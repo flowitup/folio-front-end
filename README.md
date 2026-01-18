@@ -19,17 +19,27 @@ src/
 │   │   ├── dashboard/      # Dashboard page
 │   │   ├── projects/       # Projects page
 │   │   └── settings/       # Settings page
+│   ├── login/              # Login page (auth route)
 │   ├── globals.css         # Global styles
-│   └── layout.tsx          # Root layout
+│   └── layout.tsx          # Root layout (AuthProvider + ErrorBoundary)
 ├── components/
 │   └── layout/
 │       ├── Sidebar.tsx     # Navigation sidebar
 │       └── Topbar.tsx      # Top navigation bar
-└── lib/
-    ├── api/
-    │   └── http.ts         # Typed fetch wrapper
-    └── config/
-        └── env.ts          # Environment configuration
+├── context/
+│   ├── AuthContext.tsx     # Auth context + provider
+│   └── AuthErrorBoundary.tsx # Auth error handling
+├── lib/
+│   ├── api/
+│   │   └── http.ts         # Typed fetch wrapper (credentials: include)
+│   ├── auth/
+│   │   ├── types.ts        # TypeScript auth types
+│   │   ├── session.ts      # Server-side session utils
+│   │   ├── actions.ts      # Server actions (login/logout)
+│   │   └── middleware.ts   # Middleware helpers
+│   └── config/
+│       └── env.ts          # Environment configuration
+└── middleware.ts           # Next.js middleware (route protection)
 ```
 
 ## Getting Started
@@ -93,17 +103,34 @@ npm start
 
 ## API Client
 
-The project includes a typed fetch wrapper (`src/lib/api/http.ts`) for making API requests:
+The project includes a typed fetch wrapper (`src/lib/api/http.ts`) for making API requests with automatic cookie handling:
 
 ```typescript
 import { api } from "@/lib/api/http";
 
-// GET request
+// GET request (cookies sent automatically)
 const data = await api.get<ProjectList>("/projects");
 
 // POST request
 const result = await api.post<Project, CreateProjectDto>("/projects", { name: "New Project" });
 ```
+
+## Authentication
+
+The frontend uses a hybrid cookie-based authentication approach:
+
+- **Server Actions:** `src/lib/auth/actions.ts` (login, logout)
+- **Middleware:** `src/middleware.ts` (route protection)
+- **Client Context:** `src/context/AuthContext.tsx` (useAuth hook)
+- **Error Handling:** `src/context/AuthErrorBoundary.tsx` (auto-logout on 401)
+
+### Protected Routes
+
+Routes under `/(app)/*` require authentication. Unauthenticated users are redirected to `/login`.
+
+### Auth Routes
+
+`/login` redirects authenticated users to `/dashboard`.
 
 ## License
 

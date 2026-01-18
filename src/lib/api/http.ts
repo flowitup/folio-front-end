@@ -38,8 +38,6 @@ export async function http<TResponse, TBody = unknown>(
 
     const defaultHeaders: Record<string, string> = {
         "Content-Type": "application/json",
-        // TODO: Add authorization header when auth is implemented
-        // "Authorization": `Bearer ${getToken()}`,
     };
 
     const response = await fetch(url, {
@@ -47,6 +45,7 @@ export async function http<TResponse, TBody = unknown>(
         headers: { ...defaultHeaders, ...headers },
         body: body ? JSON.stringify(body) : undefined,
         signal,
+        credentials: "include",
     });
 
     // Handle non-2xx responses

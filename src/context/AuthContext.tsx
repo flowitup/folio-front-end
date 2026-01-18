@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useTransition,
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -18,7 +19,7 @@ interface AuthContextType extends AuthState {
   login: (
     credentials: LoginCredentials
   ) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,11 +34,14 @@ export function AuthProvider({
   initialUser = null,
 }: AuthProviderProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [state, setState] = useState<AuthState>({
     user: initialUser,
     isAuthenticated: !!initialUser,
     isLoading: false,
   });
+
+  const isLoading = state.isLoading || isPending;
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
@@ -62,16 +66,18 @@ export function AuthProvider({
     [router]
   );
 
-  const logout = useCallback(async () => {
-    setState((prev) => ({ ...prev, isLoading: true }));
-    // Server action redirects to /login, so code after this won't execute
-    await logoutAction();
+  const logout = useCallback(() => {
+    startTransition(async () => {
+      // Server action redirects to /login
+      await logoutAction();
+    });
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
         ...state,
+        isLoading,
         login,
         logout,
       }}

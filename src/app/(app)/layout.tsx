@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { ProjectProvider } from "@/context/ProjectContext";
 
 export default async function AppLayout({
   children,
@@ -16,18 +17,20 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar />
+    <ProjectProvider>
+      <div className="flex h-screen bg-gray-50">
+        {/* Sidebar */}
+        <Sidebar />
 
-      {/* Main content area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Topbar */}
-        <Topbar />
+        {/* Main content area */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Topbar */}
+          <Topbar />
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+          {/* Page content */}
+          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </ProjectProvider>
   );
 }

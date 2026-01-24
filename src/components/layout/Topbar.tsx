@@ -1,14 +1,17 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { ProjectSelector } from "@/components/project/ProjectSelector";
 
 export function Topbar() {
   const { user, logout, isLoading } = useAuth();
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
-      {/* Page title area */}
-      <div>
+      {/* Left side - Project selector + Page title */}
+      <div className="flex items-center gap-4">
+        <ProjectSelector />
+        <div className="h-6 w-px bg-gray-200" />
         <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
       </div>
 
@@ -30,7 +33,9 @@ export function Topbar() {
                 {user.email.charAt(0).toUpperCase()}
               </span>
             </div>
-            <span className="text-sm font-medium text-gray-700">{user.email}</span>
+            <span className="text-sm font-medium text-gray-700">
+              {user.email}
+            </span>
             <button
               onClick={() => logout()}
               disabled={isLoading}

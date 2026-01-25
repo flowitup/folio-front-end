@@ -78,7 +78,7 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
             aria-describedby={error ? "form-error" : undefined}
-            className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 sm:text-sm"
+            className="block w-full appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 sm:text-sm"
             placeholder="you@example.com"
           />
         </div>
@@ -101,7 +101,7 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
             aria-describedby={error ? "form-error" : undefined}
-            className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 sm:text-sm"
+            className="block w-full appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 sm:text-sm"
             placeholder="••••••••"
           />
         </div>

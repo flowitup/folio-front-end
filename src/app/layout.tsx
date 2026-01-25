@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthErrorBoundary } from "@/context/AuthErrorBoundary";
 import { getCurrentUser } from "@/lib/auth/session";
+import { Agentation } from "agentation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default async function RootLayout({
         <AuthErrorBoundary>
           <AuthProvider initialUser={user}>{children}</AuthProvider>
         </AuthErrorBoundary>
+        {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>
   );

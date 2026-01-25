@@ -72,51 +72,102 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-64 flex-col bg-slate-900 text-white">
-      {/* Logo */}
-      <div className="flex h-16 items-center justify-center border-b border-slate-700">
-        <div className="flex items-center gap-2">
-          <svg
-            className="h-7 w-7 text-blue-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
+    <aside
+      className="flex w-72 flex-col border-r"
+      style={{
+        background: 'var(--bg-elevated)',
+        borderColor: 'var(--border-subtle)',
+      }}
+    >
+      {/* Logo - Scandinavian minimal branding */}
+      <div
+        className="flex h-20 items-center px-6"
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}
+      >
+        <div className="flex items-center gap-3">
+          {/* Minimal geometric logo */}
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-xl"
+            style={{ background: 'var(--accent-primary)' }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"
-            />
-          </svg>
-          <span className="text-lg font-bold">Construction</span>
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="white"
+              strokeWidth={1.8}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"
+              />
+            </svg>
+          </div>
+          <div>
+            <span
+              className="text-lg font-semibold tracking-tight font-outfit"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Construction
+            </span>
+            <p
+              className="text-xs"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
+              Project Management
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                isActive
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              {item.icon}
-              {item.name}
-            </Link>
-          );
-        })}
+      {/* Navigation - Clean, airy spacing */}
+      <nav className="flex-1 px-4 py-6">
+        <ul className="space-y-1">
+          {navigation.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            return (
+              <li key={item.name}>
+                <Link
+                  href={item.href}
+                  className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200"
+                  style={{
+                    background: isActive ? 'var(--accent-primary-light)' : 'transparent',
+                    color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'var(--bg-hover)';
+                      e.currentTarget.style.color = 'var(--text-primary)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                    }
+                  }}
+                >
+                  <span className="flex-shrink-0">{item.icon}</span>
+                  <span>{item.name}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-slate-700 p-4">
-        <p className="text-xs text-slate-400">© 2026 Construction App</p>
+      {/* Footer - Subtle and minimal */}
+      <div
+        className="px-6 py-5"
+        style={{ borderTop: '1px solid var(--border-subtle)' }}
+      >
+        <p
+          className="text-xs"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
+          © 2026 Construction
+        </p>
       </div>
     </aside>
   );

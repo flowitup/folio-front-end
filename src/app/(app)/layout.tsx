@@ -18,7 +18,10 @@ export default async function AppLayout({
 
   return (
     <ProjectProvider>
-      <div className="flex h-screen bg-gray-50">
+      <div
+        className="flex h-screen"
+        style={{ background: 'var(--bg-primary)' }}
+      >
         {/* Sidebar */}
         <Sidebar />
 
@@ -27,8 +30,15 @@ export default async function AppLayout({
           {/* Topbar */}
           <Topbar />
 
-          {/* Page content */}
-          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+          {/* Page content - Generous padding for Scandinavian breathing room */}
+          <main
+            className="flex-1 overflow-y-auto p-8 lg:p-10"
+            style={{ background: 'var(--bg-primary)' }}
+          >
+            <div className="mx-auto max-w-7xl">
+              {children}
+            </div>
+          </main>
         </div>
       </div>
     </ProjectProvider>

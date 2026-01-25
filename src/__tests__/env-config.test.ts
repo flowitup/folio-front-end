@@ -13,10 +13,14 @@ describe('Environment Config', () => {
   })
 
   describe('getEnvVar behavior', () => {
-    it('should throw when required env var is missing', async () => {
+    it('should throw when required env var is missing in production', async () => {
       delete process.env.NEXT_PUBLIC_API_BASE_URL
+      ;(process.env as Record<string, string>).NODE_ENV = 'production'
 
-      await expect(import('@/lib/config/env')).rejects.toThrow(
+      const { env } = await import('@/lib/config/env')
+
+      // The getter throws when accessed, not on import
+      expect(() => env.apiBaseUrl).toThrow(
         'Missing required environment variable: NEXT_PUBLIC_API_BASE_URL'
       )
     })

@@ -31,21 +31,26 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
   };
 
   return (
-    <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-      {/* Error Alert */}
+    <form className="space-y-6" onSubmit={handleSubmit}>
+      {/* Error Alert - Scandinavian minimal */}
       {error && (
         <div
           id="form-error"
-          className="rounded-md bg-red-50 p-4"
+          className="rounded-xl p-4"
+          style={{
+            background: 'var(--status-negative-bg)',
+            border: '1px solid var(--status-negative)',
+          }}
           role="alert"
           aria-live="polite"
         >
-          <div className="flex">
+          <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-red-400"
+                className="h-5 w-5"
                 viewBox="0 0 20 20"
                 fill="currentColor"
+                style={{ color: 'var(--status-negative)' }}
                 aria-hidden="true"
               >
                 <path
@@ -55,69 +60,116 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
                 />
               </svg>
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-red-800">{error}</p>
-            </div>
+            <p
+              className="text-sm font-medium"
+              style={{ color: 'var(--status-negative)' }}
+            >
+              {error}
+            </p>
           </div>
         </div>
       )}
 
       {/* Email Field */}
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium mb-2"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Email address
         </label>
-        <div className="mt-1">
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={isLoading}
-            aria-describedby={error ? "form-error" : undefined}
-            className="block w-full appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 sm:text-sm"
-            placeholder="you@example.com"
-          />
-        </div>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={isLoading}
+          aria-describedby={error ? "form-error" : undefined}
+          className="block w-full rounded-xl px-4 py-3 text-base transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            color: 'var(--text-primary)',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--accent-primary)';
+            e.currentTarget.style.boxShadow = '0 0 0 3px var(--accent-primary-light)';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'var(--border-default)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          placeholder="you@example.com"
+        />
       </div>
 
       {/* Password Field */}
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium mb-2"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Password
         </label>
-        <div className="mt-1">
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-            aria-describedby={error ? "form-error" : undefined}
-            className="block w-full appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 sm:text-sm"
-            placeholder="••••••••"
-          />
-        </div>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          minLength={8}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={isLoading}
+          aria-describedby={error ? "form-error" : undefined}
+          className="block w-full rounded-xl px-4 py-3 text-base transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            color: 'var(--text-primary)',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--accent-primary)';
+            e.currentTarget.style.boxShadow = '0 0 0 3px var(--accent-primary-light)';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'var(--border-default)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          placeholder="••••••••"
+        />
       </div>
 
       {/* Submit Button */}
-      <div>
+      <div className="pt-2">
         <button
           type="submit"
           disabled={isLoading}
-          className="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full justify-center items-center gap-2 rounded-xl px-4 py-3.5 text-base font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          style={{
+            background: 'var(--accent-primary)',
+            color: 'var(--text-inverse)',
+          }}
+          onMouseEnter={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.background = 'var(--accent-primary-hover)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--accent-primary)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
         >
           {isLoading ? (
             <>
               <svg
-                className="mr-2 h-5 w-5 animate-spin text-white"
+                className="h-5 w-5 animate-spin"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"

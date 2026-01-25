@@ -36,33 +36,33 @@ vi.mock('@/lib/api/projects', () => ({
 import { ProjectProvider, useProject } from '../ProjectContext'
 
 // Safe test component that handles context availability
+// Note: Hooks must be called unconditionally - use the same pattern as TestConsumer
 function SafeTestConsumer({ fallback = null }: { fallback?: ReactNode }) {
-  try {
-    const {
-      projects,
-      selectedProjectId,
-      selectedProject,
-      selectProject,
-      isLoading,
-      error,
-    } = useProject()
+  const {
+    projects,
+    selectedProjectId,
+    selectedProject,
+    selectProject,
+    isLoading,
+    error,
+  } = useProject()
 
-    return (
-      <div>
-        <span data-testid="loading">{isLoading ? 'loading' : 'loaded'}</span>
-        <span data-testid="error">{error || 'no-error'}</span>
-        <span data-testid="count">{projects.length}</span>
-        <span data-testid="selected">{selectedProjectId || 'none'}</span>
-        <span data-testid="selected-name">
-          {selectedProject?.name || 'none'}
-        </span>
-        <button onClick={() => selectProject('2')}>Select Project B</button>
-      </div>
-    )
-  } catch {
-    // Before hydration, context is undefined
-    return <div data-testid="pre-hydration">{fallback}</div>
-  }
+  // The fallback prop is kept for API compatibility but not used
+  // since we always render within ProjectProvider in tests
+  void fallback
+
+  return (
+    <div>
+      <span data-testid="loading">{isLoading ? 'loading' : 'loaded'}</span>
+      <span data-testid="error">{error || 'no-error'}</span>
+      <span data-testid="count">{projects.length}</span>
+      <span data-testid="selected">{selectedProjectId || 'none'}</span>
+      <span data-testid="selected-name">
+        {selectedProject?.name || 'none'}
+      </span>
+      <button onClick={() => selectProject('2')}>Select Project B</button>
+    </div>
+  )
 }
 
 // Test component that always expects context

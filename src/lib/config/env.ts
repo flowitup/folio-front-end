@@ -7,25 +7,25 @@ interface EnvConfig {
     apiBaseUrl: string;
 }
 
-function getEnvVar(name: string, required: boolean = true): string {
-    const value = process.env[name];
-
-    if (required && !value) {
-        throw new Error(
-            `Missing required environment variable: ${name}. ` +
-            `Please check your .env.local file.`
-        );
-    }
-
-    return value || "";
-}
-
 /**
  * Validated environment configuration
- * Throws an error if required variables are missing
+ * Uses getters for lazy evaluation to avoid issues during SSR/hydration
  */
 export const env: EnvConfig = {
-    apiBaseUrl: getEnvVar("NEXT_PUBLIC_API_BASE_URL"),
+    get apiBaseUrl(): string {
+        const value = process.env.NEXT_PUBLIC_API_BASE_URL;
+        if (!value) {
+            // Fallback for development
+            if (process.env.NODE_ENV === "development") {
+                return "http://localhost:5000/api/v1";
+            }
+            throw new Error(
+                "Missing required environment variable: NEXT_PUBLIC_API_BASE_URL. " +
+                "Please check your .env.local file."
+            );
+        }
+        return value;
+    },
 };
 
 /**

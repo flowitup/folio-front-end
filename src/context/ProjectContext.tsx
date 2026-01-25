@@ -98,11 +98,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   const selectedProject =
     projects.find((p) => p.id === selectedProjectId) ?? null;
 
-  // Don't render until hydrated to prevent mismatch
-  if (!isHydrated) {
-    return <>{children}</>;
-  }
-
   return (
     <ProjectContext.Provider
       value={{
@@ -110,7 +105,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         selectedProjectId,
         selectedProject,
         selectProject,
-        isLoading,
+        isLoading: isLoading || !isHydrated,
         error,
         refetch: loadProjects,
       }}

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { LoginForm } from "@/components/auth/LoginForm";
 
@@ -9,12 +10,15 @@ interface LoginPageProps {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   // Redirect if already authenticated
   const session = await getSession();
+  const locale = await getLocale();
+  const t = await getTranslations("auth");
+
   if (session) {
-    redirect("/dashboard");
+    redirect(`/${locale}/dashboard`);
   }
 
   const params = await searchParams;
-  const callbackUrl = params.callbackUrl || "/dashboard";
+  const callbackUrl = params.callbackUrl || `/${locale}/dashboard`;
 
   return (
     <div
@@ -59,13 +63,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               className="text-2xl font-semibold tracking-tight font-outfit"
               style={{ color: 'var(--text-primary)' }}
             >
-              Welcome back
+              {t("welcomeBack")}
             </h1>
             <p
               className="mt-2 text-base"
               style={{ color: 'var(--text-secondary)' }}
             >
-              Sign in to your account to continue
+              {t("signInPrompt")}
             </p>
           </div>
 
@@ -78,7 +82,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           className="mt-8 text-center text-sm"
           style={{ color: 'var(--text-tertiary)' }}
         >
-          Contact your administrator if you need access.
+          {t("contactAdmin")}
         </p>
       </div>
     </div>

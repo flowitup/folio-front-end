@@ -1,3 +1,4 @@
+import { getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -11,9 +12,10 @@ export default async function AppLayout({
 }) {
   // Server-side auth check (primary protection)
   const session = await getSession();
+  const locale = await getLocale();
 
   if (!session) {
-    redirect("/login");
+    redirect(`/${locale}/login`);
   }
 
   return (

@@ -1,20 +1,30 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ProjectSelector } from "@/components/project/ProjectSelector";
-
-const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/projects": "Projects",
-  "/settings": "Settings",
-};
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export function Topbar() {
   const pathname = usePathname();
+  const locale = useLocale();
+  const t = useTranslations("navigation");
+  const tTopbar = useTranslations("topbar");
+  const tCommon = useTranslations("common");
   const { user, logout, isLoading } = useAuth();
 
-  const pageTitle = pageTitles[pathname] || "Dashboard";
+  // Extract path without locale prefix for title matching
+  const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
+
+  const pageTitleKeys: Record<string, string> = {
+    "/dashboard": "dashboard",
+    "/projects": "projects",
+    "/settings": "settings",
+  };
+
+  const titleKey = pageTitleKeys[pathWithoutLocale] || "dashboard";
+  const pageTitle = t(titleKey);
 
   return (
     <header
@@ -41,6 +51,9 @@ export function Topbar() {
 
       {/* Right side - user menu */}
       <div className="flex items-center gap-5">
+        {/* Language Switcher */}
+        <LanguageSwitcher />
+
         {/* Notifications */}
         <button
           className="cursor-pointer rounded-xl p-2.5 transition-all duration-200"
@@ -56,7 +69,7 @@ export function Topbar() {
             e.currentTarget.style.background = 'transparent';
             e.currentTarget.style.color = 'var(--text-secondary)';
           }}
-          aria-label="View notifications"
+          aria-label={tTopbar("viewNotifications")}
         >
           <svg
             className="h-5 w-5"
@@ -121,7 +134,7 @@ export function Topbar() {
                 e.currentTarget.style.color = 'var(--text-secondary)';
               }}
             >
-              {isLoading ? "..." : "Sign out"}
+              {isLoading ? "..." : tCommon("signOut")}
             </button>
           </div>
         )}

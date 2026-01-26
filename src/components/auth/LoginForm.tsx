@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
 
 interface LoginFormProps {
@@ -10,6 +11,7 @@ interface LoginFormProps {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future callbackUrl redirect
 export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
   const { login, isLoading } = useAuth();
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -19,14 +21,14 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
     setError(null);
 
     if (!email || !password) {
-      setError("Please enter both email and password");
+      setError(t("errorRequired"));
       return;
     }
 
     const result = await login({ email, password });
 
     if (!result.success) {
-      setError(result.error || "Invalid credentials");
+      setError(result.error || t("errorInvalid"));
     }
   };
 
@@ -77,7 +79,7 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
           className="block text-sm font-medium mb-2"
           style={{ color: 'var(--text-primary)' }}
         >
-          Email address
+          {t("emailLabel")}
         </label>
         <input
           id="email"
@@ -103,7 +105,7 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
             e.currentTarget.style.borderColor = 'var(--border-default)';
             e.currentTarget.style.boxShadow = 'none';
           }}
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
         />
       </div>
 
@@ -114,7 +116,7 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
           className="block text-sm font-medium mb-2"
           style={{ color: 'var(--text-primary)' }}
         >
-          Password
+          {t("passwordLabel")}
         </label>
         <input
           id="password"
@@ -141,7 +143,7 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
             e.currentTarget.style.borderColor = 'var(--border-default)';
             e.currentTarget.style.boxShadow = 'none';
           }}
-          placeholder="••••••••"
+          placeholder={t("passwordPlaceholder")}
         />
       </div>
 
@@ -189,10 +191,10 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              Signing in...
+              {t("signingIn")}
             </>
           ) : (
-            "Sign in"
+            t("signIn")
           )}
         </button>
       </div>

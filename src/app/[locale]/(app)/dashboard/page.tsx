@@ -1,6 +1,10 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 export default function DashboardPage() {
+    const t = useTranslations("dashboard");
+
     return (
         <div className="space-y-8">
             {/* Page Header */}
@@ -9,13 +13,13 @@ export default function DashboardPage() {
                     className="text-2xl font-semibold tracking-tight font-outfit"
                     style={{ color: 'var(--text-primary)' }}
                 >
-                    Dashboard
+                    {t("title")}
                 </h2>
                 <p
                     className="mt-2 text-base"
                     style={{ color: 'var(--text-secondary)' }}
                 >
-                    Welcome to the Construction Management Dashboard.
+                    {t("welcome")}
                 </p>
             </div>
 
@@ -43,7 +47,7 @@ export default function DashboardPage() {
                             className="font-medium text-sm"
                             style={{ color: 'var(--text-secondary)' }}
                         >
-                            Active Projects
+                            {t("activeProjects")}
                         </h3>
                         <div
                             className="rounded-lg p-2"
@@ -75,7 +79,7 @@ export default function DashboardPage() {
                         className="mt-2 text-sm"
                         style={{ color: 'var(--text-tertiary)' }}
                     >
-                        Awaiting data
+                        {t("awaitingData")}
                     </p>
                 </div>
 
@@ -101,7 +105,7 @@ export default function DashboardPage() {
                             className="font-medium text-sm"
                             style={{ color: 'var(--text-secondary)' }}
                         >
-                            Pending Tasks
+                            {t("pendingTasks")}
                         </h3>
                         <div
                             className="rounded-lg p-2"
@@ -133,7 +137,7 @@ export default function DashboardPage() {
                         className="mt-2 text-sm"
                         style={{ color: 'var(--text-tertiary)' }}
                     >
-                        Awaiting data
+                        {t("awaitingData")}
                     </p>
                 </div>
 
@@ -159,7 +163,7 @@ export default function DashboardPage() {
                             className="font-medium text-sm"
                             style={{ color: 'var(--text-secondary)' }}
                         >
-                            Team Members
+                            {t("teamMembers")}
                         </h3>
                         <div
                             className="rounded-lg p-2"
@@ -191,7 +195,7 @@ export default function DashboardPage() {
                         className="mt-2 text-sm"
                         style={{ color: 'var(--text-tertiary)' }}
                     >
-                        Awaiting data
+                        {t("awaitingData")}
                     </p>
                 </div>
             </div>
@@ -209,7 +213,7 @@ export default function DashboardPage() {
                     className="text-lg font-medium font-outfit"
                     style={{ color: 'var(--text-primary)' }}
                 >
-                    Recent Activity
+                    {t("recentActivity")}
                 </h3>
                 <div
                     className="mt-6 flex items-center justify-center py-12 rounded-xl"
@@ -234,7 +238,7 @@ export default function DashboardPage() {
                             className="mt-4 text-sm"
                             style={{ color: 'var(--text-tertiary)' }}
                         >
-                            No recent activity to display
+                            {t("noActivity")}
                         </p>
                     </div>
                 </div>

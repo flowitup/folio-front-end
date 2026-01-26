@@ -1,4 +1,10 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 export default function SettingsPage() {
+    const t = useTranslations("settings");
+
     return (
         <div className="space-y-8">
             {/* Page Header */}
@@ -7,13 +13,13 @@ export default function SettingsPage() {
                     className="text-2xl font-semibold tracking-tight font-outfit"
                     style={{ color: 'var(--text-primary)' }}
                 >
-                    Settings
+                    {t("title")}
                 </h2>
                 <p
                     className="mt-2 text-base"
                     style={{ color: 'var(--text-secondary)' }}
                 >
-                    Configure your application settings here.
+                    {t("description")}
                 </p>
             </div>
 
@@ -57,13 +63,13 @@ export default function SettingsPage() {
                                     className="font-medium font-outfit"
                                     style={{ color: 'var(--text-primary)' }}
                                 >
-                                    Profile Settings
+                                    {t("profile")}
                                 </h3>
                                 <p
                                     className="text-sm"
                                     style={{ color: 'var(--text-secondary)' }}
                                 >
-                                    Manage your personal information
+                                    {t("profileDesc")}
                                 </p>
                             </div>
                         </div>
@@ -77,7 +83,7 @@ export default function SettingsPage() {
                                 className="text-sm"
                                 style={{ color: 'var(--text-tertiary)' }}
                             >
-                                Profile settings will be available soon
+                                {t("profile")} {t("comingSoon")}
                             </p>
                         </div>
                     </div>
@@ -121,13 +127,13 @@ export default function SettingsPage() {
                                     className="font-medium font-outfit"
                                     style={{ color: 'var(--text-primary)' }}
                                 >
-                                    Notification Preferences
+                                    {t("notifications")}
                                 </h3>
                                 <p
                                     className="text-sm"
                                     style={{ color: 'var(--text-secondary)' }}
                                 >
-                                    Control how you receive notifications
+                                    {t("notificationsDesc")}
                                 </p>
                             </div>
                         </div>
@@ -141,7 +147,7 @@ export default function SettingsPage() {
                                 className="text-sm"
                                 style={{ color: 'var(--text-tertiary)' }}
                             >
-                                Notification preferences will be available soon
+                                {t("notifications")} {t("comingSoon")}
                             </p>
                         </div>
                     </div>
@@ -185,13 +191,13 @@ export default function SettingsPage() {
                                     className="font-medium font-outfit"
                                     style={{ color: 'var(--text-primary)' }}
                                 >
-                                    Organization Settings
+                                    {t("organization")}
                                 </h3>
                                 <p
                                     className="text-sm"
                                     style={{ color: 'var(--text-secondary)' }}
                                 >
-                                    Manage organization-level settings
+                                    {t("organizationDesc")}
                                 </p>
                             </div>
                         </div>
@@ -205,7 +211,7 @@ export default function SettingsPage() {
                                 className="text-sm"
                                 style={{ color: 'var(--text-tertiary)' }}
                             >
-                                Organization settings will be available soon
+                                {t("organization")} {t("comingSoon")}
                             </p>
                         </div>
                     </div>

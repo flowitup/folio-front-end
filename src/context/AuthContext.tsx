@@ -67,8 +67,15 @@ export function AuthProvider({
   );
 
   const logout = useCallback(() => {
+    // Clear local state immediately to prevent AuthErrorBoundary from triggering
+    setState({
+      user: null,
+      isAuthenticated: false,
+      isLoading: true,
+    });
+
     startTransition(async () => {
-      // Server action redirects to /login
+      // Server action clears cookies and redirects to /login
       await logoutAction();
     });
   }, []);

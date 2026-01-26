@@ -17,6 +17,23 @@ function isAuthRoute(pathname: string): boolean {
   return authRoutes.some((route) => pathname.startsWith(route));
 }
 
+/**
+ * Decode JWT and check if expired (without verification).
+ * Returns true if token exists and is not expired.
+ */
+function isTokenValid(token: string | undefined): boolean {
+  if (!token) return false;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return true; // No expiry = assume valid
+    return payload.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware({
   locales,
@@ -45,9 +62,9 @@ export function middleware(request: NextRequest) {
     ""
   ) || "/";
 
-  // Check for access token cookie
+  // Check for access token cookie and validate expiry
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
-  const isAuthenticated = !!accessToken;
+  const isAuthenticated = isTokenValid(accessToken);
 
   // Get the current locale from pathname or default
   const localeMatch = pathname.match(new RegExp(`^/(${locales.join("|")})`));

@@ -287,6 +287,14 @@ describe('ProjectContext', () => {
   })
 
   it('renders children during hydration phase', async () => {
+    // Ensure fresh localStorage mock is properly set
+    localStorageMock = createLocalStorageMock()
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      writable: true,
+      configurable: true,
+    })
+
     render(
       <ProjectProvider>
         <SafeTestConsumer fallback={<span>hydrating</span>} />

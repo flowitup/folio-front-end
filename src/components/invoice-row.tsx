@@ -19,34 +19,52 @@ export function InvoiceRow({
   status = "paid",
 }: InvoiceRowProps) {
   return (
-    <div className="flex w-[700px] items-center border-b-[1px] border-[#1F1F1F] py-[12px]">
+    <div
+      className="flex w-[700px] items-center py-3"
+      style={{ borderBottom: '1px solid var(--border-subtle)' }}
+    >
       {/* Cell 1: Invoice ID and Project */}
-      <div className="flex w-[140px] flex-col items-center gap-[2px]">
-        <span className="font-jetbrains text-[12px] font-medium text-[#E5E5E5]">
+      <div className="flex w-[140px] flex-col items-center gap-0.5">
+        <span
+          className="text-xs font-medium"
+          style={{ color: 'var(--text-primary)' }}
+        >
           {invoiceId}
         </span>
-        <span className="font-jetbrains text-[10px] font-normal text-[#525252]">
+        <span
+          className="text-[10px]"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
           {project}
         </span>
       </div>
 
       {/* Cell 2: Client Name */}
       <div className="flex flex-1 items-center">
-        <span className="font-jetbrains text-[12px] font-normal text-[#737373]">
+        <span
+          className="text-xs"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           {client}
         </span>
       </div>
 
       {/* Cell 3: Date */}
       <div className="flex w-[100px] items-center">
-        <span className="font-jetbrains text-[11px] font-normal text-[#737373]">
+        <span
+          className="text-[11px]"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           {date}
         </span>
       </div>
 
       {/* Cell 4: Amount */}
       <div className="flex w-[120px] items-center">
-        <span className="font-jetbrains text-[12px] font-semibold text-[#E5E5E5]">
+        <span
+          className="text-xs font-semibold"
+          style={{ color: 'var(--text-primary)' }}
+        >
           {amount}
         </span>
       </div>

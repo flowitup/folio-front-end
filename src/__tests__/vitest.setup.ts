@@ -8,3 +8,35 @@ import '@testing-library/jest-dom/vitest'
 // Set default environment variables for tests
 process.env.NEXT_PUBLIC_API_BASE_URL = 'http://localhost:3001/api'
 process.env.NEXT_PUBLIC_APP_ENV = 'test'
+
+// Mock pointer capture methods for Radix UI components (not supported in jsdom)
+Element.prototype.hasPointerCapture = () => false
+Element.prototype.setPointerCapture = () => {}
+Element.prototype.releasePointerCapture = () => {}
+
+// Mock scrollIntoView (not supported in jsdom)
+Element.prototype.scrollIntoView = () => {}
+
+// Global localStorage mock (ensures localStorage is always available in tests)
+const localStorageStore: Record<string, string> = {}
+Object.defineProperty(window, 'localStorage', {
+  value: {
+    getItem: (key: string) => localStorageStore[key] ?? null,
+    setItem: (key: string, value: string) => {
+      localStorageStore[key] = value
+    },
+    removeItem: (key: string) => {
+      delete localStorageStore[key]
+    },
+    clear: () => {
+      Object.keys(localStorageStore).forEach((key) => delete localStorageStore[key])
+    },
+    get length() {
+      return Object.keys(localStorageStore).length
+    },
+    key: (index: number) => Object.keys(localStorageStore)[index] ?? null,
+  },
+  writable: true,
+  configurable: true,
+})
+

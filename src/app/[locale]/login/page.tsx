@@ -26,9 +26,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       style={{ background: 'var(--bg-primary)' }}
     >
       <div className="w-full max-w-md">
-        {/* Card Container - Scandinavian minimal */}
+        {/* Card Container - Fintech minimal */}
         <div
-          className="rounded-3xl p-10"
+          className="rounded-2xl p-8"
           style={{
             background: 'var(--bg-elevated)',
             border: '1px solid var(--border-subtle)',
@@ -36,17 +36,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           }}
         >
           {/* Logo */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6">
             <div
-              className="flex h-14 w-14 items-center justify-center rounded-2xl"
+              className="flex h-12 w-12 items-center justify-center rounded-xl"
               style={{ background: 'var(--accent-primary)' }}
             >
               <svg
-                className="h-7 w-7"
+                className="h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="white"
-                strokeWidth={1.8}
+                strokeWidth={2}
               >
                 <path
                   strokeLinecap="round"
@@ -58,15 +58,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
 
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h1
-              className="text-2xl font-semibold tracking-tight font-outfit"
+              className="text-xl font-semibold tracking-tight"
               style={{ color: 'var(--text-primary)' }}
             >
               {t("welcomeBack")}
             </h1>
             <p
-              className="mt-2 text-base"
+              className="mt-1 text-sm"
               style={{ color: 'var(--text-secondary)' }}
             >
               {t("signInPrompt")}
@@ -79,7 +79,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         {/* Footer */}
         <p
-          className="mt-8 text-center text-sm"
+          className="mt-6 text-center text-xs"
           style={{ color: 'var(--text-tertiary)' }}
         >
           {t("contactAdmin")}

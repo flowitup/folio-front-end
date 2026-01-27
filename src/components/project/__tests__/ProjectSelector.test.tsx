@@ -1,9 +1,9 @@
 /**
- * Tests for ProjectSelector component
+ * Tests for ProjectSelector component with Shadcn/Radix Select
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ProjectSelector } from '../ProjectSelector'
 
@@ -34,34 +34,36 @@ describe('ProjectSelector - populated state', () => {
     vi.mocked(useProject).mockReturnValue(mockContextValue)
   })
 
-  it('renders dropdown with projects', () => {
+  it('renders select trigger with selected value', () => {
     render(<ProjectSelector />)
 
-    expect(screen.getByLabelText('Select project')).toBeInTheDocument()
-    expect(screen.getByRole('combobox')).toHaveValue('1')
+    const trigger = screen.getByRole('combobox')
+    expect(trigger).toBeInTheDocument()
+    expect(trigger).toHaveTextContent('Project A')
   })
 
-  it('shows all project options', () => {
+  it('shows all project options when opened', async () => {
+    const user = userEvent.setup()
     render(<ProjectSelector />)
 
-    const options = screen.getAllByRole('option')
+    await user.click(screen.getByRole('combobox'))
+
+    const listbox = screen.getByRole('listbox')
+    const options = within(listbox).getAllByRole('option')
     expect(options).toHaveLength(2)
     expect(options[0]).toHaveTextContent('Project A')
     expect(options[1]).toHaveTextContent('Project B')
   })
 
-  it('displays selected project value', () => {
-    render(<ProjectSelector />)
-
-    const select = screen.getByRole('combobox')
-    expect(select).toHaveValue('1')
-  })
-
-  it('calls selectProject on change', async () => {
+  it('calls selectProject when option is selected', async () => {
     const user = userEvent.setup()
     render(<ProjectSelector />)
 
-    await user.selectOptions(screen.getByRole('combobox'), '2')
+    await user.click(screen.getByRole('combobox'))
+
+    const listbox = screen.getByRole('listbox')
+    const projectB = within(listbox).getByText('Project B')
+    await user.click(projectB)
 
     expect(mockSelectProject).toHaveBeenCalledWith('2')
   })
@@ -157,9 +159,7 @@ describe('ProjectSelector - edge cases', () => {
     vi.clearAllMocks()
   })
 
-  it('handles null selectedProjectId with empty value in select', () => {
-    // When selectedProjectId is null but projects exist,
-    // the select will default to first option due to HTML behavior
+  it('handles null selectedProjectId with placeholder', () => {
     vi.mocked(useProject).mockReturnValue({
       ...mockContextValue,
       selectedProjectId: null,
@@ -168,19 +168,21 @@ describe('ProjectSelector - edge cases', () => {
 
     render(<ProjectSelector />)
 
-    const select = screen.getByRole('combobox')
-    // HTML selects default to first option when value is empty string
-    // and no option with empty value exists
-    expect(select).toBeInTheDocument()
+    const trigger = screen.getByRole('combobox')
+    expect(trigger).toBeInTheDocument()
+    expect(trigger).toHaveTextContent('Select project')
   })
 
-  it('renders correct option values', () => {
+  it('renders correct options in listbox', async () => {
     vi.mocked(useProject).mockReturnValue(mockContextValue)
+    const user = userEvent.setup()
 
     render(<ProjectSelector />)
+    await user.click(screen.getByRole('combobox'))
 
-    const options = screen.getAllByRole('option')
-    expect(options[0]).toHaveValue('1')
-    expect(options[1]).toHaveValue('2')
+    const listbox = screen.getByRole('listbox')
+    const options = within(listbox).getAllByRole('option')
+    expect(options[0]).toHaveTextContent('Project A')
+    expect(options[1]).toHaveTextContent('Project B')
   })
 })

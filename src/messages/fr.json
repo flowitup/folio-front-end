@@ -1,0 +1,63 @@
+{
+  "common": {
+    "appName": "Construction",
+    "appTagline": "Gestion de Projet",
+    "signOut": "Déconnexion",
+    "loading": "Chargement...",
+    "copyright": "© 2026 Construction"
+  },
+  "navigation": {
+    "dashboard": "Tableau de bord",
+    "projects": "Projets",
+    "settings": "Paramètres"
+  },
+  "auth": {
+    "welcomeBack": "Bienvenue",
+    "signInPrompt": "Connectez-vous à votre compte pour continuer",
+    "contactAdmin": "Contactez votre administrateur si vous avez besoin d'un accès.",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "vous@example.com",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "••••••••",
+    "signIn": "Se connecter",
+    "signingIn": "Connexion en cours...",
+    "errorRequired": "Veuillez entrer l'e-mail et le mot de passe",
+    "errorInvalid": "Identifiants invalides"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue sur le Tableau de bord de Gestion de Construction.",
+    "activeProjects": "Projets Actifs",
+    "pendingTasks": "Tâches en Attente",
+    "teamMembers": "Membres de l'Équipe",
+    "awaitingData": "En attente de données",
+    "recentActivity": "Activité Récente",
+    "noActivity": "Aucune activité récente à afficher"
+  },
+  "projects": {
+    "title": "Projets",
+    "selectProject": "Sélectionner un projet",
+    "loading": "Chargement...",
+    "loadError": "Échec du chargement des projets",
+    "noProjects": "Aucun projet disponible"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "description": "Configurez les paramètres de votre application ici.",
+    "profile": "Paramètres du Profil",
+    "profileDesc": "Gérez vos informations personnelles",
+    "notifications": "Préférences de Notification",
+    "notificationsDesc": "Contrôlez comment vous recevez les notifications",
+    "organization": "Paramètres de l'Organisation",
+    "organizationDesc": "Gérez les paramètres au niveau de l'organisation",
+    "comingSoon": "sera bientôt disponible"
+  },
+  "topbar": {
+    "viewNotifications": "Voir les notifications",
+    "signOut": "Déconnexion"
+  },
+  "errors": {
+    "unauthorized": "Non autorisé",
+    "accessDenied": "Vous n'avez pas la permission d'accéder à cette page."
+  }
+}

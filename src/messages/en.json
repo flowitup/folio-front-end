@@ -1,0 +1,63 @@
+{
+  "common": {
+    "appName": "Construction",
+    "appTagline": "Project Management",
+    "signOut": "Sign out",
+    "loading": "Loading...",
+    "copyright": "© 2026 Construction"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "settings": "Settings"
+  },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "signInPrompt": "Sign in to your account to continue",
+    "contactAdmin": "Contact your administrator if you need access.",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "errorRequired": "Please enter both email and password",
+    "errorInvalid": "Invalid credentials"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to the Construction Management Dashboard.",
+    "activeProjects": "Active Projects",
+    "pendingTasks": "Pending Tasks",
+    "teamMembers": "Team Members",
+    "awaitingData": "Awaiting data",
+    "recentActivity": "Recent Activity",
+    "noActivity": "No recent activity to display"
+  },
+  "projects": {
+    "title": "Projects",
+    "selectProject": "Select project",
+    "loading": "Loading...",
+    "loadError": "Failed to load projects",
+    "noProjects": "No projects available"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Configure your application settings here.",
+    "profile": "Profile Settings",
+    "profileDesc": "Manage your personal information",
+    "notifications": "Notification Preferences",
+    "notificationsDesc": "Control how you receive notifications",
+    "organization": "Organization Settings",
+    "organizationDesc": "Manage organization-level settings",
+    "comingSoon": "will be available soon"
+  },
+  "topbar": {
+    "viewNotifications": "View notifications",
+    "signOut": "Sign out"
+  },
+  "errors": {
+    "unauthorized": "Unauthorized",
+    "accessDenied": "You do not have permission to access this page."
+  }
+}

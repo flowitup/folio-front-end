@@ -1,4 +1,4 @@
-import React from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface BadgeSuccessProps {
   content?: string;
@@ -6,10 +6,11 @@ interface BadgeSuccessProps {
 
 export function BadgeSuccess({ content = "complete" }: BadgeSuccessProps) {
   return (
-    <div className="flex items-center rounded-[6px] bg-[var(--accent-light)] px-[10px] py-[4px]">
-      <span className="font-outfit text-[11px] font-semibold text-[var(--accent-green)]">
-        {content}
-      </span>
-    </div>
+    <Badge
+      variant="outline"
+      className="border-green-200 bg-green-50 text-green-600 dark:border-green-800 dark:bg-green-950 dark:text-green-400"
+    >
+      {content}
+    </Badge>
   );
 }

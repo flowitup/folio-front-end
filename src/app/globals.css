@@ -1,62 +1,63 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Scandinavian Minimalistic Design System
+   Fintech Minimalist Design System
    ───────────────────────────────────────────────────────────────────────────
-   Inspired by Nordic design principles: 
-   - Natural warmth with muted tones
-   - Generous whitespace (hygge-inspired breathing room)
-   - Functional simplicity
-   - Soft, diffused lighting feel
+   Inspired by TaxPal/Stripe/TailwindUI:
+   - Cool, crisp whites with blue accent
+   - Generous whitespace for clarity
+   - Soft, elevated shadows
+   - Clean typography hierarchy
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ─── Primary Background Tones ─── */
-  --background: #FDFCFA;           /* Warm off-white (Nordic snow) */
-  --foreground: #1F1E1C;           /* Deep charcoal (not pure black) */
-  
+  /* ─── Primary Background Tones ─── */           /* Pure white */           /* Slate 900 */
+
   /* ─── Surface Hierarchy ─── */
-  --bg-primary: #FAF9F7;           /* Main app background */
-  --bg-elevated: #FFFFFF;          /* Cards and elevated surfaces */
-  --bg-muted: #F5F3EF;             /* Subtle secondary backgrounds */
+  --bg-primary: #F8FAFC;           /* Slate 50 */
+  --bg-elevated: #FFFFFF;          /* White */
+  --bg-muted: #F1F5F9;             /* Slate 100 */
   --bg-surface: #FFFFFF;           /* Content containers */
-  --bg-hover: #F0EDE8;             /* Hover states */
-  --bg-active: #EBE7E1;            /* Active/pressed states */
-  
-  /* ─── Nordic Accent Colors ─── */
-  --accent-primary: #4A6B5D;       /* Forest green (Nordic nature) */
-  --accent-primary-hover: #3D5A4E; /* Darker forest green */
-  --accent-primary-light: #E8F0EC; /* Light green tint */
-  --accent-secondary: #8B7355;     /* Warm oak brown */
-  --accent-tertiary: #6B8E8E;      /* Fjord blue-gray */
-  
+  --bg-hover: #E2E8F0;             /* Slate 200 */
+  --bg-active: #CBD5E1;            /* Slate 300 */
+
+  /* ─── Fintech Blue Accent ─── */
+  --accent-primary: #3B82F6;       /* Blue 500 */
+  --accent-primary-hover: #2563EB; /* Blue 600 */
+  --accent-primary-light: #EFF6FF; /* Blue 50 */
+  --accent-secondary: #6366F1;     /* Indigo 500 */
+  --accent-tertiary: #8B5CF6;      /* Violet 500 */
+
   /* ─── Text Colors ─── */
-  --text-primary: #1F1E1C;         /* Primary text */
-  --text-secondary: #5C5A56;       /* Secondary/muted text */
-  --text-tertiary: #8A8884;        /* Tertiary/placeholder text */
+  --text-primary: #0F172A;         /* Slate 900 */
+  --text-secondary: #64748B;       /* Slate 500 */
+  --text-tertiary: #94A3B8;        /* Slate 400 */
   --text-inverse: #FFFFFF;         /* Text on dark backgrounds */
-  
+
   /* ─── Border & Divider ─── */
-  --border-subtle: #E8E5DF;        /* Subtle dividers */
-  --border-default: #DDD9D2;       /* Default borders */
-  --border-strong: #C9C4BB;        /* Emphasized borders */
-  
-  /* ─── Status Colors (Muted Nordic Palette) ─── */
-  --status-positive: #4A7C59;      /* Success - Pine green */
-  --status-positive-bg: #EDF5EF;   /* Success background */
-  --status-warning: #B8956C;       /* Warning - Amber wood */
-  --status-warning-bg: #FBF6EF;    /* Warning background */
-  --status-negative: #9E6B6B;      /* Error - Muted rose */
-  --status-negative-bg: #F9F0F0;   /* Error background */
-  --status-info: #6B8E8E;          /* Info - Fjord blue */
-  --status-info-bg: #EFF5F5;       /* Info background */
-  
-  /* ─── Shadows (Soft, diffused Nordic light) ─── */
-  --shadow-sm: 0 1px 2px rgba(31, 30, 28, 0.04);
-  --shadow-md: 0 4px 12px rgba(31, 30, 28, 0.06);
-  --shadow-lg: 0 8px 24px rgba(31, 30, 28, 0.08);
-  --shadow-xl: 0 16px 48px rgba(31, 30, 28, 0.10);
-  
+  --border-subtle: #F1F5F9;        /* Slate 100 */
+  --border-default: #E2E8F0;       /* Slate 200 */
+  --border-strong: #CBD5E1;        /* Slate 300 */
+
+  /* ─── Status Colors (Vibrant Fintech Palette) ─── */
+  --status-positive: #22C55E;      /* Green 500 */
+  --status-positive-bg: #F0FDF4;   /* Green 50 */
+  --status-warning: #F59E0B;       /* Amber 500 */
+  --status-warning-bg: #FFFBEB;    /* Amber 50 */
+  --status-negative: #EF4444;      /* Red 500 */
+  --status-negative-bg: #FEF2F2;   /* Red 50 */
+  --status-info: #3B82F6;          /* Blue 500 */
+  --status-info-bg: #EFF6FF;       /* Blue 50 */
+
+  /* ─── Shadows (Soft, layered elevation) ─── */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
   /* ─── Spacing Scale ─── */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -65,25 +66,97 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
   --space-3xl: 4rem;
-  
-  /* ─── Border Radius (Soft, organic) ─── */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+
+  /* ─── Border Radius (Tighter, modern) ─── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 9999px;
-  
+
   /* ─── Transitions ─── */
   --transition-fast: 150ms ease;
   --transition-base: 200ms ease;
   --transition-slow: 300ms ease;
+  --radius: 0.5rem;
+
+  /* ─── Shadcn Theme Variables (Fintech Blue) ─── */
+  --background: #FFFFFF;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #3B82F6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #EFF6FF;
+  --accent-foreground: #3B82F6;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #3B82F6;
+  --chart-1: #3B82F6;
+  --chart-2: #6366F1;
+  --chart-3: #8B5CF6;
+  --chart-4: #22C55E;
+  --chart-5: #F59E0B;
+  --sidebar: #F8FAFC;
+  --sidebar-foreground: #0F172A;
+  --sidebar-primary: #3B82F6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EFF6FF;
+  --sidebar-accent-foreground: #3B82F6;
+  --sidebar-border: #E2E8F0;
+  --sidebar-ring: #3B82F6;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-destructive-foreground: var(--destructive-foreground);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
 }
 
 @layer base {
@@ -99,18 +172,18 @@
   .font-jetbrains {
     font-family: "JetBrains Mono", monospace;
   }
-  
+
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
   }
-  
+
   /* Selection color */
   ::selection {
     background-color: var(--accent-primary-light);
     color: var(--text-primary);
   }
-  
+
   /* Focus visible styles */
   :focus-visible {
     outline: 2px solid var(--accent-primary);
@@ -118,9 +191,9 @@
   }
 }
 
-/* ─── Scandinavian Component Utilities ─── */
+/* ─── Fintech Component Utilities ─── */
 @layer components {
-  /* Card with subtle elevation */
+  /* Card with soft elevation */
   .scandi-card {
     background: var(--bg-elevated);
     border: 1px solid var(--border-subtle);
@@ -128,94 +201,193 @@
     box-shadow: var(--shadow-sm);
     transition: box-shadow var(--transition-base), border-color var(--transition-base);
   }
-  
+
   .scandi-card:hover {
     box-shadow: var(--shadow-md);
     border-color: var(--border-default);
   }
-  
+
   /* Primary button */
   .scandi-btn-primary {
     background: var(--accent-primary);
-    color: var(--text-inverse);
+    color: white;
     border-radius: var(--radius-md);
-    padding: 0.625rem 1.25rem;
-    font-weight: 500;
-    transition: background var(--transition-fast), transform var(--transition-fast);
+    padding: 0.625rem 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: background var(--transition-fast);
   }
-  
+
   .scandi-btn-primary:hover {
     background: var(--accent-primary-hover);
   }
-  
+
   .scandi-btn-primary:active {
     transform: scale(0.98);
   }
-  
+
   /* Secondary button */
   .scandi-btn-secondary {
-    background: var(--bg-muted);
-    color: var(--text-primary);
+    background: transparent;
+    color: var(--text-secondary);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-md);
-    padding: 0.625rem 1.25rem;
+    padding: 0.625rem 1rem;
     font-weight: 500;
-    transition: background var(--transition-fast), border-color var(--transition-fast);
+    font-size: 0.875rem;
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
   }
-  
+
   .scandi-btn-secondary:hover {
     background: var(--bg-hover);
+    color: var(--text-primary);
     border-color: var(--border-strong);
   }
-  
+
   /* Input field */
   .scandi-input {
     background: var(--bg-elevated);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-md);
     padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
     color: var(--text-primary);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   }
-  
+
   .scandi-input:focus {
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px var(--accent-primary-light);
+    box-shadow: 0 0 0 2px var(--accent-primary-light);
+    outline: none;
   }
-  
+
   .scandi-input::placeholder {
     color: var(--text-tertiary);
   }
 }
 
-/* Dark mode - Cozy Nordic night */
+/* Dark mode - Fintech slate palette */
+/* Uses .dark class for manual toggle or system preference via next-themes */
+.dark {
+  /* ─── Surface Hierarchy ─── */
+  --bg-primary: #0F172A;         /* Slate 900 */
+  --bg-elevated: #1E293B;        /* Slate 800 */
+  --bg-muted: #334155;           /* Slate 700 */
+  --bg-surface: #1E293B;         /* Slate 800 */
+  --bg-hover: #475569;           /* Slate 600 */
+  --bg-active: #64748B;          /* Slate 500 */
+
+  --accent-primary: #60A5FA;     /* Blue 400 */
+  --accent-primary-hover: #3B82F6; /* Blue 500 */
+  --accent-primary-light: #1E3A5F; /* Custom dark blue tint */
+
+  --text-primary: #F8FAFC;       /* Slate 50 */
+  --text-secondary: #94A3B8;     /* Slate 400 */
+  --text-tertiary: #64748B;      /* Slate 500 */
+
+  --border-subtle: #1E293B;      /* Slate 800 */
+  --border-default: #334155;     /* Slate 700 */
+  --border-strong: #475569;      /* Slate 600 */
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+
+  /* ─── Shadcn Dark Theme (Fintech Blue) ─── */
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  --card: #1E293B;
+  --card-foreground: #F8FAFC;
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
+  --primary: #60A5FA;
+  --primary-foreground: #0F172A;
+  --secondary: #334155;
+  --secondary-foreground: #F8FAFC;
+  --muted: #334155;
+  --muted-foreground: #94A3B8;
+  --accent: #1E3A5F;
+  --accent-foreground: #60A5FA;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #334155;
+  --input: #334155;
+  --ring: #60A5FA;
+  --chart-1: #60A5FA;
+  --chart-2: #818CF8;
+  --chart-3: #A78BFA;
+  --chart-4: #4ADE80;
+  --chart-5: #FBBF24;
+  --sidebar: #1E293B;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-primary: #60A5FA;
+  --sidebar-primary-foreground: #0F172A;
+  --sidebar-accent: #1E3A5F;
+  --sidebar-accent-foreground: #60A5FA;
+  --sidebar-border: #334155;
+  --sidebar-ring: #60A5FA;
+}
+
+/* Also apply dark mode based on system preference */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1A1918;
-    --foreground: #F5F3EF;
-    
-    --bg-primary: #1A1918;
-    --bg-elevated: #242320;
-    --bg-muted: #2A2927;
-    --bg-surface: #242320;
-    --bg-hover: #333230;
-    --bg-active: #3D3B39;
-    
-    --accent-primary: #6B9B7E;
-    --accent-primary-hover: #5C8A6F;
-    --accent-primary-light: #2A3530;
-    
-    --text-primary: #F5F3EF;
-    --text-secondary: #A8A5A0;
-    --text-tertiary: #6E6B66;
-    
-    --border-subtle: #333230;
-    --border-default: #3D3B39;
-    --border-strong: #4A4845;
-    
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+    /* ─── Surface Hierarchy ─── */
+    --bg-primary: #0F172A;
+    --bg-elevated: #1E293B;
+    --bg-muted: #334155;
+    --bg-surface: #1E293B;
+    --bg-hover: #475569;
+    --bg-active: #64748B;
+
+    --accent-primary: #60A5FA;
+    --accent-primary-hover: #3B82F6;
+    --accent-primary-light: #1E3A5F;
+
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-tertiary: #64748B;
+
+    --border-subtle: #1E293B;
+    --border-default: #334155;
+    --border-strong: #475569;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+
+    /* ─── Shadcn Dark Theme ─── */
+    --background: #0F172A;
+    --foreground: #F8FAFC;
+    --card: #1E293B;
+    --card-foreground: #F8FAFC;
+    --popover: #1E293B;
+    --popover-foreground: #F8FAFC;
+    --primary: #60A5FA;
+    --primary-foreground: #0F172A;
+    --secondary: #334155;
+    --secondary-foreground: #F8FAFC;
+    --muted: #334155;
+    --muted-foreground: #94A3B8;
+    --accent: #1E3A5F;
+    --accent-foreground: #60A5FA;
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+    --border: #334155;
+    --input: #334155;
+    --ring: #60A5FA;
+    --chart-1: #60A5FA;
+    --chart-2: #818CF8;
+    --chart-3: #A78BFA;
+    --chart-4: #4ADE80;
+    --chart-5: #FBBF24;
+    --sidebar: #1E293B;
+    --sidebar-foreground: #F8FAFC;
+    --sidebar-primary: #60A5FA;
+    --sidebar-primary-foreground: #0F172A;
+    --sidebar-accent: #1E3A5F;
+    --sidebar-accent-foreground: #60A5FA;
+    --sidebar-border: #334155;
+    --sidebar-ring: #60A5FA;
   }
 }
 
@@ -245,4 +417,13 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

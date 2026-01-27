@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Outfit } from "next/font/google";
-import "./globals.css";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getLocale } from "next-intl/server";
+import "../globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthErrorBoundary } from "@/context/AuthErrorBoundary";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -29,19 +31,23 @@ export const metadata: Metadata = {
   description: "Streamlined construction project management with Nordic-inspired simplicity",
 };
 
-export default async function RootLayout({
+export default async function LocaleLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const user = await getCurrentUser();
+  const locale = await getLocale();
+  const messages = await getMessages();
 
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${outfit.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${jetbrainsMono.variable} ${outfit.variable}`}>
       <body className="antialiased">
-        <AuthErrorBoundary>
-          <AuthProvider initialUser={user}>{children}</AuthProvider>
-        </AuthErrorBoundary>
+        <NextIntlClientProvider messages={messages}>
+          <AuthErrorBoundary>
+            <AuthProvider initialUser={user}>{children}</AuthProvider>
+          </AuthErrorBoundary>
+        </NextIntlClientProvider>
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>

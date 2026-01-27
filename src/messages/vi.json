@@ -1,0 +1,63 @@
+{
+  "common": {
+    "appName": "Construction",
+    "appTagline": "Quản lý Dự án",
+    "signOut": "Đăng xuất",
+    "loading": "Đang tải...",
+    "copyright": "© 2026 Construction"
+  },
+  "navigation": {
+    "dashboard": "Bảng điều khiển",
+    "projects": "Dự án",
+    "settings": "Cài đặt"
+  },
+  "auth": {
+    "welcomeBack": "Chào mừng trở lại",
+    "signInPrompt": "Đăng nhập vào tài khoản để tiếp tục",
+    "contactAdmin": "Liên hệ quản trị viên nếu bạn cần quyền truy cập.",
+    "emailLabel": "Địa chỉ email",
+    "emailPlaceholder": "ban@example.com",
+    "passwordLabel": "Mật khẩu",
+    "passwordPlaceholder": "••••••••",
+    "signIn": "Đăng nhập",
+    "signingIn": "Đang đăng nhập...",
+    "errorRequired": "Vui lòng nhập email và mật khẩu",
+    "errorInvalid": "Thông tin đăng nhập không hợp lệ"
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển",
+    "welcome": "Chào mừng đến với Bảng điều khiển Quản lý Xây dựng.",
+    "activeProjects": "Dự án Đang hoạt động",
+    "pendingTasks": "Công việc Chờ xử lý",
+    "teamMembers": "Thành viên Nhóm",
+    "awaitingData": "Đang chờ dữ liệu",
+    "recentActivity": "Hoạt động Gần đây",
+    "noActivity": "Không có hoạt động gần đây"
+  },
+  "projects": {
+    "title": "Dự án",
+    "selectProject": "Chọn dự án",
+    "loading": "Đang tải...",
+    "loadError": "Không thể tải dự án",
+    "noProjects": "Không có dự án nào"
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "description": "Cấu hình cài đặt ứng dụng của bạn tại đây.",
+    "profile": "Cài đặt Hồ sơ",
+    "profileDesc": "Quản lý thông tin cá nhân của bạn",
+    "notifications": "Tùy chọn Thông báo",
+    "notificationsDesc": "Kiểm soát cách bạn nhận thông báo",
+    "organization": "Cài đặt Tổ chức",
+    "organizationDesc": "Quản lý cài đặt cấp tổ chức",
+    "comingSoon": "sẽ sớm ra mắt"
+  },
+  "topbar": {
+    "viewNotifications": "Xem thông báo",
+    "signOut": "Đăng xuất"
+  },
+  "errors": {
+    "unauthorized": "Không được phép",
+    "accessDenied": "Bạn không có quyền truy cập trang này."
+  }
+}

@@ -328,9 +328,9 @@
   --sidebar-ring: #60A5FA;
 }
 
-/* Also apply dark mode based on system preference */
+/* Apply dark mode based on system preference (fallback when JS not loaded) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     /* ─── Surface Hierarchy ─── */
     --bg-primary: #0F172A;
     --bg-elevated: #1E293B;

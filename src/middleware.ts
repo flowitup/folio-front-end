@@ -1,6 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { routing } from "@/i18n/routing";
 import { locales, defaultLocale } from "@/i18n/config";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/middleware";
 
@@ -35,11 +36,7 @@ function isTokenValid(token: string | undefined): boolean {
 }
 
 // Create the next-intl middleware
-const intlMiddleware = createMiddleware({
-  locales,
-  defaultLocale,
-  localePrefix: "always",
-});
+const intlMiddleware = createMiddleware(routing);
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

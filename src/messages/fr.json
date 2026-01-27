@@ -7,7 +7,7 @@
     "copyright": "© 2026 Construction"
   },
   "navigation": {
-    "dashboard": "Tableau de bord",
+    "dashboard": "Aperçu",
     "projects": "Projets",
     "settings": "Paramètres"
   },
@@ -25,8 +25,8 @@
     "errorInvalid": "Identifiants invalides"
   },
   "dashboard": {
-    "title": "Tableau de bord",
-    "welcome": "Bienvenue sur le Tableau de bord de Gestion de Construction.",
+    "title": "Aperçu",
+    "welcome": "Bienvenue sur l'Aperçu de Gestion de Construction.",
     "activeProjects": "Projets Actifs",
     "pendingTasks": "Tâches en Attente",
     "teamMembers": "Membres de l'Équipe",
@@ -36,10 +36,18 @@
   },
   "projects": {
     "title": "Projets",
+    "description": "Gérez vos projets de construction ici.",
     "selectProject": "Sélectionner un projet",
     "loading": "Chargement...",
     "loadError": "Échec du chargement des projets",
-    "noProjects": "Aucun projet disponible"
+    "noProjects": "Aucun projet disponible",
+    "newProject": "Nouveau Projet",
+    "member": "membre",
+    "members": "membres",
+    "selected": "Sélectionné",
+    "noProjectsYet": "Aucun projet pour le moment",
+    "getStarted": "Commencez par créer votre premier projet de construction.",
+    "createFirst": "Créer votre premier projet"
   },
   "settings": {
     "title": "Paramètres",

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useProject } from "@/context/ProjectContext";
 import { Plus, Building2, Users, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 export default function ProjectsPage() {
+  const t = useTranslations("projects");
   const { projects, isLoading, error, selectedProjectId, selectProject } = useProject();
 
   return (
@@ -17,16 +19,16 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
-            Projects
+            {t("title")}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage your construction projects here.
+            {t("description")}
           </p>
         </div>
 
         <Button>
           <Plus className="h-4 w-4" />
-          New Project
+          {t("newProject")}
         </Button>
       </div>
 
@@ -80,7 +82,7 @@ export default function ProjectsPage() {
                 <div className="mt-3 flex items-center gap-1">
                   <Users className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">
-                    {project.user_count} {project.user_count === 1 ? "member" : "members"}
+                    {project.user_count} {project.user_count === 1 ? t("member") : t("members")}
                   </span>
                 </div>
 
@@ -88,7 +90,7 @@ export default function ProjectsPage() {
                 {selectedProjectId === project.id && (
                   <Badge className="mt-3">
                     <Check className="mr-1 h-3 w-3" />
-                    Selected
+                    {t("selected")}
                   </Badge>
                 )}
               </CardContent>
@@ -106,15 +108,15 @@ export default function ProjectsPage() {
             </div>
 
             <h3 className="text-base font-medium text-foreground">
-              No projects yet
+              {t("noProjectsYet")}
             </h3>
             <p className="mt-1 max-w-sm text-center text-sm text-muted-foreground">
-              Get started by creating your first construction project.
+              {t("getStarted")}
             </p>
 
             <Button variant="outline" className="mt-4">
               <Plus className="h-4 w-4" />
-              Create your first project
+              {t("createFirst")}
             </Button>
           </CardContent>
         </Card>

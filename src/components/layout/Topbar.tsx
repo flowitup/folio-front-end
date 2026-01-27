@@ -6,6 +6,7 @@ import { Bell } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ProjectSelector } from "@/components/project/ProjectSelector";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -39,6 +40,7 @@ export function Topbar() {
 
       {/* Right side - user menu */}
       <div className="flex items-center gap-4">
+        <ThemeToggle />
         <LanguageSwitcher />
 
         {/* Notifications */}

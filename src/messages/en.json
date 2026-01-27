@@ -7,7 +7,7 @@
     "copyright": "© 2026 Construction"
   },
   "navigation": {
-    "dashboard": "Dashboard",
+    "dashboard": "Overview",
     "projects": "Projects",
     "settings": "Settings"
   },
@@ -25,8 +25,8 @@
     "errorInvalid": "Invalid credentials"
   },
   "dashboard": {
-    "title": "Dashboard",
-    "welcome": "Welcome to the Construction Management Dashboard.",
+    "title": "Overview",
+    "welcome": "Welcome to the Construction Management Overview.",
     "activeProjects": "Active Projects",
     "pendingTasks": "Pending Tasks",
     "teamMembers": "Team Members",
@@ -36,10 +36,18 @@
   },
   "projects": {
     "title": "Projects",
+    "description": "Manage your construction projects here.",
     "selectProject": "Select project",
     "loading": "Loading...",
     "loadError": "Failed to load projects",
-    "noProjects": "No projects available"
+    "noProjects": "No projects available",
+    "newProject": "New Project",
+    "member": "member",
+    "members": "members",
+    "selected": "Selected",
+    "noProjectsYet": "No projects yet",
+    "getStarted": "Get started by creating your first construction project.",
+    "createFirst": "Create your first project"
   },
   "settings": {
     "title": "Settings",

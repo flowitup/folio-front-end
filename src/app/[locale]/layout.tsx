@@ -5,6 +5,7 @@ import { getMessages, getLocale } from "next-intl/server";
 import "../globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthErrorBoundary } from "@/context/AuthErrorBoundary";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { getCurrentUser } from "@/lib/auth/session";
 import { Agentation } from "agentation";
 
@@ -44,9 +45,11 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${inter.variable} ${jetbrainsMono.variable} ${outfit.variable}`}>
       <body className="antialiased">
         <NextIntlClientProvider messages={messages}>
-          <AuthErrorBoundary>
-            <AuthProvider initialUser={user}>{children}</AuthProvider>
-          </AuthErrorBoundary>
+          <ThemeProvider>
+            <AuthErrorBoundary>
+              <AuthProvider initialUser={user}>{children}</AuthProvider>
+            </AuthErrorBoundary>
+          </ThemeProvider>
         </NextIntlClientProvider>
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>

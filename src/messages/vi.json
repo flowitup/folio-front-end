@@ -7,7 +7,7 @@
     "copyright": "© 2026 Construction"
   },
   "navigation": {
-    "dashboard": "Bảng điều khiển",
+    "dashboard": "Tổng quan",
     "projects": "Dự án",
     "settings": "Cài đặt"
   },
@@ -25,8 +25,8 @@
     "errorInvalid": "Thông tin đăng nhập không hợp lệ"
   },
   "dashboard": {
-    "title": "Bảng điều khiển",
-    "welcome": "Chào mừng đến với Bảng điều khiển Quản lý Xây dựng.",
+    "title": "Tổng quan",
+    "welcome": "Chào mừng đến với Tổng quan Quản lý Xây dựng.",
     "activeProjects": "Dự án Đang hoạt động",
     "pendingTasks": "Công việc Chờ xử lý",
     "teamMembers": "Thành viên Nhóm",
@@ -36,10 +36,18 @@
   },
   "projects": {
     "title": "Dự án",
+    "description": "Quản lý các dự án xây dựng của bạn tại đây.",
     "selectProject": "Chọn dự án",
     "loading": "Đang tải...",
     "loadError": "Không thể tải dự án",
-    "noProjects": "Không có dự án nào"
+    "noProjects": "Không có dự án nào",
+    "newProject": "Dự án Mới",
+    "member": "thành viên",
+    "members": "thành viên",
+    "selected": "Đã chọn",
+    "noProjectsYet": "Chưa có dự án nào",
+    "getStarted": "Bắt đầu bằng cách tạo dự án xây dựng đầu tiên của bạn.",
+    "createFirst": "Tạo dự án đầu tiên"
   },
   "settings": {
     "title": "Cài đặt",

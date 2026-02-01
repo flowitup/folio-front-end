@@ -47,7 +47,15 @@
     "selected": "Đã chọn",
     "noProjectsYet": "Chưa có dự án nào",
     "getStarted": "Bắt đầu bằng cách tạo dự án xây dựng đầu tiên của bạn.",
-    "createFirst": "Tạo dự án đầu tiên"
+    "createFirst": "Tạo dự án đầu tiên",
+    "teamMembers": "Thành viên",
+    "noMembers": "Chưa có thành viên nào",
+    "addMember": "Thêm",
+    "addMemberTo": "Thêm thành viên vào {project}",
+    "searchUserPlaceholder": "Tìm theo email...",
+    "searchUserHint": "Nhập ít nhất 2 ký tự",
+    "noUsersFound": "Không tìm thấy",
+    "addMemberError": "Không thể thêm thành viên"
   },
   "settings": {
     "title": "Cài đặt",

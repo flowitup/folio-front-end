@@ -47,7 +47,20 @@
     "selected": "Selected",
     "noProjectsYet": "No projects yet",
     "getStarted": "Get started by creating your first construction project.",
-    "createFirst": "Create your first project"
+    "createFirst": "Create your first project",
+    "teamMembers": "Team Members",
+    "noMembers": "No members assigned yet",
+    "addMember": "Add",
+    "addMemberTo": "Add member to {project}",
+    "searchUserPlaceholder": "Search by email...",
+    "searchUserHint": "Type at least 2 characters to search",
+    "noUsersFound": "No users found",
+    "addMemberError": "Failed to add member",
+    "confirmRemoveMember": "Remove {email} from this project?",
+    "removeMemberTitle": "Remove Team Member",
+    "removeMemberDescription": "Remove {email} from this project?",
+    "cancel": "Cancel",
+    "remove": "Remove"
   },
   "settings": {
     "title": "Settings",

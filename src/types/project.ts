@@ -11,3 +11,13 @@ export interface ProjectListResponse {
   projects: Project[];
   total: number;
 }
+
+export interface ProjectUser {
+  id: string;
+  email: string;
+}
+
+export interface ProjectUsersResponse {
+  users: ProjectUser[];
+  total: number;
+}

@@ -24,7 +24,7 @@ function parseCookie(cookie: string): { name: string; value: string } | null {
  */
 export async function login(
   credentials: LoginCredentials
-): Promise<{ success: boolean; error?: string; user?: User }> {
+): Promise<{ success: boolean; error?: string; user?: User; accessToken?: string }> {
   try {
     const response = await fetch(`${env.apiBaseUrl}/auth/login`, {
       method: "POST",
@@ -53,7 +53,7 @@ export async function login(
       if (parsed) {
         cookieStore.set(parsed.name, parsed.value, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
+          secure: process.env.NODE_ENV === "production" && process.env.HTTPS_ENABLED === "true",
           sameSite: "lax",
           path: "/",
         });
@@ -63,6 +63,7 @@ export async function login(
     return {
       success: true,
       user: data.user,
+      accessToken: data.access_token,
     };
   } catch (error) {
     console.error("Login error:", error);
@@ -130,7 +131,7 @@ export async function refreshToken(): Promise<boolean> {
       if (parsed) {
         cookieStore.set(parsed.name, parsed.value, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
+          secure: process.env.NODE_ENV === "production" && process.env.HTTPS_ENABLED === "true",
           sameSite: "lax",
           path: "/",
         });

@@ -1,4 +1,4 @@
-import type { Project, ProjectListResponse } from "@/types/project";
+import type { Project, ProjectListResponse, ProjectUsersResponse } from "@/types/project";
 import { api } from "@/lib/api/http";
 
 export async function fetchProjects(): Promise<Project[]> {
@@ -8,4 +8,20 @@ export async function fetchProjects(): Promise<Project[]> {
 
 export async function fetchProjectById(id: string): Promise<Project> {
   return api.get<Project>(`/projects/${id}`);
+}
+
+export async function fetchProjectUsers(projectId: string): Promise<ProjectUsersResponse> {
+  return api.get<ProjectUsersResponse>(`/projects/${projectId}/users`);
+}
+
+export async function searchUsers(query: string): Promise<{ users: { id: string; email: string }[]; total: number }> {
+  return api.get(`/users?q=${encodeURIComponent(query)}`);
+}
+
+export async function addUserToProject(projectId: string, userId: string): Promise<void> {
+  await api.post(`/projects/${projectId}/users`, { user_id: userId });
+}
+
+export async function removeUserFromProject(projectId: string, userId: string): Promise<void> {
+  await api.delete(`/projects/${projectId}/users/${userId}`);
 }

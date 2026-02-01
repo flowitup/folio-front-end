@@ -1,6 +1,19 @@
 import { env } from "@/lib/config/env";
 
 /**
+ * Token storage for client-side API calls
+ */
+let accessToken: string | null = null;
+
+export function setApiAccessToken(token: string | null) {
+    accessToken = token;
+}
+
+export function getApiAccessToken(): string | null {
+    return accessToken;
+}
+
+/**
  * Custom API error class
  */
 export class ApiError extends Error {
@@ -22,23 +35,50 @@ interface RequestOptions<TBody = unknown> {
     body?: TBody;
     headers?: Record<string, string>;
     signal?: AbortSignal;
+    _isRetry?: boolean;
 }
 
 /**
- * Typed fetch wrapper with error handling
- * Uses the base URL from environment configuration
+ * Refresh the access token using the refresh token cookie
+ */
+async function refreshAccessToken(): Promise<boolean> {
+    try {
+        const response = await fetch(`${env.apiBaseUrl}/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.access_token) {
+                accessToken = data.access_token;
+            }
+            return true;
+        }
+        return false;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Typed fetch wrapper with error handling and automatic token refresh
  */
 export async function http<TResponse, TBody = unknown>(
     endpoint: string,
     options: RequestOptions<TBody> = {}
 ): Promise<TResponse> {
-    const { method = "GET", body, headers = {}, signal } = options;
+    const { method = "GET", body, headers = {}, signal, _isRetry = false } = options;
 
     const url = `${env.apiBaseUrl}${endpoint}`;
 
     const defaultHeaders: Record<string, string> = {
         "Content-Type": "application/json",
     };
+
+    // Add Authorization header if we have an access token
+    if (accessToken) {
+        defaultHeaders["Authorization"] = `Bearer ${accessToken}`;
+    }
 
     const response = await fetch(url, {
         method,
@@ -47,6 +87,15 @@ export async function http<TResponse, TBody = unknown>(
         signal,
         credentials: "include",
     });
+
+    // Handle 401 - try to refresh token once
+    if (response.status === 401 && !_isRetry) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+            // Retry the original request
+            return http<TResponse, TBody>(endpoint, { ...options, _isRetry: true });
+        }
+    }
 
     // Handle non-2xx responses
     if (!response.ok) {

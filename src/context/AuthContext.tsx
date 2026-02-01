@@ -6,20 +6,23 @@ import {
   useState,
   useCallback,
   useTransition,
+  useEffect,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import type { User, AuthState, LoginCredentials } from "@/lib/auth/types";
 import {
   login as loginAction,
   logout as logoutAction,
 } from "@/lib/auth/actions";
+import { setApiAccessToken } from "@/lib/api/http";
 
 interface AuthContextType extends AuthState {
   login: (
     credentials: LoginCredentials
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  accessToken: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,14 +30,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 interface AuthProviderProps {
   children: ReactNode;
   initialUser?: User | null;
+  initialAccessToken?: string | null;
 }
 
 export function AuthProvider({
   children,
   initialUser = null,
+  initialAccessToken = null,
 }: AuthProviderProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "en";
   const [isPending, startTransition] = useTransition();
+  const [accessToken, setAccessToken] = useState<string | null>(initialAccessToken);
   const [state, setState] = useState<AuthState>({
     user: initialUser,
     isAuthenticated: !!initialUser,
@@ -42,6 +50,11 @@ export function AuthProvider({
   });
 
   const isLoading = state.isLoading || isPending;
+
+  // Sync access token with http module
+  useEffect(() => {
+    setApiAccessToken(accessToken);
+  }, [accessToken]);
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
@@ -55,7 +68,10 @@ export function AuthProvider({
           isAuthenticated: true,
           isLoading: false,
         });
-        router.push("/dashboard");
+        if (result.accessToken) {
+          setAccessToken(result.accessToken);
+        }
+        router.push(`/${locale}/dashboard`);
         router.refresh();
         return { success: true };
       }
@@ -73,6 +89,7 @@ export function AuthProvider({
       isAuthenticated: false,
       isLoading: true,
     });
+    setAccessToken(null);
 
     startTransition(async () => {
       // Server action clears cookies and redirects to /login
@@ -87,6 +104,7 @@ export function AuthProvider({
         isLoading,
         login,
         logout,
+        accessToken,
       }}
     >
       {children}

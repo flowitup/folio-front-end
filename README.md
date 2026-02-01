@@ -4,66 +4,78 @@ Next.js application with TypeScript and Tailwind CSS for the Construction Manage
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Linting**: ESLint
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS v4
+- **UI Components**: Shadcn UI (Radix primitives)
+- **Icons**: Lucide React
+- **i18n**: next-intl (en, fr, vi)
+- **Testing**: Vitest + React Testing Library
+- **Linting**: ESLint 9
+
+## Features
+
+- JWT authentication with HTTP-only cookies
+- Multi-language support (English, French, Vietnamese)
+- Dark/Light/System theme modes with persistence
+- Project workspace switching
+- Responsive fintech-inspired UI
 
 ## Project Structure
 
 ```
 src/
-├── app/
-│   ├── (app)/              # App routes with shell layout
+├── app/[locale]/
+│   ├── (app)/              # Protected app routes
 │   │   ├── layout.tsx      # Shell layout (Sidebar + Topbar)
-│   │   ├── dashboard/      # Dashboard page
+│   │   ├── dashboard/      # Overview page
 │   │   ├── projects/       # Projects page
 │   │   └── settings/       # Settings page
-│   ├── login/              # Login page (auth route)
-│   ├── globals.css         # Global styles
-│   └── layout.tsx          # Root layout (AuthProvider + ErrorBoundary)
+│   ├── login/              # Login page
+│   ├── unauthorized/       # 403 page
+│   ├── globals.css         # Global styles + theme variables
+│   └── layout.tsx          # Root layout (providers)
 ├── components/
-│   └── layout/
-│       ├── Sidebar.tsx     # Navigation sidebar
-│       └── Topbar.tsx      # Top navigation bar
+│   ├── auth/               # LoginForm, ProtectedRoute
+│   ├── layout/             # Sidebar, Topbar
+│   ├── project/            # ProjectSelector
+│   ├── ui/                 # Shadcn UI components
+│   ├── language-switcher.tsx
+│   └── theme-toggle.tsx
 ├── context/
-│   ├── AuthContext.tsx     # Auth context + provider
-│   └── AuthErrorBoundary.tsx # Auth error handling
+│   ├── AuthContext.tsx     # Auth state provider
+│   ├── AuthErrorBoundary.tsx
+│   ├── ProjectContext.tsx  # Project state provider
+│   └── ThemeContext.tsx    # Theme state provider
+├── i18n/
+│   ├── config.ts           # Locale definitions
+│   ├── routing.ts          # next-intl routing config
+│   ├── navigation.ts       # Localized Link/useRouter
+│   └── request.ts          # Server request config
+├── messages/               # Translation files (en, fr, vi)
 ├── lib/
-│   ├── api/
-│   │   └── http.ts         # Typed fetch wrapper (credentials: include)
-│   ├── auth/
-│   │   ├── types.ts        # TypeScript auth types
-│   │   ├── session.ts      # Server-side session utils
-│   │   ├── actions.ts      # Server actions (login/logout)
-│   │   └── middleware.ts   # Middleware helpers
-│   └── config/
-│       └── env.ts          # Environment configuration
-└── middleware.ts           # Next.js middleware (route protection)
+│   ├── api/http.ts         # Typed fetch wrapper
+│   ├── auth/               # Session, actions, types
+│   ├── config/env.ts       # Environment config
+│   └── utils.ts            # cn() utility
+└── middleware.ts           # Route protection + i18n
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 20 LTS
 - npm
 
 ### Installation
 
-1. Install dependencies:
-
 ```bash
 npm install
-```
-
-2. Set up environment variables:
-
-```bash
 cp .env.example .env.local
 ```
 
-3. Edit `.env.local` with your configuration:
+Edit `.env.local`:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api/v1
@@ -71,66 +83,59 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api/v1
 
 ### Development
 
-Start the development server:
-
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000)
 
-### Build
+### Scripts
 
-Create a production build:
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run test` | Run tests |
+| `npm run lint` | ESLint check |
+| `npm run type-check` | TypeScript check |
+
+## UI Components (Shadcn)
+
+Add new components:
 
 ```bash
-npm run build
+npx shadcn@latest add <component>
 ```
 
-### Production
-
-Start the production server:
-
-```bash
-npm start
-```
-
-## Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_API_BASE_URL` | Yes | Backend API base URL |
-
-## API Client
-
-The project includes a typed fetch wrapper (`src/lib/api/http.ts`) for making API requests with automatic cookie handling:
-
-```typescript
-import { api } from "@/lib/api/http";
-
-// GET request (cookies sent automatically)
-const data = await api.get<ProjectList>("/projects");
-
-// POST request
-const result = await api.post<Project, CreateProjectDto>("/projects", { name: "New Project" });
-```
+Installed: button, input, label, select, card, badge, alert, dropdown-menu, separator
 
 ## Authentication
 
-The frontend uses a hybrid cookie-based authentication approach:
+- **Server Actions**: `src/lib/auth/actions.ts` (login, logout, refresh)
+- **Middleware**: Route protection + locale handling
+- **Client Context**: `useAuth()` hook
 
-- **Server Actions:** `src/lib/auth/actions.ts` (login, logout)
-- **Middleware:** `src/middleware.ts` (route protection)
-- **Client Context:** `src/context/AuthContext.tsx` (useAuth hook)
-- **Error Handling:** `src/context/AuthErrorBoundary.tsx` (auto-logout on 401)
+Protected routes: `/(app)/*` require authentication.
 
-### Protected Routes
+## Internationalization
 
-Routes under `/(app)/*` require authentication. Unauthenticated users are redirected to `/login`.
+Locales: `en` (English), `fr` (French), `vi` (Vietnamese)
 
-### Auth Routes
+```typescript
+import { useTranslations } from "next-intl";
+const t = useTranslations("navigation");
+t("dashboard"); // "Overview" | "Aperçu" | "Tổng quan"
+```
 
-`/login` redirects authenticated users to `/dashboard`.
+## Theme
+
+3 modes: Light, Dark, System (follows OS preference)
+
+```typescript
+import { useTheme } from "@/context/ThemeContext";
+const { theme, resolvedTheme, setTheme } = useTheme();
+```
 
 ## License
 

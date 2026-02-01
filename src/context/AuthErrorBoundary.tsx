@@ -67,7 +67,14 @@ export class AuthErrorBoundary extends Component<Props, State> {
                 Please try refreshing the page or logging in again.
               </p>
               <button
-                onClick={() => (window.location.href = "/login")}
+                onClick={() => {
+                  // Clear cookies client-side before redirecting
+                  document.cookie = "access_token_cookie=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+                  document.cookie = "refresh_token_cookie=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+                  document.cookie = "csrf_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+                  document.cookie = "csrf_refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+                  window.location.href = "/en/login";
+                }}
                 className="mt-4 rounded bg-primary px-4 py-2 text-white"
               >
                 Go to Login

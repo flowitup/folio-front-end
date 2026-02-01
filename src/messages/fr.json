@@ -47,7 +47,15 @@
     "selected": "Sélectionné",
     "noProjectsYet": "Aucun projet pour le moment",
     "getStarted": "Commencez par créer votre premier projet de construction.",
-    "createFirst": "Créer votre premier projet"
+    "createFirst": "Créer votre premier projet",
+    "teamMembers": "Membres de l'équipe",
+    "noMembers": "Aucun membre assigné",
+    "addMember": "Ajouter",
+    "addMemberTo": "Ajouter un membre à {project}",
+    "searchUserPlaceholder": "Rechercher par email...",
+    "searchUserHint": "Tapez au moins 2 caractères",
+    "noUsersFound": "Aucun utilisateur trouvé",
+    "addMemberError": "Échec de l'ajout du membre"
   },
   "settings": {
     "title": "Paramètres",

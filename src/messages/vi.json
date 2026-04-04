@@ -75,5 +75,38 @@
   "errors": {
     "unauthorized": "Không được phép",
     "accessDenied": "Bạn không có quyền truy cập trang này."
+  },
+  "labor": {
+    "title": "Chi phí Nhân công",
+    "workers": "Công nhân",
+    "attendance": "Chấm công",
+    "summary": "Tổng hợp",
+    "addWorker": "Thêm công nhân",
+    "editWorker": "Sửa công nhân",
+    "deactivateWorker": "Vô hiệu hóa",
+    "workerName": "Tên",
+    "workerPhone": "Điện thoại",
+    "dailyRate": "Lương ngày",
+    "noWorkers": "Chưa có công nhân nào",
+    "logAttendance": "Chấm công",
+    "date": "Ngày",
+    "override": "Ghi đè lương",
+    "note": "Ghi chú",
+    "effectiveCost": "Chi phí",
+    "noEntries": "Không có dữ liệu",
+    "duplicateEntry": "Công nhân đã có bản ghi cho ngày này",
+    "daysWorked": "Số ngày",
+    "totalCost": "Tổng",
+    "grandTotal": "Tổng cộng",
+    "filterFrom": "Từ",
+    "filterTo": "Đến",
+    "filterWorker": "Công nhân",
+    "confirmDeactivate": "Vô hiệu hóa công nhân này?",
+    "confirmDelete": "Xóa bản ghi này?",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "active": "Hoạt động",
+    "inactive": "Không hoạt động"
   }
 }

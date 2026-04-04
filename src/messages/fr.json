@@ -75,5 +75,38 @@
   "errors": {
     "unauthorized": "Non autorisé",
     "accessDenied": "Vous n'avez pas la permission d'accéder à cette page."
+  },
+  "labor": {
+    "title": "Charges de Main-d'œuvre",
+    "workers": "Ouvriers",
+    "attendance": "Présence",
+    "summary": "Résumé",
+    "addWorker": "Ajouter ouvrier",
+    "editWorker": "Modifier ouvrier",
+    "deactivateWorker": "Désactiver",
+    "workerName": "Nom",
+    "workerPhone": "Téléphone",
+    "dailyRate": "Tarif journalier",
+    "noWorkers": "Aucun ouvrier ajouté",
+    "logAttendance": "Enregistrer présence",
+    "date": "Date",
+    "override": "Tarif personnalisé",
+    "note": "Note",
+    "effectiveCost": "Coût",
+    "noEntries": "Aucune entrée trouvée",
+    "duplicateEntry": "Cet ouvrier a déjà une entrée pour cette date",
+    "daysWorked": "Jours",
+    "totalCost": "Total",
+    "grandTotal": "Total général",
+    "filterFrom": "De",
+    "filterTo": "À",
+    "filterWorker": "Ouvrier",
+    "confirmDeactivate": "Désactiver cet ouvrier ?",
+    "confirmDelete": "Supprimer cette entrée ?",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "active": "Actif",
+    "inactive": "Inactif"
   }
 }

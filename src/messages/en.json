@@ -80,5 +80,38 @@
   "errors": {
     "unauthorized": "Unauthorized",
     "accessDenied": "You do not have permission to access this page."
+  },
+  "labor": {
+    "title": "Labor Charges",
+    "workers": "Workers",
+    "attendance": "Attendance",
+    "summary": "Summary",
+    "addWorker": "Add Worker",
+    "editWorker": "Edit Worker",
+    "deactivateWorker": "Deactivate",
+    "workerName": "Name",
+    "workerPhone": "Phone",
+    "dailyRate": "Daily Rate",
+    "noWorkers": "No workers added yet",
+    "logAttendance": "Log Attendance",
+    "date": "Date",
+    "override": "Rate Override",
+    "note": "Note",
+    "effectiveCost": "Cost",
+    "noEntries": "No entries found",
+    "duplicateEntry": "This worker already has an entry for this date",
+    "daysWorked": "Days",
+    "totalCost": "Total",
+    "grandTotal": "Grand Total",
+    "filterFrom": "From",
+    "filterTo": "To",
+    "filterWorker": "Worker",
+    "confirmDeactivate": "Deactivate this worker?",
+    "confirmDelete": "Delete this entry?",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "active": "Active",
+    "inactive": "Inactive"
   }
 }

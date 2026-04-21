@@ -2,10 +2,10 @@ name: CI Pipeline
 
 on:
   pull_request:
-    branches: [main]
+    branches: [master]
     types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
-    branches: [main]
+    branches: [master]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -70,7 +70,7 @@ jobs:
         id: main-version
         run: |
           # Fetch main branch version from remote
-          MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | grep '"version"' | sed 's/.*"version": "\([^"]*\)".*/\1/' || echo "0.0.0")
+          MAIN_VERSION=$(git show origin/master:package.json 2>/dev/null | grep '"version"' | sed 's/.*"version": "\([^"]*\)".*/\1/' || echo "0.0.0")
           echo "main_version=$MAIN_VERSION" >> $GITHUB_OUTPUT
           echo "Main branch version: $MAIN_VERSION"
 
@@ -276,7 +276,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

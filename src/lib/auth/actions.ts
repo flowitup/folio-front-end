@@ -35,10 +35,12 @@ export async function login(
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const body = await response.text();
+      let errorMsg = "Invalid credentials";
+      try { errorMsg = JSON.parse(body)?.message || errorMsg; } catch {}
       return {
         success: false,
-        error: error.message || "Invalid credentials",
+        error: errorMsg,
       };
     }
 
@@ -53,7 +55,7 @@ export async function login(
       if (parsed) {
         cookieStore.set(parsed.name, parsed.value, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production" && process.env.HTTPS_ENABLED === "true",
+          secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           path: "/",
         });
@@ -131,7 +133,7 @@ export async function refreshToken(): Promise<boolean> {
       if (parsed) {
         cookieStore.set(parsed.name, parsed.value, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production" && process.env.HTTPS_ENABLED === "true",
+          secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           path: "/",
         });

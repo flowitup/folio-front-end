@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import type { Worker, LogAttendancePayload } from "@/types/labor";
+import type { Worker, LogAttendancePayload, ShiftType } from "@/types/labor";
 
 interface LogAttendanceDialogProps {
   open: boolean;
@@ -38,6 +38,7 @@ export function LogAttendanceDialog({
   const t = useTranslations("labor");
   const [workerId, setWorkerId] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [shiftType, setShiftType] = useState<ShiftType>("full");
   const [amountOverride, setAmountOverride] = useState("");
   const [note, setNote] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -62,6 +63,7 @@ export function LogAttendanceDialog({
       await onSave({
         worker_id: workerId,
         date,
+        shift_type: shiftType,
         amount_override: amountOverride ? parseFloat(amountOverride) : undefined,
         note: note.trim() || undefined,
       });
@@ -81,6 +83,7 @@ export function LogAttendanceDialog({
   const handleClose = () => {
     setWorkerId("");
     setDate(new Date().toISOString().split("T")[0]);
+    setShiftType("full");
     setAmountOverride("");
     setNote("");
     setError(null);
@@ -119,6 +122,20 @@ export function LogAttendanceDialog({
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t("shiftType")}</Label>
+            <Select value={shiftType} onValueChange={(v) => setShiftType(v as ShiftType)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="full">{t("shiftFull")}</SelectItem>
+                <SelectItem value="half">{t("shiftHalf")}</SelectItem>
+                <SelectItem value="overtime">{t("shiftOvertime")}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

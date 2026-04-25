@@ -9,6 +9,8 @@
   "navigation": {
     "dashboard": "Overview",
     "projects": "Projects",
+    "labor": "Labor",
+    "invoices": "Invoices",
     "settings": "Settings"
   },
   "auth": {
@@ -81,6 +83,41 @@
     "unauthorized": "Unauthorized",
     "accessDenied": "You do not have permission to access this page."
   },
+  "invoices": {
+    "title": "Invoices",
+    "newInvoice": "New Invoice",
+    "invoiceNumber": "Invoice #",
+    "type": "Type",
+    "types": {
+      "client": "Client",
+      "labor": "Labor",
+      "supplier": "Supplier"
+    },
+    "issueDate": "Issue Date",
+    "recipient": "Recipient",
+    "recipientAddress": "Address",
+    "totalAmount": "Total",
+    "items": "Line Items",
+    "description": "Description",
+    "quantity": "Qty",
+    "unitPrice": "Unit Price",
+    "total": "Total",
+    "notes": "Notes",
+    "addItem": "Add Item",
+    "all": "All",
+    "printPdf": "Print / Save PDF",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this invoice? This cannot be undone.",
+    "noInvoices": "No invoices yet",
+    "errorRecipientRequired": "Recipient name is required",
+    "errorAtLeastOneItem": "At least one line item is required",
+    "errorDescriptionRequired": "Item description is required",
+    "errorQuantityPositive": "Quantity must be greater than zero"
+  },
   "labor": {
     "title": "Labor Charges",
     "workers": "Workers",
@@ -103,8 +140,7 @@
     "daysWorked": "Days",
     "totalCost": "Total",
     "grandTotal": "Grand Total",
-    "filterFrom": "From",
-    "filterTo": "To",
+    "filterMonth": "Month",
     "filterWorker": "Worker",
     "confirmDeactivate": "Deactivate this worker?",
     "confirmDelete": "Delete this entry?",
@@ -112,6 +148,10 @@
     "save": "Save",
     "delete": "Delete",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "shiftType": "Shift",
+    "shiftFull": "Full Day",
+    "shiftHalf": "Half Day",
+    "shiftOvertime": "Overtime"
   }
 }

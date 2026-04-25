@@ -3,20 +3,28 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, FolderOpen, Settings, Building2 } from "lucide-react";
+import { LayoutGrid, FolderOpen, Settings, Building2, HardHat, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useProject } from "@/context/ProjectContext";
 
 export function Sidebar() {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("navigation");
   const tCommon = useTranslations("common");
+  const { selectedProjectId } = useProject();
 
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
   const navigation = [
     { key: "dashboard", href: "/dashboard", icon: LayoutGrid },
     { key: "projects", href: "/projects", icon: FolderOpen },
+    ...(selectedProjectId
+      ? [
+          { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
+          { key: "invoices", href: `/projects/${selectedProjectId}/invoices`, icon: Receipt },
+        ]
+      : []),
     { key: "settings", href: "/settings", icon: Settings },
   ];
 

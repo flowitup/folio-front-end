@@ -30,6 +30,23 @@ import {
 
 type TabType = "workers" | "attendance" | "summary";
 
+function currentMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function monthToRange(month: string) {
+  if (!month) return { from: undefined, to: undefined };
+  const match = /^(\d{4})-(\d{2})$/.exec(month);
+  if (!match) return { from: undefined, to: undefined };
+  const [, y, m] = match.map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  return {
+    from: `${month}-01`,
+    to: `${month}-${String(lastDay).padStart(2, '0')}`,
+  };
+}
+
 export default function LaborPage() {
   const t = useTranslations("labor");
   const params = useParams();
@@ -55,14 +72,12 @@ export default function LaborPage() {
   // Entries state
   const [entries, setEntries] = useState<LaborEntry[]>([]);
   const [showLogAttendance, setShowLogAttendance] = useState(false);
-  const [entriesDateFrom, setEntriesDateFrom] = useState("");
-  const [entriesDateTo, setEntriesDateTo] = useState("");
+  const [entriesMonth, setEntriesMonth] = useState(currentMonth);
   const [entriesWorkerFilter, setEntriesWorkerFilter] = useState("all");
 
   // Summary state
   const [summary, setSummary] = useState<LaborSummaryResponse | null>(null);
-  const [summaryDateFrom, setSummaryDateFrom] = useState("");
-  const [summaryDateTo, setSummaryDateTo] = useState("");
+  const [summaryMonth, setSummaryMonth] = useState(currentMonth);
 
   // Load workers
   const loadWorkers = useCallback(async () => {
@@ -78,9 +93,11 @@ export default function LaborPage() {
   const loadEntries = useCallback(async () => {
     setIsTabLoading(true);
     try {
+      const { from, to } = monthToRange(entriesMonth);
+      if (!from || !to) { setIsTabLoading(false); return; }
       const data = await fetchLaborEntries(projectId, {
-        from: entriesDateFrom || undefined,
-        to: entriesDateTo || undefined,
+        from,
+        to,
         worker_id: entriesWorkerFilter !== "all" ? entriesWorkerFilter : undefined,
       });
       setEntries(data);
@@ -89,23 +106,22 @@ export default function LaborPage() {
     } finally {
       setIsTabLoading(false);
     }
-  }, [projectId, entriesDateFrom, entriesDateTo, entriesWorkerFilter]);
+  }, [projectId, entriesMonth, entriesWorkerFilter]);
 
   // Load summary
   const loadSummary = useCallback(async () => {
     setIsTabLoading(true);
     try {
-      const data = await fetchLaborSummary(projectId, {
-        from: summaryDateFrom || undefined,
-        to: summaryDateTo || undefined,
-      });
+      const { from, to } = monthToRange(summaryMonth);
+      if (!from || !to) { setIsTabLoading(false); return; }
+      const data = await fetchLaborSummary(projectId, { from, to });
       setSummary(data);
     } catch {
       setError("Failed to load summary");
     } finally {
       setIsTabLoading(false);
     }
-  }, [projectId, summaryDateFrom, summaryDateTo]);
+  }, [projectId, summaryMonth]);
 
   // Initial load
   useEffect(() => {
@@ -118,14 +134,13 @@ export default function LaborPage() {
     load();
   }, [loadWorkers]);
 
-  // Load data when tab changes
   useEffect(() => {
-    if (activeTab === "attendance") {
-      loadEntries();
-    } else if (activeTab === "summary") {
-      loadSummary();
-    }
-  }, [activeTab, loadEntries, loadSummary]);
+    if (activeTab === "attendance") loadEntries();
+  }, [activeTab, loadEntries]);
+
+  useEffect(() => {
+    if (activeTab === "summary") loadSummary();
+  }, [activeTab, loadSummary]);
 
   // Handlers
   const handleCreateWorker = async (payload: CreateWorkerPayload | UpdateWorkerPayload) => {
@@ -247,11 +262,9 @@ export default function LaborPage() {
             workers={workers}
             isLoading={isTabLoading}
             canManage={canManageLabor}
-            dateFrom={entriesDateFrom}
-            dateTo={entriesDateTo}
+            month={entriesMonth}
             workerFilter={entriesWorkerFilter}
-            onDateFromChange={setEntriesDateFrom}
-            onDateToChange={setEntriesDateTo}
+            onMonthChange={setEntriesMonth}
             onWorkerFilterChange={setEntriesWorkerFilter}
             onDelete={handleDeleteEntry}
           />
@@ -262,10 +275,8 @@ export default function LaborPage() {
         <LaborSummary
           summary={summary}
           isLoading={isTabLoading}
-          dateFrom={summaryDateFrom}
-          dateTo={summaryDateTo}
-          onDateFromChange={setSummaryDateFrom}
-          onDateToChange={setSummaryDateTo}
+          month={summaryMonth}
+          onMonthChange={setSummaryMonth}
         />
       )}
 

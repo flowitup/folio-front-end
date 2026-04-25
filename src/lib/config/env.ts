@@ -8,11 +8,23 @@ interface EnvConfig {
 }
 
 /**
- * Validated environment configuration
- * Uses getters for lazy evaluation to avoid issues during SSR/hydration
+ * Validated environment configuration.
+ *
+ * Two-URL strategy for Docker deployments:
+ *   - Browser (client) → NEXT_PUBLIC_API_BASE_URL  (e.g. http://localhost:5000/api/v1)
+ *   - Server actions   → API_INTERNAL_BASE_URL      (e.g. http://api:5000/api/v1)
+ *
+ * API_INTERNAL_BASE_URL is a runtime env var (no NEXT_PUBLIC_ prefix) so it is
+ * never baked into the build and can be set per-environment in docker-compose.
  */
 export const env: EnvConfig = {
     get apiBaseUrl(): string {
+        // Server-side: prefer the internal Docker network URL when available
+        const isServer = typeof window === "undefined";
+        if (isServer && process.env.API_INTERNAL_BASE_URL) {
+            return process.env.API_INTERNAL_BASE_URL;
+        }
+
         const value = process.env.NEXT_PUBLIC_API_BASE_URL;
         if (!value) {
             // Fallback for development

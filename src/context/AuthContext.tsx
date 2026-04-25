@@ -79,7 +79,7 @@ export function AuthProvider({
       setState((prev) => ({ ...prev, isLoading: false }));
       return { success: false, error: result.error };
     },
-    [router]
+    [router, locale]
   );
 
   const logout = useCallback(() => {

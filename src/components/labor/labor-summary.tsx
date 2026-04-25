@@ -11,19 +11,15 @@ import { formatEUR } from "@/lib/api/labor";
 interface LaborSummaryProps {
   summary: LaborSummaryResponse | null;
   isLoading: boolean;
-  dateFrom: string;
-  dateTo: string;
-  onDateFromChange: (value: string) => void;
-  onDateToChange: (value: string) => void;
+  month: string;
+  onMonthChange: (value: string) => void;
 }
 
 export function LaborSummary({
   summary,
   isLoading,
-  dateFrom,
-  dateTo,
-  onDateFromChange,
-  onDateToChange,
+  month,
+  onMonthChange,
 }: LaborSummaryProps) {
   const t = useTranslations("labor");
 
@@ -38,23 +34,13 @@ export function LaborSummary({
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="space-y-1">
-          <Label>{t("filterFrom")}</Label>
-          <Input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => onDateFromChange(e.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label>{t("filterTo")}</Label>
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={(e) => onDateToChange(e.target.value)}
-          />
-        </div>
+      <div className="max-w-xs space-y-1">
+        <Label>{t("filterMonth")}</Label>
+        <Input
+          type="month"
+          value={month}
+          onChange={(e) => onMonthChange(e.target.value)}
+        />
       </div>
 
       {/* Summary Table */}

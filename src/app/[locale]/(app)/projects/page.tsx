@@ -70,6 +70,7 @@ export default function ProjectsPage() {
     if (addMemberProject) {
       // Clear cached users to force reload
       setProjectUsers((prev) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [addMemberProject.id]: _, ...rest } = prev;
         return rest;
       });
@@ -85,6 +86,7 @@ export default function ProjectsPage() {
       await removeUserFromProject(removeMember.projectId, removeMember.userId);
       // Clear cache and reload
       setProjectUsers((prev) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [removeMember.projectId]: _, ...rest } = prev;
         return rest;
       });

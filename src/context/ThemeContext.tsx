@@ -28,68 +28,51 @@ function getSystemTheme(): "light" | "dark" {
     : "light";
 }
 
+function getInitialTheme(): Theme {
+  if (typeof window === "undefined") return "system";
+  const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+  if (stored && ["light", "dark", "system"].includes(stored)) return stored;
+  return "system";
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
-  const [mounted, setMounted] = useState(false);
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  // systemTheme is updated only via the media-query event handler (not sync in effect)
+  const [systemTheme, setSystemTheme] = useState<"light" | "dark">(getSystemTheme);
 
-  // Initialize theme from localStorage
+  // Derived — no useState needed, avoids setState-in-effect lint errors
+  const resolvedTheme: "light" | "dark" = theme === "system" ? systemTheme : theme;
+
+  // Apply .dark/.light class to <html> whenever the resolved theme changes
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    if (stored && ["light", "dark", "system"].includes(stored)) {
-      setThemeState(stored);
-    }
-    setMounted(true);
-  }, []);
-
-  // Update resolved theme and apply .dark/.light class
-  useEffect(() => {
-    if (!mounted) return;
-
-    const resolved = theme === "system" ? getSystemTheme() : theme;
-    setResolvedTheme(resolved);
-
-    // Apply classes on documentElement
     const root = document.documentElement;
     root.classList.remove("dark", "light");
-
     if (theme === "system") {
-      // Let media query handle it, but still add class for consistency
-      if (resolved === "dark") {
-        root.classList.add("dark");
-      }
+      if (resolvedTheme === "dark") root.classList.add("dark");
     } else {
-      // Manual override - add explicit class
       root.classList.add(theme);
     }
-  }, [theme, mounted]);
+  }, [theme, resolvedTheme]);
 
-  // Listen for system theme changes when theme is "system"
+  // Subscribe to OS-level color-scheme changes (only relevant when theme === "system")
   useEffect(() => {
-    if (!mounted || theme !== "system") return;
+    if (theme !== "system") return;
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e: MediaQueryListEvent) => {
-      const newTheme = e.matches ? "dark" : "light";
-      setResolvedTheme(newTheme);
-      const root = document.documentElement;
-      root.classList.remove("dark", "light");
-      if (newTheme === "dark") {
-        root.classList.add("dark");
-      }
+      // setState inside a callback/handler is fine — not a sync effect call
+      setSystemTheme(e.matches ? "dark" : "light");
     };
 
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [theme, mounted]);
+  }, [theme]);
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
     localStorage.setItem(STORAGE_KEY, newTheme);
   }, []);
 
-  // Always provide context - use current state even before mount
-  // This prevents "useTheme must be used within ThemeProvider" errors
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
       {children}

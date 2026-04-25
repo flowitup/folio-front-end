@@ -38,7 +38,7 @@ function isTokenValid(token: string | undefined): boolean {
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware(routing);
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for static files and API routes

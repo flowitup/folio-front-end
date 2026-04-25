@@ -9,6 +9,8 @@
   "navigation": {
     "dashboard": "Tổng quan",
     "projects": "Dự án",
+    "labor": "Nhân công",
+    "invoices": "Hóa đơn",
     "settings": "Cài đặt"
   },
   "auth": {
@@ -76,6 +78,41 @@
     "unauthorized": "Không được phép",
     "accessDenied": "Bạn không có quyền truy cập trang này."
   },
+  "invoices": {
+    "title": "Hóa đơn",
+    "newInvoice": "Tạo Hóa đơn",
+    "invoiceNumber": "Số hóa đơn",
+    "type": "Loại",
+    "types": {
+      "client": "Khách hàng",
+      "labor": "Nhân công",
+      "supplier": "Nhà cung cấp"
+    },
+    "issueDate": "Ngày phát hành",
+    "recipient": "Người nhận",
+    "recipientAddress": "Địa chỉ",
+    "totalAmount": "Tổng",
+    "items": "Danh mục",
+    "description": "Mô tả",
+    "quantity": "Số lượng",
+    "unitPrice": "Đơn giá",
+    "total": "Thành tiền",
+    "notes": "Ghi chú",
+    "addItem": "Thêm dòng",
+    "all": "Tất cả",
+    "printPdf": "In / Lưu PDF",
+    "edit": "Chỉnh sửa",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "saving": "Đang lưu...",
+    "delete": "Xóa",
+    "deleteConfirm": "Xóa hóa đơn này? Hành động này không thể hoàn tác.",
+    "noInvoices": "Chưa có hóa đơn nào",
+    "errorRecipientRequired": "Tên người nhận là bắt buộc",
+    "errorAtLeastOneItem": "Cần ít nhất một dòng mục",
+    "errorDescriptionRequired": "Mô tả dòng mục là bắt buộc",
+    "errorQuantityPositive": "Số lượng phải lớn hơn không"
+  },
   "labor": {
     "title": "Chi phí Nhân công",
     "workers": "Công nhân",
@@ -98,8 +135,7 @@
     "daysWorked": "Số ngày",
     "totalCost": "Tổng",
     "grandTotal": "Tổng cộng",
-    "filterFrom": "Từ",
-    "filterTo": "Đến",
+    "filterMonth": "Tháng",
     "filterWorker": "Công nhân",
     "confirmDeactivate": "Vô hiệu hóa công nhân này?",
     "confirmDelete": "Xóa bản ghi này?",
@@ -107,6 +143,10 @@
     "save": "Lưu",
     "delete": "Xóa",
     "active": "Hoạt động",
-    "inactive": "Không hoạt động"
+    "inactive": "Không hoạt động",
+    "shiftType": "Ca làm",
+    "shiftFull": "Ngày công",
+    "shiftHalf": "Nửa ngày",
+    "shiftOvertime": "Tăng ca"
   }
 }

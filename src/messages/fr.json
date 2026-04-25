@@ -9,6 +9,8 @@
   "navigation": {
     "dashboard": "Aperçu",
     "projects": "Projets",
+    "labor": "Main-d'œuvre",
+    "invoices": "Factures",
     "settings": "Paramètres"
   },
   "auth": {
@@ -76,6 +78,41 @@
     "unauthorized": "Non autorisé",
     "accessDenied": "Vous n'avez pas la permission d'accéder à cette page."
   },
+  "invoices": {
+    "title": "Factures",
+    "newInvoice": "Nouvelle Facture",
+    "invoiceNumber": "Facture #",
+    "type": "Type",
+    "types": {
+      "client": "Client",
+      "labor": "Main-d'œuvre",
+      "supplier": "Fournisseur"
+    },
+    "issueDate": "Date d'émission",
+    "recipient": "Destinataire",
+    "recipientAddress": "Adresse",
+    "totalAmount": "Total",
+    "items": "Lignes",
+    "description": "Description",
+    "quantity": "Qté",
+    "unitPrice": "Prix unitaire",
+    "total": "Total",
+    "notes": "Notes",
+    "addItem": "Ajouter une ligne",
+    "all": "Tous",
+    "printPdf": "Imprimer / Enregistrer PDF",
+    "edit": "Modifier",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "delete": "Supprimer",
+    "deleteConfirm": "Supprimer cette facture ? Cette action est irréversible.",
+    "noInvoices": "Aucune facture pour le moment",
+    "errorRecipientRequired": "Le nom du destinataire est requis",
+    "errorAtLeastOneItem": "Au moins une ligne est requise",
+    "errorDescriptionRequired": "La description de l'article est requise",
+    "errorQuantityPositive": "La quantité doit être supérieure à zéro"
+  },
   "labor": {
     "title": "Charges de Main-d'œuvre",
     "workers": "Ouvriers",
@@ -98,8 +135,7 @@
     "daysWorked": "Jours",
     "totalCost": "Total",
     "grandTotal": "Total général",
-    "filterFrom": "De",
-    "filterTo": "À",
+    "filterMonth": "Mois",
     "filterWorker": "Ouvrier",
     "confirmDeactivate": "Désactiver cet ouvrier ?",
     "confirmDelete": "Supprimer cette entrée ?",
@@ -107,6 +143,10 @@
     "save": "Enregistrer",
     "delete": "Supprimer",
     "active": "Actif",
-    "inactive": "Inactif"
+    "inactive": "Inactif",
+    "shiftType": "Vacation",
+    "shiftFull": "Journée complète",
+    "shiftHalf": "Demi-journée",
+    "shiftOvertime": "Heures sup."
   }
 }

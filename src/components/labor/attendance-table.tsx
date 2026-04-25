@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,11 +31,9 @@ interface AttendanceTableProps {
   workers: Worker[];
   isLoading: boolean;
   canManage: boolean;
-  dateFrom: string;
-  dateTo: string;
+  month: string;
   workerFilter: string;
-  onDateFromChange: (value: string) => void;
-  onDateToChange: (value: string) => void;
+  onMonthChange: (value: string) => void;
   onWorkerFilterChange: (value: string) => void;
   onDelete: (entry: LaborEntry) => void;
 }
@@ -44,11 +43,9 @@ export function AttendanceTable({
   workers,
   isLoading,
   canManage,
-  dateFrom,
-  dateTo,
+  month,
   workerFilter,
-  onDateFromChange,
-  onDateToChange,
+  onMonthChange,
   onWorkerFilterChange,
   onDelete,
 }: AttendanceTableProps) {
@@ -66,21 +63,13 @@ export function AttendanceTable({
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label>{t("filterFrom")}</Label>
+          <Label>{t("filterMonth")}</Label>
           <Input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => onDateFromChange(e.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label>{t("filterTo")}</Label>
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={(e) => onDateToChange(e.target.value)}
+            type="month"
+            value={month}
+            onChange={(e) => onMonthChange(e.target.value)}
           />
         </div>
         <div className="space-y-1">
@@ -101,56 +90,84 @@ export function AttendanceTable({
         </div>
       </div>
 
-      {/* Entries List */}
+      {/* Entries grouped by date */}
       {entries.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             {t("noEntries")}
           </CardContent>
         </Card>
-      ) : (
-        <div className="space-y-2">
-          {entries.map((entry) => (
-            <Card key={entry.id}>
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{entry.worker_name}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(entry.date).toLocaleDateString("fr-FR")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium text-primary">
-                      {formatEUR(entry.effective_cost)}
-                    </span>
-                    {entry.amount_override !== null && (
-                      <span className="text-xs text-muted-foreground">
-                        ({t("override")})
-                      </span>
-                    )}
-                    {entry.note && (
-                      <span className="text-muted-foreground">
-                        — {entry.note}
-                      </span>
-                    )}
-                  </div>
-                </div>
+      ) : (() => {
+        const shiftLabel: Record<string, string> = {
+          full: t("shiftFull"),
+          half: t("shiftHalf"),
+          overtime: t("shiftOvertime"),
+        };
+        const grouped = entries.reduce<Record<string, typeof entries>>((acc, e) => {
+          (acc[e.date] ??= []).push(e);
+          return acc;
+        }, {});
+        const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
-                {canManage && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setConfirmDelete(entry)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+        return (
+          <div className="space-y-4">
+            {sortedDates.map((date) => (
+              <div key={date} className="space-y-1">
+                {/* Date header */}
+                <p className="text-sm font-semibold text-muted-foreground px-1">
+                  {new Date(date).toLocaleDateString("fr-FR", {
+                    weekday: "long",
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
+                </p>
+
+                {/* Worker rows */}
+                {grouped[date].map((entry) => (
+                  <Card key={entry.id}>
+                    <CardContent className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium">{entry.worker_name}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {shiftLabel[entry.shift_type] ?? entry.shift_type}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-medium text-primary">
+                            {formatEUR(entry.effective_cost)}
+                          </span>
+                          {entry.amount_override !== null && (
+                            <span className="text-xs text-muted-foreground">
+                              ({t("override")})
+                            </span>
+                          )}
+                          {entry.note && (
+                            <span className="text-muted-foreground">
+                              — {entry.note}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {canManage && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setConfirmDelete(entry)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Delete Confirmation */}
       <AlertDialog

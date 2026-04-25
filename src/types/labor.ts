@@ -1,5 +1,7 @@
 // Labor management types
 
+export type ShiftType = 'full' | 'half' | 'overtime';
+
 export interface Worker {
   id: string;
   project_id: string;
@@ -35,6 +37,7 @@ export interface LaborEntry {
   amount_override: number | null;
   effective_cost: number;
   note: string | null;
+  shift_type: ShiftType;
   created_at: string;
 }
 
@@ -48,11 +51,13 @@ export interface LogAttendancePayload {
   date: string;
   amount_override?: number;
   note?: string;
+  shift_type?: ShiftType;
 }
 
 export interface UpdateAttendancePayload {
   amount_override?: number;
   note?: string;
+  shift_type?: ShiftType;
 }
 
 export interface WorkerSummaryRow {

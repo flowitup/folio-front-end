@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { fetchInvoice } from "@/lib/api/invoice-api";
 import type { Invoice, InvoiceType } from "@/types/invoice";
@@ -19,18 +19,13 @@ export default function InvoicePrintPage() {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const loadInvoice = useCallback(async () => {
-    try {
-      const data = await fetchInvoice(projectId, invoiceId);
-      setInvoice(data);
-    } catch {
-      setError("Failed to load invoice");
-    }
-  }, [invoiceId]);
-
   useEffect(() => {
-    loadInvoice();
-  }, [loadInvoice]);
+    let cancelled = false;
+    fetchInvoice(projectId, invoiceId)
+      .then((data) => { if (!cancelled) setInvoice(data); })
+      .catch(() => { if (!cancelled) setError("Failed to load invoice"); });
+    return () => { cancelled = true; };
+  }, [projectId, invoiceId]);
 
   if (error) {
     return (

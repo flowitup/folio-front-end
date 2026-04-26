@@ -116,7 +116,20 @@
     "errorRecipientRequired": "Recipient name is required",
     "errorAtLeastOneItem": "At least one line item is required",
     "errorDescriptionRequired": "Item description is required",
-    "errorQuantityPositive": "Quantity must be greater than zero"
+    "errorQuantityPositive": "Quantity must be greater than zero",
+    "attachments": "Attachments",
+    "noAttachments": "No attachments yet",
+    "dragDropHint": "Drag & drop files here, or",
+    "chooseFiles": "Choose files",
+    "uploading": "Uploading...",
+    "attachmentLimits": "PDF, JPEG, PNG, WebP, HEIC — max 10 MB per file",
+    "attachmentsLoadError": "Failed to load attachments",
+    "fileTooLarge": "{name} is too large (max 10 MB)",
+    "invalidFileType": "{name}: file type not allowed",
+    "uploadFailed": "Failed to upload {name}",
+    "deleteFailed": "Failed to delete attachment",
+    "attachmentDeleteConfirm": "Delete this attachment? This cannot be undone.",
+    "openAttachment": "Open"
   },
   "labor": {
     "title": "Labor Charges",

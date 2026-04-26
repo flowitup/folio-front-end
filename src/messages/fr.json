@@ -111,7 +111,20 @@
     "errorRecipientRequired": "Le nom du destinataire est requis",
     "errorAtLeastOneItem": "Au moins une ligne est requise",
     "errorDescriptionRequired": "La description de l'article est requise",
-    "errorQuantityPositive": "La quantité doit être supérieure à zéro"
+    "errorQuantityPositive": "La quantité doit être supérieure à zéro",
+    "attachments": "Pièces jointes",
+    "noAttachments": "Aucune pièce jointe",
+    "dragDropHint": "Glissez-déposez vos fichiers, ou",
+    "chooseFiles": "Choisir des fichiers",
+    "uploading": "Téléversement...",
+    "attachmentLimits": "PDF, JPEG, PNG, WebP, HEIC — max 10 Mo par fichier",
+    "attachmentsLoadError": "Échec du chargement des pièces jointes",
+    "fileTooLarge": "{name} est trop volumineux (max 10 Mo)",
+    "invalidFileType": "{name} : type de fichier non autorisé",
+    "uploadFailed": "Échec du téléversement de {name}",
+    "deleteFailed": "Échec de la suppression",
+    "attachmentDeleteConfirm": "Supprimer cette pièce jointe ? Cette action est irréversible.",
+    "openAttachment": "Ouvrir"
   },
   "labor": {
     "title": "Charges de Main-d'œuvre",

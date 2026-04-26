@@ -111,7 +111,20 @@
     "errorRecipientRequired": "Tên người nhận là bắt buộc",
     "errorAtLeastOneItem": "Cần ít nhất một dòng mục",
     "errorDescriptionRequired": "Mô tả dòng mục là bắt buộc",
-    "errorQuantityPositive": "Số lượng phải lớn hơn không"
+    "errorQuantityPositive": "Số lượng phải lớn hơn không",
+    "attachments": "Tệp đính kèm",
+    "noAttachments": "Chưa có tệp đính kèm",
+    "dragDropHint": "Kéo thả tệp vào đây, hoặc",
+    "chooseFiles": "Chọn tệp",
+    "uploading": "Đang tải lên...",
+    "attachmentLimits": "PDF, JPEG, PNG, WebP, HEIC — tối đa 10 MB/tệp",
+    "attachmentsLoadError": "Không thể tải tệp đính kèm",
+    "fileTooLarge": "{name} quá lớn (tối đa 10 MB)",
+    "invalidFileType": "{name}: loại tệp không hợp lệ",
+    "uploadFailed": "Tải lên {name} thất bại",
+    "deleteFailed": "Xóa tệp thất bại",
+    "attachmentDeleteConfirm": "Xóa tệp đính kèm này? Không thể hoàn tác.",
+    "openAttachment": "Mở"
   },
   "labor": {
     "title": "Chi phí Nhân công",

@@ -1,78 +1,193 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
-import { Bell } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, Search, Sun, Plus, Globe, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { ProjectSelector } from "@/components/project/ProjectSelector";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { useProject } from "@/context/ProjectContext";
+import { locales, localeNames, type Locale } from "@/i18n/config";
+import { useRouter as useIntlRouter, usePathname as useIntlPathname } from "@/i18n/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Page meta keys reference message keys in `topbar.*` (title/subtitle) and
+// `projects/planning/labor/invoices.newProject|newTask|logDay|newInvoice` for actions.
+type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices";
+
+const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; actionKey?: string }> = {
+  dashboard: {
+    titleKey: "topbar.overviewTitle",
+    subtitleKey: "topbar.overviewSubtitle",
+    actionKey: "topbar.newEntry",
+  },
+  projects: {
+    titleKey: "topbar.projectsTitle",
+    subtitleKey: "topbar.projectsSubtitle",
+    actionKey: "projects.newProject",
+  },
+  settings: { titleKey: "topbar.settingsTitle", subtitleKey: "topbar.settingsSubtitle" },
+  planning: {
+    titleKey: "topbar.planningTitle",
+    subtitleKey: "topbar.planningSubtitle",
+    actionKey: "planning.newTask",
+  },
+  labor: {
+    titleKey: "topbar.laborTitle",
+    subtitleKey: "topbar.laborSubtitle",
+    actionKey: "labor.logDay",
+  },
+  invoices: {
+    titleKey: "topbar.invoicesTitle",
+    subtitleKey: "topbar.invoicesSubtitle",
+    actionKey: "invoices.newInvoice",
+  },
+};
 
 export function Topbar() {
   const pathname = usePathname();
-  const locale = useLocale();
-  const t = useTranslations("navigation");
-  const tTopbar = useTranslations("topbar");
+  const router = useRouter();
+  const locale = useLocale() as Locale;
+  const intlRouter = useIntlRouter();
+  const intlPathname = useIntlPathname();
   const tCommon = useTranslations("common");
+  const tTopbar = useTranslations();
   const { user, logout, isLoading } = useAuth();
+  const { selectedProject } = useProject();
 
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
-  const pageTitleKeys: Record<string, string> = {
-    "/dashboard": "dashboard",
-    "/projects": "projects",
-    "/settings": "settings",
+  // Resolve page key from path
+  let pageKey: PageKey = "dashboard";
+  if (pathWithoutLocale === "/projects") pageKey = "projects";
+  else if (pathWithoutLocale === "/settings") pageKey = "settings";
+  else if (pathWithoutLocale === "/dashboard") pageKey = "dashboard";
+  else {
+    const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)/);
+    if (projectMatch && (projectMatch[1] in TOPBAR_KEYS)) {
+      pageKey = projectMatch[1] as PageKey;
+    }
+  }
+
+  const cfg = TOPBAR_KEYS[pageKey];
+  const title = tTopbar(cfg.titleKey);
+  const subtitle = tTopbar(cfg.subtitleKey);
+  const actionLabel = cfg.actionKey ? tTopbar(cfg.actionKey) : null;
+
+  const projectName = selectedProject?.name;
+  const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
+
+  const handleAction = () => {
+    if (pathWithoutLocale.endsWith("/invoices") && selectedProject) {
+      router.push(`/${locale}/projects/${selectedProject.id}/invoices/new`);
+    }
   };
 
-  const titleKey = pageTitleKeys[pathWithoutLocale] || "dashboard";
-  const pageTitle = t(titleKey);
-
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-card px-5">
-      {/* Left side - Project selector + Page title */}
-      <div className="flex items-center gap-4">
-        <ProjectSelector />
-        <Separator orientation="vertical" className="h-5" />
-        <h1 className="text-base font-medium text-foreground">{pageTitle}</h1>
+    <header className="flex items-start justify-between gap-6 px-8 pb-4 pt-6">
+      <div className="min-w-0 flex-1">
+        <div
+          className="mb-1 flex items-center gap-2 text-[12px]"
+          style={{ color: "var(--muted)" }}
+        >
+          {projectName && (
+            <>
+              <span>{projectName}</span>
+              <span style={{ color: "var(--line-2)" }}>›</span>
+            </>
+          )}
+          <span style={{ color: "var(--ink-2)" }}>{title}</span>
+        </div>
+        <h1 className="font-display text-[34px] font-medium leading-[1.05] tracking-tight">
+          {title}
+        </h1>
+        {subtitle && (
+          <p
+            className="mt-1.5 text-[13.5px]"
+            style={{ color: "var(--muted)", maxWidth: 540 }}
+          >
+            {subtitle}
+          </p>
+        )}
       </div>
 
-      {/* Right side - user menu */}
-      <div className="flex items-center gap-4">
-        <ThemeToggle />
-        <LanguageSwitcher />
+      <div className="flex flex-shrink-0 items-center gap-2">
+        <button type="button" className="btn btn-quiet" aria-label={tTopbar("topbar.search")}>
+          <Search size={16} />
+        </button>
+        <button
+          type="button"
+          className="btn btn-quiet relative"
+          aria-label={tTopbar("topbar.viewNotifications")}
+        >
+          <Bell size={16} />
+          <span
+            className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full"
+            style={{ background: "var(--accent)" }}
+          />
+        </button>
+        <button type="button" className="btn btn-quiet" aria-label={tTopbar("topbar.theme")}>
+          <Sun size={16} />
+        </button>
 
-        {/* Notifications */}
-        <Button variant="ghost" size="sm" aria-label={tTopbar("viewNotifications")}>
-          <Bell className="h-4 w-4" />
-        </Button>
+        <div className="mx-1 h-6 w-px" style={{ background: "var(--line-2)" }} />
 
-        {/* User info and logout */}
+        {actionLabel && (
+          <button type="button" className="btn btn-primary" onClick={handleAction}>
+            <Plus size={14} /> {actionLabel}
+          </button>
+        )}
+
         {user && (
-          <div className="flex items-center gap-3">
-            {/* Avatar */}
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <span className="text-xs font-medium">
-                {user.email.charAt(0).toUpperCase()}
-              </span>
-            </div>
-
-            {/* Email */}
-            <span className="hidden text-sm font-medium text-foreground sm:block">
-              {user.email}
-            </span>
-
-            {/* Sign out button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => logout()}
-              disabled={isLoading}
-            >
-              {isLoading ? "..." : tCommon("signOut")}
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="avatar ml-1"
+                title={user.email}
+                style={{ background: "var(--accent)", color: "white", cursor: "pointer" }}
+              >
+                {initials}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5 text-[12px]" style={{ color: "var(--muted)" }}>
+                {user.email}
+              </div>
+              <DropdownMenuSeparator />
+              <div className="label-cap px-2 pb-1 pt-2">{tCommon("language")}</div>
+              {locales.map((loc) => (
+                <DropdownMenuItem
+                  key={loc}
+                  onClick={() => intlRouter.replace(intlPathname, { locale: loc })}
+                >
+                  <Globe size={14} />
+                  <span className="font-medium">{loc.toUpperCase()}</span>
+                  <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+                    {localeNames[loc]}
+                  </span>
+                  {locale === loc && (
+                    <span className="ml-auto text-[11px]" style={{ color: "var(--accent-ink)" }}>
+                      ✓
+                    </span>
+                  )}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => logout()}
+                disabled={isLoading}
+                style={{ color: "var(--negative)" }}
+              >
+                <LogOut size={14} />
+                {tCommon("signOut")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
     </header>

@@ -1,10 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { LaborSummaryResponse } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
 
@@ -15,88 +12,165 @@ interface LaborSummaryProps {
   onMonthChange: (value: string) => void;
 }
 
-export function LaborSummary({
-  summary,
-  isLoading,
-  month,
-  onMonthChange,
-}: LaborSummaryProps) {
+function formatMonthLabel(month: string, locale: string): string {
+  const [y, m] = month.split("-").map(Number);
+  if (!y || !m) return month;
+  return new Date(y, m - 1, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
+}
+
+export function LaborSummary({ summary, isLoading, month, onMonthChange }: LaborSummaryProps) {
   const t = useTranslations("labor");
+  const locale = useLocale();
+
+  const totalCost = summary?.total_cost ?? 0;
+  const totalDays = summary?.total_days ?? 0;
+  const workerCount = summary?.rows.length ?? 0;
+  const onSiteToday = workerCount;
+  const avgDailyRate = totalDays > 0 ? totalCost / totalDays : 0;
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 size={20} className="animate-spin" style={{ color: "var(--muted)" }} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Filters */}
-      <div className="max-w-xs space-y-1">
-        <Label>{t("filterMonth")}</Label>
-        <Input
-          type="month"
-          value={month}
-          onChange={(e) => onMonthChange(e.target.value)}
-        />
+    <div className="space-y-5">
+      {/* KPI Row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="folio-card p-5">
+          <div className="label-cap">{t("totalLaborCost")}</div>
+          <div className="font-display num mt-2 text-[28px] font-medium leading-none">
+            {formatEUR(totalCost)}
+          </div>
+          <div className="num mt-2 text-[11px]" style={{ color: "var(--positive)" }}>
+            {formatMonthLabel(month, locale)}
+          </div>
+        </div>
+        <div className="folio-card p-5">
+          <div className="label-cap">{t("workerDays")}</div>
+          <div className="font-display num mt-2 text-[28px] font-medium leading-none">
+            {totalDays}
+          </div>
+          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("acrossWorkers", { n: workerCount })}
+          </div>
+        </div>
+        <div className="folio-card p-5">
+          <div className="label-cap">{t("onSiteToday")}</div>
+          <div className="font-display num mt-2 text-[28px] font-medium leading-none">
+            {onSiteToday}
+          </div>
+          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("workersLogged")}
+          </div>
+        </div>
+        <div className="folio-card p-5">
+          <div className="label-cap">{t("avgDailyRate")}</div>
+          <div
+            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            style={{ color: "var(--accent)" }}
+          >
+            {formatEUR(avgDailyRate)}
+          </div>
+          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("perWorkerDay")}
+          </div>
+        </div>
       </div>
 
-      {/* Summary Table */}
-      {!summary || summary.rows.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
+      {/* Monthly summary table */}
+      <div className="folio-card overflow-hidden">
+        <div
+          className="flex items-center justify-between border-b px-5 py-4"
+          style={{ borderColor: "var(--line)" }}
+        >
+          <div className="flex items-center gap-3">
+            <h3 className="font-display text-[18px] font-medium tracking-tight">
+              {t("monthlySummary", { month: formatMonthLabel(month, locale) })}
+            </h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="month"
+              value={month}
+              onChange={(e) => onMonthChange(e.target.value)}
+              className="folio-input num"
+              style={{ width: 160 }}
+            />
+            {workerCount > 0 && (
+              <span className="stamp num">{t("workersBadge", { n: workerCount })}</span>
+            )}
+          </div>
+        </div>
+
+        {!summary || summary.rows.length === 0 ? (
+          <div className="px-5 py-8 text-center text-[13px]" style={{ color: "var(--muted)" }}>
             {t("noEntries")}
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="px-4 py-3 text-left text-sm font-medium">
-                      {t("workerName")}
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium">
-                      {t("daysWorked")}
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium">
-                      {t("totalCost")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.rows.map((row) => (
-                    <tr key={row.worker_id} className="border-b">
-                      <td className="px-4 py-3 text-sm">{row.worker_name}</td>
-                      <td className="px-4 py-3 text-right text-sm">
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="ledger">
+              <thead>
+                <tr>
+                  <th>{t("workerName")}</th>
+                  <th>{t("role")}</th>
+                  <th style={{ textAlign: "right" }}>{t("daysWorked")}</th>
+                  <th style={{ textAlign: "right" }}>{t("dailyRate")}</th>
+                  <th style={{ textAlign: "right" }}>{t("totalCost")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.rows.map((row) => {
+                  const dailyRate = row.days_worked > 0 ? row.total_cost / row.days_worked : 0;
+                  const initials = row.worker_name
+                    .split(" ")
+                    .map((p) => p.charAt(0))
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase();
+                  return (
+                    <tr key={row.worker_id}>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <div className="avatar">{initials}</div>
+                          <span>{row.worker_name}</span>
+                        </div>
+                      </td>
+                      <td style={{ color: "var(--muted)" }}>—</td>
+                      <td className="num" style={{ textAlign: "right" }}>
                         {row.days_worked}
                       </td>
-                      <td className="px-4 py-3 text-right text-sm font-medium">
+                      <td className="num" style={{ textAlign: "right" }}>
+                        {formatEUR(dailyRate)}
+                      </td>
+                      <td className="num font-medium" style={{ textAlign: "right" }}>
                         {formatEUR(row.total_cost)}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="bg-muted/50 font-medium">
-                    <td className="px-4 py-3 text-sm">{t("grandTotal")}</td>
-                    <td className="px-4 py-3 text-right text-sm">
-                      {summary.total_days}
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm text-primary">
-                      {formatEUR(summary.total_cost)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr style={{ background: "var(--paper-2)" }}>
+                  <td colSpan={2} className="font-medium">
+                    {t("grandTotal")}
+                  </td>
+                  <td className="num font-medium" style={{ textAlign: "right" }}>
+                    {summary.total_days}
+                  </td>
+                  <td></td>
+                  <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
+                    {formatEUR(summary.total_cost)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

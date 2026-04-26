@@ -28,21 +28,11 @@ export default async function AppLayout({
 
   return (
     <ProjectProvider>
-      <div className="flex h-screen bg-background">
-        {/* Sidebar */}
+      <div className="flex h-screen overflow-hidden" style={{ background: "var(--paper)" }}>
         <Sidebar />
-
-        {/* Main content area */}
         <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Topbar */}
           <Topbar />
-
-          {/* Page content - Clean fintech spacing */}
-          <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
-            <div className="mx-auto max-w-6xl">
-              {children}
-            </div>
-          </main>
+          <main className="scroll-area flex-1">{children}</main>
         </div>
       </div>
     </ProjectProvider>

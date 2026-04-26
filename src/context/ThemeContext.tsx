@@ -29,10 +29,11 @@ function getSystemTheme(): "light" | "dark" {
 }
 
 function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "system";
+  // Folio is a single cream/ink theme — default to light, ignore system preference.
+  if (typeof window === "undefined") return "light";
   const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
   if (stored && ["light", "dark", "system"].includes(stored)) return stored;
-  return "system";
+  return "light";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

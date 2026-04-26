@@ -2,16 +2,17 @@ import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { FolioLogo } from "@/components/folio-logo";
 
 interface LoginPageProps {
   searchParams: Promise<{ callbackUrl?: string }>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  // Redirect if already authenticated
   const session = await getSession();
   const locale = await getLocale();
   const t = await getTranslations("auth");
+  const tCommon = await getTranslations("common");
 
   if (session) {
     redirect(`/${locale}/dashboard`);
@@ -21,69 +22,118 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const callbackUrl = params.callbackUrl || `/${locale}/dashboard`;
 
   return (
-    <div
-      className="flex min-h-screen items-center justify-center px-6 py-12"
-      style={{ background: 'var(--bg-primary)' }}
-    >
-      <div className="w-full max-w-md">
-        {/* Card Container - Fintech minimal */}
-        <div
-          className="rounded-2xl p-8"
-          style={{
-            background: 'var(--bg-elevated)',
-            border: '1px solid var(--border-subtle)',
-            boxShadow: 'var(--shadow-lg)',
-          }}
-        >
-          {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <div
-              className="flex h-12 w-12 items-center justify-center rounded-xl"
-              style={{ background: 'var(--accent-primary)' }}
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="white"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"
-                />
-              </svg>
-            </div>
+    <div className="grid min-h-screen grid-cols-12">
+      {/* Left — form column (cream paper) */}
+      <div
+        className="col-span-12 flex flex-col p-10 lg:col-span-5"
+        style={{ background: "var(--paper)" }}
+      >
+        <div className="flex items-center gap-3">
+          <FolioLogo />
+          <div className="leading-tight">
+            <div className="font-display text-[18px] font-semibold tracking-tight">Folio</div>
           </div>
-
-          {/* Header */}
-          <div className="text-center mb-6">
-            <h1
-              className="text-xl font-semibold tracking-tight"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              {t("welcomeBack")}
-            </h1>
-            <p
-              className="mt-1 text-sm"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              {t("signInPrompt")}
-            </p>
-          </div>
-
-          {/* Login Form */}
-          <LoginForm callbackUrl={callbackUrl} />
         </div>
 
-        {/* Footer */}
-        <p
-          className="mt-6 text-center text-xs"
-          style={{ color: 'var(--text-tertiary)' }}
+        <div className="m-auto w-full max-w-[380px]">
+          <span className="stamp accent mb-5 inline-flex">{t("welcomeBack")}</span>
+          <h1 className="font-display text-[40px] font-medium leading-[1.05] tracking-tight">
+            {t("heroTitle")}
+          </h1>
+          <p className="mt-3 text-[14px]" style={{ color: "var(--muted)" }}>
+            {t("heroSubtitle")}
+          </p>
+
+          <div className="mt-8">
+            <LoginForm callbackUrl={callbackUrl} />
+          </div>
+
+          <p className="mt-7 text-[12px]" style={{ color: "var(--muted)" }}>
+            {t("newToFolio")}{" "}
+            <a
+              style={{
+                color: "var(--accent-ink)",
+                textDecoration: "underline",
+                textUnderlineOffset: 3,
+              }}
+            >
+              {t("startProject")}
+            </a>
+            .
+          </p>
+        </div>
+
+        <div className="text-[11px]" style={{ color: "var(--muted)" }}>
+          {tCommon("copyright")}
+        </div>
+      </div>
+
+      {/* Right — visual / blueprint panel */}
+      <div
+        className="relative col-span-7 hidden overflow-hidden lg:flex"
+        style={{
+          background: "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #5b3a1f 100%)",
+        }}
+      >
+        <div className="blueprint-grid absolute inset-0 opacity-25" />
+        <div className="paper-noise absolute inset-0" />
+
+        <svg
+          className="absolute inset-0 m-auto opacity-90"
+          width="80%"
+          height="80%"
+          viewBox="0 0 400 280"
+          fill="none"
+          stroke="white"
+          strokeWidth="0.6"
+          strokeLinecap="round"
         >
-          {t("contactAdmin")}
-        </p>
+          <rect x="60" y="50" width="280" height="180" />
+          <line x1="60" y1="120" x2="340" y2="120" />
+          <line x1="200" y1="50" x2="200" y2="230" />
+          <line x1="60" y1="170" x2="200" y2="170" />
+          <rect x="80" y="70" width="40" height="20" strokeDasharray="2 2" />
+          <circle cx="270" cy="85" r="14" />
+          <text x="100" y="110" fill="white" fontSize="6" fontFamily="JetBrains Mono">
+            LIVING · 32 m²
+          </text>
+          <text x="240" y="110" fill="white" fontSize="6" fontFamily="JetBrains Mono">
+            KITCHEN · 18 m²
+          </text>
+          <text x="100" y="200" fill="white" fontSize="6" fontFamily="JetBrains Mono">
+            BED 1 · 14 m²
+          </text>
+          <text x="240" y="200" fill="white" fontSize="6" fontFamily="JetBrains Mono">
+            BED 2 · 12 m²
+          </text>
+          <line x1="60" y1="40" x2="340" y2="40" strokeDasharray="2 3" />
+          <text x="190" y="35" fill="white" fontSize="6" fontFamily="JetBrains Mono">
+            14.0 m
+          </text>
+          <line x1="50" y1="50" x2="50" y2="230" strokeDasharray="2 3" />
+          <text
+            x="30"
+            y="145"
+            fill="white"
+            fontSize="6"
+            fontFamily="JetBrains Mono"
+            transform="rotate(-90 30 145)"
+          >
+            9.0 m
+          </text>
+        </svg>
+
+        <div className="absolute bottom-8 left-8 right-8 text-white">
+          <div
+            className="font-display text-[28px] leading-tight"
+            dangerouslySetInnerHTML={{
+              __html: `&ldquo;${t("quote")}&rdquo;`,
+            }}
+          />
+          <div className="mt-3 flex items-center gap-2 text-[12px] opacity-80">
+            <div className="h-px w-6 bg-white/60" /> {t("quoteAuthor")}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -35,3 +35,14 @@ export interface CreateInvoicePayload {
 }
 
 export type UpdateInvoicePayload = Partial<Omit<CreateInvoicePayload, "type">>;
+
+export interface InvoiceAttachment {
+  id: string;
+  invoice_id: string;
+  filename: string;
+  mime_type: string;
+  size_bytes: number;
+  uploaded_at: string;
+  uploaded_by: string | null;
+  download_url: string;
+}

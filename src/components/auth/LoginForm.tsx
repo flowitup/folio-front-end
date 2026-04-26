@@ -2,12 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, ArrowRight, Globe } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface LoginFormProps {
   callbackUrl?: string;
@@ -31,24 +27,32 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
     }
 
     const result = await login({ email, password });
-
     if (!result.success) {
       setError(result.error || t("errorInvalid"));
     }
   };
 
   return (
-    <form className="space-y-5" onSubmit={handleSubmit}>
+    <form className="space-y-4" onSubmit={handleSubmit}>
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div
+          className="flex items-start gap-2 rounded-[10px] p-3 text-[12.5px]"
+          style={{
+            background: "var(--negative-tint)",
+            color: "#8a3924",
+            border: "1px solid #e6c0ad",
+          }}
+        >
+          <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
       )}
 
-      <div className="space-y-1.5">
-        <Label htmlFor="email">{t("emailLabel")}</Label>
-        <Input
+      <div>
+        <label htmlFor="email" className="label-cap">
+          {t("emailLabel")}
+        </label>
+        <input
           id="email"
           name="email"
           type="email"
@@ -58,12 +62,25 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
           onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
           placeholder={t("emailPlaceholder")}
+          className="folio-input mt-1"
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="password">{t("passwordLabel")}</Label>
-        <Input
+      <div>
+        <div className="flex items-center justify-between">
+          <label htmlFor="password" className="label-cap">
+            {t("passwordLabel")}
+          </label>
+          <a
+            href="#"
+            className="text-[12px]"
+            style={{ color: "var(--accent-ink)" }}
+            onClick={(e) => e.preventDefault()}
+          >
+            {t("forgot")}
+          </a>
+        </div>
+        <input
           id="password"
           name="password"
           type="password"
@@ -74,21 +91,36 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
           onChange={(e) => setPassword(e.target.value)}
           disabled={isLoading}
           placeholder={t("passwordPlaceholder")}
+          className="folio-input mt-1"
         />
       </div>
 
-      <div className="pt-1">
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {t("signingIn")}
-            </>
-          ) : (
-            t("signIn")
-          )}
-        </Button>
-      </div>
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="btn btn-primary w-full"
+        style={{ padding: "12px 16px", fontSize: 14 }}
+      >
+        {isLoading ? (
+          <>
+            <Loader2 size={14} className="animate-spin" />
+            {t("signingIn")}
+          </>
+        ) : (
+          <>
+            {t("signIn")} <ArrowRight size={14} />
+          </>
+        )}
+      </button>
+
+      <button
+        type="button"
+        className="btn btn-ghost w-full"
+        style={{ padding: "12px 16px", fontSize: 14 }}
+        disabled={isLoading}
+      >
+        <Globe size={14} /> {t("continueWithGoogle")}
+      </button>
     </form>
   );
 }

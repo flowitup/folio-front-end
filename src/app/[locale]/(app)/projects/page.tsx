@@ -1,13 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
-import { Plus, Building2, Users, Check, Loader2, ChevronDown, ChevronUp, UserPlus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {
+  Plus,
+  Building2,
+  Loader2,
+  MoreHorizontal,
+  Search,
+  Filter,
+  ArrowRight,
+  UserPlus,
+  Trash2,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -17,44 +25,68 @@ import {
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
 import { fetchProjectUsers, removeUserFromProject } from "@/lib/api/projects";
 import { AddMemberDialog } from "@/components/project/add-member-dialog";
 import type { ProjectUser } from "@/types/project";
 
+const COVER_GRADIENTS = [
+  "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
+  "linear-gradient(135deg, #e8d5b7 0%, #c9a878 60%, #8d6f4a 100%)",
+  "linear-gradient(135deg, #cfd9c5 0%, #9aa988 60%, #5a6b4a 100%)",
+  "linear-gradient(135deg, #e7d2c4 0%, #b89485 60%, #714c3e 100%)",
+];
+
+const AVATAR_TONES = ["#1a1a1a", "#5a7a4a", "#c9a961", "#e8843c", "#8a8479", "#b3543d"];
+
+function coverFor(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return COVER_GRADIENTS[h % COVER_GRADIENTS.length];
+}
+
+type FilterTab = "all" | "active" | "archived";
+
 export default function ProjectsPage() {
   const t = useTranslations("projects");
-  const { projects, isLoading, error, selectedProjectId, selectProject, refetch } = useProject();
+  const locale = useLocale();
+  const router = useRouter();
+  const { projects, isLoading, error, selectedProjectId, selectProject, refetch } =
+    useProject();
   const { user } = useAuth();
+  const [filterTab, setFilterTab] = useState<FilterTab>("all");
+  const [search, setSearch] = useState("");
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [projectUsers, setProjectUsers] = useState<Record<string, ProjectUser[]>>({});
   const [loadingUsers, setLoadingUsers] = useState<string | null>(null);
-  const [addMemberProject, setAddMemberProject] = useState<{ id: string; name: string } | null>(null);
-  const [removeMember, setRemoveMember] = useState<{ projectId: string; userId: string; email: string } | null>(null);
+  const [addMemberProject, setAddMemberProject] = useState<{ id: string; name: string } | null>(
+    null,
+  );
+  const [removeMember, setRemoveMember] = useState<{
+    projectId: string;
+    userId: string;
+    email: string;
+  } | null>(null);
 
-  // Check if user can manage project members (includes wildcard *:* for admins)
-  const canManageUsers = user?.permissions?.some(
-    (p) => p === "project:manage_users" || p === "*:*" || p === "project:*"
-  ) ?? false;
+  const canManageUsers =
+    user?.permissions?.some((p) => p === "project:manage_users" || p === "*:*" || p === "project:*") ??
+    false;
 
-  const handleProjectClick = async (projectId: string) => {
-    // Toggle expansion
+  const filteredProjects = projects.filter((p) => {
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const toggleExpand = async (projectId: string) => {
     if (expandedProjectId === projectId) {
       setExpandedProjectId(null);
       return;
     }
-
-    // Set expanded first, then select
     setExpandedProjectId(projectId);
-    selectProject(projectId);
-
-    // Fetch users if not already loaded
     await loadProjectUsers(projectId);
   };
 
   const loadProjectUsers = async (projectId: string) => {
     if (projectUsers[projectId]) return;
-
     setLoadingUsers(projectId);
     try {
       const response = await fetchProjectUsers(projectId);
@@ -68,23 +100,20 @@ export default function ProjectsPage() {
 
   const handleMemberAdded = async () => {
     if (addMemberProject) {
-      // Clear cached users to force reload
       setProjectUsers((prev) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [addMemberProject.id]: _, ...rest } = prev;
         return rest;
       });
       await loadProjectUsers(addMemberProject.id);
-      refetch(); // Refresh project list to update user_count
+      refetch();
     }
   };
 
   const handleRemoveUser = async () => {
     if (!removeMember) return;
-
     try {
       await removeUserFromProject(removeMember.projectId, removeMember.userId);
-      // Clear cache and reload
       setProjectUsers((prev) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [removeMember.projectId]: _, ...rest } = prev;
@@ -92,205 +121,343 @@ export default function ProjectsPage() {
       });
       await loadProjectUsers(removeMember.projectId);
       refetch();
-    } catch (error) {
-      console.error("Failed to remove user:", error);
+    } catch (err) {
+      console.error("Failed to remove user:", err);
     } finally {
       setRemoveMember(null);
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">
-            {t("title")}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("description")}
-          </p>
-        </div>
+  const openProject = (projectId: string) => {
+    selectProject(projectId);
+    router.push(`/${locale}/dashboard`);
+  };
 
-        <Button>
-          <Plus className="h-4 w-4" />
-          {t("newProject")}
-        </Button>
+  const fmtEUR = (n: number) =>
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+      maximumFractionDigits: 0,
+    }).format(n);
+
+  const counts = {
+    all: projects.length,
+    active: projects.length,
+    archived: 0,
+  };
+
+  return (
+    <div className="fade-up px-8 pb-12">
+      {/* Filter row */}
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div className="seg">
+          {(["all", "active", "archived"] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setFilterTab(tab)}
+              className={filterTab === tab ? "on" : ""}
+            >
+              {tab === "all" ? t("allProjects") : tab === "active" ? t("active") : t("archived")} ·{" "}
+              <span className="num">{counts[tab]}</span>
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search
+              size={14}
+              style={{ position: "absolute", left: 10, top: 11, color: "var(--muted)" }}
+            />
+            <input
+              className="folio-input num"
+              placeholder={t("searchProjects")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ paddingLeft: 30, width: 240 }}
+            />
+          </div>
+          <button type="button" className="btn btn-ghost">
+            <Filter size={14} /> {t("filter")}
+          </button>
+        </div>
       </div>
 
-      {/* Loading State */}
       {isLoading && (
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </CardContent>
-        </Card>
+        <div className="folio-card flex items-center justify-center p-12">
+          <Loader2 size={20} className="animate-spin" style={{ color: "var(--muted)" }} />
+        </div>
       )}
 
-      {/* Error State */}
       {error && !isLoading && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      {/* Projects Grid */}
-      {!isLoading && !error && projects.length > 0 && (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 items-start">
-          {projects.map((project) => {
-            const isExpanded = expandedProjectId !== null && expandedProjectId === project.id;
+      {!isLoading && !error && filteredProjects.length > 0 && (
+        <div className="grid grid-cols-12 items-start gap-5">
+          {filteredProjects.map((project, idx) => {
+            const isFeatured = idx === 0;
+            const isExpanded = expandedProjectId === project.id;
             const users = projectUsers[project.id] || [];
             const isLoadingThisProject = loadingUsers === project.id;
+            const cover = (project as { cover?: string }).cover ?? coverFor(project.id);
+            const phase = (project as { phase?: string }).phase ?? "Planning";
+            const progress =
+              typeof (project as { progress?: number }).progress === "number"
+                ? (project as { progress?: number }).progress!
+                : 0.05;
+            const budget = (project as { budget?: number }).budget ?? 0;
+            const spent = (project as { spent?: number }).spent ?? 0;
+            const isSelected = selectedProjectId === project.id;
+            const userCount = project.user_count ?? 0;
+            const visibleAvatars = Math.min(userCount, 4);
 
             return (
-              <Card
+              <article
                 key={project.id}
-                className={cn(
-                  "cursor-pointer transition-all hover:shadow-md",
-                  selectedProjectId === project.id && "ring-2 ring-primary",
-                  isExpanded && "ring-1 ring-border"
-                )}
+                className={`folio-card overflow-hidden ${
+                  isFeatured ? "col-span-12" : "col-span-12 md:col-span-6"
+                }`}
               >
-                <CardContent className="p-5">
-                  {/* Card Header - Clickable */}
-                  <div onClick={() => handleProjectClick(project.id)}>
-                    {/* Project Icon */}
-                    <div className="mb-3 flex items-start justify-between">
-                      <div className="w-fit rounded-lg bg-muted p-2.5">
-                        <Building2 className="h-5 w-5 text-primary" />
-                      </div>
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
-
-                    {/* Project Name */}
-                    <h3 className="truncate text-base font-medium text-foreground">
-                      {project.name}
-                    </h3>
-
-                    {/* Project Address */}
-                    {project.address && (
-                      <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                        {project.address}
-                      </p>
-                    )}
-
-                    {/* Project Meta */}
-                    <div className="mt-3 flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">
-                        {project.user_count} {project.user_count === 1 ? t("member") : t("members")}
+                <div
+                  className="grid"
+                  style={{
+                    gridTemplateColumns: isFeatured ? "1.2fr 2fr" : "1fr 1.4fr",
+                  }}
+                >
+                  {/* Cover */}
+                  <button
+                    type="button"
+                    onClick={() => openProject(project.id)}
+                    className="relative cursor-pointer text-left"
+                    style={{ background: cover, minHeight: isFeatured ? 280 : 220 }}
+                  >
+                    <div className="blueprint-grid absolute inset-0 opacity-25" />
+                    <div className="paper-noise absolute inset-0" />
+                    <div className="absolute left-4 right-4 top-4 flex items-center justify-between">
+                      <span
+                        className="stamp"
+                        style={{ background: "rgba(255,255,255,0.85)", borderColor: "transparent" }}
+                      >
+                        <Building2 size={11} /> {t("projectStamp")}
                       </span>
+                      {isSelected && <span className="stamp accent">{t("selected")}</span>}
                     </div>
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                      <div className="num mb-1 text-[10px] uppercase tracking-[0.2em] opacity-80">
+                        0{idx + 1}
+                      </div>
+                      <div className="font-display text-[22px] leading-tight">{phase}</div>
+                    </div>
+                  </button>
 
-                    {/* Selected Badge */}
-                    {selectedProjectId === project.id && (
-                      <Badge className="mt-3">
-                        <Check className="mr-1 h-3 w-3" />
-                        {t("selected")}
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Expanded User List */}
-                  {isExpanded && (
-                    <div className="mt-4 border-t pt-4">
-                      <div className="mb-2 flex items-center justify-between">
-                        <h4 className="text-sm font-medium text-foreground">
-                          {t("teamMembers")}
-                        </h4>
-                        {canManageUsers && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 gap-1 px-2 text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setAddMemberProject({ id: project.id, name: project.name });
-                            }}
+                  {/* Body */}
+                  <div className="flex flex-col p-6">
+                    <div className="mb-3 flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="font-display text-[26px] font-medium leading-tight tracking-tight">
+                          {project.name}
+                        </h3>
+                        {project.address && (
+                          <p
+                            className="mt-0.5 truncate text-[13px]"
+                            style={{ color: "var(--muted)" }}
                           >
-                            <UserPlus className="h-3.5 w-3.5" />
-                            {t("addMember")}
-                          </Button>
+                            {project.address}
+                          </p>
                         )}
                       </div>
+                      <button
+                        type="button"
+                        className="btn btn-quiet"
+                        onClick={() => toggleExpand(project.id)}
+                        aria-label="More"
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+                    </div>
 
-                      {isLoadingThisProject ? (
-                        <div className="flex items-center justify-center py-3">
-                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    {/* Progress */}
+                    <div className="mb-4">
+                      <div className="mb-1.5 flex items-center justify-between text-[12px]">
+                        <span style={{ color: "var(--muted)" }}>{t("progress")}</span>
+                        <span className="num font-medium">{Math.round(progress * 100)}%</span>
+                      </div>
+                      <div className="progress-track">
+                        <div
+                          className="progress-fill accent"
+                          style={{ width: `${progress * 100}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Meta row */}
+                    <div className="hairline mt-auto grid grid-cols-3 gap-4 border-t pt-4">
+                      <div>
+                        <div className="label-cap">{t("budget")}</div>
+                        <div className="font-display num mt-0.5 text-[15px]">
+                          {budget ? fmtEUR(budget) : "—"}
                         </div>
-                      ) : users.length > 0 ? (
-                        <ul className="space-y-2">
-                          {users.map((member) => (
-                            <li
-                              key={member.id}
-                              className="flex items-center justify-between gap-2 text-sm"
+                      </div>
+                      <div>
+                        <div className="label-cap">{t("spent")}</div>
+                        <div className="font-display num mt-0.5 text-[15px]">
+                          {spent ? fmtEUR(spent) : "—"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="label-cap">{t("team")}</div>
+                        <div className="mt-1 flex -space-x-1.5">
+                          {Array.from({ length: visibleAvatars }).map((_, i) => (
+                            <div
+                              key={i}
+                              className="avatar"
+                              style={{
+                                background: AVATAR_TONES[i % AVATAR_TONES.length],
+                                width: 24,
+                                height: 24,
+                                fontSize: 10,
+                                border: "2px solid white",
+                              }}
                             >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-                                  {member.email.charAt(0).toUpperCase()}
-                                </div>
-                                <span className="truncate text-muted-foreground">
-                                  {member.email}
-                                </span>
-                              </div>
-                              {canManageUsers && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 shrink-0 p-0 text-muted-foreground hover:text-destructive"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setRemoveMember({ projectId: project.id, userId: member.id, email: member.email });
-                                  }}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              )}
-                            </li>
+                              ·
+                            </div>
                           ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          {t("noMembers")}
-                        </p>
+                          {userCount > 4 && (
+                            <div
+                              className="avatar"
+                              style={{
+                                background: "var(--paper-2)",
+                                color: "var(--ink-2)",
+                                width: 24,
+                                height: 24,
+                                fontSize: 10,
+                                border: "2px solid white",
+                              }}
+                            >
+                              +{userCount - 4}
+                            </div>
+                          )}
+                          {userCount === 0 && (
+                            <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+                              {t("noneTeam")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {isSelected && (
+                      <button
+                        type="button"
+                        className="btn btn-primary mt-4 w-full"
+                        onClick={() => openProject(project.id)}
+                      >
+                        {t("openDashboard")} <ArrowRight size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Expanded team */}
+                {isExpanded && (
+                  <div
+                    className="border-t p-5 fade-up"
+                    style={{ background: "var(--paper-2)", borderColor: "var(--line)" }}
+                  >
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="label-cap">{t("teamMembers")}</div>
+                      {canManageUsers && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAddMemberProject({ id: project.id, name: project.name })
+                          }
+                          className="btn btn-ghost"
+                          style={{ padding: "5px 10px", fontSize: 12 }}
+                        >
+                          <UserPlus size={12} /> {t("invite")}
+                        </button>
                       )}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                    {isLoadingThisProject ? (
+                      <div className="flex items-center justify-center py-3">
+                        <Loader2
+                          size={14}
+                          className="animate-spin"
+                          style={{ color: "var(--muted)" }}
+                        />
+                      </div>
+                    ) : users.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                        {users.map((member, i) => (
+                          <div key={member.id} className="flex items-center gap-2.5">
+                            <div
+                              className="avatar"
+                              style={{ background: AVATAR_TONES[i % AVATAR_TONES.length] }}
+                            >
+                              {member.email.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-[13px] font-medium">
+                                {member.email}
+                              </div>
+                              <div className="text-[11px]" style={{ color: "var(--muted)" }}>
+                                {t("memberRole")}
+                              </div>
+                            </div>
+                            {canManageUsers && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setRemoveMember({
+                                    projectId: project.id,
+                                    userId: member.id,
+                                    email: member.email,
+                                  })
+                                }
+                                className="btn btn-quiet"
+                                aria-label="Remove"
+                              >
+                                <Trash2 size={12} style={{ color: "var(--negative)" }} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[12.5px]" style={{ color: "var(--muted)" }}>
+                        {t("noMembers")}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </article>
             );
           })}
         </div>
       )}
 
-      {/* Empty State */}
       {!isLoading && !error && projects.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="mb-4 rounded-xl bg-muted p-4">
-              <Building2 className="h-12 w-12 text-muted-foreground" />
-            </div>
-
-            <h3 className="text-base font-medium text-foreground">
-              {t("noProjectsYet")}
-            </h3>
-            <p className="mt-1 max-w-sm text-center text-sm text-muted-foreground">
-              {t("getStarted")}
-            </p>
-
-            <Button variant="outline" className="mt-4">
-              <Plus className="h-4 w-4" />
-              {t("createFirst")}
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="folio-card flex flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 rounded-xl p-4" style={{ background: "var(--paper-2)" }}>
+            <Building2 size={36} style={{ color: "var(--muted)" }} />
+          </div>
+          <h3 className="font-display text-[20px] font-medium tracking-tight">
+            {t("noProjectsYet")}
+          </h3>
+          <p className="mt-1 max-w-sm text-[13px]" style={{ color: "var(--muted)" }}>
+            {t("getStarted")}
+          </p>
+          <button type="button" className="btn btn-primary mt-4">
+            <Plus size={14} />
+            {t("createFirst")}
+          </button>
+        </div>
       )}
 
-      {/* Add Member Dialog */}
       {addMemberProject && (
         <AddMemberDialog
           projectId={addMemberProject.id}
@@ -301,23 +468,29 @@ export default function ProjectsPage() {
         />
       )}
 
-      {/* Remove Member Confirmation Dialog */}
       <AlertDialog open={!!removeMember} onOpenChange={(open) => !open && setRemoveMember(null)}>
         <AlertDialogContent className="max-w-sm sm:max-w-md">
           <div className="flex flex-col items-center gap-4 py-2">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-              <Trash2 className="h-6 w-6 text-destructive" />
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-full"
+              style={{ background: "var(--negative-tint)" }}
+            >
+              <Trash2 size={20} style={{ color: "var(--negative)" }} />
             </div>
-            <div className="text-center space-y-1">
-              <AlertDialogTitle className="text-center">{t("removeMemberTitle")}</AlertDialogTitle>
-              <p className="text-sm text-muted-foreground">{removeMember?.email}</p>
+            <div className="space-y-1 text-center">
+              <AlertDialogTitle className="font-display text-center">
+                {t("removeMemberTitle")}
+              </AlertDialogTitle>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>
+                {removeMember?.email}
+              </p>
             </div>
           </div>
-          <AlertDialogFooter className="sm:justify-center gap-2">
+          <AlertDialogFooter className="gap-2 sm:justify-center">
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRemoveUser}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              style={{ background: "var(--negative)", color: "white" }}
             >
               {t("remove")}
             </AlertDialogAction>

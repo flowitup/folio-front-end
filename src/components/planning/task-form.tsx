@@ -34,8 +34,12 @@ export function TaskForm({ initial, isSaving, onSubmit, onCancel }: TaskFormProp
   const [dueDate, setDueDate] = useState(initial?.due_date ?? "");
   const [labelsInput, setLabelsInput] = useState((initial?.labels ?? []).join(", "));
 
+  // Re-sync form fields when the edit target changes (legit "reset form on
+  // prop change" pattern; alternative would be `key={initial?.id}` on the
+  // parent which we don't control here).
   useEffect(() => {
     if (initial) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle(initial.title);
       setDescription(initial.description ?? "");
       setPriority(initial.priority);

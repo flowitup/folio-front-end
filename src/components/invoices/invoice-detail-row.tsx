@@ -49,10 +49,17 @@ export function InvoiceDetailRow({
 
   useEffect(() => {
     let cancelled = false;
-    setError(null);
+    // Clear any prior error and fetch — both paths set state inside the
+    // promise callback so we don't trigger react-hooks/set-state-in-effect.
     fetchInvoice(projectId, invoiceId)
-      .then((data) => { if (!cancelled) setInvoice(data); })
-      .catch(() => { if (!cancelled) setError("Failed to load invoice"); });
+      .then((data) => {
+        if (cancelled) return;
+        setInvoice(data);
+        setError(null);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Failed to load invoice");
+      });
     return () => { cancelled = true; };
   }, [projectId, invoiceId]);
 

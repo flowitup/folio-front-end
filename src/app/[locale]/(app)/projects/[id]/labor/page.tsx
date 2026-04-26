@@ -4,11 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { ArrowLeft, Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import Link from "next/link";
 
 import { WorkerList } from "@/components/labor/worker-list";
 import { AddWorkerDialog } from "@/components/labor/add-worker-dialog";
@@ -59,7 +57,7 @@ export default function LaborPage() {
   ) ?? false;
 
   // State
-  const [activeTab, setActiveTab] = useState<TabType>("workers");
+  const [activeTab, setActiveTab] = useState<TabType>("summary");
   const [isLoading, setIsLoading] = useState(true);
   const [isTabLoading, setIsTabLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -192,48 +190,33 @@ export default function LaborPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/projects">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <h2 className="text-xl font-semibold tracking-tight">{t("title")}</h2>
+    <div className="fade-up space-y-6 px-8 pb-12">
+      {/* Segmented tabs */}
+      <div className="flex items-center justify-between">
+        <div className="seg">
+          {(["summary", "attendance", "workers"] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={activeTab === tab ? "on" : ""}
+            >
+              {t(tab)}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b">
-        {(["workers", "attendance", "summary"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t(tab)}
-          </button>
-        ))}
-      </div>
-
-      {/* Error */}
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      {/* Loading */}
       {isLoading && (
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </CardContent>
-        </Card>
+        <div className="folio-card flex items-center justify-center p-12">
+          <Loader2 size={20} className="animate-spin" style={{ color: "var(--muted)" }} />
+        </div>
       )}
 
       {/* Tab Content */}

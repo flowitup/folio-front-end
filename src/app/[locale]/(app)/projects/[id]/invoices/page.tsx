@@ -5,9 +5,8 @@ import { useTranslations } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
-import { Plus, Loader2, Trash2, ChevronRight, ChevronDown } from "lucide-react";
+import { Loader2, Trash2, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 import { fetchInvoices, deleteInvoice } from "@/lib/api/invoice-api";
@@ -19,10 +18,10 @@ type TabType = "all" | InvoiceType;
 // row's colSpan so it spans the full width. Update if columns change.
 const INVOICE_TABLE_COLUMN_COUNT = 7;
 
-const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
-  client: "bg-blue-100 text-blue-700",
-  labor: "bg-orange-100 text-orange-700",
-  supplier: "bg-green-100 text-green-700",
+const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
+  client: "stamp",
+  labor: "stamp accent",
+  supplier: "stamp positive",
 };
 
 export default function InvoicesPage() {
@@ -107,179 +106,198 @@ export default function InvoicesPage() {
 
   const tabs: TabType[] = ["all", "client", "labor", "supplier"];
 
+  // Compute KPIs from current invoice list
+  const formatEUR = (n: number) =>
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+      maximumFractionDigits: 0,
+    }).format(n);
+  const totalInvoiced = invoices.reduce((s, i) => s + i.total_amount, 0);
+  const paidInvoices = invoices.filter((i) => (i as { status?: string }).status === "paid");
+  const pendingInvoices = invoices.filter((i) => (i as { status?: string }).status === "pending");
+  const overdueInvoices = invoices.filter((i) => (i as { status?: string }).status === "overdue");
+  const paidTotal = paidInvoices.reduce((s, i) => s + i.total_amount, 0);
+  const pendingTotal = pendingInvoices.reduce((s, i) => s + i.total_amount, 0);
+  const overdueTotal = overdueInvoices.reduce((s, i) => s + i.total_amount, 0);
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="fade-up space-y-6 px-8 pb-12">
+      {/* KPI Row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="folio-card p-5">
+          <div className="label-cap">{t("totalInvoiced")}</div>
+          <div className="font-display num mt-2 text-[28px] font-medium leading-none">
+            {formatEUR(totalInvoiced)}
+          </div>
+          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("invoiceCount", { n: invoices.length })}
+          </div>
+        </div>
+        <div className="folio-card p-5">
+          <div className="label-cap">{t("paid")}</div>
+          <div
+            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            style={{ color: "var(--positive)" }}
+          >
+            {formatEUR(paidTotal)}
+          </div>
+          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("invoiceCount", { n: paidInvoices.length })}
+          </div>
+        </div>
+        <div className="folio-card p-5">
+          <div className="label-cap">{t("pending")}</div>
+          <div
+            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            style={{ color: "var(--warning)" }}
+          >
+            {formatEUR(pendingTotal)}
+          </div>
+          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("awaiting", { n: pendingInvoices.length })}
+          </div>
+        </div>
+        <div className="folio-card p-5">
+          <div className="label-cap">{t("overdue")}</div>
+          <div
+            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            style={{ color: overdueInvoices.length > 0 ? "var(--negative)" : "var(--ink)" }}
+          >
+            {formatEUR(overdueTotal)}
+          </div>
+          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("invoiceCount", { n: overdueInvoices.length })}
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">{t("title")}</h2>
-        {canManageInvoices && (
-          <Button
-            onClick={() =>
-              router.push(`/${locale}/projects/${projectId}/invoices/new`)
-            }
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            {t("newInvoice")}
-          </Button>
-        )}
+        <div className="seg">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={activeTab === tab ? "on" : ""}
+            >
+              {tab === "all" ? t("all") : t(`types.${tab}`)}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {tab === "all" ? t("all") : t(`types.${tab}`)}
-          </button>
-        ))}
-      </div>
-
-      {/* Error */}
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      {/* Loading */}
       {isLoading && (
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </CardContent>
-        </Card>
+        <div className="folio-card flex items-center justify-center p-12">
+          <Loader2 size={20} className="animate-spin" style={{ color: "var(--muted)" }} />
+        </div>
       )}
 
-      {/* Table */}
       {!isLoading && (
-        <Card>
-          <CardContent className="p-0">
-            {invoices.length === 0 ? (
-              <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-                {t("noInvoices")}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/30">
-                      <th className="w-8 px-2 py-3"></th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                        {t("invoiceNumber")}
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                        {t("type")}
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                        {t("issueDate")}
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                        {t("recipient")}
-                      </th>
-                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                        {t("totalAmount")}
-                      </th>
-                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoices.map((invoice) => {
-                      const isOpen = selectedInvoiceId === invoice.id;
-                      const detailId = `invoice-detail-${invoice.id}`;
-                      return (
-                        <Fragment key={invoice.id}>
-                          <tr
-                            role="button"
-                            tabIndex={0}
-                            aria-expanded={isOpen}
-                            aria-controls={detailId}
-                            className={`border-b last:border-0 hover:bg-muted/20 transition-colors cursor-pointer ${
-                              isOpen ? "bg-muted/30" : ""
-                            }`}
-                            onClick={() => toggleInvoice(invoice.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                toggleInvoice(invoice.id);
-                              }
-                            }}
+        <div className="folio-card overflow-hidden">
+          {invoices.length === 0 ? (
+            <div
+              className="flex items-center justify-center py-12 text-[13px]"
+              style={{ color: "var(--muted)" }}
+            >
+              {t("noInvoices")}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="ledger">
+                <thead>
+                  <tr>
+                    <th style={{ width: 32 }}></th>
+                    <th>{t("invoiceNumber")}</th>
+                    <th>{t("type")}</th>
+                    <th>{t("issueDate")}</th>
+                    <th>{t("recipient")}</th>
+                    <th style={{ textAlign: "right" }}>{t("totalAmount")}</th>
+                    <th style={{ textAlign: "right" }}>{t("actions")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map((invoice) => {
+                    const isOpen = selectedInvoiceId === invoice.id;
+                    const detailId = `invoice-detail-${invoice.id}`;
+                    return (
+                      <Fragment key={invoice.id}>
+                        <tr
+                          role="button"
+                          tabIndex={0}
+                          aria-expanded={isOpen}
+                          aria-controls={detailId}
+                          className="cursor-pointer"
+                          style={isOpen ? { background: "var(--paper-2)" } : undefined}
+                          onClick={() => toggleInvoice(invoice.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              toggleInvoice(invoice.id);
+                            }
+                          }}
+                        >
+                          <td style={{ color: "var(--muted)" }}>
+                            {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                          </td>
+                          <td className="num text-[12.5px]">{invoice.invoice_number}</td>
+                          <td>
+                            <span className={TYPE_STAMP_CLASS[invoice.type]}>
+                              {t(`types.${invoice.type}`)}
+                            </span>
+                          </td>
+                          <td className="num" style={{ color: "var(--muted)" }}>
+                            {invoice.issue_date}
+                          </td>
+                          <td>{invoice.recipient_name}</td>
+                          <td className="num font-medium" style={{ textAlign: "right" }}>
+                            {invoice.total_amount.toFixed(2)}
+                          </td>
+                          <td
+                            style={{ textAlign: "right" }}
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <td className="w-8 px-2 py-3 text-muted-foreground">
-                              {isOpen ? (
-                                <ChevronDown className="h-4 w-4" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4" />
+                            <div className="flex items-center justify-end gap-1">
+                              {canManageInvoices && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  style={{ color: "var(--muted)" }}
+                                  onClick={() => handleDelete(invoice)}
+                                >
+                                  <Trash2 size={13} />
+                                </Button>
                               )}
-                            </td>
-                            <td className="px-4 py-3 font-mono text-xs">
-                              {invoice.invoice_number}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span
-                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                                  TYPE_BADGE_CLASS[invoice.type]
-                                }`}
-                              >
-                                {t(`types.${invoice.type}`)}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground">
-                              {invoice.issue_date}
-                            </td>
-                            <td className="px-4 py-3">{invoice.recipient_name}</td>
-                            <td className="px-4 py-3 text-right font-medium">
-                              {invoice.total_amount.toFixed(2)}
-                            </td>
-                            <td
-                              className="px-4 py-3"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <div className="flex items-center justify-end gap-1">
-                                {canManageInvoices && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                                    onClick={() => handleDelete(invoice)}
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                          {isOpen && (
-                            <InvoiceDetailRow
-                              projectId={projectId}
-                              invoiceId={invoice.id}
-                              canManage={canManageInvoices}
-                              colSpan={INVOICE_TABLE_COLUMN_COUNT}
-                              regionId={detailId}
-                              onMutated={loadInvoices}
-                              onCollapse={closeInvoice}
-                            />
-                          )}
-                        </Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                            </div>
+                          </td>
+                        </tr>
+                        {isOpen && (
+                          <InvoiceDetailRow
+                            projectId={projectId}
+                            invoiceId={invoice.id}
+                            canManage={canManageInvoices}
+                            colSpan={INVOICE_TABLE_COLUMN_COUNT}
+                            regionId={detailId}
+                            onMutated={loadInvoices}
+                            onCollapse={closeInvoice}
+                          />
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       )}
-
     </div>
   );
 }

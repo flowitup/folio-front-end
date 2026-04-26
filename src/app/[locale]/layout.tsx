@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Outfit } from "next/font/google";
+import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
 import "../globals.css";
@@ -21,15 +21,16 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
+  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
-  title: "Construction — Project Management",
-  description: "Streamlined construction project management with Nordic-inspired simplicity",
+  title: "Folio · Build Journal",
+  description: "A warm, human-feeling app for managing the construction of your own house.",
 };
 
 export default async function LocaleLayout({
@@ -42,7 +43,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${inter.variable} ${jetbrainsMono.variable} ${outfit.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}>
       <body className="antialiased">
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider>

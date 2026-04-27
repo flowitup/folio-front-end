@@ -375,6 +375,7 @@
         "placeholder": "Tapez au moins 3 caractères d'un e-mail ou d'un nom",
         "minChars": "Tapez au moins 3 caractères pour lancer la recherche",
         "empty": "Aucun utilisateur ne correspond à votre recherche",
+        "searching": "Recherche en cours…",
         "selected": "Sélectionné : {email}",
         "clear": "Effacer"
       },

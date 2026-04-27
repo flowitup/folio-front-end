@@ -222,12 +222,13 @@ export function Sidebar() {
 
         {/* Admin section — only for superadmin (*:*); server-side authz is authoritative */}
         {isSuperadmin && (
-          <div className="pt-3">
+          <div className="mt-4 pt-3">
+            <div className="ink-divider mb-3" />
             <div
-              className="label-cap flex items-center gap-1.5 px-3 pb-1.5"
-              style={{ color: "var(--muted)" }}
+              className="flex items-center gap-2 px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.08em]"
+              style={{ color: "var(--accent)" }}
             >
-              <ShieldCheck size={11} />
+              <ShieldCheck size={13} />
               <span>{tAdmin("section")}</span>
             </div>
             <Link

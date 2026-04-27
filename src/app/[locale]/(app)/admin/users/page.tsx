@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { ShieldCheck } from "lucide-react";
 import { getSession } from "@/lib/auth/session";
 import { listRoles } from "@/lib/api/roles";
 import { listProjects } from "@/lib/api/projects-server";
@@ -30,17 +31,31 @@ export default async function AdminUsersPage({ params }: PageProps) {
     listProjects().catch(() => []),
   ]);
 
+  const t = await getTranslations("admin.bulkAdd");
+  const tNav = await getTranslations("navigation.admin");
+
   return (
-    <div className="container py-8 space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Bulk Add Memberships
+    <div className="fade-up space-y-8 px-8 pb-12">
+      {/* Page header — matches Folio's quietly-confident page-title aesthetic */}
+      <div className="space-y-2 pt-2">
+        <div
+          className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em]"
+          style={{ color: "var(--accent)" }}
+        >
+          <ShieldCheck aria-hidden="true" size={13} />
+          <span>{tNav("section")}</span>
+          <span style={{ color: "var(--muted)" }}>›</span>
+          <span style={{ color: "var(--muted)" }}>{tNav("users")}</span>
+        </div>
+        <h1 className="font-display text-[28px] font-semibold tracking-tight">
+          {t("title")}
         </h1>
-        <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-          Search for a user, select projects and a role, then submit.
+        <p className="text-sm max-w-2xl" style={{ color: "var(--muted)" }}>
+          {t("subtitle")}
         </p>
       </div>
 
+      {/* Form */}
       <BulkAddForm roles={roles} projects={projects} />
     </div>
   );

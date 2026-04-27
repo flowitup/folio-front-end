@@ -79,7 +79,7 @@ export function UserSearch({ onSelect }: UserSearchProps) {
   return (
     <div ref={containerRef} className="relative space-y-1.5">
       <Label htmlFor="user-search" aria-required="true">
-        {t("userLabel")}
+        {t("userSearch.label")}
       </Label>
       <Input
         id="user-search"
@@ -87,14 +87,14 @@ export function UserSearch({ onSelect }: UserSearchProps) {
         autoComplete="off"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder={t("userPlaceholder")}
+        placeholder={t("userSearch.placeholder")}
         aria-autocomplete="list"
         aria-expanded={isOpen}
         aria-controls="user-search-listbox"
       />
       {isLoading && (
         <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-          {t("searching")}
+          {t("userSearch.searching")}
         </p>
       )}
 
@@ -113,7 +113,7 @@ export function UserSearch({ onSelect }: UserSearchProps) {
               className="px-3 py-2 text-sm"
               style={{ color: "var(--muted-foreground)" }}
             >
-              {t("noUsersFound")}
+              {t("userSearch.empty")}
             </li>
           ) : (
             results.map((user) => (

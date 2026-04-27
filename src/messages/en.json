@@ -375,6 +375,7 @@
         "placeholder": "Type at least 3 characters of an email or name",
         "minChars": "Type at least 3 characters to search",
         "empty": "No users match your search",
+        "searching": "Searching…",
         "selected": "Selected: {email}",
         "clear": "Clear"
       },

@@ -375,6 +375,7 @@
         "placeholder": "Nhập ít nhất 3 ký tự của email hoặc tên",
         "minChars": "Nhập ít nhất 3 ký tự để tìm kiếm",
         "empty": "Không tìm thấy người dùng phù hợp",
+        "searching": "Đang tìm…",
         "selected": "Đã chọn: {email}",
         "clear": "Xoá"
       },

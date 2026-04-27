@@ -29,10 +29,40 @@ function isUuid(value: string): boolean {
   return UUID_RE.test(value);
 }
 
+/** Inspect a thrown fetch-error's response body to discriminate between
+ *  similar status codes (e.g. 404 user vs role; 403 perm vs role-not-allowed). */
+function classifyBackendError(err: unknown): string {
+  const e = err as { status?: number; body?: { error?: string; message?: string } };
+  const status = e.status;
+  const errorClass = e.body?.error ?? "";
+  const message = (e.body?.message ?? "").toLowerCase();
+
+  // M2 / N1 — body inspection differentiates same-status causes:
+  if (status === 403) {
+    if (errorClass === "Forbidden" && message.includes("superadmin")) {
+      return "roleNotAllowed";
+    }
+    return "forbidden";
+  }
+  if (status === 404) {
+    // BE message includes "Target user" or "Role" prefix
+    if (message.includes("role")) return "roleNotFound";
+    return "userNotFound";
+  }
+  if (status === 400) return "tooMany"; // EmptyProjectListError / TooManyProjectsError; FE pre-validates so rare
+  if (status === 422) {
+    // Pydantic ValidationError — usually wrong-types or out-of-bounds project_ids
+    if (message.includes("project_ids")) return "tooMany";
+    return "generic";
+  }
+  if (status === 429) return "rateLimited";
+  return "generic";
+}
+
 /**
  * Server action: bulk-add a user to multiple projects under one role.
  * Validates inputs server-side before hitting the backend.
- * Maps known HTTP status codes to i18n error keys (translated in client).
+ * Maps known HTTP status codes (with response-body inspection) to i18n error keys.
  */
 export async function bulkAddMembershipsAction(
   userId: string,
@@ -47,7 +77,8 @@ export async function bulkAddMembershipsAction(
     return { success: false, error: "roleNotFound" };
   }
   if (!Array.isArray(projectIds) || projectIds.length < 1) {
-    return { success: false, error: "tooFewProjects" };
+    // M3 — match the existing i18n key admin.bulkAdd.errors.projectsRequired.
+    return { success: false, error: "projectsRequired" };
   }
   if (projectIds.length > 50) {
     return { success: false, error: "tooMany" };
@@ -63,11 +94,6 @@ export async function bulkAddMembershipsAction(
     });
     return { success: true, results: result.results };
   } catch (err: unknown) {
-    const status = (err as { status?: number }).status;
-    if (status === 403) return { success: false, error: "forbidden" };
-    if (status === 404) return { success: false, error: "userNotFound" };
-    if (status === 422) return { success: false, error: "tooMany" };
-    if (status === 429) return { success: false, error: "rateLimited" };
-    return { success: false, error: "generic" };
+    return { success: false, error: classifyBackendError(err) };
   }
 }

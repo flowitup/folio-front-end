@@ -54,11 +54,7 @@ export async function searchUsers(
   }
 
   if (!response.ok) {
-    const err = new Error(
-      `Failed to search users (HTTP ${response.status})`
-    ) as Error & { status: number };
-    err.status = response.status;
-    throw err;
+    throw await buildHttpError(response, "Failed to search users");
   }
 
   const data: { items: UserSearchItem[]; count: number } = await response.json();
@@ -92,12 +88,33 @@ export async function bulkAddMemberships(
   }
 
   if (!response.ok) {
-    const err = new Error(
-      `Failed to add memberships (HTTP ${response.status})`
-    ) as Error & { status: number };
-    err.status = response.status;
-    throw err;
+    throw await buildHttpError(response, "Failed to add memberships");
   }
 
   return response.json();
+}
+
+/**
+ * Parse a non-2xx response and produce an Error carrying both `.status`
+ * and `.body` (the parsed JSON, if any). The server-action layer uses
+ * the body fields (`error`, `message`) to discriminate same-status causes
+ * — e.g. 403 forbidden vs roleNotAllowed, 404 user vs role.
+ */
+async function buildHttpError(
+  response: Response,
+  prefix: string
+): Promise<Error & { status: number; body: { error?: string; message?: string } | null }> {
+  let body: { error?: string; message?: string } | null = null;
+  try {
+    body = (await response.json()) as { error?: string; message?: string };
+  } catch {
+    // Non-JSON body (or empty) — leave body as null.
+  }
+  const err = new Error(`${prefix} (HTTP ${response.status})`) as Error & {
+    status: number;
+    body: { error?: string; message?: string } | null;
+  };
+  err.status = response.status;
+  err.body = body;
+  return err;
 }

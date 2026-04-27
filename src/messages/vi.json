@@ -497,11 +497,14 @@
     "invite": {
       "button": "Mời thành viên",
       "dialogTitle": "Mời thành viên mới",
+      "dialogDescription": "Thêm một người vào dự án này. Nếu họ đã có tài khoản Folio, họ sẽ được thêm trực tiếp. Nếu chưa, chúng tôi sẽ gửi link mời có hiệu lực 7 ngày qua email.",
       "emailLabel": "Địa chỉ email",
+      "emailHint": "Chúng tôi sẽ gửi lời mời đến địa chỉ này",
       "roleLabel": "Vai trò",
       "rolePlaceholder": "Chọn vai trò",
+      "roleHint": "Member có thể xem dữ liệu dự án; Manager còn có thể chỉnh sửa",
       "submit": "Gửi lời mời",
-      "submitting": "Đang gửi...",
+      "submitting": "Đang gửi…",
       "cancel": "Hủy"
     },
     "revoke": "Thu hồi",

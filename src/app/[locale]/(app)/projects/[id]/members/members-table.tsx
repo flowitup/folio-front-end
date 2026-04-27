@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { UserPlus } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,7 +92,8 @@ export function MembersTable({
       <div className="flex items-center justify-between pt-2">
         <h1 className="font-display text-[22px] font-semibold">{t("title")}</h1>
         {canInvite && (
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
+          <Button size="sm" onClick={() => setDialogOpen(true)} className="gap-1.5">
+            <UserPlus aria-hidden="true" size={14} />
             {t("invite.button")}
           </Button>
         )}

@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BulkAddForm } from "../bulk-add-form";
 import type { Role } from "@/lib/api/roles";
@@ -229,45 +229,53 @@ describe("BulkAddForm", () => {
   // ---------------------------------------------------------------------------
 
   describe("Max-50 project cap", () => {
-    it("renders cap caption and disables unchecked checkboxes when 50 projects are selected", async () => {
-      // Build 52 projects; first 50 are pre-selected by toggling, then assert 51st is disabled
-      const manyProjects: ProjectSummary[] = Array.from({ length: 52 }, (_, i) => ({
-        id: `proj-uuid-${i.toString().padStart(2, "0")}`,
-        name: `Project ${i + 1}`,
-      }));
+    // CI timing note: 50 sequential userEvent.click pointer-simulations push past
+    // the 5000ms default in slower CI runners. fireEvent.click triggers the same
+    // React state path synchronously (no pointer simulation), keeping wall time
+    // under 1s even on shared CI runners. Explicit timeout adds headroom.
+    it(
+      "renders cap caption and disables unchecked checkboxes when 50 projects are selected",
+      async () => {
+        // Build 52 projects; first 50 are pre-selected by toggling, then assert 51st is disabled
+        const manyProjects: ProjectSummary[] = Array.from({ length: 52 }, (_, i) => ({
+          id: `proj-uuid-${i.toString().padStart(2, "0")}`,
+          name: `Project ${i + 1}`,
+        }));
 
-      renderForm(ROLES, manyProjects);
+        renderForm(ROLES, manyProjects);
 
-      // Click the first 50 checkboxes
-      for (let i = 0; i < 50; i++) {
+        // Batch all 50 clicks inside a single act() so React only flushes once.
         await act(async () => {
-          await userEvent.click(
-            screen.getByRole("checkbox", { name: `Project ${i + 1}` })
-          );
+          for (let i = 0; i < 50; i++) {
+            fireEvent.click(
+              screen.getByRole("checkbox", { name: `Project ${i + 1}` })
+            );
+          }
         });
-      }
 
-      // Cap caption should be rendered — match the specific cap-reached message key
-      await waitFor(() => {
-        // The form renders t("projectCapReached", { max: 50 }) which in our mock becomes
-        // "admin.bulkAdd.projectCapReached50" — just assert the element with role="alert"
-        // is absent but the cap paragraph is present via partial text match on the key fragment
-        const capEl = screen.queryByText(/projectCapReached/);
-        expect(capEl).not.toBeNull();
-      });
+        // Cap caption should be rendered — match the specific cap-reached message key
+        await waitFor(() => {
+          // The form renders t("projectCapReached", { max: 50 }) which in our mock becomes
+          // "admin.bulkAdd.projectCapReached50" — just assert the element with role="alert"
+          // is absent but the cap paragraph is present via partial text match on the key fragment
+          const capEl = screen.queryByText(/projectCapReached/);
+          expect(capEl).not.toBeNull();
+        });
 
-      // The 51st checkbox (index 50 → "Project 51") should be disabled
-      const checkbox51 = screen.getByRole("checkbox", { name: "Project 51" });
-      expect(checkbox51).toBeDisabled();
+        // The 51st checkbox (index 50 → "Project 51") should be disabled
+        const checkbox51 = screen.getByRole("checkbox", { name: "Project 51" });
+        expect(checkbox51).toBeDisabled();
 
-      // The 52nd checkbox should also be disabled
-      const checkbox52 = screen.getByRole("checkbox", { name: "Project 52" });
-      expect(checkbox52).toBeDisabled();
+        // The 52nd checkbox should also be disabled
+        const checkbox52 = screen.getByRole("checkbox", { name: "Project 52" });
+        expect(checkbox52).toBeDisabled();
 
-      // Already-checked boxes should still be enabled (user can uncheck them)
-      const checkbox1 = screen.getByRole("checkbox", { name: "Project 1" });
-      expect(checkbox1).not.toBeDisabled();
-    });
+        // Already-checked boxes should still be enabled (user can uncheck them)
+        const checkbox1 = screen.getByRole("checkbox", { name: "Project 1" });
+        expect(checkbox1).not.toBeDisabled();
+      },
+      15000
+    );
   });
 
   // ---------------------------------------------------------------------------

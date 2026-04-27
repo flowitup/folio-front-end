@@ -13,6 +13,7 @@
     "labor": "Main-d'œuvre",
     "invoices": "Factures",
     "planning": "Planification",
+    "notes": "Notes",
     "members": "Membres",
     "settings": "Paramètres",
     "admin": {
@@ -407,6 +408,74 @@
         "differentRole": "{count} projet(s) ignoré(s) — l'utilisateur y a un rôle différent",
         "notFound": "{count} projet(s) introuvable(s)"
       }
+    }
+  },
+  "notes": {
+    "title": "Notes",
+    "subtitle": "À retenir pour {projectName}",
+    "anchorNote": "Les rappels sont envoyés à 09h00 UTC",
+    "addButton": "+ Ajouter une note",
+    "placeholderTitle": "Que devez-vous retenir ?",
+    "placeholderDescription": "Détails optionnels",
+    "dueLabel": "Échéance",
+    "leadTimeLabel": "Rappel",
+    "leadTimeOptions": {
+      "0": "À l'échéance",
+      "60": "1 heure avant",
+      "1440": "1 jour avant"
+    },
+    "statusOpen": "Ouvert",
+    "statusDone": "Terminé",
+    "actions": {
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "edit": "Modifier"
+    },
+    "groups": {
+      "today": "Aujourd'hui",
+      "tomorrow": "Demain",
+      "thisWeek": "Cette semaine",
+      "later": "Plus tard",
+      "done": "Terminé"
+    },
+    "empty": {
+      "title": "Aucune note pour le moment",
+      "cta": "Ajoutez votre première note"
+    },
+    "deleted": {
+      "toast": "Note supprimée",
+      "undo": "Annuler"
+    },
+    "errors": {
+      "saveFailed": "Impossible d'enregistrer la note. Réessayez.",
+      "deleteFailed": "Impossible de supprimer la note. Réessayez.",
+      "validation": "Certains champs sont invalides.",
+      "forbidden": "Vous n'avez pas accès à ce projet.",
+      "notFound": "Cette note n'existe plus.",
+      "rateLimited": "Trop de requêtes. Réessayez dans un moment.",
+      "generic": "Une erreur est survenue. Réessayez."
+    }
+  },
+  "notifications": {
+    "aria": {
+      "bell": "Notifications",
+      "goToNote": "Aller à la note : {title}"
+    },
+    "title": "Rappels",
+    "empty": "Aucun rappel pour le moment",
+    "dismissButton": "Ignorer",
+    "dueAt": "Échéance {date}",
+    "leadTime": {
+      "0": "Maintenant",
+      "60": "Dans ~1 heure",
+      "1440": "Demain"
+    },
+    "errors": {
+      "dismissFailed": "Impossible d'ignorer. Réessayez."
+    },
+    "skeleton": {
+      "loading": "Chargement des rappels..."
     }
   },
   "members": {

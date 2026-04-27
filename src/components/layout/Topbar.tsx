@@ -2,7 +2,8 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Search, Sun, Plus, Globe, LogOut } from "lucide-react";
+import { Search, Sun, Plus, Globe, LogOut } from "lucide-react";
+import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { locales, localeNames, type Locale } from "@/i18n/config";
@@ -119,17 +120,7 @@ export function Topbar() {
         <button type="button" className="btn btn-quiet" aria-label={tTopbar("topbar.search")}>
           <Search size={16} />
         </button>
-        <button
-          type="button"
-          className="btn btn-quiet relative"
-          aria-label={tTopbar("topbar.viewNotifications")}
-        >
-          <Bell size={16} />
-          <span
-            className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full"
-            style={{ background: "var(--accent)" }}
-          />
-        </button>
+        <NotificationsBell />
         <button type="button" className="btn btn-quiet" aria-label={tTopbar("topbar.theme")}>
           <Sun size={16} />
         </button>

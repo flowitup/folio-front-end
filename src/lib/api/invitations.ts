@@ -6,7 +6,7 @@
  */
 
 import { env } from "@/lib/config/env";
-import { cookies } from "next/headers";
+import { sessionAuthHeader } from "@/lib/api/auth-header";
 import type { User } from "@/lib/auth/types";
 import type { VerifyInviteResponse, AcceptInvitePayload } from "@/lib/auth/types";
 
@@ -29,14 +29,6 @@ export interface CreateInvitationPayload {
 export type CreateInvitationResult =
   | { kind: "invitation_sent"; invitation_id: string; expires_at: string }
   | { kind: "direct_added"; user_id: string };
-
-/** Build an auth header from the server-side session cookie. */
-async function sessionAuthHeader(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("access_token_cookie")?.value;
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
-}
 
 /**
  * List pending invitations for a project.

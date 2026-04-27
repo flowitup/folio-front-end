@@ -5,7 +5,7 @@
  */
 
 import { env } from "@/lib/config/env";
-import { cookies } from "next/headers";
+import { sessionAuthHeader } from "@/lib/api/auth-header";
 
 export interface ProjectMember {
   user_id: string;
@@ -13,13 +13,6 @@ export interface ProjectMember {
   display_name: string | null;
   role_name: string;
   joined_at: string;
-}
-
-async function sessionAuthHeader(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("access_token_cookie")?.value;
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
 }
 
 /**

@@ -20,6 +20,26 @@ function parseCookie(cookie: string): { name: string; value: string } | null {
 }
 
 /**
+ * Forward an array of raw Set-Cookie header values onto the Next.js cookie
+ * store with our standard security flags (httpOnly, Secure in prod,
+ * SameSite=Lax, root path). Used by login, acceptInviteAction, and
+ * refreshToken to avoid duplicating the cookie-setting block.
+ */
+async function setForwardedCookies(setCookieHeaders: string[]): Promise<void> {
+  const cookieStore = await cookies();
+  for (const cookie of setCookieHeaders) {
+    const parsed = parseCookie(cookie);
+    if (!parsed) continue;
+    cookieStore.set(parsed.name, parsed.value, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+  }
+}
+
+/**
  * Login server action.
  * Calls backend API and sets cookies.
  */
@@ -48,20 +68,7 @@ export async function login(
     const data: LoginResponse = await response.json();
 
     // Forward cookies from backend response
-    const setCookieHeaders = response.headers.getSetCookie();
-    const cookieStore = await cookies();
-
-    for (const cookie of setCookieHeaders) {
-      const parsed = parseCookie(cookie);
-      if (parsed) {
-        cookieStore.set(parsed.name, parsed.value, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          path: "/",
-        });
-      }
-    }
+    await setForwardedCookies(response.headers.getSetCookie());
 
     return {
       success: true,
@@ -128,18 +135,7 @@ export async function acceptInviteAction(
     const payload: AcceptInvitePayload = { token, name: name.trim(), password };
     const { user, setCookieHeaders } = await acceptInvite(payload);
 
-    const cookieStore = await cookies();
-    for (const cookie of setCookieHeaders) {
-      const parsed = parseCookie(cookie);
-      if (parsed) {
-        cookieStore.set(parsed.name, parsed.value, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          path: "/",
-        });
-      }
-    }
+    await setForwardedCookies(setCookieHeaders);
 
     return { success: true, user };
   } catch (error) {
@@ -174,19 +170,7 @@ export async function refreshToken(): Promise<boolean> {
     }
 
     // Forward new cookies
-    const setCookieHeaders = response.headers.getSetCookie();
-
-    for (const cookie of setCookieHeaders) {
-      const parsed = parseCookie(cookie);
-      if (parsed) {
-        cookieStore.set(parsed.name, parsed.value, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          path: "/",
-        });
-      }
-    }
+    await setForwardedCookies(response.headers.getSetCookie());
 
     return true;
   } catch {

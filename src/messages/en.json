@@ -14,7 +14,11 @@
     "invoices": "Invoices",
     "planning": "Planning",
     "members": "Members",
-    "settings": "Settings"
+    "settings": "Settings",
+    "admin": {
+      "section": "Admin",
+      "users": "Users"
+    }
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -360,6 +364,50 @@
       "signOut": "Sign out and continue"
     },
     "backToLogin": "Go to login"
+  },
+  "admin": {
+    "bulkAdd": {
+      "title": "Add a user to multiple projects",
+      "subtitle": "Find an existing user, pick projects, and assign one role to all of them.",
+      "userSearch": {
+        "label": "Search for a user",
+        "placeholder": "Type at least 3 characters of an email or name",
+        "minChars": "Type at least 3 characters to search",
+        "empty": "No users match your search",
+        "selected": "Selected: {email}",
+        "clear": "Clear"
+      },
+      "projects": {
+        "label": "Projects",
+        "placeholder": "Filter projects...",
+        "empty": "No projects available",
+        "selectedCount": "{count} selected",
+        "maxReached": "Up to 50 projects per request"
+      },
+      "role": {
+        "label": "Role",
+        "placeholder": "Select a role"
+      },
+      "submit": "Add to selected projects",
+      "submitting": "Adding...",
+      "errors": {
+        "userRequired": "Select a user first",
+        "projectsRequired": "Select at least one project",
+        "roleRequired": "Select a role",
+        "generic": "Something went wrong. Please try again.",
+        "forbidden": "You don't have permission to perform this action",
+        "userNotFound": "User not found",
+        "roleNotFound": "Role not found",
+        "tooMany": "Too many projects (max 50 per request)",
+        "rateLimited": "Too many bulk operations. Try again in an hour."
+      },
+      "toast": {
+        "added": "Added user to {count} project(s)",
+        "alreadyMember": "{count} project(s) skipped — user already a member",
+        "differentRole": "{count} project(s) skipped — user has a different role there",
+        "notFound": "{count} project(s) not found"
+      }
+    }
   },
   "members": {
     "title": "Members",

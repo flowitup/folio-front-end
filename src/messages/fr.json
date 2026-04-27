@@ -14,7 +14,11 @@
     "invoices": "Factures",
     "planning": "Planification",
     "members": "Membres",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "admin": {
+      "section": "Administration",
+      "users": "Utilisateurs"
+    }
   },
   "auth": {
     "welcomeBack": "Bienvenue",
@@ -360,6 +364,50 @@
       "signOut": "Se déconnecter et continuer"
     },
     "backToLogin": "Aller à la connexion"
+  },
+  "admin": {
+    "bulkAdd": {
+      "title": "Ajouter un utilisateur à plusieurs projets",
+      "subtitle": "Recherchez un utilisateur existant, choisissez les projets, puis attribuez un rôle pour tous.",
+      "userSearch": {
+        "label": "Rechercher un utilisateur",
+        "placeholder": "Tapez au moins 3 caractères d'un e-mail ou d'un nom",
+        "minChars": "Tapez au moins 3 caractères pour lancer la recherche",
+        "empty": "Aucun utilisateur ne correspond à votre recherche",
+        "selected": "Sélectionné : {email}",
+        "clear": "Effacer"
+      },
+      "projects": {
+        "label": "Projets",
+        "placeholder": "Filtrer les projets...",
+        "empty": "Aucun projet disponible",
+        "selectedCount": "{count} sélectionné(s)",
+        "maxReached": "Jusqu'à 50 projets par requête"
+      },
+      "role": {
+        "label": "Rôle",
+        "placeholder": "Sélectionnez un rôle"
+      },
+      "submit": "Ajouter aux projets sélectionnés",
+      "submitting": "Ajout en cours...",
+      "errors": {
+        "userRequired": "Sélectionnez d'abord un utilisateur",
+        "projectsRequired": "Sélectionnez au moins un projet",
+        "roleRequired": "Sélectionnez un rôle",
+        "generic": "Une erreur est survenue. Veuillez réessayer.",
+        "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
+        "userNotFound": "Utilisateur introuvable",
+        "roleNotFound": "Rôle introuvable",
+        "tooMany": "Trop de projets (50 maximum par requête)",
+        "rateLimited": "Trop d'opérations en bloc. Réessayez dans une heure."
+      },
+      "toast": {
+        "added": "Utilisateur ajouté à {count} projet(s)",
+        "alreadyMember": "{count} projet(s) ignoré(s) — l'utilisateur en est déjà membre",
+        "differentRole": "{count} projet(s) ignoré(s) — l'utilisateur y a un rôle différent",
+        "notFound": "{count} projet(s) introuvable(s)"
+      }
+    }
   },
   "members": {
     "title": "Membres",

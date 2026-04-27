@@ -28,6 +28,10 @@ type EditingId = string | null; // note id, "new" for add-row, null for none
 
 const BUCKET_ORDER = ["today", "tomorrow", "thisWeek", "later", "done"] as const;
 
+// Prefix optimistic IDs so they never collide with real BE UUIDs.
+const TEMP_PREFIX = "temp-";
+const makeTempId = () => `${TEMP_PREFIX}${crypto.randomUUID()}`;
+
 // Minimal temp note shape for optimistic insert
 function makeTempNote(
   projectId: string,
@@ -145,7 +149,7 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
     if (!newDueDate) return;
 
     setIsAdding(true);
-    const tempId = crypto.randomUUID();
+    const tempId = makeTempId();
     const tempNote = makeTempNote(projectId, tempId, trimmed, newDueDate, newLeadTime);
 
     // Optimistic insert

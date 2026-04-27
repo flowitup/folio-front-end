@@ -459,7 +459,8 @@
   },
   "notifications": {
     "aria": {
-      "bell": "Notifications"
+      "bell": "Notifications",
+      "goToNote": "Aller à la note : {title}"
     },
     "title": "Rappels",
     "empty": "Aucun rappel pour le moment",

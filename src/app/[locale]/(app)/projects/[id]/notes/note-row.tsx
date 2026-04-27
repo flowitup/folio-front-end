@@ -58,14 +58,17 @@ export function NoteRow({
   const [leadTime, setLeadTime] = useState<LeadTimeMinutes>(note.lead_time_minutes);
   const [description, setDescription] = useState(note.description ?? "");
   const [isSaving, setIsSaving] = useState(false);
+  const [expandedDescription, setExpandedDescription] = useState(false);
 
-  // Sync local state when note prop changes (e.g. optimistic rollback or server update)
+  // Sync local state when note prop changes (e.g. optimistic rollback or server update).
+  // Also resets expandedDescription when leaving edit mode.
   useEffect(() => {
     if (!isEditing) {
       setTitle(note.title);
       setDueDate(note.due_date);
       setLeadTime(note.lead_time_minutes);
       setDescription(note.description ?? "");
+      setExpandedDescription(false);
     }
   }, [note, isEditing]);
 
@@ -128,56 +131,72 @@ export function NoteRow({
   if (!isEditing) {
     return (
       <div
-        className="group flex items-center gap-3 rounded-md px-2 py-2 hover:bg-accent/40 transition-colors"
+        className="group rounded-md px-2 py-2 hover:bg-accent/40 transition-colors"
         role="row"
       >
-        <NoteStatusToggle note={note} onStatusChange={onStatusChange} />
+        <div className="flex items-center gap-3">
+          <NoteStatusToggle note={note} onStatusChange={onStatusChange} />
 
-        {/* Title — clickable to enter edit */}
-        <button
-          type="button"
-          onClick={onStartEdit}
-          className="flex-1 text-left text-sm truncate focus:outline-none focus-visible:underline"
-          style={note.status === "done" ? { textDecoration: "line-through", color: "var(--muted-foreground)" } : undefined}
-        >
-          {note.title}
-        </button>
-
-        {/* Due-date chip */}
-        <span
-          className="shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
-          style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
-        >
-          {note.due_date}
-        </span>
-
-        {/* Lead-time chip */}
-        <span
-          className="shrink-0 text-xs hidden sm:inline-block"
-          style={{ color: "var(--muted-foreground)" }}
-        >
-          {t(`leadTimeOptions.${note.lead_time_minutes}`)}
-        </span>
-
-        {/* Hover actions */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+          {/* Title — clickable to enter edit */}
           <button
             type="button"
             onClick={onStartEdit}
-            aria-label={t("actions.edit")}
-            className="rounded p-1 hover:bg-accent transition-colors"
+            className="flex-1 text-left text-sm truncate focus:outline-none focus-visible:underline"
+            style={note.status === "done" ? { textDecoration: "line-through", color: "var(--muted-foreground)" } : undefined}
           >
-            <Pencil className="h-3.5 w-3.5" style={{ color: "var(--muted-foreground)" }} />
+            {note.title}
           </button>
-          <button
-            type="button"
-            onClick={handleDeleteClick}
-            aria-label={t("actions.delete")}
-            className="rounded p-1 hover:bg-destructive/10 transition-colors"
+
+          {/* Due-date chip */}
+          <span
+            className="shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
+            style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
           >
-            <Trash2 className="h-3.5 w-3.5" style={{ color: "var(--muted-foreground)" }} />
-          </button>
+            {note.due_date}
+          </span>
+
+          {/* Lead-time chip */}
+          <span
+            className="shrink-0 text-xs hidden sm:inline-block"
+            style={{ color: "var(--muted-foreground)" }}
+          >
+            {t(`leadTimeOptions.${note.lead_time_minutes}`)}
+          </span>
+
+          {/* Hover actions */}
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={onStartEdit}
+              aria-label={t("actions.edit")}
+              className="rounded p-1 hover:bg-accent transition-colors"
+            >
+              <Pencil className="h-3.5 w-3.5" style={{ color: "var(--muted-foreground)" }} />
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteClick}
+              aria-label={t("actions.delete")}
+              className="rounded p-1 hover:bg-destructive/10 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" style={{ color: "var(--muted-foreground)" }} />
+            </button>
+          </div>
         </div>
+
+        {/* Description — click to expand/collapse; stopPropagation prevents row-click-to-edit */}
+        {note.description && (
+          <p
+            className={`mt-1 ml-7 text-sm whitespace-pre-wrap cursor-pointer ${expandedDescription ? "" : "line-clamp-2"}`}
+            style={{ color: "var(--muted-foreground)" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpandedDescription((v) => !v);
+            }}
+          >
+            {note.description}
+          </p>
+        )}
       </div>
     );
   }

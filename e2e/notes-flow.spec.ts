@@ -47,7 +47,7 @@ test.describe("Notes flow", () => {
     // ── 3. Add a new note (today, lead_time 0) ────────────────────────────────
     await page.getByRole("button", { name: /add note/i }).click();
 
-    const titleInput = page.getByPlaceholder(/note title|title/i);
+    const titleInput = page.getByPlaceholder(/remember/i);
     await titleInput.fill("E2E test note — can delete");
 
     // Submit with Enter
@@ -80,7 +80,7 @@ test.describe("Notes flow", () => {
     await page.getByRole("button", { name: /bell|notifications/i }).click();
 
     // The dropdown empty state text (from i18n key notifications.empty)
-    await expect(page.getByText(/no notifications|all caught up/i)).toBeVisible({
+    await expect(page.getByText(/no reminders/i)).toBeVisible({
       timeout: 5_000,
     });
   });

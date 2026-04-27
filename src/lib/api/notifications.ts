@@ -14,7 +14,7 @@ import type { Note } from "@/lib/api/notes";
 
 export interface DueNotification {
   note: Note;
-  fire_at: string; // ISO 8601 UTC
+  dismissed: boolean; // BE always sends this; v1 always false but must be declared
 }
 
 export interface NotificationsListResult {

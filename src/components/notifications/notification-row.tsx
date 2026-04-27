@@ -47,7 +47,7 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
         type="button"
         onClick={handleClickThrough}
         className="min-w-0 flex-1 text-left focus:outline-none focus-visible:underline"
-        aria-label={`Go to note: ${note.title}`}
+        aria-label={t("aria.goToNote", { title: note.title })}
       >
         <p
           className="truncate text-sm font-medium leading-snug"

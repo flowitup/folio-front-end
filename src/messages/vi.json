@@ -459,7 +459,8 @@
   },
   "notifications": {
     "aria": {
-      "bell": "Thông báo"
+      "bell": "Thông báo",
+      "goToNote": "Đi đến ghi chú: {title}"
     },
     "title": "Nhắc nhở",
     "empty": "Không có nhắc nhở nào lúc này",

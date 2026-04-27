@@ -84,7 +84,9 @@ export function groupNotesByDay(notes: Note[], today: Date = new Date()): Groupe
     }
   }
 
-  // Sort each open bucket by due_date ascending
+  // Re-sort within each bucket even though BE returns notes ordered by due_date ASC
+  // (from ListProjectNotesUseCase). This is intentional: open buckets sort by due_date
+  // ascending, while the done bucket sorts by recency — different orders per bucket.
   const byDue = (a: Note, b: Note) => a.due_date.localeCompare(b.due_date);
   result.today.sort(byDue);
   result.tomorrow.sort(byDue);

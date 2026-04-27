@@ -375,6 +375,7 @@
         "placeholder": "Type at least 3 characters of an email or name",
         "minChars": "Type at least 3 characters to search",
         "empty": "No users match your search",
+        "searching": "Searching…",
         "selected": "Selected: {email}",
         "clear": "Clear"
       },
@@ -497,11 +498,14 @@
     "invite": {
       "button": "Invite member",
       "dialogTitle": "Invite a new member",
+      "dialogDescription": "Add someone to this project. If they already have a Folio account, they'll be added directly. Otherwise we'll email a 7-day invite link.",
       "emailLabel": "Email address",
+      "emailHint": "We'll send the invite to this address",
       "roleLabel": "Role",
       "rolePlaceholder": "Select a role",
+      "roleHint": "Members can read project data; managers can also edit it",
       "submit": "Send invitation",
-      "submitting": "Sending...",
+      "submitting": "Sending…",
       "cancel": "Cancel"
     },
     "revoke": "Revoke",

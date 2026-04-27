@@ -58,15 +58,15 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
     setError(null);
 
     if (!selectedUser) {
-      setError(t("errors.noUser"));
+      setError(t("errors.userRequired"));
       return;
     }
     if (projectIds.length < 1) {
-      setError(t("errors.noProjects"));
+      setError(t("errors.projectsRequired"));
       return;
     }
     if (!roleId) {
-      setError(t("errors.noRole"));
+      setError(t("errors.roleRequired"));
       return;
     }
 
@@ -109,17 +109,14 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
       />
       {selectedUser && (
         <p className="text-sm -mt-2" style={{ color: "var(--muted-foreground)" }}>
-          {t("selectedUser", {
-            name: selectedUser.display_name ?? selectedUser.email,
-            email: selectedUser.email,
-          })}
+          {t("userSearch.selected", { email: selectedUser.email })}
         </p>
       )}
 
       {/* Role select */}
       <div className="space-y-1.5">
         <Label htmlFor="role-select" aria-required="true">
-          {t("roleLabel")}
+          {t("role.label")}
         </Label>
         <Select
           value={roleId}
@@ -127,7 +124,7 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
           disabled={isSubmitting}
         >
           <SelectTrigger id="role-select">
-            <SelectValue placeholder={t("rolePlaceholder")} />
+            <SelectValue placeholder={t("role.placeholder")} />
           </SelectTrigger>
           <SelectContent>
             {roles.map((role) => (
@@ -150,7 +147,7 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
       {/* Project multi-select */}
       <div className="space-y-1.5">
         <Label aria-required="true">
-          {t("projectsLabel")}{" "}
+          {t("projects.label")}{" "}
           <span
             className="ml-1 text-xs font-normal"
             style={{ color: "var(--muted-foreground)" }}
@@ -162,7 +159,7 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
         {/* Client-side filter */}
         <Input
           type="text"
-          placeholder={t("projectFilterPlaceholder")}
+          placeholder={t("projects.placeholder")}
           value={projectFilter}
           onChange={(e) => setProjectFilter(e.target.value)}
           disabled={isSubmitting}
@@ -171,7 +168,7 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
 
         {atCap && (
           <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-            {t("projectCapReached", { max: MAX_PROJECTS })}
+            {t("projects.maxReached")}
           </p>
         )}
 
@@ -181,7 +178,7 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
               className="text-sm"
               style={{ color: "var(--muted-foreground)" }}
             >
-              {t("noProjectsMatch")}
+              {t("projects.empty")}
             </p>
           ) : (
             filteredProjects.map((project) => {

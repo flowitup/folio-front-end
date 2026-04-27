@@ -53,7 +53,10 @@ const { inviteMemberAction } = await import("../actions");
 const mockInviteAction = vi.mocked(inviteMemberAction);
 
 const { toast } = await import("sonner");
-const mockToast = toast as {
+// Cast through `unknown` because the runtime toast object is mocked via
+// vi.mock (above), but TypeScript still sees its real type — the narrow
+// shape we use here is all the test calls.
+const mockToast = toast as unknown as {
   success: ReturnType<typeof vi.fn>;
   warning: ReturnType<typeof vi.fn>;
   error: ReturnType<typeof vi.fn>;

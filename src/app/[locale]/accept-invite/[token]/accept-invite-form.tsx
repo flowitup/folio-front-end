@@ -64,10 +64,10 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
       >
         <div className="m-auto w-full max-w-[380px]">
           <h1 className="font-display text-[32px] font-medium leading-[1.1] tracking-tight">
-            {t("title")}
+            {t("title", { projectName: verified.project_name })}
           </h1>
           <p className="mt-2 text-[14px]" style={{ color: "var(--muted)" }}>
-            {t("subtitle")}
+            {t("intro")}
           </p>
 
           {/* Invite banner */}
@@ -83,7 +83,6 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
             <span>
               {t("subtitle", {
                 inviterName: verified.inviter_name,
-                projectName: verified.project_name,
                 roleName: verified.role_name,
               })}
             </span>

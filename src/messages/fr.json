@@ -336,6 +336,7 @@
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",
+    "intro": "Configurez votre compte pour rejoindre le projet.",
     "subtitle": "{inviterName} vous a invité en tant que {roleName}",
     "emailLabel": "E-mail",
     "nameLabel": "Votre nom complet",

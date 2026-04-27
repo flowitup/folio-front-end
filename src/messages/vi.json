@@ -336,6 +336,7 @@
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",
+    "intro": "Thiết lập tài khoản để tham gia dự án.",
     "subtitle": "{inviterName} đã mời bạn với vai trò {roleName}",
     "emailLabel": "Email",
     "nameLabel": "Họ và tên",

@@ -55,7 +55,9 @@ export async function listInvitations(
   if (!response.ok) {
     throw new Error(`Failed to list invitations (HTTP ${response.status})`);
   }
-  return response.json();
+  // BE returns InvitationListResponse { items: [...], total: N }; unwrap to array.
+  const data: { items: PendingInvitation[] } = await response.json();
+  return data.items ?? [];
 }
 
 /**

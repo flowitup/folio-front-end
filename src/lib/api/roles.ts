@@ -32,5 +32,7 @@ export async function listRoles(): Promise<Role[]> {
   if (!response.ok) {
     throw new Error(`Failed to fetch roles (HTTP ${response.status})`);
   }
-  return response.json();
+  // BE returns { roles: [...] }; unwrap to array.
+  const data: { roles: Role[] } = await response.json();
+  return data.roles ?? [];
 }

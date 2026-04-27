@@ -37,5 +37,7 @@ export async function listMembers(projectId: string): Promise<ProjectMember[]> {
   if (!response.ok) {
     throw new Error(`Failed to fetch members (HTTP ${response.status})`);
   }
-  return response.json();
+  // BE returns { members: [...], total: N }; unwrap to array.
+  const data: { members: ProjectMember[] } = await response.json();
+  return data.members ?? [];
 }

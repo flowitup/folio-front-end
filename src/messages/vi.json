@@ -13,6 +13,7 @@
     "labor": "Nhân công",
     "invoices": "Hóa đơn",
     "planning": "Kế hoạch",
+    "members": "Thành viên",
     "settings": "Cài đặt"
   },
   "auth": {
@@ -332,5 +333,74 @@
     "monthlySummary": "Tổng kết tháng · {month}",
     "workersBadge": "{n} công nhân",
     "role": "Vai trò"
+  },
+  "acceptInvite": {
+    "title": "Bạn được mời tham gia {projectName}",
+    "intro": "Thiết lập tài khoản để tham gia dự án.",
+    "subtitle": "{inviterName} đã mời bạn với vai trò {roleName}",
+    "emailLabel": "Email",
+    "nameLabel": "Họ và tên",
+    "passwordLabel": "Chọn mật khẩu",
+    "confirmLabel": "Xác nhận mật khẩu",
+    "submit": "Tạo tài khoản",
+    "submitting": "Đang tạo tài khoản...",
+    "passwordHint": "8-128 ký tự",
+    "passwordMismatch": "Mật khẩu không khớp",
+    "success": "Tài khoản đã được tạo. Chào mừng!",
+    "errors": {
+      "expired": "Lời mời này đã hết hạn. Hãy nhờ người mời gửi lại.",
+      "revoked": "Lời mời này đã bị thu hồi. Liên hệ người mời.",
+      "accepted": "Lời mời này đã được sử dụng. Hãy thử đăng nhập.",
+      "notFound": "Đường dẫn mời không hợp lệ.",
+      "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+    },
+    "loggedInOther": {
+      "title": "Bạn đang đăng nhập bằng tài khoản khác",
+      "body": "Bạn đang đăng nhập là {currentEmail}. Đăng xuất để chấp nhận lời mời này.",
+      "signOut": "Đăng xuất và tiếp tục"
+    },
+    "backToLogin": "Đến trang đăng nhập"
+  },
+  "members": {
+    "title": "Thành viên",
+    "subtitle": "Quản lý quyền truy cập vào dự án này",
+    "tab": {
+      "current": "Thành viên",
+      "pending": "Lời mời đang chờ"
+    },
+    "col": {
+      "name": "Tên",
+      "email": "Email",
+      "role": "Vai trò",
+      "joined": "Tham gia",
+      "expires": "Hết hạn",
+      "invitedBy": "Được mời bởi",
+      "actions": "Thao tác"
+    },
+    "invite": {
+      "button": "Mời thành viên",
+      "dialogTitle": "Mời thành viên mới",
+      "emailLabel": "Địa chỉ email",
+      "roleLabel": "Vai trò",
+      "rolePlaceholder": "Chọn vai trò",
+      "submit": "Gửi lời mời",
+      "submitting": "Đang gửi...",
+      "cancel": "Hủy"
+    },
+    "revoke": "Thu hồi",
+    "revokeConfirm": "Thu hồi lời mời này?",
+    "expiresIn": "{days} ngày",
+    "toast": {
+      "inviteSent": "Đã gửi lời mời đến {email}",
+      "directAdded": "{email} đã được thêm trực tiếp vào dự án",
+      "alreadyInvited": "Đã có lời mời đang chờ cho {email}",
+      "revoked": "Đã thu hồi lời mời",
+      "rateLimited": "Gửi quá nhiều lời mời. Thử lại sau.",
+      "error": "Không thể gửi lời mời. Vui lòng thử lại."
+    },
+    "empty": {
+      "members": "Chưa có thành viên nào",
+      "pending": "Không có lời mời nào đang chờ"
+    }
   }
 }

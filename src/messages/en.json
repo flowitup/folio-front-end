@@ -13,6 +13,7 @@
     "labor": "Labor",
     "invoices": "Invoices",
     "planning": "Planning",
+    "members": "Members",
     "settings": "Settings"
   },
   "auth": {
@@ -332,5 +333,74 @@
     "monthlySummary": "Monthly summary · {month}",
     "workersBadge": "{n} workers",
     "role": "Role"
+  },
+  "acceptInvite": {
+    "title": "You're invited to join {projectName}",
+    "intro": "Set up your account to join the project.",
+    "subtitle": "{inviterName} invited you as {roleName}",
+    "emailLabel": "Email",
+    "nameLabel": "Your full name",
+    "passwordLabel": "Choose a password",
+    "confirmLabel": "Confirm password",
+    "submit": "Create account",
+    "submitting": "Creating account...",
+    "passwordHint": "8-128 characters",
+    "passwordMismatch": "Passwords do not match",
+    "success": "Account created. Welcome!",
+    "errors": {
+      "expired": "This invitation has expired. Ask your inviter to send a new one.",
+      "revoked": "This invitation was revoked. Contact your inviter.",
+      "accepted": "This invitation was already used. Try logging in.",
+      "notFound": "This invitation link is invalid.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "loggedInOther": {
+      "title": "You're signed in as someone else",
+      "body": "You're signed in as {currentEmail}. Sign out to accept this invitation.",
+      "signOut": "Sign out and continue"
+    },
+    "backToLogin": "Go to login"
+  },
+  "members": {
+    "title": "Members",
+    "subtitle": "Manage who has access to this project",
+    "tab": {
+      "current": "Members",
+      "pending": "Pending invitations"
+    },
+    "col": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "joined": "Joined",
+      "expires": "Expires",
+      "invitedBy": "Invited by",
+      "actions": "Actions"
+    },
+    "invite": {
+      "button": "Invite member",
+      "dialogTitle": "Invite a new member",
+      "emailLabel": "Email address",
+      "roleLabel": "Role",
+      "rolePlaceholder": "Select a role",
+      "submit": "Send invitation",
+      "submitting": "Sending...",
+      "cancel": "Cancel"
+    },
+    "revoke": "Revoke",
+    "revokeConfirm": "Revoke this invitation?",
+    "expiresIn": "{days}d",
+    "toast": {
+      "inviteSent": "Invitation sent to {email}",
+      "directAdded": "{email} was added directly to the project",
+      "alreadyInvited": "An invitation is already pending for {email}",
+      "revoked": "Invitation revoked",
+      "rateLimited": "Too many invitations. Try again later.",
+      "error": "Could not send invitation. Please try again."
+    },
+    "empty": {
+      "members": "No members yet",
+      "pending": "No pending invitations"
+    }
   }
 }

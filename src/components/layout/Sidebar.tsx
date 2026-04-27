@@ -14,6 +14,7 @@ import {
   Thermometer,
   Check,
   Plus,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
@@ -63,6 +64,7 @@ export function Sidebar() {
           { key: "planning", href: `/projects/${selectedProjectId}/planning`, icon: KanbanSquare },
           { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
           { key: "invoices", href: `/projects/${selectedProjectId}/invoices`, icon: Receipt },
+          { key: "members", href: `/projects/${selectedProjectId}/members`, icon: Users },
         ]
       : []),
     { key: "settings", href: "/settings", icon: Settings },

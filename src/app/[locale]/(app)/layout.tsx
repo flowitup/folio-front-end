@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
@@ -15,14 +14,14 @@ export default async function AppLayout({
   const locale = await getLocale();
 
   if (!session) {
-    // Clear invalid cookie to prevent redirect loop
-    const cookieStore = await cookies();
-    const hasToken = cookieStore.get("access_token_cookie");
-    if (hasToken) {
-      // Cookie exists but session invalid - clear it via response
-      cookieStore.delete("access_token_cookie");
-      cookieStore.delete("refresh_token_cookie");
-    }
+    // Stale cookie cleanup is deliberately NOT done here: Next.js 16 forbids
+    // cookies().delete/set in Server Components (only Server Actions and
+    // Route Handlers may mutate cookies). The /login page is outside this
+    // (app) route group, so there's no redirect loop — the stale cookie just
+    // gets overwritten on the next successful login (BE sets a fresh
+    // access_token_cookie in its login response). If we ever need explicit
+    // server-side cookie clearing we can add a Route Handler the layout
+    // redirects through.
     redirect(`/${locale}/login`);
   }
 

@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { Loader2, Mail } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -81,25 +83,42 @@ export function InviteMemberDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t("invite.dialogTitle")}</DialogTitle>
+          <DialogDescription>{t("invite.dialogDescription")}</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <Label htmlFor="invite-email">{t("invite.emailLabel")}</Label>
-            <Input
-              id="invite-email"
-              type="email"
-              required
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="member@example.com"
-              disabled={isSubmitting}
-            />
+            <Label htmlFor="invite-email" aria-required="true">
+              {t("invite.emailLabel")}
+            </Label>
+            <div className="relative">
+              <Mail
+                aria-hidden="true"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+                size={14}
+                style={{ color: "var(--muted)" }}
+              />
+              <Input
+                id="invite-email"
+                type="email"
+                required
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="member@example.com"
+                disabled={isSubmitting}
+                className="pl-9"
+              />
+            </div>
+            <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+              {t("invite.emailHint")}
+            </p>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="invite-role">{t("invite.roleLabel")}</Label>
+            <Label htmlFor="invite-role" aria-required="true">
+              {t("invite.roleLabel")}
+            </Label>
             <Select
               value={roleId}
               onValueChange={setRoleId}
@@ -112,22 +131,27 @@ export function InviteMemberDialog({
               <SelectContent>
                 {roles.map((role) => (
                   <SelectItem key={role.id} value={role.id}>
-                    <span className="font-medium">{role.name}</span>
-                    {role.description && (
-                      <span
-                        className="ml-1.5 text-[11px]"
-                        style={{ color: "var(--muted)" }}
-                      >
-                        — {role.description}
-                      </span>
-                    )}
+                    <span className="flex flex-col items-start gap-0.5">
+                      <span className="font-medium capitalize">{role.name}</span>
+                      {role.description && (
+                        <span
+                          className="text-[11px]"
+                          style={{ color: "var(--muted)" }}
+                        >
+                          {role.description}
+                        </span>
+                      )}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+              {t("invite.roleHint")}
+            </p>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
             <Button
               type="button"
               variant="outline"
@@ -136,7 +160,14 @@ export function InviteMemberDialog({
             >
               {t("invite.cancel")}
             </Button>
-            <Button type="submit" disabled={isSubmitting || !email.trim() || !roleId}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !email.trim() || !roleId}
+              className="gap-1.5"
+            >
+              {isSubmitting && (
+                <Loader2 aria-hidden="true" className="animate-spin" size={14} />
+              )}
               {isSubmitting ? t("invite.submitting") : t("invite.submit")}
             </Button>
           </DialogFooter>

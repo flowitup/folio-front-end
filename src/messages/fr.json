@@ -333,5 +333,73 @@
     "monthlySummary": "Résumé mensuel · {month}",
     "workersBadge": "{n} ouvriers",
     "role": "Rôle"
+  },
+  "acceptInvite": {
+    "title": "Vous êtes invité à rejoindre {projectName}",
+    "subtitle": "{inviterName} vous a invité en tant que {roleName}",
+    "emailLabel": "E-mail",
+    "nameLabel": "Votre nom complet",
+    "passwordLabel": "Choisissez un mot de passe",
+    "confirmLabel": "Confirmez le mot de passe",
+    "submit": "Créer le compte",
+    "submitting": "Création du compte...",
+    "passwordHint": "8-128 caractères",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "success": "Compte créé. Bienvenue !",
+    "errors": {
+      "expired": "Cette invitation a expiré. Demandez à votre invitant d'en envoyer une nouvelle.",
+      "revoked": "Cette invitation a été révoquée. Contactez votre invitant.",
+      "accepted": "Cette invitation a déjà été utilisée. Essayez de vous connecter.",
+      "notFound": "Ce lien d'invitation est invalide.",
+      "generic": "Une erreur s'est produite. Veuillez réessayer."
+    },
+    "loggedInOther": {
+      "title": "Vous êtes connecté sous un autre compte",
+      "body": "Vous êtes connecté en tant que {currentEmail}. Déconnectez-vous pour accepter cette invitation.",
+      "signOut": "Se déconnecter et continuer"
+    },
+    "backToLogin": "Aller à la connexion"
+  },
+  "members": {
+    "title": "Membres",
+    "subtitle": "Gérez qui a accès à ce projet",
+    "tab": {
+      "current": "Membres",
+      "pending": "Invitations en attente"
+    },
+    "col": {
+      "name": "Nom",
+      "email": "E-mail",
+      "role": "Rôle",
+      "joined": "Rejoint le",
+      "expires": "Expire le",
+      "invitedBy": "Invité par",
+      "actions": "Actions"
+    },
+    "invite": {
+      "button": "Inviter un membre",
+      "dialogTitle": "Inviter un nouveau membre",
+      "emailLabel": "Adresse e-mail",
+      "roleLabel": "Rôle",
+      "rolePlaceholder": "Sélectionner un rôle",
+      "submit": "Envoyer l'invitation",
+      "submitting": "Envoi en cours...",
+      "cancel": "Annuler"
+    },
+    "revoke": "Révoquer",
+    "revokeConfirm": "Révoquer cette invitation ?",
+    "expiresIn": "{days}j",
+    "toast": {
+      "inviteSent": "Invitation envoyée à {email}",
+      "directAdded": "{email} a été ajouté directement au projet",
+      "alreadyInvited": "Une invitation est déjà en attente pour {email}",
+      "revoked": "Invitation révoquée",
+      "rateLimited": "Trop d'invitations. Réessayez plus tard.",
+      "error": "Impossible d'envoyer l'invitation. Veuillez réessayer."
+    },
+    "empty": {
+      "members": "Aucun membre pour le moment",
+      "pending": "Aucune invitation en attente"
+    }
   }
 }

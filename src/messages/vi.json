@@ -13,6 +13,7 @@
     "labor": "Nhân công",
     "invoices": "Hóa đơn",
     "planning": "Kế hoạch",
+    "notes": "Ghi chú",
     "members": "Thành viên",
     "settings": "Cài đặt",
     "admin": {
@@ -407,6 +408,73 @@
         "differentRole": "{count} dự án đã bỏ qua — người dùng đang có vai trò khác",
         "notFound": "{count} dự án không tồn tại"
       }
+    }
+  },
+  "notes": {
+    "title": "Ghi chú",
+    "subtitle": "Những điều cần nhớ cho {projectName}",
+    "anchorNote": "Nhắc nhở được gửi lúc 09:00 UTC",
+    "addButton": "+ Thêm ghi chú",
+    "placeholderTitle": "Bạn cần nhớ điều gì?",
+    "placeholderDescription": "Chi tiết thêm (tuỳ chọn)",
+    "dueLabel": "Hạn",
+    "leadTimeLabel": "Nhắc trước",
+    "leadTimeOptions": {
+      "0": "Đúng hạn",
+      "60": "Trước 1 giờ",
+      "1440": "Trước 1 ngày"
+    },
+    "statusOpen": "Đang mở",
+    "statusDone": "Xong",
+    "actions": {
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "delete": "Xóa",
+      "edit": "Sửa"
+    },
+    "groups": {
+      "today": "Hôm nay",
+      "tomorrow": "Ngày mai",
+      "thisWeek": "Tuần này",
+      "later": "Sau này",
+      "done": "Đã xong"
+    },
+    "empty": {
+      "title": "Chưa có ghi chú nào",
+      "cta": "Thêm ghi chú đầu tiên"
+    },
+    "deleted": {
+      "toast": "Đã xóa ghi chú",
+      "undo": "Hoàn tác"
+    },
+    "errors": {
+      "saveFailed": "Không thể lưu ghi chú. Vui lòng thử lại.",
+      "deleteFailed": "Không thể xóa ghi chú. Vui lòng thử lại.",
+      "validation": "Một số trường không hợp lệ.",
+      "forbidden": "Bạn không có quyền truy cập dự án này.",
+      "notFound": "Ghi chú này không còn tồn tại.",
+      "rateLimited": "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
+      "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+    }
+  },
+  "notifications": {
+    "aria": {
+      "bell": "Thông báo"
+    },
+    "title": "Nhắc nhở",
+    "empty": "Không có nhắc nhở nào lúc này",
+    "dismissButton": "Bỏ qua",
+    "dueAt": "Hạn {date}",
+    "leadTime": {
+      "0": "Ngay bây giờ",
+      "60": "Khoảng 1 giờ nữa",
+      "1440": "Ngày mai"
+    },
+    "errors": {
+      "dismissFailed": "Không thể bỏ qua. Vui lòng thử lại."
+    },
+    "skeleton": {
+      "loading": "Đang tải nhắc nhở..."
     }
   },
   "members": {

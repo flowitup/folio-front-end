@@ -222,30 +222,4 @@ export async function deleteNote(projectId: string, noteId: string): Promise<voi
   }
 }
 
-/**
- * Dismiss a notification by note ID.
- * Primarily used in phase 05; included here for completeness.
- */
-export async function dismissNotification(noteId: string): Promise<void> {
-  const authHeaders = await sessionAuthHeader();
-  let response: Response;
-  try {
-    response = await fetch(
-      `${env.apiBaseUrl}/notifications/${encodeURIComponent(noteId)}/dismiss`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-          ...authHeaders,
-        },
-        cache: "no-store",
-      }
-    );
-  } catch (err) {
-    throw new Error(`Network error dismissing notification: ${String(err)}`);
-  }
-  if (!response.ok) {
-    throw await buildHttpError(response, "Failed to dismiss notification");
-  }
-}
+// dismissNotification removed — canonical implementation lives in lib/api/notifications.ts

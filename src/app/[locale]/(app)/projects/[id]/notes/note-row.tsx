@@ -10,6 +10,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { Pencil, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -37,15 +38,7 @@ interface NoteRowProps {
   onStatusChange: (updated: Note) => void;
 }
 
-const LEAD_TIME_OPTIONS: { value: LeadTimeMinutes; label: string }[] = [
-  { value: 0, label: "At due time" },
-  { value: 60, label: "1h before" },
-  { value: 1440, label: "1 day before" },
-];
-
-function leadTimeLabel(minutes: LeadTimeMinutes): string {
-  return LEAD_TIME_OPTIONS.find((o) => o.value === minutes)?.label ?? "At due time";
-}
+const LEAD_TIME_VALUES = [0, 60, 1440] as const satisfies readonly LeadTimeMinutes[];
 
 export function NoteRow({
   note,
@@ -56,6 +49,7 @@ export function NoteRow({
   onDelete,
   onStatusChange,
 }: NoteRowProps) {
+  const t = useTranslations("notes");
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -162,7 +156,7 @@ export function NoteRow({
           className="shrink-0 text-xs hidden sm:inline-block"
           style={{ color: "var(--muted-foreground)" }}
         >
-          {leadTimeLabel(note.lead_time_minutes)}
+          {t(`leadTimeOptions.${note.lead_time_minutes}`)}
         </span>
 
         {/* Hover actions */}
@@ -170,7 +164,7 @@ export function NoteRow({
           <button
             type="button"
             onClick={onStartEdit}
-            aria-label="Edit note"
+            aria-label={t("actions.edit")}
             className="rounded p-1 hover:bg-accent transition-colors"
           >
             <Pencil className="h-3.5 w-3.5" style={{ color: "var(--muted-foreground)" }} />
@@ -178,7 +172,7 @@ export function NoteRow({
           <button
             type="button"
             onClick={handleDeleteClick}
-            aria-label="Delete note"
+            aria-label={t("actions.delete")}
             className="rounded p-1 hover:bg-destructive/10 transition-colors"
           >
             <Trash2 className="h-3.5 w-3.5" style={{ color: "var(--muted-foreground)" }} />
@@ -193,7 +187,7 @@ export function NoteRow({
     <div
       ref={containerRef}
       role="form"
-      aria-label="Edit note"
+      aria-label={t("actions.edit")}
       className="rounded-md border px-3 py-3 space-y-2 shadow-sm"
       style={{ background: "var(--card)", borderColor: "var(--border)" }}
     >
@@ -206,8 +200,8 @@ export function NoteRow({
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
         disabled={isSaving}
-        placeholder="Note title"
-        aria-label="Note title"
+        placeholder={t("placeholderTitle")}
+        aria-label={t("placeholderTitle")}
         className="w-full rounded border-0 bg-transparent text-sm font-medium outline-none focus:ring-0 placeholder:text-muted-foreground"
       />
 
@@ -220,7 +214,7 @@ export function NoteRow({
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
           disabled={isSaving}
-          aria-label="Due date"
+          aria-label={t("dueLabel")}
           className="rounded border px-2 py-1 text-xs"
           style={{ borderColor: "var(--border)", background: "var(--background)" }}
         />
@@ -230,13 +224,13 @@ export function NoteRow({
           onValueChange={(v) => setLeadTime(Number(v) as LeadTimeMinutes)}
           disabled={isSaving}
         >
-          <SelectTrigger size="sm" className="w-[130px] text-xs" aria-label="Reminder lead time">
+          <SelectTrigger size="sm" className="w-[130px] text-xs" aria-label={t("leadTimeLabel")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {LEAD_TIME_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={String(opt.value)}>
-                {opt.label}
+            {LEAD_TIME_VALUES.map((val) => (
+              <SelectItem key={val} value={String(val)}>
+                {t(`leadTimeOptions.${val}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -250,8 +244,8 @@ export function NoteRow({
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
         disabled={isSaving}
-        placeholder="Add description (optional)"
-        aria-label="Description"
+        placeholder={t("placeholderDescription")}
+        aria-label={t("placeholderDescription")}
         rows={2}
         className="w-full resize-none rounded border-0 bg-transparent text-xs outline-none focus:ring-0 placeholder:text-muted-foreground"
         style={{ whiteSpace: "pre-wrap" }}
@@ -266,7 +260,7 @@ export function NoteRow({
           className="rounded px-2.5 py-1 text-xs font-medium disabled:opacity-50"
           style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
         >
-          {isSaving ? "Saving…" : "Save"}
+          {isSaving ? "…" : t("actions.save")}
         </button>
         <button
           type="button"
@@ -281,13 +275,13 @@ export function NoteRow({
           className="rounded px-2.5 py-1 text-xs font-medium disabled:opacity-50"
           style={{ color: "var(--muted-foreground)" }}
         >
-          Cancel
+          {t("actions.cancel")}
         </button>
         <button
           type="button"
           onClick={handleDeleteClick}
           disabled={isSaving}
-          aria-label="Delete note"
+          aria-label={t("actions.delete")}
           className="ml-auto rounded p-1 hover:bg-destructive/10 disabled:opacity-50"
         >
           <Trash2 className="h-3.5 w-3.5" style={{ color: "var(--muted-foreground)" }} />

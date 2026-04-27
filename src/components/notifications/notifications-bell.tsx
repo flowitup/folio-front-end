@@ -9,6 +9,7 @@
 import { useState, useCallback } from "react";
 import { Bell } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { useNotificationsPoll } from "@/components/notifications/use-notifications-poll";
@@ -22,6 +23,7 @@ function getBadgeLabel(count: number): string | null {
 }
 
 export function NotificationsBell() {
+  const t = useTranslations("notifications");
   const [items, setItems] = useState<DueNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -47,10 +49,10 @@ export function NotificationsBell() {
       if (!result.success) {
         // Rollback on failure
         setItems(prev);
-        toast.error("Could not dismiss reminder — please try again.");
+        toast.error(t("errors.dismissFailed"));
       }
     },
-    [items]
+    [items, t]
   );
 
   const badge = getBadgeLabel(items.length);
@@ -61,7 +63,7 @@ export function NotificationsBell() {
         <button
           type="button"
           className="btn btn-quiet relative"
-          aria-label="View notifications"
+          aria-label={t("aria.bell")}
         >
           <Bell size={16} />
           {badge && (

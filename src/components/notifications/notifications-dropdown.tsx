@@ -6,6 +6,7 @@
  */
 
 import { BellOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { NotificationRow } from "@/components/notifications/notification-row";
 import type { DueNotification } from "@/lib/api/notifications";
 
@@ -43,6 +44,7 @@ export function NotificationsDropdown({
   onDismiss,
   onClickRow,
 }: NotificationsDropdownProps) {
+  const t = useTranslations("notifications");
   return (
     <div className="flex flex-col">
       {/* Header */}
@@ -51,7 +53,7 @@ export function NotificationsDropdown({
         style={{ borderColor: "var(--border)" }}
       >
         <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-          Reminders
+          {t("title")}
         </p>
       </div>
 
@@ -71,7 +73,7 @@ export function NotificationsDropdown({
             style={{ color: "var(--muted-foreground)" }}
           >
             <BellOff className="h-7 w-7 opacity-40" />
-            <p className="text-sm">No reminders</p>
+            <p className="text-sm">{t("empty")}</p>
           </div>
         ) : (
           // List

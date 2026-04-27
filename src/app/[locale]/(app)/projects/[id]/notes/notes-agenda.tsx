@@ -8,6 +8,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { PlusCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { groupNotesByDay } from "@/lib/notes/grouping";
 import { NoteRow } from "./note-row";
 import { confirmDelete } from "./delete-confirm-toast";
@@ -24,14 +25,6 @@ interface NotesAgendaProps {
 }
 
 type EditingId = string | null; // note id, "new" for add-row, null for none
-
-const BUCKET_LABELS: Record<string, string> = {
-  today: "Today",
-  tomorrow: "Tomorrow",
-  thisWeek: "This week",
-  later: "Later",
-  done: "Done",
-};
 
 const BUCKET_ORDER = ["today", "tomorrow", "thisWeek", "later", "done"] as const;
 
@@ -68,6 +61,7 @@ function todayISODate(): string {
 }
 
 export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
+  const t = useTranslations("notes");
   const [notes, setNotes] = useState<Note[]>(initialNotes);
   const [editingId, setEditingId] = useState<EditingId>(null);
 
@@ -107,10 +101,10 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
         );
       } else {
         setNotes(snapshot);
-        toast.error(`Save failed — ${result.error}`);
+        toast.error(t("errors.saveFailed"));
       }
     },
-    [notes, projectId]
+    [notes, projectId, t]
   );
 
   const handleStatusChange = useCallback((updated: Note) => {
@@ -123,8 +117,8 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
       if (!target) return;
 
       confirmDelete({
-        label: `Deleted "${target.title}"`,
-        undoLabel: "Undo",
+        label: t("deleted.toast"),
+        undoLabel: t("deleted.undo"),
         onRemove: () => {
           setNotes((prev) => prev.filter((n) => n.id !== noteId));
         },
@@ -133,16 +127,16 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
           if (!result.success) {
             // Re-insert note on server failure
             setNotes((prev) => [...prev, target]);
-            toast.error(`Delete failed — ${result.error}`);
+            toast.error(t("errors.deleteFailed"));
           }
         },
         onError: () => {
           setNotes((prev) => [...prev, target]);
-          toast.error("Delete failed — please try again.");
+          toast.error(t("errors.deleteFailed"));
         },
       });
     },
-    [notes, projectId]
+    [notes, projectId, t]
   );
 
   async function handleAddSubmit() {
@@ -173,7 +167,7 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
     } else {
       // Remove temp
       setNotes((prev) => prev.filter((n) => n.id !== tempId));
-      toast.error(`Could not create note — ${result.error}`);
+      toast.error(t("errors.saveFailed"));
     }
     setIsAdding(false);
   }
@@ -205,7 +199,7 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
             style={{ color: "var(--muted-foreground)" }}
           >
             <PlusCircle className="h-4 w-4" />
-            Add note
+            {t("addButton")}
           </button>
         ) : (
           <div
@@ -219,8 +213,8 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={handleAddKeyDown}
               disabled={isAdding}
-              placeholder="Note title"
-              aria-label="New note title"
+              placeholder={t("placeholderTitle")}
+              aria-label={t("placeholderTitle")}
               className="w-full rounded border-0 bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
             />
             <div className="flex flex-wrap items-center gap-2">
@@ -230,7 +224,7 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
                 onChange={(e) => setNewDueDate(e.target.value)}
                 onKeyDown={handleAddKeyDown}
                 disabled={isAdding}
-                aria-label="Due date"
+                aria-label={t("dueLabel")}
                 className="rounded border px-2 py-1 text-xs"
                 style={{ borderColor: "var(--border)", background: "var(--background)" }}
               />
@@ -243,7 +237,7 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
                 className="rounded px-2.5 py-1 text-xs font-medium disabled:opacity-50"
                 style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
               >
-                {isAdding ? "Adding…" : "Add"}
+                {isAdding ? "…" : t("actions.save")}
               </button>
               <button
                 type="button"
@@ -257,7 +251,7 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
                 className="rounded px-2.5 py-1 text-xs font-medium disabled:opacity-50"
                 style={{ color: "var(--muted-foreground)" }}
               >
-                Cancel
+                {t("actions.cancel")}
               </button>
             </div>
           </div>
@@ -268,7 +262,7 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
       {notes.length === 0 && !isAddRowOpen && (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-            No notes yet — add your first one above.
+            {t("empty.title")}
           </p>
         </div>
       )}
@@ -283,7 +277,7 @@ export function NotesAgenda({ projectId, initialNotes }: NotesAgendaProps) {
               className="text-xs font-semibold uppercase tracking-wide mb-2"
               style={{ color: "var(--muted-foreground)" }}
             >
-              {BUCKET_LABELS[bucket]}
+              {t(`groups.${bucket}`)}
             </h2>
             {items.map((note) => (
               <NoteRow

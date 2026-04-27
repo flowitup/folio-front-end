@@ -7,6 +7,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { markNoteDoneAction, markNoteOpenAction } from "./actions";
 import type { Note } from "@/lib/api/notes";
 
@@ -21,6 +22,7 @@ export function NoteStatusToggle({
   onStatusChange,
   disabled = false,
 }: NoteStatusToggleProps) {
+  const t = useTranslations("notes");
   const [isPending, setIsPending] = useState(false);
   const isDone = note.status === "done";
 
@@ -42,12 +44,12 @@ export function NoteStatusToggle({
       } else {
         // Rollback
         onStatusChange(note);
-        toast.error(`notes.errors.${result.error}`);
+        toast.error(t("errors.generic"));
       }
     } catch {
       // Rollback on unexpected error
       onStatusChange(note);
-      toast.error("notes.errors.generic");
+      toast.error(t("errors.generic"));
     } finally {
       setIsPending(false);
     }
@@ -59,7 +61,7 @@ export function NoteStatusToggle({
       checked={isDone}
       onChange={handleChange}
       disabled={isPending || disabled}
-      aria-label={isDone ? "Mark as open" : "Mark as done"}
+      aria-label={isDone ? t("statusOpen") : t("statusDone")}
       className="h-4 w-4 rounded border accent-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 shrink-0"
     />
   );

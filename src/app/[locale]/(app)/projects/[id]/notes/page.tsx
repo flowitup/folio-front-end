@@ -5,7 +5,7 @@
  */
 
 import { notFound, redirect } from "next/navigation";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { fetchProjectById } from "@/lib/api/projects";
 import { listProjectNotes } from "@/lib/api/notes";
@@ -19,6 +19,7 @@ interface PageProps {
 export default async function NotesPage({ params }: PageProps) {
   const { id: projectId } = await params;
   const locale = await getLocale();
+  const t = await getTranslations("notes");
 
   const session = await getSession();
   if (!session) {
@@ -37,9 +38,9 @@ export default async function NotesPage({ params }: PageProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Notes</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-          Things to remember for {project.name} &middot; Reminders fire at 09:00 UTC
+          {t("subtitle", { projectName: project.name })} &middot; {t("anchorNote")}
         </p>
       </header>
 

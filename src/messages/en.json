@@ -13,6 +13,7 @@
     "labor": "Labor",
     "invoices": "Invoices",
     "planning": "Planning",
+    "notes": "Notes",
     "members": "Members",
     "settings": "Settings",
     "admin": {
@@ -407,6 +408,73 @@
         "differentRole": "{count} project(s) skipped — user has a different role there",
         "notFound": "{count} project(s) not found"
       }
+    }
+  },
+  "notes": {
+    "title": "Notes",
+    "subtitle": "Things to remember for {projectName}",
+    "anchorNote": "Reminders fire at 09:00 UTC",
+    "addButton": "+ Add note",
+    "placeholderTitle": "What do you need to remember?",
+    "placeholderDescription": "Optional details",
+    "dueLabel": "Due",
+    "leadTimeLabel": "Remind",
+    "leadTimeOptions": {
+      "0": "At due time",
+      "60": "1 hour before",
+      "1440": "1 day before"
+    },
+    "statusOpen": "Open",
+    "statusDone": "Done",
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit"
+    },
+    "groups": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "thisWeek": "This week",
+      "later": "Later",
+      "done": "Done"
+    },
+    "empty": {
+      "title": "No notes yet",
+      "cta": "Add your first note"
+    },
+    "deleted": {
+      "toast": "Note deleted",
+      "undo": "Undo"
+    },
+    "errors": {
+      "saveFailed": "Couldn't save the note. Try again.",
+      "deleteFailed": "Couldn't delete the note. Try again.",
+      "validation": "Some fields are invalid.",
+      "forbidden": "You don't have access to this project.",
+      "notFound": "This note doesn't exist anymore.",
+      "rateLimited": "Too many requests. Try again in a moment.",
+      "generic": "Something went wrong. Try again."
+    }
+  },
+  "notifications": {
+    "aria": {
+      "bell": "Notifications"
+    },
+    "title": "Reminders",
+    "empty": "No reminders right now",
+    "dismissButton": "Dismiss",
+    "dueAt": "Due {date}",
+    "leadTime": {
+      "0": "Now",
+      "60": "In ~1 hour",
+      "1440": "Tomorrow"
+    },
+    "errors": {
+      "dismissFailed": "Couldn't dismiss. Try again."
+    },
+    "skeleton": {
+      "loading": "Loading reminders..."
     }
   },
   "members": {

@@ -8,7 +8,7 @@
 
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { DueNotification } from "@/lib/api/notifications";
 
 interface NotificationRowProps {
@@ -18,6 +18,7 @@ interface NotificationRowProps {
 }
 
 export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRowProps) {
+  const t = useTranslations("notifications");
   const router = useRouter();
   const locale = useLocale();
   const { note } = item;
@@ -32,9 +33,9 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
     onDismiss(note.id);
   }
 
-  // Format due_date (YYYY-MM-DD) for display
+  // Format due_date (YYYY-MM-DD) for display — locale-aware
   const formattedDate = note.due_date
-    ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(
+    ? new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(
         new Date(`${note.due_date}T00:00:00`)
       )
     : null;
@@ -70,7 +71,7 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
       <button
         type="button"
         onClick={handleDismiss}
-        aria-label={`Dismiss reminder: ${note.title}`}
+        aria-label={t("dismissButton")}
         className="mt-0.5 shrink-0 rounded p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-destructive/10 transition-opacity"
       >
         <X className="h-3.5 w-3.5" style={{ color: "var(--muted-foreground)" }} />

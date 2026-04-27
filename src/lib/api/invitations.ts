@@ -1,12 +1,124 @@
 /**
  * Invitations API wrapper
  * Typed wrappers for invitation-related backend endpoints.
- * Used from server components and server actions (no client token needed — routes are public).
+ * Public routes (verify/accept) need no auth token.
+ * Admin routes (list/create/revoke) require session cookie.
  */
 
 import { env } from "@/lib/config/env";
+import { cookies } from "next/headers";
 import type { User } from "@/lib/auth/types";
 import type { VerifyInviteResponse, AcceptInvitePayload } from "@/lib/auth/types";
+
+// ---- Admin invitation types ----
+
+export interface PendingInvitation {
+  id: string;
+  email: string;
+  role_name: string;
+  expires_at: string;
+  invited_by_name: string | null;
+}
+
+export interface CreateInvitationPayload {
+  project_id: string;
+  email: string;
+  role_id: string;
+}
+
+export type CreateInvitationResult =
+  | { kind: "invitation_sent"; invitation_id: string; expires_at: string }
+  | { kind: "direct_added"; user_id: string };
+
+/** Build an auth header from the server-side session cookie. */
+async function sessionAuthHeader(): Promise<Record<string, string>> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token_cookie")?.value;
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+/**
+ * List pending invitations for a project.
+ * Requires auth + project membership.
+ */
+export async function listInvitations(
+  projectId: string,
+  status = "pending"
+): Promise<PendingInvitation[]> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/invitations?status=${encodeURIComponent(status)}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error listing invitations: ${String(err)}`);
+  }
+  if (!response.ok) {
+    throw new Error(`Failed to list invitations (HTTP ${response.status})`);
+  }
+  return response.json();
+}
+
+/**
+ * Create an invitation (or directly add existing user).
+ * Returns a discriminated result with kind field.
+ * Throws errors with a `status` property for 409/429 handling.
+ */
+export async function createInvitation(
+  payload: CreateInvitationPayload
+): Promise<CreateInvitationResult> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiBaseUrl}/invitations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new Error(`Network error creating invitation: ${String(err)}`);
+  }
+  if (!response.ok) {
+    const err = new Error(`Failed to create invitation (HTTP ${response.status})`) as Error & {
+      status: number;
+    };
+    err.status = response.status;
+    throw err;
+  }
+  return response.json();
+}
+
+/**
+ * Revoke a pending invitation by id.
+ * Requires auth + owner/admin permission.
+ */
+export async function revokeInvitation(invitationId: string): Promise<void> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/invitations/${encodeURIComponent(invitationId)}/revoke`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error revoking invitation: ${String(err)}`);
+  }
+  if (!response.ok) {
+    throw new Error(`Failed to revoke invitation (HTTP ${response.status})`);
+  }
+}
 
 export type InviteErrorReason = "expired" | "revoked" | "accepted" | "not_found";
 

@@ -8,6 +8,7 @@ import { AuthErrorBoundary } from "@/context/AuthErrorBoundary";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { getCurrentUser } from "@/lib/auth/session";
 import { Agentation } from "agentation";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -53,6 +54,7 @@ export default async function LocaleLayout({
           </ThemeProvider>
         </NextIntlClientProvider>
         {process.env.NODE_ENV === "development" && <Agentation />}
+        <Toaster />
       </body>
     </html>
   );

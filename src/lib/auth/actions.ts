@@ -3,7 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { env } from "@/lib/config/env";
-import type { LoginCredentials, LoginResponse, User } from "./types";
+import type { LoginCredentials, LoginResponse, User, AcceptInvitePayload } from "./types";
+import { acceptInvite } from "@/lib/api/invitations";
 
 /**
  * Parse Set-Cookie header safely.
@@ -100,6 +101,53 @@ export async function logout(): Promise<never> {
   cookieStore.delete("csrf_refresh_token");
 
   redirect("/login");
+}
+
+/**
+ * Accept invitation server action.
+ * Calls backend, forwards Set-Cookie headers, returns the created user.
+ * Caller performs client-side redirect after success.
+ */
+export async function acceptInviteAction(
+  token: string,
+  name: string,
+  password: string
+): Promise<{ success: boolean; error?: string; user?: User }> {
+  // Server-side input validation (don't trust client)
+  if (!token || typeof token !== "string" || token.trim().length === 0) {
+    return { success: false, error: "Invalid invitation token" };
+  }
+  if (!name || typeof name !== "string" || name.trim().length < 1 || name.trim().length > 100) {
+    return { success: false, error: "Name must be between 1 and 100 characters" };
+  }
+  if (!password || typeof password !== "string" || password.length < 8 || password.length > 128) {
+    return { success: false, error: "Password must be between 8 and 128 characters" };
+  }
+
+  try {
+    const payload: AcceptInvitePayload = { token, name: name.trim(), password };
+    const { user, setCookieHeaders } = await acceptInvite(payload);
+
+    const cookieStore = await cookies();
+    for (const cookie of setCookieHeaders) {
+      const parsed = parseCookie(cookie);
+      if (parsed) {
+        cookieStore.set(parsed.name, parsed.value, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+        });
+      }
+    }
+
+    return { success: true, user };
+  } catch (error) {
+    console.error("Accept invite error:", error);
+    const message =
+      error instanceof Error ? error.message : "An unexpected error occurred";
+    return { success: false, error: message };
+  }
 }
 
 /**

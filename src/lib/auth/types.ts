@@ -34,3 +34,23 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
 }
+
+export interface AcceptInviteCredentials {
+  token: string;
+  name: string;
+  password: string;
+}
+
+export interface VerifyInviteResponse {
+  email: string;
+  project_name: string;
+  role_name: string;
+  inviter_name: string;
+  expires_at: string;
+}
+
+export interface AcceptInvitePayload {
+  token: string;
+  name: string;
+  password: string;
+}

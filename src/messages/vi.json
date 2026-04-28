@@ -57,7 +57,9 @@
     "invoicesTitle": "Hóa đơn",
     "invoicesSubtitle": "Tiền ra vào trên công trường.",
     "notesTitle": "Ghi chú",
-    "notesSubtitle": "Những điều cần nhớ — nhắc nhở được gửi lúc 09:00 UTC"
+    "notesSubtitle": "Những điều cần nhớ — nhắc nhở được gửi lúc 09:00 UTC",
+    "membersTitle": "Thành viên",
+    "membersSubtitle": "Ai đang làm trong dự án này, với vai trò gì."
   },
   "sidebar": {
     "todayOnSite": "Hôm nay tại công trường",

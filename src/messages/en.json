@@ -57,7 +57,9 @@
     "invoicesTitle": "Invoices",
     "invoicesSubtitle": "Money flowing in and out of the site.",
     "notesTitle": "Notes",
-    "notesSubtitle": "Things to remember — reminders fire at 09:00 UTC"
+    "notesSubtitle": "Things to remember — reminders fire at 09:00 UTC",
+    "membersTitle": "Members",
+    "membersSubtitle": "Who's on this project, with what role."
   },
   "sidebar": {
     "todayOnSite": "Today on site",

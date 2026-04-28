@@ -193,7 +193,12 @@
     "projectName": "Nom du projet",
     "address": "Adresse",
     "startDate": "Date de début",
-    "targetCompletion": "Achèvement prévu"
+    "targetCompletion": "Achèvement prévu",
+    "users": {
+      "title": "Utilisateurs et rôles",
+      "description": "Attribuer des rôles aux utilisateurs existants sur un ou plusieurs projets.",
+      "permissionDenied": "Vous n'avez pas l'autorisation de modifier les rôles des utilisateurs."
+    }
   },
   "errors": {
     "unauthorized": "Non autorisé",

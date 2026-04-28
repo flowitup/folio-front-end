@@ -15,13 +15,10 @@ import {
   Check,
   Plus,
   Users,
-  ShieldCheck,
-  UserCog,
   StickyNote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
-import { useAuth } from "@/context/AuthContext";
 import { FolioLogo } from "@/components/folio-logo";
 import {
   DropdownMenu,
@@ -49,7 +46,6 @@ export function Sidebar() {
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations("navigation");
-  const tAdmin = useTranslations("navigation.admin");
   const tSidebar = useTranslations("sidebar");
   const tProjects = useTranslations("projects");
   const {
@@ -58,11 +54,6 @@ export function Sidebar() {
     selectedProject,
     selectProject,
   } = useProject();
-  const { user } = useAuth();
-  // *:* is the de-facto superadmin marker (see /admin/users page authz).
-  // Server-side check in page.tsx is authoritative; this is UX gating only.
-  const isSuperadmin = user?.permissions?.includes("*:*") ?? false;
-
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
   const navigation = [
@@ -220,33 +211,7 @@ export function Sidebar() {
           );
         })}
 
-        {/* Admin section — only for superadmin (*:*); server-side authz is authoritative */}
-        {isSuperadmin && (
-          <div className="mt-4 pt-3">
-            <div className="ink-divider mb-3" />
-            <div
-              className="flex items-center gap-2 px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.08em]"
-              style={{ color: "var(--accent)" }}
-            >
-              <ShieldCheck size={13} />
-              <span>{tAdmin("section")}</span>
-            </div>
-            <Link
-              href="/admin/users"
-              className={cn(
-                "nav-link",
-                (pathWithoutLocale === "/admin/users" ||
-                  pathWithoutLocale.startsWith("/admin/users/")) &&
-                  "active",
-              )}
-            >
-              <span className="nav-icon flex w-5 items-center justify-center">
-                <UserCog size={16} />
-              </span>
-              <span className="font-medium">{tAdmin("users")}</span>
-            </Link>
-          </div>
-        )}
+
       </nav>
 
       {/* Footer card — Today on site */}

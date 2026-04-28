@@ -124,12 +124,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </svg>
 
         <div className="absolute bottom-8 left-8 right-8 text-white">
-          <div
-            className="font-display text-[28px] leading-tight"
-            dangerouslySetInnerHTML={{
-              __html: `&ldquo;${t("quote")}&rdquo;`,
-            }}
-          />
+          <div className="font-display text-[28px] leading-tight">
+            &ldquo;
+            {t.rich("quote", {
+              em: (chunks) => <em>{chunks}</em>,
+            })}
+            &rdquo;
+          </div>
           <div className="mt-3 flex items-center gap-2 text-[12px] opacity-80">
             <div className="h-px w-6 bg-white/60" /> {t("quoteAuthor")}
           </div>

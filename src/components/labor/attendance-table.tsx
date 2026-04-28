@@ -130,9 +130,30 @@ export function AttendanceTable({
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium">{entry.worker_name}</span>
-                          <Badge variant="secondary" className="text-xs">
-                            {entry.shift_type ? (shiftLabel[entry.shift_type] ?? entry.shift_type) : null}
-                          </Badge>
+                          {/* Shift chip: only show when shift_type is set */}
+                          {entry.shift_type !== null ? (
+                            <Badge variant="secondary" className="text-xs">
+                              {shiftLabel[entry.shift_type] ?? entry.shift_type}
+                            </Badge>
+                          ) : entry.supplement_hours > 0 ? (
+                            // Standalone supplement row — no shift, show label instead of chip
+                            <span className="text-xs text-muted-foreground italic">
+                              {t("supplement.standaloneShiftLabel") || "(supplement only)"}
+                            </span>
+                          ) : null}
+                          {/* Supplement hours badge — shown whenever supplement_hours > 0 */}
+                          {entry.supplement_hours > 0 && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs"
+                              title={
+                                t("supplement.badgeTooltip") ||
+                                "Supplement hours (banked, not priced today)"
+                              }
+                            >
+                              +{entry.supplement_hours}h
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 text-sm">
                           <span className="font-medium text-primary">

@@ -316,8 +316,15 @@ describe("fetchLaborExport — happy path (200 + Content-Disposition)", () => {
     // Correct filename extracted from Content-Disposition
     expect(result.filename).toBe("labor-foo-2026-01-to-2026-03.xlsx");
 
-    // Blob returned is the response blob
-    expect(result.blob).toBeInstanceOf(Blob);
+    // Blob returned is the response blob.
+    // Note: avoid toBeInstanceOf(Blob) — undici's fetch (used by Node CI runtime)
+    // returns a Blob from undici/internal/blob.js whose constructor is a DIFFERENT
+    // class identity than globalThis.Blob, causing toBeInstanceOf to fail in CI
+    // even though the value is structurally a Blob. Verify by duck-typing instead.
+    expect(typeof result.blob).toBe("object");
+    expect(result.blob).not.toBeNull();
+    expect(typeof (result.blob as Blob).size).toBe("number");
+    expect(typeof (result.blob as Blob).type).toBe("string");
 
     // URL constructed with correct query params
     const fetchCall = vi.mocked(fetch).mock.calls[0];

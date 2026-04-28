@@ -1,11 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { LaborSummaryResponse } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
+import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 
 interface LaborSummaryProps {
+  projectId: string;
   summary: LaborSummaryResponse | null;
   isLoading: boolean;
   month: string;
@@ -23,9 +27,10 @@ function formatBonusDays(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
-export function LaborSummary({ summary, isLoading, month, onMonthChange }: LaborSummaryProps) {
+export function LaborSummary({ projectId, summary, isLoading, month, onMonthChange }: LaborSummaryProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
+  const [exportOpen, setExportOpen] = useState(false);
 
   const totalCost = summary?.total_cost ?? 0;
   const totalDays = summary?.total_days ?? 0;
@@ -138,6 +143,13 @@ export function LaborSummary({ summary, isLoading, month, onMonthChange }: Labor
             {workerCount > 0 && (
               <span className="stamp num">{t("workersBadge", { n: workerCount })}</span>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExportOpen(true)}
+            >
+              {t("export.button")}
+            </Button>
           </div>
         </div>
 
@@ -222,6 +234,11 @@ export function LaborSummary({ summary, isLoading, month, onMonthChange }: Labor
           </div>
         )}
       </div>
+      <LaborExportDialog
+        projectId={projectId}
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+      />
     </div>
   );
 }

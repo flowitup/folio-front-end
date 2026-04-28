@@ -303,6 +303,7 @@
     "workerName": "Name",
     "workerPhone": "Phone",
     "dailyRate": "Daily rate",
+    "avgCostPerDay": "Avg cost / day",
     "noWorkers": "No workers added yet",
     "logAttendance": "Log attendance",
     "logDay": "Log day",

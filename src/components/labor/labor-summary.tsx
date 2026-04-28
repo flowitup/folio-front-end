@@ -153,7 +153,7 @@ export function LaborSummary({ summary, isLoading, month, onMonthChange }: Labor
                   <th>{t("workerName")}</th>
                   <th>{t("role")}</th>
                   <th style={{ textAlign: "right" }}>{t("daysWorked")}</th>
-                  <th style={{ textAlign: "right" }}>{t("dailyRate")}</th>
+                  <th style={{ textAlign: "right" }}>{t("avgCostPerDay")}</th>
                   <th style={{ textAlign: "right" }}>{t("totalCost")}</th>
                   <th style={{ textAlign: "right" }}>{t("supplement.bonusDays")}</th>
                 </tr>

@@ -303,6 +303,7 @@
     "workerName": "Nom",
     "workerPhone": "Téléphone",
     "dailyRate": "Tarif journalier",
+    "avgCostPerDay": "Coût moyen / jour",
     "noWorkers": "Aucun ouvrier ajouté",
     "logAttendance": "Enregistrer présence",
     "logDay": "Enregistrer jour",

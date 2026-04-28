@@ -303,6 +303,7 @@
     "workerName": "Tên",
     "workerPhone": "Điện thoại",
     "dailyRate": "Lương ngày",
+    "avgCostPerDay": "Chi phí TB / ngày",
     "noWorkers": "Chưa có công nhân nào",
     "logAttendance": "Chấm công",
     "logDay": "Chấm ngày",

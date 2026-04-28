@@ -131,7 +131,7 @@ export function AttendanceTable({
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium">{entry.worker_name}</span>
                           <Badge variant="secondary" className="text-xs">
-                            {shiftLabel[entry.shift_type] ?? entry.shift_type}
+                            {entry.shift_type ? (shiftLabel[entry.shift_type] ?? entry.shift_type) : null}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2 text-sm">

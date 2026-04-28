@@ -56,10 +56,24 @@ export async function fetchLaborEntries(projectId: string, params?: LaborEntryPa
 }
 
 export async function logAttendance(projectId: string, payload: LogAttendancePayload): Promise<LaborEntry> {
+  const hours = payload.supplement_hours ?? 0;
+  if (!Number.isInteger(hours) || hours < 0 || hours > 12) {
+    throw new Error('supplement_hours must be an integer in [0, 12]');
+  }
+  if ((payload.shift_type == null) && hours === 0) {
+    throw new Error('Either shift_type or supplement_hours must be set');
+  }
+  if ((payload.shift_type == null) && payload.amount_override != null) {
+    throw new Error('amount_override requires a shift_type');
+  }
   return api.post<LaborEntry>(`/projects/${projectId}/labor-entries`, payload);
 }
 
 export async function updateAttendance(projectId: string, entryId: string, payload: UpdateAttendancePayload): Promise<LaborEntry> {
+  const hours = payload.supplement_hours;
+  if (hours !== undefined && (!Number.isInteger(hours) || hours < 0 || hours > 12)) {
+    throw new Error('supplement_hours must be an integer in [0, 12]');
+  }
   return api.put<LaborEntry>(`/projects/${projectId}/labor-entries/${entryId}`, payload);
 }
 

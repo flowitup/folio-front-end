@@ -1,20 +1,27 @@
 /**
- * Tests for labor API client — phase 08 supplement_hours guard coverage
+ * Tests for labor API client — phase 08 supplement_hours guard coverage + fetchLaborExport
  *
  * Validates the defense-in-depth guards in logAttendance / updateAttendance
  * before the request hits the network layer.
+ * Also validates fetchLaborExport input guards, URL construction, blob handling,
+ * Content-Disposition parsing, and non-2xx error path.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { logAttendance, updateAttendance } from "../labor";
+import { logAttendance, updateAttendance, fetchLaborExport } from "../labor";
+import { ApiError } from "../http";
 
-// Mock the http module so no real fetch occurs
-vi.mock("../http", () => ({
-  api: {
-    post: vi.fn(),
-    put: vi.fn(),
-  },
-}));
+// Mock the http module — keep ApiError + getApiAccessToken real; stub api methods
+vi.mock("../http", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../http")>();
+  return {
+    ...actual,
+    api: {
+      post: vi.fn(),
+      put: vi.fn(),
+    },
+  };
+});
 
 import { api } from "../http";
 
@@ -217,5 +224,163 @@ describe("updateAttendance — supplement_hours guard", () => {
 
     expect(api.put).toHaveBeenCalledOnce();
     expect(result).toEqual(STUB_ENTRY);
+  });
+});
+
+// ─── fetchLaborExport ─────────────────────────────────────────────────────────
+
+describe("fetchLaborExport — input validation guards", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Reset global fetch mock
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("throws when 'from' does not match YYYY-MM regex (year only)", async () => {
+    await expect(
+      fetchLaborExport("proj-1", { from: "2026", to: "2026-03" }, "xlsx")
+    ).rejects.toThrow("Invalid 'from' month format");
+  });
+
+  it("throws when 'from' has an invalid month (13)", async () => {
+    await expect(
+      fetchLaborExport("proj-1", { from: "2026-13", to: "2026-03" }, "xlsx")
+    ).rejects.toThrow("Invalid 'from' month format");
+  });
+
+  it("throws when from > to (reversed range)", async () => {
+    await expect(
+      fetchLaborExport("proj-1", { from: "2026-04", to: "2026-01" }, "xlsx")
+    ).rejects.toThrow("'from' must be <= 'to'");
+  });
+
+  it("throws when span exceeds 24 months (25-month range)", async () => {
+    // 2024-01 to 2026-02 = 25 months
+    await expect(
+      fetchLaborExport("proj-1", { from: "2024-01", to: "2026-02" }, "xlsx")
+    ).rejects.toThrow("Range must be <= 24 months");
+  });
+
+  it("throws for invalid format (csv)", async () => {
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional bad value for test
+      fetchLaborExport("proj-1", { from: "2026-01", to: "2026-03" }, "csv" as any)
+    ).rejects.toThrow("Invalid format 'csv'");
+  });
+
+  // No fetch calls should have been made for any guard-throw above
+  it("does not call fetch when validation fails", async () => {
+    await expect(
+      fetchLaborExport("proj-1", { from: "2026-04", to: "2026-01" }, "xlsx")
+    ).rejects.toThrow();
+
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
+  });
+});
+
+describe("fetchLaborExport — happy path (200 + Content-Disposition)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("returns { blob, filename } from Content-Disposition header and constructs correct URL", async () => {
+    const fakeBlob = new Blob(["fake-xlsx-bytes"], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const mockHeaders = new Headers({
+      "Content-Disposition": 'attachment; filename="labor-foo-2026-01-to-2026-03.xlsx"',
+    });
+
+    const mockResponse = new Response(fakeBlob, {
+      status: 200,
+      headers: mockHeaders,
+    });
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const result = await fetchLaborExport(
+      "proj-1",
+      { from: "2026-01", to: "2026-03" },
+      "xlsx"
+    );
+
+    // Correct filename extracted from Content-Disposition
+    expect(result.filename).toBe("labor-foo-2026-01-to-2026-03.xlsx");
+
+    // Blob returned is the response blob.
+    // Note: avoid toBeInstanceOf(Blob) — undici's fetch (used by Node CI runtime)
+    // returns a Blob from undici/internal/blob.js whose constructor is a DIFFERENT
+    // class identity than globalThis.Blob, causing toBeInstanceOf to fail in CI
+    // even though the value is structurally a Blob. Verify by duck-typing instead.
+    expect(typeof result.blob).toBe("object");
+    expect(result.blob).not.toBeNull();
+    expect(typeof (result.blob as Blob).size).toBe("number");
+    expect(typeof (result.blob as Blob).type).toBe("string");
+
+    // URL constructed with correct query params
+    const fetchCall = vi.mocked(fetch).mock.calls[0];
+    const url = fetchCall[0] as string;
+    expect(url).toContain("from=2026-01");
+    expect(url).toContain("to=2026-03");
+    expect(url).toContain("format=xlsx");
+    expect(url).toContain("proj-1");
+  });
+});
+
+describe("fetchLaborExport — missing Content-Disposition fallback", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("falls back to timestamped default filename when Content-Disposition absent", async () => {
+    const fakeBlob = new Blob(["bytes"]);
+    const mockResponse = new Response(fakeBlob, { status: 200 });
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const result = await fetchLaborExport(
+      "proj-1",
+      { from: "2026-02", to: "2026-04" },
+      "pdf"
+    );
+
+    // Fallback pattern: labor-export-{from}-to-{to}.{format}
+    expect(result.filename).toBe("labor-export-2026-02-to-2026-04.pdf");
+  });
+});
+
+describe("fetchLaborExport — non-2xx error path", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("throws ApiError with status=422 when server returns 422 with JSON body", async () => {
+    const errorBody = { detail: "Unprocessable entity" };
+
+    const mockResponse = new Response(JSON.stringify(errorBody), {
+      status: 422,
+      headers: { "Content-Type": "application/json" },
+    });
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const err = await fetchLaborExport(
+      "proj-1",
+      { from: "2026-01", to: "2026-03" },
+      "xlsx"
+    ).catch((e) => e);
+
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).status).toBe(422);
+    expect((err as ApiError).message).toContain("422");
   });
 });

@@ -256,6 +256,7 @@ export default function LaborPage() {
 
       {!isLoading && activeTab === "summary" && (
         <LaborSummary
+          projectId={projectId}
           summary={summary}
           isLoading={isTabLoading}
           month={summaryMonth}

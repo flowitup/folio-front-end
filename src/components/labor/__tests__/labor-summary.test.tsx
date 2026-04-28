@@ -18,6 +18,11 @@ vi.mock("@/lib/api/labor", () => ({
   formatEUR: (value: number) => `€${value.toFixed(2)}`,
 }));
 
+// Mock LaborExportDialog to avoid triggering sonner/dialog in summary tests
+vi.mock("../labor-export-dialog", () => ({
+  LaborExportDialog: () => null,
+}));
+
 function makeSummary(overrides: Partial<LaborSummaryResponse> = {}): LaborSummaryResponse {
   return {
     rows: [],
@@ -31,6 +36,7 @@ function makeSummary(overrides: Partial<LaborSummaryResponse> = {}): LaborSummar
 }
 
 const defaultProps = {
+  projectId: "proj-test-1",
   isLoading: false,
   month: "2026-04",
   onMonthChange: vi.fn(),

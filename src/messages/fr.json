@@ -354,6 +354,23 @@
     },
     "errors": {
       "supplementOutOfRange": "Les heures supplémentaires doivent être entre 0 et 12."
+    },
+    "export": {
+      "button": "Exporter",
+      "dialogTitle": "Exporter les données de main-d'œuvre",
+      "from": "Du mois",
+      "to": "Au mois",
+      "format": "Format",
+      "xlsx": "Excel (.xlsx)",
+      "pdf": "PDF (.pdf)",
+      "summaryLine": "{count, plural, =1 {# mois sélectionné} other {# mois sélectionnés}}",
+      "download": "Télécharger",
+      "cancel": "Annuler",
+      "generating": "Génération de l'export…",
+      "downloaded": "Export téléchargé",
+      "errorGeneric": "Impossible de générer l'export",
+      "errorRangeInvalid": "« Du mois » doit être ≤ « Au mois »",
+      "errorRangeTooLarge": "La plage doit être ≤ 24 mois"
     }
   },
   "acceptInvite": {

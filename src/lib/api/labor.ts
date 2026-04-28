@@ -12,8 +12,11 @@ import type {
   LaborSummaryResponse,
   LaborEntryParams,
   SummaryParams,
+  LaborExportFormat,
+  LaborExportRange,
 } from "@/types/labor";
-import { api } from "@/lib/api/http";
+import { api, ApiError, getApiAccessToken } from "@/lib/api/http";
+import { env } from "@/lib/config/env";
 
 // Build URL with optional query params
 function buildUrl(basePath: string, params?: Record<string, string | undefined>): string {
@@ -96,4 +99,77 @@ export function formatEUR(amount: number): string {
     style: "currency",
     currency: "EUR",
   }).format(amount);
+}
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+
+const YEAR_MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+const VALID_FORMATS: readonly LaborExportFormat[] = ['xlsx', 'pdf'];
+
+function assertValidExportArgs(range: LaborExportRange, format: LaborExportFormat): void {
+  if (!YEAR_MONTH_RE.test(range.from)) {
+    throw new Error("Invalid 'from' month format (expected YYYY-MM)");
+  }
+  if (!YEAR_MONTH_RE.test(range.to)) {
+    throw new Error("Invalid 'to' month format (expected YYYY-MM)");
+  }
+  if (range.from > range.to) {
+    throw new Error("'from' must be <= 'to'");
+  }
+  const [fy, fm] = range.from.split('-').map(Number);
+  const [ty, tm] = range.to.split('-').map(Number);
+  const span = (ty - fy) * 12 + (tm - fm) + 1;
+  if (span > 24) {
+    throw new Error('Range must be <= 24 months');
+  }
+  if (!VALID_FORMATS.includes(format)) {
+    throw new Error(`Invalid format '${format}' — must be xlsx or pdf`);
+  }
+}
+
+function parseFilenameFromContentDisposition(cd: string): string | null {
+  // RFC 5987 extended form: filename*=UTF-8''...
+  const extMatch = cd.match(/filename\*=UTF-8''([^;]+)/i);
+  if (extMatch) {
+    try { return decodeURIComponent(extMatch[1].trim()); } catch { return extMatch[1].trim(); }
+  }
+  // Quoted form: filename="..."
+  const quotedMatch = cd.match(/filename="([^"]+)"/i);
+  if (quotedMatch) return quotedMatch[1].trim();
+  // Bare form: filename=...
+  const bareMatch = cd.match(/filename=([^;]+)/i);
+  if (bareMatch) return bareMatch[1].trim();
+  return null;
+}
+
+export async function fetchLaborExport(
+  projectId: string,
+  range: LaborExportRange,
+  format: LaborExportFormat,
+): Promise<{ blob: Blob; filename: string }> {
+  assertValidExportArgs(range, format);
+
+  const url =
+    `${env.apiBaseUrl}/api/v1/projects/${encodeURIComponent(projectId)}/labor-export` +
+    `?from=${range.from}&to=${range.to}&format=${format}`;
+
+  const token = getApiAccessToken();
+  const response = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    let body: unknown;
+    try { body = await response.json(); } catch { body = await response.text().catch(() => response.statusText); }
+    throw new ApiError(`Export failed: ${response.status}`, response.status, body);
+  }
+
+  const cd = response.headers.get('Content-Disposition') ?? '';
+  const filename =
+    parseFilenameFromContentDisposition(cd) ??
+    `labor-export-${range.from}-to-${range.to}.${format}`;
+
+  const blob = await response.blob();
+  return { blob, filename };
 }

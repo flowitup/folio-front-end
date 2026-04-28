@@ -59,7 +59,9 @@
     "laborTitle": "Nhân công",
     "laborSubtitle": "Ai có mặt, bao nhiêu giờ, chi phí thế nào.",
     "invoicesTitle": "Hóa đơn",
-    "invoicesSubtitle": "Tiền ra vào trên công trường."
+    "invoicesSubtitle": "Tiền ra vào trên công trường.",
+    "notesTitle": "Ghi chú",
+    "notesSubtitle": "Những điều cần nhớ — nhắc nhở được gửi lúc 09:00 UTC"
   },
   "sidebar": {
     "todayOnSite": "Hôm nay tại công trường",

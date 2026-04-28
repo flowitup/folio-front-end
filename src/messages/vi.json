@@ -303,6 +303,7 @@
     "workerName": "Tên",
     "workerPhone": "Điện thoại",
     "dailyRate": "Lương ngày",
+    "avgCostPerDay": "Chi phí TB / ngày",
     "noWorkers": "Chưa có công nhân nào",
     "logAttendance": "Chấm công",
     "logDay": "Chấm ngày",
@@ -337,7 +338,23 @@
     "perWorkerDay": "mỗi công nhân-ngày",
     "monthlySummary": "Tổng kết tháng · {month}",
     "workersBadge": "{n} công nhân",
-    "role": "Vai trò"
+    "role": "Vai trò",
+    "shift": {
+      "none": "(không có ca)"
+    },
+    "supplement": {
+      "fieldLabel": "Giờ phụ",
+      "fieldHelp": "Cộng dồn để quy đổi ngày công thưởng. Không tính giá hôm nay.",
+      "badgeTooltip": "Giờ phụ (đã cộng dồn, không tính giá hôm nay)",
+      "banner": "Đã cộng dồn {banked}h → {bonusDays} ngày công thưởng ({bonusCost})",
+      "bonusCost": "Chi phí thưởng",
+      "bonusDays": "Ngày công thưởng",
+      "bonusDaysSubtitle": "{days} ngày đã cộng dồn",
+      "standaloneShiftLabel": "(chỉ giờ phụ)"
+    },
+    "errors": {
+      "supplementOutOfRange": "Giờ phụ phải từ 0 đến 12."
+    }
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

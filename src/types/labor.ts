@@ -37,7 +37,8 @@ export interface LaborEntry {
   amount_override: number | null;
   effective_cost: number;
   note: string | null;
-  shift_type: ShiftType;
+  shift_type: ShiftType | null;
+  supplement_hours: number;
   created_at: string;
 }
 
@@ -51,13 +52,15 @@ export interface LogAttendancePayload {
   date: string;
   amount_override?: number;
   note?: string;
-  shift_type?: ShiftType;
+  shift_type?: ShiftType | null;
+  supplement_hours?: number;
 }
 
 export interface UpdateAttendancePayload {
   amount_override?: number;
   note?: string;
-  shift_type?: ShiftType;
+  shift_type?: ShiftType | null;
+  supplement_hours?: number;
 }
 
 export interface WorkerSummaryRow {
@@ -65,12 +68,19 @@ export interface WorkerSummaryRow {
   worker_name: string;
   days_worked: number;
   total_cost: number;
+  banked_hours: number;
+  bonus_full_days: number;
+  bonus_half_days: number;
+  bonus_cost: number;
 }
 
 export interface LaborSummaryResponse {
   rows: WorkerSummaryRow[];
   total_days: number;
   total_cost: number;
+  total_banked_hours: number;
+  total_bonus_days: number;
+  total_bonus_cost: number;
 }
 
 export interface LaborEntryParams {

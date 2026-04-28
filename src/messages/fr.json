@@ -303,6 +303,7 @@
     "workerName": "Nom",
     "workerPhone": "Téléphone",
     "dailyRate": "Tarif journalier",
+    "avgCostPerDay": "Coût moyen / jour",
     "noWorkers": "Aucun ouvrier ajouté",
     "logAttendance": "Enregistrer présence",
     "logDay": "Enregistrer jour",
@@ -337,7 +338,23 @@
     "perWorkerDay": "par jour-ouvrier",
     "monthlySummary": "Résumé mensuel · {month}",
     "workersBadge": "{n} ouvriers",
-    "role": "Rôle"
+    "role": "Rôle",
+    "shift": {
+      "none": "(aucun)"
+    },
+    "supplement": {
+      "fieldLabel": "Heures supplémentaires",
+      "fieldHelp": "Cumulées vers des jours bonus. Non facturées aujourd'hui.",
+      "badgeTooltip": "Heures supplémentaires (cumulées, non facturées aujourd'hui)",
+      "banner": "Cumulé {banked}h → {bonusDays} jours bonus ({bonusCost})",
+      "bonusCost": "Coût bonus",
+      "bonusDays": "Jours bonus",
+      "bonusDaysSubtitle": "{days} jours cumulés",
+      "standaloneShiftLabel": "(supplément seul)"
+    },
+    "errors": {
+      "supplementOutOfRange": "Les heures supplémentaires doivent être entre 0 et 12."
+    }
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",

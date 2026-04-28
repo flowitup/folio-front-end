@@ -356,6 +356,7 @@
       "supplementOutOfRange": "Giờ phụ phải từ 0 đến 12."
     },
     "export": {
+      "button": "Xuất file",
       "dialogTitle": "Xuất dữ liệu nhân công",
       "from": "Từ tháng",
       "to": "Đến tháng",

@@ -356,6 +356,7 @@
       "supplementOutOfRange": "Les heures supplémentaires doivent être entre 0 et 12."
     },
     "export": {
+      "button": "Exporter",
       "dialogTitle": "Exporter les données de main-d'œuvre",
       "from": "Du mois",
       "to": "Au mois",

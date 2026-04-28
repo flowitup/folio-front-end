@@ -356,6 +356,7 @@
       "supplementOutOfRange": "Supplement hours must be between 0 and 12."
     },
     "export": {
+      "button": "Export",
       "dialogTitle": "Export labor data",
       "from": "From month",
       "to": "To month",

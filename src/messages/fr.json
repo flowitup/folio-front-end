@@ -59,7 +59,9 @@
     "laborTitle": "Main-d'œuvre",
     "laborSubtitle": "Qui s'est présenté, combien d'heures, à quel coût.",
     "invoicesTitle": "Factures",
-    "invoicesSubtitle": "L'argent qui entre et sort du chantier."
+    "invoicesSubtitle": "L'argent qui entre et sort du chantier.",
+    "notesTitle": "Notes",
+    "notesSubtitle": "À retenir — les rappels sont envoyés à 09h00 UTC"
   },
   "sidebar": {
     "todayOnSite": "Aujourd'hui sur site",

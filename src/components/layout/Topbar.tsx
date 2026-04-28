@@ -18,7 +18,7 @@ import {
 
 // Page meta keys reference message keys in `topbar.*` (title/subtitle) and
 // `projects/planning/labor/invoices.newProject|newTask|logDay|newInvoice` for actions.
-type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices";
+type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes";
 
 const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; actionKey?: string }> = {
   dashboard: {
@@ -46,6 +46,11 @@ const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; acti
     titleKey: "topbar.invoicesTitle",
     subtitleKey: "topbar.invoicesSubtitle",
     actionKey: "invoices.newInvoice",
+  },
+  notes: {
+    titleKey: "topbar.notesTitle",
+    subtitleKey: "topbar.notesSubtitle",
+    // No topbar action — Add Note lives inline in the notes agenda
   },
 };
 

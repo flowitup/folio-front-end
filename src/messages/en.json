@@ -59,7 +59,9 @@
     "laborTitle": "Labor",
     "laborSubtitle": "Who showed up, how many hours, what it cost.",
     "invoicesTitle": "Invoices",
-    "invoicesSubtitle": "Money flowing in and out of the site."
+    "invoicesSubtitle": "Money flowing in and out of the site.",
+    "notesTitle": "Notes",
+    "notesSubtitle": "Things to remember — reminders fire at 09:00 UTC"
   },
   "sidebar": {
     "todayOnSite": "Today on site",

@@ -3,7 +3,6 @@
 export type TaskStatus = "backlog" | "todo" | "in_progress" | "blocked" | "done";
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
 
-export const TASK_STATUSES: TaskStatus[] = ["backlog", "todo", "in_progress", "blocked", "done"];
 export const TASK_PRIORITIES: TaskPriority[] = ["low", "medium", "high", "urgent"];
 
 // Lanes shown as columns on the board (backlog rendered separately as a top bar).

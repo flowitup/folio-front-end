@@ -15,11 +15,7 @@
     "planning": "Planning",
     "notes": "Notes",
     "members": "Members",
-    "settings": "Settings",
-    "admin": {
-      "section": "Admin",
-      "users": "Users"
-    }
+    "settings": "Settings"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -193,7 +189,12 @@
     "projectName": "Project name",
     "address": "Address",
     "startDate": "Start date",
-    "targetCompletion": "Target completion"
+    "targetCompletion": "Target completion",
+    "users": {
+      "title": "Users & Roles",
+      "description": "Assign roles to existing users across one or more projects.",
+      "permissionDenied": "You don't have authorization to change roles of users."
+    }
   },
   "errors": {
     "unauthorized": "Unauthorized",

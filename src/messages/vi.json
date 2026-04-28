@@ -15,11 +15,7 @@
     "planning": "Kế hoạch",
     "notes": "Ghi chú",
     "members": "Thành viên",
-    "settings": "Cài đặt",
-    "admin": {
-      "section": "Quản trị",
-      "users": "Người dùng"
-    }
+    "settings": "Cài đặt"
   },
   "auth": {
     "welcomeBack": "Chào mừng trở lại",
@@ -193,7 +189,12 @@
     "projectName": "Tên dự án",
     "address": "Địa chỉ",
     "startDate": "Ngày khởi công",
-    "targetCompletion": "Hoàn thành dự kiến"
+    "targetCompletion": "Hoàn thành dự kiến",
+    "users": {
+      "title": "Người dùng & vai trò",
+      "description": "Gán vai trò cho người dùng hiện có trên một hoặc nhiều dự án.",
+      "permissionDenied": "Bạn không có quyền thay đổi vai trò của người dùng."
+    }
   },
   "errors": {
     "unauthorized": "Không được phép",

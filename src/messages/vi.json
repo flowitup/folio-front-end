@@ -354,6 +354,22 @@
     },
     "errors": {
       "supplementOutOfRange": "Giờ phụ phải từ 0 đến 12."
+    },
+    "export": {
+      "dialogTitle": "Xuất dữ liệu nhân công",
+      "from": "Từ tháng",
+      "to": "Đến tháng",
+      "format": "Định dạng",
+      "xlsx": "Excel (.xlsx)",
+      "pdf": "PDF (.pdf)",
+      "summaryLine": "{count} tháng đã chọn",
+      "download": "Tải xuống",
+      "cancel": "Huỷ",
+      "generating": "Đang tạo file…",
+      "downloaded": "Đã tải xong",
+      "errorGeneric": "Không tạo được file xuất",
+      "errorRangeInvalid": "'Từ tháng' phải nhỏ hơn hoặc bằng 'Đến tháng'",
+      "errorRangeTooLarge": "Phạm vi không được vượt quá 24 tháng"
     }
   },
   "acceptInvite": {

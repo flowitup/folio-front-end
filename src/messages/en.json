@@ -354,6 +354,22 @@
     },
     "errors": {
       "supplementOutOfRange": "Supplement hours must be between 0 and 12."
+    },
+    "export": {
+      "dialogTitle": "Export labor data",
+      "from": "From month",
+      "to": "To month",
+      "format": "Format",
+      "xlsx": "Excel (.xlsx)",
+      "pdf": "PDF (.pdf)",
+      "summaryLine": "{count, plural, =1 {# month selected} other {# months selected}}",
+      "download": "Download",
+      "cancel": "Cancel",
+      "generating": "Generating export…",
+      "downloaded": "Export downloaded",
+      "errorGeneric": "Could not generate export",
+      "errorRangeInvalid": "'From' must be ≤ 'To'",
+      "errorRangeTooLarge": "Range must be ≤ 24 months"
     }
   },
   "acceptInvite": {

@@ -93,3 +93,14 @@ export interface SummaryParams {
   from?: string;
   to?: string;
 }
+
+// ─── Export types ────────────────────────────────────────────────────────────
+
+export type LaborExportFormat = 'xlsx' | 'pdf';
+
+export interface LaborExportRange {
+  /** YYYY-MM */
+  from: string;
+  /** YYYY-MM */
+  to: string;
+}

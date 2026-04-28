@@ -222,6 +222,150 @@ describe("LaborSummary — per-worker bonus days column", () => {
   });
 });
 
+// Phase 08 — mixed-data aggregation rendering + banner conditional visibility
+describe("LaborSummary — aggregation rendering (phase 08)", () => {
+  it("renders banner in DOM when total_banked_hours > 0 with mixed 2-worker data", () => {
+    // Worker 1: banked_hours=8, bonus_full=1, bonus_half=0, bonus_cost=100
+    // Worker 2: banked_hours=4, bonus_full=0, bonus_half=1, bonus_cost=50
+    // Top-level: total_banked_hours=12, total_bonus_days=1.5, total_bonus_cost=150
+    const summary = makeSummary({
+      rows: [
+        {
+          worker_id: "w1",
+          worker_name: "Alice",
+          days_worked: 8,
+          total_cost: 800,
+          banked_hours: 8,
+          bonus_full_days: 1,
+          bonus_half_days: 0,
+          bonus_cost: 100,
+        },
+        {
+          worker_id: "w2",
+          worker_name: "Bob",
+          days_worked: 4,
+          total_cost: 400,
+          banked_hours: 4,
+          bonus_full_days: 0,
+          bonus_half_days: 1,
+          bonus_cost: 50,
+        },
+      ],
+      total_days: 12,
+      total_cost: 1200,
+      total_banked_hours: 12,
+      total_bonus_days: 1.5,
+      total_bonus_cost: 150,
+    });
+
+    render(<LaborSummary {...defaultProps} summary={summary} />);
+
+    // Banner is present (total_banked_hours=12 > 0)
+    expect(screen.getByText("supplement.banner")).toBeDefined();
+
+    // Per-worker rows render their respective values
+    // Alice: 1F + 0H, 8h banked, €100.00 cost
+    const aliceLabel = screen.getByText((_, el) =>
+      el?.tagName === "SPAN" && el.textContent?.trim() === "1F + 0H"
+    );
+    expect(aliceLabel).toBeDefined();
+    expect(screen.getByText(/8h/)).toBeDefined();
+
+    // Bob: 0F + 1H, 4h banked
+    const bobLabel = screen.getByText((_, el) =>
+      el?.tagName === "SPAN" && el.textContent?.trim() === "0F + 1H"
+    );
+    expect(bobLabel).toBeDefined();
+    expect(screen.getByText(/4h/)).toBeDefined();
+
+    // Bonus costs present (multiple occurrences across KPI card, tfoot, worker cells)
+    expect(screen.getAllByText(/€100\.00/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/€50\.00/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("banner is NOT in the DOM when total_banked_hours=0", () => {
+    const summary = makeSummary({
+      total_banked_hours: 0,
+      total_bonus_days: 0,
+      total_bonus_cost: 0,
+    });
+
+    render(<LaborSummary {...defaultProps} summary={summary} />);
+
+    // queryByText returns null when element absent
+    expect(screen.queryByText("supplement.banner")).toBeNull();
+  });
+
+  it("banner is present and per-worker cells render for single-worker with banked_hours=8 + bonus_cost=100", () => {
+    const summary = makeSummary({
+      rows: [
+        {
+          worker_id: "w1",
+          worker_name: "Alice",
+          days_worked: 10,
+          total_cost: 1100,
+          banked_hours: 8,
+          bonus_full_days: 1,
+          bonus_half_days: 0,
+          bonus_cost: 100,
+        },
+      ],
+      total_days: 10,
+      total_cost: 1100,
+      total_banked_hours: 8,
+      total_bonus_days: 1,
+      total_bonus_cost: 100,
+    });
+
+    render(<LaborSummary {...defaultProps} summary={summary} />);
+
+    expect(screen.getByText("supplement.banner")).toBeDefined();
+
+    const fullHalfLabel = screen.getByText((_, el) =>
+      el?.tagName === "SPAN" && el.textContent?.trim() === "1F + 0H"
+    );
+    expect(fullHalfLabel).toBeDefined();
+    expect(screen.getByText(/8h/)).toBeDefined();
+  });
+
+  it("total_bonus_cost=150 shown in KPI card formatted as EUR when total_banked_hours=12", () => {
+    const summary = makeSummary({
+      rows: [
+        {
+          worker_id: "w1",
+          worker_name: "Alice",
+          days_worked: 8,
+          total_cost: 800,
+          banked_hours: 8,
+          bonus_full_days: 1,
+          bonus_half_days: 0,
+          bonus_cost: 100,
+        },
+        {
+          worker_id: "w2",
+          worker_name: "Bob",
+          days_worked: 4,
+          total_cost: 400,
+          banked_hours: 4,
+          bonus_full_days: 0,
+          bonus_half_days: 1,
+          bonus_cost: 50,
+        },
+      ],
+      total_days: 12,
+      total_cost: 1200,
+      total_banked_hours: 12,
+      total_bonus_days: 1.5,
+      total_bonus_cost: 150,
+    });
+
+    render(<LaborSummary {...defaultProps} summary={summary} />);
+
+    // Total bonus cost appears in KPI card (mocked formatEUR returns "€150.00")
+    expect(screen.getAllByText(/€150\.00/).length).toBeGreaterThanOrEqual(1);
+  });
+});
+
 describe("LaborSummary — loading state", () => {
   it("renders spinner when isLoading=true", () => {
     render(<LaborSummary {...defaultProps} summary={null} isLoading={true} />);

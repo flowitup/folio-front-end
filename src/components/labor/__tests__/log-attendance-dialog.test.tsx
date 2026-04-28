@@ -179,4 +179,74 @@ describe("LogAttendanceDialog", () => {
       expect(supplementInput).toHaveAttribute("max", "12");
     });
   });
+
+  // Phase 08 — edit-mode population test
+  // The dialog is currently create-only (no initialEntry prop).
+  // This test group verifies that supplement + null-shift state can be
+  // pre-populated via fireEvent and that the payload preserves both
+  // fields on submit — locking in the expected contract for a future
+  // edit-mode prop addition.
+  describe("Edit-mode field population (phase 08)", () => {
+    it("populates supplement_hours=4 and null shift_type via fireEvent; submit preserves both", async () => {
+      const user = userEvent.setup();
+      render(<LogAttendanceDialog {...defaultProps} />);
+
+      // Simulate selecting a worker via the hidden native select (Radix Select in jsdom)
+      const hiddenSelects = document.querySelectorAll("select");
+      if (hiddenSelects.length > 0) {
+        fireEvent.change(hiddenSelects[0], { target: { value: "worker-1" } });
+      }
+
+      // Pre-populate supplement_hours = 4 (simulates edit-mode initialEntry.supplement_hours)
+      const supplementInput = screen.getByRole("spinbutton", { name: /supplement/i });
+      fireEvent.change(supplementInput, { target: { value: "4" } });
+
+      // Verify input reflects the value
+      expect((supplementInput as HTMLInputElement).value).toBe("4");
+
+      // Shift type stays null (shiftType === null, i.e. __none__ sentinel selected)
+      // The shift select should show the "(none)" option — verified by the submit payload below
+
+      // Submit button should be enabled: null-shift + supplement=4 is valid standalone
+      const submitBtn = screen.getByRole("button", { name: /save/i });
+      expect(submitBtn).not.toBeDisabled();
+
+      // Submit and verify payload preserves supplement_hours=4 and shift_type=null
+      await user.click(submitBtn);
+
+      expect(defaultProps.onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          shift_type: null,
+          supplement_hours: 4,
+        })
+      );
+    });
+
+    it("preserves supplement_hours=4 and shift_type=null unchanged when submitted without edits", async () => {
+      const user = userEvent.setup();
+      render(<LogAttendanceDialog {...defaultProps} />);
+
+      // Select worker
+      const hiddenSelects = document.querySelectorAll("select");
+      if (hiddenSelects.length > 0) {
+        fireEvent.change(hiddenSelects[0], { target: { value: "worker-1" } });
+      }
+
+      // Set fields to match an existing entry: supplement_hours=4, shift_type=null
+      const supplementInput = screen.getByRole("spinbutton", { name: /supplement/i });
+      fireEvent.change(supplementInput, { target: { value: "4" } });
+
+      // Submit without any further changes
+      const submitBtn = screen.getByRole("button", { name: /save/i });
+      await user.click(submitBtn);
+
+      // Payload must include the exact values — no coercion or default override
+      expect(defaultProps.onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          supplement_hours: 4,
+          shift_type: null,
+        })
+      );
+    });
+  });
 });

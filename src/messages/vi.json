@@ -15,11 +15,7 @@
     "planning": "Kế hoạch",
     "notes": "Ghi chú",
     "members": "Thành viên",
-    "settings": "Cài đặt",
-    "admin": {
-      "section": "Quản trị",
-      "users": "Người dùng"
-    }
+    "settings": "Cài đặt"
   },
   "auth": {
     "welcomeBack": "Chào mừng trở lại",

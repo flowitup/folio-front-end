@@ -15,11 +15,7 @@
     "planning": "Planning",
     "notes": "Notes",
     "members": "Members",
-    "settings": "Settings",
-    "admin": {
-      "section": "Admin",
-      "users": "Users"
-    }
+    "settings": "Settings"
   },
   "auth": {
     "welcomeBack": "Welcome back",

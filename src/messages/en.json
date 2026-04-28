@@ -337,7 +337,23 @@
     "perWorkerDay": "per worker-day",
     "monthlySummary": "Monthly summary · {month}",
     "workersBadge": "{n} workers",
-    "role": "Role"
+    "role": "Role",
+    "shift": {
+      "none": "(none)"
+    },
+    "supplement": {
+      "fieldLabel": "Supplement hours",
+      "fieldHelp": "Banked toward bonus days. Not priced today.",
+      "badgeTooltip": "Supplement hours (banked, not priced today)",
+      "banner": "Banked {banked}h → {bonusDays} bonus days ({bonusCost})",
+      "bonusCost": "Bonus cost",
+      "bonusDays": "Bonus days",
+      "bonusDaysSubtitle": "{days} days banked",
+      "standaloneShiftLabel": "(supplement only)"
+    },
+    "errors": {
+      "supplementOutOfRange": "Supplement hours must be between 0 and 12."
+    }
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

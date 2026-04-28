@@ -18,6 +18,11 @@ function formatMonthLabel(month: string, locale: string): string {
   return new Date(y, m - 1, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
 }
 
+/** Format bonus_days value: render integer without decimal, float with one decimal */
+function formatBonusDays(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
 export function LaborSummary({ summary, isLoading, month, onMonthChange }: LaborSummaryProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
@@ -27,6 +32,10 @@ export function LaborSummary({ summary, isLoading, month, onMonthChange }: Labor
   const workerCount = summary?.rows.length ?? 0;
   const onSiteToday = workerCount;
   const avgDailyRate = totalDays > 0 ? totalCost / totalDays : 0;
+
+  const totalBankedHours = summary?.total_banked_hours ?? 0;
+  const totalBonusDays = summary?.total_bonus_days ?? 0;
+  const totalBonusCost = summary?.total_bonus_cost ?? 0;
 
   if (isLoading) {
     return (
@@ -38,8 +47,21 @@ export function LaborSummary({ summary, isLoading, month, onMonthChange }: Labor
 
   return (
     <div className="space-y-5">
-      {/* KPI Row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Supplement banner — only shown when there are banked hours */}
+      {totalBankedHours > 0 && (
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-4">
+          <p className="text-[13px] font-medium">
+            {t("supplement.banner", {
+              banked: totalBankedHours,
+              bonusDays: formatBonusDays(totalBonusDays),
+              bonusCost: formatEUR(totalBonusCost),
+            })}
+          </p>
+        </div>
+      )}
+
+      {/* KPI Row — 4 base cards + optional bonus-cost card */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="folio-card p-5">
           <div className="label-cap">{t("totalLaborCost")}</div>
           <div className="font-display num mt-2 text-[28px] font-medium leading-none">
@@ -77,6 +99,19 @@ export function LaborSummary({ summary, isLoading, month, onMonthChange }: Labor
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("perWorkerDay")}
+          </div>
+        </div>
+        {/* Bonus cost KPI — always rendered to keep grid stable; value is 0 when no supplements */}
+        <div className="folio-card p-5">
+          <div className="label-cap">{t("supplement.bonusCost")}</div>
+          <div
+            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            style={{ color: "var(--accent)" }}
+          >
+            {formatEUR(totalBonusCost)}
+          </div>
+          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("supplement.bonusDaysSubtitle", { days: formatBonusDays(totalBonusDays) })}
           </div>
         </div>
       </div>
@@ -120,6 +155,7 @@ export function LaborSummary({ summary, isLoading, month, onMonthChange }: Labor
                   <th style={{ textAlign: "right" }}>{t("daysWorked")}</th>
                   <th style={{ textAlign: "right" }}>{t("dailyRate")}</th>
                   <th style={{ textAlign: "right" }}>{t("totalCost")}</th>
+                  <th style={{ textAlign: "right" }}>{t("supplement.bonusDays")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -149,6 +185,18 @@ export function LaborSummary({ summary, isLoading, month, onMonthChange }: Labor
                       <td className="num font-medium" style={{ textAlign: "right" }}>
                         {formatEUR(row.total_cost)}
                       </td>
+                      <td className="num" style={{ textAlign: "right" }}>
+                        {row.banked_hours > 0 ? (
+                          <div className="flex flex-col items-end">
+                            <span>{row.bonus_full_days}F + {row.bonus_half_days}H</span>
+                            <span className="text-xs text-muted-foreground">
+                              {row.banked_hours}h · {formatEUR(row.bonus_cost)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span style={{ color: "var(--muted)" }}>—</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -164,6 +212,9 @@ export function LaborSummary({ summary, isLoading, month, onMonthChange }: Labor
                   <td></td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {formatEUR(summary.total_cost)}
+                  </td>
+                  <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
+                    {totalBonusCost > 0 ? formatEUR(totalBonusCost) : "—"}
                   </td>
                 </tr>
               </tfoot>

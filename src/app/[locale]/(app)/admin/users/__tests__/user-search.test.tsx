@@ -31,11 +31,12 @@ vi.mock("../actions", () => ({
 
 vi.mock("next-intl", () => ({
   useTranslations: (_ns: string) => (key: string) => {
+    // Keys must match the nested paths used by user-search.tsx (admin.bulkAdd.userSearch.*)
     const map: Record<string, string> = {
-      userLabel: "Search for a user",
-      userPlaceholder: "Type at least 3 characters",
-      searching: "Searching...",
-      noUsersFound: "No users match your search",
+      "userSearch.label": "Search for a user",
+      "userSearch.placeholder": "Type at least 3 characters",
+      "userSearch.searching": "Searching...",
+      "userSearch.empty": "No users match your search",
     };
     return map[key] ?? key;
   },

@@ -253,12 +253,10 @@ describe("BulkAddForm", () => {
           }
         });
 
-        // Cap caption should be rendered — match the specific cap-reached message key
+        // Cap caption should be rendered — the form calls t("projects.maxReached")
+        // which in the mock becomes "admin.bulkAdd.projects.maxReached".
         await waitFor(() => {
-          // The form renders t("projectCapReached", { max: 50 }) which in our mock becomes
-          // "admin.bulkAdd.projectCapReached50" — just assert the element with role="alert"
-          // is absent but the cap paragraph is present via partial text match on the key fragment
-          const capEl = screen.queryByText(/projectCapReached/);
+          const capEl = screen.queryByText(/projects\.maxReached/);
           expect(capEl).not.toBeNull();
         });
 

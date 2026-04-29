@@ -1,22 +1,38 @@
 /**
- * Tests for LaborExportDialog component — phase 08
+ * Tests for LaborExportDialog component — phase 08 + round-2 H-4 DRY refactor
  *
  * Covers: trigger render, range validation UI, format toggle, submit happy path
  * with Blob + anchor-click mock, error toast on rejection, cancel closes dialog.
+ * Also covers worker-prop mode (per-worker export) after H-4 unification.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { LaborExportDialog } from "../labor-export-dialog";
+import type { Worker } from "@/types/labor";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string, params?: Record<string, unknown>) => {
+    if (params) {
+      return Object.entries(params).reduce(
+        (acc, [k, v]) => acc.replace(`{${k}}`, String(v)),
+        key,
+      );
+    }
+    return key;
+  },
 }));
 
 vi.mock("@/lib/api/labor", () => ({
   fetchLaborExport: vi.fn(),
+  fetchWorkerLaborExport: vi.fn(),
+  formatEUR: (amount: number) => `€${amount.toFixed(2)}`,
+}));
+
+vi.mock("@/lib/util/trigger-browser-download", () => ({
+  triggerBrowserDownload: vi.fn(),
 }));
 
 vi.mock("sonner", () => ({
@@ -28,7 +44,8 @@ vi.mock("sonner", () => ({
 }));
 
 // Import after mocking
-import { fetchLaborExport } from "@/lib/api/labor";
+import { fetchLaborExport, fetchWorkerLaborExport } from "@/lib/api/labor";
+import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { toast } from "sonner";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -188,32 +205,8 @@ describe("LaborExportDialog — format toggle", () => {
 });
 
 describe("LaborExportDialog — submit happy path", () => {
-  let createObjectURLSpy: ReturnType<typeof vi.spyOn>;
-  // Tracks all anchor elements created during the test
-  const anchorClicks: HTMLAnchorElement[] = [];
-
   beforeEach(() => {
     vi.clearAllMocks();
-    anchorClicks.length = 0;
-
-    createObjectURLSpy = vi
-      .spyOn(URL, "createObjectURL")
-      .mockReturnValue("blob:fake-url");
-    vi.spyOn(URL, "revokeObjectURL").mockReturnValue(undefined);
-
-    // Spy on createElement to intercept anchor creation without disrupting rendering.
-    // We call the original but override click() on every anchor so we can assert it.
-    const originalCreateElement = document.createElement.bind(document);
-    vi.spyOn(document, "createElement").mockImplementation((tag: string, ...args: unknown[]) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- spread for overload compat
-      const el = originalCreateElement(tag, ...(args as any[]));
-      if (tag === "a") {
-        // Track and stub click so it doesn't open a navigation
-        vi.spyOn(el as HTMLAnchorElement, "click").mockReturnValue(undefined);
-        anchorClicks.push(el as HTMLAnchorElement);
-      }
-      return el;
-    });
   });
 
   afterEach(() => {
@@ -253,16 +246,11 @@ describe("LaborExportDialog — submit happy path", () => {
       { timeout: 15000 }
     );
 
-    // URL.createObjectURL called with the blob
-    expect(createObjectURLSpy).toHaveBeenCalledWith(fakeBlob);
-
-    // An anchor was created with the correct download attribute
-    const anchor = anchorClicks[anchorClicks.length - 1];
-    expect(anchor).toBeDefined();
-    expect(anchor.download).toBe("labor-proj-test-1-2026-01-to-2026-03.xlsx");
-
-    // anchor.click() was called (triggering the download)
-    expect(anchor.click).toHaveBeenCalled();
+    // triggerBrowserDownload called with blob + filename
+    expect(triggerBrowserDownload).toHaveBeenCalledWith(
+      fakeBlob,
+      "labor-proj-test-1-2026-01-to-2026-03.xlsx",
+    );
 
     // toast.success called
     expect(toast.success).toHaveBeenCalledWith("downloaded", {
@@ -304,8 +292,7 @@ describe("LaborExportDialog — submit happy path", () => {
     );
   });
 
-  // Verifies URL.createObjectURL is called (revokeObjectURL runs via setTimeout(0) in production)
-  it("URL.createObjectURL is called with the response blob", async () => {
+  it("triggerBrowserDownload is called with the response blob and filename", async () => {
     const fakeBlob = new Blob(["bytes"]);
 
     vi.mocked(fetchLaborExport).mockResolvedValue({
@@ -326,7 +313,7 @@ describe("LaborExportDialog — submit happy path", () => {
 
     await waitFor(
       () => {
-        expect(createObjectURLSpy).toHaveBeenCalledWith(fakeBlob);
+        expect(triggerBrowserDownload).toHaveBeenCalledWith(fakeBlob, "labor-test.xlsx");
       },
       { timeout: 15000 }
     );
@@ -437,4 +424,338 @@ describe("LaborExportDialog — cancel behavior", () => {
 
     expect(fetchLaborExport).not.toHaveBeenCalled();
   });
+});
+
+// ── Worker prop (per-worker export mode) — H-4 DRY unification ───────────────
+
+const ACTIVE_WORKER: Worker = {
+  id: "worker-uuid-1",
+  project_id: "proj-uuid-1",
+  name: "Alice Dupont",
+  phone: "+33612345678",
+  daily_rate: 180,
+  is_active: true,
+  created_at: "2026-01-01T00:00:00Z",
+};
+
+function renderWorkerDialog(workerOverride: Worker | null = ACTIVE_WORKER) {
+  return render(
+    <LaborExportDialog
+      projectId="proj-uuid-1"
+      open={!!workerOverride}
+      onOpenChange={vi.fn()}
+      worker={workerOverride}
+    />,
+  );
+}
+
+describe("LaborExportDialog — with worker prop (render)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders nothing when worker is null and open is false", () => {
+    const { container } = render(
+      <LaborExportDialog
+        projectId="proj-1"
+        open={false}
+        onOpenChange={vi.fn()}
+        worker={null}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("renders worker dialog title with worker name", () => {
+    renderWorkerDialog();
+    expect(screen.getByText("workerDialogTitle")).toBeDefined();
+  });
+
+  it("renders subtitle containing formatted daily rate", () => {
+    renderWorkerDialog();
+    expect(screen.getByText(/workerSubtitle/)).toBeDefined();
+  });
+
+  it("renders from/to inputs with worker-prefixed IDs", () => {
+    renderWorkerDialog();
+    expect(document.getElementById("worker-export-from")).toBeTruthy();
+    expect(document.getElementById("worker-export-to")).toBeTruthy();
+  });
+
+  it("renders xlsx and pdf format toggle buttons", () => {
+    renderWorkerDialog();
+    expect(screen.getByText("xlsx")).toBeDefined();
+    expect(screen.getByText("pdf")).toBeDefined();
+  });
+
+  it("download button is disabled when from/to are empty", () => {
+    renderWorkerDialog();
+    expect(screen.getByText("download").closest("button")).toBeDisabled();
+  });
+});
+
+describe("LaborExportDialog — with worker prop (range validation)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows errorRangeInvalid when from > to", () => {
+    renderWorkerDialog();
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2026-06" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-03" },
+    });
+    expect(screen.getByRole("alert")).toBeDefined();
+    expect(screen.getByText("errorRangeInvalid")).toBeDefined();
+    expect(screen.getByText("download").closest("button")).toBeDisabled();
+  });
+
+  it("shows errorRangeTooLarge when span > 24 months", () => {
+    renderWorkerDialog();
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2024-01" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-02" },
+    });
+    expect(screen.getByText("errorRangeTooLarge")).toBeDefined();
+    expect(screen.getByText("download").closest("button")).toBeDisabled();
+  });
+
+  it("enables download for valid range (same month)", () => {
+    renderWorkerDialog();
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2026-04" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-04" },
+    });
+    expect(screen.getByText("download").closest("button")).not.toBeDisabled();
+  });
+});
+
+describe("LaborExportDialog — with worker prop (submit happy path)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("calls fetchWorkerLaborExport with correct args on submit", async () => {
+    const fakeBlob = new Blob(["xlsx-bytes"]);
+    vi.mocked(fetchWorkerLaborExport).mockResolvedValue({
+      blob: fakeBlob,
+      filename: "worker-alice-2026-01-to-2026-03.xlsx",
+    });
+
+    renderWorkerDialog();
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2026-01" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-03" },
+    });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(
+      () => {
+        expect(fetchWorkerLaborExport).toHaveBeenCalledWith(
+          "proj-uuid-1",
+          "worker-uuid-1",
+          { from: "2026-01", to: "2026-03" },
+          "xlsx",
+        );
+      },
+      { timeout: 15000 },
+    );
+  });
+
+  it("calls triggerBrowserDownload with blob and filename on success", async () => {
+    const fakeBlob = new Blob(["bytes"]);
+    vi.mocked(fetchWorkerLaborExport).mockResolvedValue({
+      blob: fakeBlob,
+      filename: "worker-alice.xlsx",
+    });
+
+    renderWorkerDialog();
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2026-02" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-02" },
+    });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(
+      () => {
+        expect(triggerBrowserDownload).toHaveBeenCalledWith(fakeBlob, "worker-alice.xlsx");
+      },
+      { timeout: 15000 },
+    );
+  });
+
+  it("shows workerToastSuccess toast on success", async () => {
+    const fakeBlob = new Blob(["bytes"]);
+    vi.mocked(fetchWorkerLaborExport).mockResolvedValue({
+      blob: fakeBlob,
+      filename: "report.xlsx",
+    });
+
+    renderWorkerDialog();
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2026-01" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-01" },
+    });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(
+      () => {
+        expect(toast.success).toHaveBeenCalledWith(
+          "workerToastSuccess",
+          expect.objectContaining({ id: "toast-id-1" }),
+        );
+      },
+      { timeout: 15000 },
+    );
+  });
+
+  it("calls onOpenChange(false) after successful download", async () => {
+    const onOpenChange = vi.fn();
+    const fakeBlob = new Blob(["bytes"]);
+    vi.mocked(fetchWorkerLaborExport).mockResolvedValue({
+      blob: fakeBlob,
+      filename: "report.xlsx",
+    });
+
+    render(
+      <LaborExportDialog
+        projectId="proj-uuid-1"
+        worker={ACTIVE_WORKER}
+        open={true}
+        onOpenChange={onOpenChange}
+      />,
+    );
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2026-04" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-04" },
+    });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(
+      () => {
+        expect(onOpenChange).toHaveBeenCalledWith(false);
+      },
+      { timeout: 15000 },
+    );
+  });
+});
+
+describe("LaborExportDialog — with worker prop (failure path)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows error toast with Error message when fetchWorkerLaborExport rejects", async () => {
+    vi.mocked(fetchWorkerLaborExport).mockRejectedValue(new Error("Server error: 500"));
+
+    renderWorkerDialog();
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2026-01" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-03" },
+    });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(
+      () => {
+        expect(toast.error).toHaveBeenCalledWith(
+          "Server error: 500",
+          expect.objectContaining({ id: "toast-id-1" }),
+        );
+      },
+      { timeout: 15000 },
+    );
+  }, 20000);
+
+  it("shows workerToastError i18n key when rejection is not an Error instance", async () => {
+    vi.mocked(fetchWorkerLaborExport).mockRejectedValue("raw string error");
+
+    renderWorkerDialog();
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2026-01" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-03" },
+    });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(
+      () => {
+        expect(toast.error).toHaveBeenCalledWith(
+          "workerToastError",
+          expect.objectContaining({ id: "toast-id-1" }),
+        );
+      },
+      { timeout: 15000 },
+    );
+  }, 20000);
+
+  it("does not call onOpenChange(false) after failure", async () => {
+    const onOpenChange = vi.fn();
+    vi.mocked(fetchWorkerLaborExport).mockRejectedValue(new Error("network error"));
+
+    render(
+      <LaborExportDialog
+        projectId="proj-uuid-1"
+        worker={ACTIVE_WORKER}
+        open={true}
+        onOpenChange={onOpenChange}
+      />,
+    );
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2026-02" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-02" },
+    });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(
+      () => {
+        expect(toast.error).toHaveBeenCalled();
+      },
+      { timeout: 15000 },
+    );
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  }, 20000);
+
+  it("triggerBrowserDownload is not called after failure", async () => {
+    vi.mocked(fetchWorkerLaborExport).mockRejectedValue(new Error("timeout"));
+
+    renderWorkerDialog();
+    fireEvent.change(document.getElementById("worker-export-from")!, {
+      target: { value: "2026-01" },
+    });
+    fireEvent.change(document.getElementById("worker-export-to")!, {
+      target: { value: "2026-01" },
+    });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(
+      () => {
+        expect(toast.error).toHaveBeenCalled();
+      },
+      { timeout: 15000 },
+    );
+    expect(triggerBrowserDownload).not.toHaveBeenCalled();
+  }, 20000);
 });

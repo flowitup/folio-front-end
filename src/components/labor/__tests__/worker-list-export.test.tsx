@@ -30,8 +30,8 @@ vi.mock("@/lib/api/labor", () => ({
 
 // Mock the export dialog so we can assert it receives the right worker
 // without triggering its full render (toast, fetch, etc.)
-vi.mock("../worker-labor-export-dialog", () => ({
-  WorkerLaborExportDialog: ({
+vi.mock("../labor-export-dialog", () => ({
+  LaborExportDialog: ({
     worker,
     open,
   }: {

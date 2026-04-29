@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Worker } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
-import { WorkerLaborExportDialog } from "@/components/labor/worker-labor-export-dialog";
+import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 
 interface WorkerListProps {
   workers: Worker[];
@@ -115,7 +115,7 @@ export function WorkerList({
       )}
 
       {/* Per-worker export dialog */}
-      <WorkerLaborExportDialog
+      <LaborExportDialog
         projectId={projectId}
         worker={exportWorker}
         open={!!exportWorker}

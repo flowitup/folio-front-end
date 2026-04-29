@@ -224,6 +224,7 @@ export default function LaborPage() {
         <WorkerList
           workers={workers}
           canManage={canManageLabor}
+          projectId={projectId}
           onAdd={() => setShowAddWorker(true)}
           onEdit={(worker) => setEditWorker(worker)}
           onDeactivate={handleDeactivateWorker}

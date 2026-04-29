@@ -375,7 +375,12 @@
       "downloaded": "Export downloaded",
       "errorGeneric": "Could not generate export",
       "errorRangeInvalid": "'From' must be ≤ 'To'",
-      "errorRangeTooLarge": "Range must be ≤ 24 months"
+      "errorRangeTooLarge": "Range must be ≤ 24 months",
+      "exportWorker": "Export",
+      "workerDialogTitle": "Export labor for {name}",
+      "workerSubtitle": "Daily rate: {rate}",
+      "workerToastError": "Could not export",
+      "workerToastSuccess": "Export downloaded"
     }
   },
   "acceptInvite": {

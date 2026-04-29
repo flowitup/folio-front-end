@@ -173,3 +173,37 @@ export async function fetchLaborExport(
   const blob = await response.blob();
   return { blob, filename };
 }
+
+export async function fetchWorkerLaborExport(
+  projectId: string,
+  workerId: string,
+  range: LaborExportRange,
+  format: LaborExportFormat,
+): Promise<{ blob: Blob; filename: string }> {
+  assertValidExportArgs(range, format);
+
+  const url =
+    `${env.apiBaseUrl}/api/v1/projects/${encodeURIComponent(projectId)}` +
+    `/workers/${encodeURIComponent(workerId)}/labor-export` +
+    `?from=${range.from}&to=${range.to}&format=${format}`;
+
+  const token = getApiAccessToken();
+  const response = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    let body: unknown;
+    try { body = await response.json(); } catch { body = await response.text().catch(() => response.statusText); }
+    throw new ApiError(`Export failed: ${response.status}`, response.status, body);
+  }
+
+  const cd = response.headers.get('Content-Disposition') ?? '';
+  const filename =
+    parseFilenameFromContentDisposition(cd) ??
+    `labor-export-${range.from}-to-${range.to}.${format}`;
+
+  const blob = await response.blob();
+  return { blob, filename };
+}

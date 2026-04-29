@@ -142,17 +142,12 @@ function parseFilenameFromContentDisposition(cd: string): string | null {
   return null;
 }
 
-export async function fetchLaborExport(
-  projectId: string,
+async function fetchExportFile(
+  url: string,
   range: LaborExportRange,
   format: LaborExportFormat,
 ): Promise<{ blob: Blob; filename: string }> {
   assertValidExportArgs(range, format);
-
-  const url =
-    `${env.apiBaseUrl}/api/v1/projects/${encodeURIComponent(projectId)}/labor-export` +
-    `?from=${range.from}&to=${range.to}&format=${format}`;
-
   const token = getApiAccessToken();
   const response = await fetch(url, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -172,4 +167,28 @@ export async function fetchLaborExport(
 
   const blob = await response.blob();
   return { blob, filename };
+}
+
+export async function fetchLaborExport(
+  projectId: string,
+  range: LaborExportRange,
+  format: LaborExportFormat,
+): Promise<{ blob: Blob; filename: string }> {
+  const url =
+    `${env.apiBaseUrl}/api/v1/projects/${encodeURIComponent(projectId)}/labor-export` +
+    `?from=${range.from}&to=${range.to}&format=${format}`;
+  return fetchExportFile(url, range, format);
+}
+
+export async function fetchWorkerLaborExport(
+  projectId: string,
+  workerId: string,
+  range: LaborExportRange,
+  format: LaborExportFormat,
+): Promise<{ blob: Blob; filename: string }> {
+  const url =
+    `${env.apiBaseUrl}/api/v1/projects/${encodeURIComponent(projectId)}` +
+    `/workers/${encodeURIComponent(workerId)}/labor-export` +
+    `?from=${range.from}&to=${range.to}&format=${format}`;
+  return fetchExportFile(url, range, format);
 }

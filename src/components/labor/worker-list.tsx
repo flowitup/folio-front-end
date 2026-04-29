@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Pencil, UserX } from "lucide-react";
+import { Plus, Pencil, UserX, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,10 +16,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Worker } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
+import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 
 interface WorkerListProps {
   workers: Worker[];
   canManage: boolean;
+  projectId: string;
   onAdd: () => void;
   onEdit: (worker: Worker) => void;
   onDeactivate: (worker: Worker) => void;
@@ -28,12 +30,15 @@ interface WorkerListProps {
 export function WorkerList({
   workers,
   canManage,
+  projectId,
   onAdd,
   onEdit,
   onDeactivate,
 }: WorkerListProps) {
   const t = useTranslations("labor");
+  const tExport = useTranslations("labor.export");
   const [confirmDeactivate, setConfirmDeactivate] = useState<Worker | null>(null);
+  const [exportWorker, setExportWorker] = useState<Worker | null>(null);
 
   return (
     <div className="space-y-4">
@@ -73,22 +78,34 @@ export function WorkerList({
                   </div>
                 </div>
 
-                {canManage && worker.is_active && (
+                {worker.is_active && (
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onEdit(worker)}
+                      aria-label={tExport("exportWorker")}
+                      onClick={() => setExportWorker(worker)}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Download className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setConfirmDeactivate(worker)}
-                    >
-                      <UserX className="h-4 w-4" />
-                    </Button>
+                    {canManage && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEdit(worker)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setConfirmDeactivate(worker)}
+                        >
+                          <UserX className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -96,6 +113,14 @@ export function WorkerList({
           ))}
         </div>
       )}
+
+      {/* Per-worker export dialog */}
+      <LaborExportDialog
+        projectId={projectId}
+        worker={exportWorker}
+        open={!!exportWorker}
+        onOpenChange={(o) => !o && setExportWorker(null)}
+      />
 
       {/* Deactivate Confirmation */}
       <AlertDialog

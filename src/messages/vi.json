@@ -375,7 +375,12 @@
       "downloaded": "Đã tải xong",
       "errorGeneric": "Không tạo được file xuất",
       "errorRangeInvalid": "'Từ tháng' phải nhỏ hơn hoặc bằng 'Đến tháng'",
-      "errorRangeTooLarge": "Phạm vi không được vượt quá 24 tháng"
+      "errorRangeTooLarge": "Phạm vi không được vượt quá 24 tháng",
+      "exportWorker": "Xuất",
+      "workerDialogTitle": "Xuất công của {name}",
+      "workerSubtitle": "Đơn giá ngày: {rate}",
+      "workerToastError": "Không thể xuất",
+      "workerToastSuccess": "Đã tải xuống bản xuất"
     }
   },
   "acceptInvite": {

@@ -375,7 +375,12 @@
       "downloaded": "Export téléchargé",
       "errorGeneric": "Impossible de générer l'export",
       "errorRangeInvalid": "« Du mois » doit être ≤ « Au mois »",
-      "errorRangeTooLarge": "La plage doit être ≤ 24 mois"
+      "errorRangeTooLarge": "La plage doit être ≤ 24 mois",
+      "exportWorker": "Exporter",
+      "workerDialogTitle": "Exporter la main-d'œuvre de {name}",
+      "workerSubtitle": "Taux journalier : {rate}",
+      "workerToastError": "Impossible d'exporter",
+      "workerToastSuccess": "Export téléchargé"
     }
   },
   "acceptInvite": {

@@ -14,13 +14,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { fetchLaborExport } from "@/lib/api/labor";
+import { fetchLaborExport, fetchWorkerLaborExport, formatEUR } from "@/lib/api/labor";
+import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
+import type { Worker } from "@/types/labor";
 import type { LaborExportFormat } from "@/types/labor";
 
 interface LaborExportDialogProps {
   projectId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** When provided, dialog exports for this specific worker instead of the whole project. */
+  worker?: Worker | null;
 }
 
 function computeMonthSpan(from: string, to: string): number {
@@ -30,22 +34,11 @@ function computeMonthSpan(from: string, to: string): number {
   return (ty - fy) * 12 + (tm - fm) + 1;
 }
 
-function triggerBrowserDownload(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  // Defer revoke so the browser can finish the download trigger
-  setTimeout(() => URL.revokeObjectURL(url), 0);
-}
-
 export function LaborExportDialog({
   projectId,
   open,
   onOpenChange,
+  worker,
 }: LaborExportDialogProps) {
   const t = useTranslations("labor.export");
   const [from, setFrom] = useState<string>("");
@@ -55,7 +48,8 @@ export function LaborExportDialog({
 
   const monthSpan = useMemo(() => computeMonthSpan(from, to), [from, to]);
   const rangeInvalid = !from || !to || from > to || monthSpan > 24;
-  const canSubmit = !rangeInvalid && !submitting;
+  // When worker mode: also require worker to be non-null
+  const canSubmit = !rangeInvalid && !submitting && (worker !== undefined ? !!worker : true);
 
   const rangeError: string | null =
     from && to && from > to
@@ -77,16 +71,30 @@ export function LaborExportDialog({
     setSubmitting(true);
     const toastId = toast.loading(t("generating"));
     try {
-      const { blob, filename } = await fetchLaborExport(
-        projectId,
-        { from, to },
-        format,
-      );
-      triggerBrowserDownload(blob, filename);
-      toast.success(t("downloaded"), { id: toastId });
+      let blob: Blob;
+      let filename: string;
+      if (worker) {
+        ({ blob, filename } = await fetchWorkerLaborExport(
+          projectId,
+          worker.id,
+          { from, to },
+          format,
+        ));
+        triggerBrowserDownload(blob, filename);
+        toast.success(t("workerToastSuccess"), { id: toastId });
+      } else {
+        ({ blob, filename } = await fetchLaborExport(
+          projectId,
+          { from, to },
+          format,
+        ));
+        triggerBrowserDownload(blob, filename);
+        toast.success(t("downloaded"), { id: toastId });
+      }
       handleClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("errorGeneric"), {
+      const fallbackKey = worker ? t("workerToastError") : t("errorGeneric");
+      toast.error(err instanceof Error ? err.message : fallbackKey, {
         id: toastId,
       });
     } finally {
@@ -94,29 +102,45 @@ export function LaborExportDialog({
     }
   };
 
+  // In worker mode: don't render if both worker is absent and dialog is closed
+  if (worker !== undefined && !worker && !open) return null;
+
+  const isOpen = worker !== undefined ? open && !!worker : open;
+  const fromId = worker ? "worker-export-from" : "export-from";
+  const toId = worker ? "worker-export-to" : "export-to";
+
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("dialogTitle")}</DialogTitle>
+          <DialogTitle>
+            {worker
+              ? t("workerDialogTitle", { name: worker.name })
+              : t("dialogTitle")}
+          </DialogTitle>
+          {worker && (
+            <p className="text-sm text-muted-foreground pt-1">
+              {t("workerSubtitle", { rate: formatEUR(worker.daily_rate) })}
+            </p>
+          )}
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           {/* Date range pickers */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="export-from">{t("from")}</Label>
+              <Label htmlFor={fromId}>{t("from")}</Label>
               <Input
-                id="export-from"
+                id={fromId}
                 type="month"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="export-to">{t("to")}</Label>
+              <Label htmlFor={toId}>{t("to")}</Label>
               <Input
-                id="export-to"
+                id={toId}
                 type="month"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
@@ -138,7 +162,7 @@ export function LaborExportDialog({
             </p>
           )}
 
-          {/* Format selector — toggle buttons (no radio-group primitive) */}
+          {/* Format selector — toggle buttons */}
           <div className="space-y-2">
             <Label>{t("format")}</Label>
             <div className="flex gap-2 mt-1">

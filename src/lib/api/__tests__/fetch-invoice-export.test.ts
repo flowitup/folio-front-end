@@ -108,6 +108,9 @@ describe("fetchInvoiceExport — URL construction", () => {
     expect(url).toContain("from=2026-01");
     expect(url).toContain("to=2026-03");
     expect(url).toContain("format=xlsx");
+    // URL-pinning: base URL must not contain a doubled /api/v1 segment
+    expect(url).toMatch(/^https?:\/\/.+\/projects\/[^/]+\/invoices-export\?/);
+    expect(url).not.toMatch(/api\/v1\/api\/v1/);
   });
 
   it("includes optional type param when typeFilter is provided", async () => {

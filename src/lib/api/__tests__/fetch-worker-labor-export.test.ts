@@ -107,6 +107,9 @@ describe("fetchWorkerLaborExport — URL construction", () => {
     expect(url).toContain("from=2026-01");
     expect(url).toContain("to=2026-03");
     expect(url).toContain("format=xlsx");
+    // URL-pinning: must not contain a doubled /api/v1 segment
+    expect(url).toMatch(/^https?:\/\/.+\/projects\/[^/]+\/workers\/[^/]+\/labor-export\?/);
+    expect(url).not.toMatch(/api\/v1\/api\/v1/);
   });
 
   it("URL-encodes projectId and workerId with special characters", async () => {

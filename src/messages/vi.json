@@ -255,7 +255,29 @@
     "pending": "Chờ thanh toán",
     "overdue": "Quá hạn",
     "invoiceCount": "{n, plural, =0 {không có hóa đơn} other {# hóa đơn}}",
-    "awaiting": "{n} chờ xử lý"
+    "awaiting": "{n} chờ xử lý",
+    "export": {
+      "trigger": "Xuất dữ liệu theo khoảng",
+      "dialogTitle": "Xuất hóa đơn",
+      "from": "Tháng bắt đầu",
+      "to": "Tháng kết thúc",
+      "typeFilter": "Loại",
+      "typeAll": "Tất cả loại",
+      "typeClient": "Khách hàng",
+      "typeLabor": "Nhân công",
+      "typeSupplier": "Nhà cung cấp",
+      "format": "Định dạng",
+      "xlsx": "Excel (.xlsx)",
+      "pdf": "PDF",
+      "download": "Tải xuống",
+      "cancel": "Hủy",
+      "generating": "Đang tạo…",
+      "downloaded": "Đã tải xuống bản xuất",
+      "summaryLine": "Đã chọn {count} tháng",
+      "errorRangeInvalid": "\"Từ\" phải trước hoặc bằng \"Đến\"",
+      "errorRangeTooLarge": "Khoảng thời gian không vượt quá 24 tháng",
+      "errorGeneric": "Không thể xuất hóa đơn"
+    }
   },
   "planning": {
     "title": "Kế hoạch",

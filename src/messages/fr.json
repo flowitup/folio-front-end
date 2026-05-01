@@ -255,7 +255,29 @@
     "pending": "En attente",
     "overdue": "En retard",
     "invoiceCount": "{n, plural, =0 {aucune facture} =1 {1 facture} other {# factures}}",
-    "awaiting": "{n} en attente"
+    "awaiting": "{n} en attente",
+    "export": {
+      "trigger": "Exporter une période",
+      "dialogTitle": "Exporter les factures",
+      "from": "Mois de début",
+      "to": "Mois de fin",
+      "typeFilter": "Type",
+      "typeAll": "Tous les types",
+      "typeClient": "Client",
+      "typeLabor": "Main-d'œuvre",
+      "typeSupplier": "Fournisseur",
+      "format": "Format",
+      "xlsx": "Excel (.xlsx)",
+      "pdf": "PDF",
+      "download": "Télécharger",
+      "cancel": "Annuler",
+      "generating": "Génération…",
+      "downloaded": "Export téléchargé",
+      "summaryLine": "{count, plural, =1 {1 mois sélectionné} other {# mois sélectionnés}}",
+      "errorRangeInvalid": "« De » doit être antérieur ou égal à « À »",
+      "errorRangeTooLarge": "La période ne peut pas dépasser 24 mois",
+      "errorGeneric": "Échec de l'export des factures"
+    }
   },
   "planning": {
     "title": "Planification",

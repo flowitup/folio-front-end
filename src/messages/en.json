@@ -255,7 +255,29 @@
     "pending": "Pending",
     "overdue": "Overdue",
     "invoiceCount": "{n, plural, =0 {no invoices} =1 {1 invoice} other {# invoices}}",
-    "awaiting": "{n} awaiting"
+    "awaiting": "{n} awaiting",
+    "export": {
+      "trigger": "Export range",
+      "dialogTitle": "Export invoices",
+      "from": "From month",
+      "to": "To month",
+      "typeFilter": "Type",
+      "typeAll": "All types",
+      "typeClient": "Client",
+      "typeLabor": "Labor",
+      "typeSupplier": "Supplier",
+      "format": "Format",
+      "xlsx": "Excel (.xlsx)",
+      "pdf": "PDF",
+      "download": "Download",
+      "cancel": "Cancel",
+      "generating": "Generating…",
+      "downloaded": "Export downloaded",
+      "summaryLine": "{count, plural, =1 {1 month selected} other {# months selected}}",
+      "errorRangeInvalid": "\"From\" must be before or equal to \"To\"",
+      "errorRangeTooLarge": "Range cannot exceed 24 months",
+      "errorGeneric": "Failed to export invoices"
+    }
   },
   "planning": {
     "title": "Planning",

@@ -17,6 +17,7 @@ import type {
 } from "@/types/labor";
 import { api, ApiError, getApiAccessToken } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
+import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 
 // Build URL with optional query params
 function buildUrl(basePath: string, params?: Record<string, string | undefined>): string {
@@ -127,20 +128,6 @@ function assertValidExportArgs(range: LaborExportRange, format: LaborExportForma
   }
 }
 
-function parseFilenameFromContentDisposition(cd: string): string | null {
-  // RFC 5987 extended form: filename*=UTF-8''...
-  const extMatch = cd.match(/filename\*=UTF-8''([^;]+)/i);
-  if (extMatch) {
-    try { return decodeURIComponent(extMatch[1].trim()); } catch { return extMatch[1].trim(); }
-  }
-  // Quoted form: filename="..."
-  const quotedMatch = cd.match(/filename="([^"]+)"/i);
-  if (quotedMatch) return quotedMatch[1].trim();
-  // Bare form: filename=...
-  const bareMatch = cd.match(/filename=([^;]+)/i);
-  if (bareMatch) return bareMatch[1].trim();
-  return null;
-}
 
 async function fetchExportFile(
   url: string,
@@ -160,10 +147,11 @@ async function fetchExportFile(
     throw new ApiError(`Export failed: ${response.status}`, response.status, body);
   }
 
-  const cd = response.headers.get('Content-Disposition') ?? '';
-  const filename =
-    parseFilenameFromContentDisposition(cd) ??
-    `labor-export-${range.from}-to-${range.to}.${format}`;
+  const cd = response.headers.get('Content-Disposition');
+  const filename = parseFilenameFromContentDisposition(
+    cd,
+    `labor-export-${range.from}-to-${range.to}.${format}`,
+  );
 
   const blob = await response.blob();
   return { blob, filename };
@@ -175,7 +163,7 @@ export async function fetchLaborExport(
   format: LaborExportFormat,
 ): Promise<{ blob: Blob; filename: string }> {
   const url =
-    `${env.apiBaseUrl}/api/v1/projects/${encodeURIComponent(projectId)}/labor-export` +
+    `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/labor-export` +
     `?from=${range.from}&to=${range.to}&format=${format}`;
   return fetchExportFile(url, range, format);
 }
@@ -187,7 +175,7 @@ export async function fetchWorkerLaborExport(
   format: LaborExportFormat,
 ): Promise<{ blob: Blob; filename: string }> {
   const url =
-    `${env.apiBaseUrl}/api/v1/projects/${encodeURIComponent(projectId)}` +
+    `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}` +
     `/workers/${encodeURIComponent(workerId)}/labor-export` +
     `?from=${range.from}&to=${range.to}&format=${format}`;
   return fetchExportFile(url, range, format);

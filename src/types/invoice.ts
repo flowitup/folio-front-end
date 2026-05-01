@@ -46,3 +46,14 @@ export interface InvoiceAttachment {
   uploaded_by: string | null;
   download_url: string;
 }
+
+// ─── Export types ─────────────────────────────────────────────────────────────
+
+export type InvoiceExportFormat = "xlsx" | "pdf";
+
+export interface InvoiceExportRange {
+  from: string; // YYYY-MM
+  to: string;   // YYYY-MM
+}
+
+export type InvoiceExportTypeFilter = InvoiceType | undefined;

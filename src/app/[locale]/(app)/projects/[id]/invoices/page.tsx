@@ -5,12 +5,13 @@ import { useTranslations } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
-import { Loader2, Trash2, ChevronRight, ChevronDown } from "lucide-react";
+import { Loader2, Trash2, ChevronRight, ChevronDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 import { fetchInvoices, deleteInvoice } from "@/lib/api/invoice-api";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
+import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
 
 type TabType = "all" | InvoiceType;
 
@@ -70,6 +71,7 @@ export default function InvoicesPage() {
     ) ?? false;
 
   const [activeTab, setActiveTab] = useState<TabType>("all");
+  const [exportOpen, setExportOpen] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -185,7 +187,18 @@ export default function InvoicesPage() {
             </button>
           ))}
         </div>
+        <Button variant="outline" onClick={() => setExportOpen(true)}>
+          <Download className="mr-2 h-4 w-4" />
+          {t("export.trigger")}
+        </Button>
       </div>
+
+      <InvoiceExportDialog
+        projectId={projectId}
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        initialType={activeTab}
+      />
 
       {error && (
         <Alert variant="destructive">

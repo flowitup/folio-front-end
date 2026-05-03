@@ -11,7 +11,6 @@ import {
   Loader2,
   MoreHorizontal,
   Search,
-  Filter,
   ArrowRight,
   UserPlus,
   Trash2,
@@ -194,9 +193,6 @@ export default function ProjectsPage() {
               style={{ paddingLeft: 30, width: 240 }}
             />
           </div>
-          <button type="button" className="btn btn-ghost">
-            <Filter size={14} /> {t("filter")}
-          </button>
         </div>
       </div>
 

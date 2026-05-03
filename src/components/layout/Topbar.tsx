@@ -93,6 +93,10 @@ export function Topbar() {
   const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
 
   const handleAction = () => {
+    if (pageKey === "projects") {
+      router.push(`/${locale}/projects?new=1`);
+      return;
+    }
     if (pathWithoutLocale.endsWith("/invoices") && selectedProject) {
       router.push(`/${locale}/projects/${selectedProject.id}/invoices/new`);
     }

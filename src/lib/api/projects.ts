@@ -6,6 +6,15 @@ export async function fetchProjects(): Promise<Project[]> {
   return data.projects;
 }
 
+export interface CreateProjectPayload {
+  name: string;
+  address?: string | null;
+}
+
+export async function createProject(payload: CreateProjectPayload): Promise<Project> {
+  return api.post<Project, CreateProjectPayload>("/projects", payload);
+}
+
 export async function fetchProjectById(id: string): Promise<Project> {
   return api.get<Project>(`/projects/${id}`);
 }

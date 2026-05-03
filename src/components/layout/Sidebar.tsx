@@ -178,7 +178,7 @@ export function Sidebar() {
                 <FolderOpen size={14} />
                 {tProjects("title")}
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => router.push("/projects")}>
+              <DropdownMenuItem onSelect={() => router.push("/projects?new=1")}>
                 <Plus size={14} />
                 {tProjects("newProject")}
               </DropdownMenuItem>

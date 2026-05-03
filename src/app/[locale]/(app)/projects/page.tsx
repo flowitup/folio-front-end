@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { fetchProjectUsers, removeUserFromProject } from "@/lib/api/projects";
 import { AddMemberDialog } from "@/components/project/add-member-dialog";
-import type { ProjectUser } from "@/types/project";
+import { CreateProjectDialog } from "@/components/project/create-project-dialog";
+import type { Project, ProjectUser } from "@/types/project";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -50,6 +51,8 @@ export default function ProjectsPage() {
   const t = useTranslations("projects");
   const locale = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { projects, isLoading, error, selectedProjectId, selectProject, refetch } =
     useProject();
   const { user } = useAuth();
@@ -66,6 +69,20 @@ export default function ProjectsPage() {
     userId: string;
     email: string;
   } | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  // Open dialog when external triggers (Topbar/Sidebar) navigate with ?new=1.
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setShowCreateDialog(true);
+      router.replace(pathname);
+    }
+  }, [searchParams, router, pathname]);
+
+  const handleProjectCreated = async (project: Project) => {
+    await refetch();
+    selectProject(project.id);
+  };
 
   const canManageUsers =
     user?.permissions?.some((p) => p === "project:manage_users" || p === "*:*" || p === "project:*") ??
@@ -451,12 +468,22 @@ export default function ProjectsPage() {
           <p className="mt-1 max-w-sm text-[13px]" style={{ color: "var(--muted)" }}>
             {t("getStarted")}
           </p>
-          <button type="button" className="btn btn-primary mt-4">
+          <button
+            type="button"
+            className="btn btn-primary mt-4"
+            onClick={() => setShowCreateDialog(true)}
+          >
             <Plus size={14} />
             {t("createFirst")}
           </button>
         </div>
       )}
+
+      <CreateProjectDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onCreated={handleProjectCreated}
+      />
 
       {addMemberProject && (
         <AddMemberDialog

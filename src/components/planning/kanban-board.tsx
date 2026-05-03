@@ -69,6 +69,17 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
 
   useEffect(() => { reload(); }, [reload]);
 
+  // Topbar "+ New task" hands off via ?new=1 — open the create dialog and
+  // strip the param so refresh / back-button doesn't re-open it.
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setCreateForStatus("backlog");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("new");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [searchParams, router, pathname]);
+
   // Silent variant for mutation-triggered refreshes — avoids whole-board
   // spinner flash after a card create / edit / delete.
   const silentReload = useCallback(() => reload(true), [reload]);

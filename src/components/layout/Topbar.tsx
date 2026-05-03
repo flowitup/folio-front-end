@@ -2,10 +2,11 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Sun, Plus, Globe, LogOut } from "lucide-react";
+import { Sun, Moon, Plus, Globe, LogOut } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
+import { useTheme } from "@/context/ThemeContext";
 import { locales, localeNames, type Locale } from "@/i18n/config";
 import { useRouter as useIntlRouter, usePathname as useIntlPathname } from "@/i18n/navigation";
 import {
@@ -24,7 +25,7 @@ const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; acti
   dashboard: {
     titleKey: "topbar.overviewTitle",
     subtitleKey: "topbar.overviewSubtitle",
-    actionKey: "topbar.newEntry",
+    // Overview is read-only; no topbar action target exists.
   },
   projects: {
     titleKey: "topbar.projectsTitle",
@@ -69,6 +70,7 @@ export function Topbar() {
   const tTopbar = useTranslations();
   const { user, logout, isLoading } = useAuth();
   const { selectedProject } = useProject();
+  const { resolvedTheme, setTheme } = useTheme();
 
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
@@ -92,15 +94,29 @@ export function Topbar() {
   const projectName = selectedProject?.name;
   const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
 
+  // Each topbar action button hands off to the page that owns the create flow,
+  // signalling intent via a query param the page consumes (mirrors the
+  // /projects?new=1 pattern from the create-project fix).
   const handleAction = () => {
     if (pageKey === "projects") {
       router.push(`/${locale}/projects?new=1`);
       return;
     }
-    if (pathWithoutLocale.endsWith("/invoices") && selectedProject) {
+    if (!selectedProject) return;
+    if (pageKey === "planning") {
+      router.push(`/${locale}/projects/${selectedProject.id}/planning?new=1`);
+      return;
+    }
+    if (pageKey === "labor") {
+      router.push(`/${locale}/projects/${selectedProject.id}/labor?logDay=1`);
+      return;
+    }
+    if (pathWithoutLocale.endsWith("/invoices")) {
       router.push(`/${locale}/projects/${selectedProject.id}/invoices/new`);
     }
   };
+
+  const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
 
   return (
     <header className="flex items-start justify-between gap-6 px-8 pb-4 pt-6">
@@ -131,12 +147,14 @@ export function Topbar() {
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2">
-        <button type="button" className="btn btn-quiet" aria-label={tTopbar("topbar.search")}>
-          <Search size={16} />
-        </button>
         <NotificationsBell />
-        <button type="button" className="btn btn-quiet" aria-label={tTopbar("topbar.theme")}>
-          <Sun size={16} />
+        <button
+          type="button"
+          className="btn btn-quiet"
+          aria-label={tTopbar("topbar.theme")}
+          onClick={toggleTheme}
+        >
+          {resolvedTheme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
         </button>
 
         <div className="mx-1 h-6 w-px" style={{ background: "var(--line-2)" }} />

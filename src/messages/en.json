@@ -40,10 +40,8 @@
   },
   "topbar": {
     "viewNotifications": "View notifications",
-    "search": "Search",
     "theme": "Theme",
     "signOut": "Sign out",
-    "newEntry": "New entry",
     "overviewTitle": "Overview",
     "overviewSubtitle": "A daily picture of how your build is coming together.",
     "projectsTitle": "Projects",

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import {
   Plus,
@@ -74,8 +76,10 @@ const ACTIVITY = [
 export default function DashboardPage() {
   const { selectedProject } = useProject();
   const locale = useLocale();
+  const router = useRouter();
   const t = useTranslations("dashboard");
   const fmtEUR = (n: number) => fmtEURForLocale(n, locale);
+  const [alertDismissed, setAlertDismissed] = useState(false);
 
   const project = {
     name: selectedProject?.name ?? "Maison Lavandou",
@@ -86,6 +90,21 @@ export default function DashboardPage() {
       "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
     progress: 0.42,
   };
+
+  // Each CTA hands off to the page that owns the real flow. Disabled when
+  // there's no selected project (Overview is also reachable in that empty
+  // state, so the buttons must be safe-no-op rather than navigating to /undefined).
+  const projectId = selectedProject?.id;
+  const goLabor = () => {
+    if (projectId) router.push(`/${locale}/projects/${projectId}/labor`);
+  };
+  const goNotes = () => {
+    if (projectId) router.push(`/${locale}/projects/${projectId}/notes`);
+  };
+  const goPlanning = () => {
+    if (projectId) router.push(`/${locale}/projects/${projectId}/planning`);
+  };
+  const noProject = !projectId;
 
   const totalBudget = BUDGET_BREAKDOWN.reduce((s, b) => s + b.budget, 0);
   const totalSpent = BUDGET_BREAKDOWN.reduce((s, b) => s + b.spent, 0);
@@ -164,13 +183,20 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-7 flex flex-wrap items-center gap-2">
-              <button type="button" className="btn btn-primary">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={goLabor}
+                disabled={noProject}
+              >
                 <Plus size={14} /> {t("logEntry")}
               </button>
-              <button type="button" className="btn btn-ghost">
-                <Camera size={14} /> {t("addPhotos")}
-              </button>
-              <button type="button" className="btn btn-ghost">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={goNotes}
+                disabled={noProject}
+              >
                 <ScrollText size={14} /> {t("dailyReport")}
               </button>
             </div>
@@ -213,6 +239,8 @@ export default function DashboardPage() {
             type="button"
             className="flex items-center gap-1 text-[12.5px]"
             style={{ color: "var(--muted)" }}
+            onClick={goPlanning}
+            disabled={noProject}
           >
             {t("viewGantt")} <ArrowUpRight size={12} />
           </button>
@@ -364,31 +392,31 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="card-paper-surface p-5">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5">
-                <AlertTriangle size={16} style={{ color: "var(--warning)" }} />
-              </div>
-              <div className="flex-1">
-                <div className="text-[13px] font-medium">{t("rebarInspectionTitle")}</div>
-                <div className="mt-0.5 text-[12px]" style={{ color: "var(--muted)" }}>
-                  {t("rebarInspectionBody")}
+          {!alertDismissed && (
+            <div className="card-paper-surface p-5" data-testid="rebar-alert">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5">
+                  <AlertTriangle size={16} style={{ color: "var(--warning)" }} />
                 </div>
-                <div className="mt-3 flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    style={{ padding: "6px 10px", fontSize: 12 }}
-                  >
-                    {t("addToCalendar")}
-                  </button>
-                  <button type="button" className="btn btn-quiet" style={{ fontSize: 12 }}>
-                    {t("dismiss")}
-                  </button>
+                <div className="flex-1">
+                  <div className="text-[13px] font-medium">{t("rebarInspectionTitle")}</div>
+                  <div className="mt-0.5 text-[12px]" style={{ color: "var(--muted)" }}>
+                    {t("rebarInspectionBody")}
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-quiet"
+                      style={{ fontSize: 12 }}
+                      onClick={() => setAlertDismissed(true)}
+                    >
+                      {t("dismiss")}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -402,9 +430,6 @@ export default function DashboardPage() {
                 {t("recentPhotos")}
               </h3>
             </div>
-            <button type="button" className="btn btn-ghost">
-              <Camera size={14} /> {t("addPhoto")}
-            </button>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {PHOTOS.slice(0, 3).map((p) => (
@@ -432,18 +457,6 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
-            <button
-              type="button"
-              className="flex flex-col items-center justify-center gap-1 rounded-[10px] border-2 border-dashed text-[12px]"
-              style={{
-                borderColor: "var(--line-2)",
-                color: "var(--muted)",
-                aspectRatio: "4 / 2.5",
-              }}
-            >
-              <Plus size={18} />
-              {t("addNMore", { n: 9 })}
-            </button>
           </div>
         </div>
 
@@ -484,6 +497,8 @@ export default function DashboardPage() {
             type="button"
             className="mt-5 flex items-center gap-1 text-[12.5px]"
             style={{ color: "var(--accent-ink)" }}
+            onClick={goNotes}
+            disabled={noProject}
           >
             {t("seeFullJournal")} <ArrowRight size={12} />
           </button>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,9 @@ export default function LaborPage() {
   const t = useTranslations("labor");
   const params = useParams();
   const projectId = params.id as string;
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
 
   // Permission check
@@ -139,6 +142,18 @@ export default function LaborPage() {
   useEffect(() => {
     if (activeTab === "summary") loadSummary();
   }, [activeTab, loadSummary]);
+
+  // Topbar "+ Log day" hands off via ?logDay=1 — jump to the attendance tab
+  // and open the LogAttendanceDialog. Strip the param after consuming.
+  useEffect(() => {
+    if (searchParams.get("logDay") !== "1") return;
+    setActiveTab("attendance");
+    setShowLogAttendance(true);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("logDay");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [searchParams, router, pathname]);
 
   // Handlers
   const handleCreateWorker = async (payload: CreateWorkerPayload | UpdateWorkerPayload) => {

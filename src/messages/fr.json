@@ -40,10 +40,8 @@
   },
   "topbar": {
     "viewNotifications": "Voir les notifications",
-    "search": "Rechercher",
     "theme": "Thème",
     "signOut": "Déconnexion",
-    "newEntry": "Nouvelle entrée",
     "overviewTitle": "Aperçu",
     "overviewSubtitle": "Une photo quotidienne de l'avancement de votre chantier.",
     "projectsTitle": "Projets",

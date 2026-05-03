@@ -40,10 +40,8 @@
   },
   "topbar": {
     "viewNotifications": "Xem thông báo",
-    "search": "Tìm kiếm",
     "theme": "Giao diện",
     "signOut": "Đăng xuất",
-    "newEntry": "Thêm mục",
     "overviewTitle": "Tổng quan",
     "overviewSubtitle": "Bức tranh hằng ngày về tiến độ công trình của bạn.",
     "projectsTitle": "Dự án",

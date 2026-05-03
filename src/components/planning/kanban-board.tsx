@@ -13,7 +13,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Loader2, Filter } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BacklogBar } from "@/components/planning/backlog-bar";
 import { KanbanColumn } from "@/components/planning/kanban-column";
@@ -179,21 +179,13 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
 
   return (
     <div className="space-y-4">
-      {/* Header: view selector + filter */}
+      {/* Header: task count. (View switcher + filter live behind future
+          features that don't exist yet — adding them back will require list
+          / calendar views and a filter UI to be designed and built.) */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="seg">
-            <button type="button" className="on">{t("board")}</button>
-            <button type="button">{t("list")}</button>
-            <button type="button">{t("calendar")}</button>
-          </div>
-          <span className="num text-[11.5px]" style={{ color: "var(--muted)" }}>
-            {t("taskCount", { n: totalCount })}
-          </span>
-        </div>
-        <button type="button" className="btn btn-ghost">
-          <Filter size={14} /> {t("filter")}
-        </button>
+        <span className="num text-[11.5px]" style={{ color: "var(--muted)" }}>
+          {t("taskCount", { n: totalCount })}
+        </span>
       </div>
 
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}

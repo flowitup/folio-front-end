@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, AlertCircle, ArrowRight, Globe } from "lucide-react";
+import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 interface LoginFormProps {
@@ -67,19 +67,9 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
       </div>
 
       <div>
-        <div className="flex items-center justify-between">
-          <label htmlFor="password" className="label-cap">
-            {t("passwordLabel")}
-          </label>
-          <a
-            href="#"
-            className="text-[12px]"
-            style={{ color: "var(--accent-ink)" }}
-            onClick={(e) => e.preventDefault()}
-          >
-            {t("forgot")}
-          </a>
-        </div>
+        <label htmlFor="password" className="label-cap">
+          {t("passwordLabel")}
+        </label>
         <input
           id="password"
           name="password"
@@ -111,15 +101,6 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
             {t("signIn")} <ArrowRight size={14} />
           </>
         )}
-      </button>
-
-      <button
-        type="button"
-        className="btn btn-ghost w-full"
-        style={{ padding: "12px 16px", fontSize: 14 }}
-        disabled={isLoading}
-      >
-        <Globe size={14} /> {t("continueWithGoogle")}
       </button>
     </form>
   );

@@ -1,4 +1,4 @@
-import { api, ApiError, getApiAccessToken } from "@/lib/api/http";
+import { api, ApiError, getApiAccessToken, getCsrfHeader } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 import type {
@@ -57,7 +57,10 @@ export const uploadAttachment = async (
     `${env.apiBaseUrl}/projects/${projectId}/invoices/${invoiceId}/attachments`,
     {
       method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...getCsrfHeader("POST"),
+      },
       credentials: "include",
       body: formData,
     }

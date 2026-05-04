@@ -13,6 +13,40 @@ export function getApiAccessToken(): string | null {
     return accessToken;
 }
 
+const CSRF_COOKIE_NAME = "csrf_access_token";
+const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+/**
+ * Read the backend-issued CSRF cookie from document.cookie. Returns null on
+ * the server (Next.js server actions handle CSRF via the same-origin Action
+ * boundary) or when the cookie is absent.
+ *
+ * Flask-JWT-Extended skips the cookie-CSRF check when an Authorization Bearer
+ * header is present, so this is defense-in-depth that closes F-2: if a future
+ * change ever falls back to cookie-only auth, mutations still carry a CSRF
+ * token paired against the cookie.
+ */
+export function getCsrfToken(): string | null {
+    if (typeof document === "undefined") return null;
+    const prefix = `${CSRF_COOKIE_NAME}=`;
+    const match = document.cookie
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith(prefix));
+    return match ? decodeURIComponent(match.slice(prefix.length)) : null;
+}
+
+/**
+ * Build the headers needed for a CSRF-protected mutating request. Exposed for
+ * direct fetch() callers (FormData uploads, blob downloads) that bypass the
+ * `http()` wrapper.
+ */
+export function getCsrfHeader(method: string): Record<string, string> {
+    if (!MUTATION_METHODS.has(method.toUpperCase())) return {};
+    const token = getCsrfToken();
+    return token ? { "X-CSRF-TOKEN": token } : {};
+}
+
 /**
  * Custom API error class
  */
@@ -73,6 +107,7 @@ export async function http<TResponse, TBody = unknown>(
 
     const defaultHeaders: Record<string, string> = {
         "Content-Type": "application/json",
+        ...getCsrfHeader(method),
     };
 
     // Add Authorization header if we have an access token

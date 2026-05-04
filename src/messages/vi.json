@@ -4,7 +4,6 @@
     "appTagline": "Nhật ký xây dựng",
     "signOut": "Đăng xuất",
     "loading": "Đang tải...",
-    "copyright": "© 2026 Folio · Làm bằng tâm huyết tại Provence",
     "language": "Ngôn ngữ"
   },
   "navigation": {
@@ -30,11 +29,7 @@
     "errorRequired": "Vui lòng nhập email và mật khẩu",
     "errorInvalid": "Thông tin đăng nhập không hợp lệ",
     "heroTitle": "Trở lại với công trình.",
-    "heroSubtitle": "Tiếp tục nơi bạn dừng lại — hôm qua Antoine đã ghi nhận 8 giờ tại bức tường phía bắc, và Élise đã gửi bốn ảnh mới.",
-    "newToFolio": "Mới đến với Folio?",
-    "startProject": "Bắt đầu một dự án",
-    "quote": "Chúng ta không xây một ngôi nhà — chúng ta đang xây <em>ngôi nhà của mình</em>.",
-    "quoteAuthor": "Camille & Théo, Le Lavandou"
+    "heroSubtitle": "Đăng nhập để tiếp tục với các dự án của bạn."
   },
   "topbar": {
     "viewNotifications": "Xem thông báo",
@@ -45,7 +40,7 @@
     "projectsTitle": "Dự án",
     "projectsSubtitle": "Mọi công trình bạn đang quản lý, song song với nhau.",
     "settingsTitle": "Cài đặt",
-    "settingsSubtitle": "Tùy chỉnh Folio theo phong cách của bạn.",
+    "settingsSubtitle": "",
     "planningTitle": "Kế hoạch",
     "planningSubtitle": "Việc của đội — kéo thẻ trên bảng để di chuyển.",
     "laborTitle": "Nhân công",
@@ -196,7 +191,9 @@
       "title": "Người dùng & vai trò",
       "description": "Gán vai trò cho người dùng hiện có trên một hoặc nhiều dự án.",
       "permissionDenied": "Bạn không có quyền thay đổi vai trò của người dùng."
-    }
+    },
+    "about": "Giới thiệu",
+    "version": "Phiên bản"
   },
   "errors": {
     "unauthorized": "Không được phép",

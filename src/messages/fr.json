@@ -4,7 +4,6 @@
     "appTagline": "Journal de chantier",
     "signOut": "Déconnexion",
     "loading": "Chargement...",
-    "copyright": "© 2026 Folio · Construit avec soin en Provence",
     "language": "Langue"
   },
   "navigation": {
@@ -30,11 +29,7 @@
     "errorRequired": "Veuillez entrer l'e-mail et le mot de passe",
     "errorInvalid": "Identifiants invalides",
     "heroTitle": "Reprenez le chantier.",
-    "heroSubtitle": "Reprenez là où vous en étiez — hier Antoine a pointé 8 h sur le mur nord, et Élise a envoyé quatre nouvelles photos.",
-    "newToFolio": "Nouveau sur Folio ?",
-    "startProject": "Démarrer un projet",
-    "quote": "Nous ne construisons pas une maison — nous construisons <em>notre</em> maison.",
-    "quoteAuthor": "Camille & Théo, Le Lavandou"
+    "heroSubtitle": "Connectez-vous pour reprendre vos projets."
   },
   "topbar": {
     "viewNotifications": "Voir les notifications",
@@ -45,7 +40,7 @@
     "projectsTitle": "Projets",
     "projectsSubtitle": "Tous vos chantiers, côte à côte.",
     "settingsTitle": "Paramètres",
-    "settingsSubtitle": "Adaptez Folio à votre image.",
+    "settingsSubtitle": "",
     "planningTitle": "Planification",
     "planningSubtitle": "Tâches de l'équipe — glissez une carte sur le tableau pour la déplacer.",
     "laborTitle": "Main-d'œuvre",
@@ -196,7 +191,9 @@
       "title": "Utilisateurs et rôles",
       "description": "Attribuer des rôles aux utilisateurs existants sur un ou plusieurs projets.",
       "permissionDenied": "Vous n'avez pas l'autorisation de modifier les rôles des utilisateurs."
-    }
+    },
+    "about": "À propos",
+    "version": "Version"
   },
   "errors": {
     "unauthorized": "Non autorisé",

@@ -9,6 +9,7 @@ import { locales, localeNames, type Locale } from "@/i18n/config";
 import { UsersSection } from "./users/users-section";
 import type { Role } from "@/lib/api/roles";
 import type { ProjectSummary } from "@/lib/api/projects-server";
+import pkg from "../../../../../package.json";
 
 const SECTION_KEYS = [
   "profile",
@@ -18,6 +19,7 @@ const SECTION_KEYS = [
   "notifications",
   "preferences",
   "users",
+  "about",
 ] as const;
 type SectionKey = (typeof SECTION_KEYS)[number];
 
@@ -237,10 +239,26 @@ export function SettingsClient({ roles, projects }: Props) {
           </section>
         )}
 
+        {active === "about" && (
+          <section className="folio-card p-7">
+            <h3 className="font-display text-[22px] font-medium tracking-tight">
+              {t("about")}
+            </h3>
+            <div className="ink-divider my-5" />
+            <dl className="grid grid-cols-[auto_1fr] items-center gap-x-6 gap-y-2 text-[13px]">
+              <dt className="label-cap" style={{ color: "var(--muted)" }}>
+                {t("version")}
+              </dt>
+              <dd className="num">v{pkg.version}</dd>
+            </dl>
+          </section>
+        )}
+
         {active !== "profile" &&
           active !== "project" &&
           active !== "preferences" &&
-          active !== "users" && (
+          active !== "users" &&
+          active !== "about" && (
             <section className="folio-card p-12 text-center">
               <p className="font-display text-[20px] font-medium tracking-tight">{t(active)}</p>
               <p className="mt-2 text-[13px]" style={{ color: "var(--muted)" }}>

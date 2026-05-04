@@ -4,7 +4,6 @@
     "appTagline": "Build journal",
     "signOut": "Sign out",
     "loading": "Loading...",
-    "copyright": "© 2026 Folio · Built carefully in Provence",
     "language": "Language"
   },
   "navigation": {
@@ -30,11 +29,7 @@
     "errorRequired": "Please enter both email and password",
     "errorInvalid": "Invalid credentials",
     "heroTitle": "Step back onto the site.",
-    "heroSubtitle": "Pick up where you left off — yesterday Antoine logged 8h on the north wall, and Élise sent four new photos.",
-    "newToFolio": "New to Folio?",
-    "startProject": "Start a project",
-    "quote": "We're not building a house — we're building <em>our</em> house.",
-    "quoteAuthor": "Camille & Théo, Le Lavandou"
+    "heroSubtitle": "Sign in to continue working on your projects."
   },
   "topbar": {
     "viewNotifications": "View notifications",
@@ -45,7 +40,7 @@
     "projectsTitle": "Projects",
     "projectsSubtitle": "Every build you're running, side by side.",
     "settingsTitle": "Settings",
-    "settingsSubtitle": "Make Folio feel like yours.",
+    "settingsSubtitle": "",
     "planningTitle": "Planning",
     "planningSubtitle": "Tasks for the team — drag a card across the board to move it.",
     "laborTitle": "Labor",
@@ -196,7 +191,9 @@
       "title": "Users & Roles",
       "description": "Assign roles to existing users across one or more projects.",
       "permissionDenied": "You don't have authorization to change roles of users."
-    }
+    },
+    "about": "About",
+    "version": "Version"
   },
   "errors": {
     "unauthorized": "Unauthorized",

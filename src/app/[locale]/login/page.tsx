@@ -12,7 +12,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await getSession();
   const locale = await getLocale();
   const t = await getTranslations("auth");
-  const tCommon = await getTranslations("common");
 
   if (session) {
     redirect(`/${locale}/dashboard`);
@@ -47,24 +46,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <div className="mt-8">
             <LoginForm callbackUrl={callbackUrl} />
           </div>
-
-          <p className="mt-7 text-[12px]" style={{ color: "var(--muted)" }}>
-            {t("newToFolio")}{" "}
-            <a
-              style={{
-                color: "var(--accent-ink)",
-                textDecoration: "underline",
-                textUnderlineOffset: 3,
-              }}
-            >
-              {t("startProject")}
-            </a>
-            .
-          </p>
-        </div>
-
-        <div className="text-[11px]" style={{ color: "var(--muted)" }}>
-          {tCommon("copyright")}
         </div>
       </div>
 
@@ -123,18 +104,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </text>
         </svg>
 
-        <div className="absolute bottom-8 left-8 right-8 text-white">
-          <div className="font-display text-[28px] leading-tight">
-            &ldquo;
-            {t.rich("quote", {
-              em: (chunks) => <em>{chunks}</em>,
-            })}
-            &rdquo;
-          </div>
-          <div className="mt-3 flex items-center gap-2 text-[12px] opacity-80">
-            <div className="h-px w-6 bg-white/60" /> {t("quoteAuthor")}
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
  * Backwards-compat redirect: the dedicated detail route now opens inline as
  * an expandable row in the invoice list via `?invoice=<id>`. Direct visits
  * land here and bounce to the list with the row expanded, preserving deep-link
- * behaviour.
+ * behavior.
  */
 export default function InvoiceDetailRedirect() {
   const params = useParams();

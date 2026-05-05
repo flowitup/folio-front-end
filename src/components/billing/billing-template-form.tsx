@@ -19,9 +19,9 @@
  * Duplicate name within (user, kind) → 409 from BE → surfaces inline.
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeft, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -87,6 +87,7 @@ export type BillingTemplateFormProps =
 export function BillingTemplateForm(props: BillingTemplateFormProps) {
   const router = useRouter();
   const locale = useLocale();
+  const tForm = useTranslations("billing.templates.form");
   const isEdit = props.mode === "edit";
   const template = isEdit ? props.template : null;
 
@@ -116,6 +117,9 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Double-submit guards
+  const submittingRef = useRef(false);
+
   // ---------------------------------------------------------------------------
   // Computed
   // ---------------------------------------------------------------------------
@@ -128,9 +132,9 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
   // ---------------------------------------------------------------------------
 
   function validate(): string | null {
-    if (!name.trim()) return "Template name is required.";
-    if (name.trim().length > 120) return "Template name must be 120 characters or fewer.";
-    if (!kind) return "Kind is required.";
+    if (!name.trim()) return tForm("errors.nameRequired");
+    if (name.trim().length > 120) return tForm("errors.nameTooLong");
+    if (!kind) return tForm("errors.kindRequired");
     return null;
   }
 
@@ -139,8 +143,10 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
   // ---------------------------------------------------------------------------
 
   async function handleSave() {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     const err = validate();
-    if (err) { setFormError(err); return; }
+    if (err) { setFormError(err); submittingRef.current = false; return; }
     setFormError(null);
     setIsSubmitting(true);
 
@@ -157,7 +163,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         const result = await updateBillingTemplateAction(template!.id, payload);
         if (!result.ok) {
           if (result.error.code === "conflict") {
-            setFormError("A template with this name already exists for this kind.");
+            setFormError(tForm("errors.duplicateName"));
           } else {
             setFormError(result.error.message);
           }
@@ -169,7 +175,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         const result = await createBillingTemplateAction({ kind, ...payload });
         if (!result.ok) {
           if (result.error.code === "conflict") {
-            setFormError("A template with this name already exists for this kind.");
+            setFormError(tForm("errors.duplicateName"));
           } else {
             setFormError(result.error.message);
           }
@@ -179,21 +185,28 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         router.push(listPath);
       }
     } catch {
-      setFormError("An unexpected error occurred. Please try again.");
+      setFormError(tForm("errors.saveFailed"));
     } finally {
       setIsSubmitting(false);
+      submittingRef.current = false;
     }
   }
 
   async function handleDelete() {
+    if (submittingRef.current) return;
     if (!template) return;
-    const result = await deleteBillingTemplateAction(template.id);
-    if (!result.ok) {
-      toast.error("Failed to delete template. Please try again.");
-      return;
+    submittingRef.current = true;
+    try {
+      const result = await deleteBillingTemplateAction(template.id);
+      if (!result.ok) {
+        toast.error(tForm("errors.deleteFailed"));
+        return;
+      }
+      toast.success("Template deleted.");
+      router.push(listPath);
+    } finally {
+      submittingRef.current = false;
     }
-    toast.success("Template deleted.");
-    router.push(listPath);
   }
 
   function handleVatRateChange(value: string) {
@@ -218,7 +231,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h2 className="font-display text-xl font-medium">
-          {isEdit ? "Edit template" : "New template"}
+          {isEdit ? tForm("titleEdit") : tForm("titleCreate")}
         </h2>
       </div>
 
@@ -227,7 +240,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         {/* Kind */}
         <div className="space-y-1">
           <Label htmlFor="tpl-kind" className="text-[12px]">
-            Kind <span className="text-red-500">*</span>
+            {tForm("kind")} <span className="text-red-500">*</span>
           </Label>
           {isEdit ? (
             <div className="space-y-1">
@@ -235,11 +248,11 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
                 className="flex h-9 w-full items-center rounded-md border px-3 text-sm"
                 style={{ borderColor: "var(--border)", color: "var(--muted)", background: "var(--muted-bg, #f9fafb)" }}
               >
-                {kind === "devis" ? "Devis" : "Facture"}
+                {kind === "devis" ? tForm("kindDevis") : tForm("kindFacture")}
               </div>
               <p className="flex items-center gap-1 text-[11px]" style={{ color: "var(--muted)" }}>
                 <Info size={11} />
-                Kind cannot be changed after creation.
+                {tForm("kindImmutableNote")}
               </p>
             </div>
           ) : (
@@ -248,8 +261,8 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="devis">Devis</SelectItem>
-                <SelectItem value="facture">Facture</SelectItem>
+                <SelectItem value="devis">{tForm("kindDevis")}</SelectItem>
+                <SelectItem value="facture">{tForm("kindFacture")}</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -258,20 +271,20 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         {/* Name */}
         <div className="space-y-1">
           <Label htmlFor="tpl-name" className="text-[12px]">
-            Template name <span className="text-red-500">*</span>
+            {tForm("name")} <span className="text-red-500">*</span>
           </Label>
           <Input
             id="tpl-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Standard web project"
+            placeholder={tForm("namePlaceholder")}
             maxLength={120}
           />
         </div>
 
         {/* Default VAT rate */}
         <div className="space-y-1">
-          <Label htmlFor="tpl-vat" className="text-[12px]">Default VAT rate</Label>
+          <Label htmlFor="tpl-vat" className="text-[12px]">{tForm("defaultVatRate")}</Label>
           {isCustomVat ? (
             <div className="flex items-center gap-2">
               <Input
@@ -304,7 +317,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
                 {PRESET_VAT_RATES.map((r) => (
                   <SelectItem key={r} value={r}>{r}%</SelectItem>
                 ))}
-                <SelectItem value="__custom__">Custom…</SelectItem>
+                <SelectItem value="__custom__">{tForm("vatRateCustom")}</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -314,7 +327,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
       {/* 3. Items editor (no totals card) */}
       <div className="space-y-2">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-          Line items
+          {tForm("items")}
         </p>
         <BillingDocumentItemsEditor items={items} onChange={setItems} showTotals={false} />
       </div>
@@ -322,26 +335,26 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
       {/* 4. Notes & Terms */}
       <div className="folio-card space-y-4 p-5">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-          Notes &amp; terms
+          {tForm("notes")} &amp; {tForm("terms")}
         </p>
         <div className="space-y-1">
-          <Label htmlFor="tpl-notes" className="text-[12px]">Notes</Label>
+          <Label htmlFor="tpl-notes" className="text-[12px]">{tForm("notes")}</Label>
           <Textarea
             id="tpl-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Internal or client-facing notes"
+            placeholder={tForm("notesPlaceholder")}
             rows={3}
             className="resize-none"
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="tpl-terms" className="text-[12px]">General terms (CGV)</Label>
+          <Label htmlFor="tpl-terms" className="text-[12px]">{tForm("terms")}</Label>
           <Textarea
             id="tpl-terms"
             value={terms}
             onChange={(e) => setTerms(e.target.value)}
-            placeholder="General terms and conditions"
+            placeholder={tForm("termsPlaceholder")}
             rows={3}
             className="resize-none"
           />
@@ -363,11 +376,11 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
           onClick={() => router.push(listPath)}
           disabled={isSubmitting}
         >
-          Cancel
+          {tForm("actions.cancel")}
         </Button>
         <Button type="button" onClick={handleSave} disabled={isSubmitting}>
           {isSubmitting ? <Loader2 size={13} className="mr-2 animate-spin" /> : null}
-          {isEdit ? "Save changes" : "Create template"}
+          {isEdit ? tForm("actions.save") : tForm("titleCreate")}
         </Button>
 
         {isEdit && (
@@ -379,23 +392,23 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
                 className="ml-auto text-red-600 hover:bg-red-50 hover:text-red-600"
                 disabled={isSubmitting}
               >
-                Delete template
+                {tForm("actions.delete")}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete template</AlertDialogTitle>
+                <AlertDialogTitle>{tForm("titleEdit")}</AlertDialogTitle>
                 <AlertDialogDescription>
                   Delete &ldquo;{template!.name}&rdquo;? This cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{tForm("actions.cancel")}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDelete}
                   className="bg-red-600 text-white hover:bg-red-700"
                 >
-                  Delete
+                  {tForm("actions.delete")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

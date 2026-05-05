@@ -11,7 +11,8 @@
  * On 409 (race / invalid transition from server) surfaces a toast error.
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,20 +27,20 @@ import { updateBillingDocumentStatusAction } from "@/app/[locale]/(app)/billing/
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
 
 // ---------------------------------------------------------------------------
-// Transition matrix
+// Transition matrix — references translation keys in billing.{kind}.transitions
 // ---------------------------------------------------------------------------
 
-type Transition = { to: BillingDocumentStatus; label: string };
+type Transition = { to: BillingDocumentStatus; labelKey: string };
 
 const DEVIS_TRANSITIONS: Record<BillingDocumentStatus, Transition[]> = {
-  draft:     [{ to: "sent",     label: "Mark as Sent" }],
+  draft:     [{ to: "sent",     labelKey: "markAsSent" }],
   sent:      [
-    { to: "accepted", label: "Mark as Accepted" },
-    { to: "rejected", label: "Mark as Rejected" },
-    { to: "expired",  label: "Mark as Expired" },
+    { to: "accepted", labelKey: "markAsAccepted" },
+    { to: "rejected", labelKey: "markAsRejected" },
+    { to: "expired",  labelKey: "markAsExpired" },
   ],
-  accepted:  [{ to: "sent",    label: "Revert to Sent" }],
-  rejected:  [{ to: "draft",   label: "Re-open (Draft)" }],
+  accepted:  [{ to: "sent",    labelKey: "revertToSent" }],
+  rejected:  [{ to: "draft",   labelKey: "reopen" }],
   expired:   [], // terminal
   paid:      [], // N/A for devis
   overdue:   [], // N/A for devis
@@ -47,14 +48,14 @@ const DEVIS_TRANSITIONS: Record<BillingDocumentStatus, Transition[]> = {
 };
 
 const FACTURE_TRANSITIONS: Record<BillingDocumentStatus, Transition[]> = {
-  draft:     [{ to: "sent",      label: "Mark as Sent" }],
+  draft:     [{ to: "sent",      labelKey: "markAsSent" }],
   sent:      [
-    { to: "paid",      label: "Mark as Paid" },
-    { to: "overdue",   label: "Mark as Overdue" },
-    { to: "cancelled", label: "Mark as Cancelled" },
+    { to: "paid",      labelKey: "markAsPaid" },
+    { to: "overdue",   labelKey: "markAsOverdue" },
+    { to: "cancelled", labelKey: "markAsCancelled" },
   ],
-  overdue:   [{ to: "paid",      label: "Mark as Paid" }],
-  paid:      [{ to: "cancelled", label: "Mark as Cancelled (refund)" }],
+  overdue:   [{ to: "paid",      labelKey: "markAsPaid" }],
+  paid:      [{ to: "cancelled", labelKey: "markAsCancelledRefund" }],
   cancelled: [], // terminal
   accepted:  [], // N/A for facture
   rejected:  [], // N/A for facture
@@ -68,21 +69,6 @@ function getTransitions(
   const matrix = kind === "devis" ? DEVIS_TRANSITIONS : FACTURE_TRANSITIONS;
   return matrix[status] ?? [];
 }
-
-// ---------------------------------------------------------------------------
-// Status labels
-// ---------------------------------------------------------------------------
-
-const STATUS_LABEL: Record<BillingDocumentStatus, string> = {
-  draft:     "Draft",
-  sent:      "Sent",
-  accepted:  "Accepted",
-  rejected:  "Rejected",
-  expired:   "Expired",
-  paid:      "Paid",
-  overdue:   "Overdue",
-  cancelled: "Cancelled",
-};
 
 // ---------------------------------------------------------------------------
 // Props
@@ -102,31 +88,64 @@ export function BillingStatusMenu({
   document,
   onStatusChanged,
 }: BillingStatusMenuProps) {
+  const tDevisStatus = useTranslations("billing.devis.status");
+  const tFactureStatus = useTranslations("billing.facture.status");
+  const tDevisTrans = useTranslations("billing.devis.transitions");
+  const tFactureTrans = useTranslations("billing.facture.transitions");
+  const tActions = useTranslations("billing.form.actions");
+  const tErrors = useTranslations("billing.form.errors");
+
   const [isUpdating, setIsUpdating] = useState(false);
+  // Double-submit guard: synchronous check before React commit
+  const updatingRef = useRef(false);
 
   const transitions = getTransitions(document.kind, document.status);
   const isTerminal = transitions.length === 0;
 
+  /** Locale-aware status label for the current document's kind. */
+  function statusLabel(status: BillingDocumentStatus): string {
+    if (document.kind === "devis") {
+      // Devis statuses: draft, sent, accepted, rejected, expired
+      if (status in { draft: 1, sent: 1, accepted: 1, rejected: 1, expired: 1 }) {
+        return tDevisStatus(status as "draft" | "sent" | "accepted" | "rejected" | "expired");
+      }
+    } else {
+      // Facture statuses: draft, sent, paid, overdue, cancelled
+      if (status in { draft: 1, sent: 1, paid: 1, overdue: 1, cancelled: 1 }) {
+        return tFactureStatus(status as "draft" | "sent" | "paid" | "overdue" | "cancelled");
+      }
+    }
+    return status;
+  }
+
+  /** Locale-aware transition label. */
+  function transitionLabel(kind: BillingDocumentKind, labelKey: string): string {
+    const tTrans = kind === "devis" ? tDevisTrans : tFactureTrans;
+    // labelKey is one of the keys in billing.{kind}.transitions
+    return tTrans(labelKey as Parameters<typeof tDevisTrans>[0]);
+  }
+
   async function handleTransition(to: BillingDocumentStatus) {
+    if (updatingRef.current) return;
+    updatingRef.current = true;
     setIsUpdating(true);
     try {
       const result = await updateBillingDocumentStatusAction(document.id, to);
       if (!result.ok) {
         if (result.error.code === "conflict") {
-          toast.error(
-            "This status transition is not allowed. The document may have been updated by another session."
-          );
+          toast.error(tErrors("invalidTransition"));
         } else {
           toast.error(result.error.message);
         }
         return;
       }
-      toast.success(`Status updated to ${STATUS_LABEL[to]}.`);
+      toast.success(`Status updated to ${statusLabel(to)}.`);
       onStatusChanged(result.data);
     } catch {
       toast.error("Failed to update status. Please try again.");
     } finally {
       setIsUpdating(false);
+      updatingRef.current = false;
     }
   }
 
@@ -134,7 +153,7 @@ export function BillingStatusMenu({
     <div className="flex items-center gap-2">
       <BillingStatusBadge
         status={document.status}
-        label={STATUS_LABEL[document.status]}
+        label={statusLabel(document.status)}
       />
 
       {!isTerminal && (
@@ -150,7 +169,7 @@ export function BillingStatusMenu({
                 <Loader2 size={11} className="animate-spin" />
               ) : (
                 <>
-                  Change status
+                  {tActions("changeStatus")}
                   <ChevronDown size={11} />
                 </>
               )}
@@ -162,7 +181,7 @@ export function BillingStatusMenu({
                 key={t.to}
                 onClick={() => handleTransition(t.to)}
               >
-                {t.label}
+                {transitionLabel(document.kind, t.labelKey)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

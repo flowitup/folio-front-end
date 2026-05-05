@@ -1,14 +1,17 @@
 /**
  * BillingTotalsCard — live totals display (HT / TVA per rate / TTC).
  *
- * All arithmetic uses Decimal-as-string inputs and hand-rolled helpers
- * to avoid floating-point drift. No new npm deps.
+ * Best-effort live preview only. Arithmetic uses Number() (float) internally,
+ * which may differ from the server's Python Decimal result for edge cases like
+ * 1.005. The server is authoritative for stored totals; this component is for
+ * interactive feedback only. No new npm deps.
  */
 
+import { useTranslations } from "next-intl";
 import type { BillingDocumentItem } from "@/types/billing";
 
 // ---------------------------------------------------------------------------
-// Decimal helpers — string-based arithmetic (avoids float drift)
+// Arithmetic helpers — float-based (best-effort preview; server is authoritative)
 // ---------------------------------------------------------------------------
 
 /** Parse a decimal string to number, returning 0 on invalid input. */
@@ -17,7 +20,7 @@ function parseDecimal(value: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-/** Round to 2 decimal places (half-even is not critical here; half-up is fine). */
+/** Round to 2 decimal places (half-up, float-based). */
 function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
@@ -89,16 +92,18 @@ interface BillingTotalsCardProps {
 }
 
 export function BillingTotalsCard({ totals }: BillingTotalsCardProps) {
+  const t = useTranslations("billing.form.totals");
+
   return (
     <div className="folio-card space-y-2 p-4">
       <div className="flex items-center justify-between text-sm">
-        <span style={{ color: "var(--muted)" }}>Total HT</span>
+        <span style={{ color: "var(--muted)" }}>{t("ht")}</span>
         <span className="num font-medium">{formatEUR(totals.totalHt)}</span>
       </div>
 
       {totals.vatLines.map((line) => (
         <div key={line.rate} className="flex items-center justify-between text-[13px]">
-          <span style={{ color: "var(--muted)" }}>TVA {line.rate}%</span>
+          <span style={{ color: "var(--muted)" }}>{t("tva", { rate: line.rate })}</span>
           <span className="num">{formatEUR(line.tvaAmount)}</span>
         </div>
       ))}
@@ -107,7 +112,7 @@ export function BillingTotalsCard({ totals }: BillingTotalsCardProps) {
         className="flex items-center justify-between border-t pt-2 text-sm font-semibold"
         style={{ borderColor: "var(--border)" }}
       >
-        <span>Total TTC</span>
+        <span>{t("ttc")}</span>
         <span className="num">{formatEUR(totals.totalTtc)}</span>
       </div>
     </div>

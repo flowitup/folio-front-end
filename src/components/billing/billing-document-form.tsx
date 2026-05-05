@@ -19,9 +19,9 @@
  * State: plain useState (no react-hook-form). Server is source of truth.
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeft, Loader2, Download, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,7 @@ type CreateMode = "blank" | "from-existing" | "from-template";
 export function BillingDocumentForm(props: BillingDocumentFormProps) {
   const router = useRouter();
   const locale = useLocale();
+  const tForm = useTranslations("billing.form");
   const isEdit = props.mode === "edit";
   const kind = props.kind;
 
@@ -149,18 +150,23 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   const [isConverting, setIsConverting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Double-submit guards (ref-based — synchronous check before first React commit)
+  const submittingRef = useRef(false);
+  const pdfLoadingRef = useRef(false);
+  const convertingRef = useRef(false);
+
   // ---------------------------------------------------------------------------
   // Validation
   // ---------------------------------------------------------------------------
 
   function validate(): string | null {
-    if (!recipientName.trim()) return "Recipient name is required.";
-    if (items.length === 0) return "At least one line item is required.";
+    if (!recipientName.trim()) return tForm("errors.recipientRequired");
+    if (items.length === 0) return tForm("errors.atLeastOneItem");
     for (const item of items) {
-      if (!item.description.trim()) return "All items must have a description.";
-      if (Number(item.quantity) <= 0) return "Item quantity must be greater than 0.";
-      if (Number(item.unit_price) < 0) return "Item unit price cannot be negative.";
-      if (Number(item.vat_rate) < 0) return "Item VAT rate cannot be negative.";
+      if (!item.description.trim()) return tForm("errors.itemDescriptionRequired");
+      if (Number(item.quantity) <= 0) return tForm("errors.itemQuantityPositive");
+      if (Number(item.unit_price) < 0) return tForm("errors.itemUnitPricePositive");
+      if (Number(item.vat_rate) < 0) return tForm("errors.itemVatRatePositive");
     }
     return null;
   }
@@ -170,8 +176,10 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   // ---------------------------------------------------------------------------
 
   async function handleSave() {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     const err = validate();
-    if (err) { setFormError(err); return; }
+    if (err) { setFormError(err); submittingRef.current = false; return; }
     setFormError(null);
     setIsSubmitting(true);
     try {
@@ -202,22 +210,31 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         router.push(`/${locale}/billing/${kind}/${result.data.id}`);
       }
     } catch {
-      setFormError("An unexpected error occurred. Please try again.");
+      setFormError(tForm("errors.saveFailed"));
     } finally {
       setIsSubmitting(false);
+      submittingRef.current = false;
     }
   }
 
   async function handleDelete() {
+    if (submittingRef.current) return;
     if (!liveDoc) return;
-    const result = await deleteBillingDocumentAction(liveDoc.id);
-    if (!result.ok) { toast.error(result.error.message); return; }
-    toast.success("Document deleted.");
-    router.push(`/${locale}/billing/${kind}`);
+    submittingRef.current = true;
+    try {
+      const result = await deleteBillingDocumentAction(liveDoc.id);
+      if (!result.ok) { toast.error(result.error.message); return; }
+      toast.success("Document deleted.");
+      router.push(`/${locale}/billing/${kind}`);
+    } finally {
+      submittingRef.current = false;
+    }
   }
 
   async function handleDownloadPdf() {
+    if (pdfLoadingRef.current) return;
     if (!liveDoc) return;
+    pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
       const token = getApiAccessToken();
@@ -235,20 +252,23 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       triggerBrowserDownload(blob, filename);
       toast.success("PDF downloaded.");
     } catch {
-      toast.error("Failed to download PDF. Please try again.");
+      toast.error(tForm("errors.pdfFailed"));
     } finally {
       setIsPdfLoading(false);
+      pdfLoadingRef.current = false;
     }
   }
 
   async function handleConvert() {
+    if (convertingRef.current) return;
     if (!liveDoc) return;
+    convertingRef.current = true;
     setIsConverting(true);
     try {
       const result = await convertDevisToFactureAction(liveDoc.id);
       if (!result.ok) {
         if (result.error.code === "conflict") {
-          toast.error("This devis has already been converted to a facture.");
+          toast.error(tForm("errors.alreadyConverted"));
         } else {
           toast.error(result.error.message);
         }
@@ -257,9 +277,10 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       toast.success("Devis converted to facture.");
       router.push(`/${locale}/billing/factures/${result.data.id}`);
     } catch {
-      toast.error("Failed to convert devis to facture.");
+      toast.error(tForm("errors.convertFailed"));
     } finally {
       setIsConverting(false);
+      convertingRef.current = false;
     }
   }
 
@@ -309,7 +330,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
                   ) : (
                     <ArrowRightLeft size={13} className="mr-2" />
                   )}
-                  Convert to Facture
+                  {tForm("actions.convertToFacture")}
                 </Button>
               )}
               <Button
@@ -323,7 +344,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
                 ) : (
                   <Download size={13} className="mr-2" />
                 )}
-                Download PDF
+                {tForm("actions.downloadPdf")}
               </Button>
             </div>
           </>
@@ -341,7 +362,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
               size="sm"
               onClick={() => setCreateMode("blank")}
             >
-              Blank
+              {tForm("modes.blank")}
             </Button>
             <Button
               type="button"
@@ -349,7 +370,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
               size="sm"
               onClick={() => setFromExistingOpen(true)}
             >
-              From existing
+              {tForm("modes.fromExisting")}
             </Button>
             <Button
               type="button"
@@ -357,7 +378,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
               size="sm"
               onClick={() => setFromTemplateOpen(true)}
             >
-              From template
+              {tForm("modes.fromTemplate")}
             </Button>
           </div>
         )}
@@ -365,27 +386,27 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       {/* 3. Recipient block */}
       <div className="folio-card space-y-4 p-5">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-          Recipient
+          {tForm("recipient.section")}
         </p>
         <div className="space-y-3">
           <div className="space-y-1">
             <Label htmlFor="recipient-name" className="text-[12px]">
-              Name <span className="text-red-500">*</span>
+              {tForm("recipient.name")} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="recipient-name"
               value={recipientName}
               onChange={(e) => setRecipientName(e.target.value)}
-              placeholder="Client or company name"
+              placeholder={tForm("recipient.namePlaceholder")}
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="recipient-address" className="text-[12px]">Address</Label>
+            <Label htmlFor="recipient-address" className="text-[12px]">{tForm("recipient.address")}</Label>
             <Textarea
               id="recipient-address"
               value={recipientAddress}
               onChange={(e) => setRecipientAddress(e.target.value)}
-              placeholder="Street, city, postal code"
+              placeholder={tForm("recipient.addressPlaceholder")}
               rows={2}
               className="resize-none"
             />
@@ -398,27 +419,27 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
               style={{ color: "var(--muted)" }}
               onClick={() => setShowExtraRecipient(true)}
             >
-              + Add email / SIRET
+              {tForm("recipient.addExtraFields")}
             </button>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="recipient-email" className="text-[12px]">Email</Label>
+                <Label htmlFor="recipient-email" className="text-[12px]">{tForm("recipient.email")}</Label>
                 <Input
                   id="recipient-email"
                   type="email"
                   value={recipientEmail}
                   onChange={(e) => setRecipientEmail(e.target.value)}
-                  placeholder="client@example.com"
+                  placeholder={tForm("recipient.emailPlaceholder")}
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="recipient-siret" className="text-[12px]">SIRET</Label>
+                <Label htmlFor="recipient-siret" className="text-[12px]">{tForm("recipient.siret")}</Label>
                 <Input
                   id="recipient-siret"
                   value={recipientSiret}
                   onChange={(e) => setRecipientSiret(e.target.value)}
-                  placeholder="123 456 789 00012"
+                  placeholder={tForm("recipient.siretPlaceholder")}
                 />
               </div>
             </div>
@@ -429,19 +450,19 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       {/* 4. Meta block */}
       <div className="folio-card space-y-4 p-5">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-          Details
+          {tForm("details.section")}
         </p>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {isEdit && liveDoc && (
             <div className="space-y-1">
-              <Label className="text-[12px]">Document number</Label>
+              <Label className="text-[12px]">{tForm("details.documentNumber")}</Label>
               <p className="num h-9 rounded-md border px-3 py-2 text-sm" style={{ borderColor: "var(--border)", color: "var(--muted)" }}>
                 {liveDoc.document_number}
               </p>
             </div>
           )}
           <div className="space-y-1">
-            <Label htmlFor="issue-date" className="text-[12px]">Issue date</Label>
+            <Label htmlFor="issue-date" className="text-[12px]">{tForm("details.issueDate")}</Label>
             <Input
               id="issue-date"
               type="date"
@@ -451,7 +472,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
           </div>
           {kind === "devis" && (
             <div className="space-y-1">
-              <Label htmlFor="validity-until" className="text-[12px]">Valid until</Label>
+              <Label htmlFor="validity-until" className="text-[12px]">{tForm("details.validityUntil")}</Label>
               <Input
                 id="validity-until"
                 type="date"
@@ -463,7 +484,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
           {kind === "facture" && (
             <>
               <div className="space-y-1">
-                <Label htmlFor="payment-due" className="text-[12px]">Payment due</Label>
+                <Label htmlFor="payment-due" className="text-[12px]">{tForm("details.paymentDue")}</Label>
                 <Input
                   id="payment-due"
                   type="date"
@@ -472,12 +493,12 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
                 />
               </div>
               <div className="col-span-full space-y-1">
-                <Label htmlFor="payment-terms" className="text-[12px]">Payment terms</Label>
+                <Label htmlFor="payment-terms" className="text-[12px]">{tForm("details.paymentTerms")}</Label>
                 <Input
                   id="payment-terms"
                   value={paymentTerms}
                   onChange={(e) => setPaymentTerms(e.target.value)}
-                  placeholder="e.g. Net 30, virement bancaire"
+                  placeholder={tForm("details.paymentTermsPlaceholder")}
                 />
               </div>
             </>
@@ -488,7 +509,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       {/* 5. Items editor */}
       <div className="space-y-2">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-          Line items
+          {tForm("items.section")}
         </p>
         <BillingDocumentItemsEditor items={items} onChange={setItems} />
       </div>
@@ -496,37 +517,37 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       {/* 6. Notes / Terms / Signature */}
       <div className="folio-card space-y-4 p-5">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-          Notes &amp; terms
+          {tForm("notes.section")}
         </p>
         <div className="space-y-1">
-          <Label htmlFor="notes" className="text-[12px]">Notes</Label>
+          <Label htmlFor="notes" className="text-[12px]">{tForm("notes.notes")}</Label>
           <Textarea
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Internal or client-facing notes"
+            placeholder={tForm("notes.notesPlaceholder")}
             rows={3}
             className="resize-none"
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="terms" className="text-[12px]">General terms (CGV)</Label>
+          <Label htmlFor="terms" className="text-[12px]">{tForm("notes.terms")}</Label>
           <Textarea
             id="terms"
             value={terms}
             onChange={(e) => setTerms(e.target.value)}
-            placeholder="General terms and conditions"
+            placeholder={tForm("notes.termsPlaceholder")}
             rows={3}
             className="resize-none"
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="signature-block" className="text-[12px]">Signature block</Label>
+          <Label htmlFor="signature-block" className="text-[12px]">{tForm("notes.signatureBlock")}</Label>
           <Textarea
             id="signature-block"
             value={signatureBlock}
             onChange={(e) => setSignatureBlock(e.target.value)}
-            placeholder="Signature / stamp area text"
+            placeholder={tForm("notes.signatureBlockPlaceholder")}
             rows={2}
             className="resize-none"
           />
@@ -548,13 +569,13 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
           onClick={() => router.push(listPath)}
           disabled={isSubmitting}
         >
-          Cancel
+          {tForm("actions.cancel")}
         </Button>
         <Button type="button" onClick={handleSave} disabled={isSubmitting}>
           {isSubmitting ? (
             <Loader2 size={13} className="mr-2 animate-spin" />
           ) : null}
-          {isEdit ? "Save changes" : "Create"}
+          {isEdit ? tForm("actions.save") : tForm("actions.create")}
         </Button>
         {isEdit && (
           <Button
@@ -564,7 +585,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
             onClick={handleDelete}
             disabled={isSubmitting}
           >
-            Delete
+            {tForm("actions.delete")}
           </Button>
         )}
       </div>

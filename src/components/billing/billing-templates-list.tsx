@@ -11,9 +11,9 @@
  * State: optimistic delete (removes from local list immediately).
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Plus, FileText, Pencil, Trash2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,19 +35,14 @@ import type { BillingDocumentTemplate, BillingDocumentKind } from "@/types/billi
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatRelativeDate(isoDate: string): string {
+/** Format a relative date using the current locale (M-3 fix: was hard-coded "en"). */
+function formatRelativeDate(isoDate: string, locale: string): string {
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return isoDate;
-  return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+  return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
     Math.round((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
     "day"
   );
-}
-
-function formatItemCount(n: number): string {
-  if (n === 0) return "no items";
-  if (n === 1) return "1 item";
-  return `${n} items`;
 }
 
 // ---------------------------------------------------------------------------
@@ -62,22 +57,41 @@ interface TemplateCardProps {
 function TemplateCard({ template, onDelete }: TemplateCardProps) {
   const router = useRouter();
   const locale = useLocale();
+  const tList = useTranslations("billing.templates.list");
   const [isDeleting, setIsDeleting] = useState(false);
+  // Double-submit guard
+  const deletingRef = useRef(false);
 
   const editPath = `/${locale}/billing/templates/${template.id}`;
   const usePath = `/${locale}/billing/${template.kind}/new?template=${template.id}`;
 
   async function handleConfirmDelete() {
+    if (deletingRef.current) return;
+    deletingRef.current = true;
     setIsDeleting(true);
-    const result = await deleteBillingTemplateAction(template.id);
-    setIsDeleting(false);
-    if (!result.ok) {
-      toast.error("Failed to delete template. Please try again.");
-      return;
+    try {
+      const result = await deleteBillingTemplateAction(template.id);
+      if (!result.ok) {
+        toast.error(tList("actions.delete") + " failed. Please try again.");
+        return;
+      }
+      toast.success("Template deleted.");
+      onDelete(template.id);
+    } finally {
+      setIsDeleting(false);
+      deletingRef.current = false;
     }
-    toast.success("Template deleted.");
-    onDelete(template.id);
   }
+
+  const itemCount = template.items.length;
+  // Use ICU plural key from billing.templates.list.card.items
+  const itemCountLabel = tList("card.items", { n: itemCount });
+  const vatLabel = template.default_vat_rate
+    ? tList("card.vatRate", { rate: template.default_vat_rate })
+    : tList("card.vatRateNone");
+  const lastUpdatedLabel = tList("card.lastUpdated", {
+    date: formatRelativeDate(template.updated_at, locale),
+  });
 
   return (
     <div className="folio-card flex flex-col gap-3 p-5">
@@ -97,7 +111,7 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
             onClick={() => router.push(editPath)}
           >
             <Pencil size={12} className="mr-1" />
-            Edit
+            {tList("actions.edit")}
           </Button>
 
           <Button
@@ -106,7 +120,7 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
             className="h-7 px-2 text-[12px]"
             onClick={() => router.push(usePath)}
           >
-            Use
+            {tList("actions.use")}
             <ArrowRight size={12} className="ml-1" />
           </Button>
 
@@ -123,18 +137,18 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete template</AlertDialogTitle>
+                <AlertDialogTitle>{tList("actions.deleteConfirmTitle")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Delete &ldquo;{template.name}&rdquo;? This cannot be undone.
+                  {tList("actions.deleteConfirmDescription", { name: template.name })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{tList("actions.deleteCancel")}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleConfirmDelete}
                   className="bg-red-600 text-white hover:bg-red-700"
                 >
-                  Delete
+                  {tList("actions.deleteConfirm")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -144,15 +158,11 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
 
       {/* Meta row */}
       <div className="flex flex-wrap gap-3 text-[12px]" style={{ color: "var(--muted)" }}>
-        <span>{formatItemCount(template.items.length)}</span>
+        <span>{itemCountLabel}</span>
         <span>·</span>
-        <span>
-          {template.default_vat_rate
-            ? `Default VAT ${template.default_vat_rate}%`
-            : "No default VAT"}
-        </span>
+        <span>{vatLabel}</span>
         <span>·</span>
-        <span>Updated {formatRelativeDate(template.updated_at)}</span>
+        <span>{lastUpdatedLabel}</span>
       </div>
     </div>
   );
@@ -206,6 +216,7 @@ interface BillingTemplatesListProps {
 export function BillingTemplatesList({ initialTemplates }: BillingTemplatesListProps) {
   const router = useRouter();
   const locale = useLocale();
+  const tList = useTranslations("billing.templates.list");
   const [templates, setTemplates] = useState<BillingDocumentTemplate[]>(initialTemplates);
 
   const devisTemplates = templates.filter((t) => t.kind === "devis");
@@ -221,9 +232,9 @@ export function BillingTemplatesList({ initialTemplates }: BillingTemplatesListP
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-xl font-medium">Templates</h2>
+          <h2 className="font-display text-xl font-medium">{tList("title")}</h2>
           <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-            Reusable document skeletons to speed up creation.
+            {tList("empty.description")}
           </p>
         </div>
         <Button
@@ -231,7 +242,7 @@ export function BillingTemplatesList({ initialTemplates }: BillingTemplatesListP
           onClick={() => router.push(`/${locale}/billing/templates/new`)}
         >
           <Plus size={13} className="mr-1" />
-          New template
+          {tList("new")}
         </Button>
       </div>
 
@@ -240,9 +251,9 @@ export function BillingTemplatesList({ initialTemplates }: BillingTemplatesListP
         <div className="folio-card flex flex-col items-center gap-4 py-16 text-center">
           <FileText size={32} style={{ color: "var(--muted)" }} />
           <div>
-            <p className="font-medium text-sm">No templates yet</p>
+            <p className="font-medium text-sm">{tList("empty.title")}</p>
             <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
-              Create your first template to speed up doc creation.
+              {tList("empty.description")}
             </p>
           </div>
           <Button
@@ -250,19 +261,19 @@ export function BillingTemplatesList({ initialTemplates }: BillingTemplatesListP
             onClick={() => router.push(`/${locale}/billing/templates/new`)}
           >
             <Plus size={13} className="mr-1" />
-            Create your first template
+            {tList("empty.cta")}
           </Button>
         </div>
       ) : (
         <div className="space-y-8">
           <TemplateSection
-            label="Devis templates"
+            label={tList("devisGroup")}
             kind="devis"
             templates={devisTemplates}
             onDelete={handleDelete}
           />
           <TemplateSection
-            label="Facture templates"
+            label={tList("factureGroup")}
             kind="facture"
             templates={factureTemplates}
             onDelete={handleDelete}

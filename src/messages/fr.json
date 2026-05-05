@@ -666,6 +666,14 @@
         "accepted": "Accepté",
         "rejected": "Refusé",
         "expired": "Expiré"
+      },
+      "transitions": {
+        "markAsSent": "Marquer comme envoyé",
+        "markAsAccepted": "Marquer comme accepté",
+        "markAsRejected": "Marquer comme refusé",
+        "markAsExpired": "Marquer comme expiré",
+        "revertToSent": "Revenir à Envoyé",
+        "reopen": "Réouvrir (Brouillon)"
       }
     },
     "facture": {
@@ -684,6 +692,13 @@
         "paid": "Payée",
         "overdue": "En retard",
         "cancelled": "Annulée"
+      },
+      "transitions": {
+        "markAsSent": "Marquer comme envoyée",
+        "markAsPaid": "Marquer comme payée",
+        "markAsOverdue": "Marquer comme en retard",
+        "markAsCancelled": "Marquer comme annulée",
+        "markAsCancelledRefund": "Marquer comme annulée (remboursement)"
       }
     },
     "list": {
@@ -763,7 +778,8 @@
         "changeStatus": "Changer le statut",
         "cloneSelected": "Dupliquer le sélectionné",
         "createFromTemplate": "Créer depuis un modèle",
-        "sendStatus": "Marquer comme envoyé"
+        "sendStatus": "Marquer comme envoyé",
+        "edit": "Modifier"
       },
       "errors": {
         "recipientRequired": "Le nom du destinataire est obligatoire.",

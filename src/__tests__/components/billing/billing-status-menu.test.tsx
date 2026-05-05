@@ -38,6 +38,24 @@ vi.mock(
   })
 );
 
+// next-intl mock: useTranslations returns a key-lookup against en.json so
+// assertions on English text ("Mark as Sent", etc.) still pass.
+vi.mock("next-intl", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const en = require("../../../messages/en.json") as Record<string, unknown>;
+  function resolve(obj: Record<string, unknown>, path: string): string {
+    return path.split(".").reduce<unknown>((acc, k) => {
+      if (acc && typeof acc === "object") return (acc as Record<string, unknown>)[k];
+      return undefined;
+    }, obj) as string ?? path;
+  }
+  const makeT = (ns: string) => (key: string) => resolve(en, `${ns}.${key}`);
+  return {
+    useLocale: () => "en",
+    useTranslations: (ns: string) => makeT(ns),
+  };
+});
+
 vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),

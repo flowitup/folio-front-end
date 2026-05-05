@@ -17,7 +17,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, FileText, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -42,17 +42,6 @@ import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-const STATUS_LABEL: Record<BillingDocumentStatus, string> = {
-  draft:     "Draft",
-  sent:      "Sent",
-  accepted:  "Accepted",
-  rejected:  "Rejected",
-  expired:   "Expired",
-  paid:      "Paid",
-  overdue:   "Overdue",
-  cancelled: "Cancelled",
-};
 
 function formatDate(iso: string): string {
   try {
@@ -95,6 +84,22 @@ export function CreateFromExistingDialog({
 }: CreateFromExistingDialogProps) {
   const router = useRouter();
   const locale = useLocale();
+  const tDevisStatus = useTranslations("billing.devis.status");
+  const tFactureStatus = useTranslations("billing.facture.status");
+  const tActions = useTranslations("billing.form.actions");
+
+  /** Locale-aware status label — devis-specific statuses take priority; rest fall back to facture. */
+  function statusLabel(status: BillingDocumentStatus): string {
+    const devisStatuses = new Set<BillingDocumentStatus>(["draft", "sent", "accepted", "rejected", "expired"]);
+    const factureOnlyStatuses = new Set<BillingDocumentStatus>(["paid", "overdue", "cancelled"]);
+    if (devisStatuses.has(status)) {
+      return tDevisStatus(status as "draft" | "sent" | "accepted" | "rejected" | "expired");
+    }
+    if (factureOnlyStatuses.has(status)) {
+      return tFactureStatus(status as "paid" | "overdue" | "cancelled");
+    }
+    return status;
+  }
 
   const [documents, setDocuments] = useState<BillingDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -161,7 +166,7 @@ export function CreateFromExistingDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Clone from existing document</DialogTitle>
+          <DialogTitle>{tActions("cloneSelected")}</DialogTitle>
           <DialogDescription>
             Select a document to use as the starting point for your new{" "}
             <strong>{targetKind}</strong>. Items, recipient, notes and terms will
@@ -248,7 +253,7 @@ export function CreateFromExistingDialog({
                       </span>
                       <BillingStatusBadge
                         status={doc.status}
-                        label={STATUS_LABEL[doc.status]}
+                        label={statusLabel(doc.status)}
                       />
                       <span
                         className="text-[11px] uppercase tracking-wide"
@@ -267,10 +272,10 @@ export function CreateFromExistingDialog({
         {/* Footer */}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {tActions("cancel")}
           </Button>
           <Button onClick={handleConfirm} disabled={!selectedId}>
-            Clone selected
+            {tActions("cloneSelected")}
           </Button>
         </div>
       </DialogContent>

@@ -666,6 +666,14 @@
         "accepted": "Đã chấp nhận",
         "rejected": "Đã từ chối",
         "expired": "Hết hạn"
+      },
+      "transitions": {
+        "markAsSent": "Đánh dấu đã gửi",
+        "markAsAccepted": "Đánh dấu đã chấp nhận",
+        "markAsRejected": "Đánh dấu đã từ chối",
+        "markAsExpired": "Đánh dấu hết hạn",
+        "revertToSent": "Hoàn về Đã gửi",
+        "reopen": "Mở lại (Nháp)"
       }
     },
     "facture": {
@@ -684,6 +692,13 @@
         "paid": "Đã thanh toán",
         "overdue": "Quá hạn",
         "cancelled": "Đã hủy"
+      },
+      "transitions": {
+        "markAsSent": "Đánh dấu đã gửi",
+        "markAsPaid": "Đánh dấu đã thanh toán",
+        "markAsOverdue": "Đánh dấu quá hạn",
+        "markAsCancelled": "Đánh dấu đã hủy",
+        "markAsCancelledRefund": "Đánh dấu đã hủy (hoàn tiền)"
       }
     },
     "list": {
@@ -763,7 +778,8 @@
         "changeStatus": "Đổi trạng thái",
         "cloneSelected": "Nhân bản đã chọn",
         "createFromTemplate": "Tạo từ mẫu",
-        "sendStatus": "Đánh dấu đã gửi"
+        "sendStatus": "Đánh dấu đã gửi",
+        "edit": "Chỉnh sửa"
       },
       "errors": {
         "recipientRequired": "Tên khách hàng là bắt buộc.",

@@ -4,10 +4,35 @@
  * Required named test: test_totals_mixed_vat_rates
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { BillingTotalsCard, computeTotals } from "@/components/billing/billing-totals-card";
 import type { BillingDocumentItem } from "@/types/billing";
+
+// next-intl mock — returns English values so assertions on "Total HT" / "TVA X%" still pass.
+vi.mock("next-intl", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const en = require("../../../messages/en.json") as Record<string, unknown>;
+  function resolve(obj: Record<string, unknown>, path: string): string {
+    return path.split(".").reduce<unknown>((acc, k) => {
+      if (acc && typeof acc === "object") return (acc as Record<string, unknown>)[k];
+      return undefined;
+    }, obj) as string ?? path;
+  }
+  const makeT = (ns: string) => (key: string, params?: Record<string, unknown>) => {
+    let val = resolve(en, `${ns}.${key}`);
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        val = val.replace(`{${k}}`, String(v));
+      });
+    }
+    return val;
+  };
+  return {
+    useLocale: () => "en",
+    useTranslations: (ns: string) => makeT(ns),
+  };
+});
 
 // ---------------------------------------------------------------------------
 // computeTotals — pure logic tests (no React, no DOM)

@@ -13,9 +13,9 @@
  * State: plain useState, no form library.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,8 @@ export function ApplyTemplateDialog({
 }: ApplyTemplateDialogProps) {
   const router = useRouter();
   const locale = useLocale();
+  const tRecipient = useTranslations("billing.form.recipient");
+  const tActions = useTranslations("billing.form.actions");
 
   const [templates, setTemplates] = useState<BillingDocumentTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -87,6 +89,9 @@ export function ApplyTemplateDialog({
 
   // Validation errors
   const [nameError, setNameError] = useState<string | null>(null);
+
+  // Double-submit guard
+  const submittingRef = useRef(false);
 
   // Reset + load on open
   useEffect(() => {
@@ -122,6 +127,7 @@ export function ApplyTemplateDialog({
   }
 
   async function handleConfirm() {
+    if (submittingRef.current) return;
     if (!selectedId) return;
 
     // Client-side validation
@@ -130,6 +136,7 @@ export function ApplyTemplateDialog({
       return;
     }
 
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
       const result = await createBillingDocumentFromTemplateAction(selectedId, {
@@ -149,6 +156,7 @@ export function ApplyTemplateDialog({
       toast.error("Failed to create document from template.");
     } finally {
       setIsSubmitting(false);
+      submittingRef.current = false;
     }
   }
 
@@ -239,11 +247,11 @@ export function ApplyTemplateDialog({
         {/* Recipient fields — shown once a template is selected */}
         {selectedTemplate && (
           <div className="space-y-3 rounded-md border p-4" style={{ borderColor: "var(--border)" }}>
-            <p className="text-[13px] font-medium">Recipient details</p>
+            <p className="text-[13px] font-medium">{tRecipient("section")}</p>
 
             <div className="space-y-1">
               <Label htmlFor="tpl-recipient-name" className="text-[12px]">
-                Name <span className="text-red-500">*</span>
+                {tRecipient("name")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="tpl-recipient-name"
@@ -251,7 +259,7 @@ export function ApplyTemplateDialog({
                 onChange={(e) =>
                   handleRecipientChange("recipient_name", e.target.value)
                 }
-                placeholder="Client or company name"
+                placeholder={tRecipient("namePlaceholder")}
                 className={nameError ? "border-red-400" : ""}
               />
               {nameError && (
@@ -261,7 +269,7 @@ export function ApplyTemplateDialog({
 
             <div className="space-y-1">
               <Label htmlFor="tpl-recipient-address" className="text-[12px]">
-                Address
+                {tRecipient("address")}
               </Label>
               <Textarea
                 id="tpl-recipient-address"
@@ -269,7 +277,7 @@ export function ApplyTemplateDialog({
                 onChange={(e) =>
                   handleRecipientChange("recipient_address", e.target.value)
                 }
-                placeholder="Street, city, postal code"
+                placeholder={tRecipient("addressPlaceholder")}
                 rows={2}
                 className="resize-none"
               />
@@ -278,7 +286,7 @@ export function ApplyTemplateDialog({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="tpl-recipient-email" className="text-[12px]">
-                  Email
+                  {tRecipient("email")}
                 </Label>
                 <Input
                   id="tpl-recipient-email"
@@ -287,12 +295,12 @@ export function ApplyTemplateDialog({
                   onChange={(e) =>
                     handleRecipientChange("recipient_email", e.target.value)
                   }
-                  placeholder="client@example.com"
+                  placeholder={tRecipient("emailPlaceholder")}
                 />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="tpl-recipient-siret" className="text-[12px]">
-                  SIRET
+                  {tRecipient("siret")}
                 </Label>
                 <Input
                   id="tpl-recipient-siret"
@@ -300,7 +308,7 @@ export function ApplyTemplateDialog({
                   onChange={(e) =>
                     handleRecipientChange("recipient_siret", e.target.value)
                   }
-                  placeholder="123 456 789 00012"
+                  placeholder={tRecipient("siretPlaceholder")}
                 />
               </div>
             </div>
@@ -314,7 +322,7 @@ export function ApplyTemplateDialog({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Cancel
+            {tActions("cancel")}
           </Button>
           <Button
             onClick={handleConfirm}
@@ -323,7 +331,7 @@ export function ApplyTemplateDialog({
             {isSubmitting ? (
               <Loader2 size={13} className="mr-2 animate-spin" />
             ) : null}
-            Create from template
+            {tActions("createFromTemplate")}
           </Button>
         </div>
       </DialogContent>

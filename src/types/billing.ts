@@ -1,7 +1,8 @@
 /**
  * Billing domain types — devis (quote) and facture (invoice) documents.
  * Decimal values are transported as strings to avoid floating-point precision loss.
- * All math is performed server-side; the FE displays via Number() + Intl.NumberFormat.
+ * FE does best-effort live-preview math via Number() + Intl.NumberFormat;
+ * the server (Python Decimal) is authoritative for all stored totals.
  */
 
 export type BillingDocumentKind = "devis" | "facture";

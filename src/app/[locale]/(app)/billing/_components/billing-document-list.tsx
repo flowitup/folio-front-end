@@ -54,16 +54,7 @@ const FACTURE_STATUSES: BillingDocumentStatus[] = [
   "cancelled",
 ];
 
-const STATUS_LABEL: Record<BillingDocumentStatus, string> = {
-  draft: "Draft",
-  sent: "Sent",
-  accepted: "Accepted",
-  rejected: "Rejected",
-  expired: "Expired",
-  paid: "Paid",
-  overdue: "Overdue",
-  cancelled: "Cancelled",
-};
+// STATUS_LABEL removed — status labels now come from i18n via t(`${kind}.status.${s}`).
 
 // ---------------------------------------------------------------------------
 // Formatting helpers
@@ -99,10 +90,10 @@ export function BillingDocumentList({
   const searchParams = useSearchParams();
   const locale = useLocale();
 
-  // Status filter — driven from ?status= query param for back/forward compat
-  const [statusFilter, setStatusFilter] = useState<BillingDocumentStatus | "all">(
-    (searchParams.get("status") as BillingDocumentStatus | null) ?? "all"
-  );
+  // Status filter — read directly from ?status= per render (H-2: no local useState).
+  // handleStatusChange calls router.push which triggers a server re-render with
+  // new searchParams, keeping URL as the single source of truth for the filter.
+  const statusFilter = (searchParams.get("status") as BillingDocumentStatus | null) ?? "all";
 
   // Search — client-side filter on current page
   const [searchRaw, setSearchRaw] = useState(searchParams.get("q") ?? "");
@@ -142,7 +133,6 @@ export function BillingDocumentList({
 
   function handleStatusChange(value: string) {
     const next = value as BillingDocumentStatus | "all";
-    setStatusFilter(next);
     // Round-trip: server page re-fetches with new status filter
     const params = new URLSearchParams(searchParams.toString());
     if (next === "all") params.delete("status");
@@ -258,7 +248,7 @@ export function BillingDocumentList({
             <SelectItem value="all">{t("list.allStatuses")}</SelectItem>
             {statusOptions.map((s) => (
               <SelectItem key={s} value={s}>
-                {STATUS_LABEL[s]}
+                {t(`${kind}.status.${s}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -306,7 +296,7 @@ export function BillingDocumentList({
                     <td>
                       <BillingStatusBadge
                         status={doc.status}
-                        label={STATUS_LABEL[doc.status]}
+                        label={t(`${kind}.status.${doc.status}`)}
                       />
                     </td>
                     <td className="num font-medium" style={{ textAlign: "right" }}>

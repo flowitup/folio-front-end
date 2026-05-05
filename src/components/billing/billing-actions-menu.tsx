@@ -10,9 +10,9 @@
  *   - Delete → confirm then call server action
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { MoreHorizontal, Pencil, Download, ArrowRightLeft, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -48,9 +48,17 @@ interface BillingActionsMenuProps {
 export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuProps) {
   const router = useRouter();
   const locale = useLocale();
+  const tActions = useTranslations("billing.form.actions");
+  const tErrors = useTranslations("billing.form.errors");
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+
+  // Double-submit guards — synchronous check before React commit
+  const pdfLoadingRef = useRef(false);
+  const convertingRef = useRef(false);
+  const deletingRef = useRef(false);
 
   const editPath = `/${locale}/billing/${document.kind}/${document.id}/edit`;
 
@@ -58,6 +66,8 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
     document.kind === "devis" && document.status === "accepted";
 
   async function handleDownloadPdf() {
+    if (pdfLoadingRef.current) return;
+    pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
       const token = getApiAccessToken();
@@ -80,13 +90,16 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
       const blob = await response.blob();
       triggerBrowserDownload(blob, filename);
     } catch {
-      toast.error("Failed to download PDF. Please try again.");
+      toast.error(tErrors("pdfFailed"));
     } finally {
       setIsPdfLoading(false);
+      pdfLoadingRef.current = false;
     }
   }
 
   async function handleConvertToFacture() {
+    if (convertingRef.current) return;
+    convertingRef.current = true;
     setIsConverting(true);
     try {
       const result = await convertDevisToFactureAction(document.id);
@@ -99,20 +112,27 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
       router.push(`/${locale}/billing/factures`);
       onMutated();
     } catch {
-      toast.error("Failed to convert devis to facture.");
+      toast.error(tErrors("convertFailed"));
     } finally {
       setIsConverting(false);
+      convertingRef.current = false;
     }
   }
 
   async function handleDelete() {
-    const result = await deleteBillingDocumentAction(document.id);
-    if (!result.ok) {
-      toast.error(result.error.message);
-      return;
+    if (deletingRef.current) return;
+    deletingRef.current = true;
+    try {
+      const result = await deleteBillingDocumentAction(document.id);
+      if (!result.ok) {
+        toast.error(result.error.message);
+        return;
+      }
+      toast.success("Document deleted.");
+      onMutated();
+    } finally {
+      deletingRef.current = false;
     }
-    toast.success("Document deleted.");
-    onMutated();
   }
 
   return (
@@ -137,11 +157,11 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => router.push(editPath)}>
             <Pencil size={13} className="mr-2" />
-            Edit
+            {tActions("edit") ?? "Edit"}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleDownloadPdf} disabled={isPdfLoading}>
             <Download size={13} className="mr-2" />
-            Download PDF
+            {tActions("downloadPdf")}
           </DropdownMenuItem>
           {showConvertToFacture && (
             <>
@@ -151,7 +171,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
                 disabled={isConverting}
               >
                 <ArrowRightLeft size={13} className="mr-2" />
-                Convert to Facture
+                {tActions("convertToFacture")}
               </DropdownMenuItem>
             </>
           )}
@@ -161,7 +181,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
             className="text-red-600 focus:text-red-600"
           >
             <Trash2 size={13} className="mr-2" />
-            Delete
+            {tActions("delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -177,12 +197,12 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tActions("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             >
-              Delete
+              {tActions("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -11,6 +11,7 @@
 
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { fetchCompanyProfile } from "@/lib/api/billing/company-profile";
 import { fetchBillingDocument } from "@/lib/api/billing/documents";
 import { fetchBillingTemplate } from "@/lib/api/billing/templates";
@@ -69,24 +70,23 @@ export default async function NewFacturePage({ searchParams }: NewFacturePagePro
   );
 }
 
-function MissingProfileCallout() {
+async function MissingProfileCallout() {
+  const t = await getTranslations("billing.form.missingProfile");
   return (
     <div className="fade-up px-8 py-12">
       <div className="folio-card flex max-w-lg flex-col items-start gap-4 p-6">
         <div className="flex items-center gap-3 text-amber-700">
           <AlertTriangle size={20} className="shrink-0" />
-          <p className="text-sm font-medium">Company profile required</p>
+          <p className="text-sm font-medium">{t("title")}</p>
         </div>
         <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-          Before creating a facture, please complete your company profile. It
-          provides the issuer details (legal name, address, SIRET, TVA number)
-          that are printed on every document.
+          {t("description", { kind: "facture" })}
         </p>
         <Link
           href="/settings#company-profile"
           className="rounded-md bg-amber-50 px-3 py-1.5 text-[13px] font-medium text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100 transition-colors"
         >
-          Go to Settings → Company Profile
+          {t("cta")}
         </Link>
       </div>
     </div>

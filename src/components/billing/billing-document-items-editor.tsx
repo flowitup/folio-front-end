@@ -12,6 +12,7 @@
  */
 
 import { useId } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +67,7 @@ export function BillingDocumentItemsEditor({
   showTotals = true,
 }: BillingDocumentItemsEditorProps) {
   const uid = useId();
+  const t = useTranslations("billing.form.items");
 
   function updateItem(index: number, patch: Partial<BillingDocumentItem>) {
     const next = items.map((item, i) =>
@@ -92,11 +94,11 @@ export function BillingDocumentItemsEditor({
           <table className="ledger">
             <thead>
               <tr>
-                <th className="min-w-[200px]">Description</th>
-                <th className="w-20 text-right">Qty</th>
-                <th className="w-28 text-right">Unit price HT</th>
-                <th className="w-24">VAT %</th>
-                <th className="w-24 text-right">Total HT</th>
+                <th className="min-w-[200px]">{t("description")}</th>
+                <th className="w-20 text-right">{t("quantity")}</th>
+                <th className="w-28 text-right">{t("unitPrice")}</th>
+                <th className="w-24">{t("vatRate")}</th>
+                <th className="w-24 text-right">{t("totalHt")}</th>
                 {!readOnly && <th className="w-10" />}
               </tr>
             </thead>
@@ -108,7 +110,7 @@ export function BillingDocumentItemsEditor({
                     className="py-8 text-center text-[13px]"
                     style={{ color: "var(--muted)" }}
                   >
-                    No line items yet. Click &quot;Add line&quot; to start.
+                    {t("noItems")}
                   </td>
                 </tr>
               )}
@@ -124,7 +126,7 @@ export function BillingDocumentItemsEditor({
                         onChange={(e) =>
                           updateItem(index, { description: e.target.value })
                         }
-                        placeholder="Item description"
+                        placeholder={t("descriptionPlaceholder")}
                         className="h-7 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
                       />
                     )}
@@ -192,7 +194,7 @@ export function BillingDocumentItemsEditor({
                         size="sm"
                         className="h-6 w-6 p-0"
                         onClick={() => removeItem(index)}
-                        aria-label="Remove line"
+                        aria-label={t("removeLine")}
                       >
                         <Trash2 size={12} style={{ color: "var(--muted)" }} />
                       </Button>
@@ -214,7 +216,7 @@ export function BillingDocumentItemsEditor({
               className="h-7 text-[13px]"
             >
               <Plus size={13} className="mr-1" />
-              Add line
+              {t("addLine")}
             </Button>
           </div>
         )}

@@ -198,6 +198,49 @@
       "description": "Attribuer des rôles aux utilisateurs existants sur un ou plusieurs projets.",
       "permissionDenied": "Vous n'avez pas l'autorisation de modifier les rôles des utilisateurs."
     },
+    "companyProfile": {
+      "title": "Profil de l'entreprise",
+      "description": "Informations de l'émetteur imprimées sur chaque devis et facture.",
+      "explainer": "Utilisé comme info émetteur sur chaque devis & facture. Instantané à la création du document.",
+      "fields": {
+        "legalName": "Raison sociale",
+        "legalNamePlaceholder": "ex. Maison Lavandou SAS",
+        "address": "Adresse",
+        "addressPlaceholder": "Rue, ville, code postal, pays",
+        "siret": "SIRET",
+        "siretPlaceholder": "ex. 12345678900012",
+        "tvaNumber": "Numéro de TVA",
+        "tvaNumberPlaceholder": "ex. FR12345678901",
+        "iban": "IBAN",
+        "ibanPlaceholder": "ex. FR76 3000 6000 0112 3456 7890 189",
+        "bic": "BIC / SWIFT",
+        "bicPlaceholder": "ex. BNPAFRPPXXX",
+        "logoUrl": "URL du logo",
+        "logoUrlPlaceholder": "https://example.com/logo.png",
+        "logoUrlHint": "URL d'image accessible publiquement. Affichée dans l'en-tête PDF.",
+        "defaultPaymentTerms": "Conditions de paiement par défaut",
+        "defaultPaymentTermsPlaceholder": "ex. Paiement à 30 jours. Virement bancaire.",
+        "defaultPaymentTermsHint": "Pré-rempli sur les nouvelles factures. Modifiable par document.",
+        "prefixOverride": "Préfixe du numéro de document",
+        "prefixOverridePlaceholder": "ex. FLW (8 car. max)",
+        "prefixOverrideHint": "Optionnel. Lettres ASCII majuscules et chiffres uniquement (A-Z, 0-9). Max 8 caractères. Exemple : « FLW » → FLW-DEV-2026-001."
+      },
+      "actions": {
+        "save": "Enregistrer",
+        "saving": "Enregistrement…"
+      },
+      "errors": {
+        "legalNameRequired": "La raison sociale est obligatoire.",
+        "legalNameTooLong": "La raison sociale doit comporter 255 caractères au maximum.",
+        "addressRequired": "L'adresse est obligatoire.",
+        "prefixTooLong": "Le préfixe doit comporter 8 caractères au maximum.",
+        "prefixInvalidChars": "Le préfixe ne doit contenir que des lettres ASCII majuscules et des chiffres (A-Z, 0-9).",
+        "generic": "Une erreur inattendue s'est produite. Veuillez réessayer."
+      },
+      "toast": {
+        "saved": "Profil de l'entreprise enregistré."
+      }
+    },
     "about": "À propos",
     "version": "Version"
   },
@@ -542,6 +585,211 @@
     },
     "skeleton": {
       "loading": "Chargement des rappels..."
+    }
+  },
+  "billing": {
+    "group": {
+      "title": "Facturation"
+    },
+    "templates": {
+      "list": {
+        "title": "Modèles",
+        "new": "Nouveau modèle",
+        "devisGroup": "Modèles de devis",
+        "factureGroup": "Modèles de facture",
+        "empty": {
+          "title": "Aucun modèle pour le moment",
+          "description": "Créez votre premier modèle pour accélérer la création de documents.",
+          "cta": "Créer votre premier modèle"
+        },
+        "card": {
+          "items": "{n, plural, =0 {aucun article} =1 {1 article} other {# articles}}",
+          "vatRate": "TVA par défaut {rate}%",
+          "vatRateNone": "Pas de TVA par défaut",
+          "lastUpdated": "Mis à jour {date}"
+        },
+        "actions": {
+          "edit": "Modifier",
+          "delete": "Supprimer",
+          "use": "Utiliser",
+          "deleteConfirmTitle": "Supprimer le modèle",
+          "deleteConfirmDescription": "Supprimer « {name} » ? Cette action est irréversible.",
+          "deleteConfirm": "Supprimer",
+          "deleteCancel": "Annuler"
+        }
+      },
+      "form": {
+        "titleCreate": "Nouveau modèle",
+        "titleEdit": "Modifier le modèle",
+        "kind": "Type",
+        "kindDevis": "Devis",
+        "kindFacture": "Facture",
+        "kindImmutableNote": "Le type ne peut pas être modifié après la création.",
+        "name": "Nom du modèle",
+        "namePlaceholder": "ex. Projet web standard",
+        "defaultVatRate": "Taux de TVA par défaut",
+        "vatRateCustom": "Personnalisé…",
+        "notes": "Notes",
+        "notesPlaceholder": "Notes internes ou à destination du client",
+        "terms": "Conditions générales (CGV)",
+        "termsPlaceholder": "Conditions générales de vente",
+        "items": "Lignes",
+        "actions": {
+          "save": "Enregistrer",
+          "saving": "Enregistrement…",
+          "cancel": "Annuler",
+          "delete": "Supprimer le modèle"
+        },
+        "errors": {
+          "nameRequired": "Le nom du modèle est obligatoire.",
+          "nameTooLong": "Le nom du modèle doit comporter 120 caractères au maximum.",
+          "kindRequired": "Le type est obligatoire.",
+          "duplicateName": "Un modèle portant ce nom existe déjà pour ce type.",
+          "saveFailed": "Échec de l'enregistrement du modèle. Veuillez réessayer.",
+          "deleteFailed": "Échec de la suppression du modèle. Veuillez réessayer."
+        }
+      }
+    },
+    "devis": {
+      "list": {
+        "title": "Devis",
+        "new": "Nouveau devis",
+        "empty": {
+          "title": "Aucun devis pour le moment",
+          "description": "Créez votre premier devis pour commencer.",
+          "cta": "Créer votre premier devis"
+        }
+      },
+      "status": {
+        "draft": "Brouillon",
+        "sent": "Envoyé",
+        "accepted": "Accepté",
+        "rejected": "Refusé",
+        "expired": "Expiré"
+      }
+    },
+    "facture": {
+      "list": {
+        "title": "Factures",
+        "new": "Nouvelle facture",
+        "empty": {
+          "title": "Aucune facture pour le moment",
+          "description": "Créez votre première facture pour commencer.",
+          "cta": "Créer votre première facture"
+        }
+      },
+      "status": {
+        "draft": "Brouillon",
+        "sent": "Envoyée",
+        "paid": "Payée",
+        "overdue": "En retard",
+        "cancelled": "Annulée"
+      }
+    },
+    "list": {
+      "searchPlaceholder": "Rechercher par numéro ou destinataire…",
+      "allStatuses": "Tous les statuts",
+      "noResults": "Aucun document ne correspond à votre recherche.",
+      "loadMore": "Charger plus",
+      "columns": {
+        "number": "Numéro",
+        "date": "Date",
+        "recipient": "Destinataire",
+        "status": "Statut",
+        "totalTtc": "Total TTC",
+        "actions": "Actions"
+      }
+    },
+    "form": {
+      "modes": {
+        "blank": "Vierge",
+        "fromExisting": "Depuis un existant",
+        "fromTemplate": "Depuis un modèle"
+      },
+      "recipient": {
+        "section": "Destinataire",
+        "name": "Nom",
+        "namePlaceholder": "Nom du client ou de l'entreprise",
+        "address": "Adresse",
+        "addressPlaceholder": "Rue, ville, code postal",
+        "email": "E-mail",
+        "emailPlaceholder": "client@exemple.com",
+        "siret": "SIRET",
+        "siretPlaceholder": "123 456 789 00012",
+        "addExtraFields": "+ Ajouter e-mail / SIRET"
+      },
+      "details": {
+        "section": "Détails",
+        "documentNumber": "Numéro de document",
+        "issueDate": "Date d'émission",
+        "validityUntil": "Valable jusqu'au",
+        "paymentDue": "Échéance de paiement",
+        "paymentTerms": "Conditions de paiement",
+        "paymentTermsPlaceholder": "ex. 30 jours net, virement bancaire"
+      },
+      "items": {
+        "section": "Lignes",
+        "description": "Description",
+        "descriptionPlaceholder": "Description de l'article",
+        "quantity": "Qté",
+        "unitPrice": "Prix unitaire HT",
+        "vatRate": "TVA %",
+        "totalHt": "Total HT",
+        "addLine": "Ajouter une ligne",
+        "noItems": "Aucune ligne pour le moment. Cliquez sur « Ajouter une ligne » pour commencer.",
+        "removeLine": "Supprimer la ligne"
+      },
+      "totals": {
+        "ht": "Total HT",
+        "tva": "TVA {rate}%",
+        "ttc": "Total TTC"
+      },
+      "notes": {
+        "section": "Notes & conditions",
+        "notes": "Notes",
+        "notesPlaceholder": "Notes internes ou à destination du client",
+        "terms": "Conditions générales (CGV)",
+        "termsPlaceholder": "Conditions générales de vente",
+        "signatureBlock": "Bloc de signature",
+        "signatureBlockPlaceholder": "Texte de la zone de signature / tampon"
+      },
+      "actions": {
+        "save": "Enregistrer les modifications",
+        "create": "Créer",
+        "cancel": "Annuler",
+        "delete": "Supprimer",
+        "downloadPdf": "Télécharger PDF",
+        "convertToFacture": "Convertir en facture",
+        "changeStatus": "Changer le statut",
+        "cloneSelected": "Dupliquer le sélectionné",
+        "createFromTemplate": "Créer depuis un modèle",
+        "sendStatus": "Marquer comme envoyé"
+      },
+      "errors": {
+        "recipientRequired": "Le nom du destinataire est obligatoire.",
+        "atLeastOneItem": "Au moins une ligne est obligatoire.",
+        "itemDescriptionRequired": "Tous les articles doivent avoir une description.",
+        "itemQuantityPositive": "La quantité doit être supérieure à 0.",
+        "itemUnitPricePositive": "Le prix unitaire ne peut pas être négatif.",
+        "itemVatRatePositive": "Le taux de TVA ne peut pas être négatif.",
+        "saveFailed": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+        "pdfFailed": "Échec du téléchargement du PDF. Veuillez réessayer.",
+        "convertFailed": "Échec de la conversion du devis en facture.",
+        "alreadyConverted": "Ce devis a déjà été converti en facture.",
+        "invalidTransition": "Cette transition de statut n'est pas autorisée. Le document a peut-être été modifié dans une autre session.",
+        "companyProfileMissing": "Le profil de l'entreprise est requis avant de créer des documents de facturation."
+      },
+      "missingProfile": {
+        "title": "Profil de l'entreprise requis",
+        "description": "Avant de créer un {kind}, veuillez compléter votre profil d'entreprise. Il fournit les informations de l'émetteur (raison sociale, adresse, SIRET, numéro de TVA) imprimées sur chaque document.",
+        "cta": "Aller dans Paramètres → Profil de l'entreprise"
+      }
+    },
+    "errors": {
+      "invalidTransition": "Transition de statut invalide.",
+      "numberCollision": "Un document avec ce numéro existe déjà.",
+      "companyProfileMissing": "Le profil de l'entreprise est requis.",
+      "generic": "Une erreur inattendue s'est produite."
     }
   },
   "members": {

@@ -4,7 +4,7 @@
  * BillingActionsMenu — `...` row action menu for billing documents.
  *
  * Items:
- *   - Edit → navigate to /billing/{kind}/{id}/edit
+ *   - Edit → navigate to /billing/{segment}/{id} (segment = "devis" or "factures")
  *   - Download PDF → fetch PDF blob then trigger browser download
  *   - Convert to Facture → only rendered for devis with status=accepted
  *   - Delete → confirm then call server action
@@ -39,6 +39,7 @@ import { env } from "@/lib/config/env";
 import { getApiAccessToken } from "@/lib/api/http";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 import type { BillingDocument } from "@/types/billing";
+import { kindToSegment } from "@/lib/billing/url-helpers";
 
 interface BillingActionsMenuProps {
   document: BillingDocument;
@@ -60,7 +61,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
   const convertingRef = useRef(false);
   const deletingRef = useRef(false);
 
-  const editPath = `/${locale}/billing/${document.kind}/${document.id}/edit`;
+  const editPath = `/${locale}/billing/${kindToSegment(document.kind)}/${document.id}`;
 
   const showConvertToFacture =
     document.kind === "devis" && document.status === "accepted";

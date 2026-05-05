@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { deleteBillingTemplateAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import type { BillingDocumentTemplate, BillingDocumentKind } from "@/types/billing";
+import { kindToSegment } from "@/lib/billing/url-helpers";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -63,7 +64,7 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
   const deletingRef = useRef(false);
 
   const editPath = `/${locale}/billing/templates/${template.id}`;
-  const usePath = `/${locale}/billing/${template.kind}/new?template=${template.id}`;
+  const usePath = `/${locale}/billing/${kindToSegment(template.kind)}/new?template=${template.id}`;
 
   async function handleConfirmDelete() {
     if (deletingRef.current) return;

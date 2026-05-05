@@ -33,6 +33,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BillingStatusBadge } from "@/components/billing/billing-status-badge";
 import { BillingActionsMenu } from "@/components/billing/billing-actions-menu";
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
+import { kindToSegment } from "@/lib/billing/url-helpers";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -170,7 +171,7 @@ export function BillingDocumentList({
   // receives new props from above. useState initializer doesn't re-run — so we
   // track via a stable key pattern at the page level instead.
 
-  const newPath = `/${locale}/billing/${kind}/new`;
+  const newPath = `/${locale}/billing/${kindToSegment(kind)}/new`;
 
   const statusOptions = kind === "devis" ? DEVIS_STATUSES : FACTURE_STATUSES;
   const kindLabel = kind === "devis" ? "Devis" : "Facture";

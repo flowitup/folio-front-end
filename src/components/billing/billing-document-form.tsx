@@ -49,6 +49,7 @@ import type {
   BillingDocumentTemplate,
   BillingDocumentItem,
 } from "@/types/billing";
+import { kindToSegment } from "@/lib/billing/url-helpers";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -207,7 +208,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         const result = await createBillingDocumentAction({ kind, ...payload });
         if (!result.ok) { setFormError(result.error.message); return; }
         toast.success("Document created.");
-        router.push(`/${locale}/billing/${kind}/${result.data.id}`);
+        router.push(`/${locale}/billing/${kindToSegment(kind)}/${result.data.id}`);
       }
     } catch {
       setFormError(tForm("errors.saveFailed"));
@@ -225,7 +226,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       const result = await deleteBillingDocumentAction(liveDoc.id);
       if (!result.ok) { toast.error(result.error.message); return; }
       toast.success("Document deleted.");
-      router.push(`/${locale}/billing/${kind}`);
+      router.push(`/${locale}/billing/${kindToSegment(kind)}`);
     } finally {
       submittingRef.current = false;
     }
@@ -292,7 +293,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     isEdit && liveDoc?.kind === "devis" && liveDoc.status === "accepted";
 
   const kindLabel = kind === "devis" ? "Devis" : "Facture";
-  const listPath = `/${locale}/billing/${kind}`;
+  const listPath = `/${locale}/billing/${kindToSegment(kind)}`;
 
   // ---------------------------------------------------------------------------
   // Render

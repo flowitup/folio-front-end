@@ -542,6 +542,65 @@
     "group": {
       "title": "Billing"
     },
+    "templates": {
+      "list": {
+        "title": "Templates",
+        "new": "New template",
+        "devisGroup": "Devis templates",
+        "factureGroup": "Facture templates",
+        "empty": {
+          "title": "No templates yet",
+          "description": "Create your first template to speed up doc creation.",
+          "cta": "Create your first template"
+        },
+        "card": {
+          "items": "{n, plural, =0 {no items} =1 {1 item} other {# items}}",
+          "vatRate": "Default VAT {rate}%",
+          "vatRateNone": "No default VAT",
+          "lastUpdated": "Updated {date}"
+        },
+        "actions": {
+          "edit": "Edit",
+          "delete": "Delete",
+          "use": "Use",
+          "deleteConfirmTitle": "Delete template",
+          "deleteConfirmDescription": "Delete \"{name}\"? This cannot be undone.",
+          "deleteConfirm": "Delete",
+          "deleteCancel": "Cancel"
+        }
+      },
+      "form": {
+        "titleCreate": "New template",
+        "titleEdit": "Edit template",
+        "kind": "Kind",
+        "kindDevis": "Devis",
+        "kindFacture": "Facture",
+        "kindImmutableNote": "Kind cannot be changed after creation.",
+        "name": "Template name",
+        "namePlaceholder": "e.g. Standard web project",
+        "defaultVatRate": "Default VAT rate",
+        "vatRateCustom": "Custom…",
+        "notes": "Notes",
+        "notesPlaceholder": "Internal or client-facing notes",
+        "terms": "General terms (CGV)",
+        "termsPlaceholder": "General terms and conditions",
+        "items": "Line items",
+        "actions": {
+          "save": "Save",
+          "saving": "Saving…",
+          "cancel": "Cancel",
+          "delete": "Delete template"
+        },
+        "errors": {
+          "nameRequired": "Template name is required.",
+          "nameTooLong": "Template name must be 120 characters or fewer.",
+          "kindRequired": "Kind is required.",
+          "duplicateName": "A template with this name already exists for this kind.",
+          "saveFailed": "Failed to save template. Please try again.",
+          "deleteFailed": "Failed to delete template. Please try again."
+        }
+      }
+    },
     "devis": {
       "list": {
         "title": "Devis",

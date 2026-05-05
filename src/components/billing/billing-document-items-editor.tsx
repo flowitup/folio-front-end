@@ -51,6 +51,8 @@ interface BillingDocumentItemsEditorProps {
   items: BillingDocumentItem[];
   onChange: (items: BillingDocumentItem[]) => void;
   readOnly?: boolean;
+  /** Set to false for template forms where totals are not meaningful. Default: true. */
+  showTotals?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -61,6 +63,7 @@ export function BillingDocumentItemsEditor({
   items,
   onChange,
   readOnly = false,
+  showTotals = true,
 }: BillingDocumentItemsEditorProps) {
   const uid = useId();
 
@@ -217,12 +220,14 @@ export function BillingDocumentItemsEditor({
         )}
       </div>
 
-      {/* Live totals */}
-      <div className="flex justify-end">
-        <div className="w-full max-w-xs">
-          <BillingTotalsCard totals={totals} />
+      {/* Live totals — hidden for template forms */}
+      {showTotals && (
+        <div className="flex justify-end">
+          <div className="w-full max-w-xs">
+            <BillingTotalsCard totals={totals} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

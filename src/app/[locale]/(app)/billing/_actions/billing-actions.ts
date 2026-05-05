@@ -17,6 +17,8 @@
  */
 
 import {
+  fetchBillingDocuments,
+  fetchBillingDocument,
   createBillingDocument,
   updateBillingDocument,
   deleteBillingDocument,
@@ -25,6 +27,7 @@ import {
   updateBillingDocumentStatus,
   createBillingDocumentFromTemplate,
 } from "@/lib/api/billing/documents";
+import { fetchBillingTemplates, fetchBillingTemplate } from "@/lib/api/billing/templates";
 import {
   createBillingTemplate,
   updateBillingTemplate,
@@ -33,6 +36,7 @@ import {
 import { upsertCompanyProfile } from "@/lib/api/billing/company-profile";
 import type {
   BillingDocument,
+  BillingDocumentKind,
   BillingDocumentTemplate,
   BillingDocumentStatus,
   CompanyProfile,
@@ -164,6 +168,51 @@ export async function createBillingDocumentFromTemplateAction(
 ): Promise<ActionResult<BillingDocument>> {
   try {
     const data = await createBillingDocumentFromTemplate(template_id, payload);
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+export async function listBillingDocumentsAction(
+  kind: BillingDocumentKind,
+  limit = 25
+): Promise<ActionResult<{ items: BillingDocument[]; total: number }>> {
+  try {
+    const data = await fetchBillingDocuments({ kind, limit, offset: 0 });
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+export async function getBillingDocumentAction(
+  id: string
+): Promise<ActionResult<BillingDocument>> {
+  try {
+    const data = await fetchBillingDocument(id);
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+export async function listBillingTemplatesAction(
+  kind?: BillingDocumentKind
+): Promise<ActionResult<BillingDocumentTemplate[]>> {
+  try {
+    const data = await fetchBillingTemplates(kind);
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+export async function getBillingTemplateAction(
+  id: string
+): Promise<ActionResult<BillingDocumentTemplate>> {
+  try {
+    const data = await fetchBillingTemplate(id);
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: classifyBackendError(err) };

@@ -539,6 +539,9 @@
     }
   },
   "billing": {
+    "group": {
+      "title": "Billing"
+    },
     "devis": {
       "list": {
         "title": "Devis",
@@ -548,6 +551,13 @@
           "description": "Create your first quote to get started.",
           "cta": "Create your first devis"
         }
+      },
+      "status": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "expired": "Expired"
       }
     },
     "facture": {
@@ -559,6 +569,13 @@
           "description": "Create your first invoice to get started.",
           "cta": "Create your first facture"
         }
+      },
+      "status": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "paid": "Paid",
+        "overdue": "Overdue",
+        "cancelled": "Cancelled"
       }
     },
     "list": {
@@ -574,6 +591,97 @@
         "totalTtc": "Total TTC",
         "actions": "Actions"
       }
+    },
+    "form": {
+      "modes": {
+        "blank": "Blank",
+        "fromExisting": "From existing",
+        "fromTemplate": "From template"
+      },
+      "recipient": {
+        "section": "Recipient",
+        "name": "Name",
+        "namePlaceholder": "Client or company name",
+        "address": "Address",
+        "addressPlaceholder": "Street, city, postal code",
+        "email": "Email",
+        "emailPlaceholder": "client@example.com",
+        "siret": "SIRET",
+        "siretPlaceholder": "123 456 789 00012",
+        "addExtraFields": "+ Add email / SIRET"
+      },
+      "details": {
+        "section": "Details",
+        "documentNumber": "Document number",
+        "issueDate": "Issue date",
+        "validityUntil": "Valid until",
+        "paymentDue": "Payment due",
+        "paymentTerms": "Payment terms",
+        "paymentTermsPlaceholder": "e.g. Net 30, virement bancaire"
+      },
+      "items": {
+        "section": "Line items",
+        "description": "Description",
+        "descriptionPlaceholder": "Item description",
+        "quantity": "Qty",
+        "unitPrice": "Unit price HT",
+        "vatRate": "VAT %",
+        "totalHt": "Total HT",
+        "addLine": "Add line",
+        "noItems": "No line items yet. Click \"Add line\" to start.",
+        "removeLine": "Remove line"
+      },
+      "totals": {
+        "ht": "Total HT",
+        "tva": "TVA {rate}%",
+        "ttc": "Total TTC"
+      },
+      "notes": {
+        "section": "Notes & terms",
+        "notes": "Notes",
+        "notesPlaceholder": "Internal or client-facing notes",
+        "terms": "General terms (CGV)",
+        "termsPlaceholder": "General terms and conditions",
+        "signatureBlock": "Signature block",
+        "signatureBlockPlaceholder": "Signature / stamp area text"
+      },
+      "actions": {
+        "save": "Save changes",
+        "create": "Create",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "downloadPdf": "Download PDF",
+        "convertToFacture": "Convert to Facture",
+        "changeStatus": "Change status",
+        "cloneSelected": "Clone selected",
+        "createFromTemplate": "Create from template",
+        "sendStatus": "Mark as Sent"
+      },
+      "errors": {
+        "recipientRequired": "Recipient name is required.",
+        "atLeastOneItem": "At least one line item is required.",
+        "itemDescriptionRequired": "All items must have a description.",
+        "itemQuantityPositive": "Item quantity must be greater than 0.",
+        "itemUnitPricePositive": "Item unit price cannot be negative.",
+        "itemVatRatePositive": "Item VAT rate cannot be negative.",
+        "saveFailed": "An unexpected error occurred. Please try again.",
+        "pdfFailed": "Failed to download PDF. Please try again.",
+        "convertFailed": "Failed to convert devis to facture.",
+        "alreadyConverted": "This devis has already been converted to a facture.",
+        "invalidTransition": "This status transition is not allowed. The document may have been updated by another session.",
+        "companyProfileMissing": "Company profile is required before creating billing documents."
+      },
+      "missingProfile": {
+        "title": "Company profile required",
+        "description": "Before creating a {kind}, please complete your company profile. It provides the issuer details (legal name, address, SIRET, TVA number) that are printed on every document.",
+        "cta": "Go to Settings → Company Profile"
+      }
+    },
+    "errors": {
+      "invalidTransition": "Invalid status transition.",
+      "numberCollision": "A document with this number already exists.",
+      "companyProfileMissing": "Company profile is required.",
+      "generic": "An unexpected error occurred."
     }
   },
   "members": {

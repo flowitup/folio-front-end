@@ -82,13 +82,15 @@ export default function ProjectsPage() {
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [deleteProjectState, setDeleteProjectState] = useState<Project | null>(null);
 
+  // Mirror BE rule in app/api/v1/projects/decorators.py::can_mutate_project:
+  //   admin (project:create) OR owner. Wildcards expand via the BE's
+  //   _has_permission helper; we mirror them here for the same UX gating.
   const canMutateProject = (project: Project) =>
     !!user &&
     (project.owner_id === user.id ||
-      user.permissions?.includes("project:update") ||
-      user.permissions?.includes("project:delete") ||
-      user.permissions?.includes("project:*") ||
-      user.permissions?.includes("*:*"));
+      user.permissions.includes("project:create") ||
+      user.permissions.includes("project:*") ||
+      user.permissions.includes("*:*"));
 
   // Open dialog when external triggers (Topbar/Sidebar) navigate with ?new=1.
   useEffect(() => {
@@ -232,6 +234,7 @@ export default function ProjectsPage() {
           {filteredProjects.map((project, idx) => {
             const isFeatured = idx === 0;
             const isExpanded = expandedProjectId === project.id;
+            const canMutate = canMutateProject(project);
             const users = projectUsers[project.id] || [];
             const isLoadingThisProject = loadingUsers === project.id;
             const cover = (project as { cover?: string }).cover ?? coverFor(project.id);
@@ -312,20 +315,20 @@ export default function ProjectsPage() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          {canMutateProject(project) && (
+                          {canMutate && (
                             <DropdownMenuItem onSelect={() => setEditProject(project)}>
                               <Pencil size={14} /> {t("editProject")}
                             </DropdownMenuItem>
                           )}
-                          {canMutateProject(project) && (
+                          {canMutate && (
                             <DropdownMenuItem
+                              variant="destructive"
                               onSelect={() => setDeleteProjectState(project)}
-                              className="text-destructive focus:text-destructive"
                             >
                               <Trash2 size={14} /> {t("deleteProject")}
                             </DropdownMenuItem>
                           )}
-                          {canMutateProject(project) && <DropdownMenuSeparator />}
+                          {canMutate && <DropdownMenuSeparator />}
                           <DropdownMenuItem onSelect={() => toggleExpand(project.id)}>
                             {expandedProjectId === project.id ? t("hideTeam") : t("showTeam")}
                           </DropdownMenuItem>
@@ -526,20 +529,16 @@ export default function ProjectsPage() {
         project={editProject}
         open={!!editProject}
         onOpenChange={(o) => !o && setEditProject(null)}
-        onUpdated={() => {
-          refetch();
-        }}
+        onUpdated={refetch}
       />
 
       <DeleteProjectDialog
         project={deleteProjectState}
         open={!!deleteProjectState}
         onOpenChange={(o) => !o && setDeleteProjectState(null)}
-        onDeleted={() => {
-          // ProjectContext.loadProjects auto-clears selectedProjectId when
-          // the previously-selected id is no longer in the list.
-          refetch();
-        }}
+        // ProjectContext.loadProjects auto-clears selectedProjectId when the
+        // previously-selected id is no longer in the list, so we just refetch.
+        onDeleted={refetch}
       />
 
       {addMemberProject && (

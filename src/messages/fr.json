@@ -179,8 +179,8 @@
     "editProjectNameRequired": "Le nom du projet est requis",
     "deleteProjectTitle": "Supprimer le projet ?",
     "deleteProjectIrreversible": "Cette action est irréversible.",
-    "deleteProjectCascade": "Tous les ouvriers, saisies de main-d'œuvre, tâches, factures, notes, invitations et appartenances au projet seront définitivement supprimés.",
-    "deleteProjectBillingNote": "Les documents de facturation (devis, factures) seront dissociés de ce projet mais conservés.",
+    "deleteProjectCascade": "Tous les ouvriers, saisies de main-d'œuvre, tâches, dépenses, notes, invitations et appartenances au projet seront définitivement supprimés.",
+    "deleteProjectBillingNote": "Les devis et factures (documents de facturation) liés à ce projet seront dissociés mais conservés.",
     "deleteProjectTypeToConfirm": "Pour confirmer, tapez le nom du projet ci-dessous :",
     "deleteProjectTypePlaceholder": "Tapez le nom du projet pour confirmer",
     "deleteProjectError": "Impossible de supprimer le projet. Veuillez réessayer."

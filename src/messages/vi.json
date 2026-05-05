@@ -179,8 +179,8 @@
     "editProjectNameRequired": "Tên dự án là bắt buộc",
     "deleteProjectTitle": "Xóa dự án?",
     "deleteProjectIrreversible": "Hành động này không thể hoàn tác.",
-    "deleteProjectCascade": "Toàn bộ thợ, chấm công, tác vụ, hóa đơn, ghi chú, lời mời và quyền truy cập dự án sẽ bị xóa vĩnh viễn.",
-    "deleteProjectBillingNote": "Tài liệu thanh toán (báo giá, hóa đơn) sẽ tách khỏi dự án này nhưng được giữ lại.",
+    "deleteProjectCascade": "Toàn bộ thợ, chấm công, tác vụ, chi phí, ghi chú, lời mời và quyền truy cập dự án sẽ bị xóa vĩnh viễn.",
+    "deleteProjectBillingNote": "Báo giá và hóa đơn (tài liệu thanh toán) liên kết với dự án này sẽ được tách ra nhưng vẫn giữ lại.",
     "deleteProjectTypeToConfirm": "Để xác nhận, hãy nhập tên dự án bên dưới:",
     "deleteProjectTypePlaceholder": "Nhập tên dự án để xác nhận",
     "deleteProjectError": "Không thể xóa dự án. Vui lòng thử lại."

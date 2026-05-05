@@ -179,8 +179,8 @@
     "editProjectNameRequired": "Project name is required",
     "deleteProjectTitle": "Delete project?",
     "deleteProjectIrreversible": "This action cannot be undone.",
-    "deleteProjectCascade": "All workers, labor entries, tasks, invoices, notes, invitations, and project memberships will be permanently deleted.",
-    "deleteProjectBillingNote": "Billing documents (quotes, invoices) will be unlinked from this project but kept.",
+    "deleteProjectCascade": "All workers, labor entries, tasks, expenses, notes, invitations, and project memberships will be permanently deleted.",
+    "deleteProjectBillingNote": "Quotes and invoices (billing documents) linked to this project will be unlinked but kept.",
     "deleteProjectTypeToConfirm": "To confirm, type the project name below:",
     "deleteProjectTypePlaceholder": "Type project name to confirm",
     "deleteProjectError": "Could not delete the project. Please try again."

@@ -20,7 +20,9 @@ interface DeleteProjectDialogProps {
   project: Project | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDeleted?: (deletedId: string) => void;
+  // Awaited before close so the caller's refetch (or local-state update)
+  // surfaces failures while the dialog is still up.
+  onDeleted?: (deletedId: string) => void | Promise<void>;
 }
 
 export function DeleteProjectDialog({
@@ -51,7 +53,9 @@ export function DeleteProjectDialog({
     setError(null);
     try {
       await deleteProject(project.id);
-      onDeleted?.(project.id);
+      // Wait for caller-side reconciliation (e.g. refetch) BEFORE we close,
+      // so a refetch failure surfaces while the dialog is still up.
+      await onDeleted?.(project.id);
       onOpenChange(false);
     } catch {
       setError(t("deleteProjectError"));

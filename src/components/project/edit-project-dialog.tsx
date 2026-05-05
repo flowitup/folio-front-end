@@ -19,7 +19,9 @@ interface EditProjectDialogProps {
   project: Project | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdated?: (project: Project) => void;
+  // Awaited before close so the caller's refetch (or local-state update)
+  // has a chance to fail loudly rather than silently after the dialog goes.
+  onUpdated?: (project: Project) => void | Promise<void>;
 }
 
 export function EditProjectDialog({
@@ -46,6 +48,8 @@ export function EditProjectDialog({
     }
   }, [project?.id, open]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  if (!project) return null;
+
   const handleClose = (isOpen: boolean) => {
     if (!isOpen && !isSubmitting) {
       onOpenChange(false);
@@ -56,8 +60,6 @@ export function EditProjectDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!project) return;
 
     const trimmedName = name.trim();
     const trimmedAddress = address.trim();
@@ -82,7 +84,9 @@ export function EditProjectDialog({
     setError(null);
     try {
       const updated = await updateProject(project.id, payload);
-      onUpdated?.(updated);
+      // Wait for caller-side reconciliation (e.g. refetch) BEFORE we close,
+      // so a refetch failure surfaces while the dialog is still up.
+      await onUpdated?.(updated);
       onOpenChange(false);
     } catch {
       setError(t("editProjectError"));

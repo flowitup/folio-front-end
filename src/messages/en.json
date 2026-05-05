@@ -58,8 +58,8 @@
     "todayLocation": "{place} · {workers} workers on site",
     "billing": {
       "title": "Billing",
-      "devis": "Devis",
-      "factures": "Factures",
+      "devis": "Quotes",
+      "factures": "Invoices",
       "templates": "Templates"
     }
   },
@@ -200,8 +200,8 @@
     },
     "companyProfile": {
       "title": "Company profile",
-      "description": "Issuer information printed on every devis and facture.",
-      "explainer": "Used as issuer info on every devis & facture. Snapshotted at document creation.",
+      "description": "Issuer information printed on every quote and invoice.",
+      "explainer": "Used as issuer info on every quote & invoice. Snapshotted at document creation.",
       "fields": {
         "legalName": "Legal name",
         "legalNamePlaceholder": "e.g. Maison Lavandou SAS",
@@ -220,7 +220,7 @@
         "logoUrlHint": "A publicly accessible image URL. Displayed on PDF headers.",
         "defaultPaymentTerms": "Default payment terms",
         "defaultPaymentTermsPlaceholder": "e.g. Payment due 30 days from invoice date. Virement bancaire.",
-        "defaultPaymentTermsHint": "Pre-filled on new factures. Editable per document.",
+        "defaultPaymentTermsHint": "Pre-filled on new invoices. Editable per document.",
         "prefixOverride": "Document number prefix",
         "prefixOverridePlaceholder": "e.g. FLW (up to 8 chars)",
         "prefixOverrideHint": "Optional. Uppercase letters and digits only (A-Z, 0-9). Max 8 characters. Example: \"FLW\" → FLW-DEV-2026-001."
@@ -595,8 +595,8 @@
       "list": {
         "title": "Templates",
         "new": "New template",
-        "devisGroup": "Devis templates",
-        "factureGroup": "Facture templates",
+        "devisGroup": "Quote templates",
+        "factureGroup": "Invoice templates",
         "empty": {
           "title": "No templates yet",
           "description": "Create your first template to speed up doc creation.",
@@ -622,8 +622,8 @@
         "titleCreate": "New template",
         "titleEdit": "Edit template",
         "kind": "Kind",
-        "kindDevis": "Devis",
-        "kindFacture": "Facture",
+        "kindDevis": "Quote",
+        "kindFacture": "Invoice",
         "kindImmutableNote": "Kind cannot be changed after creation.",
         "name": "Template name",
         "namePlaceholder": "e.g. Standard web project",
@@ -652,12 +652,12 @@
     },
     "devis": {
       "list": {
-        "title": "Devis",
-        "new": "New devis",
+        "title": "Quote",
+        "new": "New quote",
         "empty": {
-          "title": "No devis yet",
+          "title": "No quotes yet",
           "description": "Create your first quote to get started.",
-          "cta": "Create your first devis"
+          "cta": "Create your first quote"
         }
       },
       "status": {
@@ -678,12 +678,12 @@
     },
     "facture": {
       "list": {
-        "title": "Factures",
-        "new": "New facture",
+        "title": "Invoice",
+        "new": "New invoice",
         "empty": {
-          "title": "No factures yet",
+          "title": "No invoices yet",
           "description": "Create your first invoice to get started.",
-          "cta": "Create your first facture"
+          "cta": "Create your first invoice"
         }
       },
       "status": {
@@ -774,7 +774,7 @@
         "cancel": "Cancel",
         "delete": "Delete",
         "downloadPdf": "Download PDF",
-        "convertToFacture": "Convert to Facture",
+        "convertToFacture": "Convert to Invoice",
         "changeStatus": "Change status",
         "cloneSelected": "Clone selected",
         "createFromTemplate": "Create from template",
@@ -790,8 +790,8 @@
         "itemVatRatePositive": "Item VAT rate cannot be negative.",
         "saveFailed": "An unexpected error occurred. Please try again.",
         "pdfFailed": "Failed to download PDF. Please try again.",
-        "convertFailed": "Failed to convert devis to facture.",
-        "alreadyConverted": "This devis has already been converted to a facture.",
+        "convertFailed": "Failed to convert quote to invoice.",
+        "alreadyConverted": "This quote has already been converted to an invoice.",
         "invalidTransition": "This status transition is not allowed. The document may have been updated by another session.",
         "companyProfileMissing": "Company profile is required before creating billing documents."
       },

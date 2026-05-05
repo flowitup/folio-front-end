@@ -57,7 +57,7 @@
     "todayConditions": "{temp}° / {weather}",
     "todayLocation": "{place} · {workers} công nhân tại công trường",
     "billing": {
-      "title": "Thanh toán",
+      "title": "Báo giá & Hóa đơn",
       "devis": "Báo giá",
       "factures": "Hóa đơn",
       "templates": "Mẫu tài liệu"
@@ -589,7 +589,7 @@
   },
   "billing": {
     "group": {
-      "title": "Hóa đơn khách"
+      "title": "Báo giá & Hóa đơn"
     },
     "templates": {
       "list": {

@@ -192,6 +192,49 @@
       "description": "Assign roles to existing users across one or more projects.",
       "permissionDenied": "You don't have authorization to change roles of users."
     },
+    "companyProfile": {
+      "title": "Company profile",
+      "description": "Issuer information printed on every devis and facture.",
+      "explainer": "Used as issuer info on every devis & facture. Snapshotted at document creation.",
+      "fields": {
+        "legalName": "Legal name",
+        "legalNamePlaceholder": "e.g. Maison Lavandou SAS",
+        "address": "Address",
+        "addressPlaceholder": "Street, city, postal code, country",
+        "siret": "SIRET",
+        "siretPlaceholder": "e.g. 12345678900012",
+        "tvaNumber": "TVA number",
+        "tvaNumberPlaceholder": "e.g. FR12345678901",
+        "iban": "IBAN",
+        "ibanPlaceholder": "e.g. FR76 3000 6000 0112 3456 7890 189",
+        "bic": "BIC / SWIFT",
+        "bicPlaceholder": "e.g. BNPAFRPPXXX",
+        "logoUrl": "Logo URL",
+        "logoUrlPlaceholder": "https://example.com/logo.png",
+        "logoUrlHint": "A publicly accessible image URL. Displayed on PDF headers.",
+        "defaultPaymentTerms": "Default payment terms",
+        "defaultPaymentTermsPlaceholder": "e.g. Payment due 30 days from invoice date. Virement bancaire.",
+        "defaultPaymentTermsHint": "Pre-filled on new factures. Editable per document.",
+        "prefixOverride": "Document number prefix",
+        "prefixOverridePlaceholder": "e.g. FLW (up to 8 chars)",
+        "prefixOverrideHint": "Optional. Uppercase letters and digits only (A-Z, 0-9). Max 8 characters. Example: \"FLW\" → FLW-DEV-2026-001."
+      },
+      "actions": {
+        "save": "Save",
+        "saving": "Saving…"
+      },
+      "errors": {
+        "legalNameRequired": "Legal name is required.",
+        "legalNameTooLong": "Legal name must be 255 characters or fewer.",
+        "addressRequired": "Address is required.",
+        "prefixTooLong": "Prefix must be 8 characters or fewer.",
+        "prefixInvalidChars": "Prefix must contain only uppercase ASCII letters and digits (A-Z, 0-9).",
+        "generic": "An unexpected error occurred. Please try again."
+      },
+      "toast": {
+        "saved": "Company profile saved."
+      }
+    },
     "about": "About",
     "version": "Version"
   },

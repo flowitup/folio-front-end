@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth/session";
 import { listRoles } from "@/lib/api/roles";
 import { listProjects } from "@/lib/api/projects-server";
+import { fetchCompanyProfile } from "@/lib/api/billing/company-profile";
 import { SettingsClient } from "./settings-client";
 
 export default async function SettingsPage() {
@@ -12,12 +13,11 @@ export default async function SettingsPage() {
   const session = await getSession();
   const isSuperadmin = session?.user.permissions.includes("*:*") ?? false;
 
-  const [roles, projects] = isSuperadmin
-    ? await Promise.all([
-        listRoles().catch(() => []),
-        listProjects().catch(() => []),
-      ])
-    : [[], []];
+  const [roles, projects, companyProfile] = await Promise.all([
+    isSuperadmin ? listRoles().catch(() => []) : Promise.resolve([]),
+    isSuperadmin ? listProjects().catch(() => []) : Promise.resolve([]),
+    fetchCompanyProfile().catch(() => null),
+  ]);
 
-  return <SettingsClient roles={roles} projects={projects} />;
+  return <SettingsClient roles={roles} projects={projects} companyProfile={companyProfile} />;
 }

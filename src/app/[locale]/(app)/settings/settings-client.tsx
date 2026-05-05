@@ -7,8 +7,10 @@ import { Check, Globe, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { locales, localeNames, type Locale } from "@/i18n/config";
 import { UsersSection } from "./users/users-section";
+import { CompanyProfileSection } from "@/components/billing/company-profile-section";
 import type { Role } from "@/lib/api/roles";
 import type { ProjectSummary } from "@/lib/api/projects-server";
+import type { CompanyProfile } from "@/types/billing";
 import pkg from "../../../../../package.json";
 
 const SECTION_KEYS = [
@@ -16,6 +18,7 @@ const SECTION_KEYS = [
   "project",
   "team",
   "billing",
+  "company-profile",
   "notifications",
   "preferences",
   "users",
@@ -38,12 +41,27 @@ const LOCALE_TAGLINES: Record<Locale, string> = {
 interface Props {
   roles: Role[];
   projects: ProjectSummary[];
+  companyProfile: CompanyProfile | null;
 }
 
-export function SettingsClient({ roles, projects }: Props) {
+/**
+ * Derive the initial active tab from the URL hash (if valid).
+ * Using a lazy initializer avoids the cascading setState-in-effect pattern.
+ * Falls back to "profile" when no hash or hash doesn't match a known section.
+ */
+function initialActiveFromHash(): SectionKey {
+  if (typeof window === "undefined") return "profile";
+  const hash = window.location.hash.replace("#", "");
+  return (SECTION_KEYS as readonly string[]).includes(hash)
+    ? (hash as SectionKey)
+    : "profile";
+}
+
+export function SettingsClient({ roles, projects, companyProfile }: Props) {
   const t = useTranslations("settings");
   const { user } = useAuth();
-  const [active, setActive] = useState<SectionKey>("profile");
+  // Lazy initializer reads window.location.hash once at mount — no effect needed.
+  const [active, setActive] = useState<SectionKey>(initialActiveFromHash);
   const currentLocale = useLocale() as Locale;
   const intlRouter = useRouter();
   const intlPathname = usePathname();
@@ -75,7 +93,11 @@ export function SettingsClient({ roles, projects }: Props) {
               style={{ textAlign: "left" }}
             >
               <span className="font-medium">
-                {key === "users" ? t("users.title") : t(key)}
+                {key === "users"
+                  ? t("users.title")
+                  : key === "company-profile"
+                    ? t("companyProfile.title")
+                    : t(key)}
               </span>
             </button>
           ))}
@@ -239,6 +261,10 @@ export function SettingsClient({ roles, projects }: Props) {
           </section>
         )}
 
+        {active === "company-profile" && (
+          <CompanyProfileSection initialProfile={companyProfile} />
+        )}
+
         {active === "about" && (
           <section className="folio-card p-7">
             <h3 className="font-display text-[22px] font-medium tracking-tight">
@@ -258,6 +284,7 @@ export function SettingsClient({ roles, projects }: Props) {
           active !== "project" &&
           active !== "preferences" &&
           active !== "users" &&
+          active !== "company-profile" &&
           active !== "about" && (
             <section className="folio-card p-12 text-center">
               <p className="font-display text-[20px] font-medium tracking-tight">{t(active)}</p>

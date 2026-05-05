@@ -55,7 +55,13 @@
   "sidebar": {
     "todayOnSite": "Hôm nay tại công trường",
     "todayConditions": "{temp}° / {weather}",
-    "todayLocation": "{place} · {workers} công nhân tại công trường"
+    "todayLocation": "{place} · {workers} công nhân tại công trường",
+    "billing": {
+      "title": "Thanh toán",
+      "devis": "Báo giá",
+      "factures": "Hóa đơn",
+      "templates": "Mẫu tài liệu"
+    }
   },
   "dashboard": {
     "title": "Tổng quan",

@@ -55,7 +55,13 @@
   "sidebar": {
     "todayOnSite": "Aujourd'hui sur site",
     "todayConditions": "{temp}° / {weather}",
-    "todayLocation": "{place} · {workers} ouvriers sur site"
+    "todayLocation": "{place} · {workers} ouvriers sur site",
+    "billing": {
+      "title": "Facturation",
+      "devis": "Devis",
+      "factures": "Factures",
+      "templates": "Modèles"
+    }
   },
   "dashboard": {
     "title": "Aperçu",

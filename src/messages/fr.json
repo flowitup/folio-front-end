@@ -10,7 +10,7 @@
     "dashboard": "Aperçu",
     "projects": "Projets",
     "labor": "Main-d'œuvre",
-    "invoices": "Factures",
+    "invoices": "Dépenses",
     "planning": "Planification",
     "notes": "Notes",
     "members": "Membres",
@@ -45,7 +45,7 @@
     "planningSubtitle": "Tâches de l'équipe — glissez une carte sur le tableau pour la déplacer.",
     "laborTitle": "Main-d'œuvre",
     "laborSubtitle": "Qui s'est présenté, combien d'heures, à quel coût.",
-    "invoicesTitle": "Factures",
+    "invoicesTitle": "Dépenses",
     "invoicesSubtitle": "L'argent qui entre et sort du chantier.",
     "notesTitle": "Notes",
     "notesSubtitle": "À retenir — les rappels sont envoyés à 09h00 UTC",
@@ -249,8 +249,8 @@
     "accessDenied": "Vous n'avez pas la permission d'accéder à cette page."
   },
   "invoices": {
-    "title": "Factures",
-    "newInvoice": "Nouvelle facture",
+    "title": "Dépenses",
+    "newInvoice": "Nouvelle dépense",
     "invoiceNumber": "Facture #",
     "type": "Type",
     "types": {
@@ -277,8 +277,8 @@
     "save": "Enregistrer",
     "saving": "Enregistrement...",
     "delete": "Supprimer",
-    "deleteConfirm": "Supprimer cette facture ? Cette action est irréversible.",
-    "noInvoices": "Aucune facture pour le moment",
+    "deleteConfirm": "Supprimer cette dépense ? Cette action est irréversible.",
+    "noInvoices": "Aucune dépense pour le moment",
     "errorRecipientRequired": "Le nom du destinataire est requis",
     "errorAtLeastOneItem": "Au moins une ligne est requise",
     "errorDescriptionRequired": "La description de l'article est requise",
@@ -296,15 +296,15 @@
     "deleteFailed": "Échec de la suppression",
     "attachmentDeleteConfirm": "Supprimer cette pièce jointe ? Cette action est irréversible.",
     "openAttachment": "Ouvrir",
-    "totalInvoiced": "Total facturé",
+    "totalInvoiced": "Total dépenses",
     "paid": "Payées",
     "pending": "En attente",
     "overdue": "En retard",
-    "invoiceCount": "{n, plural, =0 {aucune facture} =1 {1 facture} other {# factures}}",
+    "invoiceCount": "{n, plural, =0 {aucune dépense} =1 {1 dépense} other {# dépenses}}",
     "awaiting": "{n} en attente",
     "export": {
       "trigger": "Exporter une période",
-      "dialogTitle": "Exporter les factures",
+      "dialogTitle": "Exporter les dépenses",
       "from": "Mois de début",
       "to": "Mois de fin",
       "typeFilter": "Type",
@@ -322,7 +322,7 @@
       "summaryLine": "{count, plural, =1 {1 mois sélectionné} other {# mois sélectionnés}}",
       "errorRangeInvalid": "« De » doit être antérieur ou égal à « À »",
       "errorRangeTooLarge": "La période ne peut pas dépasser 24 mois",
-      "errorGeneric": "Échec de l'export des factures"
+      "errorGeneric": "Échec de l'export des dépenses"
     }
   },
   "planning": {

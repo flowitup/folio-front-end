@@ -55,7 +55,13 @@
   "sidebar": {
     "todayOnSite": "Hôm nay tại công trường",
     "todayConditions": "{temp}° / {weather}",
-    "todayLocation": "{place} · {workers} công nhân tại công trường"
+    "todayLocation": "{place} · {workers} công nhân tại công trường",
+    "billing": {
+      "title": "Thanh toán",
+      "devis": "Báo giá",
+      "factures": "Hóa đơn",
+      "templates": "Mẫu tài liệu"
+    }
   },
   "dashboard": {
     "title": "Tổng quan",
@@ -191,6 +197,49 @@
       "title": "Người dùng & vai trò",
       "description": "Gán vai trò cho người dùng hiện có trên một hoặc nhiều dự án.",
       "permissionDenied": "Bạn không có quyền thay đổi vai trò của người dùng."
+    },
+    "companyProfile": {
+      "title": "Hồ sơ công ty",
+      "description": "Thông tin công ty phát hành in trên mỗi devis và facture.",
+      "explainer": "Dùng làm thông tin phát hành trên mỗi báo giá & hóa đơn. Lưu tại thời điểm tạo tài liệu.",
+      "fields": {
+        "legalName": "Tên pháp lý",
+        "legalNamePlaceholder": "vd. Maison Lavandou SAS",
+        "address": "Địa chỉ",
+        "addressPlaceholder": "Đường, thành phố, mã bưu chính, quốc gia",
+        "siret": "SIRET",
+        "siretPlaceholder": "vd. 12345678900012",
+        "tvaNumber": "Số TVA",
+        "tvaNumberPlaceholder": "vd. FR12345678901",
+        "iban": "IBAN",
+        "ibanPlaceholder": "vd. FR76 3000 6000 0112 3456 7890 189",
+        "bic": "BIC / SWIFT",
+        "bicPlaceholder": "vd. BNPAFRPPXXX",
+        "logoUrl": "URL logo",
+        "logoUrlPlaceholder": "https://example.com/logo.png",
+        "logoUrlHint": "URL hình ảnh công khai. Hiển thị trong tiêu đề PDF.",
+        "defaultPaymentTerms": "Điều khoản thanh toán mặc định",
+        "defaultPaymentTermsPlaceholder": "vd. Thanh toán trong 30 ngày kể từ ngày xuất hóa đơn. Chuyển khoản.",
+        "defaultPaymentTermsHint": "Điền sẵn cho hóa đơn mới. Có thể chỉnh sửa từng tài liệu.",
+        "prefixOverride": "Tiền tố số tài liệu",
+        "prefixOverridePlaceholder": "vd. FLW (tối đa 8 ký tự)",
+        "prefixOverrideHint": "Tùy chọn. Chỉ dùng chữ hoa ASCII và chữ số (A-Z, 0-9). Tối đa 8 ký tự. Ví dụ: \"FLW\" → FLW-DEV-2026-001."
+      },
+      "actions": {
+        "save": "Lưu",
+        "saving": "Đang lưu…"
+      },
+      "errors": {
+        "legalNameRequired": "Tên pháp lý là bắt buộc.",
+        "legalNameTooLong": "Tên pháp lý không được vượt quá 255 ký tự.",
+        "addressRequired": "Địa chỉ là bắt buộc.",
+        "prefixTooLong": "Tiền tố không được vượt quá 8 ký tự.",
+        "prefixInvalidChars": "Tiền tố chỉ được chứa chữ hoa ASCII và chữ số (A-Z, 0-9).",
+        "generic": "Đã xảy ra lỗi không mong đợi. Vui lòng thử lại."
+      },
+      "toast": {
+        "saved": "Đã lưu hồ sơ công ty."
+      }
     },
     "about": "Giới thiệu",
     "version": "Phiên bản"
@@ -536,6 +585,227 @@
     },
     "skeleton": {
       "loading": "Đang tải nhắc nhở..."
+    }
+  },
+  "billing": {
+    "group": {
+      "title": "Hóa đơn khách"
+    },
+    "templates": {
+      "list": {
+        "title": "Mẫu tài liệu",
+        "new": "Mẫu mới",
+        "devisGroup": "Mẫu báo giá",
+        "factureGroup": "Mẫu hóa đơn",
+        "empty": {
+          "title": "Chưa có mẫu nào",
+          "description": "Tạo mẫu đầu tiên để tăng tốc quá trình tạo tài liệu.",
+          "cta": "Tạo mẫu đầu tiên"
+        },
+        "card": {
+          "items": "{n, plural, =0 {không có mục} =1 {1 mục} other {# mục}}",
+          "vatRate": "VAT mặc định {rate}%",
+          "vatRateNone": "Không có VAT mặc định",
+          "lastUpdated": "Cập nhật {date}"
+        },
+        "actions": {
+          "edit": "Sửa",
+          "delete": "Xóa",
+          "use": "Dùng mẫu này",
+          "deleteConfirmTitle": "Xóa mẫu",
+          "deleteConfirmDescription": "Xóa \"{name}\"? Không thể hoàn tác.",
+          "deleteConfirm": "Xóa",
+          "deleteCancel": "Hủy"
+        }
+      },
+      "form": {
+        "titleCreate": "Mẫu mới",
+        "titleEdit": "Chỉnh sửa mẫu",
+        "kind": "Loại",
+        "kindDevis": "Báo giá",
+        "kindFacture": "Hóa đơn",
+        "kindImmutableNote": "Không thể thay đổi loại sau khi tạo.",
+        "name": "Tên mẫu",
+        "namePlaceholder": "vd. Dự án web tiêu chuẩn",
+        "defaultVatRate": "Tỉ lệ VAT mặc định",
+        "vatRateCustom": "Tùy chỉnh…",
+        "notes": "Ghi chú",
+        "notesPlaceholder": "Ghi chú nội bộ hoặc cho khách hàng",
+        "terms": "Điều khoản chung",
+        "termsPlaceholder": "Điều khoản và điều kiện chung",
+        "items": "Danh mục dịch vụ",
+        "actions": {
+          "save": "Lưu",
+          "saving": "Đang lưu…",
+          "cancel": "Hủy",
+          "delete": "Xóa mẫu"
+        },
+        "errors": {
+          "nameRequired": "Tên mẫu là bắt buộc.",
+          "nameTooLong": "Tên mẫu không được vượt quá 120 ký tự.",
+          "kindRequired": "Loại là bắt buộc.",
+          "duplicateName": "Đã có mẫu trùng tên cho loại này.",
+          "saveFailed": "Lưu mẫu thất bại. Vui lòng thử lại.",
+          "deleteFailed": "Xóa mẫu thất bại. Vui lòng thử lại."
+        }
+      }
+    },
+    "devis": {
+      "list": {
+        "title": "Báo giá",
+        "new": "Báo giá mới",
+        "empty": {
+          "title": "Chưa có báo giá nào",
+          "description": "Tạo báo giá đầu tiên để bắt đầu.",
+          "cta": "Tạo báo giá đầu tiên"
+        }
+      },
+      "status": {
+        "draft": "Nháp",
+        "sent": "Đã gửi",
+        "accepted": "Đã chấp nhận",
+        "rejected": "Đã từ chối",
+        "expired": "Hết hạn"
+      },
+      "transitions": {
+        "markAsSent": "Đánh dấu đã gửi",
+        "markAsAccepted": "Đánh dấu đã chấp nhận",
+        "markAsRejected": "Đánh dấu đã từ chối",
+        "markAsExpired": "Đánh dấu hết hạn",
+        "revertToSent": "Hoàn về Đã gửi",
+        "reopen": "Mở lại (Nháp)"
+      }
+    },
+    "facture": {
+      "list": {
+        "title": "Hóa đơn",
+        "new": "Hóa đơn mới",
+        "empty": {
+          "title": "Chưa có hóa đơn nào",
+          "description": "Tạo hóa đơn đầu tiên để bắt đầu.",
+          "cta": "Tạo hóa đơn đầu tiên"
+        }
+      },
+      "status": {
+        "draft": "Nháp",
+        "sent": "Đã gửi",
+        "paid": "Đã thanh toán",
+        "overdue": "Quá hạn",
+        "cancelled": "Đã hủy"
+      },
+      "transitions": {
+        "markAsSent": "Đánh dấu đã gửi",
+        "markAsPaid": "Đánh dấu đã thanh toán",
+        "markAsOverdue": "Đánh dấu quá hạn",
+        "markAsCancelled": "Đánh dấu đã hủy",
+        "markAsCancelledRefund": "Đánh dấu đã hủy (hoàn tiền)"
+      }
+    },
+    "list": {
+      "searchPlaceholder": "Tìm theo số hoặc khách hàng…",
+      "allStatuses": "Tất cả trạng thái",
+      "noResults": "Không có tài liệu nào phù hợp.",
+      "loadMore": "Tải thêm",
+      "columns": {
+        "number": "Số",
+        "date": "Ngày",
+        "recipient": "Khách hàng",
+        "status": "Trạng thái",
+        "totalTtc": "Tổng (gồm VAT)",
+        "actions": "Thao tác"
+      }
+    },
+    "form": {
+      "modes": {
+        "blank": "Trống",
+        "fromExisting": "Từ tài liệu có sẵn",
+        "fromTemplate": "Từ mẫu"
+      },
+      "recipient": {
+        "section": "Khách hàng",
+        "name": "Tên",
+        "namePlaceholder": "Tên khách hàng hoặc công ty",
+        "address": "Địa chỉ",
+        "addressPlaceholder": "Đường, thành phố, mã bưu chính",
+        "email": "Email",
+        "emailPlaceholder": "khachhang@example.com",
+        "siret": "SIRET",
+        "siretPlaceholder": "123 456 789 00012",
+        "addExtraFields": "+ Thêm email / SIRET"
+      },
+      "details": {
+        "section": "Chi tiết",
+        "documentNumber": "Số tài liệu",
+        "issueDate": "Ngày phát hành",
+        "validityUntil": "Có hiệu lực đến",
+        "paymentDue": "Hạn thanh toán",
+        "paymentTerms": "Điều khoản thanh toán",
+        "paymentTermsPlaceholder": "vd. Thanh toán trong 30 ngày, chuyển khoản"
+      },
+      "items": {
+        "section": "Danh mục dịch vụ",
+        "description": "Mô tả",
+        "descriptionPlaceholder": "Mô tả dịch vụ",
+        "quantity": "Số lượng",
+        "unitPrice": "Đơn giá (chưa VAT)",
+        "vatRate": "VAT %",
+        "totalHt": "Tổng (chưa VAT)",
+        "addLine": "Thêm dòng",
+        "noItems": "Chưa có dòng nào. Nhấn \"Thêm dòng\" để bắt đầu.",
+        "removeLine": "Xóa dòng"
+      },
+      "totals": {
+        "ht": "Tổng (chưa VAT)",
+        "tva": "VAT {rate}%",
+        "ttc": "Tổng (gồm VAT)"
+      },
+      "notes": {
+        "section": "Ghi chú & điều khoản",
+        "notes": "Ghi chú",
+        "notesPlaceholder": "Ghi chú nội bộ hoặc cho khách hàng",
+        "terms": "Điều khoản chung",
+        "termsPlaceholder": "Điều khoản và điều kiện chung",
+        "signatureBlock": "Khối chữ ký",
+        "signatureBlockPlaceholder": "Văn bản vùng chữ ký / con dấu"
+      },
+      "actions": {
+        "save": "Lưu thay đổi",
+        "create": "Tạo",
+        "cancel": "Hủy",
+        "delete": "Xóa",
+        "downloadPdf": "Tải PDF",
+        "convertToFacture": "Chuyển thành hóa đơn",
+        "changeStatus": "Đổi trạng thái",
+        "cloneSelected": "Nhân bản đã chọn",
+        "createFromTemplate": "Tạo từ mẫu",
+        "sendStatus": "Đánh dấu đã gửi",
+        "edit": "Chỉnh sửa"
+      },
+      "errors": {
+        "recipientRequired": "Tên khách hàng là bắt buộc.",
+        "atLeastOneItem": "Cần ít nhất một dòng dịch vụ.",
+        "itemDescriptionRequired": "Tất cả các mục phải có mô tả.",
+        "itemQuantityPositive": "Số lượng phải lớn hơn 0.",
+        "itemUnitPricePositive": "Đơn giá không được âm.",
+        "itemVatRatePositive": "Tỉ lệ VAT không được âm.",
+        "saveFailed": "Đã xảy ra lỗi không mong đợi. Vui lòng thử lại.",
+        "pdfFailed": "Tải PDF thất bại. Vui lòng thử lại.",
+        "convertFailed": "Chuyển đổi báo giá sang hóa đơn thất bại.",
+        "alreadyConverted": "Báo giá này đã được chuyển thành hóa đơn.",
+        "invalidTransition": "Chuyển đổi trạng thái này không được phép. Tài liệu có thể đã được cập nhật bởi phiên khác.",
+        "companyProfileMissing": "Cần có hồ sơ công ty trước khi tạo tài liệu hóa đơn."
+      },
+      "missingProfile": {
+        "title": "Yêu cầu hồ sơ công ty",
+        "description": "Trước khi tạo {kind}, vui lòng hoàn thiện hồ sơ công ty. Nó cung cấp thông tin phát hành (tên pháp lý, địa chỉ, SIRET, số TVA) in trên mỗi tài liệu.",
+        "cta": "Đến Cài đặt → Hồ sơ công ty"
+      }
+    },
+    "errors": {
+      "invalidTransition": "Chuyển đổi trạng thái không hợp lệ.",
+      "numberCollision": "Đã có tài liệu với số này.",
+      "companyProfileMissing": "Yêu cầu hồ sơ công ty.",
+      "generic": "Đã xảy ra lỗi không mong đợi."
     }
   },
   "members": {

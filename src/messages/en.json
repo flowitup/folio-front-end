@@ -55,7 +55,13 @@
   "sidebar": {
     "todayOnSite": "Today on site",
     "todayConditions": "{temp}° / {weather}",
-    "todayLocation": "{place} · {workers} workers on site"
+    "todayLocation": "{place} · {workers} workers on site",
+    "billing": {
+      "title": "Billing",
+      "devis": "Devis",
+      "factures": "Factures",
+      "templates": "Templates"
+    }
   },
   "dashboard": {
     "title": "Overview",
@@ -191,6 +197,49 @@
       "title": "Users & Roles",
       "description": "Assign roles to existing users across one or more projects.",
       "permissionDenied": "You don't have authorization to change roles of users."
+    },
+    "companyProfile": {
+      "title": "Company profile",
+      "description": "Issuer information printed on every devis and facture.",
+      "explainer": "Used as issuer info on every devis & facture. Snapshotted at document creation.",
+      "fields": {
+        "legalName": "Legal name",
+        "legalNamePlaceholder": "e.g. Maison Lavandou SAS",
+        "address": "Address",
+        "addressPlaceholder": "Street, city, postal code, country",
+        "siret": "SIRET",
+        "siretPlaceholder": "e.g. 12345678900012",
+        "tvaNumber": "TVA number",
+        "tvaNumberPlaceholder": "e.g. FR12345678901",
+        "iban": "IBAN",
+        "ibanPlaceholder": "e.g. FR76 3000 6000 0112 3456 7890 189",
+        "bic": "BIC / SWIFT",
+        "bicPlaceholder": "e.g. BNPAFRPPXXX",
+        "logoUrl": "Logo URL",
+        "logoUrlPlaceholder": "https://example.com/logo.png",
+        "logoUrlHint": "A publicly accessible image URL. Displayed on PDF headers.",
+        "defaultPaymentTerms": "Default payment terms",
+        "defaultPaymentTermsPlaceholder": "e.g. Payment due 30 days from invoice date. Virement bancaire.",
+        "defaultPaymentTermsHint": "Pre-filled on new factures. Editable per document.",
+        "prefixOverride": "Document number prefix",
+        "prefixOverridePlaceholder": "e.g. FLW (up to 8 chars)",
+        "prefixOverrideHint": "Optional. Uppercase letters and digits only (A-Z, 0-9). Max 8 characters. Example: \"FLW\" → FLW-DEV-2026-001."
+      },
+      "actions": {
+        "save": "Save",
+        "saving": "Saving…"
+      },
+      "errors": {
+        "legalNameRequired": "Legal name is required.",
+        "legalNameTooLong": "Legal name must be 255 characters or fewer.",
+        "addressRequired": "Address is required.",
+        "prefixTooLong": "Prefix must be 8 characters or fewer.",
+        "prefixInvalidChars": "Prefix must contain only uppercase ASCII letters and digits (A-Z, 0-9).",
+        "generic": "An unexpected error occurred. Please try again."
+      },
+      "toast": {
+        "saved": "Company profile saved."
+      }
     },
     "about": "About",
     "version": "Version"
@@ -536,6 +585,227 @@
     },
     "skeleton": {
       "loading": "Loading reminders..."
+    }
+  },
+  "billing": {
+    "group": {
+      "title": "Billing"
+    },
+    "templates": {
+      "list": {
+        "title": "Templates",
+        "new": "New template",
+        "devisGroup": "Devis templates",
+        "factureGroup": "Facture templates",
+        "empty": {
+          "title": "No templates yet",
+          "description": "Create your first template to speed up doc creation.",
+          "cta": "Create your first template"
+        },
+        "card": {
+          "items": "{n, plural, =0 {no items} =1 {1 item} other {# items}}",
+          "vatRate": "Default VAT {rate}%",
+          "vatRateNone": "No default VAT",
+          "lastUpdated": "Updated {date}"
+        },
+        "actions": {
+          "edit": "Edit",
+          "delete": "Delete",
+          "use": "Use",
+          "deleteConfirmTitle": "Delete template",
+          "deleteConfirmDescription": "Delete \"{name}\"? This cannot be undone.",
+          "deleteConfirm": "Delete",
+          "deleteCancel": "Cancel"
+        }
+      },
+      "form": {
+        "titleCreate": "New template",
+        "titleEdit": "Edit template",
+        "kind": "Kind",
+        "kindDevis": "Devis",
+        "kindFacture": "Facture",
+        "kindImmutableNote": "Kind cannot be changed after creation.",
+        "name": "Template name",
+        "namePlaceholder": "e.g. Standard web project",
+        "defaultVatRate": "Default VAT rate",
+        "vatRateCustom": "Custom…",
+        "notes": "Notes",
+        "notesPlaceholder": "Internal or client-facing notes",
+        "terms": "General terms (CGV)",
+        "termsPlaceholder": "General terms and conditions",
+        "items": "Line items",
+        "actions": {
+          "save": "Save",
+          "saving": "Saving…",
+          "cancel": "Cancel",
+          "delete": "Delete template"
+        },
+        "errors": {
+          "nameRequired": "Template name is required.",
+          "nameTooLong": "Template name must be 120 characters or fewer.",
+          "kindRequired": "Kind is required.",
+          "duplicateName": "A template with this name already exists for this kind.",
+          "saveFailed": "Failed to save template. Please try again.",
+          "deleteFailed": "Failed to delete template. Please try again."
+        }
+      }
+    },
+    "devis": {
+      "list": {
+        "title": "Devis",
+        "new": "New devis",
+        "empty": {
+          "title": "No devis yet",
+          "description": "Create your first quote to get started.",
+          "cta": "Create your first devis"
+        }
+      },
+      "status": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "expired": "Expired"
+      },
+      "transitions": {
+        "markAsSent": "Mark as Sent",
+        "markAsAccepted": "Mark as Accepted",
+        "markAsRejected": "Mark as Rejected",
+        "markAsExpired": "Mark as Expired",
+        "revertToSent": "Revert to Sent",
+        "reopen": "Re-open (Draft)"
+      }
+    },
+    "facture": {
+      "list": {
+        "title": "Factures",
+        "new": "New facture",
+        "empty": {
+          "title": "No factures yet",
+          "description": "Create your first invoice to get started.",
+          "cta": "Create your first facture"
+        }
+      },
+      "status": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "paid": "Paid",
+        "overdue": "Overdue",
+        "cancelled": "Cancelled"
+      },
+      "transitions": {
+        "markAsSent": "Mark as Sent",
+        "markAsPaid": "Mark as Paid",
+        "markAsOverdue": "Mark as Overdue",
+        "markAsCancelled": "Mark as Cancelled",
+        "markAsCancelledRefund": "Mark as Cancelled (refund)"
+      }
+    },
+    "list": {
+      "searchPlaceholder": "Search by number or recipient…",
+      "allStatuses": "All statuses",
+      "noResults": "No documents match your search.",
+      "loadMore": "Load more",
+      "columns": {
+        "number": "Number",
+        "date": "Date",
+        "recipient": "Recipient",
+        "status": "Status",
+        "totalTtc": "Total TTC",
+        "actions": "Actions"
+      }
+    },
+    "form": {
+      "modes": {
+        "blank": "Blank",
+        "fromExisting": "From existing",
+        "fromTemplate": "From template"
+      },
+      "recipient": {
+        "section": "Recipient",
+        "name": "Name",
+        "namePlaceholder": "Client or company name",
+        "address": "Address",
+        "addressPlaceholder": "Street, city, postal code",
+        "email": "Email",
+        "emailPlaceholder": "client@example.com",
+        "siret": "SIRET",
+        "siretPlaceholder": "123 456 789 00012",
+        "addExtraFields": "+ Add email / SIRET"
+      },
+      "details": {
+        "section": "Details",
+        "documentNumber": "Document number",
+        "issueDate": "Issue date",
+        "validityUntil": "Valid until",
+        "paymentDue": "Payment due",
+        "paymentTerms": "Payment terms",
+        "paymentTermsPlaceholder": "e.g. Net 30, virement bancaire"
+      },
+      "items": {
+        "section": "Line items",
+        "description": "Description",
+        "descriptionPlaceholder": "Item description",
+        "quantity": "Qty",
+        "unitPrice": "Unit price HT",
+        "vatRate": "VAT %",
+        "totalHt": "Total HT",
+        "addLine": "Add line",
+        "noItems": "No line items yet. Click \"Add line\" to start.",
+        "removeLine": "Remove line"
+      },
+      "totals": {
+        "ht": "Total HT",
+        "tva": "TVA {rate}%",
+        "ttc": "Total TTC"
+      },
+      "notes": {
+        "section": "Notes & terms",
+        "notes": "Notes",
+        "notesPlaceholder": "Internal or client-facing notes",
+        "terms": "General terms (CGV)",
+        "termsPlaceholder": "General terms and conditions",
+        "signatureBlock": "Signature block",
+        "signatureBlockPlaceholder": "Signature / stamp area text"
+      },
+      "actions": {
+        "save": "Save changes",
+        "create": "Create",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "downloadPdf": "Download PDF",
+        "convertToFacture": "Convert to Facture",
+        "changeStatus": "Change status",
+        "cloneSelected": "Clone selected",
+        "createFromTemplate": "Create from template",
+        "sendStatus": "Mark as Sent",
+        "edit": "Edit"
+      },
+      "errors": {
+        "recipientRequired": "Recipient name is required.",
+        "atLeastOneItem": "At least one line item is required.",
+        "itemDescriptionRequired": "All items must have a description.",
+        "itemQuantityPositive": "Item quantity must be greater than 0.",
+        "itemUnitPricePositive": "Item unit price cannot be negative.",
+        "itemVatRatePositive": "Item VAT rate cannot be negative.",
+        "saveFailed": "An unexpected error occurred. Please try again.",
+        "pdfFailed": "Failed to download PDF. Please try again.",
+        "convertFailed": "Failed to convert devis to facture.",
+        "alreadyConverted": "This devis has already been converted to a facture.",
+        "invalidTransition": "This status transition is not allowed. The document may have been updated by another session.",
+        "companyProfileMissing": "Company profile is required before creating billing documents."
+      },
+      "missingProfile": {
+        "title": "Company profile required",
+        "description": "Before creating a {kind}, please complete your company profile. It provides the issuer details (legal name, address, SIRET, TVA number) that are printed on every document.",
+        "cta": "Go to Settings → Company Profile"
+      }
+    },
+    "errors": {
+      "invalidTransition": "Invalid status transition.",
+      "numberCollision": "A document with this number already exists.",
+      "companyProfileMissing": "Company profile is required.",
+      "generic": "An unexpected error occurred."
     }
   },
   "members": {

@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SidebarBillingGroup } from "@/components/layout/sidebar-billing-group";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -189,6 +190,9 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-0.5 px-3 scroll-area">
+        {/* Billing group — top-level, independent of project selection */}
+        <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />
+
         {navigation.map((item) => {
           const isActive =
             item.key === "projects"

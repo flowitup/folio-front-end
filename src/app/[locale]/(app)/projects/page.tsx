@@ -44,7 +44,7 @@ function coverFor(id: string): string {
   return COVER_GRADIENTS[h % COVER_GRADIENTS.length];
 }
 
-type FilterTab = "all" | "active" | "archived";
+type FilterTab = "all" | "active";
 
 export default function ProjectsPage() {
   const t = useTranslations("projects");
@@ -159,7 +159,6 @@ export default function ProjectsPage() {
   const counts = {
     all: projects.length,
     active: projects.length,
-    archived: 0,
   };
 
   return (
@@ -167,14 +166,14 @@ export default function ProjectsPage() {
       {/* Filter row */}
       <div className="mb-5 flex items-center justify-between gap-4">
         <div className="seg">
-          {(["all", "active", "archived"] as const).map((tab) => (
+          {(["all", "active"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setFilterTab(tab)}
               className={filterTab === tab ? "on" : ""}
             >
-              {tab === "all" ? t("allProjects") : tab === "active" ? t("active") : t("archived")} ·{" "}
+              {tab === "all" ? t("allProjects") : t("active")} ·{" "}
               <span className="num">{counts[tab]}</span>
             </button>
           ))}

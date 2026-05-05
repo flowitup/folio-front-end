@@ -15,6 +15,22 @@ export async function createProject(payload: CreateProjectPayload): Promise<Proj
   return api.post<Project, CreateProjectPayload>("/projects", payload);
 }
 
+export interface UpdateProjectPayload {
+  name: string;
+  address?: string | null;
+}
+
+export async function updateProject(
+  id: string,
+  payload: UpdateProjectPayload,
+): Promise<Project> {
+  return api.put<Project, UpdateProjectPayload>(`/projects/${id}`, payload);
+}
+
+export async function deleteProject(id: string): Promise<void> {
+  await api.delete(`/projects/${id}`);
+}
+
 export async function fetchProjectById(id: string): Promise<Project> {
   return api.get<Project>(`/projects/${id}`);
 }

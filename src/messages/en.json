@@ -538,6 +538,44 @@
       "loading": "Loading reminders..."
     }
   },
+  "billing": {
+    "devis": {
+      "list": {
+        "title": "Devis",
+        "new": "New devis",
+        "empty": {
+          "title": "No devis yet",
+          "description": "Create your first quote to get started.",
+          "cta": "Create your first devis"
+        }
+      }
+    },
+    "facture": {
+      "list": {
+        "title": "Factures",
+        "new": "New facture",
+        "empty": {
+          "title": "No factures yet",
+          "description": "Create your first invoice to get started.",
+          "cta": "Create your first facture"
+        }
+      }
+    },
+    "list": {
+      "searchPlaceholder": "Search by number or recipient…",
+      "allStatuses": "All statuses",
+      "noResults": "No documents match your search.",
+      "loadMore": "Load more",
+      "columns": {
+        "number": "Number",
+        "date": "Date",
+        "recipient": "Recipient",
+        "status": "Status",
+        "totalTtc": "Total TTC",
+        "actions": "Actions"
+      }
+    }
+  },
   "members": {
     "title": "Members",
     "subtitle": "Manage who has access to this project",

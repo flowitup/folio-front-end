@@ -152,17 +152,25 @@ export async function acceptInviteAction(
 export async function refreshToken(): Promise<boolean> {
   const cookieStore = await cookies();
   const token = cookieStore.get("refresh_token_cookie")?.value;
+  // Flask-JWT-Extended requires the refresh-token CSRF header on POST /auth/refresh
+  // when JWT_COOKIE_CSRF_PROTECT is on (production default). The CSRF token is
+  // SEPARATE from the access-token CSRF, so we must read csrf_refresh_token here.
+  const csrfRefresh = cookieStore.get("csrf_refresh_token")?.value;
 
   if (!token) {
     return false;
   }
 
   try {
+    const headers: Record<string, string> = {
+      Cookie: `refresh_token_cookie=${token}${csrfRefresh ? `; csrf_refresh_token=${csrfRefresh}` : ""}`,
+    };
+    if (csrfRefresh) {
+      headers["X-CSRF-TOKEN"] = csrfRefresh;
+    }
     const response = await fetch(`${env.apiBaseUrl}/auth/refresh`, {
       method: "POST",
-      headers: {
-        Cookie: `refresh_token_cookie=${token}`,
-      },
+      headers,
     });
 
     if (!response.ok) {

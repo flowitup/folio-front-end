@@ -14,7 +14,18 @@ export function getApiAccessToken(): string | null {
 }
 
 const CSRF_COOKIE_NAME = "csrf_access_token";
+const REFRESH_CSRF_COOKIE_NAME = "csrf_refresh_token";
 const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function readCookie(name: string): string | null {
+    if (typeof document === "undefined") return null;
+    const prefix = `${name}=`;
+    const match = document.cookie
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith(prefix));
+    return match ? decodeURIComponent(match.slice(prefix.length)) : null;
+}
 
 /**
  * Read the backend-issued CSRF cookie from document.cookie. Returns null on
@@ -27,13 +38,17 @@ const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
  * token paired against the cookie.
  */
 export function getCsrfToken(): string | null {
-    if (typeof document === "undefined") return null;
-    const prefix = `${CSRF_COOKIE_NAME}=`;
-    const match = document.cookie
-        .split(";")
-        .map((c) => c.trim())
-        .find((c) => c.startsWith(prefix));
-    return match ? decodeURIComponent(match.slice(prefix.length)) : null;
+    return readCookie(CSRF_COOKIE_NAME);
+}
+
+/**
+ * Read the refresh-token CSRF cookie. Required as the X-CSRF-TOKEN header on
+ * POST /auth/refresh when JWT_COOKIE_CSRF_PROTECT is on (production default).
+ * Flask-JWT-Extended uses a SEPARATE CSRF token for refresh — the one sent on
+ * regular mutations (csrf_access_token) does not match.
+ */
+export function getRefreshCsrfToken(): string | null {
+    return readCookie(REFRESH_CSRF_COOKIE_NAME);
 }
 
 /**
@@ -77,9 +92,19 @@ interface RequestOptions<TBody = unknown> {
  */
 async function refreshAccessToken(): Promise<boolean> {
     try {
+        // Flask-JWT-Extended's refresh endpoint requires the refresh-token CSRF
+        // header in production (JWT_COOKIE_CSRF_PROTECT=True). Without it,
+        // refresh always 401s, bricking every mutating call once the access
+        // token expires (~15 min).
+        const csrfRefresh = getRefreshCsrfToken();
+        const headers: Record<string, string> = {};
+        if (csrfRefresh) {
+            headers["X-CSRF-TOKEN"] = csrfRefresh;
+        }
         const response = await fetch(`${env.apiBaseUrl}/auth/refresh`, {
             method: "POST",
             credentials: "include",
+            headers,
         });
         if (response.ok) {
             const data = await response.json();

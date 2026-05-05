@@ -92,6 +92,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   const router = useRouter();
   const locale = useLocale();
   const tForm = useTranslations("billing.form");
+  const tBilling = useTranslations("billing");
   const isEdit = props.mode === "edit";
   const kind = props.kind;
 
@@ -292,7 +293,8 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   const showConvertButton =
     isEdit && liveDoc?.kind === "devis" && liveDoc.status === "accepted";
 
-  const kindLabel = kind === "devis" ? "Devis" : "Facture";
+  const kindLabel = tBilling(`${kind}.list.title`);
+  const newLabel = tBilling(`${kind}.list.new`);
   const listPath = `/${locale}/billing/${kindToSegment(kind)}`;
 
   // ---------------------------------------------------------------------------
@@ -309,7 +311,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         <h2 className="font-display text-xl font-medium">
           {isEdit
             ? (liveDoc?.document_number ?? kindLabel)
-            : `New ${kindLabel}`}
+            : newLabel}
         </h2>
 
         {isEdit && liveDoc && (

@@ -397,7 +397,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
       <BillingDocumentForm mode="edit" kind="devis" document={acceptedDevis} />
     );
     expect(
-      screen.getByRole("button", { name: /convert to facture/i })
+      screen.getByRole("button", { name: /convert to invoice/i })
     ).toBeDefined();
   });
 
@@ -406,7 +406,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
       <BillingDocumentForm mode="edit" kind="devis" document={makeDoc({ status: "draft" })} />
     );
     expect(
-      screen.queryByRole("button", { name: /convert to facture/i })
+      screen.queryByRole("button", { name: /convert to invoice/i })
     ).toBeNull();
   });
 
@@ -419,7 +419,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
       />
     );
     expect(
-      screen.queryByRole("button", { name: /convert to facture/i })
+      screen.queryByRole("button", { name: /convert to invoice/i })
     ).toBeNull();
   });
 

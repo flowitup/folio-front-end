@@ -174,7 +174,7 @@ export function BillingDocumentList({
   const newPath = `/${locale}/billing/${kindToSegment(kind)}/new`;
 
   const statusOptions = kind === "devis" ? DEVIS_STATUSES : FACTURE_STATUSES;
-  const kindLabel = kind === "devis" ? "Devis" : "Facture";
+  const kindLabel = t(`${kind}.list.title`);
 
   // ---------------------------------------------------------------------------
   // Empty state

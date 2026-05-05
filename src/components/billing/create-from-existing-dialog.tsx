@@ -38,6 +38,7 @@ import {
 import { BillingStatusBadge } from "@/components/billing/billing-status-badge";
 import { listBillingDocumentsAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
+import { kindToSegment } from "@/lib/billing/url-helpers";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -156,7 +157,7 @@ export function CreateFromExistingDialog({
   function handleConfirm() {
     if (!selectedId) return;
     onOpenChange(false);
-    router.push(`/${locale}/billing/${targetKind}/new?from=${selectedId}`);
+    router.push(`/${locale}/billing/${kindToSegment(targetKind)}/new?from=${selectedId}`);
   }
 
   const selectedDoc = documents.find((d) => d.id === selectedId);

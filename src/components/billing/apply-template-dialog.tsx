@@ -34,6 +34,7 @@ import {
   createBillingDocumentFromTemplateAction,
 } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import type { BillingDocumentKind, BillingDocumentTemplate } from "@/types/billing";
+import { kindToSegment } from "@/lib/billing/url-helpers";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -151,7 +152,7 @@ export function ApplyTemplateDialog({
       }
       toast.success("Document created from template.");
       onOpenChange(false);
-      router.push(`/${locale}/billing/${kind}/${result.data.id}`);
+      router.push(`/${locale}/billing/${kindToSegment(kind)}/${result.data.id}`);
     } catch {
       toast.error("Failed to create document from template.");
     } finally {

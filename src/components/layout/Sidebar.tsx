@@ -57,7 +57,7 @@ export function Sidebar() {
   } = useProject();
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
-  const navigation = [
+  const projectNav = [
     { key: "dashboard", href: "/dashboard", icon: Home },
     { key: "projects", href: "/projects", icon: FolderOpen },
     ...(selectedProjectId
@@ -69,8 +69,9 @@ export function Sidebar() {
           { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
         ]
       : []),
-    { key: "settings", href: "/settings", icon: Settings },
   ];
+
+  const settingsItem = { key: "settings", href: "/settings", icon: Settings };
 
   const selectedCover =
     (selectedProject as { cover?: string })?.cover ??
@@ -190,10 +191,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-0.5 px-3 scroll-area">
-        {/* Billing group — top-level, independent of project selection */}
-        <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />
-
-        {navigation.map((item) => {
+        {projectNav.map((item) => {
           const isActive =
             item.key === "projects"
               ? pathWithoutLocale === item.href ||
@@ -215,7 +213,29 @@ export function Sidebar() {
           );
         })}
 
+        {/* Billing group — after project-scoped nav, before Settings */}
+        <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />
 
+        {/* Settings — always last */}
+        {(() => {
+          const item = settingsItem;
+          const isActive =
+            pathWithoutLocale === item.href ||
+            pathWithoutLocale.startsWith(item.href + "/");
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={cn("nav-link", isActive && "active")}
+            >
+              <span className="nav-icon flex w-5 items-center justify-center">
+                <Icon size={16} />
+              </span>
+              <span className="font-medium">{t(item.key)}</span>
+            </Link>
+          );
+        })()}
       </nav>
 
       {/* Footer card — Today on site */}

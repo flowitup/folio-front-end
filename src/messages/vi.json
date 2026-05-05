@@ -10,7 +10,7 @@
     "dashboard": "Tổng quan",
     "projects": "Dự án",
     "labor": "Nhân công",
-    "invoices": "Hóa đơn",
+    "invoices": "Chi phí",
     "planning": "Kế hoạch",
     "notes": "Ghi chú",
     "members": "Thành viên",
@@ -45,7 +45,7 @@
     "planningSubtitle": "Việc của đội — kéo thẻ trên bảng để di chuyển.",
     "laborTitle": "Nhân công",
     "laborSubtitle": "Ai có mặt, bao nhiêu giờ, chi phí thế nào.",
-    "invoicesTitle": "Hóa đơn",
+    "invoicesTitle": "Chi phí",
     "invoicesSubtitle": "Tiền ra vào trên công trường.",
     "notesTitle": "Ghi chú",
     "notesSubtitle": "Những điều cần nhớ — nhắc nhở được gửi lúc 09:00 UTC",
@@ -249,8 +249,8 @@
     "accessDenied": "Bạn không có quyền truy cập trang này."
   },
   "invoices": {
-    "title": "Hóa đơn",
-    "newInvoice": "Tạo hóa đơn",
+    "title": "Chi phí",
+    "newInvoice": "Chi phí mới",
     "invoiceNumber": "Số hóa đơn",
     "type": "Loại",
     "types": {
@@ -277,8 +277,8 @@
     "save": "Lưu",
     "saving": "Đang lưu...",
     "delete": "Xóa",
-    "deleteConfirm": "Xóa hóa đơn này? Hành động không thể hoàn tác.",
-    "noInvoices": "Chưa có hóa đơn nào",
+    "deleteConfirm": "Xóa chi phí này? Hành động không thể hoàn tác.",
+    "noInvoices": "Chưa có chi phí nào",
     "errorRecipientRequired": "Tên người nhận là bắt buộc",
     "errorAtLeastOneItem": "Cần ít nhất một dòng mục",
     "errorDescriptionRequired": "Mô tả dòng mục là bắt buộc",
@@ -296,15 +296,15 @@
     "deleteFailed": "Xóa tệp thất bại",
     "attachmentDeleteConfirm": "Xóa tệp đính kèm này? Không thể hoàn tác.",
     "openAttachment": "Mở",
-    "totalInvoiced": "Tổng đã xuất hóa đơn",
+    "totalInvoiced": "Tổng chi phí",
     "paid": "Đã thanh toán",
     "pending": "Chờ thanh toán",
     "overdue": "Quá hạn",
-    "invoiceCount": "{n, plural, =0 {không có hóa đơn} other {# hóa đơn}}",
+    "invoiceCount": "{n, plural, =0 {không có chi phí} other {# chi phí}}",
     "awaiting": "{n} chờ xử lý",
     "export": {
       "trigger": "Xuất dữ liệu theo khoảng",
-      "dialogTitle": "Xuất hóa đơn",
+      "dialogTitle": "Xuất chi phí",
       "from": "Tháng bắt đầu",
       "to": "Tháng kết thúc",
       "typeFilter": "Loại",
@@ -322,7 +322,7 @@
       "summaryLine": "Đã chọn {count} tháng",
       "errorRangeInvalid": "\"Từ\" phải trước hoặc bằng \"Đến\"",
       "errorRangeTooLarge": "Khoảng thời gian không vượt quá 24 tháng",
-      "errorGeneric": "Không thể xuất hóa đơn"
+      "errorGeneric": "Không thể xuất chi phí"
     }
   },
   "planning": {

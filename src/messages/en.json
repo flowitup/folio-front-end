@@ -10,7 +10,7 @@
     "dashboard": "Overview",
     "projects": "Projects",
     "labor": "Labor",
-    "invoices": "Invoices",
+    "invoices": "Expense",
     "planning": "Planning",
     "notes": "Notes",
     "members": "Members",
@@ -45,7 +45,7 @@
     "planningSubtitle": "Tasks for the team — drag a card across the board to move it.",
     "laborTitle": "Labor",
     "laborSubtitle": "Who showed up, how many hours, what it cost.",
-    "invoicesTitle": "Invoices",
+    "invoicesTitle": "Expense",
     "invoicesSubtitle": "Money flowing in and out of the site.",
     "notesTitle": "Notes",
     "notesSubtitle": "Things to remember — reminders fire at 09:00 UTC",
@@ -249,8 +249,8 @@
     "accessDenied": "You do not have permission to access this page."
   },
   "invoices": {
-    "title": "Invoices",
-    "newInvoice": "New invoice",
+    "title": "Expense",
+    "newInvoice": "New expense",
     "invoiceNumber": "Invoice #",
     "type": "Type",
     "types": {
@@ -277,8 +277,8 @@
     "save": "Save",
     "saving": "Saving...",
     "delete": "Delete",
-    "deleteConfirm": "Delete this invoice? This cannot be undone.",
-    "noInvoices": "No invoices yet",
+    "deleteConfirm": "Delete this expense? This cannot be undone.",
+    "noInvoices": "No expenses yet",
     "errorRecipientRequired": "Recipient name is required",
     "errorAtLeastOneItem": "At least one line item is required",
     "errorDescriptionRequired": "Item description is required",
@@ -296,15 +296,15 @@
     "deleteFailed": "Failed to delete attachment",
     "attachmentDeleteConfirm": "Delete this attachment? This cannot be undone.",
     "openAttachment": "Open",
-    "totalInvoiced": "Total invoiced",
+    "totalInvoiced": "Total expenses",
     "paid": "Paid",
     "pending": "Pending",
     "overdue": "Overdue",
-    "invoiceCount": "{n, plural, =0 {no invoices} =1 {1 invoice} other {# invoices}}",
+    "invoiceCount": "{n, plural, =0 {no expenses} =1 {1 expense} other {# expenses}}",
     "awaiting": "{n} awaiting",
     "export": {
       "trigger": "Export range",
-      "dialogTitle": "Export invoices",
+      "dialogTitle": "Export expenses",
       "from": "From month",
       "to": "To month",
       "typeFilter": "Type",
@@ -322,7 +322,7 @@
       "summaryLine": "{count, plural, =1 {1 month selected} other {# months selected}}",
       "errorRangeInvalid": "\"From\" must be before or equal to \"To\"",
       "errorRangeTooLarge": "Range cannot exceed 24 months",
-      "errorGeneric": "Failed to export invoices"
+      "errorGeneric": "Failed to export expenses"
     }
   },
   "planning": {

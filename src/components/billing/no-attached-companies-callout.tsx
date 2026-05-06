@@ -9,18 +9,20 @@
 
 import Link from "next/link";
 import { Building2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function NoAttachedCompaniesCallout() {
+  const t = useTranslations("companies.picker");
+
   return (
     <div className="fade-up px-8 py-12">
       <div className="folio-card flex max-w-lg flex-col items-start gap-4 p-6">
         <div className="flex items-center gap-3" style={{ color: "var(--ink)" }}>
           <Building2 size={20} className="shrink-0" />
-          <p className="text-sm font-medium">No company attached</p>
+          <p className="text-sm font-medium">{t("noCompaniesCalloutTitle")}</p>
         </div>
         <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-          You don&apos;t have a company attached yet. Add one in Settings to start creating
-          quotes &amp; invoices.
+          {t("noCompaniesCalloutBody")}
         </p>
         <Link
           href="/settings#my-companies"
@@ -31,7 +33,7 @@ export function NoAttachedCompaniesCallout() {
             border: "1px solid var(--line)",
           }}
         >
-          Open Settings
+          {t("noCompaniesCalloutCta")}
         </Link>
       </div>
     </div>

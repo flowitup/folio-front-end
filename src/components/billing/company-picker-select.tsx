@@ -17,6 +17,7 @@
  */
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -96,6 +97,7 @@ export function CompanyPickerSelect({
   onChange,
   disabled = false,
 }: CompanyPickerSelectProps) {
+  const t = useTranslations("companies.picker");
   // Resolve and emit default on mount when value is null.
   useEffect(() => {
     if (value === null && attachedCompanies.length > 0) {
@@ -127,12 +129,12 @@ export function CompanyPickerSelect({
     return (
       <div className="folio-card flex items-center gap-2 px-5 py-3">
         <span className="text-[12px] font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-          Issued from
+          {t("label")}
         </span>
         <span className="text-[13px] font-medium">{company.legal_name}</span>
         {company.is_primary && (
           <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 ring-1 ring-blue-200">
-            primary
+            {t("primaryBadge")}
           </span>
         )}
       </div>
@@ -145,11 +147,11 @@ export function CompanyPickerSelect({
   return (
     <div className="folio-card flex items-center gap-3 px-5 py-3">
       <span className="shrink-0 text-[12px] font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-        Issued from
+        {t("label")}
       </span>
       <Select value={value ?? ""} onValueChange={handleChange} disabled={disabled}>
         <SelectTrigger className="h-8 min-w-[200px] text-[13px]">
-          <SelectValue placeholder="Select company..." />
+          <SelectValue placeholder={t("placeholder")} />
         </SelectTrigger>
         <SelectContent>
           {ordered.map((company) => (
@@ -157,7 +159,7 @@ export function CompanyPickerSelect({
               <span>{company.legal_name}</span>
               {company.is_primary && (
                 <span className="ml-2 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
-                  primary
+                  {t("primaryBadge")}
                 </span>
               )}
             </SelectItem>

@@ -5,25 +5,14 @@ import { redirect } from "next/navigation";
 import { env } from "@/lib/config/env";
 import type { LoginCredentials, LoginResponse, User, AcceptInvitePayload } from "./types";
 import { acceptInvite } from "@/lib/api/invitations";
+import { parseCookie } from "./cookie-parser";
 
 /**
- * Parse Set-Cookie header safely.
- * Handles values containing '=' characters.
- */
-function parseCookie(cookie: string): { name: string; value: string } | null {
-  const [nameValue] = cookie.split(";");
-  const eqIndex = nameValue.indexOf("=");
-  if (eqIndex === -1) return null;
-  const name = nameValue.slice(0, eqIndex).trim();
-  const value = nameValue.slice(eqIndex + 1).trim();
-  return name && value ? { name, value } : null;
-}
-
-/**
- * Forward an array of raw Set-Cookie header values onto the Next.js cookie
- * store with our standard security flags (httpOnly, Secure in prod,
- * SameSite=Lax, root path). Used by login, acceptInviteAction, and
- * refreshToken to avoid duplicating the cookie-setting block.
+ * Forward Set-Cookie headers from the BE auth response onto the Next.js
+ * cookie store, preserving each cookie's HttpOnly / Max-Age / SameSite /
+ * Path attributes from the original. Critical for the CSRF cookies (which
+ * MUST stay JS-readable) and for refresh-token lifetime (which must outlive
+ * the browser session).
  */
 async function setForwardedCookies(setCookieHeaders: string[]): Promise<void> {
   const cookieStore = await cookies();
@@ -31,10 +20,11 @@ async function setForwardedCookies(setCookieHeaders: string[]): Promise<void> {
     const parsed = parseCookie(cookie);
     if (!parsed) continue;
     cookieStore.set(parsed.name, parsed.value, {
-      httpOnly: true,
+      httpOnly: parsed.httpOnly,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
+      sameSite: parsed.sameSite ?? "lax",
+      path: parsed.path ?? "/",
+      ...(parsed.maxAge !== undefined ? { maxAge: parsed.maxAge } : {}),
     });
   }
 }

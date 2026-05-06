@@ -29,8 +29,10 @@ vi.mock("next-intl", () => {
   return { useTranslations: (ns: string) => makeT(ns) };
 });
 
-vi.mock("next/link", () => ({
-  default: ({ href, children, ...rest }: { href: string; children: React.ReactNode; [key: string]: unknown }) => (
+// C-2 fix: component now imports Link from @/i18n/navigation (locale-aware),
+// not next/link. Mock the navigation module instead.
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode; [key: string]: unknown }) => (
     <a href={href} {...rest}>{children}</a>
   ),
 }));

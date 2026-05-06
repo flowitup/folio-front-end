@@ -263,6 +263,9 @@
     "version": "Version",
     "myCompanies": {
       "title": "My companies"
+    },
+    "companies": {
+      "backToSettings": "Back to Settings"
     }
   },
   "errors": {
@@ -810,12 +813,28 @@
         "itemUnitPricePositive": "Item unit price cannot be negative.",
         "itemVatRatePositive": "Item VAT rate cannot be negative.",
         "saveFailed": "An unexpected error occurred. Please try again.",
+        "deleteFailed": "Failed to delete document. Please try again.",
         "pdfFailed": "Failed to download PDF. Please try again.",
         "convertFailed": "Failed to convert quote to invoice.",
         "alreadyConverted": "This quote has already been converted to an invoice.",
         "invalidTransition": "This status transition is not allowed. The document may have been updated by another session.",
         "companyRequired": "Please select a company to issue this document from."
+      },
+      "toast": {
+        "documentSaved": "Document saved.",
+        "documentCreated": "Document created.",
+        "documentDeleted": "Document deleted.",
+        "pdfDownloaded": "PDF downloaded.",
+        "devisConverted": "Quote converted to invoice.",
+        "companyNoLongerAttached": "Your access to this company has been revoked. Please select another company."
+      },
+      "issuer": {
+        "issuedFrom": "Issued from",
+        "locked": "locked"
       }
+    },
+    "editPage": {
+      "loadFailed": "Failed to load document. Please refresh or try again later."
     },
     "errors": {
       "invalidTransition": "Invalid status transition.",
@@ -981,6 +1000,8 @@
         "addressRequired": "Address is required.",
         "prefixTooLong": "Prefix must be 8 characters or fewer.",
         "prefixInvalidChars": "Prefix must contain only uppercase letters and digits (A-Z, 0-9).",
+        "logoUrlInvalidScheme": "Logo URL must use http or https.",
+        "logoUrlInvalidUrl": "Logo URL is not a valid URL.",
         "generic": "An unexpected error occurred. Please try again."
       }
     },
@@ -989,6 +1010,7 @@
       "expiresLine": "Expires: {expiresAt}",
       "copyCta": "Copy token",
       "copiedToast": "Token copied to clipboard.",
+      "copyFailedToast": "Could not copy to clipboard.",
       "oneShotWarning": "Save this token now — you will not see it again after closing this dialog.",
       "autoCloseCountdown": "Auto-closes in {seconds}s"
     },

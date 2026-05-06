@@ -91,6 +91,16 @@ export function CompanyCreateDialog({
     if (!form.address?.trim()) {
       errors.address = t("form.errors.addressRequired");
     }
+    if (form.logo_url) {
+      try {
+        const u = new URL(form.logo_url);
+        if (!/^https?:$/.test(u.protocol)) {
+          errors.logo_url = t("form.errors.logoUrlInvalidScheme");
+        }
+      } catch {
+        errors.logo_url = t("form.errors.logoUrlInvalidUrl");
+      }
+    }
     if (form.prefix_override) {
       if (form.prefix_override.length > 8) {
         errors.prefix_override = t("form.errors.prefixTooLong");
@@ -236,6 +246,11 @@ export function CompanyCreateDialog({
                 placeholder={t("form.fields.logoUrl.placeholder")}
                 disabled={isSubmitting}
               />
+              {fieldErrors.logo_url && (
+                <p className="text-[12px] text-red-600">
+                  {fieldErrors.logo_url}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">

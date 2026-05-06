@@ -263,6 +263,9 @@
     "version": "Phiên bản",
     "myCompanies": {
       "title": "My companies"
+    },
+    "companies": {
+      "backToSettings": "Quay lại Cài đặt"
     }
   },
   "errors": {
@@ -810,12 +813,28 @@
         "itemUnitPricePositive": "Đơn giá không được âm.",
         "itemVatRatePositive": "Tỉ lệ VAT không được âm.",
         "saveFailed": "Đã xảy ra lỗi không mong đợi. Vui lòng thử lại.",
+        "deleteFailed": "Xóa tài liệu thất bại. Vui lòng thử lại.",
         "pdfFailed": "Tải PDF thất bại. Vui lòng thử lại.",
         "convertFailed": "Chuyển đổi báo giá sang hóa đơn thất bại.",
         "alreadyConverted": "Báo giá này đã được chuyển thành hóa đơn.",
         "invalidTransition": "Chuyển đổi trạng thái này không được phép. Tài liệu có thể đã được cập nhật bởi phiên khác.",
         "companyRequired": "Vui lòng chọn một công ty để phát hành tài liệu này."
+      },
+      "toast": {
+        "documentSaved": "Đã lưu tài liệu.",
+        "documentCreated": "Đã tạo tài liệu.",
+        "documentDeleted": "Đã xóa tài liệu.",
+        "pdfDownloaded": "Đã tải PDF.",
+        "devisConverted": "Đã chuyển báo giá thành hóa đơn.",
+        "companyNoLongerAttached": "Quyền truy cập vào công ty này đã bị thu hồi. Vui lòng chọn công ty khác."
+      },
+      "issuer": {
+        "issuedFrom": "Phát hành từ",
+        "locked": "đã khóa"
       }
+    },
+    "editPage": {
+      "loadFailed": "Không thể tải tài liệu. Vui lòng tải lại trang hoặc thử lại sau."
     },
     "errors": {
       "invalidTransition": "Chuyển đổi trạng thái không hợp lệ.",
@@ -981,6 +1000,8 @@
         "addressRequired": "Địa chỉ là bắt buộc.",
         "prefixTooLong": "Tiền tố không được vượt quá 8 ký tự.",
         "prefixInvalidChars": "Tiền tố chỉ được chứa chữ hoa và chữ số (A-Z, 0-9).",
+        "logoUrlInvalidScheme": "URL logo phải sử dụng http hoặc https.",
+        "logoUrlInvalidUrl": "URL logo không hợp lệ.",
         "generic": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
       }
     },
@@ -989,6 +1010,7 @@
       "expiresLine": "Hết hạn: {expiresAt}",
       "copyCta": "Sao chép mã",
       "copiedToast": "Đã sao chép mã vào bộ nhớ tạm.",
+      "copyFailedToast": "Không thể sao chép vào bộ nhớ tạm.",
       "oneShotWarning": "Hãy lưu mã này ngay — bạn sẽ không thấy lại sau khi đóng hộp thoại này.",
       "autoCloseCountdown": "Tự động đóng sau {seconds}s"
     },

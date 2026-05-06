@@ -78,21 +78,6 @@ export interface BillingDocumentTemplate {
   updated_at: string;
 }
 
-export interface CompanyProfile {
-  user_id: string;
-  legal_name: string;
-  address: string;
-  siret: string | null;
-  tva_number: string | null;
-  iban: string | null;
-  bic: string | null;
-  logo_url: string | null;
-  default_payment_terms: string | null;
-  prefix_override: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 // ---------------------------------------------------------------------------
 // Request payload types
 // ---------------------------------------------------------------------------
@@ -177,14 +162,3 @@ export interface UpdateBillingTemplatePayload {
   default_vat_rate?: string | null;
 }
 
-export interface UpsertCompanyProfilePayload {
-  legal_name: string;
-  address: string;
-  siret?: string | null;
-  tva_number?: string | null;
-  iban?: string | null;
-  bic?: string | null;
-  logo_url?: string | null;
-  default_payment_terms?: string | null;
-  prefix_override?: string | null;
-}

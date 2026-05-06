@@ -7,6 +7,7 @@
  */
 
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { fetchCompany, fetchAttachedUsers } from "@/lib/api/companies";
 import { AdminCompanyManagePage } from "@/components/companies/admin-company-manage-page";
@@ -17,6 +18,7 @@ interface Props {
 
 export default async function CompanyManagePage({ params }: Props) {
   const { locale, id } = await params;
+  const t = await getTranslations({ locale, namespace: "settings.companies" });
 
   // Permission gate — non-admins see /settings
   const session = await getSession();
@@ -45,7 +47,7 @@ export default async function CompanyManagePage({ params }: Props) {
         className="mb-6 inline-flex items-center gap-1.5 text-[13px] hover:underline"
         style={{ color: "var(--muted)" }}
       >
-        ← Back to Settings
+        ← {t("backToSettings")}
       </a>
 
       <AdminCompanyManagePage company={company} initialUsers={attachedUsers} />

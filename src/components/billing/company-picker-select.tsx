@@ -104,7 +104,12 @@ export function CompanyPickerSelect({
       const defaultId = resolveDefaultCompanyId(kind, attachedCompanies);
       if (defaultId) onChange(defaultId);
     }
-    // Run only on mount and when attachedCompanies identity changes.
+    // Intentionally omit `kind`, `value`, and `onChange` from the dep array.
+    // `kind` is page-stable: devis and facture pages are separate routes and
+    // never swap mid-component-lifecycle, so there is no scenario where `kind`
+    // changes without a remount. `value` and `onChange` are excluded to avoid
+    // re-running whenever the parent re-renders — this effect is purely a
+    // "set default on mount / on companies-list change" initialisation step.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attachedCompanies]);
 

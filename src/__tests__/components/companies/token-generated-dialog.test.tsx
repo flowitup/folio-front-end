@@ -186,6 +186,46 @@ describe("TokenGeneratedDialog — auto-close countdown", () => {
 
     expect(screen.getByText(/55s/i)).toBeDefined();
   }, 15_000);
+
+  it("C-3 regression: reopening after auto-close resets countdown and stays open", async () => {
+    // Simulates: open → auto-close (60 ticks) → reopen → verify dialog stays
+    // open for a full AUTO_CLOSE_SECONDS cycle (does NOT immediately close).
+    const onOpenChange = vi.fn();
+    const { rerender } = render(
+      <TokenGeneratedDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        tokenData={TOKEN_DATA}
+      />
+    );
+
+    // Let the dialog auto-close after 60 s
+    for (let i = 0; i < 60; i++) {
+      await act(async () => { vi.advanceTimersByTime(1_000); });
+    }
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    onOpenChange.mockClear();
+
+    // Reopen (parent sets open=true again)
+    await act(async () => {
+      rerender(
+        <TokenGeneratedDialog
+          open={true}
+          onOpenChange={onOpenChange}
+          tokenData={TOKEN_DATA}
+        />
+      );
+    });
+
+    // After reset the countdown must start from 60s again.
+    // Advance several ticks — onOpenChange(false) must NOT fire until 60 more seconds pass.
+    // We only advance 5 ticks here (well under the 60s threshold).
+    for (let i = 0; i < 5; i++) {
+      await act(async () => { vi.advanceTimersByTime(1_000); });
+    }
+    // The dialog has been open for only 5 s since reopen — must still be open.
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  }, 15_000);
 });
 
 // ---------------------------------------------------------------------------

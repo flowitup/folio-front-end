@@ -228,6 +228,53 @@ describe("RedeemInviteTokenDialog — already-attached error", () => {
 });
 
 // ---------------------------------------------------------------------------
+// H-3 chosen behavior: rate_limited / unauthorized surface distinct messages
+// (policy: only 410-family codes get the uniform toast; others are actionable)
+// ---------------------------------------------------------------------------
+
+describe("RedeemInviteTokenDialog — H-3 non-uniform error codes", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("rate_limited code → surfaces rate_limited message (not uniform toast)", async () => {
+    const msg = "Too many requests. Please wait and try again.";
+    mockRedeem.mockResolvedValueOnce({
+      ok: false,
+      error: { code: "rate_limited", message: msg },
+    });
+
+    renderDialog();
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "tok" } });
+
+    await act(async () => {
+      fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+    });
+
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalledWith(msg);
+    });
+  });
+
+  it("unauthorized code → surfaces session-expired message (not uniform toast)", async () => {
+    const msg = "Session expired. Please log in again.";
+    mockRedeem.mockResolvedValueOnce({
+      ok: false,
+      error: { code: "unauthorized", message: msg },
+    });
+
+    renderDialog();
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "tok" } });
+
+    await act(async () => {
+      fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+    });
+
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalledWith(msg);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Submit button disabled when input empty
 // ---------------------------------------------------------------------------
 

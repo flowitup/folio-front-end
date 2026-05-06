@@ -54,6 +54,14 @@ export function TokenGeneratedDialog({
       return;
     }
 
+    // Reset countdown on every open (fixes C-3: auto-close leaves secondsLeft=0,
+    // so the next open would immediately fire onOpenChange(false) again).
+    // Calling setState here is intentional: we are synchronising UI countdown
+    // state to the "dialog opened" lifecycle event — this is not a side-effect
+    // triggered by render but a direct response to the prop flip.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSecondsLeft(AUTO_CLOSE_SECONDS);
+
     // Dialog just opened: start the countdown.
     timerRef.current = setInterval(() => {
       setSecondsLeft((prev) => {
@@ -91,7 +99,7 @@ export function TokenGeneratedDialog({
       if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
       copiedTimerRef.current = setTimeout(() => setCopied(false), 3_000);
     } catch {
-      toast.error("Could not copy to clipboard.");
+      toast.error(t("tokenGenerated.copyFailedToast"));
     }
   }
 

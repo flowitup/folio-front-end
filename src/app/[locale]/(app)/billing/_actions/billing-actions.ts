@@ -34,13 +34,11 @@ import {
   updateBillingTemplate,
   deleteBillingTemplate,
 } from "@/lib/api/billing/templates";
-import { upsertCompanyProfile } from "@/lib/api/billing/company-profile";
 import type {
   BillingDocument,
   BillingDocumentKind,
   BillingDocumentTemplate,
   BillingDocumentStatus,
-  CompanyProfile,
   CreateBillingDocumentPayload,
   UpdateBillingDocumentPayload,
   CloneBillingDocumentPayload,
@@ -48,7 +46,6 @@ import type {
   ApplyTemplatePayload,
   CreateBillingTemplatePayload,
   UpdateBillingTemplatePayload,
-  UpsertCompanyProfilePayload,
 } from "@/types/billing";
 
 // ---------------------------------------------------------------------------
@@ -263,17 +260,3 @@ export async function deleteBillingTemplateAction(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Company profile action
-// ---------------------------------------------------------------------------
-
-export async function upsertCompanyProfileAction(
-  payload: UpsertCompanyProfilePayload
-): Promise<ActionResult<CompanyProfile>> {
-  try {
-    const data = await upsertCompanyProfile(payload);
-    return { ok: true, data };
-  } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
-  }
-}

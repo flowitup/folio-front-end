@@ -7,7 +7,7 @@
  * CTA links to /settings#my-companies so the user can attach or create a company.
  */
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Building2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 

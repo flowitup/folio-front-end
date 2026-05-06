@@ -263,6 +263,9 @@
     "version": "Version",
     "myCompanies": {
       "title": "My companies"
+    },
+    "companies": {
+      "backToSettings": "Retour aux paramètres"
     }
   },
   "errors": {
@@ -810,12 +813,28 @@
         "itemUnitPricePositive": "Le prix unitaire ne peut pas être négatif.",
         "itemVatRatePositive": "Le taux de TVA ne peut pas être négatif.",
         "saveFailed": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+        "deleteFailed": "Échec de la suppression du document. Veuillez réessayer.",
         "pdfFailed": "Échec du téléchargement du PDF. Veuillez réessayer.",
         "convertFailed": "Échec de la conversion du devis en facture.",
         "alreadyConverted": "Ce devis a déjà été converti en facture.",
         "invalidTransition": "Cette transition de statut n'est pas autorisée. Le document a peut-être été modifié dans une autre session.",
         "companyRequired": "Veuillez sélectionner une entreprise pour émettre ce document."
+      },
+      "toast": {
+        "documentSaved": "Document enregistré.",
+        "documentCreated": "Document créé.",
+        "documentDeleted": "Document supprimé.",
+        "pdfDownloaded": "PDF téléchargé.",
+        "devisConverted": "Devis converti en facture.",
+        "companyNoLongerAttached": "Votre accès à cette société a été révoqué. Veuillez en sélectionner une autre."
+      },
+      "issuer": {
+        "issuedFrom": "Émis par",
+        "locked": "verrouillé"
       }
+    },
+    "editPage": {
+      "loadFailed": "Impossible de charger le document. Veuillez actualiser ou réessayer plus tard."
     },
     "errors": {
       "invalidTransition": "Transition de statut invalide.",
@@ -981,6 +1000,8 @@
         "addressRequired": "L'adresse est obligatoire.",
         "prefixTooLong": "Le préfixe ne peut pas dépasser 8 caractères.",
         "prefixInvalidChars": "Le préfixe ne doit contenir que des lettres majuscules et des chiffres (A-Z, 0-9).",
+        "logoUrlInvalidScheme": "L'URL du logo doit utiliser http ou https.",
+        "logoUrlInvalidUrl": "L'URL du logo n'est pas valide.",
         "generic": "Une erreur inattendue s'est produite. Veuillez réessayer."
       }
     },
@@ -989,6 +1010,7 @@
       "expiresLine": "Expire le : {expiresAt}",
       "copyCta": "Copier le jeton",
       "copiedToast": "Jeton copié dans le presse-papiers.",
+      "copyFailedToast": "Impossible de copier dans le presse-papiers.",
       "oneShotWarning": "Enregistrez ce jeton maintenant — il ne sera plus visible après la fermeture de cette fenêtre.",
       "autoCloseCountdown": "Fermeture automatique dans {seconds}s"
     },

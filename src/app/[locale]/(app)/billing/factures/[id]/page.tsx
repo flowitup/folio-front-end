@@ -7,6 +7,7 @@
  */
 
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { fetchBillingDocument } from "@/lib/api/billing/documents";
 import { fetchMyCompanies } from "@/lib/api/companies/companies";
 import { BillingDocumentForm } from "@/components/billing/billing-document-form";
@@ -18,6 +19,7 @@ interface EditFacturePageProps {
 
 export default async function EditFacturePage({ params }: EditFacturePageProps) {
   const { id } = await params;
+  const t = await getTranslations("billing.editPage");
 
   let document;
   try {
@@ -30,7 +32,7 @@ export default async function EditFacturePage({ params }: EditFacturePageProps) 
       <div className="fade-up px-8 py-12">
         <div className="folio-card p-6">
           <p className="text-sm font-medium text-red-600">
-            Failed to load document. Please refresh or try again later.
+            {t("loadFailed")}
           </p>
         </div>
       </div>

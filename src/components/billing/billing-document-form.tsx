@@ -129,11 +129,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   // Form state
   // ---------------------------------------------------------------------------
 
-  const [createMode, setCreateMode] = useState<CreateMode>(
-    props.mode === "create" && !props.initialFromSource && !props.initialFromTemplate
-      ? "blank"
-      : "blank" // dialogs handle the navigation; mode-picker just opens them
-  );
+  const [createMode, setCreateMode] = useState<CreateMode>("blank");
   const [fromExistingOpen, setFromExistingOpen] = useState(false);
   const [fromTemplateOpen, setFromTemplateOpen] = useState(false);
 
@@ -200,7 +196,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   // ---------------------------------------------------------------------------
 
   async function handleCompanyNoLongerAttached() {
-    toast.error("Your access to this company has been revoked. Please select another company.");
+    toast.error(tForm("toast.companyNoLongerAttached"));
     setSelectedCompanyId(null);
     // Refetch attached companies so the picker shows the current list.
     try {
@@ -243,7 +239,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       if (isEdit && liveDoc) {
         const result = await updateBillingDocumentAction(liveDoc.id, payload);
         if (!result.ok) { setFormError(result.error.message); return; }
-        toast.success("Document saved.");
+        toast.success(tForm("toast.documentSaved"));
         setLiveDoc(result.data);
       } else {
         // selectedCompanyId is guaranteed non-null here — validate() guards above.
@@ -260,7 +256,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
           setFormError(result.error.message);
           return;
         }
-        toast.success("Document created.");
+        toast.success(tForm("toast.documentCreated"));
         router.push(`/${locale}/billing/${kindToSegment(kind)}/${result.data.id}`);
       }
     } catch {
@@ -275,12 +271,16 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     if (submittingRef.current) return;
     if (!liveDoc) return;
     submittingRef.current = true;
+    setIsSubmitting(true);
     try {
       const result = await deleteBillingDocumentAction(liveDoc.id);
       if (!result.ok) { toast.error(result.error.message); return; }
-      toast.success("Document deleted.");
+      toast.success(tForm("toast.documentDeleted"));
       router.push(`/${locale}/billing/${kindToSegment(kind)}`);
+    } catch {
+      toast.error(tForm("errors.deleteFailed"));
     } finally {
+      setIsSubmitting(false);
       submittingRef.current = false;
     }
   }
@@ -304,7 +304,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       const filename = parseFilenameFromContentDisposition(cd, `${liveDoc.document_number}.pdf`);
       const blob = await response.blob();
       triggerBrowserDownload(blob, filename);
-      toast.success("PDF downloaded.");
+      toast.success(tForm("toast.pdfDownloaded"));
     } catch {
       toast.error(tForm("errors.pdfFailed"));
     } finally {
@@ -334,7 +334,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         }
         return;
       }
-      toast.success("Devis converted to facture.");
+      toast.success(tForm("toast.devisConverted"));
       router.push(`/${locale}/billing/factures/${result.data.id}`);
     } catch {
       toast.error(tForm("errors.convertFailed"));
@@ -421,11 +421,11 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         editIssuerName && (
           <div className="folio-card flex items-center gap-2 px-5 py-3">
             <span className="text-[12px] font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-              Issued from
+              {tForm("issuer.issuedFrom")}
             </span>
             <span className="text-[13px] font-medium">{editIssuerName}</span>
             <span className="ml-1 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-500 ring-1 ring-stone-200">
-              locked
+              {tForm("issuer.locked")}
             </span>
           </div>
         )

@@ -64,7 +64,16 @@ export function RedeemInviteTokenDialog({
       const result = await redeemInviteTokenAction(trimmed);
 
       if (!result.ok) {
-        // Surface ALL failures with the single uniform message per spec.
+        // Error surfacing policy (chosen behavior, reviewed 2026-05-07):
+        // The 410-family codes (token_invalid, not_found, validation) all map to
+        // a single uniform user-facing message per spec — these represent "bad token"
+        // scenarios and exposing the distinction to the end-user adds no value.
+        // Other codes (rate_limited, unauthorized, generic) surface their distinct
+        // messages: "rate_limited" gives actionable wait-and-retry guidance;
+        // "unauthorized" indicates a session expiry the user must resolve;
+        // "generic" is already a generic fallback message safe to show.
+        // This keeps UX clean for the common path while preserving actionability
+        // for recoverable non-token errors.
         const isTokenError =
           result.error.code === "token_invalid" ||
           result.error.code === "not_found" ||

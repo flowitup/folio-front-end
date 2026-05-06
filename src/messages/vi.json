@@ -814,18 +814,12 @@
         "convertFailed": "Chuyển đổi báo giá sang hóa đơn thất bại.",
         "alreadyConverted": "Báo giá này đã được chuyển thành hóa đơn.",
         "invalidTransition": "Chuyển đổi trạng thái này không được phép. Tài liệu có thể đã được cập nhật bởi phiên khác.",
-        "companyProfileMissing": "Cần có hồ sơ công ty trước khi tạo tài liệu hóa đơn."
-      },
-      "missingProfile": {
-        "title": "Yêu cầu hồ sơ công ty",
-        "description": "Trước khi tạo {kind}, vui lòng hoàn thiện hồ sơ công ty. Nó cung cấp thông tin phát hành (tên pháp lý, địa chỉ, SIRET, số TVA) in trên mỗi tài liệu.",
-        "cta": "Đến Cài đặt → Hồ sơ công ty"
+        "companyRequired": "Vui lòng chọn một công ty để phát hành tài liệu này."
       }
     },
     "errors": {
       "invalidTransition": "Chuyển đổi trạng thái không hợp lệ.",
       "numberCollision": "Đã có tài liệu với số này.",
-      "companyProfileMissing": "Yêu cầu hồ sơ công ty.",
       "generic": "Đã xảy ra lỗi không mong đợi."
     }
   },

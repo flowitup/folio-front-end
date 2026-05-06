@@ -814,18 +814,12 @@
         "convertFailed": "Failed to convert quote to invoice.",
         "alreadyConverted": "This quote has already been converted to an invoice.",
         "invalidTransition": "This status transition is not allowed. The document may have been updated by another session.",
-        "companyProfileMissing": "Company profile is required before creating billing documents."
-      },
-      "missingProfile": {
-        "title": "Company profile required",
-        "description": "Before creating a {kind}, please complete your company profile. It provides the issuer details (legal name, address, SIRET, TVA number) that are printed on every document.",
-        "cta": "Go to Settings → Company Profile"
+        "companyRequired": "Please select a company to issue this document from."
       }
     },
     "errors": {
       "invalidTransition": "Invalid status transition.",
       "numberCollision": "A document with this number already exists.",
-      "companyProfileMissing": "Company profile is required.",
       "generic": "An unexpected error occurred."
     }
   },

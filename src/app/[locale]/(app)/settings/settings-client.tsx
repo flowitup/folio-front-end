@@ -7,12 +7,10 @@ import { Check, Globe, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { locales, localeNames, type Locale } from "@/i18n/config";
 import { UsersSection } from "./users/users-section";
-import { CompanyProfileSection } from "@/components/billing/company-profile-section";
 import { MyCompaniesSection } from "@/components/companies/my-companies-section";
 import { AdminCompaniesSection } from "@/components/companies/admin-companies-section";
 import type { Role } from "@/lib/api/roles";
 import type { ProjectSummary } from "@/lib/api/projects-server";
-import type { CompanyProfile } from "@/types/billing";
 import pkg from "../../../../../package.json";
 
 const SECTION_KEYS = [
@@ -20,7 +18,6 @@ const SECTION_KEYS = [
   "project",
   "team",
   "billing",
-  "company-profile",
   "my-companies",
   "notifications",
   "preferences",
@@ -44,7 +41,6 @@ const LOCALE_TAGLINES: Record<Locale, string> = {
 interface Props {
   roles: Role[];
   projects: ProjectSummary[];
-  companyProfile: CompanyProfile | null;
 }
 
 /**
@@ -60,7 +56,7 @@ function initialActiveFromHash(): SectionKey {
     : "profile";
 }
 
-export function SettingsClient({ roles, projects, companyProfile }: Props) {
+export function SettingsClient({ roles, projects }: Props) {
   const t = useTranslations("settings");
   const { user } = useAuth();
   // Lazy initializer reads window.location.hash once at mount — no effect needed.
@@ -99,11 +95,9 @@ export function SettingsClient({ roles, projects, companyProfile }: Props) {
               <span className="font-medium">
                 {key === "users"
                   ? t("users.title")
-                  : key === "company-profile"
-                    ? t("companyProfile.title")
-                    : key === "my-companies"
-                      ? t("myCompanies.title")
-                      : t(key)}
+                  : key === "my-companies"
+                    ? t("myCompanies.title")
+                    : t(key)}
               </span>
             </button>
           ))}
@@ -267,10 +261,6 @@ export function SettingsClient({ roles, projects, companyProfile }: Props) {
           </section>
         )}
 
-        {active === "company-profile" && (
-          <CompanyProfileSection initialProfile={companyProfile} />
-        )}
-
         {active === "my-companies" && (
           <div className="space-y-5">
             <MyCompaniesSection />
@@ -297,7 +287,6 @@ export function SettingsClient({ roles, projects, companyProfile }: Props) {
           active !== "project" &&
           active !== "preferences" &&
           active !== "users" &&
-          active !== "company-profile" &&
           active !== "my-companies" &&
           active !== "about" && (
             <section className="folio-card p-12 text-center">

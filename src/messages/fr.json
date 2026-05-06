@@ -814,18 +814,12 @@
         "convertFailed": "Échec de la conversion du devis en facture.",
         "alreadyConverted": "Ce devis a déjà été converti en facture.",
         "invalidTransition": "Cette transition de statut n'est pas autorisée. Le document a peut-être été modifié dans une autre session.",
-        "companyProfileMissing": "Le profil de l'entreprise est requis avant de créer des documents de facturation."
-      },
-      "missingProfile": {
-        "title": "Profil de l'entreprise requis",
-        "description": "Avant de créer un {kind}, veuillez compléter votre profil d'entreprise. Il fournit les informations de l'émetteur (raison sociale, adresse, SIRET, numéro de TVA) imprimées sur chaque document.",
-        "cta": "Aller dans Paramètres → Profil de l'entreprise"
+        "companyRequired": "Veuillez sélectionner une entreprise pour émettre ce document."
       }
     },
     "errors": {
       "invalidTransition": "Transition de statut invalide.",
       "numberCollision": "Un document avec ce numéro existe déjà.",
-      "companyProfileMissing": "Le profil de l'entreprise est requis.",
       "generic": "Une erreur inattendue s'est produite."
     }
   },

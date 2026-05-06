@@ -33,6 +33,13 @@ vi.mock(
   })
 );
 
+vi.mock(
+  "@/app/[locale]/(app)/settings/_actions/companies-actions",
+  () => ({
+    fetchMyCompaniesAction: vi.fn().mockResolvedValue({ ok: true, data: [] }),
+  })
+);
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockRouterPush }),
 }));
@@ -98,6 +105,7 @@ import {
   deleteBillingDocumentAction,
 } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import { toast } from "sonner";
+import type { MyCompany } from "@/types/companies";
 
 const mockCreate = vi.mocked(createBillingDocumentAction);
 const mockUpdate = vi.mocked(updateBillingDocumentAction);
@@ -107,6 +115,30 @@ const mockToast = toast as unknown as {
   success: ReturnType<typeof vi.fn>;
   error: ReturnType<typeof vi.fn>;
 };
+
+// ---------------------------------------------------------------------------
+// Fixtures — attached companies (required prop for create + edit modes)
+// ---------------------------------------------------------------------------
+
+const ATTACHED_COMPANIES: MyCompany[] = [
+  {
+    id: "co-1",
+    legal_name: "Maison Lavandou SAS",
+    address: "12 Rue de la Paix, 75001 Paris",
+    siret: "12345678900012",
+    tva_number: null,
+    iban: null,
+    bic: null,
+    logo_url: null,
+    default_payment_terms: null,
+    prefix_override: null,
+    created_by: "user-1",
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    is_primary: true,
+    attached_at: "2026-01-01T00:00:00Z",
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -198,13 +230,13 @@ describe("test_form_blank_create_calls_createBillingDocument_with_decimal_string
   });
 
   it("renders blank create form with Create button and no document number", () => {
-    render(<BillingDocumentForm mode="create" kind="devis" />);
+    render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />);
     expect(screen.getByRole("button", { name: /^create$/i })).toBeDefined();
     expect(screen.queryByText("Document number")).toBeNull();
   });
 
   it("shows validation error when recipient is empty on submit", async () => {
-    render(<BillingDocumentForm mode="create" kind="devis" />);
+    render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />);
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /^create$/i }));
@@ -217,7 +249,7 @@ describe("test_form_blank_create_calls_createBillingDocument_with_decimal_string
   });
 
   it("shows validation error when no items on submit", async () => {
-    render(<BillingDocumentForm mode="create" kind="devis" />);
+    render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />);
 
     const recipientInput = screen.getByLabelText(/name \*/i);
     fireEvent.change(recipientInput, { target: { value: "Client X" } });
@@ -235,7 +267,7 @@ describe("test_form_blank_create_calls_createBillingDocument_with_decimal_string
   it("calls createBillingDocumentAction with kind and decimal-string item values", async () => {
     mockCreate.mockResolvedValueOnce({ ok: true, data: makeDoc() });
 
-    render(<BillingDocumentForm mode="create" kind="devis" />);
+    render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />);
     await fillAndSubmitCreateForm("Client Corp");
 
     await waitFor(() => {
@@ -256,7 +288,7 @@ describe("test_form_blank_create_calls_createBillingDocument_with_decimal_string
   it("redirects to document page on successful create", async () => {
     mockCreate.mockResolvedValueOnce({ ok: true, data: makeDoc({ id: "new-doc-99" }) });
 
-    render(<BillingDocumentForm mode="create" kind="devis" />);
+    render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />);
     await fillAndSubmitCreateForm();
 
     await waitFor(() => {
@@ -273,7 +305,7 @@ describe("test_form_blank_create_calls_createBillingDocument_with_decimal_string
       error: { code: "validation", message: "Invalid payload" },
     });
 
-    render(<BillingDocumentForm mode="create" kind="devis" />);
+    render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />);
     await fillAndSubmitCreateForm();
 
     await waitFor(() => {
@@ -283,13 +315,13 @@ describe("test_form_blank_create_calls_createBillingDocument_with_decimal_string
   });
 
   it("facture mode shows payment due date field instead of validity_until", () => {
-    render(<BillingDocumentForm mode="create" kind="facture" />);
+    render(<BillingDocumentForm mode="create" kind="facture" attachedCompanies={ATTACHED_COMPANIES} />);
     expect(screen.getByLabelText(/payment due/i)).toBeDefined();
     expect(screen.queryByLabelText(/valid until/i)).toBeNull();
   });
 
   it("devis mode shows valid until field instead of payment due", () => {
-    render(<BillingDocumentForm mode="create" kind="devis" />);
+    render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />);
     expect(screen.getByLabelText(/valid until/i)).toBeDefined();
     expect(screen.queryByLabelText(/payment due/i)).toBeNull();
   });
@@ -306,7 +338,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
   });
 
   it("renders edit form with document number and Save changes button", () => {
-    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} />);
+    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
     expect(screen.getByRole("button", { name: /save changes/i })).toBeDefined();
     // Document number appears in both the <h2> header and the read-only field —
     // use getAllByText to avoid "found multiple elements" error.
@@ -314,7 +346,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
   });
 
   it("renders Delete button in edit mode", () => {
-    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} />);
+    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
     expect(screen.getByRole("button", { name: /delete/i })).toBeDefined();
   });
 
@@ -322,7 +354,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
     const updatedDoc = makeDoc({ recipient_name: "New Client" });
     mockUpdate.mockResolvedValueOnce({ ok: true, data: updatedDoc });
 
-    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} />);
+    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
 
     const recipientInput = screen.getByDisplayValue("ACME Corp");
     fireEvent.change(recipientInput, { target: { value: "New Client" } });
@@ -346,7 +378,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
   it("shows toast.success after successful update", async () => {
     mockUpdate.mockResolvedValueOnce({ ok: true, data: makeDoc() });
 
-    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} />);
+    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
@@ -363,7 +395,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
       error: { code: "validation", message: "Update failed" },
     });
 
-    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} />);
+    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
@@ -377,7 +409,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
   it("calls deleteBillingDocumentAction and redirects on delete", async () => {
     mockDelete.mockResolvedValueOnce({ ok: true, data: undefined });
 
-    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} />);
+    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
@@ -394,7 +426,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
   it("shows Convert to Facture button only for accepted devis in edit mode", () => {
     const acceptedDevis = makeDoc({ status: "accepted", kind: "devis" });
     render(
-      <BillingDocumentForm mode="edit" kind="devis" document={acceptedDevis} />
+      <BillingDocumentForm mode="edit" kind="devis" document={acceptedDevis} attachedCompanies={ATTACHED_COMPANIES} />
     );
     expect(
       screen.getByRole("button", { name: /convert to invoice/i })
@@ -403,7 +435,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
 
   it("does NOT show Convert to Facture for draft devis", () => {
     render(
-      <BillingDocumentForm mode="edit" kind="devis" document={makeDoc({ status: "draft" })} />
+      <BillingDocumentForm mode="edit" kind="devis" document={makeDoc({ status: "draft" })} attachedCompanies={ATTACHED_COMPANIES} />
     );
     expect(
       screen.queryByRole("button", { name: /convert to invoice/i })
@@ -416,6 +448,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
         mode="edit"
         kind="facture"
         document={makeDoc({ kind: "facture", status: "accepted" })}
+        attachedCompanies={ATTACHED_COMPANIES}
       />
     );
     expect(
@@ -424,7 +457,7 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
   });
 
   it("shows Download PDF button in edit mode", () => {
-    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} />);
+    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
     expect(screen.getByRole("button", { name: /download pdf/i })).toBeDefined();
   });
 });
@@ -437,7 +470,7 @@ describe("BillingDocumentForm — create mode picker", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("shows mode picker buttons in blank create mode", () => {
-    render(<BillingDocumentForm mode="create" kind="devis" />);
+    render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />);
     expect(screen.getByRole("button", { name: /blank/i })).toBeDefined();
     expect(screen.getByRole("button", { name: /from existing/i })).toBeDefined();
     expect(screen.getByRole("button", { name: /from template/i })).toBeDefined();
@@ -448,6 +481,7 @@ describe("BillingDocumentForm — create mode picker", () => {
       <BillingDocumentForm
         mode="create"
         kind="devis"
+        attachedCompanies={ATTACHED_COMPANIES}
         initialFromSource={makeDoc()}
       />
     );

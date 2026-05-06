@@ -99,6 +99,8 @@ export interface CompanyProfile {
 
 export interface CreateBillingDocumentPayload {
   kind: BillingDocumentKind;
+  /** Required — which company to bill from. Phase 08 (billing form picker) populates this. */
+  company_id: string;
   project_id?: string | null;
   recipient_name: string;
   recipient_address?: string | null;
@@ -132,11 +134,15 @@ export interface UpdateBillingDocumentPayload {
 
 export interface CloneBillingDocumentPayload {
   override_kind?: BillingDocumentKind | null;
+  /** Optional — defaults to caller's primary company if omitted. */
+  company_id?: string | null;
 }
 
 export interface ConvertDevisToFacturePayload {
   payment_due_date?: string | null;
   payment_terms?: string | null;
+  /** Optional — defaults to caller's primary company if omitted. */
+  company_id?: string | null;
 }
 
 export interface UpdateBillingDocumentStatusPayload {
@@ -150,6 +156,8 @@ export interface ApplyTemplatePayload {
   recipient_siret?: string | null;
   project_id?: string | null;
   issue_date?: string | null;
+  /** Optional — defaults to caller's primary company if omitted. */
+  company_id?: string | null;
 }
 
 export interface CreateBillingTemplatePayload {

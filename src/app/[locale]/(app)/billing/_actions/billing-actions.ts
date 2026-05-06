@@ -6,9 +6,10 @@
  * Each action wraps a server-only API client call and returns a discriminated
  * union: { ok: true, data } | { ok: false, error: { code, message } }.
  *
- * Special case: error code "company_profile_missing" (HTTP 409 with
- * reason: "company_profile_missing") is surfaced so callers can redirect
- * to /settings#company-profile to complete onboarding.
+ * Special-case error codes:
+ * - "company_profile_missing"      (HTTP 409) — redirect to /settings#company-profile
+ * - "company_no_longer_attached"   (HTTP 409) — user's company access revoked mid-flow;
+ *                                               phase 08 resets the company picker on this code.
  *
  * Cookie forwarding: billing mutations use JWT bearer auth (sessionAuthHeader),
  * so no Set-Cookie forwarding is needed — tokens are read from the existing
@@ -76,6 +77,11 @@ function classifyBackendError(err: unknown): { code: string; message: string } {
   // 409 with reason: "company_profile_missing" — caller should redirect to /settings#company-profile
   if (status === 409 && reason === "company_profile_missing") {
     return { code: "company_profile_missing", message: "Company profile is required before creating billing documents." };
+  }
+  // 409 with reason: "company_no_longer_attached" — user's access was revoked between picker render
+  // and form submit. Phase 08 will surface a toast + reset the company picker on this code.
+  if (status === 409 && reason === "company_no_longer_attached") {
+    return { code: "company_no_longer_attached", message: "Your access to this company has been revoked. Please select another company." };
   }
   if (status === 409) return { code: "conflict", message: bodyMsg || "A conflict occurred." };
   if (status === 400 || status === 422) return { code: "validation", message: bodyMsg || "Validation error." };

@@ -61,6 +61,13 @@ export type BillingDocumentFormProps =
       kind: BillingDocumentKind;
       initialFromSource?: BillingDocument;
       initialFromTemplate?: BillingDocumentTemplate;
+      /**
+       * Company to bill from.
+       * Phase 08 (billing form company picker) will make this required and wire
+       * it to a MyCompany picker. Until then it is optional; the action will
+       * surface a BE validation error at submit time if omitted.
+       */
+      company_id?: string;
     }
   | {
       mode: "edit";
@@ -206,7 +213,10 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         toast.success("Document saved.");
         setLiveDoc(result.data);
       } else {
-        const result = await createBillingDocumentAction({ kind, ...payload });
+        // company_id is optional here until phase 08 wires a company picker.
+        // If omitted the BE returns a validation error surfaced via setFormError.
+        const companyId = props.mode === "create" ? (props.company_id ?? "") : "";
+        const result = await createBillingDocumentAction({ kind, company_id: companyId, ...payload });
         if (!result.ok) { setFormError(result.error.message); return; }
         toast.success("Document created.");
         router.push(`/${locale}/billing/${kindToSegment(kind)}/${result.data.id}`);

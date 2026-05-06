@@ -5,8 +5,10 @@
  *   - billing.*
  *   - settings.companyProfile.*
  *   - sidebar.billing.*
+ *   - companies.*
  *
  * Also asserts no empty-string values exist under those namespaces.
+ * Also asserts removed keys (billing.errors.companyProfileMissing.*) are absent.
  */
 import { describe, it, expect } from "vitest";
 import en from "@/messages/en.json";
@@ -51,6 +53,7 @@ const NAMESPACES = [
   "billing",
   "settings.companyProfile",
   "sidebar.billing",
+  "companies",
 ] as const;
 
 const LOCALES = [
@@ -98,4 +101,19 @@ describe("i18n billing parity", () => {
       }
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // Removed keys assertions (phase 08 removed these; verify they stay gone)
+  // ---------------------------------------------------------------------------
+
+  describe("removed keys: billing.errors.companyProfileMissing", () => {
+    const REMOVED_PATH = "billing.errors.companyProfileMissing";
+
+    for (const locale of LOCALES) {
+      it(`${locale.name} does not contain ${REMOVED_PATH}`, () => {
+        const node = dig(locale.messages, REMOVED_PATH);
+        expect(node, `${REMOVED_PATH} should be absent in ${locale.name}`).toBeUndefined();
+      });
+    }
+  });
 });

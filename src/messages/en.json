@@ -991,6 +991,15 @@
       "copiedToast": "Token copied to clipboard.",
       "oneShotWarning": "Save this token now — you will not see it again after closing this dialog.",
       "autoCloseCountdown": "Auto-closes in {seconds}s"
+    },
+    "picker": {
+      "label": "Issued from",
+      "placeholder": "Select a company",
+      "primaryBadge": "Primary",
+      "noCompaniesCalloutTitle": "No company attached",
+      "noCompaniesCalloutBody": "Add a company in Settings to start creating quotes & invoices.",
+      "noCompaniesCalloutCta": "Open Settings",
+      "detachedDuringEditError": "The selected company is no longer attached to your account. Please refresh the page."
     }
   }
 }

@@ -195,6 +195,7 @@ describe("test_api_client_documents_url_method_body_contract", () => {
 
       const payload = {
         kind: "devis" as const,
+        company_id: "company-1",
         recipient_name: "ACME Corp",
         items: [SAMPLE_ITEM],
       };

@@ -1,22 +1,22 @@
 /**
  * New facture page — server component.
  *
- * Guards:
- *   - Missing company profile → renders an inline callout instead of the form.
+ * Fetches the user's attached companies server-side.
+ * - 0 attached → renders NoAttachedCompaniesCallout instead of the form.
+ * - 1+ attached → renders BillingDocumentForm with the company picker.
  *
  * Query params:
  *   ?from=<id>       — pre-load source document (clone mode)
  *   ?template=<id>   — pre-load template (apply-template mode)
  */
 
-import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
-import { getTranslations } from "next-intl/server";
-import { fetchCompanyProfile } from "@/lib/api/billing/company-profile";
+import { fetchMyCompanies } from "@/lib/api/companies/companies";
 import { fetchBillingDocument } from "@/lib/api/billing/documents";
 import { fetchBillingTemplate } from "@/lib/api/billing/templates";
 import { BillingDocumentForm } from "@/components/billing/billing-document-form";
+import { NoAttachedCompaniesCallout } from "@/components/billing/no-attached-companies-callout";
 import type { BillingDocument, BillingDocumentTemplate } from "@/types/billing";
+import type { MyCompany } from "@/types/companies";
 
 interface NewFacturePageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -27,17 +27,16 @@ export default async function NewFacturePage({ searchParams }: NewFacturePagePro
   const fromId = typeof params.from === "string" ? params.from : undefined;
   const templateId = typeof params.template === "string" ? params.template : undefined;
 
-  // Guard: company profile must exist before creating billing documents.
-  let profileMissing = false;
+  // Fetch attached companies — required before allowing document creation.
+  let attachedCompanies: MyCompany[] = [];
   try {
-    const profile = await fetchCompanyProfile();
-    if (!profile) profileMissing = true;
+    attachedCompanies = await fetchMyCompanies();
   } catch {
-    console.warn("[NewFacturePage] Could not check company profile.");
+    console.warn("[NewFacturePage] Could not fetch attached companies.");
   }
 
-  if (profileMissing) {
-    return <MissingProfileCallout />;
+  if (attachedCompanies.length === 0) {
+    return <NoAttachedCompaniesCallout />;
   }
 
   // Optional: pre-load source document for clone mode
@@ -64,31 +63,9 @@ export default async function NewFacturePage({ searchParams }: NewFacturePagePro
     <BillingDocumentForm
       mode="create"
       kind="facture"
+      attachedCompanies={attachedCompanies}
       initialFromSource={sourceDoc}
       initialFromTemplate={templateDoc}
     />
-  );
-}
-
-async function MissingProfileCallout() {
-  const t = await getTranslations("billing.form.missingProfile");
-  return (
-    <div className="fade-up px-8 py-12">
-      <div className="folio-card flex max-w-lg flex-col items-start gap-4 p-6">
-        <div className="flex items-center gap-3 text-amber-700">
-          <AlertTriangle size={20} className="shrink-0" />
-          <p className="text-sm font-medium">{t("title")}</p>
-        </div>
-        <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-          {t("description", { kind: "facture" })}
-        </p>
-        <Link
-          href="/settings#company-profile"
-          className="rounded-md bg-amber-50 px-3 py-1.5 text-[13px] font-medium text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100 transition-colors"
-        >
-          {t("cta")}
-        </Link>
-      </div>
-    </div>
   );
 }

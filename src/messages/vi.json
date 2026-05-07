@@ -260,7 +260,13 @@
       }
     },
     "about": "Giới thiệu",
-    "version": "Phiên bản"
+    "version": "Phiên bản",
+    "myCompanies": {
+      "title": "My companies"
+    },
+    "companies": {
+      "backToSettings": "Quay lại Cài đặt"
+    }
   },
   "errors": {
     "unauthorized": "Không được phép",
@@ -807,22 +813,32 @@
         "itemUnitPricePositive": "Đơn giá không được âm.",
         "itemVatRatePositive": "Tỉ lệ VAT không được âm.",
         "saveFailed": "Đã xảy ra lỗi không mong đợi. Vui lòng thử lại.",
+        "deleteFailed": "Xóa tài liệu thất bại. Vui lòng thử lại.",
         "pdfFailed": "Tải PDF thất bại. Vui lòng thử lại.",
         "convertFailed": "Chuyển đổi báo giá sang hóa đơn thất bại.",
         "alreadyConverted": "Báo giá này đã được chuyển thành hóa đơn.",
         "invalidTransition": "Chuyển đổi trạng thái này không được phép. Tài liệu có thể đã được cập nhật bởi phiên khác.",
-        "companyProfileMissing": "Cần có hồ sơ công ty trước khi tạo tài liệu hóa đơn."
+        "companyRequired": "Vui lòng chọn một công ty để phát hành tài liệu này."
       },
-      "missingProfile": {
-        "title": "Yêu cầu hồ sơ công ty",
-        "description": "Trước khi tạo {kind}, vui lòng hoàn thiện hồ sơ công ty. Nó cung cấp thông tin phát hành (tên pháp lý, địa chỉ, SIRET, số TVA) in trên mỗi tài liệu.",
-        "cta": "Đến Cài đặt → Hồ sơ công ty"
+      "toast": {
+        "documentSaved": "Đã lưu tài liệu.",
+        "documentCreated": "Đã tạo tài liệu.",
+        "documentDeleted": "Đã xóa tài liệu.",
+        "pdfDownloaded": "Đã tải PDF.",
+        "devisConverted": "Đã chuyển báo giá thành hóa đơn.",
+        "companyNoLongerAttached": "Quyền truy cập vào công ty này đã bị thu hồi. Vui lòng chọn công ty khác."
+      },
+      "issuer": {
+        "issuedFrom": "Phát hành từ",
+        "locked": "đã khóa"
       }
+    },
+    "editPage": {
+      "loadFailed": "Không thể tải tài liệu. Vui lòng tải lại trang hoặc thử lại sau."
     },
     "errors": {
       "invalidTransition": "Chuyển đổi trạng thái không hợp lệ.",
       "numberCollision": "Đã có tài liệu với số này.",
-      "companyProfileMissing": "Yêu cầu hồ sơ công ty.",
       "generic": "Đã xảy ra lỗi không mong đợi."
     }
   },
@@ -869,6 +885,143 @@
     "empty": {
       "members": "Chưa có thành viên nào",
       "pending": "Không có lời mời nào đang chờ"
+    }
+  },
+  "companies": {
+    "masking": {
+      "tooltip": "Chỉ quản trị viên mới nhìn thấy"
+    },
+    "my": {
+      "title": "Công ty của tôi",
+      "description": "Các công ty bạn đang liên kết. Các trường nhạy cảm được ẩn đi.",
+      "addCta": "Thêm công ty",
+      "empty": {
+        "title": "Chưa liên kết công ty nào",
+        "cta": "Dùng mã mời từ quản trị viên để liên kết công ty đầu tiên của bạn."
+      },
+      "card": {
+        "primaryBadge": "Chính",
+        "setPrimary": "Đặt làm chính",
+        "detach": "Hủy liên kết",
+        "detachConfirm": "Xóa bạn khỏi \"{name}\"? Bạn sẽ mất quyền truy cập và cần mã mời mới để liên kết lại."
+      }
+    },
+    "invite": {
+      "dialogTitle": "Liên kết công ty",
+      "inputLabel": "Mã mời",
+      "inputPlaceholder": "Dán mã mời do quản trị viên cung cấp…",
+      "attachCta": "Liên kết",
+      "successToast": "Đã liên kết công ty thành công.",
+      "tokenInvalidError": "Mã mời không hợp lệ, đã hết hạn hoặc đã được sử dụng."
+    },
+    "admin": {
+      "title": "Tất cả công ty",
+      "description": "Giao diện quản trị — hiển thị đầy đủ giá trị các trường nhạy cảm.",
+      "newCompany": "Công ty mới",
+      "createSuccessToast": "Đã tạo công ty.",
+      "empty": {
+        "title": "Chưa có công ty nào",
+        "description": "Tạo công ty đầu tiên để bắt đầu."
+      },
+      "table": {
+        "createdAt": "Ngày tạo",
+        "showingOf": "Hiển thị {shown} trong số {total}"
+      },
+      "manage": {
+        "title": "Quản lý",
+        "tabs": {
+          "edit": "Chỉnh sửa",
+          "invites": "Mã mời",
+          "users": "Người dùng liên kết",
+          "delete": "Xóa"
+        },
+        "edit": {
+          "save": "Lưu thay đổi",
+          "savedToast": "Đã lưu công ty."
+        },
+        "invites": {
+          "title": "Mã mời",
+          "description": "Tạo mã dùng một lần có hiệu lực 7 ngày. Chia sẻ với người dùng cần liên kết công ty này.",
+          "generate": "Tạo mã mời",
+          "regenerate": "Tạo lại mã mời",
+          "regenerateConfirm": "Đã có mã mời đang hoạt động. Tạo lại sẽ vô hiệu hóa mã cũ. Tiếp tục?",
+          "revoke": "Thu hồi mã đang hoạt động",
+          "revokeConfirm": "Thao tác này sẽ vô hiệu hóa ngay mã hiện tại. Người dùng chưa dùng mã sẽ cần mã mới.",
+          "revokedToast": "Đã thu hồi mã mời.",
+          "policyNote": "Mã dùng một lần và hết hạn sau 7 ngày. Mỗi công ty chỉ có một mã đang hoạt động."
+        },
+        "attached": {
+          "nameEmail": "Tên / Email",
+          "attachedAt": "Ngày liên kết",
+          "primaryBadge": "Chính",
+          "boot": "Xóa người dùng",
+          "bootConfirm": "Xóa {name} khỏi công ty này? Họ sẽ mất quyền truy cập ngay lập tức.",
+          "empty": "Chưa có người dùng nào liên kết với công ty này.",
+          "countSingular": "người dùng",
+          "countPlural": "người dùng"
+        },
+        "delete": {
+          "title": "Xóa công ty",
+          "body": "Xóa vĩnh viễn công ty này. Tất cả người dùng liên kết sẽ mất quyền truy cập. Các bản chụp tài liệu hiện có được giữ nguyên. Hành động này không thể hoàn tác.",
+          "confirm": "Xóa công ty",
+          "deletedToast": "Đã xóa công ty."
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "legalName": "Tên pháp lý",
+        "legalName.placeholder": "vd. Công ty TNHH Lavandou",
+        "address": "Địa chỉ",
+        "address.placeholder": "Số nhà, đường, thành phố, mã bưu chính, quốc gia",
+        "siret": "Mã số doanh nghiệp",
+        "siret.placeholder": "vd. 12345678900012",
+        "tvaNumber": "Mã số thuế GTGT",
+        "tvaNumber.placeholder": "vd. FR12345678901",
+        "iban": "Số IBAN",
+        "iban.placeholder": "vd. FR76 3000 6000 0112 3456 7890 189",
+        "bic": "Mã BIC / SWIFT",
+        "bic.placeholder": "vd. BNPAFRPPXXX",
+        "logoUrl": "URL logo",
+        "logoUrl.placeholder": "https://example.com/logo.png",
+        "defaultPaymentTerms": "Điều khoản thanh toán mặc định",
+        "defaultPaymentTerms.placeholder": "vd. Thanh toán trong vòng 30 ngày kể từ ngày xuất hóa đơn.",
+        "defaultPaymentTerms.help": "Tự động điền vào hóa đơn mới. Có thể chỉnh sửa theo từng tài liệu.",
+        "prefixOverride": "Tiền tố số tài liệu",
+        "prefixOverride.placeholder": "vd. FLW (tối đa 8 ký tự)",
+        "prefixOverride.help": "Tùy chọn. Chỉ dùng chữ hoa và chữ số. Tối đa 8 ký tự. Vd. \"FLW\" → FLW-DEV-2026-001."
+      },
+      "actions": {
+        "cancel": "Hủy",
+        "save": "Lưu"
+      },
+      "errors": {
+        "legalNameRequired": "Tên pháp lý là bắt buộc.",
+        "addressRequired": "Địa chỉ là bắt buộc.",
+        "prefixTooLong": "Tiền tố không được vượt quá 8 ký tự.",
+        "prefixInvalidChars": "Tiền tố chỉ được chứa chữ hoa và chữ số (A-Z, 0-9).",
+        "logoUrlInvalidScheme": "URL logo phải sử dụng http hoặc https.",
+        "logoUrlInvalidUrl": "URL logo không hợp lệ.",
+        "generic": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
+      }
+    },
+    "tokenGenerated": {
+      "dialogTitle": "Đã tạo mã mời",
+      "expiresLine": "Hết hạn: {expiresAt}",
+      "copyCta": "Sao chép mã",
+      "copiedToast": "Đã sao chép mã vào bộ nhớ tạm.",
+      "copyFailedToast": "Không thể sao chép vào bộ nhớ tạm.",
+      "oneShotWarning": "Hãy lưu mã này ngay — bạn sẽ không thấy lại sau khi đóng hộp thoại này.",
+      "autoCloseCountdown": "Tự động đóng sau {seconds}s"
+    },
+    "picker": {
+      "label": "Phát hành từ",
+      "placeholder": "Chọn công ty",
+      "primaryBadge": "Chính",
+      "noCompaniesCalloutTitle": "Chưa liên kết công ty",
+      "noCompaniesCalloutBody": "Thêm công ty trong Cài đặt để bắt đầu tạo báo giá và hóa đơn.",
+      "noCompaniesCalloutCta": "Mở cài đặt",
+      "detachedDuringEditError": "Công ty đã chọn không còn liên kết với tài khoản của bạn. Vui lòng tải lại trang."
     }
   }
 }

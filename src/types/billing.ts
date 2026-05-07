@@ -78,27 +78,14 @@ export interface BillingDocumentTemplate {
   updated_at: string;
 }
 
-export interface CompanyProfile {
-  user_id: string;
-  legal_name: string;
-  address: string;
-  siret: string | null;
-  tva_number: string | null;
-  iban: string | null;
-  bic: string | null;
-  logo_url: string | null;
-  default_payment_terms: string | null;
-  prefix_override: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 // ---------------------------------------------------------------------------
 // Request payload types
 // ---------------------------------------------------------------------------
 
 export interface CreateBillingDocumentPayload {
   kind: BillingDocumentKind;
+  /** Required — which company to bill from. Phase 08 (billing form picker) populates this. */
+  company_id: string;
   project_id?: string | null;
   recipient_name: string;
   recipient_address?: string | null;
@@ -132,11 +119,15 @@ export interface UpdateBillingDocumentPayload {
 
 export interface CloneBillingDocumentPayload {
   override_kind?: BillingDocumentKind | null;
+  /** Optional — defaults to caller's primary company if omitted. */
+  company_id?: string | null;
 }
 
 export interface ConvertDevisToFacturePayload {
   payment_due_date?: string | null;
   payment_terms?: string | null;
+  /** Optional — defaults to caller's primary company if omitted. */
+  company_id?: string | null;
 }
 
 export interface UpdateBillingDocumentStatusPayload {
@@ -150,6 +141,8 @@ export interface ApplyTemplatePayload {
   recipient_siret?: string | null;
   project_id?: string | null;
   issue_date?: string | null;
+  /** Optional — defaults to caller's primary company if omitted. */
+  company_id?: string | null;
 }
 
 export interface CreateBillingTemplatePayload {
@@ -169,14 +162,3 @@ export interface UpdateBillingTemplatePayload {
   default_vat_rate?: string | null;
 }
 
-export interface UpsertCompanyProfilePayload {
-  legal_name: string;
-  address: string;
-  siret?: string | null;
-  tva_number?: string | null;
-  iban?: string | null;
-  bic?: string | null;
-  logo_url?: string | null;
-  default_payment_terms?: string | null;
-  prefix_override?: string | null;
-}

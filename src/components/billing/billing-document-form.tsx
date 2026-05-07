@@ -9,12 +9,13 @@
  *
  * Layout (top → bottom):
  *   1. Header bar
- *   2. Mode picker (create + no pre-fill only)
- *   3. Recipient block
- *   4. Meta block (dates, document number read-only on edit)
- *   5. Items editor (live totals)
- *   6. Notes / Terms / Signature block
- *   7. Footer (Cancel / Save / optional Delete)
+ *   2. Company picker (create mode) OR locked issuer label (edit mode)
+ *   3. Mode picker (create + no pre-fill only)
+ *   4. Recipient block
+ *   5. Meta block (dates, document number read-only on edit)
+ *   6. Items editor (live totals)
+ *   7. Notes / Terms / Signature block
+ *   8. Footer (Cancel / Save / optional Delete)
  *
  * State: plain useState (no react-hook-form). Server is source of truth.
  */
@@ -33,12 +34,14 @@ import { BillingStatusMenu } from "@/components/billing/billing-status-menu";
 import { BillingDocumentItemsEditor } from "@/components/billing/billing-document-items-editor";
 import { CreateFromExistingDialog } from "@/components/billing/create-from-existing-dialog";
 import { ApplyTemplateDialog } from "@/components/billing/apply-template-dialog";
+import { CompanyPickerSelect } from "@/components/billing/company-picker-select";
 import {
   createBillingDocumentAction,
   updateBillingDocumentAction,
   deleteBillingDocumentAction,
   convertDevisToFactureAction,
 } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
+import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { env } from "@/lib/config/env";
 import { getApiAccessToken } from "@/lib/api/http";
@@ -49,6 +52,7 @@ import type {
   BillingDocumentTemplate,
   BillingDocumentItem,
 } from "@/types/billing";
+import type { MyCompany } from "@/types/companies";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 
 // ---------------------------------------------------------------------------
@@ -59,6 +63,8 @@ export type BillingDocumentFormProps =
   | {
       mode: "create";
       kind: BillingDocumentKind;
+      /** Companies the user is attached to — required for create mode. */
+      attachedCompanies: MyCompany[];
       initialFromSource?: BillingDocument;
       initialFromTemplate?: BillingDocumentTemplate;
     }
@@ -66,6 +72,8 @@ export type BillingDocumentFormProps =
       mode: "edit";
       kind: BillingDocumentKind;
       document: BillingDocument;
+      /** Companies the user is attached to — used to resolve issuer label in edit mode. */
+      attachedCompanies: MyCompany[];
     };
 
 // ---------------------------------------------------------------------------
@@ -105,14 +113,23 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     props.mode === "create" ? props.initialFromTemplate : null;
 
   // ---------------------------------------------------------------------------
+  // Company picker state
+  // ---------------------------------------------------------------------------
+
+  // Create mode: selectedCompanyId is set by the picker; null until picker resolves default.
+  // Edit mode: issuer is snapshotted at creation time — only issuer_legal_name is available.
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+
+  // Runtime-refetchable attached companies (reset when company_no_longer_attached).
+  const [attachedCompanies, setAttachedCompanies] = useState<MyCompany[]>(
+    props.attachedCompanies
+  );
+
+  // ---------------------------------------------------------------------------
   // Form state
   // ---------------------------------------------------------------------------
 
-  const [createMode, setCreateMode] = useState<CreateMode>(
-    props.mode === "create" && !props.initialFromSource && !props.initialFromTemplate
-      ? "blank"
-      : "blank" // dialogs handle the navigation; mode-picker just opens them
-  );
+  const [createMode, setCreateMode] = useState<CreateMode>("blank");
   const [fromExistingOpen, setFromExistingOpen] = useState(false);
   const [fromTemplateOpen, setFromTemplateOpen] = useState(false);
 
@@ -162,6 +179,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   // ---------------------------------------------------------------------------
 
   function validate(): string | null {
+    if (!isEdit && !selectedCompanyId) return tForm("errors.companyRequired");
     if (!recipientName.trim()) return tForm("errors.recipientRequired");
     if (items.length === 0) return tForm("errors.atLeastOneItem");
     for (const item of items) {
@@ -171,6 +189,24 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       if (Number(item.vat_rate) < 0) return tForm("errors.itemVatRatePositive");
     }
     return null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // 409 company_no_longer_attached handler
+  // ---------------------------------------------------------------------------
+
+  async function handleCompanyNoLongerAttached() {
+    toast.error(tForm("toast.companyNoLongerAttached"));
+    setSelectedCompanyId(null);
+    // Refetch attached companies so the picker shows the current list.
+    try {
+      const result = await fetchMyCompaniesAction();
+      if (result.ok) {
+        setAttachedCompanies(result.data);
+      }
+    } catch {
+      // Non-fatal — picker will reflect stale list until page refresh.
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -203,12 +239,24 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       if (isEdit && liveDoc) {
         const result = await updateBillingDocumentAction(liveDoc.id, payload);
         if (!result.ok) { setFormError(result.error.message); return; }
-        toast.success("Document saved.");
+        toast.success(tForm("toast.documentSaved"));
         setLiveDoc(result.data);
       } else {
-        const result = await createBillingDocumentAction({ kind, ...payload });
-        if (!result.ok) { setFormError(result.error.message); return; }
-        toast.success("Document created.");
+        // selectedCompanyId is guaranteed non-null here — validate() guards above.
+        const result = await createBillingDocumentAction({
+          kind,
+          company_id: selectedCompanyId!,
+          ...payload,
+        });
+        if (!result.ok) {
+          if (result.error.code === "company_no_longer_attached") {
+            await handleCompanyNoLongerAttached();
+            return;
+          }
+          setFormError(result.error.message);
+          return;
+        }
+        toast.success(tForm("toast.documentCreated"));
         router.push(`/${locale}/billing/${kindToSegment(kind)}/${result.data.id}`);
       }
     } catch {
@@ -223,12 +271,16 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     if (submittingRef.current) return;
     if (!liveDoc) return;
     submittingRef.current = true;
+    setIsSubmitting(true);
     try {
       const result = await deleteBillingDocumentAction(liveDoc.id);
       if (!result.ok) { toast.error(result.error.message); return; }
-      toast.success("Document deleted.");
+      toast.success(tForm("toast.documentDeleted"));
       router.push(`/${locale}/billing/${kindToSegment(kind)}`);
+    } catch {
+      toast.error(tForm("errors.deleteFailed"));
     } finally {
+      setIsSubmitting(false);
       submittingRef.current = false;
     }
   }
@@ -252,7 +304,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
       const filename = parseFilenameFromContentDisposition(cd, `${liveDoc.document_number}.pdf`);
       const blob = await response.blob();
       triggerBrowserDownload(blob, filename);
-      toast.success("PDF downloaded.");
+      toast.success(tForm("toast.pdfDownloaded"));
     } catch {
       toast.error(tForm("errors.pdfFailed"));
     } finally {
@@ -267,8 +319,14 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     convertingRef.current = true;
     setIsConverting(true);
     try {
-      const result = await convertDevisToFactureAction(liveDoc.id);
+      const result = await convertDevisToFactureAction(liveDoc.id, {
+        company_id: selectedCompanyId ?? undefined,
+      });
       if (!result.ok) {
+        if (result.error.code === "company_no_longer_attached") {
+          await handleCompanyNoLongerAttached();
+          return;
+        }
         if (result.error.code === "conflict") {
           toast.error(tForm("errors.alreadyConverted"));
         } else {
@@ -276,7 +334,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         }
         return;
       }
-      toast.success("Devis converted to facture.");
+      toast.success(tForm("toast.devisConverted"));
       router.push(`/${locale}/billing/factures/${result.data.id}`);
     } catch {
       toast.error(tForm("errors.convertFailed"));
@@ -296,6 +354,9 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   const kindLabel = tBilling(`${kind}.list.title`);
   const newLabel = tBilling(`${kind}.list.new`);
   const listPath = `/${locale}/billing/${kindToSegment(kind)}`;
+
+  // Edit mode: issuer is snapshotted at creation — use the stored issuer_legal_name directly.
+  const editIssuerName = isEdit ? (props.document.issuer_legal_name ?? null) : null;
 
   // ---------------------------------------------------------------------------
   // Render
@@ -354,7 +415,31 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         )}
       </div>
 
-      {/* 2. Mode picker (create, no pre-fill) */}
+      {/* 2. Company picker / locked issuer */}
+      {isEdit ? (
+        /* Edit mode: read-only issuer display */
+        editIssuerName && (
+          <div className="folio-card flex items-center gap-2 px-5 py-3">
+            <span className="text-[12px] font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              {tForm("issuer.issuedFrom")}
+            </span>
+            <span className="text-[13px] font-medium">{editIssuerName}</span>
+            <span className="ml-1 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-500 ring-1 ring-stone-200">
+              {tForm("issuer.locked")}
+            </span>
+          </div>
+        )
+      ) : (
+        /* Create mode: company picker */
+        <CompanyPickerSelect
+          kind={kind}
+          attachedCompanies={attachedCompanies}
+          value={selectedCompanyId}
+          onChange={setSelectedCompanyId}
+        />
+      )}
+
+      {/* 3. Mode picker (create, no pre-fill) */}
       {!isEdit &&
         !props.initialFromSource &&
         !props.initialFromTemplate && (
@@ -386,7 +471,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
           </div>
         )}
 
-      {/* 3. Recipient block */}
+      {/* 4. Recipient block */}
       <div className="folio-card space-y-4 p-5">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
           {tForm("recipient.section")}
@@ -450,7 +535,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         </div>
       </div>
 
-      {/* 4. Meta block */}
+      {/* 5. Meta block */}
       <div className="folio-card space-y-4 p-5">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
           {tForm("details.section")}
@@ -509,7 +594,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         </div>
       </div>
 
-      {/* 5. Items editor */}
+      {/* 6. Items editor */}
       <div className="space-y-2">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
           {tForm("items.section")}
@@ -517,7 +602,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         <BillingDocumentItemsEditor items={items} onChange={setItems} />
       </div>
 
-      {/* 6. Notes / Terms / Signature */}
+      {/* 7. Notes / Terms / Signature */}
       <div className="folio-card space-y-4 p-5">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
           {tForm("notes.section")}
@@ -564,7 +649,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         </Alert>
       )}
 
-      {/* 7. Footer */}
+      {/* 8. Footer */}
       <div className="flex items-center gap-3">
         <Button
           type="button"

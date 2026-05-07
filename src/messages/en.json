@@ -260,7 +260,13 @@
       }
     },
     "about": "About",
-    "version": "Version"
+    "version": "Version",
+    "myCompanies": {
+      "title": "My companies"
+    },
+    "companies": {
+      "backToSettings": "Back to Settings"
+    }
   },
   "errors": {
     "unauthorized": "Unauthorized",
@@ -807,22 +813,32 @@
         "itemUnitPricePositive": "Item unit price cannot be negative.",
         "itemVatRatePositive": "Item VAT rate cannot be negative.",
         "saveFailed": "An unexpected error occurred. Please try again.",
+        "deleteFailed": "Failed to delete document. Please try again.",
         "pdfFailed": "Failed to download PDF. Please try again.",
         "convertFailed": "Failed to convert quote to invoice.",
         "alreadyConverted": "This quote has already been converted to an invoice.",
         "invalidTransition": "This status transition is not allowed. The document may have been updated by another session.",
-        "companyProfileMissing": "Company profile is required before creating billing documents."
+        "companyRequired": "Please select a company to issue this document from."
       },
-      "missingProfile": {
-        "title": "Company profile required",
-        "description": "Before creating a {kind}, please complete your company profile. It provides the issuer details (legal name, address, SIRET, TVA number) that are printed on every document.",
-        "cta": "Go to Settings → Company Profile"
+      "toast": {
+        "documentSaved": "Document saved.",
+        "documentCreated": "Document created.",
+        "documentDeleted": "Document deleted.",
+        "pdfDownloaded": "PDF downloaded.",
+        "devisConverted": "Quote converted to invoice.",
+        "companyNoLongerAttached": "Your access to this company has been revoked. Please select another company."
+      },
+      "issuer": {
+        "issuedFrom": "Issued from",
+        "locked": "locked"
       }
+    },
+    "editPage": {
+      "loadFailed": "Failed to load document. Please refresh or try again later."
     },
     "errors": {
       "invalidTransition": "Invalid status transition.",
       "numberCollision": "A document with this number already exists.",
-      "companyProfileMissing": "Company profile is required.",
       "generic": "An unexpected error occurred."
     }
   },
@@ -869,6 +885,143 @@
     "empty": {
       "members": "No members yet",
       "pending": "No pending invitations"
+    }
+  },
+  "companies": {
+    "masking": {
+      "tooltip": "Visible to admins only"
+    },
+    "my": {
+      "title": "My Companies",
+      "description": "Companies you are attached to. Sensitive fields are masked.",
+      "addCta": "Add company",
+      "empty": {
+        "title": "No companies attached yet",
+        "cta": "Use an invite token from your admin to attach your first company."
+      },
+      "card": {
+        "primaryBadge": "Primary",
+        "setPrimary": "Set as primary",
+        "detach": "Detach",
+        "detachConfirm": "Remove yourself from \"{name}\"? You will lose access and will need a new invite token to re-attach."
+      }
+    },
+    "invite": {
+      "dialogTitle": "Attach a company",
+      "inputLabel": "Invite token",
+      "inputPlaceholder": "Paste the token your admin shared…",
+      "attachCta": "Attach",
+      "successToast": "Company attached successfully.",
+      "tokenInvalidError": "Invite token is invalid, expired, or already used."
+    },
+    "admin": {
+      "title": "All Companies",
+      "description": "Admin view — full sensitive field values visible.",
+      "newCompany": "New company",
+      "createSuccessToast": "Company created.",
+      "empty": {
+        "title": "No companies yet",
+        "description": "Create your first company to get started."
+      },
+      "table": {
+        "createdAt": "Created",
+        "showingOf": "Showing {shown} of {total}"
+      },
+      "manage": {
+        "title": "Manage",
+        "tabs": {
+          "edit": "Edit",
+          "invites": "Invite tokens",
+          "users": "Attached users",
+          "delete": "Delete"
+        },
+        "edit": {
+          "save": "Save changes",
+          "savedToast": "Company saved."
+        },
+        "invites": {
+          "title": "Invite token",
+          "description": "Generate a single-use token valid for 7 days. Share it with the user who should attach this company.",
+          "generate": "Generate invite",
+          "regenerate": "Regenerate token",
+          "regenerateConfirm": "An active invite token already exists. Regenerating will invalidate it. Continue?",
+          "revoke": "Revoke active token",
+          "revokeConfirm": "This will immediately invalidate the current token. Any user who has not yet redeemed it will need a new one.",
+          "revokedToast": "Invite token revoked.",
+          "policyNote": "Tokens are single-use and expire after 7 days. Only one active token per company."
+        },
+        "attached": {
+          "nameEmail": "Name / Email",
+          "attachedAt": "Attached",
+          "primaryBadge": "Primary",
+          "boot": "Boot user",
+          "bootConfirm": "Remove {name} from this company? They will lose access immediately.",
+          "empty": "No users attached to this company yet.",
+          "countSingular": "user",
+          "countPlural": "users"
+        },
+        "delete": {
+          "title": "Delete company",
+          "body": "Permanently delete this company. All attached users will lose access. Existing document snapshots are preserved. This action cannot be undone.",
+          "confirm": "Delete company",
+          "deletedToast": "Company deleted."
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "legalName": "Legal name",
+        "legalName.placeholder": "e.g. Maison Lavandou SAS",
+        "address": "Address",
+        "address.placeholder": "Street, city, postal code, country",
+        "siret": "SIRET",
+        "siret.placeholder": "e.g. 12345678900012",
+        "tvaNumber": "TVA number",
+        "tvaNumber.placeholder": "e.g. FR12345678901",
+        "iban": "IBAN",
+        "iban.placeholder": "e.g. FR76 3000 6000 0112 3456 7890 189",
+        "bic": "BIC / SWIFT",
+        "bic.placeholder": "e.g. BNPAFRPPXXX",
+        "logoUrl": "Logo URL",
+        "logoUrl.placeholder": "https://example.com/logo.png",
+        "defaultPaymentTerms": "Default payment terms",
+        "defaultPaymentTerms.placeholder": "e.g. Payment due 30 days from invoice date.",
+        "defaultPaymentTerms.help": "Pre-filled on new invoices. Editable per document.",
+        "prefixOverride": "Document number prefix",
+        "prefixOverride.placeholder": "e.g. FLW (up to 8 chars)",
+        "prefixOverride.help": "Optional. Uppercase letters and digits only. Max 8 chars. E.g. \"FLW\" → FLW-DEV-2026-001."
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "errors": {
+        "legalNameRequired": "Legal name is required.",
+        "addressRequired": "Address is required.",
+        "prefixTooLong": "Prefix must be 8 characters or fewer.",
+        "prefixInvalidChars": "Prefix must contain only uppercase letters and digits (A-Z, 0-9).",
+        "logoUrlInvalidScheme": "Logo URL must use http or https.",
+        "logoUrlInvalidUrl": "Logo URL is not a valid URL.",
+        "generic": "An unexpected error occurred. Please try again."
+      }
+    },
+    "tokenGenerated": {
+      "dialogTitle": "Invite token generated",
+      "expiresLine": "Expires: {expiresAt}",
+      "copyCta": "Copy token",
+      "copiedToast": "Token copied to clipboard.",
+      "copyFailedToast": "Could not copy to clipboard.",
+      "oneShotWarning": "Save this token now — you will not see it again after closing this dialog.",
+      "autoCloseCountdown": "Auto-closes in {seconds}s"
+    },
+    "picker": {
+      "label": "Issued from",
+      "placeholder": "Select a company",
+      "primaryBadge": "Primary",
+      "noCompaniesCalloutTitle": "No company attached",
+      "noCompaniesCalloutBody": "Add a company in Settings to start creating quotes & invoices.",
+      "noCompaniesCalloutCta": "Open Settings",
+      "detachedDuringEditError": "The selected company is no longer attached to your account. Please refresh the page."
     }
   }
 }

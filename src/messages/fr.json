@@ -260,7 +260,13 @@
       }
     },
     "about": "À propos",
-    "version": "Version"
+    "version": "Version",
+    "myCompanies": {
+      "title": "My companies"
+    },
+    "companies": {
+      "backToSettings": "Retour aux paramètres"
+    }
   },
   "errors": {
     "unauthorized": "Non autorisé",
@@ -807,22 +813,32 @@
         "itemUnitPricePositive": "Le prix unitaire ne peut pas être négatif.",
         "itemVatRatePositive": "Le taux de TVA ne peut pas être négatif.",
         "saveFailed": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+        "deleteFailed": "Échec de la suppression du document. Veuillez réessayer.",
         "pdfFailed": "Échec du téléchargement du PDF. Veuillez réessayer.",
         "convertFailed": "Échec de la conversion du devis en facture.",
         "alreadyConverted": "Ce devis a déjà été converti en facture.",
         "invalidTransition": "Cette transition de statut n'est pas autorisée. Le document a peut-être été modifié dans une autre session.",
-        "companyProfileMissing": "Le profil de l'entreprise est requis avant de créer des documents de facturation."
+        "companyRequired": "Veuillez sélectionner une entreprise pour émettre ce document."
       },
-      "missingProfile": {
-        "title": "Profil de l'entreprise requis",
-        "description": "Avant de créer un {kind}, veuillez compléter votre profil d'entreprise. Il fournit les informations de l'émetteur (raison sociale, adresse, SIRET, numéro de TVA) imprimées sur chaque document.",
-        "cta": "Aller dans Paramètres → Profil de l'entreprise"
+      "toast": {
+        "documentSaved": "Document enregistré.",
+        "documentCreated": "Document créé.",
+        "documentDeleted": "Document supprimé.",
+        "pdfDownloaded": "PDF téléchargé.",
+        "devisConverted": "Devis converti en facture.",
+        "companyNoLongerAttached": "Votre accès à cette société a été révoqué. Veuillez en sélectionner une autre."
+      },
+      "issuer": {
+        "issuedFrom": "Émis par",
+        "locked": "verrouillé"
       }
+    },
+    "editPage": {
+      "loadFailed": "Impossible de charger le document. Veuillez actualiser ou réessayer plus tard."
     },
     "errors": {
       "invalidTransition": "Transition de statut invalide.",
       "numberCollision": "Un document avec ce numéro existe déjà.",
-      "companyProfileMissing": "Le profil de l'entreprise est requis.",
       "generic": "Une erreur inattendue s'est produite."
     }
   },
@@ -869,6 +885,143 @@
     "empty": {
       "members": "Aucun membre pour le moment",
       "pending": "Aucune invitation en attente"
+    }
+  },
+  "companies": {
+    "masking": {
+      "tooltip": "Visible uniquement par les administrateurs"
+    },
+    "my": {
+      "title": "Mes sociétés",
+      "description": "Sociétés auxquelles vous êtes rattaché. Les champs sensibles sont masqués.",
+      "addCta": "Ajouter une société",
+      "empty": {
+        "title": "Aucune société rattachée",
+        "cta": "Utilisez un jeton d'invitation de votre administrateur pour rattacher votre première société."
+      },
+      "card": {
+        "primaryBadge": "Principale",
+        "setPrimary": "Définir comme principale",
+        "detach": "Détacher",
+        "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un nouveau jeton d'invitation pour vous rattacher."
+      }
+    },
+    "invite": {
+      "dialogTitle": "Rattacher une société",
+      "inputLabel": "Jeton d'invitation",
+      "inputPlaceholder": "Collez le jeton partagé par votre administrateur…",
+      "attachCta": "Rattacher",
+      "successToast": "Société rattachée avec succès.",
+      "tokenInvalidError": "Le jeton d'invitation est invalide, expiré ou déjà utilisé."
+    },
+    "admin": {
+      "title": "Toutes les sociétés",
+      "description": "Vue administrateur — valeurs complètes des champs sensibles visibles.",
+      "newCompany": "Nouvelle société",
+      "createSuccessToast": "Société créée.",
+      "empty": {
+        "title": "Aucune société pour le moment",
+        "description": "Créez votre première société pour commencer."
+      },
+      "table": {
+        "createdAt": "Créée le",
+        "showingOf": "{shown} sur {total} affichés"
+      },
+      "manage": {
+        "title": "Gérer",
+        "tabs": {
+          "edit": "Modifier",
+          "invites": "Jetons d'invitation",
+          "users": "Utilisateurs rattachés",
+          "delete": "Supprimer"
+        },
+        "edit": {
+          "save": "Enregistrer les modifications",
+          "savedToast": "Société enregistrée."
+        },
+        "invites": {
+          "title": "Jeton d'invitation",
+          "description": "Générez un jeton à usage unique valable 7 jours. Partagez-le avec l'utilisateur qui doit rattacher cette société.",
+          "generate": "Générer une invitation",
+          "regenerate": "Régénérer le jeton",
+          "regenerateConfirm": "Un jeton d'invitation actif existe déjà. Le régénérer l'invalidera. Continuer ?",
+          "revoke": "Révoquer le jeton actif",
+          "revokeConfirm": "Cela invalidera immédiatement le jeton actuel. Tout utilisateur ne l'ayant pas encore utilisé devra en obtenir un nouveau.",
+          "revokedToast": "Jeton d'invitation révoqué.",
+          "policyNote": "Les jetons sont à usage unique et expirent après 7 jours. Un seul jeton actif par société."
+        },
+        "attached": {
+          "nameEmail": "Nom / E-mail",
+          "attachedAt": "Rattaché le",
+          "primaryBadge": "Principale",
+          "boot": "Retirer l'utilisateur",
+          "bootConfirm": "Retirer {name} de cette société ? Il perdra l'accès immédiatement.",
+          "empty": "Aucun utilisateur rattaché à cette société pour le moment.",
+          "countSingular": "utilisateur",
+          "countPlural": "utilisateurs"
+        },
+        "delete": {
+          "title": "Supprimer la société",
+          "body": "Suppression définitive de cette société. Tous les utilisateurs rattachés perdront l'accès. Les instantanés de documents existants sont conservés. Cette action est irréversible.",
+          "confirm": "Supprimer la société",
+          "deletedToast": "Société supprimée."
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "legalName": "Raison sociale",
+        "legalName.placeholder": "ex. Maison Lavandou SAS",
+        "address": "Adresse",
+        "address.placeholder": "Rue, ville, code postal, pays",
+        "siret": "SIRET",
+        "siret.placeholder": "ex. 12345678900012",
+        "tvaNumber": "Numéro de TVA",
+        "tvaNumber.placeholder": "ex. FR12345678901",
+        "iban": "IBAN",
+        "iban.placeholder": "ex. FR76 3000 6000 0112 3456 7890 189",
+        "bic": "BIC / SWIFT",
+        "bic.placeholder": "ex. BNPAFRPPXXX",
+        "logoUrl": "URL du logo",
+        "logoUrl.placeholder": "https://exemple.com/logo.png",
+        "defaultPaymentTerms": "Conditions de paiement par défaut",
+        "defaultPaymentTerms.placeholder": "ex. Paiement à 30 jours date de facture.",
+        "defaultPaymentTerms.help": "Pré-rempli sur les nouvelles factures. Modifiable par document.",
+        "prefixOverride": "Préfixe de numérotation",
+        "prefixOverride.placeholder": "ex. FLW (8 car. max)",
+        "prefixOverride.help": "Facultatif. Lettres majuscules et chiffres uniquement. 8 caractères max. Ex. « FLW » → FLW-DEV-2026-001."
+      },
+      "actions": {
+        "cancel": "Annuler",
+        "save": "Enregistrer"
+      },
+      "errors": {
+        "legalNameRequired": "La raison sociale est obligatoire.",
+        "addressRequired": "L'adresse est obligatoire.",
+        "prefixTooLong": "Le préfixe ne peut pas dépasser 8 caractères.",
+        "prefixInvalidChars": "Le préfixe ne doit contenir que des lettres majuscules et des chiffres (A-Z, 0-9).",
+        "logoUrlInvalidScheme": "L'URL du logo doit utiliser http ou https.",
+        "logoUrlInvalidUrl": "L'URL du logo n'est pas valide.",
+        "generic": "Une erreur inattendue s'est produite. Veuillez réessayer."
+      }
+    },
+    "tokenGenerated": {
+      "dialogTitle": "Jeton d'invitation généré",
+      "expiresLine": "Expire le : {expiresAt}",
+      "copyCta": "Copier le jeton",
+      "copiedToast": "Jeton copié dans le presse-papiers.",
+      "copyFailedToast": "Impossible de copier dans le presse-papiers.",
+      "oneShotWarning": "Enregistrez ce jeton maintenant — il ne sera plus visible après la fermeture de cette fenêtre.",
+      "autoCloseCountdown": "Fermeture automatique dans {seconds}s"
+    },
+    "picker": {
+      "label": "Émis par",
+      "placeholder": "Sélectionner une société",
+      "primaryBadge": "Principale",
+      "noCompaniesCalloutTitle": "Aucune société rattachée",
+      "noCompaniesCalloutBody": "Ajoutez une société dans les Paramètres pour commencer à créer des devis et des factures.",
+      "noCompaniesCalloutCta": "Ouvrir les paramètres",
+      "detachedDuringEditError": "La société sélectionnée n'est plus rattachée à votre compte. Veuillez actualiser la page."
     }
   }
 }

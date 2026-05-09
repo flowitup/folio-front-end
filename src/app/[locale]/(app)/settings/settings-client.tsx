@@ -15,7 +15,6 @@ import pkg from "../../../../../package.json";
 
 const SECTION_KEYS = [
   "profile",
-  "project",
   "team",
   "billing",
   "my-companies",
@@ -144,39 +143,6 @@ export function SettingsClient({ roles, projects }: Props) {
           </section>
         )}
 
-        {active === "project" && (
-          <section className="folio-card p-7">
-            <h3 className="font-display text-[22px] font-medium tracking-tight">
-              {t("projectDetails")}
-            </h3>
-            <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
-              {t("projectDetailsTagline")}
-            </p>
-            <div className="ink-divider my-5" />
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div>
-                <label className="label-cap">{t("projectName")}</label>
-                <input className="folio-input mt-1.5" defaultValue="Maison Lavandou" />
-              </div>
-              <div>
-                <label className="label-cap">{t("address")}</label>
-                <input
-                  className="folio-input mt-1.5"
-                  defaultValue="14 Chemin des Oliviers, Le Lavandou"
-                />
-              </div>
-              <div>
-                <label className="label-cap">{t("startDate")}</label>
-                <input className="folio-input num mt-1.5" defaultValue="2025-09-08" />
-              </div>
-              <div>
-                <label className="label-cap">{t("targetCompletion")}</label>
-                <input className="folio-input num mt-1.5" defaultValue="2026-08-30" />
-              </div>
-            </div>
-          </section>
-        )}
-
         {active === "preferences" && (
           <section className="folio-card p-7">
             <div className="flex items-start gap-3">
@@ -284,7 +250,6 @@ export function SettingsClient({ roles, projects }: Props) {
         )}
 
         {active !== "profile" &&
-          active !== "project" &&
           active !== "preferences" &&
           active !== "users" &&
           active !== "my-companies" &&

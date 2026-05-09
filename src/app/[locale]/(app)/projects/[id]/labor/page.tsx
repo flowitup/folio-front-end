@@ -28,11 +28,6 @@ import {
 
 type TabType = "workers" | "attendance" | "summary";
 
-function currentMonth() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
-
 function monthToRange(month: string) {
   if (!month) return { from: undefined, to: undefined };
   const match = /^(\d{4})-(\d{2})$/.exec(month);
@@ -78,9 +73,11 @@ export default function LaborPage() {
   const [entriesMonth, setEntriesMonth] = useState("");
   const [entriesWorkerFilter, setEntriesWorkerFilter] = useState("all");
 
-  // Summary state
+  // Summary state. Default: "" → unbounded (all history). The month picker
+  // is opt-in; clearing it returns to the all-history aggregate. Mirrors the
+  // attendance default (PR #44).
   const [summary, setSummary] = useState<LaborSummaryResponse | null>(null);
-  const [summaryMonth, setSummaryMonth] = useState(currentMonth);
+  const [summaryMonth, setSummaryMonth] = useState("");
 
   // Load workers
   const loadWorkers = useCallback(async () => {
@@ -112,12 +109,12 @@ export default function LaborPage() {
     }
   }, [projectId, entriesMonth, entriesWorkerFilter]);
 
-  // Load summary
+  // Load summary. summaryMonth === "" → no from/to → BE returns the
+  // all-history aggregate.
   const loadSummary = useCallback(async () => {
     setIsTabLoading(true);
     try {
       const { from, to } = monthToRange(summaryMonth);
-      if (!from || !to) { setIsTabLoading(false); return; }
       const data = await fetchLaborSummary(projectId, { from, to });
       setSummary(data);
     } catch {

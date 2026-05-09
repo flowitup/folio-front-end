@@ -433,6 +433,7 @@
     "workersLogged": "công nhân đã chấm",
     "perWorkerDay": "mỗi công nhân-ngày",
     "monthlySummary": "Tổng kết tháng · {month}",
+    "summaryAllHistoryTitle": "Tổng kết · Toàn bộ lịch sử",
     "workersBadge": "{n} công nhân",
     "role": "Vai trò",
     "shift": {

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { logAttendance, updateAttendance, fetchLaborExport } from "../labor";
+import { logAttendance, updateAttendance, fetchLaborEntries, fetchLaborExport } from "../labor";
 import { ApiError } from "../http";
 
 // Mock the http module — keep ApiError + getApiAccessToken real; stub api methods
@@ -17,6 +17,7 @@ vi.mock("../http", async (importOriginal) => {
   return {
     ...actual,
     api: {
+      get: vi.fn(),
       post: vi.fn(),
       put: vi.fn(),
     },
@@ -224,6 +225,47 @@ describe("updateAttendance — supplement_hours guard", () => {
 
     expect(api.put).toHaveBeenCalledOnce();
     expect(result).toEqual(STUB_ENTRY);
+  });
+});
+
+// ─── fetchLaborEntries — URL build (default unbounded) ───────────────────────
+
+describe("fetchLaborEntries — URL build", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(api.get).mockResolvedValue({ entries: [], total: 0 });
+  });
+
+  it("hits the bare /labor-entries endpoint when no params are provided (all-history default)", async () => {
+    await fetchLaborEntries("proj-1");
+
+    expect(api.get).toHaveBeenCalledOnce();
+    const url = vi.mocked(api.get).mock.calls[0][0] as string;
+    expect(url).toBe("/projects/proj-1/labor-entries");
+    expect(url).not.toContain("from=");
+    expect(url).not.toContain("to=");
+  });
+
+  it("appends from/to/worker_id only when supplied", async () => {
+    await fetchLaborEntries("proj-1", {
+      from: "2026-04-01",
+      to: "2026-04-30",
+      worker_id: "worker-7",
+    });
+
+    const url = vi.mocked(api.get).mock.calls[0][0] as string;
+    expect(url).toContain("from=2026-04-01");
+    expect(url).toContain("to=2026-04-30");
+    expect(url).toContain("worker_id=worker-7");
+  });
+
+  it("omits worker_id when only month range is supplied", async () => {
+    await fetchLaborEntries("proj-1", { from: "2026-04-01", to: "2026-04-30" });
+
+    const url = vi.mocked(api.get).mock.calls[0][0] as string;
+    expect(url).toContain("from=2026-04-01");
+    expect(url).toContain("to=2026-04-30");
+    expect(url).not.toContain("worker_id");
   });
 });
 

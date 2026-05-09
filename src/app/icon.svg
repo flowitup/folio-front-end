@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" fill="none" role="img" aria-label="Folio">
+  <rect width="80" height="80" rx="14" fill="#1a1a1a"/>
+  <path d="M 12 38 L 40 14 L 68 38" stroke="#e8843c" stroke-width="6" stroke-linejoin="miter" stroke-linecap="round" fill="none"/>
+  <line x1="22" y1="30" x2="22" y2="64" stroke="#f5f1ea" stroke-width="6" stroke-linecap="round"/>
+  <line x1="22" y1="42" x2="58" y2="42" stroke="#f5f1ea" stroke-width="6" stroke-linecap="round"/>
+  <line x1="22" y1="54" x2="50" y2="54" stroke="#f5f1ea" stroke-width="6" stroke-linecap="round"/>
+</svg>

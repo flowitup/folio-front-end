@@ -1019,6 +1019,18 @@
       "noCompaniesCalloutBody": "Add a company in Settings to start creating quotes & invoices.",
       "noCompaniesCalloutCta": "Open Settings",
       "detachedDuringEditError": "The selected company is no longer attached to your account. Please refresh the page."
+    },
+    "errors": {
+      "forbiddenAdminRequired": "Admin access is required.",
+      "companyAlreadyAttached": "You are already attached to this company.",
+      "activeTokenExists": "An active invite token already exists. Use regenerate=true to replace it.",
+      "conflict": "A conflict occurred.",
+      "tokenInvalid": "This invite link is no longer valid. Ask an admin to generate a new one.",
+      "validation": "Validation error.",
+      "unauthorized": "Session expired. Please log in again.",
+      "notFound": "The requested resource was not found.",
+      "rateLimited": "Too many requests. Please wait and try again.",
+      "generic": "An unexpected error occurred."
     }
   }
 }

@@ -85,6 +85,29 @@ describe("test_companies_i18n_parity", () => {
     expect((val as string).length).toBeGreaterThan(0);
   });
 
+  it("en has companies.errors sub-namespace (server-action toast messages)", () => {
+    const node = dig(en as Record<string, unknown>, "companies.errors");
+    expect(node).toBeDefined();
+    // Each code returned by classifyBackendError must have a translated message.
+    const requiredKeys = [
+      "forbiddenAdminRequired",
+      "companyAlreadyAttached",
+      "activeTokenExists",
+      "conflict",
+      "tokenInvalid",
+      "validation",
+      "unauthorized",
+      "notFound",
+      "rateLimited",
+      "generic",
+    ];
+    for (const k of requiredKeys) {
+      const v = dig(en as Record<string, unknown>, `companies.errors.${k}`);
+      expect(typeof v, `companies.errors.${k} must be a string`).toBe("string");
+      expect((v as string).length).toBeGreaterThan(0);
+    }
+  });
+
   for (const locale of LOCALES.filter((l) => l.name !== "en")) {
     it(`${locale.name} has same key tree as en under companies`, () => {
       const localeNode = dig(locale.messages, NS);
@@ -108,4 +131,27 @@ describe("test_companies_i18n_parity", () => {
       expect(empties, `Empty strings in ${locale.name}`).toEqual([]);
     });
   }
+
+  // -------------------------------------------------------------------------
+  // settings.myCompanies regression guard
+  // The "My companies" Settings tab label lives under settings.myCompanies.title;
+  // it was previously copy-pasted as English in fr/vi. This test catches that
+  // exact shape of regression (English-fallback string in a non-English locale).
+  // -------------------------------------------------------------------------
+
+  it("settings.myCompanies.title is translated in fr (not English fallback)", () => {
+    const enVal = dig(en as Record<string, unknown>, "settings.myCompanies.title") as string;
+    const frVal = dig(fr as Record<string, unknown>, "settings.myCompanies.title") as string;
+    expect(typeof frVal).toBe("string");
+    expect(frVal.length).toBeGreaterThan(0);
+    expect(frVal, "fr settings.myCompanies.title must not equal en value").not.toBe(enVal);
+  });
+
+  it("settings.myCompanies.title is translated in vi (not English fallback)", () => {
+    const enVal = dig(en as Record<string, unknown>, "settings.myCompanies.title") as string;
+    const viVal = dig(vi as Record<string, unknown>, "settings.myCompanies.title") as string;
+    expect(typeof viVal).toBe("string");
+    expect(viVal.length).toBeGreaterThan(0);
+    expect(viVal, "vi settings.myCompanies.title must not equal en value").not.toBe(enVal);
+  });
 });

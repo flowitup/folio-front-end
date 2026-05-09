@@ -17,6 +17,7 @@
  * The caller MUST display it immediately and MUST NOT log or store it.
  */
 
+import { getTranslations } from "next-intl/server";
 import {
   fetchMyCompanies,
   fetchAllCompanies,
@@ -51,7 +52,17 @@ export type ActionResult<T> =
 // Internal error classifier
 // ---------------------------------------------------------------------------
 
-function classifyBackendError(err: unknown): { code: string; message: string } {
+/**
+ * Classify a backend error into a stable code + a localized user-facing message.
+ *
+ * Messages resolve through `getTranslations("companies.errors")` so the toast
+ * surfaced in the UI always matches the active locale. Backend `body.message`
+ * is intentionally NOT surfaced — the BE is not localized today, so trusting it
+ * would leak English into fr/vi views and defeat the i18n parity guarantee.
+ */
+async function classifyBackendError(
+  err: unknown
+): Promise<{ code: string; message: string }> {
   const e = err as {
     status?: number;
     body?: Record<string, unknown> | null;
@@ -60,50 +71,44 @@ function classifyBackendError(err: unknown): { code: string; message: string } {
   const status = e.status;
   const body = e.body ?? {};
   const reason = typeof body["reason"] === "string" ? body["reason"] : "";
-  const bodyMsg = typeof body["message"] === "string" ? body["message"] : "";
+
+  const t = await getTranslations("companies.errors");
 
   // 403 — admin-only endpoint
   if (status === 403) {
-    return { code: "forbidden_admin_required", message: "Admin access is required." };
+    return { code: "forbidden_admin_required", message: t("forbiddenAdminRequired") };
   }
 
   // 409 conflicts — discriminate by reason
   if (status === 409) {
     if (reason === "company_already_attached") {
-      return { code: "company_already_attached", message: "You are already attached to this company." };
+      return { code: "company_already_attached", message: t("companyAlreadyAttached") };
     }
     if (reason === "active_token_exists") {
-      return {
-        code: "active_token_exists",
-        message: "An active invite token already exists. Use regenerate=true to replace it.",
-      };
+      return { code: "active_token_exists", message: t("activeTokenExists") };
     }
-    return { code: "conflict", message: bodyMsg || "A conflict occurred." };
+    return { code: "conflict", message: t("conflict") };
   }
 
   // 410 — token invalid (expired, already redeemed, or wrong) — uniform message
   if (status === 410) {
-    return {
-      code: "token_invalid",
-      message: "This invite link is no longer valid. Ask an admin to generate a new one.",
-    };
+    return { code: "token_invalid", message: t("tokenInvalid") };
   }
 
   if (status === 400 || status === 422) {
-    return { code: "validation", message: bodyMsg || "Validation error." };
+    return { code: "validation", message: t("validation") };
   }
   if (status === 401) {
-    return { code: "unauthorized", message: "Session expired. Please log in again." };
+    return { code: "unauthorized", message: t("unauthorized") };
   }
   if (status === 404) {
-    return { code: "not_found", message: "The requested resource was not found." };
+    return { code: "not_found", message: t("notFound") };
   }
   if (status === 429) {
-    return { code: "rate_limited", message: "Too many requests. Please wait and try again." };
+    return { code: "rate_limited", message: t("rateLimited") };
   }
 
-  const fallbackMsg = e.message ?? "An unexpected error occurred.";
-  return { code: "generic", message: fallbackMsg };
+  return { code: "generic", message: t("generic") };
 }
 
 // ---------------------------------------------------------------------------
@@ -115,7 +120,7 @@ export async function fetchMyCompaniesAction(): Promise<ActionResult<MyCompany[]
     const data = await fetchMyCompanies();
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -127,7 +132,7 @@ export async function fetchAllCompaniesAction(opts?: {
     const data = await fetchAllCompanies(opts);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -136,7 +141,7 @@ export async function fetchCompanyAction(id: string): Promise<ActionResult<Compa
     const data = await fetchCompany(id);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -147,7 +152,7 @@ export async function createCompanyAction(
     const data = await createCompany(payload);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -159,7 +164,7 @@ export async function updateCompanyAction(
     const data = await updateCompany(id, payload);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -168,7 +173,7 @@ export async function deleteCompanyAction(id: string): Promise<ActionResult<void
     await deleteCompany(id);
     return { ok: true, data: undefined };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -177,7 +182,7 @@ export async function setPrimaryCompanyAction(id: string): Promise<ActionResult<
     await setPrimaryCompany(id);
     return { ok: true, data: undefined };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -186,7 +191,7 @@ export async function detachCompanyAction(id: string): Promise<ActionResult<void
     await detachCompany(id);
     return { ok: true, data: undefined };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -206,7 +211,7 @@ export async function generateInviteTokenAction(
     const data = await generateInviteToken(companyId, opts);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -215,7 +220,7 @@ export async function revokeInviteTokenAction(companyId: string): Promise<Action
     await revokeInviteToken(companyId);
     return { ok: true, data: undefined };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -224,7 +229,7 @@ export async function redeemInviteTokenAction(token: string): Promise<ActionResu
     const data = await redeemInviteToken(token);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -239,7 +244,7 @@ export async function fetchAttachedUsersAction(
     const data = await fetchAttachedUsers(companyId);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 
@@ -251,6 +256,6 @@ export async function bootAttachedUserAction(
     await bootAttachedUser(companyId, userId);
     return { ok: true, data: undefined };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }

@@ -5,7 +5,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { LaborSummary } from "../labor-summary";
-import type { LaborSummaryResponse } from "@/types/labor";
+import type {
+  LaborSummaryResponse,
+  LaborMonthlySummaryResponse,
+} from "@/types/labor";
 
 // Mock next-intl — returns key as fallback (next-intl default when translation missing)
 vi.mock("next-intl", () => ({
@@ -35,10 +38,17 @@ function makeSummary(overrides: Partial<LaborSummaryResponse> = {}): LaborSummar
   };
 }
 
+function makeMonthlySummary(
+  rows: LaborMonthlySummaryResponse["rows"],
+): LaborMonthlySummaryResponse {
+  return { rows };
+}
+
 const defaultProps = {
   projectId: "proj-test-1",
   isLoading: false,
   month: "2026-04",
+  monthlySummary: null as LaborMonthlySummaryResponse | null,
   onMonthChange: vi.fn(),
 };
 
@@ -439,5 +449,142 @@ describe("LaborSummary — month filter (opt-in)", () => {
     // i18n key when month === "". The title also uses summaryAllHistoryTitle,
     // so the all-history fallback key must be in the document.
     expect(screen.getByText("filterMonthAll")).toBeDefined();
+  });
+});
+
+describe("LaborSummary — monthly rollup + year filter (all-history mode)", () => {
+  const monthly = makeMonthlySummary([
+    { year: 2026, month: 4, total_days: 22, total_cost: 5500 },
+    { year: 2026, month: 3, total_days: 18, total_cost: 4500 },
+    { year: 2025, month: 12, total_days: 10, total_cost: 2500 },
+  ]);
+
+  it("renders one row per (year, month) bucket when month filter is empty", () => {
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+      />
+    );
+    // 3 buckets → 3 rows in the table body. Per-row totals are rendered
+    // distinctly: 5500, 4500, 2500. The grand total (12500) and KPI card
+    // are also rendered, so each per-row value appears at least once.
+    expect(screen.getAllByText("€5500.00").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("€4500.00").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("€2500.00").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("derives year buttons from data (only years with entries)", () => {
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+      />
+    );
+    const row = screen.getByTestId("year-filter-row");
+    // "All" button + "2026" + "2025" — derived from data, no hardcoded range.
+    expect(row).toBeDefined();
+    expect(screen.getByText("summaryAllYears")).toBeDefined();
+    expect(screen.getByText("2026")).toBeDefined();
+    expect(screen.getByText("2025")).toBeDefined();
+    // No 2024 because the data has no 2024 entries.
+    expect(screen.queryByText("2024")).toBeNull();
+  });
+
+  it("clicking a year narrows the rendered rows to that year", () => {
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+      />
+    );
+    fireEvent.click(screen.getByText("2025"));
+    // The 5500 / 4500 (2026) rows should disappear from the table; 2500
+    // (2025) row remains. The KPI card may also render the total, hence
+    // queryAll over screen-wide getByText.
+    expect(screen.queryByText("€5500.00")).toBeNull();
+    expect(screen.queryByText("€4500.00")).toBeNull();
+    expect(screen.getAllByText("€2500.00").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("clicking 'All' restores all years after a year was selected", () => {
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+      />
+    );
+    fireEvent.click(screen.getByText("2025"));
+    fireEvent.click(screen.getByText("summaryAllYears"));
+    // All three buckets visible again.
+    expect(screen.getAllByText("€5500.00").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("€4500.00").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("€2500.00").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("clicking a month row drills down via onMonthChange('YYYY-MM')", () => {
+    const onMonthChange = vi.fn();
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+        onMonthChange={onMonthChange}
+      />
+    );
+    // April 2026 row holds total_cost=5500. The KPI total card may also
+    // render €5500.00, so pick the occurrence inside a <tr>.
+    const matches = screen.getAllByText("€5500.00");
+    const rowCell = matches.find((el) => el.closest("tr") !== null);
+    fireEvent.click(rowCell!.closest("tr")!);
+    expect(onMonthChange).toHaveBeenCalledWith("2026-04");
+  });
+
+  it("renders summaryYearTitle when a year is selected", () => {
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+      />
+    );
+    fireEvent.click(screen.getByText("2026"));
+    // i18n mock returns the key as-is (no value interpolation).
+    expect(screen.getByText("summaryYearTitle")).toBeDefined();
+    expect(screen.queryByText("summaryAllHistoryTitle")).toBeNull();
+  });
+
+  it("hides the year-filter row when month filter is set (per-worker mode)", () => {
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={makeSummary()}
+        monthlySummary={monthly}
+        month="2026-04"
+      />
+    );
+    expect(screen.queryByTestId("year-filter-row")).toBeNull();
+  });
+
+  it("hides the year-filter row when monthlySummary has no rows", () => {
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={null}
+        monthlySummary={makeMonthlySummary([])}
+        month=""
+      />
+    );
+    expect(screen.queryByTestId("year-filter-row")).toBeNull();
   });
 });

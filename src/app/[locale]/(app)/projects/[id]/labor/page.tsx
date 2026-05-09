@@ -14,7 +14,7 @@ import { AttendanceTable } from "@/components/labor/attendance-table";
 import { LogAttendanceDialog } from "@/components/labor/log-attendance-dialog";
 import { LaborSummary } from "@/components/labor/labor-summary";
 
-import type { Worker, LaborEntry, LaborSummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, LogAttendancePayload } from "@/types/labor";
+import type { Worker, LaborEntry, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, LogAttendancePayload } from "@/types/labor";
 import {
   fetchWorkers,
   createWorker,
@@ -24,6 +24,7 @@ import {
   logAttendance,
   deleteAttendance,
   fetchLaborSummary,
+  fetchLaborMonthlySummary,
 } from "@/lib/api/labor";
 
 type TabType = "workers" | "attendance" | "summary";
@@ -75,8 +76,11 @@ export default function LaborPage() {
 
   // Summary state. Default: "" → unbounded (all history). The month picker
   // is opt-in; clearing it returns to the all-history aggregate. Mirrors the
-  // attendance default (PR #44).
+  // attendance default (PR #44). When summaryMonth is empty we render the
+  // per-month rollup (monthlySummary); when set we render the existing
+  // per-worker breakdown (summary).
   const [summary, setSummary] = useState<LaborSummaryResponse | null>(null);
+  const [monthlySummary, setMonthlySummary] = useState<LaborMonthlySummaryResponse | null>(null);
   const [summaryMonth, setSummaryMonth] = useState("");
 
   // Load workers
@@ -109,14 +113,22 @@ export default function LaborPage() {
     }
   }, [projectId, entriesMonth, entriesWorkerFilter]);
 
-  // Load summary. summaryMonth === "" → no from/to → BE returns the
-  // all-history aggregate.
+  // Load summary.
+  // - summaryMonth === ""  → fetch the per-month rollup (LaborSummary
+  //   renders month rows + year filter buttons).
+  // - summaryMonth !== "" → fetch the per-worker summary scoped to that
+  //   month (existing behavior).
   const loadSummary = useCallback(async () => {
     setIsTabLoading(true);
     try {
-      const { from, to } = monthToRange(summaryMonth);
-      const data = await fetchLaborSummary(projectId, { from, to });
-      setSummary(data);
+      if (summaryMonth === "") {
+        const data = await fetchLaborMonthlySummary(projectId);
+        setMonthlySummary(data);
+      } else {
+        const { from, to } = monthToRange(summaryMonth);
+        const data = await fetchLaborSummary(projectId, { from, to });
+        setSummary(data);
+      }
     } catch {
       setError("Failed to load summary");
     } finally {
@@ -274,6 +286,7 @@ export default function LaborPage() {
         <LaborSummary
           projectId={projectId}
           summary={summary}
+          monthlySummary={monthlySummary}
           isLoading={isTabLoading}
           month={summaryMonth}
           onMonthChange={setSummaryMonth}

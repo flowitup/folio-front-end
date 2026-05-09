@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { LaborSummary } from "../labor-summary";
 import type { LaborSummaryResponse } from "@/types/labor";
 
@@ -389,5 +389,55 @@ describe("LaborSummary — empty state", () => {
   it("renders empty state when summary is null", () => {
     render(<LaborSummary {...defaultProps} summary={null} />);
     expect(screen.getByText("noEntries")).toBeDefined();
+  });
+});
+
+describe("LaborSummary — month filter (opt-in)", () => {
+  it("renders the all-history title and hides Clear button when month is empty", () => {
+    render(
+      <LaborSummary {...defaultProps} summary={makeSummary()} month="" />
+    );
+    // i18n mock returns the key as-is: title swaps to summaryAllHistoryTitle.
+    expect(screen.getByText("summaryAllHistoryTitle")).toBeDefined();
+    expect(screen.queryByText("monthlySummary")).toBeNull();
+    expect(screen.queryByLabelText("filterMonthClear")).toBeNull();
+  });
+
+  it("renders the monthly title and shows Clear button when month is set", () => {
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={makeSummary()}
+        month="2026-04"
+      />
+    );
+    expect(screen.getByText("monthlySummary")).toBeDefined();
+    expect(screen.queryByText("summaryAllHistoryTitle")).toBeNull();
+    expect(screen.getByLabelText("filterMonthClear")).toBeDefined();
+  });
+
+  it("clicking Clear resets month to empty (back to all-history)", () => {
+    const onMonthChange = vi.fn();
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={makeSummary()}
+        month="2026-04"
+        onMonthChange={onMonthChange}
+      />
+    );
+
+    fireEvent.click(screen.getByLabelText("filterMonthClear"));
+    expect(onMonthChange).toHaveBeenCalledWith("");
+  });
+
+  it("KPI subtitle shows the all-history label when month is empty", () => {
+    render(
+      <LaborSummary {...defaultProps} summary={makeSummary()} month="" />
+    );
+    // The KPI card subtitle uses periodLabel which falls back to filterMonthAll
+    // i18n key when month === "". The title also uses summaryAllHistoryTitle,
+    // so the all-history fallback key must be in the document.
+    expect(screen.getByText("filterMonthAll")).toBeDefined();
   });
 });

@@ -433,6 +433,7 @@
     "workersLogged": "ouvriers pointés",
     "perWorkerDay": "par jour-ouvrier",
     "monthlySummary": "Résumé mensuel · {month}",
+    "summaryAllHistoryTitle": "Résumé · Tout l'historique",
     "workersBadge": "{n} ouvriers",
     "role": "Rôle",
     "shift": {

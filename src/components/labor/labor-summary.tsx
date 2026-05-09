@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { LaborSummaryResponse } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
@@ -31,6 +31,13 @@ export function LaborSummary({ projectId, summary, isLoading, month, onMonthChan
   const t = useTranslations("labor");
   const locale = useLocale();
   const [exportOpen, setExportOpen] = useState(false);
+
+  // month === "" → unbounded "all history" summary. Switch labels + headers
+  // to a localized "All history" string and hide the Clear button.
+  const isAllHistory = month === "";
+  const periodLabel = isAllHistory
+    ? t("filterMonthAll")
+    : formatMonthLabel(month, locale);
 
   const totalCost = summary?.total_cost ?? 0;
   const totalDays = summary?.total_days ?? 0;
@@ -73,7 +80,7 @@ export function LaborSummary({ projectId, summary, isLoading, month, onMonthChan
             {formatEUR(totalCost)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--positive)" }}>
-            {formatMonthLabel(month, locale)}
+            {periodLabel}
           </div>
         </div>
         <div className="folio-card p-5">
@@ -129,7 +136,9 @@ export function LaborSummary({ projectId, summary, isLoading, month, onMonthChan
         >
           <div className="flex items-center gap-3">
             <h3 className="font-display text-[18px] font-medium tracking-tight">
-              {t("monthlySummary", { month: formatMonthLabel(month, locale) })}
+              {isAllHistory
+                ? t("summaryAllHistoryTitle")
+                : t("monthlySummary", { month: periodLabel })}
             </h3>
           </div>
           <div className="flex items-center gap-2">
@@ -139,7 +148,20 @@ export function LaborSummary({ projectId, summary, isLoading, month, onMonthChan
               onChange={(e) => onMonthChange(e.target.value)}
               className="folio-input num"
               style={{ width: 160 }}
+              placeholder={t("filterMonthAll")}
             />
+            {!isAllHistory && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onMonthChange("")}
+                aria-label={t("filterMonthClear")}
+                title={t("filterMonthClear")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
             {workerCount > 0 && (
               <span className="stamp num">{t("workersBadge", { n: workerCount })}</span>
             )}

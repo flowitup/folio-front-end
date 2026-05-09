@@ -433,6 +433,7 @@
     "workersLogged": "workers logged",
     "perWorkerDay": "per worker-day",
     "monthlySummary": "Monthly summary · {month}",
+    "summaryAllHistoryTitle": "Summary · All history",
     "workersBadge": "{n} workers",
     "role": "Role",
     "shift": {

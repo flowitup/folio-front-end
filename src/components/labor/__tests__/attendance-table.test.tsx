@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { AttendanceTable } from "../attendance-table";
 import type { LaborEntry, Worker } from "@/types/labor";
 
@@ -131,6 +131,34 @@ describe("AttendanceTable", () => {
     it("renders empty state message when entries is empty", () => {
       render(<AttendanceTable {...defaultTableProps} entries={[]} />);
       expect(screen.getByText("noEntries")).toBeDefined();
+    });
+  });
+
+  describe("Month filter — opt-in clear", () => {
+    it("hides Clear button when month is empty (all-history default)", () => {
+      render(
+        <AttendanceTable {...defaultTableProps} entries={[]} month="" />
+      );
+      // No element with the clear-filter aria-label / title.
+      expect(screen.queryByLabelText("filterMonthClear")).toBeNull();
+    });
+
+    it("shows Clear button when month is set and resets month on click", () => {
+      const onMonthChange = vi.fn();
+      render(
+        <AttendanceTable
+          {...defaultTableProps}
+          entries={[]}
+          month="2026-04"
+          onMonthChange={onMonthChange}
+        />
+      );
+
+      const clearBtn = screen.getByLabelText("filterMonthClear");
+      expect(clearBtn).toBeDefined();
+
+      fireEvent.click(clearBtn);
+      expect(onMonthChange).toHaveBeenCalledWith("");
     });
   });
 });

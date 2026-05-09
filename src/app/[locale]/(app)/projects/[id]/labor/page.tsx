@@ -73,7 +73,9 @@ export default function LaborPage() {
   // Entries state
   const [entries, setEntries] = useState<LaborEntry[]>([]);
   const [showLogAttendance, setShowLogAttendance] = useState(false);
-  const [entriesMonth, setEntriesMonth] = useState(currentMonth);
+  // Default: "" → no month filter → all-history view (BE caps the response,
+  // see GET /labor-entries default limit). The month picker is opt-in.
+  const [entriesMonth, setEntriesMonth] = useState("");
   const [entriesWorkerFilter, setEntriesWorkerFilter] = useState("all");
 
   // Summary state
@@ -90,12 +92,13 @@ export default function LaborPage() {
     }
   }, [projectId]);
 
-  // Load entries
+  // Load entries.
+  // entriesMonth === "" means "all history" — fetch unbounded (BE caps the
+  // response). When a month is picked, narrow with from/to.
   const loadEntries = useCallback(async () => {
     setIsTabLoading(true);
     try {
       const { from, to } = monthToRange(entriesMonth);
-      if (!from || !to) { setIsTabLoading(false); return; }
       const data = await fetchLaborEntries(projectId, {
         from,
         to,

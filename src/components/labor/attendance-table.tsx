@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,15 +62,30 @@ export function AttendanceTable({
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
+      {/* Filters — month is optional. Empty = all history. */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label>{t("filterMonth")}</Label>
-          <Input
-            type="month"
-            value={month}
-            onChange={(e) => onMonthChange(e.target.value)}
-          />
+          <Label>{t("filterMonthOptional")}</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              type="month"
+              value={month}
+              onChange={(e) => onMonthChange(e.target.value)}
+              placeholder={t("filterMonthAll")}
+            />
+            {month && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onMonthChange("")}
+                aria-label={t("filterMonthClear")}
+                title={t("filterMonthClear")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
         <div className="space-y-1">
           <Label>{t("filterWorker")}</Label>

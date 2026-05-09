@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { LaborEntry, Worker } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
+import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 
 interface AttendanceTableProps {
   entries: LaborEntry[];
@@ -128,14 +129,19 @@ export function AttendanceTable({
           <div className="space-y-4">
             {sortedDates.map((date) => (
               <div key={date} className="space-y-1">
-                {/* Date header */}
+                {/* Date header — Intl returns lowercase weekday names in
+                    French (e.g. "samedi"); capitalize the leading char so
+                    the header reads "Samedi 09/05/2026". */}
                 <p className="text-sm font-semibold text-muted-foreground px-1">
-                  {new Date(date).toLocaleDateString("fr-FR", {
-                    weekday: "long",
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}
+                  {capitalizeFirst(
+                    new Date(date).toLocaleDateString("fr-FR", {
+                      weekday: "long",
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    }),
+                    "fr-FR",
+                  )}
                 </p>
 
                 {/* Worker rows */}

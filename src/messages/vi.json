@@ -427,6 +427,10 @@
     "perWorkerDay": "mỗi công nhân-ngày",
     "monthlySummary": "Tổng kết tháng · {month}",
     "summaryAllHistoryTitle": "Tổng kết · Toàn bộ lịch sử",
+    "summaryYearTitle": "Tổng kết · {year}",
+    "summaryAllYears": "Tất cả",
+    "summaryMonthColumn": "Tháng",
+    "summaryDrillDown": "Nhấn để xem chi tiết theo công nhân",
     "workersBadge": "{n} công nhân",
     "role": "Vai trò",
     "shift": {

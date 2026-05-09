@@ -10,6 +10,7 @@ import type {
   LogAttendancePayload,
   UpdateAttendancePayload,
   LaborSummaryResponse,
+  LaborMonthlySummaryResponse,
   LaborEntryParams,
   SummaryParams,
   LaborExportFormat,
@@ -92,6 +93,20 @@ export async function fetchLaborSummary(projectId: string, params?: SummaryParam
     to: params?.to,
   });
   return api.get<LaborSummaryResponse>(url);
+}
+
+/**
+ * Per-month rollup of labor totals across the whole project.
+ *
+ * Used by the Summary tab when no specific month filter is active —
+ * displays one row per (year, month) ordered most-recent first.
+ */
+export async function fetchLaborMonthlySummary(
+  projectId: string,
+): Promise<LaborMonthlySummaryResponse> {
+  return api.get<LaborMonthlySummaryResponse>(
+    `/projects/${projectId}/labor-monthly-summary`,
+  );
 }
 
 // EUR formatter for French locale

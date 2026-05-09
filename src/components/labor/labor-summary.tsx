@@ -1,19 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { LaborSummaryResponse } from "@/types/labor";
+import type { LaborSummaryResponse, LaborMonthlySummaryResponse, MonthlySummaryRow } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
+import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 
 interface LaborSummaryProps {
   projectId: string;
   summary: LaborSummaryResponse | null;
+  /** Per-month rollup. Used when no specific month filter is active. */
+  monthlySummary: LaborMonthlySummaryResponse | null;
   isLoading: boolean;
   month: string;
   onMonthChange: (value: string) => void;
+}
+
+/** Format a (year, month) into a localized label like "May 2026". */
+function formatYearMonthLabel(row: MonthlySummaryRow, locale: string): string {
+  const d = new Date(row.year, row.month - 1, 1);
+  return capitalizeFirst(
+    d.toLocaleDateString(locale, { month: "long", year: "numeric" }),
+    locale,
+  );
 }
 
 function formatMonthLabel(month: string, locale: string): string {
@@ -27,10 +39,20 @@ function formatBonusDays(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
-export function LaborSummary({ projectId, summary, isLoading, month, onMonthChange }: LaborSummaryProps) {
+export function LaborSummary({
+  projectId,
+  summary,
+  monthlySummary,
+  isLoading,
+  month,
+  onMonthChange,
+}: LaborSummaryProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
   const [exportOpen, setExportOpen] = useState(false);
+  // Year filter — null = "All years". Only meaningful when month filter
+  // is unset (we're in the all-history monthly-rollup view).
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   // month === "" → unbounded "all history" summary. Switch labels + headers
   // to a localized "All history" string and hide the Clear button.
@@ -39,8 +61,29 @@ export function LaborSummary({ projectId, summary, isLoading, month, onMonthChan
     ? t("filterMonthAll")
     : formatMonthLabel(month, locale);
 
-  const totalCost = summary?.total_cost ?? 0;
-  const totalDays = summary?.total_days ?? 0;
+  // Year filter buttons — derived from the per-month rollup so we only
+  // show years that actually have data. DESC.
+  const availableYears = useMemo(() => {
+    const ys = new Set<number>();
+    monthlySummary?.rows.forEach((r) => ys.add(r.year));
+    return Array.from(ys).sort((a, b) => b - a);
+  }, [monthlySummary]);
+
+  // Filtered monthly rows (apply year filter if one is selected).
+  const filteredMonthlyRows = useMemo(() => {
+    const rows = monthlySummary?.rows ?? [];
+    return selectedYear == null ? rows : rows.filter((r) => r.year === selectedYear);
+  }, [monthlySummary, selectedYear]);
+
+  // KPI numbers: in all-history mode they roll up the monthly buckets
+  // (filtered by year if set). In month mode they come from the per-worker
+  // summary (existing behavior).
+  const totalCost = isAllHistory
+    ? filteredMonthlyRows.reduce((sum, r) => sum + r.total_cost, 0)
+    : summary?.total_cost ?? 0;
+  const totalDays = isAllHistory
+    ? filteredMonthlyRows.reduce((sum, r) => sum + r.total_days, 0)
+    : summary?.total_days ?? 0;
   const workerCount = summary?.rows.length ?? 0;
   const onSiteToday = workerCount;
   const avgDailyRate = totalDays > 0 ? totalCost / totalDays : 0;
@@ -128,7 +171,34 @@ export function LaborSummary({ projectId, summary, isLoading, month, onMonthChan
         </div>
       </div>
 
-      {/* Monthly summary table */}
+      {/* Year filter — only shown when no specific month filter is active.
+          Buttons derived from the data; horizontal scroll on overflow so
+          mobile stays clean even when there are many years. */}
+      {isAllHistory && availableYears.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1" data-testid="year-filter-row">
+          <button
+            type="button"
+            onClick={() => setSelectedYear(null)}
+            className={`stamp num shrink-0 ${selectedYear == null ? "on" : ""}`}
+            aria-pressed={selectedYear == null}
+          >
+            {t("summaryAllYears")}
+          </button>
+          {availableYears.map((y) => (
+            <button
+              key={y}
+              type="button"
+              onClick={() => setSelectedYear(y)}
+              className={`stamp num shrink-0 ${selectedYear === y ? "on" : ""}`}
+              aria-pressed={selectedYear === y}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Summary table */}
       <div className="folio-card overflow-hidden">
         <div
           className="flex items-center justify-between border-b px-5 py-4"
@@ -137,7 +207,9 @@ export function LaborSummary({ projectId, summary, isLoading, month, onMonthChan
           <div className="flex items-center gap-3">
             <h3 className="font-display text-[18px] font-medium tracking-tight">
               {isAllHistory
-                ? t("summaryAllHistoryTitle")
+                ? selectedYear == null
+                  ? t("summaryAllHistoryTitle")
+                  : t("summaryYearTitle", { year: selectedYear })
                 : t("monthlySummary", { month: periodLabel })}
             </h3>
           </div>
@@ -162,7 +234,7 @@ export function LaborSummary({ projectId, summary, isLoading, month, onMonthChan
                 <X className="h-4 w-4" />
               </Button>
             )}
-            {workerCount > 0 && (
+            {workerCount > 0 && !isAllHistory && (
               <span className="stamp num">{t("workersBadge", { n: workerCount })}</span>
             )}
             <Button
@@ -175,7 +247,59 @@ export function LaborSummary({ projectId, summary, isLoading, month, onMonthChan
           </div>
         </div>
 
-        {!summary || summary.rows.length === 0 ? (
+        {/* Conditional body: month-grouped rows in all-history mode,
+            per-worker table when a specific month is selected. */}
+        {isAllHistory ? (
+          filteredMonthlyRows.length === 0 ? (
+            <div className="px-5 py-8 text-center text-[13px]" style={{ color: "var(--muted)" }}>
+              {t("noEntries")}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="ledger">
+                <thead>
+                  <tr>
+                    <th>{t("summaryMonthColumn")}</th>
+                    <th style={{ textAlign: "right" }}>{t("daysWorked")}</th>
+                    <th style={{ textAlign: "right" }}>{t("totalCost")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredMonthlyRows.map((row) => {
+                    const ym = `${row.year}-${String(row.month).padStart(2, "0")}`;
+                    return (
+                      <tr
+                        key={ym}
+                        onClick={() => onMonthChange(ym)}
+                        style={{ cursor: "pointer" }}
+                        title={t("summaryDrillDown")}
+                      >
+                        <td>{formatYearMonthLabel(row, locale)}</td>
+                        <td className="num" style={{ textAlign: "right" }}>
+                          {row.total_days}
+                        </td>
+                        <td className="num font-medium" style={{ textAlign: "right" }}>
+                          {formatEUR(row.total_cost)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr style={{ background: "var(--paper-2)" }}>
+                    <td className="font-medium">{t("grandTotal")}</td>
+                    <td className="num font-medium" style={{ textAlign: "right" }}>
+                      {totalDays}
+                    </td>
+                    <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
+                      {formatEUR(totalCost)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )
+        ) : !summary || summary.rows.length === 0 ? (
           <div className="px-5 py-8 text-center text-[13px]" style={{ color: "var(--muted)" }}>
             {t("noEntries")}
           </div>

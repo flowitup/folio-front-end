@@ -83,6 +83,22 @@ export interface LaborSummaryResponse {
   total_bonus_cost: number;
 }
 
+export interface MonthlySummaryRow {
+  /** 4-digit calendar year (e.g. 2026) */
+  year: number;
+  /** 1-12 month-of-year */
+  month: number;
+  /** Priced shifts in this month (supplement-only rows excluded) */
+  total_days: number;
+  /** Total cost in EUR for this month */
+  total_cost: number;
+}
+
+export interface LaborMonthlySummaryResponse {
+  /** Ordered most-recent first (year DESC, month DESC) */
+  rows: MonthlySummaryRow[];
+}
+
 export interface LaborEntryParams {
   from?: string;
   to?: string;

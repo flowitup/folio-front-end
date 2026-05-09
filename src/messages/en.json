@@ -427,6 +427,10 @@
     "perWorkerDay": "per worker-day",
     "monthlySummary": "Monthly summary · {month}",
     "summaryAllHistoryTitle": "Summary · All history",
+    "summaryYearTitle": "Summary · {year}",
+    "summaryAllYears": "All",
+    "summaryMonthColumn": "Month",
+    "summaryDrillDown": "Click to view per-worker breakdown",
     "workersBadge": "{n} workers",
     "role": "Role",
     "shift": {

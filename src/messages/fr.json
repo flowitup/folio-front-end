@@ -427,6 +427,10 @@
     "perWorkerDay": "par jour-ouvrier",
     "monthlySummary": "Résumé mensuel · {month}",
     "summaryAllHistoryTitle": "Résumé · Tout l'historique",
+    "summaryYearTitle": "Résumé · {year}",
+    "summaryAllYears": "Tout",
+    "summaryMonthColumn": "Mois",
+    "summaryDrillDown": "Cliquer pour voir le détail par ouvrier",
     "workersBadge": "{n} ouvriers",
     "role": "Rôle",
     "shift": {

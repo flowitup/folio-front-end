@@ -255,7 +255,7 @@
     "about": "À propos",
     "version": "Version",
     "myCompanies": {
-      "title": "My companies"
+      "title": "Mes sociétés"
     },
     "companies": {
       "backToSettings": "Retour aux paramètres"
@@ -1023,6 +1023,18 @@
       "noCompaniesCalloutBody": "Ajoutez une société dans les Paramètres pour commencer à créer des devis et des factures.",
       "noCompaniesCalloutCta": "Ouvrir les paramètres",
       "detachedDuringEditError": "La société sélectionnée n'est plus rattachée à votre compte. Veuillez actualiser la page."
+    },
+    "errors": {
+      "forbiddenAdminRequired": "Accès administrateur requis.",
+      "companyAlreadyAttached": "Vous êtes déjà rattaché·e à cette société.",
+      "activeTokenExists": "Un jeton d'invitation actif existe déjà. Utilisez regenerate=true pour le remplacer.",
+      "conflict": "Un conflit est survenu.",
+      "tokenInvalid": "Ce lien d'invitation n'est plus valable. Demandez à un administrateur d'en générer un nouveau.",
+      "validation": "Erreur de validation.",
+      "unauthorized": "Session expirée. Veuillez vous reconnecter.",
+      "notFound": "La ressource demandée est introuvable.",
+      "rateLimited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
+      "generic": "Une erreur inattendue est survenue."
     }
   }
 }

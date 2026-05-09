@@ -255,7 +255,7 @@
     "about": "Giới thiệu",
     "version": "Phiên bản",
     "myCompanies": {
-      "title": "My companies"
+      "title": "Công ty của tôi"
     },
     "companies": {
       "backToSettings": "Quay lại Cài đặt"
@@ -1023,6 +1023,18 @@
       "noCompaniesCalloutBody": "Thêm công ty trong Cài đặt để bắt đầu tạo báo giá và hóa đơn.",
       "noCompaniesCalloutCta": "Mở cài đặt",
       "detachedDuringEditError": "Công ty đã chọn không còn liên kết với tài khoản của bạn. Vui lòng tải lại trang."
+    },
+    "errors": {
+      "forbiddenAdminRequired": "Yêu cầu quyền quản trị viên.",
+      "companyAlreadyAttached": "Bạn đã được liên kết với công ty này.",
+      "activeTokenExists": "Đã có mã mời đang hoạt động. Dùng regenerate=true để thay thế.",
+      "conflict": "Đã xảy ra xung đột.",
+      "tokenInvalid": "Liên kết mời này không còn hợp lệ. Yêu cầu quản trị viên tạo liên kết mới.",
+      "validation": "Lỗi xác thực dữ liệu.",
+      "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+      "notFound": "Không tìm thấy tài nguyên yêu cầu.",
+      "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
+      "generic": "Đã xảy ra lỗi không mong muốn."
     }
   }
 }

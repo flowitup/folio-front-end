@@ -77,6 +77,9 @@ export function Combobox({
   // inputQuery tracks what's visible in the CommandInput (may differ from
   // committed value while the popover is open).
   const [inputQuery, setInputQuery] = React.useState(value);
+  // Set when an option is selected; consulted by handleBlur to skip the
+  // free-text overwrite that would otherwise race with the click.
+  const justSelectedRef = React.useRef(false);
 
   // Sync inputQuery whenever the controlled value changes from the outside
   // (e.g., when parent prefills after suggestion selection).
@@ -102,6 +105,7 @@ export function Combobox({
   }
 
   function handleSelect(selectedValue: string) {
+    justSelectedRef.current = true;
     onChange(selectedValue);
     setInputQuery(selectedValue);
     setOpen(false);
@@ -127,6 +131,13 @@ export function Combobox({
 
   /** Commit free-text on blur (tabbing away). */
   function handleBlur() {
+    // If a suggestion was just clicked, handleSelect already committed it.
+    // Skip the free-text overwrite to avoid clobbering the prefill.
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
+      setTimeout(() => setOpen(false), 120);
+      return;
+    }
     if (allowFreeText) {
       const trimmed = inputQuery.trim();
       // Only commit if it changed from the current value.

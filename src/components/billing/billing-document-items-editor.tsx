@@ -287,7 +287,9 @@ function ItemRow({
     if (match) {
       patch.unit_price = match.last_unit_price;
       patch.vat_rate = match.last_vat_rate;
-      if (match.last_unit) patch.unit = match.last_unit;
+      // Note: BE ItemSchema is strict-mode (extra='forbid') and does not
+      // accept a `unit` field on line items. The last_unit hint is shown as
+      // meta on the suggestion row instead, not pre-filled into the row.
     }
     onUpdate(patch);
     setDescQuery(value);

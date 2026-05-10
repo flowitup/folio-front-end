@@ -24,8 +24,6 @@ export interface BillingDocumentItem {
   vat_rate: string; // Decimal-as-string (percent, e.g. "20")
   /** Phase 05 — grouping category (e.g. "Toiture"). Optional/null for legacy items. */
   category?: string | null;
-  /** Optional unit label (e.g. "m²", "ft"). Stored by BE on suggestions. */
-  unit?: string | null;
 }
 
 export interface VatBreakdownEntry {

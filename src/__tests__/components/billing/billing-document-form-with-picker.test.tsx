@@ -70,6 +70,10 @@ vi.mock(
     updateBillingDocumentAction: vi.fn(),
     deleteBillingDocumentAction: vi.fn(),
     convertDevisToFactureAction: vi.fn(),
+    getActivitySuggestionsAction: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { categories: [], suggestions: [] },
+    }),
   })
 );
 
@@ -185,9 +189,14 @@ async function fillAndSubmit(recipientName = "Client Corp") {
 
   fireEvent.click(screen.getByRole("button", { name: /add line/i }));
 
-  await waitFor(() => screen.getAllByPlaceholderText("Item description"));
-  const descInputs = screen.getAllByPlaceholderText("Item description");
-  fireEvent.change(descInputs[0], { target: { value: "Consulting" } });
+  // Description is now a Combobox — open it and type into the CommandInput.
+  const comboboxes = screen.getAllByRole("combobox");
+  const descTrigger = comboboxes[comboboxes.length > 1 ? 1 : 0];
+  await act(async () => { fireEvent.click(descTrigger); });
+  const cmdInputs = screen.getAllByPlaceholderText(/describe the work|Item description/i);
+  await act(async () => {
+    fireEvent.change(cmdInputs[0], { target: { value: "Consulting" } });
+  });
 
   const spinButtons = screen.getAllByRole("spinbutton");
   fireEvent.change(spinButtons[0], { target: { value: "1" } });

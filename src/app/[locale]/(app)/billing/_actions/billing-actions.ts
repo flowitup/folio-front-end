@@ -27,6 +27,9 @@ import {
   convertDevisToFacture,
   updateBillingDocumentStatus,
   createBillingDocumentFromTemplate,
+  fetchActivitySuggestions,
+  type ActivitySuggestionsResponse,
+  type FetchActivitySuggestionsParams,
 } from "@/lib/api/billing/documents";
 import { fetchBillingTemplates, fetchBillingTemplate } from "@/lib/api/billing/templates";
 import {
@@ -255,6 +258,21 @@ export async function deleteBillingTemplateAction(
   try {
     await deleteBillingTemplate(id);
     return { ok: true, data: undefined };
+  } catch (err) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Activity suggestions action (Phase 05)
+// ---------------------------------------------------------------------------
+
+export async function getActivitySuggestionsAction(
+  params: FetchActivitySuggestionsParams
+): Promise<ActionResult<ActivitySuggestionsResponse>> {
+  try {
+    const data = await fetchActivitySuggestions(params);
+    return { ok: true, data };
   } catch (err) {
     return { ok: false, error: classifyBackendError(err) };
   }

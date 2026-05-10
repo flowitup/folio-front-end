@@ -23,7 +23,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, Loader2, Download, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Download, FileSpreadsheet, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -166,12 +166,14 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [isXlsxLoading, setIsXlsxLoading] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   // Double-submit guards (ref-based — synchronous check before first React commit)
   const submittingRef = useRef(false);
   const pdfLoadingRef = useRef(false);
+  const xlsxLoadingRef = useRef(false);
   const convertingRef = useRef(false);
 
   // ---------------------------------------------------------------------------
@@ -313,6 +315,34 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     }
   }
 
+  async function handleDownloadXlsx() {
+    if (xlsxLoadingRef.current) return;
+    if (!liveDoc) return;
+    xlsxLoadingRef.current = true;
+    setIsXlsxLoading(true);
+    try {
+      const token = getApiAccessToken();
+      const response = await fetch(
+        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/xlsx`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          credentials: "include",
+        }
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const cd = response.headers.get("Content-Disposition");
+      const filename = parseFilenameFromContentDisposition(cd, `${liveDoc.document_number}.xlsx`);
+      const blob = await response.blob();
+      triggerBrowserDownload(blob, filename);
+      toast.success(tForm("toast.xlsxDownloaded"));
+    } catch {
+      toast.error(tForm("errors.xlsxFailed"));
+    } finally {
+      setIsXlsxLoading(false);
+      xlsxLoadingRef.current = false;
+    }
+  }
+
   async function handleConvert() {
     if (convertingRef.current) return;
     if (!liveDoc) return;
@@ -409,6 +439,19 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
                   <Download size={13} className="mr-2" />
                 )}
                 {tForm("actions.downloadPdf")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadXlsx}
+                disabled={isXlsxLoading}
+              >
+                {isXlsxLoading ? (
+                  <Loader2 size={13} className="mr-2 animate-spin" />
+                ) : (
+                  <FileSpreadsheet size={13} className="mr-2" />
+                )}
+                {tForm("actions.downloadXlsx")}
               </Button>
             </div>
           </>

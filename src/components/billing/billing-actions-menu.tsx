@@ -13,7 +13,15 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { MoreHorizontal, Pencil, Download, ArrowRightLeft, Trash2, Loader2 } from "lucide-react";
+import {
+  MoreHorizontal,
+  Pencil,
+  Download,
+  FileSpreadsheet,
+  ArrowRightLeft,
+  Trash2,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,10 +62,12 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [isXlsxLoading, setIsXlsxLoading] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
 
   // Double-submit guards — synchronous check before React commit
   const pdfLoadingRef = useRef(false);
+  const xlsxLoadingRef = useRef(false);
   const convertingRef = useRef(false);
   const deletingRef = useRef(false);
 
@@ -95,6 +105,38 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
     } finally {
       setIsPdfLoading(false);
       pdfLoadingRef.current = false;
+    }
+  }
+
+  async function handleDownloadXlsx() {
+    if (xlsxLoadingRef.current) return;
+    xlsxLoadingRef.current = true;
+    setIsXlsxLoading(true);
+    try {
+      const token = getApiAccessToken();
+      const response = await fetch(
+        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/xlsx`,
+        {
+          method: "GET",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          credentials: "include",
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const cd = response.headers.get("Content-Disposition");
+      const filename = parseFilenameFromContentDisposition(
+        cd,
+        `${document.document_number}.xlsx`
+      );
+      const blob = await response.blob();
+      triggerBrowserDownload(blob, filename);
+    } catch {
+      toast.error(tErrors("xlsxFailed"));
+    } finally {
+      setIsXlsxLoading(false);
+      xlsxLoadingRef.current = false;
     }
   }
 
@@ -145,9 +187,9 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
             size="sm"
             className="h-7 w-7 p-0"
             style={{ color: "var(--muted)" }}
-            disabled={isPdfLoading || isConverting}
+            disabled={isPdfLoading || isXlsxLoading || isConverting}
           >
-            {isPdfLoading || isConverting ? (
+            {isPdfLoading || isXlsxLoading || isConverting ? (
               <Loader2 size={13} className="animate-spin" />
             ) : (
               <MoreHorizontal size={13} />
@@ -163,6 +205,10 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
           <DropdownMenuItem onClick={handleDownloadPdf} disabled={isPdfLoading}>
             <Download size={13} className="mr-2" />
             {tActions("downloadPdf")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleDownloadXlsx} disabled={isXlsxLoading}>
+            <FileSpreadsheet size={13} className="mr-2" />
+            {tActions("downloadXlsx")}
           </DropdownMenuItem>
           {showConvertToFacture && (
             <>

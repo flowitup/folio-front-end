@@ -804,6 +804,7 @@
         "cancel": "Cancel",
         "delete": "Delete",
         "downloadPdf": "Download PDF",
+        "downloadXlsx": "Download XLSX",
         "convertToFacture": "Convert to Invoice",
         "changeStatus": "Change status",
         "cloneSelected": "Clone selected",
@@ -821,6 +822,7 @@
         "saveFailed": "An unexpected error occurred. Please try again.",
         "deleteFailed": "Failed to delete document. Please try again.",
         "pdfFailed": "Failed to download PDF. Please try again.",
+        "xlsxFailed": "Failed to download XLSX. Please try again.",
         "convertFailed": "Failed to convert quote to invoice.",
         "alreadyConverted": "This quote has already been converted to an invoice.",
         "invalidTransition": "This status transition is not allowed. The document may have been updated by another session.",
@@ -831,6 +833,7 @@
         "documentCreated": "Document created.",
         "documentDeleted": "Document deleted.",
         "pdfDownloaded": "PDF downloaded.",
+        "xlsxDownloaded": "XLSX downloaded.",
         "devisConverted": "Quote converted to invoice.",
         "companyNoLongerAttached": "Your access to this company has been revoked. Please select another company."
       },

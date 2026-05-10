@@ -804,6 +804,7 @@
         "cancel": "Hủy",
         "delete": "Xóa",
         "downloadPdf": "Tải PDF",
+        "downloadXlsx": "Tải XLSX",
         "convertToFacture": "Chuyển thành hóa đơn",
         "changeStatus": "Đổi trạng thái",
         "cloneSelected": "Nhân bản đã chọn",
@@ -821,6 +822,7 @@
         "saveFailed": "Đã xảy ra lỗi không mong đợi. Vui lòng thử lại.",
         "deleteFailed": "Xóa tài liệu thất bại. Vui lòng thử lại.",
         "pdfFailed": "Tải PDF thất bại. Vui lòng thử lại.",
+        "xlsxFailed": "Tải XLSX thất bại. Vui lòng thử lại.",
         "convertFailed": "Chuyển đổi báo giá sang hóa đơn thất bại.",
         "alreadyConverted": "Báo giá này đã được chuyển thành hóa đơn.",
         "invalidTransition": "Chuyển đổi trạng thái này không được phép. Tài liệu có thể đã được cập nhật bởi phiên khác.",
@@ -831,6 +833,7 @@
         "documentCreated": "Đã tạo tài liệu.",
         "documentDeleted": "Đã xóa tài liệu.",
         "pdfDownloaded": "Đã tải PDF.",
+        "xlsxDownloaded": "Đã tải XLSX.",
         "devisConverted": "Đã chuyển báo giá thành hóa đơn.",
         "companyNoLongerAttached": "Quyền truy cập vào công ty này đã bị thu hồi. Vui lòng chọn công ty khác."
       },

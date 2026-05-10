@@ -83,6 +83,15 @@ export interface LaborSummaryResponse {
   total_bonus_cost: number;
 }
 
+export interface MonthlyWorkerSubRow {
+  worker_id: string;
+  worker_name: string;
+  /** Priced shifts (supplement-only excluded) */
+  days_worked: number;
+  /** EUR */
+  total_cost: number;
+}
+
 export interface MonthlySummaryRow {
   /** 4-digit calendar year (e.g. 2026) */
   year: number;
@@ -92,6 +101,8 @@ export interface MonthlySummaryRow {
   total_days: number;
   /** Total cost in EUR for this month */
   total_cost: number;
+  /** Per-worker breakdown for this month, sorted ASC by name. */
+  workers: MonthlyWorkerSubRow[];
 }
 
 export interface LaborMonthlySummaryResponse {

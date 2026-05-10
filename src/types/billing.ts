@@ -22,6 +22,8 @@ export interface BillingDocumentItem {
   quantity: string; // Decimal-as-string
   unit_price: string; // Decimal-as-string
   vat_rate: string; // Decimal-as-string (percent, e.g. "20")
+  /** Phase 05 — grouping category (e.g. "Toiture"). Optional/null for legacy items. */
+  category?: string | null;
 }
 
 export interface VatBreakdownEntry {

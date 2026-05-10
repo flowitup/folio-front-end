@@ -9,6 +9,15 @@ import '@testing-library/jest-dom/vitest'
 process.env.NEXT_PUBLIC_API_BASE_URL = 'http://localhost:3001/api'
 process.env.NEXT_PUBLIC_APP_ENV = 'test'
 
+// ResizeObserver polyfill — required by cmdk (not available in jsdom)
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}
+
 // Mock pointer capture methods for Radix UI components (not supported in jsdom)
 Element.prototype.hasPointerCapture = () => false
 Element.prototype.setPointerCapture = () => {}

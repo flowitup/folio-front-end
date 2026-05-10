@@ -30,6 +30,10 @@ vi.mock(
     updateBillingDocumentAction: vi.fn(),
     deleteBillingDocumentAction: vi.fn(),
     convertDevisToFactureAction: vi.fn(),
+    getActivitySuggestionsAction: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { categories: [], suggestions: [] },
+    }),
   })
 );
 
@@ -202,10 +206,17 @@ async function fillAndSubmitCreateForm(recipientName = "Test Client") {
   // Add a line item
   fireEvent.click(screen.getByRole("button", { name: /add line/i }));
 
-  // Fill description on the new item
-  await waitFor(() => screen.getAllByPlaceholderText("Item description"));
-  const descInputs = screen.getAllByPlaceholderText("Item description");
-  fireEvent.change(descInputs[0], { target: { value: "Dev work" } });
+  // Fill description on the new item via the Combobox.
+  // Click the description combobox trigger (second combobox — first is category).
+  const comboboxes = screen.getAllByRole("combobox");
+  // comboboxes[0] = category combobox, comboboxes[1] = description combobox
+  const descTrigger = comboboxes[comboboxes.length > 1 ? 1 : 0];
+  await act(async () => { fireEvent.click(descTrigger); });
+  // Type into the CommandInput that appears in the popover
+  const cmdInputs = screen.getAllByPlaceholderText(/describe the work|Item description/i);
+  await act(async () => {
+    fireEvent.change(cmdInputs[0], { target: { value: "Dev work" } });
+  });
 
   // Fill unit price (first spinbutton for that row is qty, second is unit_price)
   const spinButtons = screen.getAllByRole("spinbutton");

@@ -275,6 +275,69 @@ export async function fetchBillingDocumentPdf(
   return { blob, filename };
 }
 
+// ---------------------------------------------------------------------------
+// Activity suggestions (Phase 05)
+// ---------------------------------------------------------------------------
+
+/** One distinct category with its historical frequency. */
+export interface ActivityCategory {
+  name: string;
+  frequency: number;
+}
+
+/** One past line-item suggestion returned by the suggestions endpoint. */
+export interface ActivitySuggestion {
+  description: string;
+  category: string | null;
+  frequency: number;
+  last_unit: string | null;
+  last_unit_price: string;
+  last_vat_rate: string;
+}
+
+export interface ActivitySuggestionsResponse {
+  categories: ActivityCategory[];
+  suggestions: ActivitySuggestion[];
+}
+
+export interface FetchActivitySuggestionsParams {
+  category?: string | null;
+  q?: string;
+  limit?: number;
+}
+
+/**
+ * Fetch activity suggestions (categories + past line-item descriptions).
+ * Server-only — uses sessionAuthHeader.
+ */
+export async function fetchActivitySuggestions(
+  params: FetchActivitySuggestionsParams
+): Promise<ActivitySuggestionsResponse> {
+  const authHeaders = await sessionAuthHeader();
+  const qs = new URLSearchParams();
+  if (params.category) qs.set("category", params.category);
+  if (params.q !== undefined && params.q !== "") qs.set("q", params.q);
+  if (params.limit !== undefined) qs.set("limit", String(params.limit));
+
+  let response: Response;
+  try {
+    response = await fetch(
+      `${baseUrl()}/billing-documents/activity-suggestions?${qs.toString()}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        // Intentionally no cache override — relies on Next.js fetch defaults
+        // (no-store set in calling action). Suggestions are always fresh.
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error fetching activity suggestions: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to fetch activity suggestions");
+  return response.json() as Promise<ActivitySuggestionsResponse>;
+}
+
 /**
  * Create a billing document from an existing template.
  */

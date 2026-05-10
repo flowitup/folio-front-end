@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -268,20 +268,53 @@ export function LaborSummary({
                   {filteredMonthlyRows.map((row) => {
                     const ym = `${row.year}-${String(row.month).padStart(2, "0")}`;
                     return (
-                      <tr
-                        key={ym}
-                        onClick={() => onMonthChange(ym)}
-                        style={{ cursor: "pointer" }}
-                        title={t("summaryDrillDown")}
-                      >
-                        <td>{formatYearMonthLabel(row, locale)}</td>
-                        <td className="num" style={{ textAlign: "right" }}>
-                          {row.total_days}
-                        </td>
-                        <td className="num font-medium" style={{ textAlign: "right" }}>
-                          {formatEUR(row.total_cost)}
-                        </td>
-                      </tr>
+                      <Fragment key={ym}>
+                        {/* Month header — clickable to drill into per-worker
+                            mode for that month (existing behavior). */}
+                        <tr
+                          onClick={() => onMonthChange(ym)}
+                          style={{ cursor: "pointer" }}
+                          title={t("summaryDrillDown")}
+                          data-testid={`month-row-${ym}`}
+                        >
+                          <td className="font-medium">
+                            {formatYearMonthLabel(row, locale)}
+                          </td>
+                          <td className="num font-medium" style={{ textAlign: "right" }}>
+                            {row.total_days}
+                          </td>
+                          <td className="num font-medium" style={{ textAlign: "right" }}>
+                            {formatEUR(row.total_cost)}
+                          </td>
+                        </tr>
+                        {/* Inline per-worker sub-rows. Indented + muted to
+                            visually nest under the month header. */}
+                        {row.workers.map((w) => (
+                          <tr
+                            key={`${ym}-${w.worker_id}`}
+                            data-testid={`worker-subrow-${ym}-${w.worker_id}`}
+                          >
+                            <td
+                              className="text-[13px] pl-8"
+                              style={{ color: "var(--muted)" }}
+                            >
+                              {w.worker_name}
+                            </td>
+                            <td
+                              className="num text-[13px]"
+                              style={{ textAlign: "right", color: "var(--muted)" }}
+                            >
+                              {w.days_worked}
+                            </td>
+                            <td
+                              className="num text-[13px]"
+                              style={{ textAlign: "right", color: "var(--muted)" }}
+                            >
+                              {formatEUR(w.total_cost)}
+                            </td>
+                          </tr>
+                        ))}
+                      </Fragment>
                     );
                   })}
                 </tbody>

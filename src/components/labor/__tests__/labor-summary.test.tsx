@@ -454,9 +454,34 @@ describe("LaborSummary — month filter (opt-in)", () => {
 
 describe("LaborSummary — monthly rollup + year filter (all-history mode)", () => {
   const monthly = makeMonthlySummary([
-    { year: 2026, month: 4, total_days: 22, total_cost: 5500 },
-    { year: 2026, month: 3, total_days: 18, total_cost: 4500 },
-    { year: 2025, month: 12, total_days: 10, total_cost: 2500 },
+    {
+      year: 2026,
+      month: 4,
+      total_days: 22,
+      total_cost: 5500,
+      workers: [
+        { worker_id: "w-alice", worker_name: "Alice", days_worked: 12, total_cost: 3000 },
+        { worker_id: "w-bob", worker_name: "Bob", days_worked: 10, total_cost: 2500 },
+      ],
+    },
+    {
+      year: 2026,
+      month: 3,
+      total_days: 18,
+      total_cost: 4500,
+      workers: [
+        { worker_id: "w-alice", worker_name: "Alice", days_worked: 18, total_cost: 4500 },
+      ],
+    },
+    {
+      year: 2025,
+      month: 12,
+      total_days: 10,
+      total_cost: 2500,
+      workers: [
+        { worker_id: "w-bob", worker_name: "Bob", days_worked: 10, total_cost: 2500 },
+      ],
+    },
   ]);
 
   it("renders one row per (year, month) bucket when month filter is empty", () => {
@@ -586,5 +611,60 @@ describe("LaborSummary — monthly rollup + year filter (all-history mode)", () 
       />
     );
     expect(screen.queryByTestId("year-filter-row")).toBeNull();
+  });
+
+  it("renders inline per-worker sub-rows under each month header", () => {
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+      />
+    );
+    // April 2026 month header has 2 sub-rows (Alice + Bob).
+    expect(screen.getByTestId("worker-subrow-2026-04-w-alice")).toBeDefined();
+    expect(screen.getByTestId("worker-subrow-2026-04-w-bob")).toBeDefined();
+    // March 2026 has Alice only.
+    expect(screen.getByTestId("worker-subrow-2026-03-w-alice")).toBeDefined();
+    expect(screen.queryByTestId("worker-subrow-2026-03-w-bob")).toBeNull();
+    // December 2025 has Bob only.
+    expect(screen.getByTestId("worker-subrow-2025-12-w-bob")).toBeDefined();
+  });
+
+  it("sub-row days/cost match the BE-supplied per-worker values", () => {
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+      />
+    );
+    // April: Alice 12 days @ €3000.
+    const aliceApr = screen.getByTestId("worker-subrow-2026-04-w-alice");
+    expect(aliceApr.textContent).toContain("Alice");
+    expect(aliceApr.textContent).toContain("12");
+    expect(aliceApr.textContent).toContain("€3000.00");
+    // April: Bob 10 days @ €2500.
+    const bobApr = screen.getByTestId("worker-subrow-2026-04-w-bob");
+    expect(bobApr.textContent).toContain("Bob");
+    expect(bobApr.textContent).toContain("10");
+    expect(bobApr.textContent).toContain("€2500.00");
+  });
+
+  it("clicking the month header still drills down (sub-rows do not block)", () => {
+    const onMonthChange = vi.fn();
+    render(
+      <LaborSummary
+        {...defaultProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+        onMonthChange={onMonthChange}
+      />
+    );
+    fireEvent.click(screen.getByTestId("month-row-2026-04"));
+    expect(onMonthChange).toHaveBeenCalledWith("2026-04");
   });
 });

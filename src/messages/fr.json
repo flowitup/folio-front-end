@@ -804,6 +804,7 @@
         "cancel": "Annuler",
         "delete": "Supprimer",
         "downloadPdf": "Télécharger PDF",
+        "downloadXlsx": "Télécharger XLSX",
         "convertToFacture": "Convertir en facture",
         "changeStatus": "Changer le statut",
         "cloneSelected": "Dupliquer le sélectionné",
@@ -821,6 +822,7 @@
         "saveFailed": "Une erreur inattendue s'est produite. Veuillez réessayer.",
         "deleteFailed": "Échec de la suppression du document. Veuillez réessayer.",
         "pdfFailed": "Échec du téléchargement du PDF. Veuillez réessayer.",
+        "xlsxFailed": "Échec du téléchargement du XLSX. Veuillez réessayer.",
         "convertFailed": "Échec de la conversion du devis en facture.",
         "alreadyConverted": "Ce devis a déjà été converti en facture.",
         "invalidTransition": "Cette transition de statut n'est pas autorisée. Le document a peut-être été modifié dans une autre session.",
@@ -831,6 +833,7 @@
         "documentCreated": "Document créé.",
         "documentDeleted": "Document supprimé.",
         "pdfDownloaded": "PDF téléchargé.",
+        "xlsxDownloaded": "XLSX téléchargé.",
         "devisConverted": "Devis converti en facture.",
         "companyNoLongerAttached": "Votre accès à cette société a été révoqué. Veuillez en sélectionner une autre."
       },

@@ -287,28 +287,29 @@ export function LaborSummary({
                             {formatEUR(row.total_cost)}
                           </td>
                         </tr>
-                        {/* Inline per-worker sub-rows. Indented + muted to
-                            visually nest under the month header. */}
+                        {/* Inline per-worker sub-rows. Hierarchy via indent
+                            (pl-8) + smaller font (text-[13px]); the row text
+                            inherits the table's normal ink color so it stays
+                            readable on every theme + alt-row background.
+                            (`var(--muted)` was too low-contrast inside table
+                            rows even when fine for card subtitles.) */}
                         {row.workers.map((w) => (
                           <tr
                             key={`${ym}-${w.worker_id}`}
                             data-testid={`worker-subrow-${ym}-${w.worker_id}`}
                           >
-                            <td
-                              className="text-[13px] pl-8"
-                              style={{ color: "var(--muted)" }}
-                            >
+                            <td className="text-[13px] pl-8">
                               {w.worker_name}
                             </td>
                             <td
                               className="num text-[13px]"
-                              style={{ textAlign: "right", color: "var(--muted)" }}
+                              style={{ textAlign: "right" }}
                             >
                               {w.days_worked}
                             </td>
                             <td
                               className="num text-[13px]"
-                              style={{ textAlign: "right", color: "var(--muted)" }}
+                              style={{ textAlign: "right" }}
                             >
                               {formatEUR(w.total_cost)}
                             </td>

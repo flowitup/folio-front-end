@@ -777,7 +777,12 @@
         "totalHt": "Tổng (chưa VAT)",
         "addLine": "Thêm dòng",
         "noItems": "Chưa có dòng nào. Nhấn \"Thêm dòng\" để bắt đầu.",
-        "removeLine": "Xóa dòng"
+        "removeLine": "Xóa dòng",
+        "categoryLabel": "Mục",
+        "categoryPlaceholder": "ví dụ Toiture, Plomberie",
+        "descriptionSuggestionsHeading": "Từ các hóa đơn trước",
+        "noSuggestions": "Không có gợi ý — văn bản của bạn sẽ được dùng",
+        "categoryNoMatches": "Chưa có mục nào — văn bản của bạn sẽ được dùng"
       },
       "totals": {
         "ht": "Tổng (chưa VAT)",

@@ -777,7 +777,12 @@
         "totalHt": "Total HT",
         "addLine": "Add line",
         "noItems": "No line items yet. Click \"Add line\" to start.",
-        "removeLine": "Remove line"
+        "removeLine": "Remove line",
+        "categoryLabel": "Section",
+        "categoryPlaceholder": "e.g. Toiture, Plomberie",
+        "descriptionSuggestionsHeading": "From your past invoices",
+        "noSuggestions": "No matches — your text will be used",
+        "categoryNoMatches": "No categories yet — your text will be used"
       },
       "totals": {
         "ht": "Total HT",

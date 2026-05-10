@@ -777,7 +777,12 @@
         "totalHt": "Total HT",
         "addLine": "Ajouter une ligne",
         "noItems": "Aucune ligne pour le moment. Cliquez sur « Ajouter une ligne » pour commencer.",
-        "removeLine": "Supprimer la ligne"
+        "removeLine": "Supprimer la ligne",
+        "categoryLabel": "Section",
+        "categoryPlaceholder": "ex. Toiture, Plomberie",
+        "descriptionSuggestionsHeading": "Depuis vos factures précédentes",
+        "noSuggestions": "Aucune correspondance — votre texte sera utilisé",
+        "categoryNoMatches": "Aucune section enregistrée — votre texte sera utilisé"
       },
       "totals": {
         "ht": "Total HT",

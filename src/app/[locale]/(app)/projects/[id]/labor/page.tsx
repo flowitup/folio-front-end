@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { WorkerList } from "@/components/labor/worker-list";
 import { AddWorkerDialog } from "@/components/labor/add-worker-dialog";
 import { AttendanceTable } from "@/components/labor/attendance-table";
+import { AttendanceCalendar } from "@/components/labor/attendance-calendar";
+import { ViewToggle, type AttendanceViewMode } from "@/components/labor/view-toggle";
 import { LogAttendanceDialog } from "@/components/labor/log-attendance-dialog";
 import { LaborSummary } from "@/components/labor/labor-summary";
 
@@ -73,6 +75,11 @@ export default function LaborPage() {
   // see GET /labor-entries default limit). The month picker is opt-in.
   const [entriesMonth, setEntriesMonth] = useState("");
   const [entriesWorkerFilter, setEntriesWorkerFilter] = useState("all");
+  // Calendar default per plan; list view stays available as fallback for
+  // power users who want "all history" scroll (cook 2d).
+  const [attendanceView, setAttendanceView] = useState<AttendanceViewMode>(
+    "calendar",
+  );
 
   // Summary state. Default: "" → unbounded (all history). The month picker
   // is opt-in; clearing it returns to the all-history aggregate. Mirrors the
@@ -260,25 +267,40 @@ export default function LaborPage() {
 
       {!isLoading && activeTab === "attendance" && (
         <div className="space-y-4">
-          {canManageLabor && (
-            <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-3">
+            <ViewToggle value={attendanceView} onChange={setAttendanceView} />
+            {canManageLabor && (
               <Button onClick={() => setShowLogAttendance(true)}>
                 <Plus className="h-4 w-4" />
                 {t("logAttendance")}
               </Button>
-            </div>
+            )}
+          </div>
+          {attendanceView === "calendar" ? (
+            <AttendanceCalendar
+              entries={entries}
+              workers={workers}
+              isLoading={isTabLoading}
+              canManage={canManageLabor}
+              month={entriesMonth}
+              workerFilter={entriesWorkerFilter}
+              onMonthChange={setEntriesMonth}
+              onWorkerFilterChange={setEntriesWorkerFilter}
+              onDelete={handleDeleteEntry}
+            />
+          ) : (
+            <AttendanceTable
+              entries={entries}
+              workers={workers}
+              isLoading={isTabLoading}
+              canManage={canManageLabor}
+              month={entriesMonth}
+              workerFilter={entriesWorkerFilter}
+              onMonthChange={setEntriesMonth}
+              onWorkerFilterChange={setEntriesWorkerFilter}
+              onDelete={handleDeleteEntry}
+            />
           )}
-          <AttendanceTable
-            entries={entries}
-            workers={workers}
-            isLoading={isTabLoading}
-            canManage={canManageLabor}
-            month={entriesMonth}
-            workerFilter={entriesWorkerFilter}
-            onMonthChange={setEntriesMonth}
-            onWorkerFilterChange={setEntriesWorkerFilter}
-            onDelete={handleDeleteEntry}
-          />
         </div>
       )}
 

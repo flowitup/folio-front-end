@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import type { Worker, CreateWorkerPayload, UpdateWorkerPayload } from "@/types/labor";
+import { PersonTypeahead } from "@/components/persons/person-typeahead";
+import type { PersonSummary } from "@/types/person";
+import type {
+  Worker,
+  CreateWorkerPayload,
+  UpdateWorkerPayload,
+} from "@/types/labor";
 
 interface AddWorkerDialogProps {
   open: boolean;
@@ -21,6 +28,18 @@ interface AddWorkerDialogProps {
   editWorker?: Worker | null;
 }
 
+/**
+ * AddWorkerDialog
+ *
+ * Create flow (cook 1d-ii-b): picks or inline-creates a Person via
+ * PersonTypeahead, then attaches a daily_rate. The Worker is linked to
+ * the Person's id; name/phone derive from the Person selection.
+ *
+ * Edit flow: unchanged. The Worker's inline name/phone columns and
+ * daily_rate remain editable. A future release (after workers.name and
+ * workers.phone columns are dropped) will move name/phone edits to a
+ * dedicated Person edit surface.
+ */
 export function AddWorkerDialog({
   open,
   onOpenChange,
@@ -28,15 +47,24 @@ export function AddWorkerDialog({
   editWorker,
 }: AddWorkerDialogProps) {
   const t = useTranslations("labor");
+
+  // Create-flow state
+  const [selectedPerson, setSelectedPerson] = useState<PersonSummary | null>(
+    null,
+  );
+
+  // Edit-flow state (unchanged from prior version)
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+
+  // Shared state
   const [dailyRate, setDailyRate] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isEdit = !!editWorker;
 
-  // Sync form state when editWorker changes
+  // Hydrate form when entering edit mode.
   useEffect(() => {
     if (open && editWorker) {
       setName(editWorker.name);
@@ -45,14 +73,18 @@ export function AddWorkerDialog({
     }
   }, [open, editWorker]);
 
+  const handleClose = () => {
+    setSelectedPerson(null);
+    setName("");
+    setPhone("");
+    setDailyRate("");
+    setError(null);
+    onOpenChange(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    if (!name.trim()) {
-      setError(t("workerName") + " is required");
-      return;
-    }
 
     const rate = parseFloat(dailyRate);
     if (isNaN(rate) || rate <= 0) {
@@ -60,12 +92,40 @@ export function AddWorkerDialog({
       return;
     }
 
+    if (isEdit) {
+      // Edit path mirrors the legacy contract.
+      if (!name.trim()) {
+        setError(t("workerName") + " is required");
+        return;
+      }
+      setIsSaving(true);
+      try {
+        await onSave({
+          name: name.trim(),
+          daily_rate: rate,
+          phone: phone.trim() || undefined,
+        });
+        handleClose();
+      } catch {
+        setError("Failed to save worker");
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
+
+    // Create path — Person selection is required.
+    if (!selectedPerson) {
+      setError(t("workerName") + " is required");
+      return;
+    }
     setIsSaving(true);
     try {
       await onSave({
-        name: name.trim(),
+        name: selectedPerson.name,
         daily_rate: rate,
-        phone: phone.trim() || undefined,
+        phone: selectedPerson.phone ?? undefined,
+        person_id: selectedPerson.id,
       });
       handleClose();
     } catch {
@@ -73,14 +133,6 @@ export function AddWorkerDialog({
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleClose = () => {
-    setName("");
-    setPhone("");
-    setDailyRate("");
-    setError(null);
-    onOpenChange(false);
   };
 
   return (
@@ -93,16 +145,43 @@ export function AddWorkerDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">{t("workerName")}</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("workerName")}
-              autoFocus
-            />
-          </div>
+          {isEdit ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="name">{t("workerName")}</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t("workerName")}
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">{t("workerPhone")}</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+33 6 12 34 56 78"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="space-y-2">
+              <Label>{t("workerName")}</Label>
+              <PersonTypeahead
+                value={selectedPerson}
+                onChange={setSelectedPerson}
+                placeholder={t("workerName")}
+              />
+              {selectedPerson?.phone && (
+                <p className="text-muted-foreground font-mono text-xs">
+                  {selectedPerson.phone}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="dailyRate">{t("dailyRate")} (EUR)</Label>
@@ -117,19 +196,7 @@ export function AddWorkerDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">{t("workerPhone")}</Label>
-            <Input
-              id="phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+33 6 12 34 56 78"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-destructive text-sm">{error}</p>}
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={handleClose}>

@@ -29,6 +29,11 @@ export interface CreateWorkerPayload {
   name: string;
   daily_rate: number;
   phone?: string;
+  // When set, link the new Worker to an existing Person picked via the
+  // PersonTypeahead (cook 1d-ii-b). Server skips inline Person creation
+  // and uses this id instead. When omitted, the BE creates a Person
+  // from name+phone (legacy behavior).
+  person_id?: string;
 }
 
 export interface UpdateWorkerPayload {

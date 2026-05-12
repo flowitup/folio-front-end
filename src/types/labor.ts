@@ -10,6 +10,14 @@ export interface Worker {
   daily_rate: number;
   is_active: boolean;
   created_at: string;
+  // Joined Person identity (cook 1d-ii-a). Optional during the Phase 1c
+  // backfill rollout — older workers may not yet have a linked Person.
+  // The legacy ``name`` and ``phone`` fields above remain populated for
+  // back-compat; FE consumers should prefer person_name / person_phone
+  // when present and fall back to the legacy fields otherwise.
+  person_id?: string | null;
+  person_name?: string | null;
+  person_phone?: string | null;
 }
 
 export interface WorkerListResponse {

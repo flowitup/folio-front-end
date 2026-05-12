@@ -20,9 +20,10 @@ import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarMonthGrid } from "@/components/labor/calendar-month-grid";
+import { AttendanceDayDetailSheet } from "@/components/labor/attendance-day-detail-sheet";
 import { api } from "@/lib/api/http";
 import { fetchLaborEntries } from "@/lib/api/labor";
-import { monthLabel } from "@/lib/utils/calendar-month";
+import { monthLabel, toDateKey } from "@/lib/utils/calendar-month";
 import type { LaborEntry } from "@/types/labor";
 
 interface ProjectSummary {
@@ -39,6 +40,10 @@ export default function CalendarPreviewPage() {
   const [entries, setEntries] = useState<LaborEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Day-detail sheet state. Track the clicked Date directly; the
+  // entries for it are derived from `entries` at render time.
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // Pick the first accessible project that actually has workers, since
   // the demo needs entries to be visible. Falls back to the first
@@ -167,12 +172,7 @@ export default function CalendarPreviewPage() {
               year={year}
               monthIdx={monthIdx}
               entries={entries}
-              onDayClick={(d) => {
-                // 2c will open the day-detail drawer here. For 2b
-                // we just log so the click affordance is verifiable.
-                // eslint-disable-next-line no-console
-                console.log("clicked", d.toISOString().slice(0, 10));
-              }}
+              onDayClick={(d) => setSelectedDate(d)}
             />
           )}
 
@@ -181,6 +181,24 @@ export default function CalendarPreviewPage() {
           </p>
         </CardContent>
       </Card>
+
+      <AttendanceDayDetailSheet
+        date={selectedDate}
+        entries={
+          selectedDate
+            ? entries.filter((e) => e.date === toDateKey(selectedDate))
+            : []
+        }
+        open={selectedDate !== null}
+        onOpenChange={(o) => {
+          if (!o) setSelectedDate(null);
+        }}
+        canManage={false}
+        onDelete={() => {
+          // Delete wiring lands in Phase 2d when the calendar moves
+          // into LaborPage and gains the existing delete flow.
+        }}
+      />
     </div>
   );
 }

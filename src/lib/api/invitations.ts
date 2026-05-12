@@ -42,7 +42,7 @@ export async function listInvitations(
   let response: Response;
   try {
     response = await fetch(
-      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/invitations?status=${encodeURIComponent(status)}`,
+      `${env.apiBaseUrl}/invitations/projects/${encodeURIComponent(projectId)}/invitations?status=${encodeURIComponent(status)}`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json", ...authHeaders },

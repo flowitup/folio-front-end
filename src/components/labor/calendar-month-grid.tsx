@@ -82,7 +82,7 @@ export function CalendarMonthGrid({
     <div className={cn("space-y-1.5", className)}>
       {/* Weekday header row */}
       <div
-        className="text-muted-foreground grid grid-cols-7 gap-1.5 text-xs"
+        className="text-foreground/70 grid grid-cols-7 gap-1.5 text-xs"
         aria-hidden="true"
       >
         {weekdayLabels.map((label) => (

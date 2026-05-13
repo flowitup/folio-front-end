@@ -25,6 +25,7 @@ import {
 import { LaborEntryCard } from "@/components/labor/labor-entry-card";
 import type { LaborEntry, Worker } from "@/types/labor";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
+import { formatEUR } from "@/lib/api/labor";
 
 interface AttendanceTableProps {
   entries: LaborEntry[];
@@ -120,37 +121,56 @@ export function AttendanceTable({
         const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
         return (
-          <div className="space-y-4">
-            {sortedDates.map((date) => (
-              <div key={date} className="space-y-1">
-                {/* Date header — Intl returns lowercase weekday names in
-                    French (e.g. "samedi"); capitalize the leading char so
-                    the header reads "Samedi 09/05/2026". */}
-                <p className="text-sm font-semibold text-muted-foreground px-1">
-                  {capitalizeFirst(
-                    new Date(date).toLocaleDateString("fr-FR", {
-                      weekday: "long",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    }),
-                    "fr-FR",
-                  )}
-                </p>
+          <div className="space-y-6">
+            {sortedDates.map((date) => {
+              const dayEntries = grouped[date];
+              const dayTotal = dayEntries.reduce(
+                (sum, e) => sum + Number(e.effective_cost ?? 0),
+                0,
+              );
+              return (
+                <section key={date} className="space-y-2">
+                  {/* Date header — French weekday is lowercased by Intl;
+                      capitalize so the line reads "Samedi 09/05/2026". */}
+                  <header className="flex items-baseline justify-between gap-3 px-1">
+                    <h3 className="text-foreground text-sm font-semibold tracking-tight">
+                      {capitalizeFirst(
+                        new Date(date).toLocaleDateString("fr-FR", {
+                          weekday: "long",
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        }),
+                        "fr-FR",
+                      )}
+                    </h3>
+                    <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                      <span>
+                        {dayEntries.length}{" "}
+                        {dayEntries.length === 1 ? "worker" : "workers"}
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span className="text-foreground font-semibold tabular-nums">
+                        {formatEUR(dayTotal)}
+                      </span>
+                    </div>
+                  </header>
 
-                {/* Worker rows — extracted to <LaborEntryCard> in Phase 2a
-                    so the upcoming AttendanceDayDetailSheet (Phase 2c) can
-                    reuse the same row markup. */}
-                {grouped[date].map((entry) => (
-                  <LaborEntryCard
-                    key={entry.id}
-                    entry={entry}
-                    canManage={canManage}
-                    onDelete={(e) => setConfirmDelete(e)}
-                  />
-                ))}
-              </div>
-            ))}
+                  <Card className="overflow-hidden p-0">
+                    <div className="divide-border divide-y">
+                      {dayEntries.map((entry) => (
+                        <LaborEntryCard
+                          key={entry.id}
+                          entry={entry}
+                          canManage={canManage}
+                          onDelete={(e) => setConfirmDelete(e)}
+                        />
+                      ))}
+                    </div>
+                  </Card>
+                </section>
+              );
+            })}
           </div>
         );
       })()}

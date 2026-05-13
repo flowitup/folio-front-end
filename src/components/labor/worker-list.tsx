@@ -17,6 +17,56 @@ import {
 import type { Worker } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
+import { personColor, personInitials } from "@/lib/utils/person-color";
+import { cn } from "@/lib/utils";
+
+/**
+ * Avatar block — renders an image when src is set and loads; otherwise
+ * falls back to colored initials. The `failed` state resets whenever the
+ * src changes, so a previous load error doesn't blank out a new URL.
+ */
+function WorkerAvatar({
+  src,
+  alt,
+  initials,
+  color,
+}: {
+  src: string | null;
+  alt: string;
+  initials: string;
+  color: string;
+}) {
+  // Derived-state pattern: when `src` changes, reset `failed` during
+  // render rather than via useEffect (avoids the cascading-render lint).
+  const [lastSrc, setLastSrc] = useState(src);
+  const [failed, setFailed] = useState(false);
+  if (src !== lastSrc) {
+    setLastSrc(src);
+    setFailed(false);
+  }
+
+  if (src && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={alt}
+        referrerPolicy="no-referrer"
+        className="h-14 w-14 rounded-full object-cover shadow-sm"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  return (
+    <span
+      className="flex h-14 w-14 items-center justify-center rounded-full text-base font-semibold text-white shadow-sm"
+      style={{ backgroundColor: color }}
+      aria-hidden="true"
+    >
+      {initials}
+    </span>
+  );
+}
 
 interface WorkerListProps {
   workers: Worker[];
@@ -61,62 +111,89 @@ export function WorkerList({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3">
-          {workers.map((worker) => (
-            <Card key={worker.id}>
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    {/* Prefer the joined Person identity once cook 1c
-                        backfill links workers to persons; fall back to
-                        the inline workers.name column for legacy / un-
-                        linked rows. */}
-                    <span className="font-medium">{worker.person_name ?? worker.name}</span>
-                    <Badge variant={worker.is_active ? "default" : "secondary"}>
-                      {worker.is_active ? t("active") : t("inactive")}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>{formatEUR(worker.daily_rate)}/jour</span>
-                    {(worker.person_phone ?? worker.phone) && (
-                      <span>{worker.person_phone ?? worker.phone}</span>
-                    )}
-                  </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {workers.map((worker) => {
+            // Prefer the joined Person identity once cook 1c backfill
+            // links workers to persons; fall back to legacy fields.
+            const displayName = worker.person_name ?? worker.name;
+            const colorKey = worker.person_id ?? worker.id;
+            return (
+              <Card
+                key={worker.id}
+                className={cn(
+                  "group relative flex aspect-square flex-col items-center justify-center gap-2 p-4 text-center transition",
+                  "hover:border-primary/60 hover:shadow-md",
+                  !worker.is_active && "opacity-60",
+                )}
+              >
+                {/* Active indicator dot — top-left */}
+                <span
+                  className={cn(
+                    "absolute left-3 top-3 inline-block h-2 w-2 rounded-full",
+                    worker.is_active ? "bg-emerald-500" : "bg-muted-foreground/40",
+                  )}
+                  title={worker.is_active ? t("active") : t("inactive")}
+                  aria-label={worker.is_active ? t("active") : t("inactive")}
+                />
+
+                {/* Avatar — image if set, otherwise initials fallback */}
+                <WorkerAvatar
+                  src={worker.avatar_url ?? null}
+                  alt={displayName}
+                  initials={personInitials(displayName)}
+                  color={personColor(colorKey)}
+                />
+
+
+                {/* Identity */}
+                <div className="min-w-0 space-y-0.5">
+                  <p className="truncate text-sm font-semibold leading-tight">
+                    {displayName}
+                  </p>
+                  <p className="text-primary text-sm font-medium tabular-nums">
+                    {formatEUR(worker.daily_rate)}
+                  </p>
                 </div>
 
+                {/* Action bar — visible on hover or focus-within */}
                 {worker.is_active && (
-                  <div className="flex items-center gap-1">
+                  <div className="absolute inset-x-0 bottom-2 flex items-center justify-center gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="h-7 w-7"
                       aria-label={tExport("exportWorker")}
                       onClick={() => setExportWorker(worker)}
                     >
-                      <Download className="h-4 w-4" />
+                      <Download className="h-3.5 w-3.5" />
                     </Button>
                     {canManage && (
                       <>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label={t("editWorker")}
                           onClick={() => onEdit(worker)}
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive h-7 w-7"
+                          aria-label={t("deactivateWorker")}
                           onClick={() => setConfirmDeactivate(worker)}
                         >
-                          <UserX className="h-4 w-4" />
+                          <UserX className="h-3.5 w-3.5" />
                         </Button>
                       </>
                     )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
 

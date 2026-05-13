@@ -265,51 +265,87 @@ export function LaborSummary({
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMonthlyRows.map((row) => {
+                  {filteredMonthlyRows.map((row, idx) => {
                     const ym = `${row.year}-${String(row.month).padStart(2, "0")}`;
                     return (
                       <Fragment key={ym}>
-                        {/* Month header — clickable to drill into per-worker
-                            mode for that month (existing behavior). */}
+                        {/* Month row — clickable, typographic-only hierarchy
+                            (serif bold, slightly larger). A thin top rule
+                            separates each month group; no fill, no accent. */}
                         <tr
                           onClick={() => onMonthChange(ym)}
-                          style={{ cursor: "pointer" }}
                           title={t("summaryDrillDown")}
                           data-testid={`month-row-${ym}`}
+                          className="month-row"
+                          style={{ cursor: "pointer" }}
                         >
-                          <td className="font-medium">
+                          <td
+                            className="font-display text-[14px] font-semibold tracking-tight"
+                            style={{
+                              padding: "10px 16px",
+                              borderTop: idx > 0 ? "1px solid var(--line)" : undefined,
+                            }}
+                          >
                             {formatYearMonthLabel(row, locale)}
                           </td>
-                          <td className="num font-medium" style={{ textAlign: "right" }}>
+                          <td
+                            className="num text-[13px] font-semibold tabular-nums"
+                            style={{
+                              padding: "10px 16px",
+                              textAlign: "right",
+                              borderTop: idx > 0 ? "1px solid var(--line)" : undefined,
+                            }}
+                          >
                             {row.total_days}
                           </td>
-                          <td className="num font-medium" style={{ textAlign: "right" }}>
+                          <td
+                            className="num text-[13px] font-semibold tabular-nums"
+                            style={{
+                              padding: "10px 16px",
+                              textAlign: "right",
+                              borderTop: idx > 0 ? "1px solid var(--line)" : undefined,
+                            }}
+                          >
                             {formatEUR(row.total_cost)}
                           </td>
                         </tr>
-                        {/* Inline per-worker sub-rows. Hierarchy via indent
-                            (pl-8) + smaller font (text-[13px]); the row text
-                            inherits the table's normal ink color so it stays
-                            readable on every theme + alt-row background.
-                            (`var(--muted)` was too low-contrast inside table
-                            rows even when fine for card subtitles.) */}
+                        {/* Per-worker sub-rows — text-only, indented, muted.
+                            Borderless within the group so the month feels
+                            like a block. */}
                         {row.workers.map((w) => (
                           <tr
                             key={`${ym}-${w.worker_id}`}
                             data-testid={`worker-subrow-${ym}-${w.worker_id}`}
                           >
-                            <td className="text-[13px] pl-8">
+                            <td
+                              className="text-[13px]"
+                              style={{
+                                padding: "6px 16px 6px 32px",
+                                border: "none",
+                                color: "var(--ink)",
+                              }}
+                            >
                               {w.worker_name}
                             </td>
                             <td
-                              className="num text-[13px]"
-                              style={{ textAlign: "right" }}
+                              className="num text-[13px] tabular-nums"
+                              style={{
+                                padding: "6px 16px",
+                                textAlign: "right",
+                                border: "none",
+                                color: "var(--ink)",
+                              }}
                             >
                               {w.days_worked}
                             </td>
                             <td
-                              className="num text-[13px]"
-                              style={{ textAlign: "right" }}
+                              className="num text-[13px] tabular-nums"
+                              style={{
+                                padding: "6px 16px",
+                                textAlign: "right",
+                                border: "none",
+                                color: "var(--ink)",
+                              }}
                             >
                               {formatEUR(w.total_cost)}
                             </td>

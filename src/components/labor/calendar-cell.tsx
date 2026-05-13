@@ -16,7 +16,8 @@
 import { useMemo } from "react";
 
 import { cn } from "@/lib/utils";
-import { isToday, isWeekend } from "@/lib/utils/calendar-month";
+import { isToday } from "@/lib/utils/calendar-month";
+import { getFrenchHolidayName } from "@/lib/utils/french-holidays";
 import { personColor, personInitials } from "@/lib/utils/person-color";
 import { formatEUR } from "@/lib/api/labor";
 import type { LaborEntry } from "@/types/labor";
@@ -35,6 +36,7 @@ interface CalendarCellProps {
 interface ChipDescriptor {
   id: string;
   name: string;
+  avatarUrl?: string | null;
 }
 
 export function CalendarCell({
@@ -58,7 +60,7 @@ export function CalendarCell({
       const id = e.worker_id; // Worker id is fine for chip color; people stable per worker.
       if (seen.has(id)) continue;
       seen.add(id);
-      list.push({ id, name: e.worker_name });
+      list.push({ id, name: e.worker_name, avatarUrl: e.worker_avatar_url ?? null });
     }
     const shown = list.slice(0, maxChips);
     const rest = Math.max(0, list.length - maxChips);
@@ -76,8 +78,9 @@ export function CalendarCell({
   }
 
   const today = isToday(date);
-  const weekend = isWeekend(date);
+  const sunday = date.getDay() === 0;
   const empty = entries.length === 0;
+  const holidayName = getFrenchHolidayName(date);
 
   return (
     <button
@@ -87,22 +90,24 @@ export function CalendarCell({
         "min-h-20 rounded-md border p-2 text-left transition",
         "flex flex-col gap-1.5",
         "hover:border-primary/60 hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring",
-        weekend ? "bg-muted/40" : "bg-background",
+        holidayName ? "bg-rose-50" : sunday ? "bg-muted/40" : "bg-card",
         today ? "border-primary ring-1 ring-primary/40" : "border-border",
-        empty && "opacity-60",
       )}
-      aria-label={date.toLocaleDateString(undefined, {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-      })}
+      title={holidayName ?? undefined}
+      aria-label={
+        date.toLocaleDateString(undefined, {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        }) + (holidayName ? ` — ${holidayName} (jour férié)` : "")
+      }
     >
       <div className="flex items-baseline justify-between gap-1">
         <span
           className={cn(
             "text-sm font-medium",
             today && "text-primary",
-            empty && "text-muted-foreground",
+            empty && "text-foreground/70",
           )}
         >
           {date.getDate()}
@@ -114,18 +119,36 @@ export function CalendarCell({
         )}
       </div>
 
+      {holidayName && (
+        <span className="text-rose-700 truncate text-[10px] font-medium uppercase tracking-wide">
+          {holidayName}
+        </span>
+      )}
+
       {chips.length > 0 && (
         <div className="flex flex-wrap items-center gap-1">
-          {chips.map((c) => (
-            <span
-              key={c.id}
-              title={c.name}
-              className="text-[10px] inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-white"
-              style={{ backgroundColor: personColor(c.id) }}
-            >
-              {personInitials(c.name)}
-            </span>
-          ))}
+          {chips.map((c) =>
+            c.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={c.id}
+                src={c.avatarUrl}
+                alt={c.name}
+                title={c.name}
+                referrerPolicy="no-referrer"
+                className="h-5 w-5 rounded-full object-cover ring-1 ring-white"
+              />
+            ) : (
+              <span
+                key={c.id}
+                title={c.name}
+                className="text-[10px] inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-white"
+                style={{ backgroundColor: personColor(c.id) }}
+              >
+                {personInitials(c.name)}
+              </span>
+            ),
+          )}
           {overflow > 0 && (
             <span className="text-muted-foreground text-[10px] font-medium">
               +{overflow}

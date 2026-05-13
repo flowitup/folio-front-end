@@ -20,6 +20,7 @@ import type {
   CreateWorkerPayload,
   UpdateWorkerPayload,
 } from "@/types/labor";
+import { resolveFacebookAvatarUrl } from "@/lib/utils/facebook-avatar";
 
 interface AddWorkerDialogProps {
   open: boolean;
@@ -56,6 +57,7 @@ export function AddWorkerDialog({
   // Edit-flow state (unchanged from prior version)
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [avatarInput, setAvatarInput] = useState("");
 
   // Shared state
   const [dailyRate, setDailyRate] = useState("");
@@ -70,6 +72,7 @@ export function AddWorkerDialog({
       setName(editWorker.name);
       setPhone(editWorker.phone || "");
       setDailyRate(editWorker.daily_rate.toString());
+      setAvatarInput(editWorker.avatar_url || "");
     }
   }, [open, editWorker]);
 
@@ -78,6 +81,7 @@ export function AddWorkerDialog({
     setName("");
     setPhone("");
     setDailyRate("");
+    setAvatarInput("");
     setError(null);
     onOpenChange(false);
   };
@@ -98,12 +102,22 @@ export function AddWorkerDialog({
         setError(t("workerName") + " is required");
         return;
       }
+      // Resolve a Facebook URL/username to the graph picture URL. Empty
+      // input clears the avatar; non-empty but unparseable input is treated
+      // as a literal URL (graph.facebook.com pass-through handled inside
+      // resolveFacebookAvatarUrl; anything else: store as-is).
+      const trimmedAvatar = avatarInput.trim();
+      const resolvedAvatar = trimmedAvatar
+        ? resolveFacebookAvatarUrl(trimmedAvatar) ?? trimmedAvatar
+        : null;
+
       setIsSaving(true);
       try {
         await onSave({
           name: name.trim(),
           daily_rate: rate,
           phone: phone.trim() || undefined,
+          avatar_url: resolvedAvatar,
         });
         handleClose();
       } catch {
@@ -165,6 +179,22 @@ export function AddWorkerDialog({
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+33 6 12 34 56 78"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="avatar">Avatar URL</Label>
+                <Input
+                  id="avatar"
+                  value={avatarInput}
+                  onChange={(e) => setAvatarInput(e.target.value)}
+                  placeholder="https://… (image URL or Facebook profile)"
+                />
+                {avatarInput.trim() && (
+                  <p className="text-muted-foreground text-xs">
+                    {resolveFacebookAvatarUrl(avatarInput.trim())
+                      ? "Facebook URL detected — note: FB now requires OAuth, public picture endpoint is deprecated."
+                      : "Direct image URL — will be stored as-is."}
+                  </p>
+                )}
               </div>
             </>
           ) : (

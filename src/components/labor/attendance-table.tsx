@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Trash2, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,8 +22,8 @@ import {
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { LaborEntryCard } from "@/components/labor/labor-entry-card";
 import type { LaborEntry, Worker } from "@/types/labor";
-import { formatEUR } from "@/lib/api/labor";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 
 interface AttendanceTableProps {
@@ -114,11 +113,6 @@ export function AttendanceTable({
           </CardContent>
         </Card>
       ) : (() => {
-        const shiftLabel: Record<string, string> = {
-          full: t("shiftFull"),
-          half: t("shiftHalf"),
-          overtime: t("shiftOvertime"),
-        };
         const grouped = entries.reduce<Record<string, typeof entries>>((acc, e) => {
           (acc[e.date] ??= []).push(e);
           return acc;
@@ -144,66 +138,16 @@ export function AttendanceTable({
                   )}
                 </p>
 
-                {/* Worker rows */}
+                {/* Worker rows — extracted to <LaborEntryCard> in Phase 2a
+                    so the upcoming AttendanceDayDetailSheet (Phase 2c) can
+                    reuse the same row markup. */}
                 {grouped[date].map((entry) => (
-                  <Card key={entry.id}>
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium">{entry.worker_name}</span>
-                          {/* Shift chip: only show when shift_type is set */}
-                          {entry.shift_type !== null ? (
-                            <Badge variant="secondary" className="text-xs">
-                              {shiftLabel[entry.shift_type] ?? entry.shift_type}
-                            </Badge>
-                          ) : entry.supplement_hours > 0 ? (
-                            // Standalone supplement row — no shift, show label instead of chip
-                            <span className="text-xs text-muted-foreground italic">
-                              {t("supplement.standaloneShiftLabel") || "(supplement only)"}
-                            </span>
-                          ) : null}
-                          {/* Supplement hours badge — shown whenever supplement_hours > 0 */}
-                          {entry.supplement_hours > 0 && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs"
-                              title={
-                                t("supplement.badgeTooltip") ||
-                                "Supplement hours (banked, not priced today)"
-                              }
-                            >
-                              +{entry.supplement_hours}h
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="font-medium text-primary">
-                            {formatEUR(entry.effective_cost)}
-                          </span>
-                          {entry.amount_override !== null && (
-                            <span className="text-xs text-muted-foreground">
-                              ({t("override")})
-                            </span>
-                          )}
-                          {entry.note && (
-                            <span className="text-muted-foreground">
-                              — {entry.note}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {canManage && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setConfirmDelete(entry)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <LaborEntryCard
+                    key={entry.id}
+                    entry={entry}
+                    canManage={canManage}
+                    onDelete={(e) => setConfirmDelete(e)}
+                  />
                 ))}
               </div>
             ))}

@@ -11,17 +11,20 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { WorkerList } from "@/components/labor/worker-list";
 import { AddWorkerDialog } from "@/components/labor/add-worker-dialog";
 import { AttendanceTable } from "@/components/labor/attendance-table";
-import { LogAttendanceDialog } from "@/components/labor/log-attendance-dialog";
+import { AttendanceCalendar } from "@/components/labor/attendance-calendar";
+import { ViewToggle, type AttendanceViewMode } from "@/components/labor/view-toggle";
+import { LogDayDialog } from "@/components/labor/log-day-dialog";
+import { EditAttendanceDialog } from "@/components/labor/edit-attendance-dialog";
 import { LaborSummary } from "@/components/labor/labor-summary";
 
-import type { Worker, LaborEntry, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, LogAttendancePayload } from "@/types/labor";
+import type { Worker, LaborEntry, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
 import {
   fetchWorkers,
   createWorker,
   updateWorker,
   deleteWorker,
   fetchLaborEntries,
-  logAttendance,
+  updateAttendance,
   deleteAttendance,
   fetchLaborSummary,
   fetchLaborMonthlySummary,
@@ -68,11 +71,21 @@ export default function LaborPage() {
 
   // Entries state
   const [entries, setEntries] = useState<LaborEntry[]>([]);
-  const [showLogAttendance, setShowLogAttendance] = useState(false);
+  const [showLogDay, setShowLogDay] = useState(false);
+  // Date pre-fill for the bulk-log dialog (YYYY-MM-DD). Set when the
+  // user clicks an empty calendar cell or "Log more" inside the sheet.
+  const [logDayDate, setLogDayDate] = useState<string | undefined>(undefined);
+  // Active entry for the edit dialog. Null when closed.
+  const [editEntry, setEditEntry] = useState<LaborEntry | null>(null);
   // Default: "" → no month filter → all-history view (BE caps the response,
   // see GET /labor-entries default limit). The month picker is opt-in.
   const [entriesMonth, setEntriesMonth] = useState("");
   const [entriesWorkerFilter, setEntriesWorkerFilter] = useState("all");
+  // Calendar default per plan; list view stays available as fallback for
+  // power users who want "all history" scroll (cook 2d).
+  const [attendanceView, setAttendanceView] = useState<AttendanceViewMode>(
+    "calendar",
+  );
 
   // Summary state. Default: "" → unbounded (all history). The month picker
   // is opt-in; clearing it returns to the all-history aggregate. Mirrors the
@@ -156,11 +169,12 @@ export default function LaborPage() {
   }, [activeTab, loadSummary]);
 
   // Topbar "+ Log day" hands off via ?logDay=1 — jump to the attendance tab
-  // and open the LogAttendanceDialog. Strip the param after consuming.
+  // and open the bulk-log dialog. Strip the param after consuming.
   useEffect(() => {
     if (searchParams.get("logDay") !== "1") return;
     setActiveTab("attendance");
-    setShowLogAttendance(true);
+    setLogDayDate(undefined);
+    setShowLogDay(true);
     const params = new URLSearchParams(searchParams.toString());
     params.delete("logDay");
     const qs = params.toString();
@@ -198,13 +212,21 @@ export default function LaborPage() {
     }
   };
 
-  const handleLogAttendance = async (payload: LogAttendancePayload) => {
+  const handleUpdateAttendance = async (payload: UpdateAttendancePayload) => {
+    if (!editEntry) return;
     try {
-      await logAttendance(projectId, payload);
+      await updateAttendance(projectId, editEntry.id, payload);
       await loadEntries();
-    } catch {
-      setError("Failed to log attendance");
+      setEditEntry(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update entry");
+      throw err;
     }
+  };
+
+  const handleOpenLogDay = (date?: string) => {
+    setLogDayDate(date);
+    setShowLogDay(true);
   };
 
   const handleDeleteEntry = async (entry: LaborEntry) => {
@@ -260,25 +282,42 @@ export default function LaborPage() {
 
       {!isLoading && activeTab === "attendance" && (
         <div className="space-y-4">
-          {canManageLabor && (
-            <div className="flex justify-end">
-              <Button onClick={() => setShowLogAttendance(true)}>
+          <div className="flex items-center justify-between gap-3">
+            <ViewToggle value={attendanceView} onChange={setAttendanceView} />
+            {canManageLabor && (
+              <Button onClick={() => handleOpenLogDay()}>
                 <Plus className="h-4 w-4" />
-                {t("logAttendance")}
+                {t("logDay")}
               </Button>
-            </div>
+            )}
+          </div>
+          {attendanceView === "calendar" ? (
+            <AttendanceCalendar
+              entries={entries}
+              workers={workers}
+              isLoading={isTabLoading}
+              canManage={canManageLabor}
+              month={entriesMonth}
+              workerFilter={entriesWorkerFilter}
+              onMonthChange={setEntriesMonth}
+              onWorkerFilterChange={setEntriesWorkerFilter}
+              onDelete={handleDeleteEntry}
+              onLogDay={canManageLabor ? handleOpenLogDay : undefined}
+              onEditEntry={canManageLabor ? setEditEntry : undefined}
+            />
+          ) : (
+            <AttendanceTable
+              entries={entries}
+              workers={workers}
+              isLoading={isTabLoading}
+              canManage={canManageLabor}
+              month={entriesMonth}
+              workerFilter={entriesWorkerFilter}
+              onMonthChange={setEntriesMonth}
+              onWorkerFilterChange={setEntriesWorkerFilter}
+              onDelete={handleDeleteEntry}
+            />
           )}
-          <AttendanceTable
-            entries={entries}
-            workers={workers}
-            isLoading={isTabLoading}
-            canManage={canManageLabor}
-            month={entriesMonth}
-            workerFilter={entriesWorkerFilter}
-            onMonthChange={setEntriesMonth}
-            onWorkerFilterChange={setEntriesWorkerFilter}
-            onDelete={handleDeleteEntry}
-          />
         </div>
       )}
 
@@ -307,11 +346,26 @@ export default function LaborPage() {
         editWorker={editWorker}
       />
 
-      <LogAttendanceDialog
-        open={showLogAttendance}
-        onOpenChange={setShowLogAttendance}
-        onSave={handleLogAttendance}
+      <LogDayDialog
+        open={showLogDay}
+        onOpenChange={(open) => {
+          setShowLogDay(open);
+          if (!open) setLogDayDate(undefined);
+        }}
+        projectId={projectId}
         workers={workers}
+        entries={entries}
+        initialDate={logDayDate}
+        onSaved={loadEntries}
+      />
+
+      <EditAttendanceDialog
+        open={editEntry !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditEntry(null);
+        }}
+        entry={editEntry}
+        onSave={handleUpdateAttendance}
       />
     </div>
   );

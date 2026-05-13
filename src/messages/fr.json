@@ -449,6 +449,43 @@
     "errors": {
       "supplementOutOfRange": "Les heures supplémentaires doivent être entre 0 et 12."
     },
+    "logDayDialog": {
+      "title": "Pointer la journée",
+      "dateLabel": "Date",
+      "sameAsLastDay": "Comme la dernière fois",
+      "sameAsLastDayHint": "Copier la sélection du {date}",
+      "noPreviousDay": "Aucune journée précédente à copier",
+      "searchPlaceholder": "Rechercher un ouvrier…",
+      "sectionRecent": "Récents (7 derniers jours)",
+      "sectionAll": "Tous les ouvriers",
+      "selectAtLeastOne": "Sélectionnez au moins un ouvrier.",
+      "saveButton": "Enregistrer ({count})",
+      "saveFailed": "Échec de l'enregistrement",
+      "toastLogged": "{n} pointé(s)",
+      "toastLoggedWithSkip": "{n} pointé(s), {skipped} ignoré(s) (déjà existant)",
+      "toastLogNextDay": "Pointer le jour suivant →",
+      "tile": {
+        "alreadyLogged": "déjà pointé",
+        "conflictBadge": "conflit",
+        "expandOptions": "Afficher les options",
+        "collapseOptions": "Masquer les options",
+        "overrideLabel": "Tarif (€)",
+        "overridePlaceholder": "Par défaut",
+        "supplementLabel": "Supplément (h)",
+        "noteLabel": "Note",
+        "notePlaceholder": "Facultatif"
+      }
+    },
+    "editEntry": {
+      "title": "Modifier le pointage"
+    },
+    "conflict": {
+      "modalTitle": "Conflit inter-chantiers",
+      "modalBody": "Les ouvriers suivants sont déjà pointés sur un autre chantier aujourd'hui. Continuer quand même ?",
+      "continueAnyway": "Continuer quand même",
+      "cancel": "Annuler",
+      "sameAsLastDaySkipped": "{n} ouvrier(s) ignoré(s) — déjà pointé(s) ailleurs"
+    },
     "export": {
       "button": "Exporter",
       "dialogTitle": "Exporter les données de main-d'œuvre",

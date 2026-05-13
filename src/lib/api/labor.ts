@@ -9,6 +9,9 @@ import type {
   LaborEntryListResponse,
   LogAttendancePayload,
   UpdateAttendancePayload,
+  BulkLogPayload,
+  BulkLogResponse,
+  ConflictsResponse,
   LaborSummaryResponse,
   LaborMonthlySummaryResponse,
   LaborEntryParams,
@@ -72,6 +75,48 @@ export async function logAttendance(projectId: string, payload: LogAttendancePay
     throw new Error('amount_override requires a shift_type');
   }
   return api.post<LaborEntry>(`/projects/${projectId}/labor-entries`, payload);
+}
+
+/**
+ * Bulk-log attendance for N workers on a single date (Phase 3).
+ *
+ * Atomic on the server: all entries persisted in one transaction.
+ * Workers already logged on `date` for this project are silently
+ * skipped and reported back via `skipped_worker_ids`. The caller is
+ * responsible for showing a toast summarising created + skipped counts.
+ */
+export async function bulkLogAttendance(
+  projectId: string,
+  payload: BulkLogPayload,
+): Promise<BulkLogResponse> {
+  return api.post<BulkLogResponse>(
+    `/projects/${projectId}/labor-entries/bulk`,
+    payload,
+  );
+}
+
+/**
+ * Fetch cross-project conflicts for a date (Phase 4).
+ *
+ * Returns conflict groups (one per Person) describing other-project
+ * entries the same Person is logged against on the requested date.
+ * Pass `personIds` to narrow the scan; otherwise the server checks
+ * every active worker on the target project.
+ */
+export async function fetchCrossProjectConflicts(
+  projectId: string,
+  date: string,
+  personIds?: string[],
+): Promise<ConflictsResponse> {
+  const params: Record<string, string> = { date };
+  if (personIds && personIds.length > 0) {
+    params.person_ids = personIds.join(",");
+  }
+  const url = buildUrl(
+    `/projects/${projectId}/labor-entries/conflicts`,
+    params,
+  );
+  return api.get<ConflictsResponse>(url);
 }
 
 export async function updateAttendance(projectId: string, entryId: string, payload: UpdateAttendancePayload): Promise<LaborEntry> {

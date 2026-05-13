@@ -67,14 +67,20 @@ export function WorkerList({
               <CardContent className="flex items-center justify-between p-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{worker.name}</span>
+                    {/* Prefer the joined Person identity once cook 1c
+                        backfill links workers to persons; fall back to
+                        the inline workers.name column for legacy / un-
+                        linked rows. */}
+                    <span className="font-medium">{worker.person_name ?? worker.name}</span>
                     <Badge variant={worker.is_active ? "default" : "secondary"}>
                       {worker.is_active ? t("active") : t("inactive")}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span>{formatEUR(worker.daily_rate)}/jour</span>
-                    {worker.phone && <span>{worker.phone}</span>}
+                    {(worker.person_phone ?? worker.phone) && (
+                      <span>{worker.person_phone ?? worker.phone}</span>
+                    )}
                   </div>
                 </div>
 

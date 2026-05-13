@@ -979,26 +979,44 @@
     },
     "form": {
       "fields": {
-        "legalName": "Legal name",
-        "legalName.placeholder": "e.g. Maison Lavandou SAS",
-        "address": "Address",
-        "address.placeholder": "Street, city, postal code, country",
-        "siret": "SIRET",
-        "siret.placeholder": "e.g. 12345678900012",
-        "tvaNumber": "TVA number",
-        "tvaNumber.placeholder": "e.g. FR12345678901",
-        "iban": "IBAN",
-        "iban.placeholder": "e.g. FR76 3000 6000 0112 3456 7890 189",
-        "bic": "BIC / SWIFT",
-        "bic.placeholder": "e.g. BNPAFRPPXXX",
-        "logoUrl": "Logo URL",
-        "logoUrl.placeholder": "https://example.com/logo.png",
-        "defaultPaymentTerms": "Default payment terms",
-        "defaultPaymentTerms.placeholder": "e.g. Payment due 30 days from invoice date.",
-        "defaultPaymentTerms.help": "Pre-filled on new invoices. Editable per document.",
-        "prefixOverride": "Document number prefix",
-        "prefixOverride.placeholder": "e.g. FLW (up to 8 chars)",
-        "prefixOverride.help": "Optional. Uppercase letters and digits only. Max 8 chars. E.g. \"FLW\" → FLW-DEV-2026-001."
+        "legalName": {
+          "label": "Legal name",
+          "placeholder": "e.g. Maison Lavandou SAS"
+        },
+        "address": {
+          "label": "Address",
+          "placeholder": "Street, city, postal code, country"
+        },
+        "siret": {
+          "label": "SIRET",
+          "placeholder": "e.g. 12345678900012"
+        },
+        "tvaNumber": {
+          "label": "TVA number",
+          "placeholder": "e.g. FR12345678901"
+        },
+        "iban": {
+          "label": "IBAN",
+          "placeholder": "e.g. FR76 3000 6000 0112 3456 7890 189"
+        },
+        "bic": {
+          "label": "BIC / SWIFT",
+          "placeholder": "e.g. BNPAFRPPXXX"
+        },
+        "logoUrl": {
+          "label": "Logo URL",
+          "placeholder": "https://example.com/logo.png"
+        },
+        "defaultPaymentTerms": {
+          "label": "Default payment terms",
+          "placeholder": "e.g. Payment due 30 days from invoice date.",
+          "help": "Pre-filled on new invoices. Editable per document."
+        },
+        "prefixOverride": {
+          "label": "Document number prefix",
+          "placeholder": "e.g. FLW (up to 8 chars)",
+          "help": "Optional. Uppercase letters and digits only. Max 8 chars. E.g. \"FLW\" → FLW-DEV-2026-001."
+        }
       },
       "actions": {
         "cancel": "Cancel",

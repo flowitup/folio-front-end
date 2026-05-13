@@ -128,10 +128,10 @@ export function MyCompanyCard({ company, onMutated }: MyCompanyCardProps) {
         {/* Sensitive fields (always masked for non-admin callers) */}
         <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-[12px]">
           {[
-            { label: t("form.fields.siret"), value: company.siret },
-            { label: t("form.fields.tvaNumber"), value: company.tva_number },
-            { label: t("form.fields.iban"), value: company.iban },
-            { label: t("form.fields.bic"), value: company.bic },
+            { label: t("form.fields.siret.label"), value: company.siret },
+            { label: t("form.fields.tvaNumber.label"), value: company.tva_number },
+            { label: t("form.fields.iban.label"), value: company.iban },
+            { label: t("form.fields.bic.label"), value: company.bic },
           ].map(({ label, value }) => (
             <div key={label}>
               <span

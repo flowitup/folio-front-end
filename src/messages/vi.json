@@ -449,6 +449,43 @@
     "errors": {
       "supplementOutOfRange": "Giờ phụ phải từ 0 đến 12."
     },
+    "logDayDialog": {
+      "title": "Chấm công ngày",
+      "dateLabel": "Ngày",
+      "sameAsLastDay": "Như ngày trước",
+      "sameAsLastDayHint": "Sao chép lựa chọn từ {date}",
+      "noPreviousDay": "Chưa có ngày trước để sao chép",
+      "searchPlaceholder": "Tìm công nhân…",
+      "sectionRecent": "Gần đây (7 ngày qua)",
+      "sectionAll": "Tất cả công nhân",
+      "selectAtLeastOne": "Chọn ít nhất một công nhân.",
+      "saveButton": "Lưu ({count})",
+      "saveFailed": "Lưu thất bại",
+      "toastLogged": "Đã chấm {n}",
+      "toastLoggedWithSkip": "Đã chấm {n}, bỏ qua {skipped} (đã tồn tại)",
+      "toastLogNextDay": "Chấm ngày tiếp theo →",
+      "tile": {
+        "alreadyLogged": "đã chấm",
+        "conflictBadge": "xung đột",
+        "expandOptions": "Mở thêm tùy chọn",
+        "collapseOptions": "Đóng tùy chọn",
+        "overrideLabel": "Giá ghi đè (€)",
+        "overridePlaceholder": "Mặc định",
+        "supplementLabel": "Giờ phụ (h)",
+        "noteLabel": "Ghi chú",
+        "notePlaceholder": "Tùy chọn"
+      }
+    },
+    "editEntry": {
+      "title": "Sửa chấm công"
+    },
+    "conflict": {
+      "modalTitle": "Xung đột giữa các dự án",
+      "modalBody": "Các công nhân sau đã được chấm công ở dự án khác hôm nay. Vẫn tiếp tục?",
+      "continueAnyway": "Vẫn tiếp tục",
+      "cancel": "Hủy",
+      "sameAsLastDaySkipped": "Bỏ qua {n} công nhân — đã chấm công ở nơi khác"
+    },
     "export": {
       "button": "Xuất file",
       "dialogTitle": "Xuất dữ liệu nhân công",

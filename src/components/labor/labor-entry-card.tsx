@@ -25,12 +25,15 @@ interface LaborEntryCardProps {
   entry: LaborEntry;
   canManage: boolean;
   onDelete: (entry: LaborEntry) => void;
+  /** Optional — tapping the card body triggers edit. */
+  onEdit?: (entry: LaborEntry) => void;
 }
 
 export function LaborEntryCard({
   entry,
   canManage,
   onDelete,
+  onEdit,
 }: LaborEntryCardProps) {
   const t = useTranslations("labor");
 
@@ -41,8 +44,23 @@ export function LaborEntryCard({
   };
 
   return (
-    <Card>
-      <CardContent className="flex items-center justify-between p-4">
+    <Card className={onEdit ? "hover:bg-accent/40 cursor-pointer transition" : undefined}>
+      <CardContent
+        className="flex items-center justify-between p-4"
+        onClick={onEdit ? () => onEdit(entry) : undefined}
+        role={onEdit ? "button" : undefined}
+        tabIndex={onEdit ? 0 : undefined}
+        onKeyDown={
+          onEdit
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onEdit(entry);
+                }
+              }
+            : undefined
+        }
+      >
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium">{entry.worker_name}</span>
@@ -94,7 +112,10 @@ export function LaborEntryCard({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onDelete(entry)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(entry);
+            }}
             aria-label={t("delete")}
           >
             <Trash2 className="h-4 w-4" />

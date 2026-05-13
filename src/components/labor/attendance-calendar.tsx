@@ -46,6 +46,10 @@ interface AttendanceCalendarProps {
   onMonthChange: (value: string) => void;
   onWorkerFilterChange: (value: string) => void;
   onDelete: (entry: LaborEntry) => void;
+  /** Open the bulk-log dialog for a given YYYY-MM-DD. */
+  onLogDay?: (date: string) => void;
+  /** Open the edit dialog for a single existing entry. */
+  onEditEntry?: (entry: LaborEntry) => void;
 }
 
 export function AttendanceCalendar({
@@ -58,6 +62,8 @@ export function AttendanceCalendar({
   onMonthChange,
   onWorkerFilterChange,
   onDelete,
+  onLogDay,
+  onEditEntry,
 }: AttendanceCalendarProps) {
   const t = useTranslations("labor");
 
@@ -153,7 +159,16 @@ export function AttendanceCalendar({
         year={cursor.getFullYear()}
         monthIdx={cursor.getMonth()}
         entries={filteredEntries}
-        onDayClick={(d) => setSelectedDate(d)}
+        onDayClick={(d) => {
+          // Empty-cell click: jump straight to the log dialog. Days
+          // with entries open the detail sheet first.
+          const hasEntries = filteredEntries.some((e) => e.date === toDateKey(d));
+          if (!hasEntries && onLogDay && canManage) {
+            onLogDay(toDateKey(d));
+          } else {
+            setSelectedDate(d);
+          }
+        }}
       />
 
       <AttendanceDayDetailSheet
@@ -165,6 +180,16 @@ export function AttendanceCalendar({
         }}
         canManage={canManage}
         onDelete={onDelete}
+        onEdit={onEditEntry}
+        onAddMore={
+          selectedDate && onLogDay
+            ? () => {
+                const key = toDateKey(selectedDate);
+                setSelectedDate(null);
+                onLogDay(key);
+              }
+            : undefined
+        }
       />
     </div>
   );

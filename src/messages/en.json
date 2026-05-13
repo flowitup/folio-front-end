@@ -449,6 +449,43 @@
     "errors": {
       "supplementOutOfRange": "Supplement hours must be between 0 and 12."
     },
+    "logDayDialog": {
+      "title": "Log day",
+      "dateLabel": "Date",
+      "sameAsLastDay": "Same as last day",
+      "sameAsLastDayHint": "Copy selection from {date}",
+      "noPreviousDay": "No previous day to copy",
+      "searchPlaceholder": "Search workers…",
+      "sectionRecent": "Recent (last 7 days)",
+      "sectionAll": "All workers",
+      "selectAtLeastOne": "Pick at least one worker.",
+      "saveButton": "Save ({count})",
+      "saveFailed": "Failed to save",
+      "toastLogged": "{n} logged",
+      "toastLoggedWithSkip": "{n} logged, {skipped} skipped (already exists)",
+      "toastLogNextDay": "Log next day →",
+      "tile": {
+        "alreadyLogged": "already logged",
+        "conflictBadge": "conflict",
+        "expandOptions": "Expand extra options",
+        "collapseOptions": "Collapse extra options",
+        "overrideLabel": "Override (€)",
+        "overridePlaceholder": "Default",
+        "supplementLabel": "Supplement (h)",
+        "noteLabel": "Note",
+        "notePlaceholder": "Optional"
+      }
+    },
+    "editEntry": {
+      "title": "Edit attendance"
+    },
+    "conflict": {
+      "modalTitle": "Cross-project conflict",
+      "modalBody": "The following workers are already logged in another project today. Continue anyway?",
+      "continueAnyway": "Continue anyway",
+      "cancel": "Cancel",
+      "sameAsLastDaySkipped": "{n} worker(s) skipped — already logged elsewhere"
+    },
     "export": {
       "button": "Export",
       "dialogTitle": "Export labor data",

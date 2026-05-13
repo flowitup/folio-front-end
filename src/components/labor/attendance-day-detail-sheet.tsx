@@ -17,10 +17,11 @@
  * Plan: 260512-2341-labor-calendar-and-bulk-log → phase-02 (2c).
  */
 
-import { XIcon } from "lucide-react";
+import { Plus, XIcon } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborEntryCard } from "@/components/labor/labor-entry-card";
@@ -36,6 +37,10 @@ interface AttendanceDayDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   canManage: boolean;
   onDelete: (entry: LaborEntry) => void;
+  /** Tapping a card → opens EditAttendanceDialog. Optional. */
+  onEdit?: (entry: LaborEntry) => void;
+  /** "+ Log more" button → opens LogDayDialog for this date. Optional. */
+  onAddMore?: () => void;
 }
 
 export function AttendanceDayDetailSheet({
@@ -45,6 +50,8 @@ export function AttendanceDayDetailSheet({
   onOpenChange,
   canManage,
   onDelete,
+  onEdit,
+  onAddMore,
 }: AttendanceDayDetailSheetProps) {
   const dayTotal = entries.reduce(
     (sum, e) => sum + Number(e.effective_cost ?? 0),
@@ -114,9 +121,17 @@ export function AttendanceDayDetailSheet({
                 entry={entry}
                 canManage={canManage}
                 onDelete={onDelete}
+                onEdit={canManage ? onEdit : undefined}
               />
             ))}
           </div>
+
+          {canManage && onAddMore && (
+            <Button onClick={onAddMore} variant="default" className="w-full">
+              <Plus className="mr-1 h-4 w-4" />
+              {entries.length === 0 ? "Log day" : "Log more workers"}
+            </Button>
+          )}
 
           <DialogPrimitive.Close
             aria-label="Close"

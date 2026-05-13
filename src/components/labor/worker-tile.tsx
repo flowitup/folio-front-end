@@ -22,10 +22,13 @@
  * Plan: 260512-2341-labor-calendar-and-bulk-log → phase-03 (3b).
  */
 
-import { ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -34,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { personColor, personInitials } from "@/lib/utils/person-color";
-import type { ShiftType, Worker } from "@/types/labor";
+import type { ConflictGroup, ShiftType, Worker } from "@/types/labor";
 
 interface WorkerTileProps {
   worker: Worker;
@@ -42,18 +45,23 @@ interface WorkerTileProps {
   shiftType: ShiftType;
   /** Set on tiles whose worker is already logged for the target date. */
   locked?: boolean;
-  /** Expanded reveals override / note / supplement controls — Phase 3d. */
+  /** Expanded reveals override / note / supplement controls. */
   expanded?: boolean;
+  /** Optional amount-override (EUR). Empty = use default rate. */
+  amountOverride?: number;
+  /** Optional supplement hours (0-12). */
+  supplementHours?: number;
+  /** Optional note. */
+  note?: string;
+  /** Phase 4: cross-project conflict group; renders ⚠ badge + tooltip. */
+  conflict?: ConflictGroup;
   onToggle: (next: boolean) => void;
   onShiftChange: (next: ShiftType) => void;
   onToggleExpanded?: () => void;
+  onAmountOverrideChange?: (next: number | undefined) => void;
+  onSupplementHoursChange?: (next: number) => void;
+  onNoteChange?: (next: string) => void;
 }
-
-const SHIFT_LABELS: Record<ShiftType, string> = {
-  full: "Full day",
-  half: "Half day",
-  overtime: "Overtime",
-};
 
 export function WorkerTile({
   worker,
@@ -61,12 +69,26 @@ export function WorkerTile({
   shiftType,
   locked = false,
   expanded = false,
+  amountOverride,
+  supplementHours,
+  note,
+  conflict,
   onToggle,
   onShiftChange,
   onToggleExpanded,
+  onAmountOverrideChange,
+  onSupplementHoursChange,
+  onNoteChange,
 }: WorkerTileProps) {
+  const t = useTranslations("labor");
+  const tTile = useTranslations("labor.logDayDialog.tile");
   const colorKey = worker.person_id ?? worker.id;
   const displayName = worker.person_name ?? worker.name;
+  const shiftLabels: Record<ShiftType, string> = {
+    full: t("shiftFull"),
+    half: t("shiftHalf"),
+    overtime: t("shiftOvertime"),
+  };
 
   return (
     <div
@@ -101,8 +123,24 @@ export function WorkerTile({
         </div>
         {locked && (
           <Badge variant="outline" className="text-[10px] shrink-0">
-            already logged
+            {tTile("alreadyLogged")}
           </Badge>
+        )}
+        {!locked && conflict && (
+          <span
+            className="text-amber-600 inline-flex items-center gap-1 text-[10px] shrink-0"
+            title={conflict.entries
+              .map((e) =>
+                `${e.project_name}: ${e.shift_type ?? "(supplement)"}`,
+              )
+              .join(", ")}
+            aria-label={tTile("conflictBadge")}
+          >
+            <AlertTriangle className="h-3 w-3" />
+            <span className="font-medium uppercase">
+              {tTile("conflictBadge")}
+            </span>
+          </span>
         )}
         {checked && !locked && (
           <span className="text-primary text-xs font-semibold" aria-hidden="true">
@@ -121,9 +159,9 @@ export function WorkerTile({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(Object.keys(SHIFT_LABELS) as ShiftType[]).map((s) => (
+              {(Object.keys(shiftLabels) as ShiftType[]).map((s) => (
                 <SelectItem key={s} value={s}>
-                  {SHIFT_LABELS[s]}
+                  {shiftLabels[s]}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -133,7 +171,7 @@ export function WorkerTile({
               type="button"
               onClick={onToggleExpanded}
               className="text-muted-foreground hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-md border"
-              aria-label={expanded ? "Collapse extra options" : "Expand extra options"}
+              aria-label={expanded ? tTile("collapseOptions") : tTile("expandOptions")}
               aria-expanded={expanded}
             >
               {expanded ? (
@@ -147,9 +185,57 @@ export function WorkerTile({
       )}
 
       {checked && expanded && !locked && (
-        <div className="text-muted-foreground flex items-center gap-1 text-xs">
-          <Clock className="h-3 w-3" />
-          <span>Override / note / supplement — wired in cook 3d</span>
+        <div className="space-y-2 border-t pt-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[10px]" htmlFor={`override-${worker.id}`}>
+                {tTile("overrideLabel")}
+              </Label>
+              <Input
+                id={`override-${worker.id}`}
+                type="number"
+                step="0.01"
+                min="0"
+                value={amountOverride ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  onAmountOverrideChange?.(v === "" ? undefined : parseFloat(v));
+                }}
+                placeholder={tTile("overridePlaceholder")}
+                className="h-8 text-xs"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px]" htmlFor={`supplement-${worker.id}`}>
+                {tTile("supplementLabel")}
+              </Label>
+              <Input
+                id={`supplement-${worker.id}`}
+                type="number"
+                min={0}
+                max={12}
+                step={1}
+                inputMode="numeric"
+                value={supplementHours ?? 0}
+                onChange={(e) =>
+                  onSupplementHoursChange?.(parseInt(e.target.value, 10) || 0)
+                }
+                className="h-8 text-xs"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px]" htmlFor={`note-${worker.id}`}>
+              {tTile("noteLabel")}
+            </Label>
+            <Input
+              id={`note-${worker.id}`}
+              value={note ?? ""}
+              onChange={(e) => onNoteChange?.(e.target.value)}
+              placeholder={tTile("notePlaceholder")}
+              className="h-8 text-xs"
+            />
+          </div>
         </div>
       )}
     </div>

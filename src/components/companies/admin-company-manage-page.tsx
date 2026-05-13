@@ -309,7 +309,7 @@ export function AdminCompanyManagePage({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="mp-legal-name">
-                {t("form.fields.legalName")}
+                {t("form.fields.legalName.label")}
                 <span className="ml-1 text-red-500">*</span>
               </Label>
               <Input
@@ -325,7 +325,7 @@ export function AdminCompanyManagePage({
 
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="mp-address">
-                {t("form.fields.address")}
+                {t("form.fields.address.label")}
                 <span className="ml-1 text-red-500">*</span>
               </Label>
               <Textarea
@@ -341,24 +341,24 @@ export function AdminCompanyManagePage({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="mp-siret">{t("form.fields.siret")}</Label>
+              <Label htmlFor="mp-siret">{t("form.fields.siret.label")}</Label>
               <Input id="mp-siret" value={str(form.siret)} onChange={setField("siret")} disabled={isSaving} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="mp-tva">{t("form.fields.tvaNumber")}</Label>
+              <Label htmlFor="mp-tva">{t("form.fields.tvaNumber.label")}</Label>
               <Input id="mp-tva" value={str(form.tva_number)} onChange={setField("tva_number")} disabled={isSaving} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="mp-iban">{t("form.fields.iban")}</Label>
+              <Label htmlFor="mp-iban">{t("form.fields.iban.label")}</Label>
               <Input id="mp-iban" value={str(form.iban)} onChange={setField("iban")} disabled={isSaving} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="mp-bic">{t("form.fields.bic")}</Label>
+              <Label htmlFor="mp-bic">{t("form.fields.bic.label")}</Label>
               <Input id="mp-bic" value={str(form.bic)} onChange={setField("bic")} disabled={isSaving} />
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="mp-logo">{t("form.fields.logoUrl")}</Label>
+              <Label htmlFor="mp-logo">{t("form.fields.logoUrl.label")}</Label>
               <Input id="mp-logo" type="url" value={str(form.logo_url)} onChange={setField("logo_url")} disabled={isSaving} />
               {fieldErrors.logo_url && (
                 <p className="text-[12px] text-red-600">{fieldErrors.logo_url}</p>
@@ -366,7 +366,7 @@ export function AdminCompanyManagePage({
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="mp-terms">{t("form.fields.defaultPaymentTerms")}</Label>
+              <Label htmlFor="mp-terms">{t("form.fields.defaultPaymentTerms.label")}</Label>
               <Textarea id="mp-terms" value={str(form.default_payment_terms)} onChange={setField("default_payment_terms")} disabled={isSaving} rows={2} />
               <p className="text-[11px]" style={{ color: "var(--muted)" }}>
                 {t("form.fields.defaultPaymentTerms.help")}
@@ -374,7 +374,7 @@ export function AdminCompanyManagePage({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="mp-prefix">{t("form.fields.prefixOverride")}</Label>
+              <Label htmlFor="mp-prefix">{t("form.fields.prefixOverride.label")}</Label>
               <Input
                 id="mp-prefix"
                 value={str(form.prefix_override)}

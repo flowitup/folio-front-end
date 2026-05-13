@@ -152,7 +152,7 @@ export function CompanyCreateDialog({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="cc-legal-name">
-                {t("form.fields.legalName")}
+                {t("form.fields.legalName.label")}
                 <span className="ml-1 text-red-500">*</span>
               </Label>
               <Input
@@ -172,7 +172,7 @@ export function CompanyCreateDialog({
 
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="cc-address">
-                {t("form.fields.address")}
+                {t("form.fields.address.label")}
                 <span className="ml-1 text-red-500">*</span>
               </Label>
               <Textarea
@@ -192,7 +192,7 @@ export function CompanyCreateDialog({
 
             {/* Sensitive fields */}
             <div className="space-y-1.5">
-              <Label htmlFor="cc-siret">{t("form.fields.siret")}</Label>
+              <Label htmlFor="cc-siret">{t("form.fields.siret.label")}</Label>
               <Input
                 id="cc-siret"
                 value={str(form.siret)}
@@ -203,7 +203,7 @@ export function CompanyCreateDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="cc-tva">{t("form.fields.tvaNumber")}</Label>
+              <Label htmlFor="cc-tva">{t("form.fields.tvaNumber.label")}</Label>
               <Input
                 id="cc-tva"
                 value={str(form.tva_number)}
@@ -214,7 +214,7 @@ export function CompanyCreateDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="cc-iban">{t("form.fields.iban")}</Label>
+              <Label htmlFor="cc-iban">{t("form.fields.iban.label")}</Label>
               <Input
                 id="cc-iban"
                 value={str(form.iban)}
@@ -225,7 +225,7 @@ export function CompanyCreateDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="cc-bic">{t("form.fields.bic")}</Label>
+              <Label htmlFor="cc-bic">{t("form.fields.bic.label")}</Label>
               <Input
                 id="cc-bic"
                 value={str(form.bic)}
@@ -237,7 +237,7 @@ export function CompanyCreateDialog({
 
             {/* Non-sensitive optional fields */}
             <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="cc-logo">{t("form.fields.logoUrl")}</Label>
+              <Label htmlFor="cc-logo">{t("form.fields.logoUrl.label")}</Label>
               <Input
                 id="cc-logo"
                 type="url"
@@ -255,7 +255,7 @@ export function CompanyCreateDialog({
 
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="cc-terms">
-                {t("form.fields.defaultPaymentTerms")}
+                {t("form.fields.defaultPaymentTerms.label")}
               </Label>
               <Textarea
                 id="cc-terms"
@@ -272,7 +272,7 @@ export function CompanyCreateDialog({
 
             <div className="space-y-1.5">
               <Label htmlFor="cc-prefix">
-                {t("form.fields.prefixOverride")}
+                {t("form.fields.prefixOverride.label")}
               </Label>
               <Input
                 id="cc-prefix"

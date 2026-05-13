@@ -1016,26 +1016,44 @@
     },
     "form": {
       "fields": {
-        "legalName": "Tên pháp lý",
-        "legalName.placeholder": "vd. Công ty TNHH Lavandou",
-        "address": "Địa chỉ",
-        "address.placeholder": "Số nhà, đường, thành phố, mã bưu chính, quốc gia",
-        "siret": "Mã số doanh nghiệp",
-        "siret.placeholder": "vd. 12345678900012",
-        "tvaNumber": "Mã số thuế GTGT",
-        "tvaNumber.placeholder": "vd. FR12345678901",
-        "iban": "Số IBAN",
-        "iban.placeholder": "vd. FR76 3000 6000 0112 3456 7890 189",
-        "bic": "Mã BIC / SWIFT",
-        "bic.placeholder": "vd. BNPAFRPPXXX",
-        "logoUrl": "URL logo",
-        "logoUrl.placeholder": "https://example.com/logo.png",
-        "defaultPaymentTerms": "Điều khoản thanh toán mặc định",
-        "defaultPaymentTerms.placeholder": "vd. Thanh toán trong vòng 30 ngày kể từ ngày xuất hóa đơn.",
-        "defaultPaymentTerms.help": "Tự động điền vào hóa đơn mới. Có thể chỉnh sửa theo từng tài liệu.",
-        "prefixOverride": "Tiền tố số tài liệu",
-        "prefixOverride.placeholder": "vd. FLW (tối đa 8 ký tự)",
-        "prefixOverride.help": "Tùy chọn. Chỉ dùng chữ hoa và chữ số. Tối đa 8 ký tự. Vd. \"FLW\" → FLW-DEV-2026-001."
+        "legalName": {
+          "label": "Tên pháp lý",
+          "placeholder": "vd. Công ty TNHH Lavandou"
+        },
+        "address": {
+          "label": "Địa chỉ",
+          "placeholder": "Số nhà, đường, thành phố, mã bưu chính, quốc gia"
+        },
+        "siret": {
+          "label": "Mã số doanh nghiệp",
+          "placeholder": "vd. 12345678900012"
+        },
+        "tvaNumber": {
+          "label": "Mã số thuế GTGT",
+          "placeholder": "vd. FR12345678901"
+        },
+        "iban": {
+          "label": "Số IBAN",
+          "placeholder": "vd. FR76 3000 6000 0112 3456 7890 189"
+        },
+        "bic": {
+          "label": "Mã BIC / SWIFT",
+          "placeholder": "vd. BNPAFRPPXXX"
+        },
+        "logoUrl": {
+          "label": "URL logo",
+          "placeholder": "https://example.com/logo.png"
+        },
+        "defaultPaymentTerms": {
+          "label": "Điều khoản thanh toán mặc định",
+          "placeholder": "vd. Thanh toán trong vòng 30 ngày kể từ ngày xuất hóa đơn.",
+          "help": "Tự động điền vào hóa đơn mới. Có thể chỉnh sửa theo từng tài liệu."
+        },
+        "prefixOverride": {
+          "label": "Tiền tố số tài liệu",
+          "placeholder": "vd. FLW (tối đa 8 ký tự)",
+          "help": "Tùy chọn. Chỉ dùng chữ hoa và chữ số. Tối đa 8 ký tự. Vd. \"FLW\" → FLW-DEV-2026-001."
+        }
       },
       "actions": {
         "cancel": "Hủy",

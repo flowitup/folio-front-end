@@ -111,9 +111,9 @@ export function AdminCompaniesSection() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("form.fields.legalName")}</TableHead>
-                <TableHead>{t("form.fields.siret")}</TableHead>
-                <TableHead>{t("form.fields.tvaNumber")}</TableHead>
+                <TableHead>{t("form.fields.legalName.label")}</TableHead>
+                <TableHead>{t("form.fields.siret.label")}</TableHead>
+                <TableHead>{t("form.fields.tvaNumber.label")}</TableHead>
                 <TableHead>{t("admin.table.createdAt")}</TableHead>
                 <TableHead className="w-[80px]" />
               </TableRow>

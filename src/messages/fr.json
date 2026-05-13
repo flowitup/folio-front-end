@@ -1016,26 +1016,44 @@
     },
     "form": {
       "fields": {
-        "legalName": "Raison sociale",
-        "legalName.placeholder": "ex. Maison Lavandou SAS",
-        "address": "Adresse",
-        "address.placeholder": "Rue, ville, code postal, pays",
-        "siret": "SIRET",
-        "siret.placeholder": "ex. 12345678900012",
-        "tvaNumber": "Numéro de TVA",
-        "tvaNumber.placeholder": "ex. FR12345678901",
-        "iban": "IBAN",
-        "iban.placeholder": "ex. FR76 3000 6000 0112 3456 7890 189",
-        "bic": "BIC / SWIFT",
-        "bic.placeholder": "ex. BNPAFRPPXXX",
-        "logoUrl": "URL du logo",
-        "logoUrl.placeholder": "https://exemple.com/logo.png",
-        "defaultPaymentTerms": "Conditions de paiement par défaut",
-        "defaultPaymentTerms.placeholder": "ex. Paiement à 30 jours date de facture.",
-        "defaultPaymentTerms.help": "Pré-rempli sur les nouvelles factures. Modifiable par document.",
-        "prefixOverride": "Préfixe de numérotation",
-        "prefixOverride.placeholder": "ex. FLW (8 car. max)",
-        "prefixOverride.help": "Facultatif. Lettres majuscules et chiffres uniquement. 8 caractères max. Ex. « FLW » → FLW-DEV-2026-001."
+        "legalName": {
+          "label": "Raison sociale",
+          "placeholder": "ex. Maison Lavandou SAS"
+        },
+        "address": {
+          "label": "Adresse",
+          "placeholder": "Rue, ville, code postal, pays"
+        },
+        "siret": {
+          "label": "SIRET",
+          "placeholder": "ex. 12345678900012"
+        },
+        "tvaNumber": {
+          "label": "Numéro de TVA",
+          "placeholder": "ex. FR12345678901"
+        },
+        "iban": {
+          "label": "IBAN",
+          "placeholder": "ex. FR76 3000 6000 0112 3456 7890 189"
+        },
+        "bic": {
+          "label": "BIC / SWIFT",
+          "placeholder": "ex. BNPAFRPPXXX"
+        },
+        "logoUrl": {
+          "label": "URL du logo",
+          "placeholder": "https://exemple.com/logo.png"
+        },
+        "defaultPaymentTerms": {
+          "label": "Conditions de paiement par défaut",
+          "placeholder": "ex. Paiement à 30 jours date de facture.",
+          "help": "Pré-rempli sur les nouvelles factures. Modifiable par document."
+        },
+        "prefixOverride": {
+          "label": "Préfixe de numérotation",
+          "placeholder": "ex. FLW (8 car. max)",
+          "help": "Facultatif. Lettres majuscules et chiffres uniquement. 8 caractères max. Ex. « FLW » → FLW-DEV-2026-001."
+        }
       },
       "actions": {
         "cancel": "Annuler",

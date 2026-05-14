@@ -507,6 +507,20 @@
       "workerSubtitle": "Taux journalier : {rate}",
       "workerToastError": "Impossible d'exporter",
       "workerToastSuccess": "Export téléchargé"
+    },
+    "holidays": {
+      "publicHoliday": "jour férié",
+      "newYear": "Jour de l'An",
+      "easterMonday": "Lundi de Pâques",
+      "labourDay": "Fête du Travail",
+      "victory1945": "Victoire 1945",
+      "ascension": "Ascension",
+      "pentecostMonday": "Lundi de Pentecôte",
+      "bastilleDay": "Fête Nationale",
+      "assumption": "Assomption",
+      "allSaints": "Toussaint",
+      "armistice1918": "Armistice 1918",
+      "christmas": "Noël"
     }
   },
   "acceptInvite": {

@@ -507,6 +507,20 @@
       "workerSubtitle": "Đơn giá ngày: {rate}",
       "workerToastError": "Không thể xuất",
       "workerToastSuccess": "Đã tải xuống bản xuất"
+    },
+    "holidays": {
+      "publicHoliday": "ngày lễ",
+      "newYear": "Tết Dương lịch",
+      "easterMonday": "Thứ Hai Phục Sinh",
+      "labourDay": "Ngày Quốc tế Lao động",
+      "victory1945": "Ngày Chiến thắng 1945",
+      "ascension": "Lễ Thăng Thiên",
+      "pentecostMonday": "Thứ Hai Lễ Ngũ Tuần",
+      "bastilleDay": "Quốc khánh Pháp",
+      "assumption": "Lễ Đức Mẹ Lên Trời",
+      "allSaints": "Lễ Các Thánh",
+      "armistice1918": "Ngày Đình chiến 1918",
+      "christmas": "Lễ Giáng Sinh"
     }
   },
   "acceptInvite": {

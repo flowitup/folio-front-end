@@ -14,10 +14,11 @@
  */
 
 import { useMemo } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { isToday } from "@/lib/utils/calendar-month";
-import { getFrenchHolidayName } from "@/lib/utils/french-holidays";
+import { getFrenchHolidayKey } from "@/lib/utils/french-holidays";
 import { personColor, personInitials } from "@/lib/utils/person-color";
 import { formatEUR } from "@/lib/api/labor";
 import type { LaborEntry } from "@/types/labor";
@@ -45,6 +46,9 @@ export function CalendarCell({
   onClick,
   maxChips = 3,
 }: CalendarCellProps) {
+  const t = useTranslations("labor");
+  const locale = useLocale();
+
   // Aggregate the day's data once per render.
   const { dayTotal, chips, overflow } = useMemo(() => {
     const total = entries.reduce(
@@ -80,7 +84,8 @@ export function CalendarCell({
   const today = isToday(date);
   const sunday = date.getDay() === 0;
   const empty = entries.length === 0;
-  const holidayName = getFrenchHolidayName(date);
+  const holidayKey = getFrenchHolidayKey(date);
+  const holidayName = holidayKey ? t(`holidays.${holidayKey}`) : null;
 
   return (
     <button
@@ -95,11 +100,11 @@ export function CalendarCell({
       )}
       title={holidayName ?? undefined}
       aria-label={
-        date.toLocaleDateString(undefined, {
+        date.toLocaleDateString(locale, {
           weekday: "long",
           day: "numeric",
           month: "long",
-        }) + (holidayName ? ` — ${holidayName} (jour férié)` : "")
+        }) + (holidayName ? ` — ${holidayName} (${t("holidays.publicHoliday")})` : "")
       }
     >
       <div className="flex items-baseline justify-between gap-1">

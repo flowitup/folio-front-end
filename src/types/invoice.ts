@@ -23,6 +23,10 @@ export interface Invoice {
   created_by: string;
   created_at: string;
   updated_at: string;
+  /** UUID of the payment method selected when the invoice was written. */
+  payment_method_id: string | null;
+  /** Snapshot of the payment method label at write time (survives label renames/deletes). */
+  payment_method_label: string | null;
 }
 
 export interface CreateInvoicePayload {
@@ -32,6 +36,8 @@ export interface CreateInvoicePayload {
   recipient_address?: string;
   notes?: string;
   items: Omit<InvoiceItem, "total">[];
+  /** Optional payment method UUID. Null or omitted = no payment method. */
+  payment_method_id?: string | null;
 }
 
 export type UpdateInvoicePayload = Partial<Omit<CreateInvoicePayload, "type">>;

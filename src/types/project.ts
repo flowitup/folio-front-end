@@ -5,6 +5,8 @@ export interface Project {
   owner_id: string;
   user_count: number;
   created_at: string;
+  /** UUID of the company this project belongs to. Null/undefined if no company is linked. */
+  company_id?: string | null;
 }
 
 export interface ProjectListResponse {

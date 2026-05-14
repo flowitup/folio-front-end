@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
 import type { CreateInvoicePayload, InvoiceType } from "@/types/invoice";
 
 interface LineItem {
@@ -17,13 +18,19 @@ interface InvoiceFormProps {
   onSubmit: (payload: CreateInvoicePayload) => Promise<void>;
   initialValues?: Partial<CreateInvoicePayload>;
   isLoading?: boolean;
+  /**
+   * UUID of the company that owns this project.
+   * Required to load and create payment methods.
+   * When null/undefined, the payment method field is hidden.
+   */
+  companyId?: string | null;
 }
 
 const INVOICE_TYPES: InvoiceType[] = ["client", "labor", "supplier"];
 
 const emptyItem = (): LineItem => ({ description: "", quantity: 1, unit_price: 0 });
 
-export function InvoiceForm({ onSubmit, initialValues, isLoading }: InvoiceFormProps) {
+export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId }: InvoiceFormProps) {
   const t = useTranslations("invoices");
 
   const [type, setType] = useState<InvoiceType>(initialValues?.type ?? "client");
@@ -33,6 +40,9 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading }: InvoiceFormP
     initialValues?.recipient_address ?? ""
   );
   const [notes, setNotes] = useState(initialValues?.notes ?? "");
+  const [paymentMethodId, setPaymentMethodId] = useState<string | null>(
+    initialValues?.payment_method_id ?? null
+  );
   const [items, setItems] = useState<LineItem[]>(
     initialValues?.items && initialValues.items.length > 0
       ? initialValues.items.map((i) => ({
@@ -88,6 +98,8 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading }: InvoiceFormP
         quantity: Number(item.quantity),
         unit_price: Number(item.unit_price),
       })),
+      // Always include payment_method_id so updates can explicitly clear it (null).
+      payment_method_id: paymentMethodId,
     };
 
     try {
@@ -166,6 +178,19 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading }: InvoiceFormP
               disabled={isLoading}
             />
           </div>
+
+          {/* Payment Method */}
+          {companyId && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Payment method</label>
+              <PaymentMethodSelect
+                companyId={companyId}
+                value={paymentMethodId}
+                onChange={setPaymentMethodId}
+                disabled={isLoading}
+              />
+            </div>
+          )}
 
           {/* Notes */}
           <div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InvoiceForm } from "@/components/invoices/invoice-form";
 import { createInvoice } from "@/lib/api/invoice-api";
+import { fetchProjectById } from "@/lib/api/projects";
 import type { CreateInvoicePayload } from "@/types/invoice";
 
 export default function NewInvoicePage() {
@@ -20,6 +21,15 @@ export default function NewInvoicePage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
+
+  // Fetch the project once to resolve company_id for the payment method select.
+  // Non-fatal: if it fails, payment method select is hidden (companyId stays null).
+  useEffect(() => {
+    fetchProjectById(projectId)
+      .then((p) => setCompanyId(p.company_id ?? null))
+      .catch(() => setCompanyId(null));
+  }, [projectId]);
 
   const handleSubmit = async (payload: CreateInvoicePayload) => {
     setIsLoading(true);
@@ -54,7 +64,11 @@ export default function NewInvoicePage() {
         </Alert>
       )}
 
-      <InvoiceForm onSubmit={handleSubmit} isLoading={isLoading} />
+      <InvoiceForm
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+        companyId={companyId}
+      />
     </div>
   );
 }

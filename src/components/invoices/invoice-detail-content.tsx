@@ -20,6 +20,12 @@ const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
 interface InvoiceDetailContentProps {
   invoice: Invoice;
   canManage: boolean;
+  /**
+   * UUID of the company that owns this project.
+   * Forwarded to InvoiceForm for payment method selection.
+   * When null, the payment method field is hidden in edit mode.
+   */
+  companyId?: string | null;
   /** Called after a successful update so parent can refresh state. */
   onUpdated: (updated: Invoice) => void;
   /** Called after a successful delete so parent can close/redirect. */
@@ -35,6 +41,7 @@ interface InvoiceDetailContentProps {
 export function InvoiceDetailContent({
   invoice,
   canManage,
+  companyId,
   onUpdated,
   onDeleted,
   printUrl,
@@ -124,6 +131,7 @@ export function InvoiceDetailContent({
         <InvoiceForm
           onSubmit={handleUpdate}
           isLoading={isSaving}
+          companyId={companyId}
           initialValues={{
             type: invoice.type,
             issue_date: invoice.issue_date,
@@ -135,6 +143,7 @@ export function InvoiceDetailContent({
               quantity: item.quantity,
               unit_price: item.unit_price,
             })),
+            payment_method_id: invoice.payment_method_id ?? null,
           }}
         />
       ) : (
@@ -165,6 +174,14 @@ export function InvoiceDetailContent({
                     </dd>
                   </div>
                 )}
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Payment method
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {invoice.payment_method_label ?? "—"}
+                  </dd>
+                </div>
               </dl>
               {invoice.notes && (
                 <div className="mt-4 border-t pt-4">

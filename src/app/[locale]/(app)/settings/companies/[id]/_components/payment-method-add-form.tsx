@@ -10,6 +10,7 @@
 
 import { useRef, useState } from "react";
 import { Loader2, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -27,6 +28,8 @@ interface PaymentMethodAddFormProps {
 // ---------------------------------------------------------------------------
 
 export function PaymentMethodAddForm({ isMutating, onAdd }: PaymentMethodAddFormProps) {
+  const t = useTranslations("paymentMethods");
+
   const [label, setLabel] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submittingRef = useRef(false);
@@ -60,10 +63,10 @@ export function PaymentMethodAddForm({ isMutating, onAdd }: PaymentMethodAddForm
         value={label}
         onChange={(e) => setLabel(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="New payment method label"
+        placeholder={t("addPlaceholder")}
         disabled={busy}
         className="h-8 text-[13px]"
-        aria-label="New payment method label"
+        aria-label={t("addPlaceholder")}
         maxLength={100}
       />
       <Button
@@ -77,7 +80,7 @@ export function PaymentMethodAddForm({ isMutating, onAdd }: PaymentMethodAddForm
         ) : (
           <Plus size={13} className="mr-1.5" />
         )}
-        Add
+        {t("addButton")}
       </Button>
     </form>
   );

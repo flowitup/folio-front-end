@@ -13,6 +13,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -60,6 +61,8 @@ export function PaymentMethodSelect({
   disabled = false,
   className,
 }: PaymentMethodSelectProps) {
+  const t = useTranslations("invoices.paymentMethod");
+
   const [open, setOpen] = React.useState(false);
   const [methods, setMethods] = React.useState<PaymentMethod[]>([]);
   const [loadState, setLoadState] = React.useState<"idle" | "loading" | "done" | "error">("idle");
@@ -85,13 +88,13 @@ export function PaymentMethodSelect({
         setLoadState("done");
       } else {
         setLoadState("error");
-        toast.error("Failed to load payment methods");
+        toast.error(t("failedToLoad"));
       }
     } catch {
       setLoadState("error");
-      toast.error("Failed to load payment methods");
+      toast.error(t("failedToLoad"));
     }
-  }, [companyId]);
+  }, [companyId, t]);
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
@@ -119,17 +122,17 @@ export function PaymentMethodSelect({
         );
         if (created) {
           onChange(created.id);
-          toast.success(`"${created.label}" added`);
+          toast.success(created.label);
         }
       } else {
         const msg =
           result.error.code === "duplicate_label"
-            ? "A payment method with that label already exists"
+            ? t("failedToLoad")
             : result.error.message;
         toast.error(msg);
       }
     } catch {
-      toast.error("Failed to create payment method");
+      toast.error(t("failedToCreate"));
     } finally {
       setCreating(false);
       setOpen(false);
@@ -178,7 +181,7 @@ export function PaymentMethodSelect({
           )}
         >
           <span className="truncate">
-            {selectedLabel ?? "Select payment method"}
+            {selectedLabel ?? t("placeholder")}
           </span>
           {isLoading || creating ? (
             <Loader2 className="ml-auto h-4 w-4 shrink-0 animate-spin opacity-50" />
@@ -196,7 +199,7 @@ export function PaymentMethodSelect({
       >
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder="Search payment methods..."
+            placeholder={t("placeholder")}
             value={query}
             onValueChange={setQuery}
           />
@@ -208,7 +211,7 @@ export function PaymentMethodSelect({
             )}
 
             {!isLoading && loadState === "error" && (
-              <CommandEmpty>Failed to load. Try reopening.</CommandEmpty>
+              <CommandEmpty>{t("failedToLoadRetry")}</CommandEmpty>
             )}
 
             {!isLoading && loadState !== "error" && (
@@ -223,15 +226,15 @@ export function PaymentMethodSelect({
                     }}
                     className="text-muted-foreground"
                   >
-                    (None)
+                    {t("none")}
                   </CommandItem>
                 </CommandGroup>
 
                 <CommandSeparator />
 
-                <CommandGroup heading="Payment methods">
+                <CommandGroup heading={t("label")}>
                   {filteredMethods.length === 0 && !showCreateOption && (
-                    <CommandEmpty>No methods found.</CommandEmpty>
+                    <CommandEmpty>{t("noMethodsFound")}</CommandEmpty>
                   )}
                   {filteredMethods.map((m) => (
                     <CommandItem
@@ -257,7 +260,7 @@ export function PaymentMethodSelect({
                         className="text-primary font-medium"
                       >
                         <Plus className="mr-2 h-4 w-4" />
-                        Add &ldquo;{query.trim()}&rdquo;
+                        {t("addInline", { name: query.trim() })}
                       </CommandItem>
                     </CommandGroup>
                   </>

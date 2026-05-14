@@ -182,7 +182,7 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId }: I
           {/* Payment Method */}
           {companyId && (
             <div>
-              <label className="block text-sm font-medium mb-1">Payment method</label>
+              <label className="block text-sm font-medium mb-1">{t("paymentMethod.label")}</label>
               <PaymentMethodSelect
                 companyId={companyId}
                 value={paymentMethodId}

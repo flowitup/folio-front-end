@@ -261,6 +261,31 @@
       "backToSettings": "Quay lại Cài đặt"
     }
   },
+  "paymentMethods": {
+    "title": "Phương thức thanh toán",
+    "description": "Quản lý cách hoá đơn được thanh toán cho công ty này. Phương thức mặc định không thể xoá nhưng có thể đổi tên.",
+    "addPlaceholder": "ví dụ Wise, Stripe…",
+    "addButton": "Thêm",
+    "builtin": "Mặc định",
+    "noMethods": "Chưa có phương thức thanh toán. Thêm một phương thức ở trên.",
+    "usedInInvoices": "{count, plural, one {# hoá đơn} other {# hoá đơn}}",
+    "deleteConfirmTitle": "Xoá phương thức thanh toán này?",
+    "deleteConfirmBody": "Các hoá đơn hiện tại vẫn giữ nhãn đã chụp. Hoá đơn mới sẽ không thể chọn phương thức này.",
+    "deleteConfirmCta": "Xoá",
+    "errors": {
+      "duplicate_label": "Đã tồn tại phương thức thanh toán với tên này.",
+      "builtin_protected": "Không thể xoá phương thức mặc định.",
+      "not_found": "Không tìm thấy phương thức thanh toán.",
+      "permission_denied": "Bạn không có quyền quản lý phương thức thanh toán cho công ty này.",
+      "label_required": "Tên là bắt buộc.",
+      "label_too_long": "Tên quá dài (tối đa 120 ký tự)."
+    },
+    "toasts": {
+      "created": "Đã thêm phương thức thanh toán",
+      "renamed": "Đã đổi tên phương thức thanh toán",
+      "deleted": "Đã xoá phương thức thanh toán"
+    }
+  },
   "errors": {
     "unauthorized": "Không được phép",
     "accessDenied": "Bạn không có quyền truy cập trang này."
@@ -340,6 +365,16 @@
       "errorRangeInvalid": "\"Từ\" phải trước hoặc bằng \"Đến\"",
       "errorRangeTooLarge": "Khoảng thời gian không vượt quá 24 tháng",
       "errorGeneric": "Không thể xuất chi phí"
+    },
+    "paymentMethod": {
+      "label": "Phương thức thanh toán",
+      "placeholder": "Chọn phương thức thanh toán…",
+      "none": "—",
+      "addInline": "+ Thêm \"{name}\"",
+      "failedToLoad": "Không thể tải phương thức thanh toán",
+      "failedToLoadRetry": "Tải thất bại. Thử đóng và mở lại.",
+      "noMethodsFound": "Không tìm thấy phương thức nào.",
+      "failedToCreate": "Không thể tạo phương thức thanh toán"
     }
   },
   "planning": {

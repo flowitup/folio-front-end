@@ -10,6 +10,7 @@
 
 import { useRef, useState } from "react";
 import { Loader2, Pencil, Trash2, Check, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,8 @@ export function PaymentMethodRow({
   onRenameRequest,
   onDeleteRequest,
 }: PaymentMethodRowProps) {
+  const t = useTranslations("paymentMethods");
+
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(method.label);
   const [isSaving, setIsSaving] = useState(false);
@@ -92,7 +95,7 @@ export function PaymentMethodRow({
             onKeyDown={handleKeyDown}
             disabled={isSaving}
             className="h-7 text-[13px] py-0"
-            aria-label="Edit payment method label"
+            aria-label={t("title")}
           />
         ) : (
           <span className="text-[13px] truncate block">{method.label}</span>
@@ -103,12 +106,12 @@ export function PaymentMethodRow({
       <div className="flex items-center gap-1.5 shrink-0">
         {method.isBuiltin && (
           <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
-            Built-in
+            {t("builtin")}
           </Badge>
         )}
         {method.usageCount > 0 && (
           <span className="text-[11px] tabular-nums" style={{ color: "var(--muted)" }}>
-            {method.usageCount} invoice{method.usageCount !== 1 ? "s" : ""}
+            {t("usedInInvoices", { count: method.usageCount })}
           </span>
         )}
       </div>
@@ -124,7 +127,7 @@ export function PaymentMethodRow({
               className="h-7 w-7"
               onClick={() => void handleSave()}
               disabled={isSaving || !editValue.trim()}
-              aria-label="Save label"
+              aria-label={t("deleteConfirmCta")}
             >
               {isSaving ? (
                 <Loader2 size={13} className="animate-spin" />
@@ -165,7 +168,7 @@ export function PaymentMethodRow({
               onClick={() => onDeleteRequest(method)}
               disabled={rowDisabled || method.isBuiltin}
               aria-label={`Delete "${method.label}"`}
-              title={method.isBuiltin ? "Built-in methods cannot be deleted" : undefined}
+              title={method.isBuiltin ? t("errors.builtin_protected") : undefined}
             >
               <Trash2 size={13} />
             </Button>

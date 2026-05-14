@@ -16,6 +16,7 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -59,6 +60,8 @@ export function PaymentMethodsSection({
   initial,
   companyId,
 }: PaymentMethodsSectionProps) {
+  const t = useTranslations("paymentMethods");
+
   const [methods, setMethods] = useState<PaymentMethod[]>(initial);
   const [isMutating, setIsMutating] = useState(false);
   const mutatingRef = useRef(false);
@@ -97,9 +100,9 @@ export function PaymentMethodsSection({
         return;
       }
       setMethods(result.data);
-      toast.success(`"${label}" added.`);
+      toast.success(t("toasts.created"));
     } catch {
-      toast.error("An unexpected error occurred. Please try again.");
+      toast.error(t("errors.label_required"));
     } finally {
       endMutation();
     }
@@ -114,9 +117,9 @@ export function PaymentMethodsSection({
         return;
       }
       setMethods(result.data);
-      toast.success("Payment method renamed.");
+      toast.success(t("toasts.renamed"));
     } catch {
-      toast.error("An unexpected error occurred. Please try again.");
+      toast.error(t("errors.label_required"));
     } finally {
       endMutation();
     }
@@ -132,12 +135,11 @@ export function PaymentMethodsSection({
         toast.error(result.error.message);
         return;
       }
-      const label = deletingMethod.label;
       setMethods(result.data);
       setDeletingMethod(null);
-      toast.success(`"${label}" deleted.`);
+      toast.success(t("toasts.deleted"));
     } catch {
-      toast.error("An unexpected error occurred. Please try again.");
+      toast.error(t("errors.not_found"));
     } finally {
       setIsDeleting(false);
       deletingRef.current = false;
@@ -152,10 +154,9 @@ export function PaymentMethodsSection({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-[16px]">Payment Methods</CardTitle>
+          <CardTitle className="text-[16px]">{t("title")}</CardTitle>
           <CardDescription className="text-[13px]">
-            Manage the payment methods available when creating invoices. Built-in
-            methods can be renamed but not deleted.
+            {t("description")}
           </CardDescription>
         </CardHeader>
 
@@ -164,10 +165,10 @@ export function PaymentMethodsSection({
 
           {methods.length === 0 ? (
             <p className="text-[13px] py-4 text-center" style={{ color: "var(--muted)" }}>
-              No payment methods yet. Add one above.
+              {t("noMethods")}
             </p>
           ) : (
-            <ul className="divide-y-0" aria-label="Payment methods">
+            <ul className="divide-y-0" aria-label={t("title")}>
               {methods.map((m) => (
                 <PaymentMethodRow
                   key={m.id}
@@ -191,32 +192,20 @@ export function PaymentMethodsSection({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete payment method</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {deletingMethod && deletingMethod.usageCount > 0 ? (
-                <>
-                  <strong>&ldquo;{deletingMethod.label}&rdquo;</strong> is referenced in{" "}
-                  {deletingMethod.usageCount} invoice
-                  {deletingMethod.usageCount !== 1 ? "s" : ""}. Those invoices will keep
-                  their snapshot label. This action cannot be undone.
-                </>
-              ) : (
-                <>
-                  Delete <strong>&ldquo;{deletingMethod?.label}&rdquo;</strong>? This
-                  action cannot be undone.
-                </>
-              )}
+              {t("deleteConfirmBody")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{/* cancel is a common word */}Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void handleDeleteConfirm()}
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             >
               {isDeleting && <Loader2 size={12} className="mr-1.5 animate-spin" />}
-              Delete
+              {t("deleteConfirmCta")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -176,10 +176,10 @@ export function InvoiceDetailContent({
                 )}
                 <div>
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Payment method
+                    {t("paymentMethod.label")}
                   </dt>
                   <dd className="mt-1 text-sm">
-                    {invoice.payment_method_label ?? "—"}
+                    {invoice.payment_method_label ?? t("paymentMethod.none")}
                   </dd>
                 </div>
               </dl>

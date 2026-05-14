@@ -239,7 +239,7 @@ export default function LaborPage() {
   };
 
   return (
-    <div className="fade-up space-y-6 px-8 pb-12">
+    <div className="fade-up flex min-h-full flex-col gap-6 px-8 pb-12">
       {/* Segmented tabs */}
       <div className="flex items-center justify-between">
         <div className="seg">
@@ -281,7 +281,13 @@ export default function LaborPage() {
       )}
 
       {!isLoading && activeTab === "attendance" && (
-        <div className="space-y-4">
+        <div
+          className={
+            attendanceView === "calendar"
+              ? "flex min-h-0 flex-1 flex-col gap-4"
+              : "flex flex-col gap-4"
+          }
+        >
           <div className="flex items-center justify-between gap-3">
             <ViewToggle value={attendanceView} onChange={setAttendanceView} />
             {canManageLabor && (

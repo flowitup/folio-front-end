@@ -106,7 +106,7 @@ export function AttendanceCalendar({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       {/* Header row — month nav (left) + worker filter (right). The
           all-history mode of the list view doesn't apply here because
           a calendar is inherently month-scoped; clicking the toggle
@@ -156,6 +156,7 @@ export function AttendanceCalendar({
       </div>
 
       <CalendarMonthGrid
+        className="min-h-0 flex-1"
         year={cursor.getFullYear()}
         monthIdx={cursor.getMonth()}
         entries={filteredEntries}

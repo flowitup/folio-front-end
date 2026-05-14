@@ -79,7 +79,7 @@ export function CalendarMonthGrid({
   }, [effectiveLocale]);
 
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("flex flex-col gap-1.5", className)}>
       {/* Weekday header row */}
       <div
         className="text-foreground/70 grid grid-cols-7 gap-1.5 text-xs"
@@ -93,7 +93,7 @@ export function CalendarMonthGrid({
       </div>
 
       {/* Cell grid */}
-      <div className="grid grid-cols-7 gap-1.5">
+      <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-7 gap-1.5">
         {cells.map((date, i) => {
           const dayEntries = date ? entriesByDay.get(toDateKey(date)) ?? [] : [];
           return (

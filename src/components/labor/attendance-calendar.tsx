@@ -13,7 +13,7 @@
  */
 
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,7 @@ export function AttendanceCalendar({
   onEditEntry,
 }: AttendanceCalendarProps) {
   const t = useTranslations("labor");
+  const locale = useLocale();
 
   // Calendar needs an explicit (year, monthIdx). Parse the parent's
   // YYYY-MM tag, fall back to "today" when empty. We don't push the
@@ -121,11 +122,8 @@ export function AttendanceCalendar({
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          {/* monthLabel pinned to fr-FR for now — Folio is French-speaking
-              by default and the rest of the labor module uses French
-              date formatting. i18n cleanup arrives in Phase 2e. */}
           <h3 className="min-w-[10ch] text-base font-semibold capitalize">
-            {monthLabel(cursor, "fr-FR")}
+            {monthLabel(cursor, locale)}
           </h3>
           <Button
             variant="outline"
@@ -160,6 +158,7 @@ export function AttendanceCalendar({
         year={cursor.getFullYear()}
         monthIdx={cursor.getMonth()}
         entries={filteredEntries}
+        locale={locale}
         onDayClick={(d) => {
           // Empty-cell click: jump straight to the log dialog. Days
           // with entries open the detail sheet first.

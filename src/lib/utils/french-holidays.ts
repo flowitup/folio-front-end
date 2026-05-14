@@ -2,8 +2,9 @@
  * French public holidays (jours fériés) for any given year.
  *
  * Combines fixed-date holidays with movable feasts derived from Easter.
- * Returns the holiday's French name when the given date is a public holiday,
- * or null otherwise.
+ * Returns a stable translation key when the given date is a public
+ * holiday, or null otherwise. Callers resolve the key via next-intl
+ * (labor.holidays.*) so the display follows the user's chosen locale.
  *
  * Easter date uses Gauss's algorithm (Anonymous Gregorian / Meeus form).
  */
@@ -38,36 +39,50 @@ function dateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export function getFrenchHolidays(year: number): Map<string, string> {
+/** Stable translation keys under `labor.holidays.*` in messages/*.json. */
+export type FrenchHolidayKey =
+  | "newYear"
+  | "labourDay"
+  | "victory1945"
+  | "bastilleDay"
+  | "assumption"
+  | "allSaints"
+  | "armistice1918"
+  | "christmas"
+  | "easterMonday"
+  | "ascension"
+  | "pentecostMonday";
+
+export function getFrenchHolidays(year: number): Map<string, FrenchHolidayKey> {
   const easter = easterSunday(year);
   const easterMonday = addDays(easter, 1);
   const ascension = addDays(easter, 39);
   const pentecostMonday = addDays(easter, 50);
 
-  const fixed: Array<[number, number, string]> = [
-    [0, 1, "Jour de l'An"],
-    [4, 1, "Fête du Travail"],
-    [4, 8, "Victoire 1945"],
-    [6, 14, "Fête Nationale"],
-    [7, 15, "Assomption"],
-    [10, 1, "Toussaint"],
-    [10, 11, "Armistice 1918"],
-    [11, 25, "Noël"],
+  const fixed: Array<[number, number, FrenchHolidayKey]> = [
+    [0, 1, "newYear"],
+    [4, 1, "labourDay"],
+    [4, 8, "victory1945"],
+    [6, 14, "bastilleDay"],
+    [7, 15, "assumption"],
+    [10, 1, "allSaints"],
+    [10, 11, "armistice1918"],
+    [11, 25, "christmas"],
   ];
 
-  const holidays = new Map<string, string>();
-  for (const [m, d, name] of fixed) {
-    holidays.set(dateKey(new Date(year, m, d)), name);
+  const holidays = new Map<string, FrenchHolidayKey>();
+  for (const [m, d, key] of fixed) {
+    holidays.set(dateKey(new Date(year, m, d)), key);
   }
-  holidays.set(dateKey(easterMonday), "Lundi de Pâques");
-  holidays.set(dateKey(ascension), "Ascension");
-  holidays.set(dateKey(pentecostMonday), "Lundi de Pentecôte");
+  holidays.set(dateKey(easterMonday), "easterMonday");
+  holidays.set(dateKey(ascension), "ascension");
+  holidays.set(dateKey(pentecostMonday), "pentecostMonday");
   return holidays;
 }
 
-const cache = new Map<number, Map<string, string>>();
+const cache = new Map<number, Map<string, FrenchHolidayKey>>();
 
-export function getFrenchHolidayName(date: Date): string | null {
+export function getFrenchHolidayKey(date: Date): FrenchHolidayKey | null {
   const year = date.getFullYear();
   let yearMap = cache.get(year);
   if (!yearMap) {

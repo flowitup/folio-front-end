@@ -507,6 +507,20 @@
       "workerSubtitle": "Daily rate: {rate}",
       "workerToastError": "Could not export",
       "workerToastSuccess": "Export downloaded"
+    },
+    "holidays": {
+      "publicHoliday": "public holiday",
+      "newYear": "New Year's Day",
+      "easterMonday": "Easter Monday",
+      "labourDay": "Labour Day",
+      "victory1945": "Victory Day 1945",
+      "ascension": "Ascension Day",
+      "pentecostMonday": "Whit Monday",
+      "bastilleDay": "Bastille Day",
+      "assumption": "Assumption of Mary",
+      "allSaints": "All Saints' Day",
+      "armistice1918": "Armistice Day 1918",
+      "christmas": "Christmas Day"
     }
   },
   "acceptInvite": {

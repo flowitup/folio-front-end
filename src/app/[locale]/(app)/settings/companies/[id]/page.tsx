@@ -10,9 +10,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { fetchCompany, fetchAttachedUsers } from "@/lib/api/companies";
-import { fetchPaymentMethods } from "@/lib/api/payment-methods-api";
 import { AdminCompanyManagePage } from "@/components/companies/admin-company-manage-page";
-import { PaymentMethodsSection } from "./_components/payment-methods-section";
 
 interface Props {
   params: Promise<{ locale: string; id: string }>;
@@ -32,12 +30,10 @@ export default async function CompanyManagePage({ params }: Props) {
   // Fetch data — gracefully handle not-found by redirecting
   let company;
   let attachedUsers;
-  let initialPaymentMethods;
   try {
-    [company, attachedUsers, initialPaymentMethods] = await Promise.all([
+    [company, attachedUsers] = await Promise.all([
       fetchCompany(id),
       fetchAttachedUsers(id),
-      fetchPaymentMethods(id),
     ]);
   } catch {
     redirect(`/${locale}/settings`);
@@ -55,13 +51,6 @@ export default async function CompanyManagePage({ params }: Props) {
       </a>
 
       <AdminCompanyManagePage company={company} initialUsers={attachedUsers} />
-
-      <div className="mt-8">
-        <PaymentMethodsSection
-          initial={initialPaymentMethods}
-          companyId={id}
-        />
-      </div>
     </div>
   );
 }

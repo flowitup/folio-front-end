@@ -35,6 +35,8 @@ vi.mock("next-intl", () => ({
       "failedToLoadRetry": "Failed to load. Try reopening.",
       "noMethodsFound": "No methods found.",
       "failedToCreate": "Failed to create payment method",
+      // paymentMethods.builtins namespace (resolved by the localizeMethodLabel helper)
+      "cash": "Cash",
     };
     const val = map[key] ?? key;
     if (!params) return val;

@@ -288,6 +288,9 @@
       "created": "Payment method added",
       "renamed": "Payment method renamed",
       "deleted": "Payment method removed"
+    },
+    "builtins": {
+      "cash": "Cash"
     }
   },
   "errors": {

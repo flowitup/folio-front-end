@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 
 // ---------------------------------------------------------------------------
@@ -38,6 +39,8 @@ export function PaymentMethodRow({
   onDeleteRequest,
 }: PaymentMethodRowProps) {
   const t = useTranslations("paymentMethods");
+  const tBuiltins = useTranslations("paymentMethods.builtins");
+  const displayLabel = localizeMethodLabel(method.label, tBuiltins);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(method.label);
@@ -98,7 +101,7 @@ export function PaymentMethodRow({
             aria-label={t("title")}
           />
         ) : (
-          <span className="text-[13px] truncate block">{method.label}</span>
+          <span className="text-[13px] truncate block">{displayLabel}</span>
         )}
       </div>
 
@@ -156,7 +159,7 @@ export function PaymentMethodRow({
               className="h-7 w-7"
               onClick={startEdit}
               disabled={rowDisabled}
-              aria-label={t("editLabelAria", { name: method.label })}
+              aria-label={t("editLabelAria", { name: displayLabel })}
             >
               <Pencil size={13} />
             </Button>
@@ -167,7 +170,7 @@ export function PaymentMethodRow({
               className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
               onClick={() => onDeleteRequest(method)}
               disabled={rowDisabled || method.isBuiltin}
-              aria-label={t("deleteLabelAria", { name: method.label })}
+              aria-label={t("deleteLabelAria", { name: displayLabel })}
               title={method.isBuiltin ? t("errors.builtin_protected") : undefined}
             >
               <Trash2 size={13} />

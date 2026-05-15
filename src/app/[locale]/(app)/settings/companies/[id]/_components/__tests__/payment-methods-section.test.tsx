@@ -52,6 +52,9 @@ vi.mock("next-intl", () => {
       "toasts.renamed": "Payment method renamed",
       "toasts.deleted": "Payment method removed",
     },
+    "paymentMethods.builtins": {
+      cash: "Cash",
+    },
   };
 
   const makeT = (ns: string) => (key: string, params?: Record<string, unknown>) => {

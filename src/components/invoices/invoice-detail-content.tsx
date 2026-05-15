@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InvoiceForm } from "@/components/invoices/invoice-form";
 import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
+import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
 
 const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
@@ -47,6 +48,7 @@ export function InvoiceDetailContent({
   printUrl,
 }: InvoiceDetailContentProps) {
   const t = useTranslations("invoices");
+  const tBuiltins = useTranslations("paymentMethods.builtins");
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -175,11 +177,13 @@ export function InvoiceDetailContent({
                   </div>
                 )}
                 <div>
-                  <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  <dt className="text-xs font-medium text-muted-foreground tracking-wide">
                     {t("paymentMethod.label")}
                   </dt>
                   <dd className="mt-1 text-sm">
-                    {invoice.payment_method_label ?? t("paymentMethod.none")}
+                    {invoice.payment_method_label
+                      ? localizeMethodLabel(invoice.payment_method_label, tBuiltins)
+                      : t("paymentMethod.none")}
                   </dd>
                 </div>
               </dl>

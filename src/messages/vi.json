@@ -288,6 +288,9 @@
       "created": "Đã thêm phương thức thanh toán",
       "renamed": "Đã đổi tên phương thức thanh toán",
       "deleted": "Đã xoá phương thức thanh toán"
+    },
+    "builtins": {
+      "cash": "Tiền mặt"
     }
   },
   "errors": {

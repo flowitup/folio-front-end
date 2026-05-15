@@ -10,9 +10,10 @@ export type {
 export { getSession, getCurrentUser, hasPermission, hasRole } from "./session";
 export { login, logout, refreshToken } from "./actions";
 export {
-  protectedRoutes,
+  PUBLIC_PATH_PREFIXES,
   authRoutes,
   isProtectedRoute,
+  isPublicRoute,
   isAuthRoute,
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,

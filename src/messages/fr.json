@@ -261,6 +261,35 @@
       "backToSettings": "Retour aux paramètres"
     }
   },
+  "paymentMethods": {
+    "title": "Moyens de paiement",
+    "description": "Gérez comment les factures peuvent être payées pour cette société. Les moyens intégrés ne peuvent pas être supprimés mais peuvent être renommés.",
+    "addPlaceholder": "ex. Wise, Stripe…",
+    "addButton": "Ajouter",
+    "builtin": "Intégré",
+    "noMethods": "Aucun moyen de paiement. Ajoutez-en un ci-dessus.",
+    "usedInInvoices": "{count, plural, one {# facture} other {# factures}}",
+    "deleteConfirmTitle": "Supprimer ce moyen de paiement ?",
+    "deleteConfirmBody": "Les factures existantes conservent leur libellé instantané. Les nouvelles factures ne pourront plus le sélectionner.",
+    "deleteConfirmCta": "Supprimer",
+    "cancel": "Annuler",
+    "cancelEditAria": "Annuler la modification",
+    "editLabelAria": "Modifier « {name} »",
+    "deleteLabelAria": "Supprimer « {name} »",
+    "errors": {
+      "duplicate_label": "Un moyen de paiement avec ce nom existe déjà.",
+      "builtin_protected": "Les moyens intégrés ne peuvent pas être supprimés.",
+      "not_found": "Moyen de paiement introuvable.",
+      "permission_denied": "Vous n'avez pas la permission de gérer les moyens de paiement pour cette société.",
+      "label_required": "Le nom est requis.",
+      "label_too_long": "Le nom est trop long (max 120 caractères)."
+    },
+    "toasts": {
+      "created": "Moyen de paiement ajouté",
+      "renamed": "Moyen de paiement renommé",
+      "deleted": "Moyen de paiement supprimé"
+    }
+  },
   "errors": {
     "unauthorized": "Non autorisé",
     "accessDenied": "Vous n'avez pas la permission d'accéder à cette page."
@@ -340,6 +369,16 @@
       "errorRangeInvalid": "« De » doit être antérieur ou égal à « À »",
       "errorRangeTooLarge": "La période ne peut pas dépasser 24 mois",
       "errorGeneric": "Échec de l'export des dépenses"
+    },
+    "paymentMethod": {
+      "label": "Moyen de paiement",
+      "placeholder": "Sélectionner un moyen de paiement…",
+      "none": "—",
+      "addInline": "+ Ajouter « {name} »",
+      "failedToLoad": "Échec du chargement des moyens de paiement",
+      "failedToLoadRetry": "Échec du chargement. Réessayez en rouvrant.",
+      "noMethodsFound": "Aucun moyen trouvé.",
+      "failedToCreate": "Échec de la création du moyen de paiement"
     }
   },
   "planning": {

@@ -261,6 +261,35 @@
       "backToSettings": "Back to Settings"
     }
   },
+  "paymentMethods": {
+    "title": "Payment methods",
+    "description": "Manage how invoices can be paid for this company. Built-in methods cannot be removed but can be renamed.",
+    "addPlaceholder": "e.g. Wise, Stripe, …",
+    "addButton": "Add",
+    "builtin": "Built-in",
+    "noMethods": "No payment methods yet. Add one above.",
+    "usedInInvoices": "{count, plural, one {# invoice} other {# invoices}}",
+    "deleteConfirmTitle": "Remove this payment method?",
+    "deleteConfirmBody": "Existing invoices keep their snapshot label. New invoices won't be able to select it.",
+    "deleteConfirmCta": "Remove",
+    "cancel": "Cancel",
+    "cancelEditAria": "Cancel edit",
+    "editLabelAria": "Edit \"{name}\"",
+    "deleteLabelAria": "Delete \"{name}\"",
+    "errors": {
+      "duplicate_label": "A payment method with this name already exists.",
+      "builtin_protected": "Built-in methods cannot be removed.",
+      "not_found": "Payment method not found.",
+      "permission_denied": "You don't have permission to manage payment methods for this company.",
+      "label_required": "Name is required.",
+      "label_too_long": "Name is too long (max 120 characters)."
+    },
+    "toasts": {
+      "created": "Payment method added",
+      "renamed": "Payment method renamed",
+      "deleted": "Payment method removed"
+    }
+  },
   "errors": {
     "unauthorized": "Unauthorized",
     "accessDenied": "You do not have permission to access this page."
@@ -340,6 +369,16 @@
       "errorRangeInvalid": "\"From\" must be before or equal to \"To\"",
       "errorRangeTooLarge": "Range cannot exceed 24 months",
       "errorGeneric": "Failed to export expenses"
+    },
+    "paymentMethod": {
+      "label": "Payment method",
+      "placeholder": "Select a payment method…",
+      "none": "—",
+      "addInline": "+ Add \"{name}\"",
+      "failedToLoad": "Failed to load payment methods",
+      "failedToLoadRetry": "Failed to load. Try reopening.",
+      "noMethodsFound": "No methods found.",
+      "failedToCreate": "Failed to create payment method"
     }
   },
   "planning": {

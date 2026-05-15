@@ -5,6 +5,7 @@ import { useLocale } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { InvoiceDetailContent } from "@/components/invoices/invoice-detail-content";
 import { fetchInvoice } from "@/lib/api/invoice-api";
+import { fetchProjectById } from "@/lib/api/projects";
 import type { Invoice } from "@/types/invoice";
 
 interface InvoiceDetailRowProps {
@@ -37,6 +38,7 @@ export function InvoiceDetailRow({
 }: InvoiceDetailRowProps) {
   const locale = useLocale();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Mount-then-flip pattern: render with grid 0fr on first paint, then flip
   // to 1fr on the next animation frame so CSS transitions the height open.
@@ -49,12 +51,15 @@ export function InvoiceDetailRow({
 
   useEffect(() => {
     let cancelled = false;
-    // Clear any prior error and fetch — both paths set state inside the
-    // promise callback so we don't trigger react-hooks/set-state-in-effect.
-    fetchInvoice(projectId, invoiceId)
-      .then((data) => {
+    // Fetch invoice and project company_id in parallel
+    Promise.all([
+      fetchInvoice(projectId, invoiceId),
+      fetchProjectById(projectId).catch(() => null),
+    ])
+      .then(([invoiceData, projectData]) => {
         if (cancelled) return;
-        setInvoice(data);
+        setInvoice(invoiceData);
+        setCompanyId(projectData?.company_id ?? null);
         setError(null);
       })
       .catch(() => {
@@ -86,6 +91,7 @@ export function InvoiceDetailRow({
                 <InvoiceDetailContent
                   invoice={invoice}
                   canManage={canManage}
+                  companyId={companyId}
                   onUpdated={(u) => { setInvoice(u); onMutated?.(); }}
                   onDeleted={() => { onMutated?.(); onCollapse?.(); }}
                   printUrl={`/${locale}/projects/${projectId}/invoices/${invoice.id}/print`}

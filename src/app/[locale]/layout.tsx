@@ -2,13 +2,21 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
+import dynamic from "next/dynamic";
 import "../globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthErrorBoundary } from "@/context/AuthErrorBoundary";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { getCurrentUser } from "@/lib/auth/session";
-import { Agentation } from "agentation";
 import { Toaster } from "@/components/ui/sonner";
+
+// Dev-only visual feedback toolbar. Gated behind dynamic() so the prod
+// bundle never includes the package — keeps the runtime surface lean and
+// avoids shipping a dev-tooling package to end users.
+const Agentation =
+  process.env.NODE_ENV === "development"
+    ? dynamic(() => import("agentation").then((m) => m.Agentation), { ssr: false })
+    : null;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -53,7 +61,7 @@ export default async function LocaleLayout({
             </AuthErrorBoundary>
           </ThemeProvider>
         </NextIntlClientProvider>
-        {process.env.NODE_ENV === "development" && <Agentation />}
+        {process.env.NODE_ENV === "development" && Agentation && <Agentation />}
         <Toaster />
       </body>
     </html>

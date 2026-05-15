@@ -23,6 +23,17 @@ vi.mock("@/lib/api/payment-methods-api", () => ({
   deletePaymentMethod: vi.fn(),
 }));
 
+// Server-action session guard is mocked as authenticated by default so
+// existing tests focus on BE-error classification. A dedicated test
+// below covers the unauthenticated branch.
+vi.mock("@/lib/auth/session", () => ({
+  getSession: vi.fn().mockResolvedValue({
+    user: { id: "11111111-1111-1111-1111-111111111111" },
+    accessToken: "test-token",
+    expiresAt: Date.now() + 60_000,
+  }),
+}));
+
 // ---- Imports after mocks ----
 
 const {
@@ -59,8 +70,9 @@ function httpError(
   return err;
 }
 
-const COMPANY_ID = "co-test-1";
-const PM_ID = "pm-test-1";
+// Valid UUIDs — actions reject non-UUID identifiers as defense-in-depth.
+const COMPANY_ID = "11111111-1111-1111-1111-111111111111";
+const PM_ID = "22222222-2222-2222-2222-222222222222";
 
 const PAYMENT_METHOD = {
   id: PM_ID,
@@ -154,10 +166,20 @@ describe("createPaymentMethodAction", () => {
   });
 
   it("400 → ok:false, error.code='validation'", async () => {
-    mockCreate.mockRejectedValueOnce(httpError(400, { message: "Label too long." }));
+    // The BE may reject a label that FE didn't catch (e.g. semantic
+    // duplicate-after-trim). Send a label that passes FE validation so
+    // the mocked BE 400 is what produces the error.
+    mockCreate.mockRejectedValueOnce(httpError(400, { message: "Label not allowed." }));
+    const result = await createPaymentMethodAction(COMPANY_ID, "Bank Wire");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("validation");
+  });
+
+  it("rejects labels exceeding max length before hitting BE", async () => {
     const result = await createPaymentMethodAction(COMPANY_ID, "x".repeat(200));
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("validation");
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it("429 → ok:false, error.code='rate_limited'", async () => {
@@ -200,7 +222,7 @@ describe("updatePaymentMethodAction", () => {
 
   it("404 → not_found", async () => {
     mockUpdate.mockRejectedValueOnce(httpError(404));
-    const result = await updatePaymentMethodAction(COMPANY_ID, "nonexistent", {
+    const result = await updatePaymentMethodAction(COMPANY_ID, PM_ID, {
       label: "X",
     });
     expect(result.ok).toBe(false);
@@ -225,7 +247,7 @@ describe("deletePaymentMethodAction", () => {
     mockDelete.mockRejectedValueOnce(
       httpError(409, { reason: "delete" })
     );
-    const result = await deletePaymentMethodAction(COMPANY_ID, "pm-builtin-1");
+    const result = await deletePaymentMethodAction(COMPANY_ID, PM_ID);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("builtin_delete");
   });

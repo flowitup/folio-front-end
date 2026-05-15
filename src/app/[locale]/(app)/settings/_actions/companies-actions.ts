@@ -37,6 +37,7 @@ import {
   fetchAttachedUsers,
   bootAttachedUser,
 } from "@/lib/api/companies/attached-users";
+import { getSession } from "@/lib/auth/session";
 import type { Company, MyCompany, CompanyInviteTokenGenerated, AttachedUser } from "@/types/companies";
 import type { CreateCompanyPayload, UpdateCompanyPayload } from "@/lib/api/companies/companies";
 
@@ -47,6 +48,35 @@ import type { CreateCompanyPayload, UpdateCompanyPayload } from "@/lib/api/compa
 export type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: { code: string; message: string } };
+
+// Defense-in-depth: every action checks for a session locally before
+// touching the BE. Keeps the action endpoint inert when no cookie is
+// present, independent of any BE auth regression.
+async function requireSession(): Promise<
+  { ok: true } | { ok: false; error: { code: string; message: string } }
+> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    const t = await getTranslations("companies.errors");
+    return { ok: false, error: { code: "unauthorized", message: t("unauthorized") } };
+  }
+  return { ok: true };
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
+async function invalid(): Promise<{
+  ok: false;
+  error: { code: string; message: string };
+}> {
+  const t = await getTranslations("companies.errors");
+  return { ok: false, error: { code: "validation", message: t("validation") } };
+}
 
 // ---------------------------------------------------------------------------
 // Internal error classifier
@@ -116,6 +146,8 @@ async function classifyBackendError(
 // ---------------------------------------------------------------------------
 
 export async function fetchMyCompaniesAction(): Promise<ActionResult<MyCompany[]>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
   try {
     const data = await fetchMyCompanies();
     return { ok: true, data };
@@ -128,6 +160,8 @@ export async function fetchAllCompaniesAction(opts?: {
   limit?: number;
   offset?: number;
 }): Promise<ActionResult<{ items: Company[]; total: number }>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
   try {
     const data = await fetchAllCompanies(opts);
     return { ok: true, data };
@@ -137,6 +171,9 @@ export async function fetchAllCompaniesAction(opts?: {
 }
 
 export async function fetchCompanyAction(id: string): Promise<ActionResult<Company>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     const data = await fetchCompany(id);
     return { ok: true, data };
@@ -148,6 +185,8 @@ export async function fetchCompanyAction(id: string): Promise<ActionResult<Compa
 export async function createCompanyAction(
   payload: CreateCompanyPayload
 ): Promise<ActionResult<Company>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
   try {
     const data = await createCompany(payload);
     return { ok: true, data };
@@ -160,6 +199,9 @@ export async function updateCompanyAction(
   id: string,
   payload: UpdateCompanyPayload
 ): Promise<ActionResult<Company>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     const data = await updateCompany(id, payload);
     return { ok: true, data };
@@ -169,6 +211,9 @@ export async function updateCompanyAction(
 }
 
 export async function deleteCompanyAction(id: string): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     await deleteCompany(id);
     return { ok: true, data: undefined };
@@ -178,6 +223,9 @@ export async function deleteCompanyAction(id: string): Promise<ActionResult<void
 }
 
 export async function setPrimaryCompanyAction(id: string): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     await setPrimaryCompany(id);
     return { ok: true, data: undefined };
@@ -187,6 +235,9 @@ export async function setPrimaryCompanyAction(id: string): Promise<ActionResult<
 }
 
 export async function detachCompanyAction(id: string): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     await detachCompany(id);
     return { ok: true, data: undefined };
@@ -207,6 +258,9 @@ export async function generateInviteTokenAction(
   companyId: string,
   opts?: { regenerate?: boolean }
 ): Promise<ActionResult<CompanyInviteTokenGenerated>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId)) return invalid();
   try {
     const data = await generateInviteToken(companyId, opts);
     return { ok: true, data };
@@ -216,6 +270,9 @@ export async function generateInviteTokenAction(
 }
 
 export async function revokeInviteTokenAction(companyId: string): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId)) return invalid();
   try {
     await revokeInviteToken(companyId);
     return { ok: true, data: undefined };
@@ -225,6 +282,9 @@ export async function revokeInviteTokenAction(companyId: string): Promise<Action
 }
 
 export async function redeemInviteTokenAction(token: string): Promise<ActionResult<MyCompany>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!token || typeof token !== "string" || token.length > 512) return invalid();
   try {
     const data = await redeemInviteToken(token);
     return { ok: true, data };
@@ -240,6 +300,9 @@ export async function redeemInviteTokenAction(token: string): Promise<ActionResu
 export async function fetchAttachedUsersAction(
   companyId: string
 ): Promise<ActionResult<AttachedUser[]>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId)) return invalid();
   try {
     const data = await fetchAttachedUsers(companyId);
     return { ok: true, data };
@@ -252,6 +315,9 @@ export async function bootAttachedUserAction(
   companyId: string,
   userId: string
 ): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId) || !isUuid(userId)) return invalid();
   try {
     await bootAttachedUser(companyId, userId);
     return { ok: true, data: undefined };

@@ -6,6 +6,7 @@ import {
   updateNote,
   deleteNote,
 } from "@/lib/api/notes";
+import { getSession } from "@/lib/auth/session";
 import type { Note, CreateNotePayload, UpdateNotePayload } from "@/lib/api/notes";
 
 // ---- UUID validation ----
@@ -53,6 +54,10 @@ export async function createNoteAction(
   projectId: string,
   payload: CreateNotePayload
 ): Promise<NoteActionResult> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    return { success: false, error: "unauthorized" };
+  }
   if (!projectId || !isUuid(projectId)) {
     return { success: false, error: "validation" };
   }
@@ -82,6 +87,10 @@ export async function updateNoteAction(
   noteId: string,
   patch: UpdateNotePayload
 ): Promise<NoteActionResult> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    return { success: false, error: "unauthorized" };
+  }
   if (!projectId || !isUuid(projectId)) {
     return { success: false, error: "validation" };
   }
@@ -115,6 +124,10 @@ export async function deleteNoteAction(
   projectId: string,
   noteId: string
 ): Promise<DeleteActionResult> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    return { success: false, error: "unauthorized" };
+  }
   if (!projectId || !isUuid(projectId)) {
     return { success: false, error: "validation" };
   }

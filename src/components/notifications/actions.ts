@@ -8,6 +8,7 @@
  */
 
 import { listDueNotifications, dismissNotification } from "@/lib/api/notifications";
+import { getSession } from "@/lib/auth/session";
 import type { DueNotification } from "@/lib/api/notifications";
 
 // ---- UUID validation ----
@@ -57,6 +58,10 @@ export async function fetchDueNotificationsAction(): Promise<DueNotification[]> 
 export async function dismissNotificationAction(
   noteId: string
 ): Promise<{ success: boolean; error?: string }> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    return { success: false, error: "unauthorized" };
+  }
   if (!noteId || !isUuid(noteId)) {
     return { success: false, error: "validation" };
   }

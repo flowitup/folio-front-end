@@ -21,6 +21,16 @@ vi.mock("@/lib/api/admin", () => ({
   searchUsers: vi.fn(),
 }));
 
+// Session guard is assumed authenticated for these tests; the action's
+// unauthenticated branch is short and obvious.
+vi.mock("@/lib/auth/session", () => ({
+  getSession: vi.fn().mockResolvedValue({
+    user: { id: "11111111-1111-1111-1111-111111111111" },
+    accessToken: "test-token",
+    expiresAt: Date.now() + 60_000,
+  }),
+}));
+
 // ---- Imports (after mocks) ----
 
 const { bulkAddMembershipsAction, searchUsersAction } = await import("../actions");

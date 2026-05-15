@@ -71,7 +71,13 @@ export async function login(
       accessToken: data.access_token,
     };
   } catch (error) {
-    console.error("Login error:", error);
+    // Log only the message; the full error object can carry the
+    // outbound request body (credentials) on fetch failures and stack
+    // lines we'd rather not stream into container logs.
+    console.error(
+      "Login error:",
+      error instanceof Error ? error.message : "unknown"
+    );
     return {
       success: false,
       error: "An unexpected error occurred",
@@ -134,9 +140,9 @@ export async function acceptInviteAction(
 
     return { success: true, user };
   } catch (error) {
-    console.error("Accept invite error:", error);
     const message =
       error instanceof Error ? error.message : "An unexpected error occurred";
+    console.error("Accept invite error:", message);
     return { success: false, error: message };
   }
 }

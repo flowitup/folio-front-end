@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, type ReactNode, type ErrorInfo } from "react";
+import { Component, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -48,12 +48,15 @@ export class AuthErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error) {
     // Don't log Next.js internal errors
     if (isNextJsInternalError(error)) {
       throw error;
     }
-    console.error("Auth error boundary caught:", error, errorInfo);
+    // Log only the message — full Error / ErrorInfo objects carry
+    // component stacks and may include request bodies in their
+    // `cause` chain in some flows.
+    console.error("Auth error boundary caught:", error.message);
   }
 
   render() {

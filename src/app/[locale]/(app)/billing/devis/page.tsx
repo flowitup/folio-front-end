@@ -38,7 +38,10 @@ export default async function DevisPage({ searchParams }: DevisPageProps) {
     initialTotal = result.total;
   } catch (err) {
     // Log server-side; render empty state — client shows empty UI gracefully.
-    console.error("[DevisPage] Failed to fetch billing documents:", err);
+    console.error(
+      "[DevisPage] Failed to fetch billing documents:",
+      err instanceof Error ? err.message : "unknown"
+    );
   }
 
   return (

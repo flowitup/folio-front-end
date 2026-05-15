@@ -61,8 +61,8 @@ export async function fetchAttachedUsers(companyId: string): Promise<AttachedUse
     throw new Error(`Network error listing attached users: ${String(err)}`);
   }
   if (!response.ok) throw await buildHttpError(response, "Failed to list attached users");
-  const data = (await response.json()) as { items: AttachedUser[] };
-  return data.items;
+  const data = (await response.json()) as { items?: AttachedUser[] };
+  return data.items ?? [];
 }
 
 /**

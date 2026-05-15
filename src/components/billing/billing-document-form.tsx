@@ -44,7 +44,6 @@ import {
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { env } from "@/lib/config/env";
-import { getApiAccessToken } from "@/lib/api/http";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 import type {
   BillingDocument,
@@ -293,11 +292,9 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
-      const token = getApiAccessToken();
       const response = await fetch(
         `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/pdf`,
         {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
           credentials: "include",
         }
       );
@@ -321,11 +318,9 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     xlsxLoadingRef.current = true;
     setIsXlsxLoading(true);
     try {
-      const token = getApiAccessToken();
       const response = await fetch(
         `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/xlsx`,
         {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
           credentials: "include",
         }
       );

@@ -1,4 +1,4 @@
-import { api, ApiError, getApiAccessToken, getCsrfHeader } from "@/lib/api/http";
+import { api, ApiError, getCsrfHeader } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 import type {
@@ -59,13 +59,11 @@ export const uploadAttachment = async (
   const formData = new FormData();
   formData.append("file", file);
 
-  const token = getApiAccessToken();
   const response = await fetch(
     `${env.apiBaseUrl}/projects/${projectId}/invoices/${invoiceId}/attachments`,
     {
       method: "POST",
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...getCsrfHeader("POST"),
       },
       credentials: "include",
@@ -90,9 +88,7 @@ export const deleteAttachment = (attachmentId: string): Promise<void> =>
  * Caller must URL.revokeObjectURL() when done.
  */
 export const fetchAttachmentBlobUrl = async (attachmentId: string): Promise<string> => {
-  const token = getApiAccessToken();
   const response = await fetch(`${env.apiBaseUrl}/attachments/${attachmentId}/download`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
     credentials: "include",
   });
   if (!response.ok) {
@@ -127,9 +123,7 @@ export async function fetchInvoiceExport(
   if (typeFilter) params.set("type", typeFilter);
 
   const url = `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/invoices-export?${params.toString()}`;
-  const token = getApiAccessToken();
   const res = await fetch(url, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
     credentials: "include",
   });
 

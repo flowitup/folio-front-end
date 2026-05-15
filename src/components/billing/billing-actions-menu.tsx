@@ -44,7 +44,6 @@ import {
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { deleteBillingDocumentAction, convertDevisToFactureAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import { env } from "@/lib/config/env";
-import { getApiAccessToken } from "@/lib/api/http";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 import type { BillingDocument } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
@@ -81,12 +80,10 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
     pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
-      const token = getApiAccessToken();
       const response = await fetch(
         `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/pdf`,
         {
           method: "GET",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
           credentials: "include",
         }
       );
@@ -113,12 +110,10 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
     xlsxLoadingRef.current = true;
     setIsXlsxLoading(true);
     try {
-      const token = getApiAccessToken();
       const response = await fetch(
         `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/xlsx`,
         {
           method: "GET",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
           credentials: "include",
         }
       );

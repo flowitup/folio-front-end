@@ -19,7 +19,7 @@ import type {
   LaborExportFormat,
   LaborExportRange,
 } from "@/types/labor";
-import { api, ApiError, getApiAccessToken } from "@/lib/api/http";
+import { api, ApiError } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 
@@ -195,9 +195,7 @@ async function fetchExportFile(
   format: LaborExportFormat,
 ): Promise<{ blob: Blob; filename: string }> {
   assertValidExportArgs(range, format);
-  const token = getApiAccessToken();
   const response = await fetch(url, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
     credentials: 'include',
   });
 

@@ -85,7 +85,7 @@ vi.mock(
 );
 
 vi.mock("@/lib/api/http", () => ({
-  getApiAccessToken: vi.fn().mockReturnValue(null),
+  getCsrfHeader: vi.fn().mockReturnValue({}),
 }));
 
 vi.mock("@/lib/util/trigger-browser-download", () => ({

@@ -86,9 +86,11 @@ vi.mock("sonner", () => ({
   },
 }));
 
-// PDF download helpers — stub so handleDownloadPdf doesn't actually fetch
+// PDF download helpers — stub so handleDownloadPdf doesn't actually fetch.
+// The form no longer reads any module-level token; auth rides on the
+// HttpOnly cookie sent by credentials: "include".
 vi.mock("@/lib/api/http", () => ({
-  getApiAccessToken: vi.fn().mockReturnValue(null),
+  getCsrfHeader: vi.fn().mockReturnValue({}),
 }));
 
 vi.mock("@/lib/util/trigger-browser-download", () => ({

@@ -13,6 +13,7 @@ export interface ParsedCookie {
   name: string;
   value: string;
   httpOnly: boolean;
+  secure: boolean;
   maxAge?: number;
   sameSite?: "strict" | "lax" | "none";
   path?: string;
@@ -28,12 +29,13 @@ export function parseCookie(cookie: string): ParsedCookie | null {
   const value = first.slice(eqIndex + 1).trim();
   if (!name || !value) return null;
 
-  const result: ParsedCookie = { name, value, httpOnly: false };
+  const result: ParsedCookie = { name, value, httpOnly: false, secure: false };
   for (const attr of parts) {
     const [rawKey, ...rest] = attr.split("=");
     const key = rawKey.toLowerCase();
     const v = rest.join("=").trim();
     if (key === "httponly") result.httpOnly = true;
+    else if (key === "secure") result.secure = true;
     else if (key === "max-age" && v) result.maxAge = Number(v);
     else if (key === "samesite" && v) {
       const lower = v.toLowerCase();

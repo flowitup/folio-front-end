@@ -16,12 +16,17 @@ import { parseCookie } from "./cookie-parser";
  */
 async function setForwardedCookies(setCookieHeaders: string[]): Promise<void> {
   const cookieStore = await cookies();
+  // Defense-in-depth: never demote Secure. If the backend marks a cookie
+  // Secure, forward that verbatim. Independently of that, always force
+  // Secure in production runtimes so a misconfigured BE in prod cannot
+  // accidentally issue a plaintext-capable session cookie.
+  const isProdRuntime = process.env.NODE_ENV === "production";
   for (const cookie of setCookieHeaders) {
     const parsed = parseCookie(cookie);
     if (!parsed) continue;
     cookieStore.set(parsed.name, parsed.value, {
       httpOnly: parsed.httpOnly,
-      secure: process.env.NODE_ENV === "production",
+      secure: parsed.secure || isProdRuntime,
       sameSite: parsed.sameSite ?? "lax",
       path: parsed.path ?? "/",
       ...(parsed.maxAge !== undefined ? { maxAge: parsed.maxAge } : {}),

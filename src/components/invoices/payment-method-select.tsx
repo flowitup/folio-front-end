@@ -30,6 +30,7 @@ import {
   listPaymentMethodsAction,
   createPaymentMethodAction,
 } from "@/app/[locale]/(app)/settings/companies/[id]/_actions/payment-methods-actions";
+import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 
 // ---------------------------------------------------------------------------
@@ -62,6 +63,7 @@ export function PaymentMethodSelect({
   className,
 }: PaymentMethodSelectProps) {
   const t = useTranslations("invoices.paymentMethod");
+  const tBuiltins = useTranslations("paymentMethods.builtins");
 
   const [open, setOpen] = React.useState(false);
   const [methods, setMethods] = React.useState<PaymentMethod[]>([]);
@@ -69,11 +71,12 @@ export function PaymentMethodSelect({
   const [creating, setCreating] = React.useState(false);
   const [query, setQuery] = React.useState("");
 
-  // Display label for the trigger button
+  // Display label for the trigger button (localized for built-ins)
   const selectedLabel = React.useMemo(() => {
     if (!value) return null;
-    return methods.find((m) => m.id === value)?.label ?? null;
-  }, [value, methods]);
+    const raw = methods.find((m) => m.id === value)?.label ?? null;
+    return raw ? localizeMethodLabel(raw, tBuiltins) : null;
+  }, [value, methods, tBuiltins]);
 
   // -------------------------------------------------------------------------
   // Fetch on open
@@ -143,16 +146,26 @@ export function PaymentMethodSelect({
   // Filtered options
   // -------------------------------------------------------------------------
 
+  // Filter against BOTH the raw label (canonical, e.g. "Cash") and the
+  // localized version (e.g. "Espèces" in fr) so users can type in either.
   const filteredMethods = React.useMemo(() => {
     if (!query.trim()) return methods;
     const q = query.toLowerCase();
-    return methods.filter((m) => m.label.toLowerCase().includes(q));
-  }, [methods, query]);
+    return methods.filter((m) => {
+      const raw = m.label.toLowerCase();
+      const localized = localizeMethodLabel(m.label, tBuiltins).toLowerCase();
+      return raw.includes(q) || localized.includes(q);
+    });
+  }, [methods, query, tBuiltins]);
 
-  // Whether the typed query exactly matches an existing option
-  const exactMatch = methods.some(
-    (m) => m.label.toLowerCase() === query.trim().toLowerCase()
-  );
+  // Whether the typed query exactly matches an existing option (raw or localized)
+  const exactMatch = methods.some((m) => {
+    const q = query.trim().toLowerCase();
+    return (
+      m.label.toLowerCase() === q ||
+      localizeMethodLabel(m.label, tBuiltins).toLowerCase() === q
+    );
+  });
 
   const showCreateOption =
     allowCreate && query.trim().length > 0 && !exactMatch && !creating;
@@ -245,7 +258,7 @@ export function PaymentMethodSelect({
                         setOpen(false);
                       }}
                     >
-                      {m.label}
+                      {localizeMethodLabel(m.label, tBuiltins)}
                     </CommandItem>
                   ))}
                 </CommandGroup>

@@ -288,6 +288,9 @@
       "created": "Moyen de paiement ajouté",
       "renamed": "Moyen de paiement renommé",
       "deleted": "Moyen de paiement supprimé"
+    },
+    "builtins": {
+      "cash": "Espèces"
     }
   },
   "errors": {

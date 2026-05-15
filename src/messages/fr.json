@@ -272,6 +272,10 @@
     "deleteConfirmTitle": "Supprimer ce moyen de paiement ?",
     "deleteConfirmBody": "Les factures existantes conservent leur libellé instantané. Les nouvelles factures ne pourront plus le sélectionner.",
     "deleteConfirmCta": "Supprimer",
+    "cancel": "Annuler",
+    "cancelEditAria": "Annuler la modification",
+    "editLabelAria": "Modifier « {name} »",
+    "deleteLabelAria": "Supprimer « {name} »",
     "errors": {
       "duplicate_label": "Un moyen de paiement avec ce nom existe déjà.",
       "builtin_protected": "Les moyens intégrés ne peuvent pas être supprimés.",

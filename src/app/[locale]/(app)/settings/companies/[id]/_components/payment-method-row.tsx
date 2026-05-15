@@ -142,7 +142,7 @@ export function PaymentMethodRow({
               className="h-7 w-7"
               onClick={cancelEdit}
               disabled={isSaving}
-              aria-label="Cancel edit"
+              aria-label={t("cancelEditAria")}
             >
               <X size={13} />
             </Button>
@@ -156,7 +156,7 @@ export function PaymentMethodRow({
               className="h-7 w-7"
               onClick={startEdit}
               disabled={rowDisabled}
-              aria-label={`Edit "${method.label}"`}
+              aria-label={t("editLabelAria", { name: method.label })}
             >
               <Pencil size={13} />
             </Button>
@@ -167,7 +167,7 @@ export function PaymentMethodRow({
               className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
               onClick={() => onDeleteRequest(method)}
               disabled={rowDisabled || method.isBuiltin}
-              aria-label={`Delete "${method.label}"`}
+              aria-label={t("deleteLabelAria", { name: method.label })}
               title={method.isBuiltin ? t("errors.builtin_protected") : undefined}
             >
               <Trash2 size={13} />

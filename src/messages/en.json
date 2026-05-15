@@ -272,6 +272,10 @@
     "deleteConfirmTitle": "Remove this payment method?",
     "deleteConfirmBody": "Existing invoices keep their snapshot label. New invoices won't be able to select it.",
     "deleteConfirmCta": "Remove",
+    "cancel": "Cancel",
+    "cancelEditAria": "Cancel edit",
+    "editLabelAria": "Edit \"{name}\"",
+    "deleteLabelAria": "Delete \"{name}\"",
     "errors": {
       "duplicate_label": "A payment method with this name already exists.",
       "builtin_protected": "Built-in methods cannot be removed.",

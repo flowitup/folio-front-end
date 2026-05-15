@@ -198,7 +198,7 @@ export function PaymentMethodsSection({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>{/* cancel is a common word */}Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void handleDeleteConfirm()}
               disabled={isDeleting}

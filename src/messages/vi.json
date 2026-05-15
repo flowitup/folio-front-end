@@ -272,6 +272,10 @@
     "deleteConfirmTitle": "Xoá phương thức thanh toán này?",
     "deleteConfirmBody": "Các hoá đơn hiện tại vẫn giữ nhãn đã chụp. Hoá đơn mới sẽ không thể chọn phương thức này.",
     "deleteConfirmCta": "Xoá",
+    "cancel": "Huỷ",
+    "cancelEditAria": "Huỷ chỉnh sửa",
+    "editLabelAria": "Chỉnh sửa \"{name}\"",
+    "deleteLabelAria": "Xoá \"{name}\"",
     "errors": {
       "duplicate_label": "Đã tồn tại phương thức thanh toán với tên này.",
       "builtin_protected": "Không thể xoá phương thức mặc định.",

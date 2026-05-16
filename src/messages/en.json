@@ -1015,6 +1015,10 @@
     "toast": {
       "uploadSuccess": "{filename} uploaded",
       "listLoadError": "Failed to load documents"
+    },
+    "pagination": {
+      "prev": "Prev",
+      "next": "Next"
     }
   },
   "members": {

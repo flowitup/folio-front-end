@@ -196,7 +196,7 @@ export function DocumentsPanel({
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
           >
-            Prev
+            {t("pagination.prev")}
           </Button>
           <span className="text-sm text-muted-foreground">
             {page} / {totalPages}
@@ -207,7 +207,7 @@ export function DocumentsPanel({
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
           >
-            Next
+            {t("pagination.next")}
           </Button>
         </div>
       )}

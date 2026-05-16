@@ -1015,6 +1015,10 @@
     "toast": {
       "uploadSuccess": "Đã tải lên {filename}",
       "listLoadError": "Không thể tải danh sách tài liệu"
+    },
+    "pagination": {
+      "prev": "Trước",
+      "next": "Sau"
     }
   },
   "members": {

@@ -31,6 +31,7 @@ const { listDocumentsAction, deleteDocumentAction } = await import("../actions")
 const { listProjectDocuments, deleteProjectDocument } = await import(
   "@/lib/api/project-documents"
 );
+import type { ProjectDocumentKind } from "@/lib/api/project-documents";
 
 const mockListDocuments = vi.mocked(listProjectDocuments);
 const mockDeleteDocument = vi.mocked(deleteProjectDocument);
@@ -139,7 +140,7 @@ describe("listDocumentsAction — happy path", () => {
     const mockData = { items: [], total: 0, page: 1, per_page: 20 };
     mockListDocuments.mockResolvedValueOnce(mockData);
 
-    const params = { kinds: ["pdf"] as const as any[], page: 2 };
+    const params = { kinds: ["pdf"] as ProjectDocumentKind[], page: 2 };
     const result = await listDocumentsAction(PROJECT_ID, params);
 
     expect(mockListDocuments).toHaveBeenCalledWith(PROJECT_ID, params);

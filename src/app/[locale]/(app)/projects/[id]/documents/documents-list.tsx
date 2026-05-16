@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
+import { toast } from "sonner";
 import {
   ChevronUp,
   ChevronDown,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { ProjectDocument, ProjectDocumentKind } from "@/lib/api/project-documents";
+import { downloadProjectDocument } from "@/lib/api/project-document-blob";
 
 // ---- Helpers ----
 
@@ -257,15 +259,21 @@ export function DocumentsList({
                     <Eye />
                   </Button>
                 )}
-                <a
-                  href={doc.download_url}
-                  download={doc.filename}
-                  className="inline-flex items-center justify-center size-8 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   title={t("actions.download")}
                   aria-label={t("actions.download")}
+                  onClick={async () => {
+                    try {
+                      await downloadProjectDocument(doc.project_id, doc.id, doc.filename);
+                    } catch {
+                      toast.error(t("actions.downloadError"));
+                    }
+                  }}
                 >
                   <Download className="size-4" aria-hidden />
-                </a>
+                </Button>
                 {canDelete(doc) && (
                   <Button
                     variant="ghost"

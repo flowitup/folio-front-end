@@ -977,7 +977,8 @@
       "actions": {
         "preview": "Aperçu",
         "download": "Télécharger",
-        "delete": "Supprimer"
+        "delete": "Supprimer",
+        "downloadError": "Échec du téléchargement — veuillez réessayer"
       }
     },
     "kinds": {
@@ -997,7 +998,9 @@
     "preview": {
       "fallback": "Aperçu non disponible pour ce type de fichier. Téléchargez-le pour le consulter.",
       "close": "Fermer",
-      "download": "Télécharger"
+      "download": "Télécharger",
+      "error": "Aperçu impossible — téléchargez pour afficher le fichier",
+      "loading": "Chargement de l’aperçu…"
     },
     "delete": {
       "title": "Supprimer le document ?",

@@ -977,7 +977,8 @@
       "actions": {
         "preview": "Xem trước",
         "download": "Tải xuống",
-        "delete": "Xoá"
+        "delete": "Xoá",
+        "downloadError": "Tải xuống thất bại — vui lòng thử lại"
       }
     },
     "kinds": {
@@ -997,7 +998,9 @@
     "preview": {
       "fallback": "Không thể xem trước loại file này. Hãy tải xuống để xem.",
       "close": "Đóng",
-      "download": "Tải xuống"
+      "download": "Tải xuống",
+      "error": "Xem trước thất bại — hãy tải xuống để xem file",
+      "loading": "Đang tải xem trước…"
     },
     "delete": {
       "title": "Xoá tài liệu?",

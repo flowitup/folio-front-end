@@ -977,7 +977,8 @@
       "actions": {
         "preview": "Preview",
         "download": "Download",
-        "delete": "Delete"
+        "delete": "Delete",
+        "downloadError": "Download failed — please try again"
       }
     },
     "kinds": {
@@ -997,7 +998,9 @@
     "preview": {
       "fallback": "Preview not available for this file type. Download to view.",
       "close": "Close",
-      "download": "Download"
+      "download": "Download",
+      "error": "Preview failed — download to view the file",
+      "loading": "Loading preview…"
     },
     "delete": {
       "title": "Delete document?",

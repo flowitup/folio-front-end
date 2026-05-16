@@ -214,6 +214,7 @@ export function DocumentsPanel({
 
       <DocumentsPreviewDialog
         doc={previewDoc}
+        projectId={projectId}
         onClose={() => setPreviewDoc(null)}
       />
 

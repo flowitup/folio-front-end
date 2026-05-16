@@ -5,7 +5,7 @@
  * - Renders all document rows with formatted size and date
  * - Delete button visibility gated by uploader/admin/owner
  * - Preview button only shown for pdf/image kinds
- * - Download anchor has correct href and download attribute
+ * - Download button triggers blob-fetch helper (not a bare anchor href)
  * - Sort header click triggers onSortChange callback with column name
  * - Empty state when documents array is empty
  */
@@ -14,6 +14,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { DocumentsList } from "../documents-list";
 import type { ProjectDocument } from "@/lib/api/project-documents";
+
+// ---- Module mocks ----
+
+vi.mock("sonner", () => ({
+  toast: { error: vi.fn(), success: vi.fn() },
+}));
+
+vi.mock("@/lib/api/project-document-blob", () => ({
+  downloadProjectDocument: vi.fn().mockResolvedValue(undefined),
+}));
 
 // ---- Module mocks ----
 
@@ -29,6 +39,7 @@ vi.mock("next-intl", () => {
       "columns.actions": "Actions",
       "actions.preview": "Preview",
       "actions.download": "Download",
+      "actions.downloadError": "Download failed — please try again",
       "actions.delete": "Delete",
       formerMember: "Former member",
     },
@@ -363,10 +374,21 @@ describe("DocumentsList", () => {
     });
   });
 
-  describe("download anchor", () => {
-    it("has correct href and download attributes", () => {
+  describe("download button", () => {
+    it("is rendered as a button (not a bare anchor)", () => {
+      const doc = makeDoc({ id: "doc-abc", filename: "my-report.pdf" });
+
+      render(<DocumentsList {...defaultProps} documents={[doc]} />);
+
+      const downloadBtn = screen.getByTitle("Download");
+      expect(downloadBtn.tagName.toLowerCase()).toBe("button");
+    });
+
+    it("calls downloadProjectDocument with correct ids and filename on click", async () => {
+      const { downloadProjectDocument } = await import("@/lib/api/project-document-blob");
       const doc = makeDoc({
         id: "doc-abc",
+        project_id: "proj-123",
         filename: "my-report.pdf",
         download_url: "/api/v1/projects/proj-123/documents/doc-abc/download",
       });
@@ -378,11 +400,17 @@ describe("DocumentsList", () => {
         />
       );
 
-      const downloadAnchor = screen.getByTitle("Download").closest("a");
-      expect(downloadAnchor?.href).toContain(
-        "/api/v1/projects/proj-123/documents/doc-abc/download"
-      );
-      expect(downloadAnchor?.download).toBe("my-report.pdf");
+      const downloadBtn = screen.getByTitle("Download");
+      fireEvent.click(downloadBtn);
+
+      // Allow the async click handler to settle
+      await vi.waitFor(() => {
+        expect(downloadProjectDocument).toHaveBeenCalledWith(
+          "proj-123",
+          "doc-abc",
+          "my-report.pdf"
+        );
+      });
     });
   });
 

@@ -975,7 +975,7 @@
     },
     "revoke": "Revoke",
     "revokeConfirm": "Revoke this invitation?",
-    "expiresIn": "{days}d",
+    "expiresIn": "{days, plural, one {# day} other {# days}}",
     "toast": {
       "inviteSent": "Invitation sent to {email}",
       "directAdded": "{email} was added directly to the project",

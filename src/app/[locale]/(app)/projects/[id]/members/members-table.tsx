@@ -40,14 +40,14 @@ function formatDate(isoString: string): string {
   }
 }
 
-function expiresInDays(expiresAt: string): string {
+function expiresInDays(expiresAt: string): number | null {
   try {
     const diff = Math.ceil(
       (new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
     );
-    return diff > 0 ? `${diff}d` : "—";
+    return diff > 0 ? diff : null;
   } catch {
-    return "—";
+    return null;
   }
 }
 
@@ -189,7 +189,10 @@ export function MembersTable({
                       <span className="stamp">{invite.role_name}</span>
                     </TableCell>
                     <TableCell className="num" style={{ color: "var(--muted)" }}>
-                      {t("expiresIn", { days: expiresInDays(invite.expires_at) })}
+                      {(() => {
+                        const days = expiresInDays(invite.expires_at);
+                        return days === null ? "—" : t("expiresIn", { days });
+                      })()}
                     </TableCell>
                     <TableCell style={{ color: "var(--muted)" }}>
                       {invite.invited_by_name ?? "—"}

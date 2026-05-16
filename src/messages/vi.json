@@ -13,6 +13,7 @@
     "invoices": "Chi phí",
     "planning": "Kế hoạch",
     "notes": "Ghi chú",
+    "documents": "Tài liệu",
     "members": "Thành viên",
     "settings": "Cài đặt"
   },
@@ -942,6 +943,82 @@
       "invalidTransition": "Chuyển đổi trạng thái không hợp lệ.",
       "numberCollision": "Đã có tài liệu với số này.",
       "generic": "Đã xảy ra lỗi không mong đợi."
+    }
+  },
+  "documents": {
+    "title": "Tài liệu",
+    "subtitle": "Bản vẽ, hợp đồng, ảnh, hoá đơn — mọi thứ liên quan đến dự án.",
+    "upload": {
+      "ctaPick": "Chọn file",
+      "dragHere": "Kéo file vào đây hoặc nhấn để chọn",
+      "supportedTypes": "PDF, PNG, JPG, WebP, DOCX, XLSX, DWG, TXT — tối đa 25 MB mỗi file",
+      "queued": "Đang chờ",
+      "uploading": "Đang tải lên",
+      "done": "Đã tải lên",
+      "failed": "Bỏ qua",
+      "errorOversize": "File quá lớn (tối đa 25 MB)",
+      "errorUnsupported": "Loại file không được hỗ trợ",
+      "errorNetwork": "Lỗi mạng — vui lòng thử lại",
+      "errorRateLimited": "Tải lên quá nhiều — vui lòng chậm lại",
+      "errorForbidden": "Không được phép",
+      "errorServer": "Tải lên thất bại"
+    },
+    "list": {
+      "empty": "Chưa có tài liệu. Kéo file vào khu vực tải lên để bắt đầu.",
+      "formerMember": "(thành viên cũ)",
+      "columns": {
+        "file": "File",
+        "type": "Loại",
+        "size": "Kích thước",
+        "uploadedBy": "Người tải lên",
+        "uploaded": "Ngày tải",
+        "actions": "Thao tác"
+      },
+      "actions": {
+        "preview": "Xem trước",
+        "download": "Tải xuống",
+        "delete": "Xoá",
+        "downloadError": "Tải xuống thất bại — vui lòng thử lại"
+      }
+    },
+    "kinds": {
+      "pdf": "PDF",
+      "image": "Hình ảnh",
+      "spreadsheet": "Bảng tính",
+      "doc": "Tài liệu",
+      "cad": "CAD",
+      "text": "Văn bản",
+      "other": "Khác"
+    },
+    "filter": {
+      "all": "Tất cả",
+      "anyUploader": "Bất kỳ ai",
+      "reset": "Đặt lại"
+    },
+    "preview": {
+      "fallback": "Không thể xem trước loại file này. Hãy tải xuống để xem.",
+      "close": "Đóng",
+      "download": "Tải xuống",
+      "error": "Xem trước thất bại — hãy tải xuống để xem file",
+      "loading": "Đang tải xem trước…"
+    },
+    "delete": {
+      "title": "Xoá tài liệu?",
+      "body": "Bạn chắc chắn muốn xoá \"{filename}\"? Không thể khôi phục từ giao diện.",
+      "cancel": "Huỷ",
+      "confirm": "Xoá",
+      "confirming": "Đang xoá…",
+      "success": "Đã xoá tài liệu",
+      "errorForbidden": "Chỉ người tải lên hoặc quản trị viên dự án mới có thể xoá tài liệu này",
+      "errorServer": "Xoá thất bại"
+    },
+    "toast": {
+      "uploadSuccess": "Đã tải lên {filename}",
+      "listLoadError": "Không thể tải danh sách tài liệu"
+    },
+    "pagination": {
+      "prev": "Trước",
+      "next": "Sau"
     }
   },
   "members": {

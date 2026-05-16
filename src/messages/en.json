@@ -13,6 +13,7 @@
     "invoices": "Expense",
     "planning": "Planning",
     "notes": "Notes",
+    "documents": "Documents",
     "members": "Members",
     "settings": "Settings"
   },
@@ -942,6 +943,82 @@
       "invalidTransition": "Invalid status transition.",
       "numberCollision": "A document with this number already exists.",
       "generic": "An unexpected error occurred."
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Plans, contracts, photos, invoices — anything for the project.",
+    "upload": {
+      "ctaPick": "Pick files",
+      "dragHere": "Drag files here or click to choose",
+      "supportedTypes": "PDF, PNG, JPG, WebP, DOCX, XLSX, DWG, TXT — up to 25 MB each",
+      "queued": "Queued",
+      "uploading": "Uploading",
+      "done": "Uploaded",
+      "failed": "Dismiss",
+      "errorOversize": "Too large (max 25 MB)",
+      "errorUnsupported": "Unsupported file type",
+      "errorNetwork": "Network error — try again",
+      "errorRateLimited": "Too many uploads — slow down",
+      "errorForbidden": "Not allowed",
+      "errorServer": "Upload failed"
+    },
+    "list": {
+      "empty": "No documents yet. Drag files into the upload area to start.",
+      "formerMember": "(former member)",
+      "columns": {
+        "file": "File",
+        "type": "Type",
+        "size": "Size",
+        "uploadedBy": "Uploaded by",
+        "uploaded": "Uploaded",
+        "actions": "Actions"
+      },
+      "actions": {
+        "preview": "Preview",
+        "download": "Download",
+        "delete": "Delete",
+        "downloadError": "Download failed — please try again"
+      }
+    },
+    "kinds": {
+      "pdf": "PDF",
+      "image": "Image",
+      "spreadsheet": "Spreadsheet",
+      "doc": "Document",
+      "cad": "CAD",
+      "text": "Text",
+      "other": "Other"
+    },
+    "filter": {
+      "all": "All",
+      "anyUploader": "Anyone",
+      "reset": "Reset"
+    },
+    "preview": {
+      "fallback": "Preview not available for this file type. Download to view.",
+      "close": "Close",
+      "download": "Download",
+      "error": "Preview failed — download to view the file",
+      "loading": "Loading preview…"
+    },
+    "delete": {
+      "title": "Delete document?",
+      "body": "Are you sure you want to delete \"{filename}\"? This cannot be undone from the UI.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "confirming": "Deleting…",
+      "success": "Document deleted",
+      "errorForbidden": "Only the uploader or a project admin can delete this document",
+      "errorServer": "Failed to delete"
+    },
+    "toast": {
+      "uploadSuccess": "{filename} uploaded",
+      "listLoadError": "Failed to load documents"
+    },
+    "pagination": {
+      "prev": "Prev",
+      "next": "Next"
     }
   },
   "members": {

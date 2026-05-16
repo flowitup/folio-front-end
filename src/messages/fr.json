@@ -13,6 +13,7 @@
     "invoices": "Dépenses",
     "planning": "Planification",
     "notes": "Notes",
+    "documents": "Documents",
     "members": "Membres",
     "settings": "Paramètres"
   },
@@ -942,6 +943,75 @@
       "invalidTransition": "Transition de statut invalide.",
       "numberCollision": "Un document avec ce numéro existe déjà.",
       "generic": "Une erreur inattendue s'est produite."
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Plans, contrats, photos, factures — tout ce qui concerne le projet.",
+    "upload": {
+      "ctaPick": "Choisir des fichiers",
+      "dragHere": "Glissez les fichiers ici ou cliquez pour choisir",
+      "supportedTypes": "PDF, PNG, JPG, WebP, DOCX, XLSX, DWG, TXT — jusqu'à 25 Mo chacun",
+      "queued": "En attente",
+      "uploading": "Envoi en cours",
+      "done": "Envoyé",
+      "failed": "Ignorer",
+      "errorOversize": "Trop volumineux (max 25 Mo)",
+      "errorUnsupported": "Type de fichier non pris en charge",
+      "errorNetwork": "Erreur réseau — réessayez",
+      "errorRateLimited": "Trop d'envois — ralentissez",
+      "errorForbidden": "Action non autorisée",
+      "errorServer": "Échec de l'envoi"
+    },
+    "list": {
+      "empty": "Aucun document pour l'instant. Glissez des fichiers dans la zone de dépôt pour commencer.",
+      "formerMember": "(ancien membre)",
+      "columns": {
+        "file": "Fichier",
+        "type": "Type",
+        "size": "Taille",
+        "uploadedBy": "Déposé par",
+        "uploaded": "Déposé le",
+        "actions": "Actions"
+      },
+      "actions": {
+        "preview": "Aperçu",
+        "download": "Télécharger",
+        "delete": "Supprimer"
+      }
+    },
+    "kinds": {
+      "pdf": "PDF",
+      "image": "Image",
+      "spreadsheet": "Tableur",
+      "doc": "Document",
+      "cad": "CAO",
+      "text": "Texte",
+      "other": "Autre"
+    },
+    "filter": {
+      "all": "Tous",
+      "anyUploader": "N'importe qui",
+      "reset": "Réinitialiser"
+    },
+    "preview": {
+      "fallback": "Aperçu non disponible pour ce type de fichier. Téléchargez-le pour le consulter.",
+      "close": "Fermer",
+      "download": "Télécharger"
+    },
+    "delete": {
+      "title": "Supprimer le document ?",
+      "body": "Êtes-vous sûr de vouloir supprimer « {filename} » ? Cette action est irréversible depuis l'interface.",
+      "cancel": "Annuler",
+      "confirm": "Supprimer",
+      "confirming": "Suppression…",
+      "success": "Document supprimé",
+      "errorForbidden": "Seul l'auteur du dépôt ou un administrateur du projet peut supprimer ce document",
+      "errorServer": "Échec de la suppression"
+    },
+    "toast": {
+      "uploadSuccess": "{filename} envoyé",
+      "listLoadError": "Impossible de charger les documents"
     }
   },
   "members": {

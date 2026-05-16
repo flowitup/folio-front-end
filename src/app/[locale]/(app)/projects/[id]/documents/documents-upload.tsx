@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/config/env";
 import { getApiAccessToken, getCsrfToken } from "@/lib/api/http";
+import { refreshAccessTokenViaCookie } from "@/lib/api/refresh";
 import type { ProjectDocument } from "@/lib/api/project-documents";
 
 // ---- Constants ----
@@ -91,70 +92,112 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
     }, 3000);
   }
 
-  function uploadOne(file: File, jobId: string) {
-    const xhr = new XMLHttpRequest();
-    const url = `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents`;
-    xhr.open("POST", url);
+  // Send a single XHR upload with the given bearer token.
+  // Returns "retry_401" when the server responds 401 so the caller can refresh
+  // and call once more; returns void for all other outcomes (job already updated).
+  function sendXhr(
+    file: File,
+    jobId: string,
+    token: string,
+  ): Promise<"retry_401" | void> {
+    return new Promise((resolve) => {
+      const xhr = new XMLHttpRequest();
+      const url = `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents`;
+      xhr.open("POST", url);
 
-    // Auth: Bearer token (mirrors uploadAttachment in invoice-api.ts)
-    const token = getApiAccessToken();
-    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
 
-    // CSRF defense-in-depth for mutations
-    const csrf = getCsrfToken();
-    if (csrf) xhr.setRequestHeader("X-CSRF-TOKEN", csrf);
+      // CSRF defense-in-depth for mutations
+      const csrf = getCsrfToken();
+      if (csrf) xhr.setRequestHeader("X-CSRF-TOKEN", csrf);
 
-    // Ensure cookies are sent for same-origin session fallback
-    xhr.withCredentials = true;
+      // Ensure cookies are sent for same-origin session fallback
+      xhr.withCredentials = true;
 
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        updateJob(jobId, { status: "uploading", progress: e.loaded / e.total });
-      }
-    };
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          updateJob(jobId, { status: "uploading", progress: e.loaded / e.total });
+        }
+      };
 
-    xhr.onload = () => {
-      if (xhr.status === 201) {
-        let doc: ProjectDocument;
-        try {
-          doc = JSON.parse(xhr.responseText) as ProjectDocument;
-        } catch {
+      xhr.onload = () => {
+        if (xhr.status === 201) {
+          let doc: ProjectDocument;
+          try {
+            doc = JSON.parse(xhr.responseText) as ProjectDocument;
+          } catch {
+            updateJob(jobId, {
+              status: "failed",
+              error: { kind: "server", message: "Invalid response from server" },
+            });
+            resolve();
+            return;
+          }
+          updateJob(jobId, { status: "done", progress: 1, doc });
+          onUploaded(doc);
+          scheduleDoneCleanup(jobId);
+          resolve();
+        } else if (xhr.status === 401) {
+          // Signal caller to refresh + retry once
+          resolve("retry_401");
+        } else if (xhr.status === 413) {
+          updateJob(jobId, { status: "failed", error: { kind: "oversize" } });
+          resolve();
+        } else if (xhr.status === 415) {
+          updateJob(jobId, { status: "failed", error: { kind: "unsupported" } });
+          resolve();
+        } else if (xhr.status === 429) {
+          updateJob(jobId, { status: "failed", error: { kind: "rateLimited" } });
+          resolve();
+        } else if (xhr.status === 403) {
+          updateJob(jobId, { status: "failed", error: { kind: "forbidden" } });
+          resolve();
+        } else {
           updateJob(jobId, {
             status: "failed",
-            error: { kind: "server", message: "Invalid response from server" },
+            error: { kind: "server", message: `HTTP ${xhr.status}` },
           });
-          return;
+          resolve();
         }
-        updateJob(jobId, { status: "done", progress: 1, doc });
-        onUploaded(doc);
-        scheduleDoneCleanup(jobId);
-      } else if (xhr.status === 413) {
-        updateJob(jobId, { status: "failed", error: { kind: "oversize" } });
-      } else if (xhr.status === 415) {
-        updateJob(jobId, { status: "failed", error: { kind: "unsupported" } });
-      } else if (xhr.status === 429) {
-        updateJob(jobId, { status: "failed", error: { kind: "rateLimited" } });
-      } else if (xhr.status === 403 || xhr.status === 401) {
-        updateJob(jobId, { status: "failed", error: { kind: "forbidden" } });
+      };
+
+      xhr.onerror = () => {
+        updateJob(jobId, { status: "failed", error: { kind: "network" } });
+        resolve();
+      };
+
+      xhr.onabort = () => {
+        updateJob(jobId, { status: "failed", error: { kind: "network" } });
+        resolve();
+      };
+
+      const fd = new FormData();
+      fd.append("file", file);
+      xhr.send(fd);
+    });
+  }
+
+  async function uploadOne(file: File, jobId: string) {
+    // Bootstrap token: if no in-memory token (fresh page load), try refresh via
+    // cookie before sending. Mirrors the fix applied to the blob helper (H2).
+    let token = getApiAccessToken();
+    if (!token) token = await refreshAccessTokenViaCookie();
+    if (!token) {
+      updateJob(jobId, { status: "failed", error: { kind: "forbidden" } });
+      return;
+    }
+
+    const outcome = await sendXhr(file, jobId, token);
+
+    if (outcome === "retry_401") {
+      // Token expired mid-upload: refresh once and retry
+      const fresh = await refreshAccessTokenViaCookie();
+      if (fresh) {
+        await sendXhr(file, jobId, fresh);
       } else {
-        updateJob(jobId, {
-          status: "failed",
-          error: { kind: "server", message: `HTTP ${xhr.status}` },
-        });
+        updateJob(jobId, { status: "failed", error: { kind: "forbidden" } });
       }
-    };
-
-    xhr.onerror = () => {
-      updateJob(jobId, { status: "failed", error: { kind: "network" } });
-    };
-
-    xhr.onabort = () => {
-      updateJob(jobId, { status: "failed", error: { kind: "network" } });
-    };
-
-    const fd = new FormData();
-    fd.append("file", file);
-    xhr.send(fd);
+    }
   }
 
   function handleFiles(files: File[]) {
@@ -198,10 +241,11 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
 
     setJobs((prev) => ({ ...prev, ...newJobs }));
 
-    // Kick off uploads for all valid queued jobs
+    // Kick off uploads for all valid queued jobs (fire-and-forget; state
+    // updates happen inside uploadOne / sendXhr via updateJob)
     for (const [jobId, job] of Object.entries(newJobs)) {
       if (job.status === "queued") {
-        uploadOne(job.file, jobId);
+        void uploadOne(job.file, jobId);
       }
     }
   }

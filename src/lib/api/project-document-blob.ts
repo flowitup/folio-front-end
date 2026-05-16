@@ -9,30 +9,9 @@
  * to serve the file from an authenticated request.
  */
 
-import { getApiAccessToken, getCsrfToken, getRefreshCsrfToken, setApiAccessToken } from "@/lib/api/http";
+import { getApiAccessToken, getCsrfToken } from "@/lib/api/http";
+import { refreshAccessTokenViaCookie } from "@/lib/api/refresh";
 import { env } from "@/lib/config/env";
-
-async function refreshAccessTokenViaCookie(): Promise<string | null> {
-  try {
-    const csrfRefresh = getRefreshCsrfToken();
-    const headers: Record<string, string> = {};
-    if (csrfRefresh) headers["X-CSRF-TOKEN"] = csrfRefresh;
-    const res = await fetch(`${env.apiBaseUrl}/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
-      headers,
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data?.access_token) {
-      setApiAccessToken(data.access_token);
-      return data.access_token as string;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 // ---- Types ----
 

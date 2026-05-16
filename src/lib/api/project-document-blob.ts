@@ -9,8 +9,30 @@
  * to serve the file from an authenticated request.
  */
 
-import { getApiAccessToken, getCsrfToken } from "@/lib/api/http";
+import { getApiAccessToken, getCsrfToken, getRefreshCsrfToken, setApiAccessToken } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
+
+async function refreshAccessTokenViaCookie(): Promise<string | null> {
+  try {
+    const csrfRefresh = getRefreshCsrfToken();
+    const headers: Record<string, string> = {};
+    if (csrfRefresh) headers["X-CSRF-TOKEN"] = csrfRefresh;
+    const res = await fetch(`${env.apiBaseUrl}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data?.access_token) {
+      setApiAccessToken(data.access_token);
+      return data.access_token as string;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 // ---- Types ----
 
@@ -35,22 +57,41 @@ export async function fetchProjectDocumentBlob(
   docId: string,
   signal?: AbortSignal,
 ): Promise<DocumentBlob> {
-  const token = getApiAccessToken();
+  let token = getApiAccessToken();
+  // Bootstrap: if no in-memory token, try refresh via cookie. Mirrors http()'s
+  // 401-retry dance but pre-emptively so we don't waste a round trip on the
+  // download endpoint (which is server-streamed and would carry the file body).
+  if (!token) token = await refreshAccessTokenViaCookie();
   if (!token) throw new Error("not_authenticated");
 
   const csrf = getCsrfToken();
   const url = `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents/${encodeURIComponent(docId)}/download`;
 
-  const res = await fetch(url, {
+  const buildHeaders = (t: string) => ({
+    Authorization: `Bearer ${t}`,
+    // CSRF is not required for GET, but include if present for defense-in-depth
+    ...(csrf ? { "X-CSRF-TOKEN": csrf } : {}),
+  });
+
+  let res = await fetch(url, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      // CSRF is not required for GET, but include if present for defense-in-depth
-      ...(csrf ? { "X-CSRF-TOKEN": csrf } : {}),
-    },
+    headers: buildHeaders(token),
     credentials: "include",
     signal,
   });
+
+  // 401 → refresh once and retry. Matches http() wrapper semantics.
+  if (res.status === 401) {
+    const fresh = await refreshAccessTokenViaCookie();
+    if (fresh) {
+      res = await fetch(url, {
+        method: "GET",
+        headers: buildHeaders(fresh),
+        credentials: "include",
+        signal,
+      });
+    }
+  }
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");

@@ -20,7 +20,7 @@ import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { buildMonthGrid, toDateKey } from "@/lib/utils/calendar-month";
 import { CalendarCell } from "@/components/labor/calendar-cell";
-import type { LaborEntry } from "@/types/labor";
+import type { LaborEntry, Worker } from "@/types/labor";
 
 interface CalendarMonthGridProps {
   year: number;
@@ -31,6 +31,8 @@ interface CalendarMonthGridProps {
   /** BCP-47 locale tag. Defaults to the browser's. */
   locale?: string;
   className?: string;
+  /** Worker lookup for role-aware chip colors. See CalendarCell. */
+  workerMap?: Record<string, Worker>;
 }
 
 export function CalendarMonthGrid({
@@ -40,6 +42,7 @@ export function CalendarMonthGrid({
   onDayClick,
   locale,
   className,
+  workerMap,
 }: CalendarMonthGridProps) {
   const effectiveLocale = locale ?? (typeof navigator !== "undefined" ? navigator.language : "en-US");
 
@@ -102,6 +105,7 @@ export function CalendarMonthGrid({
               date={date}
               entries={dayEntries}
               onClick={(d) => d && onDayClick?.(d)}
+              workerMap={workerMap}
             />
           );
         })}

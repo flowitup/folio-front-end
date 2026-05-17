@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -18,6 +18,7 @@ import { EditAttendanceDialog } from "@/components/labor/edit-attendance-dialog"
 import { LaborSummary } from "@/components/labor/labor-summary";
 
 import type { Worker, LaborEntry, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
+import type { LaborRole } from "@/types/labor-role";
 import {
   fetchWorkers,
   createWorker,
@@ -29,6 +30,7 @@ import {
   fetchLaborSummary,
   fetchLaborMonthlySummary,
 } from "@/lib/api/labor";
+import { fetchLaborRolesAction } from "./actions";
 
 type TabType = "workers" | "attendance" | "summary";
 
@@ -68,6 +70,16 @@ export default function LaborPage() {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [showAddWorker, setShowAddWorker] = useState(false);
   const [editWorker, setEditWorker] = useState<Worker | null>(null);
+
+  // Roles state
+  const [roles, setRoles] = useState<LaborRole[]>([]);
+  const [palette, setPalette] = useState<string[]>([]);
+
+  // Worker lookup map for role-aware chip colors in calendar cells.
+  const workerMap = useMemo(
+    () => Object.fromEntries(workers.map((w) => [w.id, w])),
+    [workers],
+  );
 
   // Entries state
   const [entries, setEntries] = useState<LaborEntry[]>([]);
@@ -149,12 +161,22 @@ export default function LaborPage() {
     }
   }, [projectId, summaryMonth]);
 
-  // Initial load
+  // Initial load — workers + roles in parallel.
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
       setError(null);
-      await loadWorkers();
+      await Promise.all([
+        loadWorkers(),
+        fetchLaborRolesAction().then((result) => {
+          if (result.success) {
+            setRoles(result.data.roles);
+            setPalette(result.data.palette);
+          }
+          // Non-fatal: roles are enhancement only; missing roles doesn't
+          // prevent the page from loading.
+        }),
+      ]);
       setIsLoading(false);
     };
     load();
@@ -310,6 +332,7 @@ export default function LaborPage() {
               onDelete={handleDeleteEntry}
               onLogDay={canManageLabor ? handleOpenLogDay : undefined}
               onEditEntry={canManageLabor ? setEditEntry : undefined}
+              workerMap={workerMap}
             />
           ) : (
             <AttendanceTable
@@ -344,6 +367,9 @@ export default function LaborPage() {
         open={showAddWorker}
         onOpenChange={setShowAddWorker}
         onSave={handleCreateWorker}
+        roles={roles}
+        palette={palette}
+        onRoleCreated={(role) => setRoles((prev) => [...prev, role])}
       />
 
       <AddWorkerDialog
@@ -351,6 +377,9 @@ export default function LaborPage() {
         onOpenChange={(open) => !open && setEditWorker(null)}
         onSave={handleUpdateWorker}
         editWorker={editWorker}
+        roles={roles}
+        palette={palette}
+        onRoleCreated={(role) => setRoles((prev) => [...prev, role])}
       />
 
       <LogDayDialog

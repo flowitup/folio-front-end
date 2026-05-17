@@ -12,12 +12,13 @@ import type { Invoice, InvoiceType } from "@/types/invoice";
 import { fetchInvoices, deleteInvoice } from "@/lib/api/invoice-api";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
+import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 
 type TabType = "all" | InvoiceType;
 
 // Number of <th> columns in the invoice table — used for the inline detail
 // row's colSpan so it spans the full width. Update if columns change.
-const INVOICE_TABLE_COLUMN_COUNT = 7;
+const INVOICE_TABLE_COLUMN_COUNT = 8;
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   client: "stamp",
@@ -27,6 +28,7 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
 
 export default function InvoicesPage() {
   const t = useTranslations("invoices");
+  const tBuiltins = useTranslations("paymentMethods.builtins");
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -231,6 +233,7 @@ export default function InvoicesPage() {
                     <th>{t("type")}</th>
                     <th>{t("issueDate")}</th>
                     <th>{t("recipient")}</th>
+                    <th>{t("paymentMethod.label")}</th>
                     <th style={{ textAlign: "right" }}>{t("totalAmount")}</th>
                     <th style={{ textAlign: "right" }}>{t("actions")}</th>
                   </tr>
@@ -269,6 +272,15 @@ export default function InvoicesPage() {
                             {invoice.issue_date}
                           </td>
                           <td>{invoice.recipient_name}</td>
+                          <td>
+                            {invoice.payment_method_label?.trim() ? (
+                              <span className="stamp">
+                                {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}
+                              </span>
+                            ) : (
+                              <span style={{ color: "var(--muted)" }}>—</span>
+                            )}
+                          </td>
                           <td className="num font-medium" style={{ textAlign: "right" }}>
                             {invoice.total_amount.toFixed(2)}
                           </td>

@@ -46,6 +46,16 @@ function formatBonusDays(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
+/** Format a fractional priced-day count compactly: "5" for 5.0, "5.5"
+ *  for 5.5, "5.25" for 5.25. Strips trailing zeros after the dot so a
+ *  whole-day total doesn't show a redundant decimal. */
+function formatDays(value: number): string {
+  if (!Number.isFinite(value)) return "0";
+  if (Number.isInteger(value)) return String(value);
+  // Render with up to 2 fraction digits, then trim trailing zeros.
+  return value.toFixed(2).replace(/\.?0+$/, "");
+}
+
 // Folio warm worker-accent palette, lifted from the Labor Summary
 // design. Used to tint the per-worker avatar + the inline MiniBar so a
 // reader can scan "who carried the cost" without reading the numbers.
@@ -244,7 +254,7 @@ export function LaborSummary({
         <div className="folio-card p-5">
           <div className="label-cap">{t("workerDays")}</div>
           <div className="font-display num mt-2 text-[28px] font-medium leading-none">
-            {totalDays}
+            {formatDays(totalDays)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("acrossWorkers", { n: workerCount })}
@@ -455,7 +465,7 @@ export function LaborSummary({
                               <span
                                 key={w.worker_id}
                                 className="avatar"
-                                title={`${w.worker_name} · ${w.days_worked}d · ${formatEUR(w.total_cost)}`}
+                                title={`${w.worker_name} · ${formatDays(w.days_worked)}d · ${formatEUR(w.total_cost)}`}
                                 style={{
                                   background: workerColor(w.worker_id),
                                   width: 22,
@@ -559,7 +569,7 @@ export function LaborSummary({
                               className="num text-[12.5px] tabular-nums"
                               style={{ textAlign: "right", border: "none", paddingTop: 6, paddingBottom: 6 }}
                             >
-                              {w.days_worked}
+                              {formatDays(w.days_worked)}
                             </td>
                             <td style={{ border: "none", paddingTop: 6, paddingBottom: 6 }}>
                               <MiniBar
@@ -591,7 +601,7 @@ export function LaborSummary({
                       {t("workersBadge", { n: distinctWorkerCount })}
                     </td>
                     <td className="num font-medium" style={{ textAlign: "right" }}>
-                      {totalDays}
+                      {formatDays(totalDays)}
                     </td>
                     <td />
                     <td
@@ -639,7 +649,7 @@ export function LaborSummary({
                       </td>
                       <td style={{ color: "var(--muted)" }}>—</td>
                       <td className="num" style={{ textAlign: "right" }}>
-                        {row.days_worked}
+                        {formatDays(row.days_worked)}
                       </td>
                       <td className="num font-medium" style={{ textAlign: "right" }}>
                         {formatEUR(row.total_cost)}
@@ -666,7 +676,7 @@ export function LaborSummary({
                     {t("grandTotal")}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right" }}>
-                    {summary.total_days}
+                    {formatDays(summary.total_days)}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {formatEUR(summary.total_cost)}

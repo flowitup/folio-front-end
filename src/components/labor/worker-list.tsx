@@ -219,7 +219,7 @@ export function WorkerList({
               {t("confirmDeactivate")}
             </AlertDialogTitle>
             <p className="text-sm text-muted-foreground">
-              {confirmDeactivate?.name}
+              {confirmDeactivate?.person_name ?? confirmDeactivate?.name}
             </p>
           </div>
           <AlertDialogFooter className="sm:justify-center gap-2">

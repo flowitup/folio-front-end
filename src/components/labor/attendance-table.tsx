@@ -98,7 +98,7 @@ export function AttendanceTable({
               <SelectItem value="all">{t("filterWorker")}</SelectItem>
               {workers.map((w) => (
                 <SelectItem key={w.id} value={w.id}>
-                  {w.name}
+                  {w.person_name ?? w.name}
                 </SelectItem>
               ))}
             </SelectContent>

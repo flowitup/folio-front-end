@@ -115,7 +115,7 @@ export function LaborExportDialog({
         <DialogHeader>
           <DialogTitle>
             {worker
-              ? t("workerDialogTitle", { name: worker.name })
+              ? t("workerDialogTitle", { name: worker.person_name ?? worker.name })
               : t("dialogTitle")}
           </DialogTitle>
           {worker && (

@@ -128,7 +128,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
         </DialogHeader>
 
         {/* Body — fills remaining grid space */}
-        <div className="min-h-0 overflow-hidden">
+        <div className="min-h-0 overflow-auto">
           {loading && (
             <div className="flex flex-col items-center justify-center gap-3 h-full text-center">
               <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden />

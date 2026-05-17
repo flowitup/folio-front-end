@@ -13,7 +13,7 @@ vi.mock("next-intl", () => ({
     // Simple mock translations — return key as fallback
     const translations: Record<string, string> = {
       "invoices.type": "Type",
-      "invoices.types.client": "Client",
+      "invoices.types.released_funds": "Released Funds",
       "invoices.types.labor": "Labor",
       "invoices.types.supplier": "Supplier",
       "invoices.issueDate": "Issue Date",
@@ -415,11 +415,11 @@ describe("InvoiceForm", () => {
       expect(descriptionInputs[0]).toHaveValue("Initial Item");
     });
 
-    it("defaults to client type when no initial values", () => {
+    it("defaults to released_funds type when no initial values", () => {
       render(<InvoiceForm onSubmit={mockOnSubmit} />);
 
       const typeSelect = screen.getByRole("combobox");
-      expect(typeSelect).toHaveValue("client");
+      expect(typeSelect).toHaveValue("released_funds");
     });
   });
 });

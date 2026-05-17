@@ -304,7 +304,7 @@
     "invoiceNumber": "Facture #",
     "type": "Type",
     "types": {
-      "client": "Client",
+      "released_funds": "Fond débloqué",
       "labor": "Main-d'œuvre",
       "supplier": "Fournisseur"
     },
@@ -359,7 +359,7 @@
       "to": "Mois de fin",
       "typeFilter": "Type",
       "typeAll": "Tous les types",
-      "typeClient": "Client",
+      "typeReleasedFunds": "Fond débloqué",
       "typeLabor": "Main-d'œuvre",
       "typeSupplier": "Fournisseur",
       "format": "Format",

@@ -13,7 +13,7 @@ import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
 
 const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
-  client: "bg-blue-100 text-blue-700",
+  released_funds: "bg-blue-100 text-blue-700",
   labor: "bg-orange-100 text-orange-700",
   supplier: "bg-green-100 text-green-700",
 };

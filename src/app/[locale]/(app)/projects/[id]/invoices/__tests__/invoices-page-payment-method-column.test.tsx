@@ -3,11 +3,10 @@
  *
  * Covers:
  * - Column header "paymentMethod.label" renders in the table
- * - Cell renders a tag for invoices with a payment_method_label
- * - Cell renders an em-dash for invoices with payment_method_label = null
  * - Built-in "Cash" snapshot is routed through localizeMethodLabel and
  *   resolves to the "cash" key under the paymentMethods.builtins namespace
  * - Custom user labels pass through unchanged
+ * - Em-dash renders for null / empty / whitespace-only payment_method_label
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -17,10 +16,18 @@ import type { Invoice } from "@/types/invoice";
 // ── Module mocks (must be hoisted before dynamic imports) ─────────────────────
 
 vi.mock("next-intl", () => ({
-  // Returns the key as-is, but prefixed with the namespace so we can assert
-  // which translator scope produced a given string in the DOM.
-  useTranslations: (namespace?: string) => (key: string) =>
-    namespace ? `${namespace}.${key}` : key,
+  // Returns the key prefixed with its namespace so DOM assertions can
+  // verify which translator scope produced a given string. Interpolates
+  // {param} placeholders to mirror the sibling test's mock contract.
+  useTranslations: (namespace?: string) =>
+    (key: string, params?: Record<string, unknown>) => {
+      const full = namespace ? `${namespace}.${key}` : key;
+      if (!params) return full;
+      return Object.entries(params).reduce(
+        (acc, [k, v]) => acc.replace(`{${k}}`, String(v)),
+        full,
+      );
+    },
   useLocale: () => "en",
 }));
 
@@ -149,14 +156,19 @@ describe("InvoicesPage — payment method column", () => {
     );
   });
 
-  it("renders an em-dash when payment_method_label is null", async () => {
-    setupMocks([makeInvoice({ payment_method_label: null })]);
+  it.each([
+    ["null", null],
+    ["empty string", ""],
+    ["whitespace only", "   "],
+  ])("renders an em-dash when payment_method_label is %s", async (_name, value) => {
+    setupMocks([makeInvoice({ payment_method_label: value })]);
     render(<InvoicesPage />);
 
     await waitFor(
       () => {
-        // The cell renders "—" inside a muted span. Scope to the table body
-        // so we don't catch em-dashes that might appear elsewhere.
+        // The data row is rendered as <tr role="button">, so scope by that
+        // role rather than "row" — the explicit role overrides the implicit
+        // <tr> row role. Keeps us from matching em-dashes elsewhere on the page.
         const dashes = screen
           .getAllByRole("button")
           .flatMap((row) => within(row).queryAllByText("—"));

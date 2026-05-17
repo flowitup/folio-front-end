@@ -273,7 +273,7 @@ export default function InvoicesPage() {
                           </td>
                           <td>{invoice.recipient_name}</td>
                           <td>
-                            {invoice.payment_method_label ? (
+                            {invoice.payment_method_label?.trim() ? (
                               <span className="stamp">
                                 {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}
                               </span>

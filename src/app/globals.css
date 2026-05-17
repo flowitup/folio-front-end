@@ -282,6 +282,36 @@ body {
     color: var(--muted-2);
   }
 
+  /* Folio month picker — paper-toned styled trigger that overlays a
+     native <input type="month"> so the OS calendar still opens. */
+  .folio-month-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px 8px 12px;
+    background: var(--paper-2);
+    border: 1px solid var(--line-2);
+    border-radius: 10px;
+    color: var(--ink-2);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+  .folio-month-picker:hover {
+    background: var(--card-paper);
+    border-color: #c9bfa9;
+  }
+  .folio-month-picker:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+    border-color: var(--ink);
+  }
+  .folio-month-picker > svg:first-child {
+    color: var(--accent-ink);
+  }
+
   /* Nav links */
   .nav-link {
     display: flex;

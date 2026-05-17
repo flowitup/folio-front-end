@@ -446,9 +446,9 @@ describe("LaborSummary — month filter (opt-in)", () => {
       <LaborSummary {...defaultProps} summary={makeSummary()} month="" />
     );
     // The KPI card subtitle uses periodLabel which falls back to filterMonthAll
-    // i18n key when month === "". The title also uses summaryAllHistoryTitle,
-    // so the all-history fallback key must be in the document.
-    expect(screen.getByText("filterMonthAll")).toBeDefined();
+    // i18n key when month === "". The Folio month-picker trigger also shows
+    // the same all-history label, so the key may appear more than once.
+    expect(screen.getAllByText("filterMonthAll").length).toBeGreaterThanOrEqual(1);
   });
 });
 

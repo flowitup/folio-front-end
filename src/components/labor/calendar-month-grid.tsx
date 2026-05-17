@@ -96,7 +96,7 @@ export function CalendarMonthGrid({
       </div>
 
       {/* Cell grid */}
-      <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-7 gap-1.5">
+      <div className="grid grid-cols-7 gap-1.5 auto-rows-auto lg:min-h-0 lg:flex-1 lg:auto-rows-fr">
         {cells.map((date, i) => {
           const dayEntries = date ? entriesByDay.get(toDateKey(date)) ?? [] : [];
           return (

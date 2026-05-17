@@ -97,7 +97,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className="hidden w-[248px] flex-col border-r lg:flex"
+      className="hidden w-[248px] border-r lg:flex lg:flex-col"
       style={{ background: "var(--paper)", borderColor: "var(--line)" }}
     >
       {/* Brand */}

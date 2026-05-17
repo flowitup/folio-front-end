@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { Sun, Moon, Plus, Globe, LogOut } from "lucide-react";
+import { Sun, Moon, Plus, Globe, LogOut, ChevronDown, Check } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
@@ -69,8 +69,9 @@ export function Topbar() {
   const tCommon = useTranslations("common");
   const tTopbar = useTranslations();
   const { user, logout, isLoading } = useAuth();
-  const { selectedProject } = useProject();
+  const { projects, selectedProjectId, selectedProject, selectProject } = useProject();
   const { resolvedTheme, setTheme } = useTheme();
+  const tProjects = useTranslations("projects");
 
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
@@ -93,6 +94,14 @@ export function Topbar() {
 
   const projectName = selectedProject?.name;
   const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
+
+  const handleSwitchProject = (projectId: string) => {
+    selectProject(projectId);
+    const projectSubrouteMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/(.+)$/);
+    if (projectSubrouteMatch) {
+      router.push(`/${locale}/projects/${projectId}/${projectSubrouteMatch[1]}`);
+    }
+  };
 
   // Each topbar action button hands off to the page that owns the create flow,
   // signalling intent via a query param the page consumes (mirrors the
@@ -143,6 +152,38 @@ export function Topbar() {
           >
             {subtitle}
           </p>
+        )}
+        {projects.length > 0 && (
+          <div className="mt-2 lg:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[12px] font-medium"
+                  style={{ borderColor: "var(--line)", color: "var(--ink-2)" }}
+                >
+                  <span className="max-w-[160px] truncate">
+                    {projectName ?? tProjects("selectProject")}
+                  </span>
+                  <ChevronDown size={12} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[220px]">
+                {projects.map((p) => (
+                  <DropdownMenuItem
+                    key={p.id}
+                    onSelect={() => handleSwitchProject(p.id)}
+                    className="flex items-center gap-2"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-[13px]">{p.name}</span>
+                    {p.id === selectedProjectId && (
+                      <Check size={14} className="flex-shrink-0" style={{ color: "var(--accent)" }} />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </div>
 

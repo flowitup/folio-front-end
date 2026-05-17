@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Download, Loader2 } from "lucide-react";
 import {
@@ -16,6 +16,10 @@ import {
   fetchProjectDocumentBlob,
   downloadProjectDocument,
 } from "@/lib/api/project-document-blob";
+import {
+  ResizableDialogHandles,
+  type DialogBounds,
+} from "./resizable-dialog-handles";
 
 // ---- Props ----
 
@@ -35,6 +39,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [bounds, setBounds] = useState<DialogBounds | null>(null);
 
   // Keep a ref to the revoke function so we can call it on cleanup
   const revokeRef = useRef<(() => void) | null>(null);
@@ -48,6 +53,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
     setBlobUrl(null);
     setContentType(null);
     setError(null);
+    setBounds(null);
 
     if (!doc) return;
 
@@ -103,12 +109,18 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
   const showPdf = blobUrl && doc?.kind === "pdf";
   const showImage = blobUrl && doc?.kind === "image";
 
+  const resizeStyle: CSSProperties | undefined = bounds
+    ? { top: bounds.y, left: bounds.x, width: bounds.w, height: bounds.h, transform: "none", maxWidth: "none" }
+    : undefined;
+
   return (
     <Dialog open={doc !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="max-w-4xl w-full h-[85vh] max-h-[95vh] grid-rows-[auto_1fr_auto] resize overflow-hidden"
+        className="max-w-4xl w-full h-[85vh] max-h-[95vh] grid-rows-[auto_1fr_auto] overflow-hidden"
+        style={resizeStyle}
         showCloseButton
       >
+        <ResizableDialogHandles onResize={setBounds} />
         <DialogHeader>
           <DialogTitle className="truncate pr-8">
             {doc?.filename ?? ""}

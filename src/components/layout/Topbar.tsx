@@ -159,22 +159,34 @@ export function Topbar() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[12px] font-medium"
-                  style={{ borderColor: "var(--line)", color: "var(--ink-2)" }}
+                  className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-[13px] font-semibold shadow-sm"
+                  style={{ background: "var(--surface-2)", color: "var(--ink)", borderColor: "var(--line)" }}
                 >
-                  <span className="max-w-[160px] truncate">
+                  <span
+                    className="flex h-5 w-5 items-center justify-center rounded-md text-[10px] font-bold text-white"
+                    style={{ background: "var(--accent)" }}
+                  >
+                    {(projectName ?? "P").charAt(0).toUpperCase()}
+                  </span>
+                  <span className="max-w-[140px] truncate">
                     {projectName ?? tProjects("selectProject")}
                   </span>
-                  <ChevronDown size={12} />
+                  <ChevronDown size={14} style={{ color: "var(--muted)" }} />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[220px]">
+              <DropdownMenuContent align="start" className="w-[240px]">
                 {projects.map((p) => (
                   <DropdownMenuItem
                     key={p.id}
                     onSelect={() => handleSwitchProject(p.id)}
                     className="flex items-center gap-2"
                   >
+                    <span
+                      className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white"
+                      style={{ background: p.id === selectedProjectId ? "var(--accent)" : "var(--muted)" }}
+                    >
+                      {p.name.charAt(0).toUpperCase()}
+                    </span>
                     <span className="min-w-0 flex-1 truncate text-[13px]">{p.name}</span>
                     {p.id === selectedProjectId && (
                       <Check size={14} className="flex-shrink-0" style={{ color: "var(--accent)" }} />

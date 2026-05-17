@@ -239,10 +239,10 @@ export default function LaborPage() {
   };
 
   return (
-    <div className="fade-up flex min-h-full flex-col gap-6 px-8 pb-12">
+    <div className="fade-up flex min-h-full flex-col gap-4 px-4 pb-12 lg:gap-6 lg:px-8">
       {/* Segmented tabs */}
-      <div className="flex items-center justify-between">
-        <div className="seg">
+      <div className="flex items-center">
+        <div className="seg w-full sm:w-auto">
           {(["summary", "attendance", "workers"] as const).map((tab) => (
             <button
               key={tab}
@@ -284,16 +284,16 @@ export default function LaborPage() {
         <div
           className={
             attendanceView === "calendar"
-              ? "flex min-h-0 flex-1 flex-col gap-4"
+              ? "flex flex-col gap-4 lg:min-h-0 lg:flex-1"
               : "flex flex-col gap-4"
           }
         >
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <ViewToggle value={attendanceView} onChange={setAttendanceView} />
             {canManageLabor && (
               <Button onClick={() => handleOpenLogDay()}>
                 <Plus className="h-4 w-4" />
-                {t("logDay")}
+                <span className="hidden sm:inline">{t("logDay")}</span>
               </Button>
             )}
           </div>

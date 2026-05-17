@@ -154,7 +154,7 @@ export function AttendanceCalendar({
       </div>
 
       <CalendarMonthGrid
-        className="min-h-0 flex-1"
+        className="lg:min-h-0 lg:flex-1"
         year={cursor.getFullYear()}
         monthIdx={cursor.getMonth()}
         entries={filteredEntries}

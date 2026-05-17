@@ -478,7 +478,21 @@
     "summaryDrillDown": "Nhấn để xem chi tiết theo công nhân",
     "summaryMonthPickerAll": "Tất cả tháng",
     "workersBadge": "{n} công nhân",
-    "role": "Vai trò",
+    "role": {
+      "label": "Vai trò",
+      "selectRole": "Chọn vai trò",
+      "noRole": "Không có vai trò",
+      "createRole": "Tạo vai trò",
+      "editRole": "Sửa vai trò",
+      "deleteRole": "Xóa vai trò",
+      "roleName": "Tên vai trò",
+      "roleColor": "Màu sắc",
+      "confirmDelete": "Xóa vai trò này? Các thợ được gán sẽ mất vai trò.",
+      "duplicateName": "Vai trò với tên này đã tồn tại.",
+      "created": "Đã tạo vai trò.",
+      "updated": "Đã cập nhật vai trò.",
+      "deleted": "Đã xóa vai trò."
+    },
     "shift": {
       "none": "(không có ca)"
     },

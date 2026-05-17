@@ -119,10 +119,10 @@ export function Topbar() {
   const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
 
   return (
-    <header className="flex items-start justify-between gap-6 px-8 pb-4 pt-6">
+    <header className="flex items-start justify-between gap-4 px-4 pb-3 pt-4 lg:gap-6 lg:px-8 lg:pb-4 lg:pt-6">
       <div className="min-w-0 flex-1">
         <div
-          className="mb-1 flex items-center gap-2 text-[12px]"
+          className="mb-1 hidden items-center gap-2 text-[12px] lg:flex"
           style={{ color: "var(--muted)" }}
         >
           {projectName && (
@@ -133,12 +133,12 @@ export function Topbar() {
           )}
           <span style={{ color: "var(--ink-2)" }}>{title}</span>
         </div>
-        <h1 className="font-display text-[34px] font-medium leading-[1.05] tracking-tight">
+        <h1 className="font-display text-2xl font-medium leading-[1.05] tracking-tight lg:text-[34px]">
           {title}
         </h1>
         {subtitle && (
           <p
-            className="mt-1.5 text-[13.5px]"
+            className="mt-1 hidden text-[13.5px] lg:block"
             style={{ color: "var(--muted)", maxWidth: 540 }}
           >
             {subtitle}
@@ -146,7 +146,7 @@ export function Topbar() {
         )}
       </div>
 
-      <div className="flex flex-shrink-0 items-center gap-2">
+      <div className="flex flex-shrink-0 items-center gap-1 lg:gap-2">
         <NotificationsBell />
         <button
           type="button"
@@ -157,11 +157,11 @@ export function Topbar() {
           {resolvedTheme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
         </button>
 
-        <div className="mx-1 h-6 w-px" style={{ background: "var(--line-2)" }} />
+        <div className="mx-1 hidden h-6 w-px lg:block" style={{ background: "var(--line-2)" }} />
 
         {actionLabel && (
           <button type="button" className="btn btn-primary" onClick={handleAction}>
-            <Plus size={14} /> {actionLabel}
+            <Plus size={14} /> <span className="hidden lg:inline">{actionLabel}</span>
           </button>
         )}
 

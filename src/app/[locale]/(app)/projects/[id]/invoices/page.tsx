@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 import { fetchInvoices, deleteInvoice } from "@/lib/api/invoice-api";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
+import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 
@@ -126,7 +127,7 @@ export default function InvoicesPage() {
   const overdueTotal = overdueInvoices.reduce((s, i) => s + i.total_amount, 0);
 
   return (
-    <div className="fade-up space-y-6 px-8 pb-12">
+    <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
       {/* KPI Row */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="folio-card p-5">
@@ -176,7 +177,7 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="seg">
           {tabs.map((tab) => (
             <button
@@ -215,15 +216,47 @@ export default function InvoicesPage() {
       )}
 
       {!isLoading && (
-        <div className="folio-card overflow-hidden">
-          {invoices.length === 0 ? (
+        <>
+        {invoices.length === 0 ? (
+          <div className="folio-card overflow-hidden">
             <div
               className="flex items-center justify-center py-12 text-[13px]"
               style={{ color: "var(--muted)" }}
             >
               {t("noInvoices")}
             </div>
-          ) : (
+          </div>
+        ) : (
+          <>
+          {/* Mobile card list */}
+          <div className="space-y-3 lg:hidden">
+            {invoices.map((invoice) => {
+              const isOpen = selectedInvoiceId === invoice.id;
+              return (
+                <InvoiceMobileCard
+                  key={invoice.id}
+                  invoice={invoice}
+                  isOpen={isOpen}
+                  onToggle={() => toggleInvoice(invoice.id)}
+                  formatAmount={formatEUR}
+                >
+                  <InvoiceDetailRow
+                    projectId={projectId}
+                    invoiceId={invoice.id}
+                    canManage={canManageInvoices}
+                    colSpan={1}
+                    regionId={`invoice-detail-mobile-${invoice.id}`}
+                    onMutated={loadInvoices}
+                    onCollapse={closeInvoice}
+                    asCard
+                  />
+                </InvoiceMobileCard>
+              );
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="folio-card hidden overflow-hidden lg:block">
             <div className="overflow-x-auto">
               <table className="ledger">
                 <thead>
@@ -320,8 +353,10 @@ export default function InvoicesPage() {
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </div>
+          </>
+        )}
+        </>
       )}
     </div>
   );

@@ -79,27 +79,32 @@ export function SettingsClient({ roles, projects }: Props) {
   };
 
   return (
-    <div className="fade-up grid grid-cols-12 gap-8 px-8 pb-12">
+    <div className="fade-up grid grid-cols-12 gap-5 px-4 pb-12 lg:gap-8 lg:px-8">
       {/* Anchor nav */}
       <aside className="col-span-12 lg:col-span-3">
-        <nav className="space-y-0.5 sticky top-4">
-          {SECTION_KEYS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setActive(key)}
-              className={`nav-link w-full ${active === key ? "active" : ""}`}
-              style={{ textAlign: "left" }}
-            >
-              <span className="font-medium">
-                {key === "users"
-                  ? t("users.title")
-                  : key === "my-companies"
-                    ? t("myCompanies.title")
-                    : t(key)}
-              </span>
-            </button>
-          ))}
+        <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-3 lg:mx-0 lg:flex-col lg:gap-0 lg:space-y-0.5 lg:overflow-visible lg:px-0 lg:pb-0 lg:sticky lg:top-4">
+          {SECTION_KEYS.map((key) => {
+            const label =
+              key === "users"
+                ? t("users.title")
+                : key === "my-companies"
+                  ? t("myCompanies.title")
+                  : t(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActive(key)}
+                className={`flex-shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors lg:w-full lg:rounded-lg lg:border-transparent lg:text-left ${
+                  active === key
+                    ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] lg:border-transparent lg:bg-[var(--paper-2)] lg:text-[var(--ink)]"
+                    : "border-[var(--line)] text-[var(--muted)] hover:text-[var(--ink)] lg:border-transparent"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </nav>
       </aside>
 

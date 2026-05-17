@@ -184,9 +184,9 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="fade-up px-8 pb-12">
+    <div className="fade-up px-4 pb-12 lg:px-8">
       {/* Filter row */}
-      <div className="mb-5 flex items-center justify-between gap-4">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="seg">
           {(["all", "active"] as const).map((tab) => (
             <button
@@ -207,11 +207,11 @@ export default function ProjectsPage() {
               style={{ position: "absolute", left: 10, top: 11, color: "var(--muted)" }}
             />
             <input
-              className="folio-input num"
+              className="folio-input num w-full sm:w-60"
               placeholder={t("searchProjects")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: 30, width: 240 }}
+              style={{ paddingLeft: 30 }}
             />
           </div>
         </div>
@@ -257,10 +257,11 @@ export default function ProjectsPage() {
                 }`}
               >
                 <div
-                  className="grid"
-                  style={{
-                    gridTemplateColumns: isFeatured ? "1.2fr 2fr" : "1fr 1.4fr",
-                  }}
+                  className={`grid grid-cols-1 ${
+                    isFeatured
+                      ? "sm:grid-cols-[1.2fr_2fr]"
+                      : "sm:grid-cols-[1fr_1.4fr]"
+                  }`}
                 >
                   {/* Cover */}
                   <button

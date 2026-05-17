@@ -111,7 +111,7 @@ export default function DashboardPage() {
   const pctSpent = totalSpent / totalBudget;
 
   return (
-    <div className="fade-up space-y-6 px-8 pb-12">
+    <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
       {/* Hero panel */}
       <section className="folio-card relative overflow-hidden">
         <div className="grid grid-cols-12">
@@ -245,13 +245,13 @@ export default function DashboardPage() {
             {t("viewGantt")} <ArrowUpRight size={12} />
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-7">
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:grid lg:grid-cols-7 lg:overflow-visible lg:px-0">
           {PHASES.map((p, i) => {
             const Ic = p.icon;
             return (
               <div
                 key={p.key}
-                className={`phase-step !flex-col !items-start ${p.done ? "done" : ""} ${
+                className={`phase-step !flex-col !items-start min-w-[130px] flex-shrink-0 lg:min-w-0 lg:flex-shrink ${p.done ? "done" : ""} ${
                   p.current ? "current" : ""
                 }`}
                 style={{ minHeight: 92 }}

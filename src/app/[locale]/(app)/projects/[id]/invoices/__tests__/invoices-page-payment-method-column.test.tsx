@@ -55,6 +55,12 @@ vi.mock("@/components/invoices/invoice-detail-row", () => ({
   InvoiceDetailRow: () => <div data-testid="invoice-detail-row" />,
 }));
 
+vi.mock("@/components/invoices/invoice-mobile-card", () => ({
+  InvoiceMobileCard: ({ children }: { children?: React.ReactNode }) => (
+    <div data-testid="invoice-mobile-card">{children}</div>
+  ),
+}));
+
 // ── Imports after mocks ───────────────────────────────────────────────────────
 
 import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";

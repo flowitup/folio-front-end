@@ -20,6 +20,8 @@ interface InvoiceDetailRowProps {
   onMutated?: () => void;
   /** Called when the row should collapse (after delete). */
   onCollapse?: () => void;
+  /** Render as a plain div instead of a table row (for mobile card layout). */
+  asCard?: boolean;
 }
 
 /**
@@ -35,6 +37,7 @@ export function InvoiceDetailRow({
   regionId,
   onMutated,
   onCollapse,
+  asCard,
 }: InvoiceDetailRowProps) {
   const locale = useLocale();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -68,38 +71,45 @@ export function InvoiceDetailRow({
     return () => { cancelled = true; };
   }, [projectId, invoiceId]);
 
+  const content = (
+    <div
+      className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+        open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+      }`}
+    >
+      <div className="overflow-hidden">
+        <div className={asCard ? "" : "p-6 border-l-2 border-primary"}>
+          {!invoice && !error && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          {error && (
+            <div className="py-4 text-sm text-destructive">{error}</div>
+          )}
+          {invoice && (
+            <InvoiceDetailContent
+              invoice={invoice}
+              canManage={canManage}
+              companyId={companyId}
+              onUpdated={(u) => { setInvoice(u); onMutated?.(); }}
+              onDeleted={() => { onMutated?.(); onCollapse?.(); }}
+              printUrl={`/${locale}/projects/${projectId}/invoices/${invoice.id}/print`}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (asCard) {
+    return <div id={regionId} role="region">{content}</div>;
+  }
+
   return (
     <tr className="border-b last:border-0 bg-muted/10" id={regionId} role="region">
       <td colSpan={colSpan} className="p-0">
-        {/* CSS-only slide-down via grid-rows transition (no JS height measurement). */}
-        <div
-          className={`grid transition-[grid-template-rows] duration-300 ease-out ${
-            open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-          }`}
-        >
-          <div className="overflow-hidden">
-            <div className="p-6 border-l-2 border-primary">
-              {!invoice && !error && (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              )}
-              {error && (
-                <div className="py-4 text-sm text-destructive">{error}</div>
-              )}
-              {invoice && (
-                <InvoiceDetailContent
-                  invoice={invoice}
-                  canManage={canManage}
-                  companyId={companyId}
-                  onUpdated={(u) => { setInvoice(u); onMutated?.(); }}
-                  onDeleted={() => { onMutated?.(); onCollapse?.(); }}
-                  printUrl={`/${locale}/projects/${projectId}/invoices/${invoice.id}/print`}
-                />
-              )}
-            </div>
-          </div>
-        </div>
+        {content}
       </td>
     </tr>
   );

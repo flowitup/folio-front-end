@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { ProjectProvider } from "@/context/ProjectContext";
 
 export default async function AppLayout({
@@ -31,8 +32,9 @@ export default async function AppLayout({
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Topbar />
-          <main className="scroll-area flex-1">{children}</main>
+          <main className="scroll-area flex-1 pb-16 lg:pb-0">{children}</main>
         </div>
+        <MobileBottomNav />
       </div>
     </ProjectProvider>
   );

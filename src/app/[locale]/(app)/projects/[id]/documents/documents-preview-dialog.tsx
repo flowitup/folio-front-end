@@ -105,24 +105,27 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
 
   return (
     <Dialog open={doc !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl w-full" showCloseButton>
+      <DialogContent
+        className="max-w-4xl w-full h-[85vh] max-h-[95vh] grid-rows-[auto_1fr_auto] resize overflow-hidden"
+        showCloseButton
+      >
         <DialogHeader>
           <DialogTitle className="truncate pr-8">
             {doc?.filename ?? ""}
           </DialogTitle>
         </DialogHeader>
 
-        {/* Body */}
-        <div className="min-h-[200px]">
+        {/* Body — fills remaining grid space */}
+        <div className="min-h-0 overflow-hidden">
           {loading && (
-            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <div className="flex flex-col items-center justify-center gap-3 h-full text-center">
               <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden />
               <p className="text-sm text-muted-foreground">{doc?.filename ?? ""}</p>
             </div>
           )}
 
           {!loading && error && (
-            <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+            <div className="flex flex-col items-center justify-center gap-4 h-full text-center">
               <p className="text-sm text-muted-foreground">{t("error")}</p>
               <Button
                 variant="outline"
@@ -141,7 +144,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
             <embed
               src={`${blobUrl}#toolbar=0`}
               type="application/pdf"
-              className="h-[80vh] w-full rounded"
+              className="h-full w-full rounded"
             />
           )}
 
@@ -150,12 +153,12 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
             <img
               src={blobUrl}
               alt={doc?.filename ?? ""}
-              className="max-h-[80vh] mx-auto rounded object-contain"
+              className="max-h-full max-w-full mx-auto rounded object-contain"
             />
           )}
 
           {!loading && !error && !showPdf && !showImage && doc !== null && (
-            <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+            <div className="flex flex-col items-center justify-center gap-4 h-full text-center">
               <p className="text-sm text-muted-foreground">
                 {t("fallback")}
               </p>

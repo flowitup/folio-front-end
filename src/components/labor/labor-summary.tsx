@@ -4,7 +4,7 @@ import { useMemo, useState, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Calendar, ChevronRight, ChevronDown, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { LaborSummaryResponse, LaborMonthlySummaryResponse, MonthlySummaryRow } from "@/types/labor";
+import type { LaborSummaryResponse, LaborMonthlySummaryResponse, MonthlySummaryRow, Worker } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
@@ -14,6 +14,11 @@ interface LaborSummaryProps {
   summary: LaborSummaryResponse | null;
   /** Per-month rollup. Used when no specific month filter is active. */
   monthlySummary: LaborMonthlySummaryResponse | null;
+  /** Project workers — used to display each worker's true `daily_rate`
+   *  in the per-worker sub-rows. Optional so the legacy two-prop call
+   *  site (and tests) still type-check; sub-rows fall back to omitting
+   *  the rate when this is empty. */
+  workers?: Worker[];
   isLoading: boolean;
   month: string;
   onMonthChange: (value: string) => void;
@@ -96,6 +101,7 @@ export function LaborSummary({
   projectId,
   summary,
   monthlySummary,
+  workers,
   isLoading,
   month,
   onMonthChange,
@@ -146,6 +152,16 @@ export function LaborSummary({
     filteredMonthlyRows.forEach((r) => r.workers.forEach((w) => ids.add(w.worker_id)));
     return ids.size;
   }, [filteredMonthlyRows]);
+
+  // Lookup table: worker_id → daily_rate. We must NOT derive the rate
+  // from total_cost / days_worked — that blends full days, half days,
+  // and overrides into a misleading "effective" rate. The contract
+  // shown to users is the worker's configured rate (Worker.daily_rate).
+  const rateByWorkerId = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const w of workers ?? []) m.set(w.id, w.daily_rate);
+    return m;
+  }, [workers]);
 
   // Per-month expand/collapse state. Default: all months open so the
   // table reads as a complete ledger on first load — the chevron lets
@@ -479,7 +495,12 @@ export function LaborSummary({
                     if (open) {
                       for (const w of row.workers) {
                         const color = workerColor(w.worker_id);
-                        const rate = w.days_worked > 0 ? w.total_cost / w.days_worked : 0;
+                        // True configured daily rate from the worker
+                        // record — NOT total_cost / days_worked, which
+                        // averages full + half + override shifts into
+                        // a fractional value that doesn't match what
+                        // the user actually pays per day.
+                        const rate = rateByWorkerId.get(w.worker_id);
                         rows.push(
                           <tr
                             key={`sub-${ym}-${w.worker_id}`}
@@ -530,7 +551,9 @@ export function LaborSummary({
                               className="num text-[11.5px]"
                               style={{ color: "var(--muted)", border: "none", paddingTop: 6, paddingBottom: 6 }}
                             >
-                              {rate > 0 ? t("summaryPerDay", { rate: formatEUR(rate) }) : ""}
+                              {rate != null && rate > 0
+                                ? t("summaryPerDay", { rate: formatEUR(rate) })
+                                : ""}
                             </td>
                             <td
                               className="num text-[12.5px] tabular-nums"

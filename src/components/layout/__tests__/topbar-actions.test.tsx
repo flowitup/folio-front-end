@@ -78,9 +78,14 @@ function setup(opts: {
     isLoading: false,
   });
   mockUseProject.mockReturnValue({
+    projects: opts.selectedProjectId
+      ? [{ id: opts.selectedProjectId, name: "Test" }]
+      : [],
+    selectedProjectId: opts.selectedProjectId ?? null,
     selectedProject: opts.selectedProjectId
       ? { id: opts.selectedProjectId, name: "Test" }
       : null,
+    selectProject: vi.fn(),
   });
 }
 

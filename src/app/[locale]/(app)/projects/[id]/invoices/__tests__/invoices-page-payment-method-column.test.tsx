@@ -90,7 +90,7 @@ function makeInvoice(overrides: Partial<Invoice>): Invoice {
     id: "inv-1",
     project_id: "proj-test-1",
     invoice_number: "INV-2026-0001",
-    type: "client",
+    type: "released_funds",
     issue_date: "2026-05-12",
     recipient_name: "Acme Corp",
     recipient_address: null,

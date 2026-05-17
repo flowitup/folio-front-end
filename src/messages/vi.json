@@ -304,7 +304,7 @@
     "invoiceNumber": "Số hóa đơn",
     "type": "Loại",
     "types": {
-      "client": "Khách hàng",
+      "released_funds": "Vốn giải ngân",
       "labor": "Nhân công",
       "supplier": "Nhà cung cấp"
     },
@@ -359,7 +359,7 @@
       "to": "Tháng kết thúc",
       "typeFilter": "Loại",
       "typeAll": "Tất cả loại",
-      "typeClient": "Khách hàng",
+      "typeReleasedFunds": "Vốn giải ngân",
       "typeLabor": "Nhân công",
       "typeSupplier": "Nhà cung cấp",
       "format": "Định dạng",

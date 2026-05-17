@@ -26,14 +26,14 @@ interface InvoiceFormProps {
   companyId?: string | null;
 }
 
-const INVOICE_TYPES: InvoiceType[] = ["client", "labor", "supplier"];
+const INVOICE_TYPES: InvoiceType[] = ["released_funds", "labor", "supplier"];
 
 const emptyItem = (): LineItem => ({ description: "", quantity: 1, unit_price: 0 });
 
 export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId }: InvoiceFormProps) {
   const t = useTranslations("invoices");
 
-  const [type, setType] = useState<InvoiceType>(initialValues?.type ?? "client");
+  const [type, setType] = useState<InvoiceType>(initialValues?.type ?? "released_funds");
   const [issueDate, setIssueDate] = useState(initialValues?.issue_date ?? "");
   const [recipientName, setRecipientName] = useState(initialValues?.recipient_name ?? "");
   const [recipientAddress, setRecipientAddress] = useState(

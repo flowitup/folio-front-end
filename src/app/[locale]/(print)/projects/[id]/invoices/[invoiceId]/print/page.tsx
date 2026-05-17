@@ -6,7 +6,7 @@ import { fetchInvoice } from "@/lib/api/invoice-api";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
 const TYPE_LABEL: Record<InvoiceType, string> = {
-  client: "Client",
+  released_funds: "Released Funds",
   labor: "Labor",
   supplier: "Supplier",
 };

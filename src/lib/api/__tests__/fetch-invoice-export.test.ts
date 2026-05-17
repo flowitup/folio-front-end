@@ -118,12 +118,12 @@ describe("fetchInvoiceExport — URL construction", () => {
     const mockResponse = new Response(fakeBlob, { status: 200 });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
-    await fetchInvoiceExport("proj-abc", { from: "2026-01", to: "2026-03" }, "xlsx", "client");
+    await fetchInvoiceExport("proj-abc", { from: "2026-01", to: "2026-03" }, "xlsx", "released_funds");
 
     const fetchCall = vi.mocked(fetch).mock.calls[0];
     const url = fetchCall[0] as string;
 
-    expect(url).toContain("type=client");
+    expect(url).toContain("type=released_funds");
   });
 
   it("omits type param when typeFilter is undefined", async () => {
@@ -153,7 +153,7 @@ describe("fetchInvoiceExport — URL construction", () => {
   });
 
   it("constructs correct URL for all three type filters", async () => {
-    for (const typeFilter of ["client", "labor", "supplier"] as const) {
+    for (const typeFilter of ["released_funds", "labor", "supplier"] as const) {
       const fakeBlob = new Blob(["bytes"]);
       const mockResponse = new Response(fakeBlob, { status: 200 });
       vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));

@@ -21,7 +21,7 @@ type TabType = "all" | InvoiceType;
 const INVOICE_TABLE_COLUMN_COUNT = 8;
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
-  client: "stamp",
+  released_funds: "stamp",
   labor: "stamp accent",
   supplier: "stamp positive",
 };
@@ -108,7 +108,7 @@ export default function InvoicesPage() {
     }
   };
 
-  const tabs: TabType[] = ["all", "client", "labor", "supplier"];
+  const tabs: TabType[] = ["all", "released_funds", "labor", "supplier"];
 
   // Compute KPIs from current invoice list
   const formatEUR = (n: number) =>

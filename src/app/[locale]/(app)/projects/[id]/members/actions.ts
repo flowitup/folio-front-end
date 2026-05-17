@@ -15,7 +15,10 @@ export async function inviteMemberAction(
   roleId: string
 ): Promise<CreateInvitationResult> {
   const result = await createInvitation({ project_id: projectId, email, role_id: roleId });
-  revalidatePath(`/[locale]/(app)/projects/${projectId}/members`, "page");
+  // Route groups like `(app)` are stripped from Next.js cache keys, so
+  // including them here makes the call a silent no-op. Use the resolved
+  // path template without route-group segments.
+  revalidatePath(`/[locale]/projects/${projectId}/members`, "page");
   return result;
 }
 
@@ -27,5 +30,8 @@ export async function revokeInviteAction(
   projectId: string
 ): Promise<void> {
   await revokeInvitation(invitationId);
-  revalidatePath(`/[locale]/(app)/projects/${projectId}/members`, "page");
+  // Route groups like `(app)` are stripped from Next.js cache keys, so
+  // including them here makes the call a silent no-op. Use the resolved
+  // path template without route-group segments.
+  revalidatePath(`/[locale]/projects/${projectId}/members`, "page");
 }

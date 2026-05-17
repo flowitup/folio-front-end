@@ -42,7 +42,13 @@ function buildContentSecurityPolicy(): string {
     "frame-ancestors": ["'none'"],
     "form-action": ["'self'"],
     "base-uri": ["'self'"],
-    "object-src": ["'none'"],
+    // `<embed>` is governed by object-src. The Project Documents preview
+    // dialog renders PDFs via `<embed src={URL.createObjectURL(blob)}>` — a
+    // same-origin `blob:` URL — so we must allow `blob:` here. Without it,
+    // promoting the CSP from Report-Only to enforce mode would silently break
+    // PDF preview. `<img>` previews are unaffected (img-src already allows
+    // blob:).
+    "object-src": ["blob:"],
   };
 
   return Object.entries(directives)

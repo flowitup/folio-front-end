@@ -64,9 +64,16 @@ vi.mock("next-intl", () => {
 
 // ---- Helpers ----
 
+// Counter so successive makeDoc() calls without an explicit `id` get distinct
+// React keys — silences the "two children with the same key" warning when a
+// test renders multiple default docs in the same table.
+let _docSeq = 0;
+
 function makeDoc(overrides: Partial<ProjectDocument> = {}): ProjectDocument {
+  _docSeq += 1;
+  const id = overrides.id ?? `doc-${_docSeq}`;
   return {
-    id: "doc-1",
+    id,
     project_id: "proj-1",
     filename: "sample.pdf",
     content_type: "application/pdf",
@@ -74,7 +81,7 @@ function makeDoc(overrides: Partial<ProjectDocument> = {}): ProjectDocument {
     kind: "pdf",
     uploaded_at: "2024-01-15T10:30:00Z",
     uploader_id: "user-1",
-    download_url: "/api/v1/projects/proj-1/documents/doc-1/download",
+    download_url: `/api/v1/projects/proj-1/documents/${id}/download`,
     ...overrides,
   };
 }

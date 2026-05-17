@@ -18,6 +18,9 @@ export const fetchInvoices = (projectId: string, type?: string): Promise<Invoice
     )
     .then((r) => r.invoices);
 
+export const fetchFundsReleasedTotal = (projectId: string): Promise<{ total: number }> =>
+  api.get<{ total: number }>(`/projects/${projectId}/funds-released-total`);
+
 export const fetchInvoice = (projectId: string, invoiceId: string): Promise<Invoice> =>
   api.get<Invoice>(`/projects/${projectId}/invoices/${invoiceId}`);
 

@@ -20,13 +20,17 @@ import type {
   CreateWorkerPayload,
   UpdateWorkerPayload,
 } from "@/types/labor";
-import { resolveFacebookAvatarUrl } from "@/lib/utils/facebook-avatar";
+import type { LaborRole } from "@/types/labor-role";
+import { RoleSelectWithCreate } from "@/app/[locale]/(app)/projects/[id]/labor/components/role-select-with-create";
 
 interface AddWorkerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (payload: CreateWorkerPayload | UpdateWorkerPayload) => Promise<void>;
   editWorker?: Worker | null;
+  roles?: LaborRole[];
+  palette?: string[];
+  onRoleCreated?: (role: LaborRole) => void;
 }
 
 /**
@@ -46,6 +50,9 @@ export function AddWorkerDialog({
   onOpenChange,
   onSave,
   editWorker,
+  roles = [],
+  palette = [],
+  onRoleCreated,
 }: AddWorkerDialogProps) {
   const t = useTranslations("labor");
 
@@ -54,13 +61,13 @@ export function AddWorkerDialog({
     null,
   );
 
-  // Edit-flow state (unchanged from prior version)
+  // Edit-flow state
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [avatarInput, setAvatarInput] = useState("");
 
   // Shared state
   const [dailyRate, setDailyRate] = useState("");
+  const [roleId, setRoleId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,7 +79,10 @@ export function AddWorkerDialog({
       setName(editWorker.name);
       setPhone(editWorker.phone || "");
       setDailyRate(editWorker.daily_rate.toString());
-      setAvatarInput(editWorker.avatar_url || "");
+      setRoleId(editWorker.role_id ?? null);
+    }
+    if (open && !editWorker) {
+      setRoleId(null);
     }
   }, [open, editWorker]);
 
@@ -81,7 +91,7 @@ export function AddWorkerDialog({
     setName("");
     setPhone("");
     setDailyRate("");
-    setAvatarInput("");
+    setRoleId(null);
     setError(null);
     onOpenChange(false);
   };
@@ -102,14 +112,6 @@ export function AddWorkerDialog({
         setError(t("workerName") + " is required");
         return;
       }
-      // Resolve a Facebook URL/username to the graph picture URL. Empty
-      // input clears the avatar; non-empty but unparseable input is treated
-      // as a literal URL (graph.facebook.com pass-through handled inside
-      // resolveFacebookAvatarUrl; anything else: store as-is).
-      const trimmedAvatar = avatarInput.trim();
-      const resolvedAvatar = trimmedAvatar
-        ? resolveFacebookAvatarUrl(trimmedAvatar) ?? trimmedAvatar
-        : null;
 
       setIsSaving(true);
       try {
@@ -117,7 +119,7 @@ export function AddWorkerDialog({
           name: name.trim(),
           daily_rate: rate,
           phone: phone.trim() || undefined,
-          avatar_url: resolvedAvatar,
+          role_id: roleId,
         });
         handleClose();
       } catch {
@@ -140,6 +142,7 @@ export function AddWorkerDialog({
         daily_rate: rate,
         phone: selectedPerson.phone ?? undefined,
         person_id: selectedPerson.id,
+        role_id: roleId ?? undefined,
       });
       handleClose();
     } catch {
@@ -180,22 +183,6 @@ export function AddWorkerDialog({
                   placeholder="+33 6 12 34 56 78"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="avatar">Avatar URL</Label>
-                <Input
-                  id="avatar"
-                  value={avatarInput}
-                  onChange={(e) => setAvatarInput(e.target.value)}
-                  placeholder="https://… (image URL or Facebook profile)"
-                />
-                {avatarInput.trim() && (
-                  <p className="text-muted-foreground text-xs">
-                    {resolveFacebookAvatarUrl(avatarInput.trim())
-                      ? "Facebook URL detected — note: FB now requires OAuth, public picture endpoint is deprecated."
-                      : "Direct image URL — will be stored as-is."}
-                  </p>
-                )}
-              </div>
             </>
           ) : (
             <div className="space-y-2">
@@ -210,6 +197,22 @@ export function AddWorkerDialog({
                   {selectedPerson.phone}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Role selection — shown in both create and edit flows when roles exist */}
+          {(roles.length > 0 || palette.length > 0) && (
+            <div className="space-y-2">
+              <Label>{t("role.label")}</Label>
+              <RoleSelectWithCreate
+                roles={roles}
+                palette={palette}
+                value={roleId}
+                onChange={setRoleId}
+                onRoleCreated={(role) => {
+                  onRoleCreated?.(role);
+                }}
+              />
             </div>
           )}
 

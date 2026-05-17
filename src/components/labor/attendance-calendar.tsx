@@ -50,6 +50,8 @@ interface AttendanceCalendarProps {
   onLogDay?: (date: string) => void;
   /** Open the edit dialog for a single existing entry. */
   onEditEntry?: (entry: LaborEntry) => void;
+  /** Worker lookup for role-aware chip colors. See CalendarCell. */
+  workerMap?: Record<string, Worker>;
 }
 
 export function AttendanceCalendar({
@@ -64,6 +66,7 @@ export function AttendanceCalendar({
   onDelete,
   onLogDay,
   onEditEntry,
+  workerMap,
 }: AttendanceCalendarProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
@@ -159,6 +162,7 @@ export function AttendanceCalendar({
         monthIdx={cursor.getMonth()}
         entries={filteredEntries}
         locale={locale}
+        workerMap={workerMap}
         onDayClick={(d) => {
           // Empty-cell click: jump straight to the log dialog. Days
           // with entries open the detail sheet first.

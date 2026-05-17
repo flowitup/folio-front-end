@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { Plus, Pencil, UserX, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,46 +16,21 @@ import {
 import type { Worker } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
-import { personColor, personInitials } from "@/lib/utils/person-color";
+import { workerColor, personInitials } from "@/lib/utils/person-color";
 import { cn } from "@/lib/utils";
 
 /**
- * Avatar block — renders an image when src is set and loads; otherwise
- * falls back to colored initials. The `failed` state resets whenever the
- * src changes, so a previous load error doesn't blank out a new URL.
+ * Avatar block — colored initials chip. Color is driven by the worker's
+ * role_color when assigned, otherwise falls back to the deterministic
+ * personColor hash so each worker has a stable visual identity.
  */
 function WorkerAvatar({
-  src,
-  alt,
   initials,
   color,
 }: {
-  src: string | null;
-  alt: string;
   initials: string;
   color: string;
 }) {
-  // Derived-state pattern: when `src` changes, reset `failed` during
-  // render rather than via useEffect (avoids the cascading-render lint).
-  const [lastSrc, setLastSrc] = useState(src);
-  const [failed, setFailed] = useState(false);
-  if (src !== lastSrc) {
-    setLastSrc(src);
-    setFailed(false);
-  }
-
-  if (src && !failed) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={src}
-        alt={alt}
-        referrerPolicy="no-referrer"
-        className="h-14 w-14 rounded-full object-cover shadow-sm"
-        onError={() => setFailed(true)}
-      />
-    );
-  }
   return (
     <span
       className="flex h-14 w-14 items-center justify-center rounded-full text-base font-semibold text-white shadow-sm"
@@ -116,7 +90,6 @@ export function WorkerList({
             // Prefer the joined Person identity once cook 1c backfill
             // links workers to persons; fall back to legacy fields.
             const displayName = worker.person_name ?? worker.name;
-            const colorKey = worker.person_id ?? worker.id;
             return (
               <Card
                 key={worker.id}
@@ -136,14 +109,11 @@ export function WorkerList({
                   aria-label={worker.is_active ? t("active") : t("inactive")}
                 />
 
-                {/* Avatar — image if set, otherwise initials fallback */}
+                {/* Avatar — colored initials (color = role_color or hash) */}
                 <WorkerAvatar
-                  src={worker.avatar_url ?? null}
-                  alt={displayName}
                   initials={personInitials(displayName)}
-                  color={personColor(colorKey)}
+                  color={workerColor(worker)}
                 />
-
 
                 {/* Identity */}
                 <div className="min-w-0 space-y-0.5">
@@ -153,6 +123,17 @@ export function WorkerList({
                   <p className="text-primary text-sm font-medium tabular-nums">
                     {formatEUR(worker.daily_rate)}
                   </p>
+                  {/* Role badge */}
+                  {worker.role_name && (
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <span
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{ backgroundColor: worker.role_color ?? undefined }}
+                        aria-hidden="true"
+                      />
+                      {worker.role_name}
+                    </span>
+                  )}
                 </div>
 
                 {/* Action bar — visible on hover or focus-within */}

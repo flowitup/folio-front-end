@@ -10,7 +10,6 @@
  */
 
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
@@ -21,36 +20,12 @@ import { personColor, personInitials } from "@/lib/utils/person-color";
 import type { LaborEntry, ShiftType } from "@/types/labor";
 
 function EntryAvatar({
-  src,
-  alt,
   initials,
   color,
 }: {
-  src: string | null;
-  alt: string;
   initials: string;
   color: string;
 }) {
-  // Derived-state pattern: reset `failed` during render when `src`
-  // changes — avoids the cascading-render lint from useEffect.
-  const [lastSrc, setLastSrc] = useState(src);
-  const [failed, setFailed] = useState(false);
-  if (src !== lastSrc) {
-    setLastSrc(src);
-    setFailed(false);
-  }
-  if (src && !failed) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={src}
-        alt={alt}
-        referrerPolicy="no-referrer"
-        className="h-8 w-8 flex-none rounded-full object-cover"
-        onError={() => setFailed(true)}
-      />
-    );
-  }
   return (
     <span
       className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full text-[11px] font-semibold text-white"
@@ -106,10 +81,8 @@ export function LaborEntryCard({
           : undefined
       }
     >
-      {/* Avatar — image if set, otherwise colored initials matching calendar chips */}
+      {/* Avatar — colored initials matching calendar chips */}
       <EntryAvatar
-        src={entry.worker_avatar_url ?? null}
-        alt={entry.worker_name}
         initials={personInitials(entry.worker_name)}
         color={personColor(colorKey)}
       />

@@ -15,7 +15,7 @@ vi.mock("next-intl", () => ({
       "invoices.type": "Type",
       "invoices.types.released_funds": "Released Funds",
       "invoices.types.labor": "Labor",
-      "invoices.types.supplier": "Supplier",
+      "invoices.types.materials_services": "Materials & Services",
       "invoices.issueDate": "Issue Date",
       "invoices.recipient": "Recipient",
       "invoices.recipientAddress": "Recipient Address",

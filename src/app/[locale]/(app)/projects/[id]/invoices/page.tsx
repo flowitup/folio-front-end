@@ -23,7 +23,7 @@ const INVOICE_TABLE_COLUMN_COUNT = 8;
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp",
   labor: "stamp accent",
-  supplier: "stamp positive",
+  materials_services: "stamp positive",
 };
 
 export default function InvoicesPage() {
@@ -108,7 +108,7 @@ export default function InvoicesPage() {
     }
   };
 
-  const tabs: TabType[] = ["all", "released_funds", "labor", "supplier"];
+  const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services"];
 
   // Compute KPIs from current invoice list
   const formatEUR = (n: number) =>

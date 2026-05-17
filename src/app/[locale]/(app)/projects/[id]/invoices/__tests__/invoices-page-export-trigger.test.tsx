@@ -214,7 +214,7 @@ describe("InvoicesPage — initialType carries through from active tab", () => {
     expect(dialog.getAttribute("data-initial-type")).toBe("released_funds");
   });
 
-  it("dialog receives initialType='supplier' when supplier tab is active", async () => {
+  it("dialog receives initialType='materials_services' when materials-services tab is active", async () => {
     render(<InvoicesPage />);
 
     await waitFor(
@@ -224,11 +224,11 @@ describe("InvoicesPage — initialType carries through from active tab", () => {
       { timeout: 5000 },
     );
 
-    fireEvent.click(screen.getByText("types.supplier").closest("button")!);
+    fireEvent.click(screen.getByText("types.materials_services").closest("button")!);
     fireEvent.click(screen.getByText("export.trigger").closest("button")!);
 
     const dialog = screen.getByTestId("dialog-mock");
-    expect(dialog.getAttribute("data-initial-type")).toBe("supplier");
+    expect(dialog.getAttribute("data-initial-type")).toBe("materials_services");
   });
 });
 

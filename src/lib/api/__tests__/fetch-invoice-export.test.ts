@@ -153,7 +153,7 @@ describe("fetchInvoiceExport — URL construction", () => {
   });
 
   it("constructs correct URL for all three type filters", async () => {
-    for (const typeFilter of ["released_funds", "labor", "supplier"] as const) {
+    for (const typeFilter of ["released_funds", "labor", "materials_services"] as const) {
       const fakeBlob = new Blob(["bytes"]);
       const mockResponse = new Response(fakeBlob, { status: 200 });
       vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));

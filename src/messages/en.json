@@ -306,7 +306,7 @@
     "types": {
       "released_funds": "Released Funds",
       "labor": "Labor",
-      "supplier": "Supplier"
+      "materials_services": "Materials & Services"
     },
     "issueDate": "Issue date",
     "recipient": "Recipient",
@@ -361,7 +361,7 @@
       "typeAll": "All types",
       "typeReleasedFunds": "Released Funds",
       "typeLabor": "Labor",
-      "typeSupplier": "Supplier",
+      "typeMaterialsServices": "Materials & Services",
       "format": "Format",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",

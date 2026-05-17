@@ -14,7 +14,7 @@ import vi from "../vi.json";
 
 const REQUIRED_KEYS = [
   "trigger", "dialogTitle", "from", "to",
-  "typeFilter", "typeAll", "typeReleasedFunds", "typeLabor", "typeSupplier",
+  "typeFilter", "typeAll", "typeReleasedFunds", "typeLabor", "typeMaterialsServices",
   "format", "xlsx", "pdf", "download", "cancel",
   "generating", "downloaded", "summaryLine",
   "errorRangeInvalid", "errorRangeTooLarge", "errorGeneric",

@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatEUR } from "@/lib/api/labor";
-import { personColor, personInitials } from "@/lib/utils/person-color";
+import { personInitials, workerColor } from "@/lib/utils/person-color";
 import type { LaborEntry, ShiftType } from "@/types/labor";
 
 function EntryAvatar({
@@ -59,7 +59,10 @@ export function LaborEntryCard({
     overtime: t("shiftOvertime"),
   };
 
-  const colorKey = entry.worker_id ?? entry.worker_name;
+  const entryColor = workerColor({
+    role_color: entry.role_color,
+    id: entry.worker_id,
+  });
 
   return (
     <div
@@ -84,7 +87,7 @@ export function LaborEntryCard({
       {/* Avatar — colored initials matching calendar chips */}
       <EntryAvatar
         initials={personInitials(entry.worker_name)}
-        color={personColor(colorKey)}
+        color={entryColor}
       />
 
       {/* Name + badges */}

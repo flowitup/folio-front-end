@@ -60,6 +60,7 @@ export interface LaborEntry {
   shift_type: ShiftType | null;
   supplement_hours: number;
   created_at: string;
+  role_color?: string | null;
 }
 
 export interface LaborEntryListResponse {

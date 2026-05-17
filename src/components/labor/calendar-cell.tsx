@@ -147,10 +147,10 @@ export function CalendarCell({
               <span
                 key={c.id}
                 title={c.name}
-                className="text-[10px] inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-white"
-                style={{ backgroundColor: personColor(c.id) }}
+                className="text-[10px] inline-flex items-center gap-1 truncate rounded-full px-1.5 py-0.5 text-white"
+                style={{ backgroundColor: personColor(c.id), maxWidth: "100%" }}
               >
-                {personInitials(c.name)}
+                {c.name}
               </span>
             ),
           )}

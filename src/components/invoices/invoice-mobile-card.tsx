@@ -6,9 +6,9 @@ import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
-  client: "stamp",
+  released_funds: "stamp",
   labor: "stamp accent",
-  supplier: "stamp positive",
+  materials_services: "stamp positive",
 };
 
 interface InvoiceMobileCardProps {

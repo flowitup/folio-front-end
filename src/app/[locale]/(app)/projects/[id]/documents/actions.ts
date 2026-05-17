@@ -81,7 +81,10 @@ export async function deleteDocumentAction(
 
   try {
     await deleteProjectDocument(projectId, docId);
-    revalidatePath(`/[locale]/(app)/projects/${projectId}/documents`, "page");
+    // Route groups like `(app)` are stripped from cache keys by Next.js, so
+    // including them here makes the call a silent no-op. Use the resolved path
+    // template without route-group segments.
+    revalidatePath(`/[locale]/projects/${projectId}/documents`, "page");
     return { ok: true, data: null };
   } catch (err: unknown) {
     return { ok: false, error: classifyBackendError(err) };

@@ -15,7 +15,8 @@
     "notes": "Notes",
     "documents": "Documents",
     "members": "Membres",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "more": "Plus"
   },
   "auth": {
     "welcomeBack": "Bienvenue",

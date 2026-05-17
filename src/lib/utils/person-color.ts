@@ -65,6 +65,21 @@ export function personColor(key: string | null | undefined): string {
 }
 
 /**
+ * Returns the display color for a Worker chip.
+ *
+ * Priority: role_color (explicit assignment) → deterministic personColor hash.
+ * This keeps role-grouped workers visually consistent while still giving
+ * unassigned workers their stable hash-derived color.
+ */
+export function workerColor(worker: {
+  role_color?: string | null;
+  person_id?: string | null;
+  id: string;
+}): string {
+  return worker.role_color ?? personColor(worker.person_id ?? worker.id);
+}
+
+/**
  * Two-letter initials helper used alongside the colored chip.
  *
  * Falls back to the first two characters of a single-word name. Never

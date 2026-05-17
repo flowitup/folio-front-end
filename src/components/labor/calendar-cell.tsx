@@ -19,9 +19,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { isToday } from "@/lib/utils/calendar-month";
 import { getFrenchHolidayKey } from "@/lib/utils/french-holidays";
-import { personColor, personInitials } from "@/lib/utils/person-color";
+import { personColor, workerColor } from "@/lib/utils/person-color";
 import { formatEUR } from "@/lib/api/labor";
-import type { LaborEntry } from "@/types/labor";
+import type { LaborEntry, Worker } from "@/types/labor";
 
 interface CalendarCellProps {
   /** The Date this cell represents, or null for grid padding cells. */
@@ -32,12 +32,18 @@ interface CalendarCellProps {
   onClick?: (date: Date | null) => void;
   /** Max chips shown before collapsing to "+N". Defaults to 3. */
   maxChips?: number;
+  /**
+   * Worker lookup map keyed by worker id. When provided, chip color is
+   * resolved via workerColor (respects role_color). Falls back to
+   * personColor(worker_id) when absent for backward compat.
+   */
+  workerMap?: Record<string, Worker>;
 }
 
 interface ChipDescriptor {
   id: string;
   name: string;
-  avatarUrl?: string | null;
+  chipColor: string;
 }
 
 export function CalendarCell({
@@ -45,6 +51,7 @@ export function CalendarCell({
   entries,
   onClick,
   maxChips = 3,
+  workerMap,
 }: CalendarCellProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
@@ -55,21 +62,25 @@ export function CalendarCell({
       (sum, e) => sum + Number(e.effective_cost ?? 0),
       0,
     );
-    // De-duplicate by person_id (or worker_id fallback) — same worker
-    // could appear twice on a day if a supplement-only entry coexists
-    // with a shift entry, but we only want one chip per person.
+    // De-duplicate by worker_id — same worker could appear twice on a day
+    // if a supplement-only entry coexists with a shift entry, but we only
+    // want one chip per worker.
     const seen = new Set<string>();
     const list: ChipDescriptor[] = [];
     for (const e of entries) {
-      const id = e.worker_id; // Worker id is fine for chip color; people stable per worker.
+      const id = e.worker_id;
       if (seen.has(id)) continue;
       seen.add(id);
-      list.push({ id, name: e.worker_name, avatarUrl: e.worker_avatar_url ?? null });
+      // Resolve chip color: workerMap → workerColor (role_color aware);
+      // fall back to personColor(worker_id) when map is unavailable.
+      const worker = workerMap?.[id];
+      const chipColor = worker ? workerColor(worker) : personColor(id);
+      list.push({ id, name: e.worker_name, chipColor });
     }
     const shown = list.slice(0, maxChips);
     const rest = Math.max(0, list.length - maxChips);
     return { dayTotal: total, chips: shown, overflow: rest };
-  }, [entries, maxChips]);
+  }, [entries, maxChips, workerMap]);
 
   // Padding cell (before first-of-month or after last-of-month).
   if (date === null) {
@@ -132,28 +143,16 @@ export function CalendarCell({
 
       {chips.length > 0 && (
         <div className="flex flex-wrap items-center gap-1">
-          {chips.map((c) =>
-            c.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={c.id}
-                src={c.avatarUrl}
-                alt={c.name}
-                title={c.name}
-                referrerPolicy="no-referrer"
-                className="h-5 w-5 rounded-full object-cover ring-1 ring-white"
-              />
-            ) : (
-              <span
-                key={c.id}
-                title={c.name}
-                className="text-[10px] inline-flex items-center gap-1 truncate rounded-full px-1.5 py-0.5 text-white"
-                style={{ backgroundColor: personColor(c.id), maxWidth: "100%" }}
-              >
-                {c.name}
-              </span>
-            ),
-          )}
+          {chips.map((c) => (
+            <span
+              key={c.id}
+              title={c.name}
+              className="text-[10px] inline-flex items-center gap-1 truncate rounded-full px-1.5 py-0.5 text-white"
+              style={{ backgroundColor: c.chipColor, maxWidth: "100%" }}
+            >
+              {c.name}
+            </span>
+          ))}
           {overflow > 0 && (
             <span className="text-muted-foreground text-[10px] font-medium">
               +{overflow}

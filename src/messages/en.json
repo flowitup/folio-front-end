@@ -478,7 +478,21 @@
     "summaryDrillDown": "Click to view per-worker breakdown",
     "summaryMonthPickerAll": "All months",
     "workersBadge": "{n} workers",
-    "role": "Role",
+    "role": {
+      "label": "Role",
+      "selectRole": "Select role",
+      "noRole": "No role",
+      "createRole": "Create role",
+      "editRole": "Edit role",
+      "deleteRole": "Delete role",
+      "roleName": "Role name",
+      "roleColor": "Color",
+      "confirmDelete": "Delete this role? Workers assigned to it will lose their role.",
+      "duplicateName": "A role with this name already exists.",
+      "created": "Role created.",
+      "updated": "Role updated.",
+      "deleted": "Role deleted."
+    },
     "shift": {
       "none": "(none)"
     },

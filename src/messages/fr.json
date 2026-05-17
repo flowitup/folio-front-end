@@ -478,7 +478,21 @@
     "summaryDrillDown": "Cliquer pour voir le détail par ouvrier",
     "summaryMonthPickerAll": "Tous les mois",
     "workersBadge": "{n} ouvriers",
-    "role": "Rôle",
+    "role": {
+      "label": "Rôle",
+      "selectRole": "Sélectionner un rôle",
+      "noRole": "Aucun rôle",
+      "createRole": "Créer un rôle",
+      "editRole": "Modifier le rôle",
+      "deleteRole": "Supprimer le rôle",
+      "roleName": "Nom du rôle",
+      "roleColor": "Couleur",
+      "confirmDelete": "Supprimer ce rôle ? Les ouvriers assignés perdront leur rôle.",
+      "duplicateName": "Un rôle avec ce nom existe déjà.",
+      "created": "Rôle créé.",
+      "updated": "Rôle modifié.",
+      "deleted": "Rôle supprimé."
+    },
     "shift": {
       "none": "(aucun)"
     },

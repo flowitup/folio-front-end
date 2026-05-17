@@ -8,7 +8,6 @@ export interface Worker {
   name: string;
   phone: string | null;
   daily_rate: number;
-  avatar_url?: string | null;
   is_active: boolean;
   created_at: string;
   // Joined Person identity (cook 1d-ii-a). Optional during the Phase 1c
@@ -19,6 +18,11 @@ export interface Worker {
   person_id?: string | null;
   person_name?: string | null;
   person_phone?: string | null;
+  // Labor role assignment. role_color drives the avatar chip color when set;
+  // falls back to the deterministic personColor hash otherwise.
+  role_id?: string | null;
+  role_name?: string | null;
+  role_color?: string | null;
 }
 
 export interface WorkerListResponse {
@@ -30,26 +34,25 @@ export interface CreateWorkerPayload {
   name: string;
   daily_rate: number;
   phone?: string;
-  avatar_url?: string | null;
   // When set, link the new Worker to an existing Person picked via the
   // PersonTypeahead (cook 1d-ii-b). Server skips inline Person creation
   // and uses this id instead. When omitted, the BE creates a Person
   // from name+phone (legacy behavior).
   person_id?: string;
+  role_id?: string;
 }
 
 export interface UpdateWorkerPayload {
   name?: string;
   daily_rate?: number;
   phone?: string;
-  avatar_url?: string | null;
+  role_id?: string | null;
 }
 
 export interface LaborEntry {
   id: string;
   worker_id: string;
   worker_name: string;
-  worker_avatar_url?: string | null;
   date: string;
   amount_override: number | null;
   effective_cost: number;
@@ -57,6 +60,7 @@ export interface LaborEntry {
   shift_type: ShiftType | null;
   supplement_hours: number;
   created_at: string;
+  role_color?: string | null;
 }
 
 export interface LaborEntryListResponse {

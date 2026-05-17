@@ -17,9 +17,7 @@ import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label
 
 type TabType = "all" | InvoiceType;
 
-// Number of <th> columns in the invoice table — used for the inline detail
-// row's colSpan so it spans the full width. Update if columns change.
-const INVOICE_TABLE_COLUMN_COUNT = 8;
+const INVOICE_TABLE_COLUMN_COUNT = 7;
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp",
@@ -110,6 +108,12 @@ export default function InvoicesPage() {
   };
 
   const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services"];
+
+  const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services"];
+  const groupedInvoices = GROUP_ORDER
+    .map((type) => ({ type, items: invoices.filter((i) => i.type === type) }))
+    .filter((g) => g.items.length > 0);
+  const showGroups = activeTab === "all" && groupedInvoices.length > 0;
 
   // Compute KPIs from current invoice list
   const formatEUR = (n: number) =>
@@ -230,29 +234,42 @@ export default function InvoicesPage() {
           <>
           {/* Mobile card list */}
           <div className="space-y-3 lg:hidden">
-            {invoices.map((invoice) => {
-              const isOpen = selectedInvoiceId === invoice.id;
-              return (
-                <InvoiceMobileCard
-                  key={invoice.id}
-                  invoice={invoice}
-                  isOpen={isOpen}
-                  onToggle={() => toggleInvoice(invoice.id)}
-                  formatAmount={formatEUR}
-                >
-                  <InvoiceDetailRow
-                    projectId={projectId}
-                    invoiceId={invoice.id}
-                    canManage={canManageInvoices}
-                    colSpan={1}
-                    regionId={`invoice-detail-mobile-${invoice.id}`}
-                    onMutated={loadInvoices}
-                    onCollapse={closeInvoice}
-                    asCard
-                  />
-                </InvoiceMobileCard>
-              );
-            })}
+            {(showGroups ? groupedInvoices : [{ type: null, items: invoices }]).map(
+              ({ type: groupType, items }) => (
+                <Fragment key={groupType ?? "flat"}>
+                  {groupType && (
+                    <div className="flex items-center gap-2 pt-3">
+                      <span className={TYPE_STAMP_CLASS[groupType]}>
+                        {t(`types.${groupType}`)}
+                      </span>
+                    </div>
+                  )}
+                  {items.map((invoice) => {
+                    const isOpen = selectedInvoiceId === invoice.id;
+                    return (
+                      <InvoiceMobileCard
+                        key={invoice.id}
+                        invoice={invoice}
+                        isOpen={isOpen}
+                        onToggle={() => toggleInvoice(invoice.id)}
+                        formatAmount={formatEUR}
+                      >
+                        <InvoiceDetailRow
+                          projectId={projectId}
+                          invoiceId={invoice.id}
+                          canManage={canManageInvoices}
+                          colSpan={1}
+                          regionId={`invoice-detail-mobile-${invoice.id}`}
+                          onMutated={loadInvoices}
+                          onCollapse={closeInvoice}
+                          asCard
+                        />
+                      </InvoiceMobileCard>
+                    );
+                  })}
+                </Fragment>
+              )
+            )}
           </div>
 
           {/* Desktop table */}
@@ -263,7 +280,6 @@ export default function InvoicesPage() {
                   <tr>
                     <th style={{ width: 32 }}></th>
                     <th>{t("invoiceNumber")}</th>
-                    <th>{t("type")}</th>
                     <th>{t("issueDate")}</th>
                     <th>{t("recipient")}</th>
                     <th>{t("paymentMethod.label")}</th>
@@ -272,84 +288,102 @@ export default function InvoicesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {invoices.map((invoice) => {
-                    const isOpen = selectedInvoiceId === invoice.id;
-                    const detailId = `invoice-detail-${invoice.id}`;
-                    return (
-                      <Fragment key={invoice.id}>
-                        <tr
-                          role="button"
-                          tabIndex={0}
-                          aria-expanded={isOpen}
-                          aria-controls={detailId}
-                          className="cursor-pointer"
-                          style={isOpen ? { background: "var(--paper-2)" } : undefined}
-                          onClick={() => toggleInvoice(invoice.id)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              toggleInvoice(invoice.id);
-                            }
-                          }}
-                        >
-                          <td style={{ color: "var(--muted)" }}>
-                            {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                          </td>
-                          <td className="num text-[12.5px]">{invoice.invoice_number}</td>
-                          <td>
-                            <span className={TYPE_STAMP_CLASS[invoice.type]}>
-                              {t(`types.${invoice.type}`)}
-                            </span>
-                          </td>
-                          <td className="num" style={{ color: "var(--muted)" }}>
-                            {invoice.issue_date}
-                          </td>
-                          <td>{invoice.recipient_name}</td>
-                          <td>
-                            {invoice.payment_method_label?.trim() ? (
-                              <span className="stamp">
-                                {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}
+                  {(showGroups ? groupedInvoices : [{ type: null, items: invoices }]).map(
+                    ({ type: groupType, items }) => (
+                      <Fragment key={groupType ?? "flat"}>
+                        {groupType && (
+                          <tr>
+                            <td
+                              colSpan={INVOICE_TABLE_COLUMN_COUNT}
+                              className="label-cap"
+                              style={{
+                                paddingTop: 20,
+                                paddingBottom: 8,
+                                borderBottom: "1px solid var(--line)",
+                              }}
+                            >
+                              <span className={TYPE_STAMP_CLASS[groupType]}>
+                                {t(`types.${groupType}`)}
                               </span>
-                            ) : (
-                              <span style={{ color: "var(--muted)" }}>—</span>
-                            )}
-                          </td>
-                          <td className="num font-medium" style={{ textAlign: "right" }}>
-                            {invoice.total_amount.toFixed(2)}
-                          </td>
-                          <td
-                            style={{ textAlign: "right" }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="flex items-center justify-end gap-1">
-                              {canManageInvoices && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0"
-                                  style={{ color: "var(--muted)" }}
-                                  onClick={() => handleDelete(invoice)}
-                                >
-                                  <Trash2 size={13} />
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                        {isOpen && (
-                          <InvoiceDetailRow
-                            projectId={projectId}
-                            invoiceId={invoice.id}
-                            canManage={canManageInvoices}
-                            colSpan={INVOICE_TABLE_COLUMN_COUNT}
-                            regionId={detailId}
-                            onMutated={loadInvoices}
-                            onCollapse={closeInvoice}
-                          />
+                            </td>
+                          </tr>
                         )}
+                        {items.map((invoice) => {
+                          const isOpen = selectedInvoiceId === invoice.id;
+                          const detailId = `invoice-detail-${invoice.id}`;
+                          return (
+                            <Fragment key={invoice.id}>
+                              <tr
+                                role="button"
+                                tabIndex={0}
+                                aria-expanded={isOpen}
+                                aria-controls={detailId}
+                                className="cursor-pointer"
+                                style={isOpen ? { background: "var(--paper-2)" } : undefined}
+                                onClick={() => toggleInvoice(invoice.id)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    toggleInvoice(invoice.id);
+                                  }
+                                }}
+                              >
+                                <td style={{ color: "var(--muted)" }}>
+                                  {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                </td>
+                                <td className="num text-[12.5px]">{invoice.invoice_number}</td>
+                                <td className="num" style={{ color: "var(--muted)" }}>
+                                  {invoice.issue_date}
+                                </td>
+                                <td>{invoice.recipient_name}</td>
+                                <td>
+                                  {invoice.payment_method_label?.trim() ? (
+                                    <span className="stamp">
+                                      {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}
+                                    </span>
+                                  ) : (
+                                    <span style={{ color: "var(--muted)" }}>—</span>
+                                  )}
+                                </td>
+                                <td className="num font-medium" style={{ textAlign: "right" }}>
+                                  {invoice.total_amount.toFixed(2)}
+                                </td>
+                                <td
+                                  style={{ textAlign: "right" }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="flex items-center justify-end gap-1">
+                                    {canManageInvoices && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 w-7 p-0"
+                                        style={{ color: "var(--muted)" }}
+                                        onClick={() => handleDelete(invoice)}
+                                      >
+                                        <Trash2 size={13} />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                              {isOpen && (
+                                <InvoiceDetailRow
+                                  projectId={projectId}
+                                  invoiceId={invoice.id}
+                                  canManage={canManageInvoices}
+                                  colSpan={INVOICE_TABLE_COLUMN_COUNT}
+                                  regionId={detailId}
+                                  onMutated={loadInvoices}
+                                  onCollapse={closeInvoice}
+                                />
+                              )}
+                            </Fragment>
+                          );
+                        })}
                       </Fragment>
-                    );
-                  })}
+                    )
+                  )}
                 </tbody>
               </table>
             </div>

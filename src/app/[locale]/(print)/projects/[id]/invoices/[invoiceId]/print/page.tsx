@@ -8,7 +8,7 @@ import type { Invoice, InvoiceType } from "@/types/invoice";
 const TYPE_LABEL: Record<InvoiceType, string> = {
   released_funds: "Released Funds",
   labor: "Labor",
-  supplier: "Supplier",
+  materials_services: "Materials & Services",
 };
 
 export default function InvoicePrintPage() {

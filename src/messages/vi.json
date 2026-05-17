@@ -306,7 +306,7 @@
     "types": {
       "released_funds": "Vốn giải ngân",
       "labor": "Nhân công",
-      "supplier": "Nhà cung cấp"
+      "materials_services": "Vật tư & dịch vụ"
     },
     "issueDate": "Ngày phát hành",
     "recipient": "Người nhận",
@@ -361,7 +361,7 @@
       "typeAll": "Tất cả loại",
       "typeReleasedFunds": "Vốn giải ngân",
       "typeLabor": "Nhân công",
-      "typeSupplier": "Nhà cung cấp",
+      "typeMaterialsServices": "Vật tư & dịch vụ",
       "format": "Định dạng",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",

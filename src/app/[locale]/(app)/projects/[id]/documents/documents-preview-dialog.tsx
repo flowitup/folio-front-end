@@ -110,13 +110,13 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
   const showImage = blobUrl && doc?.kind === "image";
 
   const resizeStyle: CSSProperties | undefined = bounds
-    ? { top: bounds.y, left: bounds.x, width: bounds.w, height: bounds.h, transform: "none", maxWidth: "none" }
+    ? { top: bounds.y, left: bounds.x, width: bounds.w, height: bounds.h, transform: "none", translate: "none", maxWidth: "none" }
     : undefined;
 
   return (
     <Dialog open={doc !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="max-w-4xl w-full h-[85vh] max-h-[95vh] grid-rows-[auto_1fr_auto] overflow-hidden"
+        className="sm:max-w-4xl w-full h-[85vh] max-h-[95vh] grid-rows-[auto_1fr_auto] overflow-hidden"
         style={resizeStyle}
         showCloseButton
       >

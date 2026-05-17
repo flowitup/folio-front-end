@@ -332,6 +332,7 @@ export default function LaborPage() {
           projectId={projectId}
           summary={summary}
           monthlySummary={monthlySummary}
+          workers={workers}
           isLoading={isTabLoading}
           month={summaryMonth}
           onMonthChange={setSummaryMonth}

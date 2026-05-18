@@ -494,7 +494,11 @@
       "duplicateName": "Vai trò với tên này đã tồn tại.",
       "created": "Đã tạo vai trò.",
       "updated": "Đã cập nhật vai trò.",
-      "deleted": "Đã xóa vai trò."
+      "deleted": "Đã xóa vai trò.",
+      "defaults": {
+        "masterCraftsman": "Thợ chính",
+        "assistant": "Thợ phụ"
+      }
     },
     "shift": {
       "none": "(không có ca)"

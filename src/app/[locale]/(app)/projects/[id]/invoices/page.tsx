@@ -5,11 +5,11 @@ import { useTranslations } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
-import { Loader2, Trash2, ChevronRight, ChevronDown, Download } from "lucide-react";
+import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Invoice, InvoiceType } from "@/types/invoice";
-import { fetchInvoices, deleteInvoice } from "@/lib/api/invoice-api";
+import { fetchInvoicesWithMeta, deleteInvoice } from "@/lib/api/invoice-api";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
@@ -74,6 +74,7 @@ export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [exportOpen, setExportOpen] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [fundsReleasedTotal, setFundsReleasedTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,11 +82,12 @@ export default function InvoicesPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchInvoices(
+      const res = await fetchInvoicesWithMeta(
         projectId,
         activeTab !== "all" ? activeTab : undefined
       );
-      setInvoices(data);
+      setInvoices(res.invoices);
+      setFundsReleasedTotal(res.funds_released_total);
     } catch {
       setError("Failed to load invoices");
     } finally {
@@ -123,12 +125,9 @@ export default function InvoicesPage() {
       maximumFractionDigits: 0,
     }).format(n);
   const totalInvoiced = invoices.reduce((s, i) => s + i.total_amount, 0);
-  const paidInvoices = invoices.filter((i) => (i as { status?: string }).status === "paid");
-  const pendingInvoices = invoices.filter((i) => (i as { status?: string }).status === "pending");
-  const overdueInvoices = invoices.filter((i) => (i as { status?: string }).status === "overdue");
-  const paidTotal = paidInvoices.reduce((s, i) => s + i.total_amount, 0);
-  const pendingTotal = pendingInvoices.reduce((s, i) => s + i.total_amount, 0);
-  const overdueTotal = overdueInvoices.reduce((s, i) => s + i.total_amount, 0);
+  const releasedFundsInvoices = invoices.filter((i) => i.type === "released_funds");
+  const laborInvoices = invoices.filter((i) => i.type === "labor");
+  const materialsInvoices = invoices.filter((i) => i.type === "materials_services");
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
@@ -144,39 +143,38 @@ export default function InvoicesPage() {
           </div>
         </div>
         <div className="folio-card p-5">
-          <div className="label-cap">{t("paid")}</div>
+          <div className="label-cap">{t("fundsReleased")}</div>
           <div
             className="font-display num mt-2 text-[28px] font-medium leading-none"
             style={{ color: "var(--positive)" }}
           >
-            {formatEUR(paidTotal)}
+            {formatEUR(fundsReleasedTotal)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("invoiceCount", { n: paidInvoices.length })}
+            {t("invoiceCount", { n: releasedFundsInvoices.length })}
           </div>
         </div>
         <div className="folio-card p-5">
-          <div className="label-cap">{t("pending")}</div>
+          <div className="label-cap">{t("types.labor")}</div>
           <div
             className="font-display num mt-2 text-[28px] font-medium leading-none"
-            style={{ color: "var(--warning)" }}
+            style={{ color: "var(--accent)" }}
           >
-            {formatEUR(pendingTotal)}
+            {formatEUR(laborInvoices.reduce((s, i) => s + i.total_amount, 0))}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("awaiting", { n: pendingInvoices.length })}
+            {t("invoiceCount", { n: laborInvoices.length })}
           </div>
         </div>
         <div className="folio-card p-5">
-          <div className="label-cap">{t("overdue")}</div>
+          <div className="label-cap">{t("types.materials_services")}</div>
           <div
             className="font-display num mt-2 text-[28px] font-medium leading-none"
-            style={{ color: overdueInvoices.length > 0 ? "var(--negative)" : "var(--ink)" }}
           >
-            {formatEUR(overdueTotal)}
+            {formatEUR(materialsInvoices.reduce((s, i) => s + i.total_amount, 0))}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("invoiceCount", { n: overdueInvoices.length })}
+            {t("invoiceCount", { n: materialsInvoices.length })}
           </div>
         </div>
       </div>
@@ -331,7 +329,19 @@ export default function InvoicesPage() {
                                 <td style={{ color: "var(--muted)" }}>
                                   {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                                 </td>
-                                <td className="num text-[12.5px]">{invoice.invoice_number}</td>
+                                <td className="num text-[12.5px]">
+                                  {invoice.invoice_number}
+                                  {invoice.is_auto_generated && (
+                                    <span
+                                      className="stamp ml-2"
+                                      title={t("autoGenerated")}
+                                      style={{ fontSize: 10, verticalAlign: "middle" }}
+                                    >
+                                      <Lock size={10} className="mr-0.5 inline" />
+                                      {t("auto")}
+                                    </span>
+                                  )}
+                                </td>
                                 <td className="num" style={{ color: "var(--muted)" }}>
                                   {invoice.issue_date}
                                 </td>
@@ -353,7 +363,7 @@ export default function InvoicesPage() {
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <div className="flex items-center justify-end gap-1">
-                                    {canManageInvoices && (
+                                    {canManageInvoices && !invoice.is_auto_generated && (
                                       <Button
                                         variant="ghost"
                                         size="sm"

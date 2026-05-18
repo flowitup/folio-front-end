@@ -43,7 +43,7 @@ vi.mock("@/context/AuthContext", () => ({
 }));
 
 vi.mock("@/lib/api/invoice-api", () => ({
-  fetchInvoices: vi.fn(),
+  fetchInvoicesWithMeta: vi.fn(),
   deleteInvoice: vi.fn(),
 }));
 
@@ -65,7 +65,7 @@ vi.mock("@/components/invoices/invoice-mobile-card", () => ({
 
 import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { fetchInvoices } from "@/lib/api/invoice-api";
+import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import InvoicesPage from "../page";
 
 const mockUseParams = vi.mocked(useParams);
@@ -73,7 +73,7 @@ const mockUseSearchParams = vi.mocked(useSearchParams);
 const mockUseRouter = vi.mocked(useRouter);
 const mockUsePathname = vi.mocked(usePathname);
 const mockUseAuth = vi.mocked(useAuth);
-const mockFetchInvoices = vi.mocked(fetchInvoices);
+const mockFetchInvoicesWithMeta = vi.mocked(fetchInvoicesWithMeta);
 
 function setupMocks(invoices: Invoice[]) {
   mockUseParams.mockReturnValue({ id: "proj-test-1", locale: "en" });
@@ -88,7 +88,7 @@ function setupMocks(invoices: Invoice[]) {
   mockUsePathname.mockReturnValue("/en/projects/proj-test-1/invoices");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockUseAuth.mockReturnValue({ user: { permissions: [] } } as any);
-  mockFetchInvoices.mockResolvedValue(invoices);
+  mockFetchInvoicesWithMeta.mockResolvedValue({ invoices, total: invoices.length, funds_released_total: 0 });
 }
 
 function makeInvoice(overrides: Partial<Invoice>): Invoice {
@@ -108,6 +108,8 @@ function makeInvoice(overrides: Partial<Invoice>): Invoice {
     updated_at: "2026-05-12T00:00:00Z",
     payment_method_id: null,
     payment_method_label: null,
+    source_billing_document_id: null,
+    is_auto_generated: false,
     ...overrides,
   };
 }

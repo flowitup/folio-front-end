@@ -99,7 +99,7 @@ export function InvoiceDetailContent({
             <Printer className="h-4 w-4 mr-1" />
             {t("printPdf")}
           </Button>
-          {canManage && !isEditing && (
+          {canManage && !isEditing && !invoice.is_auto_generated && (
             <>
               <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
                 <Pencil className="h-4 w-4 mr-1" />

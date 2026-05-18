@@ -494,7 +494,11 @@
       "duplicateName": "Un rôle avec ce nom existe déjà.",
       "created": "Rôle créé.",
       "updated": "Rôle modifié.",
-      "deleted": "Rôle supprimé."
+      "deleted": "Rôle supprimé.",
+      "defaults": {
+        "masterCraftsman": "Ouvrier principal",
+        "assistant": "Ouvrier auxiliaire"
+      }
     },
     "shift": {
       "none": "(aucun)"

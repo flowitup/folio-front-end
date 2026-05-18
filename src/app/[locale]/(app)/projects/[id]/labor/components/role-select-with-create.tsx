@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ChevronsUpDown, Loader2, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RoleColorPicker } from "./role-color-picker";
 import { createLaborRoleAction } from "../actions";
+import { DEFAULT_ROLE_I18N_KEYS } from "@/lib/utils/default-role-names";
 import type { LaborRole } from "@/types/labor-role";
 
 interface RoleSelectWithCreateProps {
@@ -46,6 +48,7 @@ export function RoleSelectWithCreate({
   onChange,
   onRoleCreated,
 }: RoleSelectWithCreateProps) {
+  const tRole = useTranslations("labor.role.defaults");
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
@@ -56,6 +59,8 @@ export function RoleSelectWithCreate({
   const [createError, setCreateError] = React.useState<string | null>(null);
 
   const selectedRole = value ? roles.find((r) => r.id === value) : null;
+  const roleName = (role: LaborRole) =>
+    DEFAULT_ROLE_I18N_KEYS[role.id] ? tRole(DEFAULT_ROLE_I18N_KEYS[role.id]) : role.name;
 
   const trimmed = query.trim();
 
@@ -63,12 +68,12 @@ export function RoleSelectWithCreate({
   const filteredRoles = React.useMemo(() => {
     if (!trimmed) return roles;
     const lower = trimmed.toLowerCase();
-    return roles.filter((r) => r.name.toLowerCase().includes(lower));
+    return roles.filter((r) => roleName(r).toLowerCase().includes(lower));
   }, [roles, trimmed]);
 
   const exactMatch =
     trimmed.length > 0 &&
-    roles.some((r) => r.name.trim().toLowerCase() === trimmed.toLowerCase());
+    roles.some((r) => roleName(r).trim().toLowerCase() === trimmed.toLowerCase());
 
   const showCreateOption = trimmed.length > 0 && !exactMatch && !showCreateForm;
 
@@ -122,7 +127,7 @@ export function RoleSelectWithCreate({
     }
   }
 
-  const displayLabel = selectedRole ? selectedRole.name : "";
+  const displayLabel = selectedRole ? roleName(selectedRole) : "";
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -203,7 +208,7 @@ export function RoleSelectWithCreate({
                         style={{ backgroundColor: role.color }}
                         aria-hidden="true"
                       />
-                      <span className="truncate">{role.name}</span>
+                      <span className="truncate">{roleName(role)}</span>
                     </CommandItem>
                   ))}
                 </CommandGroup>

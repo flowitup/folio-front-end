@@ -17,6 +17,7 @@ import type { Worker } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { workerColor, personInitials } from "@/lib/utils/person-color";
+import { DEFAULT_ROLE_I18N_KEYS } from "@/lib/utils/default-role-names";
 import { cn } from "@/lib/utils";
 
 /**
@@ -60,6 +61,7 @@ export function WorkerList({
   onDeactivate,
 }: WorkerListProps) {
   const t = useTranslations("labor");
+  const tRole = useTranslations("labor.role.defaults");
   const tExport = useTranslations("labor.export");
   const [confirmDeactivate, setConfirmDeactivate] = useState<Worker | null>(null);
   const [exportWorker, setExportWorker] = useState<Worker | null>(null);
@@ -131,7 +133,9 @@ export function WorkerList({
                         style={{ backgroundColor: worker.role_color ?? undefined }}
                         aria-hidden="true"
                       />
-                      {worker.role_name}
+                      {worker.role_id && DEFAULT_ROLE_I18N_KEYS[worker.role_id]
+                        ? tRole(DEFAULT_ROLE_I18N_KEYS[worker.role_id])
+                        : worker.role_name}
                     </span>
                   )}
                 </div>

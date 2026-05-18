@@ -494,7 +494,11 @@
       "duplicateName": "A role with this name already exists.",
       "created": "Role created.",
       "updated": "Role updated.",
-      "deleted": "Role deleted."
+      "deleted": "Role deleted.",
+      "defaults": {
+        "masterCraftsman": "Master craftsman",
+        "assistant": "Assistant"
+      }
     },
     "shift": {
       "none": "(none)"

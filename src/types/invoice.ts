@@ -27,6 +27,10 @@ export interface Invoice {
   payment_method_id: string | null;
   /** Snapshot of the payment method label at write time (survives label renames/deletes). */
   payment_method_label: string | null;
+  /** UUID of the billing document that triggered this auto-generated invoice. */
+  source_billing_document_id: string | null;
+  /** True when invoice was created automatically (e.g. facture → PAID funds release). */
+  is_auto_generated: boolean;
 }
 
 export interface CreateInvoicePayload {

@@ -11,12 +11,19 @@ import type {
   InvoiceExportTypeFilter,
 } from "@/types/invoice";
 
+export interface InvoiceListResponse {
+  invoices: Invoice[];
+  total: number;
+  funds_released_total: number;
+}
+
+export const fetchInvoicesWithMeta = (projectId: string, type?: string): Promise<InvoiceListResponse> =>
+  api.get<InvoiceListResponse>(
+    `/projects/${projectId}/invoices${type ? `?type=${type}` : ""}`
+  );
+
 export const fetchInvoices = (projectId: string, type?: string): Promise<Invoice[]> =>
-  api
-    .get<{ invoices: Invoice[]; total: number }>(
-      `/projects/${projectId}/invoices${type ? `?type=${type}` : ""}`
-    )
-    .then((r) => r.invoices);
+  fetchInvoicesWithMeta(projectId, type).then((r) => r.invoices);
 
 export const fetchInvoice = (projectId: string, invoiceId: string): Promise<Invoice> =>
   api.get<Invoice>(`/projects/${projectId}/invoices/${invoiceId}`);

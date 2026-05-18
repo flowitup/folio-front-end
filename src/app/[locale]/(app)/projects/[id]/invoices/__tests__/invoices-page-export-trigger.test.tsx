@@ -41,7 +41,7 @@ vi.mock("@/context/AuthContext", () => ({
 }));
 
 vi.mock("@/lib/api/invoice-api", () => ({
-  fetchInvoices: vi.fn(),
+  fetchInvoicesWithMeta: vi.fn(),
   deleteInvoice: vi.fn(),
 }));
 
@@ -73,7 +73,7 @@ vi.mock("@/components/invoices/invoice-detail-row", () => ({
 
 import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { fetchInvoices } from "@/lib/api/invoice-api";
+import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import InvoicesPage from "../page";
 
 // ── Typed mock helpers ────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ const mockUseSearchParams = vi.mocked(useSearchParams);
 const mockUseRouter = vi.mocked(useRouter);
 const mockUsePathname = vi.mocked(usePathname);
 const mockUseAuth = vi.mocked(useAuth);
-const mockFetchInvoices = vi.mocked(fetchInvoices);
+const mockFetchInvoicesWithMeta = vi.mocked(fetchInvoicesWithMeta);
 
 // ── Setup helpers ─────────────────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ function setupMocks() {
   mockUsePathname.mockReturnValue("/en/projects/proj-test-1/invoices");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockUseAuth.mockReturnValue({ user: { permissions: [] } } as any);
-  mockFetchInvoices.mockResolvedValue([]);
+  mockFetchInvoicesWithMeta.mockResolvedValue({ invoices: [], total: 0, funds_released_total: 0 });
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -187,7 +187,7 @@ describe("InvoicesPage — initialType carries through from active tab", () => {
     );
 
     // Click the "labor" tab — the tab button text is t("types.labor") → "types.labor" via mock
-    const laborTab = screen.getByText("types.labor").closest("button")!;
+    const laborTab = screen.getAllByText("types.labor").find((el) => el.closest(".seg"))!;
     fireEvent.click(laborTab);
 
     // Now open the dialog
@@ -207,7 +207,7 @@ describe("InvoicesPage — initialType carries through from active tab", () => {
       { timeout: 5000 },
     );
 
-    fireEvent.click(screen.getByText("types.released_funds").closest("button")!);
+    fireEvent.click(screen.getAllByText("types.released_funds").find((el) => el.closest(".seg"))!);
     fireEvent.click(screen.getByText("export.trigger").closest("button")!);
 
     const dialog = screen.getByTestId("dialog-mock");
@@ -224,7 +224,7 @@ describe("InvoicesPage — initialType carries through from active tab", () => {
       { timeout: 5000 },
     );
 
-    fireEvent.click(screen.getByText("types.materials_services").closest("button")!);
+    fireEvent.click(screen.getAllByText("types.materials_services").find((el) => el.closest(".seg"))!);
     fireEvent.click(screen.getByText("export.trigger").closest("button")!);
 
     const dialog = screen.getByTestId("dialog-mock");

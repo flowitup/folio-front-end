@@ -206,3 +206,34 @@ export interface LaborExportRange {
   /** YYYY-MM */
   to: string;
 }
+
+// ─── Labor activities (project-level daily log) ─────────────────────────────
+
+export interface LaborActivity {
+  id: string;
+  project_id: string;
+  /** ISO YYYY-MM-DD */
+  date: string;
+  title: string;
+  description: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LaborActivityListResponse {
+  activities: LaborActivity[];
+  total: number;
+}
+
+export interface CreateLaborActivityPayload {
+  /** ISO YYYY-MM-DD */
+  date: string;
+  title: string;
+  description?: string;
+}
+
+export interface UpdateLaborActivityPayload {
+  title?: string;
+  description?: string;
+}

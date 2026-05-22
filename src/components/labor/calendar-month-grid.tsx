@@ -20,13 +20,15 @@ import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { buildMonthGrid, toDateKey } from "@/lib/utils/calendar-month";
 import { CalendarCell } from "@/components/labor/calendar-cell";
-import type { LaborEntry, Worker } from "@/types/labor";
+import type { LaborEntry, LaborActivity, Worker } from "@/types/labor";
 
 interface CalendarMonthGridProps {
   year: number;
   /** 0-based month index (0 = January). */
   monthIdx: number;
   entries: LaborEntry[];
+  /** Activities for the current month scope. */
+  activities?: LaborActivity[];
   onDayClick?: (date: Date) => void;
   /** BCP-47 locale tag. Defaults to the browser's. */
   locale?: string;
@@ -39,6 +41,7 @@ export function CalendarMonthGrid({
   year,
   monthIdx,
   entries,
+  activities = [],
   onDayClick,
   locale,
   className,
@@ -66,6 +69,19 @@ export function CalendarMonthGrid({
     }
     return map;
   }, [entries]);
+
+  const activitiesByDay = useMemo(() => {
+    const map = new Map<string, LaborActivity[]>();
+    for (const a of activities) {
+      const arr = map.get(a.date);
+      if (arr) {
+        arr.push(a);
+      } else {
+        map.set(a.date, [a]);
+      }
+    }
+    return map;
+  }, [activities]);
 
   // Weekday header labels, Monday-first. We derive these from the
   // locale by formatting a known set of dates (2026-04-06 is a Monday,
@@ -98,12 +114,15 @@ export function CalendarMonthGrid({
       {/* Cell grid */}
       <div className="grid grid-cols-7 gap-1.5 auto-rows-auto lg:min-h-0 lg:flex-1 lg:auto-rows-fr">
         {cells.map((date, i) => {
-          const dayEntries = date ? entriesByDay.get(toDateKey(date)) ?? [] : [];
+          const key = date ? toDateKey(date) : null;
+          const dayEntries = key ? entriesByDay.get(key) ?? [] : [];
+          const dayActivities = key ? activitiesByDay.get(key) ?? [] : [];
           return (
             <CalendarCell
-              key={date ? toDateKey(date) : `pad-${i}`}
+              key={key ?? `pad-${i}`}
               date={date}
               entries={dayEntries}
+              activities={dayActivities}
               onClick={(d) => d && onDayClick?.(d)}
               workerMap={workerMap}
             />

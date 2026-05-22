@@ -21,13 +21,15 @@ import { isToday } from "@/lib/utils/calendar-month";
 import { getFrenchHolidayKey } from "@/lib/utils/french-holidays";
 import { personColor, workerColor } from "@/lib/utils/person-color";
 import { formatEUR } from "@/lib/api/labor";
-import type { LaborEntry, Worker } from "@/types/labor";
+import type { LaborEntry, LaborActivity, Worker } from "@/types/labor";
 
 interface CalendarCellProps {
   /** The Date this cell represents, or null for grid padding cells. */
   date: Date | null;
   /** Entries for this day (already filtered by parent). */
   entries: LaborEntry[];
+  /** Activities for this day. */
+  activities?: LaborActivity[];
   /** Click handler. Receives the cell's date (null for padding). */
   onClick?: (date: Date | null) => void;
   /** Max chips shown before collapsing to "+N". Defaults to 3. */
@@ -49,6 +51,7 @@ interface ChipDescriptor {
 export function CalendarCell({
   date,
   entries,
+  activities = [],
   onClick,
   maxChips = 3,
   workerMap,
@@ -94,7 +97,7 @@ export function CalendarCell({
 
   const today = isToday(date);
   const sunday = date.getDay() === 0;
-  const empty = entries.length === 0;
+  const empty = entries.length === 0 && activities.length === 0;
   const holidayKey = getFrenchHolidayKey(date);
   const holidayName = holidayKey ? t(`holidays.${holidayKey}`) : null;
 
@@ -156,6 +159,25 @@ export function CalendarCell({
           {overflow > 0 && (
             <span className="text-muted-foreground text-[10px] font-medium">
               +{overflow}
+            </span>
+          )}
+        </div>
+      )}
+
+      {activities.length > 0 && (
+        <div className="flex flex-col gap-0.5">
+          {activities.slice(0, 2).map((a) => (
+            <span
+              key={a.id}
+              title={a.title}
+              className="text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 truncate rounded px-1 py-0.5"
+            >
+              {a.title}
+            </span>
+          ))}
+          {activities.length > 2 && (
+            <span className="text-muted-foreground text-[10px] font-medium">
+              +{activities.length - 2}
             </span>
           )}
         </div>

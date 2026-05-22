@@ -1,31 +1,20 @@
-/**
- * Tests for project-document-blob helpers.
- *
- * Covers:
- * - fetchProjectDocumentBlob: throws "not_authenticated" when no token
- * - fetchProjectDocumentBlob: builds correct URL with encoded IDs
- * - fetchProjectDocumentBlob: sends Authorization: Bearer header
- * - fetchProjectDocumentBlob: throws on non-2xx with status in message
- * - fetchProjectDocumentBlob: returns objectUrl + contentType on success
- * - fetchProjectDocumentBlob: revoke() calls URL.revokeObjectURL
- * - downloadProjectDocument: creates <a>, sets href/download, clicks it
- */
-
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { fetchProjectDocumentBlob, downloadProjectDocument } from "../project-document-blob";
 
-// ---- Mock http module (keep getApiAccessToken + getCsrfToken real-ish) ----
-
 vi.mock("../http", () => ({
-  getApiAccessToken: vi.fn(),
   getCsrfToken: vi.fn(),
+}));
+
+vi.mock("../refresh", () => ({
+  refreshAccessTokenViaCookie: vi.fn(),
 }));
 
 vi.mock("@/lib/config/env", () => ({
   env: { apiBaseUrl: "http://api.test/api/v1" },
 }));
 
-import { getApiAccessToken, getCsrfToken } from "../http";
+import { getCsrfToken } from "../http";
+import { refreshAccessTokenViaCookie } from "../refresh";
 
 // ---- Helpers ----
 
@@ -44,10 +33,9 @@ function makeErrorResponse(status: number, body = "") {
 // ---- Setup ----
 
 beforeEach(() => {
-  vi.mocked(getApiAccessToken).mockReturnValue("test-token-abc");
   vi.mocked(getCsrfToken).mockReturnValue(null);
+  vi.mocked(refreshAccessTokenViaCookie).mockResolvedValue(false);
 
-  // Stub URL APIs used in blob creation
   vi.stubGlobal("URL", {
     createObjectURL: vi.fn().mockReturnValue("blob:fake-url"),
     revokeObjectURL: vi.fn(),
@@ -64,16 +52,6 @@ afterEach(() => {
 // ── fetchProjectDocumentBlob ──────────────────────────────────────────────────
 
 describe("fetchProjectDocumentBlob", () => {
-  it("throws not_authenticated when no access token", async () => {
-    vi.mocked(getApiAccessToken).mockReturnValue(null);
-
-    await expect(
-      fetchProjectDocumentBlob("proj-1", "doc-1")
-    ).rejects.toThrow("not_authenticated");
-
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
   it("builds correct URL with encoded projectId and docId", async () => {
     vi.mocked(fetch).mockResolvedValue(makeOkResponse("pdf-bytes"));
 
@@ -81,22 +59,18 @@ describe("fetchProjectDocumentBlob", () => {
 
     expect(fetch).toHaveBeenCalledWith(
       "http://api.test/api/v1/projects/proj%2Fspecial/documents/doc%26id/download",
-      expect.objectContaining({ method: "GET" })
+      expect.objectContaining({ method: "GET" }),
     );
   });
 
-  it("sends Authorization Bearer header", async () => {
+  it("sends credentials include for cookie auth", async () => {
     vi.mocked(fetch).mockResolvedValue(makeOkResponse("pdf-bytes"));
 
     await fetchProjectDocumentBlob("proj-1", "doc-1");
 
     expect(fetch).toHaveBeenCalledWith(
       expect.any(String),
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: "Bearer test-token-abc",
-        }),
-      })
+      expect.objectContaining({ credentials: "include" }),
     );
   });
 
@@ -122,32 +96,50 @@ describe("fetchProjectDocumentBlob", () => {
     expect(headers["X-CSRF-TOKEN"]).toBe("csrf-value");
   });
 
-  it("throws fetch_failed:<status> on 401", async () => {
+  it("retries after 401 when refresh succeeds", async () => {
+    vi.mocked(refreshAccessTokenViaCookie).mockResolvedValue(true);
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(makeErrorResponse(401))
+      .mockResolvedValueOnce(makeOkResponse("pdf-bytes"));
+
+    const result = await fetchProjectDocumentBlob("proj-1", "doc-1");
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(refreshAccessTokenViaCookie).toHaveBeenCalledTimes(1);
+    expect(result.objectUrl).toBe("blob:fake-url");
+  });
+
+  it("throws fetch_failed on 401 when refresh fails", async () => {
+    vi.mocked(refreshAccessTokenViaCookie).mockResolvedValue(false);
     vi.mocked(fetch).mockResolvedValue(makeErrorResponse(401, "Unauthorized"));
 
-    await expect(
-      fetchProjectDocumentBlob("proj-1", "doc-1")
-    ).rejects.toThrow("fetch_failed:401");
+    await expect(fetchProjectDocumentBlob("proj-1", "doc-1")).rejects.toThrow(
+      "fetch_failed:401",
+    );
   });
 
   it("throws fetch_failed:<status> on 403", async () => {
     vi.mocked(fetch).mockResolvedValue(makeErrorResponse(403, "Forbidden"));
 
-    await expect(
-      fetchProjectDocumentBlob("proj-1", "doc-1")
-    ).rejects.toThrow("fetch_failed:403");
+    await expect(fetchProjectDocumentBlob("proj-1", "doc-1")).rejects.toThrow(
+      "fetch_failed:403",
+    );
   });
 
   it("throws fetch_failed:<status> on 500", async () => {
-    vi.mocked(fetch).mockResolvedValue(makeErrorResponse(500, "Internal Server Error"));
+    vi.mocked(fetch).mockResolvedValue(
+      makeErrorResponse(500, "Internal Server Error"),
+    );
 
-    await expect(
-      fetchProjectDocumentBlob("proj-1", "doc-1")
-    ).rejects.toThrow("fetch_failed:500");
+    await expect(fetchProjectDocumentBlob("proj-1", "doc-1")).rejects.toThrow(
+      "fetch_failed:500",
+    );
   });
 
   it("returns objectUrl and contentType on success", async () => {
-    vi.mocked(fetch).mockResolvedValue(makeOkResponse("pdf-bytes", "application/pdf"));
+    vi.mocked(fetch).mockResolvedValue(
+      makeOkResponse("pdf-bytes", "application/pdf"),
+    );
 
     const result = await fetchProjectDocumentBlob("proj-1", "doc-1");
 
@@ -157,12 +149,10 @@ describe("fetchProjectDocumentBlob", () => {
   });
 
   it("defaults contentType to application/octet-stream when content-type header is absent", async () => {
-    // Build a Response whose Headers map has no content-type entry
     const res = new Response(new Blob(["data"]), {
       status: 200,
-      headers: { "content-type": "" }, // empty string → getApiAccessToken returns "" → falsy
+      headers: { "content-type": "" },
     });
-    // Override headers.get to simulate missing header (returns null)
     vi.spyOn(res.headers, "get").mockReturnValue(null);
     vi.mocked(fetch).mockResolvedValue(res);
 
@@ -172,7 +162,9 @@ describe("fetchProjectDocumentBlob", () => {
   });
 
   it("revoke() calls URL.revokeObjectURL with the object URL", async () => {
-    vi.mocked(fetch).mockResolvedValue(makeOkResponse("img-bytes", "image/png"));
+    vi.mocked(fetch).mockResolvedValue(
+      makeOkResponse("img-bytes", "image/png"),
+    );
 
     const result = await fetchProjectDocumentBlob("proj-1", "doc-1");
     result.revoke();
@@ -188,7 +180,7 @@ describe("fetchProjectDocumentBlob", () => {
 
     expect(fetch).toHaveBeenCalledWith(
       expect.any(String),
-      expect.objectContaining({ signal: controller.signal })
+      expect.objectContaining({ signal: controller.signal }),
     );
   });
 });
@@ -197,14 +189,18 @@ describe("fetchProjectDocumentBlob", () => {
 
 describe("downloadProjectDocument", () => {
   beforeEach(() => {
-    vi.stubGlobal("setTimeout", (fn: () => void) => fn()); // run immediately in tests
+    vi.stubGlobal("setTimeout", (fn: () => void) => fn());
   });
 
   it("creates and clicks a transient <a> element with correct attributes", async () => {
-    vi.mocked(fetch).mockResolvedValue(makeOkResponse("pdf-bytes", "application/pdf"));
+    vi.mocked(fetch).mockResolvedValue(
+      makeOkResponse("pdf-bytes", "application/pdf"),
+    );
 
     const appendChildSpy = vi.spyOn(document.body, "appendChild");
-    const removeChildSpy = vi.spyOn(document.body, "removeChild").mockImplementation(() => document.body);
+    const removeChildSpy = vi
+      .spyOn(document.body, "removeChild")
+      .mockImplementation(() => document.body);
 
     await downloadProjectDocument("proj-1", "doc-1", "report.pdf");
 
@@ -220,7 +216,9 @@ describe("downloadProjectDocument", () => {
   it("revokes the object URL after download", async () => {
     vi.mocked(fetch).mockResolvedValue(makeOkResponse("pdf-bytes"));
     vi.spyOn(document.body, "appendChild");
-    vi.spyOn(document.body, "removeChild").mockImplementation(() => document.body);
+    vi.spyOn(document.body, "removeChild").mockImplementation(
+      () => document.body,
+    );
 
     await downloadProjectDocument("proj-1", "doc-1", "report.pdf");
 
@@ -231,7 +229,7 @@ describe("downloadProjectDocument", () => {
     vi.mocked(fetch).mockResolvedValue(makeErrorResponse(403));
 
     await expect(
-      downloadProjectDocument("proj-1", "doc-1", "report.pdf")
+      downloadProjectDocument("proj-1", "doc-1", "report.pdf"),
     ).rejects.toThrow("fetch_failed:403");
   });
 });

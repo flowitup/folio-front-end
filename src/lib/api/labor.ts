@@ -18,6 +18,10 @@ import type {
   SummaryParams,
   LaborExportFormat,
   LaborExportRange,
+  LaborActivity,
+  LaborActivityListResponse,
+  CreateLaborActivityPayload,
+  UpdateLaborActivityPayload,
 } from "@/types/labor";
 import { api, ApiError } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
@@ -160,6 +164,42 @@ export function formatEUR(amount: number): string {
     style: "currency",
     currency: "EUR",
   }).format(amount);
+}
+
+// ─── Labor Activities ────────────────────────────────────────────────────────
+
+export async function fetchLaborActivities(
+  projectId: string,
+  params?: { from?: string; to?: string },
+): Promise<LaborActivity[]> {
+  const url = buildUrl(`/projects/${projectId}/labor-activities`, {
+    from: params?.from,
+    to: params?.to,
+  });
+  const data = await api.get<LaborActivityListResponse>(url);
+  return data.activities;
+}
+
+export async function createLaborActivity(
+  projectId: string,
+  payload: CreateLaborActivityPayload,
+): Promise<LaborActivity> {
+  return api.post<LaborActivity>(`/projects/${projectId}/labor-activities`, payload);
+}
+
+export async function updateLaborActivity(
+  projectId: string,
+  activityId: string,
+  payload: UpdateLaborActivityPayload,
+): Promise<LaborActivity> {
+  return api.put<LaborActivity>(`/projects/${projectId}/labor-activities/${activityId}`, payload);
+}
+
+export async function deleteLaborActivity(
+  projectId: string,
+  activityId: string,
+): Promise<void> {
+  await api.delete(`/projects/${projectId}/labor-activities/${activityId}`);
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────

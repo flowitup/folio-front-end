@@ -22,14 +22,16 @@ import {
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ClipboardList, Pencil, Trash2 as ActivityTrash } from "lucide-react";
 import { LaborEntryCard } from "@/components/labor/labor-entry-card";
-import type { LaborEntry, Worker } from "@/types/labor";
+import type { LaborEntry, LaborActivity, Worker } from "@/types/labor";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatEUR } from "@/lib/api/labor";
 
 interface AttendanceTableProps {
   entries: LaborEntry[];
   workers: Worker[];
+  activities?: LaborActivity[];
   isLoading: boolean;
   canManage: boolean;
   month: string;
@@ -37,11 +39,15 @@ interface AttendanceTableProps {
   onMonthChange: (value: string) => void;
   onWorkerFilterChange: (value: string) => void;
   onDelete: (entry: LaborEntry) => void;
+  onAddActivity?: (date: string) => void;
+  onEditActivity?: (activity: LaborActivity) => void;
+  onDeleteActivity?: (activity: LaborActivity) => void;
 }
 
 export function AttendanceTable({
   entries,
   workers,
+  activities = [],
   isLoading,
   canManage,
   month,
@@ -49,6 +55,9 @@ export function AttendanceTable({
   onMonthChange,
   onWorkerFilterChange,
   onDelete,
+  onAddActivity,
+  onEditActivity,
+  onDeleteActivity,
 }: AttendanceTableProps) {
   const t = useTranslations("labor");
   const [confirmDelete, setConfirmDelete] = useState<LaborEntry | null>(null);
@@ -106,32 +115,40 @@ export function AttendanceTable({
         </div>
       </div>
 
-      {/* Entries grouped by date */}
-      {entries.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            {t("noEntries")}
-          </CardContent>
-        </Card>
-      ) : (() => {
+      {/* Entries + activities grouped by date */}
+      {(() => {
         const grouped = entries.reduce<Record<string, typeof entries>>((acc, e) => {
           (acc[e.date] ??= []).push(e);
           return acc;
         }, {});
-        const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+        const activitiesByDay = activities.reduce<Record<string, LaborActivity[]>>((acc, a) => {
+          (acc[a.date] ??= []).push(a);
+          return acc;
+        }, {});
+        const allDates = new Set([...Object.keys(grouped), ...Object.keys(activitiesByDay)]);
+        const sortedDates = [...allDates].sort((a, b) => b.localeCompare(a));
+
+        if (sortedDates.length === 0) {
+          return (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                {t("noEntries")}
+              </CardContent>
+            </Card>
+          );
+        }
 
         return (
           <div className="space-y-6">
             {sortedDates.map((date) => {
-              const dayEntries = grouped[date];
+              const dayEntries = grouped[date] ?? [];
+              const dayActivities = activitiesByDay[date] ?? [];
               const dayTotal = dayEntries.reduce(
                 (sum, e) => sum + Number(e.effective_cost ?? 0),
                 0,
               );
               return (
                 <section key={date} className="space-y-2">
-                  {/* Date header — French weekday is lowercased by Intl;
-                      capitalize so the line reads "Samedi 09/05/2026". */}
                   <header className="flex items-baseline justify-between gap-3 px-1">
                     <h3 className="text-foreground text-sm font-semibold tracking-tight">
                       {capitalizeFirst(
@@ -145,14 +162,27 @@ export function AttendanceTable({
                       )}
                     </h3>
                     <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                      <span>
-                        {dayEntries.length}{" "}
-                        {dayEntries.length === 1 ? "worker" : "workers"}
-                      </span>
-                      <span aria-hidden="true">·</span>
-                      <span className="text-foreground font-semibold tabular-nums">
-                        {formatEUR(dayTotal)}
-                      </span>
+                      {dayEntries.length > 0 && (
+                        <>
+                          <span>
+                            {dayEntries.length}{" "}
+                            {dayEntries.length === 1 ? "worker" : "workers"}
+                          </span>
+                          <span aria-hidden="true">·</span>
+                          <span className="text-foreground font-semibold tabular-nums">
+                            {formatEUR(dayTotal)}
+                          </span>
+                        </>
+                      )}
+                      {dayActivities.length > 0 && (
+                        <>
+                          {dayEntries.length > 0 && <span aria-hidden="true">·</span>}
+                          <span>
+                            {dayActivities.length}{" "}
+                            {dayActivities.length === 1 ? "activity" : "activities"}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </header>
 
@@ -166,8 +196,57 @@ export function AttendanceTable({
                           onDelete={(e) => setConfirmDelete(e)}
                         />
                       ))}
+                      {dayActivities.map((activity) => (
+                        <div key={activity.id} className="flex items-start gap-3 px-4 py-3">
+                          <ClipboardList className="text-blue-500 mt-0.5 h-4 w-4 shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium">{activity.title}</p>
+                            {activity.description && (
+                              <p className="text-muted-foreground mt-0.5 text-xs">
+                                {activity.description}
+                              </p>
+                            )}
+                          </div>
+                          {canManage && (
+                            <div className="flex shrink-0 gap-1">
+                              {onEditActivity && (
+                                <button
+                                  type="button"
+                                  onClick={() => onEditActivity(activity)}
+                                  className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                              {onDeleteActivity && (
+                                <button
+                                  type="button"
+                                  onClick={() => onDeleteActivity(activity)}
+                                  className="text-muted-foreground hover:text-destructive rounded p-1 transition-colors"
+                                >
+                                  <ActivityTrash className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </Card>
+
+                  {canManage && onAddActivity && (
+                    <div className="px-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onAddActivity(date)}
+                        className="text-muted-foreground h-auto py-1 text-xs"
+                      >
+                        <ClipboardList className="mr-1 h-3 w-3" />
+                        {t("activity.addTitle")}
+                      </Button>
+                    </div>
+                  )}
                 </section>
               );
             })}

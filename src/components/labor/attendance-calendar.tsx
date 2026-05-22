@@ -33,11 +33,13 @@ import {
   parseMonthTag,
   toDateKey,
 } from "@/lib/utils/calendar-month";
-import type { LaborEntry, Worker } from "@/types/labor";
+import type { LaborEntry, LaborActivity, Worker } from "@/types/labor";
 
 interface AttendanceCalendarProps {
   entries: LaborEntry[];
   workers: Worker[];
+  /** Activities for the current month scope. */
+  activities?: LaborActivity[];
   isLoading: boolean;
   canManage: boolean;
   /** YYYY-MM — empty defaults to current month for the calendar. */
@@ -52,11 +54,16 @@ interface AttendanceCalendarProps {
   onEditEntry?: (entry: LaborEntry) => void;
   /** Worker lookup for role-aware chip colors. See CalendarCell. */
   workerMap?: Record<string, Worker>;
+  /** Activity CRUD callbacks. */
+  onAddActivity?: (date: string) => void;
+  onEditActivity?: (activity: LaborActivity) => void;
+  onDeleteActivity?: (activity: LaborActivity) => void;
 }
 
 export function AttendanceCalendar({
   entries,
   workers,
+  activities = [],
   isLoading,
   canManage,
   month,
@@ -67,6 +74,9 @@ export function AttendanceCalendar({
   onLogDay,
   onEditEntry,
   workerMap,
+  onAddActivity,
+  onEditActivity,
+  onDeleteActivity,
 }: AttendanceCalendarProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
@@ -100,6 +110,12 @@ export function AttendanceCalendar({
     const key = toDateKey(selectedDate);
     return filteredEntries.filter((e) => e.date === key);
   }, [filteredEntries, selectedDate]);
+
+  const dayActivities = useMemo(() => {
+    if (!selectedDate) return [];
+    const key = toDateKey(selectedDate);
+    return activities.filter((a) => a.date === key);
+  }, [activities, selectedDate]);
 
   if (isLoading) {
     return (
@@ -161,14 +177,15 @@ export function AttendanceCalendar({
         year={cursor.getFullYear()}
         monthIdx={cursor.getMonth()}
         entries={filteredEntries}
+        activities={activities}
         locale={locale}
         workerMap={workerMap}
         onDayClick={(d) => {
-          // Empty-cell click: jump straight to the log dialog. Days
-          // with entries open the detail sheet first.
-          const hasEntries = filteredEntries.some((e) => e.date === toDateKey(d));
-          if (!hasEntries && onLogDay && canManage) {
-            onLogDay(toDateKey(d));
+          const key = toDateKey(d);
+          const hasEntries = filteredEntries.some((e) => e.date === key);
+          const hasActivities = activities.some((a) => a.date === key);
+          if (!hasEntries && !hasActivities && onLogDay && canManage) {
+            onLogDay(key);
           } else {
             setSelectedDate(d);
           }
@@ -178,6 +195,7 @@ export function AttendanceCalendar({
       <AttendanceDayDetailSheet
         date={selectedDate}
         entries={dayEntries}
+        activities={dayActivities}
         open={selectedDate !== null}
         onOpenChange={(o) => {
           if (!o) setSelectedDate(null);
@@ -194,6 +212,16 @@ export function AttendanceCalendar({
               }
             : undefined
         }
+        onAddActivity={
+          selectedDate && onAddActivity
+            ? () => {
+                const key = toDateKey(selectedDate);
+                onAddActivity(key);
+              }
+            : undefined
+        }
+        onEditActivity={onEditActivity}
+        onDeleteActivity={onDeleteActivity}
       />
     </div>
   );

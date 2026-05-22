@@ -17,7 +17,9 @@ import { LogDayDialog } from "@/components/labor/log-day-dialog";
 import { EditAttendanceDialog } from "@/components/labor/edit-attendance-dialog";
 import { LaborSummary } from "@/components/labor/labor-summary";
 
-import type { Worker, LaborEntry, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
+import { ActivityDialog } from "@/components/labor/activity-dialog";
+
+import type { Worker, LaborEntry, LaborActivity, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload, CreateLaborActivityPayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
 import {
   fetchWorkers,
@@ -29,6 +31,10 @@ import {
   deleteAttendance,
   fetchLaborSummary,
   fetchLaborMonthlySummary,
+  fetchLaborActivities,
+  createLaborActivity,
+  updateLaborActivity,
+  deleteLaborActivity,
 } from "@/lib/api/labor";
 import { fetchLaborRolesAction } from "./actions";
 
@@ -89,6 +95,11 @@ export default function LaborPage() {
   const [logDayDate, setLogDayDate] = useState<string | undefined>(undefined);
   // Active entry for the edit dialog. Null when closed.
   const [editEntry, setEditEntry] = useState<LaborEntry | null>(null);
+  // Activities state.
+  const [activities, setActivities] = useState<LaborActivity[]>([]);
+  const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [activityDate, setActivityDate] = useState<string | undefined>(undefined);
+  const [editActivity, setEditActivity] = useState<LaborActivity | null>(null);
   // Default: "" → no month filter → all-history view (BE caps the response,
   // see GET /labor-entries default limit). The month picker is opt-in.
   const [entriesMonth, setEntriesMonth] = useState("");
@@ -138,6 +149,16 @@ export default function LaborPage() {
     }
   }, [projectId, entriesMonth, entriesWorkerFilter]);
 
+  const loadActivities = useCallback(async () => {
+    try {
+      const { from, to } = monthToRange(entriesMonth);
+      const data = await fetchLaborActivities(projectId, { from, to });
+      setActivities(data);
+    } catch {
+      // Non-fatal: activities are enhancement; entries still render.
+    }
+  }, [projectId, entriesMonth]);
+
   // Load summary.
   // - summaryMonth === ""  → fetch the per-month rollup (LaborSummary
   //   renders month rows + year filter buttons).
@@ -183,8 +204,11 @@ export default function LaborPage() {
   }, [loadWorkers]);
 
   useEffect(() => {
-    if (activeTab === "attendance") loadEntries();
-  }, [activeTab, loadEntries]);
+    if (activeTab === "attendance") {
+      loadEntries();
+      loadActivities();
+    }
+  }, [activeTab, loadEntries, loadActivities]);
 
   useEffect(() => {
     if (activeTab === "summary") loadSummary();
@@ -260,6 +284,39 @@ export default function LaborPage() {
     }
   };
 
+  const handleOpenAddActivity = (date: string) => {
+    setActivityDate(date);
+    setEditActivity(null);
+    setShowActivityDialog(true);
+  };
+
+  const handleOpenEditActivity = (activity: LaborActivity) => {
+    setEditActivity(activity);
+    setActivityDate(undefined);
+    setShowActivityDialog(true);
+  };
+
+  const handleSaveActivity = async (data: { date: string; title: string; description?: string }) => {
+    if (editActivity) {
+      await updateLaborActivity(projectId, editActivity.id, {
+        title: data.title,
+        description: data.description,
+      });
+    } else {
+      await createLaborActivity(projectId, data as CreateLaborActivityPayload);
+    }
+    await loadActivities();
+  };
+
+  const handleDeleteActivity = async (activity: LaborActivity) => {
+    try {
+      await deleteLaborActivity(projectId, activity.id);
+      await loadActivities();
+    } catch {
+      setError("Failed to delete activity");
+    }
+  };
+
   return (
     <div className="fade-up flex min-h-full flex-col gap-4 px-4 pb-12 lg:gap-6 lg:px-8">
       {/* Segmented tabs */}
@@ -323,6 +380,7 @@ export default function LaborPage() {
             <AttendanceCalendar
               entries={entries}
               workers={workers}
+              activities={activities}
               isLoading={isTabLoading}
               canManage={canManageLabor}
               month={entriesMonth}
@@ -333,11 +391,15 @@ export default function LaborPage() {
               onLogDay={canManageLabor ? handleOpenLogDay : undefined}
               onEditEntry={canManageLabor ? setEditEntry : undefined}
               workerMap={workerMap}
+              onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
+              onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
+              onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
             />
           ) : (
             <AttendanceTable
               entries={entries}
               workers={workers}
+              activities={activities}
               isLoading={isTabLoading}
               canManage={canManageLabor}
               month={entriesMonth}
@@ -345,6 +407,9 @@ export default function LaborPage() {
               onMonthChange={setEntriesMonth}
               onWorkerFilterChange={setEntriesWorkerFilter}
               onDelete={handleDeleteEntry}
+              onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
+              onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
+              onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
             />
           )}
         </div>
@@ -402,6 +467,20 @@ export default function LaborPage() {
         }}
         entry={editEntry}
         onSave={handleUpdateAttendance}
+      />
+
+      <ActivityDialog
+        open={showActivityDialog}
+        onOpenChange={(open) => {
+          setShowActivityDialog(open);
+          if (!open) {
+            setEditActivity(null);
+            setActivityDate(undefined);
+          }
+        }}
+        initialDate={activityDate}
+        editActivity={editActivity}
+        onSave={handleSaveActivity}
       />
     </div>
   );

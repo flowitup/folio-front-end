@@ -17,7 +17,7 @@
  * Plan: 260512-2341-labor-calendar-and-bulk-log → phase-02 (2c).
  */
 
-import { Plus, XIcon } from "lucide-react";
+import { Plus, XIcon, Pencil, Trash2, ClipboardList } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 import { cn } from "@/lib/utils";
@@ -25,13 +25,15 @@ import { Button } from "@/components/ui/button";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborEntryCard } from "@/components/labor/labor-entry-card";
-import type { LaborEntry } from "@/types/labor";
+import type { LaborEntry, LaborActivity } from "@/types/labor";
 
 interface AttendanceDayDetailSheetProps {
   /** The day this sheet describes. Null = closed. */
   date: Date | null;
   /** Entries for this day. */
   entries: LaborEntry[];
+  /** Activities for this day. */
+  activities?: LaborActivity[];
   /** Open/close binding. */
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,17 +43,25 @@ interface AttendanceDayDetailSheetProps {
   onEdit?: (entry: LaborEntry) => void;
   /** "+ Log more" button → opens LogDayDialog for this date. Optional. */
   onAddMore?: () => void;
+  /** Activity CRUD callbacks. */
+  onAddActivity?: () => void;
+  onEditActivity?: (activity: LaborActivity) => void;
+  onDeleteActivity?: (activity: LaborActivity) => void;
 }
 
 export function AttendanceDayDetailSheet({
   date,
   entries,
+  activities = [],
   open,
   onOpenChange,
   canManage,
   onDelete,
   onEdit,
   onAddMore,
+  onAddActivity,
+  onEditActivity,
+  onDeleteActivity,
 }: AttendanceDayDetailSheetProps) {
   const dayTotal = entries.reduce(
     (sum, e) => sum + Number(e.effective_cost ?? 0),
@@ -124,14 +134,73 @@ export function AttendanceDayDetailSheet({
                 onEdit={canManage ? onEdit : undefined}
               />
             ))}
+
+            {activities.length > 0 && (
+              <>
+                {entries.length > 0 && <hr className="border-border my-2" />}
+                <div className="flex items-center gap-1.5 pb-1">
+                  <ClipboardList className="text-muted-foreground h-3.5 w-3.5" />
+                  <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                    Activities
+                  </span>
+                </div>
+                {activities.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="bg-muted/30 rounded-md border p-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{activity.title}</p>
+                        {activity.description && (
+                          <p className="text-muted-foreground mt-0.5 text-xs">
+                            {activity.description}
+                          </p>
+                        )}
+                      </div>
+                      {canManage && (
+                        <div className="flex shrink-0 gap-1">
+                          {onEditActivity && (
+                            <button
+                              type="button"
+                              onClick={() => onEditActivity(activity)}
+                              className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          {onDeleteActivity && (
+                            <button
+                              type="button"
+                              onClick={() => onDeleteActivity(activity)}
+                              className="text-muted-foreground hover:text-destructive rounded p-1 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
 
-          {canManage && onAddMore && (
-            <Button onClick={onAddMore} variant="default" className="w-full">
-              <Plus className="mr-1 h-4 w-4" />
-              {entries.length === 0 ? "Log day" : "Log more workers"}
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {canManage && onAddMore && (
+              <Button onClick={onAddMore} variant="default" className="flex-1">
+                <Plus className="mr-1 h-4 w-4" />
+                {entries.length === 0 ? "Log day" : "Log more workers"}
+              </Button>
+            )}
+            {canManage && onAddActivity && (
+              <Button onClick={onAddActivity} variant="outline" className="flex-1">
+                <ClipboardList className="mr-1 h-4 w-4" />
+                Add activity
+              </Button>
+            )}
+          </div>
 
           <DialogPrimitive.Close
             aria-label="Close"

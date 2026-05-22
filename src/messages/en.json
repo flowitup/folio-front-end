@@ -575,6 +575,16 @@
       "workerToastError": "Could not export",
       "workerToastSuccess": "Export downloaded"
     },
+    "activity": {
+      "addTitle": "Add activity",
+      "editTitle": "Edit activity",
+      "titleField": "Title",
+      "titlePlaceholder": "What happened today?",
+      "descriptionField": "Description (optional)",
+      "descriptionPlaceholder": "Add details...",
+      "confirmDelete": "Delete this activity?",
+      "noActivities": "No activities logged"
+    },
     "holidays": {
       "publicHoliday": "public holiday",
       "newYear": "New Year's Day",

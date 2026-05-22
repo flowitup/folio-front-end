@@ -1,18 +1,17 @@
 "use client";
 
 /**
- * Shared helper: refresh the in-memory access token via the HttpOnly refresh cookie.
+ * Shared helper: refresh the access token via the HttpOnly refresh cookie.
  *
- * Used by both the project-document blob helper (GET /download) and the upload XHR
- * (POST /documents) so the token-refresh dance lives in one place.
- *
- * Returns the new access token on success, or null if the refresh fails.
+ * The backend sets the refreshed access cookie via Set-Cookie; callers just
+ * need to know whether the refresh succeeded so they can retry their request
+ * with credentials:"include".
  */
 
 import { env } from "@/lib/config/env";
-import { getRefreshCsrfToken, setApiAccessToken } from "@/lib/api/http";
+import { getRefreshCsrfToken } from "@/lib/api/http";
 
-export async function refreshAccessTokenViaCookie(): Promise<string | null> {
+export async function refreshAccessTokenViaCookie(): Promise<boolean> {
   try {
     const csrfRefresh = getRefreshCsrfToken();
     const headers: Record<string, string> = {};
@@ -22,14 +21,8 @@ export async function refreshAccessTokenViaCookie(): Promise<string | null> {
       credentials: "include",
       headers,
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data?.access_token) {
-      setApiAccessToken(data.access_token);
-      return data.access_token as string;
-    }
-    return null;
+    return res.ok;
   } catch {
-    return null;
+    return false;
   }
 }

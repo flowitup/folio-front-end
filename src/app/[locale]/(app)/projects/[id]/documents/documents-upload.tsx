@@ -6,7 +6,7 @@ import { Upload, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/config/env";
-import { getApiAccessToken, getCsrfToken } from "@/lib/api/http";
+import { getCsrfToken } from "@/lib/api/http";
 import { refreshAccessTokenViaCookie } from "@/lib/api/refresh";
 import type { ProjectDocument } from "@/lib/api/project-documents";
 
@@ -92,22 +92,15 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
     }, 3000);
   }
 
-  // Send a single XHR upload with the given bearer token.
-  // Returns "retry_401" when the server responds 401 so the caller can refresh
-  // and call once more; returns void for all other outcomes (job already updated).
   function sendXhr(
     file: File,
     jobId: string,
-    token: string,
   ): Promise<"retry_401" | void> {
     return new Promise((resolve) => {
       const xhr = new XMLHttpRequest();
       const url = `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents`;
       xhr.open("POST", url);
 
-      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-
-      // CSRF defense-in-depth for mutations
       const csrf = getCsrfToken();
       if (csrf) xhr.setRequestHeader("X-CSRF-TOKEN", csrf);
 
@@ -178,22 +171,12 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
   }
 
   async function uploadOne(file: File, jobId: string) {
-    // Bootstrap token: if no in-memory token (fresh page load), try refresh via
-    // cookie before sending. Mirrors the fix applied to the blob helper (H2).
-    let token = getApiAccessToken();
-    if (!token) token = await refreshAccessTokenViaCookie();
-    if (!token) {
-      updateJob(jobId, { status: "failed", error: { kind: "forbidden" } });
-      return;
-    }
-
-    const outcome = await sendXhr(file, jobId, token);
+    const outcome = await sendXhr(file, jobId);
 
     if (outcome === "retry_401") {
-      // Token expired mid-upload: refresh once and retry
-      const fresh = await refreshAccessTokenViaCookie();
-      if (fresh) {
-        await sendXhr(file, jobId, fresh);
+      const refreshed = await refreshAccessTokenViaCookie();
+      if (refreshed) {
+        await sendXhr(file, jobId);
       } else {
         updateJob(jobId, { status: "failed", error: { kind: "forbidden" } });
       }

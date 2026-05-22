@@ -27,7 +27,7 @@ jobs:
       version_bumped: ${{ steps.compute-version.outputs.version_bumped }}
     steps:
       - name: Checkout PR branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
@@ -174,7 +174,7 @@ jobs:
     needs: [version-bump]
     if: always() && (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
@@ -202,7 +202,7 @@ jobs:
     needs: [version-bump]
     if: always() && (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
@@ -229,7 +229,7 @@ jobs:
     timeout-minutes: 10
     needs: [lint, type-check]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
@@ -256,7 +256,7 @@ jobs:
     timeout-minutes: 10
     needs: [test]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
@@ -325,7 +325,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 

@@ -1025,8 +1025,17 @@
       "text": "Texte",
       "other": "Autre"
     },
+    "tags": {
+      "column": "Étiquettes",
+      "add": "Ajouter une étiquette",
+      "remove": "Supprimer l'étiquette",
+      "placeholder": "Nouvelle…",
+      "done": "Terminé"
+    },
     "filter": {
       "all": "Tous",
+      "tags": "Étiquettes",
+      "clearTags": "Effacer les étiquettes",
       "anyUploader": "N'importe qui",
       "reset": "Réinitialiser"
     },

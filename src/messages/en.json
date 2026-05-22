@@ -1025,8 +1025,17 @@
       "text": "Text",
       "other": "Other"
     },
+    "tags": {
+      "column": "Tags",
+      "add": "Add tag",
+      "remove": "Remove tag",
+      "placeholder": "New tag…",
+      "done": "Done"
+    },
     "filter": {
       "all": "All",
+      "tags": "Tags",
+      "clearTags": "Clear tags",
       "anyUploader": "Anyone",
       "reset": "Reset"
     },

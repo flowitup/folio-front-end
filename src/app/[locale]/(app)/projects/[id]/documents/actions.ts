@@ -6,6 +6,8 @@ import {
   listProjectDocuments,
   deleteProjectDocument,
   renameProjectDocument,
+  updateDocumentTags,
+  listDocumentTags,
 } from "@/lib/api/project-documents";
 import type {
   ProjectDocument,
@@ -116,6 +118,49 @@ export async function deleteDocumentAction(
     // template without route-group segments.
     revalidatePath(`/[locale]/projects/${projectId}/documents`, "page");
     return { ok: true, data: null };
+  } catch (err: unknown) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+/**
+ * Update tags on a document.
+ * Returns the updated document on success.
+ */
+export async function updateDocumentTagsAction(
+  projectId: string,
+  docId: string,
+  tags: string[]
+): Promise<ActionResult<ProjectDocument>> {
+  if (!projectId || !isUuid(projectId)) {
+    return { ok: false, error: "validation", message: "Invalid project id" };
+  }
+  if (!docId || !isUuid(docId)) {
+    return { ok: false, error: "validation", message: "Invalid document id" };
+  }
+
+  try {
+    const data = await updateDocumentTags(projectId, docId, tags);
+    revalidatePath(`/[locale]/projects/${projectId}/documents`, "page");
+    return { ok: true, data };
+  } catch (err: unknown) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+/**
+ * List all distinct tags used by documents in a project.
+ */
+export async function listDocumentTagsAction(
+  projectId: string
+): Promise<ActionResult<string[]>> {
+  if (!projectId || !isUuid(projectId)) {
+    return { ok: false, error: "validation", message: "Invalid project id" };
+  }
+
+  try {
+    const data = await listDocumentTags(projectId);
+    return { ok: true, data };
   } catch (err: unknown) {
     return { ok: false, error: classifyBackendError(err) };
   }

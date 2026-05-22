@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
-import { listProjectDocuments } from "@/lib/api/project-documents";
+import { listProjectDocuments, listDocumentTags } from "@/lib/api/project-documents";
 import { listMembers } from "@/lib/api/members";
 import { fetchProjectById } from "@/lib/api/projects";
 import { DocumentsPanel } from "./documents-panel";
@@ -27,8 +27,8 @@ export default async function DocumentsPage({ params }: PageProps) {
     redirect(`/${locale}/login`);
   }
 
-  // Parallel fetch — project metadata and members
-  const [project, members, docsResult] = await Promise.all([
+  // Parallel fetch — project metadata, members, documents, and tags
+  const [project, members, docsResult, tags] = await Promise.all([
     fetchProjectById(projectId).catch(() => null),
     listMembers(projectId).catch(() => []),
     listProjectDocuments(projectId).catch(() => ({
@@ -37,6 +37,7 @@ export default async function DocumentsPage({ params }: PageProps) {
       page: 1,
       per_page: 25,
     })),
+    listDocumentTags(projectId).catch(() => [] as string[]),
   ]);
 
   // Membership gate: admin (*:*) or project member (non-null project means access granted by BE)
@@ -67,6 +68,7 @@ export default async function DocumentsPage({ params }: PageProps) {
         projectId={projectId}
         initialDocuments={docsResult.items}
         initialTotal={docsResult.total}
+        initialTags={tags}
         members={adaptedMembers}
         currentUserId={session.user.id}
         isAdminOrOwner={isAdminOrOwner}

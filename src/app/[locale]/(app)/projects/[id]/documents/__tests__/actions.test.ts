@@ -123,6 +123,7 @@ describe("listDocumentsAction — happy path", () => {
           uploaded_at: "2024-01-01T00:00:00Z",
           uploader_id: "user-1",
           download_url: "/api/v1/projects/11111111/documents/22222222/download",
+          tags: [],
         },
       ],
       total: 1,

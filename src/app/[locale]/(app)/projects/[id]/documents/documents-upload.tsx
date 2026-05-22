@@ -12,7 +12,7 @@ import type { ProjectDocument } from "@/lib/api/project-documents";
 
 // ---- Constants ----
 
-const MAX_SIZE_BYTES = 26_214_400; // 25 MiB
+const MAX_SIZE_BYTES = 157_286_400; // 150 MiB
 
 const ALLOWED_EXTENSIONS = [
   ".pdf",

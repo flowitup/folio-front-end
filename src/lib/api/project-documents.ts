@@ -30,10 +30,12 @@ export type ProjectDocument = {
   uploaded_at: string; // ISO 8601
   uploader_id: string;
   download_url: string; // relative API path
+  tags: string[];
 };
 
 export type ListProjectDocumentsParams = {
   kinds?: ProjectDocumentKind[];
+  tags?: string[];
   uploaderId?: string;
   sort?: "name" | "size" | "created_at" | "uploader";
   order?: "asc" | "desc";
@@ -89,6 +91,11 @@ export async function listProjectDocuments(
   if (params?.kinds && params.kinds.length > 0) {
     for (const kind of params.kinds) {
       qs.append("type", kind);
+    }
+  }
+  if (params?.tags && params.tags.length > 0) {
+    for (const tag of params.tags) {
+      qs.append("tag", tag);
     }
   }
   if (params?.uploaderId) qs.set("uploader_id", params.uploaderId);
@@ -183,6 +190,71 @@ export async function deleteProjectDocument(
   if (response.status !== 204) {
     throw await buildHttpError(response, "Failed to delete document");
   }
+}
+
+/**
+ * Replace all tags on a document.
+ * Returns the updated document on success.
+ */
+export async function updateDocumentTags(
+  projectId: string,
+  docId: string,
+  tags: string[]
+): Promise<ProjectDocument> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents/${encodeURIComponent(docId)}/tags`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          ...authHeaders,
+        },
+        body: JSON.stringify({ tags }),
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error updating tags: ${String(err)}`);
+  }
+  if (!response.ok) {
+    throw await buildHttpError(response, "Failed to update tags");
+  }
+  return response.json() as Promise<ProjectDocument>;
+}
+
+/**
+ * List all distinct tags used by documents in a project.
+ */
+export async function listDocumentTags(
+  projectId: string
+): Promise<string[]> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents/tags`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          ...authHeaders,
+        },
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error listing tags: ${String(err)}`);
+  }
+  if (!response.ok) {
+    throw await buildHttpError(response, "Failed to list tags");
+  }
+  const data = (await response.json()) as { tags: string[] };
+  return data.tags;
 }
 
 /**

@@ -53,6 +53,13 @@ vi.mock("next-intl", () => {
       text: "Text",
       other: "Other",
     },
+    "documents.tags": {
+      column: "Tags",
+      add: "Add tag",
+      remove: "Remove tag",
+      placeholder: "New tag…",
+      done: "Done",
+    },
   };
 
   return {
@@ -83,6 +90,7 @@ function makeDoc(overrides: Partial<ProjectDocument> = {}): ProjectDocument {
     uploaded_at: "2024-01-15T10:30:00Z",
     uploader_id: "user-1",
     download_url: `/api/v1/projects/proj-1/documents/${id}/download`,
+    tags: [],
     ...overrides,
   };
 }
@@ -102,10 +110,12 @@ describe("DocumentsList", () => {
     members: [],
     sort: "name" as const,
     order: "asc" as const,
+    availableTags: [],
     onSortChange: vi.fn(),
     onPreview: vi.fn(),
     onRename: vi.fn(),
     onDelete: vi.fn(),
+    onTagsUpdate: vi.fn(),
   };
 
   beforeEach(() => {

@@ -1025,8 +1025,17 @@
       "text": "Văn bản",
       "other": "Khác"
     },
+    "tags": {
+      "column": "Nhãn",
+      "add": "Thêm nhãn",
+      "remove": "Xoá nhãn",
+      "placeholder": "Nhãn mới…",
+      "done": "Xong"
+    },
     "filter": {
       "all": "Tất cả",
+      "tags": "Nhãn",
+      "clearTags": "Xoá nhãn lọc",
       "anyUploader": "Bất kỳ ai",
       "reset": "Đặt lại"
     },

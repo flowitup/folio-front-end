@@ -14,7 +14,7 @@ import { DocumentsUpload } from "./documents-upload";
 import { DocumentsPreviewDialog } from "./documents-preview-dialog";
 import { DocumentsRenameDialog } from "./documents-rename-dialog";
 import { DocumentsDeleteDialog } from "./documents-delete-dialog";
-import { listDocumentsAction, deleteDocumentAction, renameDocumentAction } from "./actions";
+import { listDocumentsAction, deleteDocumentAction, renameDocumentAction, updateDocumentTagsAction, listDocumentTagsAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import type { ProjectDocument, ProjectDocumentKind } from "@/lib/api/project-documents";
 
@@ -32,6 +32,7 @@ type Props = {
   projectId: string;
   initialDocuments: ProjectDocument[];
   initialTotal: number;
+  initialTags: string[];
   members: Member[];
   currentUserId: string;
   isAdminOrOwner: boolean;
@@ -43,6 +44,7 @@ export function DocumentsPanel({
   projectId,
   initialDocuments,
   initialTotal,
+  initialTags,
   members,
   currentUserId,
   isAdminOrOwner,
@@ -59,6 +61,8 @@ export function DocumentsPanel({
   const [sort, setSort] = useState<SortColumn>("created_at");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [kinds, setKinds] = useState<ProjectDocumentKind[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>(initialTags);
   const [uploaderId, setUploaderId] = useState<string | null>(null);
 
   // ---- Dialog state ----
@@ -77,6 +81,7 @@ export function DocumentsPanel({
         sort,
         order,
         kinds: kinds.length > 0 ? kinds : undefined,
+        tags: selectedTags.length > 0 ? selectedTags : undefined,
         uploaderId: uploaderId ?? undefined,
         page,
         perPage,
@@ -98,14 +103,12 @@ export function DocumentsPanel({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sort, order, kinds, uploaderId, page, projectId]);
+  }, [sort, order, kinds, selectedTags, uploaderId, page, projectId]);
 
   // ---- Handlers ----
 
   const handleUploaded = useCallback(
     (doc: ProjectDocument) => {
-      // Optimistically prepend; if not sorted by created_at desc, a refresh
-      // would re-order — but the optimistic entry is good enough UX.
       setList((prev) => [doc, ...prev]);
       setTotal((prev) => prev + 1);
       toast.success(t("toast.uploadSuccess", { filename: doc.filename }));
@@ -127,12 +130,31 @@ export function DocumentsPanel({
   );
 
   const handleFiltersChange = useCallback(
-    (next: { kinds: ProjectDocumentKind[]; uploaderId: string | null }) => {
+    (next: { kinds: ProjectDocumentKind[]; tags: string[]; uploaderId: string | null }) => {
       setKinds(next.kinds);
+      setSelectedTags(next.tags);
       setUploaderId(next.uploaderId);
       setPage(1);
     },
     []
+  );
+
+  const refreshAvailableTags = useCallback(async () => {
+    const result = await listDocumentTagsAction(projectId);
+    if (result.ok) setAvailableTags(result.data);
+  }, [projectId]);
+
+  const handleTagsUpdate = useCallback(
+    async (docId: string, tags: string[]) => {
+      const result = await updateDocumentTagsAction(projectId, docId, tags);
+      if (result.ok) {
+        setList((prev) => prev.map((d) => (d.id === docId ? result.data : d)));
+        void refreshAvailableTags();
+      } else {
+        toast.error(t("toast.listLoadError"));
+      }
+    },
+    [projectId, t, refreshAvailableTags]
   );
 
   const handleRenameConfirm = useCallback(
@@ -194,6 +216,8 @@ export function DocumentsPanel({
 
       <DocumentsFilters
         kinds={kinds}
+        selectedTags={selectedTags}
+        availableTags={availableTags}
         uploaderId={uploaderId}
         members={members}
         onChange={handleFiltersChange}
@@ -207,10 +231,12 @@ export function DocumentsPanel({
         members={members}
         sort={sort}
         order={order}
+        availableTags={availableTags}
         onSortChange={handleSortChange}
         onPreview={setPreviewDoc}
         onRename={setRenameDoc}
         onDelete={setDeleteDoc}
+        onTagsUpdate={handleTagsUpdate}
       />
 
       {/* Pagination controls */}

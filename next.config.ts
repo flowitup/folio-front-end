@@ -37,14 +37,11 @@ function buildContentSecurityPolicy(): string {
     // style-src rollout, accept 'unsafe-inline' for styles only — never
     // for scripts.
     "style-src": ["'self'", "'unsafe-inline'"],
-    // Scripts: drop 'unsafe-inline' in prod so a future XSS sink cannot
-    // execute injected <script>. Next.js' bootstrap script is allowed via
-    // 'self'. 'unsafe-eval' stays only for dev (Turbopack HMR).
+    // Next.js emits inline <script> tags for hydration data; without a
+    // nonce pipeline, 'unsafe-inline' is required in all environments.
     // TODO(security): migrate to nonce-based script-src + 'strict-dynamic'
-    // for first-party inline bootstraps; this requires plumbing a nonce
-    // from middleware into <Script> and <script> tags.
     "script-src": isProd
-      ? ["'self'"]
+      ? ["'self'", "'unsafe-inline'"]
       : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
     "img-src": ["'self'", "data:", "blob:", ...imageOrigins],
     "font-src": ["'self'", "data:"],

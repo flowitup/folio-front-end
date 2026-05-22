@@ -12,6 +12,7 @@ import {
   File,
   Eye,
   Download,
+  Pencil,
   Trash2,
 } from "lucide-react";
 import {
@@ -114,6 +115,7 @@ type Props = {
   order: "asc" | "desc";
   onSortChange: (sort: SortColumn) => void;
   onPreview: (doc: ProjectDocument) => void;
+  onRename: (doc: ProjectDocument) => void;
   onDelete: (doc: ProjectDocument) => void;
 };
 
@@ -128,6 +130,7 @@ export function DocumentsList({
   order,
   onSortChange,
   onPreview,
+  onRename,
   onDelete,
 }: Props) {
   const t = useTranslations("documents.list");
@@ -156,6 +159,9 @@ export function DocumentsList({
 
   const canPreview = (doc: ProjectDocument) =>
     doc.kind === "pdf" || doc.kind === "image";
+
+  const canRename = (doc: ProjectDocument) =>
+    doc.uploader_id === currentUserId || isAdminOrOwner;
 
   const canDelete = (doc: ProjectDocument) =>
     doc.uploader_id === currentUserId || isAdminOrOwner;
@@ -274,6 +280,17 @@ export function DocumentsList({
                 >
                   <Download className="size-4" aria-hidden />
                 </Button>
+                {canRename(doc) && (
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => onRename(doc)}
+                    title={t("actions.rename")}
+                    aria-label={t("actions.rename")}
+                  >
+                    <Pencil className="size-4" aria-hidden />
+                  </Button>
+                )}
                 {canDelete(doc) && (
                   <Button
                     variant="ghost"

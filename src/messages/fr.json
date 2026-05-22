@@ -1012,7 +1012,8 @@
         "preview": "Aperçu",
         "download": "Télécharger",
         "delete": "Supprimer",
-        "downloadError": "Échec du téléchargement — veuillez réessayer"
+        "downloadError": "Échec du téléchargement — veuillez réessayer",
+        "rename": "Renommer"
       }
     },
     "kinds": {
@@ -1053,6 +1054,17 @@
     "pagination": {
       "prev": "Préc.",
       "next": "Suiv."
+    },
+    "rename": {
+      "title": "Renommer le document",
+      "description": "L'extension du fichier ({extension}) ne peut pas être modifiée.",
+      "label": "Nom du fichier",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "success": "Document renommé",
+      "errorForbidden": "Seul l'importateur ou un administrateur du projet peut renommer ce document",
+      "errorServer": "Échec du renommage"
     }
   },
   "members": {

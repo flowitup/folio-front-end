@@ -12,8 +12,9 @@ import { DocumentsList } from "./documents-list";
 import { DocumentsFilters } from "./documents-filters";
 import { DocumentsUpload } from "./documents-upload";
 import { DocumentsPreviewDialog } from "./documents-preview-dialog";
+import { DocumentsRenameDialog } from "./documents-rename-dialog";
 import { DocumentsDeleteDialog } from "./documents-delete-dialog";
-import { listDocumentsAction, deleteDocumentAction } from "./actions";
+import { listDocumentsAction, deleteDocumentAction, renameDocumentAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import type { ProjectDocument, ProjectDocumentKind } from "@/lib/api/project-documents";
 
@@ -62,6 +63,7 @@ export function DocumentsPanel({
 
   // ---- Dialog state ----
   const [previewDoc, setPreviewDoc] = useState<ProjectDocument | null>(null);
+  const [renameDoc, setRenameDoc] = useState<ProjectDocument | null>(null);
   const [deleteDoc, setDeleteDoc] = useState<ProjectDocument | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -133,6 +135,29 @@ export function DocumentsPanel({
     []
   );
 
+  const handleRenameConfirm = useCallback(
+    async (newFilename: string) => {
+      if (!renameDoc) return;
+
+      const result = await renameDocumentAction(projectId, renameDoc.id, newFilename);
+
+      if (result.ok) {
+        setList((prev) =>
+          prev.map((d) => (d.id === renameDoc.id ? result.data : d))
+        );
+        toast.success(t("rename.success"));
+        setRenameDoc(null);
+      } else if (result.error === "forbidden") {
+        toast.error(t("rename.errorForbidden"));
+        setRenameDoc(null);
+      } else {
+        toast.error(t("rename.errorServer"));
+        setRenameDoc(null);
+      }
+    },
+    [renameDoc, projectId, t]
+  );
+
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteDoc) return;
     setDeleting(true);
@@ -184,6 +209,7 @@ export function DocumentsPanel({
         order={order}
         onSortChange={handleSortChange}
         onPreview={setPreviewDoc}
+        onRename={setRenameDoc}
         onDelete={setDeleteDoc}
       />
 
@@ -216,6 +242,12 @@ export function DocumentsPanel({
         doc={previewDoc}
         projectId={projectId}
         onClose={() => setPreviewDoc(null)}
+      />
+
+      <DocumentsRenameDialog
+        doc={renameDoc}
+        onCancel={() => setRenameDoc(null)}
+        onConfirm={handleRenameConfirm}
       />
 
       <DocumentsDeleteDialog

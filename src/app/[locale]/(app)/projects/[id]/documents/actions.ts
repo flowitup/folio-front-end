@@ -5,8 +5,10 @@ import { revalidatePath } from "next/cache";
 import {
   listProjectDocuments,
   deleteProjectDocument,
+  renameProjectDocument,
 } from "@/lib/api/project-documents";
 import type {
+  ProjectDocument,
   ListProjectDocumentsParams,
   ListProjectDocumentsResult,
 } from "@/lib/api/project-documents";
@@ -58,6 +60,34 @@ export async function listDocumentsAction(
 
   try {
     const data = await listProjectDocuments(projectId, params);
+    return { ok: true, data };
+  } catch (err: unknown) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+/**
+ * Rename a document in a project.
+ * Revalidates the documents page cache on success.
+ */
+export async function renameDocumentAction(
+  projectId: string,
+  docId: string,
+  filename: string
+): Promise<ActionResult<ProjectDocument>> {
+  if (!projectId || !isUuid(projectId)) {
+    return { ok: false, error: "validation", message: "Invalid project id" };
+  }
+  if (!docId || !isUuid(docId)) {
+    return { ok: false, error: "validation", message: "Invalid document id" };
+  }
+  if (!filename || !filename.trim()) {
+    return { ok: false, error: "validation", message: "Filename cannot be empty" };
+  }
+
+  try {
+    const data = await renameProjectDocument(projectId, docId, filename.trim());
+    revalidatePath(`/[locale]/projects/${projectId}/documents`, "page");
     return { ok: true, data };
   } catch (err: unknown) {
     return { ok: false, error: classifyBackendError(err) };

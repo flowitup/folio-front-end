@@ -1012,7 +1012,8 @@
         "preview": "Preview",
         "download": "Download",
         "delete": "Delete",
-        "downloadError": "Download failed — please try again"
+        "downloadError": "Download failed — please try again",
+        "rename": "Rename"
       }
     },
     "kinds": {
@@ -1053,6 +1054,17 @@
     "pagination": {
       "prev": "Prev",
       "next": "Next"
+    },
+    "rename": {
+      "title": "Rename document",
+      "description": "The file extension ({extension}) cannot be changed.",
+      "label": "File name",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "success": "Document renamed",
+      "errorForbidden": "Only the uploader or a project admin can rename this document",
+      "errorServer": "Failed to rename"
     }
   },
   "members": {

@@ -40,6 +40,7 @@ vi.mock("next-intl", () => {
       "actions.preview": "Preview",
       "actions.download": "Download",
       "actions.downloadError": "Download failed — please try again",
+      "actions.rename": "Rename",
       "actions.delete": "Delete",
       formerMember: "Former member",
     },
@@ -103,6 +104,7 @@ describe("DocumentsList", () => {
     order: "asc" as const,
     onSortChange: vi.fn(),
     onPreview: vi.fn(),
+    onRename: vi.fn(),
     onDelete: vi.fn(),
   };
 

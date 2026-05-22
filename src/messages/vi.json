@@ -1012,7 +1012,8 @@
         "preview": "Xem trước",
         "download": "Tải xuống",
         "delete": "Xoá",
-        "downloadError": "Tải xuống thất bại — vui lòng thử lại"
+        "downloadError": "Tải xuống thất bại — vui lòng thử lại",
+        "rename": "Đổi tên"
       }
     },
     "kinds": {
@@ -1053,6 +1054,17 @@
     "pagination": {
       "prev": "Trước",
       "next": "Sau"
+    },
+    "rename": {
+      "title": "Đổi tên tài liệu",
+      "description": "Phần mở rộng tệp ({extension}) không thể thay đổi.",
+      "label": "Tên tệp",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "saving": "Đang lưu…",
+      "success": "Đã đổi tên tài liệu",
+      "errorForbidden": "Chỉ người tải lên hoặc quản trị viên dự án mới có thể đổi tên tài liệu này",
+      "errorServer": "Đổi tên thất bại"
     }
   },
   "members": {

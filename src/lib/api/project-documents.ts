@@ -121,6 +121,40 @@ export async function listProjectDocuments(
 }
 
 /**
+ * Rename a document by ID.
+ * Returns the updated document on success.
+ */
+export async function renameProjectDocument(
+  projectId: string,
+  docId: string,
+  filename: string
+): Promise<ProjectDocument> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents/${encodeURIComponent(docId)}/rename`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          ...authHeaders,
+        },
+        body: JSON.stringify({ filename }),
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error renaming document: ${String(err)}`);
+  }
+  if (!response.ok) {
+    throw await buildHttpError(response, "Failed to rename document");
+  }
+  return response.json() as Promise<ProjectDocument>;
+}
+
+/**
  * Delete a document by ID.
  * Expects 204 No Content on success.
  */

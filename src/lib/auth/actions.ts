@@ -16,12 +16,17 @@ import { parseCookie } from "./cookie-parser";
  */
 async function setForwardedCookies(setCookieHeaders: string[]): Promise<void> {
   const cookieStore = await cookies();
+  // Defense-in-depth: never demote Secure. If the backend marks a cookie
+  // Secure, forward that verbatim. Independently of that, always force
+  // Secure in production runtimes so a misconfigured BE in prod cannot
+  // accidentally issue a plaintext-capable session cookie.
+  const isProdRuntime = process.env.NODE_ENV === "production";
   for (const cookie of setCookieHeaders) {
     const parsed = parseCookie(cookie);
     if (!parsed) continue;
     cookieStore.set(parsed.name, parsed.value, {
       httpOnly: parsed.httpOnly,
-      secure: process.env.NODE_ENV === "production",
+      secure: parsed.secure || isProdRuntime,
       sameSite: parsed.sameSite ?? "lax",
       path: parsed.path ?? "/",
       ...(parsed.maxAge !== undefined ? { maxAge: parsed.maxAge } : {}),
@@ -66,7 +71,13 @@ export async function login(
       accessToken: data.access_token,
     };
   } catch (error) {
-    console.error("Login error:", error);
+    // Log only the message; the full error object can carry the
+    // outbound request body (credentials) on fetch failures and stack
+    // lines we'd rather not stream into container logs.
+    console.error(
+      "Login error:",
+      error instanceof Error ? error.message : "unknown"
+    );
     return {
       success: false,
       error: "An unexpected error occurred",
@@ -129,9 +140,9 @@ export async function acceptInviteAction(
 
     return { success: true, user };
   } catch (error) {
-    console.error("Accept invite error:", error);
     const message =
       error instanceof Error ? error.message : "An unexpected error occurred";
+    console.error("Accept invite error:", message);
     return { success: false, error: message };
   }
 }

@@ -160,7 +160,10 @@ export default function ProjectsPage() {
       await loadProjectUsers(removeMember.projectId);
       refetch();
     } catch (err) {
-      console.error("Failed to remove user:", err);
+      console.error(
+        "Failed to remove user:",
+        err instanceof Error ? err.message : "unknown"
+      );
     } finally {
       setRemoveMember(null);
     }

@@ -16,6 +16,16 @@ vi.mock("@/lib/api/notifications", () => ({
   dismissNotification: vi.fn(),
 }));
 
+// Session guard mocked as authenticated by default; unauthenticated
+// branch is trivial.
+vi.mock("@/lib/auth/session", () => ({
+  getSession: vi.fn().mockResolvedValue({
+    user: { id: "11111111-1111-1111-1111-111111111111" },
+    accessToken: "test-token",
+    expiresAt: Date.now() + 60_000,
+  }),
+}));
+
 // ---- Imports after mocks ----
 
 const { fetchDueNotificationsAction, dismissNotificationAction } = await import("../actions");

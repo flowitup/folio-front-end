@@ -37,6 +37,7 @@ import {
   updateBillingTemplate,
   deleteBillingTemplate,
 } from "@/lib/api/billing/templates";
+import { getSession } from "@/lib/auth/session";
 import type {
   BillingDocument,
   BillingDocumentKind,
@@ -58,6 +59,33 @@ import type {
 export type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: { code: string; message: string } };
+
+// Defense-in-depth: short-circuit before BE call when no session. Returns
+// the unauthorized result so each action keeps its discriminated-union
+// contract.
+async function requireSession(): Promise<
+  { ok: true } | { ok: false; error: { code: string; message: string } }
+> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    return {
+      ok: false,
+      error: { code: "unauthorized", message: "Session expired. Please log in again." },
+    };
+  }
+  return { ok: true };
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
+function invalid(): { ok: false; error: { code: string; message: string } } {
+  return { ok: false, error: { code: "validation", message: "Invalid identifier." } };
+}
 
 // ---------------------------------------------------------------------------
 // Internal error classifier
@@ -101,6 +129,8 @@ function classifyBackendError(err: unknown): { code: string; message: string } {
 export async function createBillingDocumentAction(
   payload: CreateBillingDocumentPayload
 ): Promise<ActionResult<BillingDocument>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
   try {
     const data = await createBillingDocument(payload);
     return { ok: true, data };
@@ -113,6 +143,9 @@ export async function updateBillingDocumentAction(
   id: string,
   payload: UpdateBillingDocumentPayload
 ): Promise<ActionResult<BillingDocument>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     const data = await updateBillingDocument(id, payload);
     return { ok: true, data };
@@ -124,6 +157,9 @@ export async function updateBillingDocumentAction(
 export async function deleteBillingDocumentAction(
   id: string
 ): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     await deleteBillingDocument(id);
     return { ok: true, data: undefined };
@@ -136,6 +172,9 @@ export async function cloneBillingDocumentAction(
   id: string,
   payload?: CloneBillingDocumentPayload
 ): Promise<ActionResult<BillingDocument>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     const data = await cloneBillingDocument(id, payload);
     return { ok: true, data };
@@ -148,6 +187,9 @@ export async function convertDevisToFactureAction(
   id: string,
   payload?: ConvertDevisToFacturePayload
 ): Promise<ActionResult<BillingDocument>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     const data = await convertDevisToFacture(id, payload);
     return { ok: true, data };
@@ -160,6 +202,9 @@ export async function updateBillingDocumentStatusAction(
   id: string,
   new_status: BillingDocumentStatus
 ): Promise<ActionResult<BillingDocument>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     const data = await updateBillingDocumentStatus(id, new_status);
     return { ok: true, data };
@@ -172,6 +217,9 @@ export async function createBillingDocumentFromTemplateAction(
   template_id: string,
   payload: ApplyTemplatePayload
 ): Promise<ActionResult<BillingDocument>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(template_id)) return invalid();
   try {
     const data = await createBillingDocumentFromTemplate(template_id, payload);
     return { ok: true, data };
@@ -184,6 +232,8 @@ export async function listBillingDocumentsAction(
   kind: BillingDocumentKind,
   limit = 25
 ): Promise<ActionResult<{ items: BillingDocument[]; total: number }>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
   try {
     const data = await fetchBillingDocuments({ kind, limit, offset: 0 });
     return { ok: true, data };
@@ -195,6 +245,9 @@ export async function listBillingDocumentsAction(
 export async function getBillingDocumentAction(
   id: string
 ): Promise<ActionResult<BillingDocument>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     const data = await fetchBillingDocument(id);
     return { ok: true, data };
@@ -206,6 +259,8 @@ export async function getBillingDocumentAction(
 export async function listBillingTemplatesAction(
   kind?: BillingDocumentKind
 ): Promise<ActionResult<BillingDocumentTemplate[]>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
   try {
     const data = await fetchBillingTemplates(kind);
     return { ok: true, data };
@@ -217,6 +272,9 @@ export async function listBillingTemplatesAction(
 export async function getBillingTemplateAction(
   id: string
 ): Promise<ActionResult<BillingDocumentTemplate>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     const data = await fetchBillingTemplate(id);
     return { ok: true, data };
@@ -232,6 +290,8 @@ export async function getBillingTemplateAction(
 export async function createBillingTemplateAction(
   payload: CreateBillingTemplatePayload
 ): Promise<ActionResult<BillingDocumentTemplate>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
   try {
     const data = await createBillingTemplate(payload);
     return { ok: true, data };
@@ -244,6 +304,9 @@ export async function updateBillingTemplateAction(
   id: string,
   payload: UpdateBillingTemplatePayload
 ): Promise<ActionResult<BillingDocumentTemplate>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     const data = await updateBillingTemplate(id, payload);
     return { ok: true, data };
@@ -255,6 +318,9 @@ export async function updateBillingTemplateAction(
 export async function deleteBillingTemplateAction(
   id: string
 ): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(id)) return invalid();
   try {
     await deleteBillingTemplate(id);
     return { ok: true, data: undefined };
@@ -270,6 +336,8 @@ export async function deleteBillingTemplateAction(
 export async function getActivitySuggestionsAction(
   params: FetchActivitySuggestionsParams
 ): Promise<ActionResult<ActivitySuggestionsResponse>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
   try {
     const data = await fetchActivitySuggestions(params);
     return { ok: true, data };

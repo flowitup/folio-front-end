@@ -26,6 +26,7 @@ import {
   updatePaymentMethod,
   deletePaymentMethod,
 } from "@/lib/api/payment-methods-api";
+import { getSession } from "@/lib/auth/session";
 import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 
 // ---------------------------------------------------------------------------
@@ -35,6 +36,33 @@ import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 export type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: { code: string; message: string } };
+
+// Defense-in-depth: short-circuit before BE call when no session cookie.
+async function requireSession(): Promise<
+  { ok: true } | { ok: false; error: { code: string; message: string } }
+> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    return {
+      ok: false,
+      error: { code: "unauthorized", message: "Session expired. Please log in again." },
+    };
+  }
+  return { ok: true };
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
+function invalid(): { ok: false; error: { code: string; message: string } } {
+  return { ok: false, error: { code: "validation", message: "Invalid identifier." } };
+}
+
+const MAX_LABEL_LEN = 64;
 
 // ---------------------------------------------------------------------------
 // Internal error classifier
@@ -94,6 +122,9 @@ export async function listPaymentMethodsAction(
   companyId: string,
   includeInactive = false
 ): Promise<ActionResult<PaymentMethod[]>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId)) return invalid();
   try {
     const data = await fetchPaymentMethods(companyId, { includeInactive });
     return { ok: true, data };
@@ -110,6 +141,16 @@ export async function createPaymentMethodAction(
   companyId: string,
   label: string
 ): Promise<ActionResult<PaymentMethod[]>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId)) return invalid();
+  if (
+    typeof label !== "string" ||
+    label.trim().length === 0 ||
+    label.length > MAX_LABEL_LEN
+  ) {
+    return invalid();
+  }
   try {
     await createPaymentMethod(companyId, label);
     // Refetch to get accurate usage_count and server-ordered list
@@ -128,6 +169,17 @@ export async function updatePaymentMethodAction(
   id: string,
   patch: { label?: string; isActive?: boolean }
 ): Promise<ActionResult<PaymentMethod[]>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId) || !isUuid(id)) return invalid();
+  if (
+    patch.label !== undefined &&
+    (typeof patch.label !== "string" ||
+      patch.label.trim().length === 0 ||
+      patch.label.length > MAX_LABEL_LEN)
+  ) {
+    return invalid();
+  }
   try {
     await updatePaymentMethod(companyId, id, patch);
     const data = await fetchPaymentMethods(companyId);
@@ -145,6 +197,9 @@ export async function deletePaymentMethodAction(
   companyId: string,
   id: string
 ): Promise<ActionResult<PaymentMethod[]>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId) || !isUuid(id)) return invalid();
   try {
     await deletePaymentMethod(companyId, id);
     const data = await fetchPaymentMethods(companyId);

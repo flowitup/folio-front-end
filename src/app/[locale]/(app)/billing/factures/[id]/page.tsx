@@ -27,7 +27,11 @@ export default async function EditFacturePage({ params }: EditFacturePageProps) 
   } catch (err) {
     const status = (err as { status?: number }).status;
     if (status === 404) notFound();
-    console.error("[EditFacturePage] Failed to fetch document:", id, err);
+    console.error(
+      "[EditFacturePage] Failed to fetch document:",
+      id,
+      err instanceof Error ? err.message : "unknown"
+    );
     return (
       <div className="fade-up px-8 py-12">
         <div className="folio-card p-6">

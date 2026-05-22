@@ -38,7 +38,10 @@ export default async function FacturesPage({ searchParams }: FacturesPageProps) 
     initialTotal = result.total;
   } catch (err) {
     // Log server-side; render empty state — client shows empty UI gracefully.
-    console.error("[FacturesPage] Failed to fetch billing documents:", err);
+    console.error(
+      "[FacturesPage] Failed to fetch billing documents:",
+      err instanceof Error ? err.message : "unknown"
+    );
   }
 
   return (

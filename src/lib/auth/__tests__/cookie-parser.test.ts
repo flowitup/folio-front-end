@@ -22,7 +22,7 @@ describe("parseCookie", () => {
 
   it("extracts name + value from a minimal cookie", () => {
     const c = parseCookie("foo=bar");
-    expect(c).toEqual({ name: "foo", value: "bar", httpOnly: false });
+    expect(c).toEqual({ name: "foo", value: "bar", httpOnly: false, secure: false });
   });
 
   it("preserves '=' inside the value", () => {
@@ -37,6 +37,7 @@ describe("parseCookie", () => {
     expect(c).toMatchObject({
       name: "access_token_cookie",
       httpOnly: true,
+      secure: true,
       maxAge: 1800,
       sameSite: "strict",
       path: "/",
@@ -74,7 +75,17 @@ describe("parseCookie", () => {
 
   it("ignores unknown attributes", () => {
     const c = parseCookie("foo=bar; Domain=example.com; Whatever=1; HttpOnly");
-    expect(c).toEqual({ name: "foo", value: "bar", httpOnly: true });
+    expect(c).toEqual({ name: "foo", value: "bar", httpOnly: true, secure: false });
+  });
+
+  it("preserves Secure flag when present (BE-issued cookies in HTTPS contexts)", () => {
+    const c = parseCookie("access_token_cookie=eyJ.X.Y; HttpOnly; Secure; Path=/");
+    expect(c?.secure).toBe(true);
+  });
+
+  it("leaves Secure false when BE omits it (local plaintext dev)", () => {
+    const c = parseCookie("access_token_cookie=eyJ.X.Y; HttpOnly; Path=/");
+    expect(c?.secure).toBe(false);
   });
 
   it("treats attribute keys as case-insensitive", () => {

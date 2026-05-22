@@ -19,7 +19,10 @@ export default async function TemplatesPage() {
     initialTemplates = await fetchBillingTemplates();
   } catch (err) {
     // Log server-side; render empty state gracefully.
-    console.error("[TemplatesPage] Failed to fetch billing templates:", err);
+    console.error(
+      "[TemplatesPage] Failed to fetch billing templates:",
+      err instanceof Error ? err.message : "unknown"
+    );
   }
 
   return <BillingTemplatesList initialTemplates={initialTemplates} />;

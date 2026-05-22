@@ -23,6 +23,16 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(() => { throw new Error("REDIRECT"); }),
 }));
 
+// Session guard mocked as authenticated; the unauthenticated branch is
+// trivial.
+vi.mock("@/lib/auth/session", () => ({
+  getSession: vi.fn().mockResolvedValue({
+    user: { id: "11111111-1111-1111-1111-111111111111" },
+    accessToken: "test-token",
+    expiresAt: Date.now() + 60_000,
+  }),
+}));
+
 // ---- Imports after mocks ----
 
 const {

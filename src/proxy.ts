@@ -3,20 +3,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
 import { locales, defaultLocale } from "@/i18n/config";
-import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/middleware";
-
-// Protected routes (without locale prefix)
-const protectedRoutes = ["/dashboard", "/projects", "/settings"];
-// Auth routes that redirect to dashboard if authenticated
-const authRoutes = ["/login"];
-
-function isProtectedRoute(pathname: string): boolean {
-  return protectedRoutes.some((route) => pathname.startsWith(route));
-}
-
-function isAuthRoute(pathname: string): boolean {
-  return authRoutes.some((route) => pathname.startsWith(route));
-}
+import {
+  ACCESS_TOKEN_COOKIE,
+  isAuthRoute,
+  isProtectedRoute,
+} from "@/lib/auth/middleware";
 
 /**
  * Decode JWT and check if expired (without verification).
@@ -53,18 +44,18 @@ export function proxy(request: NextRequest) {
   // Run i18n middleware first to handle locale detection/redirect
   const response = intlMiddleware(request);
 
-  // Extract the pathname without locale prefix for auth checks
-  const pathnameWithoutLocale = pathname.replace(
-    new RegExp(`^/(${locales.join("|")})`),
-    ""
-  ) || "/";
+  // Extract the pathname without locale prefix for auth checks. Strip
+  // exactly the leading "/<locale>" segment if present so denylist
+  // matching is locale-agnostic.
+  const pathnameWithoutLocale =
+    pathname.replace(new RegExp(`^/(${locales.join("|")})(?=/|$)`), "") || "/";
 
   // Check for access token cookie and validate expiry
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
   const isAuthenticated = isTokenValid(accessToken);
 
   // Get the current locale from pathname or default
-  const localeMatch = pathname.match(new RegExp(`^/(${locales.join("|")})`));
+  const localeMatch = pathname.match(new RegExp(`^/(${locales.join("|")})(?=/|$)`));
   const locale = localeMatch ? localeMatch[1] : defaultLocale;
 
   // Redirect authenticated users away from auth pages
@@ -72,7 +63,9 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
   }
 
-  // Redirect unauthenticated users to login
+  // Default-deny: every route requires auth unless it's on the public
+  // denylist (login, accept-invite, etc). Adding a new authenticated
+  // route no longer requires touching this file.
   if (!isAuthenticated && isProtectedRoute(pathnameWithoutLocale)) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);

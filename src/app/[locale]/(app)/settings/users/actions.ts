@@ -1,6 +1,7 @@
 "use server";
 
 import { bulkAddMemberships, searchUsers } from "@/lib/api/admin";
+import { getSession } from "@/lib/auth/session";
 import type { BulkAddResultItem, UserSearchItem } from "@/lib/api/admin";
 
 /**
@@ -11,6 +12,8 @@ import type { BulkAddResultItem, UserSearchItem } from "@/lib/api/admin";
 export async function searchUsersAction(
   query: string
 ): Promise<{ items: UserSearchItem[]; error?: string }> {
+  const session = await getSession();
+  if (!session?.accessToken) return { items: [], error: "unauthorized" };
   if (!query || query.length < 3) return { items: [] };
   if (query.length > 100) return { items: [], error: "queryTooLong" };
   try {
@@ -69,6 +72,10 @@ export async function bulkAddMembershipsAction(
   projectIds: string[],
   roleId: string
 ): Promise<{ success: boolean; results?: BulkAddResultItem[]; error?: string }> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    return { success: false, error: "unauthorized" };
+  }
   // --- Server-side input validation ---
   if (!userId || !isUuid(userId)) {
     return { success: false, error: "userNotFound" };

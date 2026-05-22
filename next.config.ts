@@ -22,21 +22,31 @@ const apiOrigin = deriveApiOrigin();
 // Cloudflared edge + analytics origins. Add any additional first-party hosts here.
 const cloudflareConnectOrigins = ["https://*.cloudflareaccess.com", "https://*.cloudflare.com"];
 
-// CSP is intentionally shipped in report-only mode first so a stray inline
-// style/script in prod cannot black-box the app. Flip to enforcing
-// (Content-Security-Policy) after a week of clean reports — see TODO below.
+// Image hosts: limited to first-party CDNs the app actually serves images
+// from. The previous wildcard `https:` opened img-src to every TLS origin
+// on the web, which trivially defeats CSP for exfil/tracking pixels.
+const imageOrigins = [
+  "https://imagedelivery.net",       // Cloudflare Images
+  "https://storage.googleapis.com",  // GCS public buckets / signed URLs
+];
+
 function buildContentSecurityPolicy(): string {
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
-    // Next.js + Tailwind ship inline <style> tags. Strict-dynamic + nonces are
-    // the long-term fix; for now we accept 'unsafe-inline' for styles only.
+    // Next.js + Tailwind ship inline <style> tags. Until a nonce-based
+    // style-src rollout, accept 'unsafe-inline' for styles only — never
+    // for scripts.
     "style-src": ["'self'", "'unsafe-inline'"],
-    // Inline + eval for HMR/dev-only; prod tightens to 'self' + inline (still
-    // needed by Next.js' bootstrap script). nonces are the proper next step.
+    // Scripts: drop 'unsafe-inline' in prod so a future XSS sink cannot
+    // execute injected <script>. Next.js' bootstrap script is allowed via
+    // 'self'. 'unsafe-eval' stays only for dev (Turbopack HMR).
+    // TODO(security): migrate to nonce-based script-src + 'strict-dynamic'
+    // for first-party inline bootstraps; this requires plumbing a nonce
+    // from middleware into <Script> and <script> tags.
     "script-src": isProd
-      ? ["'self'", "'unsafe-inline'"]
+      ? ["'self'"]
       : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-    "img-src": ["'self'", "data:", "blob:", "https:"],
+    "img-src": ["'self'", "data:", "blob:", ...imageOrigins],
     "font-src": ["'self'", "data:"],
     "connect-src": ["'self'", apiOrigin, ...cloudflareConnectOrigins, ...(isProd ? [] : ["ws:", "wss:"])],
     "frame-ancestors": ["'none'"],
@@ -57,9 +67,10 @@ function buildContentSecurityPolicy(): string {
 }
 
 const securityHeaders = [
-  // TODO(security): after one week of clean CSP reports in prod, flip the key
-  // below to "Content-Security-Policy" to enforce instead of report-only.
-  { key: "Content-Security-Policy-Report-Only", value: buildContentSecurityPolicy() },
+  // Enforcing mode: a CSP violation now blocks the offending resource
+  // instead of just emitting a report. Inline scripts are no longer
+  // permitted in prod (see script-src above).
+  { key: "Content-Security-Policy", value: buildContentSecurityPolicy() },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },

@@ -11,7 +11,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { logAttendance, updateAttendance, fetchLaborEntries, fetchLaborExport } from "../labor";
 import { ApiError } from "../http";
 
-// Mock the http module — keep ApiError + getApiAccessToken real; stub api methods
+// Mock the http module — keep ApiError + CSRF helpers real; stub api methods
 vi.mock("../http", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../http")>();
   return {

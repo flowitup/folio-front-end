@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { fetchInvoiceExport } from "../invoice-api";
 import { ApiError } from "../http";
 
-// Mock the http module — keep ApiError + getApiAccessToken real
+// Mock the http module — keep ApiError + CSRF helpers real
 vi.mock("../http", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../http")>();
   return {

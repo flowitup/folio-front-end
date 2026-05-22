@@ -1,17 +1,19 @@
 import { env } from "@/lib/config/env";
 
 /**
- * Token storage for client-side API calls
+ * Browser API client.
+ *
+ * Auth lives entirely in the HttpOnly access_token_cookie that the
+ * backend issues. The browser sends it automatically with
+ * credentials:"include"; nothing in JS-readable memory carries the
+ * JWT. Mutations carry the CSRF cookie's value back as X-CSRF-TOKEN
+ * (see getCsrfHeader below) to satisfy JWT_COOKIE_CSRF_PROTECT.
+ *
+ * Why no Bearer header: keeping the JWT only in HttpOnly cookies
+ * means an XSS sink cannot exfiltrate a usable token. The previous
+ * in-memory `accessToken` + Bearer fallback was redundant with the
+ * cookie path and expanded the blast radius of any future XSS.
  */
-let accessToken: string | null = null;
-
-export function setApiAccessToken(token: string | null) {
-    accessToken = token;
-}
-
-export function getApiAccessToken(): string | null {
-    return accessToken;
-}
 
 const CSRF_COOKIE_NAME = "csrf_access_token";
 const REFRESH_CSRF_COOKIE_NAME = "csrf_refresh_token";
@@ -95,7 +97,8 @@ async function refreshAccessToken(): Promise<boolean> {
         // Flask-JWT-Extended's refresh endpoint requires the refresh-token CSRF
         // header in production (JWT_COOKIE_CSRF_PROTECT=True). Without it,
         // refresh always 401s, bricking every mutating call once the access
-        // token expires (~15 min).
+        // token expires (~15 min). The refreshed access cookie is set by the
+        // BE via Set-Cookie; no JS-side state to update here.
         const csrfRefresh = getRefreshCsrfToken();
         const headers: Record<string, string> = {};
         if (csrfRefresh) {
@@ -106,14 +109,7 @@ async function refreshAccessToken(): Promise<boolean> {
             credentials: "include",
             headers,
         });
-        if (response.ok) {
-            const data = await response.json();
-            if (data.access_token) {
-                accessToken = data.access_token;
-            }
-            return true;
-        }
-        return false;
+        return response.ok;
     } catch {
         return false;
     }
@@ -134,11 +130,6 @@ export async function http<TResponse, TBody = unknown>(
         "Content-Type": "application/json",
         ...getCsrfHeader(method),
     };
-
-    // Add Authorization header if we have an access token
-    if (accessToken) {
-        defaultHeaders["Authorization"] = `Bearer ${accessToken}`;
-    }
 
     const response = await fetch(url, {
         method,

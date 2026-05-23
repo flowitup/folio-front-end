@@ -12,7 +12,11 @@ import type { ProjectDocument } from "@/lib/api/project-documents";
 
 // ---- Constants ----
 
-const MAX_SIZE_BYTES = 157_286_400; // 150 MiB
+// Cloudflare Tunnel enforces a 100 MB upload limit (Free/Pro plan). Uploads
+// exceeding this cap are rejected at the edge with a 413 that lacks CORS
+// headers, causing the XHR to stall silently instead of surfacing an error.
+// Keep this value at or below 100 MB until a presigned-URL bypass is in place.
+const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MiB
 
 const ALLOWED_EXTENSIONS = [
   ".pdf",
@@ -107,13 +111,39 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
       // Ensure cookies are sent for same-origin session fallback
       xhr.withCredentials = true;
 
+      // Stall detection: if progress hasn't changed for 60 s the upload is
+      // likely stuck (e.g. Cloudflare rejected the body mid-stream with a
+      // CORS-less 413). Abort so the user sees an error instead of an
+      // infinite spinner.
+      let lastProgress = 0;
+      let stallTimer = setTimeout(abortOnStall, 60_000);
+
+      function resetStallTimer(progress: number) {
+        lastProgress = progress;
+        clearTimeout(stallTimer);
+        stallTimer = setTimeout(abortOnStall, 60_000);
+      }
+
+      function abortOnStall() {
+        if (xhr.readyState !== XMLHttpRequest.DONE) {
+          xhr.abort();
+        }
+      }
+
+      function clearStallTimer() {
+        clearTimeout(stallTimer);
+      }
+
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
-          updateJob(jobId, { status: "uploading", progress: e.loaded / e.total });
+          const progress = e.loaded / e.total;
+          updateJob(jobId, { status: "uploading", progress });
+          resetStallTimer(progress);
         }
       };
 
       xhr.onload = () => {
+        clearStallTimer();
         if (xhr.status === 201) {
           let doc: ProjectDocument;
           try {
@@ -155,11 +185,13 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
       };
 
       xhr.onerror = () => {
+        clearStallTimer();
         updateJob(jobId, { status: "failed", error: { kind: "network" } });
         resolve();
       };
 
       xhr.onabort = () => {
+        clearStallTimer();
         updateJob(jobId, { status: "failed", error: { kind: "network" } });
         resolve();
       };

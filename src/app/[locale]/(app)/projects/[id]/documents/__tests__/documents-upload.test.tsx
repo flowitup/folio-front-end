@@ -17,7 +17,7 @@ vi.mock("next-intl", () => {
       uploading: "Uploading",
       done: "Done",
       failed: "Failed",
-      errorOversize: "File too large (max 150 MB)",
+      errorOversize: "File too large (max 100 MB)",
       errorUnsupported: "File type not supported",
       errorNetwork: "Network error",
       errorRateLimited: "Rate limited, try again later",
@@ -190,8 +190,8 @@ describe("DocumentsUpload", () => {
   // ---- Client-side validation ----
 
   describe("client-side validation", () => {
-    it("MAX_SIZE_BYTES constant is 150 MiB (157 286 400 bytes)", () => {
-      expect(157_286_400).toBe(150 * 1024 * 1024);
+    it("MAX_SIZE_BYTES constant is 100 MiB (104 857 600 bytes)", () => {
+      expect(100 * 1024 * 1024).toBe(104_857_600);
     });
 
     it("rejects oversized files client-side without creating XHR", async () => {
@@ -200,7 +200,7 @@ describe("DocumentsUpload", () => {
       const oversizeFile = new File([new Uint8Array(100)], "big.pdf", {
         type: "application/pdf",
       });
-      Object.defineProperty(oversizeFile, "size", { value: 151 * 1024 * 1024 });
+      Object.defineProperty(oversizeFile, "size", { value: 101 * 1024 * 1024 });
 
       await act(async () => {
         dropFile(container, oversizeFile);
@@ -208,7 +208,7 @@ describe("DocumentsUpload", () => {
       });
 
       expect(xhrQueue.length).toBe(0);
-      expect(screen.getByText("File too large (max 150 MB)")).toBeDefined();
+      expect(screen.getByText("File too large (max 100 MB)")).toBeDefined();
     });
 
     it("rejects unsupported extensions client-side without creating XHR", async () => {

@@ -12,6 +12,12 @@ export type DocumentBlob = {
   revoke: () => void;
 };
 
+export type PreviewUrl = {
+  url: string;
+  contentType: string;
+  filename: string;
+};
+
 // ---- Helpers ----
 
 export async function fetchProjectDocumentBlob(
@@ -58,6 +64,52 @@ export async function fetchProjectDocumentBlob(
     contentType,
     revoke: () => URL.revokeObjectURL(objectUrl),
   };
+}
+
+/**
+ * Fetch a presigned GET URL for direct S3/MinIO download — bypasses Flask
+ * streaming entirely. Falls back to null when presigned URLs are not available
+ * (501) so callers can degrade gracefully to the blob-fetch path.
+ */
+export async function fetchDocumentPreviewUrl(
+  projectId: string,
+  docId: string,
+  signal?: AbortSignal,
+): Promise<PreviewUrl | null> {
+  const csrf = getCsrfToken();
+  const url = `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents/${encodeURIComponent(docId)}/preview-url`;
+
+  const headers: Record<string, string> = {};
+  if (csrf) headers["X-CSRF-TOKEN"] = csrf;
+
+  let res = await fetch(url, {
+    method: "GET",
+    headers,
+    credentials: "include",
+    signal,
+  });
+
+  if (res.status === 401) {
+    const refreshed = await refreshAccessTokenViaCookie();
+    if (refreshed) {
+      res = await fetch(url, {
+        method: "GET",
+        headers,
+        credentials: "include",
+        signal,
+      });
+    }
+  }
+
+  // 501 = presigned URLs not configured — caller should fall back to blob fetch
+  if (res.status === 501) return null;
+  // 400 = doc type not previewable — also fall back
+  if (res.status === 400) return null;
+
+  if (!res.ok) return null;
+
+  const data: PreviewUrl = await res.json();
+  return data;
 }
 
 /**

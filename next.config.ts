@@ -19,6 +19,18 @@ function deriveApiOrigin(): string {
 
 const apiOrigin = deriveApiOrigin();
 
+// S3/MinIO public endpoint for presigned GET/PUT URLs. Browser fetches PDF/image
+// bytes directly from this origin when previewing documents.
+function deriveS3Origin(): string | null {
+  const raw = process.env.NEXT_PUBLIC_S3_PUBLIC_URL ?? "";
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return null;
+  }
+}
+const s3Origin = deriveS3Origin();
+
 // Cloudflared edge + analytics origins. Add any additional first-party hosts here.
 const cloudflareConnectOrigins = ["https://*.cloudflareaccess.com", "https://*.cloudflare.com"];
 
@@ -45,7 +57,7 @@ function buildContentSecurityPolicy(): string {
       : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
     "img-src": ["'self'", "data:", "blob:", ...imageOrigins],
     "font-src": ["'self'", "data:"],
-    "connect-src": ["'self'", apiOrigin, ...cloudflareConnectOrigins, ...(isProd ? [] : ["ws:", "wss:"])],
+    "connect-src": ["'self'", apiOrigin, ...(s3Origin ? [s3Origin] : []), ...cloudflareConnectOrigins, ...(isProd ? [] : ["ws:", "wss:"])],
     "frame-ancestors": ["'none'"],
     "form-action": ["'self'"],
     "base-uri": ["'self'"],
@@ -56,6 +68,8 @@ function buildContentSecurityPolicy(): string {
     // PDF preview. `<img>` previews are unaffected (img-src already allows
     // blob:).
     "object-src": ["blob:"],
+    // PDF.js spawns a web worker from /pdf.worker.min.mjs (public folder)
+    "worker-src": ["'self'", "blob:"],
     "frame-src": ["'self'", "blob:"],
   };
 

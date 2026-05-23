@@ -56,10 +56,7 @@ function buildContentSecurityPolicy(): string {
     // PDF preview. `<img>` previews are unaffected (img-src already allows
     // blob:).
     "object-src": ["blob:"],
-    // Browsers render embedded PDFs via their built-in viewer which creates a
-    // navigable frame. Without an explicit frame-src, this falls back to
-    // default-src 'self' and blocks blob: URLs used by the PDF preview dialog.
-    "frame-src": ["blob:"],
+    "frame-src": ["'self'", "blob:"],
   };
 
   return Object.entries(directives)

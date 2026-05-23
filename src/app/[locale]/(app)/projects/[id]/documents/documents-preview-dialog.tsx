@@ -14,12 +14,14 @@ import { Button } from "@/components/ui/button";
 import type { ProjectDocument } from "@/lib/api/project-documents";
 import {
   fetchProjectDocumentBlob,
+  fetchDocumentPreviewUrl,
   downloadProjectDocument,
 } from "@/lib/api/project-document-blob";
 import {
   ResizableDialogHandles,
   type DialogBounds,
 } from "./resizable-dialog-handles";
+import { PdfCanvasViewer } from "./pdf-canvas-viewer";
 
 // ---- Props ----
 
@@ -34,6 +36,9 @@ type Props = {
 export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
   const t = useTranslations("documents.preview");
 
+  // Presigned URL for direct S3 download (PDF.js path)
+  const [presignedUrl, setPresignedUrl] = useState<string | null>(null);
+  // Fallback blob URL (legacy path for images and when presigned unavailable)
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [contentType, setContentType] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,6 +55,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
       revokeRef.current();
       revokeRef.current = null;
     }
+    setPresignedUrl(null);
     setBlobUrl(null);
     setContentType(null);
     setError(null);
@@ -60,8 +66,27 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
     const controller = new AbortController();
     setLoading(true);
 
-    fetchProjectDocumentBlob(projectId, doc.id, controller.signal)
-      .then((b) => {
+    const currentDoc = doc;
+    async function loadDocument() {
+      try {
+        // For PDFs: try presigned GET URL first (bypasses Flask streaming,
+        // enables progressive page-by-page rendering via PDF.js)
+        if (currentDoc.kind === "pdf") {
+          const preview = await fetchDocumentPreviewUrl(projectId, currentDoc.id, controller.signal);
+          if (preview && !controller.signal.aborted) {
+            setPresignedUrl(preview.url);
+            setContentType(preview.contentType);
+            return;
+          }
+        }
+
+        // Fallback: stream through Flask as blob (used for images, and
+        // when presigned URLs are not configured on the server)
+        const b = await fetchProjectDocumentBlob(
+          projectId,
+          currentDoc.id,
+          controller.signal,
+        );
         if (controller.signal.aborted) {
           b.revoke();
           return;
@@ -69,15 +94,16 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
         revokeRef.current = b.revoke;
         setBlobUrl(b.objectUrl);
         setContentType(b.contentType);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (controller.signal.aborted) return;
         const msg = err instanceof Error ? err.message : String(err);
         setError(msg);
-      })
-      .finally(() => {
+      } finally {
         if (!controller.signal.aborted) setLoading(false);
-      });
+      }
+    }
+
+    loadDocument();
 
     return () => {
       controller.abort();
@@ -106,8 +132,9 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
     }
   }
 
-  const showPdf = blobUrl && doc?.kind === "pdf";
-  const showImage = blobUrl && doc?.kind === "image";
+  const showPdfJs = presignedUrl && doc?.kind === "pdf";
+  const showPdfEmbed = !presignedUrl && blobUrl && doc?.kind === "pdf";
+  const showImage = (blobUrl || presignedUrl) && doc?.kind === "image";
 
   const resizeStyle: CSSProperties | undefined = bounds
     ? { top: bounds.y, left: bounds.x, width: bounds.w, height: bounds.h, transform: "none", translate: "none", maxWidth: "none" }
@@ -152,7 +179,16 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
             </div>
           )}
 
-          {!loading && !error && showPdf && (
+          {/* PDF.js progressive viewer — direct from S3, page-by-page */}
+          {!loading && !error && showPdfJs && (
+            <PdfCanvasViewer
+              src={presignedUrl}
+              label={doc?.filename}
+            />
+          )}
+
+          {/* Legacy embed fallback — when presigned URLs unavailable */}
+          {!loading && !error && showPdfEmbed && (
             <embed
               src={`${blobUrl}#toolbar=0`}
               type="application/pdf"
@@ -163,13 +199,13 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
           {!loading && !error && showImage && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={blobUrl}
+              src={presignedUrl ?? blobUrl!}
               alt={doc?.filename ?? ""}
               className="max-h-full max-w-full mx-auto rounded object-contain"
             />
           )}
 
-          {!loading && !error && !showPdf && !showImage && doc !== null && (
+          {!loading && !error && !showPdfJs && !showPdfEmbed && !showImage && doc !== null && (
             <div className="flex flex-col items-center justify-center gap-4 h-full text-center">
               <p className="text-sm text-muted-foreground">
                 {t("fallback")}

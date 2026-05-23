@@ -9,14 +9,19 @@ import { env } from "@/lib/config/env";
 import { getCsrfToken } from "@/lib/api/http";
 import { refreshAccessTokenViaCookie } from "@/lib/api/refresh";
 import type { ProjectDocument } from "@/lib/api/project-documents";
+import {
+  requestPresignedUrl,
+  putToPresignedUrl,
+  confirmUpload,
+} from "@/lib/api/presigned-upload";
 
 // ---- Constants ----
 
-// Cloudflare Tunnel enforces a 100 MB upload limit (Free/Pro plan). Uploads
-// exceeding this cap are rejected at the edge with a 413 that lacks CORS
-// headers, causing the XHR to stall silently instead of surfacing an error.
-// Keep this value at or below 100 MB until a presigned-URL bypass is in place.
-const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MiB
+// Presigned URL uploads bypass Cloudflare entirely (browser PUTs directly to
+// S3/MinIO), so the 100 MB CF limit no longer applies. If presigned upload is
+// unavailable the component falls back to multipart POST through CF; files
+// >100 MB will fail on that path but the user sees a clear error.
+const MAX_SIZE_BYTES = 150 * 1024 * 1024; // 150 MiB
 
 const ALLOWED_EXTENSIONS = [
   ".pdf",
@@ -202,7 +207,41 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
     });
   }
 
+  async function uploadViaPresigned(file: File, jobId: string): Promise<boolean> {
+    try {
+      updateJob(jobId, { status: "uploading", progress: 0 });
+
+      // Step A: get presigned PUT URL (tiny JSON through CF)
+      const presign = await requestPresignedUrl(projectId, file);
+
+      // Step B: PUT file directly to S3/MinIO (bypasses CF entirely)
+      await putToPresignedUrl(
+        presign.presigned_url,
+        file,
+        file.type || "application/octet-stream",
+        (progress) => updateJob(jobId, { status: "uploading", progress }),
+      );
+
+      // Step C: confirm upload (tiny JSON through CF)
+      updateJob(jobId, { progress: 0.95 });
+      const doc = await confirmUpload(projectId, presign, file);
+
+      updateJob(jobId, { status: "done", progress: 1, doc });
+      onUploaded(doc);
+      scheduleDoneCleanup(jobId);
+      return true;
+    } catch {
+      // Presigned path failed — caller should fall back to multipart
+      return false;
+    }
+  }
+
   async function uploadOne(file: File, jobId: string) {
+    // Try presigned URL path first (bypasses CF 100 MB limit)
+    const presignedOk = await uploadViaPresigned(file, jobId);
+    if (presignedOk) return;
+
+    // Fall back to multipart POST through Cloudflare
     const outcome = await sendXhr(file, jobId);
 
     if (outcome === "retry_401") {

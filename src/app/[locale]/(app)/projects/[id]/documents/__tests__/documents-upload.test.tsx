@@ -17,7 +17,7 @@ vi.mock("next-intl", () => {
       uploading: "Uploading",
       done: "Done",
       failed: "Failed",
-      errorOversize: "File too large (max 100 MB)",
+      errorOversize: "File too large (max 150 MB)",
       errorUnsupported: "File type not supported",
       errorNetwork: "Network error",
       errorRateLimited: "Rate limited, try again later",
@@ -41,6 +41,13 @@ vi.mock("@/lib/api/refresh", () => ({
 
 vi.mock("@/lib/config/env", () => ({
   env: { apiBaseUrl: "http://localhost:3001/api" },
+}));
+
+// Mock presigned upload to always throw (forces fallback to multipart XHR)
+vi.mock("@/lib/api/presigned-upload", () => ({
+  requestPresignedUrl: () => Promise.reject(new Error("presign:501")),
+  putToPresignedUrl: () => Promise.reject(new Error("not available")),
+  confirmUpload: () => Promise.reject(new Error("not available")),
 }));
 
 import { DocumentsUpload } from "../documents-upload";
@@ -190,8 +197,8 @@ describe("DocumentsUpload", () => {
   // ---- Client-side validation ----
 
   describe("client-side validation", () => {
-    it("MAX_SIZE_BYTES constant is 100 MiB (104 857 600 bytes)", () => {
-      expect(100 * 1024 * 1024).toBe(104_857_600);
+    it("MAX_SIZE_BYTES constant is 150 MiB (157 286 400 bytes)", () => {
+      expect(150 * 1024 * 1024).toBe(157_286_400);
     });
 
     it("rejects oversized files client-side without creating XHR", async () => {
@@ -200,7 +207,7 @@ describe("DocumentsUpload", () => {
       const oversizeFile = new File([new Uint8Array(100)], "big.pdf", {
         type: "application/pdf",
       });
-      Object.defineProperty(oversizeFile, "size", { value: 101 * 1024 * 1024 });
+      Object.defineProperty(oversizeFile, "size", { value: 151 * 1024 * 1024 });
 
       await act(async () => {
         dropFile(container, oversizeFile);
@@ -208,7 +215,7 @@ describe("DocumentsUpload", () => {
       });
 
       expect(xhrQueue.length).toBe(0);
-      expect(screen.getByText("File too large (max 100 MB)")).toBeDefined();
+      expect(screen.getByText("File too large (max 150 MB)")).toBeDefined();
     });
 
     it("rejects unsupported extensions client-side without creating XHR", async () => {

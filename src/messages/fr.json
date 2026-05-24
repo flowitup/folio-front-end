@@ -347,6 +347,13 @@
     "deleteFailed": "Échec de la suppression",
     "attachmentDeleteConfirm": "Supprimer cette pièce jointe ? Cette action est irréversible.",
     "openAttachment": "Ouvrir",
+    "attachmentPreview": {
+      "preview": "Aperçu",
+      "close": "Fermer",
+      "download": "Télécharger",
+      "error": "Aperçu impossible — téléchargez pour afficher le fichier",
+      "fallback": "Aperçu non disponible pour ce type de fichier. Téléchargez-le pour le consulter."
+    },
     "totalInvoiced": "Total dépenses",
     "fundsReleased": "Fonds libérés",
     "paid": "Payées",

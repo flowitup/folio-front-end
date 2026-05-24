@@ -347,6 +347,13 @@
     "deleteFailed": "Xóa tệp thất bại",
     "attachmentDeleteConfirm": "Xóa tệp đính kèm này? Không thể hoàn tác.",
     "openAttachment": "Mở",
+    "attachmentPreview": {
+      "preview": "Xem trước",
+      "close": "Đóng",
+      "download": "Tải xuống",
+      "error": "Xem trước thất bại — hãy tải xuống để xem tệp",
+      "fallback": "Không thể xem trước loại tệp này. Hãy tải xuống để xem."
+    },
     "totalInvoiced": "Tổng chi phí",
     "fundsReleased": "Đã giải ngân",
     "paid": "Đã thanh toán",

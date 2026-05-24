@@ -347,6 +347,13 @@
     "deleteFailed": "Failed to delete attachment",
     "attachmentDeleteConfirm": "Delete this attachment? This cannot be undone.",
     "openAttachment": "Open",
+    "attachmentPreview": {
+      "preview": "Preview",
+      "close": "Close",
+      "download": "Download",
+      "error": "Preview failed — download to view the file",
+      "fallback": "Preview not available for this file type. Download to view."
+    },
     "totalInvoiced": "Total expenses",
     "fundsReleased": "Funds released",
     "paid": "Paid",

@@ -126,10 +126,11 @@ export function PdfCanvasViewer({ src, label }: PdfCanvasViewerProps) {
         setError(null);
 
         const pdfjs = await loadPdfjs();
+        const isBlob = src.startsWith("blob:");
         const loadingTask = pdfjs.getDocument({
           url: src,
-          disableRange: false,
-          disableStream: false,
+          disableRange: isBlob,
+          disableStream: isBlob,
         });
         const doc = await loadingTask.promise;
         if (cancelled) {

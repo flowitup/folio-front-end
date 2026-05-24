@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, Upload, X, FileText, Image as ImageIcon, Download } from "lucide-react";
+import { Loader2, Upload, X, FileText, Image as ImageIcon, Download, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -12,6 +12,7 @@ import {
   fetchAttachmentBlobUrl,
 } from "@/lib/api/invoice-api";
 import type { Invoice, InvoiceAttachment } from "@/types/invoice";
+import { InvoiceAttachmentPreviewDialog } from "./invoice-attachment-preview-dialog";
 
 const ALLOWED_MIME = [
   "application/pdf",
@@ -45,6 +46,7 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [previewAttachment, setPreviewAttachment] = useState<InvoiceAttachment | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reload = useCallback(async () => {
@@ -167,12 +169,17 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
                   attachment={att}
                   canDelete={canManage}
                   onDelete={() => handleDelete(att.id)}
+                  onPreview={() => setPreviewAttachment(att)}
                 />
               ))}
             </ul>
           )}
         </div>
       </CardContent>
+      <InvoiceAttachmentPreviewDialog
+        attachment={previewAttachment}
+        onClose={() => setPreviewAttachment(null)}
+      />
     </Card>
   );
 }
@@ -181,9 +188,10 @@ interface AttachmentRowProps {
   attachment: InvoiceAttachment;
   canDelete: boolean;
   onDelete: () => void;
+  onPreview: () => void;
 }
 
-function AttachmentRow({ attachment, canDelete, onDelete }: AttachmentRowProps) {
+function AttachmentRow({ attachment, canDelete, onDelete, onPreview }: AttachmentRowProps) {
   const t = useTranslations("invoices");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const isImage = isImageMime(attachment.mime_type);
@@ -202,19 +210,30 @@ function AttachmentRow({ attachment, canDelete, onDelete }: AttachmentRowProps) 
     };
   }, [attachment.id, isImage]);
 
-  const handleOpen = async () => {
-    // Fetch as blob so auth header is included, then open in new tab
+  const handleDownload = async () => {
     try {
       const url = await fetchAttachmentBlobUrl(attachment.id);
-      window.open(url, "_blank", "noopener,noreferrer");
-      // Note: can't easily revoke since the new tab is using it. Browser cleans up on tab close.
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = attachment.filename;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
-      /* surfaced via existing error UI is overkill here; row stays usable */
+      /* swallow — row stays usable */
     }
   };
 
   return (
-    <li className="flex items-center gap-3 rounded-md border bg-card px-3 py-2">
+    <li
+      className="flex items-center gap-3 rounded-md border bg-card px-3 py-2 cursor-pointer hover:bg-accent/50 transition-colors"
+      onClick={onPreview}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPreview(); } }}
+    >
       <div className="shrink-0">
         {isImage && previewUrl ? (
           <img
@@ -236,14 +255,17 @@ function AttachmentRow({ attachment, canDelete, onDelete }: AttachmentRowProps) 
         </p>
       </div>
 
-      <Button variant="ghost" size="sm" onClick={handleOpen} title={t("openAttachment")}>
+      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onPreview(); }} title={t("attachmentPreview.preview")}>
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownload(); }} title={t("openAttachment")}>
         <Download className="h-4 w-4" />
       </Button>
       {canDelete && (
         <Button
           variant="ghost"
           size="sm"
-          onClick={onDelete}
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
           className="text-muted-foreground hover:text-destructive"
           title={t("delete")}
         >

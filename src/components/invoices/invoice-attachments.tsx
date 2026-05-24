@@ -108,7 +108,7 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
   return (
     <Card>
       <CardContent className="p-0">
-        <div className="px-6 py-4 border-b">
+        <div className="px-4 py-2 border-b">
           <h3 className="text-sm font-semibold">{t("attachments")}</h3>
         </div>
 
@@ -122,7 +122,7 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
               setIsDragging(false);
               if (e.dataTransfer.files.length) validateAndUpload(e.dataTransfer.files);
             }}
-            className={`m-4 border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+            className={`m-3 border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
               isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/30"
             }`}
           >
@@ -135,8 +135,8 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
               onChange={(e) => { if (e.target.files?.length) validateAndUpload(e.target.files); e.target.value = ""; }}
               disabled={uploading}
             />
-            <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground mb-2">{t("dragDropHint")}</p>
+            <Upload className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground mb-1.5">{t("dragDropHint")}</p>
             <Button
               variant="outline"
               size="sm"
@@ -149,14 +149,14 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
                 t("chooseFiles")
               )}
             </Button>
-            <p className="text-xs text-muted-foreground mt-2">{t("attachmentLimits")}</p>
+            <p className="text-xs text-muted-foreground mt-1.5">{t("attachmentLimits")}</p>
           </div>
         )}
 
-        {error && <div className="px-6 py-2 text-xs text-destructive">{error}</div>}
+        {error && <div className="px-4 py-1.5 text-xs text-destructive">{error}</div>}
 
         {/* List */}
-        <div className="px-6 pb-4">
+        <div className="px-4 pb-3">
           {loading ? (
             <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" /></div>
           ) : attachments.length === 0 ? (
@@ -228,7 +228,7 @@ function AttachmentRow({ attachment, canDelete, onDelete, onPreview }: Attachmen
 
   return (
     <li
-      className="flex items-center gap-3 rounded-md border bg-card px-3 py-2 cursor-pointer hover:bg-accent/50 transition-colors"
+      className="flex items-center gap-2.5 rounded-md border bg-card px-2.5 py-1.5 cursor-pointer hover:bg-accent/50 transition-colors"
       onClick={onPreview}
       role="button"
       tabIndex={0}
@@ -239,12 +239,12 @@ function AttachmentRow({ attachment, canDelete, onDelete, onPreview }: Attachmen
           <img
             src={previewUrl}
             alt={attachment.filename}
-            className="h-12 w-12 rounded object-cover border"
+            className="h-9 w-9 rounded object-cover border"
           />
         ) : isImage ? (
-          <ImageIcon className="h-12 w-12 text-muted-foreground p-2" />
+          <ImageIcon className="h-9 w-9 text-muted-foreground p-1.5" />
         ) : (
-          <FileText className="h-12 w-12 text-muted-foreground p-2" />
+          <FileText className="h-9 w-9 text-muted-foreground p-1.5" />
         )}
       </div>
 

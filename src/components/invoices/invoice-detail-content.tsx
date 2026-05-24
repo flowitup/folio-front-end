@@ -78,11 +78,11 @@ export function InvoiceDetailContent({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Action bar */}
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight font-mono">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold tracking-tight font-mono">
             {invoice.invoice_number}
           </h2>
           <span
@@ -94,7 +94,7 @@ export function InvoiceDetailContent({
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button variant="outline" size="sm" onClick={() => window.open(printUrl, "_blank")}>
             <Printer className="h-4 w-4 mr-1" />
             {t("printPdf")}
@@ -152,26 +152,26 @@ export function InvoiceDetailContent({
         <>
           {/* Meta */}
           <Card>
-            <CardContent className="pt-6">
-              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <CardContent className="py-3 px-4">
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
                 <div>
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {t("issueDate")}
                   </dt>
-                  <dd className="mt-1 text-sm">{invoice.issue_date}</dd>
+                  <dd className="mt-0.5 text-sm">{invoice.issue_date}</dd>
                 </div>
                 <div>
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {t("recipient")}
                   </dt>
-                  <dd className="mt-1 text-sm">{invoice.recipient_name}</dd>
+                  <dd className="mt-0.5 text-sm">{invoice.recipient_name}</dd>
                 </div>
                 {invoice.recipient_address && (
                   <div>
                     <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       {t("recipientAddress")}
                     </dt>
-                    <dd className="mt-1 text-sm whitespace-pre-line">
+                    <dd className="mt-0.5 text-sm whitespace-pre-line">
                       {invoice.recipient_address}
                     </dd>
                   </div>
@@ -180,7 +180,7 @@ export function InvoiceDetailContent({
                   <dt className="text-xs font-medium text-muted-foreground tracking-wide">
                     {t("paymentMethod.label")}
                   </dt>
-                  <dd className="mt-1 text-sm">
+                  <dd className="mt-0.5 text-sm">
                     {invoice.payment_method_label
                       ? localizeMethodLabel(invoice.payment_method_label, tBuiltins)
                       : t("paymentMethod.none")}
@@ -188,11 +188,11 @@ export function InvoiceDetailContent({
                 </div>
               </dl>
               {invoice.notes && (
-                <div className="mt-4 border-t pt-4">
+                <div className="mt-2 border-t pt-2">
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {t("notes")}
                   </dt>
-                  <dd className="mt-1 text-sm whitespace-pre-line">{invoice.notes}</dd>
+                  <dd className="mt-0.5 text-sm whitespace-pre-line">{invoice.notes}</dd>
                 </div>
               )}
             </CardContent>
@@ -201,23 +201,20 @@ export function InvoiceDetailContent({
           {/* Line items */}
           <Card>
             <CardContent className="p-0">
-              <div className="px-6 py-4 border-b">
-                <h3 className="text-sm font-semibold">{t("items")}</h3>
-              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/30">
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      <th className="px-3 py-1.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         {t("description")}
                       </th>
-                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                      <th className="px-3 py-1.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         {t("quantity")}
                       </th>
-                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                      <th className="px-3 py-1.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         {t("unitPrice")}
                       </th>
-                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                      <th className="px-3 py-1.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         {t("total")}
                       </th>
                     </tr>
@@ -225,10 +222,10 @@ export function InvoiceDetailContent({
                   <tbody>
                     {invoice.items.map((item, i) => (
                       <tr key={i} className="border-b last:border-0">
-                        <td className="px-4 py-3">{item.description}</td>
-                        <td className="px-4 py-3 text-right">{item.quantity}</td>
-                        <td className="px-4 py-3 text-right">{item.unit_price.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right font-medium">
+                        <td className="px-3 py-1.5">{item.description}</td>
+                        <td className="px-3 py-1.5 text-right">{item.quantity}</td>
+                        <td className="px-3 py-1.5 text-right">{item.unit_price.toFixed(2)}</td>
+                        <td className="px-3 py-1.5 text-right font-medium">
                           {item.total.toFixed(2)}
                         </td>
                       </tr>
@@ -236,10 +233,10 @@ export function InvoiceDetailContent({
                   </tbody>
                   <tfoot>
                     <tr className="border-t bg-muted/30">
-                      <td colSpan={3} className="px-4 py-3 text-right font-semibold text-sm">
+                      <td colSpan={3} className="px-3 py-1.5 text-right font-semibold text-sm">
                         {t("totalAmount")}
                       </td>
-                      <td className="px-4 py-3 text-right font-bold">
+                      <td className="px-3 py-1.5 text-right font-bold">
                         {invoice.total_amount.toFixed(2)}
                       </td>
                     </tr>

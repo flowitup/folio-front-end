@@ -128,10 +128,7 @@ export function PdfCanvasViewer({ src, label }: PdfCanvasViewerProps) {
         const pdfjs = await loadPdfjs();
         const loadingTask = pdfjs.getDocument({
           url: src,
-          // Range requests disabled — the nginx S3 proxy CORS config does not
-          // include Range in Access-Control-Allow-Headers, so preflight would
-          // fail. Streaming still works: PDF.js parses pages as bytes arrive.
-          disableRange: true,
+          disableRange: false,
           disableStream: false,
         });
         const doc = await loadingTask.promise;

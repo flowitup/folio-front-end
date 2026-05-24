@@ -17,6 +17,7 @@
  * Plan: 260512-2341-labor-calendar-and-bulk-log → phase-02 (2c).
  */
 
+import { useTranslations } from "next-intl";
 import { Plus, XIcon, Pencil, Trash2, ClipboardList } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
@@ -63,6 +64,7 @@ export function AttendanceDayDetailSheet({
   onEditActivity,
   onDeleteActivity,
 }: AttendanceDayDetailSheetProps) {
+  const t = useTranslations("labor");
   const dayTotal = entries.reduce(
     (sum, e) => sum + Number(e.effective_cost ?? 0),
     0,
@@ -111,15 +113,15 @@ export function AttendanceDayDetailSheet({
 
           <DialogPrimitive.Description className="text-muted-foreground text-sm">
             {entries.length === 0 ? (
-              <>No entries logged for this day.</>
+              <>{t("noEntriesForDay")}</>
             ) : (
               <>
-                {entries.length} {entries.length === 1 ? "entry" : "entries"}{" "}
+                {entries.length} {entries.length === 1 ? t("entrySingular") : t("entryPlural")}{" "}
                 &middot;{" "}
                 <span className="text-foreground font-medium">
                   {formatEUR(dayTotal)}
                 </span>{" "}
-                total
+                {t("total")}
               </>
             )}
           </DialogPrimitive.Description>
@@ -141,7 +143,7 @@ export function AttendanceDayDetailSheet({
                 <div className="flex items-center gap-1.5 pb-1">
                   <ClipboardList className="text-muted-foreground h-3.5 w-3.5" />
                   <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-                    Activities
+                    {t("activity.sectionTitle")}
                   </span>
                 </div>
                 {activities.map((activity) => (
@@ -191,13 +193,13 @@ export function AttendanceDayDetailSheet({
             {canManage && onAddMore && (
               <Button onClick={onAddMore} variant="default" className="flex-1">
                 <Plus className="mr-1 h-4 w-4" />
-                {entries.length === 0 ? "Log day" : "Log more workers"}
+                {entries.length === 0 ? t("logDay") : t("logMoreWorkers")}
               </Button>
             )}
             {canManage && onAddActivity && (
               <Button onClick={onAddActivity} variant="outline" className="flex-1">
                 <ClipboardList className="mr-1 h-4 w-4" />
-                Add activity
+                {t("activity.addTitle")}
               </Button>
             )}
           </div>

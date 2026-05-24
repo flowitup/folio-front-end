@@ -313,7 +313,7 @@ export default function LaborPage() {
       await deleteLaborActivity(projectId, activity.id);
       await loadActivities();
     } catch {
-      setError("Failed to delete activity");
+      setError(t("activity.deleteFailed"));
     }
   };
 

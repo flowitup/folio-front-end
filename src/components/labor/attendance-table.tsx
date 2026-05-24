@@ -166,7 +166,7 @@ export function AttendanceTable({
                         <>
                           <span>
                             {dayEntries.length}{" "}
-                            {dayEntries.length === 1 ? "worker" : "workers"}
+                            {dayEntries.length === 1 ? t("workerSingular") : t("workerPlural")}
                           </span>
                           <span aria-hidden="true">·</span>
                           <span className="text-foreground font-semibold tabular-nums">
@@ -179,7 +179,7 @@ export function AttendanceTable({
                           {dayEntries.length > 0 && <span aria-hidden="true">·</span>}
                           <span>
                             {dayActivities.length}{" "}
-                            {dayActivities.length === 1 ? "activity" : "activities"}
+                            {dayActivities.length === 1 ? t("activity.countSingular") : t("activity.countPlural")}
                           </span>
                         </>
                       )}

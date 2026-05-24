@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Download, Loader2 } from "lucide-react";
 import {
@@ -14,6 +14,10 @@ import { Button } from "@/components/ui/button";
 import { fetchAttachmentBlobUrl } from "@/lib/api/invoice-api";
 import type { InvoiceAttachment } from "@/types/invoice";
 import { PdfCanvasViewer } from "@/app/[locale]/(app)/projects/[id]/documents/pdf-canvas-viewer";
+import {
+  ResizableDialogHandles,
+  type DialogBounds,
+} from "@/app/[locale]/(app)/projects/[id]/documents/resizable-dialog-handles";
 
 type Props = {
   attachment: InvoiceAttachment | null;
@@ -35,6 +39,7 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [bounds, setBounds] = useState<DialogBounds | null>(null);
   const revokeRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -44,6 +49,7 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
     }
     setBlobUrl(null);
     setError(null);
+    setBounds(null);
 
     if (!attachment) return;
 
@@ -108,12 +114,18 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
   const showPdf = blobUrl && isPdf(mime);
   const showImage = blobUrl && isImage(mime);
 
+  const resizeStyle: CSSProperties | undefined = bounds
+    ? { top: bounds.y, left: bounds.x, width: bounds.w, height: bounds.h, transform: "none", translate: "none", maxWidth: "none" }
+    : undefined;
+
   return (
     <Dialog open={attachment !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="sm:max-w-4xl w-full h-[85vh] max-h-[95vh] grid-rows-[auto_1fr_auto] overflow-hidden"
+        style={resizeStyle}
         showCloseButton
       >
+        <ResizableDialogHandles onResize={setBounds} />
         <DialogHeader>
           <DialogTitle className="truncate pr-8">
             {attachment?.filename ?? ""}

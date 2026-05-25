@@ -15,6 +15,7 @@
     "notes": "Notes",
     "documents": "Documents",
     "members": "Members",
+    "projectSettings": "Settings",
     "settings": "Settings",
     "more": "More"
   },
@@ -187,7 +188,15 @@
     "deleteProjectBillingNote": "Quotes and invoices (billing documents) linked to this project will be unlinked but kept.",
     "deleteProjectTypeToConfirm": "To confirm, type the project name below:",
     "deleteProjectTypePlaceholder": "Type project name to confirm",
-    "deleteProjectError": "Could not delete the project. Please try again."
+    "deleteProjectError": "Could not delete the project. Please try again.",
+    "settingsTitle": "Project Settings",
+    "invoicePrefix": "Invoice number prefix",
+    "invoicePrefixPlaceholder": "e.g. ARC",
+    "invoicePrefixHint": "Uppercase letters and digits only (A-Z, 0-9). Max 8 characters. Leave blank for the default \"INV\".",
+    "invoicePrefixExample": "Preview: {prefix}-{year}-0001",
+    "settingsSaved": "Settings saved",
+    "settingsSaveError": "Could not save settings. Please try again.",
+    "invoicePrefixInvalid": "Prefix must contain only uppercase letters and digits (A-Z, 0-9), max 8 characters."
   },
   "settings": {
     "title": "Settings",

@@ -128,9 +128,13 @@ export function PdfCanvasViewer({ src, data, label }: PdfCanvasViewerProps) {
         setError(null);
 
         const pdfjs = await loadPdfjs();
-        const loadingTask = data
-          ? pdfjs.getDocument({ data })
-          : pdfjs.getDocument({ url: src });
+        const docParams = {
+          cMapUrl: "/cmaps/",
+          cMapPacked: true,
+          standardFontDataUrl: "/standard_fonts/",
+          ...(data ? { data } : { url: src }),
+        };
+        const loadingTask = pdfjs.getDocument(docParams);
         const doc = await loadingTask.promise;
         if (cancelled) {
           doc.destroy();

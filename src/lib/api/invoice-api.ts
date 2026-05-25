@@ -83,18 +83,24 @@ export const deleteAttachment = (attachmentId: string): Promise<void> =>
   api.delete<void>(`/attachments/${attachmentId}`);
 
 /**
- * Fetch attachment as a Blob URL for inline preview.
- * Use for <img src> on protected endpoints since browsers won't send auth headers automatically.
- * Caller must URL.revokeObjectURL() when done.
+ * Fetch attachment as a raw Blob.
  */
-export const fetchAttachmentBlobUrl = async (attachmentId: string): Promise<string> => {
+export const fetchAttachmentBlob = async (attachmentId: string): Promise<Blob> => {
   const response = await fetch(`${env.apiBaseUrl}/attachments/${attachmentId}/download`, {
     credentials: "include",
   });
   if (!response.ok) {
     throw new ApiError(`Download failed: ${response.status}`, response.status);
   }
-  const blob = await response.blob();
+  return response.blob();
+};
+
+/**
+ * Fetch attachment as a Blob URL for inline preview.
+ * Caller must URL.revokeObjectURL() when done.
+ */
+export const fetchAttachmentBlobUrl = async (attachmentId: string): Promise<string> => {
+  const blob = await fetchAttachmentBlob(attachmentId);
   return URL.createObjectURL(blob);
 };
 

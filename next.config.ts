@@ -53,7 +53,7 @@ function buildContentSecurityPolicy(): string {
     // nonce pipeline, 'unsafe-inline' is required in all environments.
     // TODO(security): migrate to nonce-based script-src + 'strict-dynamic'
     "script-src": isProd
-      ? ["'self'", "'unsafe-inline'"]
+      ? ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'"]
       : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
     "img-src": ["'self'", "data:", "blob:", ...imageOrigins],
     "font-src": ["'self'", "data:"],

@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { fetchAttachmentBlobUrl } from "@/lib/api/invoice-api";
+import { fetchAttachmentBlob, fetchAttachmentBlobUrl } from "@/lib/api/invoice-api";
 import type { InvoiceAttachment } from "@/types/invoice";
 import { PdfCanvasViewer } from "@/app/[locale]/(app)/projects/[id]/documents/pdf-canvas-viewer";
 import {
@@ -36,6 +36,7 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
   const t = useTranslations("invoices.attachmentPreview");
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
@@ -48,6 +49,7 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
       revokeRef.current = null;
     }
     setBlobUrl(null);
+    setPdfData(null);
     setError(null);
     setBounds(null);
 
@@ -58,13 +60,16 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
 
     async function loadAttachment() {
       try {
-        const url = await fetchAttachmentBlobUrl(attachment!.id);
-        if (controller.signal.aborted) {
-          URL.revokeObjectURL(url);
-          return;
-        }
+        const blob = await fetchAttachmentBlob(attachment!.id);
+        if (controller.signal.aborted) return;
+
+        const url = URL.createObjectURL(blob);
         revokeRef.current = url;
         setBlobUrl(url);
+
+        if (isPdf(attachment!.mime_type)) {
+          setPdfData(await blob.arrayBuffer());
+        }
       } catch (err: unknown) {
         if (controller.signal.aborted) return;
         const msg = err instanceof Error ? err.message : String(err);
@@ -111,7 +116,7 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
   }
 
   const mime = attachment?.mime_type ?? "";
-  const showPdf = blobUrl && isPdf(mime);
+  const showPdf = pdfData && isPdf(mime);
   const showImage = blobUrl && isImage(mime);
 
   const resizeStyle: CSSProperties | undefined = bounds
@@ -158,7 +163,8 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
 
           {!loading && !error && showPdf && (
             <PdfCanvasViewer
-              src={blobUrl}
+              src=""
+              data={pdfData}
               label={attachment?.filename}
             />
           )}

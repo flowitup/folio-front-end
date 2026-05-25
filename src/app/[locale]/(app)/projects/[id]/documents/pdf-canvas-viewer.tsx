@@ -6,8 +6,10 @@ import { Loader2 } from "lucide-react";
 // ---- Types ----
 
 type PdfCanvasViewerProps = {
-  /** Presigned S3 URL or blob URL pointing to the PDF */
+  /** Presigned S3 URL pointing to the PDF */
   src: string;
+  /** Raw PDF bytes — when provided, bypasses network fetch entirely */
+  data?: ArrayBuffer;
   /** Accessible label for the viewer container */
   label?: string;
 };
@@ -41,7 +43,7 @@ function loadPdfjs() {
  * as they scroll into view via IntersectionObserver. Much faster perceived
  * load than the `<embed>` approach which waits for the entire file.
  */
-export function PdfCanvasViewer({ src, label }: PdfCanvasViewerProps) {
+export function PdfCanvasViewer({ src, data, label }: PdfCanvasViewerProps) {
   // Unique prefix for canvas IDs — prevents collision if multiple viewers mount
   const idPrefix = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -126,16 +128,9 @@ export function PdfCanvasViewer({ src, label }: PdfCanvasViewerProps) {
         setError(null);
 
         const pdfjs = await loadPdfjs();
-        const isBlob = src.startsWith("blob:");
-
-        let loadingTask;
-        if (isBlob) {
-          const resp = await fetch(src);
-          const buffer = await resp.arrayBuffer();
-          loadingTask = pdfjs.getDocument({ data: buffer });
-        } else {
-          loadingTask = pdfjs.getDocument({ url: src });
-        }
+        const loadingTask = data
+          ? pdfjs.getDocument({ data })
+          : pdfjs.getDocument({ url: src });
         const doc = await loadingTask.promise;
         if (cancelled) {
           doc.destroy();
@@ -176,7 +171,7 @@ export function PdfCanvasViewer({ src, label }: PdfCanvasViewerProps) {
         pdfDocRef.current = null;
       }
     };
-  }, [src, renderPage]);
+  }, [src, data, renderPage]);
 
   // Set up IntersectionObserver to lazily render pages as they scroll into view
   useEffect(() => {

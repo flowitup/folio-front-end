@@ -132,6 +132,7 @@ export function PdfCanvasViewer({ src, data, label }: PdfCanvasViewerProps) {
           cMapUrl: "/cmaps/",
           cMapPacked: true,
           standardFontDataUrl: "/standard_fonts/",
+          wasmUrl: "/wasm/",
           ...(data ? { data } : { url: src }),
         };
         const loadingTask = pdfjs.getDocument(docParams);

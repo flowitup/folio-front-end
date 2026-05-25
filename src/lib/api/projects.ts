@@ -16,8 +16,9 @@ export async function createProject(payload: CreateProjectPayload): Promise<Proj
 }
 
 export interface UpdateProjectPayload {
-  name: string;
+  name?: string;
   address?: string | null;
+  invoice_prefix?: string | null;
 }
 
 export async function updateProject(

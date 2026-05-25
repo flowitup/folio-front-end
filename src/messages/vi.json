@@ -15,6 +15,7 @@
     "notes": "Ghi chú",
     "documents": "Tài liệu",
     "members": "Thành viên",
+    "projectSettings": "Cài đặt",
     "settings": "Cài đặt",
     "more": "Thêm"
   },
@@ -187,7 +188,15 @@
     "deleteProjectBillingNote": "Báo giá và hóa đơn (tài liệu thanh toán) liên kết với dự án này sẽ được tách ra nhưng vẫn giữ lại.",
     "deleteProjectTypeToConfirm": "Để xác nhận, hãy nhập tên dự án bên dưới:",
     "deleteProjectTypePlaceholder": "Nhập tên dự án để xác nhận",
-    "deleteProjectError": "Không thể xóa dự án. Vui lòng thử lại."
+    "deleteProjectError": "Không thể xóa dự án. Vui lòng thử lại.",
+    "settingsTitle": "Cài đặt dự án",
+    "invoicePrefix": "Tiền tố số hóa đơn",
+    "invoicePrefixPlaceholder": "VD: ARC",
+    "invoicePrefixHint": "Chỉ chữ in hoa và số (A-Z, 0-9). Tối đa 8 ký tự. Để trống để dùng mặc định \"INV\".",
+    "invoicePrefixExample": "Xem trước: {prefix}-{year}-0001",
+    "settingsSaved": "Đã lưu cài đặt",
+    "settingsSaveError": "Không thể lưu cài đặt. Vui lòng thử lại.",
+    "invoicePrefixInvalid": "Tiền tố chỉ được chứa chữ in hoa và số (A-Z, 0-9), tối đa 8 ký tự."
   },
   "settings": {
     "title": "Cài đặt",

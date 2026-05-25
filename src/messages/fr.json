@@ -15,6 +15,7 @@
     "notes": "Notes",
     "documents": "Documents",
     "members": "Membres",
+    "projectSettings": "Paramètres",
     "settings": "Paramètres",
     "more": "Plus"
   },
@@ -187,7 +188,15 @@
     "deleteProjectBillingNote": "Les devis et factures (documents de facturation) liés à ce projet seront dissociés mais conservés.",
     "deleteProjectTypeToConfirm": "Pour confirmer, tapez le nom du projet ci-dessous :",
     "deleteProjectTypePlaceholder": "Tapez le nom du projet pour confirmer",
-    "deleteProjectError": "Impossible de supprimer le projet. Veuillez réessayer."
+    "deleteProjectError": "Impossible de supprimer le projet. Veuillez réessayer.",
+    "settingsTitle": "Paramètres du projet",
+    "invoicePrefix": "Préfixe de numéro de facture",
+    "invoicePrefixPlaceholder": "ex. ARC",
+    "invoicePrefixHint": "Lettres majuscules et chiffres uniquement (A-Z, 0-9). Max 8 caractères. Laissez vide pour le préfixe par défaut « INV ».",
+    "invoicePrefixExample": "Aperçu : {prefix}-{year}-0001",
+    "settingsSaved": "Paramètres enregistrés",
+    "settingsSaveError": "Impossible d'enregistrer les paramètres. Veuillez réessayer.",
+    "invoicePrefixInvalid": "Le préfixe doit contenir uniquement des lettres majuscules et des chiffres (A-Z, 0-9), max 8 caractères."
   },
   "settings": {
     "title": "Paramètres",

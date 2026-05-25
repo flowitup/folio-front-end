@@ -7,6 +7,8 @@ export interface Project {
   created_at: string;
   /** UUID of the company this project belongs to. Null/undefined if no company is linked. */
   company_id?: string | null;
+  /** Custom invoice number prefix (e.g. "ARC" → ARC-2026-0001). Null = default "INV". */
+  invoice_prefix?: string | null;
 }
 
 export interface ProjectListResponse {

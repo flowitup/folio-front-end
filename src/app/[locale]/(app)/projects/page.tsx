@@ -452,7 +452,7 @@ export default function ProjectsPage() {
                         />
                       </div>
                     ) : users.length > 0 ? (
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                      <div className="flex flex-wrap gap-3">
                         {users.map((member, i) => (
                           <div key={member.id} className="flex items-center gap-2.5">
                             <div
@@ -461,7 +461,7 @@ export default function ProjectsPage() {
                             >
                               {member.email.charAt(0).toUpperCase()}
                             </div>
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0">
                               <div className="truncate text-[13px] font-medium">
                                 {member.email}
                               </div>
@@ -479,10 +479,10 @@ export default function ProjectsPage() {
                                     email: member.email,
                                   })
                                 }
-                                className="btn btn-quiet"
+                                className="btn btn-quiet shrink-0"
                                 aria-label="Remove"
                               >
-                                <Trash2 size={12} style={{ color: "var(--negative)" }} />
+                                <Trash2 size={14} style={{ color: "var(--negative)" }} />
                               </button>
                             )}
                           </div>

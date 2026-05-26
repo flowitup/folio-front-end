@@ -9,6 +9,7 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp",
   labor: "stamp accent",
   materials_services: "stamp positive",
+  others: "stamp muted",
 };
 
 interface InvoiceMobileCardProps {

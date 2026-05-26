@@ -16,6 +16,7 @@ const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
   released_funds: "bg-blue-100 text-blue-700",
   labor: "bg-orange-100 text-orange-700",
   materials_services: "bg-green-100 text-green-700",
+  others: "bg-gray-100 text-gray-700",
 };
 
 interface InvoiceDetailContentProps {

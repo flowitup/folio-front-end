@@ -157,6 +157,7 @@ export function InvoiceExportDialog({
                 <SelectItem value="released_funds">{t("typeReleasedFunds")}</SelectItem>
                 <SelectItem value="labor">{t("typeLabor")}</SelectItem>
                 <SelectItem value="materials_services">{t("typeMaterialsServices")}</SelectItem>
+                <SelectItem value="others">{t("typeOthers")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

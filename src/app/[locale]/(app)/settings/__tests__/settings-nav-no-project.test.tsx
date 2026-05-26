@@ -24,6 +24,18 @@ vi.mock("@/i18n/navigation", () => ({
   usePathname: () => "/settings",
 }));
 
+vi.mock("@/context/ProjectContext", () => ({
+  useProject: () => ({
+    projects: [],
+    selectedProjectId: null,
+    selectedProject: null,
+    selectProject: vi.fn(),
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
+}));
+
 vi.mock("../users/users-section", () => ({
   UsersSection: () => <div data-testid="users-section" />,
 }));

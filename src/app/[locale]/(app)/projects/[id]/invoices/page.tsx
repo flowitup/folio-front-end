@@ -23,6 +23,7 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp",
   labor: "stamp accent",
   materials_services: "stamp positive",
+  others: "stamp muted",
 };
 
 export default function InvoicesPage() {
@@ -109,9 +110,9 @@ export default function InvoicesPage() {
     }
   };
 
-  const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services"];
+  const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services", "others"];
 
-  const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services"];
+  const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services", "others"];
   const groupedInvoices = GROUP_ORDER
     .map((type) => ({ type, items: invoices.filter((i) => i.type === type) }))
     .filter((g) => g.items.length > 0);
@@ -128,11 +129,12 @@ export default function InvoicesPage() {
   const releasedFundsInvoices = invoices.filter((i) => i.type === "released_funds");
   const laborInvoices = invoices.filter((i) => i.type === "labor");
   const materialsInvoices = invoices.filter((i) => i.type === "materials_services");
+  const othersInvoices = invoices.filter((i) => i.type === "others");
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
       {/* KPI Row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="folio-card p-5">
           <div className="label-cap">{t("totalInvoiced")}</div>
           <div className="font-display num mt-2 text-[28px] font-medium leading-none">
@@ -175,6 +177,18 @@ export default function InvoicesPage() {
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("invoiceCount", { n: materialsInvoices.length })}
+          </div>
+        </div>
+        <div className="folio-card p-5">
+          <div className="label-cap">{t("types.others")}</div>
+          <div
+            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            style={{ color: "var(--muted)" }}
+          >
+            {formatEUR(othersInvoices.reduce((s, i) => s + i.total_amount, 0))}
+          </div>
+          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("invoiceCount", { n: othersInvoices.length })}
           </div>
         </div>
       </div>

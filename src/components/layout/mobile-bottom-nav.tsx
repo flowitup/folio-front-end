@@ -50,8 +50,7 @@ export function MobileBottomNav() {
       ? pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/labor`) ||
         pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/members`) ||
         pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/notes`) ||
-        pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/documents`) ||
-        pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/settings`)
+        pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/documents`)
       : false);
 
   return (

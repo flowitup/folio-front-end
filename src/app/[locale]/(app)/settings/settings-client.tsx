@@ -6,14 +6,16 @@ import { useRouter, usePathname } from "@/i18n/navigation";
 import { Check, Globe, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { locales, localeNames, type Locale } from "@/i18n/config";
+import { useProject } from "@/context/ProjectContext";
 import { UsersSection } from "./users/users-section";
+import { InvoicePrefixSection } from "./invoice-prefix-section";
 import { MyCompaniesSection } from "@/components/companies/my-companies-section";
 import { AdminCompaniesSection } from "@/components/companies/admin-companies-section";
 import type { Role } from "@/lib/api/roles";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import pkg from "../../../../../package.json";
 
-const SECTION_KEYS = [
+const BASE_SECTION_KEYS = [
   "profile",
   "team",
   "billing",
@@ -23,7 +25,7 @@ const SECTION_KEYS = [
   "users",
   "about",
 ] as const;
-type SectionKey = (typeof SECTION_KEYS)[number];
+type SectionKey = (typeof BASE_SECTION_KEYS)[number] | "project";
 
 const LOCALE_FLAGS: Record<Locale, string> = {
   en: "🇬🇧",
@@ -47,17 +49,19 @@ interface Props {
  * Using a lazy initializer avoids the cascading setState-in-effect pattern.
  * Falls back to "profile" when no hash or hash doesn't match a known section.
  */
+const ALL_VALID_KEYS: readonly string[] = [...BASE_SECTION_KEYS, "project"];
+
 function initialActiveFromHash(): SectionKey {
   if (typeof window === "undefined") return "profile";
   const hash = window.location.hash.replace("#", "");
-  return (SECTION_KEYS as readonly string[]).includes(hash)
-    ? (hash as SectionKey)
-    : "profile";
+  return ALL_VALID_KEYS.includes(hash) ? (hash as SectionKey) : "profile";
 }
 
 export function SettingsClient({ roles, projects }: Props) {
   const t = useTranslations("settings");
+  const tProjects = useTranslations("projects");
   const { user } = useAuth();
+  const { selectedProject } = useProject();
   // Lazy initializer reads window.location.hash once at mount — no effect needed.
   const [active, setActive] = useState<SectionKey>(initialActiveFromHash);
   const currentLocale = useLocale() as Locale;
@@ -68,6 +72,18 @@ export function SettingsClient({ roles, projects }: Props) {
 
   const isSuperadmin = (user?.permissions ?? []).includes("*:*");
   const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
+
+  const sectionKeys: SectionKey[] = [
+    "profile",
+    ...(selectedProject ? ["project" as const] : []),
+    "team",
+    "billing",
+    "my-companies",
+    "notifications",
+    "preferences",
+    "users",
+    "about",
+  ];
 
   const handleLocaleChange = (next: Locale) => {
     if (next === currentLocale || isPending) return;
@@ -83,13 +99,15 @@ export function SettingsClient({ roles, projects }: Props) {
       {/* Anchor nav */}
       <aside className="col-span-12 lg:col-span-3">
         <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-3 lg:mx-0 lg:flex-col lg:gap-0 lg:space-y-0.5 lg:overflow-visible lg:px-0 lg:pb-0 lg:sticky lg:top-4">
-          {SECTION_KEYS.map((key) => {
+          {sectionKeys.map((key) => {
             const label =
               key === "users"
                 ? t("users.title")
                 : key === "my-companies"
                   ? t("myCompanies.title")
-                  : t(key);
+                  : key === "project"
+                    ? tProjects("settingsTitle")
+                    : t(key);
             return (
               <button
                 key={key}
@@ -147,6 +165,8 @@ export function SettingsClient({ roles, projects }: Props) {
             </div>
           </section>
         )}
+
+        {active === "project" && selectedProject && <InvoicePrefixSection />}
 
         {active === "preferences" && (
           <section className="folio-card p-7">
@@ -255,6 +275,7 @@ export function SettingsClient({ roles, projects }: Props) {
         )}
 
         {active !== "profile" &&
+          active !== "project" &&
           active !== "preferences" &&
           active !== "users" &&
           active !== "my-companies" &&

@@ -69,7 +69,6 @@ export function Sidebar() {
           { key: "members", href: `/projects/${selectedProjectId}/members`, icon: Users },
           { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
           { key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files },
-          { key: "projectSettings", href: `/projects/${selectedProjectId}/settings`, icon: Settings },
         ]
       : []),
   ];

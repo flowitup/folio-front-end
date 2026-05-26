@@ -59,7 +59,6 @@ function initialActiveFromHash(): SectionKey {
 
 export function SettingsClient({ roles, projects }: Props) {
   const t = useTranslations("settings");
-  const tProjects = useTranslations("projects");
   const { user } = useAuth();
   const { selectedProject } = useProject();
   // Lazy initializer reads window.location.hash once at mount — no effect needed.
@@ -105,9 +104,7 @@ export function SettingsClient({ roles, projects }: Props) {
                 ? t("users.title")
                 : key === "my-companies"
                   ? t("myCompanies.title")
-                  : key === "project"
-                    ? tProjects("settingsTitle")
-                    : t(key);
+                  : t(key);
             return (
               <button
                 key={key}

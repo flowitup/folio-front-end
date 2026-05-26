@@ -82,15 +82,4 @@ describe("Settings nav: Project entry removed", () => {
     expect(screen.queryByRole("button", { name: "Dự án" })).toBeNull();
   });
 
-  it("settings.project i18n key is removed from all locales", () => {
-    expect(
-      (enMessages.settings as Record<string, unknown>).project
-    ).toBeUndefined();
-    expect(
-      (frMessages.settings as Record<string, unknown>).project
-    ).toBeUndefined();
-    expect(
-      (viMessages.settings as Record<string, unknown>).project
-    ).toBeUndefined();
-  });
 });

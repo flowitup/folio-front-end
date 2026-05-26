@@ -318,7 +318,8 @@
     "types": {
       "released_funds": "Fond débloqué",
       "labor": "Main-d'œuvre",
-      "materials_services": "Achats & prestations"
+      "materials_services": "Achats & prestations",
+      "others": "Autres"
     },
     "issueDate": "Date d'émission",
     "recipient": "Destinataire",
@@ -387,6 +388,7 @@
       "typeReleasedFunds": "Fond débloqué",
       "typeLabor": "Main-d'œuvre",
       "typeMaterialsServices": "Achats & prestations",
+      "typeOthers": "Autres",
       "format": "Format",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",

@@ -318,7 +318,8 @@
     "types": {
       "released_funds": "Vốn giải ngân",
       "labor": "Nhân công",
-      "materials_services": "Vật tư & dịch vụ"
+      "materials_services": "Vật tư & dịch vụ",
+      "others": "Khác"
     },
     "issueDate": "Ngày phát hành",
     "recipient": "Người nhận",
@@ -387,6 +388,7 @@
       "typeReleasedFunds": "Vốn giải ngân",
       "typeLabor": "Nhân công",
       "typeMaterialsServices": "Vật tư & dịch vụ",
+      "typeOthers": "Khác",
       "format": "Định dạng",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",

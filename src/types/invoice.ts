@@ -1,6 +1,6 @@
 // Invoice management types
 
-export type InvoiceType = "released_funds" | "labor" | "materials_services";
+export type InvoiceType = "released_funds" | "labor" | "materials_services" | "others";
 
 export interface InvoiceItem {
   description: string;

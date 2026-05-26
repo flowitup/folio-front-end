@@ -26,7 +26,7 @@ interface InvoiceFormProps {
   companyId?: string | null;
 }
 
-const INVOICE_TYPES: InvoiceType[] = ["released_funds", "labor", "materials_services"];
+const INVOICE_TYPES: InvoiceType[] = ["released_funds", "labor", "materials_services", "others"];
 
 const emptyItem = (): LineItem => ({ description: "", quantity: 1, unit_price: 0 });
 

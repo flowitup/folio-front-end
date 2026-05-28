@@ -236,6 +236,7 @@ function AttachmentRow({ attachment, canDelete, onDelete, onPreview }: Attachmen
     >
       <div className="shrink-0">
         {isImage && previewUrl ? (
+          /* eslint-disable-next-line @next/next/no-img-element -- presigned S3 URL; next/image requires remotePatterns config */
           <img
             src={previewUrl}
             alt={attachment.filename}

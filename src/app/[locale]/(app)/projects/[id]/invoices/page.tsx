@@ -3,7 +3,6 @@
 import { Fragment, useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useLocale } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,6 @@ export default function InvoicesPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const locale = useLocale();
   const projectId = params.id as string;
   const { user } = useAuth();
 

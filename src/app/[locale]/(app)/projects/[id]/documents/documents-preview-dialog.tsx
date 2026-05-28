@@ -40,7 +40,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
   const [presignedUrl, setPresignedUrl] = useState<string | null>(null);
   // Fallback blob URL (legacy path for images and when presigned unavailable)
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [contentType, setContentType] = useState<string | null>(null);
+  const [_contentType, setContentType] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);

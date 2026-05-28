@@ -59,8 +59,11 @@ export function RoleSelectWithCreate({
   const [createError, setCreateError] = React.useState<string | null>(null);
 
   const selectedRole = value ? roles.find((r) => r.id === value) : null;
-  const roleName = (role: LaborRole) =>
-    DEFAULT_ROLE_I18N_KEYS[role.id] ? tRole(DEFAULT_ROLE_I18N_KEYS[role.id]) : role.name;
+  const roleName = React.useCallback(
+    (role: LaborRole) =>
+      DEFAULT_ROLE_I18N_KEYS[role.id] ? tRole(DEFAULT_ROLE_I18N_KEYS[role.id]) : role.name,
+    [tRole],
+  );
 
   const trimmed = query.trim();
 
@@ -69,7 +72,7 @@ export function RoleSelectWithCreate({
     if (!trimmed) return roles;
     const lower = trimmed.toLowerCase();
     return roles.filter((r) => roleName(r).toLowerCase().includes(lower));
-  }, [roles, trimmed]);
+  }, [roles, trimmed, roleName]);
 
   const exactMatch =
     trimmed.length > 0 &&

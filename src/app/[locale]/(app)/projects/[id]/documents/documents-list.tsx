@@ -15,7 +15,6 @@ import {
   Download,
   Pencil,
   Trash2,
-  Tag,
   Plus,
   X,
 } from "lucide-react";

@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InvoiceForm } from "../invoice-form";
 
@@ -236,7 +236,6 @@ describe("InvoiceForm", () => {
     });
 
     it("disables submit button while loading", async () => {
-      const user = userEvent.setup();
       render(<InvoiceForm onSubmit={mockOnSubmit} isLoading={true} />);
 
       const submitBtn = screen.getByRole("button", { name: /saving/i });

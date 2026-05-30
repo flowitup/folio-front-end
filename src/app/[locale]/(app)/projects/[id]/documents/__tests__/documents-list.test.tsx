@@ -544,7 +544,7 @@ describe("DocumentsList", () => {
     it("shows chevron-up when actively sorted asc", () => {
       const doc = makeDoc();
 
-      const { container } = render(
+      render(
         <DocumentsList
           {...defaultProps}
           documents={[doc]}
@@ -555,7 +555,7 @@ describe("DocumentsList", () => {
 
       // The active sort header should show ChevronUp icon
       const fileHeader = screen.getByText("File");
-      const parent = fileHeader.closest("button");
+      fileHeader.closest("button");
       // SVG chevrons are nested, just verify the header is styled as active
       expect(fileHeader).toBeDefined();
     });

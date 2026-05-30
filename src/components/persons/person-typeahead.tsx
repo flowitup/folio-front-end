@@ -14,7 +14,7 @@
  */
 
 import * as React from "react";
-import { ChevronsUpDown, Loader2, Plus, UserPlus } from "lucide-react";
+import { ChevronsUpDown, Loader2, UserPlus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

@@ -38,7 +38,6 @@ vi.mock("next-intl", () => ({
 }));
 
 // Mock window.location
-const mockLocationAssign = vi.fn();
 Object.defineProperty(window, "location", {
   value: { href: "" },
   writable: true,

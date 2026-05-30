@@ -120,11 +120,9 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
       // likely stuck (e.g. Cloudflare rejected the body mid-stream with a
       // CORS-less 413). Abort so the user sees an error instead of an
       // infinite spinner.
-      let lastProgress = 0;
       let stallTimer = setTimeout(abortOnStall, 60_000);
 
-      function resetStallTimer(progress: number) {
-        lastProgress = progress;
+      function resetStallTimer(_progress: number) {
         clearTimeout(stallTimer);
         stallTimer = setTimeout(abortOnStall, 60_000);
       }

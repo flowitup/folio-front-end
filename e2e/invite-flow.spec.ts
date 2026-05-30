@@ -128,7 +128,6 @@ test.describe("Invite-only signup flow", () => {
     const emailPayload = await fetchLastEmail();
     if (!emailPayload) {
       test.skip(
-        // eslint-disable-next-line no-constant-condition
         true,
         `Backend test endpoint ${LAST_EMAIL_ENDPOINT} is unavailable. ` +
           "Ensure backend is running with TESTING=True and EMAIL_PROVIDER=inmemory. " +
@@ -188,7 +187,7 @@ test.describe("Invite-only signup flow", () => {
 
     // InviteError component renders an error banner and a login link
     // Check for the error UI — it shows "invalid" or "expired" text
-    const errorBanner = page.locator('[style*="negative-tint"]').or(
+    const _errorBanner = page.locator('[style*="negative-tint"]').or(
       page.getByRole("alert")
     ).first();
 

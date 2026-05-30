@@ -139,7 +139,7 @@ export default function ProjectsPage() {
   const handleMemberAdded = async () => {
     if (addMemberProject) {
       setProjectUsers((prev) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
         const { [addMemberProject.id]: _, ...rest } = prev;
         return rest;
       });
@@ -153,7 +153,7 @@ export default function ProjectsPage() {
     try {
       await removeUserFromProject(removeMember.projectId, removeMember.userId);
       setProjectUsers((prev) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
         const { [removeMember.projectId]: _, ...rest } = prev;
         return rest;
       });

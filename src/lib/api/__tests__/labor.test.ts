@@ -342,10 +342,11 @@ describe("fetchLaborExport — happy path (200 + Content-Disposition)", () => {
       "Content-Disposition": 'attachment; filename="labor-foo-2026-01-to-2026-03.xlsx"',
     });
 
-    const mockResponse = new Response(fakeBlob, {
+    const mockResponse = new Response("blob-bytes", {
       status: 200,
       headers: mockHeaders,
     });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
 
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
@@ -388,7 +389,8 @@ describe("fetchLaborExport — missing Content-Disposition fallback", () => {
 
   it("falls back to timestamped default filename when Content-Disposition absent", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
 
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 

@@ -96,7 +96,8 @@ describe("fetchInvoiceExport — URL construction", () => {
 
   it("constructs URL with /invoices-export path and correct query params", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     await fetchInvoiceExport("proj-abc", { from: "2026-01", to: "2026-03" }, "xlsx");
@@ -115,7 +116,8 @@ describe("fetchInvoiceExport — URL construction", () => {
 
   it("includes optional type param when typeFilter is provided", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     await fetchInvoiceExport("proj-abc", { from: "2026-01", to: "2026-03" }, "xlsx", "released_funds");
@@ -128,7 +130,8 @@ describe("fetchInvoiceExport — URL construction", () => {
 
   it("omits type param when typeFilter is undefined", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     await fetchInvoiceExport("proj-abc", { from: "2026-01", to: "2026-03" }, "pdf", undefined);
@@ -141,7 +144,8 @@ describe("fetchInvoiceExport — URL construction", () => {
 
   it("URL-encodes projectId with special characters", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     await fetchInvoiceExport("proj/with space", { from: "2026-01", to: "2026-01" }, "pdf");
@@ -155,7 +159,8 @@ describe("fetchInvoiceExport — URL construction", () => {
   it("constructs correct URL for all three type filters", async () => {
     for (const typeFilter of ["released_funds", "labor", "materials_services"] as const) {
       const fakeBlob = new Blob(["bytes"]);
-      const mockResponse = new Response(fakeBlob, { status: 200 });
+      const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
       vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
       await fetchInvoiceExport("proj-1", { from: "2026-01", to: "2026-03" }, "xlsx", typeFilter);
@@ -180,12 +185,13 @@ describe("fetchInvoiceExport — happy path with Content-Disposition", () => {
     const fakeBlob = new Blob(["fake-xlsx-bytes"], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    const mockResponse = new Response(fakeBlob, {
+    const mockResponse = new Response("blob-bytes", {
       status: 200,
       headers: {
         "Content-Disposition": 'attachment; filename="invoices-2026-01-to-2026-03.xlsx"',
       },
     });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     const result = await fetchInvoiceExport("proj-1", { from: "2026-01", to: "2026-03" }, "xlsx");
@@ -200,12 +206,13 @@ describe("fetchInvoiceExport — happy path with Content-Disposition", () => {
   it("returns { blob, filename } with filename from CD header (RFC 5987 UTF-8 encoded)", async () => {
     const fakeBlob = new Blob(["fake-pdf-bytes"], { type: "application/pdf" });
     const encodedName = encodeURIComponent("invoices-société-2026-01.pdf");
-    const mockResponse = new Response(fakeBlob, {
+    const mockResponse = new Response("blob-bytes", {
       status: 200,
       headers: {
         "Content-Disposition": `attachment; filename*=UTF-8''${encodedName}`,
       },
     });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     const result = await fetchInvoiceExport("proj-1", { from: "2026-01", to: "2026-01" }, "pdf");
@@ -215,12 +222,13 @@ describe("fetchInvoiceExport — happy path with Content-Disposition", () => {
 
   it("happy path pdf — returns blob and filename", async () => {
     const fakeBlob = new Blob(["pdf-bytes"], { type: "application/pdf" });
-    const mockResponse = new Response(fakeBlob, {
+    const mockResponse = new Response("blob-bytes", {
       status: 200,
       headers: {
         "Content-Disposition": 'attachment; filename="report.pdf"',
       },
     });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     const result = await fetchInvoiceExport("proj-2", { from: "2026-03", to: "2026-06" }, "pdf");
@@ -239,7 +247,8 @@ describe("fetchInvoiceExport — missing Content-Disposition fallback", () => {
 
   it("falls back to invoices-{from}-to-{to}.{ext} when CD absent", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     const result = await fetchInvoiceExport("proj-1", { from: "2026-02", to: "2026-04" }, "pdf");
@@ -249,7 +258,8 @@ describe("fetchInvoiceExport — missing Content-Disposition fallback", () => {
 
   it("falls back to xlsx extension when format=xlsx and CD absent", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     const result = await fetchInvoiceExport("proj-1", { from: "2026-01", to: "2026-01" }, "xlsx");

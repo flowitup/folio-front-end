@@ -1,6 +1,6 @@
 {
   "name": "construction-front-end",
-  "version": "0.1.104",
+  "version": "0.1.105",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -50,7 +50,7 @@
     "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^5.1.2",
+    "@vitejs/plugin-react": "^6.0.2",
     "agentation": "^3.0.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",

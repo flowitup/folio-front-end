@@ -106,7 +106,7 @@ export function Sidebar() {
       <Link
         href="/dashboard"
         aria-label="Folio — home"
-        className="flex items-center gap-3 px-5 py-5 transition-opacity hover:opacity-70"
+        className="flex items-center gap-3 px-5 py-5"
       >
         <FolioLogo />
         <div className="leading-tight">

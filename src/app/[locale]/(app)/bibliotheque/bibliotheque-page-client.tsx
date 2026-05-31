@@ -26,7 +26,7 @@ import {
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 
-const PAGE_SIZE = 18; // 3-col grid — multiples of 3 look clean
+const PAGE_SIZE = 24; // responsive grid up to 4 cols — divisible by 3 and 4
 
 interface Props {
   companyId: string;
@@ -186,7 +186,7 @@ export function BibliothequePageClient({ companyId }: Props) {
       {/* Product grid */}
       {!loading && !error && products.length > 0 && (
         <>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => (
               <ProductCard
                 key={product.id}

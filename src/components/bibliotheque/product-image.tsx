@@ -71,7 +71,7 @@ export function ProductImage({ productId, hasImage, alt, className = "" }: Produ
         <img
           src={blobUrl!}
           alt={alt}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain p-2"
           onError={() => setFailed(true)}
         />
       )}

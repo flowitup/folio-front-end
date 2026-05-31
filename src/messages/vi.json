@@ -1337,6 +1337,8 @@
     "purchasedTimes": "{count, plural, =0 {Chưa mua} other {Đã mua # lần}}",
     "lastPurchased": "Mua lần cuối",
     "viewProduct": "Xem sản phẩm",
+    "columnsPerRow": "Số cột mỗi hàng",
+    "columnsCount": "{count} cột",
     "noResults": "Không tìm thấy sản phẩm.",
     "loading": "Đang tải…",
     "purchaseHistory": "Lịch sử mua hàng",

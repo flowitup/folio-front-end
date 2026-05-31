@@ -44,15 +44,23 @@ function makeImageBlob(): Blob {
   return new Blob(["fake image data"], { type: "image/png" });
 }
 
+// Plain mock objects, not real Response — `new Response(blob)` reads the body
+// via blob.stream(), which is absent in the CI jsdom/Node environment. The
+// component only touches res.ok + res.blob(), so this is sufficient and portable.
 function makeSuccessResponse(blob: Blob): Response {
-  return new Response(blob, {
+  return {
+    ok: true,
     status: 200,
-    headers: { "Content-Type": "image/png" },
-  });
+    blob: () => Promise.resolve(blob),
+  } as unknown as Response;
 }
 
 function makeErrorResponse(status: number): Response {
-  return new Response("Error", { status });
+  return {
+    ok: false,
+    status,
+    blob: () => Promise.resolve(new Blob()),
+  } as unknown as Response;
 }
 
 // ---- Tests ----

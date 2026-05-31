@@ -38,27 +38,27 @@ export function BacklogBar({ tasks, onAdd, onTaskClick }: BacklogBarProps) {
 
   return (
     <div className="border rounded-lg bg-muted/30">
-      {/* Header */}
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between px-4 py-2 hover:bg-muted/50 transition-colors"
-        aria-expanded={expanded}
-      >
-        <div className="flex items-center gap-2">
+      {/* Header — toggle and add are siblings (a <button> must not nest a <button>) */}
+      <div className="flex w-full items-center justify-between px-4 py-2 hover:bg-muted/50 transition-colors">
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="flex flex-1 items-center gap-2 text-left"
+          aria-expanded={expanded}
+        >
           {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           <h3 className="text-sm font-semibold">{t("backlog")}</h3>
           <span className="text-xs text-muted-foreground tabular-nums">{tasks.length}</span>
-        </div>
+        </button>
         <Button
           variant="ghost"
           size="sm"
           className="h-6 w-6 p-0"
-          onClick={(e) => { e.stopPropagation(); onAdd(); }}
+          onClick={onAdd}
         >
           <Plus className="h-3.5 w-3.5" />
         </Button>
-      </button>
+      </div>
 
       {/* Body */}
       {expanded && (

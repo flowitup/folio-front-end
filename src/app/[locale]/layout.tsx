@@ -44,7 +44,11 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}>
+    <html
+      lang={locale}
+      data-scroll-behavior="smooth"
+      className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}
+    >
       <body className="antialiased">
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider>

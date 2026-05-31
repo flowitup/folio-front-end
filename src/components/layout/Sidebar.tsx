@@ -102,13 +102,17 @@ export function Sidebar() {
       className="hidden w-[248px] border-r lg:flex lg:flex-col"
       style={{ background: "var(--paper)", borderColor: "var(--line)" }}
     >
-      {/* Brand */}
-      <div className="flex items-center gap-3 px-5 py-5">
+      {/* Brand — links back to the dashboard (home) */}
+      <Link
+        href="/dashboard"
+        aria-label="Folio — home"
+        className="flex items-center gap-3 px-5 py-5 transition-opacity hover:opacity-70"
+      >
         <FolioLogo />
         <div className="leading-tight">
           <div className="font-display text-[18px] font-semibold tracking-tight">Folio</div>
         </div>
-      </div>
+      </Link>
 
       <div className="px-3">
         <div className="ink-divider mb-3" />

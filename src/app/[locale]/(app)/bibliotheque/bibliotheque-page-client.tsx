@@ -23,7 +23,6 @@ import {
   listSuppliersAction,
   listCategoriesAction,
   listProductsAction,
-  fetchProductImageUrlAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 
@@ -51,7 +50,6 @@ export function BibliothequePageClient({ companyId }: Props) {
   const [categories, setCategories] = useState<string[]>([]);
   const [products, setProducts] = useState<LibraryProduct[]>([]);
   const [total, setTotal] = useState(0);
-  const [imageUrls, setImageUrls] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -111,22 +109,7 @@ export function BibliothequePageClient({ companyId }: Props) {
       setProducts(res.data.items);
       setTotal(res.data.total);
       setLoading(false);
-
-      // Fetch image URLs for products that have images (fire-and-forget per product)
-      const withImages = res.data.items.filter((p) => p.has_image);
-      for (const p of withImages) {
-        fetchProductImageUrlAction(p.id).then((r) => {
-          if (!cancelled) {
-            setImageUrls((prev) => ({ ...prev, [p.id]: r.ok ? r.data : null }));
-          }
-        });
-      }
-      // Null-out image urls for products without images
-      setImageUrls((prev) => {
-        const next = { ...prev };
-        res.data.items.filter((p) => !p.has_image).forEach((p) => { next[p.id] = null; });
-        return next;
-      });
+      // Each ProductCard fetches its own image blob lazily (see ProductImage).
     }
 
     run();
@@ -209,7 +192,6 @@ export function BibliothequePageClient({ companyId }: Props) {
                 key={product.id}
                 product={product}
                 suppliersById={suppliersById}
-                imageUrl={imageUrls[product.id] ?? null}
                 onClick={() => openProduct(product.id)}
               />
             ))}

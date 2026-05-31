@@ -3,7 +3,7 @@
 /**
  * ProductCard — card view for a single library product.
  *
- * Displays the product photo (presigned URL passed from the page),
+ * Displays the product photo (self-fetched by ProductImage),
  * name, description, badges (supplier, category, size), and footer with
  * purchase stats and link to the supplier's product page.
  */
@@ -17,15 +17,12 @@ interface ProductCardProps {
   product: LibraryProduct;
   /** Map from supplier_id → Supplier, pre-fetched by the page. */
   suppliersById: Record<string, Supplier>;
-  /** Presigned image URL (null when product has no image). Resolved by the page. */
-  imageUrl: string | null;
   onClick: () => void;
 }
 
 export function ProductCard({
   product,
   suppliersById,
-  imageUrl,
   onClick,
 }: ProductCardProps) {
   const t = useTranslations("bibliotheque");
@@ -50,7 +47,8 @@ export function ProductCard({
     >
       {/* Photo */}
       <ProductImage
-        src={imageUrl}
+        productId={product.id}
+        hasImage={product.has_image}
         alt={product.name}
         className="w-full"
       />

@@ -5,8 +5,9 @@
  * Uses sessionAuthHeader (next/headers) — must NOT be imported by client
  * components. Client components go through server actions or route handlers.
  *
- * Image endpoint returns a presigned object-storage URL; callers use it
- * directly in <img> src — no blob fetch needed for product thumbnails.
+ * Product image bytes are NOT served here: the ProductImage client component
+ * fetches GET /products/<id>/image as a Blob with cookie auth (the API streams
+ * the bytes), mirroring invoice attachment previews.
  */
 
 import "server-only";
@@ -202,27 +203,6 @@ export async function getProduct(productId: string): Promise<ProductDetailResult
   return response.json() as Promise<ProductDetailResult>;
 }
 
-/**
- * Fetch the presigned image URL for a product.
- * Returns null when the product has no image (404) or on any non-auth error.
- */
-export async function fetchProductImageUrl(productId: string): Promise<string | null> {
-  const authHeaders = await sessionAuthHeader();
-  let response: Response;
-  try {
-    response = await fetch(
-      `${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}/image`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json", ...authHeaders },
-        cache: "no-store",
-      }
-    );
-  } catch {
-    return null;
-  }
-  if (response.status === 404) return null;
-  if (!response.ok) return null;
-  const data = (await response.json()) as { url: string };
-  return data.url;
-}
+// Product image bytes are streamed from GET /bibliotheque/products/<id>/image
+// and fetched client-side as a Blob by the ProductImage component (cookie auth),
+// mirroring invoice attachment previews. No server-side wrapper needed here.

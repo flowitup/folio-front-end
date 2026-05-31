@@ -23,7 +23,6 @@ import {
 import { ProductImage } from "@/components/bibliotheque/product-image";
 import {
   getProductAction,
-  fetchProductImageUrlAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import type { ProductDetailResult, Supplier } from "@/lib/api/bibliotheque";
 
@@ -42,14 +41,12 @@ export function ProductDetailDialog({
   const locale = useLocale();
 
   const [detail, setDetail] = useState<ProductDetailResult | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!productId) {
       setDetail(null);
-      setImageUrl(null);
       setError(null);
       return;
     }
@@ -57,15 +54,11 @@ export function ProductDetailDialog({
     let cancelled = false;
     setLoading(true);
     setDetail(null);
-    setImageUrl(null);
     setError(null);
 
     async function load() {
       try {
-        const [detailRes, imgRes] = await Promise.all([
-          getProductAction(productId!),
-          fetchProductImageUrlAction(productId!),
-        ]);
+        const detailRes = await getProductAction(productId!);
         if (cancelled) return;
 
         if (!detailRes.ok) {
@@ -73,7 +66,6 @@ export function ProductDetailDialog({
           return;
         }
         setDetail(detailRes.data);
-        setImageUrl(imgRes.ok ? imgRes.data : null);
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Unknown error");
@@ -136,7 +128,8 @@ export function ProductDetailDialog({
           <div className="space-y-5">
             {/* Image */}
             <ProductImage
-              src={imageUrl}
+              productId={product.id}
+              hasImage={product.has_image}
               alt={product.name}
               className="w-full rounded-lg"
             />

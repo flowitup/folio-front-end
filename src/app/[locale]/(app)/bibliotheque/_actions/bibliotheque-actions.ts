@@ -12,7 +12,6 @@ import {
   listSuppliers,
   listCategories,
   getProduct,
-  fetchProductImageUrl,
   type ProductListResult,
   type ProductDetailResult,
   type Supplier,
@@ -82,17 +81,6 @@ export async function getProductAction(
 ): Promise<{ ok: true; data: ProductDetailResult } | { ok: false; error: string }> {
   try {
     const data = await getProduct(productId);
-    return { ok: true, data };
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
-  }
-}
-
-export async function fetchProductImageUrlAction(
-  productId: string
-): Promise<{ ok: true; data: string | null } | { ok: false; error: string }> {
-  try {
-    const data = await fetchProductImageUrl(productId);
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

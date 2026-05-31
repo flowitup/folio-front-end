@@ -1,27 +1,61 @@
 "use client";
 
 /**
- * ProductImage — displays a product photo from a presigned URL.
+ * ProductImage — displays a product photo.
  *
- * Uses a presigned object-storage URL (fetched server-side via
- * fetchProductImageUrl). When has_image is false or the URL fails to load,
- * renders a placeholder box. Fixed aspect ratio to prevent layout jitter.
+ * Fetches the image bytes from the API as a Blob (the API streams them through
+ * rather than exposing a presigned object-store URL, whose host is not
+ * browser-reachable). Same approach as invoice attachment previews. Renders a
+ * placeholder while loading, when the product has no image, or on error.
+ * Fixed aspect ratio prevents layout jitter. The object URL is revoked on
+ * unmount / product change.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Package } from "lucide-react";
+import { env } from "@/lib/config/env";
 
 interface ProductImageProps {
-  /** Presigned URL from the product image endpoint. Null = no image. */
-  src: string | null;
+  /** Product id — used to fetch /bibliotheque/products/<id>/image. */
+  productId: string;
+  /** Whether the product has a stored image. Skips the fetch when false. */
+  hasImage: boolean;
   alt: string;
   className?: string;
 }
 
-export function ProductImage({ src, alt, className = "" }: ProductImageProps) {
+export function ProductImage({ productId, hasImage, alt, className = "" }: ProductImageProps) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
-  const showPlaceholder = !src || failed;
+  useEffect(() => {
+    if (!hasImage) return;
+    let revoked = false;
+    let objectUrl: string | null = null;
+
+    fetch(`${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}/image`, {
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`image ${res.status}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        if (revoked) return;
+        objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!revoked) setFailed(true);
+      });
+
+    return () => {
+      revoked = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [productId, hasImage]);
+
+  const showPlaceholder = !hasImage || failed || !blobUrl;
 
   return (
     <div
@@ -35,7 +69,7 @@ export function ProductImage({ src, alt, className = "" }: ProductImageProps) {
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={src!}
+          src={blobUrl!}
           alt={alt}
           className="h-full w-full object-cover"
           onError={() => setFailed(true)}

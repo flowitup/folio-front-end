@@ -6,11 +6,10 @@
 
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
-import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { listProjectDocuments, listDocumentTags } from "@/lib/api/project-documents";
 import { listMembers } from "@/lib/api/members";
-import { fetchProjectById } from "@/lib/api/projects";
+import { getProjectById } from "@/lib/api/projects-server";
 import { DocumentsPanel } from "./documents-panel";
 
 interface PageProps {
@@ -20,7 +19,6 @@ interface PageProps {
 export default async function DocumentsPage({ params }: PageProps) {
   const { id: projectId } = await params;
   const locale = await getLocale();
-  const t = await getTranslations("documents");
 
   const session = await getSession();
   if (!session) {
@@ -29,7 +27,7 @@ export default async function DocumentsPage({ params }: PageProps) {
 
   // Parallel fetch — project metadata, members, documents, and tags
   const [project, members, docsResult, tags] = await Promise.all([
-    fetchProjectById(projectId).catch(() => null),
+    getProjectById(projectId).catch(() => null),
     listMembers(projectId).catch(() => []),
     listProjectDocuments(projectId).catch(() => ({
       items: [],
@@ -60,10 +58,6 @@ export default async function DocumentsPage({ params }: PageProps) {
 
   return (
     <div className="px-6 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
-      </div>
       <DocumentsPanel
         projectId={projectId}
         initialDocuments={docsResult.items}

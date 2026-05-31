@@ -321,7 +321,10 @@ describe("test_api_client_documents_url_method_body_contract", () => {
       const headers = new Headers({
         "Content-Disposition": 'attachment; filename="DEV-2026-001.pdf"',
       });
-      fetchMock.mockResolvedValueOnce(new Response(fakeBlob, { status: 200, headers }));
+      // Use string body + override .blob() to avoid jsdom .stream() gap
+      const pdfRes = new Response("pdf-bytes", { status: 200, headers });
+      vi.spyOn(pdfRes, "blob").mockResolvedValue(fakeBlob);
+      fetchMock.mockResolvedValueOnce(pdfRes);
 
       const result = await fetchBillingDocumentPdf("doc-1");
 

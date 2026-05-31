@@ -90,7 +90,8 @@ describe("fetchWorkerLaborExport — URL construction", () => {
 
   it("constructs URL with /workers/{workerId}/labor-export path and correct query params", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     await fetchWorkerLaborExport(
@@ -114,7 +115,8 @@ describe("fetchWorkerLaborExport — URL construction", () => {
 
   it("URL-encodes projectId and workerId with special characters", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     await fetchWorkerLaborExport(
@@ -143,12 +145,13 @@ describe("fetchWorkerLaborExport — happy path xlsx with Content-Disposition", 
     const fakeBlob = new Blob(["fake-xlsx-bytes"], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    const mockResponse = new Response(fakeBlob, {
+    const mockResponse = new Response("blob-bytes", {
       status: 200,
       headers: {
         "Content-Disposition": 'attachment; filename="worker-alice-2026-01-to-2026-03.xlsx"',
       },
     });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     const result = await fetchWorkerLaborExport(
@@ -168,12 +171,13 @@ describe("fetchWorkerLaborExport — happy path xlsx with Content-Disposition", 
   it("returns { blob, filename } with filename from CD header (RFC 5987 UTF-8 encoded)", async () => {
     const fakeBlob = new Blob(["fake-pdf-bytes"], { type: "application/pdf" });
     const encodedName = encodeURIComponent("worker-alice-dupont-2026-01.pdf");
-    const mockResponse = new Response(fakeBlob, {
+    const mockResponse = new Response("blob-bytes", {
       status: 200,
       headers: {
         "Content-Disposition": `attachment; filename*=UTF-8''${encodedName}`,
       },
     });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     const result = await fetchWorkerLaborExport(
@@ -188,12 +192,13 @@ describe("fetchWorkerLaborExport — happy path xlsx with Content-Disposition", 
 
   it("happy path pdf — returns blob and filename", async () => {
     const fakeBlob = new Blob(["pdf-bytes"], { type: "application/pdf" });
-    const mockResponse = new Response(fakeBlob, {
+    const mockResponse = new Response("blob-bytes", {
       status: 200,
       headers: {
         "Content-Disposition": 'attachment; filename="report.pdf"',
       },
     });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     const result = await fetchWorkerLaborExport(
@@ -217,7 +222,8 @@ describe("fetchWorkerLaborExport — missing Content-Disposition fallback", () =
 
   it("falls back to labor-export-{from}-to-{to}.{ext} when CD absent", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     const result = await fetchWorkerLaborExport(
@@ -232,7 +238,8 @@ describe("fetchWorkerLaborExport — missing Content-Disposition fallback", () =
 
   it("falls back to xlsx extension when format=xlsx and CD absent", async () => {
     const fakeBlob = new Blob(["bytes"]);
-    const mockResponse = new Response(fakeBlob, { status: 200 });
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(fakeBlob);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
     const result = await fetchWorkerLaborExport(

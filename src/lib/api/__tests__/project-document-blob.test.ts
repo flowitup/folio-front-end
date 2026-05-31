@@ -19,11 +19,17 @@ import { refreshAccessTokenViaCookie } from "../refresh";
 // ---- Helpers ----
 
 function makeOkResponse(body: string, contentType = "application/pdf") {
-  const blob = new Blob([body], { type: contentType });
-  return new Response(blob, {
+  // Use a string body instead of Blob to avoid jsdom's broken
+  // Response.blob() → .stream() path on some Node versions.
+  const res = new Response(body, {
     status: 200,
     headers: { "content-type": contentType },
   });
+  // Override .blob() so tests don't hit the jsdom .stream() gap.
+  vi.spyOn(res, "blob").mockResolvedValue(
+    new Blob([body], { type: contentType }),
+  );
+  return res;
 }
 
 function makeErrorResponse(status: number, body = "") {
@@ -149,10 +155,11 @@ describe("fetchProjectDocumentBlob", () => {
   });
 
   it("defaults contentType to application/octet-stream when content-type header is absent", async () => {
-    const res = new Response(new Blob(["data"]), {
+    const res = new Response("data", {
       status: 200,
       headers: { "content-type": "" },
     });
+    vi.spyOn(res, "blob").mockResolvedValue(new Blob(["data"]));
     vi.spyOn(res.headers, "get").mockReturnValue(null);
     vi.mocked(fetch).mockResolvedValue(res);
 

@@ -21,7 +21,7 @@ import { isToday } from "@/lib/utils/calendar-month";
 import { getFrenchHolidayKey } from "@/lib/utils/french-holidays";
 import { personColor, workerColor } from "@/lib/utils/person-color";
 import { formatEUR } from "@/lib/api/labor";
-import type { LaborEntry, LaborActivity, Worker } from "@/types/labor";
+import type { LaborEntry, LaborActivity, Worker, ShiftType } from "@/types/labor";
 
 interface CalendarCellProps {
   /** The Date this cell represents, or null for grid padding cells. */
@@ -46,6 +46,8 @@ interface ChipDescriptor {
   id: string;
   name: string;
   chipColor: string;
+  shiftType: ShiftType | null;
+  supplementHours: number;
 }
 
 export function CalendarCell({
@@ -78,7 +80,13 @@ export function CalendarCell({
       // fall back to personColor(worker_id) when map is unavailable.
       const worker = workerMap?.[id];
       const chipColor = worker ? workerColor(worker) : personColor(id);
-      list.push({ id, name: e.worker_name, chipColor });
+      list.push({
+        id,
+        name: e.worker_name,
+        chipColor,
+        shiftType: e.shift_type,
+        supplementHours: e.supplement_hours,
+      });
     }
     const shown = list.slice(0, maxChips);
     const rest = Math.max(0, list.length - maxChips);
@@ -154,6 +162,12 @@ export function CalendarCell({
               style={{ backgroundColor: c.chipColor, maxWidth: "100%" }}
             >
               {c.name}
+              {c.shiftType === "half" && (
+                <span className="opacity-80" aria-label={t("shiftHalf")}>½</span>
+              )}
+              {c.supplementHours > 0 && (
+                <span className="opacity-80">+{c.supplementHours}h</span>
+              )}
             </span>
           ))}
           {overflow > 0 && (

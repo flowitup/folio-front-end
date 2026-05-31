@@ -32,19 +32,10 @@ vi.mock("next-intl", () => ({
   },
 }));
 
-vi.mock("sonner", () => ({
-  toast: {
-    success: vi.fn(),
-    info: vi.fn(),
-    warning: vi.fn(),
-    error: vi.fn(),
-    // The toast() call (non-namespaced) used by confirmDelete
-    default: vi.fn(),
-  },
-  // Also export toast as a callable function for confirmDelete
-}));
-
-// Separate mock so `toast(label, opts)` invocation from confirmDelete works
+// `toast` must be a callable spy (confirmDelete calls `toast(label, opts)` for
+// the undo toast) that also carries .success/.info/.warning/.error methods.
+// A single mock keeps this deterministic — a duplicate vi.mock("sonner") here
+// made resolution order-dependent and flaked under different file scheduling.
 vi.mock("sonner", () => {
   const toastFn = vi.fn();
   Object.assign(toastFn, {

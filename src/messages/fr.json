@@ -9,6 +9,7 @@
   "navigation": {
     "dashboard": "Aperçu",
     "projects": "Projets",
+    "bibliotheque": "Bibliothèque",
     "labor": "Main-d'œuvre",
     "invoices": "Dépenses",
     "planning": "Planification",
@@ -1322,5 +1323,31 @@
       "rateLimited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
       "generic": "Une erreur inattendue est survenue."
     }
+  },
+  "bibliotheque": {
+    "title": "Bibliothèque de produits",
+    "subtitle": "Parcourez et suivez les produits achetés auprès de vos fournisseurs.",
+    "searchPlaceholder": "Rechercher un produit…",
+    "allSuppliers": "Tous les fournisseurs",
+    "allCategories": "Toutes les catégories",
+    "supplier": "Fournisseur",
+    "category": "Catégorie",
+    "size": "Taille",
+    "uncategorized": "Non catégorisé",
+    "purchasedTimes": "{count, plural, =0 {Jamais acheté} one {Acheté # fois} other {Acheté # fois}}",
+    "lastPurchased": "Dernier achat",
+    "viewProduct": "Voir le produit",
+    "noResults": "Aucun produit trouvé.",
+    "loading": "Chargement…",
+    "purchaseHistory": "Historique des achats",
+    "date": "Date",
+    "quantity": "Qté",
+    "unitPrice": "Prix unitaire",
+    "sourceRef": "Réf.",
+    "documentType": {
+      "ticket": "Ticket",
+      "commande": "Commande"
+    },
+    "detailTitle": "Détail du produit"
   }
 }

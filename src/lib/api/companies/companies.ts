@@ -76,8 +76,30 @@ export async function fetchMyCompanies(): Promise<MyCompany[]> {
     throw new Error(`Network error listing my companies: ${String(err)}`);
   }
   if (!response.ok) throw await buildHttpError(response, "Failed to list my companies");
-  const data = (await response.json()) as { items: MyCompany[] };
-  return data.items;
+  const data = (await response.json()) as { items: unknown[] };
+  return data.items.map(normalizeMyCompany);
+}
+
+/**
+ * GET /companies returns each attachment as a nested `{ access, company }`
+ * pair, but the rest of the app consumes a flat `MyCompany` (Company fields +
+ * is_primary + attached_at). Flatten here so callers can read `.id` /
+ * `.is_primary` directly. Tolerant of an already-flat item (passthrough).
+ */
+function normalizeMyCompany(item: unknown): MyCompany {
+  if (
+    item &&
+    typeof item === "object" &&
+    "company" in item &&
+    "access" in item
+  ) {
+    const { company, access } = item as {
+      company: Company;
+      access: { is_primary: boolean; attached_at: string };
+    };
+    return { ...company, is_primary: access.is_primary, attached_at: access.attached_at };
+  }
+  return item as MyCompany;
 }
 
 /**

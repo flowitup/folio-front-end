@@ -170,3 +170,27 @@ describe("Topbar dead-button removal", () => {
     expect(mockSetTheme).toHaveBeenCalledWith("light");
   });
 });
+
+describe("Topbar title suppression on self-headed routes", () => {
+  it("dashboard renders the topbar title heading", () => {
+    setup({ pathname: "/en/dashboard" });
+    render(<Topbar />);
+    expect(
+      screen.getByRole("heading", { level: 1, name: "topbar.overviewTitle" }),
+    ).toBeTruthy();
+  });
+
+  it("billing routes render NO topbar title heading (page owns its header)", () => {
+    setup({ pathname: "/en/billing/factures" });
+    render(<Topbar />);
+    // No fallback "Overview" title should leak onto billing pages.
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(screen.queryByText("topbar.overviewTitle")).toBeNull();
+  });
+
+  it("unknown nested settings route does not fall back to the overview title", () => {
+    setup({ pathname: "/en/settings/companies/abc" });
+    render(<Topbar />);
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+  });
+});

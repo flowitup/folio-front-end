@@ -82,11 +82,14 @@ export function Topbar() {
 
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
-  // Resolve page key from path
-  let pageKey: PageKey = "dashboard";
-  if (pathWithoutLocale === "/projects") pageKey = "projects";
+  // Resolve page key from path. Routes that render their own in-page header
+  // (billing/*, settings sub-pages, persons-*, invoice detail/new) intentionally
+  // stay null so the topbar suppresses its title block instead of falling back
+  // to a misleading "Overview" default.
+  let pageKey: PageKey | null = null;
+  if (pathWithoutLocale === "/" || pathWithoutLocale === "/dashboard") pageKey = "dashboard";
+  else if (pathWithoutLocale === "/projects") pageKey = "projects";
   else if (pathWithoutLocale === "/settings") pageKey = "settings";
-  else if (pathWithoutLocale === "/dashboard") pageKey = "dashboard";
   else {
     const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)/);
     if (projectMatch && (projectMatch[1] in TOPBAR_KEYS)) {
@@ -94,10 +97,10 @@ export function Topbar() {
     }
   }
 
-  const cfg = TOPBAR_KEYS[pageKey];
-  const title = tTopbar(cfg.titleKey);
-  const subtitle = tTopbar(cfg.subtitleKey);
-  const actionLabel = cfg.actionKey ? tTopbar(cfg.actionKey) : null;
+  const cfg = pageKey ? TOPBAR_KEYS[pageKey] : null;
+  const title = cfg ? tTopbar(cfg.titleKey) : null;
+  const subtitle = cfg ? tTopbar(cfg.subtitleKey) : null;
+  const actionLabel = cfg?.actionKey ? tTopbar(cfg.actionKey) : null;
 
   const projectName = selectedProject?.name;
   const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
@@ -137,28 +140,32 @@ export function Topbar() {
   return (
     <header className="flex items-start justify-between gap-4 px-4 pb-3 pt-4 lg:gap-6 lg:px-8 lg:pb-4 lg:pt-6">
       <div className="min-w-0 flex-1">
-        <div
-          className="mb-1 hidden items-center gap-2 text-[12px] lg:flex"
-          style={{ color: "var(--muted)" }}
-        >
-          {projectName && (
-            <>
-              <span>{projectName}</span>
-              <span style={{ color: "var(--line-2)" }}>›</span>
-            </>
-          )}
-          <span style={{ color: "var(--ink-2)" }}>{title}</span>
-        </div>
-        <h1 className="font-display text-2xl font-medium leading-[1.05] tracking-tight lg:text-[34px]">
-          {title}
-        </h1>
-        {subtitle && (
-          <p
-            className="mt-1 hidden text-[13.5px] lg:block"
-            style={{ color: "var(--muted)", maxWidth: 540 }}
-          >
-            {subtitle}
-          </p>
+        {title && (
+          <>
+            <div
+              className="mb-1 hidden items-center gap-2 text-[12px] lg:flex"
+              style={{ color: "var(--muted)" }}
+            >
+              {projectName && (
+                <>
+                  <span>{projectName}</span>
+                  <span style={{ color: "var(--line-2)" }}>›</span>
+                </>
+              )}
+              <span style={{ color: "var(--ink-2)" }}>{title}</span>
+            </div>
+            <h1 className="font-display text-2xl font-medium leading-[1.05] tracking-tight lg:text-[34px]">
+              {title}
+            </h1>
+            {subtitle && (
+              <p
+                className="mt-1 hidden text-[13.5px] lg:block"
+                style={{ color: "var(--muted)", maxWidth: 540 }}
+              >
+                {subtitle}
+              </p>
+            )}
+          </>
         )}
         {projects.length > 0 && (
           <div className="mt-2 lg:hidden">

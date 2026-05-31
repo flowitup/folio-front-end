@@ -79,6 +79,59 @@ describe("fetchMyCompanies", () => {
     expect(init.method).toBe("GET");
   });
 
+  it("flattens nested {access, company} items into flat MyCompany", async () => {
+    const items = [
+      {
+        access: { is_primary: true, attached_at: "2024-01-15T10:00:00Z" },
+        company: { id: "co-1", legal_name: "ACME Corp", address: "Paris", siret: "123456" },
+      },
+      {
+        access: { is_primary: false, attached_at: "2024-02-20T14:30:00Z" },
+        company: { id: "co-2", legal_name: "XYZ Ltd", address: "Lyon", siret: "789012" },
+      },
+    ];
+    global.fetch = vi.fn().mockResolvedValueOnce(makeJsonResponse({ items }));
+
+    const result = await fetchMyCompanies();
+
+    expect(result).toHaveLength(2);
+    // First company should be flattened with is_primary=true
+    expect(result[0]).toEqual({
+      id: "co-1",
+      legal_name: "ACME Corp",
+      address: "Paris",
+      siret: "123456",
+      is_primary: true,
+      attached_at: "2024-01-15T10:00:00Z",
+    });
+    // Second company should be flattened with is_primary=false
+    expect(result[1]).toEqual({
+      id: "co-2",
+      legal_name: "XYZ Ltd",
+      address: "Lyon",
+      siret: "789012",
+      is_primary: false,
+      attached_at: "2024-02-20T14:30:00Z",
+    });
+  });
+
+  it("passes through already-flat MyCompany items unchanged", async () => {
+    const items = [
+      {
+        id: "co-1",
+        legal_name: "ACME Corp",
+        address: "Paris",
+        is_primary: true,
+        attached_at: "2024-01-15T10:00:00Z",
+      },
+    ];
+    global.fetch = vi.fn().mockResolvedValueOnce(makeJsonResponse({ items }));
+
+    const result = await fetchMyCompanies();
+
+    expect(result).toEqual(items);
+  });
+
   it("throws on non-ok response", async () => {
     global.fetch = vi.fn().mockResolvedValueOnce(makeErrorResponse(401));
     await expect(fetchMyCompanies()).rejects.toThrow();

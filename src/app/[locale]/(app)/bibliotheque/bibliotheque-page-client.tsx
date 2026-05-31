@@ -20,13 +20,29 @@ import { ProductFilterBar } from "@/components/bibliotheque/product-filter-bar";
 import { ProductCard } from "@/components/bibliotheque/product-card";
 import { ProductDetailDialog } from "@/components/bibliotheque/product-detail-dialog";
 import {
+  ProductDensityMenu,
+  DEFAULT_COLUMNS,
+  type ColumnCount,
+} from "@/components/bibliotheque/product-density-menu";
+import {
   listSuppliersAction,
   listCategoriesAction,
   listProductsAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 
-const PAGE_SIZE = 24; // responsive grid up to 4 cols — divisible by 3 and 4
+const PAGE_SIZE = 24; // divisible by 2/3/4/6/8 — even rows at every density
+
+/**
+ * Static Tailwind class strings per chosen wide-screen column count. Must be
+ * literal (not interpolated) so Tailwind's compiler keeps them. Smaller
+ * viewports auto-reduce: 2 cols (mobile) → 3 (sm) → 4 (lg) → chosen (xl).
+ */
+const COLUMN_CLASS_MAP: Record<ColumnCount, string> = {
+  4: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
+  6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6",
+  8: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8",
+};
 
 interface Props {
   companyId: string;
@@ -44,6 +60,9 @@ export function BibliothequePageClient({ companyId }: Props) {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [page, setPage] = useState(1);
+
+  // Column density — session-only, defaults to the densest layout.
+  const [columns, setColumns] = useState<ColumnCount>(DEFAULT_COLUMNS);
 
   // Data
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -145,17 +164,23 @@ export function BibliothequePageClient({ companyId }: Props) {
         </p>
       </div>
 
-      {/* Filter bar */}
-      <ProductFilterBar
-        suppliers={suppliers}
-        categories={categories}
-        supplier={supplier}
-        category={category}
-        search={searchInput}
-        onSupplierChange={handleSupplierChange}
-        onCategoryChange={handleCategoryChange}
-        onSearchChange={handleSearchChange}
-      />
+      {/* Filter bar + density control */}
+      <div className="mb-5 flex items-center gap-3">
+        <ProductFilterBar
+          suppliers={suppliers}
+          categories={categories}
+          supplier={supplier}
+          category={category}
+          search={searchInput}
+          onSupplierChange={handleSupplierChange}
+          onCategoryChange={handleCategoryChange}
+          onSearchChange={handleSearchChange}
+        />
+        {/* Hidden below lg — small screens auto-reduce columns regardless. */}
+        <div className="hidden lg:block">
+          <ProductDensityMenu value={columns} onChange={setColumns} />
+        </div>
+      </div>
 
       {/* Loading */}
       {loading && (
@@ -186,7 +211,7 @@ export function BibliothequePageClient({ companyId }: Props) {
       {/* Product grid */}
       {!loading && !error && products.length > 0 && (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className={`grid gap-4 ${COLUMN_CLASS_MAP[columns]}`}>
             {products.map((product) => (
               <ProductCard
                 key={product.id}

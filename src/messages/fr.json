@@ -1337,6 +1337,8 @@
     "purchasedTimes": "{count, plural, =0 {Jamais acheté} one {Acheté # fois} other {Acheté # fois}}",
     "lastPurchased": "Dernier achat",
     "viewProduct": "Voir le produit",
+    "columnsPerRow": "Colonnes par ligne",
+    "columnsCount": "{count} colonnes",
     "noResults": "Aucun produit trouvé.",
     "loading": "Chargement…",
     "purchaseHistory": "Historique des achats",

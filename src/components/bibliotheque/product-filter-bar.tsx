@@ -36,7 +36,7 @@ export function ProductFilterBar({
   const t = useTranslations("bibliotheque");
 
   return (
-    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
       {/* Supplier select */}
       <select
         className="folio-input sm:w-48"

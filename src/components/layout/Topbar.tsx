@@ -19,7 +19,7 @@ import {
 
 // Page meta keys reference message keys in `topbar.*` (title/subtitle) and
 // `projects/planning/labor/invoices.newProject|newTask|logDay|newInvoice` for actions.
-type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members";
+type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents";
 
 const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; actionKey?: string }> = {
   dashboard: {
@@ -57,6 +57,13 @@ const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; acti
     titleKey: "topbar.membersTitle",
     subtitleKey: "topbar.membersSubtitle",
     // No topbar action — Invite Member lives inline in the members table
+  },
+  documents: {
+    // Reuse the documents namespace (already translated en/fr/vi) so the topbar
+    // and page share one source of truth.
+    titleKey: "documents.title",
+    subtitleKey: "documents.subtitle",
+    // No topbar action — upload lives inline in the documents panel dropzone.
   },
 };
 

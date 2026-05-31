@@ -9,6 +9,7 @@
   "navigation": {
     "dashboard": "Tổng quan",
     "projects": "Dự án",
+    "bibliotheque": "Thư viện",
     "labor": "Nhân công",
     "invoices": "Chi phí",
     "planning": "Kế hoạch",
@@ -1322,5 +1323,31 @@
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
       "generic": "Đã xảy ra lỗi không mong muốn."
     }
+  },
+  "bibliotheque": {
+    "title": "Thư viện sản phẩm",
+    "subtitle": "Duyệt và theo dõi các sản phẩm đã mua từ nhà cung cấp.",
+    "searchPlaceholder": "Tìm kiếm sản phẩm…",
+    "allSuppliers": "Tất cả nhà cung cấp",
+    "allCategories": "Tất cả danh mục",
+    "supplier": "Nhà cung cấp",
+    "category": "Danh mục",
+    "size": "Kích cỡ",
+    "uncategorized": "Chưa phân loại",
+    "purchasedTimes": "{count, plural, =0 {Chưa mua} other {Đã mua # lần}}",
+    "lastPurchased": "Mua lần cuối",
+    "viewProduct": "Xem sản phẩm",
+    "noResults": "Không tìm thấy sản phẩm.",
+    "loading": "Đang tải…",
+    "purchaseHistory": "Lịch sử mua hàng",
+    "date": "Ngày",
+    "quantity": "SL",
+    "unitPrice": "Đơn giá",
+    "sourceRef": "Mã tài liệu",
+    "documentType": {
+      "ticket": "Phiếu",
+      "commande": "Đơn hàng"
+    },
+    "detailTitle": "Chi tiết sản phẩm"
   }
 }

@@ -9,6 +9,7 @@
   "navigation": {
     "dashboard": "Overview",
     "projects": "Projects",
+    "bibliotheque": "Library",
     "labor": "Labor",
     "invoices": "Expense",
     "planning": "Planning",
@@ -1322,5 +1323,31 @@
       "rateLimited": "Too many requests. Please wait and try again.",
       "generic": "An unexpected error occurred."
     }
+  },
+  "bibliotheque": {
+    "title": "Product Library",
+    "subtitle": "Browse and track products purchased from your suppliers.",
+    "searchPlaceholder": "Search products…",
+    "allSuppliers": "All suppliers",
+    "allCategories": "All categories",
+    "supplier": "Supplier",
+    "category": "Category",
+    "size": "Size",
+    "uncategorized": "Uncategorized",
+    "purchasedTimes": "{count, plural, =0 {Not purchased} one {Purchased # time} other {Purchased # times}}",
+    "lastPurchased": "Last purchased",
+    "viewProduct": "View product",
+    "noResults": "No products found.",
+    "loading": "Loading…",
+    "purchaseHistory": "Purchase history",
+    "date": "Date",
+    "quantity": "Qty",
+    "unitPrice": "Unit price",
+    "sourceRef": "Ref.",
+    "documentType": {
+      "ticket": "Receipt",
+      "commande": "Order"
+    },
+    "detailTitle": "Product details"
   }
 }

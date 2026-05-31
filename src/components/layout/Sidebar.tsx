@@ -17,6 +17,7 @@ import {
   Users,
   StickyNote,
   Files,
+  Library,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
@@ -61,6 +62,7 @@ export function Sidebar() {
   const projectNav = [
     { key: "dashboard", href: "/dashboard", icon: Home },
     { key: "projects", href: "/projects", icon: FolderOpen },
+    { key: "bibliotheque", href: "/bibliotheque", icon: Library },
     ...(selectedProjectId
       ? [
           { key: "planning", href: `/projects/${selectedProjectId}/planning`, icon: KanbanSquare },

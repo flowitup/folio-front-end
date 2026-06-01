@@ -32,7 +32,12 @@ export default async function AppLayout({
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Topbar />
-          <main className="scroll-area flex-1 pb-16 lg:pb-0">{children}</main>
+          {/* Content scaled down so less scrolling is needed; zoom reflows
+              layout (shrinks scroll height) unlike transform: scale. Sidebar
+              and Topbar stay at 100%. */}
+          <main className="scroll-area flex-1 pb-16 lg:pb-0">
+            <div style={{ zoom: 0.8 }}>{children}</div>
+          </main>
         </div>
         <MobileBottomNav />
       </div>

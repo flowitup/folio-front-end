@@ -63,11 +63,14 @@ describe("Settings nav: Project entry removed", () => {
 
     // Sanity: known sections still present.
     expect(screen.getByRole("button", { name: "Profile" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "Preferences" })).toBeDefined();
     expect(screen.getByRole("button", { name: "About" })).toBeDefined();
 
     // The standalone "Project" tab is gone.
     expect(screen.queryByRole("button", { name: "Project" })).toBeNull();
+
+    // Language moved to the top-right control; the Preferences section
+    // (which only held the language card) is no longer in the settings nav.
+    expect(screen.queryByRole("button", { name: "Preferences" })).toBeNull();
   });
 
   it("does not render Project entry in fr", () => {

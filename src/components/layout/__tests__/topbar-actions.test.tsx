@@ -45,6 +45,10 @@ vi.mock("@/components/notifications/notifications-bell", () => ({
   NotificationsBell: () => <div data-testid="bell" />,
 }));
 
+vi.mock("@/components/language-switcher", () => ({
+  LanguageSwitcher: () => <div data-testid="language-switcher" />,
+}));
+
 const mockSetTheme = vi.fn();
 let mockResolvedTheme: "light" | "dark" = "light";
 vi.mock("@/context/ThemeContext", () => ({
@@ -168,6 +172,12 @@ describe("Topbar dead-button removal", () => {
     render(<Topbar />);
     await user.click(screen.getByLabelText("topbar.theme"));
     expect(mockSetTheme).toHaveBeenCalledWith("light");
+  });
+
+  it("renders the dedicated top-right language switcher control", () => {
+    setup({ pathname: "/en/dashboard" });
+    render(<Topbar />);
+    expect(screen.getByTestId("language-switcher")).toBeTruthy();
   });
 });
 

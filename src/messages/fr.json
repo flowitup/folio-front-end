@@ -344,6 +344,7 @@
     "delete": "Supprimer",
     "deleteConfirm": "Supprimer cette dépense ? Cette action est irréversible.",
     "noInvoices": "Aucune dépense pour le moment",
+    "errorDateRequired": "La date d'émission est requise",
     "errorRecipientRequired": "Le nom du destinataire est requis",
     "errorAtLeastOneItem": "Au moins une ligne est requise",
     "errorDescriptionRequired": "La description de l'article est requise",

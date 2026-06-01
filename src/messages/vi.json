@@ -344,6 +344,7 @@
     "delete": "Xóa",
     "deleteConfirm": "Xóa chi phí này? Hành động không thể hoàn tác.",
     "noInvoices": "Chưa có chi phí nào",
+    "errorDateRequired": "Ngày phát hành là bắt buộc",
     "errorRecipientRequired": "Tên người nhận là bắt buộc",
     "errorAtLeastOneItem": "Cần ít nhất một dòng mục",
     "errorDescriptionRequired": "Mô tả dòng mục là bắt buộc",

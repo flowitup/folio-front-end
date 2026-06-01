@@ -29,6 +29,7 @@ vi.mock("next-intl", () => ({
       "invoices.totalAmount": "Total Amount",
       "invoices.save": "Save",
       "invoices.saving": "Saving...",
+      "invoices.errorDateRequired": "Issue date is required",
       "invoices.errorRecipientRequired": "Recipient name is required",
       "invoices.errorAtLeastOneItem": "At least one item is required",
       "invoices.errorDescriptionRequired": "Description is required",
@@ -419,6 +420,48 @@ describe("InvoiceForm", () => {
 
       const typeSelect = screen.getByRole("combobox");
       expect(typeSelect).toHaveValue("released_funds");
+    });
+  });
+
+  describe("Issue date", () => {
+    it("defaults the issue date to today so the payload is never empty", async () => {
+      const user = userEvent.setup();
+      const { container } = render(<InvoiceForm onSubmit={mockOnSubmit} />);
+
+      // Date input is pre-filled (not blank) on a fresh form.
+      const dateInput = container.querySelector(
+        'input[type="date"]'
+      ) as HTMLInputElement;
+      expect(dateInput.value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+      // Fill the remaining required fields and submit.
+      await user.type(screen.getAllByRole("textbox")[0], "Resto");
+      await user.type(screen.getAllByPlaceholderText(/description/i)[0], "Dinner");
+      await user.click(screen.getByRole("button", { name: /save/i }));
+
+      expect(mockOnSubmit).toHaveBeenCalledTimes(1);
+      const payload = mockOnSubmit.mock.calls[0][0];
+      expect(payload.issue_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it("blocks submit and shows an error when the date is cleared", async () => {
+      const user = userEvent.setup();
+      const { container } = render(<InvoiceForm onSubmit={mockOnSubmit} />);
+
+      const dateInput = container.querySelector(
+        'input[type="date"]'
+      ) as HTMLInputElement;
+      await user.clear(dateInput);
+
+      await user.type(screen.getAllByRole("textbox")[0], "Resto");
+      await user.type(screen.getAllByPlaceholderText(/description/i)[0], "Dinner");
+      await user.click(screen.getByRole("button", { name: /save/i }));
+
+      const errorText = screen.queryByText((content) =>
+        /issue date.*required/i.test(content)
+      );
+      expect(errorText).toBeDefined();
+      expect(mockOnSubmit).not.toHaveBeenCalled();
     });
   });
 });

@@ -344,6 +344,7 @@
     "delete": "Delete",
     "deleteConfirm": "Delete this expense? This cannot be undone.",
     "noInvoices": "No expenses yet",
+    "errorDateRequired": "Issue date is required",
     "errorRecipientRequired": "Recipient name is required",
     "errorAtLeastOneItem": "At least one line item is required",
     "errorDescriptionRequired": "Item description is required",

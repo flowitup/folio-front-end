@@ -281,4 +281,41 @@ describe("ProductCard", () => {
     // But supplier badge should not appear
     expect(screen.queryByText("ACME Corp")).not.toBeInTheDocument();
   });
+
+  it("reflects compare selection via aria-pressed and shows no badge when unselected", () => {
+    const suppliers = { "sup-1": makeSupplier() };
+    render(
+      <ProductCard
+        product={makeProduct()}
+        suppliersById={suppliers}
+        compareMode
+        selected={false}
+        onClick={vi.fn()}
+      />
+    );
+    const card = screen.getByRole("button");
+    expect(card).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("sets aria-pressed true when selected in compare mode", () => {
+    const suppliers = { "sup-1": makeSupplier() };
+    render(
+      <ProductCard
+        product={makeProduct()}
+        suppliersById={suppliers}
+        compareMode
+        selected
+        onClick={vi.fn()}
+      />
+    );
+    expect(screen.getByRole("button")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("omits aria-pressed when not in compare mode", () => {
+    const suppliers = { "sup-1": makeSupplier() };
+    render(
+      <ProductCard product={makeProduct()} suppliersById={suppliers} onClick={vi.fn()} />
+    );
+    expect(screen.getByRole("button")).not.toHaveAttribute("aria-pressed");
+  });
 });

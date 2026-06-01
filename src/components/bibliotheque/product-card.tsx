@@ -9,20 +9,27 @@
  */
 
 import { useTranslations, useLocale } from "next-intl";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Check } from "lucide-react";
 import { ProductImage } from "@/components/bibliotheque/product-image";
+import { cn } from "@/lib/utils";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 
 interface ProductCardProps {
   product: LibraryProduct;
   /** Map from supplier_id → Supplier, pre-fetched by the page. */
   suppliersById: Record<string, Supplier>;
+  /** When true the card click selects for comparison instead of opening detail. */
+  compareMode?: boolean;
+  /** Whether this card is currently picked for comparison. */
+  selected?: boolean;
   onClick: () => void;
 }
 
 export function ProductCard({
   product,
   suppliersById,
+  compareMode = false,
+  selected = false,
   onClick,
 }: ProductCardProps) {
   const t = useTranslations("bibliotheque");
@@ -38,13 +45,28 @@ export function ProductCard({
 
   return (
     <article
-      className="folio-card flex cursor-pointer flex-col overflow-hidden transition-shadow hover:shadow-md"
+      className={cn(
+        "folio-card relative flex cursor-pointer flex-col overflow-hidden transition-shadow hover:shadow-md",
+        selected && "ring-2 ring-[var(--accent)]"
+      )}
       onClick={onClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
       aria-label={product.name}
+      aria-pressed={compareMode ? selected : undefined}
     >
+      {/* Selected badge — only shown while picking for comparison */}
+      {compareMode && selected && (
+        <span
+          className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full text-white shadow"
+          style={{ background: "var(--accent)" }}
+          aria-hidden
+        >
+          <Check size={14} strokeWidth={3} />
+        </span>
+      )}
+
       {/* Photo */}
       <ProductImage
         productId={product.id}
@@ -53,8 +75,7 @@ export function ProductCard({
         className="w-full"
       />
 
-      {/* Body — compact stack that stays readable down to the grid's min card
-          width (~168px at the densest setting). */}
+      {/* Body — compact stack that stays readable in the 5-column desktop grid. */}
       <div className="flex flex-1 flex-col p-3">
         {/* Name */}
         <h3 className="mb-1 line-clamp-2 font-display text-[13.5px] font-medium leading-snug tracking-tight">

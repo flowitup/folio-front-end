@@ -5,8 +5,8 @@
  *   - Renders name, description, badges (supplier, category, size)
  *   - Renders "uncategorized" key when category is null
  *   - Renders purchase stats with ICU plural (purchasedTimes)
- *   - Renders "Voir le produit" anchor with href + target when product_url set
- *   - Anchor absent when product_url null
+ *   - Renders icon-only "View product" link (accessible name) with href + target when product_url set
+ *   - Link absent when product_url null
  *   - onClick callback fires on click
  *   - Keyboard support: Enter key triggers onClick
  */
@@ -174,7 +174,7 @@ describe("ProductCard", () => {
       <ProductCard product={product} suppliersById={suppliers} onClick={onClick} />
     );
 
-    const link = screen.getByText("View product").closest("a");
+    const link = screen.getByRole("link", { name: "View product" });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "https://shop.example.com/prod-1");
     expect(link).toHaveAttribute("target", "_blank");
@@ -190,7 +190,7 @@ describe("ProductCard", () => {
       <ProductCard product={product} suppliersById={suppliers} onClick={onClick} />
     );
 
-    const link = screen.queryByText("View product");
+    const link = screen.queryByRole("link", { name: "View product" });
     expect(link).not.toBeInTheDocument();
   });
 
@@ -233,7 +233,7 @@ describe("ProductCard", () => {
       <ProductCard product={product} suppliersById={suppliers} onClick={onClick} />
     );
 
-    const link = screen.getByText("View product");
+    const link = screen.getByRole("link", { name: "View product" });
     await userEvent.click(link);
 
     // onClick should not be called because link.stopPropagation() prevents bubbling

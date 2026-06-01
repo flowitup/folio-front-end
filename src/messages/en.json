@@ -1350,6 +1350,10 @@
       "ticket": "Receipt",
       "commande": "Order"
     },
-    "detailTitle": "Product details"
+    "detailTitle": "Product details",
+    "page": "Page",
+    "goToPage": "Go to page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
   }
 }

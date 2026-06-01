@@ -19,6 +19,7 @@ import { Loader2, BookOpen } from "lucide-react";
 import { ProductFilterBar } from "@/components/bibliotheque/product-filter-bar";
 import { ProductCard } from "@/components/bibliotheque/product-card";
 import { ProductDetailDialog } from "@/components/bibliotheque/product-detail-dialog";
+import { LibraryPagination } from "@/components/bibliotheque/library-pagination";
 import {
   ProductDensityMenu,
   DEFAULT_COLUMNS,
@@ -34,14 +35,17 @@ import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 const PAGE_SIZE = 24; // divisible by 2/3/4/6/8 — even rows at every density
 
 /**
- * Static Tailwind class strings per chosen wide-screen column count. Must be
- * literal (not interpolated) so Tailwind's compiler keeps them. Smaller
- * viewports auto-reduce: 2 cols (mobile) → 3 (sm) → 4 (lg) → chosen (xl).
+ * Minimum card width (px) per density choice, fed into an auto-fill grid:
+ * `repeat(auto-fill, minmax(<min>px, 1fr))`. The density picker now sets this
+ * floor instead of a hard column count — on a wide desktop the chosen density
+ * still yields roughly 4 / 6 / 8 columns, but cards never shrink below the
+ * floor and the grid reflows fluidly on narrower viewports (no more cramming
+ * at the dense setting). Smaller floors = denser layout.
  */
-const COLUMN_CLASS_MAP: Record<ColumnCount, string> = {
-  4: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
-  6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6",
-  8: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8",
+const COLUMN_MIN_WIDTH: Record<ColumnCount, number> = {
+  4: 260,
+  6: 210,
+  8: 168,
 };
 
 interface Props {
@@ -211,7 +215,12 @@ export function BibliothequePageClient({ companyId }: Props) {
       {/* Product grid */}
       {!loading && !error && products.length > 0 && (
         <>
-          <div className={`grid gap-4 ${COLUMN_CLASS_MAP[columns]}`}>
+          <div
+            className="grid gap-4"
+            style={{
+              gridTemplateColumns: `repeat(auto-fill, minmax(${COLUMN_MIN_WIDTH[columns]}px, 1fr))`,
+            }}
+          >
             {products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -224,27 +233,11 @@ export function BibliothequePageClient({ companyId }: Props) {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
-              <button
-                type="button"
-                className="btn btn-ghost"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                ←
-              </button>
-              <span className="num text-[13px]" style={{ color: "var(--muted)" }}>
-                {page} / {totalPages}
-              </span>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                →
-              </button>
-            </div>
+            <LibraryPagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           )}
         </>
       )}

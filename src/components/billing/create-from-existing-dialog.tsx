@@ -39,20 +39,7 @@ import { BillingStatusBadge } from "@/components/billing/billing-status-badge";
 import { listBillingDocumentsAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function formatDate(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short" }).format(
-      new Date(iso)
-    );
-  } catch {
-    return iso;
-  }
-}
+import { formatDate } from "@/lib/utils/formatters";
 
 function formatTTC(value: string): string {
   const n = Number(value);

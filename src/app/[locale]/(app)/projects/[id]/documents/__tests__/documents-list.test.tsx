@@ -153,7 +153,7 @@ describe("DocumentsList", () => {
       expect(container.textContent).toContain("2.0");
       expect(container.textContent).toContain("MB");
       expect(screen.getByText("Alice Brown")).toBeDefined();
-      expect(screen.getByText("Mar 20, 2024")).toBeDefined();
+      expect(screen.getByText("20/03/2024")).toBeDefined();
     });
 
     it("formats sizes correctly (B, KB, MB, GB)", () => {

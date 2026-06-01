@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   formatCurrency,
   formatDate,
+  formatDateTime,
   truncate,
   slugify,
   isValidEmail,
@@ -26,13 +27,31 @@ describe('formatCurrency', () => {
 })
 
 describe('formatDate', () => {
-  it('should format Date object', () => {
-    const date = new Date('2026-01-18T12:00:00Z')
-    expect(formatDate(date)).toBe('Jan 18, 2026')
+  it('should format Date object as dd/mm/YYYY', () => {
+    // Construct via local fields to avoid timezone-dependent assertions.
+    const date = new Date(2026, 0, 18, 12, 0, 0)
+    expect(formatDate(date)).toBe('18/01/2026')
   })
 
-  it('should format ISO string', () => {
-    expect(formatDate('2026-12-25T12:00:00Z')).toBe('Dec 25, 2026')
+  it('should zero-pad single-digit day and month', () => {
+    const date = new Date(2026, 8, 5, 12, 0, 0)
+    expect(formatDate(date)).toBe('05/09/2026')
+  })
+
+  it('should format a parseable date string', () => {
+    expect(formatDate('2026-12-25T12:00:00')).toBe('25/12/2026')
+  })
+})
+
+describe('formatDateTime', () => {
+  it('should format as dd/mm/YYYY HH:MM (24h)', () => {
+    const date = new Date(2026, 0, 18, 14, 30, 0)
+    expect(formatDateTime(date)).toBe('18/01/2026 14:30')
+  })
+
+  it('should zero-pad time components', () => {
+    const date = new Date(2026, 0, 18, 9, 5, 0)
+    expect(formatDateTime(date)).toBe('18/01/2026 09:05')
   })
 })
 

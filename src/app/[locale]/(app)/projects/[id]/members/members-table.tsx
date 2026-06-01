@@ -19,6 +19,7 @@ import { revokeInviteAction } from "./actions";
 import type { ProjectMember } from "@/lib/api/members";
 import type { PendingInvitation } from "@/lib/api/invitations";
 import type { Role } from "@/lib/api/roles";
+import { formatDate } from "@/lib/utils/formatters";
 
 interface MembersTableProps {
   projectId: string;
@@ -26,18 +27,6 @@ interface MembersTableProps {
   invites: PendingInvitation[];
   roles: Role[];
   canInvite: boolean;
-}
-
-function formatDate(isoString: string): string {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(isoString));
-  } catch {
-    return isoString;
-  }
 }
 
 function expiresInDays(expiresAt: string): number | null {

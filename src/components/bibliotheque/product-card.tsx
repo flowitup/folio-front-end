@@ -8,11 +8,12 @@
  * purchase stats and link to the supplier's product page.
  */
 
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { ExternalLink, Check } from "lucide-react";
 import { ProductImage } from "@/components/bibliotheque/product-image";
 import { cn } from "@/lib/utils";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
+import { formatDate } from "@/lib/utils/formatters";
 
 interface ProductCardProps {
   product: LibraryProduct;
@@ -33,14 +34,11 @@ export function ProductCard({
   onClick,
 }: ProductCardProps) {
   const t = useTranslations("bibliotheque");
-  const locale = useLocale();
 
   const supplier = suppliersById[product.supplier_id];
 
   const lastPurchased = product.last_purchased_at
-    ? new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", day: "numeric" }).format(
-        new Date(product.last_purchased_at)
-      )
+    ? formatDate(product.last_purchased_at)
     : null;
 
   return (

@@ -18,6 +18,7 @@ import {
   StickyNote,
   Files,
   Library,
+  Camera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
@@ -71,6 +72,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
           { key: "members", href: `/projects/${selectedProjectId}/members`, icon: Users },
           { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
           { key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files },
+          { key: "photos", href: `/projects/${selectedProjectId}/photos`, icon: Camera },
         ]
       : []),
   ];

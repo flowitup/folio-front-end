@@ -16,27 +16,6 @@ import {
   type ProductDetailResult,
   type Supplier,
 } from "@/lib/api/bibliotheque";
-import { fetchMyCompanies } from "@/lib/api/companies/companies";
-
-// ---------------------------------------------------------------------------
-// Company resolution
-// ---------------------------------------------------------------------------
-
-/**
- * Resolve the active company_id for the current user.
- * Mirrors the billing pages pattern: use the primary company (is_primary=true),
- * fall back to the first attached company when no primary is set.
- */
-export async function getActiveCompanyIdAction(): Promise<string | null> {
-  try {
-    const companies = await fetchMyCompanies();
-    if (companies.length === 0) return null;
-    const primary = companies.find((c) => c.is_primary);
-    return (primary ?? companies[0]).id;
-  } catch {
-    return null;
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Library actions

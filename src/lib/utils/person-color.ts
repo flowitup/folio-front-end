@@ -30,7 +30,7 @@
  * Plan: 260512-2341-labor-calendar-and-bulk-log → phase-01 → phase-02 (2a).
  */
 
-export const PERSON_COLOR_PALETTE = [
+const PERSON_COLOR_PALETTE = [
   "#E11D48", // rose-600
   "#7C3AED", // violet-600
   "#0EA5E9", // sky-500

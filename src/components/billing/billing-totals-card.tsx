@@ -25,7 +25,7 @@ function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
-export interface VatLine {
+interface VatLine {
   rate: string; // e.g. "20"
   baseHt: number;
   tvaAmount: number;

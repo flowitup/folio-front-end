@@ -257,13 +257,3 @@ export async function listDocumentTags(
   return data.tags;
 }
 
-/**
- * Return the BE-relative download URL for a document.
- * The FE proxies this via Next.js same-origin rewrite in dev/docker-compose.
- */
-export function getProjectDocumentDownloadUrl(
-  projectId: string,
-  docId: string
-): string {
-  return `/api/v1/projects/${encodeURIComponent(projectId)}/documents/${encodeURIComponent(docId)}/download`;
-}

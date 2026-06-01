@@ -19,11 +19,9 @@
 
 import {
   fetchBillingDocuments,
-  fetchBillingDocument,
   createBillingDocument,
   updateBillingDocument,
   deleteBillingDocument,
-  cloneBillingDocument,
   convertDevisToFacture,
   updateBillingDocumentStatus,
   createBillingDocumentFromTemplate,
@@ -31,7 +29,7 @@ import {
   type ActivitySuggestionsResponse,
   type FetchActivitySuggestionsParams,
 } from "@/lib/api/billing/documents";
-import { fetchBillingTemplates, fetchBillingTemplate } from "@/lib/api/billing/templates";
+import { fetchBillingTemplates } from "@/lib/api/billing/templates";
 import {
   createBillingTemplate,
   updateBillingTemplate,
@@ -45,7 +43,6 @@ import type {
   BillingDocumentStatus,
   CreateBillingDocumentPayload,
   UpdateBillingDocumentPayload,
-  CloneBillingDocumentPayload,
   ConvertDevisToFacturePayload,
   ApplyTemplatePayload,
   CreateBillingTemplatePayload,
@@ -168,21 +165,6 @@ export async function deleteBillingDocumentAction(
   }
 }
 
-export async function cloneBillingDocumentAction(
-  id: string,
-  payload?: CloneBillingDocumentPayload
-): Promise<ActionResult<BillingDocument>> {
-  const auth = await requireSession();
-  if (!auth.ok) return auth;
-  if (!isUuid(id)) return invalid();
-  try {
-    const data = await cloneBillingDocument(id, payload);
-    return { ok: true, data };
-  } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
-  }
-}
-
 export async function convertDevisToFactureAction(
   id: string,
   payload?: ConvertDevisToFacturePayload
@@ -242,20 +224,6 @@ export async function listBillingDocumentsAction(
   }
 }
 
-export async function getBillingDocumentAction(
-  id: string
-): Promise<ActionResult<BillingDocument>> {
-  const auth = await requireSession();
-  if (!auth.ok) return auth;
-  if (!isUuid(id)) return invalid();
-  try {
-    const data = await fetchBillingDocument(id);
-    return { ok: true, data };
-  } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
-  }
-}
-
 export async function listBillingTemplatesAction(
   kind?: BillingDocumentKind
 ): Promise<ActionResult<BillingDocumentTemplate[]>> {
@@ -263,20 +231,6 @@ export async function listBillingTemplatesAction(
   if (!auth.ok) return auth;
   try {
     const data = await fetchBillingTemplates(kind);
-    return { ok: true, data };
-  } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
-  }
-}
-
-export async function getBillingTemplateAction(
-  id: string
-): Promise<ActionResult<BillingDocumentTemplate>> {
-  const auth = await requireSession();
-  if (!auth.ok) return auth;
-  if (!isUuid(id)) return invalid();
-  try {
-    const data = await fetchBillingTemplate(id);
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: classifyBackendError(err) };
@@ -330,7 +284,7 @@ export async function deleteBillingTemplateAction(
 }
 
 // ---------------------------------------------------------------------------
-// Activity suggestions action (Phase 05)
+// Activity suggestions action
 // ---------------------------------------------------------------------------
 
 export async function getActivitySuggestionsAction(
@@ -345,4 +299,3 @@ export async function getActivitySuggestionsAction(
     return { ok: false, error: classifyBackendError(err) };
   }
 }
-

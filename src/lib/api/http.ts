@@ -118,7 +118,7 @@ async function refreshAccessToken(): Promise<boolean> {
 /**
  * Typed fetch wrapper with error handling and automatic token refresh
  */
-export async function http<TResponse, TBody = unknown>(
+async function http<TResponse, TBody = unknown>(
     endpoint: string,
     options: RequestOptions<TBody> = {}
 ): Promise<TResponse> {

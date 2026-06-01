@@ -26,7 +26,7 @@ export interface BillingDocumentItem {
   category?: string | null;
 }
 
-export interface VatBreakdownEntry {
+interface VatBreakdownEntry {
   rate: string; // Decimal-as-string
   base_ht: string;
   tva_amount: string;
@@ -130,10 +130,6 @@ export interface ConvertDevisToFacturePayload {
   payment_terms?: string | null;
   /** Optional — defaults to caller's primary company if omitted. */
   company_id?: string | null;
-}
-
-export interface UpdateBillingDocumentStatusPayload {
-  new_status: BillingDocumentStatus;
 }
 
 export interface ApplyTemplatePayload {

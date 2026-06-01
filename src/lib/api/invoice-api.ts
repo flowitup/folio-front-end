@@ -22,10 +22,7 @@ export const fetchInvoicesWithMeta = (projectId: string, type?: string): Promise
     `/projects/${projectId}/invoices${type ? `?type=${type}` : ""}`
   );
 
-export const fetchInvoices = (projectId: string, type?: string): Promise<Invoice[]> =>
-  fetchInvoicesWithMeta(projectId, type).then((r) => r.invoices);
-
-export const fetchInvoice = (projectId: string, invoiceId: string): Promise<Invoice> =>
+export const fetchInvoice =(projectId: string, invoiceId: string): Promise<Invoice> =>
   api.get<Invoice>(`/projects/${projectId}/invoices/${invoiceId}`);
 
 export const createInvoice = (

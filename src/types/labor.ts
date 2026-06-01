@@ -113,7 +113,7 @@ export interface BulkLogResponse {
 
 // ─── Phase 4: cross-project conflict warn ────────────────────────────────────
 
-export interface ConflictEntry {
+interface ConflictEntry {
   project_id: string;
   project_name: string;
   shift_type: ShiftType | null;
@@ -138,7 +138,7 @@ export interface BulkConflictError {
   conflicts: ConflictGroup[];
 }
 
-export interface WorkerSummaryRow {
+interface WorkerSummaryRow {
   worker_id: string;
   worker_name: string;
   days_worked: number;
@@ -158,7 +158,7 @@ export interface LaborSummaryResponse {
   total_bonus_cost: number;
 }
 
-export interface MonthlyWorkerSubRow {
+interface MonthlyWorkerSubRow {
   worker_id: string;
   worker_name: string;
   /** Priced shifts (supplement-only excluded) */

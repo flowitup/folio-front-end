@@ -437,6 +437,18 @@
     "loadError": "Không thể tải task",
     "taskCount": "{n, plural, =0 {không có task} other {# task}}",
     "addTask": "Thêm task",
+    "view": {
+      "board": "Bảng",
+      "week": "Tuần"
+    },
+    "weekView": {
+      "thisWeek": "Tuần này",
+      "prevWeek": "Tuần trước",
+      "nextWeek": "Tuần sau",
+      "unscheduled": "Chưa lên lịch",
+      "noTasksDay": "—",
+      "addOnDay": "Thêm"
+    },
     "column": {
       "todo": "Cần làm",
       "in_progress": "Đang làm",

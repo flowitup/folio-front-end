@@ -437,6 +437,18 @@
     "loadError": "Échec du chargement des tâches",
     "taskCount": "{n, plural, =0 {aucune tâche} =1 {1 tâche} other {# tâches}}",
     "addTask": "Ajouter une tâche",
+    "view": {
+      "board": "Tableau",
+      "week": "Semaine"
+    },
+    "weekView": {
+      "thisWeek": "Cette semaine",
+      "prevWeek": "Semaine précédente",
+      "nextWeek": "Semaine suivante",
+      "unscheduled": "Non planifié",
+      "noTasksDay": "—",
+      "addOnDay": "Ajouter"
+    },
     "column": {
       "todo": "À faire",
       "in_progress": "En cours",

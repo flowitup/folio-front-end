@@ -17,6 +17,8 @@ interface TaskCreateDialogProps {
   projectId: string;
   /** The lane the user clicked "+" on; pre-fills `status`. */
   defaultStatus: TaskStatus;
+  /** Pre-fills the due date (week view's per-day "+"); null/undefined = blank. */
+  defaultDueDate?: string | null;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
 }
@@ -30,6 +32,7 @@ export function TaskCreateDialog({
   open,
   projectId,
   defaultStatus,
+  defaultDueDate,
   onOpenChange,
   onCreated,
 }: TaskCreateDialogProps) {
@@ -54,6 +57,10 @@ export function TaskCreateDialog({
           <DialogTitle>{t("newTask")}</DialogTitle>
         </DialogHeader>
         <TaskForm
+          // Remount when the prefilled due date changes so the form re-seeds
+          // (week view reuses the same dialog instance across different days).
+          key={defaultDueDate ?? "none"}
+          defaultDueDate={defaultDueDate}
           isSaving={saving}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}

@@ -17,6 +17,8 @@ import type { CreateTaskPayload, Task, TaskPriority } from "@/types/task";
 
 interface TaskFormProps {
   initial?: Task;
+  /** Create-mode pre-fill for the due date (e.g. week view's per-day "+"). */
+  defaultDueDate?: string | null;
   isSaving?: boolean;
   onSubmit: (payload: CreateTaskPayload) => void;
   onCancel: () => void;
@@ -26,12 +28,13 @@ interface TaskFormProps {
  * Reusable form for create + edit. On create, parent passes no `initial`
  * and provides project_id externally; on edit, populated from the task entity.
  */
-export function TaskForm({ initial, isSaving, onSubmit, onCancel }: TaskFormProps) {
+export function TaskForm({ initial, defaultDueDate, isSaving, onSubmit, onCancel }: TaskFormProps) {
   const t = useTranslations("planning");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [priority, setPriority] = useState<TaskPriority>(initial?.priority ?? "medium");
-  const [dueDate, setDueDate] = useState(initial?.due_date ?? "");
+  // Edit target (`initial`) wins; otherwise seed from the create-mode prefill.
+  const [dueDate, setDueDate] = useState(initial?.due_date ?? defaultDueDate ?? "");
   const [labelsInput, setLabelsInput] = useState((initial?.labels ?? []).join(", "));
 
   // Re-sync form fields when the edit target changes (legit "reset form on

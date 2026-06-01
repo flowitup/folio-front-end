@@ -20,9 +20,19 @@ import { KanbanColumn } from "@/components/planning/kanban-column";
 import { TaskCard } from "@/components/planning/task-card";
 import { TaskDetailDrawer } from "@/components/planning/task-detail-drawer";
 import { TaskCreateDialog } from "@/components/planning/task-create-dialog";
+import { WeekView } from "@/components/planning/week-view";
 import { fetchTasks, moveTask } from "@/lib/api/task-api";
+import { weekOffsetFromParam } from "@/lib/planning/week";
 import { BOARD_COLUMNS } from "@/types/task";
 import type { Task, TaskStatus } from "@/types/task";
+
+type PlanningView = "board" | "week";
+
+/** Create-dialog seed: which lane + (optional) pre-filled due date. */
+interface CreateState {
+  status: TaskStatus;
+  dueDate: string | null;
+}
 
 interface KanbanBoardProps {
   projectId: string;
@@ -41,12 +51,14 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedTaskId = searchParams.get("task");
+  const view: PlanningView = searchParams.get("view") === "week" ? "week" : "board";
+  const weekOffset = weekOffsetFromParam(searchParams.get("week"));
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [createForStatus, setCreateForStatus] = useState<TaskStatus | null>(null);
+  const [createState, setCreateState] = useState<CreateState | null>(null);
 
   const sensors = useSensors(
     // Slight activation distance prevents click-without-drag from being treated
@@ -73,7 +85,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   // strip the param so refresh / back-button doesn't re-open it.
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
-    setCreateForStatus("backlog");
+    setCreateState({ status: "backlog", dueDate: null });
     const params = new URLSearchParams(searchParams.toString());
     params.delete("new");
     const qs = params.toString();
@@ -98,6 +110,25 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     const params = new URLSearchParams(searchParams.toString());
     if (id) params.set("task", id);
     else params.delete("task");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const setView = (next: PlanningView) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === "week") params.set("view", "week");
+    else {
+      params.delete("view");
+      params.delete("week"); // week offset is meaningless on the board
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const setWeekOffset = (n: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (n === 0) params.delete("week");
+    else params.set("week", String(n));
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
@@ -179,10 +210,26 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
 
   return (
     <div className="space-y-4">
-      {/* Header: task count. (View switcher + filter live behind future
-          features that don't exist yet — adding them back will require list
-          / calendar views and a filter UI to be designed and built.) */}
+      {/* Header: Board|Week toggle + task count. */}
       <div className="flex items-center justify-between">
+        <div className="flex items-center gap-0.5 rounded-[8px] p-0.5" style={{ background: "var(--paper-2)", border: "1px solid var(--line)" }}>
+          {(["board", "week"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setView(v)}
+              aria-pressed={view === v}
+              className="rounded-[6px] px-2.5 py-1 text-[12px] font-medium transition-colors"
+              style={
+                view === v
+                  ? { background: "var(--paper)", color: "var(--ink)", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }
+                  : { background: "transparent", color: "var(--muted)" }
+              }
+            >
+              {t(`view.${v}`)}
+            </button>
+          ))}
+        </div>
         <span className="num text-[11.5px]" style={{ color: "var(--muted)" }}>
           {t("taskCount", { n: totalCount })}
         </span>
@@ -190,35 +237,47 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
 
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
 
-      <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-        {/* Backlog row across the top */}
-        <BacklogBar
-          tasks={tasksByStatus.backlog}
-          onAdd={() => setCreateForStatus("backlog")}
+      {view === "board" ? (
+        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+          {/* Backlog row across the top */}
+          <BacklogBar
+            tasks={tasksByStatus.backlog}
+            onAdd={() => setCreateState({ status: "backlog", dueDate: null })}
+            onTaskClick={(t) => setSelected(t.id)}
+          />
+
+          {/* 4 columns */}
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {BOARD_COLUMNS.map((status) => (
+              <KanbanColumn
+                key={status}
+                status={status}
+                title={t(`column.${status}`)}
+                tasks={tasksByStatus[status]}
+                onAdd={() => setCreateState({ status, dueDate: null })}
+                onTaskClick={(t) => setSelected(t.id)}
+              />
+            ))}
+          </div>
+
+          {/* Drag overlay — semi-transparent floating card while dragging */}
+          <DragOverlay>
+            {activeTask && <TaskCard task={activeTask} onClick={() => {}} />}
+          </DragOverlay>
+        </DndContext>
+      ) : (
+        <WeekView
+          tasks={tasks}
+          weekOffset={weekOffset}
+          onWeekOffsetChange={setWeekOffset}
           onTaskClick={(t) => setSelected(t.id)}
+          // Per-day "+" lands the task on that day, in the actionable "todo" lane.
+          // Empty string (Unscheduled "+") → no due date.
+          onAddForDate={(dateKey) => setCreateState({ status: "todo", dueDate: dateKey || null })}
         />
+      )}
 
-        {/* 4 columns */}
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {BOARD_COLUMNS.map((status) => (
-            <KanbanColumn
-              key={status}
-              status={status}
-              title={t(`column.${status}`)}
-              tasks={tasksByStatus[status]}
-              onAdd={() => setCreateForStatus(status)}
-              onTaskClick={(t) => setSelected(t.id)}
-            />
-          ))}
-        </div>
-
-        {/* Drag overlay — semi-transparent floating card while dragging */}
-        <DragOverlay>
-          {activeTask && <TaskCard task={activeTask} onClick={() => {}} />}
-        </DragOverlay>
-      </DndContext>
-
-      {/* Detail drawer (right slide-in) */}
+      {/* Detail drawer (right slide-in) — shared by both views */}
       <TaskDetailDrawer
         taskId={selectedTaskId}
         seed={tasks.find((t) => t.id === selectedTaskId) ?? null}
@@ -226,12 +285,13 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
         onMutated={silentReload}
       />
 
-      {/* Create dialog */}
+      {/* Create dialog — shared by both views */}
       <TaskCreateDialog
-        open={createForStatus !== null}
+        open={createState !== null}
         projectId={projectId}
-        defaultStatus={createForStatus ?? "backlog"}
-        onOpenChange={(open) => { if (!open) setCreateForStatus(null); }}
+        defaultStatus={createState?.status ?? "backlog"}
+        defaultDueDate={createState?.dueDate ?? null}
+        onOpenChange={(open) => { if (!open) setCreateState(null); }}
         onCreated={silentReload}
       />
     </div>

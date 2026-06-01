@@ -15,16 +15,15 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Loader2, BookOpen } from "lucide-react";
+import { Loader2, BookOpen, Scale } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { ProductFilterBar } from "@/components/bibliotheque/product-filter-bar";
 import { ProductCard } from "@/components/bibliotheque/product-card";
 import { ProductDetailDialog } from "@/components/bibliotheque/product-detail-dialog";
+import { CompareBar } from "@/components/bibliotheque/compare-bar";
+import { ProductCompareDialog } from "@/components/bibliotheque/product-compare-dialog";
 import { LibraryPagination } from "@/components/bibliotheque/library-pagination";
-import {
-  ProductDensityMenu,
-  DEFAULT_COLUMNS,
-  type ColumnCount,
-} from "@/components/bibliotheque/product-density-menu";
 import {
   listSuppliersAction,
   listCategoriesAction,
@@ -32,21 +31,8 @@ import {
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 
-const PAGE_SIZE = 24; // divisible by 2/3/4/6/8 — even rows at every density
-
-/**
- * Minimum card width (px) per density choice, fed into an auto-fill grid:
- * `repeat(auto-fill, minmax(<min>px, 1fr))`. The density picker now sets this
- * floor instead of a hard column count — on a wide desktop the chosen density
- * still yields roughly 4 / 6 / 8 columns, but cards never shrink below the
- * floor and the grid reflows fluidly on narrower viewports (no more cramming
- * at the dense setting). Smaller floors = denser layout.
- */
-const COLUMN_MIN_WIDTH: Record<ColumnCount, number> = {
-  4: 260,
-  6: 210,
-  8: 168,
-};
+const PAGE_SIZE = 24; // 12 rows of 2 / 8 of 3 / ~5 of 5 — fits every breakpoint
+const MAX_COMPARE = 4; // side-by-side columns that fit the compare dialog
 
 interface Props {
   companyId: string;
@@ -65,8 +51,12 @@ export function BibliothequePageClient({ companyId }: Props) {
   const [debouncedQ, setDebouncedQ] = useState("");
   const [page, setPage] = useState(1);
 
-  // Column density — session-only, defaults to the densest layout.
-  const [columns, setColumns] = useState<ColumnCount>(DEFAULT_COLUMNS);
+  // Compare — session-only. Store full product rows (keyed by id) so selections
+  // survive pagination/filter changes even when a picked product leaves the
+  // current page; list rows already carry every field the comparison needs.
+  const [compareMode, setCompareMode] = useState(false);
+  const [selected, setSelected] = useState<Map<string, LibraryProduct>>(new Map());
+  const [compareOpen, setCompareOpen] = useState(false);
 
   // Data
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -156,6 +146,43 @@ export function BibliothequePageClient({ companyId }: Props) {
 
   const closeProduct = () => setSelectedProduct(null, false);
 
+  // Compare handlers
+  const toggleCompareMode = () => {
+    setCompareMode((on) => {
+      if (on) setSelected(new Map()); // leaving compare mode clears the picks
+      return !on;
+    });
+  };
+
+  const toggleSelect = (product: LibraryProduct) => {
+    setSelected((prev) => {
+      const next = new Map(prev);
+      if (next.has(product.id)) {
+        next.delete(product.id);
+      } else {
+        if (next.size >= MAX_COMPARE) {
+          toast.error(t("compareMax", { count: MAX_COMPARE }));
+          return prev;
+        }
+        next.set(product.id, product);
+      }
+      return next;
+    });
+  };
+
+  const removeFromCompare = (id: string) => {
+    setSelected((prev) => {
+      const next = new Map(prev);
+      next.delete(id);
+      if (next.size < 2) setCompareOpen(false); // need ≥2 to compare
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelected(new Map());
+
+  const selectedProducts = Array.from(selected.values());
+
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
@@ -180,10 +207,16 @@ export function BibliothequePageClient({ companyId }: Props) {
           onCategoryChange={handleCategoryChange}
           onSearchChange={handleSearchChange}
         />
-        {/* Hidden below lg — small screens auto-reduce columns regardless. */}
-        <div className="hidden lg:block">
-          <ProductDensityMenu value={columns} onChange={setColumns} />
-        </div>
+        <Button
+          variant={compareMode ? "default" : "outline"}
+          size="sm"
+          className="shrink-0 gap-1.5"
+          aria-pressed={compareMode}
+          onClick={toggleCompareMode}
+        >
+          <Scale className="h-4 w-4" />
+          {t("compare")}
+        </Button>
       </div>
 
       {/* Loading */}
@@ -215,18 +248,17 @@ export function BibliothequePageClient({ companyId }: Props) {
       {/* Product grid */}
       {!loading && !error && products.length > 0 && (
         <>
-          <div
-            className="grid gap-4"
-            style={{
-              gridTemplateColumns: `repeat(auto-fill, minmax(${COLUMN_MIN_WIDTH[columns]}px, 1fr))`,
-            }}
-          >
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
             {products.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
                 suppliersById={suppliersById}
-                onClick={() => openProduct(product.id)}
+                compareMode={compareMode}
+                selected={selected.has(product.id)}
+                onClick={() =>
+                  compareMode ? toggleSelect(product) : openProduct(product.id)
+                }
               />
             ))}
           </div>
@@ -247,6 +279,25 @@ export function BibliothequePageClient({ companyId }: Props) {
         productId={selectedProductId}
         suppliersById={suppliersById}
         onClose={closeProduct}
+      />
+
+      {/* Floating compare bar — only while selecting */}
+      {compareMode && selected.size > 0 && (
+        <CompareBar
+          count={selected.size}
+          canCompare={selected.size >= 2}
+          onClear={clearSelection}
+          onCompare={() => setCompareOpen(true)}
+        />
+      )}
+
+      {/* Comparison dialog */}
+      <ProductCompareDialog
+        open={compareOpen}
+        products={selectedProducts}
+        suppliersById={suppliersById}
+        onRemove={removeFromCompare}
+        onClose={() => setCompareOpen(false)}
       />
     </div>
   );

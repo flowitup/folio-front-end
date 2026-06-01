@@ -2,13 +2,13 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { Sun, Moon, Plus, Globe, LogOut, ChevronDown, Check } from "lucide-react";
+import { Sun, Moon, Plus, LogOut, ChevronDown, Check } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { useTheme } from "@/context/ThemeContext";
-import { locales, localeNames, type Locale } from "@/i18n/config";
-import { useRouter as useIntlRouter, usePathname as useIntlPathname } from "@/i18n/navigation";
+import { type Locale } from "@/i18n/config";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,8 +71,6 @@ export function Topbar() {
   const pathname = usePathname();
   const router = useRouter();
   const locale = useLocale() as Locale;
-  const intlRouter = useIntlRouter();
-  const intlPathname = useIntlPathname();
   const tCommon = useTranslations("common");
   const tTopbar = useTranslations();
   const { user, logout, isLoading } = useAuth();
@@ -224,6 +222,8 @@ export function Topbar() {
           {resolvedTheme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
         </button>
 
+        <LanguageSwitcher />
+
         <div className="mx-1 hidden h-6 w-px lg:block" style={{ background: "var(--line-2)" }} />
 
         {actionLabel && (
@@ -248,25 +248,6 @@ export function Topbar() {
               <div className="px-2 py-1.5 text-[12px]" style={{ color: "var(--muted)" }}>
                 {user.email}
               </div>
-              <DropdownMenuSeparator />
-              <div className="label-cap px-2 pb-1 pt-2">{tCommon("language")}</div>
-              {locales.map((loc) => (
-                <DropdownMenuItem
-                  key={loc}
-                  onClick={() => intlRouter.replace(intlPathname, { locale: loc })}
-                >
-                  <Globe size={14} />
-                  <span className="font-medium">{loc.toUpperCase()}</span>
-                  <span className="text-[11px]" style={{ color: "var(--muted)" }}>
-                    {localeNames[loc]}
-                  </span>
-                  {locale === loc && (
-                    <span className="ml-auto text-[11px]" style={{ color: "var(--accent-ink)" }}>
-                      ✓
-                    </span>
-                  )}
-                </DropdownMenuItem>
-              ))}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => logout()}

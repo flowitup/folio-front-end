@@ -30,11 +30,20 @@ const INVOICE_TYPES: InvoiceType[] = ["released_funds", "labor", "materials_serv
 
 const emptyItem = (): LineItem => ({ description: "", quantity: 1, unit_price: 0 });
 
+// Local-time YYYY-MM-DD for the date input default. Uses local getters (not
+// toISOString, which is UTC) so the date doesn't jump a day near midnight.
+const todayIso = (): string => {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+};
+
 export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId }: InvoiceFormProps) {
   const t = useTranslations("invoices");
 
   const [type, setType] = useState<InvoiceType>(initialValues?.type ?? "released_funds");
-  const [issueDate, setIssueDate] = useState(initialValues?.issue_date ?? "");
+  const [issueDate, setIssueDate] = useState(initialValues?.issue_date ?? todayIso());
   const [recipientName, setRecipientName] = useState(initialValues?.recipient_name ?? "");
   const [recipientAddress, setRecipientAddress] = useState(
     initialValues?.recipient_address ?? ""
@@ -68,6 +77,7 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId }: I
     setItems((prev) => prev.filter((_, i) => i !== index));
 
   const validate = (): string | null => {
+    if (!issueDate) return t("errorDateRequired");
     if (!recipientName.trim()) return t("errorRecipientRequired");
     if (items.length === 0) return t("errorAtLeastOneItem");
     for (const item of items) {
@@ -147,6 +157,7 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId }: I
                 onChange={(e) => setIssueDate(e.target.value)}
                 className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 disabled={isLoading}
+                required
               />
             </div>
 

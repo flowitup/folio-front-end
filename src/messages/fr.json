@@ -15,6 +15,7 @@
     "planning": "Planification",
     "notes": "Notes",
     "documents": "Documents",
+    "photos": "Photos",
     "members": "Membres",
     "projectSettings": "Paramètres",
     "settings": "Paramètres",
@@ -1382,5 +1383,40 @@
     "goToPage": "Aller à la page",
     "previousPage": "Page précédente",
     "nextPage": "Page suivante"
+  },
+  "photos": {
+    "title": "Photos",
+    "subtitle": "Photos de l'avancement du chantier pour ce projet.",
+    "addPhotos": "Ajouter des photos",
+    "uploading": "Téléversement",
+    "uploadSuccess": "Photos téléversées",
+    "empty": {
+      "title": "Aucune photo pour l'instant",
+      "description": "Ajoutez des photos pour suivre visuellement l'avancement du chantier."
+    },
+    "caption": {
+      "label": "Légende",
+      "placeholder": "Décrivez ce qui est visible…"
+    },
+    "capturedAt": {
+      "label": "Date de prise de vue"
+    },
+    "edit": "Modifier",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "deleteConfirm": {
+      "title": "Supprimer la photo ?",
+      "description": "Cette photo sera définitivement supprimée. Cette action est irréversible."
+    },
+    "errors": {
+      "oversize": "Fichier trop volumineux (max 25 Mo)",
+      "unsupported": "Type de fichier non pris en charge (JPEG, PNG, WebP uniquement)",
+      "network": "Erreur réseau — veuillez réessayer",
+      "rateLimited": "Trop d'envois — veuillez ralentir",
+      "server": "Échec du téléversement — veuillez réessayer",
+      "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
+      "invalidImage": "Image invalide — le fichier n'a pas pu être traité"
+    }
   }
 }

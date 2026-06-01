@@ -53,25 +53,26 @@ export function ProductCard({
         className="w-full"
       />
 
-      {/* Body */}
-      <div className="flex flex-1 flex-col p-4">
+      {/* Body — compact stack that stays readable down to the grid's min card
+          width (~168px at the densest setting). */}
+      <div className="flex flex-1 flex-col p-3">
         {/* Name */}
-        <h3 className="mb-1 line-clamp-2 font-display text-[15px] font-medium leading-snug tracking-tight">
+        <h3 className="mb-1 line-clamp-2 font-display text-[13.5px] font-medium leading-snug tracking-tight">
           {product.name}
         </h3>
 
-        {/* Description */}
+        {/* Description — single line to avoid crowding dense cards. */}
         {product.description && (
           <p
-            className="mb-3 line-clamp-2 text-[12.5px] leading-relaxed"
+            className="mb-2 line-clamp-1 text-[12px] leading-relaxed"
             style={{ color: "var(--muted)" }}
           >
             {product.description}
           </p>
         )}
 
-        {/* Badges */}
-        <div className="mb-3 flex flex-wrap gap-1.5">
+        {/* Badges — wrap gracefully; smaller stamps at high density. */}
+        <div className="mb-2.5 flex flex-wrap gap-1">
           {supplier && (
             <span className="stamp">{supplier.name}</span>
           )}
@@ -85,12 +86,12 @@ export function ProductCard({
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer — purchase stats + icon-only outbound link to save width. */}
         <div
-          className="mt-auto flex items-center justify-between gap-2 border-t pt-3 text-[11.5px]"
+          className="mt-auto flex items-center justify-between gap-2 border-t pt-2.5 text-[11.5px]"
           style={{ borderColor: "var(--line)" }}
         >
-          <div style={{ color: "var(--muted)" }}>
+          <div className="min-w-0 truncate" style={{ color: "var(--muted)" }}>
             <span className="num font-medium" style={{ color: "var(--ink)" }}>
               {t("purchasedTimes", { count: product.purchase_count })}
             </span>
@@ -105,11 +106,12 @@ export function ProductCard({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 font-medium transition-colors hover:text-[var(--accent)]"
+              aria-label={t("viewProduct")}
+              title={t("viewProduct")}
+              className="shrink-0 transition-colors hover:text-[var(--accent)]"
               style={{ color: "var(--ink-2)" }}
             >
-              {t("viewProduct")}
-              <ExternalLink size={11} />
+              <ExternalLink size={13} />
             </a>
           )}
         </div>

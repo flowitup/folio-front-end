@@ -1350,6 +1350,10 @@
       "ticket": "Phiếu",
       "commande": "Đơn hàng"
     },
-    "detailTitle": "Chi tiết sản phẩm"
+    "detailTitle": "Chi tiết sản phẩm",
+    "page": "Trang",
+    "goToPage": "Đi tới trang",
+    "previousPage": "Trang trước",
+    "nextPage": "Trang sau"
   }
 }

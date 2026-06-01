@@ -1350,6 +1350,10 @@
       "ticket": "Ticket",
       "commande": "Commande"
     },
-    "detailTitle": "Détail du produit"
+    "detailTitle": "Détail du produit",
+    "page": "Page",
+    "goToPage": "Aller à la page",
+    "previousPage": "Page précédente",
+    "nextPage": "Page suivante"
   }
 }

@@ -437,6 +437,18 @@
     "loadError": "Failed to load tasks",
     "taskCount": "{n, plural, =0 {no tasks} =1 {1 task} other {# tasks}}",
     "addTask": "Add task",
+    "view": {
+      "board": "Board",
+      "week": "Week"
+    },
+    "weekView": {
+      "thisWeek": "This week",
+      "prevWeek": "Previous week",
+      "nextWeek": "Next week",
+      "unscheduled": "Unscheduled",
+      "noTasksDay": "—",
+      "addOnDay": "Add task"
+    },
     "column": {
       "todo": "To do",
       "in_progress": "In progress",
@@ -1350,6 +1362,10 @@
       "ticket": "Receipt",
       "commande": "Order"
     },
-    "detailTitle": "Product details"
+    "detailTitle": "Product details",
+    "page": "Page",
+    "goToPage": "Go to page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
   }
 }

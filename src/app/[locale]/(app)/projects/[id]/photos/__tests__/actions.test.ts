@@ -33,17 +33,19 @@ vi.mock("@/lib/config/env", () => ({
   env: { apiBaseUrl: "http://api.test/api/v1" },
 }));
 
-// API wrappers used by updatePhotoAction / deletePhotoAction
+// API wrappers used by actions
 vi.mock("@/lib/api/project-photos", () => ({
+  listProjectPhotos: vi.fn(),
   updateProjectPhoto: vi.fn(),
   deleteProjectPhoto: vi.fn(),
 }));
 
 // ---- Imports after mocks ----
 
-const { uploadPhotoAction, updatePhotoAction, deletePhotoAction } = await import("../actions");
+const { uploadPhotoAction, updatePhotoAction, deletePhotoAction, loadMorePhotosAction } = await import("../actions");
 
-const { updateProjectPhoto, deleteProjectPhoto } = await import("@/lib/api/project-photos");
+const { listProjectPhotos, updateProjectPhoto, deleteProjectPhoto } = await import("@/lib/api/project-photos");
+const mockListPhotos = vi.mocked(listProjectPhotos);
 const mockUpdatePhoto = vi.mocked(updateProjectPhoto);
 const mockDeletePhoto = vi.mocked(deleteProjectPhoto);
 
@@ -462,6 +464,88 @@ describe("deletePhotoAction — error mapping", () => {
   it("500 → server", async () => {
     mockDeletePhoto.mockRejectedValueOnce(httpError(500));
     const result = await deletePhotoAction(PROJECT_ID, PHOTO_ID);
+    expect(result).toMatchObject({ ok: false, error: "server" });
+  });
+});
+
+// ── loadMorePhotosAction ──────────────────────────────────────────────────────
+
+describe("loadMorePhotosAction — input validation", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("rejects non-UUID projectId", async () => {
+    const result = await loadMorePhotosAction(BAD_ID, 2);
+    expect(result).toMatchObject({ ok: false, error: "validation" });
+    expect(mockListPhotos).not.toHaveBeenCalled();
+  });
+
+  it("rejects empty projectId", async () => {
+    const result = await loadMorePhotosAction("", 2);
+    expect(result).toMatchObject({ ok: false, error: "validation" });
+  });
+
+  it("rejects page < 2 (page 1 is served by SSR)", async () => {
+    const result = await loadMorePhotosAction(PROJECT_ID, 1);
+    expect(result).toMatchObject({ ok: false, error: "validation" });
+    expect(mockListPhotos).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-integer page", async () => {
+    const result = await loadMorePhotosAction(PROJECT_ID, 2.5);
+    expect(result).toMatchObject({ ok: false, error: "validation" });
+  });
+});
+
+describe("loadMorePhotosAction — success", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns ok:true with PhotoListResult on page 2", async () => {
+    const listResult = {
+      items: [
+        {
+          id: PHOTO_ID,
+          projectId: PROJECT_ID,
+          filename: "p.jpg",
+          contentType: "image/jpeg",
+          sizeBytes: 1024,
+          caption: null,
+          capturedAt: "2024-06-15T10:00:00Z",
+          uploadedAt: "2024-06-16T08:00:00Z",
+          uploaderId: "u1",
+          thumbnailUrl: "/thumb",
+          originalUrl: "/original",
+        },
+      ],
+      total: 51,
+      page: 2,
+      perPage: 50,
+    };
+    mockListPhotos.mockResolvedValueOnce(listResult);
+
+    const result = await loadMorePhotosAction(PROJECT_ID, 2);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.page).toBe(2);
+      expect(result.data.items).toHaveLength(1);
+      expect(result.data.total).toBe(51);
+    }
+    expect(mockListPhotos).toHaveBeenCalledWith(PROJECT_ID, { page: 2, perPage: 50 });
+  });
+});
+
+describe("loadMorePhotosAction — error mapping", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("403 → forbidden", async () => {
+    mockListPhotos.mockRejectedValueOnce(httpError(403));
+    const result = await loadMorePhotosAction(PROJECT_ID, 2);
+    expect(result).toMatchObject({ ok: false, error: "forbidden" });
+  });
+
+  it("500 → server", async () => {
+    mockListPhotos.mockRejectedValueOnce(httpError(500));
+    const result = await loadMorePhotosAction(PROJECT_ID, 2);
     expect(result).toMatchObject({ ok: false, error: "server" });
   });
 });

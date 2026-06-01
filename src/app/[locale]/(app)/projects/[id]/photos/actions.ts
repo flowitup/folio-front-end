@@ -3,12 +3,13 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
+  listProjectPhotos,
   updateProjectPhoto,
   deleteProjectPhoto,
 } from "@/lib/api/project-photos";
 import { sessionAuthHeader } from "@/lib/api/auth-header";
 import { env } from "@/lib/config/env";
-import type { ProjectPhoto } from "@/lib/api/project-photos";
+import type { ProjectPhoto, PhotoListResult } from "@/lib/api/project-photos";
 
 // ---- UUID validation ----
 
@@ -178,6 +179,36 @@ export async function updatePhotoAction(
   try {
     const data = await updateProjectPhoto(projectId, photoId, params);
     revalidatePath(`/[locale]/projects/${projectId}/photos`, "page");
+    return { ok: true, data };
+  } catch (err: unknown) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+// ---- Load more (pagination) ----
+
+export type LoadMorePhotosResult =
+  | { ok: true; data: PhotoListResult }
+  | { ok: false; error: string; message?: string };
+
+/**
+ * Load a page of photos for the gallery "Load more" button.
+ * Uses the server-only listProjectPhotos wrapper; perPage is fixed at 50 to
+ * match the initial page fetch in page.tsx.
+ */
+export async function loadMorePhotosAction(
+  projectId: string,
+  page: number
+): Promise<LoadMorePhotosResult> {
+  if (!projectId || !isUuid(projectId)) {
+    return { ok: false, error: "validation", message: "Invalid project id" };
+  }
+  if (!Number.isInteger(page) || page < 2) {
+    return { ok: false, error: "validation", message: "Invalid page number" };
+  }
+
+  try {
+    const data = await listProjectPhotos(projectId, { page, perPage: 50 });
     return { ok: true, data };
   } catch (err: unknown) {
     return { ok: false, error: classifyBackendError(err) };

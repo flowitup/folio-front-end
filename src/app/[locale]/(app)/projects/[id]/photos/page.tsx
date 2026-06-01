@@ -43,6 +43,7 @@ export default async function PhotosPage({ params }: PageProps) {
   const hasAdminPermission = session.user.permissions.includes("*:*");
   const isProjectOwner = project.owner_id === session.user.id;
   const canEdit = hasAdminPermission || isProjectOwner;
+  const currentUserId = session.user.id;
 
   return (
     <div className="px-6 py-6">
@@ -51,6 +52,7 @@ export default async function PhotosPage({ params }: PageProps) {
         initialPhotos={photosResult.items}
         initialTotal={photosResult.total}
         canEdit={canEdit}
+        currentUserId={currentUserId}
       />
     </div>
   );

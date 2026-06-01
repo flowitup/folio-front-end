@@ -30,7 +30,10 @@ import { Label } from "@/components/ui/label";
 interface Props {
   projectId: string;
   photo: ProjectPhoto | null;
+  /** True when the viewer is an admin or project owner (all-photo edit rights). */
   canEdit: boolean;
+  /** Server-resolved id of the authenticated user; grants edit rights on own photos. */
+  currentUserId: string;
   onClose: () => void;
   onDeleted: (photoId: string) => void;
   onUpdated: (photo: ProjectPhoto) => void;
@@ -44,6 +47,7 @@ export function PhotoLightbox({
   projectId,
   photo,
   canEdit,
+  currentUserId,
   onClose,
   onDeleted,
   onUpdated,
@@ -115,6 +119,14 @@ export function PhotoLightbox({
     setLoadedPhotoId(null);
   }, [photo]);
 
+  // Revoke any live object URL when the component unmounts while a photo is
+  // still selected (prevents blob URL leak if the parent unmounts mid-session).
+  useEffect(() => {
+    return () => {
+      revokeRef.current?.();
+    };
+  }, []);
+
   // Seed edit drafts from photo when starting an edit session
   function startEditing() {
     if (!photo) return;
@@ -171,6 +183,9 @@ export function PhotoLightbox({
 
   const open = photo !== null;
 
+  // Per-photo edit right: admin/owner (canEdit) OR the uploader of this photo.
+  const canEditThisPhoto = canEdit || (photo !== null && photo.uploaderId === currentUserId);
+
   // Format date for display
   const displayDate = photo?.capturedAt
     ? new Date(photo.capturedAt).toLocaleDateString(undefined, {
@@ -217,7 +232,7 @@ export function PhotoLightbox({
                   <p className="text-xs text-muted-foreground">{displayDate}</p>
                 )}
                 <div className="flex gap-2">
-                  {canEdit && (
+                  {canEditThisPhoto && (
                     <Button
                       type="button"
                       variant="outline"
@@ -227,7 +242,7 @@ export function PhotoLightbox({
                       {t("edit")}
                     </Button>
                   )}
-                  {canEdit && (
+                  {canEditThisPhoto && (
                     <Button
                       type="button"
                       variant="destructive"

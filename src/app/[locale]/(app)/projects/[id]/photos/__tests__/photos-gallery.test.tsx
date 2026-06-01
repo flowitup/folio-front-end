@@ -27,11 +27,12 @@ vi.mock("@/lib/api/project-photo-blob", () => ({
   }),
 }));
 
-// Mock server actions imported transitively by photo-lightbox
+// Mock server actions imported by photos-gallery and photo-lightbox
 vi.mock("../actions", () => ({
   uploadPhotoAction: vi.fn(),
   updatePhotoAction: vi.fn(),
   deletePhotoAction: vi.fn(),
+  loadMorePhotosAction: vi.fn(),
 }));
 
 vi.mock("next-intl", () => ({
@@ -66,6 +67,7 @@ vi.mock("sonner", () => {
 // ---- Helpers ----
 
 const PROJECT_ID = "11111111-1111-1111-1111-111111111111";
+const CURRENT_USER_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 
 function makePhoto(id: string, capturedAt: string, caption: string | null = null): ProjectPhoto {
   return {
@@ -103,6 +105,7 @@ describe("PhotosGallery — empty state", () => {
         initialPhotos={[]}
         initialTotal={0}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
     expect(screen.getByText("photos.empty.title")).toBeDefined();
@@ -116,6 +119,7 @@ describe("PhotosGallery — empty state", () => {
         initialPhotos={[]}
         initialTotal={0}
         canEdit={true}
+        currentUserId={CURRENT_USER_ID}
       />
     );
     expect(screen.getByText("photos.empty.title")).toBeDefined();
@@ -131,6 +135,7 @@ describe("PhotosGallery — empty state", () => {
         initialPhotos={[]}
         initialTotal={0}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
     // No section elements with date labels
@@ -154,6 +159,7 @@ describe("PhotosGallery — date groups", () => {
         initialPhotos={photos}
         initialTotal={2}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -170,6 +176,7 @@ describe("PhotosGallery — date groups", () => {
         initialPhotos={photos}
         initialTotal={1}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -190,6 +197,7 @@ describe("PhotosGallery — date groups", () => {
         initialPhotos={photos}
         initialTotal={3}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -210,6 +218,7 @@ describe("PhotosGallery — date groups", () => {
         initialPhotos={photos}
         initialTotal={2}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -232,6 +241,7 @@ describe("PhotosGallery — date groups", () => {
         initialPhotos={[photo]}
         initialTotal={1}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -251,6 +261,7 @@ describe("PhotosGallery — thumbnail rendering", () => {
         initialPhotos={photos}
         initialTotal={1}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -270,6 +281,7 @@ describe("PhotosGallery — thumbnail rendering", () => {
         initialPhotos={photos}
         initialTotal={1}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -292,6 +304,7 @@ describe("PhotosGallery — thumbnail rendering", () => {
         initialPhotos={photos}
         initialTotal={3}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -323,6 +336,7 @@ describe("PhotosGallery — lightbox opens on thumb click", () => {
         initialPhotos={photos}
         initialTotal={1}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -353,6 +367,7 @@ describe("PhotosGallery — lightbox opens on thumb click", () => {
         initialPhotos={photos}
         initialTotal={1}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -371,6 +386,7 @@ describe("PhotosGallery — canEdit flag", () => {
         initialPhotos={[makePhoto("x", "2024-06-15T10:00:00Z")]}
         initialTotal={1}
         canEdit={false}
+        currentUserId={CURRENT_USER_ID}
       />
     );
     // "addPhotos" button should NOT appear in the header when canEdit=false
@@ -384,6 +400,7 @@ describe("PhotosGallery — canEdit flag", () => {
         initialPhotos={[makePhoto("x", "2024-06-15T10:00:00Z")]}
         initialTotal={1}
         canEdit={true}
+        currentUserId={CURRENT_USER_ID}
       />
     );
     expect(screen.getByText("photos.addPhotos")).toBeDefined();
@@ -396,6 +413,7 @@ describe("PhotosGallery — canEdit flag", () => {
         initialPhotos={[]}
         initialTotal={0}
         canEdit={true}
+        currentUserId={CURRENT_USER_ID}
       />
     );
 

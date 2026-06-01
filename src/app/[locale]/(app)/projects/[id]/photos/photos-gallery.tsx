@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useTranslations, useFormatter } from "next-intl";
-import { Camera } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PhotoThumb } from "./photo-thumb";
 import { PhotosUpload } from "./photos-upload";
 import { PhotoLightbox } from "./photo-lightbox";
+import { loadMorePhotosAction } from "./actions";
 import type { ProjectPhoto } from "@/lib/api/project-photos";
 
 interface Props {
@@ -14,10 +15,13 @@ interface Props {
   initialPhotos: ProjectPhoto[];
   initialTotal: number;
   canEdit: boolean;
+  /** Server-resolved id of the authenticated user; used for per-photo edit rights. */
+  currentUserId: string;
 }
 
 /**
- * Client gallery: date-grouped responsive grid, upload panel, lightbox.
+ * Client gallery: date-grouped responsive grid, upload panel, lightbox, and
+ * paginated "Load more" button.
  * Photos are grouped by capturedAt date (YYYY-MM-DD), newest group first.
  */
 export function PhotosGallery({
@@ -25,12 +29,15 @@ export function PhotosGallery({
   initialPhotos,
   initialTotal,
   canEdit,
+  currentUserId,
 }: Props) {
   const t = useTranslations("photos");
   const format = useFormatter();
 
   const [photos, setPhotos] = useState<ProjectPhoto[]>(initialPhotos);
-  const [_total, setTotal] = useState(initialTotal);
+  const [total, setTotal] = useState(initialTotal);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<ProjectPhoto | null>(null);
 
@@ -53,6 +60,23 @@ export function PhotosGallery({
     if (selectedPhoto?.id === updated.id) {
       setSelectedPhoto(updated);
     }
+  }
+
+  async function handleLoadMore() {
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const result = await loadMorePhotosAction(projectId, nextPage);
+    setLoadingMore(false);
+    if (!result.ok) return;
+
+    setPhotos((prev) => {
+      // Deduplicate by id in case of concurrent uploads
+      const existingIds = new Set(prev.map((p) => p.id));
+      const fresh = result.data.items.filter((p) => !existingIds.has(p.id));
+      return [...prev, ...fresh];
+    });
+    setTotal(result.data.total);
+    setPage(nextPage);
   }
 
   // Group photos by YYYY-MM-DD of capturedAt, newest date first
@@ -94,6 +118,7 @@ export function PhotosGallery({
   });
 
   const isEmpty = photos.length === 0;
+  const hasMore = photos.length < total;
 
   return (
     <div className="space-y-6">
@@ -168,11 +193,29 @@ export function PhotosGallery({
         </section>
       ))}
 
+      {/* Load more */}
+      {hasMore && (
+        <div className="flex justify-center pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="gap-2"
+          >
+            {loadingMore ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+            {t("loadMore")}
+          </Button>
+        </div>
+      )}
+
       {/* Lightbox */}
       <PhotoLightbox
         projectId={projectId}
         photo={selectedPhoto}
         canEdit={canEdit}
+        currentUserId={currentUserId}
         onClose={() => setSelectedPhoto(null)}
         onDeleted={handleDeleted}
         onUpdated={handleUpdated}

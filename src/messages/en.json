@@ -1417,6 +1417,7 @@
       "server": "Upload failed — please try again",
       "forbidden": "You do not have permission to perform this action",
       "invalidImage": "Invalid image — the file could not be processed"
-    }
+    },
+    "loadMore": "Load more"
   }
 }

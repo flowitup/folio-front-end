@@ -1417,6 +1417,7 @@
       "server": "Tải lên thất bại — vui lòng thử lại",
       "forbidden": "Bạn không có quyền thực hiện thao tác này",
       "invalidImage": "Ảnh không hợp lệ — tệp không thể được xử lý"
-    }
+    },
+    "loadMore": "Tải thêm"
   }
 }

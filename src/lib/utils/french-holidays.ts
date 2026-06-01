@@ -53,7 +53,7 @@ export type FrenchHolidayKey =
   | "ascension"
   | "pentecostMonday";
 
-export function getFrenchHolidays(year: number): Map<string, FrenchHolidayKey> {
+function getFrenchHolidays(year: number): Map<string, FrenchHolidayKey> {
   const easter = easterSunday(year);
   const easterMonday = addDays(easter, 1);
   const ascension = addDays(easter, 39);

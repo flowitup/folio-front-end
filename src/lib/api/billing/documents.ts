@@ -275,37 +275,8 @@ export async function fetchBillingDocumentPdf(
   return { blob, filename };
 }
 
-/**
- * Fetch the XLSX (Open Office XML) for a billing document.
- * Mirrors fetchBillingDocumentPdf — same auth, same content-disposition parsing.
- */
-export async function fetchBillingDocumentXlsx(
-  id: string
-): Promise<{ blob: Blob; filename: string }> {
-  const authHeaders = await sessionAuthHeader();
-  let response: Response;
-  try {
-    response = await fetch(
-      `${baseUrl()}/billing-documents/${encodeURIComponent(id)}/xlsx`,
-      {
-        method: "GET",
-        headers: { ...authHeaders },
-        cache: "no-store",
-      }
-    );
-  } catch (err) {
-    throw new Error(`Network error fetching billing document XLSX: ${String(err)}`);
-  }
-  if (!response.ok) throw await buildHttpError(response, "Failed to fetch billing document XLSX");
-
-  const cd = response.headers.get("Content-Disposition");
-  const filename = parseFilenameFromContentDisposition(cd, `billing-document-${id}.xlsx`);
-  const blob = await response.blob();
-  return { blob, filename };
-}
-
 // ---------------------------------------------------------------------------
-// Activity suggestions (Phase 05)
+// Activity suggestions
 // ---------------------------------------------------------------------------
 
 /** One distinct category with its historical frequency. */

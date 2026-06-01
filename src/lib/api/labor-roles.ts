@@ -12,7 +12,6 @@ import type {
   LaborRole,
   LaborRoleListResponse,
   CreateLaborRolePayload,
-  UpdateLaborRolePayload,
 } from "@/types/labor-role";
 
 // ---- Error helper ----
@@ -91,61 +90,3 @@ export async function createLaborRole(
   return response.json() as Promise<LaborRole>;
 }
 
-/**
- * Update an existing labor role (patch).
- */
-export async function updateLaborRole(
-  roleId: string,
-  payload: UpdateLaborRolePayload,
-): Promise<LaborRole> {
-  const authHeaders = await sessionAuthHeader();
-  let response: Response;
-  try {
-    response = await fetch(
-      `${env.apiBaseUrl}/labor/roles/${encodeURIComponent(roleId)}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-          ...authHeaders,
-        },
-        body: JSON.stringify(payload),
-        cache: "no-store",
-      },
-    );
-  } catch (err) {
-    throw new Error(`Network error updating labor role: ${String(err)}`);
-  }
-  if (!response.ok) {
-    throw await buildHttpError(response, "Failed to update labor role");
-  }
-  return response.json() as Promise<LaborRole>;
-}
-
-/**
- * Delete a labor role.
- */
-export async function deleteLaborRole(roleId: string): Promise<void> {
-  const authHeaders = await sessionAuthHeader();
-  let response: Response;
-  try {
-    response = await fetch(
-      `${env.apiBaseUrl}/labor/roles/${encodeURIComponent(roleId)}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-          ...authHeaders,
-        },
-        cache: "no-store",
-      },
-    );
-  } catch (err) {
-    throw new Error(`Network error deleting labor role: ${String(err)}`);
-  }
-  if (!response.ok) {
-    throw await buildHttpError(response, "Failed to delete labor role");
-  }
-}

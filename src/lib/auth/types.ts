@@ -35,12 +35,6 @@ export interface AuthState {
   isLoading: boolean;
 }
 
-export interface AcceptInviteCredentials {
-  token: string;
-  name: string;
-  password: string;
-}
-
 export interface VerifyInviteResponse {
   email: string;
   project_name: string;

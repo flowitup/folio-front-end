@@ -10,7 +10,7 @@ import { sessionAuthHeader } from "@/lib/api/auth-header";
 
 // ---- Types ----
 
-export type NoteStatus = "open" | "done";
+type NoteStatus = "open" | "done";
 export type LeadTimeMinutes = 0 | 60 | 1440;
 
 export interface Note {
@@ -100,34 +100,6 @@ export async function listProjectNotes(projectId: string): Promise<NoteListResul
     throw await buildHttpError(response, "Failed to list notes");
   }
   return response.json() as Promise<NoteListResult>;
-}
-
-/**
- * Get a single note by ID.
- */
-export async function getNote(projectId: string, noteId: string): Promise<Note> {
-  const authHeaders = await sessionAuthHeader();
-  let response: Response;
-  try {
-    response = await fetch(
-      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/notes/${encodeURIComponent(noteId)}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-          ...authHeaders,
-        },
-        cache: "no-store",
-      }
-    );
-  } catch (err) {
-    throw new Error(`Network error fetching note: ${String(err)}`);
-  }
-  if (!response.ok) {
-    throw await buildHttpError(response, "Failed to get note");
-  }
-  return response.json() as Promise<Note>;
 }
 
 /**

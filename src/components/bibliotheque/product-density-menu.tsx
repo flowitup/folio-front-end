@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 
 /** Allowed wide-screen column counts, smallest → largest. */
-export const COLUMN_OPTIONS = [4, 6, 8] as const;
+const COLUMN_OPTIONS = [4, 6, 8] as const;
 export type ColumnCount = (typeof COLUMN_OPTIONS)[number];
 
 /** Default density — densest layout per product decision. */

@@ -11,7 +11,7 @@
 import type { BulkLogEntry, LaborEntry, ShiftType, Worker } from "@/types/labor";
 import type { LastDayWorkerSelection } from "@/hooks/use-last-logged-day";
 
-export interface WorkerTileState {
+interface WorkerTileState {
   checked: boolean;
   /** Already-logged on the current date — tile is muted, click is no-op. */
   locked: boolean;
@@ -23,16 +23,6 @@ export interface WorkerTileState {
 }
 
 export type TileStateMap = Record<string, WorkerTileState>;
-
-/** Default state for an unchecked, unlocked tile. */
-export function emptyTileState(): WorkerTileState {
-  return {
-    checked: false,
-    locked: false,
-    shift_type: "full",
-    expanded: false,
-  };
-}
 
 /**
  * Build the tile-state map for the dialog's worker list. Workers

@@ -69,20 +69,3 @@ export async function getCurrentUser(): Promise<User | null> {
   return session?.user ?? null;
 }
 
-/**
- * Check if user has specific permission.
- */
-export async function hasPermission(permission: string): Promise<boolean> {
-  const user = await getCurrentUser();
-  if (!user) return false;
-  return user.permissions.includes(permission);
-}
-
-/**
- * Check if user has specific role.
- */
-export async function hasRole(role: string): Promise<boolean> {
-  const user = await getCurrentUser();
-  if (!user) return false;
-  return user.roles.includes(role);
-}

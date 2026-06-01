@@ -2,7 +2,7 @@
 
 export type InvoiceType = "released_funds" | "labor" | "materials_services" | "others";
 
-export interface InvoiceItem {
+interface InvoiceItem {
   description: string;
   quantity: number;
   unit_price: number;

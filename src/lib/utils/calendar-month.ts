@@ -34,7 +34,7 @@ export function formatMonthTag(d: Date): string {
  * years correctly because JS Date rolls over: day 0 of the next month
  * resolves to the last day of the current month.
  */
-export function daysInMonth(year: number, monthIdx: number): number {
+function daysInMonth(year: number, monthIdx: number): number {
   return new Date(year, monthIdx + 1, 0).getDate();
 }
 
@@ -44,7 +44,7 @@ export function daysInMonth(year: number, monthIdx: number): number {
  * because that's the French construction-week convention; downstream
  * cell rendering uses this offset as the left-padding count.
  */
-export function firstWeekdayOffset(year: number, monthIdx: number): number {
+function firstWeekdayOffset(year: number, monthIdx: number): number {
   // getDay(): 0 = Sunday … 6 = Saturday. Shift so Monday = 0.
   const sundayBased = new Date(year, monthIdx, 1).getDay();
   return (sundayBased + 6) % 7;
@@ -56,7 +56,7 @@ export function firstWeekdayOffset(year: number, monthIdx: number): number {
  * to fill the last week. Always a multiple of 7. Used by the
  * CalendarMonthGrid renderer to size its CSS grid.
  */
-export function monthGridCellCount(year: number, monthIdx: number): number {
+function monthGridCellCount(year: number, monthIdx: number): number {
   const offset = firstWeekdayOffset(year, monthIdx);
   const days = daysInMonth(year, monthIdx);
   const filled = offset + days;
@@ -77,14 +77,6 @@ export function buildMonthGrid(year: number, monthIdx: number): (Date | null)[] 
     cells[offset + d - 1] = new Date(year, monthIdx, d);
   }
   return cells;
-}
-
-/**
- * True when the given Date falls on Saturday or Sunday.
- */
-export function isWeekend(d: Date): boolean {
-  const dow = d.getDay();
-  return dow === 0 || dow === 6;
 }
 
 /**

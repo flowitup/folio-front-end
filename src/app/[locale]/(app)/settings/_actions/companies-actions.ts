@@ -21,7 +21,6 @@ import { getTranslations } from "next-intl/server";
 import {
   fetchMyCompanies,
   fetchAllCompanies,
-  fetchCompany,
   createCompany,
   updateCompany,
   deleteCompany,
@@ -164,18 +163,6 @@ export async function fetchAllCompaniesAction(opts?: {
   if (!auth.ok) return auth;
   try {
     const data = await fetchAllCompanies(opts);
-    return { ok: true, data };
-  } catch (err) {
-    return { ok: false, error: await classifyBackendError(err) };
-  }
-}
-
-export async function fetchCompanyAction(id: string): Promise<ActionResult<Company>> {
-  const auth = await requireSession();
-  if (!auth.ok) return auth;
-  if (!isUuid(id)) return invalid();
-  try {
-    const data = await fetchCompany(id);
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: await classifyBackendError(err) };

@@ -25,9 +25,6 @@ export const authRoutes = ["/login"];
 
 // Cookie names
 export const ACCESS_TOKEN_COOKIE = "access_token_cookie";
-export const REFRESH_TOKEN_COOKIE = "refresh_token_cookie";
-export const CSRF_ACCESS_COOKIE = "csrf_access_token";
-export const CSRF_REFRESH_COOKIE = "csrf_refresh_token";
 
 /**
  * True when the pathname (without the locale prefix) is a public route.

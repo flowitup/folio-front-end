@@ -60,6 +60,7 @@ const ALICE: AttachedUser = {
   display_name: "Alice",
   is_primary: true,
   attached_at: "2026-01-01T00:00:00Z",
+  role: "admin",
 };
 
 const BOB: AttachedUser = {
@@ -68,6 +69,7 @@ const BOB: AttachedUser = {
   display_name: null,
   is_primary: false,
   attached_at: "2026-02-01T00:00:00Z",
+  role: "member",
 };
 
 function renderTable(

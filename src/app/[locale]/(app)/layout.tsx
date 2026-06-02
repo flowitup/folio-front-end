@@ -1,6 +1,7 @@
 import { getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
+import { hasBillingAccess } from "@/lib/auth/billing-access";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
@@ -26,10 +27,14 @@ export default async function AppLayout({
     redirect(`/${locale}/login`);
   }
 
+  // Per-company admin gate: only show the billing nav to users who can access
+  // billing (superadmin or admin of at least one company).
+  const canViewBilling = await hasBillingAccess();
+
   return (
     <ProjectProvider>
       <div className="flex h-screen overflow-hidden" style={{ background: "var(--paper)" }}>
-        <Sidebar />
+        <Sidebar canViewBilling={canViewBilling} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Topbar />
           {/* Content scaled down so less scrolling is needed; zoom reflows

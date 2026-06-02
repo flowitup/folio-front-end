@@ -82,11 +82,11 @@ describe("fetchMyCompanies", () => {
   it("flattens nested {access, company} items into flat MyCompany", async () => {
     const items = [
       {
-        access: { is_primary: true, attached_at: "2024-01-15T10:00:00Z" },
+        access: { is_primary: true, attached_at: "2024-01-15T10:00:00Z", role: "admin" },
         company: { id: "co-1", legal_name: "ACME Corp", address: "Paris", siret: "123456" },
       },
       {
-        access: { is_primary: false, attached_at: "2024-02-20T14:30:00Z" },
+        access: { is_primary: false, attached_at: "2024-02-20T14:30:00Z", role: "member" },
         company: { id: "co-2", legal_name: "XYZ Ltd", address: "Lyon", siret: "789012" },
       },
     ];
@@ -95,7 +95,7 @@ describe("fetchMyCompanies", () => {
     const result = await fetchMyCompanies();
 
     expect(result).toHaveLength(2);
-    // First company should be flattened with is_primary=true
+    // First company should be flattened with is_primary=true + role
     expect(result[0]).toEqual({
       id: "co-1",
       legal_name: "ACME Corp",
@@ -103,8 +103,9 @@ describe("fetchMyCompanies", () => {
       siret: "123456",
       is_primary: true,
       attached_at: "2024-01-15T10:00:00Z",
+      role: "admin",
     });
-    // Second company should be flattened with is_primary=false
+    // Second company should be flattened with is_primary=false + role
     expect(result[1]).toEqual({
       id: "co-2",
       legal_name: "XYZ Ltd",
@@ -112,6 +113,7 @@ describe("fetchMyCompanies", () => {
       siret: "789012",
       is_primary: false,
       attached_at: "2024-02-20T14:30:00Z",
+      role: "member",
     });
   });
 

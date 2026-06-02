@@ -35,6 +35,7 @@ import {
 import {
   fetchAttachedUsers,
   bootAttachedUser,
+  setMemberRole,
 } from "@/lib/api/companies/attached-users";
 import { getSession } from "@/lib/auth/session";
 import type { Company, MyCompany, CompanyInviteTokenGenerated, AttachedUser } from "@/types/companies";
@@ -243,7 +244,7 @@ export async function detachCompanyAction(id: string): Promise<ActionResult<void
  */
 export async function generateInviteTokenAction(
   companyId: string,
-  opts?: { regenerate?: boolean }
+  opts?: { regenerate?: boolean; role?: "admin" | "member" }
 ): Promise<ActionResult<CompanyInviteTokenGenerated>> {
   const auth = await requireSession();
   if (!auth.ok) return auth;
@@ -307,6 +308,23 @@ export async function bootAttachedUserAction(
   if (!isUuid(companyId) || !isUuid(userId)) return invalid();
   try {
     await bootAttachedUser(companyId, userId);
+    return { ok: true, data: undefined };
+  } catch (err) {
+    return { ok: false, error: await classifyBackendError(err) };
+  }
+}
+
+export async function setMemberRoleAction(
+  companyId: string,
+  userId: string,
+  role: "admin" | "member"
+): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId) || !isUuid(userId)) return invalid();
+  if (role !== "admin" && role !== "member") return invalid();
+  try {
+    await setMemberRole(companyId, userId, role);
     return { ok: true, data: undefined };
   } catch (err) {
     return { ok: false, error: await classifyBackendError(err) };

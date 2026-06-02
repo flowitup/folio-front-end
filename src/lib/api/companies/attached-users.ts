@@ -87,3 +87,31 @@ export async function bootAttachedUser(companyId: string, userId: string): Promi
   }
   if (!response.ok) throw await buildHttpError(response, "Failed to boot attached user");
 }
+
+/**
+ * Change a company member's role (promote/demote between admin and member).
+ * PATCH /api/v1/companies/<companyId>/access/<userId>/role
+ * Requires admin role (*:*).
+ */
+export async function setMemberRole(
+  companyId: string,
+  userId: string,
+  role: "admin" | "member"
+): Promise<void> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${baseUrl()}/companies/${encodeURIComponent(companyId)}/access/${encodeURIComponent(userId)}/role`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ role }),
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error setting member role: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to set member role");
+}

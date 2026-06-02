@@ -1230,7 +1230,10 @@
           "revoke": "Thu hồi mã đang hoạt động",
           "revokeConfirm": "Thao tác này sẽ vô hiệu hóa ngay mã hiện tại. Người dùng chưa dùng mã sẽ cần mã mới.",
           "revokedToast": "Đã thu hồi mã mời.",
-          "policyNote": "Mã dùng một lần và hết hạn sau 7 ngày. Mỗi công ty chỉ có một mã đang hoạt động."
+          "policyNote": "Mã dùng một lần và hết hạn sau 7 ngày. Mỗi công ty chỉ có một mã đang hoạt động.",
+          "roleLabel": "Vai trò",
+          "roleAdminOption": "Quản trị (quản lý hóa đơn)",
+          "roleMemberOption": "Thành viên"
         },
         "attached": {
           "nameEmail": "Tên / Email",
@@ -1240,7 +1243,13 @@
           "bootConfirm": "Xóa {name} khỏi công ty này? Họ sẽ mất quyền truy cập ngay lập tức.",
           "empty": "Chưa có người dùng nào liên kết với công ty này.",
           "countSingular": "người dùng",
-          "countPlural": "người dùng"
+          "countPlural": "người dùng",
+          "roleColumn": "Vai trò",
+          "roleAdmin": "Quản trị",
+          "roleMember": "Thành viên",
+          "makeAdmin": "Đặt làm quản trị",
+          "makeMember": "Đặt làm thành viên",
+          "roleUpdatedToast": "Đã cập nhật vai trò"
         },
         "delete": {
           "title": "Xóa công ty",

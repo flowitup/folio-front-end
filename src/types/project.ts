@@ -9,6 +9,13 @@ export interface Project {
   company_id?: string | null;
   /** Custom invoice number prefix (e.g. "ARC" → ARC-2026-0001). Null = default "INV". */
   invoice_prefix?: string | null;
+  /**
+   * Caller's EFFECTIVE permissions on this project: global-role perms UNION the
+   * caller's membership-role perms for this project. Gate per-project UI on this
+   * (not just the global JWT permissions) so project admins/managers see the
+   * right controls even when their global role is the read-only default.
+   */
+  my_permissions?: string[];
 }
 
 export interface ProjectListResponse {

@@ -21,6 +21,7 @@ import { ActivityDialog } from "@/components/labor/activity-dialog";
 
 import type { Worker, LaborEntry, LaborActivity, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload, CreateLaborActivityPayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
+import type { ProjectTag } from "@/lib/api/tags";
 import {
   fetchWorkers,
   createWorker,
@@ -36,7 +37,7 @@ import {
   updateLaborActivity,
   deleteLaborActivity,
 } from "@/lib/api/labor";
-import { fetchLaborRolesAction } from "./actions";
+import { fetchLaborRolesAction, fetchProjectTagsAction } from "./actions";
 
 type TabType = "workers" | "attendance" | "summary";
 
@@ -80,6 +81,9 @@ export default function LaborPage() {
   // Roles state
   const [roles, setRoles] = useState<LaborRole[]>([]);
   const [palette, setPalette] = useState<string[]>([]);
+
+  // Tags state
+  const [tags, setTags] = useState<ProjectTag[]>([]);
 
   // Worker lookup map for role-aware chip colors in calendar cells.
   const workerMap = useMemo(
@@ -182,7 +186,7 @@ export default function LaborPage() {
     }
   }, [projectId, summaryMonth]);
 
-  // Initial load — workers + roles in parallel.
+  // Initial load — workers + roles + tags in parallel.
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
@@ -197,11 +201,15 @@ export default function LaborPage() {
           // Non-fatal: roles are enhancement only; missing roles doesn't
           // prevent the page from loading.
         }),
+        fetchProjectTagsAction(projectId).then((result) => {
+          if (result.success) setTags(result.tags);
+          // Non-fatal: tags are optional enhancement.
+        }),
       ]);
       setIsLoading(false);
     };
     load();
-  }, [loadWorkers]);
+  }, [loadWorkers, projectId]);
 
   useEffect(() => {
     if (activeTab === "attendance") {
@@ -467,6 +475,7 @@ export default function LaborPage() {
         }}
         entry={editEntry}
         onSave={handleUpdateAttendance}
+        tags={tags}
       />
 
       <ActivityDialog

@@ -62,6 +62,7 @@ export async function fetchLaborEntries(projectId: string, params?: LaborEntryPa
     from: params?.from,
     to: params?.to,
     worker_id: params?.worker_id,
+    tag_id: params?.tag_id,
   });
   const data = await api.get<LaborEntryListResponse>(url);
   return data.entries;

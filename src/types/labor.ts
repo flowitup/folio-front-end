@@ -61,6 +61,7 @@ export interface LaborEntry {
   supplement_hours: number;
   created_at: string;
   role_color?: string | null;
+  tag_id?: string | null;
 }
 
 export interface LaborEntryListResponse {
@@ -75,6 +76,7 @@ export interface LogAttendancePayload {
   note?: string;
   shift_type?: ShiftType | null;
   supplement_hours?: number;
+  tag_id?: string | null;
 }
 
 export interface UpdateAttendancePayload {
@@ -82,6 +84,7 @@ export interface UpdateAttendancePayload {
   note?: string;
   shift_type?: ShiftType | null;
   supplement_hours?: number;
+  tag_id?: string | null;
 }
 
 // ─── Bulk log (Phase 3) ──────────────────────────────────────────────────────
@@ -92,6 +95,7 @@ export interface BulkLogEntry {
   supplement_hours?: number;
   amount_override?: number;
   note?: string;
+  tag_id?: string | null;
 }
 
 export interface BulkLogPayload {
@@ -189,6 +193,7 @@ export interface LaborEntryParams {
   from?: string;
   to?: string;
   worker_id?: string;
+  tag_id?: string;
 }
 
 export interface SummaryParams {

@@ -31,6 +31,8 @@ export interface Invoice {
   source_billing_document_id: string | null;
   /** True when invoice was created automatically (e.g. facture → PAID funds release). */
   is_auto_generated: boolean;
+  /** Optional phase tag UUID assigned to this invoice. */
+  tag_id?: string | null;
 }
 
 export interface CreateInvoicePayload {
@@ -42,6 +44,8 @@ export interface CreateInvoicePayload {
   items: Omit<InvoiceItem, "total">[];
   /** Optional payment method UUID. Null or omitted = no payment method. */
   payment_method_id?: string | null;
+  /** Optional phase tag UUID. Null or omitted = no tag. */
+  tag_id?: string | null;
 }
 
 export type UpdateInvoicePayload = Partial<Omit<CreateInvoicePayload, "type">>;

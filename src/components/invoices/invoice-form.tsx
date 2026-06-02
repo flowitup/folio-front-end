@@ -6,7 +6,9 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
+import { TagSelect } from "@/components/tags/tag-select";
 import type { CreateInvoicePayload, InvoiceType } from "@/types/invoice";
+import type { ProjectTag } from "@/lib/api/tags";
 
 interface LineItem {
   description: string;
@@ -24,14 +26,20 @@ interface InvoiceFormProps {
    * When null/undefined, the payment method field is hidden.
    */
   companyId?: string | null;
+  /**
+   * Project-scoped phase tags for the tag selector.
+   * When empty or omitted, the tag field is hidden.
+   */
+  tags?: ProjectTag[];
 }
 
 const INVOICE_TYPES: InvoiceType[] = ["released_funds", "labor", "materials_services", "others"];
 
 const emptyItem = (): LineItem => ({ description: "", quantity: 1, unit_price: 0 });
 
-export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId }: InvoiceFormProps) {
+export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tags = [] }: InvoiceFormProps) {
   const t = useTranslations("invoices");
+  const tTags = useTranslations("tags");
 
   const [type, setType] = useState<InvoiceType>(initialValues?.type ?? "released_funds");
   const [issueDate, setIssueDate] = useState(initialValues?.issue_date ?? "");
@@ -43,6 +51,7 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId }: I
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(
     initialValues?.payment_method_id ?? null
   );
+  const [tagId, setTagId] = useState<string | null>(initialValues?.tag_id ?? null);
   const [items, setItems] = useState<LineItem[]>(
     initialValues?.items && initialValues.items.length > 0
       ? initialValues.items.map((i) => ({
@@ -100,6 +109,8 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId }: I
       })),
       // Always include payment_method_id so updates can explicitly clear it (null).
       payment_method_id: paymentMethodId,
+      // Always include tag_id so updates can explicitly clear it (null).
+      tag_id: tagId,
     };
 
     try {
@@ -174,6 +185,19 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId }: I
                   companyId={companyId}
                   value={paymentMethodId}
                   onChange={setPaymentMethodId}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+
+            {/* Phase Tag */}
+            {tags.length > 0 && (
+              <div>
+                <label className="block text-xs font-medium mb-1">{tTags("select.label")}</label>
+                <TagSelect
+                  tags={tags}
+                  value={tagId}
+                  onChange={setTagId}
                   disabled={isLoading}
                 />
               </div>

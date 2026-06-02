@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Printer, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,9 @@ import { InvoiceForm } from "@/components/invoices/invoice-form";
 import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { fetchTagsClient } from "@/lib/api/tags-client";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
+import type { ProjectTag } from "@/lib/api/tags";
 
 const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
   released_funds: "bg-blue-100 text-blue-700",
@@ -53,6 +55,14 @@ export function InvoiceDetailContent({
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tags, setTags] = useState<ProjectTag[]>([]);
+
+  // Load project tags for the edit form tag selector. Non-fatal.
+  useEffect(() => {
+    fetchTagsClient(invoice.project_id)
+      .then(setTags)
+      .catch(() => setTags([]));
+  }, [invoice.project_id]);
 
   const handleUpdate = async (payload: UpdateInvoicePayload) => {
     setIsSaving(true);
@@ -135,6 +145,7 @@ export function InvoiceDetailContent({
           onSubmit={handleUpdate}
           isLoading={isSaving}
           companyId={companyId}
+          tags={tags}
           initialValues={{
             type: invoice.type,
             issue_date: invoice.issue_date,
@@ -147,6 +158,7 @@ export function InvoiceDetailContent({
               unit_price: item.unit_price,
             })),
             payment_method_id: invoice.payment_method_id ?? null,
+            tag_id: invoice.tag_id ?? null,
           }}
         />
       ) : (

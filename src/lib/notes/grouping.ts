@@ -3,7 +3,7 @@
  * No side-effects; safe to unit-test without timers (inject today).
  */
 
-import type { Note, NoteCategory } from "@/lib/api/notes";
+import type { Note } from "@/lib/api/notes";
 import { CATEGORY_ORDER, CATEGORY_MAP } from "@/lib/notes/categories";
 
 // ---- Types ----

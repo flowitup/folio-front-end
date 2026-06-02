@@ -12,6 +12,7 @@
     "bibliotheque": "Library",
     "labor": "Labor",
     "invoices": "Expense",
+    "tags": "Tags",
     "planning": "Planning",
     "notes": "Notes",
     "documents": "Documents",
@@ -569,6 +570,7 @@
       "toastLogged": "{n} logged",
       "toastLoggedWithSkip": "{n} logged, {skipped} skipped (already exists)",
       "toastLogNextDay": "Log next day →",
+      "tagLabel": "Tag (applies to all)",
       "tile": {
         "alreadyLogged": "already logged",
         "conflictBadge": "conflict",
@@ -1396,6 +1398,59 @@
     "goToPage": "Go to page",
     "previousPage": "Previous page",
     "nextPage": "Next page"
+  },
+  "tags": {
+    "select": {
+      "label": "Phase tag",
+      "placeholder": "Select a tag…",
+      "noTag": "No tag"
+    },
+    "manager": {
+      "title": "Manage tags",
+      "addTag": "Add tag",
+      "empty": "No tags yet. Create your first phase tag to start tracking costs by phase.",
+      "createFirst": "Create first tag"
+    },
+    "form": {
+      "createTitle": "New tag",
+      "editTitle": "Edit tag",
+      "name": "Name",
+      "namePlaceholder": "e.g. Foundations",
+      "color": "Color",
+      "save": "Save",
+      "cancel": "Cancel",
+      "nameRequired": "Name is required"
+    },
+    "delete": {
+      "title": "Delete tag?",
+      "description": "Deleting \"{name}\" will remove it from this project. Expenses and labor entries that used this tag will become untagged but their data is preserved.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "toast": {
+      "created": "Tag created",
+      "updated": "Tag updated",
+      "deleted": "Tag deleted"
+    },
+    "errors": {
+      "duplicate": "A tag with that name already exists in this project.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "summary": {
+      "title": "Cost by phase tag",
+      "colTag": "Tag",
+      "colLaborCost": "Labor cost",
+      "colExpenses": "Expenses",
+      "colTotal": "Total",
+      "untagged": "Untagged",
+      "grandTotal": "Grand total",
+      "empty": "No cost data yet. Assign tags to expenses and labor entries to see a breakdown here."
+    },
+    "filter": {
+      "allTags": "All tags",
+      "filterByTag": "Filter by tag",
+      "tagForBulk": "Tag (applies to all)"
+    }
   },
   "photos": {
     "title": "Photos",

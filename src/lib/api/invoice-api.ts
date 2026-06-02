@@ -17,10 +17,19 @@ export interface InvoiceListResponse {
   funds_released_total: number;
 }
 
-export const fetchInvoicesWithMeta = (projectId: string, type?: string): Promise<InvoiceListResponse> =>
-  api.get<InvoiceListResponse>(
-    `/projects/${projectId}/invoices${type ? `?type=${type}` : ""}`
+export const fetchInvoicesWithMeta = (
+  projectId: string,
+  type?: string,
+  tagId?: string
+): Promise<InvoiceListResponse> => {
+  const params = new URLSearchParams();
+  if (type) params.set("type", type);
+  if (tagId) params.set("tag_id", tagId);
+  const qs = params.toString();
+  return api.get<InvoiceListResponse>(
+    `/projects/${projectId}/invoices${qs ? `?${qs}` : ""}`
   );
+};
 
 export const fetchInvoice =(projectId: string, invoiceId: string): Promise<Invoice> =>
   api.get<Invoice>(`/projects/${projectId}/invoices/${invoiceId}`);

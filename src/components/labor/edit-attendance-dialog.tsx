@@ -36,9 +36,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { TagSelect } from "@/components/tags/tag-select";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatDate } from "@/lib/utils/formatters";
 import type { LaborEntry, ShiftType, UpdateAttendancePayload } from "@/types/labor";
+import type { ProjectTag } from "@/lib/api/tags";
 
 // Radix Select forbids value=""; sentinel maps to null shift_type.
 const SHIFT_NONE = "__none__";
@@ -48,6 +50,8 @@ interface EditAttendanceDialogProps {
   onOpenChange: (open: boolean) => void;
   entry: LaborEntry | null;
   onSave: (payload: UpdateAttendancePayload) => Promise<void>;
+  /** Project-scoped phase tags. When empty or omitted, tag field is hidden. */
+  tags?: ProjectTag[];
 }
 
 function formatEntryDate(iso: string): string {
@@ -67,12 +71,15 @@ export function EditAttendanceDialog({
   onOpenChange,
   entry,
   onSave,
+  tags = [],
 }: EditAttendanceDialogProps) {
   const t = useTranslations("labor");
+  const tTags = useTranslations("tags");
   const [shiftType, setShiftType] = useState<ShiftType | null>(null);
   const [supplementHours, setSupplementHours] = useState(0);
   const [amountOverride, setAmountOverride] = useState("");
   const [note, setNote] = useState("");
+  const [tagId, setTagId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,6 +92,7 @@ export function EditAttendanceDialog({
       entry.amount_override !== null ? String(entry.amount_override) : "",
     );
     setNote(entry.note ?? "");
+    setTagId(entry.tag_id ?? null);
     setError(null);
   }, [open, entry]);
 
@@ -119,6 +127,7 @@ export function EditAttendanceDialog({
         supplement_hours: supplementHours,
         amount_override: amountOverride ? parseFloat(amountOverride) : undefined,
         note: note.trim() || undefined,
+        tag_id: tagId,
       });
       onOpenChange(false);
     } catch (err) {
@@ -208,6 +217,18 @@ export function EditAttendanceDialog({
                 placeholder={t("note")}
               />
             </div>
+
+            {tags.length > 0 && (
+              <div className="space-y-2">
+                <Label>{tTags("select.label")}</Label>
+                <TagSelect
+                  tags={tags}
+                  value={tagId}
+                  onChange={setTagId}
+                  disabled={isSaving}
+                />
+              </div>
+            )}
 
             {error && (
               <Alert variant="destructive">

@@ -16,6 +16,7 @@
     "planning": "Planning",
     "notes": "Notes",
     "documents": "Documents",
+    "photos": "Photos",
     "members": "Members",
     "projectSettings": "Settings",
     "settings": "Settings",
@@ -1232,7 +1233,10 @@
           "revoke": "Revoke active token",
           "revokeConfirm": "This will immediately invalidate the current token. Any user who has not yet redeemed it will need a new one.",
           "revokedToast": "Invite token revoked.",
-          "policyNote": "Tokens are single-use and expire after 7 days. Only one active token per company."
+          "policyNote": "Tokens are single-use and expire after 7 days. Only one active token per company.",
+          "roleLabel": "Role",
+          "roleAdminOption": "Admin (can manage billing)",
+          "roleMemberOption": "Member"
         },
         "attached": {
           "nameEmail": "Name / Email",
@@ -1242,7 +1246,13 @@
           "bootConfirm": "Remove {name} from this company? They will lose access immediately.",
           "empty": "No users attached to this company yet.",
           "countSingular": "user",
-          "countPlural": "users"
+          "countPlural": "users",
+          "roleColumn": "Role",
+          "roleAdmin": "Admin",
+          "roleMember": "Member",
+          "makeAdmin": "Make admin",
+          "makeMember": "Make member",
+          "roleUpdatedToast": "Role updated"
         },
         "delete": {
           "title": "Delete company",
@@ -1428,5 +1438,41 @@
       "filterByTag": "Filter by tag",
       "tagForBulk": "Tag (applies to all)"
     }
+  },
+  "photos": {
+    "title": "Photos",
+    "subtitle": "Construction progress photos for this project.",
+    "addPhotos": "Add photos",
+    "uploading": "Uploading",
+    "uploadSuccess": "Photos uploaded",
+    "empty": {
+      "title": "No photos yet",
+      "description": "Upload construction progress photos to track the build visually."
+    },
+    "caption": {
+      "label": "Caption",
+      "placeholder": "Describe what's shown…"
+    },
+    "capturedAt": {
+      "label": "Date taken"
+    },
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteConfirm": {
+      "title": "Delete photo?",
+      "description": "This photo will be permanently deleted. This cannot be undone."
+    },
+    "errors": {
+      "oversize": "File too large (max 25 MB)",
+      "unsupported": "Unsupported file type (JPEG, PNG, WebP only)",
+      "network": "Network error — please try again",
+      "rateLimited": "Too many uploads — please slow down",
+      "server": "Upload failed — please try again",
+      "forbidden": "You do not have permission to perform this action",
+      "invalidImage": "Invalid image — the file could not be processed"
+    },
+    "loadMore": "Load more"
   }
 }

@@ -8,6 +8,7 @@ import {
   Users,
   StickyNote,
   Files,
+  Camera,
   FileText,
   FileCheck,
   LayoutTemplate,
@@ -39,6 +40,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
         { key: "members", href: `/projects/${selectedProjectId}/members`, icon: Users },
         { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
         { key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files },
+        { key: "photos", href: `/projects/${selectedProjectId}/photos`, icon: Camera },
       ]
     : [];
 

@@ -13,6 +13,7 @@ import {
 } from "@/lib/api/invoice-api";
 import type { Invoice, InvoiceAttachment } from "@/types/invoice";
 import { InvoiceAttachmentPreviewDialog } from "./invoice-attachment-preview-dialog";
+import { formatDate } from "@/lib/utils/formatters";
 
 const ALLOWED_MIME = [
   "application/pdf",
@@ -252,7 +253,7 @@ function AttachmentRow({ attachment, canDelete, onDelete, onPreview }: Attachmen
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{attachment.filename}</p>
         <p className="text-xs text-muted-foreground">
-          {formatBytes(attachment.size_bytes)} · {new Date(attachment.uploaded_at).toLocaleDateString()}
+          {formatBytes(attachment.size_bytes)} · {formatDate(attachment.uploaded_at)}
         </p>
       </div>
 

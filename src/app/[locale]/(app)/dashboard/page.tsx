@@ -22,6 +22,7 @@ import {
   Flag,
 } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
+import { formatDate } from "@/lib/utils/formatters";
 
 // Currency formatter — locale-aware (uses page locale for formatting; currency stays EUR per design).
 const fmtEURForLocale = (n: number, locale: string) =>
@@ -135,21 +136,13 @@ export default function DashboardPage() {
                 <div>
                   <div className="label-cap">{t("started")}</div>
                   <div className="font-display num text-[18px]">
-                    {new Date("2025-09-08").toLocaleDateString(locale, {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {formatDate("2025-09-08")}
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="label-cap">{t("targetHandover")}</div>
                   <div className="font-display num text-[18px]">
-                    {new Date("2026-08-30").toLocaleDateString(locale, {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {formatDate("2026-08-30")}
                   </div>
                 </div>
               </div>

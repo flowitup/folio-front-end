@@ -147,8 +147,8 @@ describe("ProductCard", () => {
       <ProductCard product={product} suppliersById={suppliers} onClick={onClick} />
     );
 
-    // Date should be rendered (exact format depends on Intl.DateTimeFormat)
-    expect(screen.getByText(/May 15, 2024/)).toBeInTheDocument();
+    // Date rendered as canonical dd/mm/YYYY.
+    expect(screen.getByText(/15\/05\/2024/)).toBeInTheDocument();
   });
 
   it("does not render date separator when last_purchased_at is null", () => {

@@ -19,6 +19,7 @@ import {
   Files,
   Library,
   Tag,
+  Camera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
@@ -45,7 +46,7 @@ function coverFor(id: string): string {
   return COVER_GRADIENTS[h % COVER_GRADIENTS.length];
 }
 
-export function Sidebar() {
+export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }) {
   const pathname = usePathname();
   const locale = useLocale();
   const router = useRouter();
@@ -73,6 +74,7 @@ export function Sidebar() {
           { key: "members", href: `/projects/${selectedProjectId}/members`, icon: Users },
           { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
           { key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files },
+          { key: "photos", href: `/projects/${selectedProjectId}/photos`, icon: Camera },
         ]
       : []),
   ];
@@ -136,7 +138,10 @@ export function Sidebar() {
                   style={{ background: selectedCover }}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13px] font-medium">
+                  <div
+                    className="line-clamp-2 text-[13px] font-medium leading-snug"
+                    title={selectedProject?.name ?? undefined}
+                  >
                     {selectedProject?.name ?? tProjects("selectProject")}
                   </div>
                   {selectedProject && (selectedPhase || selectedProgress > 0) && (
@@ -146,7 +151,7 @@ export function Sidebar() {
                     </div>
                   )}
                 </div>
-                <ChevronDown size={14} style={{ color: "var(--muted)" }} />
+                <ChevronDown size={14} className="flex-shrink-0" style={{ color: "var(--muted)" }} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[260px]">
@@ -223,8 +228,9 @@ export function Sidebar() {
           );
         })}
 
-        {/* Billing group — after project-scoped nav, before Settings */}
-        <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />
+        {/* Billing group — after project-scoped nav, before Settings.
+            Only rendered for users who can access billing (company admins / superadmin). */}
+        {canViewBilling && <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />}
 
         {/* Settings — always last */}
         {(() => {

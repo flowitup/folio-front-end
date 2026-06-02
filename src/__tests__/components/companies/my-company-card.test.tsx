@@ -84,6 +84,7 @@ function makeCompany(overrides: Partial<MyCompany> = {}): MyCompany {
     updated_at: "2026-01-01T00:00:00Z",
     is_primary: false,
     attached_at: "2026-01-01T00:00:00Z",
+    role: "admin",
     ...overrides,
   };
 }

@@ -13,15 +13,27 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
- * Format a date as a readable string
+ * Format a date as dd/mm/YYYY (locale-independent).
+ * Uses local (browser-timezone) calendar fields, matching prior
+ * toLocaleDateString behavior, with manual zero-padding to avoid
+ * Intl locale-ordering ambiguity.
  */
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(d)
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  return `${dd}/${mm}/${yyyy}`
+}
+
+/**
+ * Format a date and time as dd/mm/YYYY HH:MM (24h, locale-independent).
+ */
+export function formatDateTime(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date
+  const hh = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  return `${formatDate(d)} ${hh}:${min}`
 }
 
 /**

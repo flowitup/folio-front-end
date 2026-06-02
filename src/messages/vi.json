@@ -16,6 +16,7 @@
     "planning": "Kế hoạch",
     "notes": "Ghi chú",
     "documents": "Tài liệu",
+    "photos": "Hình ảnh",
     "members": "Thành viên",
     "projectSettings": "Cài đặt",
     "settings": "Cài đặt",
@@ -1232,7 +1233,10 @@
           "revoke": "Thu hồi mã đang hoạt động",
           "revokeConfirm": "Thao tác này sẽ vô hiệu hóa ngay mã hiện tại. Người dùng chưa dùng mã sẽ cần mã mới.",
           "revokedToast": "Đã thu hồi mã mời.",
-          "policyNote": "Mã dùng một lần và hết hạn sau 7 ngày. Mỗi công ty chỉ có một mã đang hoạt động."
+          "policyNote": "Mã dùng một lần và hết hạn sau 7 ngày. Mỗi công ty chỉ có một mã đang hoạt động.",
+          "roleLabel": "Vai trò",
+          "roleAdminOption": "Quản trị (quản lý hóa đơn)",
+          "roleMemberOption": "Thành viên"
         },
         "attached": {
           "nameEmail": "Tên / Email",
@@ -1242,7 +1246,13 @@
           "bootConfirm": "Xóa {name} khỏi công ty này? Họ sẽ mất quyền truy cập ngay lập tức.",
           "empty": "Chưa có người dùng nào liên kết với công ty này.",
           "countSingular": "người dùng",
-          "countPlural": "người dùng"
+          "countPlural": "người dùng",
+          "roleColumn": "Vai trò",
+          "roleAdmin": "Quản trị",
+          "roleMember": "Thành viên",
+          "makeAdmin": "Đặt làm quản trị",
+          "makeMember": "Đặt làm thành viên",
+          "roleUpdatedToast": "Đã cập nhật vai trò"
         },
         "delete": {
           "title": "Xóa công ty",
@@ -1428,5 +1438,41 @@
       "filterByTag": "Lọc theo nhãn",
       "tagForBulk": "Nhãn (áp dụng cho tất cả)"
     }
+  },
+  "photos": {
+    "title": "Hình ảnh",
+    "subtitle": "Ảnh tiến độ thi công của dự án.",
+    "addPhotos": "Thêm ảnh",
+    "uploading": "Đang tải lên",
+    "uploadSuccess": "Đã tải ảnh lên thành công",
+    "empty": {
+      "title": "Chưa có ảnh nào",
+      "description": "Tải ảnh tiến độ thi công lên để theo dõi quá trình xây dựng bằng hình ảnh."
+    },
+    "caption": {
+      "label": "Chú thích",
+      "placeholder": "Mô tả nội dung ảnh…"
+    },
+    "capturedAt": {
+      "label": "Ngày chụp"
+    },
+    "edit": "Chỉnh sửa",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "deleteConfirm": {
+      "title": "Xóa ảnh?",
+      "description": "Ảnh này sẽ bị xóa vĩnh viễn. Thao tác này không thể hoàn tác."
+    },
+    "errors": {
+      "oversize": "Tệp quá lớn (tối đa 25 MB)",
+      "unsupported": "Định dạng tệp không được hỗ trợ (chỉ JPEG, PNG, WebP)",
+      "network": "Lỗi mạng — vui lòng thử lại",
+      "rateLimited": "Tải lên quá nhiều — vui lòng chờ một lúc",
+      "server": "Tải lên thất bại — vui lòng thử lại",
+      "forbidden": "Bạn không có quyền thực hiện thao tác này",
+      "invalidImage": "Ảnh không hợp lệ — tệp không thể được xử lý"
+    },
+    "loadMore": "Tải thêm"
   }
 }

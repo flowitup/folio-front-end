@@ -24,6 +24,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
+import { formatDate } from "@/lib/utils/formatters";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborEntryCard } from "@/components/labor/labor-entry-card";
 import type { LaborEntry, LaborActivity } from "@/types/labor";
@@ -70,18 +71,13 @@ export function AttendanceDayDetailSheet({
     0,
   );
 
-  // Localized header — "Mercredi 13/05/2026" in French. Falls back to
-  // the browser locale when the user isn't viewing the French build.
+  // Localized weekday + canonical dd/mm/YYYY date — "Mercredi 13/05/2026".
+  // Weekday follows the browser locale; the numeric date is always dd/mm/YYYY.
   const heading = date
-    ? capitalizeFirst(
-        date.toLocaleDateString(undefined, {
-          weekday: "long",
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
+    ? `${capitalizeFirst(
+        date.toLocaleDateString(undefined, { weekday: "long" }),
         undefined,
-      )
+      )} ${formatDate(date)}`
     : "";
 
   return (

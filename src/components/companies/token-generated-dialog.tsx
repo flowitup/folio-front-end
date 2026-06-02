@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { CompanyInviteTokenGenerated } from "@/types/companies";
+import { formatDateTime } from "@/lib/utils/formatters";
 
 const AUTO_CLOSE_SECONDS = 60;
 
@@ -90,7 +91,7 @@ export function TokenGeneratedDialog({
 
   async function handleCopy() {
     if (!tokenData) return;
-    const expiresAt = new Date(tokenData.expires_at).toLocaleString();
+    const expiresAt = formatDateTime(tokenData.expires_at);
     const text = `${tokenData.token}\n${t("tokenGenerated.expiresLine", { expiresAt })}`;
     try {
       await navigator.clipboard.writeText(text);
@@ -104,7 +105,7 @@ export function TokenGeneratedDialog({
   }
 
   const expiresAtFormatted = tokenData
-    ? new Date(tokenData.expires_at).toLocaleString()
+    ? formatDateTime(tokenData.expires_at)
     : "";
 
   return (

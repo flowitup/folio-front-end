@@ -56,7 +56,7 @@ function baseUrl(): string {
  */
 export async function generateInviteToken(
   companyId: string,
-  opts?: { regenerate?: boolean }
+  opts?: { regenerate?: boolean; role?: "admin" | "member" }
 ): Promise<CompanyInviteTokenGenerated> {
   const authHeaders = await sessionAuthHeader();
   const params = new URLSearchParams();
@@ -70,6 +70,7 @@ export async function generateInviteToken(
       {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ role: opts?.role ?? "member" }),
         cache: "no-store",
       }
     );

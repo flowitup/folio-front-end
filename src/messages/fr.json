@@ -16,6 +16,7 @@
     "planning": "Planification",
     "notes": "Notes",
     "documents": "Documents",
+    "photos": "Photos",
     "members": "Membres",
     "projectSettings": "Paramètres",
     "settings": "Paramètres",
@@ -1232,7 +1233,10 @@
           "revoke": "Révoquer le jeton actif",
           "revokeConfirm": "Cela invalidera immédiatement le jeton actuel. Tout utilisateur ne l'ayant pas encore utilisé devra en obtenir un nouveau.",
           "revokedToast": "Jeton d'invitation révoqué.",
-          "policyNote": "Les jetons sont à usage unique et expirent après 7 jours. Un seul jeton actif par société."
+          "policyNote": "Les jetons sont à usage unique et expirent après 7 jours. Un seul jeton actif par société.",
+          "roleLabel": "Rôle",
+          "roleAdminOption": "Admin (gère la facturation)",
+          "roleMemberOption": "Membre"
         },
         "attached": {
           "nameEmail": "Nom / E-mail",
@@ -1242,7 +1246,13 @@
           "bootConfirm": "Retirer {name} de cette société ? Il perdra l'accès immédiatement.",
           "empty": "Aucun utilisateur rattaché à cette société pour le moment.",
           "countSingular": "utilisateur",
-          "countPlural": "utilisateurs"
+          "countPlural": "utilisateurs",
+          "roleColumn": "Rôle",
+          "roleAdmin": "Admin",
+          "roleMember": "Membre",
+          "makeAdmin": "Promouvoir admin",
+          "makeMember": "Rétrograder membre",
+          "roleUpdatedToast": "Rôle mis à jour"
         },
         "delete": {
           "title": "Supprimer la société",
@@ -1428,5 +1438,41 @@
       "filterByTag": "Filtrer par étiquette",
       "tagForBulk": "Étiquette (appliquée à tous)"
     }
+  },
+  "photos": {
+    "title": "Photos",
+    "subtitle": "Photos de l'avancement du chantier pour ce projet.",
+    "addPhotos": "Ajouter des photos",
+    "uploading": "Téléversement",
+    "uploadSuccess": "Photos téléversées",
+    "empty": {
+      "title": "Aucune photo pour l'instant",
+      "description": "Ajoutez des photos pour suivre visuellement l'avancement du chantier."
+    },
+    "caption": {
+      "label": "Légende",
+      "placeholder": "Décrivez ce qui est visible…"
+    },
+    "capturedAt": {
+      "label": "Date de prise de vue"
+    },
+    "edit": "Modifier",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "deleteConfirm": {
+      "title": "Supprimer la photo ?",
+      "description": "Cette photo sera définitivement supprimée. Cette action est irréversible."
+    },
+    "errors": {
+      "oversize": "Fichier trop volumineux (max 25 Mo)",
+      "unsupported": "Type de fichier non pris en charge (JPEG, PNG, WebP uniquement)",
+      "network": "Erreur réseau — veuillez réessayer",
+      "rateLimited": "Trop d'envois — veuillez ralentir",
+      "server": "Échec du téléversement — veuillez réessayer",
+      "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
+      "invalidImage": "Image invalide — le fichier n'a pas pu être traité"
+    },
+    "loadMore": "Charger plus"
   }
 }

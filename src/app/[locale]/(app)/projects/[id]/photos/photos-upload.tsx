@@ -12,10 +12,13 @@ import { Label } from "@/components/ui/label";
 
 // ---- Constants ----
 
-const MAX_SIZE_BYTES = 25 * 1024 * 1024; // 25 MiB
+const MAX_IMAGE_BYTES = 25 * 1024 * 1024; // 25 MiB
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024; // 50 MiB
 
 // Accepted MIME types for client-side validation
-const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ALLOWED_IMAGE_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ALLOWED_VIDEO_MIME = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+const ALLOWED_MIME = new Set([...ALLOWED_IMAGE_MIME, ...ALLOWED_VIDEO_MIME]);
 
 // ---- Types ----
 
@@ -75,12 +78,14 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
 
     // Client-side validation
     for (const file of files) {
-      if (file.size > MAX_SIZE_BYTES) {
-        toast.error(t("errors.oversize"), { description: file.name });
-        return;
-      }
       if (!ALLOWED_MIME.has(file.type)) {
         toast.error(t("errors.unsupported"), { description: file.name });
+        return;
+      }
+      // Per-kind size cap: videos get more headroom than images.
+      const maxBytes = ALLOWED_VIDEO_MIME.has(file.type) ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+      if (file.size > maxBytes) {
+        toast.error(t("errors.oversize"), { description: file.name });
         return;
       }
     }
@@ -171,7 +176,7 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
         multiple
         hidden
         onChange={(e) => {

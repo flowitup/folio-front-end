@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { fetchProjectPhotoBlob } from "@/lib/api/project-photo-blob";
 import { updatePhotoAction, deletePhotoAction } from "./actions";
 import type { ProjectPhoto } from "@/lib/api/project-photos";
+import { isVideo } from "@/lib/media/is-video";
 import {
   Dialog,
   DialogContent,
@@ -211,7 +212,16 @@ export function PhotoLightbox({
             {loadError && (
               <p className="text-sm text-white/60">{t("errors.network")}</p>
             )}
-            {objectUrl && (
+            {objectUrl && isVideo(photo?.contentType) && (
+              <video
+                src={objectUrl}
+                controls
+                autoPlay
+                playsInline
+                className="max-h-[60vh] max-w-full object-contain"
+              />
+            )}
+            {objectUrl && !isVideo(photo?.contentType) && (
               <img
                 src={objectUrl}
                 alt={photo?.caption ?? photo?.filename ?? ""}

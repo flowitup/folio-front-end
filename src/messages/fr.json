@@ -170,7 +170,7 @@
     "spent": "Dépensé",
     "team": "Équipe",
     "openDashboard": "Ouvrir le tableau de bord",
-    "photos": "Photos",
+    "photos": "Médias",
     "invite": "Inviter",
     "noneTeam": "aucun",
     "memberRole": "Membre",
@@ -1456,14 +1456,14 @@
     }
   },
   "photos": {
-    "title": "Photos",
-    "subtitle": "Photos de l'avancement du chantier pour ce projet.",
-    "addPhotos": "Ajouter des photos",
+    "title": "Médias",
+    "subtitle": "Photos et vidéos de l'avancement du chantier pour ce projet.",
+    "addPhotos": "Ajouter des médias",
     "uploading": "Téléversement",
     "uploadSuccess": "Photos téléversées",
     "empty": {
-      "title": "Aucune photo pour l'instant",
-      "description": "Ajoutez des photos pour suivre visuellement l'avancement du chantier."
+      "title": "Aucun média pour l'instant",
+      "description": "Ajoutez des photos et des vidéos pour suivre visuellement l'avancement du chantier."
     },
     "caption": {
       "label": "Légende",

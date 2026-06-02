@@ -33,8 +33,9 @@ function makeTempNote(
     project_id: projectId,
     created_by: "",
     title: payload.title,
-    description: payload.description,
+    description: payload.description ?? null,
     category: payload.category,
+    status: "open",
     created_at: now,
     updated_at: now,
   };
@@ -47,6 +48,7 @@ export interface UseNotesStateReturn {
   handleAdd: (payload: QuickAddPayload) => Promise<void>;
   handleSave: (noteId: string, payload: NoteSavePayload) => Promise<void>;
   handleDelete: (noteId: string) => void;
+  handleToggleDone: (noteId: string) => Promise<void>;
 }
 
 export function useNotesState(
@@ -122,5 +124,30 @@ export function useNotesState(
     [notes, projectId, t]
   );
 
-  return { notes, editingId, setEditingId, handleAdd, handleSave, handleDelete };
+  const handleToggleDone = useCallback(
+    async (noteId: string) => {
+      const target = notes.find((n) => n.id === noteId);
+      if (!target) return;
+
+      const nextStatus: "open" | "done" = target.status === "done" ? "open" : "done";
+      // Optimistic update
+      setNotes((prev) =>
+        prev.map((n) => (n.id === noteId ? { ...n, status: nextStatus } : n))
+      );
+
+      const result = await updateNoteAction(projectId, noteId, { status: nextStatus });
+      if (result.success) {
+        setNotes((prev) => prev.map((n) => (n.id === noteId ? result.note : n)));
+      } else {
+        // Rollback
+        setNotes((prev) =>
+          prev.map((n) => (n.id === noteId ? { ...n, status: target.status } : n))
+        );
+        toast.error(t("errors.saveFailed"));
+      }
+    },
+    [notes, projectId, t]
+  );
+
+  return { notes, editingId, setEditingId, handleAdd, handleSave, handleDelete, handleToggleDone };
 }

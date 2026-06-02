@@ -756,6 +756,8 @@
       "placeholder": "Rechercher des notes",
       "clear": "Effacer la recherche"
     },
+    "markDone": "Marquer comme terminé",
+    "markOpen": "Rouvrir",
     "addedLabel": "Ajouté",
     "relative": {
       "today": "Aujourd'hui",

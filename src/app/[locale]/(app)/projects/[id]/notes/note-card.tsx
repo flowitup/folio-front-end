@@ -2,14 +2,13 @@
 
 /**
  * NoteCard — read view for a single note in the masonry grid.
- * Shows category tag, Fraunces title, clamped body, "Added {date}" footer.
+ * Shows done checkbox, category tag, Fraunces title, clamped body, "Added {date}" footer.
  * Hover → edit/delete actions visible.
  * Click → switches to inline NoteEditor.
- * Ports the artifact's NoteCard component.
  */
 
 import { useState } from "react";
-import { Pencil, Trash2, Clock } from "lucide-react";
+import { Pencil, Trash2, Clock, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CATEGORY_MAP } from "@/lib/notes/categories";
 import { NoteEditor } from "./note-editor";
@@ -23,6 +22,7 @@ interface NoteCardProps {
   onSave: (noteId: string, payload: NoteSavePayload) => Promise<void>;
   onCancel: () => void;
   onDelete: (noteId: string) => void;
+  onToggleDone: (noteId: string) => void;
 }
 
 /** Format created_at ISO for the "Added …" footer label */
@@ -44,11 +44,13 @@ export function NoteCard({
   onSave,
   onCancel,
   onDelete,
+  onToggleDone,
 }: NoteCardProps) {
   const t = useTranslations("notes");
   const [isSaving, setIsSaving] = useState(false);
 
   const cat = CATEGORY_MAP[note.category] ?? CATEGORY_MAP.general;
+  const isDone = note.status === "done";
 
   if (isEditing) {
     return (
@@ -74,12 +76,20 @@ export function NoteCard({
   return (
     <div className="grid-item">
       <article
-        className="note-card"
+        className={"note-card" + (isDone ? " done" : "")}
         onClick={(e) => {
           if (!(e.target as Element).closest(".nc-actions")) onStartEdit();
         }}
       >
         <div className="nc-head">
+          <button
+            type="button"
+            className={"check" + (isDone ? " checked" : "")}
+            aria-label={isDone ? t("markOpen") : t("markDone")}
+            onClick={(e) => { e.stopPropagation(); onToggleDone(note.id); }}
+          >
+            {isDone && <Check size={12} strokeWidth={3} />}
+          </button>
           <span className="nc-tag">
             <span className="cat-dot" style={{ background: cat.dotColor }} />
             {t(`categories.${cat.id}`)}

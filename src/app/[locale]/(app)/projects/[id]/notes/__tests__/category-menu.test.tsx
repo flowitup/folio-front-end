@@ -1,6 +1,7 @@
 /**
  * Tests for CategoryMenu component.
- * Covers: renders pill label, opens popover on click, selects category, closes on outside click.
+ * Covers: renders pill label, opens popover on click, selects category,
+ * closes on outside click. Portal rendering via createPortal to document.body.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -11,8 +12,7 @@ vi.mock("next-intl", () => ({
   useTranslations: (ns: string) => (key: string) => `${ns}.${key}`,
 }));
 
-const PROJECT_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
-void PROJECT_ID; // used for reference only
+// createPortal renders into document.body in jsdom — no mock needed.
 
 describe("CategoryMenu", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -26,7 +26,6 @@ describe("CategoryMenu", () => {
   it("opens popover when pill button is clicked", () => {
     const onChange = vi.fn();
     render(<CategoryMenu value="general" onChange={onChange} />);
-    // The pill is the only button when closed
     const pill = screen.getByRole("button");
     fireEvent.click(pill);
     expect(screen.getByRole("listbox")).toBeDefined();
@@ -75,5 +74,24 @@ describe("CategoryMenu", () => {
     );
     expect(selected).toBeDefined();
     expect(selected?.textContent).toContain("notes.categories.delivery");
+  });
+
+  it("closes popover on outside mousedown", () => {
+    const onChange = vi.fn();
+    render(<CategoryMenu value="general" onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button", { name: /notes\.categories\./i }));
+    expect(screen.getByRole("listbox")).toBeDefined();
+    // Click outside
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
+  it("closes popover on Escape key", () => {
+    const onChange = vi.fn();
+    render(<CategoryMenu value="general" onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button", { name: /notes\.categories\./i }));
+    expect(screen.getByRole("listbox")).toBeDefined();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("listbox")).toBeNull();
   });
 });

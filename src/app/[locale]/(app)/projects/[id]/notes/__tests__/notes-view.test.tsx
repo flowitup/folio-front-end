@@ -56,6 +56,7 @@ function makeNote(id: string, overrides: Partial<Note> = {}): Note {
     title: `Note ${id}`,
     description: null,
     category: "general",
+    status: "open" as const,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,

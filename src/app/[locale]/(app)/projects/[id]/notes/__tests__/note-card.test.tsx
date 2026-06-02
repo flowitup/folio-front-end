@@ -1,7 +1,7 @@
 /**
  * Tests for NoteCard component.
- * Covers: read view renders title/category/footer, click enters edit mode,
- * edit/delete hover actions, isEditing renders NoteEditor.
+ * Covers: read view renders title/category/footer, done checkbox toggle,
+ * done modifier class, edit/delete hover actions, isEditing renders NoteEditor.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -21,6 +21,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     title: "Test Note Title",
     description: "Test description",
     category: "delivery",
+    status: "open",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -39,6 +40,7 @@ describe("NoteCard — read view", () => {
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
       />
     );
     expect(screen.getByText("Test Note Title")).toBeDefined();
@@ -53,6 +55,7 @@ describe("NoteCard — read view", () => {
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
       />
     );
     expect(screen.getByText("notes.categories.payment")).toBeDefined();
@@ -67,6 +70,7 @@ describe("NoteCard — read view", () => {
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
       />
     );
     expect(screen.getByText("Some body text")).toBeDefined();
@@ -81,9 +85,9 @@ describe("NoteCard — read view", () => {
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
       />
     );
-    // Only the title should be in the card content area
     expect(screen.queryByRole("paragraph")).toBeNull();
   });
 
@@ -96,6 +100,7 @@ describe("NoteCard — read view", () => {
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
       />
     );
     expect(screen.getByText(/notes\.addedLabel/)).toBeDefined();
@@ -111,6 +116,7 @@ describe("NoteCard — read view", () => {
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
       />
     );
     const article = screen.getByRole("article");
@@ -127,6 +133,7 @@ describe("NoteCard — read view", () => {
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
       />
     );
     expect(screen.getByRole("button", { name: /notes\.actions\.edit/i })).toBeDefined();
@@ -144,10 +151,112 @@ describe("NoteCard — read view", () => {
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onDelete={onDelete}
+        onToggleDone={vi.fn()}
       />
     );
     fireEvent.click(screen.getByRole("button", { name: /notes\.actions\.delete/i }));
     expect(onDelete).toHaveBeenCalledWith(note.id);
+  });
+});
+
+describe("NoteCard — done checkbox", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("renders checkbox with markDone aria-label when status is open", () => {
+    render(
+      <NoteCard
+        note={makeNote({ status: "open" })}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
+      />
+    );
+    expect(screen.getByRole("button", { name: /notes\.markDone/i })).toBeDefined();
+  });
+
+  it("renders checkbox with markOpen aria-label when status is done", () => {
+    render(
+      <NoteCard
+        note={makeNote({ status: "done" })}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
+      />
+    );
+    expect(screen.getByRole("button", { name: /notes\.markOpen/i })).toBeDefined();
+  });
+
+  it("calls onToggleDone with note id when checkbox is clicked", () => {
+    const onToggleDone = vi.fn();
+    const note = makeNote({ status: "open" });
+    render(
+      <NoteCard
+        note={note}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleDone={onToggleDone}
+      />
+    );
+    fireEvent.click(screen.getByRole("button", { name: /notes\.markDone/i }));
+    expect(onToggleDone).toHaveBeenCalledWith(note.id);
+  });
+
+  it("does NOT call onStartEdit when checkbox is clicked (stopPropagation)", () => {
+    const onStartEdit = vi.fn();
+    render(
+      <NoteCard
+        note={makeNote({ status: "open" })}
+        isEditing={false}
+        onStartEdit={onStartEdit}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
+      />
+    );
+    fireEvent.click(screen.getByRole("button", { name: /notes\.markDone/i }));
+    expect(onStartEdit).not.toHaveBeenCalled();
+  });
+
+  it("adds 'done' class to article when status is done", () => {
+    render(
+      <NoteCard
+        note={makeNote({ status: "done" })}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
+      />
+    );
+    const article = screen.getByRole("article");
+    expect(article.className).toContain("done");
+  });
+
+  it("does NOT add 'done' class when status is open", () => {
+    render(
+      <NoteCard
+        note={makeNote({ status: "open" })}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
+      />
+    );
+    const article = screen.getByRole("article");
+    expect(article.className).not.toContain("done");
   });
 });
 
@@ -163,9 +272,9 @@ describe("NoteCard — edit mode", () => {
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
       />
     );
-    // NoteEditor renders the editor-title input
     expect(screen.getByPlaceholderText("notes.editor.placeholderTitle")).toBeDefined();
   });
 
@@ -178,6 +287,7 @@ describe("NoteCard — edit mode", () => {
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
       />
     );
     expect(screen.queryByRole("article")).toBeNull();

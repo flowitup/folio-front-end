@@ -795,6 +795,10 @@ body {
 .nc-foot { display: flex; align-items: center; gap: 6px; margin-top: 13px; font-size: 11px; color: var(--muted-2); }
 .nc-foot svg { color: var(--muted-2); }
 
+/* done-state modifier — dims card, strikes through title */
+.note-card.done { opacity: .72; }
+.note-card.done .nc-title { text-decoration: line-through; text-decoration-color: var(--muted-2); color: var(--muted); }
+
 /* editor inside a card slot */
 .grid-item .note-editor { box-shadow: var(--shadow-task); }
 

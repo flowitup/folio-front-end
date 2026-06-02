@@ -756,6 +756,8 @@
       "placeholder": "Tìm kiếm ghi chú",
       "clear": "Xóa tìm kiếm"
     },
+    "markDone": "Đánh dấu hoàn thành",
+    "markOpen": "Mở lại",
     "addedLabel": "Đã thêm",
     "relative": {
       "today": "Hôm nay",

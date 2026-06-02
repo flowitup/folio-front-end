@@ -21,6 +21,7 @@ function makeNote(
     title: `Note ${id}`,
     description: null,
     category,
+    status: "open" as const,
     created_at: createdAt,
     updated_at: createdAt,
   };

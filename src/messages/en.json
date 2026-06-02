@@ -569,6 +569,7 @@
       "toastLogged": "{n} logged",
       "toastLoggedWithSkip": "{n} logged, {skipped} skipped (already exists)",
       "toastLogNextDay": "Log next day →",
+      "tagLabel": "Tag (applies to all)",
       "tile": {
         "alreadyLogged": "already logged",
         "conflictBadge": "conflict",
@@ -1421,6 +1422,11 @@
       "untagged": "Untagged",
       "grandTotal": "Grand total",
       "empty": "No cost data yet. Assign tags to expenses and labor entries to see a breakdown here."
+    },
+    "filter": {
+      "allTags": "All tags",
+      "filterByTag": "Filter by tag",
+      "tagForBulk": "Tag (applies to all)"
     }
   }
 }

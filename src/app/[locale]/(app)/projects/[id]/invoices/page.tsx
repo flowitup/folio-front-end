@@ -13,6 +13,9 @@ import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { fetchTagsClient } from "@/lib/api/tags-client";
+import { TagFilterSelect } from "@/components/tags/tag-filter-select";
+import type { ProjectTag } from "@/lib/api/tags";
 
 type TabType = "all" | InvoiceType;
 
@@ -76,6 +79,8 @@ export default function InvoicesPage() {
   const [fundsReleasedTotal, setFundsReleasedTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tags, setTags] = useState<ProjectTag[]>([]);
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
 
   const loadInvoices = useCallback(async () => {
     setIsLoading(true);
@@ -83,7 +88,8 @@ export default function InvoicesPage() {
     try {
       const res = await fetchInvoicesWithMeta(
         projectId,
-        activeTab !== "all" ? activeTab : undefined
+        activeTab !== "all" ? activeTab : undefined,
+        tagFilter ?? undefined
       );
       setInvoices(res.invoices);
       setFundsReleasedTotal(res.funds_released_total);
@@ -92,7 +98,14 @@ export default function InvoicesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, activeTab]);
+  }, [projectId, activeTab, tagFilter]);
+
+  // Load tags once for filter dropdown (non-fatal).
+  useEffect(() => {
+    fetchTagsClient(projectId)
+      .then(setTags)
+      .catch(() => setTags([]));
+  }, [projectId]);
 
   useEffect(() => {
     loadInvoices();
@@ -204,10 +217,19 @@ export default function InvoicesPage() {
             </button>
           ))}
         </div>
-        <Button variant="outline" onClick={() => setExportOpen(true)}>
-          <Download className="mr-2 h-4 w-4" />
-          {t("export.trigger")}
-        </Button>
+        <div className="flex items-center gap-2">
+          {tags.length > 0 && (
+            <TagFilterSelect
+              tags={tags}
+              value={tagFilter}
+              onChange={setTagFilter}
+            />
+          )}
+          <Button variant="outline" onClick={() => setExportOpen(true)}>
+            <Download className="mr-2 h-4 w-4" />
+            {t("export.trigger")}
+          </Button>
+        </div>
       </div>
 
       <InvoiceExportDialog

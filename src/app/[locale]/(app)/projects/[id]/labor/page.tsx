@@ -18,6 +18,7 @@ import { EditAttendanceDialog } from "@/components/labor/edit-attendance-dialog"
 import { LaborSummary } from "@/components/labor/labor-summary";
 
 import { ActivityDialog } from "@/components/labor/activity-dialog";
+import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 
 import type { Worker, LaborEntry, LaborActivity, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload, CreateLaborActivityPayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
@@ -108,6 +109,7 @@ export default function LaborPage() {
   // see GET /labor-entries default limit). The month picker is opt-in.
   const [entriesMonth, setEntriesMonth] = useState("");
   const [entriesWorkerFilter, setEntriesWorkerFilter] = useState("all");
+  const [entriesTagFilter, setEntriesTagFilter] = useState<string | null>(null);
   // Calendar default per plan; list view stays available as fallback for
   // power users who want "all history" scroll (cook 2d).
   const [attendanceView, setAttendanceView] = useState<AttendanceViewMode>(
@@ -144,6 +146,7 @@ export default function LaborPage() {
         from,
         to,
         worker_id: entriesWorkerFilter !== "all" ? entriesWorkerFilter : undefined,
+        tag_id: entriesTagFilter ?? undefined,
       });
       setEntries(data);
     } catch {
@@ -151,7 +154,7 @@ export default function LaborPage() {
     } finally {
       setIsTabLoading(false);
     }
-  }, [projectId, entriesMonth, entriesWorkerFilter]);
+  }, [projectId, entriesMonth, entriesWorkerFilter, entriesTagFilter]);
 
   const loadActivities = useCallback(async () => {
     try {
@@ -376,7 +379,16 @@ export default function LaborPage() {
           }
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <ViewToggle value={attendanceView} onChange={setAttendanceView} />
+            <div className="flex flex-wrap items-center gap-2">
+              <ViewToggle value={attendanceView} onChange={setAttendanceView} />
+              {tags.length > 0 && (
+                <TagFilterSelect
+                  tags={tags}
+                  value={entriesTagFilter}
+                  onChange={setEntriesTagFilter}
+                />
+              )}
+            </div>
             {canManageLabor && (
               <Button onClick={() => handleOpenLogDay()}>
                 <Plus className="h-4 w-4" />
@@ -466,6 +478,7 @@ export default function LaborPage() {
         entries={entries}
         initialDate={logDayDate}
         onSaved={loadEntries}
+        tags={tags}
       />
 
       <EditAttendanceDialog

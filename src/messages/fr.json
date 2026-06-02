@@ -569,6 +569,7 @@
       "toastLogged": "{n} pointé(s)",
       "toastLoggedWithSkip": "{n} pointé(s), {skipped} ignoré(s) (déjà existant)",
       "toastLogNextDay": "Pointer le jour suivant →",
+      "tagLabel": "Étiquette (appliquée à tous)",
       "tile": {
         "alreadyLogged": "déjà pointé",
         "conflictBadge": "conflit",
@@ -1421,6 +1422,11 @@
       "untagged": "Non étiqueté",
       "grandTotal": "Total général",
       "empty": "Aucune donnée de coût pour l'instant. Affectez des étiquettes aux dépenses et aux entrées main-d'œuvre pour voir la répartition ici."
+    },
+    "filter": {
+      "allTags": "Toutes les étiquettes",
+      "filterByTag": "Filtrer par étiquette",
+      "tagForBulk": "Étiquette (appliquée à tous)"
     }
   }
 }

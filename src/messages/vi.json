@@ -569,6 +569,7 @@
       "toastLogged": "Đã chấm {n}",
       "toastLoggedWithSkip": "Đã chấm {n}, bỏ qua {skipped} (đã tồn tại)",
       "toastLogNextDay": "Chấm ngày tiếp theo →",
+      "tagLabel": "Nhãn (áp dụng cho tất cả)",
       "tile": {
         "alreadyLogged": "đã chấm",
         "conflictBadge": "xung đột",
@@ -1421,6 +1422,11 @@
       "untagged": "Chưa gắn nhãn",
       "grandTotal": "Tổng cộng",
       "empty": "Chưa có dữ liệu chi phí. Gắn nhãn cho chi phí và mục nhân công để xem phân tích ở đây."
+    },
+    "filter": {
+      "allTags": "Tất cả nhãn",
+      "filterByTag": "Lọc theo nhãn",
+      "tagForBulk": "Nhãn (áp dụng cho tất cả)"
     }
   }
 }

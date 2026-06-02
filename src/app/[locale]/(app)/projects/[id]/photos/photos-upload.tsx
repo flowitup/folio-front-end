@@ -18,7 +18,29 @@ const MAX_VIDEO_BYTES = 50 * 1024 * 1024; // 50 MiB
 // Accepted MIME types for client-side validation
 const ALLOWED_IMAGE_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 const ALLOWED_VIDEO_MIME = new Set(["video/mp4", "video/webm", "video/quicktime"]);
-const ALLOWED_MIME = new Set([...ALLOWED_IMAGE_MIME, ...ALLOWED_VIDEO_MIME]);
+
+// Accepted extensions — the primary signal. Browsers/OSes sometimes report an
+// empty or "application/octet-stream" MIME for valid files (e.g. videos saved
+// from messaging apps), so we validate by extension and treat a missing/generic
+// MIME as a pass. This mirrors the backend's validate_media_type.
+const ALLOWED_IMAGE_EXT = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+const ALLOWED_VIDEO_EXT = new Set([".mp4", ".webm", ".mov"]);
+
+function fileExtension(name: string): string {
+  const dot = name.lastIndexOf(".");
+  return dot >= 0 ? name.slice(dot).toLowerCase() : "";
+}
+
+/** Returns the media kind for an allowed file, or null if unsupported. */
+export function mediaKind(file: File): "image" | "video" | null {
+  const ext = fileExtension(file.name);
+  const type = file.type;
+  // Some sources report no/generic MIME; accept those by extension alone.
+  const genericMime = type === "" || type === "application/octet-stream";
+  if (ALLOWED_IMAGE_EXT.has(ext) && (ALLOWED_IMAGE_MIME.has(type) || genericMime)) return "image";
+  if (ALLOWED_VIDEO_EXT.has(ext) && (ALLOWED_VIDEO_MIME.has(type) || genericMime)) return "video";
+  return null;
+}
 
 // ---- Types ----
 
@@ -78,12 +100,13 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
 
     // Client-side validation
     for (const file of files) {
-      if (!ALLOWED_MIME.has(file.type)) {
+      const kind = mediaKind(file);
+      if (!kind) {
         toast.error(t("errors.unsupported"), { description: file.name });
         return;
       }
       // Per-kind size cap: videos get more headroom than images.
-      const maxBytes = ALLOWED_VIDEO_MIME.has(file.type) ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+      const maxBytes = kind === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
       if (file.size > maxBytes) {
         toast.error(t("errors.oversize"), { description: file.name });
         return;
@@ -176,7 +199,7 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
+        accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov"
         multiple
         hidden
         onChange={(e) => {

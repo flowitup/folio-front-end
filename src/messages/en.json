@@ -1502,7 +1502,7 @@
     },
     "errors": {
       "oversize": "File too large (max 25 MB)",
-      "unsupported": "Unsupported file type (JPEG, PNG, WebP only)",
+      "unsupported": "Unsupported file type (images: JPEG, PNG, WebP; videos: MP4, WebM, MOV)",
       "network": "Network error — please try again",
       "rateLimited": "Too many uploads — please slow down",
       "server": "Upload failed — please try again",

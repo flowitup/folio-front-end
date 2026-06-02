@@ -94,6 +94,7 @@ export function AdminCompanyManagePage({
   const [generatedToken, setGeneratedToken] = useState<CompanyInviteTokenGenerated | null>(null);
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
   const generatingRef = useRef(false);
   const [isRevoking, setIsRevoking] = useState(false);
   const revokingRef = useRef(false);
@@ -177,7 +178,7 @@ export function AdminCompanyManagePage({
     generatingRef.current = true;
     setIsGenerating(true);
     try {
-      const result = await generateInviteTokenAction(company.id, { regenerate });
+      const result = await generateInviteTokenAction(company.id, { regenerate, role: inviteRole });
       if (!result.ok) {
         if (result.error.code === "active_token_exists" && !regenerate) {
           // Prompt admin to confirm regeneration
@@ -422,6 +423,27 @@ export function AdminCompanyManagePage({
               <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
                 {t("admin.manage.invites.description")}
               </p>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="invite-role"
+                className="text-[12px] font-medium"
+                style={{ color: "var(--muted)" }}
+              >
+                {t("admin.manage.invites.roleLabel")}
+              </label>
+              <select
+                id="invite-role"
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as "admin" | "member")}
+                disabled={isGenerating || isRevoking}
+                className="h-9 w-fit rounded-md border px-2 text-[13px]"
+                style={{ borderColor: "var(--border)", background: "var(--paper)" }}
+              >
+                <option value="member">{t("admin.manage.invites.roleMemberOption")}</option>
+                <option value="admin">{t("admin.manage.invites.roleAdminOption")}</option>
+              </select>
             </div>
 
             <div className="flex gap-2 flex-wrap">

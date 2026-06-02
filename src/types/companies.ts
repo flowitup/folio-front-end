@@ -23,10 +23,15 @@ export interface Company {
   updated_at: string;
 }
 
+/** Per-company role governing billing + member management access. */
+export type CompanyRole = "admin" | "member";
+
 /** Company as seen from the current user's attachment (includes relationship fields). */
 export interface MyCompany extends Company {
   is_primary: boolean;
   attached_at: string;
+  /** Caller's role in this company. Only "admin" may see/manage its billing. */
+  role: CompanyRole;
 }
 
 /**
@@ -47,4 +52,6 @@ export interface AttachedUser {
   display_name: string | null;
   is_primary: boolean;
   attached_at: string;
+  /** Per-company role; only "admin" can see/manage the company's billing. */
+  role: CompanyRole;
 }

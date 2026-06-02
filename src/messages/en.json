@@ -1230,7 +1230,10 @@
           "revoke": "Revoke active token",
           "revokeConfirm": "This will immediately invalidate the current token. Any user who has not yet redeemed it will need a new one.",
           "revokedToast": "Invite token revoked.",
-          "policyNote": "Tokens are single-use and expire after 7 days. Only one active token per company."
+          "policyNote": "Tokens are single-use and expire after 7 days. Only one active token per company.",
+          "roleLabel": "Role",
+          "roleAdminOption": "Admin (can manage billing)",
+          "roleMemberOption": "Member"
         },
         "attached": {
           "nameEmail": "Name / Email",
@@ -1240,7 +1243,13 @@
           "bootConfirm": "Remove {name} from this company? They will lose access immediately.",
           "empty": "No users attached to this company yet.",
           "countSingular": "user",
-          "countPlural": "users"
+          "countPlural": "users",
+          "roleColumn": "Role",
+          "roleAdmin": "Admin",
+          "roleMember": "Member",
+          "makeAdmin": "Make admin",
+          "makeMember": "Make member",
+          "roleUpdatedToast": "Role updated"
         },
         "delete": {
           "title": "Delete company",

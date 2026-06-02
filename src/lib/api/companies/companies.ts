@@ -95,9 +95,14 @@ function normalizeMyCompany(item: unknown): MyCompany {
   ) {
     const { company, access } = item as {
       company: Company;
-      access: { is_primary: boolean; attached_at: string };
+      access: { is_primary: boolean; attached_at: string; role?: "admin" | "member" };
     };
-    return { ...company, is_primary: access.is_primary, attached_at: access.attached_at };
+    return {
+      ...company,
+      is_primary: access.is_primary,
+      attached_at: access.attached_at,
+      role: access.role ?? "member",
+    };
   }
   return item as MyCompany;
 }

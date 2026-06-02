@@ -91,6 +91,7 @@ const INITIAL_USERS: AttachedUser[] = [
     display_name: "Alice",
     is_primary: true,
     attached_at: "2026-01-01T00:00:00Z",
+    role: "admin",
   },
 ];
 
@@ -193,7 +194,7 @@ describe("AdminCompanyManagePage — generate-token flow", () => {
     });
 
     await waitFor(() => {
-      expect(mockGenerate).toHaveBeenCalledWith("co-1", { regenerate: false });
+      expect(mockGenerate).toHaveBeenCalledWith("co-1", { regenerate: false, role: "member" });
     });
   });
 

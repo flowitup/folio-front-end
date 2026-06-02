@@ -44,7 +44,7 @@ function coverFor(id: string): string {
   return COVER_GRADIENTS[h % COVER_GRADIENTS.length];
 }
 
-export function Sidebar() {
+export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }) {
   const pathname = usePathname();
   const locale = useLocale();
   const router = useRouter();
@@ -224,8 +224,9 @@ export function Sidebar() {
           );
         })}
 
-        {/* Billing group — after project-scoped nav, before Settings */}
-        <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />
+        {/* Billing group — after project-scoped nav, before Settings.
+            Only rendered for users who can access billing (company admins / superadmin). */}
+        {canViewBilling && <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />}
 
         {/* Settings — always last */}
         {(() => {

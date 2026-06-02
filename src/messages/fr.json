@@ -1230,7 +1230,10 @@
           "revoke": "Révoquer le jeton actif",
           "revokeConfirm": "Cela invalidera immédiatement le jeton actuel. Tout utilisateur ne l'ayant pas encore utilisé devra en obtenir un nouveau.",
           "revokedToast": "Jeton d'invitation révoqué.",
-          "policyNote": "Les jetons sont à usage unique et expirent après 7 jours. Un seul jeton actif par société."
+          "policyNote": "Les jetons sont à usage unique et expirent après 7 jours. Un seul jeton actif par société.",
+          "roleLabel": "Rôle",
+          "roleAdminOption": "Admin (gère la facturation)",
+          "roleMemberOption": "Membre"
         },
         "attached": {
           "nameEmail": "Nom / E-mail",
@@ -1240,7 +1243,13 @@
           "bootConfirm": "Retirer {name} de cette société ? Il perdra l'accès immédiatement.",
           "empty": "Aucun utilisateur rattaché à cette société pour le moment.",
           "countSingular": "utilisateur",
-          "countPlural": "utilisateurs"
+          "countPlural": "utilisateurs",
+          "roleColumn": "Rôle",
+          "roleAdmin": "Admin",
+          "roleMember": "Membre",
+          "makeAdmin": "Promouvoir admin",
+          "makeMember": "Rétrograder membre",
+          "roleUpdatedToast": "Rôle mis à jour"
         },
         "delete": {
           "title": "Supprimer la société",

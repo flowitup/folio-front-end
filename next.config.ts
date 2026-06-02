@@ -56,6 +56,10 @@ function buildContentSecurityPolicy(): string {
       ? ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'"]
       : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
     "img-src": ["'self'", "data:", "blob:", ...imageOrigins],
+    // `<video>` in the photos/media lightbox plays an authenticated original
+    // fetched into a same-origin `blob:` URL. Without media-src it falls back
+    // to default-src 'self' and the blob is blocked (MEDIA_ERR_SRC_NOT_SUPPORTED).
+    "media-src": ["'self'", "blob:"],
     "font-src": ["'self'", "data:"],
     "connect-src": ["'self'", apiOrigin, ...(s3Origin ? [s3Origin] : []), ...cloudflareConnectOrigins, ...(isProd ? [] : ["ws:", "wss:"])],
     "frame-ancestors": ["'none'"],

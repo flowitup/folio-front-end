@@ -31,11 +31,11 @@ vi.mock("next-intl", () => ({
 
 // ---- Helpers ----
 
+// Mirror the shared formatEUR from lib/api/labor (fr-FR, 2 decimal places = cents).
 function formatEUR(amount: number): string {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
-    maximumFractionDigits: 0,
   }).format(amount);
 }
 
@@ -114,7 +114,7 @@ describe("TagSummaryTable — currency formatting", () => {
     vi.clearAllMocks();
   });
 
-  it("formats labor_cost as EUR with no decimals", () => {
+  it("formats labor_cost as EUR with cents (2 decimals)", () => {
     const rows = [
       makeRow({
         labor_cost: 5000,
@@ -127,7 +127,7 @@ describe("TagSummaryTable — currency formatting", () => {
     expect(container.textContent).toContain(expectedEur);
   });
 
-  it("formats expense_total as EUR with no decimals", () => {
+  it("formats expense_total as EUR with cents (2 decimals)", () => {
     const rows = [
       makeRow({
         labor_cost: 0,

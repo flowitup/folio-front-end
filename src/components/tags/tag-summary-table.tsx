@@ -3,19 +3,13 @@
 /**
  * TagSummaryTable — per-tag cost rollup (labor + expenses).
  * Displays one row per tag + an untagged bucket + grand total.
- * Currency formatted as EUR using the same fr-FR locale as the rest of the app.
+ * Currency formatted as EUR using the shared fr-FR formatter (cents, matching
+ * the labor/invoice tabs — avoids visible rounding divergence).
  */
 
 import { useTranslations } from "next-intl";
+import { formatEUR } from "@/lib/api/labor";
 import type { TagSummaryRow } from "@/lib/api/tags";
-
-function formatEUR(amount: number): string {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 interface TagSummaryTableProps {
   rows: TagSummaryRow[];

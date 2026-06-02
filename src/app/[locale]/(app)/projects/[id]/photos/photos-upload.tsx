@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { uploadPhotoAction } from "./actions";
-import type { ProjectPhoto } from "@/lib/api/project-photos";
+import { uploadProjectPhoto } from "@/lib/api/project-photo-blob";
+import type { ProjectPhoto } from "@/lib/api/project-photo-blob";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,13 +24,42 @@ interface Props {
   onUploaded: (photo: ProjectPhoto) => void;
 }
 
+// ---- Error classification ----
+
+/**
+ * Maps HTTP status and BE error codes from uploadProjectPhoto into i18n keys.
+ * err.body.error takes priority over err.status for the most specific match.
+ */
+function classifyError(err: unknown): string {
+  const e = err as {
+    status?: number;
+    body?: { error?: string; message?: string } | null;
+  };
+  const code = e.body?.error;
+  const status = e.status;
+
+  // Photo-specific BE error codes (most specific — checked first)
+  if (code === "FILE_TOO_LARGE") return "oversize";
+  if (code === "UNSUPPORTED_TYPE") return "unsupported";
+  if (code === "INVALID_IMAGE") return "invalidImage";
+
+  // HTTP status fallbacks
+  if (status === 413) return "oversize";
+  if (status === 415) return "unsupported";
+  if (status === 403) return "forbidden";
+  if (status === 429) return "rateLimited";
+  if (status === 0 || !status) return "network";
+
+  return "server";
+}
+
 // ---- Component ----
 
 /**
  * Photo batch upload control.
- * Validates files client-side (size + MIME), then forwards each to the server
- * action which proxies to the BE with JWT auth. A shared caption and captured
- * date are applied to the entire batch.
+ * Validates files client-side (size + MIME), then POSTs each directly to the
+ * BE API from the browser — no bytes pass through the Next server. A shared
+ * caption and captured date are applied to the entire batch.
  */
 export function PhotosUpload({ projectId, onUploaded }: Props) {
   const t = useTranslations("photos");
@@ -62,19 +91,17 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
     let successCount = 0;
 
     for (const file of files) {
-      const fd = new FormData();
-      fd.append("file", file, file.name);
-      if (caption.trim()) fd.append("caption", caption.trim());
-      if (capturedAt) fd.append("captured_at", capturedAt);
-
-      const result = await uploadPhotoAction(projectId, fd);
-      if (result.ok) {
-        onUploaded(result.data);
+      try {
+        const photo = await uploadProjectPhoto(projectId, file, {
+          caption: caption.trim() || undefined,
+          capturedAt: capturedAt || undefined,
+        });
+        onUploaded(photo);
         successCount++;
-      } else {
-        const errorKey = result.error as string;
-        const msgKey = `errors.${mapError(errorKey)}` as const;
-        toast.error(t(msgKey as Parameters<typeof t>[0]), { description: file.name });
+      } catch (err: unknown) {
+        const errorKey = classifyError(err);
+        const msgKey = `errors.${errorKey}` as Parameters<typeof t>[0];
+        toast.error(t(msgKey), { description: file.name });
       }
 
       setProgress((prev) => prev ? { ...prev, done: prev.done + 1 } : null);
@@ -90,19 +117,6 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
       setCapturedAt("");
       if (inputRef.current) inputRef.current.value = "";
     }
-  }
-
-  function mapError(code: string): string {
-    const map: Record<string, string> = {
-      oversize: "oversize",
-      unsupported: "unsupported",
-      invalidImage: "invalidImage",
-      forbidden: "forbidden",
-      rateLimited: "rateLimited",
-      network: "network",
-      server: "server",
-    };
-    return map[code] ?? "server";
   }
 
   return (

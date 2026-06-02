@@ -25,11 +25,12 @@ vi.mock("@/lib/api/project-photo-blob", () => ({
     contentType: "image/jpeg",
     revoke: vi.fn(),
   }),
+  // uploadProjectPhoto is used by photos-upload (rendered inside gallery)
+  uploadProjectPhoto: vi.fn(),
 }));
 
 // Mock server actions imported by photos-gallery and photo-lightbox
 vi.mock("../actions", () => ({
-  uploadPhotoAction: vi.fn(),
   updatePhotoAction: vi.fn(),
   deletePhotoAction: vi.fn(),
   loadMorePhotosAction: vi.fn(),

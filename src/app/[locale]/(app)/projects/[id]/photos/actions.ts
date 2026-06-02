@@ -7,8 +7,6 @@ import {
   updateProjectPhoto,
   deleteProjectPhoto,
 } from "@/lib/api/project-photos";
-import { sessionAuthHeader } from "@/lib/api/auth-header";
-import { env } from "@/lib/config/env";
 import type { ProjectPhoto, PhotoListResult } from "@/lib/api/project-photos";
 
 // ---- UUID validation ----
@@ -60,106 +58,6 @@ export type DeleteActionResult =
   | { ok: false; error: string; message?: string };
 
 // ---- Server actions ----
-
-/**
- * Upload a single photo by forwarding multipart FormData to the BE.
- * Keeps JWT server-side — the access_token_cookie is read via sessionAuthHeader.
- * FormData must contain: file (File), optionally caption (string), captured_at (string).
- */
-export async function uploadPhotoAction(
-  projectId: string,
-  formData: FormData
-): Promise<PhotoActionResult> {
-  if (!projectId || !isUuid(projectId)) {
-    return { ok: false, error: "validation", message: "Invalid project id" };
-  }
-
-  const authHeaders = await sessionAuthHeader();
-  if (!authHeaders.Authorization) {
-    redirect("/login");
-  }
-
-  // Re-assemble a fresh FormData with only the fields the BE expects,
-  // so we don't accidentally forward extra client fields.
-  const beFormData = new FormData();
-  const file = formData.get("file");
-  if (!file || !(file instanceof File) || file.size === 0) {
-    return { ok: false, error: "validation", message: "No file provided" };
-  }
-  beFormData.append("file", file, file.name);
-
-  const caption = formData.get("caption");
-  if (caption && typeof caption === "string" && caption.trim()) {
-    beFormData.append("caption", caption.trim());
-  }
-
-  const capturedAt = formData.get("captured_at");
-  if (capturedAt && typeof capturedAt === "string" && capturedAt.trim()) {
-    beFormData.append("captured_at", capturedAt.trim());
-  }
-
-  let response: Response;
-  try {
-    response = await fetch(
-      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/photos`,
-      {
-        method: "POST",
-        headers: {
-          // Do NOT set Content-Type — let Node/fetch set it with the boundary
-          ...authHeaders,
-        },
-        body: beFormData,
-        cache: "no-store",
-      }
-    );
-  } catch (err) {
-    return { ok: false, error: "network", message: String(err) };
-  }
-
-  if (!response.ok) {
-    let body: { error?: string; message?: string } | null = null;
-    try {
-      body = (await response.json()) as { error?: string; message?: string };
-    } catch {
-      // Non-JSON body
-    }
-    const syntheticErr = { status: response.status, body };
-    return { ok: false, error: classifyBackendError(syntheticErr) };
-  }
-
-  // Revalidate the photos page cache so subsequent SSR loads pick up the new photo
-  revalidatePath(`/[locale]/projects/${projectId}/photos`, "page");
-
-  type RawPhoto = {
-    id: string;
-    project_id: string;
-    filename: string;
-    content_type: string;
-    size_bytes: number;
-    caption: string | null;
-    captured_at: string;
-    uploaded_at: string;
-    uploader_id: string;
-    thumbnail_url: string;
-    original_url: string;
-  };
-  const raw = (await response.json()) as RawPhoto;
-  const data: ProjectPhoto = {
-    id: raw.id,
-    projectId: raw.project_id,
-    filename: raw.filename,
-    contentType: raw.content_type,
-    sizeBytes: raw.size_bytes,
-    caption: raw.caption,
-    capturedAt: raw.captured_at,
-    uploadedAt: raw.uploaded_at,
-    uploaderId: raw.uploader_id,
-    thumbnailUrl: raw.thumbnail_url,
-    originalUrl: raw.original_url,
-  };
-
-  return { ok: true, data };
-}
 
 /**
  * Update caption and/or captured_at on an existing photo.

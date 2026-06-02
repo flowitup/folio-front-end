@@ -15,7 +15,7 @@ import {
   UserPlus,
   Trash2,
   Pencil,
-  ImagePlus,
+  Images,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -35,7 +35,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { fetchProjectUsers, removeUserFromProject } from "@/lib/api/projects";
 import { AddMemberDialog } from "@/components/project/add-member-dialog";
-import { AddPhotosDialog } from "@/components/project/add-photos-dialog";
 import { CreateProjectDialog } from "@/components/project/create-project-dialog";
 import { EditProjectDialog } from "@/components/project/edit-project-dialog";
 import { DeleteProjectDialog } from "@/components/project/delete-project-dialog";
@@ -83,9 +82,6 @@ export default function ProjectsPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [deleteProjectState, setDeleteProjectState] = useState<Project | null>(null);
-  const [photoDialogProject, setPhotoDialogProject] = useState<{ id: string; name: string } | null>(
-    null,
-  );
 
   // Mirror BE rule in app/api/v1/projects/decorators.py::can_mutate_project:
   //   admin (project:create) OR owner. Wildcards expand via the BE's
@@ -177,6 +173,12 @@ export default function ProjectsPage() {
   const openProject = (projectId: string) => {
     selectProject(projectId);
     router.push(`/${locale}/dashboard`);
+  };
+
+  // Open the project's photo gallery (all images + its own upload control).
+  const openProjectPhotos = (projectId: string) => {
+    selectProject(projectId);
+    router.push(`/${locale}/projects/${projectId}/photos`);
   };
 
   const fmtEUR = (n: number) =>
@@ -427,11 +429,9 @@ export default function ProjectsPage() {
                         <button
                           type="button"
                           className="btn btn-ghost mt-2 w-full"
-                          onClick={() =>
-                            setPhotoDialogProject({ id: project.id, name: project.name })
-                          }
+                          onClick={() => openProjectPhotos(project.id)}
                         >
-                          <ImagePlus size={14} /> {t("addPhotos")}
+                          <Images size={14} /> {t("photos")}
                         </button>
                       </>
                     )}
@@ -568,15 +568,6 @@ export default function ProjectsPage() {
           open={!!addMemberProject}
           onOpenChange={(open) => !open && setAddMemberProject(null)}
           onMemberAdded={handleMemberAdded}
-        />
-      )}
-
-      {photoDialogProject && (
-        <AddPhotosDialog
-          projectId={photoDialogProject.id}
-          projectName={photoDialogProject.name}
-          open={!!photoDialogProject}
-          onOpenChange={(open) => !open && setPhotoDialogProject(null)}
         />
       )}
 

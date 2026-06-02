@@ -12,6 +12,7 @@
     "bibliotheque": "Thư viện",
     "labor": "Nhân công",
     "invoices": "Chi phí",
+    "tags": "Nhãn giai đoạn",
     "planning": "Kế hoạch",
     "notes": "Ghi chú",
     "documents": "Tài liệu",
@@ -1373,5 +1374,53 @@
     "goToPage": "Đi tới trang",
     "previousPage": "Trang trước",
     "nextPage": "Trang sau"
+  },
+  "tags": {
+    "select": {
+      "label": "Nhãn giai đoạn",
+      "placeholder": "Chọn nhãn…",
+      "noTag": "Không có nhãn"
+    },
+    "manager": {
+      "title": "Quản lý nhãn",
+      "addTag": "Thêm nhãn",
+      "empty": "Chưa có nhãn nào. Tạo nhãn giai đoạn đầu tiên để theo dõi chi phí theo giai đoạn.",
+      "createFirst": "Tạo nhãn đầu tiên"
+    },
+    "form": {
+      "createTitle": "Nhãn mới",
+      "editTitle": "Chỉnh sửa nhãn",
+      "name": "Tên",
+      "namePlaceholder": "vd. Móng công trình",
+      "color": "Màu sắc",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "nameRequired": "Tên là bắt buộc"
+    },
+    "delete": {
+      "title": "Xóa nhãn?",
+      "description": "Xóa nhãn \"{name}\" sẽ loại bỏ nó khỏi dự án này. Các chi phí và mục nhân công sử dụng nhãn này sẽ trở thành không có nhãn nhưng dữ liệu vẫn được giữ nguyên.",
+      "confirm": "Xóa",
+      "cancel": "Hủy"
+    },
+    "toast": {
+      "created": "Đã tạo nhãn",
+      "updated": "Đã cập nhật nhãn",
+      "deleted": "Đã xóa nhãn"
+    },
+    "errors": {
+      "duplicate": "Đã tồn tại nhãn với tên này trong dự án.",
+      "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+    },
+    "summary": {
+      "title": "Chi phí theo nhãn giai đoạn",
+      "colTag": "Nhãn",
+      "colLaborCost": "Chi phí nhân công",
+      "colExpenses": "Chi phí",
+      "colTotal": "Tổng",
+      "untagged": "Chưa gắn nhãn",
+      "grandTotal": "Tổng cộng",
+      "empty": "Chưa có dữ liệu chi phí. Gắn nhãn cho chi phí và mục nhân công để xem phân tích ở đây."
+    }
   }
 }

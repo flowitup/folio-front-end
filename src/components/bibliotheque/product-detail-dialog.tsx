@@ -25,6 +25,7 @@ import {
   getProductAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import type { ProductDetailResult, Supplier } from "@/lib/api/bibliotheque";
+import { formatDate } from "@/lib/utils/formatters";
 
 interface ProductDetailDialogProps {
   productId: string | null;
@@ -79,12 +80,7 @@ export function ProductDetailDialog({
     return () => { cancelled = true; };
   }, [productId]);
 
-  const fmtDate = (iso: string) =>
-    new Intl.DateTimeFormat(locale, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(iso));
+  const fmtDate = (iso: string) => formatDate(iso);
 
   const fmtPrice = (val: string) =>
     new Intl.NumberFormat(locale, {

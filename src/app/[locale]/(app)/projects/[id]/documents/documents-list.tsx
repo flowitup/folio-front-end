@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useState, useRef } from "react";
 import {
@@ -29,6 +29,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { ProjectDocument, ProjectDocumentKind } from "@/lib/api/project-documents";
 import { downloadProjectDocument } from "@/lib/api/project-document-blob";
+import { formatDate } from "@/lib/utils/formatters";
 
 // ---- Helpers ----
 
@@ -143,7 +144,6 @@ export function DocumentsList({
   const t = useTranslations("documents.list");
   const tKinds = useTranslations("documents.kinds");
   const tTags = useTranslations("documents.tags");
-  const locale = useLocale();
   const [editingTagsDocId, setEditingTagsDocId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const tagInputRef = useRef<HTMLInputElement>(null);
@@ -156,17 +156,6 @@ export function DocumentsList({
     return displayName(m) || t("formerMember");
   }
 
-  function formatDate(iso: string): string {
-    try {
-      return new Intl.DateTimeFormat(locale, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }).format(new Date(iso));
-    } catch {
-      return iso;
-    }
-  }
 
   const canPreview = (doc: ProjectDocument) =>
     doc.kind === "pdf" || doc.kind === "image";

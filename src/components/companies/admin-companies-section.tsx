@@ -26,6 +26,7 @@ import {
 import { CompanyCreateDialog } from "@/components/companies/company-create-dialog";
 import { fetchAllCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { Company } from "@/types/companies";
+import { formatDate } from "@/lib/utils/formatters";
 
 export function AdminCompaniesSection() {
   const t = useTranslations("companies");
@@ -146,7 +147,7 @@ export function AdminCompaniesSection() {
                       className="num text-[12px]"
                       style={{ color: "var(--muted)" }}
                     >
-                      {new Date(c.created_at).toLocaleDateString()}
+                      {formatDate(c.created_at)}
                     </span>
                   </TableCell>
                   <TableCell>

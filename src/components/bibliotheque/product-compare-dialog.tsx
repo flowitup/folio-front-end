@@ -24,6 +24,7 @@ import {
 import { ProductImage } from "@/components/bibliotheque/product-image";
 import { cn } from "@/lib/utils";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
+import { formatDate } from "@/lib/utils/formatters";
 
 interface ProductCompareDialogProps {
   open: boolean;
@@ -43,12 +44,7 @@ export function ProductCompareDialog({
   const t = useTranslations("bibliotheque");
   const locale = useLocale();
 
-  const fmtDate = (iso: string) =>
-    new Intl.DateTimeFormat(locale, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(iso));
+  const fmtDate = (iso: string) => formatDate(iso);
 
   const fmtPrice = (val: string) =>
     new Intl.NumberFormat(locale, {

@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
+import { formatDate } from "@/lib/utils/formatters";
 import type { LaborEntry, ShiftType, UpdateAttendancePayload } from "@/types/labor";
 
 // Radix Select forbids value=""; sentinel maps to null shift_type.
@@ -54,15 +55,11 @@ function formatEntryDate(iso: string): string {
   if (!m) return iso;
   const [, y, mo, d] = m.map(Number);
   const date = new Date(y, mo - 1, d);
-  return capitalizeFirst(
-    date.toLocaleDateString(undefined, {
-      weekday: "long",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }),
+  // Localized weekday + canonical dd/mm/YYYY date.
+  return `${capitalizeFirst(
+    date.toLocaleDateString(undefined, { weekday: "long" }),
     undefined,
-  );
+  )} ${formatDate(date)}`;
 }
 
 export function EditAttendanceDialog({

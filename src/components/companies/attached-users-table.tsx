@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { bootAttachedUserAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { AttachedUser } from "@/types/companies";
+import { formatDate } from "@/lib/utils/formatters";
 
 interface AttachedUsersTableProps {
   companyId: string;
@@ -129,7 +130,7 @@ export function AttachedUsersTable({
                   className="num text-[12px]"
                   style={{ color: "var(--muted)" }}
                 >
-                  {new Date(u.attached_at).toLocaleDateString()}
+                  {formatDate(u.attached_at)}
                 </span>
               </TableCell>
               <TableCell>

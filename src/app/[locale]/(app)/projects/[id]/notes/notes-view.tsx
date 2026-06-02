@@ -2,12 +2,11 @@
 
 /**
  * NotesView — top-level client orchestrator for the journal notes wall.
- * Manages: note list state, optimistic CRUD, filter/search, grouped masonry.
- * Ports the artifact's NotesView component adapted to the real app.
+ * Manages: filter/search state, grouped masonry render.
+ * Optimistic CRUD delegated to useNotesState hook.
  */
 
-import { useState, useCallback } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { buildSections } from "@/lib/notes/grouping";
@@ -15,47 +14,20 @@ import { CATEGORY_ORDER } from "@/lib/notes/categories";
 import { QuickAdd } from "./quick-add";
 import { NotesToolbar } from "./notes-toolbar";
 import { NoteCard } from "./note-card";
-import { confirmDelete } from "./delete-confirm-toast";
-import {
-  createNoteAction,
-  updateNoteAction,
-  deleteNoteAction,
-} from "./actions";
+import { useNotesState } from "./use-notes-state";
 import type { Note, NoteCategory } from "@/lib/api/notes";
 import type { ActiveCat } from "./filter-chips";
-import type { QuickAddPayload } from "./quick-add";
-import type { NoteSavePayload } from "./note-editor";
 
 interface NotesViewProps {
   projectId: string;
   initialNotes: Note[];
 }
 
-const TEMP_PREFIX = "temp-";
-const makeTempId = () => `${TEMP_PREFIX}${crypto.randomUUID()}`;
-
-function makeTempNote(
-  projectId: string,
-  tempId: string,
-  payload: QuickAddPayload
-): Note {
-  const now = new Date().toISOString();
-  return {
-    id: tempId,
-    project_id: projectId,
-    created_by: "",
-    title: payload.title,
-    description: payload.description,
-    category: payload.category,
-    created_at: now,
-    updated_at: now,
-  };
-}
-
 export function NotesView({ projectId, initialNotes }: NotesViewProps) {
   const t = useTranslations("notes");
-  const [notes, setNotes] = useState<Note[]>(initialNotes);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const { notes, editingId, setEditingId, handleAdd, handleSave, handleDelete } =
+    useNotesState(projectId, initialNotes);
+
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState<ActiveCat>("all");
 
@@ -74,73 +46,6 @@ export function NotesView({ projectId, initialNotes }: NotesViewProps) {
 
   const sections = buildSections(filtered, "date");
   const isEmpty = notes.length === 0;
-
-  // ---- Handlers ----
-
-  const handleAdd = useCallback(
-    async (payload: QuickAddPayload) => {
-      const tempId = makeTempId();
-      const tempNote = makeTempNote(projectId, tempId, payload);
-      setNotes((prev) => [tempNote, ...prev]);
-
-      const result = await createNoteAction(projectId, payload);
-      if (result.success) {
-        setNotes((prev) => prev.map((n) => (n.id === tempId ? result.note : n)));
-      } else {
-        setNotes((prev) => prev.filter((n) => n.id !== tempId));
-        toast.error(t("errors.saveFailed"));
-      }
-    },
-    [projectId, t]
-  );
-
-  const handleSave = useCallback(
-    async (noteId: string, payload: NoteSavePayload) => {
-      const snapshot = [...notes];
-      setNotes((prev) =>
-        prev.map((n) => (n.id === noteId ? { ...n, ...payload } : n))
-      );
-      setEditingId(null);
-
-      const result = await updateNoteAction(projectId, noteId, payload);
-      if (result.success) {
-        setNotes((prev) => prev.map((n) => (n.id === noteId ? result.note : n)));
-      } else {
-        setNotes(snapshot);
-        setEditingId(noteId);
-        toast.error(t("errors.saveFailed"));
-      }
-    },
-    [notes, projectId, t]
-  );
-
-  const handleDelete = useCallback(
-    (noteId: string) => {
-      const target = notes.find((n) => n.id === noteId);
-      if (!target) return;
-
-      confirmDelete({
-        label: t("deleted.toast"),
-        undoLabel: t("deleted.undo"),
-        onRemove: () => {
-          setNotes((prev) => prev.filter((n) => n.id !== noteId));
-          setEditingId(null);
-        },
-        onConfirm: async () => {
-          const result = await deleteNoteAction(projectId, noteId);
-          if (!result.success) {
-            setNotes((prev) => [target, ...prev]);
-            toast.error(t("errors.deleteFailed"));
-          }
-        },
-        onError: () => {
-          setNotes((prev) => [target, ...prev]);
-          toast.error(t("errors.deleteFailed"));
-        },
-      });
-    },
-    [notes, projectId, t]
-  );
 
   // ---- Render ----
 

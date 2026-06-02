@@ -795,12 +795,6 @@
     "title": "Rappels",
     "empty": "Aucun rappel pour le moment",
     "dismissButton": "Ignorer",
-    "dueAt": "Échéance {date}",
-    "leadTime": {
-      "0": "Maintenant",
-      "60": "Dans ~1 heure",
-      "1440": "Demain"
-    },
     "errors": {
       "dismissFailed": "Impossible d'ignorer. Réessayez."
     },

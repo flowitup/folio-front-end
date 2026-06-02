@@ -795,12 +795,6 @@
     "title": "Reminders",
     "empty": "No reminders right now",
     "dismissButton": "Dismiss",
-    "dueAt": "Due {date}",
-    "leadTime": {
-      "0": "Now",
-      "60": "In ~1 hour",
-      "1440": "Tomorrow"
-    },
     "errors": {
       "dismissFailed": "Couldn't dismiss. Try again."
     },

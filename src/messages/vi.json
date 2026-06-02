@@ -795,12 +795,6 @@
     "title": "Nhắc nhở",
     "empty": "Không có nhắc nhở nào lúc này",
     "dismissButton": "Bỏ qua",
-    "dueAt": "Hạn {date}",
-    "leadTime": {
-      "0": "Ngay bây giờ",
-      "60": "Khoảng 1 giờ nữa",
-      "1440": "Ngày mai"
-    },
     "errors": {
       "dismissFailed": "Không thể bỏ qua. Vui lòng thử lại."
     },

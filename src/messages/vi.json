@@ -1502,7 +1502,7 @@
     },
     "errors": {
       "oversize": "Tệp quá lớn (tối đa 25 MB)",
-      "unsupported": "Định dạng tệp không được hỗ trợ (chỉ JPEG, PNG, WebP)",
+      "unsupported": "Định dạng tệp không được hỗ trợ (ảnh: JPEG, PNG, WebP; video: MP4, WebM, MOV)",
       "network": "Lỗi mạng — vui lòng thử lại",
       "rateLimited": "Tải lên quá nhiều — vui lòng chờ một lúc",
       "server": "Tải lên thất bại — vui lòng thử lại",

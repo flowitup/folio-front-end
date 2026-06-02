@@ -1502,7 +1502,7 @@
     },
     "errors": {
       "oversize": "Fichier trop volumineux (max 25 Mo)",
-      "unsupported": "Type de fichier non pris en charge (JPEG, PNG, WebP uniquement)",
+      "unsupported": "Type de fichier non pris en charge (images : JPEG, PNG, WebP ; vidéos : MP4, WebM, MOV)",
       "network": "Erreur réseau — veuillez réessayer",
       "rateLimited": "Trop d'envois — veuillez ralentir",
       "server": "Échec du téléversement — veuillez réessayer",

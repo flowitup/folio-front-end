@@ -95,6 +95,36 @@ export async function bulkAddMemberships(
 }
 
 /**
+ * Update a user's email and/or display name. Superadmin only (email is the
+ * login identity). Throws with `.status`/`.body` attached on non-2xx
+ * (e.g. 409 duplicate email).
+ */
+export async function updateUser(
+  userId: string,
+  payload: { email?: string; display_name?: string | null }
+): Promise<{ id: string; email: string; display_name: string | null }> {
+  const authHeaders = await sessionAuthHeader();
+
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiBaseUrl}/admin/users/${encodeURIComponent(userId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new Error(`Network error updating user: ${String(err)}`);
+  }
+
+  if (!response.ok) {
+    throw await buildHttpError(response, "Failed to update user");
+  }
+
+  return response.json();
+}
+
+/**
  * Parse a non-2xx response and produce an Error carrying both `.status`
  * and `.body` (the parsed JSON, if any). The server-action layer uses
  * the body fields (`error`, `message`) to discriminate same-status causes

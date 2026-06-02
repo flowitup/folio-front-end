@@ -3,7 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { createInvitation, revokeInvitation } from "@/lib/api/invitations";
 import type { CreateInvitationResult } from "@/lib/api/invitations";
+import { updateMemberRole, removeMember } from "@/lib/api/members";
+import { updateUser } from "@/lib/api/admin";
 import { getSession } from "@/lib/auth/session";
+
+function membersPath(projectId: string): string {
+  // Route groups like `(app)` are stripped from Next.js cache keys, so
+  // including them makes revalidatePath a silent no-op. Use the resolved
+  // path template without route-group segments.
+  return `/[locale]/projects/${projectId}/members`;
+}
+
+function rethrowWithStatus(err: unknown): never {
+  const status = (err as { status?: number }).status ?? 500;
+  throw Object.assign(new Error((err as Error)?.message ?? "Request failed"), { status });
+}
 
 // Defense-in-depth: every mutating server action is an internet-reachable
 // POST endpoint on the Next.js server. The BE is the source of truth for
@@ -74,4 +88,77 @@ export async function revokeInviteAction(
   // including them here makes the call a silent no-op. Use the resolved
   // path template without route-group segments.
   revalidatePath(`/[locale]/projects/${projectId}/members`, "page");
+}
+
+/**
+ * Server action: change a member's project role. Takes effect immediately
+ * (membership-role permissions are resolved per request on the backend).
+ */
+export async function updateMemberRoleAction(
+  projectId: string,
+  userId: string,
+  roleId: string
+): Promise<void> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    throw Object.assign(new Error("Unauthorized"), { status: 401 });
+  }
+  if (!isUuid(projectId) || !isUuid(userId) || !isUuid(roleId)) {
+    throw Object.assign(new Error("Invalid identifiers"), { status: 400 });
+  }
+
+  try {
+    await updateMemberRole(projectId, userId, roleId);
+  } catch (err) {
+    rethrowWithStatus(err);
+  }
+  revalidatePath(membersPath(projectId), "page");
+}
+
+/**
+ * Server action: update a member's profile (email and/or display name).
+ * Superadmin-only on the backend; email is the login identity.
+ */
+export async function updateUserProfileAction(
+  projectId: string,
+  userId: string,
+  payload: { email?: string; display_name?: string | null }
+): Promise<void> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    throw Object.assign(new Error("Unauthorized"), { status: 401 });
+  }
+  if (!isUuid(projectId) || !isUuid(userId)) {
+    throw Object.assign(new Error("Invalid identifiers"), { status: 400 });
+  }
+  if (payload.email !== undefined && !isEmail(payload.email)) {
+    throw Object.assign(new Error("Invalid email"), { status: 400 });
+  }
+
+  try {
+    await updateUser(userId, payload);
+  } catch (err) {
+    rethrowWithStatus(err);
+  }
+  revalidatePath(membersPath(projectId), "page");
+}
+
+/**
+ * Server action: remove a member from the project.
+ */
+export async function removeMemberAction(projectId: string, userId: string): Promise<void> {
+  const session = await getSession();
+  if (!session?.accessToken) {
+    throw Object.assign(new Error("Unauthorized"), { status: 401 });
+  }
+  if (!isUuid(projectId) || !isUuid(userId)) {
+    throw Object.assign(new Error("Invalid identifiers"), { status: 400 });
+  }
+
+  try {
+    await removeMember(projectId, userId);
+  } catch (err) {
+    rethrowWithStatus(err);
+  }
+  revalidatePath(membersPath(projectId), "page");
 }

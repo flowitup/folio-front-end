@@ -1186,6 +1186,26 @@
     "empty": {
       "members": "No members yet",
       "pending": "No pending invitations"
+    },
+    "edit": {
+      "button": "Edit",
+      "remove": "Remove",
+      "removeConfirm": "Remove {name} from this project?",
+      "dialogTitle": "Edit member",
+      "dialogDescription": "Update this member's role. Role changes take effect immediately.",
+      "nameLabel": "Display name",
+      "emailLabel": "Email",
+      "emailHint": "Email is the login identity. Changing it updates how this user signs in.",
+      "roleLabel": "Project role",
+      "roleHint": "Controls what this member can do on this project.",
+      "submit": "Save changes",
+      "submitting": "Saving…",
+      "toast": {
+        "saved": "Member updated",
+        "removed": "Member removed",
+        "emailTaken": "That email is already in use",
+        "forbidden": "You don't have permission to do that"
+      }
     }
   },
   "companies": {

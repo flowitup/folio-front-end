@@ -7,7 +7,8 @@ import {
   deleteNote,
 } from "@/lib/api/notes";
 import { getSession } from "@/lib/auth/session";
-import type { Note, CreateNotePayload, UpdateNotePayload } from "@/lib/api/notes";
+import { CATEGORY_ORDER } from "@/lib/notes/categories";
+import type { Note, CreateNotePayload, UpdateNotePayload, NoteCategory } from "@/lib/api/notes";
 
 // ---- UUID validation ----
 
@@ -16,6 +17,10 @@ const UUID_RE =
 
 function isUuid(value: string): boolean {
   return UUID_RE.test(value);
+}
+
+function isValidCategory(value: string): value is NoteCategory {
+  return (CATEGORY_ORDER as string[]).includes(value);
 }
 
 // ---- Error classification (mirrors admin/users pattern) ----
@@ -64,7 +69,7 @@ export async function createNoteAction(
   if (!payload.title || payload.title.trim().length === 0) {
     return { success: false, error: "validation" };
   }
-  if (!payload.due_date || !/^\d{4}-\d{2}-\d{2}$/.test(payload.due_date)) {
+  if (payload.category !== undefined && !isValidCategory(payload.category)) {
     return { success: false, error: "validation" };
   }
 
@@ -97,7 +102,7 @@ export async function updateNoteAction(
   if (!noteId || !isUuid(noteId)) {
     return { success: false, error: "validation" };
   }
-  if (patch.due_date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(patch.due_date)) {
+  if (patch.category !== undefined && !isValidCategory(patch.category)) {
     return { success: false, error: "validation" };
   }
 
@@ -141,24 +146,4 @@ export async function deleteNoteAction(
   } catch (err: unknown) {
     return { success: false, error: classifyBackendError(err) };
   }
-}
-
-/**
- * Mark a note as done.
- */
-export async function markNoteDoneAction(
-  projectId: string,
-  noteId: string
-): Promise<NoteActionResult> {
-  return updateNoteAction(projectId, noteId, { status: "done" });
-}
-
-/**
- * Mark a note as open (reopen).
- */
-export async function markNoteOpenAction(
-  projectId: string,
-  noteId: string
-): Promise<NoteActionResult> {
-  return updateNoteAction(projectId, noteId, { status: "open" });
 }

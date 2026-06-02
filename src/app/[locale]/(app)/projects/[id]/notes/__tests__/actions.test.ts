@@ -1,9 +1,9 @@
 /**
- * Tests for notes server actions.
+ * Tests for notes server actions (journal model).
  * Mirrors admin/users/actions.test.ts pattern.
  *
  * Covers:
- * - Input validation (UUID checks, required fields, date format, empty title)
+ * - Input validation (UUID checks, required fields, category validation)
  * - Error mapping: 400, 403, 404, 429, 500
  * - Happy path for each action
  */
@@ -23,8 +23,7 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(() => { throw new Error("REDIRECT"); }),
 }));
 
-// Session guard mocked as authenticated; the unauthenticated branch is
-// trivial.
+// Session guard mocked as authenticated; the unauthenticated branch is trivial.
 vi.mock("@/lib/auth/session", () => ({
   getSession: vi.fn().mockResolvedValue({
     user: { id: "11111111-1111-1111-1111-111111111111" },
@@ -39,8 +38,6 @@ const {
   createNoteAction,
   updateNoteAction,
   deleteNoteAction,
-  markNoteDoneAction,
-  markNoteOpenAction,
 } = await import("../actions");
 
 const { createNote, updateNote, deleteNote } = await import("@/lib/api/notes");
@@ -70,89 +67,101 @@ function makeNote(id = NOTE_ID) {
     created_by: "user-1",
     title: "Test note",
     description: null,
-    due_date: "2024-06-15",
-    lead_time_minutes: 0 as const,
-    status: "open" as const,
-    fire_at: "2024-06-15T09:00:00Z",
+    category: "general" as const,
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
   };
 }
 
 const PROJECT_ID = "11111111-1111-1111-1111-111111111111";
-const NOTE_ID = "22222222-2222-2222-2222-222222222222";
-const BAD_ID = "not-a-uuid";
-const VALID_PAYLOAD = { title: "My note", due_date: "2024-06-15", lead_time_minutes: 0 as const };
+const NOTE_ID    = "22222222-2222-2222-2222-222222222222";
+const BAD_ID     = "not-a-uuid";
 
-// ---- createNoteAction ----
+const VALID_CREATE = { title: "My note" };
+
+// ---- createNoteAction — input validation ----
 
 describe("createNoteAction — input validation", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("rejects non-UUID projectId", async () => {
-    const result = await createNoteAction(BAD_ID, VALID_PAYLOAD);
+    const result = await createNoteAction(BAD_ID, VALID_CREATE);
     expect(result).toEqual({ success: false, error: "validation" });
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it("rejects empty title", async () => {
-    const result = await createNoteAction(PROJECT_ID, { ...VALID_PAYLOAD, title: "  " });
+    const result = await createNoteAction(PROJECT_ID, { title: "  " });
     expect(result).toEqual({ success: false, error: "validation" });
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it("rejects missing title", async () => {
-    const result = await createNoteAction(PROJECT_ID, { ...VALID_PAYLOAD, title: "" });
+    const result = await createNoteAction(PROJECT_ID, { title: "" });
     expect(result).toEqual({ success: false, error: "validation" });
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
-  it("rejects malformed due_date", async () => {
-    const result = await createNoteAction(PROJECT_ID, { ...VALID_PAYLOAD, due_date: "15-06-2024" });
+  it("rejects invalid category string", async () => {
+    const result = await createNoteAction(PROJECT_ID, {
+      title: "ok",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      category: "unknown" as any,
+    });
     expect(result).toEqual({ success: false, error: "validation" });
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
-  it("rejects missing due_date", async () => {
-    const result = await createNoteAction(PROJECT_ID, { ...VALID_PAYLOAD, due_date: "" });
-    expect(result).toEqual({ success: false, error: "validation" });
-    expect(mockCreate).not.toHaveBeenCalled();
+  it("accepts valid category", async () => {
+    mockCreate.mockResolvedValueOnce(makeNote());
+    const result = await createNoteAction(PROJECT_ID, { title: "ok", category: "call" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts note with no category (optional)", async () => {
+    mockCreate.mockResolvedValueOnce(makeNote());
+    const result = await createNoteAction(PROJECT_ID, { title: "ok" });
+    expect(result.success).toBe(true);
   });
 });
+
+// ---- createNoteAction — error mapping ----
 
 describe("createNoteAction — error mapping", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("400 → validation", async () => {
     mockCreate.mockRejectedValueOnce(httpError(400));
-    const result = await createNoteAction(PROJECT_ID, VALID_PAYLOAD);
+    const result = await createNoteAction(PROJECT_ID, VALID_CREATE);
     expect(result).toEqual({ success: false, error: "validation" });
   });
 
   it("403 → forbidden", async () => {
     mockCreate.mockRejectedValueOnce(httpError(403));
-    const result = await createNoteAction(PROJECT_ID, VALID_PAYLOAD);
+    const result = await createNoteAction(PROJECT_ID, VALID_CREATE);
     expect(result).toEqual({ success: false, error: "forbidden" });
   });
 
   it("404 → notFound", async () => {
     mockCreate.mockRejectedValueOnce(httpError(404));
-    const result = await createNoteAction(PROJECT_ID, VALID_PAYLOAD);
+    const result = await createNoteAction(PROJECT_ID, VALID_CREATE);
     expect(result).toEqual({ success: false, error: "notFound" });
   });
 
   it("429 → rateLimited", async () => {
     mockCreate.mockRejectedValueOnce(httpError(429));
-    const result = await createNoteAction(PROJECT_ID, VALID_PAYLOAD);
+    const result = await createNoteAction(PROJECT_ID, VALID_CREATE);
     expect(result).toEqual({ success: false, error: "rateLimited" });
   });
 
   it("500 → generic", async () => {
     mockCreate.mockRejectedValueOnce(httpError(500));
-    const result = await createNoteAction(PROJECT_ID, VALID_PAYLOAD);
+    const result = await createNoteAction(PROJECT_ID, VALID_CREATE);
     expect(result).toEqual({ success: false, error: "generic" });
   });
 });
+
+// ---- createNoteAction — happy path ----
 
 describe("createNoteAction — happy path", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -160,16 +169,23 @@ describe("createNoteAction — happy path", () => {
   it("trims title and calls createNote", async () => {
     const note = makeNote();
     mockCreate.mockResolvedValueOnce(note);
-    const result = await createNoteAction(PROJECT_ID, { ...VALID_PAYLOAD, title: "  My note  " });
-    expect(mockCreate).toHaveBeenCalledWith(PROJECT_ID, {
-      ...VALID_PAYLOAD,
-      title: "My note",
-    });
+    const result = await createNoteAction(PROJECT_ID, { title: "  My note  " });
+    expect(mockCreate).toHaveBeenCalledWith(PROJECT_ID, { title: "My note" });
     expect(result).toEqual({ success: true, note });
+  });
+
+  it("passes category through to createNote", async () => {
+    const note = makeNote();
+    mockCreate.mockResolvedValueOnce(note);
+    await createNoteAction(PROJECT_ID, { title: "ok", category: "delivery" });
+    expect(mockCreate).toHaveBeenCalledWith(
+      PROJECT_ID,
+      expect.objectContaining({ category: "delivery" })
+    );
   });
 });
 
-// ---- updateNoteAction ----
+// ---- updateNoteAction — input validation ----
 
 describe("updateNoteAction — input validation", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -186,8 +202,11 @@ describe("updateNoteAction — input validation", () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
-  it("rejects malformed due_date in patch", async () => {
-    const result = await updateNoteAction(PROJECT_ID, NOTE_ID, { due_date: "bad-date" });
+  it("rejects invalid category in patch", async () => {
+    const result = await updateNoteAction(PROJECT_ID, NOTE_ID, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      category: "bad-cat" as any,
+    });
     expect(result).toEqual({ success: false, error: "validation" });
     expect(mockUpdate).not.toHaveBeenCalled();
   });
@@ -197,7 +216,15 @@ describe("updateNoteAction — input validation", () => {
     expect(result).toEqual({ success: false, error: "validation" });
     expect(mockUpdate).not.toHaveBeenCalled();
   });
+
+  it("accepts a valid category in patch", async () => {
+    mockUpdate.mockResolvedValueOnce(makeNote());
+    const result = await updateNoteAction(PROJECT_ID, NOTE_ID, { category: "decision" });
+    expect(result.success).toBe(true);
+  });
 });
+
+// ---- updateNoteAction — error mapping ----
 
 describe("updateNoteAction — error mapping", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -231,6 +258,8 @@ describe("updateNoteAction — error mapping", () => {
   });
 });
 
+// ---- updateNoteAction — happy path ----
+
 describe("updateNoteAction — happy path", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -242,15 +271,15 @@ describe("updateNoteAction — happy path", () => {
     expect(result).toEqual({ success: true, note });
   });
 
-  it("accepts valid YYYY-MM-DD due_date", async () => {
+  it("patch with only description is accepted", async () => {
     const note = makeNote();
     mockUpdate.mockResolvedValueOnce(note);
-    const result = await updateNoteAction(PROJECT_ID, NOTE_ID, { due_date: "2025-12-31" });
+    const result = await updateNoteAction(PROJECT_ID, NOTE_ID, { description: "details" });
     expect(result).toEqual({ success: true, note });
   });
 });
 
-// ---- deleteNoteAction ----
+// ---- deleteNoteAction — input validation ----
 
 describe("deleteNoteAction — input validation", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -267,6 +296,8 @@ describe("deleteNoteAction — input validation", () => {
     expect(mockDelete).not.toHaveBeenCalled();
   });
 });
+
+// ---- deleteNoteAction — error mapping ----
 
 describe("deleteNoteAction — error mapping", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -293,6 +324,8 @@ describe("deleteNoteAction — error mapping", () => {
   });
 });
 
+// ---- deleteNoteAction — happy path ----
+
 describe("deleteNoteAction — happy path", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -301,36 +334,5 @@ describe("deleteNoteAction — happy path", () => {
     const result = await deleteNoteAction(PROJECT_ID, NOTE_ID);
     expect(mockDelete).toHaveBeenCalledWith(PROJECT_ID, NOTE_ID);
     expect(result).toEqual({ success: true });
-  });
-});
-
-// ---- markNoteDoneAction / markNoteOpenAction ----
-
-describe("markNoteDoneAction", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("calls updateNoteAction with status: done", async () => {
-    const note = { ...makeNote(), status: "done" as const };
-    mockUpdate.mockResolvedValueOnce(note);
-    const result = await markNoteDoneAction(PROJECT_ID, NOTE_ID);
-    expect(mockUpdate).toHaveBeenCalledWith(PROJECT_ID, NOTE_ID, { status: "done" });
-    expect(result).toEqual({ success: true, note });
-  });
-
-  it("propagates validation error on bad projectId", async () => {
-    const result = await markNoteDoneAction(BAD_ID, NOTE_ID);
-    expect(result).toEqual({ success: false, error: "validation" });
-  });
-});
-
-describe("markNoteOpenAction", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("calls updateNoteAction with status: open", async () => {
-    const note = makeNote();
-    mockUpdate.mockResolvedValueOnce(note);
-    const result = await markNoteOpenAction(PROJECT_ID, NOTE_ID);
-    expect(mockUpdate).toHaveBeenCalledWith(PROJECT_ID, NOTE_ID, { status: "open" });
-    expect(result).toEqual({ success: true, note });
   });
 });

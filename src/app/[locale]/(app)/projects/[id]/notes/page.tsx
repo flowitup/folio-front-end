@@ -8,7 +8,6 @@ import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { listProjectNotes } from "@/lib/api/notes";
-import { NotesAgenda } from "./notes-agenda";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -33,9 +32,11 @@ export default async function NotesPage({ params }: PageProps) {
     count: 0,
   }));
 
+  // NotesView is wired in phase 05 — placeholder div keeps the page compilable.
   return (
-    <div className="px-6 py-6">
-      <NotesAgenda projectId={projectId} initialNotes={notesResult.items} />
+    <div className="notes-wrap wide px-6 py-6">
+      {/* NotesView rendered here after phase 05 */}
+      <div data-notes-placeholder data-project-id={projectId} data-count={notesResult.count} />
     </div>
   );
 }

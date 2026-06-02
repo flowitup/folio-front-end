@@ -204,3 +204,36 @@ describe("Topbar title suppression on self-headed routes", () => {
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
   });
 });
+
+describe("Topbar mobile project switcher — full name visibility", () => {
+  const LONG_NAME = "14 Rue Florentin, 75008 Paris, France — Rénovation complète";
+
+  function setupWithName(name: string) {
+    mockPathname = "/en/projects/p-1/planning";
+    mockUseAuth.mockReturnValue({
+      user: { email: "user@test.com", permissions: [] },
+      logout: vi.fn(),
+      isLoading: false,
+    });
+    mockUseProject.mockReturnValue({
+      projects: [{ id: "p-1", name }],
+      selectedProjectId: "p-1",
+      selectedProject: { id: "p-1", name },
+      selectProject: vi.fn(),
+    });
+  }
+
+  it("exposes the complete project name via the title tooltip (no truncation of the value)", () => {
+    setupWithName(LONG_NAME);
+    render(<Topbar />);
+    // The collapsed trigger carries the full name in its title attribute so
+    // the complete site address is reachable even when the pill clamps it.
+    expect(screen.getByTitle(LONG_NAME)).toBeInTheDocument();
+  });
+
+  it("clamps the trigger label to two lines instead of a single hard-truncated line", () => {
+    setupWithName(LONG_NAME);
+    render(<Topbar />);
+    expect(screen.getByTitle(LONG_NAME).className).toContain("line-clamp-2");
+  });
+});

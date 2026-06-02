@@ -180,7 +180,10 @@ export function Topbar() {
                   >
                     {(projectName ?? "P").charAt(0).toUpperCase()}
                   </span>
-                  <span className="max-w-[140px] truncate">
+                  <span
+                    className="line-clamp-2 max-w-[220px] text-left leading-snug"
+                    title={projectName ?? undefined}
+                  >
                     {projectName ?? tProjects("selectProject")}
                   </span>
                   <ChevronDown size={14} style={{ color: "var(--muted)" }} />

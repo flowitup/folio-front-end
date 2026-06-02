@@ -1186,6 +1186,26 @@
     "empty": {
       "members": "Aucun membre pour le moment",
       "pending": "Aucune invitation en attente"
+    },
+    "edit": {
+      "button": "Modifier",
+      "remove": "Retirer",
+      "removeConfirm": "Retirer {name} de ce projet ?",
+      "dialogTitle": "Modifier le membre",
+      "dialogDescription": "Mettez à jour le rôle de ce membre. Les changements de rôle prennent effet immédiatement.",
+      "nameLabel": "Nom affiché",
+      "emailLabel": "E-mail",
+      "emailHint": "L'e-mail est l'identifiant de connexion. Le modifier change la façon dont cet utilisateur se connecte.",
+      "roleLabel": "Rôle du projet",
+      "roleHint": "Détermine ce que ce membre peut faire sur ce projet.",
+      "submit": "Enregistrer",
+      "submitting": "Enregistrement…",
+      "toast": {
+        "saved": "Membre mis à jour",
+        "removed": "Membre retiré",
+        "emailTaken": "Cet e-mail est déjà utilisé",
+        "forbidden": "Vous n'avez pas la permission de faire cela"
+      }
     }
   },
   "companies": {

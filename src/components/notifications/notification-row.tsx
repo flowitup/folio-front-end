@@ -9,6 +9,7 @@
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+// useLocale is kept for the navigation URL (locale-prefixed routes)
 import type { DueNotification } from "@/lib/api/notifications";
 
 interface NotificationRowProps {
@@ -33,13 +34,6 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
     onDismiss(note.id);
   }
 
-  // Format due_date (YYYY-MM-DD) for display — locale-aware
-  const formattedDate = note.due_date
-    ? new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(
-        new Date(`${note.due_date}T00:00:00`)
-      )
-    : null;
-
   return (
     <div className="group flex items-start gap-2 rounded-md px-2 py-2 hover:bg-accent/40 transition-colors">
       {/* Clickable main area */}
@@ -55,16 +49,6 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
         >
           {note.title}
         </p>
-        <div className="mt-0.5 flex items-center gap-1.5">
-          {formattedDate && (
-            <span
-              className="shrink-0 rounded px-1 py-0.5 text-[11px] font-medium"
-              style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
-            >
-              {formattedDate}
-            </span>
-          )}
-        </div>
       </button>
 
       {/* Dismiss button — separate click target, no navigation */}

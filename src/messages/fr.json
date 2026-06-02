@@ -54,7 +54,7 @@
     "invoicesTitle": "Dépenses",
     "invoicesSubtitle": "L'argent qui entre et sort du chantier.",
     "notesTitle": "Notes",
-    "notesSubtitle": "À retenir — les rappels sont envoyés à 09h00 UTC",
+    "notesSubtitle": "Votre journal de chantier — notez tout ce qui compte",
     "membersTitle": "Membres",
     "membersSubtitle": "Qui travaille sur ce projet, et avec quel rôle."
   },
@@ -725,36 +725,55 @@
   },
   "notes": {
     "title": "Notes",
-    "subtitle": "À retenir pour {projectName}",
-    "anchorNote": "Les rappels sont envoyés à 09h00 UTC",
-    "addButton": "+ Ajouter une note",
-    "placeholderTitle": "Que devez-vous retenir ?",
-    "placeholderDescription": "Détails optionnels",
-    "dueLabel": "Échéance",
-    "leadTimeLabel": "Rappel",
-    "leadTimeOptions": {
-      "0": "À l'échéance",
-      "60": "1 heure avant",
-      "1440": "1 jour avant"
+    "subtitle": "Tout ce qui mérite d'être conservé sur le chantier",
+    "categories": {
+      "inspection": "Inspection",
+      "delivery": "Livraison",
+      "payment": "Paiement",
+      "decision": "Décision",
+      "call": "Appel",
+      "general": "Général"
     },
-    "statusOpen": "Ouvert",
-    "statusDone": "Terminé",
+    "groups": {
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "week": "Plus tôt cette semaine",
+      "earlier": "Antérieur"
+    },
+    "quickAdd": {
+      "placeholderTitle": "Prendre une note…",
+      "placeholderBody": "Notez les détails…",
+      "hint": "Enregistrée à la date du jour",
+      "save": "Enregistrer la note"
+    },
+    "editor": {
+      "placeholderTitle": "Titre de la note",
+      "placeholderBody": "Notez-le ici…"
+    },
+    "categoryLabel": "Catégorie",
+    "filterAll": "Tout",
+    "search": {
+      "placeholder": "Rechercher des notes",
+      "clear": "Effacer la recherche"
+    },
+    "addedLabel": "Ajouté",
+    "relative": {
+      "today": "Aujourd'hui",
+      "yesterday": "Hier"
+    },
     "actions": {
       "save": "Enregistrer",
       "cancel": "Annuler",
       "delete": "Supprimer",
       "edit": "Modifier"
     },
-    "groups": {
-      "today": "Aujourd'hui",
-      "tomorrow": "Demain",
-      "thisWeek": "Cette semaine",
-      "later": "Plus tard",
-      "done": "Terminé"
-    },
     "empty": {
-      "title": "Aucune note pour le moment",
-      "cta": "Ajoutez votre première note"
+      "title": "Votre carnet de chantier est vide",
+      "body": "Notez décisions, appels et livraisons ci-dessus — tout ce que vous souhaitez conserver sur le chantier se retrouve ici."
+    },
+    "noMatch": {
+      "title": "Aucune note ne correspond",
+      "body": "Essayez une autre recherche ou catégorie."
     },
     "deleted": {
       "toast": "Note supprimée",
@@ -778,12 +797,6 @@
     "title": "Rappels",
     "empty": "Aucun rappel pour le moment",
     "dismissButton": "Ignorer",
-    "dueAt": "Échéance {date}",
-    "leadTime": {
-      "0": "Maintenant",
-      "60": "Dans ~1 heure",
-      "1440": "Demain"
-    },
     "errors": {
       "dismissFailed": "Impossible d'ignorer. Réessayez."
     },

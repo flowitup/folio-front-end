@@ -1,186 +1,192 @@
 /**
- * Pure-function tests for groupNotesByDay()
+ * Pure-function tests for createdBucket() and buildSections()
  * All dates use UTC to avoid DST gotchas.
  */
 
 import { describe, it, expect } from "vitest";
-import { groupNotesByDay } from "../grouping";
+import { createdBucket, buildSections } from "../grouping";
 import type { Note } from "@/lib/api/notes";
 
 // ---- Helpers ----
 
-function makeNote(id: string, dueDate: string, status: "open" | "done" = "open", updatedAt?: string): Note {
-  const ts = updatedAt ?? "2024-01-01T00:00:00Z";
+function makeNote(
+  id: string,
+  createdAt: string,
+  category: Note["category"] = "general"
+): Note {
   return {
     id,
     project_id: "proj-1",
     created_by: "user-1",
     title: `Note ${id}`,
     description: null,
-    due_date: dueDate,
-    lead_time_minutes: 0,
-    status,
-    fire_at: "2024-01-01T09:00:00Z",
-    created_at: ts,
-    updated_at: ts,
+    category,
+    created_at: createdAt,
+    updated_at: createdAt,
   };
 }
 
-/** Returns a UTC Date for YYYY-MM-DD */
+/** Returns a UTC Date for YYYY-MM-DD at noon */
 function utcDate(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d));
+  return new Date(Date.UTC(y, m - 1, d, 12, 0, 0, 0));
 }
 
-const TODAY = "2024-06-15";
-const todayDate = utcDate(TODAY);
+const TODAY_STR = "2024-06-15";
+const todayDate = utcDate(TODAY_STR);
 
-const TOMORROW = "2024-06-16";
-const THIS_WEEK_2 = "2024-06-17"; // today+2
-const THIS_WEEK_7 = "2024-06-22"; // today+7 (boundary inclusive)
-const WEEK_AFTER = "2024-06-23"; // today+8 — "later"
-const PAST = "2024-06-10"; // before today — "later"
+// ISO timestamps for each bucket
+const NOW_ISO       = "2024-06-15T10:00:00Z"; // today
+const YESTERDAY_ISO = "2024-06-14T10:00:00Z"; // yesterday
+const WEEK_ISO      = "2024-06-10T10:00:00Z"; // within last 7 days (today-5)
+const WEEK_EDGE_ISO = "2024-06-08T10:00:00Z"; // today-7, still "week"
+const EARLIER_ISO   = "2024-06-07T10:00:00Z"; // today-8, "earlier"
+const OLD_ISO       = "2024-01-01T10:00:00Z"; // much older
 
-// ---- Tests ----
+// ---- createdBucket ----
 
-describe("groupNotesByDay — bucket assignment", () => {
-  it("assigns due_date == today to the today bucket", () => {
-    const notes = [makeNote("n1", TODAY)];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.today).toHaveLength(1);
-    expect(g.today[0].id).toBe("n1");
-    expect(g.tomorrow).toHaveLength(0);
-    expect(g.thisWeek).toHaveLength(0);
-    expect(g.later).toHaveLength(0);
+describe("createdBucket — bucket assignment", () => {
+  it("today → today", () => {
+    expect(createdBucket(NOW_ISO, todayDate)).toBe("today");
   });
 
-  it("assigns due_date == tomorrow to the tomorrow bucket", () => {
-    const notes = [makeNote("n2", TOMORROW)];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.tomorrow).toHaveLength(1);
-    expect(g.tomorrow[0].id).toBe("n2");
-    expect(g.today).toHaveLength(0);
+  it("yesterday → yesterday", () => {
+    expect(createdBucket(YESTERDAY_ISO, todayDate)).toBe("yesterday");
   });
 
-  it("assigns due_date today+2 to thisWeek (lower boundary)", () => {
-    const notes = [makeNote("n3", THIS_WEEK_2)];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.thisWeek).toHaveLength(1);
-    expect(g.thisWeek[0].id).toBe("n3");
+  it("within last 7 days (today-5) → week", () => {
+    expect(createdBucket(WEEK_ISO, todayDate)).toBe("week");
   });
 
-  it("assigns due_date today+7 to thisWeek (upper boundary inclusive)", () => {
-    const notes = [makeNote("n4", THIS_WEEK_7)];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.thisWeek).toHaveLength(1);
-    expect(g.thisWeek[0].id).toBe("n4");
+  it("today-7 (lower boundary) → week", () => {
+    expect(createdBucket(WEEK_EDGE_ISO, todayDate)).toBe("week");
   });
 
-  it("assigns due_date today+8 (one past week end) to later", () => {
-    const notes = [makeNote("n5", WEEK_AFTER)];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.later).toHaveLength(1);
-    expect(g.later[0].id).toBe("n5");
+  it("today-8 → earlier", () => {
+    expect(createdBucket(EARLIER_ISO, todayDate)).toBe("earlier");
   });
 
-  it("assigns past due_date to later (not today / tomorrow / thisWeek)", () => {
-    const notes = [makeNote("n6", PAST)];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.later).toHaveLength(1);
-    expect(g.later[0].id).toBe("n6");
+  it("very old note → earlier", () => {
+    expect(createdBucket(OLD_ISO, todayDate)).toBe("earlier");
   });
 
-  it("places done notes in the done bucket regardless of due_date", () => {
-    const notes = [makeNote("n7", TODAY, "done"), makeNote("n8", THIS_WEEK_7, "done")];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.done).toHaveLength(2);
-    expect(g.today).toHaveLength(0);
-    expect(g.thisWeek).toHaveLength(0);
-  });
-
-  it("handles empty input without throwing", () => {
-    const g = groupNotesByDay([], todayDate);
-    expect(g.today).toHaveLength(0);
-    expect(g.tomorrow).toHaveLength(0);
-    expect(g.thisWeek).toHaveLength(0);
-    expect(g.later).toHaveLength(0);
-    expect(g.done).toHaveLength(0);
-  });
-
-  it("mixed notes land in correct buckets simultaneously", () => {
-    const notes = [
-      makeNote("today-1", TODAY),
-      makeNote("tom-1", TOMORROW),
-      makeNote("week-1", THIS_WEEK_2),
-      makeNote("week-2", THIS_WEEK_7),
-      makeNote("later-1", WEEK_AFTER),
-      makeNote("done-1", TODAY, "done"),
-    ];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.today).toHaveLength(1);
-    expect(g.tomorrow).toHaveLength(1);
-    expect(g.thisWeek).toHaveLength(2);
-    expect(g.later).toHaveLength(1);
-    expect(g.done).toHaveLength(1);
-  });
-});
-
-describe("groupNotesByDay — sorting within buckets", () => {
-  it("sorts today bucket by due_date ascending (all same day — stable by insertion)", () => {
-    // Multiple today-notes — order stable (same key)
-    const notes = [makeNote("a", TODAY), makeNote("b", TODAY)];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.today.map((n) => n.id)).toEqual(["a", "b"]);
-  });
-
-  it("sorts thisWeek bucket by due_date ascending", () => {
-    const notes = [
-      makeNote("far", THIS_WEEK_7),
-      makeNote("near", THIS_WEEK_2),
-    ];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.thisWeek[0].id).toBe("near");
-    expect(g.thisWeek[1].id).toBe("far");
-  });
-
-  it("sorts later bucket by due_date ascending", () => {
-    const far = "2025-01-01";
-    const close = WEEK_AFTER;
-    const notes = [makeNote("far", far), makeNote("close", close)];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.later[0].id).toBe("close");
-    expect(g.later[1].id).toBe("far");
-  });
-
-  it("sorts done bucket by updated_at descending (most recent first)", () => {
-    const notes = [
-      makeNote("older", TODAY, "done", "2024-05-01T00:00:00Z"),
-      makeNote("newer", TODAY, "done", "2024-06-01T00:00:00Z"),
-    ];
-    const g = groupNotesByDay(notes, todayDate);
-    expect(g.done[0].id).toBe("newer");
-    expect(g.done[1].id).toBe("older");
-  });
-});
-
-describe("groupNotesByDay — UTC date math (no DST issues)", () => {
-  it("uses UTC dates, not local dates (reference: 2024-03-10 US DST transition)", () => {
-    // 2024-03-10 is US DST day — local time math could produce wrong results.
-    // groupNotesByDay uses getUTCFullYear/Month/Date so it's immune.
+  it("uses UTC dates — immune to DST (2024-03-10 US DST boundary)", () => {
     const dstToday = utcDate("2024-03-10");
-    const tomorrowDst = "2024-03-11";
-    const notes = [makeNote("dst-1", tomorrowDst)];
-    const g = groupNotesByDay(notes, dstToday);
-    expect(g.tomorrow).toHaveLength(1);
-    expect(g.tomorrow[0].id).toBe("dst-1");
+    const yesterdayDst = "2024-03-09T12:00:00Z";
+    expect(createdBucket(yesterdayDst, dstToday)).toBe("yesterday");
   });
 
-  it("correctly handles year-end boundary (2024-12-31 → tomorrow = 2025-01-01)", () => {
+  it("handles year-end boundary (2024-12-31 → yesterday = 2024-12-30)", () => {
     const yearEnd = utcDate("2024-12-31");
-    const newYear = "2025-01-01";
-    const notes = [makeNote("ny", newYear)];
-    const g = groupNotesByDay(notes, yearEnd);
-    expect(g.tomorrow).toHaveLength(1);
-    expect(g.tomorrow[0].id).toBe("ny");
+    const dec30 = "2024-12-30T12:00:00Z";
+    expect(createdBucket(dec30, yearEnd)).toBe("yesterday");
+  });
+});
+
+// ---- buildSections (date grouping) ----
+
+describe("buildSections — date grouping", () => {
+  it("returns empty array for empty input", () => {
+    expect(buildSections([], "date", todayDate)).toEqual([]);
+  });
+
+  it("puts today note in today section", () => {
+    const notes = [makeNote("n1", NOW_ISO)];
+    const sections = buildSections(notes, "date", todayDate);
+    expect(sections).toHaveLength(1);
+    expect(sections[0].key).toBe("today");
+    expect(sections[0].items[0].id).toBe("n1");
+  });
+
+  it("omits empty sections", () => {
+    const notes = [makeNote("n1", NOW_ISO), makeNote("n2", OLD_ISO)];
+    const sections = buildSections(notes, "date", todayDate);
+    const keys = sections.map((s) => s.key);
+    expect(keys).toContain("today");
+    expect(keys).toContain("earlier");
+    expect(keys).not.toContain("yesterday");
+    expect(keys).not.toContain("week");
+  });
+
+  it("sections appear in order: today → yesterday → week → earlier", () => {
+    const notes = [
+      makeNote("old", OLD_ISO),
+      makeNote("yest", YESTERDAY_ISO),
+      makeNote("tod", NOW_ISO),
+      makeNote("wk", WEEK_ISO),
+    ];
+    const sections = buildSections(notes, "date", todayDate);
+    const keys = sections.map((s) => s.key);
+    expect(keys).toEqual(["today", "yesterday", "week", "earlier"]);
+  });
+
+  it("items within a section are sorted created_at DESC", () => {
+    const earlier = makeNote("e", "2024-06-08T08:00:00Z");
+    const later   = makeNote("l", "2024-06-08T18:00:00Z");
+    const sections = buildSections([earlier, later], "date", todayDate);
+    expect(sections[0].key).toBe("week");
+    expect(sections[0].items[0].id).toBe("l");
+    expect(sections[0].items[1].id).toBe("e");
+  });
+
+  it("date sections have no dotColor", () => {
+    const notes = [makeNote("n1", NOW_ISO)];
+    const sections = buildSections(notes, "date", todayDate);
+    expect(sections[0].dotColor).toBeUndefined();
+  });
+
+  it("labelKey follows notes.groups.* pattern", () => {
+    const notes = [makeNote("n1", NOW_ISO)];
+    const sections = buildSections(notes, "date", todayDate);
+    expect(sections[0].labelKey).toBe("notes.groups.today");
+  });
+});
+
+// ---- buildSections (category grouping) ----
+
+describe("buildSections — category grouping", () => {
+  it("returns empty array when no notes", () => {
+    expect(buildSections([], "category", todayDate)).toEqual([]);
+  });
+
+  it("groups by category; dotColor present", () => {
+    const notes = [
+      makeNote("a", NOW_ISO, "delivery"),
+      makeNote("b", NOW_ISO, "payment"),
+    ];
+    const sections = buildSections(notes, "category", todayDate);
+    expect(sections).toHaveLength(2);
+    const keys = sections.map((s) => s.key);
+    expect(keys).toContain("delivery");
+    expect(keys).toContain("payment");
+    sections.forEach((s) => expect(s.dotColor).toBeTruthy());
+  });
+
+  it("category sections follow CATEGORY_ORDER (delivery before payment)", () => {
+    const notes = [makeNote("a", NOW_ISO, "payment"), makeNote("b", NOW_ISO, "delivery")];
+    const sections = buildSections(notes, "category", todayDate);
+    expect(sections[0].key).toBe("delivery");
+    expect(sections[1].key).toBe("payment");
+  });
+
+  it("omits categories with no notes", () => {
+    const notes = [makeNote("n1", NOW_ISO, "call")];
+    const sections = buildSections(notes, "category", todayDate);
+    expect(sections).toHaveLength(1);
+    expect(sections[0].key).toBe("call");
+  });
+
+  it("items within each category sorted created_at DESC", () => {
+    const older = makeNote("old", "2024-06-10T08:00:00Z", "general");
+    const newer = makeNote("new", "2024-06-10T18:00:00Z", "general");
+    const sections = buildSections([older, newer], "category", todayDate);
+    expect(sections[0].items[0].id).toBe("new");
+    expect(sections[0].items[1].id).toBe("old");
+  });
+
+  it("labelKey matches the category i18n key", () => {
+    const notes = [makeNote("n1", NOW_ISO, "inspection")];
+    const sections = buildSections(notes, "category", todayDate);
+    expect(sections[0].labelKey).toBe("notes.categories.inspection");
   });
 });

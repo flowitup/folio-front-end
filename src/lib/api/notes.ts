@@ -10,8 +10,13 @@ import { sessionAuthHeader } from "@/lib/api/auth-header";
 
 // ---- Types ----
 
-type NoteStatus = "open" | "done";
-export type LeadTimeMinutes = 0 | 60 | 1440;
+export type NoteCategory =
+  | "inspection"
+  | "delivery"
+  | "payment"
+  | "decision"
+  | "call"
+  | "general";
 
 export interface Note {
   id: string;
@@ -19,10 +24,7 @@ export interface Note {
   created_by: string;
   title: string;
   description: string | null;
-  due_date: string; // YYYY-MM-DD
-  lead_time_minutes: LeadTimeMinutes;
-  status: NoteStatus;
-  fire_at: string; // ISO 8601 UTC
+  category: NoteCategory;
   created_at: string;
   updated_at: string;
 }
@@ -34,17 +36,14 @@ export interface NoteListResult {
 
 export interface CreateNotePayload {
   title: string;
-  due_date: string; // YYYY-MM-DD
-  lead_time_minutes?: LeadTimeMinutes;
   description?: string | null;
+  category?: NoteCategory;
 }
 
 export interface UpdateNotePayload {
   title?: string;
-  due_date?: string;
-  lead_time_minutes?: LeadTimeMinutes;
   description?: string | null;
-  status?: NoteStatus;
+  category?: NoteCategory;
 }
 
 // ---- Error helper ----

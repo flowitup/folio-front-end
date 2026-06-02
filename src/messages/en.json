@@ -54,7 +54,7 @@
     "invoicesTitle": "Expense",
     "invoicesSubtitle": "Money flowing in and out of the site.",
     "notesTitle": "Notes",
-    "notesSubtitle": "Things to remember — reminders fire at 09:00 UTC",
+    "notesSubtitle": "Your build journal — jot down everything worth keeping",
     "membersTitle": "Members",
     "membersSubtitle": "Who's on this project, with what role."
   },
@@ -725,47 +725,66 @@
   },
   "notes": {
     "title": "Notes",
-    "subtitle": "Things to remember for {projectName}",
-    "anchorNote": "Reminders fire at 09:00 UTC",
-    "addButton": "+ Add note",
-    "placeholderTitle": "What do you need to remember?",
-    "placeholderDescription": "Optional details",
-    "dueLabel": "Due",
-    "leadTimeLabel": "Remind",
-    "leadTimeOptions": {
-      "0": "At due time",
-      "60": "1 hour before",
-      "1440": "1 day before"
+    "subtitle": "Everything worth keeping about the build",
+    "categories": {
+      "inspection": "Inspection",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "decision": "Decision",
+      "call": "Call",
+      "general": "General"
     },
-    "statusOpen": "Open",
-    "statusDone": "Done",
+    "groups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "Earlier this week",
+      "earlier": "Earlier"
+    },
+    "quickAdd": {
+      "placeholderTitle": "Take a note…",
+      "placeholderBody": "Write down the details…",
+      "hint": "Saved with today’s date",
+      "save": "Save note"
+    },
+    "editor": {
+      "placeholderTitle": "Note title",
+      "placeholderBody": "Write it down…"
+    },
+    "categoryLabel": "Category",
+    "filterAll": "All",
+    "search": {
+      "placeholder": "Search notes",
+      "clear": "Clear search"
+    },
+    "addedLabel": "Added",
+    "relative": {
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
     "actions": {
       "save": "Save",
       "cancel": "Cancel",
       "delete": "Delete",
       "edit": "Edit"
     },
-    "groups": {
-      "today": "Today",
-      "tomorrow": "Tomorrow",
-      "thisWeek": "This week",
-      "later": "Later",
-      "done": "Done"
-    },
     "empty": {
-      "title": "No notes yet",
-      "cta": "Add your first note"
+      "title": "Your build notebook is empty",
+      "body": "Jot down decisions, calls, and deliveries above — everything you want to keep about the build lives here."
+    },
+    "noMatch": {
+      "title": "No notes match",
+      "body": "Try a different search or category."
     },
     "deleted": {
       "toast": "Note deleted",
       "undo": "Undo"
     },
     "errors": {
-      "saveFailed": "Couldn't save the note. Try again.",
-      "deleteFailed": "Couldn't delete the note. Try again.",
+      "saveFailed": "Couldn’t save the note. Try again.",
+      "deleteFailed": "Couldn’t delete the note. Try again.",
       "validation": "Some fields are invalid.",
-      "forbidden": "You don't have access to this project.",
-      "notFound": "This note doesn't exist anymore.",
+      "forbidden": "You don’t have access to this project.",
+      "notFound": "This note doesn’t exist anymore.",
       "rateLimited": "Too many requests. Try again in a moment.",
       "generic": "Something went wrong. Try again."
     }
@@ -778,12 +797,6 @@
     "title": "Reminders",
     "empty": "No reminders right now",
     "dismissButton": "Dismiss",
-    "dueAt": "Due {date}",
-    "leadTime": {
-      "0": "Now",
-      "60": "In ~1 hour",
-      "1440": "Tomorrow"
-    },
     "errors": {
       "dismissFailed": "Couldn't dismiss. Try again."
     },

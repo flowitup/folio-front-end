@@ -1,23 +1,37 @@
 /**
- * Pure helper: group notes by due-date proximity relative to today (UTC).
- * Returns 5 named buckets used by the agenda view.
- * No side-effects; safe to unit-test without timers.
+ * Pure helpers: group notes by created-date proximity or category.
+ * No side-effects; safe to unit-test without timers (inject today).
  */
 
 import type { Note } from "@/lib/api/notes";
+import { CATEGORY_ORDER, CATEGORY_MAP } from "@/lib/notes/categories";
 
-export interface GroupedNotes {
-  today: Note[];
-  tomorrow: Note[];
-  thisWeek: Note[];
-  later: Note[];
-  done: Note[];
+// ---- Types ----
+
+export interface NoteSection {
+  key: string;
+  /** i18n key for the section heading */
+  labelKey: string;
+  /** Optional dot color (set for category grouping) */
+  dotColor?: string;
+  items: Note[];
 }
 
-/**
- * Converts a YYYY-MM-DD string to a comparable date key string (ISO date part).
- * Always treat due_date as a calendar date, no timezone conversion.
- */
+export type GroupingMode = "date" | "category";
+
+// Created-date bucket keys in display order
+const CREATED_BUCKET_ORDER = ["today", "yesterday", "week", "earlier"] as const;
+type CreatedBucket = (typeof CREATED_BUCKET_ORDER)[number];
+
+const CREATED_LABEL_KEYS: Record<CreatedBucket, string> = {
+  today:     "notes.groups.today",
+  yesterday: "notes.groups.yesterday",
+  week:      "notes.groups.week",
+  earlier:   "notes.groups.earlier",
+};
+
+// ---- Date helpers ----
+
 function toDateKey(date: Date): string {
   const y = date.getUTCFullYear();
   const m = String(date.getUTCMonth() + 1).padStart(2, "0");
@@ -26,75 +40,91 @@ function toDateKey(date: Date): string {
 }
 
 /**
- * Group notes into agenda buckets based on due_date (UTC) and status.
- *
- * Bucket rules (for `status === "open"` notes):
- *   - today    : due_date == todayKey
- *   - tomorrow : due_date == tomorrowKey
- *   - thisWeek : due_date within next 7 calendar days (excl. today and tomorrow)
- *   - later    : due_date beyond next 7 days OR no due_date match
- *
- * `done` bucket: all notes with `status === "done"`, sorted newest first.
- *
- * @param notes - flat array of Note objects
- * @param today - reference date (default: new Date())
+ * Map an ISO timestamp to a created-date bucket relative to today (UTC).
+ * - today:     created_at date == today
+ * - yesterday: created_at date == yesterday
+ * - week:      created_at date within last 7 days (excl. today and yesterday)
+ * - earlier:   anything older
  */
-export function groupNotesByDay(notes: Note[], today: Date = new Date()): GroupedNotes {
+export function createdBucket(iso: string, today: Date = new Date()): CreatedBucket {
+  const createdKey = iso.slice(0, 10); // fast YYYY-MM-DD extraction
   const todayKey = toDateKey(today);
 
-  const tomorrowDate = new Date(
-    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 1)
-  );
-  const tomorrowKey = toDateKey(tomorrowDate);
+  if (createdKey === todayKey) return "today";
 
-  // "This week" = today+2 through today+7 (inclusive)
-  const weekStartDate = new Date(
-    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 2)
+  const yesterdayDate = new Date(
+    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 1)
   );
-  const weekEndDate = new Date(
-    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 7)
-  );
-  const weekStartKey = toDateKey(weekStartDate);
-  const weekEndKey = toDateKey(weekEndDate);
+  const yesterdayKey = toDateKey(yesterdayDate);
 
-  const result: GroupedNotes = {
+  if (createdKey === yesterdayKey) return "yesterday";
+
+  // "week" = last 7 calendar days, excluding today and yesterday
+  const weekAgoDate = new Date(
+    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 7)
+  );
+  const weekAgoKey = toDateKey(weekAgoDate);
+
+  if (createdKey >= weekAgoKey && createdKey < yesterdayKey) return "week";
+
+  return "earlier";
+}
+
+// ---- Section builder ----
+
+const byCreatedDesc = (a: Note, b: Note) => b.created_at.localeCompare(a.created_at);
+
+/**
+ * Build ordered display sections from a flat note list.
+ *
+ * - grouping="date": sections = today | yesterday | week | earlier
+ * - grouping="category": sections = one per category (ordered by CATEGORY_ORDER)
+ *
+ * Items within each section are sorted created_at DESC.
+ * Empty sections are omitted.
+ *
+ * @param notes - flat array of Note objects (already filtered by caller if needed)
+ * @param grouping - "date" | "category"
+ * @param today - reference date for date grouping (default: new Date())
+ */
+export function buildSections(
+  notes: Note[],
+  grouping: GroupingMode = "date",
+  today: Date = new Date()
+): NoteSection[] {
+  if (grouping === "category") {
+    return CATEGORY_ORDER
+      .map((catId): NoteSection => {
+        const meta = CATEGORY_MAP[catId];
+        const items = notes.filter((n) => n.category === catId).sort(byCreatedDesc);
+        return {
+          key: catId,
+          labelKey: meta.i18nKey,
+          dotColor: meta.dotColor,
+          items,
+        };
+      })
+      .filter((s) => s.items.length > 0);
+  }
+
+  // grouping === "date"
+  const map: Record<CreatedBucket, Note[]> = {
     today: [],
-    tomorrow: [],
-    thisWeek: [],
-    later: [],
-    done: [],
+    yesterday: [],
+    week: [],
+    earlier: [],
   };
 
   for (const note of notes) {
-    if (note.status === "done") {
-      result.done.push(note);
-      continue;
-    }
-
-    const dueKey = note.due_date; // already YYYY-MM-DD from backend
-
-    if (dueKey === todayKey) {
-      result.today.push(note);
-    } else if (dueKey === tomorrowKey) {
-      result.tomorrow.push(note);
-    } else if (dueKey >= weekStartKey && dueKey <= weekEndKey) {
-      result.thisWeek.push(note);
-    } else {
-      result.later.push(note);
-    }
+    const bucket = createdBucket(note.created_at, today);
+    map[bucket].push(note);
   }
 
-  // Re-sort within each bucket even though BE returns notes ordered by due_date ASC
-  // (from ListProjectNotesUseCase). This is intentional: open buckets sort by due_date
-  // ascending, while the done bucket sorts by recency — different orders per bucket.
-  const byDue = (a: Note, b: Note) => a.due_date.localeCompare(b.due_date);
-  result.today.sort(byDue);
-  result.tomorrow.sort(byDue);
-  result.thisWeek.sort(byDue);
-  result.later.sort(byDue);
-
-  // Sort done by updated_at descending (most recently completed first)
-  result.done.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-
-  return result;
+  return CREATED_BUCKET_ORDER
+    .map((key): NoteSection => ({
+      key,
+      labelKey: CREATED_LABEL_KEYS[key],
+      items: map[key].sort(byCreatedDesc),
+    }))
+    .filter((s) => s.items.length > 0);
 }

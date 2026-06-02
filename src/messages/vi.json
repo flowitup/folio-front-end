@@ -54,7 +54,7 @@
     "invoicesTitle": "Chi phí",
     "invoicesSubtitle": "Tiền ra vào trên công trường.",
     "notesTitle": "Ghi chú",
-    "notesSubtitle": "Những điều cần nhớ — nhắc nhở được gửi lúc 09:00 UTC",
+    "notesSubtitle": "Nhật ký công trình — ghi lại mọi điều đáng nhớ",
     "membersTitle": "Thành viên",
     "membersSubtitle": "Ai đang làm trong dự án này, với vai trò gì."
   },
@@ -725,36 +725,55 @@
   },
   "notes": {
     "title": "Ghi chú",
-    "subtitle": "Những điều cần nhớ cho {projectName}",
-    "anchorNote": "Nhắc nhở được gửi lúc 09:00 UTC",
-    "addButton": "+ Thêm ghi chú",
-    "placeholderTitle": "Bạn cần nhớ điều gì?",
-    "placeholderDescription": "Chi tiết thêm (tuỳ chọn)",
-    "dueLabel": "Hạn",
-    "leadTimeLabel": "Nhắc trước",
-    "leadTimeOptions": {
-      "0": "Đúng hạn",
-      "60": "Trước 1 giờ",
-      "1440": "Trước 1 ngày"
+    "subtitle": "Mọi thứ đáng lưu về công trình",
+    "categories": {
+      "inspection": "Kiểm tra",
+      "delivery": "Giao hàng",
+      "payment": "Thanh toán",
+      "decision": "Quyết định",
+      "call": "Cuộc gọi",
+      "general": "Chung"
     },
-    "statusOpen": "Đang mở",
-    "statusDone": "Xong",
+    "groups": {
+      "today": "Hôm nay",
+      "yesterday": "Hôm qua",
+      "week": "Đầu tuần này",
+      "earlier": "Trước đó"
+    },
+    "quickAdd": {
+      "placeholderTitle": "Ghi chú nhanh…",
+      "placeholderBody": "Viết thêm chi tiết…",
+      "hint": "Lưu với ngày hôm nay",
+      "save": "Lưu ghi chú"
+    },
+    "editor": {
+      "placeholderTitle": "Tiêu đề ghi chú",
+      "placeholderBody": "Viết xuống đây…"
+    },
+    "categoryLabel": "Danh mục",
+    "filterAll": "Tất cả",
+    "search": {
+      "placeholder": "Tìm kiếm ghi chú",
+      "clear": "Xóa tìm kiếm"
+    },
+    "addedLabel": "Đã thêm",
+    "relative": {
+      "today": "Hôm nay",
+      "yesterday": "Hôm qua"
+    },
     "actions": {
       "save": "Lưu",
       "cancel": "Hủy",
       "delete": "Xóa",
       "edit": "Sửa"
     },
-    "groups": {
-      "today": "Hôm nay",
-      "tomorrow": "Ngày mai",
-      "thisWeek": "Tuần này",
-      "later": "Sau này",
-      "done": "Đã xong"
-    },
     "empty": {
-      "title": "Chưa có ghi chú nào",
-      "cta": "Thêm ghi chú đầu tiên"
+      "title": "Nhật ký công trình của bạn đang trống",
+      "body": "Ghi lại các quyết định, cuộc gọi và giao hàng ở trên — mọi thứ bạn muốn lưu về công trình đều ở đây."
+    },
+    "noMatch": {
+      "title": "Không tìm thấy ghi chú phù hợp",
+      "body": "Thử tìm kiếm hoặc danh mục khác."
     },
     "deleted": {
       "toast": "Đã xóa ghi chú",
@@ -778,12 +797,6 @@
     "title": "Nhắc nhở",
     "empty": "Không có nhắc nhở nào lúc này",
     "dismissButton": "Bỏ qua",
-    "dueAt": "Hạn {date}",
-    "leadTime": {
-      "0": "Ngay bây giờ",
-      "60": "Khoảng 1 giờ nữa",
-      "1440": "Ngày mai"
-    },
     "errors": {
       "dismissFailed": "Không thể bỏ qua. Vui lòng thử lại."
     },

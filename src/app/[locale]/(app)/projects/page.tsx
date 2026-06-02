@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { fetchProjectUsers, removeUserFromProject } from "@/lib/api/projects";
 import { AddMemberDialog } from "@/components/project/add-member-dialog";
+import { ProjectCoverPhotos } from "@/components/project/project-cover-photos";
 import { CreateProjectDialog } from "@/components/project/create-project-dialog";
 import { EditProjectDialog } from "@/components/project/edit-project-dialog";
 import { DeleteProjectDialog } from "@/components/project/delete-project-dialog";
@@ -282,6 +283,8 @@ export default function ProjectsPage() {
                   >
                     <div className="blueprint-grid absolute inset-0 opacity-25" />
                     <div className="paper-noise absolute inset-0" />
+                    {/* Latest photos montage; renders nothing when the project has none. */}
+                    <ProjectCoverPhotos projectId={project.id} />
                     <div className="absolute left-4 right-4 top-4 flex items-center justify-between">
                       <span
                         className="stamp"

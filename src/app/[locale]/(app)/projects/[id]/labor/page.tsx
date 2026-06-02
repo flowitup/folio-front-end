@@ -18,9 +18,11 @@ import { EditAttendanceDialog } from "@/components/labor/edit-attendance-dialog"
 import { LaborSummary } from "@/components/labor/labor-summary";
 
 import { ActivityDialog } from "@/components/labor/activity-dialog";
+import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 
 import type { Worker, LaborEntry, LaborActivity, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload, CreateLaborActivityPayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
+import type { ProjectTag } from "@/lib/api/tags";
 import {
   fetchWorkers,
   createWorker,
@@ -36,7 +38,7 @@ import {
   updateLaborActivity,
   deleteLaborActivity,
 } from "@/lib/api/labor";
-import { fetchLaborRolesAction } from "./actions";
+import { fetchLaborRolesAction, fetchProjectTagsAction } from "./actions";
 
 type TabType = "workers" | "attendance" | "summary";
 
@@ -81,6 +83,9 @@ export default function LaborPage() {
   const [roles, setRoles] = useState<LaborRole[]>([]);
   const [palette, setPalette] = useState<string[]>([]);
 
+  // Tags state
+  const [tags, setTags] = useState<ProjectTag[]>([]);
+
   // Worker lookup map for role-aware chip colors in calendar cells.
   const workerMap = useMemo(
     () => Object.fromEntries(workers.map((w) => [w.id, w])),
@@ -104,6 +109,7 @@ export default function LaborPage() {
   // see GET /labor-entries default limit). The month picker is opt-in.
   const [entriesMonth, setEntriesMonth] = useState("");
   const [entriesWorkerFilter, setEntriesWorkerFilter] = useState("all");
+  const [entriesTagFilter, setEntriesTagFilter] = useState<string | null>(null);
   // Calendar default per plan; list view stays available as fallback for
   // power users who want "all history" scroll (cook 2d).
   const [attendanceView, setAttendanceView] = useState<AttendanceViewMode>(
@@ -140,6 +146,7 @@ export default function LaborPage() {
         from,
         to,
         worker_id: entriesWorkerFilter !== "all" ? entriesWorkerFilter : undefined,
+        tag_id: entriesTagFilter ?? undefined,
       });
       setEntries(data);
     } catch {
@@ -147,7 +154,7 @@ export default function LaborPage() {
     } finally {
       setIsTabLoading(false);
     }
-  }, [projectId, entriesMonth, entriesWorkerFilter]);
+  }, [projectId, entriesMonth, entriesWorkerFilter, entriesTagFilter]);
 
   const loadActivities = useCallback(async () => {
     try {
@@ -182,7 +189,7 @@ export default function LaborPage() {
     }
   }, [projectId, summaryMonth]);
 
-  // Initial load — workers + roles in parallel.
+  // Initial load — workers + roles + tags in parallel.
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
@@ -197,11 +204,15 @@ export default function LaborPage() {
           // Non-fatal: roles are enhancement only; missing roles doesn't
           // prevent the page from loading.
         }),
+        fetchProjectTagsAction(projectId).then((result) => {
+          if (result.success) setTags(result.tags);
+          // Non-fatal: tags are optional enhancement.
+        }),
       ]);
       setIsLoading(false);
     };
     load();
-  }, [loadWorkers]);
+  }, [loadWorkers, projectId]);
 
   useEffect(() => {
     if (activeTab === "attendance") {
@@ -368,7 +379,16 @@ export default function LaborPage() {
           }
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <ViewToggle value={attendanceView} onChange={setAttendanceView} />
+            <div className="flex flex-wrap items-center gap-2">
+              <ViewToggle value={attendanceView} onChange={setAttendanceView} />
+              {tags.length > 0 && (
+                <TagFilterSelect
+                  tags={tags}
+                  value={entriesTagFilter}
+                  onChange={setEntriesTagFilter}
+                />
+              )}
+            </div>
             {canManageLabor && (
               <Button onClick={() => handleOpenLogDay()}>
                 <Plus className="h-4 w-4" />
@@ -458,6 +478,7 @@ export default function LaborPage() {
         entries={entries}
         initialDate={logDayDate}
         onSaved={loadEntries}
+        tags={tags}
       />
 
       <EditAttendanceDialog
@@ -467,6 +488,7 @@ export default function LaborPage() {
         }}
         entry={editEntry}
         onSave={handleUpdateAttendance}
+        tags={tags}
       />
 
       <ActivityDialog

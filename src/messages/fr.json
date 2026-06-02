@@ -12,6 +12,7 @@
     "bibliotheque": "Bibliothèque",
     "labor": "Main-d'œuvre",
     "invoices": "Dépenses",
+    "tags": "Étiquettes",
     "planning": "Planification",
     "notes": "Notes",
     "documents": "Documents",
@@ -569,6 +570,7 @@
       "toastLogged": "{n} pointé(s)",
       "toastLoggedWithSkip": "{n} pointé(s), {skipped} ignoré(s) (déjà existant)",
       "toastLogNextDay": "Pointer le jour suivant →",
+      "tagLabel": "Étiquette (appliquée à tous)",
       "tile": {
         "alreadyLogged": "déjà pointé",
         "conflictBadge": "conflit",
@@ -1383,6 +1385,59 @@
     "goToPage": "Aller à la page",
     "previousPage": "Page précédente",
     "nextPage": "Page suivante"
+  },
+  "tags": {
+    "select": {
+      "label": "Étiquette de phase",
+      "placeholder": "Sélectionner une étiquette…",
+      "noTag": "Sans étiquette"
+    },
+    "manager": {
+      "title": "Gérer les étiquettes",
+      "addTag": "Ajouter une étiquette",
+      "empty": "Aucune étiquette pour l'instant. Créez votre première étiquette de phase pour suivre les coûts par phase.",
+      "createFirst": "Créer la première étiquette"
+    },
+    "form": {
+      "createTitle": "Nouvelle étiquette",
+      "editTitle": "Modifier l'étiquette",
+      "name": "Nom",
+      "namePlaceholder": "ex. Fondations",
+      "color": "Couleur",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "nameRequired": "Le nom est obligatoire"
+    },
+    "delete": {
+      "title": "Supprimer l'étiquette ?",
+      "description": "La suppression de « {name} » la retirera de ce projet. Les dépenses et les entrées main-d'œuvre utilisant cette étiquette deviendront non étiquetées, mais leurs données sont conservées.",
+      "confirm": "Supprimer",
+      "cancel": "Annuler"
+    },
+    "toast": {
+      "created": "Étiquette créée",
+      "updated": "Étiquette mise à jour",
+      "deleted": "Étiquette supprimée"
+    },
+    "errors": {
+      "duplicate": "Une étiquette portant ce nom existe déjà dans ce projet.",
+      "generic": "Une erreur est survenue. Veuillez réessayer."
+    },
+    "summary": {
+      "title": "Coût par étiquette de phase",
+      "colTag": "Étiquette",
+      "colLaborCost": "Coût main-d'œuvre",
+      "colExpenses": "Dépenses",
+      "colTotal": "Total",
+      "untagged": "Non étiqueté",
+      "grandTotal": "Total général",
+      "empty": "Aucune donnée de coût pour l'instant. Affectez des étiquettes aux dépenses et aux entrées main-d'œuvre pour voir la répartition ici."
+    },
+    "filter": {
+      "allTags": "Toutes les étiquettes",
+      "filterByTag": "Filtrer par étiquette",
+      "tagForBulk": "Étiquette (appliquée à tous)"
+    }
   },
   "photos": {
     "title": "Photos",

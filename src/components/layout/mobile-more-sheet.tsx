@@ -13,6 +13,7 @@ import {
   FileCheck,
   LayoutTemplate,
   Settings,
+  Tag,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
   const projectItems = selectedProjectId
     ? [
         { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
+        { key: "tags", href: `/projects/${selectedProjectId}/tags`, icon: Tag },
         { key: "members", href: `/projects/${selectedProjectId}/members`, icon: Users },
         { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
         { key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files },

@@ -134,7 +134,10 @@ export function Sidebar() {
                   style={{ background: selectedCover }}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13px] font-medium">
+                  <div
+                    className="line-clamp-2 text-[13px] font-medium leading-snug"
+                    title={selectedProject?.name ?? undefined}
+                  >
                     {selectedProject?.name ?? tProjects("selectProject")}
                   </div>
                   {selectedProject && (selectedPhase || selectedProgress > 0) && (
@@ -144,7 +147,7 @@ export function Sidebar() {
                     </div>
                   )}
                 </div>
-                <ChevronDown size={14} style={{ color: "var(--muted)" }} />
+                <ChevronDown size={14} className="flex-shrink-0" style={{ color: "var(--muted)" }} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[260px]">

@@ -1186,6 +1186,26 @@
     "empty": {
       "members": "Chưa có thành viên nào",
       "pending": "Không có lời mời nào đang chờ"
+    },
+    "edit": {
+      "button": "Sửa",
+      "remove": "Xóa",
+      "removeConfirm": "Xóa {name} khỏi dự án này?",
+      "dialogTitle": "Chỉnh sửa thành viên",
+      "dialogDescription": "Cập nhật vai trò của thành viên này. Thay đổi vai trò có hiệu lực ngay lập tức.",
+      "nameLabel": "Tên hiển thị",
+      "emailLabel": "Email",
+      "emailHint": "Email là danh tính đăng nhập. Thay đổi nó sẽ thay đổi cách người dùng này đăng nhập.",
+      "roleLabel": "Vai trò dự án",
+      "roleHint": "Kiểm soát những gì thành viên này có thể làm trên dự án này.",
+      "submit": "Lưu thay đổi",
+      "submitting": "Đang lưu…",
+      "toast": {
+        "saved": "Đã cập nhật thành viên",
+        "removed": "Đã xóa thành viên",
+        "emailTaken": "Email này đã được sử dụng",
+        "forbidden": "Bạn không có quyền thực hiện điều này"
+      }
     }
   },
   "companies": {

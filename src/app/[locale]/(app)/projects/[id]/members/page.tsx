@@ -31,10 +31,16 @@ export default async function MembersPage({ params }: PageProps) {
   // Server-side permission check (authoritative).
   // Invite allowed if: has explicit permission OR is project owner.
   const perms = session.user.permissions ?? [];
-  const hasInvitePermission =
-    perms.includes("project:invite") || perms.includes("*:*");
+  const isSuperadmin = perms.includes("*:*");
   const isProjectOwner = project?.owner_id === session.user.id;
-  const canInvite = hasInvitePermission || isProjectOwner;
+  const canInvite =
+    perms.includes("project:invite") || isSuperadmin || isProjectOwner;
+  // Managing members (role change / remove) mirrors the backend gate:
+  // project:manage_users OR owner OR superadmin.
+  const canManageMembers =
+    perms.includes("project:manage_users") || isSuperadmin || isProjectOwner;
+  // Editing identity (email / display name) is a global concern — superadmin only.
+  const canEditIdentity = perms.includes("user:update") || isSuperadmin;
 
   return (
     <MembersTable
@@ -43,6 +49,9 @@ export default async function MembersPage({ params }: PageProps) {
       invites={invites}
       roles={roles}
       canInvite={canInvite}
+      canManageMembers={canManageMembers}
+      canEditIdentity={canEditIdentity}
+      currentUserId={session.user.id}
     />
   );
 }

@@ -15,7 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { InviteMemberDialog } from "./invite-member-dialog";
-import { revokeInviteAction } from "./actions";
+import { EditMemberDialog } from "./edit-member-dialog";
+import { revokeInviteAction, removeMemberAction } from "./actions";
 import type { ProjectMember } from "@/lib/api/members";
 import type { PendingInvitation } from "@/lib/api/invitations";
 import type { Role } from "@/lib/api/roles";
@@ -27,6 +28,9 @@ interface MembersTableProps {
   invites: PendingInvitation[];
   roles: Role[];
   canInvite: boolean;
+  canManageMembers: boolean;
+  canEditIdentity: boolean;
+  currentUserId: string;
 }
 
 function expiresInDays(expiresAt: string): number | null {
@@ -55,11 +59,16 @@ export function MembersTable({
   invites,
   roles,
   canInvite,
+  canManageMembers,
+  canEditIdentity,
+  currentUserId,
 }: MembersTableProps) {
   const t = useTranslations("members");
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<ProjectMember | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const handleRevoke = async (invitationId: string) => {
     if (!confirm(t("revokeConfirm"))) return;
@@ -72,6 +81,23 @@ export function MembersTable({
       toast.error(t("toast.error"));
     } finally {
       setRevokingId(null);
+    }
+  };
+
+  const handleRemove = async (member: ProjectMember) => {
+    if (!confirm(t("edit.removeConfirm", { name: member.display_name ?? member.email }))) {
+      return;
+    }
+    setRemovingId(member.user_id);
+    try {
+      await removeMemberAction(projectId, member.user_id);
+      toast.success(t("edit.toast.removed"));
+      router.refresh();
+    } catch (err: unknown) {
+      const status = (err as { status?: number }).status;
+      toast.error(status === 403 ? t("edit.toast.forbidden") : t("toast.error"));
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -108,6 +134,11 @@ export function MembersTable({
                   <TableHead>{t("col.email")}</TableHead>
                   <TableHead>{t("col.role")}</TableHead>
                   <TableHead>{t("col.joined")}</TableHead>
+                  {canManageMembers && (
+                    <TableHead style={{ textAlign: "right" }}>
+                      {t("col.actions")}
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -136,6 +167,33 @@ export function MembersTable({
                     <TableCell className="num" style={{ color: "var(--muted)" }}>
                       {formatDate(member.joined_at)}
                     </TableCell>
+                    {canManageMembers && (
+                      <TableCell style={{ textAlign: "right" }}>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-[12px]"
+                            onClick={() => setEditing(member)}
+                          >
+                            {t("edit.button")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-[12px]"
+                            style={{ color: "var(--negative)" }}
+                            disabled={
+                              removingId === member.user_id ||
+                              member.user_id === currentUserId
+                            }
+                            onClick={() => handleRemove(member)}
+                          >
+                            {t("edit.remove")}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -214,6 +272,17 @@ export function MembersTable({
           onOpenChange={setDialogOpen}
           projectId={projectId}
           roles={roles}
+        />
+      )}
+
+      {canManageMembers && (
+        <EditMemberDialog
+          open={editing !== null}
+          onOpenChange={(open) => !open && setEditing(null)}
+          projectId={projectId}
+          member={editing}
+          roles={roles}
+          canEditIdentity={canEditIdentity}
         />
       )}
     </div>

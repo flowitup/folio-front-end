@@ -68,6 +68,7 @@ function makeNote(id = NOTE_ID) {
     title: "Test note",
     description: null,
     category: "general" as const,
+    status: "open" as const,
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
   };
@@ -220,6 +221,27 @@ describe("updateNoteAction — input validation", () => {
   it("accepts a valid category in patch", async () => {
     mockUpdate.mockResolvedValueOnce(makeNote());
     const result = await updateNoteAction(PROJECT_ID, NOTE_ID, { category: "decision" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid status value", async () => {
+    const result = await updateNoteAction(PROJECT_ID, NOTE_ID, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      status: "pending" as any,
+    });
+    expect(result).toEqual({ success: false, error: "validation" });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("accepts status=done", async () => {
+    mockUpdate.mockResolvedValueOnce(makeNote());
+    const result = await updateNoteAction(PROJECT_ID, NOTE_ID, { status: "done" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts status=open", async () => {
+    mockUpdate.mockResolvedValueOnce(makeNote());
+    const result = await updateNoteAction(PROJECT_ID, NOTE_ID, { status: "open" });
     expect(result.success).toBe(true);
   });
 });

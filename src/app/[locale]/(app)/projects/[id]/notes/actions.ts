@@ -23,6 +23,10 @@ function isValidCategory(value: string): value is NoteCategory {
   return (CATEGORY_ORDER as string[]).includes(value);
 }
 
+function isValidStatus(value: string): value is "open" | "done" {
+  return value === "open" || value === "done";
+}
+
 // ---- Error classification (mirrors admin/users pattern) ----
 
 function classifyBackendError(err: unknown): string {
@@ -103,6 +107,9 @@ export async function updateNoteAction(
     return { success: false, error: "validation" };
   }
   if (patch.category !== undefined && !isValidCategory(patch.category)) {
+    return { success: false, error: "validation" };
+  }
+  if (patch.status !== undefined && !isValidStatus(patch.status)) {
     return { success: false, error: "validation" };
   }
 

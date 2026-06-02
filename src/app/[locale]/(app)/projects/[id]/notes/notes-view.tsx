@@ -25,7 +25,7 @@ interface NotesViewProps {
 
 export function NotesView({ projectId, initialNotes }: NotesViewProps) {
   const t = useTranslations("notes");
-  const { notes, editingId, setEditingId, handleAdd, handleSave, handleDelete } =
+  const { notes, editingId, setEditingId, handleAdd, handleSave, handleDelete, handleToggleDone } =
     useNotesState(projectId, initialNotes);
 
   const [query, setQuery] = useState("");
@@ -99,6 +99,7 @@ export function NotesView({ projectId, initialNotes }: NotesViewProps) {
                   onSave={handleSave}
                   onCancel={() => setEditingId(null)}
                   onDelete={handleDelete}
+                  onToggleDone={handleToggleDone}
                 />
               ))}
             </div>

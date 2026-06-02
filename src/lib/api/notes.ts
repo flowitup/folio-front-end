@@ -25,6 +25,7 @@ export interface Note {
   title: string;
   description: string | null;
   category: NoteCategory;
+  status: "open" | "done";
   created_at: string;
   updated_at: string;
 }
@@ -44,6 +45,7 @@ export interface UpdateNotePayload {
   title?: string;
   description?: string | null;
   category?: NoteCategory;
+  status?: "open" | "done";
 }
 
 // ---- Error helper ----

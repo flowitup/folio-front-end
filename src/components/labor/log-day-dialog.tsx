@@ -34,6 +34,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { TagSelect } from "@/components/tags/tag-select";
 import { LogDayTileGrid } from "@/components/labor/log-day-tile-grid";
 import { CrossProjectConflictModal } from "@/components/labor/cross-project-conflict-modal";
 import {
@@ -59,6 +60,7 @@ import type {
   ShiftType,
   Worker,
 } from "@/types/labor";
+import type { ProjectTag } from "@/lib/api/tags";
 
 function todayKey(): string {
   const d = new Date();
@@ -78,6 +80,8 @@ interface LogDayDialogProps {
   initialDate?: string;
   /** Re-fetch parent entries after a successful save. */
   onSaved: () => void;
+  /** Available project tags for the bulk tag selector. */
+  tags?: ProjectTag[];
 }
 
 export function LogDayDialog({
@@ -88,6 +92,7 @@ export function LogDayDialog({
   entries,
   initialDate,
   onSaved,
+  tags = [],
 }: LogDayDialogProps) {
   const t = useTranslations("labor.logDayDialog");
   const tLabor = useTranslations("labor");
@@ -97,6 +102,8 @@ export function LogDayDialog({
   const [tileStates, setTileStates] = useState<TileStateMap>({});
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Bulk tag: one tag applied to all entries created in this dialog. null = no tag. */
+  const [bulkTag, setBulkTag] = useState<string | null>(null);
 
   const lastDay = useLastLoggedDay(entries);
 
@@ -147,6 +154,7 @@ export function LogDayDialog({
     if (open) return;
     setSearch("");
     setError(null);
+    setBulkTag(null);
   }, [open]);
 
   useEffect(() => {
@@ -250,11 +258,15 @@ export function LogDayDialog({
 
   async function doSave(acknowledge: boolean) {
     setError(null);
-    const payload = buildBulkPayload(tileStates);
-    if (payload.length === 0) {
+    const baseEntries = buildBulkPayload(tileStates);
+    if (baseEntries.length === 0) {
       setError(t("selectAtLeastOne"));
       return;
     }
+    // Apply the bulk tag (null means "no tag" — omit field to leave as-is).
+    const payload = bulkTag
+      ? baseEntries.map((e) => ({ ...e, tag_id: bulkTag }))
+      : baseEntries;
     setIsSaving(true);
     try {
       const res = await bulkLogAttendance(projectId, {
@@ -312,6 +324,8 @@ export function LogDayDialog({
     await doSave(false);
   }
 
+  const showTagSelector = tags.length > 0;
+
   const canUseLastDay = lastDay.date !== null && lastDay.workers.length > 0;
 
   return (
@@ -351,6 +365,17 @@ export function LogDayDialog({
             className="pl-8"
           />
         </div>
+
+        {showTagSelector && (
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">{t("tagLabel")}</label>
+            <TagSelect
+              tags={tags}
+              value={bulkTag}
+              onChange={setBulkTag}
+            />
+          </div>
+        )}
 
         <div className="flex-1 space-y-4 overflow-y-auto pr-1">
           <LogDayTileGrid

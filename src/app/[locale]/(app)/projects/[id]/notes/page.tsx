@@ -1,6 +1,6 @@
 /**
  * Notes page — server component.
- * Parallel fetches: project metadata + initial notes list.
+ * Fetches initial notes list server-side; renders journal wall client component.
  * Auth-gated via getSession(); 403/404 handled gracefully.
  */
 
@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { listProjectNotes } from "@/lib/api/notes";
+import { NotesView } from "./notes-view";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -22,21 +23,17 @@ export default async function NotesPage({ params }: PageProps) {
     redirect(`/${locale}/login`);
   }
 
-  // `listProjectNotes` uses sessionAuthHeader() which DOES carry cookies on
-  // the server side. We don't fetch project metadata here anymore — the
-  // Topbar handles the page title/subtitle (see TOPBAR_KEYS.notes), and the
-  // project name is already shown in the Topbar's breadcrumb via
-  // ProjectContext.
+  // `listProjectNotes` uses sessionAuthHeader() which carries cookies server-side.
+  // Topbar renders page title/subtitle via TOPBAR_KEYS.notes; project name shown
+  // in the breadcrumb via ProjectContext.
   const notesResult = await listProjectNotes(projectId).catch(() => ({
     items: [],
     count: 0,
   }));
 
-  // NotesView is wired in phase 05 — placeholder div keeps the page compilable.
   return (
-    <div className="notes-wrap wide px-6 py-6">
-      {/* NotesView rendered here after phase 05 */}
-      <div data-notes-placeholder data-project-id={projectId} data-count={notesResult.count} />
+    <div className="px-6 py-6">
+      <NotesView projectId={projectId} initialNotes={notesResult.items} />
     </div>
   );
 }

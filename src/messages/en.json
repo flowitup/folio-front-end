@@ -170,7 +170,7 @@
     "spent": "Spent",
     "team": "Team",
     "openDashboard": "Open dashboard",
-    "photos": "Photos",
+    "photos": "Media",
     "invite": "Invite",
     "noneTeam": "none",
     "memberRole": "Member",
@@ -1476,14 +1476,14 @@
     }
   },
   "photos": {
-    "title": "Photos",
-    "subtitle": "Construction progress photos for this project.",
-    "addPhotos": "Add photos",
+    "title": "Media",
+    "subtitle": "Construction progress photos and videos for this project.",
+    "addPhotos": "Add media",
     "uploading": "Uploading",
     "uploadSuccess": "Photos uploaded",
     "empty": {
-      "title": "No photos yet",
-      "description": "Upload construction progress photos to track the build visually."
+      "title": "No media yet",
+      "description": "Upload photos and videos to track the build visually."
     },
     "caption": {
       "label": "Caption",

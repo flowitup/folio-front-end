@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Play } from "lucide-react";
 import { fetchProjectPhotoBlob } from "@/lib/api/project-photo-blob";
 import type { ProjectPhoto } from "@/lib/api/project-photos";
+import { isVideo } from "@/lib/media/is-video";
 
 interface Props {
   projectId: string;
@@ -86,6 +88,13 @@ export function PhotoThumb({ projectId, photo, onClick }: Props) {
         loading="lazy"
         className="h-full w-full object-cover transition-opacity duration-200"
       />
+      {isVideo(photo.contentType) && (
+        <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <span className="flex size-9 items-center justify-center rounded-full bg-black/55 text-white">
+            <Play className="size-4 translate-x-px fill-current" aria-hidden />
+          </span>
+        </span>
+      )}
     </button>
   );
 }

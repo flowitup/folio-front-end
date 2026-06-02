@@ -170,7 +170,7 @@
     "spent": "Đã chi",
     "team": "Đội",
     "openDashboard": "Mở tổng quan",
-    "photos": "Ảnh",
+    "photos": "Phương tiện",
     "invite": "Mời",
     "noneTeam": "không có",
     "memberRole": "Thành viên",
@@ -1476,14 +1476,14 @@
     }
   },
   "photos": {
-    "title": "Hình ảnh",
-    "subtitle": "Ảnh tiến độ thi công của dự án.",
-    "addPhotos": "Thêm ảnh",
+    "title": "Phương tiện",
+    "subtitle": "Ảnh và video tiến độ thi công của dự án.",
+    "addPhotos": "Thêm phương tiện",
     "uploading": "Đang tải lên",
     "uploadSuccess": "Đã tải ảnh lên thành công",
     "empty": {
-      "title": "Chưa có ảnh nào",
-      "description": "Tải ảnh tiến độ thi công lên để theo dõi quá trình xây dựng bằng hình ảnh."
+      "title": "Chưa có phương tiện nào",
+      "description": "Tải ảnh và video lên để theo dõi quá trình xây dựng bằng hình ảnh."
     },
     "caption": {
       "label": "Chú thích",

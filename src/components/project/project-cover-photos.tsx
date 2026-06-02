@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Play } from "lucide-react";
 import { loadLatestProjectPhotosAction } from "@/app/[locale]/(app)/projects/cover-photos-actions";
 import { fetchProjectPhotoBlob } from "@/lib/api/project-photo-blob";
+import { isVideo } from "@/lib/media/is-video";
+
+interface CoverTile {
+  url: string;
+  video: boolean;
+}
 
 interface Props {
   projectId: string;
@@ -19,7 +26,7 @@ interface Props {
  * underlying cover button stays clickable.
  */
 export function ProjectCoverPhotos({ projectId, max = 4 }: Props) {
-  const [urls, setUrls] = useState<string[]>([]);
+  const [tiles, setTiles] = useState<CoverTile[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -30,7 +37,7 @@ export function ProjectCoverPhotos({ projectId, max = 4 }: Props) {
       const result = await loadLatestProjectPhotosAction(projectId, max);
       if (cancelled || !result.ok || result.photos.length === 0) return;
 
-      const loaded: string[] = [];
+      const loaded: CoverTile[] = [];
       for (const photo of result.photos) {
         try {
           const blob = await fetchProjectPhotoBlob(
@@ -44,12 +51,12 @@ export function ProjectCoverPhotos({ projectId, max = 4 }: Props) {
             return;
           }
           revokers.push(blob.revoke);
-          loaded.push(blob.objectUrl);
+          loaded.push({ url: blob.objectUrl, video: isVideo(photo.contentType) });
         } catch {
           // Skip a thumbnail that fails to load; others still render.
         }
       }
-      if (!cancelled) setUrls(loaded);
+      if (!cancelled) setTiles(loaded);
     })();
 
     return () => {
@@ -59,12 +66,12 @@ export function ProjectCoverPhotos({ projectId, max = 4 }: Props) {
     };
   }, [projectId, max]);
 
-  if (urls.length === 0) return null;
+  if (tiles.length === 0) return null;
 
   // Tile spans: a single photo fills the cover; three photos give the first a
   // tall left column; otherwise an even grid.
-  const cols = urls.length === 1 ? 1 : 2;
-  const spanFirst = urls.length === 3;
+  const cols = tiles.length === 1 ? 1 : 2;
+  const spanFirst = tiles.length === 3;
 
   return (
     <div
@@ -75,14 +82,21 @@ export function ProjectCoverPhotos({ projectId, max = 4 }: Props) {
       }}
       aria-hidden
     >
-      {urls.map((url, i) => (
+      {tiles.map((tile, i) => (
         <div
           key={i}
-          className="overflow-hidden"
+          className="relative overflow-hidden"
           style={spanFirst && i === 0 ? { gridRow: "span 2" } : undefined}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt="" className="h-full w-full object-cover" />
+          <img src={tile.url} alt="" className="h-full w-full object-cover" />
+          {tile.video && (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="flex size-7 items-center justify-center rounded-full bg-black/55 text-white">
+                <Play className="size-3.5 translate-x-px fill-current" aria-hidden />
+              </span>
+            </span>
+          )}
         </div>
       ))}
       {/* Scrim so the project stamp + phase label stay legible over photos. */}

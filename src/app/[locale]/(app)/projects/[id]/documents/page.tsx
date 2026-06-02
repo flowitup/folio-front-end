@@ -38,8 +38,12 @@ export default async function DocumentsPage({ params }: PageProps) {
     listDocumentTags(projectId).catch(() => [] as string[]),
   ]);
 
-  // Membership gate: admin (*:*) or project member (non-null project means access granted by BE)
-  const hasAdminPermission = session.user.permissions.includes("*:*");
+  // Membership gate: admin (*:*) or project member (non-null project means access granted by BE).
+  // Use the project's EFFECTIVE permissions (global ∪ membership-role perms) so a
+  // project admin sees the same controls as a global admin; fall back to the
+  // global JWT perms when the project wasn't loaded (e.g. global admin, non-member).
+  const effectivePerms = project?.my_permissions ?? session.user.permissions;
+  const hasAdminPermission = effectivePerms.includes("*:*");
   const isProjectOwner = project?.owner_id === session.user.id;
 
   // If the project fetch failed entirely (403/404), redirect

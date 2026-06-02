@@ -40,7 +40,10 @@ export default async function PhotosPage({ params }: PageProps) {
     notFound();
   }
 
-  const hasAdminPermission = session.user.permissions.includes("*:*");
+  // Effective per-project perms (global ∪ membership-role) so a project admin
+  // gets edit access, not just global superadmins/owners.
+  const effectivePerms = project.my_permissions ?? session.user.permissions;
+  const hasAdminPermission = effectivePerms.includes("*:*");
   const isProjectOwner = project.owner_id === session.user.id;
   const canEdit = hasAdminPermission || isProjectOwner;
   const currentUserId = session.user.id;

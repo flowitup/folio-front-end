@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useProject } from "@/context/ProjectContext";
+import { canOnProject } from "@/lib/auth/project-permissions";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -62,11 +64,13 @@ export default function LaborPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { projects } = useProject();
 
-  // Permission check
-  const canManageLabor = user?.permissions?.some(
-    (p) => p === "project:manage_labor" || p === "*:*" || p === "project:*"
-  ) ?? false;
+  // Permission check — use EFFECTIVE per-project permissions (global role UNION
+  // this project's membership-role perms), not just the global JWT permissions,
+  // so a user invited as a project admin/manager can manage labor here.
+  const projectPerms = projects.find((p) => p.id === projectId)?.my_permissions;
+  const canManageLabor = canOnProject("project:manage_labor", user?.permissions, projectPerms);
 
   // State
   const [activeTab, setActiveTab] = useState<TabType>("summary");

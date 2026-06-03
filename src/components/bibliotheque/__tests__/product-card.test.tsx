@@ -53,7 +53,7 @@ function makeProduct(overrides?: Partial<LibraryProduct>): LibraryProduct {
     name: "Test Product",
     description: "A test product description",
     size: "Large",
-    category: "Electronics",
+    category: "plomberie",
     has_image: true,
     product_url: "https://example.com/product",
     purchase_count: 3,
@@ -98,7 +98,8 @@ describe("ProductCard", () => {
     expect(screen.getByText("Test Product")).toBeInTheDocument();
     expect(screen.getByText("A test product description")).toBeInTheDocument();
     expect(screen.getByText("ACME Corp")).toBeInTheDocument(); // supplier badge
-    expect(screen.getByText("Electronics")).toBeInTheDocument(); // category badge
+    // category slug localized via bibliotheque.categories.<slug>
+    expect(screen.getByText("bibliotheque.categories.plomberie")).toBeInTheDocument();
     expect(screen.getByText("Large")).toBeInTheDocument(); // size badge
   });
 

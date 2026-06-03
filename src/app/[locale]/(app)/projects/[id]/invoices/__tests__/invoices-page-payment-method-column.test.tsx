@@ -42,6 +42,10 @@ vi.mock("@/context/AuthContext", () => ({
   useAuth: vi.fn(),
 }));
 
+vi.mock("@/context/ProjectContext", () => ({
+  useProject: () => ({ projects: [] }),
+}));
+
 vi.mock("@/lib/api/invoice-api", () => ({
   fetchInvoicesWithMeta: vi.fn(),
   deleteInvoice: vi.fn(),

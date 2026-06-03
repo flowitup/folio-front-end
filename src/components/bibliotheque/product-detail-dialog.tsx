@@ -26,6 +26,7 @@ import {
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import type { ProductDetailResult, Supplier } from "@/lib/api/bibliotheque";
 import { formatDate } from "@/lib/utils/formatters";
+import { localizeCategory } from "@/lib/bibliotheque/categories";
 
 interface ProductDetailDialogProps {
   productId: string | null;
@@ -154,7 +155,7 @@ export function ProductDetailDialog({
               {product.category && (
                 <div>
                   <div className="label-cap mb-0.5">{t("category")}</div>
-                  <span className="font-medium">{product.category}</span>
+                  <span className="font-medium">{localizeCategory(product.category, t)}</span>
                 </div>
               )}
 

@@ -25,6 +25,7 @@ import { ProductImage } from "@/components/bibliotheque/product-image";
 import { cn } from "@/lib/utils";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 import { formatDate } from "@/lib/utils/formatters";
+import { localizeCategory } from "@/lib/bibliotheque/categories";
 
 interface ProductCompareDialogProps {
   open: boolean;
@@ -69,7 +70,7 @@ export function ProductCompareDialog({
     {
       key: "category",
       label: t("category"),
-      render: (p) => p.category ?? t("uncategorized"),
+      render: (p) => localizeCategory(p.category, t),
     },
     {
       key: "size",

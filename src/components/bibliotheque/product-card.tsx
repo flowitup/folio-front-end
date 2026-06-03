@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { ExternalLink, Check } from "lucide-react";
 import { ProductImage } from "@/components/bibliotheque/product-image";
 import { cn } from "@/lib/utils";
+import { localizeCategory } from "@/lib/bibliotheque/categories";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 import { formatDate } from "@/lib/utils/formatters";
 
@@ -96,7 +97,7 @@ export function ProductCard({
             <span className="stamp">{supplier.name}</span>
           )}
           {product.category ? (
-            <span className="stamp accent">{product.category}</span>
+            <span className="stamp accent">{localizeCategory(product.category, t)}</span>
           ) : (
             <span className="stamp muted">{t("uncategorized")}</span>
           )}

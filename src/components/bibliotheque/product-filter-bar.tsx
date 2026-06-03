@@ -11,6 +11,10 @@
 import { useTranslations } from "next-intl";
 import { Search } from "lucide-react";
 import type { Supplier } from "@/lib/api/bibliotheque";
+import {
+  LIBRARY_CATEGORY_SLUGS,
+  localizeCategory,
+} from "@/lib/bibliotheque/categories";
 
 interface FilterBarProps {
   suppliers: Supplier[];
@@ -52,7 +56,8 @@ export function ProductFilterBar({
         ))}
       </select>
 
-      {/* Category select */}
+      {/* Category select — options ordered canonically, with localized labels.
+          Value stays as slug so the filter param sent to the server action is unchanged. */}
       <select
         className="folio-input sm:w-48"
         value={category}
@@ -60,11 +65,20 @@ export function ProductFilterBar({
         aria-label={t("category")}
       >
         <option value="">{t("allCategories")}</option>
-        {categories.map((c) => (
-          <option key={c} value={c}>
-            {c}
+        {/* Known slugs first, in canonical order */}
+        {LIBRARY_CATEGORY_SLUGS.filter((s) => categories.includes(s)).map((s) => (
+          <option key={s} value={s}>
+            {localizeCategory(s, t)}
           </option>
         ))}
+        {/* Defensive: unknown/legacy slugs appended raw at the end */}
+        {categories
+          .filter((c) => !(LIBRARY_CATEGORY_SLUGS as readonly string[]).includes(c))
+          .map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
       </select>
 
       {/* Search */}

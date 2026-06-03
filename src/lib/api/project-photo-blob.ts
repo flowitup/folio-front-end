@@ -9,6 +9,7 @@
 import { getCsrfToken } from "@/lib/api/http";
 import { refreshAccessTokenViaCookie } from "@/lib/api/refresh";
 import { env } from "@/lib/config/env";
+import { withInferredContentType } from "@/lib/media/infer-content-type";
 
 // ---- Types ----
 
@@ -90,9 +91,14 @@ export async function uploadProjectPhoto(
   const headers: Record<string, string> = {};
   if (csrf) headers["X-CSRF-TOKEN"] = csrf;
 
+  // Re-tag files whose browser MIME is empty/generic (e.g. messaging-app
+  // videos) so the multipart part carries a concrete type — otherwise the BE
+  // 415s and/or stores a non-video content_type.
+  const uploadFile = withInferredContentType(file);
+
   function buildFormData(): FormData {
     const fd = new FormData();
-    fd.append("file", file, file.name);
+    fd.append("file", uploadFile, uploadFile.name);
     if (opts.caption && opts.caption.trim()) {
       fd.append("caption", opts.caption.trim());
     }

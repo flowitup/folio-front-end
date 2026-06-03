@@ -1420,7 +1420,25 @@
     "page": "Trang",
     "goToPage": "Đi tới trang",
     "previousPage": "Trang trước",
-    "nextPage": "Trang sau"
+    "nextPage": "Trang sau",
+    "categories": {
+      "terrasse_jardin": "Sân vườn & ngoài trời",
+      "revetement_sol_mur_peinture": "Sàn, tường & sơn",
+      "chauffage_clim_ventilation": "Sưởi, điều hòa & thông gió",
+      "salle_de_bains": "Phòng tắm",
+      "meuble_rangement": "Nội thất & lưu trữ",
+      "cuisine": "Nhà bếp",
+      "luminaire": "Đèn & chiếu sáng",
+      "decoration": "Trang trí",
+      "menuiserie": "Cửa & mộc",
+      "materiaux_construction": "Vật liệu xây dựng",
+      "electricite_domotique": "Điện & nhà thông minh",
+      "outillage": "Dụng cụ",
+      "plomberie": "Ống nước",
+      "quincaillerie": "Kim khí & phụ kiện",
+      "droguerie": "Hóa phẩm gia dụng",
+      "autre": "Khác / Chưa phân loại"
+    }
   },
   "tags": {
     "select": {

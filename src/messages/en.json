@@ -1420,7 +1420,25 @@
     "page": "Page",
     "goToPage": "Go to page",
     "previousPage": "Previous page",
-    "nextPage": "Next page"
+    "nextPage": "Next page",
+    "categories": {
+      "terrasse_jardin": "Terrace & garden",
+      "revetement_sol_mur_peinture": "Flooring, walls & paint",
+      "chauffage_clim_ventilation": "Heating, cooling & ventilation",
+      "salle_de_bains": "Bathroom",
+      "meuble_rangement": "Furniture & storage",
+      "cuisine": "Kitchen",
+      "luminaire": "Lighting",
+      "decoration": "Decoration",
+      "menuiserie": "Joinery",
+      "materiaux_construction": "Building materials",
+      "electricite_domotique": "Electrical & home automation",
+      "outillage": "Tools",
+      "plomberie": "Plumbing",
+      "quincaillerie": "Hardware",
+      "droguerie": "Household & cleaning",
+      "autre": "Other / Uncategorized"
+    }
   },
   "tags": {
     "select": {

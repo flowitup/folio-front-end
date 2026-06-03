@@ -1420,7 +1420,25 @@
     "page": "Page",
     "goToPage": "Aller à la page",
     "previousPage": "Page précédente",
-    "nextPage": "Page suivante"
+    "nextPage": "Page suivante",
+    "categories": {
+      "terrasse_jardin": "Terrasse et jardin",
+      "revetement_sol_mur_peinture": "Revêtement sol, mur et peinture",
+      "chauffage_clim_ventilation": "Chauffage, climatisation et ventilation",
+      "salle_de_bains": "Salle de bains",
+      "meuble_rangement": "Meuble et rangement",
+      "cuisine": "Cuisine",
+      "luminaire": "Luminaire",
+      "decoration": "Décoration",
+      "menuiserie": "Menuiserie",
+      "materiaux_construction": "Matériaux de construction",
+      "electricite_domotique": "Electricité et domotique",
+      "outillage": "Outillage",
+      "plomberie": "Plomberie",
+      "quincaillerie": "Quincaillerie",
+      "droguerie": "Droguerie",
+      "autre": "Autre / Non classé"
+    }
   },
   "tags": {
     "select": {

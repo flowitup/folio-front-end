@@ -48,7 +48,7 @@ export interface CreateInvoicePayload {
   tag_id?: string | null;
 }
 
-export type UpdateInvoicePayload = Partial<Omit<CreateInvoicePayload, "type">>;
+export type UpdateInvoicePayload = Partial<CreateInvoicePayload>;
 
 export interface InvoiceAttachment {
   id: string;

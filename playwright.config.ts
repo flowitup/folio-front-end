@@ -2,6 +2,8 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  // Seeds the deterministic dataset when E2E_SEED=1; fail-soft no-op otherwise.
+  globalSetup: "./e2e/global-setup.ts",
   fullyParallel: false, // sequential for workflow tests
   retries: process.env.CI ? 2 : 0,
   workers: 1,

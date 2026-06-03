@@ -5,6 +5,7 @@ import { listMembers } from "@/lib/api/members";
 import { listInvitations } from "@/lib/api/invitations";
 import { listRoles } from "@/lib/api/roles";
 import { getProjectById } from "@/lib/api/projects-server";
+import { canOnProject } from "@/lib/auth/project-permissions";
 import { MembersTable } from "./members-table";
 
 interface PageProps {
@@ -28,19 +29,20 @@ export default async function MembersPage({ params }: PageProps) {
     getProjectById(projectId).catch(() => null),
   ]);
 
-  // Server-side permission check (authoritative).
-  // Invite allowed if: has explicit permission OR is project owner.
+  // Server-side permission check (authoritative). Invite + manage-members honor
+  // the caller's EFFECTIVE per-project permissions (global role UNION their
+  // membership-role perms on this project), so a project manager/admin can
+  // invite and manage members even when their global role is the read-only
+  // default. Mirrors the backend gates.
   const perms = session.user.permissions ?? [];
-  const isSuperadmin = perms.includes("*:*");
+  const projectPerms = project?.my_permissions;
   const isProjectOwner = project?.owner_id === session.user.id;
-  const canInvite =
-    perms.includes("project:invite") || isSuperadmin || isProjectOwner;
-  // Managing members (role change / remove) mirrors the backend gate:
-  // project:manage_users OR owner OR superadmin.
-  const canManageMembers =
-    perms.includes("project:manage_users") || isSuperadmin || isProjectOwner;
-  // Editing identity (email / display name) is a global concern — superadmin only.
-  const canEditIdentity = perms.includes("user:update") || isSuperadmin;
+  const canInvite = canOnProject("project:invite", perms, projectPerms) || isProjectOwner;
+  const canManageMembers = canOnProject("project:manage_users", perms, projectPerms) || isProjectOwner;
+  // Editing identity (email / display name) is a GLOBAL concern (it changes how
+  // the user signs in everywhere), so it stays gated on the caller's global
+  // role only — never the per-project membership role.
+  const canEditIdentity = perms.includes("user:update") || perms.includes("*:*");
 
   return (
     <MembersTable

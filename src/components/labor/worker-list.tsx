@@ -105,7 +105,7 @@ export function WorkerList({
                 <span
                   className={cn(
                     "absolute left-3 top-3 inline-block h-2 w-2 rounded-full",
-                    worker.is_active ? "bg-emerald-500" : "bg-muted-foreground/40",
+                    worker.is_active ? "bg-[var(--positive)]" : "bg-muted-foreground/40",
                   )}
                   title={worker.is_active ? t("active") : t("inactive")}
                   aria-label={worker.is_active ? t("active") : t("inactive")}

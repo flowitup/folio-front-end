@@ -173,7 +173,7 @@ export function MyCompanyCard({ company, onMutated }: MyCompanyCardProps) {
             size="sm"
             onClick={() => setDetachOpen(true)}
             disabled={isDetaching}
-            className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+            className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50"
           >
             <Unlink size={12} className="mr-1.5" />
             {t("my.card.detach")}
@@ -197,7 +197,7 @@ export function MyCompanyCard({ company, onMutated }: MyCompanyCardProps) {
             <AlertDialogAction
               onClick={handleDetach}
               disabled={isDetaching}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
             >
               {isDetaching && (
                 <Loader2 size={12} className="mr-1.5 animate-spin" />

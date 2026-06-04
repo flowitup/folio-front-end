@@ -15,10 +15,10 @@ import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice
 import type { ProjectTag } from "@/lib/api/tags";
 
 const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
-  released_funds: "bg-blue-100 text-blue-700",
-  labor: "bg-orange-100 text-orange-700",
-  materials_services: "bg-green-100 text-green-700",
-  others: "bg-gray-100 text-gray-700",
+  released_funds: "stamp",
+  labor: "stamp accent",
+  materials_services: "stamp positive",
+  others: "stamp muted",
 };
 
 interface InvoiceDetailContentProps {
@@ -96,11 +96,7 @@ export function InvoiceDetailContent({
           <h2 className="text-lg font-semibold tracking-tight font-mono">
             {invoice.invoice_number}
           </h2>
-          <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              TYPE_BADGE_CLASS[invoice.type]
-            }`}
-          >
+          <span className={TYPE_BADGE_CLASS[invoice.type]}>
             {t(`types.${invoice.type}`)}
           </span>
         </div>

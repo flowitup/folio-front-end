@@ -394,7 +394,7 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
               {/* Status icon */}
               <div className="shrink-0">
                 {job.status === "done" ? (
-                  <CheckCircle className="size-4 text-green-500" aria-hidden />
+                  <CheckCircle className="size-4 text-[var(--positive)]" aria-hidden />
                 ) : job.status === "failed" ? (
                   <AlertCircle className="size-4 text-destructive" aria-hidden />
                 ) : (

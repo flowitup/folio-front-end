@@ -128,7 +128,7 @@ export function WorkerTile({
         )}
         {!locked && conflict && (
           <span
-            className="text-amber-600 inline-flex items-center gap-1 text-[10px] shrink-0"
+            className="text-[var(--warning)] inline-flex items-center gap-1 text-[10px] shrink-0"
             title={conflict.entries
               .map((e) =>
                 `${e.project_name}: ${e.shift_type ?? "(supplement)"}`,

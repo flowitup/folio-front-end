@@ -130,7 +130,7 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-[12px] text-red-500 hover:text-red-600"
+                className="h-7 px-2 text-[12px] text-destructive hover:text-destructive"
                 disabled={isDeleting}
               >
                 <Trash2 size={12} />
@@ -147,7 +147,7 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
                 <AlertDialogCancel>{tList("actions.deleteCancel")}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleConfirmDelete}
-                  className="bg-red-600 text-white hover:bg-red-700"
+                  className="bg-destructive text-white hover:bg-destructive/90"
                 >
                   {tList("actions.deleteConfirm")}
                 </AlertDialogAction>

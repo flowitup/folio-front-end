@@ -35,7 +35,7 @@ export default async function EditDevisPage({ params }: EditDevisPageProps) {
     return (
       <div className="fade-up px-8 py-12">
         <div className="folio-card p-6">
-          <p className="text-sm font-medium text-red-600">
+          <p className="text-destructive text-sm font-medium">
             {t("loadFailed")}
           </p>
         </div>

@@ -117,7 +117,7 @@ export function CalendarCell({
         "min-h-20 rounded-md border p-2 text-left transition",
         "flex flex-col gap-1.5",
         "hover:border-primary/60 hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring",
-        holidayName ? "bg-rose-50" : sunday ? "bg-muted/40" : "bg-card",
+        holidayName ? "bg-accent" : sunday ? "bg-muted/40" : "bg-card",
         today ? "border-primary ring-1 ring-primary/40" : "border-border",
       )}
       title={holidayName ?? undefined}
@@ -147,7 +147,7 @@ export function CalendarCell({
       </div>
 
       {holidayName && (
-        <span className="text-rose-700 truncate text-[10px] font-medium uppercase tracking-wide">
+        <span className="text-accent-foreground truncate text-[10px] font-medium uppercase tracking-wide">
           {holidayName}
         </span>
       )}
@@ -184,7 +184,7 @@ export function CalendarCell({
             <span
               key={a.id}
               title={a.title}
-              className="text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 truncate rounded px-1 py-0.5"
+              className="text-[10px] bg-accent text-accent-foreground truncate rounded px-1 py-0.5"
             >
               {a.title}
             </span>

@@ -172,7 +172,7 @@ export function DocumentsFilters({ kinds, selectedTags, availableTags, uploaderI
                 onClick={() => toggleTag(tag)}
                 data-active={isActive}
                 className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors
-                  data-[active=true]:bg-blue-600 data-[active=true]:text-white data-[active=true]:border-blue-600
+                  data-[active=true]:bg-foreground data-[active=true]:text-background data-[active=true]:border-foreground
                   data-[active=false]:bg-transparent data-[active=false]:text-muted-foreground
                   hover:bg-accent hover:text-accent-foreground"
               >

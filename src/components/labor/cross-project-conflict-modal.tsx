@@ -57,7 +57,7 @@ export function CrossProjectConflictModal({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="text-amber-600 h-5 w-5" />
+            <AlertTriangle className="text-[var(--warning)] h-5 w-5" />
             {t("modalTitle")}
           </DialogTitle>
           <DialogDescription>{t("modalBody")}</DialogDescription>
@@ -67,7 +67,7 @@ export function CrossProjectConflictModal({
           {groups.map((g) => (
             <li
               key={g.person_id}
-              className="border-amber-200 bg-amber-50 rounded-md border p-3"
+              className="border-[var(--warning)]/40 bg-[var(--warning-tint)] rounded-md border p-3"
             >
               <div className="font-medium">{g.person_name}</div>
               <ul className="text-muted-foreground mt-1 space-y-0.5 text-sm">

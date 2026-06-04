@@ -10,11 +10,13 @@ import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Task, TaskPriority } from "@/types/task";
 
+// Folio status-dot variants (globals.css): escalate from neutral → accent →
+// warning → negative as priority rises.
 const PRIORITY_DOT: Record<TaskPriority, string> = {
-  low: "bg-slate-300",
-  medium: "bg-blue-400",
-  high: "bg-orange-400",
-  urgent: "bg-red-500",
+  low: "dot",
+  medium: "dot accent",
+  high: "dot warning",
+  urgent: "dot negative",
 };
 
 interface BacklogBarProps {
@@ -110,7 +112,7 @@ function BacklogCard({ task, onClick }: BacklogCardProps) {
     >
       <div className="flex items-center gap-2">
         <span
-          className={`h-2 w-2 rounded-full flex-shrink-0 ${PRIORITY_DOT[task.priority]}`}
+          className={`${PRIORITY_DOT[task.priority]} flex-shrink-0`}
           title={task.priority}
         />
         <p className="text-xs font-medium truncate">{task.title}</p>

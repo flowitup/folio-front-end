@@ -244,13 +244,13 @@ export function DocumentsList({
                   {doc.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-0.5 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                      className="bg-accent text-accent-foreground inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium"
                     >
                       {tag}
                       <button
                         type="button"
                         onClick={() => onTagsUpdate(doc.id, doc.tags.filter((t) => t !== tag))}
-                        className="ml-0.5 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800"
+                        className="ml-0.5 rounded-full hover:bg-[var(--accent)]/20"
                         aria-label={tTags("remove")}
                       >
                         <X className="size-3" />
@@ -306,7 +306,7 @@ export function DocumentsList({
                   {doc.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                      className="bg-accent text-accent-foreground inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
                     >
                       {tag}
                     </span>

@@ -295,7 +295,7 @@ export function AdminCompanyManagePage({
               activeTab === tab.key
                 ? "border-[var(--accent)] text-[var(--accent)]"
                 : "border-transparent"
-            } ${tab.key === "delete" ? "text-red-600 ml-auto" : ""}`}
+            } ${tab.key === "delete" ? "text-destructive ml-auto" : ""}`}
           >
             {tab.label}
           </button>
@@ -311,7 +311,7 @@ export function AdminCompanyManagePage({
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="mp-legal-name">
                 {t("form.fields.legalName.label")}
-                <span className="ml-1 text-red-500">*</span>
+                <span className="ml-1 text-destructive">*</span>
               </Label>
               <Input
                 id="mp-legal-name"
@@ -320,14 +320,14 @@ export function AdminCompanyManagePage({
                 disabled={isSaving}
               />
               {fieldErrors.legal_name && (
-                <p className="text-[12px] text-red-600">{fieldErrors.legal_name}</p>
+                <p className="text-[12px] text-destructive">{fieldErrors.legal_name}</p>
               )}
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="mp-address">
                 {t("form.fields.address.label")}
-                <span className="ml-1 text-red-500">*</span>
+                <span className="ml-1 text-destructive">*</span>
               </Label>
               <Textarea
                 id="mp-address"
@@ -337,7 +337,7 @@ export function AdminCompanyManagePage({
                 rows={2}
               />
               {fieldErrors.address && (
-                <p className="text-[12px] text-red-600">{fieldErrors.address}</p>
+                <p className="text-[12px] text-destructive">{fieldErrors.address}</p>
               )}
             </div>
 
@@ -362,7 +362,7 @@ export function AdminCompanyManagePage({
               <Label htmlFor="mp-logo">{t("form.fields.logoUrl.label")}</Label>
               <Input id="mp-logo" type="url" value={str(form.logo_url)} onChange={setField("logo_url")} disabled={isSaving} />
               {fieldErrors.logo_url && (
-                <p className="text-[12px] text-red-600">{fieldErrors.logo_url}</p>
+                <p className="text-[12px] text-destructive">{fieldErrors.logo_url}</p>
               )}
             </div>
 
@@ -388,7 +388,7 @@ export function AdminCompanyManagePage({
                 maxLength={8}
               />
               {fieldErrors.prefix_override ? (
-                <p className="text-[12px] text-red-600">{fieldErrors.prefix_override}</p>
+                <p className="text-[12px] text-destructive">{fieldErrors.prefix_override}</p>
               ) : (
                 <p className="text-[11px]" style={{ color: "var(--muted)" }}>
                   {t("form.fields.prefixOverride.help")}
@@ -463,7 +463,7 @@ export function AdminCompanyManagePage({
                 variant="outline"
                 onClick={() => setRevokeConfirmOpen(true)}
                 disabled={isRevoking || isGenerating}
-                className="text-red-600 border-red-200 hover:border-red-300 hover:text-red-700"
+                className="text-destructive border-destructive/30 hover:border-destructive/50 hover:text-destructive"
               >
                 {isRevoking ? (
                   <Loader2 size={14} className="mr-2 animate-spin" />
@@ -505,7 +505,7 @@ export function AdminCompanyManagePage({
                 <AlertDialogAction
                   onClick={handleRevoke}
                   disabled={isRevoking}
-                  className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                  className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
                 >
                   {isRevoking && <Loader2 size={12} className="mr-1.5 animate-spin" />}
                   {t("admin.manage.invites.revoke")}
@@ -530,7 +530,7 @@ export function AdminCompanyManagePage({
                     setRegenConfirmOpen(false);
                     void doGenerate(true);
                   }}
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="bg-[var(--warning)] hover:bg-[var(--warning)]/90"
                 >
                   <RefreshCw size={12} className="mr-1.5" />
                   {t("admin.manage.invites.regenerate")}
@@ -569,9 +569,9 @@ export function AdminCompanyManagePage({
       {/* Tab: Delete */}
       {/* ------------------------------------------------------------------ */}
       {activeTab === "delete" && (
-        <div className="folio-card border-red-200 p-5 space-y-4">
+        <div className="folio-card border-destructive/30 p-5 space-y-4">
           <div>
-            <h4 className="font-medium text-[15px] text-red-700">
+            <h4 className="font-medium text-[15px] text-destructive">
               {t("admin.manage.delete.title")}
             </h4>
             <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
@@ -582,7 +582,7 @@ export function AdminCompanyManagePage({
             variant="outline"
             onClick={() => setDeleteConfirmOpen(true)}
             disabled={isDeleting}
-            className="border-red-200 text-red-600 hover:border-red-300 hover:text-red-700"
+            className="border-destructive/30 text-destructive hover:border-destructive/50 hover:text-destructive"
           >
             {isDeleting ? (
               <Loader2 size={14} className="mr-2 animate-spin" />
@@ -610,7 +610,7 @@ export function AdminCompanyManagePage({
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
             >
               {isDeleting && <Loader2 size={12} className="mr-1.5 animate-spin" />}
               {t("admin.manage.delete.confirm")}

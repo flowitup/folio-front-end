@@ -220,7 +220,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setDeleteOpen(true)}
-            className="text-red-600 focus:text-red-600"
+            className="text-destructive focus:text-destructive"
           >
             <Trash2 size={13} className="mr-2" />
             {tActions("delete")}
@@ -242,7 +242,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
             <AlertDialogCancel>{tActions("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
             >
               {tActions("delete")}
             </AlertDialogAction>

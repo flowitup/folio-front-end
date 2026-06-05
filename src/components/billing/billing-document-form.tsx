@@ -462,7 +462,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
               {tForm("issuer.issuedFrom")}
             </span>
             <span className="text-[13px] font-medium">{editIssuerName}</span>
-            <span className="ml-1 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-500 ring-1 ring-stone-200">
+            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground ring-1 ring-border">
               {tForm("issuer.locked")}
             </span>
           </div>
@@ -517,7 +517,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         <div className="space-y-3">
           <div className="space-y-1">
             <Label htmlFor="recipient-name" className="text-[12px]">
-              {tForm("recipient.name")} <span className="text-red-500">*</span>
+              {tForm("recipient.name")} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="recipient-name"
@@ -707,7 +707,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
           <Button
             type="button"
             variant="outline"
-            className="ml-auto text-red-600 hover:bg-red-50 hover:text-red-600"
+            className="ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={handleDelete}
             disabled={isSubmitting}
           >

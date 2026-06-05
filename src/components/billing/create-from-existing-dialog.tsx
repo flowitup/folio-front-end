@@ -182,7 +182,7 @@ export function CreateFromExistingDialog({
         </div>
 
         {crossKind && (
-          <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-800">
+          <div className="flex items-start gap-2 rounded-md border border-[var(--warning)]/40 bg-[var(--warning-tint)] p-3 text-[13px] text-[#8e6418]">
             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
             <span>
               Switching kinds resets the document lifecycle. The cloned{" "}

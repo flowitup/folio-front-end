@@ -252,7 +252,7 @@ export function ApplyTemplateDialog({
 
             <div className="space-y-1">
               <Label htmlFor="tpl-recipient-name" className="text-[12px]">
-                {tRecipient("name")} <span className="text-red-500">*</span>
+                {tRecipient("name")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="tpl-recipient-name"
@@ -261,10 +261,10 @@ export function ApplyTemplateDialog({
                   handleRecipientChange("recipient_name", e.target.value)
                 }
                 placeholder={tRecipient("namePlaceholder")}
-                className={nameError ? "border-red-400" : ""}
+                className={nameError ? "border-destructive" : ""}
               />
               {nameError && (
-                <p className="text-[12px] text-red-500">{nameError}</p>
+                <p className="text-[12px] text-destructive">{nameError}</p>
               )}
             </div>
 

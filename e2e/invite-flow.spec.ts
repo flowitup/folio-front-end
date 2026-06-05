@@ -121,8 +121,10 @@ test.describe("Invite-only signup flow", () => {
     if (await pendingTab.isVisible()) {
       await pendingTab.click();
     }
-    // The invited email should appear somewhere on the page
-    await expect(page.getByText(INVITE_EMAIL)).toBeVisible({ timeout: 10000 });
+    // The invited email should appear somewhere on the page. It can render in
+    // more than one place (the pending-invitations table cell and the success
+    // toast), so scope to the first match to avoid a strict-mode violation.
+    await expect(page.getByText(INVITE_EMAIL).first()).toBeVisible({ timeout: 10000 });
 
     // ---- Step 5: Extract accept URL from InMemoryEmailAdapter ----
     const emailPayload = await fetchLastEmail();

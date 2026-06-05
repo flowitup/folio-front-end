@@ -240,7 +240,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         {/* Kind */}
         <div className="space-y-1">
           <Label htmlFor="tpl-kind" className="text-[12px]">
-            {tForm("kind")} <span className="text-red-500">*</span>
+            {tForm("kind")} <span className="text-destructive">*</span>
           </Label>
           {isEdit ? (
             <div className="space-y-1">
@@ -271,7 +271,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         {/* Name */}
         <div className="space-y-1">
           <Label htmlFor="tpl-name" className="text-[12px]">
-            {tForm("name")} <span className="text-red-500">*</span>
+            {tForm("name")} <span className="text-destructive">*</span>
           </Label>
           <Input
             id="tpl-name"
@@ -389,7 +389,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
               <Button
                 type="button"
                 variant="outline"
-                className="ml-auto text-red-600 hover:bg-red-50 hover:text-red-600"
+                className="ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
                 disabled={isSubmitting}
               >
                 {tForm("actions.delete")}
@@ -406,7 +406,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
                 <AlertDialogCancel>{tForm("actions.cancel")}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDelete}
-                  className="bg-red-600 text-white hover:bg-red-700"
+                  className="bg-destructive text-white hover:bg-destructive/90"
                 >
                   {tForm("actions.delete")}
                 </AlertDialogAction>

@@ -229,7 +229,7 @@ export function LaborSummary({
     <div className="space-y-5">
       {/* Supplement banner — only shown when there are banked hours */}
       {totalBankedHours > 0 && (
-        <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-4">
+        <div className="rounded-lg bg-[var(--warning-tint)] p-4">
           <p className="text-[13px] font-medium">
             {t("supplement.banner", {
               banked: totalBankedHours,

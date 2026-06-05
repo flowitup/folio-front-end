@@ -198,7 +198,7 @@ export function AttendanceTable({
                       ))}
                       {dayActivities.map((activity) => (
                         <div key={activity.id} className="flex items-start gap-3 px-4 py-3">
-                          <ClipboardList className="text-blue-500 mt-0.5 h-4 w-4 shrink-0" />
+                          <ClipboardList className="text-accent-foreground mt-0.5 h-4 w-4 shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium">{activity.title}</p>
                             {activity.description && (

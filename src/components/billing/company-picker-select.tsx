@@ -138,7 +138,7 @@ export function CompanyPickerSelect({
         </span>
         <span className="text-[13px] font-medium">{company.legal_name}</span>
         {company.is_primary && (
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 ring-1 ring-blue-200">
+          <span className="bg-accent text-accent-foreground rounded-full px-2 py-0.5 text-[11px] font-medium">
             {t("primaryBadge")}
           </span>
         )}
@@ -163,7 +163,7 @@ export function CompanyPickerSelect({
             <SelectItem key={company.id} value={company.id}>
               <span>{company.legal_name}</span>
               {company.is_primary && (
-                <span className="ml-2 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
+                <span className="bg-accent text-accent-foreground ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-medium">
                   {t("primaryBadge")}
                 </span>
               )}

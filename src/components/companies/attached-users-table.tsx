@@ -210,7 +210,7 @@ export function AttachedUsersTable({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="h-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={() =>
                     setBootTarget({
                       userId: u.user_id,
@@ -253,7 +253,7 @@ export function AttachedUsersTable({
             <AlertDialogAction
               onClick={handleBoot}
               disabled={isBooting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
             >
               {isBooting && (
                 <Loader2 size={12} className="mr-1.5 animate-spin" />

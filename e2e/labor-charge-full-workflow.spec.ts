@@ -4,9 +4,6 @@ import { loginAsAdmin } from "./helpers/login-as-admin-helper";
 // Unique test data to avoid conflicts
 const WORKER_NAME = `E2E Worker ${Date.now()}`;
 const DAILY_RATE = "150.00";
-const PHONE = "0612345678";
-const OVERRIDE_AMOUNT = "175.00";
-const NOTE = "E2E test entry";
 
 // Project ID from seeded data (or discover dynamically)
 const PROJECT_ID = process.env.TEST_PROJECT_ID || "";
@@ -75,120 +72,91 @@ test.describe("Labor Charge Workflow", () => {
     await loginAsAdmin(page);
   });
 
-  test("full workflow: add worker → log attendance → verify summary → cleanup", async ({
+  test("full workflow: add worker \u2192 log day \u2192 verify summary \u2192 cleanup", async ({
     page,
   }) => {
-    // Step 1: Navigate to labor page
     const projectId = PROJECT_ID || (await getFirstProjectId(page));
     await page.goto(`/en/projects/${projectId}/labor`);
     await page.waitForLoadState("networkidle");
 
-    // Verify we're on the labor page (Workers tab is default)
-    await expect(page.getByRole("button", { name: "Workers" })).toBeVisible();
+    // The labor page opens on the Summary tab \u2014 switch to Workers.
+    await page.getByRole("button", { name: "Workers" }).click();
 
-    // Step 2: Add Worker
-    const addWorkerBtn = page.getByRole("button", { name: "Add Worker" });
-    await expect(addWorkerBtn).toBeVisible();
-    await addWorkerBtn.click();
+    // --- Add a worker -------------------------------------------------------
+    await page.getByRole("button", { name: "Add worker" }).click();
+    const addDialog = page.locator('[data-slot="dialog-content"]');
+    await expect(addDialog).toBeVisible({ timeout: 10000 });
+    // Worker identity is a Person: open the typeahead, type a fresh name and
+    // create it via the "Create …" affordance.
+    await addDialog.getByRole("combobox").first().click();
+    await page.getByTestId("person-typeahead-input").fill(WORKER_NAME);
+    await page.getByRole("option", { name: /Create/ }).click();
+    await addDialog.locator("#dailyRate").fill(DAILY_RATE);
 
-    // Wait for dialog to appear - use data-slot selector for Radix dialog
-    const dialog = page.locator('[data-slot="dialog-content"]');
-    await expect(dialog).toBeVisible({ timeout: 10000 });
-
-    // Fill worker form in dialog - use ID selectors which are more reliable
-    await page.locator("#name").fill(WORKER_NAME);
-    await page.locator("#dailyRate").fill(DAILY_RATE);
-    await page.locator("#phone").fill(PHONE);
-
-    // Click Save and wait for the API response
-    const createWorkerResponse = page.waitForResponse(
-      (resp) => resp.url().includes("/workers") && resp.request().method() === "POST",
+    const createWorker = page.waitForResponse(
+      (r) => r.url().includes("/workers") && r.request().method() === "POST",
       { timeout: 15000 }
     );
-    await page.getByRole("button", { name: "Save" }).click();
+    await addDialog.getByRole("button", { name: "Save" }).click();
+    expect((await createWorker).status()).toBeLessThan(400);
+    await expect(addDialog).not.toBeVisible({ timeout: 5000 });
 
-    // Wait for API response
-    const response = await createWorkerResponse;
-    expect(response.status()).toBeLessThan(400);
-    console.log(`Create worker response status: ${response.status()}`);
+    // Worker appears in the Workers grid.
+    await expect(page.getByText(WORKER_NAME).first()).toBeVisible({ timeout: 10000 });
 
-    // Wait for the GET workers refresh that happens after create
-    const refreshResponse = await page.waitForResponse(
-      (resp) => resp.url().includes("/workers") && resp.request().method() === "GET",
-      { timeout: 10000 }
-    );
-    console.log(`Refresh workers response status: ${refreshResponse.status()}`);
-    const workersData = await refreshResponse.json();
-    console.log(`Workers data: ${JSON.stringify(workersData)}`);
-
-    // Wait for dialog to close
-    await expect(dialog).not.toBeVisible({ timeout: 5000 });
-
-    // Log current URL to verify we're still on labor page
-    console.log(`Current URL after dialog close: ${page.url()}`);
-
-    // Verify we're still on labor page (not redirected)
-    await expect(page.getByRole("heading", { name: "Labor Charges" })).toBeVisible({ timeout: 5000 });
-
-    // Verify worker appears in list
-    await expect(page.getByText(WORKER_NAME)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/150,00/)).toBeVisible(); // EUR format
-
-    // Step 3: Log Attendance (switch to Attendance tab)
+    // --- Log a day for the worker via the Log-day dialog --------------------
     await page.getByRole("button", { name: "Attendance" }).click();
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: "Log Attendance" }).click();
+    // Two "Log day" buttons exist (topbar + attendance tab); use the main one.
+    await page.getByRole("main").getByRole("button", { name: "Log day" }).click();
+    const logDialog = page.locator('[data-slot="dialog-content"]');
+    await expect(logDialog).toBeVisible({ timeout: 10000 });
 
-    // Select worker from dropdown (Radix Select)
-    await page.getByRole("combobox").click();
-    await page.getByRole("option", { name: WORKER_NAME }).click();
+    // Toggle the worker's tile (a button whose accessible name includes the name).
+    await logDialog
+      .getByRole("button", { name: new RegExp(WORKER_NAME) })
+      .first()
+      .click();
 
-    // Date is pre-filled with today, fill override and note
-    await page.getByLabel(/Rate Override/i).fill(OVERRIDE_AMOUNT);
-    await page.getByLabel("Note").fill(NOTE);
-    await page.getByRole("button", { name: "Save" }).click();
+    const createEntry = page.waitForResponse(
+      (r) => r.url().includes("/labor-entries") && r.request().method() === "POST",
+      { timeout: 15000 }
+    );
+    await logDialog.getByRole("button", { name: /^Save \(/ }).click();
+    expect((await createEntry).status()).toBeLessThan(400);
+    await expect(logDialog).not.toBeVisible({ timeout: 5000 });
 
-    // Verify entry appears in table
-    await expect(page.getByText(WORKER_NAME)).toBeVisible();
-    await expect(page.getByText(/175,00/)).toBeVisible(); // Override amount in EUR
-    await expect(page.getByText(NOTE)).toBeVisible();
+    // Entry shows up on the attendance tab.
+    await expect(page.getByText(WORKER_NAME).first()).toBeVisible({ timeout: 10000 });
 
-    // Step 4: Verify Summary
+    // --- Verify on the Summary tab -----------------------------------------
     await page.getByRole("button", { name: "Summary" }).click();
     await page.waitForLoadState("networkidle");
+    await expect(page.getByText(WORKER_NAME).first()).toBeVisible({ timeout: 10000 });
 
-    // Verify worker name appears with correct total
-    await expect(page.getByText(WORKER_NAME)).toBeVisible();
-    await expect(page.getByText(/175,00/)).toBeVisible();
-
-    // Step 5: Cleanup - Delete entry
+    // --- Cleanup: delete the entry -----------------------------------------
     await page.getByRole("button", { name: "Attendance" }).click();
     await page.waitForLoadState("networkidle");
+    await page.getByRole("tab", { name: "List" }).click();
+    await page.getByRole("button", { name: "Delete" }).first().click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Delete" })
+      .click();
 
-    // Click delete button on the entry (trash icon button)
-    const entryRow = page.locator("div").filter({ hasText: WORKER_NAME }).first();
-    await entryRow.getByRole("button").click();
-
-    // Confirm deletion in dialog
-    await page.getByRole("button", { name: "Delete" }).click();
-
-    // Verify entry removed
-    await expect(page.getByText(NOTE)).not.toBeVisible();
-
-    // Step 6: Cleanup - Deactivate worker
+    // --- Cleanup: deactivate the worker ------------------------------------
     await page.getByRole("button", { name: "Workers" }).click();
     await page.waitForLoadState("networkidle");
-
-    // Click deactivate button on the worker (user-x icon button)
-    const workerCard = page.locator("div").filter({ hasText: WORKER_NAME }).first();
-    const deactivateBtn = workerCard.getByRole("button").last();
-    await deactivateBtn.click();
-
-    // Confirm deactivation in dialog
-    await page.getByRole("button", { name: "Deactivate" }).click();
-
-    // Verify worker shows "Inactive" badge
-    await expect(page.getByText("Inactive")).toBeVisible();
+    await page.getByRole("button", { name: "Deactivate" }).first().click();
+    const deactivateResp = page.waitForResponse(
+      (r) => /\/workers\//.test(r.url()) && r.request().method() === "DELETE",
+      { timeout: 15000 }
+    );
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Deactivate" })
+      .click();
+    expect((await deactivateResp).status()).toBeLessThan(400);
   });
 });

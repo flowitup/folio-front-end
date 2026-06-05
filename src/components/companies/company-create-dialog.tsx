@@ -153,7 +153,7 @@ export function CompanyCreateDialog({
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="cc-legal-name">
                 {t("form.fields.legalName.label")}
-                <span className="ml-1 text-red-500">*</span>
+                <span className="ml-1 text-destructive">*</span>
               </Label>
               <Input
                 id="cc-legal-name"
@@ -164,7 +164,7 @@ export function CompanyCreateDialog({
                 autoFocus
               />
               {fieldErrors.legal_name && (
-                <p className="text-[12px] text-red-600">
+                <p className="text-[12px] text-destructive">
                   {fieldErrors.legal_name}
                 </p>
               )}
@@ -173,7 +173,7 @@ export function CompanyCreateDialog({
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="cc-address">
                 {t("form.fields.address.label")}
-                <span className="ml-1 text-red-500">*</span>
+                <span className="ml-1 text-destructive">*</span>
               </Label>
               <Textarea
                 id="cc-address"
@@ -184,7 +184,7 @@ export function CompanyCreateDialog({
                 rows={2}
               />
               {fieldErrors.address && (
-                <p className="text-[12px] text-red-600">
+                <p className="text-[12px] text-destructive">
                   {fieldErrors.address}
                 </p>
               )}
@@ -247,7 +247,7 @@ export function CompanyCreateDialog({
                 disabled={isSubmitting}
               />
               {fieldErrors.logo_url && (
-                <p className="text-[12px] text-red-600">
+                <p className="text-[12px] text-destructive">
                   {fieldErrors.logo_url}
                 </p>
               )}
@@ -294,7 +294,7 @@ export function CompanyCreateDialog({
                 maxLength={8}
               />
               {fieldErrors.prefix_override ? (
-                <p className="text-[12px] text-red-600">
+                <p className="text-[12px] text-destructive">
                   {fieldErrors.prefix_override}
                 </p>
               ) : (

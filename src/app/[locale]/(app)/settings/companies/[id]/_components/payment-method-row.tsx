@@ -167,7 +167,7 @@ export function PaymentMethodRow({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+              className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={() => onDeleteRequest(method)}
               disabled={rowDisabled || method.isBuiltin}
               aria-label={t("deleteLabelAria", { name: displayLabel })}

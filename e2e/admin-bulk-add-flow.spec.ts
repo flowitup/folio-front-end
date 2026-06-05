@@ -46,7 +46,7 @@ test.describe("Admin bulk-add flow", () => {
     await loginAsAdmin(page);
 
     // ---- Step 2: Navigate to admin users page ----
-    await page.goto("/en/admin/users");
+    await page.goto("/en/settings#users");
     await page.waitForLoadState("networkidle");
 
     // Page must render the bulk-add form
@@ -117,7 +117,7 @@ test.describe("Admin bulk-add flow", () => {
 
   // ---- Negative path: non-admin access -------------------------------------
 
-  test("negative: non-admin user visiting /en/admin/users is redirected to unauthorized or sees 403", async ({
+  test("negative: non-admin user visiting /en/settings#users is redirected to unauthorized or sees 403", async ({
     page,
   }) => {
     // Attempt login as a non-admin user
@@ -136,7 +136,7 @@ test.describe("Admin bulk-add flow", () => {
       // to the admin page as a logged-out user to test the auth guard
       await page.goto("/en/login");
       await page.waitForLoadState("networkidle");
-      await page.goto("/en/admin/users");
+      await page.goto("/en/settings#users");
       await page.waitForLoadState("networkidle");
 
       // Should redirect to login (unauthenticated)
@@ -145,7 +145,7 @@ test.describe("Admin bulk-add flow", () => {
     }
 
     // Logged in as non-admin — navigate to admin page
-    await page.goto("/en/admin/users");
+    await page.goto("/en/settings#users");
     await page.waitForLoadState("networkidle");
 
     // Assert redirect to /unauthorized OR the page shows an error/403 response
@@ -165,18 +165,18 @@ test.describe("Admin bulk-add flow", () => {
 
     expect(
       isRedirected || !formVisible,
-      `Expected non-admin to be redirected or blocked from /en/admin/users. ` +
+      `Expected non-admin to be redirected or blocked from /en/settings#users. ` +
         `URL: ${url}, form visible: ${formVisible}`
     ).toBe(true);
   });
 
   // ---- Unauthenticated access ----------------------------------------------
 
-  test("unauthenticated: visiting /en/admin/users without login redirects to /en/login", async ({
+  test("unauthenticated: visiting /en/settings#users without login redirects to /en/login", async ({
     page,
   }) => {
     // Navigate directly without logging in
-    await page.goto("/en/admin/users");
+    await page.goto("/en/settings#users");
     await page.waitForLoadState("networkidle");
 
     // Should land on login page (Next.js middleware redirects unauthenticated users)

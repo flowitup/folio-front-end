@@ -415,6 +415,18 @@
       "failedToLoadRetry": "Tải thất bại. Thử đóng và mở lại.",
       "noMethodsFound": "Không tìm thấy phương thức nào.",
       "failedToCreate": "Không thể tạo phương thức thanh toán"
+    },
+    "releaseFunds": {
+      "linkedDocsTitle": "Báo giá & hóa đơn liên kết",
+      "colKind": "Loại",
+      "colNumber": "Số",
+      "colRecipient": "Người nhận",
+      "colAmount": "Thành tiền (gồm VAT)",
+      "colStatus": "Trạng thái",
+      "kindDevis": "Báo giá",
+      "kindFacture": "Hóa đơn",
+      "empty": "Chưa có tài liệu thanh toán nào được liên kết với công trình này.",
+      "loadError": "Không thể tải tài liệu thanh toán liên kết."
     }
   },
   "planning": {
@@ -960,7 +972,9 @@
         "validityUntil": "Có hiệu lực đến",
         "paymentDue": "Hạn thanh toán",
         "paymentTerms": "Điều khoản thanh toán",
-        "paymentTermsPlaceholder": "vd. Thanh toán trong 30 ngày, chuyển khoản"
+        "paymentTermsPlaceholder": "vd. Thanh toán trong 30 ngày, chuyển khoản",
+        "project": "Công trình (tùy chọn)",
+        "projectNone": "Không có công trình"
       },
       "items": {
         "section": "Danh mục dịch vụ",

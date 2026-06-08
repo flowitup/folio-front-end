@@ -47,6 +47,7 @@ vi.mock("@/context/ProjectContext", () => ({
 vi.mock("@/lib/api/invoice-api", () => ({
   fetchInvoicesWithMeta: vi.fn(),
   deleteInvoice: vi.fn(),
+  fetchProjectBillingDocuments: vi.fn().mockResolvedValue([]),
 }));
 
 // Spy-stub for InvoiceExportDialog — captures open + initialType props

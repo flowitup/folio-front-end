@@ -209,11 +209,13 @@ async function fillAndSubmitCreateForm(recipientName = "Test Client") {
   // Add a line item
   fireEvent.click(screen.getByRole("button", { name: /add line/i }));
 
-  // Fill description on the new item via the Combobox.
-  // Click the description combobox trigger (second combobox — first is category).
+  // Fill description on the new item via the Combobox. Locate it by its
+  // placeholder text rather than position — the form also renders project,
+  // category, and VAT comboboxes, so absolute indices are brittle.
   const comboboxes = screen.getAllByRole("combobox");
-  // comboboxes[0] = category combobox, comboboxes[1] = description combobox
-  const descTrigger = comboboxes[comboboxes.length > 1 ? 1 : 0];
+  const descTrigger =
+    comboboxes.find((c) => /item description/i.test(c.textContent ?? "")) ??
+    comboboxes[comboboxes.length - 2];
   await act(async () => { fireEvent.click(descTrigger); });
   // Type into the CommandInput that appears in the popover
   const cmdInputs = screen.getAllByPlaceholderText(/describe the work|Item description/i);

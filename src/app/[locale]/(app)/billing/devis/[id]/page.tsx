@@ -10,8 +10,10 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { fetchBillingDocument } from "@/lib/api/billing/documents";
 import { fetchMyCompanies } from "@/lib/api/companies/companies";
+import { listProjects } from "@/lib/api/projects-server";
 import { BillingDocumentForm } from "@/components/billing/billing-document-form";
 import type { MyCompany } from "@/types/companies";
+import type { ProjectSummary } from "@/lib/api/projects-server";
 
 interface EditDevisPageProps {
   params: Promise<{ id: string }>;
@@ -54,12 +56,21 @@ export default async function EditDevisPage({ params }: EditDevisPageProps) {
     console.warn("[EditDevisPage] Could not fetch attached companies.");
   }
 
+  // Best-effort fetch for project picker.
+  let projects: ProjectSummary[] = [];
+  try {
+    projects = await listProjects();
+  } catch {
+    console.warn("[EditDevisPage] Could not fetch projects.");
+  }
+
   return (
     <BillingDocumentForm
       mode="edit"
       kind="devis"
       document={document}
       attachedCompanies={attachedCompanies}
+      projects={projects}
     />
   );
 }

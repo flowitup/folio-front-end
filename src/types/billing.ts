@@ -84,6 +84,21 @@ export interface BillingDocumentTemplate {
 // Request payload types
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Project-linked billing document summary (for project invoices page)
+// ---------------------------------------------------------------------------
+
+export interface ProjectBillingDocumentSummary {
+  id: string;
+  kind: BillingDocumentKind;
+  document_number: string;
+  status: BillingDocumentStatus;
+  issue_date: string;
+  recipient_name: string;
+  total_ht: number;
+  total_ttc: number;
+}
+
 export interface CreateBillingDocumentPayload {
   kind: BillingDocumentKind;
   /** Required — which company to bill from. Phase 08 (billing form picker) populates this. */

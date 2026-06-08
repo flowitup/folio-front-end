@@ -30,6 +30,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BillingStatusMenu } from "@/components/billing/billing-status-menu";
 import { BillingDocumentItemsEditor } from "@/components/billing/billing-document-items-editor";
 import { CreateFromExistingDialog } from "@/components/billing/create-from-existing-dialog";
@@ -52,6 +59,7 @@ import type {
   BillingDocumentItem,
 } from "@/types/billing";
 import type { MyCompany } from "@/types/companies";
+import type { ProjectSummary } from "@/lib/api/projects-server";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 
 // ---------------------------------------------------------------------------
@@ -64,6 +72,8 @@ export type BillingDocumentFormProps =
       kind: BillingDocumentKind;
       /** Companies the user is attached to — required for create mode. */
       attachedCompanies: MyCompany[];
+      /** Projects available for linking. Optional; defaults to "No project" only. */
+      projects?: ProjectSummary[];
       initialFromSource?: BillingDocument;
       initialFromTemplate?: BillingDocumentTemplate;
     }
@@ -73,6 +83,8 @@ export type BillingDocumentFormProps =
       document: BillingDocument;
       /** Companies the user is attached to — used to resolve issuer label in edit mode. */
       attachedCompanies: MyCompany[];
+      /** Projects available for linking. Optional; defaults to "No project" only. */
+      projects?: ProjectSummary[];
     };
 
 // ---------------------------------------------------------------------------
@@ -118,6 +130,16 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   // Create mode: selectedCompanyId is set by the picker; null until picker resolves default.
   // Edit mode: issuer is snapshotted at creation time — only issuer_legal_name is available.
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+
+  // ---------------------------------------------------------------------------
+  // Project picker state
+  // ---------------------------------------------------------------------------
+
+  // Sentinel "none" maps to null (Select cannot hold null natively).
+  const PROJECT_NONE = "__none__";
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    seed?.project_id ?? null
+  );
 
   // Runtime-refetchable attached companies (reset when company_no_longer_attached).
   const [attachedCompanies, setAttachedCompanies] = useState<MyCompany[]>(
@@ -235,6 +257,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         notes: notes.trim() || null,
         terms: terms.trim() || null,
         signature_block_text: signatureBlock.trim() || null,
+        project_id: selectedProjectId,
       };
 
       if (isEdit && liveDoc) {
@@ -629,6 +652,31 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
               </div>
             </>
           )}
+        </div>
+
+        {/* Project picker */}
+        <div className="space-y-1">
+          <Label htmlFor="project-picker" className="text-[12px]">
+            {tForm("details.project")}
+          </Label>
+          <Select
+            value={selectedProjectId ?? PROJECT_NONE}
+            onValueChange={(v) => setSelectedProjectId(v === PROJECT_NONE ? null : v)}
+          >
+            <SelectTrigger id="project-picker" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={PROJECT_NONE}>
+                {tForm("details.projectNone")}
+              </SelectItem>
+              {(props.projects ?? []).map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

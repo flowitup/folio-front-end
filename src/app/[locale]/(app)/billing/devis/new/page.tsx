@@ -16,10 +16,12 @@
 import { fetchMyCompanies } from "@/lib/api/companies/companies";
 import { fetchBillingDocument } from "@/lib/api/billing/documents";
 import { fetchBillingTemplate } from "@/lib/api/billing/templates";
+import { listProjects } from "@/lib/api/projects-server";
 import { BillingDocumentForm } from "@/components/billing/billing-document-form";
 import { NoAttachedCompaniesCallout } from "@/components/billing/no-attached-companies-callout";
 import type { BillingDocument, BillingDocumentTemplate } from "@/types/billing";
 import type { MyCompany } from "@/types/companies";
+import type { ProjectSummary } from "@/lib/api/projects-server";
 
 interface NewDevisPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -41,6 +43,14 @@ export default async function NewDevisPage({ searchParams }: NewDevisPageProps) 
 
   if (attachedCompanies.length === 0) {
     return <NoAttachedCompaniesCallout />;
+  }
+
+  // Fetch projects for the project picker (best-effort; form still renders on error).
+  let projects: ProjectSummary[] = [];
+  try {
+    projects = await listProjects();
+  } catch {
+    console.warn("[NewDevisPage] Could not fetch projects.");
   }
 
   // Optional: pre-load source document for clone mode
@@ -68,6 +78,7 @@ export default async function NewDevisPage({ searchParams }: NewDevisPageProps) 
       mode="create"
       kind="devis"
       attachedCompanies={attachedCompanies}
+      projects={projects}
       initialFromSource={sourceDoc}
       initialFromTemplate={templateDoc}
     />

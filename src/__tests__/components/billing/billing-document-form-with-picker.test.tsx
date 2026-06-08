@@ -191,8 +191,12 @@ async function fillAndSubmit(recipientName = "Client Corp") {
   fireEvent.click(screen.getByRole("button", { name: /add line/i }));
 
   // Description is now a Combobox — open it and type into the CommandInput.
+  // Locate by placeholder text, not position: the form also renders project,
+  // category, and VAT comboboxes, so absolute indices are brittle.
   const comboboxes = screen.getAllByRole("combobox");
-  const descTrigger = comboboxes[comboboxes.length > 1 ? 1 : 0];
+  const descTrigger =
+    comboboxes.find((c) => /item description/i.test(c.textContent ?? "")) ??
+    comboboxes[comboboxes.length - 2];
   await act(async () => { fireEvent.click(descTrigger); });
   const cmdInputs = screen.getAllByPlaceholderText(/describe the work|Item description/i);
   await act(async () => {

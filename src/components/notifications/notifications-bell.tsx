@@ -79,7 +79,12 @@ export function NotificationsBell() {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={8} className="w-96 p-0">
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        collisionPadding={8}
+        className="w-[calc(100vw-1rem)] max-w-96 p-0"
+      >
         <NotificationsDropdown
           items={items}
           isLoading={!hasLoaded}

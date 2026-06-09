@@ -134,8 +134,8 @@ export function BillingDocumentItemsEditor({
 
   return (
     <div className="space-y-4">
-      {/* Items table */}
-      <div className="folio-card overflow-hidden">
+      {/* Items table — desktop only (>= lg) */}
+      <div className="hidden lg:block folio-card overflow-hidden" data-testid="billing-items-desktop">
         <div className="overflow-x-auto">
           <table className="ledger">
             <thead>
@@ -191,6 +191,40 @@ export function BillingDocumentItemsEditor({
               {t("addLine")}
             </Button>
           </div>
+        )}
+      </div>
+
+      {/* Mobile stacked cards (< lg) */}
+      <div className="lg:hidden space-y-3" data-testid="billing-items-mobile">
+        {items.length === 0 && (
+          <p className="py-8 text-center text-[13px]" style={{ color: "var(--muted)" }}>
+            {t("noItems")}
+          </p>
+        )}
+        {items.map((item, index) => (
+          <MobileItemCard
+            key={`${uid}-mob-${index}`}
+            item={item}
+            index={index}
+            readOnly={readOnly}
+            categoryOptions={categoryOptions}
+            suggestionCache={suggestionCache}
+            onUpdate={(patch) => updateItem(index, patch)}
+            onRemove={() => removeItem(index)}
+            t={t}
+          />
+        ))}
+        {!readOnly && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={addItem}
+            className="h-7 text-[13px]"
+          >
+            <Plus size={13} className="mr-1" />
+            {t("addLine")}
+          </Button>
         )}
       </div>
 
@@ -405,6 +439,202 @@ function ItemRow({
         </td>
       )}
     </tr>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// MobileItemCard — same fields as ItemRow, stacked layout for < lg screens
+// ---------------------------------------------------------------------------
+
+function MobileItemCard({
+  item,
+  readOnly,
+  categoryOptions,
+  suggestionCache,
+  onUpdate,
+  onRemove,
+  t,
+}: ItemRowProps) {
+  const [descQuery, setDescQuery] = useState(item.description);
+  const [descLoading, setDescLoading] = useState(false);
+  const [descOptions, setDescOptions] = useState<ComboboxOption[]>([]);
+
+  const debouncedDescQuery = useDebouncedValue(descQuery, 200);
+  const debouncedCategory = useDebouncedValue(item.category ?? "", 200);
+
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  const fetchSuggestions = useCallback(async (q: string, category: string) => {
+    const cacheKey = `${category}|${q}`;
+    const cache = suggestionCache.current;
+    if (cache && cache.has(cacheKey)) {
+      const cached = cache.get(cacheKey)!;
+      if (mountedRef.current) setDescOptions(toComboboxOptions(cached));
+      return;
+    }
+    if (mountedRef.current) setDescLoading(true);
+    try {
+      const result = await getActivitySuggestionsAction({
+        category: category || undefined,
+        q: q || undefined,
+        limit: 20,
+      });
+      if (!mountedRef.current) return;
+      if (result.ok) {
+        cache?.set(cacheKey, result.data.suggestions);
+        setDescOptions(toComboboxOptions(result.data.suggestions));
+      }
+    } catch {
+      // Silent — user can still type free-text
+    } finally {
+      if (mountedRef.current) setDescLoading(false);
+    }
+  }, [suggestionCache]);
+
+  useEffect(() => {
+    fetchSuggestions(debouncedDescQuery, debouncedCategory);
+  }, [debouncedDescQuery, debouncedCategory, fetchSuggestions]);
+
+  function handleDescSelect(value: string) {
+    const cache = suggestionCache.current;
+    const cacheKey = `${debouncedCategory}|${debouncedDescQuery}`;
+    const suggestions = cache?.get(cacheKey) ?? [];
+    const match = suggestions.find((s) => s.description === value);
+    const patch: Partial<BillingDocumentItem> = { description: value };
+    if (match) {
+      patch.unit_price = match.last_unit_price;
+      patch.vat_rate = match.last_vat_rate;
+    }
+    onUpdate(patch);
+    setDescQuery(value);
+  }
+
+  function handleDescQueryChange(q: string) {
+    setDescQuery(q);
+    onUpdate({ description: q });
+  }
+
+  return (
+    <div className="folio-card p-3 space-y-2">
+      {/* Category — full width */}
+      <div>
+        <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+          {t("categoryLabel")}
+        </label>
+        {readOnly ? (
+          <span className="text-sm" style={{ color: "var(--muted)" }}>{item.category ?? ""}</span>
+        ) : (
+          <Combobox
+            value={item.category ?? ""}
+            onChange={(v) => onUpdate({ category: v || null })}
+            options={categoryOptions}
+            onQueryChange={() => {/* categories already loaded on mount */}}
+            placeholder={t("categoryPlaceholder")}
+            emptyText={t("categoryNoMatches")}
+            allowFreeText
+          />
+        )}
+      </div>
+
+      {/* Description — full width */}
+      <div>
+        <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+          {t("description")}
+        </label>
+        {readOnly ? (
+          <span className="text-sm">{item.description}</span>
+        ) : (
+          <Combobox
+            value={item.description}
+            onChange={handleDescSelect}
+            options={descOptions}
+            onQueryChange={handleDescQueryChange}
+            placeholder={t("descriptionPlaceholder")}
+            emptyText={t("noSuggestions")}
+            groupHeading={descOptions.length > 0 ? t("descriptionSuggestionsHeading") : undefined}
+            loading={descLoading}
+            allowFreeText
+          />
+        )}
+      </div>
+
+      {/* Qty + Unit Price — 2-col row */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+            {t("quantity")}
+          </label>
+          {readOnly ? (
+            <span className="num text-sm">{item.quantity}</span>
+          ) : (
+            <Input
+              type="number"
+              min="0"
+              step="any"
+              value={item.quantity}
+              onChange={(e) => onUpdate({ quantity: e.target.value })}
+              className="h-8 text-sm num"
+            />
+          )}
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+            {t("unitPrice")}
+          </label>
+          {readOnly ? (
+            <span className="num text-sm">{item.unit_price}</span>
+          ) : (
+            <Input
+              type="number"
+              min="0"
+              step="any"
+              value={item.unit_price}
+              onChange={(e) => onUpdate({ unit_price: e.target.value })}
+              className="h-8 text-sm num"
+            />
+          )}
+        </div>
+      </div>
+
+      {/* VAT Rate — full width */}
+      <div>
+        <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+          {t("vatRate")}
+        </label>
+        {readOnly ? (
+          <span className="num text-sm">{item.vat_rate}%</span>
+        ) : (
+          <VatRateCell
+            value={item.vat_rate}
+            onChange={(v) => onUpdate({ vat_rate: v })}
+          />
+        )}
+      </div>
+
+      {/* Line HT (computed) + Delete */}
+      <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: "var(--border)" }}>
+        <span className="text-xs font-medium" style={{ color: "var(--muted)" }}>{t("totalHt")}</span>
+        <div className="flex items-center gap-2">
+          <span className="num text-sm font-medium">{lineHt(item)}</span>
+          {!readOnly && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={onRemove}
+              aria-label={t("removeLine")}
+            >
+              <Trash2 size={12} style={{ color: "var(--muted)" }} />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

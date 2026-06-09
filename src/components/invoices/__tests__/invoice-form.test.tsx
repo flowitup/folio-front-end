@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InvoiceForm } from "../invoice-form";
 
@@ -274,16 +274,14 @@ describe("InvoiceForm", () => {
       const user = userEvent.setup();
       render(<InvoiceForm onSubmit={mockOnSubmit} />);
 
-      const buttons = screen.getAllByRole("button");
-      const addBtn = buttons.find((btn) => /add.*item/i.test(btn.textContent || ""));
+      // Find "Add Item" button at the top (outside the dual-render items container)
+      const addBtn = screen.getByRole("button", { name: /add.*item/i });
+      await user.click(addBtn);
 
-      if (addBtn) {
-        await user.click(addBtn);
-
-        // Should have 2 description inputs now
-        const descriptionInputs = screen.getAllByPlaceholderText(/description/i);
-        expect(descriptionInputs.length).toBe(2);
-      }
+      // Should have 2 description inputs now (in desktop view)
+      const desktop = screen.getByTestId("invoice-items-desktop");
+      const descriptionInputs = within(desktop).getAllByPlaceholderText(/description/i);
+      expect(descriptionInputs.length).toBe(2);
     });
 
     it("removes line item when clicking delete button", async () => {

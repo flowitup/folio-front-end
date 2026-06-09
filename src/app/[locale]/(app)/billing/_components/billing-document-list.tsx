@@ -262,63 +262,106 @@ export function BillingDocumentList({
         </Alert>
       )}
 
-      {/* Table */}
-      <div className="folio-card overflow-hidden">
-        {filtered.length === 0 ? (
-          <div
-            className="flex items-center justify-center py-12 text-[13px]"
-            style={{ color: "var(--muted)" }}
-          >
-            {t("list.noResults")}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="ledger">
-              <thead>
-                <tr>
-                  <th>{t("list.columns.number")}</th>
-                  <th>{t("list.columns.date")}</th>
-                  <th>{t("list.columns.recipient")}</th>
-                  <th>{t("list.columns.status")}</th>
-                  <th style={{ textAlign: "right" }}>{t("list.columns.totalTtc")}</th>
-                  <th style={{ textAlign: "right" }}>{t("list.columns.actions")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((doc) => (
-                  <tr key={doc.id}>
-                    <td className="num text-[12.5px] font-medium">
-                      {doc.document_number}
-                    </td>
-                    <td className="num" style={{ color: "var(--muted)" }}>
-                      {doc.issue_date}
-                    </td>
-                    <td>{doc.recipient_name}</td>
-                    <td>
-                      <BillingStatusBadge
-                        status={doc.status}
-                        label={t(`${kind}.status.${doc.status}`)}
-                      />
-                    </td>
-                    <td className="num font-medium" style={{ textAlign: "right" }}>
-                      {formatTTC(doc.total_ttc)}
-                    </td>
-                    <td
-                      style={{ textAlign: "right" }}
-                      onClick={(e) => e.stopPropagation()}
+      {/* Mobile card list */}
+      {filtered.length === 0 ? (
+        <div
+          className="folio-card flex items-center justify-center py-12 text-[13px]"
+          style={{ color: "var(--muted)" }}
+        >
+          {t("list.noResults")}
+        </div>
+      ) : (
+        <>
+          {/* Mobile cards — hidden on desktop */}
+          <div className="space-y-2 lg:hidden">
+            {filtered.map((doc) => (
+              <div key={doc.id} className="folio-card p-4">
+                {/* Row 1: document number + status badge */}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="num text-[12.5px] font-medium">
+                    {doc.document_number}
+                  </span>
+                  <BillingStatusBadge
+                    status={doc.status}
+                    label={t(`${kind}.status.${doc.status}`)}
+                  />
+                </div>
+                {/* Row 2: recipient */}
+                <div className="mt-1.5 text-[13px]">{doc.recipient_name}</div>
+                {/* Row 3: date + total + actions */}
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="num text-[12px]"
+                      style={{ color: "var(--muted)" }}
                     >
-                      <BillingActionsMenu
-                        document={doc}
-                        onMutated={handleMutated}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      {doc.issue_date}
+                    </span>
+                    <span className="num text-[13px] font-medium">
+                      {formatTTC(doc.total_ttc)}
+                    </span>
+                  </div>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <BillingActionsMenu
+                      document={doc}
+                      onMutated={handleMutated}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </div>
+
+          {/* Desktop table — hidden on mobile */}
+          <div className="folio-card hidden overflow-hidden lg:block">
+            <div className="overflow-x-auto">
+              <table className="ledger">
+                <thead>
+                  <tr>
+                    <th>{t("list.columns.number")}</th>
+                    <th>{t("list.columns.date")}</th>
+                    <th>{t("list.columns.recipient")}</th>
+                    <th>{t("list.columns.status")}</th>
+                    <th style={{ textAlign: "right" }}>{t("list.columns.totalTtc")}</th>
+                    <th style={{ textAlign: "right" }}>{t("list.columns.actions")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((doc) => (
+                    <tr key={doc.id}>
+                      <td className="num text-[12.5px] font-medium">
+                        {doc.document_number}
+                      </td>
+                      <td className="num" style={{ color: "var(--muted)" }}>
+                        {doc.issue_date}
+                      </td>
+                      <td>{doc.recipient_name}</td>
+                      <td>
+                        <BillingStatusBadge
+                          status={doc.status}
+                          label={t(`${kind}.status.${doc.status}`)}
+                        />
+                      </td>
+                      <td className="num font-medium" style={{ textAlign: "right" }}>
+                        {formatTTC(doc.total_ttc)}
+                      </td>
+                      <td
+                        style={{ textAlign: "right" }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <BillingActionsMenu
+                          document={doc}
+                          onMutated={handleMutated}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Pagination — load more */}
       {hasMore && filtered.length > 0 && (

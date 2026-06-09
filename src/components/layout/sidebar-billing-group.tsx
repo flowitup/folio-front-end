@@ -9,6 +9,7 @@ import {
   FileCheck,
   LayoutTemplate,
   ChevronRight,
+  BadgeEuro,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ const BILLING_NAV = [
   { key: "devis", href: "/billing/devis", icon: FileText },
   { key: "factures", href: "/billing/factures", icon: FileCheck },
   { key: "templates", href: "/billing/templates", icon: LayoutTemplate },
+  { key: "refundableInvoices", href: "/billing/refundable-invoices", icon: BadgeEuro },
 ] as const;
 
 const STORAGE_KEY = "sidebar.billing.open";

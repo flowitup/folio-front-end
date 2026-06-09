@@ -42,8 +42,16 @@ test.describe("Project documents flow", () => {
     // Toast string: documents.toast.uploadSuccess = "{filename} uploaded".
     await expect(page.getByText("sample.pdf uploaded")).toBeVisible({ timeout: 15_000 });
 
-    // The list renders the filename as a table cell (documents-list.tsx ~229).
-    const row = page.getByRole("row").filter({ hasText: "sample.pdf" });
+    // The list renders twice — desktop table rows (documents-list-desktop) and
+    // mobile cards (documents-list-mobile). Target the unit holding the filename
+    // in whichever copy the viewport shows.
+    const docUnitAll = page.locator(
+      '[data-testid="documents-list-desktop"] tbody tr, [data-testid="documents-list-mobile"] > *'
+    );
+    const row = docUnitAll
+      .filter({ hasText: "sample.pdf" })
+      .filter({ visible: true })
+      .first();
     await expect(row).toBeVisible({ timeout: 15_000 });
 
     // ── 5. Delete the row → confirm in the AlertDialog ───────────────────────
@@ -60,9 +68,9 @@ test.describe("Project documents flow", () => {
     // delete success toast: documents.delete.success = "Document deleted".
     await expect(page.getByText("Document deleted")).toBeVisible({ timeout: 10_000 });
 
-    // ── Assert the row is gone ───────────────────────────────────────────────
+    // ── Assert the row/card is gone ──────────────────────────────────────────
     await expect(
-      page.getByRole("row").filter({ hasText: "sample.pdf" })
+      docUnitAll.filter({ hasText: "sample.pdf" })
     ).toHaveCount(0, { timeout: 10_000 });
   });
 });

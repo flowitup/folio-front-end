@@ -74,9 +74,13 @@ test.describe("Projects CRUD flow", () => {
     await page.getByRole("button", { name: "Create", exact: true }).click();
 
     // On success the project is created, the list refetches, and the new project
-    // becomes the active one (its name appears in the sidebar switcher + card).
-    // Assert the name shows up anywhere — robust to the selected-project layout
-    // (the name renders as a div, not a heading, once selected).
-    await expect(page.getByText(newName).first()).toBeVisible({ timeout: 15_000 });
+    // becomes the active one (its name appears in the project switcher + card).
+    // Scope to the visible match: the desktop sidebar switcher is rendered but
+    // display:none on mobile (it stays first in the DOM), so an unfiltered
+    // .first() would resolve to that hidden node on a phone viewport. The mobile
+    // shell surfaces the name in the topbar switcher / card instead.
+    await expect(
+      page.getByText(newName).filter({ visible: true }).first()
+    ).toBeVisible({ timeout: 15_000 });
   });
 });

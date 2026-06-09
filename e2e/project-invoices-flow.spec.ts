@@ -42,14 +42,21 @@ test.describe("Project invoices flow", () => {
     await expect(page.getByText("Total expenses")).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText("Funds released")).toBeVisible({ timeout: 10_000 });
 
-    // The list renders twice: mobile cards (div.lg:hidden) BEFORE the desktop
-    // table (div.lg:block, table.ledger). At Playwright's 1280px viewport the
-    // table is the visible one, so scope row/detail queries to it — otherwise
-    // `.first()` matches the hidden mobile copy.
-    const ledger = page.locator("table.ledger");
+    // The list renders twice — mobile cards (div.lg:hidden) and the desktop
+    // table (table.ledger) — and only one is visible per viewport. Target the
+    // visible copy so the same spec drives the desktop table rows AND the
+    // mobile invoice cards (both carry the INV number, an aria-expanded toggle
+    // button, and a region id^="invoice-detail-").
+    const invoiceNumber = () =>
+      page.getByText(INVOICE_NUMBER_RE).filter({ visible: true });
+    const expandedRow = (expanded: boolean) =>
+      page
+        .getByRole("button", { expanded })
+        .filter({ has: page.getByText(INVOICE_NUMBER_RE) })
+        .filter({ visible: true });
 
-    // ── At least one seeded invoice row matches INV-YYYY-NNNN (in a <td>) ─────
-    await expect(ledger.getByText(INVOICE_NUMBER_RE).first()).toBeVisible({ timeout: 15_000 });
+    // ── At least one seeded invoice row matches INV-YYYY-NNNN ────────────────
+    await expect(invoiceNumber().first()).toBeVisible({ timeout: 15_000 });
 
     // ── Click a type filter tab and assert the list re-filters ───────────────
     // Tabs live in div.seg (page.tsx ~211). "Labor" = invoices.types.labor.
@@ -58,29 +65,21 @@ test.describe("Project invoices flow", () => {
     // match the invoice-number format, OR the empty-state "No expenses yet"
     // shows. Either is a valid re-filter.
     await expect(
-      ledger.getByText(INVOICE_NUMBER_RE).first().or(page.getByText("No expenses yet"))
+      invoiceNumber().first().or(page.getByText("No expenses yet"))
     ).toBeVisible({ timeout: 10_000 });
 
     // Back to "All" so we have rows to expand.
     await page.getByRole("button", { name: "All", exact: true }).click();
-    await expect(ledger.getByText(INVOICE_NUMBER_RE).first()).toBeVisible({ timeout: 10_000 });
+    await expect(invoiceNumber().first()).toBeVisible({ timeout: 10_000 });
 
-    // ── Click an invoice row → inline detail region expands ──────────────────
-    // Rows are <tr role="button" aria-expanded aria-controls="invoice-detail-..">
-    // (page.tsx ~351). Clicking sets aria-expanded=true and reveals the region.
-    const firstRow = ledger.getByRole("button", { expanded: false }).filter({
-      has: page.getByText(INVOICE_NUMBER_RE),
-    }).first();
-    await firstRow.click();
+    // ── Click an invoice row/card → inline detail region expands ─────────────
+    await expandedRow(false).first().click();
+    await expect(expandedRow(true).first()).toBeVisible({ timeout: 10_000 });
+    // The expanded detail region is wired via aria-controls=invoice-detail-<id>
+    // (desktop) / invoice-detail-mobile-<id> (mobile); both share the prefix.
     await expect(
-      ledger.getByRole("button", { expanded: true }).filter({
-        has: page.getByText(INVOICE_NUMBER_RE),
-      }).first()
+      page.locator("[id^='invoice-detail-']").filter({ visible: true }).first()
     ).toBeVisible({ timeout: 10_000 });
-    // The expanded detail region is wired via aria-controls=invoice-detail-<id>.
-    await expect(ledger.locator("[id^='invoice-detail-']").first()).toBeVisible({
-      timeout: 10_000,
-    });
   });
 
   test("create a new invoice → redirects back to the invoices list", async ({ page }) => {
@@ -103,10 +102,17 @@ test.describe("Project invoices flow", () => {
 
     // One line item is required: description (required) + an amount (unit price).
     // Description input placeholder = invoices.description = "Description".
-    await page.getByPlaceholder("Description").first().fill("E2E line item");
-    // Line-item numeric inputs: [0]=quantity (defaults to 1), [1]=unit price.
-    const numberInputs = page.locator("input[type=number]");
-    await numberInputs.nth(1).fill("250");
+    // Line items render twice (desktop table + mobile cards); fill the visible
+    // copy so the create form works on both viewports.
+    const items = page
+      .locator(
+        '[data-testid="invoice-items-desktop"], [data-testid="invoice-items-mobile"]'
+      )
+      .filter({ visible: true });
+    await items.getByPlaceholder("Description").first().fill("E2E line item");
+    // Numeric inputs within the visible block: [0]=quantity (defaults to 1),
+    // [1]=unit price.
+    await items.locator("input[type=number]").nth(1).fill("250");
 
     // Payment method is OPTIONAL and only rendered for projects with a
     // company_id (the seeded "Downtown Office Tower" has none), so it is left
@@ -140,16 +146,22 @@ test.describe("Project invoices flow", () => {
     // "invoice-detail-<id>" once a row is expanded. Scope to the visible desktop
     // table (the list also renders hidden mobile cards). Expand the first row,
     // read the id, then deep-link to the detail route.
-    const ledger = page.locator("table.ledger");
-    const firstRow = ledger.getByRole("button", { expanded: false }).filter({
-      has: page.getByText(INVOICE_NUMBER_RE),
-    }).first();
+    // Expand the first row/card of whichever list copy the viewport shows.
+    const firstRow = page
+      .getByRole("button", { expanded: false })
+      .filter({ has: page.getByText(INVOICE_NUMBER_RE) })
+      .filter({ visible: true })
+      .first();
     await firstRow.click();
 
-    const detailRegion = ledger.locator("[id^='invoice-detail-']").first();
+    const detailRegion = page
+      .locator("[id^='invoice-detail-']")
+      .filter({ visible: true })
+      .first();
     await expect(detailRegion).toBeVisible({ timeout: 10_000 });
     const regionId = await detailRegion.getAttribute("id");
-    const invoiceId = regionId?.replace(/^invoice-detail-/, "");
+    // Desktop region id is invoice-detail-<id>; mobile is invoice-detail-mobile-<id>.
+    const invoiceId = regionId?.replace(/^invoice-detail-(mobile-)?/, "");
 
     if (!invoiceId) {
       // TODO(verify): could not capture an invoice id from the DOM — skip the

@@ -424,7 +424,7 @@ export default function DashboardPage() {
               </h3>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {PHOTOS.slice(0, 3).map((p) => (
               <div key={p.id} className="photo-card" style={{ background: p.tone }}>
                 <div className="blueprint-grid absolute inset-0 opacity-20" />
@@ -438,7 +438,7 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {PHOTOS.slice(3).map((p) => (
               <div
                 key={p.id}

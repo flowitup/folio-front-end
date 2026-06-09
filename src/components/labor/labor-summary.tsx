@@ -241,8 +241,10 @@ export function LaborSummary({
       )}
 
       {/* KPI Row — 3 base cards + bonus-cost card */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="folio-card p-5">
+      {/* KPI grid — total labor cost leads as a full-width hero on mobile, the
+          rest sit in a compact 2-up grid so the summary isn't a tall stack. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+        <div className="folio-card col-span-2 p-5 lg:col-span-1">
           <div className="label-cap">{t("totalLaborCost")}</div>
           <div className="font-display num mt-2 text-[28px] font-medium leading-none">
             {formatEUR(totalCost)}
@@ -251,18 +253,18 @@ export function LaborSummary({
             {periodLabel}
           </div>
         </div>
-        <div className="folio-card p-5">
+        <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("workerDays")}</div>
-          <div className="font-display num mt-2 text-[28px] font-medium leading-none">
+          <div className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]">
             {formatDays(totalDays)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("acrossWorkers", { n: workerCount })}
           </div>
         </div>
-        <div className="folio-card p-5">
+        <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("onSiteToday")}</div>
-          <div className="font-display num mt-2 text-[28px] font-medium leading-none">
+          <div className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]">
             {onSiteToday}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
@@ -270,10 +272,10 @@ export function LaborSummary({
           </div>
         </div>
         {/* Bonus cost KPI — always rendered to keep grid stable; value is 0 when no supplements */}
-        <div className="folio-card p-5">
+        <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("supplement.bonusCost")}</div>
           <div
-            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
             style={{ color: "var(--accent)" }}
           >
             {formatEUR(totalBonusCost)}

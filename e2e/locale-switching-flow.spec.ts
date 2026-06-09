@@ -61,9 +61,12 @@ test.describe("Locale switching flow", () => {
     await page.waitForURL(/\/fr\/projects/, { timeout: 15_000 });
     await page.waitForLoadState("networkidle");
 
-    // French sidebar nav label is visible.
+    // French nav label is visible. Scope to the visible match: the desktop
+    // sidebar nav is display:none on mobile (but still first in the DOM), while
+    // the mobile bottom-nav renders the same i18n label — target whichever the
+    // current viewport actually shows.
     await expect(
-      page.getByText(NAV_DASHBOARD.fr, { exact: true }).first()
+      page.getByText(NAV_DASHBOARD.fr, { exact: true }).filter({ visible: true }).first()
     ).toBeVisible({ timeout: 15_000 });
 
     // English label for the same key must NOT be present.
@@ -81,8 +84,10 @@ test.describe("Locale switching flow", () => {
     await page.waitForURL(/\/vi\/projects/, { timeout: 15_000 });
     await page.waitForLoadState("networkidle");
 
+    // Target the viewport-visible nav label (desktop sidebar vs mobile
+    // bottom-nav) — the hidden desktop sidebar is first in the DOM otherwise.
     await expect(
-      page.getByText(NAV_DASHBOARD.vi, { exact: true }).first()
+      page.getByText(NAV_DASHBOARD.vi, { exact: true }).filter({ visible: true }).first()
     ).toBeVisible({ timeout: 15_000 });
 
     // English label for the same key must NOT be present.
@@ -100,9 +105,10 @@ test.describe("Locale switching flow", () => {
     await page.waitForURL(/\/en\/projects/, { timeout: 15_000 });
     await page.waitForLoadState("networkidle");
 
-    // Sanity: English copy is showing first.
+    // Sanity: English copy is showing first (visible nav — sidebar on desktop,
+    // bottom-nav on mobile).
     await expect(
-      page.getByText(NAV_DASHBOARD.en, { exact: true }).first()
+      page.getByText(NAV_DASHBOARD.en, { exact: true }).filter({ visible: true }).first()
     ).toBeVisible({ timeout: 15_000 });
 
     // Open the LanguageSwitcher dropdown. Trigger carries aria-label =
@@ -122,9 +128,9 @@ test.describe("Locale switching flow", () => {
     // via toHaveURL, which polls the URL without waiting for a navigation.
     await expect(page).toHaveURL(/\/fr\/projects/, { timeout: 15_000 });
 
-    // French copy should now render.
+    // French copy should now render in the visible nav.
     await expect(
-      page.getByText(NAV_DASHBOARD.fr, { exact: true }).first()
+      page.getByText(NAV_DASHBOARD.fr, { exact: true }).filter({ visible: true }).first()
     ).toBeVisible({ timeout: 15_000 });
   });
 });

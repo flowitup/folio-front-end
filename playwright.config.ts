@@ -1,4 +1,4 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -14,7 +14,16 @@ export default defineConfig({
     screenshot: "only-on-failure",
     locale: "en-US",
   },
-  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
+  projects: [
+    { name: "chromium", use: { browserName: "chromium" } },
+    // Mobile browser project — emulates a phone (viewport, touch, mobile UA).
+    // The redesign targets this viewport; the mobile E2E gate runs here.
+    // `hasTouch` keeps Radix/shadcn pointer interactions on the touch path.
+    {
+      name: "mobile-chromium",
+      use: { ...devices["Pixel 7"] },
+    },
+  ],
   webServer: {
     command: "npm run dev",
     url: "http://localhost:3000",

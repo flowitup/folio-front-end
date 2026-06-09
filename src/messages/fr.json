@@ -66,7 +66,8 @@
       "title": "Facturation",
       "devis": "Devis",
       "factures": "Factures",
-      "templates": "Modèles"
+      "templates": "Modèles",
+      "refundableInvoices": "Factures remboursables"
     }
   },
   "dashboard": {
@@ -1058,6 +1059,39 @@
       "invalidTransition": "Transition de statut invalide.",
       "numberCollision": "Un document avec ce numéro existe déjà.",
       "generic": "Une erreur inattendue s'est produite."
+    },
+    "refundable": {
+      "title": "Factures remboursables",
+      "addButton": "Ajouter une dépense remboursable",
+      "empty": "Aucune dépense remboursable pour le moment.",
+      "loading": "Chargement...",
+      "loadError": "Impossible de charger les dépenses.",
+      "updateError": "Échec de la mise à jour du statut. Veuillez réessayer.",
+      "columns": {
+        "project": "Chantier",
+        "invoiceNumber": "N° facture",
+        "recipient": "Destinataire",
+        "issueDate": "Date d'émission",
+        "total": "Montant",
+        "status": "Statut",
+        "actions": "Actions"
+      },
+      "status": {
+        "refundable": "Remboursable",
+        "refundPending": "Remboursement en cours",
+        "refunded": "Remboursé"
+      },
+      "action": {
+        "remove": "Retirer",
+        "changeStatus": "Changer le statut"
+      },
+      "dialog": {
+        "title": "Ajouter une dépense remboursable",
+        "search": "Rechercher par chantier, n° de facture ou destinataire…",
+        "confirm": "Ajouter la sélection",
+        "cancel": "Annuler",
+        "empty": "Aucune dépense éligible trouvée."
+      }
     }
   },
   "documents": {

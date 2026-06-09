@@ -66,7 +66,8 @@
       "title": "Báo giá & Hóa đơn",
       "devis": "Báo giá",
       "factures": "Hóa đơn",
-      "templates": "Mẫu tài liệu"
+      "templates": "Mẫu tài liệu",
+      "refundableInvoices": "Hóa đơn hoàn tiền"
     }
   },
   "dashboard": {
@@ -1058,6 +1059,39 @@
       "invalidTransition": "Chuyển đổi trạng thái không hợp lệ.",
       "numberCollision": "Đã có tài liệu với số này.",
       "generic": "Đã xảy ra lỗi không mong đợi."
+    },
+    "refundable": {
+      "title": "Hóa đơn hoàn tiền",
+      "addButton": "Thêm chi phí hoàn tiền",
+      "empty": "Chưa có chi phí hoàn tiền nào.",
+      "loading": "Đang tải...",
+      "loadError": "Không thể tải danh sách chi phí.",
+      "updateError": "Cập nhật trạng thái thất bại. Vui lòng thử lại.",
+      "columns": {
+        "project": "Dự án",
+        "invoiceNumber": "Số hóa đơn",
+        "recipient": "Người nhận",
+        "issueDate": "Ngày phát hành",
+        "total": "Tổng tiền",
+        "status": "Trạng thái",
+        "actions": "Thao tác"
+      },
+      "status": {
+        "refundable": "Có thể hoàn tiền",
+        "refundPending": "Đang chờ hoàn tiền",
+        "refunded": "Đã hoàn tiền"
+      },
+      "action": {
+        "remove": "Gỡ bỏ",
+        "changeStatus": "Đổi trạng thái"
+      },
+      "dialog": {
+        "title": "Thêm chi phí hoàn tiền",
+        "search": "Tìm theo dự án, số hóa đơn hoặc người nhận…",
+        "confirm": "Thêm đã chọn",
+        "cancel": "Hủy",
+        "empty": "Không tìm thấy chi phí phù hợp."
+      }
     }
   },
   "documents": {

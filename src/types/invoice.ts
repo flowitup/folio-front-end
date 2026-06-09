@@ -71,3 +71,25 @@ export interface InvoiceExportRange {
 }
 
 export type InvoiceExportTypeFilter = InvoiceType | undefined;
+
+// ─── Refundable expense types ──────────────────────────────────────────────────
+
+/** Status lifecycle for a materials & services expense claimed for reimbursement. */
+export type RefundableStatus = "refundable" | "refund_pending" | "refunded";
+
+/**
+ * A project invoice (type=materials_services) tracked across the company for
+ * reimbursement. Returned by GET /billing/materials-expenses.
+ */
+export interface RefundableExpense {
+  id: string;
+  project_id: string;
+  project_name: string;
+  invoice_number: string;
+  recipient_name: string;
+  /** Issue date in YYYY-MM-DD format. */
+  issue_date: string;
+  total_amount: number;
+  /** null means the expense has not been flagged for reimbursement yet. */
+  refundable_status: RefundableStatus | null;
+}

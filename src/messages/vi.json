@@ -1067,6 +1067,8 @@
       "loading": "Đang tải...",
       "loadError": "Không thể tải danh sách chi phí.",
       "updateError": "Cập nhật trạng thái thất bại. Vui lòng thử lại.",
+      "truncatedNotice": "Đang hiển thị {count} trong số {total}",
+      "partialAddError": "Một số chi phí không thể được thêm vào. Vui lòng thử lại.",
       "columns": {
         "project": "Dự án",
         "invoiceNumber": "Số hóa đơn",

@@ -44,6 +44,7 @@ export function AddRefundableExpenseDialog({
   const t = useTranslations("billing.refundable");
 
   const [candidates, setCandidates] = useState<RefundableExpense[]>([]);
+  const [candidateTotal, setCandidateTotal] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -64,7 +65,10 @@ export function AddRefundableExpenseDialog({
     setError(null);
     setLoading(true);
     fetchRefundableCandidates()
-      .then((res) => setCandidates(res.items))
+      .then((res) => {
+        setCandidates(res.items);
+        setCandidateTotal(res.total);
+      })
       .catch(() => setError(tRef.current("loadError")))
       .finally(() => setLoading(false));
   }, [open]);
@@ -93,12 +97,31 @@ export function AddRefundableExpenseDialog({
     if (selected.size === 0) return;
     setSubmitting(true);
     try {
-      await Promise.all(
+      const results = await Promise.allSettled(
         [...selected].map((id) => setRefundableStatus(id, "refundable"))
       );
-      onAdded();
-    } catch {
-      toast.error(t("updateError"));
+
+      const rejected = results.filter((r) => r.status === "rejected");
+      const succeeded = results.filter((r) => r.status === "fulfilled");
+
+      // Always call onAdded if at least one succeeded, so the parent list
+      // refetches the items that were successfully marked.
+      if (succeeded.length > 0) {
+        onAdded();
+      }
+
+      if (rejected.length > 0) {
+        toast.error(tRef.current("partialAddError"));
+        // Keep dialog open when some failed so the user can retry.
+        // If all failed, stay open; if some succeeded, close is done via onAdded
+        // which callers typically use to close+reload. Let callers decide — we
+        // stay open only when ALL failed (no onAdded means parent won't close).
+        if (succeeded.length === 0) {
+          // All failed — keep dialog open, don't call onAdded (already skipped).
+          return;
+        }
+        // Partial success: onAdded already called above; dialog will close via parent.
+      }
     } finally {
       setSubmitting(false);
     }
@@ -129,6 +152,11 @@ export function AddRefundableExpenseDialog({
           <div className="text-sm text-muted-foreground py-4">{t("dialog.empty")}</div>
         ) : (
           <div className="overflow-y-auto max-h-72 border rounded-md">
+            {candidates.length < candidateTotal && (
+              <p className="px-3 pt-2 pb-1 text-xs text-muted-foreground border-b">
+                {t("truncatedNotice", { count: candidates.length, total: candidateTotal })}
+              </p>
+            )}
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-background border-b">
                 <tr className="text-left text-muted-foreground">

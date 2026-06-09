@@ -8,6 +8,9 @@
  *   - onAdded callback fires after successful confirm
  *   - Confirm button is disabled while submitting
  *   - Empty state when no candidates
+ *   - Truncation notice renders when candidateTotal > candidates.length
+ *   - Batch add with one rejection: onAdded called, error toast shown, submitting resets
+ *   - All rejected: onAdded not called, dialog stays open, error toast shown
  *
  * Mocking strategy:
  *   - @/lib/api/billing/refundable-invoices: vi.fn() stubs
@@ -39,7 +42,15 @@ vi.mock("next-intl", () => {
       return undefined;
     }, obj) as string ?? path;
   }
-  const makeT = (ns: string) => (key: string) => resolve(en, `${ns}.${key}`);
+  const makeT = (ns: string) => (key: string, params?: Record<string, unknown>) => {
+    let str = resolve(en, `${ns}.${key}`);
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        str = str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+      }
+    }
+    return str;
+  };
   return {
     useLocale: () => "en",
     useTranslations: (ns: string) => makeT(ns),
@@ -69,6 +80,7 @@ import {
   fetchRefundableCandidates,
   setRefundableStatus,
 } from "@/lib/api/billing/refundable-invoices";
+import { toast } from "sonner";
 import type { RefundableExpense } from "@/types/invoice";
 
 const mockFetchCandidates = vi.mocked(fetchRefundableCandidates);
@@ -261,5 +273,100 @@ describe("AddRefundableExpenseDialog", () => {
     );
 
     expect(mockFetchCandidates).not.toHaveBeenCalled();
+  });
+
+  it("shows truncation notice when candidateTotal > candidates.length", async () => {
+    mockFetchCandidates.mockResolvedValue({
+      items: [makeCandidate()],
+      total: 120,
+    });
+
+    render(<AddRefundableExpenseDialog {...DEFAULT_PROPS} />);
+    await waitFor(() => screen.getByText("Riverside Tower"));
+
+    // en.json truncatedNotice: "Showing {count} of {total}" → "Showing 1 of 120"
+    expect(screen.getByText("Showing 1 of 120")).toBeDefined();
+  });
+
+  it("does not show truncation notice when candidateTotal equals candidates.length", async () => {
+    mockFetchCandidates.mockResolvedValue({
+      items: [makeCandidate()],
+      total: 1,
+    });
+
+    render(<AddRefundableExpenseDialog {...DEFAULT_PROPS} />);
+    await waitFor(() => screen.getByText("Riverside Tower"));
+
+    expect(screen.queryByText(/Showing \d+ of \d+/)).toBeNull();
+  });
+
+  it("partial failure: onAdded called and error toast shown when one of two rejects", async () => {
+    mockFetchCandidates.mockResolvedValue({
+      items: [
+        makeCandidate({ id: "ok", invoice_number: "INV-OK" }),
+        makeCandidate({ id: "fail", invoice_number: "INV-FAIL" }),
+      ],
+      total: 2,
+    });
+
+    // "ok" resolves, "fail" rejects
+    mockSet.mockImplementation((id: string) => {
+      if (id === "fail") return Promise.reject(new Error("server error"));
+      return Promise.resolve(undefined);
+    });
+
+    const onAdded = vi.fn();
+    render(
+      <AddRefundableExpenseDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        onAdded={onAdded}
+      />
+    );
+
+    await waitFor(() => screen.getByText("INV-OK"));
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "INV-OK" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "INV-FAIL" }));
+    fireEvent.click(screen.getByText("Add selected"));
+
+    await waitFor(() => {
+      expect(onAdded).toHaveBeenCalledTimes(1);
+    });
+    expect(vi.mocked(toast.error)).toHaveBeenCalledTimes(1);
+  });
+
+  it("all failed: onAdded not called, error toast shown, submitting resets", async () => {
+    mockFetchCandidates.mockResolvedValue({
+      items: [makeCandidate({ id: "fail", invoice_number: "INV-FAIL" })],
+      total: 1,
+    });
+
+    mockSet.mockRejectedValue(new Error("server error"));
+
+    const onAdded = vi.fn();
+    render(
+      <AddRefundableExpenseDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        onAdded={onAdded}
+      />
+    );
+
+    await waitFor(() => screen.getByText("INV-FAIL"));
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "INV-FAIL" }));
+    fireEvent.click(screen.getByText("Add selected"));
+
+    await waitFor(() => {
+      expect(vi.mocked(toast.error)).toHaveBeenCalledTimes(1);
+    });
+    expect(onAdded).not.toHaveBeenCalled();
+
+    // Confirm button should be re-enabled after failure (submitting reset in finally)
+    await waitFor(() => {
+      const confirmBtn = screen.getByText("Add selected").closest("button");
+      expect(confirmBtn?.disabled).toBe(false);
+    });
   });
 });

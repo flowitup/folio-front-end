@@ -7,6 +7,8 @@
  *   - "Remove" calls setRefundableStatus(id, null) then reloads
  *   - Empty state renders when the list is empty
  *   - Error state renders when fetch fails
+ *   - Truncation notice renders when total > items.length
+ *   - Truncation notice is absent when total === items.length
  *
  * Mocking strategy:
  *   - @/lib/api/billing/refundable-invoices: vi.fn() stubs
@@ -40,7 +42,15 @@ vi.mock("next-intl", () => {
       return undefined;
     }, obj) as string ?? path;
   }
-  const makeT = (ns: string) => (key: string) => resolve(en, `${ns}.${key}`);
+  const makeT = (ns: string) => (key: string, params?: Record<string, unknown>) => {
+    let str = resolve(en, `${ns}.${key}`);
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        str = str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+      }
+    }
+    return str;
+  };
   return {
     useLocale: () => "en",
     useTranslations: (ns: string) => makeT(ns),
@@ -221,5 +231,27 @@ describe("RefundableInvoicesPage", () => {
 
     fireEvent.click(screen.getByText("Add refundable expense"));
     expect(screen.getByTestId("add-dialog")).toBeDefined();
+  });
+
+  it("shows truncation notice when total > items.length", async () => {
+    const items = [makeExpense({ id: "exp-1" }), makeExpense({ id: "exp-2", invoice_number: "INV-002" })];
+    mockFetch.mockResolvedValue({ items, total: 75 });
+
+    render(<RefundableInvoicesPage />);
+    // Two rows with "Tower Block" — wait for the unique invoice number instead
+    await waitFor(() => screen.getByText("INV-002"));
+
+    // en.json: "Showing {count} of {total}" → "Showing 2 of 75"
+    expect(screen.getByText("Showing 2 of 75")).toBeDefined();
+  });
+
+  it("does not show truncation notice when total === items.length", async () => {
+    const items = [makeExpense()];
+    mockFetch.mockResolvedValue({ items, total: 1 });
+
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => screen.getByText("Tower Block"));
+
+    expect(screen.queryByText(/Showing \d+ of \d+/)).toBeNull();
   });
 });

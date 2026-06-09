@@ -16,13 +16,17 @@ export interface FetchRefundableExpensesParams {
 /**
  * Fetch expenses already marked as refundable (refundable_status is set).
  * GET /billing/materials-expenses?refundable=true
+ *
+ * Defaults to limit=200 (backend max) so large companies do not silently
+ * receive a truncated list. The caller may pass a lower limit explicitly.
  */
 export async function fetchRefundableExpenses(
   params?: FetchRefundableExpensesParams
 ): Promise<{ items: RefundableExpense[]; total: number }> {
   const qs = new URLSearchParams({ refundable: "true" });
   if (params?.companyId) qs.set("company_id", params.companyId);
-  if (params?.limit !== undefined) qs.set("limit", String(params.limit));
+  const limit = params?.limit !== undefined ? params.limit : 200;
+  qs.set("limit", String(limit));
   if (params?.offset !== undefined) qs.set("offset", String(params.offset));
 
   return api.get<{ items: RefundableExpense[]; total: number }>(
@@ -33,13 +37,17 @@ export async function fetchRefundableExpenses(
 /**
  * Fetch expenses NOT yet flagged for reimbursement (refundable_status is null).
  * GET /billing/materials-expenses?refundable=false
+ *
+ * Defaults to limit=200 (backend max) so the picker is not silently truncated
+ * for large companies. The caller may pass a lower limit explicitly.
  */
 export async function fetchRefundableCandidates(
   params?: FetchRefundableExpensesParams
 ): Promise<{ items: RefundableExpense[]; total: number }> {
   const qs = new URLSearchParams({ refundable: "false" });
   if (params?.companyId) qs.set("company_id", params.companyId);
-  if (params?.limit !== undefined) qs.set("limit", String(params.limit));
+  const limit = params?.limit !== undefined ? params.limit : 200;
+  qs.set("limit", String(limit));
   if (params?.offset !== undefined) qs.set("offset", String(params.offset));
 
   return api.get<{ items: RefundableExpense[]; total: number }>(

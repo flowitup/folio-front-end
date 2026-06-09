@@ -23,6 +23,7 @@ export default function RefundableInvoicesPage() {
   const t = useTranslations("billing.refundable");
 
   const [items, setItems] = useState<RefundableExpense[]>([]);
+  const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -39,6 +40,7 @@ export default function RefundableInvoicesPage() {
     try {
       const result = await fetchRefundableExpenses();
       setItems(result.items);
+      setTotal(result.total);
     } catch {
       setError(tRef.current("loadError"));
     } finally {
@@ -107,6 +109,11 @@ export default function RefundableInvoicesPage() {
               ))}
             </tbody>
           </table>
+          {items.length < total && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("truncatedNotice", { count: items.length, total })}
+            </p>
+          )}
         </div>
       )}
 

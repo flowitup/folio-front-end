@@ -1067,6 +1067,8 @@
       "loading": "Loading...",
       "loadError": "Failed to load expenses.",
       "updateError": "Failed to update status. Please try again.",
+      "truncatedNotice": "Showing {count} of {total}",
+      "partialAddError": "Some expenses could not be added. Please try again.",
       "columns": {
         "project": "Project",
         "invoiceNumber": "Invoice #",

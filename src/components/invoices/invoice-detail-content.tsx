@@ -210,7 +210,46 @@ export function InvoiceDetailContent({
           {/* Line items */}
           <Card>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              {/* Mobile stacked cards — hidden on desktop */}
+              <div className="lg:hidden">
+                {invoice.items.map((item, i) => (
+                  <div
+                    key={i}
+                    className="border-b px-3 py-2.5 last:border-0"
+                    style={{ borderColor: "var(--line)" }}
+                  >
+                    {/* Description full width */}
+                    <div className="text-[13px]">{item.description}</div>
+                    {/* Qty × UnitPrice on left, Total on right */}
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <span
+                        className="num text-[12px]"
+                        style={{ color: "var(--muted)" }}
+                      >
+                        {item.quantity} × {item.unit_price.toFixed(2)}
+                      </span>
+                      <span className="num text-[13px] font-medium">
+                        {item.total.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {/* Total row */}
+                <div
+                  className="flex items-center justify-between px-3 py-2 border-t"
+                  style={{ background: "var(--paper-2)", borderColor: "var(--line)" }}
+                >
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("totalAmount")}
+                  </span>
+                  <span className="num font-bold text-[13px]">
+                    {invoice.total_amount.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Desktop table — hidden on mobile */}
+              <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/30">

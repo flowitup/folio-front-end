@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { DocumentsList } from "../documents-list";
 import type { ProjectDocument } from "@/lib/api/project-documents";
 
@@ -140,7 +140,7 @@ describe("DocumentsList", () => {
 
       const members = [makeMember("user-2", "Alice Brown")];
 
-      const { container } = render(
+      render(
         <DocumentsList
           {...defaultProps}
           documents={[doc]}
@@ -148,12 +148,12 @@ describe("DocumentsList", () => {
         />
       );
 
-      expect(screen.getByText("report.pdf")).toBeDefined();
-      // Check for MB formatted size - 2048000 / (1024*1024) ≈ 1.95 MB -> displays as 2.0
-      expect(container.textContent).toContain("2.0");
-      expect(container.textContent).toContain("MB");
-      expect(screen.getByText("Alice Brown")).toBeDefined();
-      expect(screen.getByText("20/03/2024")).toBeDefined();
+      const desktop = screen.getByTestId("documents-list-desktop");
+      expect(within(desktop).getByText("report.pdf")).toBeDefined();
+      // Check for MB formatted size - 2048000 / (1024*1024) ≈ 1.95 MB -> displays as 2.0 MB
+      expect(within(desktop).getByText(/2\.0.*MB/)).toBeDefined();
+      expect(within(desktop).getByText("Alice Brown")).toBeDefined();
+      expect(within(desktop).getByText("20/03/2024")).toBeDefined();
     });
 
     it("formats sizes correctly (B, KB, MB, GB)", () => {
@@ -189,7 +189,8 @@ describe("DocumentsList", () => {
         />
       );
 
-      expect(screen.getByText("Former member")).toBeDefined();
+      const desktop = screen.getByTestId("documents-list-desktop");
+      expect(within(desktop).getByText("Former member")).toBeDefined();
     });
 
     it("displays kind icon and badge for each document", () => {
@@ -207,8 +208,9 @@ describe("DocumentsList", () => {
         />
       );
 
-      expect(screen.getByText("PDF")).toBeDefined();
-      expect(screen.getByText("Image")).toBeDefined();
+      const desktop = screen.getByTestId("documents-list-desktop");
+      expect(within(desktop).getByText("PDF")).toBeDefined();
+      expect(within(desktop).getByText("Image")).toBeDefined();
     });
   });
 
@@ -301,7 +303,8 @@ describe("DocumentsList", () => {
         />
       );
 
-      const previewButtons = screen.getAllByTitle("Preview");
+      const desktop = screen.getByTestId("documents-list-desktop");
+      const previewButtons = within(desktop).getAllByTitle("Preview");
       expect(previewButtons.length).toBeGreaterThan(0);
     });
 
@@ -315,7 +318,8 @@ describe("DocumentsList", () => {
         />
       );
 
-      const previewButtons = screen.getAllByTitle("Preview");
+      const desktop = screen.getByTestId("documents-list-desktop");
+      const previewButtons = within(desktop).getAllByTitle("Preview");
       expect(previewButtons.length).toBeGreaterThan(0);
     });
 
@@ -332,11 +336,12 @@ describe("DocumentsList", () => {
         />
       );
 
+      const desktop = screen.getByTestId("documents-list-desktop");
       // Should have download button but not preview
-      const downloadButtons = screen.getAllByTitle("Download");
+      const downloadButtons = within(desktop).getAllByTitle("Download");
       expect(downloadButtons.length).toBeGreaterThan(0);
 
-      const previewButtons = screen.queryAllByTitle("Preview");
+      const previewButtons = within(desktop).queryAllByTitle("Preview");
       expect(previewButtons.length).toBe(0);
     });
 
@@ -350,10 +355,11 @@ describe("DocumentsList", () => {
         />
       );
 
-      const downloadButtons = screen.getAllByTitle("Download");
+      const desktop = screen.getByTestId("documents-list-desktop");
+      const downloadButtons = within(desktop).getAllByTitle("Download");
       expect(downloadButtons.length).toBeGreaterThan(0);
 
-      const previewButtons = screen.queryAllByTitle("Preview");
+      const previewButtons = within(desktop).queryAllByTitle("Preview");
       expect(previewButtons.length).toBe(0);
     });
 
@@ -367,10 +373,11 @@ describe("DocumentsList", () => {
         />
       );
 
-      const downloadButtons = screen.getAllByTitle("Download");
+      const desktop = screen.getByTestId("documents-list-desktop");
+      const downloadButtons = within(desktop).getAllByTitle("Download");
       expect(downloadButtons.length).toBeGreaterThan(0);
 
-      const previewButtons = screen.queryAllByTitle("Preview");
+      const previewButtons = within(desktop).queryAllByTitle("Preview");
       expect(previewButtons.length).toBe(0);
     });
 
@@ -386,7 +393,8 @@ describe("DocumentsList", () => {
         />
       );
 
-      const previewButton = screen.getByTitle("Preview");
+      const desktop = screen.getByTestId("documents-list-desktop");
+      const previewButton = within(desktop).getByTitle("Preview");
       fireEvent.click(previewButton);
 
       expect(onPreview).toHaveBeenCalledWith(doc);
@@ -399,7 +407,8 @@ describe("DocumentsList", () => {
 
       render(<DocumentsList {...defaultProps} documents={[doc]} />);
 
-      const downloadBtn = screen.getByTitle("Download");
+      const desktop = screen.getByTestId("documents-list-desktop");
+      const downloadBtn = within(desktop).getByTitle("Download");
       expect(downloadBtn.tagName.toLowerCase()).toBe("button");
     });
 
@@ -419,7 +428,8 @@ describe("DocumentsList", () => {
         />
       );
 
-      const downloadBtn = screen.getByTitle("Download");
+      const desktop = screen.getByTestId("documents-list-desktop");
+      const downloadBtn = within(desktop).getByTitle("Download");
       fireEvent.click(downloadBtn);
 
       // Allow the async click handler to settle
@@ -446,7 +456,8 @@ describe("DocumentsList", () => {
         />
       );
 
-      expect(screen.getByTitle("Delete")).toBeDefined();
+      const desktop = screen.getByTestId("documents-list-desktop");
+      expect(within(desktop).getByTitle("Delete")).toBeDefined();
     });
 
     it("hides delete button when currentUserId does NOT match uploader_id and NOT admin", () => {
@@ -476,7 +487,8 @@ describe("DocumentsList", () => {
         />
       );
 
-      expect(screen.getByTitle("Delete")).toBeDefined();
+      const desktop = screen.getByTestId("documents-list-desktop");
+      expect(within(desktop).getByTitle("Delete")).toBeDefined();
     });
 
     it("calls onDelete callback when delete button clicked", () => {
@@ -492,7 +504,8 @@ describe("DocumentsList", () => {
         />
       );
 
-      const deleteButton = screen.getByTitle("Delete");
+      const desktop = screen.getByTestId("documents-list-desktop");
+      const deleteButton = within(desktop).getByTitle("Delete");
       fireEvent.click(deleteButton);
 
       expect(onDelete).toHaveBeenCalledWith(doc);
@@ -514,9 +527,10 @@ describe("DocumentsList", () => {
         />
       );
 
-      expect(screen.getByText("file1.pdf")).toBeDefined();
-      expect(screen.getByText("file2.png")).toBeDefined();
-      expect(screen.getByText("file3.xlsx")).toBeDefined();
+      const desktop = screen.getByTestId("documents-list-desktop");
+      expect(within(desktop).getByText("file1.pdf")).toBeDefined();
+      expect(within(desktop).getByText("file2.png")).toBeDefined();
+      expect(within(desktop).getByText("file3.xlsx")).toBeDefined();
     });
 
     it("respects different uploader permissions for each row", () => {
@@ -534,7 +548,8 @@ describe("DocumentsList", () => {
         />
       );
 
-      const deleteButtons = screen.queryAllByTitle("Delete");
+      const desktop = screen.getByTestId("documents-list-desktop");
+      const deleteButtons = within(desktop).queryAllByTitle("Delete");
       // Only one delete button should be visible (for user-1's doc)
       expect(deleteButtons.length).toBe(1);
     });

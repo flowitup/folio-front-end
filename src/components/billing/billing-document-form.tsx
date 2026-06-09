@@ -411,7 +411,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="fade-up space-y-6 px-8 pb-16">
+    <div className="fade-up space-y-6 px-4 pb-16 lg:px-8">
       {/* 1. Header bar */}
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => router.push(listPath)}>
@@ -429,7 +429,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
               document={liveDoc}
               onStatusChanged={setLiveDoc}
             />
-            <div className="ml-auto flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
               {showConvertButton && (
                 <Button
                   variant="outline"
@@ -571,7 +571,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
               {tForm("recipient.addExtraFields")}
             </button>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="recipient-email" className="text-[12px]">{tForm("recipient.email")}</Label>
                 <Input
@@ -601,7 +601,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
           {tForm("details.section")}
         </p>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {isEdit && liveDoc && (
             <div className="space-y-1">
               <Label className="text-[12px]">{tForm("details.documentNumber")}</Label>

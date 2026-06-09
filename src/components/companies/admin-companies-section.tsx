@@ -109,6 +109,52 @@ export function AdminCompaniesSection() {
         </div>
       ) : (
         <>
+          {/* Mobile card list */}
+          <div className="flex flex-col gap-2 lg:hidden" data-testid="admin-companies-mobile">
+            {companies.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => handleManage(c.id)}
+                className="folio-card flex w-full items-start gap-3 p-4 text-left"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-[14px] truncate">{c.legal_name}</div>
+                  {c.address && (
+                    <div
+                      className="text-[12px] truncate"
+                      style={{ color: "var(--muted)" }}
+                    >
+                      {c.address}
+                    </div>
+                  )}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px]">
+                    <span className="num font-mono" style={{ color: "var(--muted)" }}>
+                      {t("form.fields.siret.label")}: {c.siret ?? "—"}
+                    </span>
+                    <span className="num font-mono" style={{ color: "var(--muted)" }}>
+                      {t("form.fields.tvaNumber.label")}: {c.tva_number ?? "—"}
+                    </span>
+                  </div>
+                  <div
+                    className="mt-0.5 num text-[12px]"
+                    style={{ color: "var(--muted)" }}
+                  >
+                    {t("admin.table.createdAt")}: {formatDate(c.created_at)}
+                  </div>
+                </div>
+                <Settings2
+                  size={16}
+                  className="mt-0.5 flex-shrink-0"
+                  style={{ color: "var(--muted)" }}
+                  aria-hidden
+                />
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden lg:block" data-testid="admin-companies-desktop">
           <Table>
             <TableHeader>
               <TableRow>
@@ -166,6 +212,7 @@ export function AdminCompaniesSection() {
               ))}
             </TableBody>
           </Table>
+          </div>
 
           {total > companies.length && (
             <p

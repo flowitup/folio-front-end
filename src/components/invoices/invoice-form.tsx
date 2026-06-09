@@ -250,19 +250,86 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
           </div>
 
           <div className="px-3 py-2 space-y-1.5">
-            {/* Header row */}
-            <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
-              <div className="col-span-5">{t("description")}</div>
-              <div className="col-span-2">{t("quantity")}</div>
-              <div className="col-span-3">{t("unitPrice")}</div>
-              <div className="col-span-2 text-right">{t("total")}</div>
+            {/* Desktop wrapper */}
+            <div className="hidden lg:block" data-testid="invoice-items-desktop">
+              {/* Header row — desktop only */}
+              <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
+                <div className="col-span-5">{t("description")}</div>
+                <div className="col-span-2">{t("quantity")}</div>
+                <div className="col-span-3">{t("unitPrice")}</div>
+                <div className="col-span-2 text-right">{t("total")}</div>
+              </div>
+
+              {/* Desktop items */}
+              {items.map((item, index) => {
+                const rowTotal = item.quantity * item.unit_price;
+                return (
+                  <div key={index} className="hidden lg:grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-5">
+                      <input
+                        type="text"
+                        value={item.description}
+                        onChange={(e) => updateItem(index, "description", e.target.value)}
+                        placeholder={t("description")}
+                        className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateItem(index, "quantity", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.unit_price}
+                        onChange={(e) =>
+                          updateItem(index, "unit_price", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div className="col-span-1 text-right text-sm font-medium">
+                      {rowTotal.toFixed(2)}
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => removeItem(index)}
+                        disabled={isLoading || items.length === 1}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            {items.map((item, index) => {
+            {/* Mobile wrapper */}
+            <div className="lg:hidden" data-testid="invoice-items-mobile">
+              {items.map((item, index) => {
               const rowTotal = item.quantity * item.unit_price;
               return (
-                <div key={index} className="grid grid-cols-12 gap-2 items-center">
-                  <div className="col-span-5">
+                <div key={index}>
+                  {/* Mobile card layout (< lg) */}
+                  <div className="lg:hidden rounded-md border bg-background p-2 space-y-2">
+                    {/* Description — full width */}
                     <input
                       type="text"
                       value={item.description}
@@ -271,51 +338,59 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
                       className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                       disabled={isLoading}
                     />
-                  </div>
-                  <div className="col-span-2">
-                    <input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        updateItem(index, "quantity", parseFloat(e.target.value) || 0)
-                      }
-                      className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="col-span-3">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={item.unit_price}
-                      onChange={(e) =>
-                        updateItem(index, "unit_price", parseFloat(e.target.value) || 0)
-                      }
-                      className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="col-span-1 text-right text-sm font-medium">
-                    {rowTotal.toFixed(2)}
-                  </div>
-                  <div className="col-span-1 flex justify-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeItem(index)}
-                      disabled={isLoading || items.length === 1}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    {/* Qty + Unit Price — 2-col row */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-0.5">{t("quantity")}</label>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            updateItem(index, "quantity", parseFloat(e.target.value) || 0)
+                          }
+                          className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-0.5">{t("unitPrice")}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.unit_price}
+                          onChange={(e) =>
+                            updateItem(index, "unit_price", parseFloat(e.target.value) || 0)
+                          }
+                          className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+                    {/* Total (right) + Delete (right) */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{t("total")}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{rowTotal.toFixed(2)}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => removeItem(index)}
+                          disabled={isLoading || items.length === 1}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
             })}
+            </div>
 
             {/* Grand Total */}
             <div className="flex justify-end border-t pt-2">

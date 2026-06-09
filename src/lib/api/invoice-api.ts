@@ -108,6 +108,13 @@ export const deleteAttachment = (attachmentId: string): Promise<void> =>
   api.delete<void>(`/attachments/${attachmentId}`);
 
 /**
+ * Rename an attachment's display filename. The extension must be preserved
+ * (the backend rejects an extension change). Returns the updated metadata.
+ */
+export const renameAttachment = (attachmentId: string, filename: string): Promise<InvoiceAttachment> =>
+  api.patch<InvoiceAttachment, { filename: string }>(`/attachments/${attachmentId}/rename`, { filename });
+
+/**
  * Fetch attachment as a raw Blob.
  */
 export const fetchAttachmentBlob = async (attachmentId: string): Promise<Blob> => {

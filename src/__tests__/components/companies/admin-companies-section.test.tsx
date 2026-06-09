@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { AdminCompaniesSection } from "@/components/companies/admin-companies-section";
 
 // ---------------------------------------------------------------------------
@@ -95,7 +95,8 @@ describe("AdminCompaniesSection — render", () => {
     render(<AdminCompaniesSection />);
 
     await waitFor(() => {
-      expect(screen.getByText("ACME Corp")).toBeDefined();
+      const desktop = screen.getByTestId("admin-companies-desktop");
+      expect(within(desktop).getByText("ACME Corp")).toBeDefined();
     });
   });
 
@@ -123,7 +124,8 @@ describe("AdminCompaniesSection — render", () => {
     render(<AdminCompaniesSection />);
 
     await waitFor(() => {
-      expect(screen.getByText("ACME Corp")).toBeDefined();
+      const desktop = screen.getByTestId("admin-companies-desktop");
+      expect(within(desktop).getByText("ACME Corp")).toBeDefined();
     });
 
     expect(screen.getByRole("button", { name: /new company/i })).toBeDefined();
@@ -146,7 +148,8 @@ describe("AdminCompaniesSection — new company CTA", () => {
     render(<AdminCompaniesSection />);
 
     await waitFor(() => {
-      expect(screen.getByText("ACME Corp")).toBeDefined();
+      const desktop = screen.getByTestId("admin-companies-desktop");
+      expect(within(desktop).getByText("ACME Corp")).toBeDefined();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /new company/i }));

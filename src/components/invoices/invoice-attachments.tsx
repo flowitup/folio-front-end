@@ -2,17 +2,19 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, Upload, X, FileText, Image as ImageIcon, Download, Eye } from "lucide-react";
+import { Loader2, Upload, X, FileText, Image as ImageIcon, Download, Eye, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   fetchAttachments,
   uploadAttachment,
   deleteAttachment,
+  renameAttachment,
   fetchAttachmentBlobUrl,
 } from "@/lib/api/invoice-api";
 import type { Invoice, InvoiceAttachment } from "@/types/invoice";
 import { InvoiceAttachmentPreviewDialog } from "./invoice-attachment-preview-dialog";
+import { InvoiceAttachmentRenameDialog } from "./invoice-attachment-rename-dialog";
 import { formatDate } from "@/lib/utils/formatters";
 
 const ALLOWED_MIME = [
@@ -48,6 +50,7 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<InvoiceAttachment | null>(null);
+  const [renameTarget, setRenameTarget] = useState<InvoiceAttachment | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reload = useCallback(async () => {
@@ -94,6 +97,17 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
       }
     }
     await reload();
+  };
+
+  const handleRename = async (attachmentId: string, newFilename: string) => {
+    setError(null);
+    try {
+      await renameAttachment(attachmentId, newFilename);
+      setRenameTarget(null);
+      await reload();
+    } catch {
+      setError(t("renameFailed"));
+    }
   };
 
   const handleDelete = async (attachmentId: string) => {
@@ -168,8 +182,9 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
                 <AttachmentRow
                   key={att.id}
                   attachment={att}
-                  canDelete={canManage}
+                  canManage={canManage}
                   onDelete={() => handleDelete(att.id)}
+                  onRename={() => setRenameTarget(att)}
                   onPreview={() => setPreviewAttachment(att)}
                 />
               ))}
@@ -181,18 +196,24 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
         attachment={previewAttachment}
         onClose={() => setPreviewAttachment(null)}
       />
+      <InvoiceAttachmentRenameDialog
+        attachment={renameTarget}
+        onCancel={() => setRenameTarget(null)}
+        onConfirm={(newFilename) => handleRename(renameTarget!.id, newFilename)}
+      />
     </Card>
   );
 }
 
 interface AttachmentRowProps {
   attachment: InvoiceAttachment;
-  canDelete: boolean;
+  canManage: boolean;
   onDelete: () => void;
+  onRename: () => void;
   onPreview: () => void;
 }
 
-function AttachmentRow({ attachment, canDelete, onDelete, onPreview }: AttachmentRowProps) {
+function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview }: AttachmentRowProps) {
   const t = useTranslations("invoices");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const isImage = isImageMime(attachment.mime_type);
@@ -263,7 +284,17 @@ function AttachmentRow({ attachment, canDelete, onDelete, onPreview }: Attachmen
       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownload(); }} title={t("openAttachment")}>
         <Download className="h-4 w-4" />
       </Button>
-      {canDelete && (
+      {canManage && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); onRename(); }}
+          title={t("rename")}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      )}
+      {canManage && (
         <Button
           variant="ghost"
           size="sm"

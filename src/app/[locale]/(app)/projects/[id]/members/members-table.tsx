@@ -117,15 +117,75 @@ export function MembersTable({
       {/* Members table */}
       <section>
         <div className="label-cap mb-3">{t("tab.current")}</div>
-        <div className="folio-card overflow-hidden">
-          {members.length === 0 ? (
-            <div
-              className="flex items-center justify-center py-10 text-[13px]"
-              style={{ color: "var(--muted)" }}
-            >
-              {t("empty.members")}
+        {members.length === 0 ? (
+          <div
+            className="folio-card flex items-center justify-center py-10 text-[13px]"
+            style={{ color: "var(--muted)" }}
+          >
+            {t("empty.members")}
+          </div>
+        ) : (
+          <>
+            {/* Mobile cards (< lg) */}
+            <div className="flex flex-col gap-2 lg:hidden" data-testid="members-mobile">
+              {members.map((member) => (
+                <div key={member.user_id} className="folio-card p-4">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
+                      style={{ background: "var(--paper-2)", color: "var(--ink)" }}
+                    >
+                      {memberInitials(member)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium">
+                        {member.display_name ?? member.email.split("@")[0]}
+                      </div>
+                      <div className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
+                        {member.email}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="mt-3 flex items-center justify-between border-t pt-2.5"
+                    style={{ borderColor: "var(--line)" }}
+                  >
+                    <span className="stamp">{member.role_name}</span>
+                    <span className="num text-[12px]" style={{ color: "var(--muted)" }}>
+                      {formatDate(member.joined_at)}
+                    </span>
+                  </div>
+                  {canManageMembers && (
+                    <div className="mt-2.5 flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 flex-1"
+                        onClick={() => setEditing(member)}
+                      >
+                        {t("edit.button")}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 flex-1"
+                        style={{ color: "var(--negative)" }}
+                        disabled={
+                          removingId === member.user_id ||
+                          member.user_id === currentUserId
+                        }
+                        onClick={() => handleRemove(member)}
+                      >
+                        {t("edit.remove")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-          ) : (
+
+            {/* Desktop table (>= lg) */}
+            <div className="folio-card overflow-hidden hidden lg:block" data-testid="members-desktop">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -198,22 +258,63 @@ export function MembersTable({
                 ))}
               </TableBody>
             </Table>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </section>
 
       {/* Pending invitations table */}
       <section>
         <div className="label-cap mb-3">{t("tab.pending")}</div>
-        <div className="folio-card overflow-hidden">
-          {invites.length === 0 ? (
-            <div
-              className="flex items-center justify-center py-10 text-[13px]"
-              style={{ color: "var(--muted)" }}
-            >
-              {t("empty.pending")}
+        {invites.length === 0 ? (
+          <div
+            className="folio-card flex items-center justify-center py-10 text-[13px]"
+            style={{ color: "var(--muted)" }}
+          >
+            {t("empty.pending")}
+          </div>
+        ) : (
+          <>
+            {/* Mobile cards (< lg) */}
+            <div className="flex flex-col gap-2 lg:hidden" data-testid="invites-mobile">
+              {invites.map((invite) => {
+                const days = expiresInDays(invite.expires_at);
+                return (
+                  <div key={invite.id} className="folio-card p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium">{invite.email}</div>
+                        <span className="stamp mt-1.5 inline-flex">{invite.role_name}</span>
+                      </div>
+                      {canInvite && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9"
+                          style={{ color: "var(--negative)" }}
+                          disabled={revokingId === invite.id}
+                          onClick={() => handleRevoke(invite.id)}
+                        >
+                          {t("revoke")}
+                        </Button>
+                      )}
+                    </div>
+                    <div
+                      className="mt-3 flex items-center justify-between border-t pt-2.5 text-[12px]"
+                      style={{ borderColor: "var(--line)", color: "var(--muted)" }}
+                    >
+                      <span className="num">
+                        {days === null ? "—" : t("expiresIn", { days })}
+                      </span>
+                      <span>{invite.invited_by_name ?? "—"}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ) : (
+
+            {/* Desktop table (>= lg) */}
+            <div className="folio-card overflow-hidden hidden lg:block" data-testid="invites-desktop">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -262,8 +363,9 @@ export function MembersTable({
                 ))}
               </TableBody>
             </Table>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </section>
 
       {canInvite && (

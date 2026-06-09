@@ -230,7 +230,12 @@ export function Topbar() {
         <div className="mx-1 hidden h-6 w-px lg:block" style={{ background: "var(--line-2)" }} />
 
         {actionLabel && (
-          <button type="button" className="btn btn-primary" onClick={handleAction}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleAction}
+            aria-label={actionLabel}
+          >
             <Plus size={14} /> <span className="hidden lg:inline">{actionLabel}</span>
           </button>
         )}

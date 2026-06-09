@@ -14,7 +14,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act, within } from "@testing-library/react";
 import { BillingDocumentForm } from "@/components/billing/billing-document-form";
 import type { MyCompany } from "@/types/companies";
 
@@ -188,7 +188,9 @@ async function fillAndSubmit(recipientName = "Client Corp") {
   const recipientInput = screen.getByLabelText(/name \*/i);
   fireEvent.change(recipientInput, { target: { value: recipientName } });
 
-  fireEvent.click(screen.getByRole("button", { name: /add line/i }));
+  // Use within to scope to desktop view (since both mobile and desktop render)
+  const desktop = screen.getByTestId("billing-items-desktop");
+  fireEvent.click(within(desktop).getByRole("button", { name: /add line/i }));
 
   // Description is now a Combobox — open it and type into the CommandInput.
   // Locate by placeholder text, not position: the form also renders project,

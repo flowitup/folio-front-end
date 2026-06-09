@@ -40,7 +40,7 @@ export default async function CompanyManagePage({ params }: Props) {
   }
 
   return (
-    <div className="fade-up px-8 pb-12 pt-6 max-w-4xl mx-auto">
+    <div className="fade-up px-4 pb-12 pt-6 lg:px-8 max-w-4xl mx-auto">
       {/* Back link */}
       <a
         href={`/${locale}/settings`}

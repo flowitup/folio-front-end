@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act, within } from "@testing-library/react";
 import { BillingDocumentForm } from "@/components/billing/billing-document-form";
 import type { BillingDocument, BillingDocumentItem } from "@/types/billing";
 
@@ -206,8 +206,9 @@ async function fillAndSubmitCreateForm(recipientName = "Test Client") {
   const recipientInput = screen.getByLabelText(/name \*/i);
   fireEvent.change(recipientInput, { target: { value: recipientName } });
 
-  // Add a line item
-  fireEvent.click(screen.getByRole("button", { name: /add line/i }));
+  // Add a line item (use within to scope to desktop view)
+  const desktop = screen.getByTestId("billing-items-desktop");
+  fireEvent.click(within(desktop).getByRole("button", { name: /add line/i }));
 
   // Fill description on the new item via the Combobox. Locate it by its
   // placeholder text rather than position — the form also renders project,

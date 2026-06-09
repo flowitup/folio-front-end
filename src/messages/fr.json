@@ -363,8 +363,18 @@
     "invalidFileType": "{name} : type de fichier non autorisé",
     "uploadFailed": "Échec du téléversement de {name}",
     "deleteFailed": "Échec de la suppression",
+    "renameFailed": "Échec du renommage de la pièce jointe",
+    "rename": "Renommer",
     "attachmentDeleteConfirm": "Supprimer cette pièce jointe ? Cette action est irréversible.",
     "openAttachment": "Ouvrir",
+    "attachmentRename": {
+      "title": "Renommer la pièce jointe",
+      "description": "L'extension du fichier ({extension}) ne peut pas être modifiée.",
+      "label": "Nom du fichier",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…"
+    },
     "attachmentPreview": {
       "preview": "Aperçu",
       "close": "Fermer",

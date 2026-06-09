@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, within } from "@testing-library/react";
 import { BillingDocumentItemsEditor } from "@/components/billing/billing-document-items-editor";
 import type { BillingDocumentItem } from "@/types/billing";
 
@@ -87,12 +87,14 @@ function renderEditor(
 describe("BillingDocumentItemsEditor — rendering", () => {
   it("renders empty state message when no items", () => {
     renderEditor([], vi.fn());
-    expect(screen.getByText(/no line items yet/i)).toBeDefined();
+    const desktop = screen.getByTestId("billing-items-desktop");
+    expect(within(desktop).getByText(/no line items yet/i)).toBeDefined();
   });
 
   it("renders Add line button by default", () => {
     renderEditor([], vi.fn());
-    expect(screen.getByRole("button", { name: /add line/i })).toBeDefined();
+    const desktop = screen.getByTestId("billing-items-desktop");
+    expect(within(desktop).getByRole("button", { name: /add line/i })).toBeDefined();
   });
 
   it("hides Add line and Remove buttons in readOnly mode", () => {
@@ -127,7 +129,8 @@ describe("BillingDocumentItemsEditor — add/remove rows", () => {
   it("calls onChange with new empty item when Add line clicked", () => {
     const onChange = vi.fn();
     renderEditor([], onChange);
-    fireEvent.click(screen.getByRole("button", { name: /add line/i }));
+    const desktop = screen.getByTestId("billing-items-desktop");
+    fireEvent.click(within(desktop).getByRole("button", { name: /add line/i }));
     expect(onChange).toHaveBeenCalledOnce();
     const [newItems] = onChange.mock.calls[0] as [BillingDocumentItem[]];
     expect(newItems).toHaveLength(1);

@@ -66,7 +66,8 @@
       "title": "Billing",
       "devis": "Quotes",
       "factures": "Invoices",
-      "templates": "Templates"
+      "templates": "Templates",
+      "refundableInvoices": "Refundable Invoices"
     }
   },
   "dashboard": {
@@ -1068,6 +1069,41 @@
       "invalidTransition": "Invalid status transition.",
       "numberCollision": "A document with this number already exists.",
       "generic": "An unexpected error occurred."
+    },
+    "refundable": {
+      "title": "Refundable Invoices",
+      "addButton": "Add refundable expense",
+      "empty": "No refundable expenses yet.",
+      "loading": "Loading...",
+      "loadError": "Failed to load expenses.",
+      "updateError": "Failed to update status. Please try again.",
+      "truncatedNotice": "Showing {count} of {total}",
+      "partialAddError": "Some expenses could not be added. Please try again.",
+      "columns": {
+        "project": "Project",
+        "invoiceNumber": "Invoice #",
+        "recipient": "Recipient",
+        "issueDate": "Issue date",
+        "total": "Total",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "refundable": "Refundable",
+        "refundPending": "Refund pending",
+        "refunded": "Refunded"
+      },
+      "action": {
+        "remove": "Remove",
+        "changeStatus": "Change status"
+      },
+      "dialog": {
+        "title": "Add refundable expense",
+        "search": "Search by project, invoice #, or recipient…",
+        "confirm": "Add selected",
+        "cancel": "Cancel",
+        "empty": "No eligible expenses found."
+      }
     }
   },
   "documents": {

@@ -362,8 +362,18 @@
     "invalidFileType": "{name}: loại tệp không hợp lệ",
     "uploadFailed": "Tải lên {name} thất bại",
     "deleteFailed": "Xóa tệp thất bại",
+    "renameFailed": "Đổi tên tệp đính kèm thất bại",
+    "rename": "Đổi tên",
     "attachmentDeleteConfirm": "Xóa tệp đính kèm này? Không thể hoàn tác.",
     "openAttachment": "Mở",
+    "attachmentRename": {
+      "title": "Đổi tên tệp đính kèm",
+      "description": "Phần mở rộng tệp ({extension}) không thể thay đổi.",
+      "label": "Tên tệp",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "saving": "Đang lưu…"
+    },
     "attachmentPreview": {
       "preview": "Xem trước",
       "close": "Đóng",

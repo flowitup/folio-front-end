@@ -362,8 +362,18 @@
     "invalidFileType": "{name}: file type not allowed",
     "uploadFailed": "Failed to upload {name}",
     "deleteFailed": "Failed to delete attachment",
+    "renameFailed": "Failed to rename attachment",
+    "rename": "Rename",
     "attachmentDeleteConfirm": "Delete this attachment? This cannot be undone.",
     "openAttachment": "Open",
+    "attachmentRename": {
+      "title": "Rename attachment",
+      "description": "The file extension ({extension}) cannot be changed.",
+      "label": "File name",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…"
+    },
     "attachmentPreview": {
       "preview": "Preview",
       "close": "Close",

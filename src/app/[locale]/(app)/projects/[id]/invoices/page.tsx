@@ -148,9 +148,12 @@ export default function InvoicesPage() {
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
-      {/* KPI Row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="folio-card p-5">
+      {/* KPI Row — on mobile the headline total spans full width as a hero and
+          the type breakdowns tuck into a compact 2-up grid beneath it, so the
+          summary reads as one primary figure + supporting detail instead of a
+          tall stack of equal-weight cards. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-5 lg:gap-4">
+        <div className="folio-card col-span-2 p-5 lg:col-span-1">
           <div className="label-cap">{t("totalInvoiced")}</div>
           <div className="font-display num mt-2 text-[28px] font-medium leading-none">
             {formatEUR(totalInvoiced)}
@@ -159,10 +162,10 @@ export default function InvoicesPage() {
             {t("invoiceCount", { n: invoices.length })}
           </div>
         </div>
-        <div className="folio-card p-5">
+        <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("fundsReleased")}</div>
           <div
-            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
             style={{ color: "var(--positive)" }}
           >
             {formatEUR(fundsReleasedTotal)}
@@ -171,10 +174,10 @@ export default function InvoicesPage() {
             {t("invoiceCount", { n: releasedFundsInvoices.length })}
           </div>
         </div>
-        <div className="folio-card p-5">
+        <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("types.labor")}</div>
           <div
-            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
             style={{ color: "var(--accent)" }}
           >
             {formatEUR(laborInvoices.reduce((s, i) => s + i.total_amount, 0))}
@@ -183,10 +186,10 @@ export default function InvoicesPage() {
             {t("invoiceCount", { n: laborInvoices.length })}
           </div>
         </div>
-        <div className="folio-card p-5">
+        <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("types.materials_services")}</div>
           <div
-            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
           >
             {formatEUR(materialsInvoices.reduce((s, i) => s + i.total_amount, 0))}
           </div>
@@ -194,10 +197,10 @@ export default function InvoicesPage() {
             {t("invoiceCount", { n: materialsInvoices.length })}
           </div>
         </div>
-        <div className="folio-card p-5">
+        <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("types.others")}</div>
           <div
-            className="font-display num mt-2 text-[28px] font-medium leading-none"
+            className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
             style={{ color: "var(--muted)" }}
           >
             {formatEUR(othersInvoices.reduce((s, i) => s + i.total_amount, 0))}

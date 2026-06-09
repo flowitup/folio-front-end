@@ -41,8 +41,14 @@ test.describe("Project members flow", () => {
 
     // ── 3. Seeded members table shows alice + dave emails ────────────────────
     // Members table renders member.email in a cell (members-table.tsx ~162).
-    await expect(page.getByText(SEED_USERS.managerAlice)).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(SEED_USERS.userDave)).toBeVisible({ timeout: 10_000 });
+    // The roster renders twice (members-mobile cards + members-desktop table);
+    // scope to the visible copy to avoid a strict-mode 2-element match.
+    await expect(
+      page.getByText(SEED_USERS.managerAlice).filter({ visible: true }).first()
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page.getByText(SEED_USERS.userDave).filter({ visible: true }).first()
+    ).toBeVisible({ timeout: 10_000 });
 
     // ── 4. Open the invite dialog and submit a new invite ────────────────────
     // Trigger button text: members.invite.button = "Invite member".
@@ -75,25 +81,31 @@ test.describe("Project members flow", () => {
       timeout: 10_000,
     });
 
-    // ── 5. Pending-invitation row with that email appears ────────────────────
-    // After router.refresh() the pending invitations table renders invite.email
-    // (members-table.tsx ~234).
-    const pendingRow = page.getByRole("row").filter({ hasText: inviteEmail });
-    await expect(pendingRow).toBeVisible({ timeout: 15_000 });
+    // ── 5. Pending-invitation row/card with that email appears ───────────────
+    // Pending invites render twice: desktop <tr> rows (invites-desktop) and
+    // mobile cards (invites-mobile). Match the unit (row or card) that holds
+    // this email in whichever copy the viewport shows.
+    const pendingUnitAll = page.locator(
+      '[data-testid="invites-desktop"] tr, [data-testid="invites-mobile"] > div'
+    );
+    const pendingUnit = pendingUnitAll
+      .filter({ hasText: inviteEmail })
+      .filter({ visible: true });
+    await expect(pendingUnit).toBeVisible({ timeout: 15_000 });
 
     // ── 6. Revoke it ─────────────────────────────────────────────────────────
     // Revoke uses native window.confirm (members-table.tsx ~74), NOT an
     // AlertDialog — register a one-shot dialog handler that accepts it.
     page.once("dialog", (d) => d.accept());
-    // Revoke button text: members.revoke = "Revoke" (scoped to the pending row).
-    await pendingRow.getByRole("button", { name: "Revoke" }).click();
+    // Revoke button text: members.revoke = "Revoke" (scoped to the pending unit).
+    await pendingUnit.getByRole("button", { name: "Revoke" }).click();
 
     // Success toast: members.toast.revoked = "Invitation revoked".
     await expect(page.getByText("Invitation revoked")).toBeVisible({ timeout: 10_000 });
 
-    // ── Assert the pending row is gone ───────────────────────────────────────
+    // ── Assert the pending row/card is gone ──────────────────────────────────
     await expect(
-      page.getByRole("row").filter({ hasText: inviteEmail })
+      pendingUnitAll.filter({ hasText: inviteEmail })
     ).toHaveCount(0, { timeout: 10_000 });
   });
 });

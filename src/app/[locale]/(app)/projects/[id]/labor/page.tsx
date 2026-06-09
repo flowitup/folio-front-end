@@ -394,7 +394,7 @@ export default function LaborPage() {
               )}
             </div>
             {canManageLabor && (
-              <Button onClick={() => handleOpenLogDay()}>
+              <Button onClick={() => handleOpenLogDay()} aria-label={t("logDay")}>
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">{t("logDay")}</span>
               </Button>

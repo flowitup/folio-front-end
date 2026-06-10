@@ -152,6 +152,7 @@ export function InvoiceDetailContent({
               description: item.description,
               quantity: item.quantity,
               unit_price: item.unit_price,
+              vat_rate: item.vat_rate ?? 0,
             })),
             payment_method_id: invoice.payment_method_id ?? null,
             tag_id: invoice.tag_id ?? null,
@@ -210,87 +211,184 @@ export function InvoiceDetailContent({
           {/* Line items */}
           <Card>
             <CardContent className="p-0">
-              {/* Mobile stacked cards — hidden on desktop */}
-              <div className="lg:hidden">
-                {invoice.items.map((item, i) => (
-                  <div
-                    key={i}
-                    className="border-b px-3 py-2.5 last:border-0"
-                    style={{ borderColor: "var(--line)" }}
-                  >
-                    {/* Description full width */}
-                    <div className="text-[13px]">{item.description}</div>
-                    {/* Qty × UnitPrice on left, Total on right */}
-                    <div className="mt-1 flex items-center justify-between gap-2">
-                      <span
-                        className="num text-[12px]"
-                        style={{ color: "var(--muted)" }}
-                      >
-                        {item.quantity} × {item.unit_price.toFixed(2)}
-                      </span>
-                      <span className="num text-[13px] font-medium">
-                        {item.total.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                {/* Total row */}
-                <div
-                  className="flex items-center justify-between px-3 py-2 border-t"
-                  style={{ background: "var(--paper-2)", borderColor: "var(--line)" }}
-                >
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("totalAmount")}
-                  </span>
-                  <span className="num font-bold text-[13px]">
-                    {invoice.total_amount.toFixed(2)}
-                  </span>
-                </div>
-              </div>
+              {(() => {
+                // Show VAT column only when at least one item carries a non-zero rate.
+                const hasVat = invoice.items.some((it) => (it.vat_rate ?? 0) > 0);
+                const totalHt = invoice.items.reduce(
+                  (s, it) => s + it.quantity * it.unit_price,
+                  0
+                );
+                const totalVat = invoice.items.reduce(
+                  (s, it) => s + it.quantity * it.unit_price * ((it.vat_rate ?? 0) / 100),
+                  0
+                );
 
-              {/* Desktop table — hidden on mobile */}
-              <div className="hidden overflow-x-auto lg:block">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/30">
-                      <th className="px-3 py-1.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        {t("description")}
-                      </th>
-                      <th className="px-3 py-1.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        {t("quantity")}
-                      </th>
-                      <th className="px-3 py-1.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        {t("unitPrice")}
-                      </th>
-                      <th className="px-3 py-1.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        {t("total")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoice.items.map((item, i) => (
-                      <tr key={i} className="border-b last:border-0">
-                        <td className="px-3 py-1.5">{item.description}</td>
-                        <td className="px-3 py-1.5 text-right">{item.quantity}</td>
-                        <td className="px-3 py-1.5 text-right">{item.unit_price.toFixed(2)}</td>
-                        <td className="px-3 py-1.5 text-right font-medium">
-                          {item.total.toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="border-t bg-muted/30">
-                      <td colSpan={3} className="px-3 py-1.5 text-right font-semibold text-sm">
-                        {t("totalAmount")}
-                      </td>
-                      <td className="px-3 py-1.5 text-right font-bold">
-                        {invoice.total_amount.toFixed(2)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+                return (
+                  <>
+                    {/* Mobile stacked cards — hidden on desktop */}
+                    <div className="lg:hidden">
+                      {invoice.items.map((item, i) => (
+                        <div
+                          key={i}
+                          className="border-b px-3 py-2.5 last:border-0"
+                          style={{ borderColor: "var(--line)" }}
+                        >
+                          {/* Description full width */}
+                          <div className="text-[13px]">{item.description}</div>
+                          {/* Qty × UnitPrice on left, Total on right */}
+                          <div className="mt-1 flex items-center justify-between gap-2">
+                            <span
+                              className="num text-[12px]"
+                              style={{ color: "var(--muted)" }}
+                            >
+                              {item.quantity} × {item.unit_price.toFixed(2)}
+                              {hasVat && (item.vat_rate ?? 0) > 0 && (
+                                <span className="ml-1">({(item.vat_rate ?? 0)}%)</span>
+                              )}
+                            </span>
+                            <span className="num text-[13px] font-medium">
+                              {item.total.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      {/* Totals footer: HT/TVA/TTC when VAT present, otherwise single Total */}
+                      {hasVat ? (
+                        <>
+                          <div
+                            className="flex items-center justify-between px-3 py-1.5 border-t"
+                            style={{ borderColor: "var(--line)" }}
+                          >
+                            <span className="text-xs text-muted-foreground">{t("totalHt")}</span>
+                            <span className="num text-[13px]">{totalHt.toFixed(2)}</span>
+                          </div>
+                          <div
+                            className="flex items-center justify-between px-3 py-1.5"
+                          >
+                            <span className="text-xs text-muted-foreground">{t("totalTva")}</span>
+                            <span className="num text-[13px]">{totalVat.toFixed(2)}</span>
+                          </div>
+                          <div
+                            className="flex items-center justify-between px-3 py-2 border-t"
+                            style={{ background: "var(--paper-2)", borderColor: "var(--line)" }}
+                          >
+                            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              {t("totalTtc")}
+                            </span>
+                            <span className="num font-bold text-[13px]">
+                              {invoice.total_amount.toFixed(2)}
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <div
+                          className="flex items-center justify-between px-3 py-2 border-t"
+                          style={{ background: "var(--paper-2)", borderColor: "var(--line)" }}
+                        >
+                          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {t("totalAmount")}
+                          </span>
+                          <span className="num font-bold text-[13px]">
+                            {invoice.total_amount.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Desktop table — hidden on mobile */}
+                    <div className="hidden overflow-x-auto lg:block">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b bg-muted/30">
+                            <th className="px-3 py-1.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              {t("description")}
+                            </th>
+                            <th className="px-3 py-1.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              {t("quantity")}
+                            </th>
+                            <th className="px-3 py-1.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              {t("unitPrice")}
+                            </th>
+                            {hasVat && (
+                              <th className="px-3 py-1.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                {t("vatRate")}
+                              </th>
+                            )}
+                            <th className="px-3 py-1.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              {t("total")}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {invoice.items.map((item, i) => (
+                            <tr key={i} className="border-b last:border-0">
+                              <td className="px-3 py-1.5">{item.description}</td>
+                              <td className="px-3 py-1.5 text-right">{item.quantity}</td>
+                              <td className="px-3 py-1.5 text-right">{item.unit_price.toFixed(2)}</td>
+                              {hasVat && (
+                                <td className="px-3 py-1.5 text-right">
+                                  {(item.vat_rate ?? 0) > 0 ? `${item.vat_rate}%` : "—"}
+                                </td>
+                              )}
+                              <td className="px-3 py-1.5 text-right font-medium">
+                                {item.total.toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          {hasVat ? (
+                            <>
+                              <tr>
+                                <td
+                                  colSpan={hasVat ? 4 : 3}
+                                  className="px-3 py-1 text-right text-xs text-muted-foreground"
+                                >
+                                  {t("totalHt")}
+                                </td>
+                                <td className="px-3 py-1 text-right text-xs">
+                                  {totalHt.toFixed(2)}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td
+                                  colSpan={hasVat ? 4 : 3}
+                                  className="px-3 py-1 text-right text-xs text-muted-foreground"
+                                >
+                                  {t("totalTva")}
+                                </td>
+                                <td className="px-3 py-1 text-right text-xs">
+                                  {totalVat.toFixed(2)}
+                                </td>
+                              </tr>
+                              <tr className="border-t bg-muted/30">
+                                <td
+                                  colSpan={hasVat ? 4 : 3}
+                                  className="px-3 py-1.5 text-right font-semibold text-sm"
+                                >
+                                  {t("totalTtc")}
+                                </td>
+                                <td className="px-3 py-1.5 text-right font-bold">
+                                  {invoice.total_amount.toFixed(2)}
+                                </td>
+                              </tr>
+                            </>
+                          ) : (
+                            <tr className="border-t bg-muted/30">
+                              <td colSpan={3} className="px-3 py-1.5 text-right font-semibold text-sm">
+                                {t("totalAmount")}
+                              </td>
+                              <td className="px-3 py-1.5 text-right font-bold">
+                                {invoice.total_amount.toFixed(2)}
+                              </td>
+                            </tr>
+                          )}
+                        </tfoot>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
 

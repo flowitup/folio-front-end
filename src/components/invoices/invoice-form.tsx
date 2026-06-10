@@ -14,6 +14,8 @@ interface LineItem {
   description: string;
   quantity: number;
   unit_price: number;
+  /** VAT rate as a percentage (0–100). Defaults to 0 when not set. */
+  vat_rate: number;
 }
 
 interface InvoiceFormProps {
@@ -35,7 +37,7 @@ interface InvoiceFormProps {
 
 const INVOICE_TYPES: InvoiceType[] = ["released_funds", "labor", "materials_services", "others"];
 
-const emptyItem = (): LineItem => ({ description: "", quantity: 1, unit_price: 0 });
+const emptyItem = (): LineItem => ({ description: "", quantity: 1, unit_price: 0, vat_rate: 0 });
 
 export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tags = [] }: InvoiceFormProps) {
   const t = useTranslations("invoices");
@@ -58,12 +60,18 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
           description: i.description,
           quantity: i.quantity,
           unit_price: i.unit_price,
+          vat_rate: i.vat_rate ?? 0,
         }))
       : [emptyItem()]
   );
   const [error, setError] = useState<string | null>(null);
 
-  const grandTotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+  // Grand total is TTC: qty × unit_price × (1 + vat_rate/100).
+  // Legacy items without a vat_rate are treated as 0 % VAT.
+  const grandTotal = items.reduce(
+    (sum, item) => sum + item.quantity * item.unit_price * (1 + (item.vat_rate ?? 0) / 100),
+    0
+  );
 
   const updateItem = (index: number, field: keyof LineItem, value: string | number) => {
     setItems((prev) =>
@@ -106,6 +114,7 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
         description: item.description.trim(),
         quantity: Number(item.quantity),
         unit_price: Number(item.unit_price),
+        vat_rate: Number(item.vat_rate ?? 0),
       })),
       // Always include payment_method_id so updates can explicitly clear it (null).
       payment_method_id: paymentMethodId,
@@ -252,20 +261,22 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
           <div className="px-3 py-2 space-y-1.5">
             {/* Desktop wrapper */}
             <div className="hidden lg:block" data-testid="invoice-items-desktop">
-              {/* Header row — desktop only */}
+              {/* Header row — desktop only. Cols: desc(4) qty(2) price(2) TVA(2) total(1) del(1) = 12 */}
               <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
-                <div className="col-span-5">{t("description")}</div>
+                <div className="col-span-4">{t("description")}</div>
                 <div className="col-span-2">{t("quantity")}</div>
-                <div className="col-span-3">{t("unitPrice")}</div>
+                <div className="col-span-2">{t("unitPrice")}</div>
+                <div className="col-span-2">{t("vatRate")}</div>
                 <div className="col-span-2 text-right">{t("total")}</div>
               </div>
 
               {/* Desktop items */}
               {items.map((item, index) => {
-                const rowTotal = item.quantity * item.unit_price;
+                // Row total is TTC: qty × price × (1 + vat/100)
+                const rowTotal = item.quantity * item.unit_price * (1 + (item.vat_rate ?? 0) / 100);
                 return (
                   <div key={index} className="hidden lg:grid grid-cols-12 gap-2 items-center">
-                    <div className="col-span-5">
+                    <div className="col-span-4">
                       <input
                         type="text"
                         value={item.description}
@@ -288,7 +299,7 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
                         disabled={isLoading}
                       />
                     </div>
-                    <div className="col-span-3">
+                    <div className="col-span-2">
                       <input
                         type="number"
                         min="0"
@@ -299,6 +310,21 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
                         }
                         className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         disabled={isLoading}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={item.vat_rate ?? 0}
+                        onChange={(e) =>
+                          updateItem(index, "vat_rate", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        disabled={isLoading}
+                        aria-label={t("vatRate")}
                       />
                     </div>
                     <div className="col-span-1 text-right text-sm font-medium">
@@ -324,7 +350,8 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
             {/* Mobile wrapper */}
             <div className="lg:hidden" data-testid="invoice-items-mobile">
               {items.map((item, index) => {
-              const rowTotal = item.quantity * item.unit_price;
+              // Row total is TTC: qty × price × (1 + vat/100)
+              const rowTotal = item.quantity * item.unit_price * (1 + (item.vat_rate ?? 0) / 100);
               return (
                 <div key={index}>
                   {/* Mobile card layout (< lg) */}
@@ -368,6 +395,22 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
                           disabled={isLoading}
                         />
                       </div>
+                    </div>
+                    {/* TVA % — full width below qty/price */}
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-0.5">{t("vatRate")}</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={item.vat_rate ?? 0}
+                        onChange={(e) =>
+                          updateItem(index, "vat_rate", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        disabled={isLoading}
+                      />
                     </div>
                     {/* Total (right) + Delete (right) */}
                     <div className="flex items-center justify-between">

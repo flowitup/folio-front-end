@@ -7,6 +7,8 @@ interface InvoiceItem {
   quantity: number;
   unit_price: number;
   total: number;
+  /** VAT rate in percent (e.g. 20 means 20 %). Absent on legacy items — treat as 0. */
+  vat_rate?: number;
 }
 
 export interface Invoice {
@@ -41,7 +43,7 @@ export interface CreateInvoicePayload {
   recipient_name: string;
   recipient_address?: string;
   notes?: string;
-  items: Omit<InvoiceItem, "total">[];
+  items: Omit<InvoiceItem, "total">[];  // vat_rate is included via InvoiceItem (minus total)
   /** Optional payment method UUID. Null or omitted = no payment method. */
   payment_method_id?: string | null;
   /** Optional phase tag UUID. Null or omitted = no tag. */

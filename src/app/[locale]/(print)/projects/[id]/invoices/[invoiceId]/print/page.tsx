@@ -115,30 +115,73 @@ export default function InvoicePrintPage() {
         </table>
 
         {/* Line items */}
-        <table className="items-table">
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th className="right" style={{ width: "80px" }}>Qty</th>
-              <th className="right" style={{ width: "110px" }}>Unit Price</th>
-              <th className="right" style={{ width: "110px" }}>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.items.map((item, i) => (
-              <tr key={i}>
-                <td>{item.description}</td>
-                <td className="right">{item.quantity}</td>
-                <td className="right">{item.unit_price.toFixed(2)}</td>
-                <td className="right">{item.total.toFixed(2)}</td>
-              </tr>
-            ))}
-            <tr className="total-row">
-              <td colSpan={3} className="right">Grand Total</td>
-              <td className="right">{invoice.total_amount.toFixed(2)}</td>
-            </tr>
-          </tbody>
-        </table>
+        {(() => {
+          // Show VAT column only when at least one item carries a non-zero rate.
+          const hasVat = invoice.items.some((it) => (it.vat_rate ?? 0) > 0);
+          const totalHt = invoice.items.reduce(
+            (s, it) => s + it.quantity * it.unit_price,
+            0
+          );
+          const totalVat = invoice.items.reduce(
+            (s, it) => s + it.quantity * it.unit_price * ((it.vat_rate ?? 0) / 100),
+            0
+          );
+          const colCount = hasVat ? 5 : 4;
+
+          return (
+            <table className="items-table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th className="right" style={{ width: "80px" }}>Qty</th>
+                  <th className="right" style={{ width: "110px" }}>Unit Price</th>
+                  {hasVat && <th className="right" style={{ width: "70px" }}>TVA %</th>}
+                  <th className="right" style={{ width: "110px" }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.items.map((item, i) => (
+                  <tr key={i}>
+                    <td>{item.description}</td>
+                    <td className="right">{item.quantity}</td>
+                    <td className="right">{item.unit_price.toFixed(2)}</td>
+                    {hasVat && (
+                      <td className="right">
+                        {(item.vat_rate ?? 0) > 0 ? `${item.vat_rate}%` : "—"}
+                      </td>
+                    )}
+                    <td className="right">{item.total.toFixed(2)}</td>
+                  </tr>
+                ))}
+                {hasVat ? (
+                  <>
+                    <tr>
+                      <td colSpan={colCount - 1} className="right" style={{ fontWeight: "normal", color: "#555" }}>
+                        Subtotal (excl. VAT)
+                      </td>
+                      <td className="right">{totalHt.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={colCount - 1} className="right" style={{ fontWeight: "normal", color: "#555" }}>
+                        VAT
+                      </td>
+                      <td className="right">{totalVat.toFixed(2)}</td>
+                    </tr>
+                    <tr className="total-row">
+                      <td colSpan={colCount - 1} className="right">Total (incl. VAT)</td>
+                      <td className="right">{invoice.total_amount.toFixed(2)}</td>
+                    </tr>
+                  </>
+                ) : (
+                  <tr className="total-row">
+                    <td colSpan={colCount - 1} className="right">Grand Total</td>
+                    <td className="right">{invoice.total_amount.toFixed(2)}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          );
+        })()}
 
         {/* Notes */}
         {invoice.notes && (

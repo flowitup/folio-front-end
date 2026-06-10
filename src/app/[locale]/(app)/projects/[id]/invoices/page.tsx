@@ -18,7 +18,6 @@ import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label
 import { fetchTagsClient } from "@/lib/api/tags-client";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
-import { ProjectLinkedBillingDocuments } from "@/components/billing/project-linked-billing-documents";
 
 type TabType = "all" | InvoiceType;
 
@@ -479,11 +478,6 @@ export default function InvoicesPage() {
           </>
         )}
         </>
-      )}
-
-      {/* Linked billing documents — shown on the released_funds tab */}
-      {activeTab === "released_funds" && (
-        <ProjectLinkedBillingDocuments projectId={projectId} />
       )}
     </div>
   );

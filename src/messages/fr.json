@@ -431,18 +431,6 @@
       "failedToLoadRetry": "Échec du chargement. Réessayez en rouvrant.",
       "noMethodsFound": "Aucun moyen trouvé.",
       "failedToCreate": "Échec de la création du moyen de paiement"
-    },
-    "releaseFunds": {
-      "linkedDocsTitle": "Devis & factures liés",
-      "colKind": "Type",
-      "colNumber": "Numéro",
-      "colRecipient": "Destinataire",
-      "colAmount": "Montant TTC",
-      "colStatus": "Statut",
-      "kindDevis": "Devis",
-      "kindFacture": "Facture",
-      "empty": "Aucun document de facturation n'est lié à ce chantier pour le moment.",
-      "loadError": "Impossible de charger les documents de facturation liés."
     }
   },
   "planning": {

@@ -40,7 +40,6 @@ export function RefundableExpenseAttachmentsCell({ attachments }: Props) {
         className="text-muted-foreground text-sm"
         aria-label={t("attachments.none")}
         title={t("attachments.none")}
-        aria-hidden
       >
         —
       </span>

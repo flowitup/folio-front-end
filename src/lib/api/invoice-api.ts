@@ -10,25 +10,6 @@ import type {
   InvoiceExportRange,
   InvoiceExportTypeFilter,
 } from "@/types/invoice";
-import type { ProjectBillingDocumentSummary } from "@/types/billing";
-
-// ---------------------------------------------------------------------------
-// Project billing documents (linked devis / factures)
-// ---------------------------------------------------------------------------
-
-/**
- * Fetch billing documents linked to a project.
- * Uses the cookie-based `api` client — safe to call from client components.
- */
-export function fetchProjectBillingDocuments(
-  projectId: string
-): Promise<ProjectBillingDocumentSummary[]> {
-  return api
-    .get<{ billing_documents: ProjectBillingDocumentSummary[] }>(
-      `/projects/${projectId}/billing-documents`
-    )
-    .then((res) => res.billing_documents);
-}
 
 export interface InvoiceListResponse {
   invoices: Invoice[];

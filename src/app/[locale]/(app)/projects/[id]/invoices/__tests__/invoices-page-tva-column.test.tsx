@@ -69,10 +69,6 @@ vi.mock("@/lib/api/tags-client", () => ({
   fetchTagsClient: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("@/components/billing/project-linked-billing-documents", () => ({
-  ProjectLinkedBillingDocuments: () => null,
-}));
-
 // ── Imports after mocks ───────────────────────────────────────────────────────
 
 import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";

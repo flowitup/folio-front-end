@@ -431,18 +431,6 @@
       "failedToLoadRetry": "Failed to load. Try reopening.",
       "noMethodsFound": "No methods found.",
       "failedToCreate": "Failed to create payment method"
-    },
-    "releaseFunds": {
-      "linkedDocsTitle": "Linked quotes & invoices",
-      "colKind": "Type",
-      "colNumber": "Number",
-      "colRecipient": "Recipient",
-      "colAmount": "Amount TTC",
-      "colStatus": "Status",
-      "kindDevis": "Quote",
-      "kindFacture": "Invoice",
-      "empty": "No billing documents are linked to this project yet.",
-      "loadError": "Failed to load linked billing documents."
     }
   },
   "planning": {

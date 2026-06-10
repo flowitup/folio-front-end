@@ -1085,8 +1085,13 @@
         "recipient": "Recipient",
         "issueDate": "Issue date",
         "total": "Total",
+        "invoice": "Invoice",
         "status": "Status",
         "actions": "Actions"
+      },
+      "attachments": {
+        "count": "{n} files",
+        "none": "No invoice file"
       },
       "status": {
         "refundable": "Refundable",

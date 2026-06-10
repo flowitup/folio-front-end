@@ -16,6 +16,7 @@ import { Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fetchRefundableExpenses } from "@/lib/api/billing/refundable-invoices";
 import { RefundableExpenseRowActions } from "@/components/billing/refundable-expense-row-actions";
+import { RefundableExpenseAttachmentsCell } from "@/components/billing/refundable-expense-attachments-cell";
 import { AddRefundableExpenseDialog } from "@/components/billing/add-refundable-expense-dialog";
 import type { RefundableExpense } from "@/types/invoice";
 
@@ -82,6 +83,7 @@ export default function RefundableInvoicesPage() {
                 <th className="pb-2 pr-4 font-medium">{t("columns.recipient")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("columns.issueDate")}</th>
                 <th className="pb-2 pr-4 font-medium text-right">{t("columns.total")}</th>
+                <th className="pb-2 pr-4 font-medium">{t("columns.invoice")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("columns.status")}</th>
                 <th className="pb-2 font-medium">{t("columns.actions")}</th>
               </tr>
@@ -98,6 +100,9 @@ export default function RefundableInvoicesPage() {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
+                  </td>
+                  <td className="py-3 pr-4">
+                    <RefundableExpenseAttachmentsCell attachments={expense.attachments} />
                   </td>
                   <td className="py-3 pr-4" colSpan={2}>
                     <RefundableExpenseRowActions

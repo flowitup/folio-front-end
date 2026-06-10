@@ -100,6 +100,7 @@ function makeCandidate(overrides: Partial<RefundableExpense> = {}): RefundableEx
     issue_date: "2026-02-10",
     total_amount: 3200.0,
     refundable_status: null,
+    attachments: [],
     ...overrides,
   };
 }

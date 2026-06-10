@@ -78,6 +78,17 @@ export type InvoiceExportTypeFilter = InvoiceType | undefined;
 export type RefundableStatus = "refundable" | "refund_pending" | "refunded";
 
 /**
+ * A single file attached to a refundable expense invoice.
+ * Subset of InvoiceAttachment — only the fields the backend sends on this endpoint.
+ */
+export interface RefundableExpenseAttachment {
+  id: string;
+  filename: string;
+  mime_type: string;
+  size_bytes: number;
+}
+
+/**
  * A project invoice (type=materials_services) tracked across the company for
  * reimbursement. Returned by GET /billing/materials-expenses.
  */
@@ -92,4 +103,6 @@ export interface RefundableExpense {
   total_amount: number;
   /** null means the expense has not been flagged for reimbursement yet. */
   refundable_status: RefundableStatus | null;
+  /** Invoice files attached to this expense, ordered by upload time. */
+  attachments: RefundableExpenseAttachment[];
 }

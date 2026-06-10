@@ -77,6 +77,13 @@ vi.mock("@/components/billing/add-refundable-expense-dialog", () => ({
     open ? <div data-testid="add-dialog" /> : null,
 }));
 
+// Stub the attachments cell — blob fetching is tested in its own suite
+vi.mock("@/components/billing/refundable-expense-attachments-cell", () => ({
+  RefundableExpenseAttachmentsCell: ({ attachments }: { attachments: unknown[] }) => (
+    <span data-testid="attachments-cell" data-count={attachments.length} />
+  ),
+}));
+
 // ---------------------------------------------------------------------------
 // Imports after mocks
 // ---------------------------------------------------------------------------
@@ -105,6 +112,7 @@ function makeExpense(overrides: Partial<RefundableExpense> = {}): RefundableExpe
     issue_date: "2026-03-15",
     total_amount: 1500.0,
     refundable_status: "refundable",
+    attachments: [],
     ...overrides,
   };
 }
@@ -150,6 +158,22 @@ describe("RefundableInvoicesPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Refunded")).toBeDefined();
     });
+  });
+
+  it("renders the invoice column header and attachment cell per row", async () => {
+    const expense = makeExpense({
+      attachments: [{ id: "a1", filename: "receipt.pdf", mime_type: "application/pdf", size_bytes: 1024 }],
+    });
+    mockFetch.mockResolvedValue({ items: [expense], total: 1 });
+
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => screen.getByText("Tower Block"));
+
+    // Header column rendered
+    expect(screen.getByText("Invoice")).toBeDefined();
+    // Stubbed cell rendered with correct count
+    const cell = screen.getByTestId("attachments-cell");
+    expect(cell.getAttribute("data-count")).toBe("1");
   });
 
   it("shows empty state when list is empty", async () => {

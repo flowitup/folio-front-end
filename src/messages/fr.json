@@ -1085,8 +1085,13 @@
         "recipient": "Destinataire",
         "issueDate": "Date d'émission",
         "total": "Montant",
+        "invoice": "Facture",
         "status": "Statut",
         "actions": "Actions"
+      },
+      "attachments": {
+        "count": "{n} fichiers",
+        "none": "Aucun fichier de facture"
       },
       "status": {
         "refundable": "Remboursable",

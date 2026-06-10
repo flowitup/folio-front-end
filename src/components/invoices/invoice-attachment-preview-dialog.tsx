@@ -19,8 +19,14 @@ import {
   type DialogBounds,
 } from "@/app/[locale]/(app)/projects/[id]/documents/resizable-dialog-handles";
 
+/**
+ * Structural minimum the dialog needs — callers can pass any superset
+ * (e.g. the full InvoiceAttachment) or a slimmer type like RefundableExpenseAttachment.
+ */
+export type PreviewableAttachment = Pick<InvoiceAttachment, "id" | "filename" | "mime_type">;
+
 type Props = {
-  attachment: InvoiceAttachment | null;
+  attachment: PreviewableAttachment | null;
   onClose: () => void;
 };
 

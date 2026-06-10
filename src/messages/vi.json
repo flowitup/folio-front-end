@@ -1085,8 +1085,13 @@
         "recipient": "Người nhận",
         "issueDate": "Ngày phát hành",
         "total": "Tổng tiền",
+        "invoice": "Hóa đơn",
         "status": "Trạng thái",
         "actions": "Thao tác"
+      },
+      "attachments": {
+        "count": "{n} tệp",
+        "none": "Không có tệp hóa đơn"
       },
       "status": {
         "refundable": "Có thể hoàn tiền",

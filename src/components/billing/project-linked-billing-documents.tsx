@@ -6,6 +6,12 @@
  * Fetches via fetchProjectBillingDocuments (cookie-based client API) on mount.
  * Renders a table with kind badge, document number, recipient, amount TTC,
  * and status badge — reusing BillingStatusBadge for visual consistency.
+ *
+ * Paid factures are excluded from this list because each paid facture
+ * automatically generates a Released Funds expense row above this section.
+ * Showing both would read as duplicates: the expense row already represents
+ * the funds flow triggered by that facture. Devis (all statuses) and
+ * non-paid, non-cancelled factures are always shown.
  */
 
 import { useEffect, useState } from "react";
@@ -56,7 +62,12 @@ export function ProjectLinkedBillingDocuments({
     fetchProjectBillingDocuments(projectId)
       .then((data) => {
         if (!cancelled) {
-          setDocs(data);
+          // Paid factures are excluded here — each paid facture triggers an
+          // auto Released Funds expense row; showing both reads as a duplicate.
+          const visible = data.filter(
+            (d) => !(d.kind === "facture" && d.status === "paid")
+          );
+          setDocs(visible);
           setError(null);
           setIsLoading(false);
         }

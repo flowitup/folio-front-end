@@ -67,7 +67,7 @@
       "devis": "Quotes",
       "factures": "Invoices",
       "templates": "Templates",
-      "refundableInvoices": "Refundable Invoices"
+      "refundableInvoices": "Refundable"
     }
   },
   "dashboard": {

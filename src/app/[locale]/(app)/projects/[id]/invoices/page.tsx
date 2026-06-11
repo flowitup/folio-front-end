@@ -9,13 +9,14 @@ import { canOnProject } from "@/lib/auth/project-permissions";
 import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import type { Invoice, InvoiceType, RefundableStatus } from "@/types/invoice";
+import type { Invoice, InvoiceType } from "@/types/invoice";
 import { fetchInvoicesWithMeta, deleteInvoice } from "@/lib/api/invoice-api";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
 import { fetchTagsClient } from "@/lib/api/tags-client";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
@@ -49,20 +50,6 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   labor: "stamp accent",
   materials_services: "stamp positive",
   others: "stamp muted",
-};
-
-// Maps refundable status to stamp CSS class, consistent with billing status design.
-const REFUND_STATUS_STAMP: Record<RefundableStatus, string> = {
-  refundable: "stamp",
-  refund_pending: "stamp warning",
-  refunded: "stamp positive",
-};
-
-// Maps API status to i18n key suffix under invoices.refund.status.*
-const REFUND_STATUS_I18N: Record<RefundableStatus, string> = {
-  refundable: "refund.status.refundable",
-  refund_pending: "refund.status.refundPending",
-  refunded: "refund.status.refunded",
 };
 
 export default function InvoicesPage() {

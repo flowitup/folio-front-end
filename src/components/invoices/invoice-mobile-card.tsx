@@ -3,25 +3,14 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
-import type { Invoice, InvoiceType, RefundableStatus } from "@/types/invoice";
+import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
+import type { Invoice, InvoiceType } from "@/types/invoice";
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp",
   labor: "stamp accent",
   materials_services: "stamp positive",
   others: "stamp muted",
-};
-
-const REFUND_STATUS_STAMP: Record<RefundableStatus, string> = {
-  refundable: "stamp",
-  refund_pending: "stamp warning",
-  refunded: "stamp positive",
-};
-
-const REFUND_STATUS_I18N: Record<RefundableStatus, string> = {
-  refundable: "refund.status.refundable",
-  refund_pending: "refund.status.refundPending",
-  refunded: "refund.status.refunded",
 };
 
 interface InvoiceMobileCardProps {

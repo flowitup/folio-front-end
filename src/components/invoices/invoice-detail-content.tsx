@@ -10,8 +10,10 @@ import { InvoiceForm } from "@/components/invoices/invoice-form";
 import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
 import { fetchTagsClient } from "@/lib/api/tags-client";
-import type { Invoice, UpdateInvoicePayload, InvoiceType, RefundableStatus } from "@/types/invoice";
+import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
+import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
 import type { ProjectTag } from "@/lib/api/tags";
 
 const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
@@ -19,18 +21,6 @@ const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
   labor: "stamp accent",
   materials_services: "stamp positive",
   others: "stamp muted",
-};
-
-const REFUND_STATUS_STAMP: Record<RefundableStatus, string> = {
-  refundable: "stamp",
-  refund_pending: "stamp warning",
-  refunded: "stamp positive",
-};
-
-const REFUND_STATUS_I18N: Record<RefundableStatus, string> = {
-  refundable: "refund.status.refundable",
-  refund_pending: "refund.status.refundPending",
-  refunded: "refund.status.refunded",
 };
 
 interface InvoiceDetailContentProps {
@@ -52,6 +42,11 @@ interface InvoiceDetailContentProps {
   onUpdated: (updated: Invoice) => void;
   /** Called after a successful delete so parent can close/redirect. */
   onDeleted: () => void;
+  /**
+   * Called after a successful company-payment transfer so the parent list
+   * can reload and the detail's displayed status refreshes.
+   */
+  onTransferred?: () => void;
   /** Used to open the print page in a new tab. */
   printUrl: string;
 }
@@ -67,6 +62,7 @@ export function InvoiceDetailContent({
   companyName,
   onUpdated,
   onDeleted,
+  onTransferred,
   printUrl,
 }: InvoiceDetailContentProps) {
   const t = useTranslations("invoices");
@@ -83,6 +79,18 @@ export function InvoiceDetailContent({
       .catch(() => setTags([]));
   }, [invoice.project_id]);
 
+  /** Extract a user-facing message from an API error, falling back to a default. */
+  function extractErrorMessage(err: unknown, fallback: string): string {
+    if (err && typeof err === "object") {
+      const e = err as Record<string, unknown>;
+      const msg =
+        (e.data as Record<string, unknown> | undefined)?.message ??
+        (e.body as Record<string, unknown> | undefined)?.message;
+      if (typeof msg === "string" && msg.trim()) return msg;
+    }
+    return err instanceof Error ? err.message : fallback;
+  }
+
   const handleUpdate = async (payload: UpdateInvoicePayload) => {
     setIsSaving(true);
     setError(null);
@@ -91,7 +99,7 @@ export function InvoiceDetailContent({
       onUpdated(updated);
       setIsEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update invoice");
+      setError(extractErrorMessage(err, "Failed to update invoice"));
     } finally {
       setIsSaving(false);
     }
@@ -102,8 +110,8 @@ export function InvoiceDetailContent({
     try {
       await deleteInvoice(invoice.project_id, invoice.id);
       onDeleted();
-    } catch {
-      setError("Failed to delete invoice");
+    } catch (err) {
+      setError(extractErrorMessage(err, "Failed to delete invoice"));
     }
   };
 
@@ -125,6 +133,15 @@ export function InvoiceDetailContent({
             <Printer className="h-4 w-4 mr-1" />
             {t("printPdf")}
           </Button>
+          {canManage &&
+            !isEditing &&
+            invoice.type === "materials_services" &&
+            invoice.refundable_status == null && (
+              <TransferToCompanyPaymentAction
+                invoiceId={invoice.id}
+                onSuccess={() => onTransferred?.()}
+              />
+            )}
           {canManage && !isEditing && !invoice.is_auto_generated && (
             <>
               <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>

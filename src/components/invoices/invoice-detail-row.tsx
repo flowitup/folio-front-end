@@ -101,6 +101,14 @@ export function InvoiceDetailRow({
               companyName={companyName}
               onUpdated={(u) => { setInvoice(u); onMutated?.(); }}
               onDeleted={() => { onMutated?.(); onCollapse?.(); }}
+              onTransferred={() => {
+                // Re-fetch the invoice so the detail reflects the new status,
+                // then notify the list to reload as well.
+                fetchInvoice(projectId, invoiceId)
+                  .then(setInvoice)
+                  .catch(() => null);
+                onMutated?.();
+              }}
               printUrl={`/${locale}/projects/${projectId}/invoices/${invoice.id}/print`}
             />
           )}

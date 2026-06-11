@@ -38,7 +38,13 @@ export function TransferToCompanyPaymentAction({
       if (err instanceof ApiError && err.status === 403) {
         toast.error(t("refund.transferForbidden"));
       } else {
-        toast.error(t("refund.transferError"));
+        // Prefer the backend's error message when present, fall back to generic.
+        const backendMsg =
+          err instanceof ApiError
+            ? ((err.data as Record<string, unknown> | undefined)?.message as string | undefined) ??
+              ((err.data as Record<string, unknown> | undefined)?.body as string | undefined)
+            : undefined;
+        toast.error(backendMsg?.trim() || t("refund.transferError"));
       }
     } finally {
       setLoading(false);

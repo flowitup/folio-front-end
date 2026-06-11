@@ -3,8 +3,9 @@
 /**
  * PaymentMethodsSection — Card-based UI for managing company payment methods.
  *
- * Rendered by the server page which passes the initial server-fetched list.
- * After each mutation (add / rename / delete) the section refetches from the
+ * Mounted by AdminCompanyManagePage when the payments tab is active. The parent
+ * fetches the list via listPaymentMethodsAction on every tab activation and
+ * passes it as `initial`. After each mutation the section refetches via the
  * server action so usage_count stays accurate.
  *
  * Split across three files:

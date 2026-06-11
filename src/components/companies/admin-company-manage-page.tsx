@@ -77,24 +77,29 @@ export function AdminCompanyManagePage({
 
   const [activeTab, setActiveTab] = useState<ManageTab>("edit");
 
-  // ---- Payment methods tab state (lazy-loaded on first activation) ----
+  // ---- Payment methods tab state (refetched on every tab activation) ----
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[] | null>(null);
   const [paymentMethodsError, setPaymentMethodsError] = useState(false);
   useEffect(() => {
-    if (activeTab !== "payments" || paymentMethods !== null) return;
+    if (activeTab !== "payments") return;
     let cancelled = false;
-    void listPaymentMethodsAction(company.id).then((result) => {
-      if (cancelled) return;
-      if (result.ok) {
-        setPaymentMethods(result.data);
-      } else {
-        setPaymentMethodsError(true);
-      }
-    });
+    setPaymentMethodsError(false);
+    listPaymentMethodsAction(company.id)
+      .then((result) => {
+        if (cancelled) return;
+        if (result.ok) {
+          setPaymentMethods(result.data);
+        } else {
+          setPaymentMethodsError(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPaymentMethodsError(true);
+      });
     return () => {
       cancelled = true;
     };
-  }, [activeTab, paymentMethods, company.id]);
+  }, [activeTab, company.id]);
 
   // ---- Edit tab state ----
   const [form, setForm] = useState<UpdateCompanyPayload>({
@@ -592,13 +597,15 @@ export function AdminCompanyManagePage({
       {/* Tab: Payment methods */}
       {/* ------------------------------------------------------------------ */}
       {activeTab === "payments" &&
-        (paymentMethods !== null ? (
+        (paymentMethodsError ? (
+          <p className="text-[13px]" style={{ color: "var(--muted)" }}>
+            {t("admin.manage.paymentsLoadError")}
+          </p>
+        ) : paymentMethods !== null ? (
           <PaymentMethodsSection initial={paymentMethods} companyId={company.id} />
         ) : (
           <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-            {paymentMethodsError
-              ? t("admin.manage.paymentsLoadError")
-              : t("admin.manage.paymentsLoading")}
+            {t("admin.manage.paymentsLoading")}
           </p>
         ))}
 

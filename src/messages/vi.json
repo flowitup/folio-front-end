@@ -310,7 +310,8 @@
     },
     "builtins": {
       "cash": "Tiền mặt"
-    }
+    },
+    "paidByCompany": "Công ty thanh toán"
   },
   "errors": {
     "unauthorized": "Không được phép",
@@ -1326,7 +1327,8 @@
           "edit": "Chỉnh sửa",
           "invites": "Mã mời",
           "users": "Người dùng liên kết",
-          "delete": "Xóa"
+          "delete": "Xóa",
+          "payments": "Phương thức thanh toán"
         },
         "edit": {
           "save": "Lưu thay đổi",
@@ -1367,7 +1369,9 @@
           "body": "Xóa vĩnh viễn công ty này. Tất cả người dùng liên kết sẽ mất quyền truy cập. Các bản chụp tài liệu hiện có được giữ nguyên. Hành động này không thể hoàn tác.",
           "confirm": "Xóa công ty",
           "deletedToast": "Đã xóa công ty."
-        }
+        },
+        "paymentsLoading": "Đang tải phương thức thanh toán…",
+        "paymentsLoadError": "Không tải được phương thức thanh toán"
       }
     },
     "form": {

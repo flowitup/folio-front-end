@@ -92,7 +92,7 @@ function setupMocks(invoices: Invoice[]) {
   mockUsePathname.mockReturnValue("/en/projects/proj-test-1/invoices");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockUseAuth.mockReturnValue({ user: { permissions: [] } } as any);
-  mockFetchInvoicesWithMeta.mockResolvedValue({ invoices, total: invoices.length, funds_released_total: 0, company_refunded_total: 0, company_name: null });
+  mockFetchInvoicesWithMeta.mockResolvedValue({ invoices, total: invoices.length, funds_released_total: 0, company_spent_total: 0, company_name: null });
 }
 
 function makeInvoice(overrides: Partial<Invoice>): Invoice {

@@ -3,7 +3,7 @@
  *
  * Covers:
  * - Total expenses KPI excludes released_funds and labor (only non-released expenses)
- * - Funds released card renders "X / Y" from meta company_refunded_total + funds_released_total
+ * - Funds released card renders "X / Y" from meta company_spent_total + funds_released_total
  * - Payment method arrow renders for refund-tracked M&S row, absent when refundable_status null
  * - Refund status stamp renders per status (refundable/refund_pending/refunded)
  * - "refunded" status uses "stamp positive" class
@@ -150,13 +150,13 @@ function setupAuthMock(canManage: boolean) {
 
 function setupFetchMock(
   invoices: Invoice[],
-  meta?: { funds_released_total?: number; company_refunded_total?: number; company_name?: string | null }
+  meta?: { funds_released_total?: number; company_spent_total?: number; company_name?: string | null }
 ) {
   mockFetchInvoicesWithMeta.mockResolvedValue({
     invoices,
     total: invoices.length,
     funds_released_total: meta?.funds_released_total ?? 0,
-    company_refunded_total: meta?.company_refunded_total ?? 0,
+    company_spent_total: meta?.company_spent_total ?? 0,
     company_name: meta?.company_name ?? null,
   });
 }
@@ -229,17 +229,17 @@ describe("InvoicesPage — total expenses KPI excludes released_funds", () => {
   });
 });
 
-describe("InvoicesPage — funds released KPI shows company_refunded / funds_released ratio", () => {
+describe("InvoicesPage — funds released KPI shows company_spent / funds_released ratio", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupNavigationMocks();
     setupAuthMock(false);
   });
 
-  it("renders company_refunded_total / funds_released_total in the funds released card", async () => {
+  it("renders company_spent_total / funds_released_total in the funds released card", async () => {
     setupFetchMock([], {
       funds_released_total: 97376,
-      company_refunded_total: 10919,
+      company_spent_total: 10919,
       company_name: "ANN ECO CONSTRUCTION",
     });
     render(<InvoicesPage />);
@@ -460,14 +460,14 @@ describe("InvoicesPage — transfer to company payment action", () => {
         invoices: [makeInvoice({ type: "materials_services", refundable_status: null })],
         total: 1,
         funds_released_total: 0,
-        company_refunded_total: 0,
+        company_spent_total: 0,
         company_name: null,
       })
       .mockResolvedValue({
         invoices: [],
         total: 0,
         funds_released_total: 0,
-        company_refunded_total: 0,
+        company_spent_total: 0,
         company_name: null,
       });
 

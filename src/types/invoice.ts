@@ -40,6 +40,11 @@ export interface Invoice {
    * null = not refund-tracked; non-null = in refund workflow.
    */
   refundable_status?: RefundableStatus | null;
+  /**
+   * True when this invoice was paid directly with a company-flagged payment method —
+   * already company money, not eligible for the refund workflow.
+   */
+  paid_by_company?: boolean;
 }
 
 export interface CreateInvoicePayload {

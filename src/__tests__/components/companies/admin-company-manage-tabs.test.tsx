@@ -61,8 +61,31 @@ vi.mock(
   })
 );
 
+vi.mock(
+  "@/app/[locale]/(app)/settings/companies/[id]/_actions/payment-methods-actions",
+  () => ({
+    listPaymentMethodsAction: vi.fn(),
+  })
+);
+
+// PaymentMethodsSection is a client component with its own mutation logic.
+// Stub it so payments-tab tests only exercise the fetch + render path in
+// AdminCompanyManagePage without pulling in the full section dependency tree.
+vi.mock(
+  "@/app/[locale]/(app)/settings/companies/[id]/_components/payment-methods-section",
+  () => ({
+    PaymentMethodsSection: ({ initial }: { initial: unknown[] }) => (
+      <div data-testid="payment-methods-section">
+        {initial.length} methods
+      </div>
+    ),
+  })
+);
+
 import { generateInviteTokenAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
+import { listPaymentMethodsAction } from "@/app/[locale]/(app)/settings/companies/[id]/_actions/payment-methods-actions";
 const mockGenerate = vi.mocked(generateInviteTokenAction);
+const mockListPaymentMethods = vi.mocked(listPaymentMethodsAction);
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -220,4 +243,81 @@ describe("AdminCompanyManagePage — generate-token flow", () => {
       expect(screen.getByText("GENERATED-TOKEN")).toBeDefined();
     });
   });
+});
+
+// ---------------------------------------------------------------------------
+// Payments tab — mount, fetch, error, and re-activation
+// ---------------------------------------------------------------------------
+
+const PAYMENT_METHODS = [
+  { id: "pm-1", companyId: "co-1", label: "Cash", isBuiltin: true, isActive: true, usageCount: 0, isCompanyPayment: false },
+  { id: "pm-2", companyId: "co-1", label: "Wise", isBuiltin: false, isActive: true, usageCount: 1, isCompanyPayment: false },
+];
+
+describe("AdminCompanyManagePage — payments tab", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it(
+    "activating the payments tab calls listPaymentMethodsAction and renders section with data",
+    async () => {
+      mockListPaymentMethods.mockResolvedValueOnce({ ok: true, data: PAYMENT_METHODS });
+
+      renderPage();
+      fireEvent.click(screen.getByRole("button", { name: /payment methods/i }));
+
+      await waitFor(() => {
+        expect(mockListPaymentMethods).toHaveBeenCalledWith("co-1");
+        expect(screen.getByTestId("payment-methods-section")).toBeDefined();
+        expect(screen.getByText("2 methods")).toBeDefined();
+      });
+    },
+    15000,
+  );
+
+  it(
+    "failed listPaymentMethodsAction shows the error message",
+    async () => {
+      mockListPaymentMethods.mockResolvedValueOnce({
+        ok: false,
+        error: { code: "permission_denied", message: "Forbidden" },
+      });
+
+      renderPage();
+      fireEvent.click(screen.getByRole("button", { name: /payment methods/i }));
+
+      await waitFor(() => {
+        // i18n key: companies.admin.manage.paymentsLoadError
+        const el = screen.queryByText(/failed to load payment methods/i);
+        expect(el).not.toBeNull();
+      });
+    },
+    15000,
+  );
+
+  it(
+    "re-activating the payments tab refetches (call count reaches 2 after tab round-trip)",
+    async () => {
+      mockListPaymentMethods
+        .mockResolvedValueOnce({ ok: true, data: PAYMENT_METHODS })
+        .mockResolvedValueOnce({ ok: true, data: PAYMENT_METHODS });
+
+      renderPage();
+
+      // First activation
+      fireEvent.click(screen.getByRole("button", { name: /payment methods/i }));
+      await waitFor(() => {
+        expect(mockListPaymentMethods).toHaveBeenCalledTimes(1);
+      });
+
+      // Switch away
+      fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
+
+      // Second activation
+      fireEvent.click(screen.getByRole("button", { name: /payment methods/i }));
+      await waitFor(() => {
+        expect(mockListPaymentMethods).toHaveBeenCalledTimes(2);
+      });
+    },
+    15000,
+  );
 });

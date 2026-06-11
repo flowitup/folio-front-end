@@ -310,7 +310,8 @@
     },
     "builtins": {
       "cash": "Espèces"
-    }
+    },
+    "paidByCompany": "Payé par l'entreprise"
   },
   "errors": {
     "unauthorized": "Non autorisé",
@@ -1326,7 +1327,8 @@
           "edit": "Modifier",
           "invites": "Jetons d'invitation",
           "users": "Utilisateurs rattachés",
-          "delete": "Supprimer"
+          "delete": "Supprimer",
+          "payments": "Moyens de paiement"
         },
         "edit": {
           "save": "Enregistrer les modifications",
@@ -1367,7 +1369,9 @@
           "body": "Suppression définitive de cette société. Tous les utilisateurs rattachés perdront l'accès. Les instantanés de documents existants sont conservés. Cette action est irréversible.",
           "confirm": "Supprimer la société",
           "deletedToast": "Société supprimée."
-        }
+        },
+        "paymentsLoading": "Chargement des moyens de paiement…",
+        "paymentsLoadError": "Échec du chargement des moyens de paiement"
       }
     },
     "form": {

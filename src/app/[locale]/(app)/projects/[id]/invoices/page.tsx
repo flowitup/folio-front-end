@@ -102,7 +102,7 @@ export default function InvoicesPage() {
   const [exportOpen, setExportOpen] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [fundsReleasedTotal, setFundsReleasedTotal] = useState(0);
-  const [companyRefundedTotal, setCompanyRefundedTotal] = useState(0);
+  const [companySpentTotal, setCompanySpentTotal] = useState(0);
   const [companyName, setCompanyName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,7 +120,7 @@ export default function InvoicesPage() {
       );
       setInvoices(res.invoices);
       setFundsReleasedTotal(res.funds_released_total);
-      setCompanyRefundedTotal(res.company_refunded_total ?? 0);
+      setCompanySpentTotal(res.company_spent_total ?? 0);
       setCompanyName(res.company_name ?? null);
     } catch {
       setError("Failed to load invoices");
@@ -196,7 +196,7 @@ export default function InvoicesPage() {
             className="font-display num mt-2 text-[22px] font-medium leading-none"
             style={{ color: "var(--positive)" }}
           >
-            {formatEUR(companyRefundedTotal)}
+            {formatEUR(companySpentTotal)}
             <span className="text-[16px]"> / </span>
             {formatEUR(fundsReleasedTotal)}
           </div>
@@ -469,7 +469,8 @@ export default function InvoicesPage() {
                                     <div className="flex items-center justify-end gap-1">
                                       {canManageInvoices &&
                                         invoice.type === "materials_services" &&
-                                        (invoice.refundable_status == null) && (
+                                        invoice.refundable_status == null &&
+                                        !invoice.paid_by_company && (
                                           <TransferToCompanyPaymentAction
                                             invoiceId={invoice.id}
                                             onSuccess={loadInvoices}

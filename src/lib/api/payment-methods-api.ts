@@ -26,6 +26,8 @@ export type PaymentMethod = {
   isBuiltin: boolean;
   isActive: boolean;
   usageCount: number;
+  /** True when invoices paid with this method are counted as direct company spend. */
+  isCompanyPayment: boolean;
 };
 
 // Raw snake_case shape from the BE
@@ -36,6 +38,7 @@ interface PaymentMethodRaw {
   is_builtin: boolean;
   is_active: boolean;
   usage_count: number;
+  is_company_payment: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -73,6 +76,7 @@ function mapPaymentMethod(raw: PaymentMethodRaw): PaymentMethod {
     isBuiltin: raw.is_builtin,
     isActive: raw.is_active,
     usageCount: raw.usage_count,
+    isCompanyPayment: raw.is_company_payment ?? false,
   };
 }
 
@@ -150,12 +154,13 @@ export async function createPaymentMethod(
 export async function updatePaymentMethod(
   companyId: string,
   id: string,
-  patch: { label?: string; isActive?: boolean }
+  patch: { label?: string; isActive?: boolean; isCompanyPayment?: boolean }
 ): Promise<PaymentMethod> {
   const authHeaders = await sessionAuthHeader();
   const body: Record<string, unknown> = {};
   if (patch.label !== undefined) body["label"] = patch.label;
   if (patch.isActive !== undefined) body["is_active"] = patch.isActive;
+  if (patch.isCompanyPayment !== undefined) body["is_company_payment"] = patch.isCompanyPayment;
 
   let response: Response;
   try {

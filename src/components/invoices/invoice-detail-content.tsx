@@ -136,7 +136,8 @@ export function InvoiceDetailContent({
           {canManage &&
             !isEditing &&
             invoice.type === "materials_services" &&
-            invoice.refundable_status == null && (
+            invoice.refundable_status == null &&
+            !invoice.paid_by_company && (
               <TransferToCompanyPaymentAction
                 invoiceId={invoice.id}
                 onSuccess={() => onTransferred?.()}

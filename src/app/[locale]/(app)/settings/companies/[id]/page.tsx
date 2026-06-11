@@ -50,7 +50,7 @@ export default async function CompanyManagePage({ params }: Props) {
         ← {t("backToSettings")}
       </a>
 
-      <AdminCompanyManagePage company={company} initialUsers={attachedUsers} />
+      <AdminCompanyManagePage key={company.id} company={company} initialUsers={attachedUsers} />
     </div>
   );
 }

@@ -14,7 +14,7 @@
  *   automatically retries with regenerate=true — matches spec.
  */
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -44,12 +44,15 @@ import {
 } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { Company, CompanyInviteTokenGenerated, AttachedUser } from "@/types/companies";
 import type { UpdateCompanyPayload } from "@/lib/api/companies/companies";
+import { PaymentMethodsSection } from "@/app/[locale]/(app)/settings/companies/[id]/_components/payment-methods-section";
+import { listPaymentMethodsAction } from "@/app/[locale]/(app)/settings/companies/[id]/_actions/payment-methods-actions";
+import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 
 // ---------------------------------------------------------------------------
 // Tab type
 // ---------------------------------------------------------------------------
 
-type ManageTab = "edit" | "invites" | "users" | "delete";
+type ManageTab = "edit" | "invites" | "users" | "payments" | "delete";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -73,6 +76,30 @@ export function AdminCompanyManagePage({
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<ManageTab>("edit");
+
+  // ---- Payment methods tab state (refetched on every tab activation) ----
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[] | null>(null);
+  const [paymentMethodsError, setPaymentMethodsError] = useState(false);
+  useEffect(() => {
+    if (activeTab !== "payments") return;
+    let cancelled = false;
+    setPaymentMethodsError(false);
+    listPaymentMethodsAction(company.id)
+      .then((result) => {
+        if (cancelled) return;
+        if (result.ok) {
+          setPaymentMethods(result.data);
+        } else {
+          setPaymentMethodsError(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPaymentMethodsError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, company.id]);
 
   // ---- Edit tab state ----
   const [form, setForm] = useState<UpdateCompanyPayload>({
@@ -269,6 +296,7 @@ export function AdminCompanyManagePage({
     { key: "edit", label: t("admin.manage.tabs.edit") },
     { key: "invites", label: t("admin.manage.tabs.invites") },
     { key: "users", label: t("admin.manage.tabs.users") },
+    { key: "payments", label: t("admin.manage.tabs.payments") },
     { key: "delete", label: t("admin.manage.tabs.delete") },
   ];
 
@@ -564,6 +592,22 @@ export function AdminCompanyManagePage({
           />
         </div>
       )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Tab: Payment methods */}
+      {/* ------------------------------------------------------------------ */}
+      {activeTab === "payments" &&
+        (paymentMethodsError ? (
+          <p className="text-[13px]" style={{ color: "var(--muted)" }}>
+            {t("admin.manage.paymentsLoadError")}
+          </p>
+        ) : paymentMethods !== null ? (
+          <PaymentMethodsSection initial={paymentMethods} companyId={company.id} />
+        ) : (
+          <p className="text-[13px]" style={{ color: "var(--muted)" }}>
+            {t("admin.manage.paymentsLoading")}
+          </p>
+        ))}
 
       {/* ------------------------------------------------------------------ */}
       {/* Tab: Delete */}

@@ -33,6 +33,7 @@ vi.mock("next-intl", () => {
       addPlaceholder: "e.g. Wise, Stripe, …",
       addButton: "Add",
       builtin: "Built-in",
+      paidByCompany: "Paid by the company",
       noMethods: "No payment methods yet.",
       // usedInInvoices: rendered as "{count} invoices" by the mock (bypasses ICU)
       usedInInvoices: "{count} invoices",
@@ -118,6 +119,7 @@ const BUILTIN_METHOD = {
   isBuiltin: true,
   isActive: true,
   usageCount: 3,
+  isCompanyPayment: false,
 };
 
 const CUSTOM_METHOD = {
@@ -127,6 +129,7 @@ const CUSTOM_METHOD = {
   isBuiltin: false,
   isActive: true,
   usageCount: 0,
+  isCompanyPayment: false,
 };
 
 const INITIAL_METHODS = [BUILTIN_METHOD, CUSTOM_METHOD];
@@ -205,6 +208,7 @@ describe("PaymentMethodsSection — inline add", () => {
         isBuiltin: false,
         isActive: true,
         usageCount: 0,
+        isCompanyPayment: false,
       };
       const refreshedList = [...INITIAL_METHODS, newMethod];
       mockCreate.mockResolvedValueOnce({ ok: true, data: refreshedList });
@@ -382,7 +386,7 @@ describe("PaymentMethodsSection — inline edit / rename", () => {
         expect(mockUpdate).toHaveBeenCalledWith(
           COMPANY_ID,
           BUILTIN_METHOD.id,
-          { label: "Cash (renamed)" }
+          { label: "Cash (renamed)", isCompanyPayment: false }
         );
       });
     },

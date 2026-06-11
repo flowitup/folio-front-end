@@ -1327,7 +1327,8 @@
           "edit": "Edit",
           "invites": "Invite tokens",
           "users": "Attached users",
-          "delete": "Delete"
+          "delete": "Delete",
+          "payments": "Payment methods"
         },
         "edit": {
           "save": "Save changes",
@@ -1368,7 +1369,9 @@
           "body": "Permanently delete this company. All attached users will lose access. Existing document snapshots are preserved. This action cannot be undone.",
           "confirm": "Delete company",
           "deletedToast": "Company deleted."
-        }
+        },
+        "paymentsLoading": "Loading payment methods…",
+        "paymentsLoadError": "Failed to load payment methods"
       }
     },
     "form": {

@@ -310,7 +310,8 @@
     },
     "builtins": {
       "cash": "Espèces"
-    }
+    },
+    "paidByCompany": "Payé par l'entreprise"
   },
   "errors": {
     "unauthorized": "Non autorisé",

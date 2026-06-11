@@ -108,10 +108,10 @@ export function PaymentMethodsSection({
     }
   }
 
-  async function handleRename(id: string, newLabel: string) {
+  async function handleRename(id: string, newLabel: string, isCompanyPayment: boolean) {
     if (!startMutation()) return;
     try {
-      const result = await updatePaymentMethodAction(companyId, id, { label: newLabel });
+      const result = await updatePaymentMethodAction(companyId, id, { label: newLabel, isCompanyPayment });
       if (!result.ok) {
         toast.error(result.error.message);
         return;

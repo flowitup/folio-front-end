@@ -167,7 +167,7 @@ export async function createPaymentMethodAction(
 export async function updatePaymentMethodAction(
   companyId: string,
   id: string,
-  patch: { label?: string; isActive?: boolean }
+  patch: { label?: string; isActive?: boolean; isCompanyPayment?: boolean }
 ): Promise<ActionResult<PaymentMethod[]>> {
   const auth = await requireSession();
   if (!auth.ok) return auth;

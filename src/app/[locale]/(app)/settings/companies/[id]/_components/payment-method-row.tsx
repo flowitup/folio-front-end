@@ -3,9 +3,9 @@
 /**
  * PaymentMethodRow — single row in the payment methods list.
  *
- * Supports inline label editing (for all methods) and delete action
- * (disabled for built-ins). The delete confirmation dialog is managed
- * by the parent; this component only fires the callbacks.
+ * Supports inline label editing and isCompanyPayment toggle (for all methods)
+ * and delete action (disabled for built-ins). The delete confirmation dialog
+ * is managed by the parent; this component only fires the callbacks.
  */
 
 import { useRef, useState } from "react";
@@ -24,7 +24,7 @@ import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 interface PaymentMethodRowProps {
   method: PaymentMethod;
   isMutating: boolean;
-  onRenameRequest: (id: string, newLabel: string) => Promise<void>;
+  onRenameRequest: (id: string, newLabel: string, isCompanyPayment: boolean) => Promise<void>;
   onDeleteRequest: (method: PaymentMethod) => void;
 }
 
@@ -44,29 +44,37 @@ export function PaymentMethodRow({
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(method.label);
+  const [editIsCompanyPayment, setEditIsCompanyPayment] = useState(method.isCompanyPayment);
   const [isSaving, setIsSaving] = useState(false);
   const savingRef = useRef(false);
 
   function startEdit() {
     setEditValue(method.label);
+    setEditIsCompanyPayment(method.isCompanyPayment);
     setIsEditing(true);
   }
 
   function cancelEdit() {
     setEditValue(method.label);
+    setEditIsCompanyPayment(method.isCompanyPayment);
     setIsEditing(false);
   }
 
   async function handleSave() {
     const trimmed = editValue.trim();
-    if (!trimmed || trimmed === method.label || savingRef.current) {
+    // Resolve effective label: keep original if input was cleared
+    const effectiveLabel = trimmed || method.label;
+    const labelChanged = effectiveLabel !== method.label;
+    const companyPaymentChanged = editIsCompanyPayment !== method.isCompanyPayment;
+    // Nothing actually changed — bail without a network call
+    if ((!labelChanged && !companyPaymentChanged) || savingRef.current) {
       setIsEditing(false);
       return;
     }
     savingRef.current = true;
     setIsSaving(true);
     try {
-      await onRenameRequest(method.id, trimmed);
+      await onRenameRequest(method.id, effectiveLabel, editIsCompanyPayment);
       setIsEditing(false);
     } finally {
       setIsSaving(false);
@@ -91,15 +99,28 @@ export function PaymentMethodRow({
       {/* Label / inline edit */}
       <div className="flex-1 min-w-0">
         {isEditing ? (
-          <Input
-            autoFocus
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isSaving}
-            className="h-7 text-[13px] py-0"
-            aria-label={t("title")}
-          />
+          <div className="flex flex-col gap-1.5">
+            <Input
+              autoFocus
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isSaving}
+              className="h-7 text-[13px] py-0"
+              aria-label={t("title")}
+            />
+            <label className="flex items-center gap-2 text-[12px] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                id={`is-company-payment-${method.id}`}
+                checked={editIsCompanyPayment}
+                onChange={(e) => setEditIsCompanyPayment(e.target.checked)}
+                disabled={isSaving}
+                className="h-3.5 w-3.5 cursor-pointer"
+              />
+              {t("paidByCompany")}
+            </label>
+          </div>
         ) : (
           <span className="text-[13px] truncate block">{displayLabel}</span>
         )}
@@ -107,6 +128,11 @@ export function PaymentMethodRow({
 
       {/* Badges */}
       <div className="flex items-center gap-1.5 shrink-0">
+        {method.isCompanyPayment && !isEditing && (
+          <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
+            {t("paidByCompany")}
+          </Badge>
+        )}
         {method.isBuiltin && (
           <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
             {t("builtin")}

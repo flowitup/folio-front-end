@@ -310,7 +310,8 @@
     },
     "builtins": {
       "cash": "Cash"
-    }
+    },
+    "paidByCompany": "Paid by the company"
   },
   "errors": {
     "unauthorized": "Unauthorized",

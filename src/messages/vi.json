@@ -310,7 +310,8 @@
     },
     "builtins": {
       "cash": "Tiền mặt"
-    }
+    },
+    "paidByCompany": "Công ty thanh toán"
   },
   "errors": {
     "unauthorized": "Không được phép",

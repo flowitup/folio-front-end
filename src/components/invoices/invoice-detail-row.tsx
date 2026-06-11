@@ -22,6 +22,11 @@ interface InvoiceDetailRowProps {
   onCollapse?: () => void;
   /** Render as a plain div instead of a table row (for mobile card layout). */
   asCard?: boolean;
+  /**
+   * Name of the construction company for the project.
+   * Forwarded to InvoiceDetailContent for refund arrow display.
+   */
+  companyName?: string | null;
 }
 
 /**
@@ -38,6 +43,7 @@ export function InvoiceDetailRow({
   onMutated,
   onCollapse,
   asCard,
+  companyName,
 }: InvoiceDetailRowProps) {
   const locale = useLocale();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -92,8 +98,17 @@ export function InvoiceDetailRow({
               invoice={invoice}
               canManage={canManage}
               companyId={companyId}
+              companyName={companyName}
               onUpdated={(u) => { setInvoice(u); onMutated?.(); }}
               onDeleted={() => { onMutated?.(); onCollapse?.(); }}
+              onTransferred={() => {
+                // Re-fetch the invoice so the detail reflects the new status,
+                // then notify the list to reload as well.
+                fetchInvoice(projectId, invoiceId)
+                  .then(setInvoice)
+                  .catch(() => null);
+                onMutated?.();
+              }}
               printUrl={`/${locale}/projects/${projectId}/invoices/${invoice.id}/print`}
             />
           )}

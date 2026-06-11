@@ -14,7 +14,9 @@ import { fetchInvoicesWithMeta, deleteInvoice } from "@/lib/api/invoice-api";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
+import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
 import { fetchTagsClient } from "@/lib/api/tags-client";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
@@ -100,6 +102,8 @@ export default function InvoicesPage() {
   const [exportOpen, setExportOpen] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [fundsReleasedTotal, setFundsReleasedTotal] = useState(0);
+  const [companyRefundedTotal, setCompanyRefundedTotal] = useState(0);
+  const [companyName, setCompanyName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tags, setTags] = useState<ProjectTag[]>([]);
@@ -116,6 +120,8 @@ export default function InvoicesPage() {
       );
       setInvoices(res.invoices);
       setFundsReleasedTotal(res.funds_released_total);
+      setCompanyRefundedTotal(res.company_refunded_total ?? 0);
+      setCompanyName(res.company_name ?? null);
     } catch {
       setError("Failed to load invoices");
     } finally {
@@ -159,7 +165,10 @@ export default function InvoicesPage() {
       currency: "EUR",
       maximumFractionDigits: 0,
     }).format(n);
-  const totalInvoiced = invoices.reduce((s, i) => s + i.total_amount, 0);
+  // Total expenses intentionally excludes released_funds auto-invoices —
+  // those represent capital flows, not project expenses.
+  const expenseInvoices = invoices.filter((i) => i.type !== "released_funds");
+  const totalInvoiced = expenseInvoices.reduce((s, i) => s + i.total_amount, 0);
   const releasedFundsInvoices = invoices.filter((i) => i.type === "released_funds");
   const laborInvoices = invoices.filter((i) => i.type === "labor");
   const materialsInvoices = invoices.filter((i) => i.type === "materials_services");
@@ -178,18 +187,23 @@ export default function InvoicesPage() {
             {formatEUR(totalInvoiced)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("invoiceCount", { n: invoices.length })}
+            {t("invoiceCount", { n: expenseInvoices.length })}
           </div>
         </div>
         <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("fundsReleased")}</div>
           <div
-            className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
+            className="font-display num mt-2 text-[22px] font-medium leading-none"
             style={{ color: "var(--positive)" }}
           >
+            {formatEUR(companyRefundedTotal)}
+            <span className="text-[16px]"> / </span>
             {formatEUR(fundsReleasedTotal)}
           </div>
-          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+          <div className="num mt-1 text-[10px]" style={{ color: "var(--muted)" }}>
+            {t("refund.companySpentOfReleased")}
+          </div>
+          <div className="num mt-1 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("invoiceCount", { n: releasedFundsInvoices.length })}
           </div>
         </div>
@@ -311,6 +325,7 @@ export default function InvoicesPage() {
                         isOpen={isOpen}
                         onToggle={() => toggleInvoice(invoice.id)}
                         formatAmount={formatEUR}
+                        companyName={companyName}
                       >
                         <InvoiceDetailRow
                           projectId={projectId}
@@ -320,6 +335,7 @@ export default function InvoicesPage() {
                           regionId={`invoice-detail-mobile-${invoice.id}`}
                           onMutated={loadInvoices}
                           onCollapse={closeInvoice}
+                          companyName={companyName}
                           asCard
                         />
                       </InvoiceMobileCard>
@@ -417,13 +433,26 @@ export default function InvoicesPage() {
                                   </td>
                                   <td>{invoice.recipient_name}</td>
                                   <td>
-                                    {invoice.payment_method_label?.trim() ? (
-                                      <span className="stamp">
-                                        {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}
-                                      </span>
-                                    ) : (
-                                      <span style={{ color: "var(--muted)" }}>—</span>
-                                    )}
+                                    <div className="flex flex-wrap items-center gap-1">
+                                      {invoice.refundable_status != null && companyName ? (
+                                        <span className="stamp truncate max-w-[180px]">
+                                          {invoice.payment_method_label?.trim()
+                                            ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
+                                            : `→ ${companyName}`}
+                                        </span>
+                                      ) : invoice.payment_method_label?.trim() ? (
+                                        <span className="stamp">
+                                          {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}
+                                        </span>
+                                      ) : (
+                                        <span style={{ color: "var(--muted)" }}>—</span>
+                                      )}
+                                      {invoice.refundable_status != null && (
+                                        <span className={REFUND_STATUS_STAMP[invoice.refundable_status]}>
+                                          {t(REFUND_STATUS_I18N[invoice.refundable_status])}
+                                        </span>
+                                      )}
+                                    </div>
                                   </td>
                                   {showTvaCol && (
                                     <td className="num" style={{ textAlign: "right", color: "var(--muted)" }}>
@@ -438,6 +467,14 @@ export default function InvoicesPage() {
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <div className="flex items-center justify-end gap-1">
+                                      {canManageInvoices &&
+                                        invoice.type === "materials_services" &&
+                                        (invoice.refundable_status == null) && (
+                                          <TransferToCompanyPaymentAction
+                                            invoiceId={invoice.id}
+                                            onSuccess={loadInvoices}
+                                          />
+                                        )}
                                       {canManageInvoices && !invoice.is_auto_generated && (
                                         <Button
                                           variant="ghost"
@@ -461,6 +498,7 @@ export default function InvoicesPage() {
                                     regionId={detailId}
                                     onMutated={loadInvoices}
                                     onCollapse={closeInvoice}
+                                    companyName={companyName}
                                   />
                                 )}
                               </Fragment>

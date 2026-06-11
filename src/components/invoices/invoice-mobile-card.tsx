@@ -3,6 +3,7 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
@@ -18,6 +19,8 @@ interface InvoiceMobileCardProps {
   onToggle: () => void;
   formatAmount: (n: number) => string;
   children?: React.ReactNode;
+  /** Company name for arrow display on refund-tracked invoices. */
+  companyName?: string | null;
 }
 
 export function InvoiceMobileCard({
@@ -26,6 +29,7 @@ export function InvoiceMobileCard({
   onToggle,
   formatAmount,
   children,
+  companyName,
 }: InvoiceMobileCardProps) {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
@@ -53,13 +57,24 @@ export function InvoiceMobileCard({
               {formatAmount(invoice.total_amount)}
             </span>
           </div>
-          <div className="mt-1.5 flex items-center gap-2">
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <span className={TYPE_STAMP_CLASS[invoice.type]}>
               {t(`types.${invoice.type}`)}
             </span>
-            {invoice.payment_method_label?.trim() && (
+            {invoice.refundable_status != null && companyName ? (
+              <span className="stamp truncate max-w-[160px]">
+                {invoice.payment_method_label?.trim()
+                  ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
+                  : `→ ${companyName}`}
+              </span>
+            ) : invoice.payment_method_label?.trim() ? (
               <span className="stamp">
                 {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}
+              </span>
+            ) : null}
+            {invoice.refundable_status != null && (
+              <span className={REFUND_STATUS_STAMP[invoice.refundable_status]}>
+                {t(REFUND_STATUS_I18N[invoice.refundable_status])}
               </span>
             )}
           </div>

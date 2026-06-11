@@ -100,6 +100,8 @@ function setupMocks(invoices: Invoice[]) {
     invoices,
     total: invoices.length,
     funds_released_total: 0,
+    company_refunded_total: 0,
+    company_name: null,
   });
 }
 

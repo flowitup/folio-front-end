@@ -10,7 +10,9 @@ import { InvoiceForm } from "@/components/invoices/invoice-form";
 import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
 import { fetchTagsClient } from "@/lib/api/tags-client";
+import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
 import type { ProjectTag } from "@/lib/api/tags";
 
@@ -30,10 +32,21 @@ interface InvoiceDetailContentProps {
    * When null, the payment method field is hidden in edit mode.
    */
   companyId?: string | null;
+  /**
+   * Display name of the construction company associated with this project.
+   * When present and invoice has a refundable_status, shown in arrow notation
+   * next to the payment method label.
+   */
+  companyName?: string | null;
   /** Called after a successful update so parent can refresh state. */
   onUpdated: (updated: Invoice) => void;
   /** Called after a successful delete so parent can close/redirect. */
   onDeleted: () => void;
+  /**
+   * Called after a successful company-payment transfer so the parent list
+   * can reload and the detail's displayed status refreshes.
+   */
+  onTransferred?: () => void;
   /** Used to open the print page in a new tab. */
   printUrl: string;
 }
@@ -46,8 +59,10 @@ export function InvoiceDetailContent({
   invoice,
   canManage,
   companyId,
+  companyName,
   onUpdated,
   onDeleted,
+  onTransferred,
   printUrl,
 }: InvoiceDetailContentProps) {
   const t = useTranslations("invoices");
@@ -64,6 +79,18 @@ export function InvoiceDetailContent({
       .catch(() => setTags([]));
   }, [invoice.project_id]);
 
+  /** Extract a user-facing message from an API error, falling back to a default. */
+  function extractErrorMessage(err: unknown, fallback: string): string {
+    if (err && typeof err === "object") {
+      const e = err as Record<string, unknown>;
+      const msg =
+        (e.data as Record<string, unknown> | undefined)?.message ??
+        (e.body as Record<string, unknown> | undefined)?.message;
+      if (typeof msg === "string" && msg.trim()) return msg;
+    }
+    return err instanceof Error ? err.message : fallback;
+  }
+
   const handleUpdate = async (payload: UpdateInvoicePayload) => {
     setIsSaving(true);
     setError(null);
@@ -72,7 +99,7 @@ export function InvoiceDetailContent({
       onUpdated(updated);
       setIsEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update invoice");
+      setError(extractErrorMessage(err, "Failed to update invoice"));
     } finally {
       setIsSaving(false);
     }
@@ -83,8 +110,8 @@ export function InvoiceDetailContent({
     try {
       await deleteInvoice(invoice.project_id, invoice.id);
       onDeleted();
-    } catch {
-      setError("Failed to delete invoice");
+    } catch (err) {
+      setError(extractErrorMessage(err, "Failed to delete invoice"));
     }
   };
 
@@ -106,6 +133,15 @@ export function InvoiceDetailContent({
             <Printer className="h-4 w-4 mr-1" />
             {t("printPdf")}
           </Button>
+          {canManage &&
+            !isEditing &&
+            invoice.type === "materials_services" &&
+            invoice.refundable_status == null && (
+              <TransferToCompanyPaymentAction
+                invoiceId={invoice.id}
+                onSuccess={() => onTransferred?.()}
+              />
+            )}
           {canManage && !isEditing && !invoice.is_auto_generated && (
             <>
               <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
@@ -190,10 +226,25 @@ export function InvoiceDetailContent({
                   <dt className="text-xs font-medium text-muted-foreground tracking-wide">
                     {t("paymentMethod.label")}
                   </dt>
-                  <dd className="mt-0.5 text-sm">
-                    {invoice.payment_method_label
-                      ? localizeMethodLabel(invoice.payment_method_label, tBuiltins)
-                      : t("paymentMethod.none")}
+                  <dd className="mt-0.5 text-sm flex flex-wrap items-center gap-1.5">
+                    {invoice.refundable_status != null && companyName ? (
+                      <span className="stamp truncate max-w-[200px]">
+                        {invoice.payment_method_label?.trim()
+                          ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
+                          : `→ ${companyName}`}
+                      </span>
+                    ) : (
+                      <span>
+                        {invoice.payment_method_label
+                          ? localizeMethodLabel(invoice.payment_method_label, tBuiltins)
+                          : t("paymentMethod.none")}
+                      </span>
+                    )}
+                    {invoice.refundable_status != null && (
+                      <span className={REFUND_STATUS_STAMP[invoice.refundable_status]}>
+                        {t(REFUND_STATUS_I18N[invoice.refundable_status])}
+                      </span>
+                    )}
                   </dd>
                 </div>
               </dl>

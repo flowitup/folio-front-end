@@ -35,6 +35,11 @@ export interface Invoice {
   is_auto_generated: boolean;
   /** Optional phase tag UUID assigned to this invoice. */
   tag_id?: string | null;
+  /**
+   * Refund-tracking lifecycle for materials & services expenses.
+   * null = not refund-tracked; non-null = in refund workflow.
+   */
+  refundable_status?: RefundableStatus | null;
 }
 
 export interface CreateInvoicePayload {

@@ -431,6 +431,20 @@
       "failedToLoadRetry": "Failed to load. Try reopening.",
       "noMethodsFound": "No methods found.",
       "failedToCreate": "Failed to create payment method"
+    },
+    "refund": {
+      "status": {
+        "refundable": "Refundable",
+        "refundPending": "Refund pending",
+        "refunded": "Refunded by company"
+      },
+      "action": {
+        "transfer": "Transfer to company payment"
+      },
+      "transferSuccess": "Expense transferred to company payment",
+      "transferForbidden": "Requires company admin access",
+      "transferError": "Failed to transfer expense",
+      "companySpentOfReleased": "spent by company / released"
     }
   },
   "planning": {

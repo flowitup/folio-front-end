@@ -431,6 +431,20 @@
       "failedToLoadRetry": "Échec du chargement. Réessayez en rouvrant.",
       "noMethodsFound": "Aucun moyen trouvé.",
       "failedToCreate": "Échec de la création du moyen de paiement"
+    },
+    "refund": {
+      "status": {
+        "refundable": "Remboursable",
+        "refundPending": "Remboursement en cours",
+        "refunded": "Remboursé par l'entreprise"
+      },
+      "action": {
+        "transfer": "Transférer au paiement entreprise"
+      },
+      "transferSuccess": "Dépense transférée au paiement de l'entreprise",
+      "transferForbidden": "Nécessite un accès administrateur de l'entreprise",
+      "transferError": "Échec du transfert de la dépense",
+      "companySpentOfReleased": "dépensé par l'entreprise / débloqué"
     }
   },
   "planning": {

@@ -431,6 +431,20 @@
       "failedToLoadRetry": "Tải thất bại. Thử đóng và mở lại.",
       "noMethodsFound": "Không tìm thấy phương thức nào.",
       "failedToCreate": "Không thể tạo phương thức thanh toán"
+    },
+    "refund": {
+      "status": {
+        "refundable": "Có thể hoàn tiền",
+        "refundPending": "Đang chờ hoàn tiền",
+        "refunded": "Công ty đã hoàn tiền"
+      },
+      "action": {
+        "transfer": "Chuyển sang thanh toán công ty"
+      },
+      "transferSuccess": "Đã chuyển chi phí sang thanh toán của công ty",
+      "transferForbidden": "Cần quyền quản trị công ty",
+      "transferError": "Chuyển chi phí thất bại",
+      "companySpentOfReleased": "công ty đã chi / đã giải ngân"
     }
   },
   "planning": {

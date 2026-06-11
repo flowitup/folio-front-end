@@ -11,7 +11,7 @@ import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { fetchTagsClient } from "@/lib/api/tags-client";
-import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
+import type { Invoice, UpdateInvoicePayload, InvoiceType, RefundableStatus } from "@/types/invoice";
 import type { ProjectTag } from "@/lib/api/tags";
 
 const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
@@ -19,6 +19,18 @@ const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
   labor: "stamp accent",
   materials_services: "stamp positive",
   others: "stamp muted",
+};
+
+const REFUND_STATUS_STAMP: Record<RefundableStatus, string> = {
+  refundable: "stamp",
+  refund_pending: "stamp warning",
+  refunded: "stamp positive",
+};
+
+const REFUND_STATUS_I18N: Record<RefundableStatus, string> = {
+  refundable: "refund.status.refundable",
+  refund_pending: "refund.status.refundPending",
+  refunded: "refund.status.refunded",
 };
 
 interface InvoiceDetailContentProps {
@@ -30,6 +42,12 @@ interface InvoiceDetailContentProps {
    * When null, the payment method field is hidden in edit mode.
    */
   companyId?: string | null;
+  /**
+   * Display name of the construction company associated with this project.
+   * When present and invoice has a refundable_status, shown in arrow notation
+   * next to the payment method label.
+   */
+  companyName?: string | null;
   /** Called after a successful update so parent can refresh state. */
   onUpdated: (updated: Invoice) => void;
   /** Called after a successful delete so parent can close/redirect. */
@@ -46,6 +64,7 @@ export function InvoiceDetailContent({
   invoice,
   canManage,
   companyId,
+  companyName,
   onUpdated,
   onDeleted,
   printUrl,
@@ -190,10 +209,25 @@ export function InvoiceDetailContent({
                   <dt className="text-xs font-medium text-muted-foreground tracking-wide">
                     {t("paymentMethod.label")}
                   </dt>
-                  <dd className="mt-0.5 text-sm">
-                    {invoice.payment_method_label
-                      ? localizeMethodLabel(invoice.payment_method_label, tBuiltins)
-                      : t("paymentMethod.none")}
+                  <dd className="mt-0.5 text-sm flex flex-wrap items-center gap-1.5">
+                    {invoice.refundable_status != null && companyName ? (
+                      <span className="stamp truncate max-w-[200px]">
+                        {invoice.payment_method_label?.trim()
+                          ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
+                          : `→ ${companyName}`}
+                      </span>
+                    ) : (
+                      <span>
+                        {invoice.payment_method_label
+                          ? localizeMethodLabel(invoice.payment_method_label, tBuiltins)
+                          : t("paymentMethod.none")}
+                      </span>
+                    )}
+                    {invoice.refundable_status != null && (
+                      <span className={REFUND_STATUS_STAMP[invoice.refundable_status]}>
+                        {t(REFUND_STATUS_I18N[invoice.refundable_status])}
+                      </span>
+                    )}
                   </dd>
                 </div>
               </dl>

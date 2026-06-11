@@ -104,7 +104,7 @@ function setupMocks() {
   mockUsePathname.mockReturnValue("/en/projects/proj-test-1/invoices");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockUseAuth.mockReturnValue({ user: { permissions: [] } } as any);
-  mockFetchInvoicesWithMeta.mockResolvedValue({ invoices: [], total: 0, funds_released_total: 0 });
+  mockFetchInvoicesWithMeta.mockResolvedValue({ invoices: [], total: 0, funds_released_total: 0, company_refunded_total: 0, company_name: null });
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

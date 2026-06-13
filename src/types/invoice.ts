@@ -1,6 +1,6 @@
 // Invoice management types
 
-export type InvoiceType = "released_funds" | "labor" | "materials_services" | "others";
+export type InvoiceType = "released_funds" | "labor" | "materials_services" | "others" | "refund";
 
 interface InvoiceItem {
   description: string;
@@ -45,6 +45,16 @@ export interface Invoice {
    * already company money, not eligible for the refund workflow.
    */
   paid_by_company?: boolean;
+  /**
+   * UUID of the materials_services invoice that this refund invoice is linked to.
+   * Only set on type=refund invoices; null/absent = unlinked refund.
+   */
+  refunds_invoice_id?: string | null;
+  /**
+   * Invoice number of the linked M&S invoice (read-only enrichment from the backend).
+   * Present when refunds_invoice_id is set.
+   */
+  refunds_invoice_number?: string;
 }
 
 export interface CreateInvoicePayload {
@@ -58,6 +68,11 @@ export interface CreateInvoicePayload {
   payment_method_id?: string | null;
   /** Optional phase tag UUID. Null or omitted = no tag. */
   tag_id?: string | null;
+  /**
+   * UUID of the materials_services invoice this refund is linked to.
+   * Only valid when type=refund. Null clears the link; omitted = keep existing (on update).
+   */
+  refunds_invoice_id?: string | null;
 }
 
 export type UpdateInvoicePayload = Partial<CreateInvoicePayload>;

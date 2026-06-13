@@ -21,6 +21,7 @@ const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
   labor: "stamp accent",
   materials_services: "stamp positive",
   others: "stamp muted",
+  refund: "stamp warning",
 };
 
 interface InvoiceDetailContentProps {
@@ -179,6 +180,8 @@ export function InvoiceDetailContent({
           isLoading={isSaving}
           companyId={companyId}
           tags={tags}
+          projectId={invoice.project_id}
+          editingInvoiceId={invoice.id}
           initialValues={{
             type: invoice.type,
             issue_date: invoice.issue_date,
@@ -193,6 +196,7 @@ export function InvoiceDetailContent({
             })),
             payment_method_id: invoice.payment_method_id ?? null,
             tag_id: invoice.tag_id ?? null,
+            refunds_invoice_id: invoice.refunds_invoice_id ?? null,
           }}
         />
       ) : (
@@ -249,6 +253,16 @@ export function InvoiceDetailContent({
                   </dd>
                 </div>
               </dl>
+              {invoice.type === "refund" && invoice.refunds_invoice_number && (
+                <div className="mt-2 border-t pt-2">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {t("refundsInvoiceLabel")}
+                  </dt>
+                  <dd className="mt-0.5 text-sm">
+                    {t("refundOf", { number: invoice.refunds_invoice_number })}
+                  </dd>
+                </div>
+              )}
               {invoice.notes && (
                 <div className="mt-2 border-t pt-2">
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">

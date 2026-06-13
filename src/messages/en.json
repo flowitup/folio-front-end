@@ -326,7 +326,8 @@
       "released_funds": "Released Funds",
       "labor": "Labor",
       "materials_services": "Materials & Services",
-      "others": "Others"
+      "others": "Others",
+      "refund": "Refund"
     },
     "issueDate": "Issue date",
     "recipient": "Recipient",
@@ -411,6 +412,7 @@
       "typeLabor": "Labor",
       "typeMaterialsServices": "Materials & Services",
       "typeOthers": "Others",
+      "typeRefund": "Refund",
       "format": "Format",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",
@@ -433,6 +435,11 @@
       "noMethodsFound": "No methods found.",
       "failedToCreate": "Failed to create payment method"
     },
+    "refundHint": "Use a negative unit price for a credit/refund line and a positive one for a charge; the total is the net.",
+    "refundsInvoiceLabel": "Refunds invoice (Materials & Services)",
+    "refundsInvoiceNone": "— none —",
+    "refundOf": "Refund of {number}",
+    "errorRefundExceedsSource": "Refund exceeds the remaining refundable amount ({remaining}) for this invoice.",
     "refund": {
       "status": {
         "refundable": "Refundable",

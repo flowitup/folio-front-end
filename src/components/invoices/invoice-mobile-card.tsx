@@ -11,6 +11,7 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   labor: "stamp accent",
   materials_services: "stamp positive",
   others: "stamp muted",
+  refund: "stamp warning",
 };
 
 interface InvoiceMobileCardProps {
@@ -53,7 +54,7 @@ export function InvoiceMobileCard({
             <span className="num text-[12.5px] font-medium">
               {invoice.invoice_number}
             </span>
-            <span className="num text-[14px] font-medium">
+            <span className={`num text-[14px] font-medium${invoice.total_amount < 0 ? " text-destructive" : ""}`}>
               {formatAmount(invoice.total_amount)}
             </span>
           </div>
@@ -61,6 +62,11 @@ export function InvoiceMobileCard({
             <span className={TYPE_STAMP_CLASS[invoice.type]}>
               {t(`types.${invoice.type}`)}
             </span>
+            {invoice.type === "refund" && invoice.refunds_invoice_number && (
+              <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+                {t("refundOf", { number: invoice.refunds_invoice_number })}
+              </span>
+            )}
             {invoice.refundable_status != null && companyName ? (
               <span className="stamp truncate max-w-[160px]">
                 {invoice.payment_method_label?.trim()

@@ -50,6 +50,7 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   labor: "stamp accent",
   materials_services: "stamp positive",
   others: "stamp muted",
+  refund: "stamp warning",
 };
 
 export default function InvoicesPage() {
@@ -150,9 +151,9 @@ export default function InvoicesPage() {
     }
   };
 
-  const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services", "others"];
+  const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services", "others", "refund"];
 
-  const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services", "others"];
+  const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services", "others", "refund"];
   const groupedInvoices = GROUP_ORDER
     .map((type) => ({ type, items: invoices.filter((i) => i.type === type) }))
     .filter((g) => g.items.length > 0);
@@ -173,6 +174,7 @@ export default function InvoicesPage() {
   const laborInvoices = invoices.filter((i) => i.type === "labor");
   const materialsInvoices = invoices.filter((i) => i.type === "materials_services");
   const othersInvoices = invoices.filter((i) => i.type === "others");
+  const refundInvoices = invoices.filter((i) => i.type === "refund");
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
@@ -180,10 +182,12 @@ export default function InvoicesPage() {
           the type breakdowns tuck into a compact 2-up grid beneath it, so the
           summary reads as one primary figure + supporting detail instead of a
           tall stack of equal-weight cards. */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-5 lg:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-6 lg:gap-4">
         <div className="folio-card col-span-2 p-5 lg:col-span-1">
           <div className="label-cap">{t("totalInvoiced")}</div>
-          <div className="font-display num mt-2 text-[28px] font-medium leading-none">
+          <div
+            className={`font-display num mt-2 text-[28px] font-medium leading-none${totalInvoiced < 0 ? " text-destructive" : ""}`}
+          >
             {formatEUR(totalInvoiced)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
@@ -242,6 +246,19 @@ export default function InvoicesPage() {
             {t("invoiceCount", { n: othersInvoices.length })}
           </div>
         </div>
+        {refundInvoices.length > 0 && (
+          <div className="folio-card p-4 lg:p-5">
+            <div className="label-cap">{t("types.refund")}</div>
+            <div
+              className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px] text-destructive"
+            >
+              {formatEUR(refundInvoices.reduce((s, i) => s + i.total_amount, 0))}
+            </div>
+            <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+              {t("invoiceCount", { n: refundInvoices.length })}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -427,6 +444,22 @@ export default function InvoicesPage() {
                                         {t("auto")}
                                       </span>
                                     )}
+                                    {invoice.type === "refund" && (
+                                      <span
+                                        className="stamp warning ml-2"
+                                        style={{ fontSize: 10, verticalAlign: "middle" }}
+                                      >
+                                        {t("types.refund")}
+                                      </span>
+                                    )}
+                                    {invoice.type === "refund" && invoice.refunds_invoice_number && (
+                                      <span
+                                        className="ml-2 text-[11px]"
+                                        style={{ color: "var(--muted)" }}
+                                      >
+                                        {t("refundOf", { number: invoice.refunds_invoice_number })}
+                                      </span>
+                                    )}
                                   </td>
                                   <td className="num" style={{ color: "var(--muted)" }}>
                                     {invoice.issue_date}
@@ -459,7 +492,10 @@ export default function InvoicesPage() {
                                       {tvaAmount > 0 ? tvaAmount.toFixed(2) : "—"}
                                     </td>
                                   )}
-                                  <td className="num font-medium" style={{ textAlign: "right" }}>
+                                  <td
+                                    className={`num font-medium${invoice.total_amount < 0 ? " text-destructive" : ""}`}
+                                    style={{ textAlign: "right" }}
+                                  >
                                     {invoice.total_amount.toFixed(2)}
                                   </td>
                                   <td

@@ -326,7 +326,8 @@
       "released_funds": "Fond débloqué",
       "labor": "Main-d'œuvre",
       "materials_services": "Achats & prestations",
-      "others": "Autres"
+      "others": "Autres",
+      "refund": "Remboursement"
     },
     "issueDate": "Date d'émission",
     "recipient": "Destinataire",
@@ -411,6 +412,7 @@
       "typeLabor": "Main-d'œuvre",
       "typeMaterialsServices": "Achats & prestations",
       "typeOthers": "Autres",
+      "typeRefund": "Remboursement",
       "format": "Format",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",
@@ -433,6 +435,11 @@
       "noMethodsFound": "Aucun moyen trouvé.",
       "failedToCreate": "Échec de la création du moyen de paiement"
     },
+    "refundHint": "Utilisez un prix unitaire négatif pour une ligne de crédit/remboursement et positif pour une charge ; le total est le net.",
+    "refundsInvoiceLabel": "Facture remboursée (Matériaux & Services)",
+    "refundsInvoiceNone": "— aucune —",
+    "refundOf": "Remboursement de {number}",
+    "errorRefundExceedsSource": "Le remboursement dépasse le montant remboursable restant ({remaining}) pour cette facture.",
     "refund": {
       "status": {
         "refundable": "Remboursable",

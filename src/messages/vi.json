@@ -326,7 +326,8 @@
       "released_funds": "Vốn giải ngân",
       "labor": "Nhân công",
       "materials_services": "Vật tư & dịch vụ",
-      "others": "Khác"
+      "others": "Khác",
+      "refund": "Hoàn tiền"
     },
     "issueDate": "Ngày phát hành",
     "recipient": "Người nhận",
@@ -411,6 +412,7 @@
       "typeLabor": "Nhân công",
       "typeMaterialsServices": "Vật tư & dịch vụ",
       "typeOthers": "Khác",
+      "typeRefund": "Hoàn tiền",
       "format": "Định dạng",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",
@@ -433,6 +435,11 @@
       "noMethodsFound": "Không tìm thấy phương thức nào.",
       "failedToCreate": "Không thể tạo phương thức thanh toán"
     },
+    "refundHint": "Dùng đơn giá âm cho dòng hoàn tiền/giảm trừ và dương cho khoản tính phí; tổng là giá trị thực.",
+    "refundsInvoiceLabel": "Hóa đơn được hoàn (Vật tư & Dịch vụ)",
+    "refundsInvoiceNone": "— không —",
+    "refundOf": "Hoàn tiền cho {number}",
+    "errorRefundExceedsSource": "Hoàn tiền vượt quá số tiền còn có thể hoàn ({remaining}) cho hóa đơn này.",
     "refund": {
       "status": {
         "refundable": "Có thể hoàn tiền",

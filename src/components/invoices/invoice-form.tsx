@@ -581,18 +581,23 @@ export function InvoiceForm({
  * `formatCapError` receives the remaining amount string and returns the translated message.
  * Falls back to the raw error message, then a generic fallback.
  */
-function classifySubmitError(
+export function classifySubmitError(
   err: unknown,
   formatCapError: (remaining: string) => string
 ): string {
   if (err && typeof err === "object") {
     const e = err as Record<string, unknown>;
-    // Check error name from body or data (ApiError carries .data or .body)
+    // Check error code from body or data (ApiError carries .data or .body).
+    // The backend returns the discriminator in the `error` field; keep `name`
+    // as a fallback for older shapes.
     const body = (e.data ?? e.body) as Record<string, unknown> | undefined;
-    const name = body?.name as string | undefined;
+    const code = (body?.error ?? body?.name) as string | undefined;
     const message = (body?.message ?? e.message) as string | undefined;
 
-    if (name === "RefundExceedsSourceError" && typeof message === "string") {
+    if (
+      (code === "RefundExceedsSource" || code === "RefundExceedsSourceError") &&
+      typeof message === "string"
+    ) {
       // Extract the remaining amount from the backend message (numeric part)
       const match = message.match(/[\d]+[.,]?[\d]*/);
       const remaining = match ? match[0] : "—";

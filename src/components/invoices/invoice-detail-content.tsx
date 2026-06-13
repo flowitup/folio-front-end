@@ -6,7 +6,7 @@ import { Printer, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InvoiceForm } from "@/components/invoices/invoice-form";
+import { InvoiceForm, classifySubmitError } from "@/components/invoices/invoice-form";
 import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
@@ -100,7 +100,11 @@ export function InvoiceDetailContent({
       onUpdated(updated);
       setIsEditing(false);
     } catch (err) {
-      setError(extractErrorMessage(err, "Failed to update invoice"));
+      setError(
+        classifySubmitError(err, (remaining) =>
+          t("errorRefundExceedsSource", { remaining })
+        )
+      );
     } finally {
       setIsSaving(false);
     }

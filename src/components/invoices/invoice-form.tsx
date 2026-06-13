@@ -598,8 +598,9 @@ export function classifySubmitError(
       (code === "RefundExceedsSource" || code === "RefundExceedsSourceError") &&
       typeof message === "string"
     ) {
-      // Extract the remaining amount from the backend message (numeric part)
-      const match = message.match(/[\d]+[.,]?[\d]*/);
+      // Extract the remaining amount from the backend message (numeric part,
+      // sign-aware so a negative remaining isn't shown as positive).
+      const match = message.match(/-?[\d]+[.,]?[\d]*/);
       const remaining = match ? match[0] : "—";
       return formatCapError(remaining);
     }

@@ -73,6 +73,7 @@ export default function NewInvoicePage() {
         onSubmit={handleSubmit}
         isLoading={isLoading}
         companyId={companyId}
+        projectId={projectId}
         tags={tags}
       />
     </div>

@@ -13,13 +13,14 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2, Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { ProductImage } from "@/components/bibliotheque/product-image";
 import {
   getProductAction,
@@ -32,12 +33,18 @@ interface ProductDetailDialogProps {
   productId: string | null;
   suppliersById: Record<string, Supplier>;
   onClose: () => void;
+  /** Called when the user clicks Edit; caller should close detail + open edit dialog. */
+  onEdit?: (product: import("@/lib/api/bibliotheque").LibraryProduct) => void;
+  /** Called when the user clicks Delete; caller should close detail + open delete dialog. */
+  onDelete?: (product: import("@/lib/api/bibliotheque").LibraryProduct) => void;
 }
 
 export function ProductDetailDialog({
   productId,
   suppliersById,
   onClose,
+  onEdit,
+  onDelete,
 }: ProductDetailDialogProps) {
   const t = useTranslations("bibliotheque");
   const locale = useLocale();
@@ -123,6 +130,37 @@ export function ProductDetailDialog({
 
         {product && !loading && (
           <div className="space-y-5">
+            {/* Footer actions — Edit + Delete. Permissions are enforced by the BE;
+                a 403 from the action surfaces as a toast.forbidden message (S2). */}
+            {(onEdit ?? onDelete) && (
+              <div className="flex justify-end gap-2 border-b pb-4" style={{ borderColor: "var(--line)" }}>
+                {onEdit && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => onEdit(product)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    {t("editTitle")}
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    style={{ color: "var(--negative)", borderColor: "var(--negative)" }}
+                    onClick={() => onDelete(product)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {t("deleteTitle")}
+                  </Button>
+                )}
+              </div>
+            )}
             {/* Image */}
             <ProductImage
               productId={product.id}

@@ -252,6 +252,32 @@ describe("InvoicesPage — funds released KPI shows company_spent / funds_releas
       { timeout: 5000 },
     );
   });
+
+  it("displays the BE-reduced company_spent_total verbatim (company refund already netted server-side)", async () => {
+    // The backend nets company-issued refunds out of company_spent_total and
+    // floors at 0; the page must render that value as-is (no client recompute).
+    // Here a 10 919 company spend was reduced to 4 242 by company refunds.
+    setupFetchMock([], {
+      funds_released_total: 97376,
+      company_spent_total: 4242,
+      company_name: "ANN ECO CONSTRUCTION",
+    });
+    render(<InvoicesPage />);
+
+    const fundsCard = await waitFor(
+      () => {
+        const card = screen.getByText("invoices.fundsReleased").closest(".folio-card");
+        expect(card).not.toBeNull();
+        return card as HTMLElement;
+      },
+      { timeout: 5000 },
+    );
+
+    // formatEUR uses fr-FR spacing (narrow no-break spaces); match digits only.
+    // Reduced numerator 4 242 and denominator 97 376 both appear in this card.
+    expect(fundsCard.textContent).toMatch(/4[^\d]*242/);
+    expect(fundsCard.textContent).toMatch(/97[^\d]*376/);
+  });
 });
 
 describe("InvoicesPage — payment method arrow for refund-tracked rows", () => {

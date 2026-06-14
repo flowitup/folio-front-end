@@ -1521,7 +1521,52 @@
       "quincaillerie": "Quincaillerie",
       "droguerie": "Droguerie",
       "autre": "Autre / Non classé"
-    }
+    },
+    "addProduct": "Ajouter un produit",
+    "createTitle": "Ajouter un produit",
+    "editTitle": "Modifier le produit",
+    "deleteTitle": "Supprimer le produit",
+    "supplierMode": {
+      "existing": "Fournisseur existant",
+      "new": "Nouveau fournisseur"
+    },
+    "fields": {
+      "name": "Nom du produit",
+      "supplierName": "Nom du fournisseur",
+      "supplierWebsite": "Site web du fournisseur (optionnel)",
+      "reference": "SKU / Référence",
+      "referenceHint": "Laisser vide pour générer automatiquement",
+      "category": "Catégorie",
+      "size": "Taille",
+      "description": "Description",
+      "productUrl": "URL du produit",
+      "image": "Image",
+      "imageHint": "PNG / JPG / WebP, max 10 Mo",
+      "replaceImage": "Remplacer l'image"
+    },
+    "uncategorizedOption": "Non catégorisé",
+    "validation": {
+      "nameRequired": "Le nom du produit est obligatoire.",
+      "supplierRequired": "Veuillez sélectionner ou saisir un fournisseur."
+    },
+    "actions": {
+      "save": "Enregistrer",
+      "create": "Ajouter le produit",
+      "cancel": "Annuler",
+      "delete": "Supprimer"
+    },
+    "toast": {
+      "created": "Produit ajouté.",
+      "updated": "Produit mis à jour.",
+      "deleted": "Produit supprimé.",
+      "createError": "Impossible d'ajouter le produit.",
+      "updateError": "Impossible de mettre à jour le produit.",
+      "deleteError": "Impossible de supprimer le produit.",
+      "forbidden": "Vous n'avez pas la permission de gérer la bibliothèque.",
+      "imageUploadWarning": "Produit enregistré, mais l'image n'a pas pu être téléchargée."
+    },
+    "deleteWarning": "Cela supprime définitivement « {name} » et {count, plural, =0 {0 enregistrement d'achat} one {# enregistrement d'achat} other {# enregistrements d'achat}}.",
+    "deleteConfirmLabel": "Saisissez le nom du produit pour confirmer"
   },
   "tags": {
     "select": {

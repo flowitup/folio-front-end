@@ -51,6 +51,8 @@ interface ProductEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdated: (product: LibraryProduct) => void | Promise<void>;
+  /** Resolved supplier display name. Falls back to raw supplier_id when absent. */
+  supplierName?: string;
 }
 
 export function ProductEditDialog({
@@ -58,6 +60,7 @@ export function ProductEditDialog({
   open,
   onOpenChange,
   onUpdated,
+  supplierName,
 }: ProductEditDialogProps) {
   const t = useTranslations("bibliotheque");
 
@@ -172,7 +175,7 @@ export function ProductEditDialog({
       const result = await updateProductAction(product.id, diff);
       if (!result.ok) {
         setError(result.error);
-        if (result.error.includes("permission")) toast.error(t("toast.forbidden"));
+        if (result.code === "Forbidden") toast.error(t("toast.forbidden"));
         else toast.error(t("toast.updateError"));
         setIsSubmitting(false);
         return;
@@ -187,6 +190,10 @@ export function ProductEditDialog({
       const imgResult = await uploadProductImageAction(updated.id, fd, { force: true });
       if (!imgResult.ok) {
         toast.warning(t("toast.imageUploadWarning"));
+      } else {
+        // Optimistically mark has_image so detail/card renders the new image
+        // immediately without waiting for the next full reload.
+        updated = { ...updated, has_image: true };
       }
     }
 
@@ -207,7 +214,7 @@ export function ProductEditDialog({
           <div className="rounded-md p-3 text-[13px] space-y-1" style={{ background: "var(--paper-2)" }}>
             <div className="flex gap-4">
               <span style={{ color: "var(--muted)" }}>{t("supplier")}</span>
-              <span className="font-medium">{product.supplier_id}</span>
+              <span className="font-medium">{supplierName ?? product.supplier_id}</span>
             </div>
             <div className="flex gap-4">
               <span style={{ color: "var(--muted)" }}>{t("fields.reference")}</span>

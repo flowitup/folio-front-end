@@ -414,6 +414,53 @@ describe("ProductCreateDialog", () => {
     });
   });
 
+  it("shows forbidden toast when result.code === 'Forbidden'", async () => {
+    mockCreate.mockResolvedValueOnce({
+      ok: false,
+      error: "You don't have permission to manage the library.",
+      code: "Forbidden",
+    });
+    renderDialog({ suppliers: [] });
+
+    fireEvent.change(screen.getByLabelText(/supplier name/i), {
+      target: { value: "Supplier X" },
+    });
+    fireEvent.change(screen.getByLabelText(/product name/i), {
+      target: { value: "Product X" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add product/i }));
+
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalled();
+    });
+  });
+
+  it("sets has_image: true on onCreated when image upload succeeds", async () => {
+    const product = makeProduct({ has_image: false });
+    mockCreate.mockResolvedValueOnce({ ok: true, data: product });
+    mockUploadImage.mockResolvedValueOnce({ ok: true, data: { image_storage_key: "key-1" } });
+    const onCreated = vi.fn();
+    renderDialog({ suppliers: [], onCreated });
+
+    fireEvent.change(screen.getByLabelText(/supplier name/i), {
+      target: { value: "Supplier X" },
+    });
+    fireEvent.change(screen.getByLabelText(/product name/i), {
+      target: { value: "Product X" },
+    });
+    const file = new File(["img"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(screen.getByLabelText(/image/i), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add product/i }));
+
+    await waitFor(() => {
+      expect(onCreated).toHaveBeenCalledWith(
+        expect.objectContaining({ has_image: true })
+      );
+    });
+  });
+
   it("calls uploadProductImageAction after successful create when image chosen", async () => {
     const product = makeProduct();
     mockCreate.mockResolvedValueOnce({ ok: true, data: product });

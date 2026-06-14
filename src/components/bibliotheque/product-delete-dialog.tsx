@@ -65,7 +65,7 @@ export function ProductDeleteDialog({
     const result = await deleteProductAction(product.id);
     if (!result.ok) {
       setError(result.error);
-      if (result.error.includes("permission")) toast.error(t("toast.forbidden"));
+      if (result.code === "Forbidden") toast.error(t("toast.forbidden"));
       else toast.error(t("toast.deleteError"));
       setIsDeleting(false);
       return;

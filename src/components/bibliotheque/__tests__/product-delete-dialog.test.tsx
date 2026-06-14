@@ -295,6 +295,24 @@ describe("ProductDeleteDialog", () => {
     });
   });
 
+  it("shows forbidden toast when result.code === 'Forbidden'", async () => {
+    mockDelete.mockResolvedValueOnce({
+      ok: false,
+      error: "You don't have permission to manage the library.",
+      code: "Forbidden",
+    });
+    renderDialog({ product: makeProduct({ name: "Hammer Drill" }) });
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "Hammer Drill" },
+    });
+    fireEvent.click(screen.getByTestId("delete-btn"));
+
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalled();
+    });
+  });
+
   it("renders confirm label mentioning product name", () => {
     renderDialog({ product: makeProduct({ name: "Power Saw" }) });
     const content = screen.getByTestId("alert-dialog-content").textContent ?? "";

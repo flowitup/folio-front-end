@@ -165,13 +165,13 @@ export function ProductCreateDialog({
     const result = await createProductAction(companyId, payload);
     if (!result.ok) {
       setError(result.error);
-      if (result.error.includes("permission")) toast.error(t("toast.forbidden"));
+      if (result.code === "Forbidden") toast.error(t("toast.forbidden"));
       else toast.error(t("toast.createError"));
       setIsSubmitting(false);
       return;
     }
 
-    const created = result.data;
+    let created = result.data;
 
     // Non-fatal image upload after product creation
     if (imageFile) {
@@ -180,6 +180,10 @@ export function ProductCreateDialog({
       const imgResult = await uploadProductImageAction(created.id, fd);
       if (!imgResult.ok) {
         toast.warning(t("toast.imageUploadWarning"));
+      } else {
+        // Optimistically mark has_image so detail/card renders the new image
+        // immediately without waiting for a full reload.
+        created = { ...created, has_image: true };
       }
     }
 

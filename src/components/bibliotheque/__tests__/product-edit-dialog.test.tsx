@@ -140,6 +140,7 @@ function renderDialog(
     open?: boolean;
     onOpenChange?: (o: boolean) => void;
     onUpdated?: (p: LibraryProduct) => void;
+    supplierName?: string;
   }
 ) {
   const onOpenChange = props?.onOpenChange ?? vi.fn();
@@ -150,6 +151,7 @@ function renderDialog(
       open={props?.open ?? true}
       onOpenChange={onOpenChange}
       onUpdated={onUpdated}
+      supplierName={props?.supplierName}
     />
   );
 }
@@ -201,6 +203,17 @@ describe("ProductEditDialog", () => {
   it("shows read-only supplier reference in context row", () => {
     renderDialog(makeProduct({ supplier_reference: "SKU-9999" }));
     expect(screen.getByText("SKU-9999")).toBeInTheDocument();
+  });
+
+  it("renders supplier NAME when supplierName prop is provided", () => {
+    renderDialog(makeProduct({ supplier_id: "sup-1" }), { supplierName: "ACME Corp" });
+    expect(screen.getByText("ACME Corp")).toBeInTheDocument();
+    expect(screen.queryByText("sup-1")).not.toBeInTheDocument();
+  });
+
+  it("falls back to supplier_id when supplierName prop is absent", () => {
+    renderDialog(makeProduct({ supplier_id: "sup-uuid-1234" }));
+    expect(screen.getByText("sup-uuid-1234")).toBeInTheDocument();
   });
 
   it("submit button is disabled when nothing has changed", () => {
@@ -345,6 +358,47 @@ describe("ProductEditDialog", () => {
     await waitFor(() => {
       expect(screen.getByText(/permission/i)).toBeInTheDocument();
       expect(mockToast.error).toHaveBeenCalled();
+    });
+  });
+
+  it("shows forbidden toast when result.code === 'Forbidden'", async () => {
+    mockUpdate.mockResolvedValueOnce({
+      ok: false,
+      error: "You don't have permission to manage the library.",
+      code: "Forbidden",
+    });
+    renderDialog();
+
+    fireEvent.change(screen.getByLabelText(/product name/i), {
+      target: { value: "Changed" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalled();
+    });
+  });
+
+  it("sets has_image: true on onUpdated when image upload succeeds", async () => {
+    const base = makeProduct({ has_image: false });
+    mockUpdate.mockResolvedValueOnce({ ok: true, data: base });
+    mockUploadImage.mockResolvedValueOnce({ ok: true, data: { image_storage_key: "k1" } });
+    const onUpdated = vi.fn();
+    renderDialog(base, { onUpdated });
+
+    fireEvent.change(screen.getByLabelText(/product name/i), {
+      target: { value: "Changed Name" },
+    });
+    const file = new File(["img"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(screen.getByLabelText(/replace image/i), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(onUpdated).toHaveBeenCalledWith(
+        expect.objectContaining({ has_image: true })
+      );
     });
   });
 

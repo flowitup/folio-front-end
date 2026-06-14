@@ -94,18 +94,22 @@ export function BibliothequePageClient({ companyId }: Props) {
   const handleSupplierChange = (v: string) => { setSupplier(v); setPage(1); };
   const handleCategoryChange = (v: string) => { setCategory(v); setPage(1); };
 
-  // Load suppliers + categories once on mount
-  useEffect(() => {
-    async function loadMeta() {
-      const [sRes, cRes] = await Promise.all([
-        listSuppliersAction(companyId),
-        listCategoriesAction(companyId),
-      ]);
-      if (sRes.ok) setSuppliers(sRes.data);
-      if (cRes.ok) setCategories(cRes.data);
-    }
-    loadMeta();
+  // Load suppliers + categories — callable on demand so create can refresh after
+  // a new inline supplier is added (otherwise the new supplier is absent from
+  // suppliersById until a hard reload).
+  const reloadMeta = useCallback(async () => {
+    const [sRes, cRes] = await Promise.all([
+      listSuppliersAction(companyId),
+      listCategoriesAction(companyId),
+    ]);
+    if (sRes.ok) setSuppliers(sRes.data);
+    if (cRes.ok) setCategories(cRes.data);
   }, [companyId]);
+
+  // Run once on mount (and whenever companyId changes)
+  useEffect(() => {
+    reloadMeta();
+  }, [reloadMeta]);
 
   // Fetch counter used by reload() to trigger useEffect re-run without changing filters
   const [fetchTick, setFetchTick] = useState(0);
@@ -332,6 +336,9 @@ export function BibliothequePageClient({ companyId }: Props) {
         companyId={companyId}
         suppliers={suppliers}
         onCreated={() => {
+          // Reload both products AND meta — a new inline supplier must appear in
+          // suppliersById immediately (filters, detail dialog, etc.)
+          reloadMeta();
           reload();
         }}
       />
@@ -341,6 +348,7 @@ export function BibliothequePageClient({ companyId }: Props) {
         product={editProduct}
         open={editProduct !== null}
         onOpenChange={(open) => { if (!open) setEditProduct(null); }}
+        supplierName={editProduct ? suppliersById[editProduct.supplier_id]?.name : undefined}
         onUpdated={() => {
           setEditProduct(null);
           reload();

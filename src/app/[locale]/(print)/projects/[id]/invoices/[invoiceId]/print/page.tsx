@@ -10,6 +10,7 @@ const TYPE_LABEL: Record<InvoiceType, string> = {
   labor: "Labor",
   materials_services: "Materials & Services",
   others: "Others",
+  refund: "Refund",
 };
 
 export default function InvoicePrintPage() {

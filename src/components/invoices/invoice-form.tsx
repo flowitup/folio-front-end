@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
 import { TagSelect } from "@/components/tags/tag-select";
-import type { CreateInvoicePayload, InvoiceType } from "@/types/invoice";
+import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
+import type { CreateInvoicePayload, Invoice, InvoiceType } from "@/types/invoice";
 import type { ProjectTag } from "@/lib/api/tags";
 
 interface LineItem {
@@ -33,13 +34,45 @@ interface InvoiceFormProps {
    * When empty or omitted, the tag field is hidden.
    */
   tags?: ProjectTag[];
+  /**
+   * Project ID — required to fetch the M&S invoice list for the refund link selector.
+   * When absent, the link selector shows no options (graceful degradation).
+   */
+  projectId?: string;
+  /**
+   * ID of the invoice being edited. Excluded from the M&S selector list.
+   */
+  editingInvoiceId?: string;
 }
 
-const INVOICE_TYPES: InvoiceType[] = ["released_funds", "labor", "materials_services", "others"];
+const INVOICE_TYPES: InvoiceType[] = [
+  "released_funds",
+  "labor",
+  "materials_services",
+  "others",
+  "refund",
+];
+
+/**
+ * Types that allow mixed-sign (negative) unit_price on line items.
+ * For all other types, the input min is clamped to 0.
+ */
+const MIXED_SIGN_TYPES: ReadonlySet<InvoiceType> = new Set([
+  "materials_services",
+  "refund",
+]);
 
 const emptyItem = (): LineItem => ({ description: "", quantity: 1, unit_price: 0, vat_rate: 0 });
 
-export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tags = [] }: InvoiceFormProps) {
+export function InvoiceForm({
+  onSubmit,
+  initialValues,
+  isLoading,
+  companyId,
+  tags = [],
+  projectId,
+  editingInvoiceId,
+}: InvoiceFormProps) {
   const t = useTranslations("invoices");
   const tTags = useTranslations("tags");
 
@@ -66,6 +99,49 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
   );
   const [error, setError] = useState<string | null>(null);
 
+  // refunds_invoice_id: the M&S invoice this refund is linked to (null = none)
+  const [refundsInvoiceId, setRefundsInvoiceId] = useState<string | null>(
+    initialValues?.refunds_invoice_id ?? null
+  );
+
+  // List of M&S invoices for the link selector (loaded when type === "refund")
+  const [msInvoices, setMsInvoices] = useState<Invoice[]>([]);
+  const [msLoading, setMsLoading] = useState(false);
+
+  // Load M&S invoices when type === "refund". Clear when switching away.
+  // Using an async IIFE so all setState calls are inside async callbacks,
+  // satisfying the react-hooks/set-state-in-effect rule.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      if (type !== "refund" || !projectId) {
+        if (!cancelled) {
+          setMsInvoices([]);
+          setMsLoading(false);
+        }
+        return;
+      }
+      if (!cancelled) setMsLoading(true);
+      try {
+        const res = await fetchInvoicesWithMeta(projectId, "materials_services");
+        if (!cancelled) {
+          const filtered = editingInvoiceId
+            ? res.invoices.filter((inv) => inv.id !== editingInvoiceId)
+            : res.invoices;
+          setMsInvoices(filtered);
+        }
+      } catch {
+        if (!cancelled) setMsInvoices([]);
+      } finally {
+        if (!cancelled) setMsLoading(false);
+      }
+    }
+
+    void load();
+    return () => { cancelled = true; };
+  }, [type, projectId, editingInvoiceId]);
+
   // Grand total is TTC: qty × unit_price × (1 + vat_rate/100).
   // Legacy items without a vat_rate are treated as 0 % VAT.
   const grandTotal = items.reduce(
@@ -90,6 +166,7 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
     for (const item of items) {
       if (!item.description.trim()) return t("errorDescriptionRequired");
       if (item.quantity <= 0) return t("errorQuantityPositive");
+      // No unit_price >= 0 check here — sign is user-controlled for mixed-sign types
     }
     return null;
   };
@@ -120,14 +197,21 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
       payment_method_id: paymentMethodId,
       // Always include tag_id so updates can explicitly clear it (null).
       tag_id: tagId,
+      // Include refunds_invoice_id only for refund type (null = no link / clear)
+      ...(type === "refund" ? { refunds_invoice_id: refundsInvoiceId } : {}),
     };
 
     try {
       await onSubmit(payload);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save invoice");
+      setError(classifySubmitError(err, (remaining: string) =>
+        t("errorRefundExceedsSource", { remaining })
+      ));
     }
   };
+
+  // Whether the current type allows negative unit prices
+  const allowNegativePrice = MIXED_SIGN_TYPES.has(type);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -238,6 +322,40 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
               disabled={isLoading}
             />
           </div>
+
+          {/* Refund type: optional M&S link selector + hint */}
+          {type === "refund" && (
+            <div className="space-y-2">
+              {/* Hint */}
+              <p className="text-xs text-muted-foreground">{t("refundHint")}</p>
+
+              {/* M&S link selector */}
+              <div>
+                <label className="block text-xs font-medium mb-1">
+                  {t("refundsInvoiceLabel")}
+                </label>
+                <select
+                  value={refundsInvoiceId ?? ""}
+                  onChange={(e) =>
+                    setRefundsInvoiceId(e.target.value === "" ? null : e.target.value)
+                  }
+                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  disabled={isLoading || msLoading}
+                  data-testid="refunds-invoice-select"
+                >
+                  <option value="">{t("refundsInvoiceNone")}</option>
+                  {msInvoices.map((inv) => (
+                    <option key={inv.id} value={inv.id}>
+                      {inv.invoice_number}
+                      {inv.total_amount != null
+                        ? ` — ${inv.total_amount.toFixed(2)}`
+                        : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -302,7 +420,7 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
                     <div className="col-span-2">
                       <input
                         type="number"
-                        min="0"
+                        {...(allowNegativePrice ? {} : { min: "0" })}
                         step="0.01"
                         value={item.unit_price}
                         onChange={(e) =>
@@ -385,7 +503,7 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
                         <label className="block text-xs text-muted-foreground mb-0.5">{t("unitPrice")}</label>
                         <input
                           type="number"
-                          min="0"
+                          {...(allowNegativePrice ? {} : { min: "0" })}
                           step="0.01"
                           value={item.unit_price}
                           onChange={(e) =>
@@ -437,7 +555,7 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
 
             {/* Grand Total */}
             <div className="flex justify-end border-t pt-2">
-              <span className="text-sm font-semibold">
+              <span className={`text-sm font-semibold${grandTotal < 0 ? " text-destructive" : ""}`}>
                 {t("totalAmount")}: {grandTotal.toFixed(2)}
               </span>
             </div>
@@ -452,4 +570,42 @@ export function InvoiceForm({ onSubmit, initialValues, isLoading, companyId, tag
       </div>
     </form>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Classify a submit error, checking for RefundExceedsSourceError from the backend.
+ * `formatCapError` receives the remaining amount string and returns the translated message.
+ * Falls back to the raw error message, then a generic fallback.
+ */
+export function classifySubmitError(
+  err: unknown,
+  formatCapError: (remaining: string) => string
+): string {
+  if (err && typeof err === "object") {
+    const e = err as Record<string, unknown>;
+    // Check error code from body or data (ApiError carries .data or .body).
+    // The backend returns the discriminator in the `error` field; keep `name`
+    // as a fallback for older shapes.
+    const body = (e.data ?? e.body) as Record<string, unknown> | undefined;
+    const code = (body?.error ?? body?.name) as string | undefined;
+    const message = (body?.message ?? e.message) as string | undefined;
+
+    if (
+      (code === "RefundExceedsSource" || code === "RefundExceedsSourceError") &&
+      typeof message === "string"
+    ) {
+      // Extract the remaining amount from the backend message (numeric part,
+      // sign-aware so a negative remaining isn't shown as positive).
+      const match = message.match(/-?[\d]+[.,]?[\d]*/);
+      const remaining = match ? match[0] : "—";
+      return formatCapError(remaining);
+    }
+
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return err instanceof Error ? err.message : "Failed to save invoice";
 }

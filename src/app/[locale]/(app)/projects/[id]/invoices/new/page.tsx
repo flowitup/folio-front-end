@@ -7,7 +7,7 @@ import { useLocale } from "next-intl";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InvoiceForm } from "@/components/invoices/invoice-form";
+import { InvoiceForm, classifySubmitError } from "@/components/invoices/invoice-form";
 import { createInvoice } from "@/lib/api/invoice-api";
 import { fetchProjectById } from "@/lib/api/projects";
 import { fetchTagsClient } from "@/lib/api/tags-client";
@@ -43,7 +43,11 @@ export default function NewInvoicePage() {
       const invoice = await createInvoice(projectId, payload);
       router.push(`/${locale}/projects/${projectId}/invoices/${invoice.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create invoice");
+      setError(
+        classifySubmitError(err, (remaining) =>
+          t("errorRefundExceedsSource", { remaining })
+        )
+      );
       setIsLoading(false);
     }
   };
@@ -73,6 +77,7 @@ export default function NewInvoicePage() {
         onSubmit={handleSubmit}
         isLoading={isLoading}
         companyId={companyId}
+        projectId={projectId}
         tags={tags}
       />
     </div>

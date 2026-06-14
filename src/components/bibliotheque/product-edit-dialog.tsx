@@ -88,7 +88,9 @@ export function ProductEditDialog({
   useEffect(() => {
     if (open && product) {
       const cat = product.category ?? NO_CATEGORY_SENTINEL;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(product.name);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCategory(cat);
       setSize(product.size ?? "");
       setDescription(product.description ?? "");

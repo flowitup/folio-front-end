@@ -87,7 +87,9 @@ export function ProductCreateDialog({
   useEffect(() => {
     if (open) {
       const mode = suppliers.length === 0 ? "new" : "existing";
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSupplierMode(mode);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSupplierId("");
       setSupplierName("");
       setSupplierWebsite("");

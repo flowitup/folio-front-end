@@ -317,8 +317,8 @@ export function InvoiceForm({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              rows={1}
-              className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              rows={3}
+              className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y"
               disabled={isLoading}
             />
           </div>

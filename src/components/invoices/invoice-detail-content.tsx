@@ -272,7 +272,7 @@ export function InvoiceDetailContent({
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {t("notes")}
                   </dt>
-                  <dd className="mt-0.5 text-sm whitespace-pre-line">{invoice.notes}</dd>
+                  <dd className="mt-0.5 text-base text-foreground whitespace-pre-line">{invoice.notes}</dd>
                 </div>
               )}
             </CardContent>

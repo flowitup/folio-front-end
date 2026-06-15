@@ -1521,7 +1521,52 @@
       "quincaillerie": "Hardware",
       "droguerie": "Household & cleaning",
       "autre": "Other / Uncategorized"
-    }
+    },
+    "addProduct": "Add product",
+    "createTitle": "Add product",
+    "editTitle": "Edit product",
+    "deleteTitle": "Delete product",
+    "supplierMode": {
+      "existing": "Existing supplier",
+      "new": "New supplier"
+    },
+    "fields": {
+      "name": "Product name",
+      "supplierName": "Supplier name",
+      "supplierWebsite": "Supplier website (optional)",
+      "reference": "SKU / Reference",
+      "referenceHint": "Leave blank to auto-generate",
+      "category": "Category",
+      "size": "Size",
+      "description": "Description",
+      "productUrl": "Product URL",
+      "image": "Image",
+      "imageHint": "PNG / JPG / WebP, max 10 MB",
+      "replaceImage": "Replace image"
+    },
+    "uncategorizedOption": "Uncategorized",
+    "validation": {
+      "nameRequired": "Product name is required.",
+      "supplierRequired": "Please select or enter a supplier."
+    },
+    "actions": {
+      "save": "Save",
+      "create": "Add product",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
+    "toast": {
+      "created": "Product added.",
+      "updated": "Product updated.",
+      "deleted": "Product deleted.",
+      "createError": "Failed to add product.",
+      "updateError": "Failed to update product.",
+      "deleteError": "Failed to delete product.",
+      "forbidden": "You don't have permission to manage the library.",
+      "imageUploadWarning": "Product saved, but the image could not be uploaded."
+    },
+    "deleteWarning": "This permanently deletes \"{name}\" and its {count, plural, =0 {0 purchase records} one {# purchase record} other {# purchase records}}.",
+    "deleteConfirmLabel": "Type the product name to confirm"
   },
   "tags": {
     "select": {

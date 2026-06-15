@@ -203,6 +203,146 @@ export async function getProduct(productId: string): Promise<ProductDetailResult
   return response.json() as Promise<ProductDetailResult>;
 }
 
+// ---------------------------------------------------------------------------
+// Mutation payload types
+// ---------------------------------------------------------------------------
+
+export interface CreateProductPayload {
+  name: string;
+  supplier_id?: string;
+  supplier_name?: string;
+  supplier_website_url?: string | null;
+  supplier_reference?: string | null;
+  category?: string | null;
+  description?: string | null;
+  size?: string | null;
+  product_url?: string | null;
+}
+
+export interface UpdateProductPayload {
+  name?: string;
+  category?: string | null;
+  description?: string | null;
+  size?: string | null;
+  product_url?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Mutation wrappers
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a new library product for the company.
+ * POST /bibliotheque/products → 201 LibraryProduct.
+ * Exactly one of supplier_id or supplier_name must be set in payload.
+ */
+export async function createProduct(
+  companyId: string,
+  payload: CreateProductPayload
+): Promise<LibraryProduct> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiBaseUrl}/bibliotheque/products`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({ company_id: companyId, ...payload }),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new Error(`Network error creating product: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to create product");
+  return response.json() as Promise<LibraryProduct>;
+}
+
+/**
+ * Update (patch) a library product.
+ * PATCH /bibliotheque/products/<id> → 200 LibraryProduct.
+ * Only include keys that changed — omitted keys are left unchanged by the BE.
+ */
+export async function updateProduct(
+  productId: string,
+  payload: UpdateProductPayload
+): Promise<LibraryProduct> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify(payload),
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error updating product: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to update product");
+  return response.json() as Promise<LibraryProduct>;
+}
+
+/**
+ * Delete a library product.
+ * DELETE /bibliotheque/products/<id> → 204 no content.
+ */
+export async function deleteProduct(productId: string): Promise<void> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}`,
+      {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error deleting product: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to delete product");
+}
+
+/**
+ * Upload or replace a product image (multipart, field: "image").
+ * POST /bibliotheque/products/<id>/image → { image_storage_key }.
+ * Use opts.force=true to overwrite an existing image.
+ *
+ * IMPORTANT: Do NOT set Content-Type — let fetch set the multipart boundary.
+ * Allowed types: image/jpeg, image/png, image/webp. Max size: 10 MB.
+ * Errors: 415 Unsupported Media Type, 413 Content Too Large.
+ */
+export async function uploadProductImage(
+  productId: string,
+  file: File,
+  opts?: { force?: boolean }
+): Promise<{ image_storage_key: string }> {
+  const authHeaders = await sessionAuthHeader();
+  const qs = opts?.force ? "?force=true" : "";
+  const form = new FormData();
+  form.append("image", file);
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}/image${qs}`,
+      {
+        method: "POST",
+        // Intentionally omit Content-Type — fetch sets multipart boundary automatically.
+        headers: { ...authHeaders },
+        body: form,
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error uploading product image: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to upload product image");
+  return response.json() as Promise<{ image_storage_key: string }>;
+}
+
 // Product image bytes are streamed from GET /bibliotheque/products/<id>/image
 // and fetched client-side as a Blob by the ProductImage component (cookie auth),
 // mirroring invoice attachment previews. No server-side wrapper needed here.

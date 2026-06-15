@@ -12,15 +12,18 @@
  * history pollution — mirrors the invoices page pattern.
  */
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Loader2, BookOpen, Scale } from "lucide-react";
+import { Loader2, BookOpen, Scale, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ProductFilterBar } from "@/components/bibliotheque/product-filter-bar";
 import { ProductCard } from "@/components/bibliotheque/product-card";
 import { ProductDetailDialog } from "@/components/bibliotheque/product-detail-dialog";
+import { ProductCreateDialog } from "@/components/bibliotheque/product-create-dialog";
+import { ProductEditDialog } from "@/components/bibliotheque/product-edit-dialog";
+import { ProductDeleteDialog } from "@/components/bibliotheque/product-delete-dialog";
 import { CompareBar } from "@/components/bibliotheque/compare-bar";
 import { ProductCompareDialog } from "@/components/bibliotheque/product-compare-dialog";
 import { LibraryPagination } from "@/components/bibliotheque/library-pagination";
@@ -50,6 +53,11 @@ export function BibliothequePageClient({ companyId }: Props) {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [page, setPage] = useState(1);
+
+  // Mutation dialog state
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState<LibraryProduct | null>(null);
+  const [deleteProduct, setDeleteProduct] = useState<LibraryProduct | null>(null);
 
   // Compare — session-only. Store full product rows (keyed by id) so selections
   // survive pagination/filter changes even when a picked product leaves the
@@ -86,20 +94,40 @@ export function BibliothequePageClient({ companyId }: Props) {
   const handleSupplierChange = (v: string) => { setSupplier(v); setPage(1); };
   const handleCategoryChange = (v: string) => { setCategory(v); setPage(1); };
 
-  // Load suppliers + categories once on mount
-  useEffect(() => {
-    async function loadMeta() {
-      const [sRes, cRes] = await Promise.all([
-        listSuppliersAction(companyId),
-        listCategoriesAction(companyId),
-      ]);
-      if (sRes.ok) setSuppliers(sRes.data);
-      if (cRes.ok) setCategories(cRes.data);
-    }
-    loadMeta();
+  // Load suppliers + categories — callable on demand so create can refresh after
+  // a new inline supplier is added (otherwise the new supplier is absent from
+  // suppliersById until a hard reload).
+  const reloadMeta = useCallback(async () => {
+    const [sRes, cRes] = await Promise.all([
+      listSuppliersAction(companyId),
+      listCategoriesAction(companyId),
+    ]);
+    if (sRes.ok) setSuppliers(sRes.data);
+    if (cRes.ok) setCategories(cRes.data);
   }, [companyId]);
 
-  // Load products when filters / page change
+  // Run once on mount (and whenever companyId changes)
+  useEffect(() => {
+    reloadMeta();
+  }, [reloadMeta]);
+
+  // Fetch counter used by reload() to trigger useEffect re-run without changing filters
+  const [fetchTick, setFetchTick] = useState(0);
+
+  /**
+   * Reload the product list from the current filter/page state.
+   * Call after any mutation (create/update/delete) to reflect changes.
+   *
+   * Note: newly created manual products have null last_purchased_at and sort
+   * LAST in the default NULLS-last ordering. After create, reload() shows the
+   * current page — the new product may appear on a later page. A future
+   * "sort by created_at" option would surface it immediately (out of scope v1).
+   */
+  const reload = useCallback(() => {
+    setFetchTick((n) => n + 1);
+  }, []);
+
+  // Load products when filters / page change (or reload() is called)
   useEffect(() => {
     let cancelled = false;
 
@@ -127,7 +155,8 @@ export function BibliothequePageClient({ companyId }: Props) {
 
     run();
     return () => { cancelled = true; };
-  }, [companyId, supplier, category, debouncedQ, page]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyId, supplier, category, debouncedQ, page, fetchTick]);
 
   // Deep-link helpers — mirror invoices page push/replace strategy
   const setSelectedProduct = (id: string | null, isInitialOpen: boolean) => {
@@ -188,11 +217,21 @@ export function BibliothequePageClient({ companyId }: Props) {
   return (
     <div className="fade-up px-4 pb-12 lg:px-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="font-display text-[28px] font-medium tracking-tight">{t("title")}</h1>
-        <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
-          {t("subtitle")}
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-[28px] font-medium tracking-tight">{t("title")}</h1>
+          <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
+            {t("subtitle")}
+          </p>
+        </div>
+        <Button
+          size="sm"
+          className="shrink-0 gap-1.5"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          {t("addProduct")}
+        </Button>
       </div>
 
       {/* Filter bar + density control */}
@@ -279,6 +318,52 @@ export function BibliothequePageClient({ companyId }: Props) {
         productId={selectedProductId}
         suppliersById={suppliersById}
         onClose={closeProduct}
+        onEdit={(p) => {
+          // Close detail before opening edit to avoid two stacked modals
+          closeProduct();
+          setEditProduct(p);
+        }}
+        onDelete={(p) => {
+          closeProduct();
+          setDeleteProduct(p);
+        }}
+      />
+
+      {/* Create product dialog */}
+      <ProductCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        companyId={companyId}
+        suppliers={suppliers}
+        onCreated={() => {
+          // Reload both products AND meta — a new inline supplier must appear in
+          // suppliersById immediately (filters, detail dialog, etc.)
+          reloadMeta();
+          reload();
+        }}
+      />
+
+      {/* Edit product dialog */}
+      <ProductEditDialog
+        product={editProduct}
+        open={editProduct !== null}
+        onOpenChange={(open) => { if (!open) setEditProduct(null); }}
+        supplierName={editProduct ? suppliersById[editProduct.supplier_id]?.name : undefined}
+        onUpdated={() => {
+          setEditProduct(null);
+          reload();
+        }}
+      />
+
+      {/* Delete product dialog */}
+      <ProductDeleteDialog
+        product={deleteProduct}
+        open={deleteProduct !== null}
+        onOpenChange={(open) => { if (!open) setDeleteProduct(null); }}
+        onDeleted={() => {
+          setDeleteProduct(null);
+          reload();
+        }}
       />
 
       {/* Floating compare bar — only while selecting */}

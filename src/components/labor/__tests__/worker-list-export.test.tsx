@@ -50,6 +50,11 @@ vi.mock("../labor-export-dialog", () => ({
   },
 }));
 
+// Stub AdjustRateDialog so tests don't trigger its fetch/toast internals.
+vi.mock("../adjust-rate-dialog", () => ({
+  AdjustRateDialog: () => null,
+}));
+
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 function makeWorker(overrides: Partial<Worker> = {}): Worker {
@@ -222,5 +227,27 @@ describe("WorkerList — inactive workers have no Download affordance", () => {
     // Both worker names are still rendered (the badge, name span, etc.)
     expect(screen.getByText("Alice")).toBeDefined();
     expect(screen.getByText("Bob")).toBeDefined();
+  });
+});
+
+// ── current_daily_rate tile display ──────────────────────────────────────────
+
+describe("WorkerList — tile shows current_daily_rate when available", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows current_daily_rate when set, not base daily_rate", () => {
+    const worker = makeWorker({ daily_rate: 100, current_daily_rate: 140 });
+    renderList([worker]);
+    // formatEUR mock: €140.00 for current_daily_rate, €100.00 for base
+    expect(screen.getByText("€140.00")).toBeDefined();
+    expect(screen.queryByText("€100.00")).toBeNull();
+  });
+
+  it("falls back to daily_rate when current_daily_rate is absent", () => {
+    const worker = makeWorker({ daily_rate: 100, current_daily_rate: undefined });
+    renderList([worker]);
+    expect(screen.getByText("€100.00")).toBeDefined();
   });
 });

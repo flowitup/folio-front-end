@@ -692,7 +692,7 @@
     "rateChange": {
       "adjust": "Điều chỉnh mức lương",
       "title": "Điều chỉnh mức lương",
-      "currentBase": "Mức lương cơ bản hiện tại",
+      "current": "Mức lương hiện tại",
       "newRate": "Mức lương ngày mới (EUR)",
       "effectiveDate": "Ngày có hiệu lực",
       "add": "Thêm thay đổi mức lương",

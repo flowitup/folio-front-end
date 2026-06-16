@@ -23,6 +23,9 @@ export interface Worker {
   role_id?: string | null;
   role_name?: string | null;
   role_color?: string | null;
+  // Rate in effect today: latest rate_change with effective_date <= today,
+  // else the base daily_rate. Optional for back-compat with older API responses.
+  current_daily_rate?: number;
 }
 
 export interface WorkerListResponse {
@@ -44,7 +47,6 @@ export interface CreateWorkerPayload {
 
 export interface UpdateWorkerPayload {
   name?: string;
-  daily_rate?: number;
   phone?: string;
   role_id?: string | null;
 }

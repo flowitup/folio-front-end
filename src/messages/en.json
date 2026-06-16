@@ -692,7 +692,7 @@
     "rateChange": {
       "adjust": "Adjust pay rate",
       "title": "Adjust pay rate",
-      "currentBase": "Current base rate",
+      "current": "Current rate",
       "newRate": "New daily rate (EUR)",
       "effectiveDate": "Effective from",
       "add": "Add rate change",

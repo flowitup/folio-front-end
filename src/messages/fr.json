@@ -692,7 +692,7 @@
     "rateChange": {
       "adjust": "Ajuster le tarif",
       "title": "Ajuster le tarif",
-      "currentBase": "Tarif de base actuel",
+      "current": "Taux journalier actuel",
       "newRate": "Nouveau tarif journalier (EUR)",
       "effectiveDate": "Date d'effet",
       "add": "Ajouter un changement de tarif",

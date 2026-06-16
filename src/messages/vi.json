@@ -688,7 +688,23 @@
     "total": "tổng",
     "workerSingular": "công nhân",
     "workerPlural": "công nhân",
-    "logMoreWorkers": "Thêm công nhân"
+    "logMoreWorkers": "Thêm công nhân",
+    "rateChange": {
+      "adjust": "Điều chỉnh mức lương",
+      "title": "Điều chỉnh mức lương",
+      "currentBase": "Mức lương cơ bản hiện tại",
+      "newRate": "Mức lương ngày mới (EUR)",
+      "effectiveDate": "Ngày có hiệu lực",
+      "add": "Thêm thay đổi mức lương",
+      "history": "Lịch sử thay đổi mức lương",
+      "noChanges": "Không có thay đổi mức lương nào được lên kế hoạch",
+      "delete": "Xóa",
+      "addedToast": "Đã thêm thay đổi mức lương",
+      "deletedToast": "Đã xóa thay đổi mức lương",
+      "effectiveFrom": "Từ ngày {date}",
+      "errorRatePositive": "Mức lương phải lớn hơn 0",
+      "errorGeneric": "Đã xảy ra lỗi"
+    }
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

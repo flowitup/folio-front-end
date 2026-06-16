@@ -688,7 +688,23 @@
     "total": "total",
     "workerSingular": "ouvrier",
     "workerPlural": "ouvriers",
-    "logMoreWorkers": "Ajouter des ouvriers"
+    "logMoreWorkers": "Ajouter des ouvriers",
+    "rateChange": {
+      "adjust": "Ajuster le tarif",
+      "title": "Ajuster le tarif",
+      "currentBase": "Tarif de base actuel",
+      "newRate": "Nouveau tarif journalier (EUR)",
+      "effectiveDate": "Date d'effet",
+      "add": "Ajouter un changement de tarif",
+      "history": "Historique des tarifs",
+      "noChanges": "Aucun changement de tarif planifié",
+      "delete": "Supprimer",
+      "addedToast": "Changement de tarif ajouté",
+      "deletedToast": "Changement de tarif supprimé",
+      "effectiveFrom": "À partir du {date}",
+      "errorRatePositive": "Le tarif doit être supérieur à 0",
+      "errorGeneric": "Une erreur est survenue"
+    }
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",

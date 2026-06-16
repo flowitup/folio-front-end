@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Pencil, UserX, Download } from "lucide-react";
+import { Plus, Pencil, UserX, Download, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -16,6 +16,7 @@ import {
 import type { Worker } from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
+import { AdjustRateDialog } from "@/components/labor/adjust-rate-dialog";
 import { workerColor, personInitials } from "@/lib/utils/person-color";
 import { DEFAULT_ROLE_I18N_KEYS } from "@/lib/utils/default-role-names";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,7 @@ export function WorkerList({
   const tExport = useTranslations("labor.export");
   const [confirmDeactivate, setConfirmDeactivate] = useState<Worker | null>(null);
   const [exportWorker, setExportWorker] = useState<Worker | null>(null);
+  const [adjustWorker, setAdjustWorker] = useState<Worker | null>(null);
 
   return (
     <div className="space-y-4">
@@ -158,6 +160,15 @@ export function WorkerList({
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7"
+                          aria-label={t("rateChange.adjust")}
+                          onClick={() => setAdjustWorker(worker)}
+                        >
+                          <TrendingUp className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
                           aria-label={t("editWorker")}
                           onClick={() => onEdit(worker)}
                         >
@@ -188,6 +199,14 @@ export function WorkerList({
         worker={exportWorker}
         open={!!exportWorker}
         onOpenChange={(o) => !o && setExportWorker(null)}
+      />
+
+      {/* Per-worker adjust pay rate dialog */}
+      <AdjustRateDialog
+        projectId={projectId}
+        worker={adjustWorker}
+        open={!!adjustWorker}
+        onOpenChange={(o) => !o && setAdjustWorker(null)}
       />
 
       {/* Deactivate Confirmation */}

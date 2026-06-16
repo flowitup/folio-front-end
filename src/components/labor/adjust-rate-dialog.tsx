@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -59,6 +59,7 @@ export function AdjustRateDialog({
   onOpenChange,
 }: AdjustRateDialogProps) {
   const t = useTranslations("labor");
+  const locale = useLocale();
 
   const [rateChanges, setRateChanges] = useState<WorkerRateChange[]>([]);
   // isRefreshing: true only during user-triggered re-fetches (add / delete),
@@ -246,7 +247,7 @@ export function AdjustRateDialog({
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {t("rateChange.effectiveFrom", {
-                        date: new Intl.DateTimeFormat(undefined, {
+                        date: new Intl.DateTimeFormat(locale, {
                           year: "numeric",
                           month: "short",
                           day: "numeric",

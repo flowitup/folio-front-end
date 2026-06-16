@@ -49,6 +49,8 @@ const REQUIRED_KEYS = [
   "addedToast",
   "deletedToast",
   "effectiveFrom",
+  "errorGeneric",
+  "errorRatePositive",
 ] as const;
 
 type RateChangeKey = keyof typeof en.labor.rateChange;

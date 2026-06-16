@@ -166,6 +166,18 @@ export function AdjustRateDialog({
     onOpenChange(false);
   };
 
+  // Current effective rate, derived from the dialog's own (re-fetched) history
+  // so it updates live after an add/delete — not just from the worker prop
+  // captured when the dialog opened. rateChanges is ordered effective_date DESC,
+  // so the first row with effective_date <= today is the one in effect now.
+  // Falls back to the BE-resolved current rate (then base) before history loads.
+  const today = todayIso();
+  const resolvedCurrentRate =
+    rateChanges.find((rc) => rc.effective_date <= today)?.daily_rate ??
+    worker?.current_daily_rate ??
+    worker?.daily_rate ??
+    0;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
@@ -177,7 +189,7 @@ export function AdjustRateDialog({
           <p className="text-sm text-muted-foreground">
             {t("rateChange.current")}:{" "}
             <span className="font-medium tabular-nums text-foreground">
-              {formatEUR(worker.current_daily_rate ?? worker.daily_rate)}
+              {formatEUR(resolvedCurrentRate)}
             </span>
           </p>
         )}

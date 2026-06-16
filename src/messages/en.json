@@ -688,7 +688,23 @@
     "total": "total",
     "workerSingular": "worker",
     "workerPlural": "workers",
-    "logMoreWorkers": "Log more workers"
+    "logMoreWorkers": "Log more workers",
+    "rateChange": {
+      "adjust": "Adjust pay rate",
+      "title": "Adjust pay rate",
+      "currentBase": "Current base rate",
+      "newRate": "New daily rate (EUR)",
+      "effectiveDate": "Effective from",
+      "add": "Add rate change",
+      "history": "Rate change history",
+      "noChanges": "No scheduled rate changes",
+      "delete": "Delete",
+      "addedToast": "Rate change added",
+      "deletedToast": "Rate change removed",
+      "effectiveFrom": "From {date}",
+      "errorRatePositive": "Rate must be greater than 0",
+      "errorGeneric": "An error occurred"
+    }
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

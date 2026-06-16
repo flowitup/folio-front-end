@@ -22,6 +22,9 @@ import type {
   LaborActivityListResponse,
   CreateLaborActivityPayload,
   UpdateLaborActivityPayload,
+  WorkerRateChange,
+  WorkerRateChangeListResponse,
+  CreateRateChangePayload,
 } from "@/types/labor";
 import { api, ApiError } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
@@ -201,6 +204,39 @@ export async function deleteLaborActivity(
   activityId: string,
 ): Promise<void> {
   await api.delete(`/projects/${projectId}/labor-activities/${activityId}`);
+}
+
+// ─── Worker rate changes ─────────────────────────────────────────────────────
+
+export async function fetchWorkerRateChanges(
+  projectId: string,
+  workerId: string,
+): Promise<WorkerRateChange[]> {
+  const data = await api.get<WorkerRateChangeListResponse>(
+    `/projects/${projectId}/workers/${workerId}/rate-changes`,
+  );
+  return data.rate_changes;
+}
+
+export async function createWorkerRateChange(
+  projectId: string,
+  workerId: string,
+  payload: CreateRateChangePayload,
+): Promise<WorkerRateChange> {
+  return api.post<WorkerRateChange>(
+    `/projects/${projectId}/workers/${workerId}/rate-changes`,
+    payload,
+  );
+}
+
+export async function deleteWorkerRateChange(
+  projectId: string,
+  workerId: string,
+  rcId: string,
+): Promise<void> {
+  await api.delete(
+    `/projects/${projectId}/workers/${workerId}/rate-changes/${rcId}`,
+  );
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────

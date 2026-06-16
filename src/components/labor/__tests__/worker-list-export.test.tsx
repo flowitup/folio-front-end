@@ -13,6 +13,7 @@ import type { Worker } from "@/types/labor";
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "en",
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
     if (params) {
       return Object.entries(params).reduce(

@@ -242,3 +242,24 @@ export interface UpdateLaborActivityPayload {
   title?: string;
   description?: string;
 }
+
+// ─── Worker rate changes ─────────────────────────────────────────────────────
+
+export interface WorkerRateChange {
+  id: string;
+  worker_id: string;
+  /** ISO YYYY-MM-DD */
+  effective_date: string;
+  daily_rate: number;
+  created_at: string;
+}
+
+export interface WorkerRateChangeListResponse {
+  rate_changes: WorkerRateChange[];
+}
+
+export interface CreateRateChangePayload {
+  /** ISO YYYY-MM-DD */
+  effective_date: string;
+  daily_rate: number;
+}

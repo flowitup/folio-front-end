@@ -51,6 +51,8 @@ interface WorkerListProps {
   onAdd: () => void;
   onEdit: (worker: Worker) => void;
   onDeactivate: (worker: Worker) => void;
+  /** Called after a rate change is added or deleted — parent should re-fetch workers. */
+  onWorkerRateChanged?: () => void;
 }
 
 export function WorkerList({
@@ -60,6 +62,7 @@ export function WorkerList({
   onAdd,
   onEdit,
   onDeactivate,
+  onWorkerRateChanged,
 }: WorkerListProps) {
   const t = useTranslations("labor");
   const tRole = useTranslations("labor.role.defaults");
@@ -125,7 +128,7 @@ export function WorkerList({
                     {displayName}
                   </p>
                   <p className="text-primary text-sm font-medium tabular-nums">
-                    {formatEUR(worker.daily_rate)}
+                    {formatEUR(worker.current_daily_rate ?? worker.daily_rate)}
                   </p>
                   {/* Role badge */}
                   {worker.role_name && (
@@ -207,6 +210,7 @@ export function WorkerList({
         worker={adjustWorker}
         open={!!adjustWorker}
         onOpenChange={(o) => !o && setAdjustWorker(null)}
+        onChanged={onWorkerRateChanged}
       />
 
       {/* Deactivate Confirmation */}

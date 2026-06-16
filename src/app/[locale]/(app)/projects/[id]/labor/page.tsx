@@ -371,6 +371,7 @@ export default function LaborPage() {
           onAdd={() => setShowAddWorker(true)}
           onEdit={(worker) => setEditWorker(worker)}
           onDeactivate={handleDeactivateWorker}
+          onWorkerRateChanged={loadWorkers}
         />
       )}
 

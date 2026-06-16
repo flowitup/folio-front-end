@@ -39,7 +39,7 @@ describe("labor.rateChange i18n parity — key sets", () => {
 const REQUIRED_KEYS = [
   "adjust",
   "title",
-  "currentBase",
+  "current",
   "newRate",
   "effectiveDate",
   "add",

@@ -29,6 +29,8 @@ interface AdjustRateDialogProps {
   worker: Worker | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Called after a rate change is successfully added or deleted. */
+  onChanged?: () => void;
 }
 
 /** Return today's date as ISO YYYY-MM-DD in local time. */
@@ -57,6 +59,7 @@ export function AdjustRateDialog({
   worker,
   open,
   onOpenChange,
+  onChanged,
 }: AdjustRateDialogProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
@@ -132,6 +135,7 @@ export function AdjustRateDialog({
       setNewRate("");
       setEffectiveDate(todayIso());
       toast.success(t("rateChange.addedToast"));
+      onChanged?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("rateChange.errorGeneric"));
     } finally {
@@ -149,6 +153,7 @@ export function AdjustRateDialog({
       const list = await fetchWorkerRateChanges(projectId, worker.id);
       setRateChanges(list);
       toast.success(t("rateChange.deletedToast"));
+      onChanged?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("rateChange.errorGeneric"));
     } finally {
@@ -170,9 +175,9 @@ export function AdjustRateDialog({
 
         {worker && (
           <p className="text-sm text-muted-foreground">
-            {t("rateChange.currentBase")}:{" "}
+            {t("rateChange.current")}:{" "}
             <span className="font-medium tabular-nums text-foreground">
-              {formatEUR(worker.daily_rate)}
+              {formatEUR(worker.current_daily_rate ?? worker.daily_rate)}
             </span>
           </p>
         )}

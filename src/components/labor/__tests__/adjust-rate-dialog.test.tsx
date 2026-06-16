@@ -64,6 +64,7 @@ const WORKER: Worker = {
   name: "Alice Dupont",
   phone: "+33612345678",
   daily_rate: 120,
+  current_daily_rate: 150,
   is_active: true,
   created_at: "2026-01-01T00:00:00Z",
 };
@@ -89,6 +90,7 @@ interface DialogProps {
   worker: Worker | null;
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  onChanged?: () => void;
 }
 
 const DEFAULT_PROPS: DialogProps = {
@@ -117,10 +119,18 @@ describe("AdjustRateDialog — render", () => {
     });
   });
 
-  it("renders current base rate of worker", async () => {
+  it("renders current_daily_rate when set (not base daily_rate)", async () => {
     renderDialog();
     await waitFor(() => {
-      // formatEUR mock returns €120.00
+      // WORKER has current_daily_rate=150, daily_rate=120; dialog must show €150.00
+      expect(screen.getByText("€150.00")).toBeDefined();
+    });
+  });
+
+  it("falls back to daily_rate when current_daily_rate is absent", async () => {
+    const workerNoCurrentRate: Worker = { ...WORKER, current_daily_rate: undefined };
+    renderDialog({ worker: workerNoCurrentRate });
+    await waitFor(() => {
       expect(screen.getByText("€120.00")).toBeDefined();
     });
   });
@@ -160,7 +170,9 @@ describe("AdjustRateDialog — history list", () => {
   it("lists fetched rate changes", async () => {
     renderDialog();
     await waitFor(() => {
-      expect(screen.getByText("€150.00")).toBeDefined();
+      // €150.00 appears twice: once as the worker's current_daily_rate header,
+      // once as RATE_CHANGE_1's daily_rate in the history list.
+      expect(screen.getAllByText("€150.00").length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText("€180.00")).toBeDefined();
     });
   });
@@ -263,6 +275,27 @@ describe("AdjustRateDialog — submit form", () => {
     await waitFor(() => {
       // Initial load call + re-fetch after create = 2 calls
       expect(fetchWorkerRateChanges).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("calls onChanged after successful create", async () => {
+    const onChanged = vi.fn();
+    renderDialog({ onChanged });
+
+    await waitFor(() => {
+      expect(document.querySelector("[data-testid='adjust-rate-amount']")).toBeTruthy();
+    });
+
+    const amountInput = document.querySelector(
+      "[data-testid='adjust-rate-amount']",
+    ) as HTMLInputElement;
+    fireEvent.change(amountInput, { target: { value: "165" } });
+
+    const form = document.querySelector("[data-testid='adjust-rate-form']") as HTMLFormElement;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(onChanged).toHaveBeenCalledTimes(1);
     });
   });
 });
@@ -392,6 +425,25 @@ describe("AdjustRateDialog — delete", () => {
     await waitFor(() => {
       // Initial load + re-fetch after delete = 2 calls
       expect(fetchWorkerRateChanges).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("calls onChanged after successful delete", async () => {
+    const onChanged = vi.fn();
+    renderDialog({ onChanged });
+
+    await waitFor(() => {
+      expect(
+        document.querySelector("[data-testid='delete-rate-change-rc-uuid-1']"),
+      ).toBeTruthy();
+    });
+
+    fireEvent.click(
+      document.querySelector("[data-testid='delete-rate-change-rc-uuid-1']") as HTMLButtonElement,
+    );
+
+    await waitFor(() => {
+      expect(onChanged).toHaveBeenCalledTimes(1);
     });
   });
 });

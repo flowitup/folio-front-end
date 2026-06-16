@@ -78,7 +78,8 @@ export function AddWorkerDialog({
     if (open && editWorker) {
       setName(editWorker.name);
       setPhone(editWorker.phone || "");
-      setDailyRate(editWorker.daily_rate.toString());
+      // daily_rate is intentionally not hydrated in edit mode:
+      // rate changes are handled exclusively via the AdjustRateDialog.
       setRoleId(editWorker.role_id ?? null);
     }
     if (open && !editWorker) {
@@ -100,14 +101,8 @@ export function AddWorkerDialog({
     e.preventDefault();
     setError(null);
 
-    const rate = parseFloat(dailyRate);
-    if (isNaN(rate) || rate <= 0) {
-      setError(t("dailyRate") + " must be > 0");
-      return;
-    }
-
     if (isEdit) {
-      // Edit path mirrors the legacy contract.
+      // Edit path: name/phone/role only — rate changes go through AdjustRateDialog.
       if (!name.trim()) {
         setError(t("workerName") + " is required");
         return;
@@ -117,7 +112,6 @@ export function AddWorkerDialog({
       try {
         await onSave({
           name: name.trim(),
-          daily_rate: rate,
           phone: phone.trim() || undefined,
           role_id: roleId,
         });
@@ -130,7 +124,12 @@ export function AddWorkerDialog({
       return;
     }
 
-    // Create path — Person selection is required.
+    // Create path — Person selection and rate are required.
+    const rate = parseFloat(dailyRate);
+    if (isNaN(rate) || rate <= 0) {
+      setError(t("dailyRate") + " must be > 0");
+      return;
+    }
     if (!selectedPerson) {
       setError(t("workerName") + " is required");
       return;
@@ -216,18 +215,20 @@ export function AddWorkerDialog({
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="dailyRate">{t("dailyRate")} (EUR)</Label>
-            <Input
-              id="dailyRate"
-              type="number"
-              step="0.01"
-              min="0"
-              value={dailyRate}
-              onChange={(e) => setDailyRate(e.target.value)}
-              placeholder="100.00"
-            />
-          </div>
+          {!isEdit && (
+            <div className="space-y-2">
+              <Label htmlFor="dailyRate">{t("dailyRate")} (EUR)</Label>
+              <Input
+                id="dailyRate"
+                type="number"
+                step="0.01"
+                min="0"
+                value={dailyRate}
+                onChange={(e) => setDailyRate(e.target.value)}
+                placeholder="100.00"
+              />
+            </div>
+          )}
 
           {error && <p className="text-destructive text-sm">{error}</p>}
 

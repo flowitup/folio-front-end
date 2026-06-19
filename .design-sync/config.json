@@ -1,5 +1,6 @@
 {
   "pkg": "construction-front-end",
+  "projectId": "6beef66e-50e6-4342-8d42-68d2ebbc88f9",
   "globalName": "Folio",
   "shape": "package",
   "entry": "./.design-sync/entry.tsx",

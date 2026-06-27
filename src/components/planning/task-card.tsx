@@ -3,6 +3,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Calendar, AlertCircle } from "lucide-react";
+import { formatDate } from "@/lib/utils/formatters";
 import type { Task, TaskPriority } from "@/types/task";
 
 const PRIORITY_DOT_CLASS: Record<TaskPriority, string> = {
@@ -79,7 +80,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
         {task.due_date ? (
           <span className="num flex items-center gap-1">
             <Calendar size={12} />
-            {task.due_date}
+            {formatDate(task.due_date)}
           </span>
         ) : (
           <span />

@@ -34,6 +34,7 @@ import { BillingStatusBadge } from "@/components/billing/billing-status-badge";
 import { BillingActionsMenu } from "@/components/billing/billing-actions-menu";
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { formatDate } from "@/lib/utils/formatters";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -295,7 +296,7 @@ export function BillingDocumentList({
                       className="num text-[12px]"
                       style={{ color: "var(--muted)" }}
                     >
-                      {doc.issue_date}
+                      {formatDate(doc.issue_date)}
                     </span>
                     <span className="num text-[13px] font-medium">
                       {formatTTC(doc.total_ttc)}
@@ -333,7 +334,7 @@ export function BillingDocumentList({
                         {doc.document_number}
                       </td>
                       <td className="num" style={{ color: "var(--muted)" }}>
-                        {doc.issue_date}
+                        {formatDate(doc.issue_date)}
                       </td>
                       <td>{doc.recipient_name}</td>
                       <td>

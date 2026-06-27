@@ -150,11 +150,6 @@ export function AttendanceDayDetailSheet({
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium">{activity.title}</p>
-                        {activity.description && (
-                          <p className="text-muted-foreground mt-0.5 text-xs">
-                            {activity.description}
-                          </p>
-                        )}
                       </div>
                       {canManage && (
                         <div className="flex shrink-0 gap-1">

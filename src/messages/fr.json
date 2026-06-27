@@ -661,8 +661,6 @@
       "editTitle": "Modifier l'activité",
       "titleField": "Titre",
       "titlePlaceholder": "Qu'est-ce qui s'est passé aujourd'hui ?",
-      "descriptionField": "Description (facultatif)",
-      "descriptionPlaceholder": "Ajouter des détails...",
       "confirmDelete": "Supprimer cette activité ?",
       "noActivities": "Aucune activité enregistrée",
       "countSingular": "activité",

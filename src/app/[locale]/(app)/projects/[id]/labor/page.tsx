@@ -23,7 +23,7 @@ import { ActivityDialog } from "@/components/labor/activity-dialog";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 
-import type { Worker, LaborEntry, LaborActivity, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload, CreateLaborActivityPayload } from "@/types/labor";
+import type { Worker, LaborEntry, LaborActivity, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
 import type { ProjectTag } from "@/lib/api/tags";
 import {
@@ -314,14 +314,13 @@ export default function LaborPage() {
     setShowActivityDialog(true);
   };
 
-  const handleSaveActivity = async (data: { date: string; title: string; description?: string }) => {
+  const handleSaveActivity = async (data: { date: string; title: string }) => {
     if (editActivity) {
       await updateLaborActivity(projectId, editActivity.id, {
         title: data.title,
-        description: data.description,
       });
     } else {
-      await createLaborActivity(projectId, data as CreateLaborActivityPayload);
+      await createLaborActivity(projectId, data);
     }
     await loadActivities();
   };

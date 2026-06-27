@@ -222,7 +222,6 @@ export interface LaborActivity {
   /** ISO YYYY-MM-DD */
   date: string;
   title: string;
-  description: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -237,12 +236,10 @@ export interface CreateLaborActivityPayload {
   /** ISO YYYY-MM-DD */
   date: string;
   title: string;
-  description?: string;
 }
 
 export interface UpdateLaborActivityPayload {
   title?: string;
-  description?: string;
 }
 
 // ─── Worker rate changes ─────────────────────────────────────────────────────

@@ -41,6 +41,13 @@ describe('formatDate', () => {
   it('should format a parseable date string', () => {
     expect(formatDate('2026-12-25T12:00:00')).toBe('25/12/2026')
   })
+
+  it('should format a date-only ISO string without timezone shift', () => {
+    // Backend issue_date/due_date are YYYY-MM-DD; the literal-parts fast-path
+    // must keep the day stable regardless of the runtime timezone.
+    expect(formatDate('2026-06-28')).toBe('28/06/2026')
+    expect(formatDate('2026-01-05')).toBe('05/01/2026')
+  })
 })
 
 describe('formatDateTime', () => {

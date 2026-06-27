@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { fetchInvoice } from "@/lib/api/invoice-api";
+import { formatDate } from "@/lib/utils/formatters";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
 const TYPE_LABEL: Record<InvoiceType, string> = {
@@ -100,7 +101,7 @@ export default function InvoicePrintPage() {
             </tr>
             <tr>
               <td>Issue Date</td>
-              <td>{invoice.issue_date}</td>
+              <td>{formatDate(invoice.issue_date)}</td>
             </tr>
             <tr>
               <td>Recipient</td>

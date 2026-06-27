@@ -18,6 +18,7 @@ import { fetchRefundableExpenses } from "@/lib/api/billing/refundable-invoices";
 import { RefundableExpenseRowActions } from "@/components/billing/refundable-expense-row-actions";
 import { RefundableExpenseAttachmentsCell } from "@/components/billing/refundable-expense-attachments-cell";
 import { AddRefundableExpenseDialog } from "@/components/billing/add-refundable-expense-dialog";
+import { formatDate } from "@/lib/utils/formatters";
 import type { RefundableExpense } from "@/types/invoice";
 
 export default function RefundableInvoicesPage() {
@@ -94,7 +95,7 @@ export default function RefundableInvoicesPage() {
                   <td className="py-3 pr-4">{expense.project_name}</td>
                   <td className="py-3 pr-4 font-mono text-xs">{expense.invoice_number}</td>
                   <td className="py-3 pr-4">{expense.recipient_name}</td>
-                  <td className="py-3 pr-4 tabular-nums">{expense.issue_date}</td>
+                  <td className="py-3 pr-4 tabular-nums">{formatDate(expense.issue_date)}</td>
                   <td className="py-3 pr-4 text-right tabular-nums">
                     {expense.total_amount.toLocaleString(undefined, {
                       minimumFractionDigits: 2,

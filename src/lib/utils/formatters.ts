@@ -17,8 +17,21 @@ export function formatCurrency(amount: number): string {
  * Uses local (browser-timezone) calendar fields, matching prior
  * toLocaleDateString behavior, with manual zero-padding to avoid
  * Intl locale-ordering ambiguity.
+ *
+ * Date-only ISO strings (YYYY-MM-DD, e.g. invoice issue_date) are formatted
+ * directly from their literal parts: parsing them via `new Date()` yields
+ * UTC midnight, which `getDate()` then reads in local time and can shift the
+ * day backwards in negative-UTC timezones. The fast-path keeps the day stable
+ * everywhere while producing identical slash-separated output.
  */
 export function formatDate(date: Date | string): string {
+  if (typeof date === 'string') {
+    const isoDateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+    if (isoDateOnly) {
+      const [, yyyy, mm, dd] = isoDateOnly
+      return `${dd}/${mm}/${yyyy}`
+    }
+  }
   const d = typeof date === 'string' ? new Date(date) : date
   const dd = String(d.getDate()).padStart(2, '0')
   const mm = String(d.getMonth() + 1).padStart(2, '0')

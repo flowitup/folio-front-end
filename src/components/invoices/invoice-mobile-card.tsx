@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
+import { formatDate } from "@/lib/utils/formatters";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
@@ -89,7 +90,7 @@ export function InvoiceMobileCard({
             style={{ color: "var(--muted)" }}
           >
             <span>{invoice.recipient_name}</span>
-            <span className="num">{invoice.issue_date}</span>
+            <span className="num">{formatDate(invoice.issue_date)}</span>
           </div>
         </div>
       </button>

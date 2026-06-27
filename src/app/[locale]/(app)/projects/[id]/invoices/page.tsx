@@ -18,6 +18,7 @@ import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-t
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
 import { fetchTagsClient } from "@/lib/api/tags-client";
+import { formatDate } from "@/lib/utils/formatters";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
 
@@ -462,7 +463,7 @@ export default function InvoicesPage() {
                                     )}
                                   </td>
                                   <td className="num" style={{ color: "var(--muted)" }}>
-                                    {invoice.issue_date}
+                                    {formatDate(invoice.issue_date)}
                                   </td>
                                   <td>{invoice.recipient_name}</td>
                                   <td>

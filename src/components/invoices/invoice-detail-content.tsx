@@ -11,6 +11,7 @@ import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
+import { formatDate } from "@/lib/utils/formatters";
 import { fetchTagsClient } from "@/lib/api/tags-client";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
@@ -213,7 +214,7 @@ export function InvoiceDetailContent({
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {t("issueDate")}
                   </dt>
-                  <dd className="mt-0.5 text-sm">{invoice.issue_date}</dd>
+                  <dd className="mt-0.5 text-sm">{formatDate(invoice.issue_date)}</dd>
                 </div>
                 <div>
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">

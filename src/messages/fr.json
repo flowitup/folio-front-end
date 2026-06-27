@@ -671,7 +671,8 @@
     "dayDescription": {
       "label": "Description du jour",
       "placeholder": "Décrivez le travail du jour…",
-      "saving": "Enregistrement…"
+      "saving": "Enregistrement…",
+      "saveFailed": "Impossible d'enregistrer la description du jour"
     },
     "holidays": {
       "publicHoliday": "jour férié",

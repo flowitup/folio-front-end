@@ -306,9 +306,16 @@ export function LogDayDialog({
         acknowledge_conflicts: acknowledge || undefined,
       });
       // Persist the day description alongside the charges (only when changed).
-      if (dayDescription.trim() !== initialDayDescription.trim()) {
-        await setLaborDayDescription(projectId, { date, description: dayDescription });
-        setInitialDayDescription(dayDescription);
+      // Best-effort: charges are already committed, so a failed description
+      // write must NOT mask the successful log — warn but continue.
+      const nextDescription = dayDescription.trim();
+      if (nextDescription !== initialDayDescription.trim()) {
+        try {
+          await setLaborDayDescription(projectId, { date, description: nextDescription });
+          setInitialDayDescription(nextDescription);
+        } catch {
+          toast.warning(tLabor("dayDescription.saveFailed"));
+        }
       }
       onSaved();
       const created = res.created.length;

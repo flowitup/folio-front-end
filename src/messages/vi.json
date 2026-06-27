@@ -671,7 +671,8 @@
     "dayDescription": {
       "label": "Mô tả trong ngày",
       "placeholder": "Mô tả công việc trong ngày…",
-      "saving": "Đang lưu…"
+      "saving": "Đang lưu…",
+      "saveFailed": "Không thể lưu mô tả trong ngày"
     },
     "holidays": {
       "publicHoliday": "ngày lễ",

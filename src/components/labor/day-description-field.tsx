@@ -54,6 +54,9 @@ export function DayDescriptionField({
       savedRef.current = trimmed;
       // Normalize stored draft to trimmed value.
       setDraft(trimmed);
+    } catch {
+      // Save failed — leave savedRef un-advanced so the next blur retries.
+      // The parent (handleSaveDayDescription) surfaces the error toast.
     } finally {
       setSaving(false);
     }
@@ -74,6 +77,7 @@ export function DayDescriptionField({
         <Textarea
           rows={2}
           value={draft}
+          maxLength={2000}
           placeholder={t("placeholder")}
           className="min-h-0 resize-none text-sm"
           onChange={(e) => setDraft(e.target.value)}

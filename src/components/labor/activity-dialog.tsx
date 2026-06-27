@@ -105,7 +105,7 @@ export function ActivityDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("activity.titlePlaceholder") || "What happened today?"}
-              maxLength={255}
+              maxLength={2000}
               autoFocus
             />
           </div>

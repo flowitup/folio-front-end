@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { canOnProject } from "@/lib/auth/project-permissions";
 import { Plus, Loader2, Download } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -350,8 +351,15 @@ export default function LaborPage() {
   };
 
   const handleSaveDayDescription = async (date: string, description: string) => {
-    await setLaborDayDescription(projectId, { date, description });
-    await loadDayDescriptions();
+    try {
+      await setLaborDayDescription(projectId, { date, description });
+      await loadDayDescriptions();
+    } catch (e) {
+      // Surface the failure (the inline field leaves its draft intact so the
+      // user can retry) and re-throw so the field keeps savedRef un-advanced.
+      toast.error(t("dayDescription.saveFailed"));
+      throw e;
+    }
   };
 
   return (
@@ -426,6 +434,7 @@ export default function LaborPage() {
                   <Button
                     variant="outline"
                     disabled={!canExportAttendance}
+                    aria-label={t("export.attendanceButton")}
                     title={canExportAttendance ? undefined : t("export.requireSelection")}
                     onClick={() => setShowAttendanceExport(true)}
                   >

@@ -671,7 +671,8 @@
     "dayDescription": {
       "label": "Day description",
       "placeholder": "Describe the day's work…",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "saveFailed": "Could not save the day description"
     },
     "holidays": {
       "publicHoliday": "public holiday",

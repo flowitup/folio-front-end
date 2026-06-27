@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TagSelect } from "@/components/tags/tag-select";
 import { LogDayTileGrid } from "@/components/labor/log-day-tile-grid";
@@ -43,7 +44,11 @@ import {
 } from "@/components/labor/date-picker-with-arrows";
 import { useLastLoggedDay } from "@/hooks/use-last-logged-day";
 import { useCrossProjectConflicts } from "@/hooks/use-cross-project-conflicts";
-import { bulkLogAttendance } from "@/lib/api/labor";
+import {
+  bulkLogAttendance,
+  fetchLaborDayDescriptions,
+  setLaborDayDescription,
+} from "@/lib/api/labor";
 import { ApiError } from "@/lib/api/http";
 import {
   applyLastDayTemplate,
@@ -98,6 +103,11 @@ export function LogDayDialog({
   const tLabor = useTranslations("labor");
   const tConflict = useTranslations("labor.conflict");
   const [date, setDate] = useState<string>(initialDate || todayKey());
+  // Day-level description for the picked date (separate from per-worker notes).
+  // Seeded from the backend whenever the dialog opens or the date changes, and
+  // upserted on save. `initialDayDescription` lets us skip a write when unchanged.
+  const [dayDescription, setDayDescription] = useState("");
+  const [initialDayDescription, setInitialDayDescription] = useState("");
   const [search, setSearch] = useState("");
   const [tileStates, setTileStates] = useState<TileStateMap>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -147,6 +157,27 @@ export function LogDayDialog({
     });
     setError(null);
   }, [open, date, workers, entries]);
+
+  // Seed the day description from the backend for the picked date.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await fetchLaborDayDescriptions(projectId, { from: date, to: date });
+        const desc = rows.find((r) => r.date === date)?.description ?? "";
+        if (!cancelled) {
+          setDayDescription(desc);
+          setInitialDayDescription(desc);
+        }
+      } catch {
+        // Non-fatal: leave the field empty if the lookup fails.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, date, projectId]);
 
   // When the dialog closes, reset transient state. Date sticks to the
   // initialDate prop for the next open.
@@ -274,6 +305,11 @@ export function LogDayDialog({
         entries: payload,
         acknowledge_conflicts: acknowledge || undefined,
       });
+      // Persist the day description alongside the charges (only when changed).
+      if (dayDescription.trim() !== initialDayDescription.trim()) {
+        await setLaborDayDescription(projectId, { date, description: dayDescription });
+        setInitialDayDescription(dayDescription);
+      }
       onSaved();
       const created = res.created.length;
       const skipped = res.skipped_worker_ids.length;
@@ -402,6 +438,24 @@ export function LogDayDialog({
             onAmountOverrideChange={setAmountOverride}
             onSupplementHoursChange={setSupplementHours}
             onNoteChange={setNote}
+          />
+        </div>
+
+        {/* Day-level description — at the end, applies to the whole day's charges. */}
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="log-day-description"
+            className="text-xs text-muted-foreground"
+          >
+            {tLabor("dayDescription.label")}
+          </label>
+          <Textarea
+            id="log-day-description"
+            value={dayDescription}
+            onChange={(e) => setDayDescription(e.target.value)}
+            placeholder={tLabor("dayDescription.placeholder")}
+            rows={2}
+            maxLength={2000}
           />
         </div>
 

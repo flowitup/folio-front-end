@@ -414,9 +414,15 @@ export default function LaborPage() {
           }
         >
           {(() => {
-            // Derive here so they're only computed when attendance is active.
-            const selectedWorker = workers.find((w) => w.id === entriesWorkerFilter) ?? null;
-            const canExportAttendance = entriesWorkerFilter !== "all" && entriesMonth !== "";
+            // Export defaults to the month being viewed (falling back to the
+            // current month); the worker is chosen inside the dialog, NOT taken
+            // from the attendance filter. Pre-select the filtered worker if any.
+            const now = new Date();
+            const exportMonth =
+              entriesMonth ||
+              `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+            const preselectWorkerId =
+              entriesWorkerFilter !== "all" ? entriesWorkerFilter : undefined;
             return (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
@@ -430,12 +436,12 @@ export default function LaborPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Export PDF button — visible to all; requires a specific worker + month */}
+                  {/* Export PDF — opens a dialog to pick the worker + month range. */}
                   <Button
                     variant="outline"
-                    disabled={!canExportAttendance}
+                    disabled={workers.length === 0}
                     aria-label={t("export.attendanceButton")}
-                    title={canExportAttendance ? undefined : t("export.requireSelection")}
+                    title={workers.length === 0 ? t("export.noWorkers") : undefined}
                     onClick={() => setShowAttendanceExport(true)}
                   >
                     <Download className="h-4 w-4" />
@@ -448,14 +454,15 @@ export default function LaborPage() {
                     </Button>
                   )}
                 </div>
-                {/* Attendance PDF export dialog — pre-filled with selected worker + month */}
+                {/* Attendance PDF export — pick the worker + range inside the dialog. */}
                 <LaborExportDialog
                   projectId={projectId}
                   open={showAttendanceExport}
                   onOpenChange={setShowAttendanceExport}
-                  worker={selectedWorker}
-                  initialFrom={entriesMonth}
-                  initialTo={entriesMonth}
+                  workers={workers}
+                  initialWorkerId={preselectWorkerId}
+                  initialFrom={exportMonth}
+                  initialTo={exportMonth}
                   initialFormat="pdf"
                 />
               </div>

@@ -25,6 +25,8 @@ import type {
   WorkerRateChange,
   WorkerRateChangeListResponse,
   CreateRateChangePayload,
+  LaborDayDescription,
+  LaborDayDescriptionListResponse,
 } from "@/types/labor";
 import { api, ApiError } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
@@ -204,6 +206,27 @@ export async function deleteLaborActivity(
   activityId: string,
 ): Promise<void> {
   await api.delete(`/projects/${projectId}/labor-activities/${activityId}`);
+}
+
+// ─── Labor day descriptions ──────────────────────────────────────────────────
+
+export async function fetchLaborDayDescriptions(
+  projectId: string,
+  params?: { from?: string; to?: string },
+): Promise<LaborDayDescription[]> {
+  const url = buildUrl(`/projects/${projectId}/labor-day-descriptions`, {
+    from: params?.from,
+    to: params?.to,
+  });
+  const data = await api.get<LaborDayDescriptionListResponse>(url);
+  return data.day_descriptions;
+}
+
+export async function setLaborDayDescription(
+  projectId: string,
+  payload: { date: string; description: string },
+): Promise<void> {
+  await api.put<unknown>(`/projects/${projectId}/labor-day-descriptions`, payload);
 }
 
 // ─── Worker rate changes ─────────────────────────────────────────────────────

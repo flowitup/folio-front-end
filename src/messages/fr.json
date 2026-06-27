@@ -652,21 +652,27 @@
       "workerDialogTitle": "Exporter la main-d'œuvre de {name}",
       "workerSubtitle": "Taux journalier : {rate}",
       "workerToastError": "Impossible d'exporter",
-      "workerToastSuccess": "Export téléchargé"
+      "workerToastSuccess": "Export téléchargé",
+      "attendanceButton": "Exporter en PDF",
+      "requireSelection": "Sélectionnez un ouvrier et un mois pour exporter"
     },
     "activity": {
       "addTitle": "Ajouter une activité",
       "editTitle": "Modifier l'activité",
       "titleField": "Titre",
       "titlePlaceholder": "Qu'est-ce qui s'est passé aujourd'hui ?",
-      "descriptionField": "Description (facultatif)",
-      "descriptionPlaceholder": "Ajouter des détails...",
       "confirmDelete": "Supprimer cette activité ?",
       "noActivities": "Aucune activité enregistrée",
       "countSingular": "activité",
       "countPlural": "activités",
       "sectionTitle": "Activités",
       "deleteFailed": "Échec de la suppression de l'activité"
+    },
+    "dayDescription": {
+      "label": "Description du jour",
+      "placeholder": "Décrivez le travail du jour…",
+      "saving": "Enregistrement…",
+      "saveFailed": "Impossible d'enregistrer la description du jour"
     },
     "holidays": {
       "publicHoliday": "jour férié",

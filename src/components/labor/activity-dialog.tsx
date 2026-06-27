@@ -11,7 +11,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,7 +23,7 @@ interface ActivityDialogProps {
   initialDate?: string;
   /** When set, dialog operates in edit mode. */
   editActivity?: LaborActivity | null;
-  onSave: (data: { date: string; title: string; description?: string }) => Promise<void>;
+  onSave: (data: { date: string; title: string }) => Promise<void>;
 }
 
 export function ActivityDialog({
@@ -37,7 +36,6 @@ export function ActivityDialog({
   const t = useTranslations("labor");
   const [date, setDate] = useState("");
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,11 +46,9 @@ export function ActivityDialog({
     if (editActivity) {
       setDate(editActivity.date);
       setTitle(editActivity.title);
-      setDescription(editActivity.description ?? "");
     } else {
       setDate(initialDate ?? new Date().toISOString().slice(0, 10));
       setTitle("");
-      setDescription("");
     }
     setError(null);
   }, [open, editActivity, initialDate]);
@@ -68,7 +64,6 @@ export function ActivityDialog({
       await onSave({
         date,
         title: title.trim(),
-        description: description.trim() || undefined,
       });
       onOpenChange(false);
     } catch (err) {
@@ -110,22 +105,8 @@ export function ActivityDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("activity.titlePlaceholder") || "What happened today?"}
-              maxLength={255}
-              autoFocus
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="activity-description">
-              {t("activity.descriptionField") || "Description (optional)"}
-            </Label>
-            <Textarea
-              id="activity-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t("activity.descriptionPlaceholder") || "Add details..."}
-              rows={3}
               maxLength={2000}
+              autoFocus
             />
           </div>
 

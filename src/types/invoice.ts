@@ -55,6 +55,12 @@ export interface Invoice {
    * Present when refunds_invoice_id is set.
    */
   refunds_invoice_number?: string;
+  /**
+   * True when ≥1 refund invoice links back to this materials_services expense
+   * (refunded by bank). Backend-derived; always false for non-M&S invoices.
+   * The company-refund signal rides on refundable_status === 'refunded'.
+   */
+  has_bank_refund?: boolean;
 }
 
 export interface CreateInvoicePayload {
@@ -130,6 +136,8 @@ export interface RefundableExpense {
   total_amount: number;
   /** null means the expense has not been flagged for reimbursement yet. */
   refundable_status: RefundableStatus | null;
+  /** True when ≥1 refund invoice links back to this expense (refunded by bank). */
+  has_bank_refund: boolean;
   /** Invoice files attached to this expense, ordered by upload time. */
   attachments: RefundableExpenseAttachment[];
 }

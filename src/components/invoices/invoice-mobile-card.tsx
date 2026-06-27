@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
 import { formatDate } from "@/lib/utils/formatters";
+import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
@@ -84,6 +85,10 @@ export function InvoiceMobileCard({
                 {t(REFUND_STATUS_I18N[invoice.refundable_status])}
               </span>
             )}
+            <RefundSourceIndicator
+              refundable_status={invoice.refundable_status}
+              has_bank_refund={invoice.has_bank_refund}
+            />
           </div>
           <div
             className="mt-1.5 flex items-center justify-between text-[12px]"

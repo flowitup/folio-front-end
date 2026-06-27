@@ -112,6 +112,7 @@ function makeExpense(overrides: Partial<RefundableExpense> = {}): RefundableExpe
     issue_date: "2026-03-15",
     total_amount: 1500.0,
     refundable_status: "refundable",
+    has_bank_refund: false,
     attachments: [],
     ...overrides,
   };

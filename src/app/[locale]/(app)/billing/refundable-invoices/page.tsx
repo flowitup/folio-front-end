@@ -19,6 +19,7 @@ import { RefundableExpenseRowActions } from "@/components/billing/refundable-exp
 import { RefundableExpenseAttachmentsCell } from "@/components/billing/refundable-expense-attachments-cell";
 import { AddRefundableExpenseDialog } from "@/components/billing/add-refundable-expense-dialog";
 import { formatDate } from "@/lib/utils/formatters";
+import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import type { RefundableExpense } from "@/types/invoice";
 
 export default function RefundableInvoicesPage() {
@@ -85,6 +86,7 @@ export default function RefundableInvoicesPage() {
                 <th className="pb-2 pr-4 font-medium">{t("columns.issueDate")}</th>
                 <th className="pb-2 pr-4 font-medium text-right">{t("columns.total")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("columns.invoice")}</th>
+                <th className="pb-2 pr-4 font-medium">{t("columns.refundedBy")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("columns.status")}</th>
                 <th className="pb-2 font-medium">{t("columns.actions")}</th>
               </tr>
@@ -104,6 +106,12 @@ export default function RefundableInvoicesPage() {
                   </td>
                   <td className="py-3 pr-4">
                     <RefundableExpenseAttachmentsCell attachments={expense.attachments} />
+                  </td>
+                  <td className="py-3 pr-4">
+                    <RefundSourceIndicator
+                      refundable_status={expense.refundable_status}
+                      has_bank_refund={expense.has_bank_refund}
+                    />
                   </td>
                   <td className="py-3 pr-4" colSpan={2}>
                     <RefundableExpenseRowActions

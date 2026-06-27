@@ -14,7 +14,6 @@ const BUDGET_KEYS = [
   "remaining",
   "overBudget",
   "budgetLabel",
-  "budgetSourceLabel",
   "budgetSourceLabelOptional",
   "budgetSourcePlaceholder",
   "budgetInvalid",

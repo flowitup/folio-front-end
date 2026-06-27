@@ -40,6 +40,7 @@ import { CreateProjectDialog } from "@/components/project/create-project-dialog"
 import { EditProjectDialog } from "@/components/project/edit-project-dialog";
 import { DeleteProjectDialog } from "@/components/project/delete-project-dialog";
 import type { Project, ProjectUser } from "@/types/project";
+import { fmtEUR, computeBudgetMeta } from "@/lib/projects/budget-display";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -182,13 +183,6 @@ export default function ProjectsPage() {
     router.push(`/${locale}/projects/${projectId}/photos`);
   };
 
-  const fmtEUR = (n: number) =>
-    new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-      maximumFractionDigits: 0,
-    }).format(n);
-
   const counts = {
     all: projects.length,
     active: projects.length,
@@ -250,11 +244,8 @@ export default function ProjectsPage() {
             const isLoadingThisProject = loadingUsers === project.id;
             const cover = (project as { cover?: string }).cover ?? coverFor(project.id);
             const phase = (project as { phase?: string }).phase ?? "Planning";
-            const budget = project.budget ?? 0;
-            const spent = project.spent ?? 0;
-            const remaining = budget - spent;
-            const isOverBudget = budget > 0 && remaining < 0;
-            const progress = budget > 0 ? Math.min(spent / budget, 1) : 0;
+            const { budget, spent, remaining, isOverBudget, progress } =
+              computeBudgetMeta(project.budget ?? 0, project.spent ?? 0);
             const isSelected = selectedProjectId === project.id;
             const userCount = project.user_count ?? 0;
             const visibleAvatars = Math.min(userCount, 4);

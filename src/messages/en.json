@@ -172,7 +172,6 @@
     "remaining": "Remaining",
     "overBudget": "Over by",
     "budgetLabel": "Budget (€)",
-    "budgetSourceLabel": "Funding source",
     "budgetSourceLabelOptional": "Funding source (optional)",
     "budgetSourcePlaceholder": "e.g. Bank loan BNP",
     "budgetInvalid": "Budget must be a positive number",

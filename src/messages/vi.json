@@ -172,7 +172,6 @@
     "remaining": "Còn lại",
     "overBudget": "Vượt quá",
     "budgetLabel": "Ngân sách (€)",
-    "budgetSourceLabel": "Nguồn tài trợ",
     "budgetSourceLabelOptional": "Nguồn tài trợ (tùy chọn)",
     "budgetSourcePlaceholder": "vd. Vay ngân hàng BNP",
     "budgetInvalid": "Ngân sách phải là số dương",

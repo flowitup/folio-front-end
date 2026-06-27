@@ -1,53 +1,35 @@
 /**
  * Tests for the Budget / Spent / Remaining meta-row display on project cards.
  *
- * The display logic lives in projects/page.tsx (a large client component), so
- * we extract + test the pure formatting helpers and the key rendering assertions
- * via a minimal wrapper that exercises the same fmtEUR + remaining logic.
+ * The display math lives in the shared helper `@/lib/projects/budget-display`
+ * (fmtEUR + computeBudgetMeta), which projects/page.tsx imports directly — so
+ * these tests exercise the REAL functions the page uses and catch drift.
  */
 
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-
-// ---------------------------------------------------------------------------
-// Pure helpers (mirror of what page.tsx uses — tested in isolation so failures
-// pinpoint exactly which calculation is wrong).
-// ---------------------------------------------------------------------------
-
-const fmtEUR = (n: number): string =>
-  new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(n);
-
-interface BudgetMetaProps {
-  budget: number;
-  spent: number;
-}
+import { fmtEUR, computeBudgetMeta } from "@/lib/projects/budget-display";
 
 /**
- * Minimal presentational slice — mirrors the meta-row in projects/page.tsx so
- * we can test it without mounting the full page (which requires ProjectContext,
- * AuthContext, router, etc.).
+ * Presentational slice that renders exactly via computeBudgetMeta + fmtEUR —
+ * the same helper calls page.tsx makes — so a render assertion validates the
+ * real display contract without mounting the full page (ProjectContext, router…).
  */
-function BudgetMeta({ budget, spent }: BudgetMetaProps) {
-  const remaining = budget - spent;
-  const isOverBudget = budget > 0 && remaining < 0;
-
+function BudgetMeta({ budget, spent }: { budget: number; spent: number }) {
+  const meta = computeBudgetMeta(budget, spent);
   return (
     <div>
-      <div data-testid="budget-value">{budget ? fmtEUR(budget) : "—"}</div>
-      <div data-testid="spent-value">{spent ? fmtEUR(spent) : "—"}</div>
+      <div data-testid="budget-value">{meta.budget ? fmtEUR(meta.budget) : "—"}</div>
+      <div data-testid="spent-value">{meta.spent ? fmtEUR(meta.spent) : "—"}</div>
       <div
         data-testid="remaining-value"
-        style={isOverBudget ? { color: "var(--negative)" } : undefined}
-        data-over-budget={isOverBudget ? "true" : undefined}
+        style={meta.isOverBudget ? { color: "var(--negative)" } : undefined}
+        data-over-budget={meta.isOverBudget ? "true" : undefined}
       >
-        {budget
-          ? isOverBudget
-            ? `Over by ${fmtEUR(Math.abs(remaining))}`
-            : fmtEUR(remaining)
+        {meta.budget
+          ? meta.isOverBudget
+            ? `Over by ${fmtEUR(Math.abs(meta.remaining))}`
+            : fmtEUR(meta.remaining)
           : "—"}
       </div>
     </div>
@@ -68,7 +50,6 @@ describe("BudgetMeta — budget set, under budget", () => {
     render(<BudgetMeta budget={100000} spent={30000} />);
     expect(screen.getByTestId("budget-value").textContent).not.toBe("—");
     expect(screen.getByTestId("spent-value").textContent).not.toBe("—");
-    // remaining = 70 000 — should not show warning
     const remaining = screen.getByTestId("remaining-value");
     expect(remaining.textContent).not.toBe("—");
     expect(remaining.getAttribute("data-over-budget")).toBeNull();
@@ -78,9 +59,7 @@ describe("BudgetMeta — budget set, under budget", () => {
   it("shows em-dash for spent when spent is 0", () => {
     render(<BudgetMeta budget={50000} spent={0} />);
     expect(screen.getByTestId("spent-value").textContent).toBe("—");
-    // remaining = 50 000 — still positive
-    const remaining = screen.getByTestId("remaining-value");
-    expect(remaining.getAttribute("data-over-budget")).toBeNull();
+    expect(screen.getByTestId("remaining-value").getAttribute("data-over-budget")).toBeNull();
   });
 });
 
@@ -88,7 +67,6 @@ describe("BudgetMeta — over budget", () => {
   it("shows warning styling and over-budget label when spent exceeds budget", () => {
     render(<BudgetMeta budget={50000} spent={60000} />);
     const remaining = screen.getByTestId("remaining-value");
-    // Should display the over-budget indicator text
     expect(remaining.textContent).toMatch(/Over by/);
     expect(remaining.getAttribute("data-over-budget")).toBe("true");
     expect(remaining.style.color).toBe("var(--negative)");
@@ -101,25 +79,22 @@ describe("BudgetMeta — over budget", () => {
   });
 });
 
-describe("BudgetMeta — progress calculation (pure logic)", () => {
-  it("progress = min(spent/budget, 1) when budget > 0", () => {
-    const budget = 100000;
-    const spent = 75000;
-    const progress = budget > 0 ? Math.min(spent / budget, 1) : 0;
-    expect(progress).toBeCloseTo(0.75);
+describe("computeBudgetMeta — derived values", () => {
+  it("remaining = budget − spent", () => {
+    expect(computeBudgetMeta(100000, 30000).remaining).toBe(70000);
+    expect(computeBudgetMeta(50000, 60000).remaining).toBe(-10000);
   });
 
-  it("progress capped at 1 when over budget", () => {
-    const budget = 50000;
-    const spent = 60000;
-    const progress = budget > 0 ? Math.min(spent / budget, 1) : 0;
-    expect(progress).toBe(1);
+  it("isOverBudget only when budget set and spend exceeds it", () => {
+    expect(computeBudgetMeta(0, 0).isOverBudget).toBe(false);
+    expect(computeBudgetMeta(100000, 30000).isOverBudget).toBe(false);
+    expect(computeBudgetMeta(50000, 60000).isOverBudget).toBe(true);
   });
 
-  it("progress = 0 when no budget set", () => {
-    const budget = 0;
-    const spent = 0;
-    const progress = budget > 0 ? Math.min(spent / budget, 1) : 0;
-    expect(progress).toBe(0);
+  it("progress = spent/budget, clamped to [0, 1]", () => {
+    expect(computeBudgetMeta(100000, 75000).progress).toBeCloseTo(0.75);
+    expect(computeBudgetMeta(50000, 60000).progress).toBe(1); // capped at 1
+    expect(computeBudgetMeta(0, 0).progress).toBe(0); // no budget
+    expect(computeBudgetMeta(50000, -10000).progress).toBe(0); // negative spend floored at 0
   });
 });

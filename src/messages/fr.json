@@ -637,6 +637,7 @@
       "dialogTitle": "Exporter les données de main-d'œuvre",
       "from": "Du mois",
       "to": "Au mois",
+      "month": "Mois",
       "format": "Format",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF (.pdf)",
@@ -654,7 +655,10 @@
       "workerToastError": "Impossible d'exporter",
       "workerToastSuccess": "Export téléchargé",
       "attendanceButton": "Exporter en PDF",
-      "requireSelection": "Sélectionnez un ouvrier et un mois pour exporter"
+      "requireSelection": "Sélectionnez un ouvrier et un mois pour exporter",
+      "workerField": "Ouvrier",
+      "workerPlaceholder": "Sélectionnez un ouvrier",
+      "noWorkers": "Ajoutez d'abord un ouvrier"
     },
     "activity": {
       "addTitle": "Ajouter une activité",

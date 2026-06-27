@@ -637,6 +637,7 @@
       "dialogTitle": "Export labor data",
       "from": "From month",
       "to": "To month",
+      "month": "Month",
       "format": "Format",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF (.pdf)",
@@ -654,7 +655,10 @@
       "workerToastError": "Could not export",
       "workerToastSuccess": "Export downloaded",
       "attendanceButton": "Export PDF",
-      "requireSelection": "Select a worker and a month to export"
+      "requireSelection": "Select a worker and a month to export",
+      "workerField": "Worker",
+      "workerPlaceholder": "Select a worker",
+      "noWorkers": "Add a worker first"
     },
     "activity": {
       "addTitle": "Add activity",

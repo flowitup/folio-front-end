@@ -10,6 +10,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,13 +30,30 @@ interface LaborExportDialogProps {
   projectId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** When provided, dialog exports for this specific worker instead of the whole project. */
+  /** Fixed-worker mode: export for this specific worker (no picker shown). */
   worker?: Worker | null;
+  /** Picker mode: when provided, the dialog shows a worker selector so the user
+   *  chooses which person to export — independent of any outer filter. */
+  workers?: Worker[];
+  /** Picker mode: pre-select this worker id when the dialog opens. */
+  initialWorkerId?: string;
   /** Optional pre-fill values. When the dialog opens these seed the from/to/format state.
    *  Existing callers that pass no initial props get the same defaults as before ("" / "" / "xlsx"). */
   initialFrom?: string;
   initialTo?: string;
   initialFormat?: LaborExportFormat;
+}
+
+function formatMonth(ym: string): string {
+  if (!ym) return "";
+  const [y, m] = ym.split("-").map(Number);
+  try {
+    return new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(
+      new Date(y, m - 1, 1),
+    );
+  } catch {
+    return ym;
+  }
 }
 
 function computeMonthSpan(from: string, to: string): number {
@@ -44,6 +68,8 @@ export function LaborExportDialog({
   open,
   onOpenChange,
   worker,
+  workers,
+  initialWorkerId,
   initialFrom,
   initialTo,
   initialFormat,
@@ -52,22 +78,34 @@ export function LaborExportDialog({
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [format, setFormat] = useState<LaborExportFormat>("xlsx");
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Seed from/to/format from pre-fill props each time the dialog opens.
-  // Falls back to the existing defaults ("" / "" / "xlsx") when props are absent.
+  // Picker mode is active when a `workers` list is supplied (the export chooses
+  // its own worker via the dropdown rather than inheriting an outer filter).
+  const pickerMode = Array.isArray(workers);
+
+  // Seed state from pre-fill props each time the dialog opens.
   useEffect(() => {
     if (open) {
       setFrom(initialFrom ?? "");
       setTo(initialTo ?? "");
       setFormat(initialFormat ?? "xlsx");
+      setSelectedWorkerId(initialWorkerId ?? "");
     }
-  }, [open, initialFrom, initialTo, initialFormat]);
+  }, [open, initialFrom, initialTo, initialFormat, initialWorkerId]);
 
   const monthSpan = useMemo(() => computeMonthSpan(from, to), [from, to]);
   const rangeInvalid = !from || !to || from > to || monthSpan > 24;
-  // When worker mode: also require worker to be non-null
-  const canSubmit = !rangeInvalid && !submitting && (worker !== undefined ? !!worker : true);
+
+  // Resolve the worker the export will target across all three modes.
+  const pickedWorker = pickerMode
+    ? (workers!.find((w) => w.id === selectedWorkerId) ?? null)
+    : null;
+  const effectiveWorkerId = pickerMode ? selectedWorkerId : worker?.id;
+  // In worker/picker mode a worker must be resolved; project-wide mode needs none.
+  const needsWorker = pickerMode || worker !== undefined;
+  const canSubmit = !rangeInvalid && !submitting && (needsWorker ? !!effectiveWorkerId : true);
 
   const rangeError: string | null =
     from && to && from > to
@@ -81,6 +119,7 @@ export function LaborExportDialog({
     setFrom("");
     setTo("");
     setFormat("xlsx");
+    setSelectedWorkerId("");
     onOpenChange(false);
   };
 
@@ -91,10 +130,10 @@ export function LaborExportDialog({
     try {
       let blob: Blob;
       let filename: string;
-      if (worker) {
+      if (effectiveWorkerId) {
         ({ blob, filename } = await fetchWorkerLaborExport(
           projectId,
-          worker.id,
+          effectiveWorkerId,
           { from, to },
           format,
         ));
@@ -111,7 +150,7 @@ export function LaborExportDialog({
       }
       handleClose();
     } catch (err) {
-      const fallbackKey = worker ? t("workerToastError") : t("errorGeneric");
+      const fallbackKey = needsWorker ? t("workerToastError") : t("errorGeneric");
       toast.error(err instanceof Error ? err.message : fallbackKey, {
         id: toastId,
       });
@@ -120,12 +159,15 @@ export function LaborExportDialog({
     }
   };
 
-  // In worker mode: don't render if both worker is absent and dialog is closed
+  // Fixed-worker mode: don't render if the worker is absent and the dialog is closed.
   if (worker !== undefined && !worker && !open) return null;
 
   const isOpen = worker !== undefined ? open && !!worker : open;
-  const fromId = worker ? "worker-export-from" : "export-from";
-  const toId = worker ? "worker-export-to" : "export-to";
+  const fromId = pickerMode ? "picker-export-from" : worker ? "worker-export-from" : "export-from";
+  const toId = pickerMode ? "picker-export-to" : worker ? "worker-export-to" : "export-to";
+
+  // Rate subtitle shows for the fixed worker, or the picked worker once chosen.
+  const subtitleWorker = worker ?? pickedWorker;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -136,48 +178,78 @@ export function LaborExportDialog({
               ? t("workerDialogTitle", { name: worker.person_name ?? worker.name })
               : t("dialogTitle")}
           </DialogTitle>
-          {worker && (
+          {subtitleWorker && (
             <p className="text-sm text-muted-foreground pt-1">
-              {t("workerSubtitle", { rate: formatEUR(worker.daily_rate) })}
+              {t("workerSubtitle", { rate: formatEUR(subtitleWorker.daily_rate) })}
             </p>
           )}
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* Date range pickers */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Worker picker — only in picker mode */}
+          {pickerMode && (
             <div className="space-y-2">
-              <Label htmlFor={fromId}>{t("from")}</Label>
-              <Input
-                id={fromId}
-                type="month"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-              />
+              <Label htmlFor="picker-export-worker">{t("workerField")}</Label>
+              <Select value={selectedWorkerId} onValueChange={setSelectedWorkerId}>
+                <SelectTrigger id="picker-export-worker">
+                  <SelectValue placeholder={t("workerPlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {workers!.map((w) => (
+                    <SelectItem key={w.id} value={w.id}>
+                      {w.person_name ?? w.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor={toId}>{t("to")}</Label>
-              <Input
-                id={toId}
-                type="month"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Range error */}
-          {rangeError && (
-            <p role="alert" className="text-sm" style={{ color: "var(--destructive)" }}>
-              {rangeError}
-            </p>
           )}
 
-          {/* Summary line */}
-          {from && to && !rangeInvalid && monthSpan > 0 && (
-            <p className="text-sm text-muted-foreground">
-              {t("summaryLine", { count: monthSpan })}
-            </p>
+          {pickerMode ? (
+            /* Picker mode: the month is fixed to the one being viewed — show it
+               read-only (no range selection). */
+            <div className="space-y-2">
+              <Label>{t("month")}</Label>
+              <p className="text-sm font-medium">{formatMonth(from)}</p>
+            </div>
+          ) : (
+            <>
+              {/* Date range pickers */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor={fromId}>{t("from")}</Label>
+                  <Input
+                    id={fromId}
+                    type="month"
+                    value={from}
+                    onChange={(e) => setFrom(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={toId}>{t("to")}</Label>
+                  <Input
+                    id={toId}
+                    type="month"
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Range error */}
+              {rangeError && (
+                <p role="alert" className="text-sm" style={{ color: "var(--destructive)" }}>
+                  {rangeError}
+                </p>
+              )}
+
+              {/* Summary line */}
+              {from && to && !rangeInvalid && monthSpan > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {t("summaryLine", { count: monthSpan })}
+                </p>
+              )}
+            </>
           )}
 
           {/* Format selector — toggle buttons */}

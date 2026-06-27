@@ -637,6 +637,7 @@
       "dialogTitle": "Xuất dữ liệu nhân công",
       "from": "Từ tháng",
       "to": "Đến tháng",
+      "month": "Tháng",
       "format": "Định dạng",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF (.pdf)",
@@ -654,7 +655,10 @@
       "workerToastError": "Không thể xuất",
       "workerToastSuccess": "Đã tải xuống bản xuất",
       "attendanceButton": "Xuất PDF",
-      "requireSelection": "Chọn một nhân công và một tháng để xuất"
+      "requireSelection": "Chọn một nhân công và một tháng để xuất",
+      "workerField": "Nhân công",
+      "workerPlaceholder": "Chọn nhân công",
+      "noWorkers": "Hãy thêm nhân công trước"
     },
     "activity": {
       "addTitle": "Thêm hoạt động",

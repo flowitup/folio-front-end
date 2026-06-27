@@ -453,6 +453,11 @@
       "transferForbidden": "Nécessite un accès administrateur de l'entreprise",
       "transferError": "Échec du transfert de la dépense",
       "companySpentOfReleased": "dépensé par l'entreprise / débloqué"
+    },
+    "refundSource": {
+      "company": "Remboursé par l'entreprise",
+      "bank": "Remboursé par la banque",
+      "both": "Remboursé par l'entreprise et la banque"
     }
   },
   "planning": {
@@ -1127,6 +1132,7 @@
         "issueDate": "Date d'émission",
         "total": "Montant",
         "invoice": "Facture",
+        "refundedBy": "Remboursé par",
         "status": "Statut",
         "actions": "Actions"
       },

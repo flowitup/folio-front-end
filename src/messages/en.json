@@ -453,6 +453,11 @@
       "transferForbidden": "Requires company admin access",
       "transferError": "Failed to transfer expense",
       "companySpentOfReleased": "spent by company / released"
+    },
+    "refundSource": {
+      "company": "Refunded by company",
+      "bank": "Refunded by bank",
+      "both": "Refunded by company and bank"
     }
   },
   "planning": {
@@ -1127,6 +1132,7 @@
         "issueDate": "Issue date",
         "total": "Total",
         "invoice": "Invoice",
+        "refundedBy": "Refunded by",
         "status": "Status",
         "actions": "Actions"
       },

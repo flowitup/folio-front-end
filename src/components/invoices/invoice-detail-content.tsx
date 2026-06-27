@@ -14,6 +14,7 @@ import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundab
 import { formatDate } from "@/lib/utils/formatters";
 import { fetchTagsClient } from "@/lib/api/tags-client";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
+import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
 import type { ProjectTag } from "@/lib/api/tags";
 
@@ -255,6 +256,10 @@ export function InvoiceDetailContent({
                         {t(REFUND_STATUS_I18N[invoice.refundable_status])}
                       </span>
                     )}
+                    <RefundSourceIndicator
+                      refundable_status={invoice.refundable_status}
+                      has_bank_refund={invoice.has_bank_refund}
+                    />
                   </dd>
                 </div>
               </dl>

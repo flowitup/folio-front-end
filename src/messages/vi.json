@@ -453,6 +453,11 @@
       "transferForbidden": "Cần quyền quản trị công ty",
       "transferError": "Chuyển chi phí thất bại",
       "companySpentOfReleased": "công ty đã chi / đã giải ngân"
+    },
+    "refundSource": {
+      "company": "Được hoàn bởi công ty",
+      "bank": "Được hoàn bởi ngân hàng",
+      "both": "Được hoàn bởi công ty và ngân hàng"
     }
   },
   "planning": {
@@ -1127,6 +1132,7 @@
         "issueDate": "Ngày phát hành",
         "total": "Tổng tiền",
         "invoice": "Hóa đơn",
+        "refundedBy": "Được hoàn bởi",
         "status": "Trạng thái",
         "actions": "Thao tác"
       },

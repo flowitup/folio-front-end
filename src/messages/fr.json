@@ -652,7 +652,9 @@
       "workerDialogTitle": "Exporter la main-d'œuvre de {name}",
       "workerSubtitle": "Taux journalier : {rate}",
       "workerToastError": "Impossible d'exporter",
-      "workerToastSuccess": "Export téléchargé"
+      "workerToastSuccess": "Export téléchargé",
+      "attendanceButton": "Exporter en PDF",
+      "requireSelection": "Sélectionnez un ouvrier et un mois pour exporter"
     },
     "activity": {
       "addTitle": "Ajouter une activité",

@@ -759,3 +759,107 @@ describe("LaborExportDialog — with worker prop (failure path)", () => {
     expect(triggerBrowserDownload).not.toHaveBeenCalled();
   }, 20000);
 });
+
+// ── Pre-fill props (initialFrom / initialTo / initialFormat) ──────────────────
+
+describe("LaborExportDialog — pre-fill props", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("seeds month inputs from initialFrom and initialTo when opened", () => {
+    render(
+      <LaborExportDialog
+        projectId="proj-uuid-1"
+        open={true}
+        onOpenChange={vi.fn()}
+        worker={ACTIVE_WORKER}
+        initialFrom="2026-06"
+        initialTo="2026-06"
+        initialFormat="pdf"
+      />,
+    );
+
+    const fromInput = document.getElementById("worker-export-from") as HTMLInputElement;
+    const toInput = document.getElementById("worker-export-to") as HTMLInputElement;
+    expect(fromInput?.value).toBe("2026-06");
+    expect(toInput?.value).toBe("2026-06");
+  });
+
+  it("selects PDF format when initialFormat='pdf'", () => {
+    render(
+      <LaborExportDialog
+        projectId="proj-uuid-1"
+        open={true}
+        onOpenChange={vi.fn()}
+        worker={ACTIVE_WORKER}
+        initialFrom="2026-06"
+        initialTo="2026-06"
+        initialFormat="pdf"
+      />,
+    );
+
+    const pdfBtn = screen.getByText("pdf").closest("button");
+    const xlsxBtn = screen.getByText("xlsx").closest("button");
+    // pdf is selected (bg-primary), xlsx is outline (bg-background)
+    expect(pdfBtn?.className).toContain("bg-primary");
+    expect(xlsxBtn?.className).toContain("bg-background");
+  });
+
+  it("calls fetchWorkerLaborExport with pdf format on submit when pre-filled", async () => {
+    const fakeBlob = new Blob(["pdf-bytes"]);
+    vi.mocked(fetchWorkerLaborExport).mockResolvedValue({
+      blob: fakeBlob,
+      filename: "worker-alice-2026-06.pdf",
+    });
+
+    render(
+      <LaborExportDialog
+        projectId="proj-uuid-1"
+        open={true}
+        onOpenChange={vi.fn()}
+        worker={ACTIVE_WORKER}
+        initialFrom="2026-06"
+        initialTo="2026-06"
+        initialFormat="pdf"
+      />,
+    );
+
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(
+      () => {
+        expect(fetchWorkerLaborExport).toHaveBeenCalledWith(
+          "proj-uuid-1",
+          "worker-uuid-1",
+          { from: "2026-06", to: "2026-06" },
+          "pdf",
+        );
+      },
+      { timeout: 15000 },
+    );
+  }, 20000);
+
+  it("falls back to empty strings and xlsx when no initial props provided", () => {
+    render(
+      <LaborExportDialog
+        projectId="proj-uuid-1"
+        open={true}
+        onOpenChange={vi.fn()}
+        worker={ACTIVE_WORKER}
+      />,
+    );
+
+    const fromInput = document.getElementById("worker-export-from") as HTMLInputElement;
+    const toInput = document.getElementById("worker-export-to") as HTMLInputElement;
+    expect(fromInput?.value).toBe("");
+    expect(toInput?.value).toBe("");
+
+    const xlsxBtn = screen.getByText("xlsx").closest("button");
+    expect(xlsxBtn?.className).toContain("bg-primary");
+  });
+});

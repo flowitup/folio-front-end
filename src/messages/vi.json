@@ -652,7 +652,9 @@
       "workerDialogTitle": "Xuất công của {name}",
       "workerSubtitle": "Đơn giá ngày: {rate}",
       "workerToastError": "Không thể xuất",
-      "workerToastSuccess": "Đã tải xuống bản xuất"
+      "workerToastSuccess": "Đã tải xuống bản xuất",
+      "attendanceButton": "Xuất PDF",
+      "requireSelection": "Chọn một nhân công và một tháng để xuất"
     },
     "activity": {
       "addTitle": "Thêm hoạt động",

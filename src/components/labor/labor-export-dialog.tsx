@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import {
@@ -25,6 +25,11 @@ interface LaborExportDialogProps {
   onOpenChange: (open: boolean) => void;
   /** When provided, dialog exports for this specific worker instead of the whole project. */
   worker?: Worker | null;
+  /** Optional pre-fill values. When the dialog opens these seed the from/to/format state.
+   *  Existing callers that pass no initial props get the same defaults as before ("" / "" / "xlsx"). */
+  initialFrom?: string;
+  initialTo?: string;
+  initialFormat?: LaborExportFormat;
 }
 
 function computeMonthSpan(from: string, to: string): number {
@@ -39,12 +44,25 @@ export function LaborExportDialog({
   open,
   onOpenChange,
   worker,
+  initialFrom,
+  initialTo,
+  initialFormat,
 }: LaborExportDialogProps) {
   const t = useTranslations("labor.export");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [format, setFormat] = useState<LaborExportFormat>("xlsx");
   const [submitting, setSubmitting] = useState(false);
+
+  // Seed from/to/format from pre-fill props each time the dialog opens.
+  // Falls back to the existing defaults ("" / "" / "xlsx") when props are absent.
+  useEffect(() => {
+    if (open) {
+      setFrom(initialFrom ?? "");
+      setTo(initialTo ?? "");
+      setFormat(initialFormat ?? "xlsx");
+    }
+  }, [open, initialFrom, initialTo, initialFormat]);
 
   const monthSpan = useMemo(() => computeMonthSpan(from, to), [from, to]);
   const rangeInvalid = !from || !to || from > to || monthSpan > 24;

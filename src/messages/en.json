@@ -652,7 +652,9 @@
       "workerDialogTitle": "Export labor for {name}",
       "workerSubtitle": "Daily rate: {rate}",
       "workerToastError": "Could not export",
-      "workerToastSuccess": "Export downloaded"
+      "workerToastSuccess": "Export downloaded",
+      "attendanceButton": "Export PDF",
+      "requireSelection": "Select a worker and a month to export"
     },
     "activity": {
       "addTitle": "Add activity",

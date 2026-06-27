@@ -6,7 +6,7 @@ import { useParams, usePathname, useRouter, useSearchParams } from "next/navigat
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { canOnProject } from "@/lib/auth/project-permissions";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -20,6 +20,7 @@ import { EditAttendanceDialog } from "@/components/labor/edit-attendance-dialog"
 import { LaborSummary } from "@/components/labor/labor-summary";
 
 import { ActivityDialog } from "@/components/labor/activity-dialog";
+import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 
 import type { Worker, LaborEntry, LaborActivity, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload, CreateLaborActivityPayload } from "@/types/labor";
@@ -104,6 +105,8 @@ export default function LaborPage() {
   const [logDayDate, setLogDayDate] = useState<string | undefined>(undefined);
   // Active entry for the edit dialog. Null when closed.
   const [editEntry, setEditEntry] = useState<LaborEntry | null>(null);
+  // Attendance PDF export dialog state.
+  const [showAttendanceExport, setShowAttendanceExport] = useState(false);
   // Activities state.
   const [activities, setActivities] = useState<LaborActivity[]>([]);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
@@ -383,24 +386,53 @@ export default function LaborPage() {
               : "flex flex-col gap-4"
           }
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <ViewToggle value={attendanceView} onChange={setAttendanceView} />
-              {tags.length > 0 && (
-                <TagFilterSelect
-                  tags={tags}
-                  value={entriesTagFilter}
-                  onChange={setEntriesTagFilter}
+          {(() => {
+            // Derive here so they're only computed when attendance is active.
+            const selectedWorker = workers.find((w) => w.id === entriesWorkerFilter) ?? null;
+            const canExportAttendance = entriesWorkerFilter !== "all" && entriesMonth !== "";
+            return (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <ViewToggle value={attendanceView} onChange={setAttendanceView} />
+                  {tags.length > 0 && (
+                    <TagFilterSelect
+                      tags={tags}
+                      value={entriesTagFilter}
+                      onChange={setEntriesTagFilter}
+                    />
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Export PDF button — visible to all; requires a specific worker + month */}
+                  <Button
+                    variant="outline"
+                    disabled={!canExportAttendance}
+                    title={canExportAttendance ? undefined : t("export.requireSelection")}
+                    onClick={() => setShowAttendanceExport(true)}
+                  >
+                    <Download className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t("export.attendanceButton")}</span>
+                  </Button>
+                  {canManageLabor && (
+                    <Button onClick={() => handleOpenLogDay()} aria-label={t("logDay")}>
+                      <Plus className="h-4 w-4" />
+                      <span className="hidden sm:inline">{t("logDay")}</span>
+                    </Button>
+                  )}
+                </div>
+                {/* Attendance PDF export dialog — pre-filled with selected worker + month */}
+                <LaborExportDialog
+                  projectId={projectId}
+                  open={showAttendanceExport}
+                  onOpenChange={setShowAttendanceExport}
+                  worker={selectedWorker}
+                  initialFrom={entriesMonth}
+                  initialTo={entriesMonth}
+                  initialFormat="pdf"
                 />
-              )}
-            </div>
-            {canManageLabor && (
-              <Button onClick={() => handleOpenLogDay()} aria-label={t("logDay")}>
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">{t("logDay")}</span>
-              </Button>
-            )}
-          </div>
+              </div>
+            );
+          })()}
           {attendanceView === "calendar" ? (
             <AttendanceCalendar
               entries={entries}

@@ -250,12 +250,11 @@ export default function ProjectsPage() {
             const isLoadingThisProject = loadingUsers === project.id;
             const cover = (project as { cover?: string }).cover ?? coverFor(project.id);
             const phase = (project as { phase?: string }).phase ?? "Planning";
-            const progress =
-              typeof (project as { progress?: number }).progress === "number"
-                ? (project as { progress?: number }).progress!
-                : 0.05;
-            const budget = (project as { budget?: number }).budget ?? 0;
-            const spent = (project as { spent?: number }).spent ?? 0;
+            const budget = project.budget ?? 0;
+            const spent = project.spent ?? 0;
+            const remaining = budget - spent;
+            const isOverBudget = budget > 0 && remaining < 0;
+            const progress = budget > 0 ? Math.min(spent / budget, 1) : 0;
             const isSelected = selectedProjectId === project.id;
             const userCount = project.user_count ?? 0;
             const visibleAvatars = Math.min(userCount, 4);
@@ -358,26 +357,47 @@ export default function ProjectsPage() {
                       </div>
                       <div className="progress-track">
                         <div
-                          className="progress-fill accent"
-                          style={{ width: `${progress * 100}%` }}
+                          className={`progress-fill ${isOverBudget ? "" : "accent"}`}
+                          style={{
+                            width: `${progress * 100}%`,
+                            ...(isOverBudget && { background: "var(--negative)" }),
+                          }}
                         />
                       </div>
                     </div>
 
                     {/* Meta row */}
-                    <div className="hairline mt-auto grid grid-cols-3 gap-4 border-t pt-4">
-                      <div>
-                        <div className="label-cap">{t("budget")}</div>
-                        <div className="font-display num mt-0.5 text-[15px]">
-                          {budget ? fmtEUR(budget) : "—"}
+                    <div className="hairline mt-auto border-t pt-4">
+                      {/* Budget / Spent / Remaining */}
+                      <div className="mb-3 grid grid-cols-3 gap-4">
+                        <div>
+                          <div className="label-cap">{t("budget")}</div>
+                          <div className="font-display num mt-0.5 text-[15px]">
+                            {budget ? fmtEUR(budget) : "—"}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="label-cap">{t("spent")}</div>
+                          <div className="font-display num mt-0.5 text-[15px]">
+                            {spent ? fmtEUR(spent) : "—"}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="label-cap">{t("remaining")}</div>
+                          <div
+                            className="font-display num mt-0.5 text-[15px]"
+                            style={isOverBudget ? { color: "var(--negative)" } : undefined}
+                          >
+                            {budget
+                              ? isOverBudget
+                                ? `${t("overBudget")} ${fmtEUR(Math.abs(remaining))}`
+                                : fmtEUR(remaining)
+                              : "—"}
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <div className="label-cap">{t("spent")}</div>
-                        <div className="font-display num mt-0.5 text-[15px]">
-                          {spent ? fmtEUR(spent) : "—"}
-                        </div>
-                      </div>
+
+                      {/* Team */}
                       <div>
                         <div className="label-cap">{t("team")}</div>
                         <div className="mt-1 flex -space-x-1.5">

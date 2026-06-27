@@ -637,6 +637,7 @@
       "dialogTitle": "Xuất dữ liệu nhân công",
       "from": "Từ tháng",
       "to": "Đến tháng",
+      "month": "Tháng",
       "format": "Định dạng",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF (.pdf)",

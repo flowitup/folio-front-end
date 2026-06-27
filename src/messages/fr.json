@@ -637,6 +637,7 @@
       "dialogTitle": "Exporter les données de main-d'œuvre",
       "from": "Du mois",
       "to": "Au mois",
+      "month": "Mois",
       "format": "Format",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF (.pdf)",

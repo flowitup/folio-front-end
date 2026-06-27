@@ -44,6 +44,18 @@ interface LaborExportDialogProps {
   initialFormat?: LaborExportFormat;
 }
 
+function formatMonth(ym: string): string {
+  if (!ym) return "";
+  const [y, m] = ym.split("-").map(Number);
+  try {
+    return new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(
+      new Date(y, m - 1, 1),
+    );
+  } catch {
+    return ym;
+  }
+}
+
 function computeMonthSpan(from: string, to: string): number {
   if (!from || !to) return 0;
   const [fy, fm] = from.split("-").map(Number);
@@ -193,40 +205,51 @@ export function LaborExportDialog({
             </div>
           )}
 
-          {/* Date range pickers */}
-          <div className="grid grid-cols-2 gap-3">
+          {pickerMode ? (
+            /* Picker mode: the month is fixed to the one being viewed — show it
+               read-only (no range selection). */
             <div className="space-y-2">
-              <Label htmlFor={fromId}>{t("from")}</Label>
-              <Input
-                id={fromId}
-                type="month"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-              />
+              <Label>{t("month")}</Label>
+              <p className="text-sm font-medium">{formatMonth(from)}</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor={toId}>{t("to")}</Label>
-              <Input
-                id={toId}
-                type="month"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-              />
-            </div>
-          </div>
+          ) : (
+            <>
+              {/* Date range pickers */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor={fromId}>{t("from")}</Label>
+                  <Input
+                    id={fromId}
+                    type="month"
+                    value={from}
+                    onChange={(e) => setFrom(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={toId}>{t("to")}</Label>
+                  <Input
+                    id={toId}
+                    type="month"
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
+                  />
+                </div>
+              </div>
 
-          {/* Range error */}
-          {rangeError && (
-            <p role="alert" className="text-sm" style={{ color: "var(--destructive)" }}>
-              {rangeError}
-            </p>
-          )}
+              {/* Range error */}
+              {rangeError && (
+                <p role="alert" className="text-sm" style={{ color: "var(--destructive)" }}>
+                  {rangeError}
+                </p>
+              )}
 
-          {/* Summary line */}
-          {from && to && !rangeInvalid && monthSpan > 0 && (
-            <p className="text-sm text-muted-foreground">
-              {t("summaryLine", { count: monthSpan })}
-            </p>
+              {/* Summary line */}
+              {from && to && !rangeInvalid && monthSpan > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {t("summaryLine", { count: monthSpan })}
+                </p>
+              )}
+            </>
           )}
 
           {/* Format selector — toggle buttons */}

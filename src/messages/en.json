@@ -637,6 +637,7 @@
       "dialogTitle": "Export labor data",
       "from": "From month",
       "to": "To month",
+      "month": "Month",
       "format": "Format",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF (.pdf)",

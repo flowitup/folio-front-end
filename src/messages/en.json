@@ -668,6 +668,11 @@
       "sectionTitle": "Activities",
       "deleteFailed": "Failed to delete activity"
     },
+    "dayDescription": {
+      "label": "Day description",
+      "placeholder": "Describe the day's work…",
+      "saving": "Saving…"
+    },
     "holidays": {
       "publicHoliday": "public holiday",
       "newYear": "New Year's Day",

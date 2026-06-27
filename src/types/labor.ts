@@ -242,6 +242,23 @@ export interface UpdateLaborActivityPayload {
   title?: string;
 }
 
+// ─── Labor day descriptions (one per project+date) ──────────────────────────
+
+export interface LaborDayDescription {
+  id: string;
+  project_id: string;
+  /** ISO YYYY-MM-DD */
+  date: string;
+  description: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LaborDayDescriptionListResponse {
+  day_descriptions: LaborDayDescription[];
+}
+
 // ─── Worker rate changes ─────────────────────────────────────────────────────
 
 export interface WorkerRateChange {

@@ -668,6 +668,11 @@
       "sectionTitle": "Hoạt động",
       "deleteFailed": "Không thể xóa hoạt động"
     },
+    "dayDescription": {
+      "label": "Mô tả trong ngày",
+      "placeholder": "Mô tả công việc trong ngày…",
+      "saving": "Đang lưu…"
+    },
     "holidays": {
       "publicHoliday": "ngày lễ",
       "newYear": "Tết Dương lịch",

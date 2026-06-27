@@ -668,6 +668,11 @@
       "sectionTitle": "Activités",
       "deleteFailed": "Échec de la suppression de l'activité"
     },
+    "dayDescription": {
+      "label": "Description du jour",
+      "placeholder": "Décrivez le travail du jour…",
+      "saving": "Enregistrement…"
+    },
     "holidays": {
       "publicHoliday": "jour férié",
       "newYear": "Jour de l'An",

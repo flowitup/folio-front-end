@@ -23,7 +23,7 @@ import { ActivityDialog } from "@/components/labor/activity-dialog";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 
-import type { Worker, LaborEntry, LaborActivity, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
+import type { Worker, LaborEntry, LaborActivity, LaborDayDescription, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
 import type { ProjectTag } from "@/lib/api/tags";
 import {
@@ -40,6 +40,8 @@ import {
   createLaborActivity,
   updateLaborActivity,
   deleteLaborActivity,
+  fetchLaborDayDescriptions,
+  setLaborDayDescription,
 } from "@/lib/api/labor";
 import { fetchLaborRolesAction, fetchProjectTagsAction } from "./actions";
 
@@ -109,6 +111,8 @@ export default function LaborPage() {
   const [showAttendanceExport, setShowAttendanceExport] = useState(false);
   // Activities state.
   const [activities, setActivities] = useState<LaborActivity[]>([]);
+  // Day descriptions state — one per (project, date).
+  const [dayDescriptions, setDayDescriptions] = useState<LaborDayDescription[]>([]);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
   const [activityDate, setActivityDate] = useState<string | undefined>(undefined);
   const [editActivity, setEditActivity] = useState<LaborActivity | null>(null);
@@ -173,6 +177,16 @@ export default function LaborPage() {
     }
   }, [projectId, entriesMonth]);
 
+  const loadDayDescriptions = useCallback(async () => {
+    try {
+      const { from, to } = monthToRange(entriesMonth);
+      const data = await fetchLaborDayDescriptions(projectId, { from, to });
+      setDayDescriptions(data);
+    } catch {
+      // Non-fatal: day descriptions are enhancement; entries still render.
+    }
+  }, [projectId, entriesMonth]);
+
   // Load summary.
   // - summaryMonth === ""  → fetch the per-month rollup (LaborSummary
   //   renders month rows + year filter buttons).
@@ -225,8 +239,9 @@ export default function LaborPage() {
     if (activeTab === "attendance") {
       loadEntries();
       loadActivities();
+      loadDayDescriptions();
     }
-  }, [activeTab, loadEntries, loadActivities]);
+  }, [activeTab, loadEntries, loadActivities, loadDayDescriptions]);
 
   useEffect(() => {
     if (activeTab === "summary") loadSummary();
@@ -334,6 +349,11 @@ export default function LaborPage() {
     }
   };
 
+  const handleSaveDayDescription = async (date: string, description: string) => {
+    await setLaborDayDescription(projectId, { date, description });
+    await loadDayDescriptions();
+  };
+
   return (
     <div className="fade-up flex min-h-full flex-col gap-4 px-4 pb-12 lg:gap-6 lg:px-8">
       {/* Segmented tabs */}
@@ -437,6 +457,7 @@ export default function LaborPage() {
               entries={entries}
               workers={workers}
               activities={activities}
+              dayDescriptions={dayDescriptions}
               isLoading={isTabLoading}
               canManage={canManageLabor}
               month={entriesMonth}
@@ -450,12 +471,14 @@ export default function LaborPage() {
               onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
               onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
+              onSaveDayDescription={canManageLabor ? handleSaveDayDescription : undefined}
             />
           ) : (
             <AttendanceTable
               entries={entries}
               workers={workers}
               activities={activities}
+              dayDescriptions={dayDescriptions}
               isLoading={isTabLoading}
               canManage={canManageLabor}
               month={entriesMonth}
@@ -466,6 +489,7 @@ export default function LaborPage() {
               onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
               onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
+              onSaveDayDescription={canManageLabor ? handleSaveDayDescription : undefined}
             />
           )}
         </div>

@@ -27,6 +27,7 @@ import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatDate } from "@/lib/utils/formatters";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborEntryCard } from "@/components/labor/labor-entry-card";
+import { DayDescriptionField } from "@/components/labor/day-description-field";
 import type { LaborEntry, LaborActivity } from "@/types/labor";
 
 interface AttendanceDayDetailSheetProps {
@@ -36,6 +37,8 @@ interface AttendanceDayDetailSheetProps {
   entries: LaborEntry[];
   /** Activities for this day. */
   activities?: LaborActivity[];
+  /** Day-level description text (separate from per-worker notes and activities). */
+  dayDescription?: string;
   /** Open/close binding. */
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,12 +52,15 @@ interface AttendanceDayDetailSheetProps {
   onAddActivity?: () => void;
   onEditActivity?: (activity: LaborActivity) => void;
   onDeleteActivity?: (activity: LaborActivity) => void;
+  /** Saves the day description (upsert). Caller refetches. */
+  onSaveDayDescription?: (date: string, description: string) => Promise<void>;
 }
 
 export function AttendanceDayDetailSheet({
   date,
   entries,
   activities = [],
+  dayDescription = "",
   open,
   onOpenChange,
   canManage,
@@ -64,6 +70,7 @@ export function AttendanceDayDetailSheet({
   onAddActivity,
   onEditActivity,
   onDeleteActivity,
+  onSaveDayDescription,
 }: AttendanceDayDetailSheetProps) {
   const t = useTranslations("labor");
   const dayTotal = entries.reduce(
@@ -123,6 +130,16 @@ export function AttendanceDayDetailSheet({
           </DialogPrimitive.Description>
 
           <div className="flex-1 space-y-2 overflow-y-auto">
+            {/* Day description — sits above worker cards, distinct from per-worker notes. */}
+            {(dayDescription || (canManage && onSaveDayDescription)) && (
+              <DayDescriptionField
+                date={date ? date.toISOString().slice(0, 10) : ""}
+                value={dayDescription}
+                canManage={canManage}
+                onSave={onSaveDayDescription}
+              />
+            )}
+
             {entries.map((entry) => (
               <LaborEntryCard
                 key={entry.id}

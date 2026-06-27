@@ -33,13 +33,15 @@ import {
   parseMonthTag,
   toDateKey,
 } from "@/lib/utils/calendar-month";
-import type { LaborEntry, LaborActivity, Worker } from "@/types/labor";
+import type { LaborEntry, LaborActivity, LaborDayDescription, Worker } from "@/types/labor";
 
 interface AttendanceCalendarProps {
   entries: LaborEntry[];
   workers: Worker[];
   /** Activities for the current month scope. */
   activities?: LaborActivity[];
+  /** Day-level descriptions for the current month scope. */
+  dayDescriptions?: LaborDayDescription[];
   isLoading: boolean;
   canManage: boolean;
   /** YYYY-MM — empty defaults to current month for the calendar. */
@@ -58,12 +60,15 @@ interface AttendanceCalendarProps {
   onAddActivity?: (date: string) => void;
   onEditActivity?: (activity: LaborActivity) => void;
   onDeleteActivity?: (activity: LaborActivity) => void;
+  /** Save (upsert) the day description. Caller refetches. */
+  onSaveDayDescription?: (date: string, description: string) => Promise<void>;
 }
 
 export function AttendanceCalendar({
   entries,
   workers,
   activities = [],
+  dayDescriptions = [],
   isLoading,
   canManage,
   month,
@@ -77,6 +82,7 @@ export function AttendanceCalendar({
   onAddActivity,
   onEditActivity,
   onDeleteActivity,
+  onSaveDayDescription,
 }: AttendanceCalendarProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
@@ -116,6 +122,12 @@ export function AttendanceCalendar({
     const key = toDateKey(selectedDate);
     return activities.filter((a) => a.date === key);
   }, [activities, selectedDate]);
+
+  const dayDescription = useMemo(() => {
+    if (!selectedDate) return "";
+    const key = toDateKey(selectedDate);
+    return dayDescriptions.find((d) => d.date === key)?.description ?? "";
+  }, [dayDescriptions, selectedDate]);
 
   if (isLoading) {
     return (
@@ -196,6 +208,7 @@ export function AttendanceCalendar({
         date={selectedDate}
         entries={dayEntries}
         activities={dayActivities}
+        dayDescription={dayDescription}
         open={selectedDate !== null}
         onOpenChange={(o) => {
           if (!o) setSelectedDate(null);
@@ -222,6 +235,7 @@ export function AttendanceCalendar({
         }
         onEditActivity={onEditActivity}
         onDeleteActivity={onDeleteActivity}
+        onSaveDayDescription={onSaveDayDescription}
       />
     </div>
   );

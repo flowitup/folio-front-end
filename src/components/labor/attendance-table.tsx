@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ClipboardList, Pencil, Trash2 as ActivityTrash } from "lucide-react";
 import { LaborEntryCard } from "@/components/labor/labor-entry-card";
-import type { LaborEntry, LaborActivity, Worker } from "@/types/labor";
+import { DayDescriptionField } from "@/components/labor/day-description-field";
+import type { LaborEntry, LaborActivity, LaborDayDescription, Worker } from "@/types/labor";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatEUR } from "@/lib/api/labor";
 
@@ -32,6 +33,7 @@ interface AttendanceTableProps {
   entries: LaborEntry[];
   workers: Worker[];
   activities?: LaborActivity[];
+  dayDescriptions?: LaborDayDescription[];
   isLoading: boolean;
   canManage: boolean;
   month: string;
@@ -42,12 +44,14 @@ interface AttendanceTableProps {
   onAddActivity?: (date: string) => void;
   onEditActivity?: (activity: LaborActivity) => void;
   onDeleteActivity?: (activity: LaborActivity) => void;
+  onSaveDayDescription?: (date: string, description: string) => Promise<void>;
 }
 
 export function AttendanceTable({
   entries,
   workers,
   activities = [],
+  dayDescriptions = [],
   isLoading,
   canManage,
   month,
@@ -58,6 +62,7 @@ export function AttendanceTable({
   onAddActivity,
   onEditActivity,
   onDeleteActivity,
+  onSaveDayDescription,
 }: AttendanceTableProps) {
   const t = useTranslations("labor");
   const [confirmDelete, setConfirmDelete] = useState<LaborEntry | null>(null);
@@ -125,7 +130,16 @@ export function AttendanceTable({
           (acc[a.date] ??= []).push(a);
           return acc;
         }, {});
-        const allDates = new Set([...Object.keys(grouped), ...Object.keys(activitiesByDay)]);
+        // Build a date → description string map for O(1) lookups.
+        const descriptionByDay = dayDescriptions.reduce<Record<string, string>>((acc, d) => {
+          acc[d.date] = d.description;
+          return acc;
+        }, {});
+        const allDates = new Set([
+          ...Object.keys(grouped),
+          ...Object.keys(activitiesByDay),
+          ...Object.keys(descriptionByDay),
+        ]);
         const sortedDates = [...allDates].sort((a, b) => b.localeCompare(a));
 
         if (sortedDates.length === 0) {
@@ -147,6 +161,7 @@ export function AttendanceTable({
                 (sum, e) => sum + Number(e.effective_cost ?? 0),
                 0,
               );
+              const dayDescription = descriptionByDay[date] ?? "";
               return (
                 <section key={date} className="space-y-2">
                   <header className="flex items-baseline justify-between gap-3 px-1">
@@ -185,6 +200,13 @@ export function AttendanceTable({
                       )}
                     </div>
                   </header>
+
+                  <DayDescriptionField
+                    date={date}
+                    value={dayDescription}
+                    canManage={canManage}
+                    onSave={onSaveDayDescription}
+                  />
 
                   <Card className="overflow-hidden p-0">
                     <div className="divide-border divide-y">

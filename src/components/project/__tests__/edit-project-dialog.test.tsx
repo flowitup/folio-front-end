@@ -25,6 +25,10 @@ vi.mock("next-intl", () => ({
       projectNamePlaceholder: "e.g. Riverside Tower",
       projectAddressOptional: "Address (optional)",
       projectAddressPlaceholder: "e.g. 12 Rue des Martyrs, Paris",
+      budgetLabel: "Budget (€)",
+      budgetSourceLabelOptional: "Funding source (optional)",
+      budgetSourcePlaceholder: "e.g. Bank loan BNP",
+      budgetInvalid: "Budget must be a positive number",
       cancel: "Cancel",
       save: "Save",
       saving: "Saving...",
@@ -45,6 +49,17 @@ const FAKE_PROJECT = {
   owner_id: "u-1",
   user_count: 3,
   created_at: "2026-05-03T00:00:00Z",
+};
+
+const FAKE_PROJECT_WITH_BUDGET: typeof FAKE_PROJECT & {
+  budget: number;
+  budget_source: string;
+  spent: number;
+} = {
+  ...FAKE_PROJECT,
+  budget: 50000,
+  budget_source: "Bank loan BNP",
+  spent: 12000,
 };
 
 describe("EditProjectDialog", () => {
@@ -101,6 +116,8 @@ describe("EditProjectDialog", () => {
       expect(mockUpdateProject).toHaveBeenCalledWith("p-1", {
         name: "New Name",
         address: "12 rue X",
+        budget: null,
+        budget_source: null,
       });
     });
 
@@ -238,6 +255,8 @@ describe("EditProjectDialog", () => {
       expect(mockUpdateProject).toHaveBeenCalledWith("p-1", {
         name: "Acme",
         address: "New Address",
+        budget: null,
+        budget_source: null,
       });
     });
 
@@ -270,10 +289,111 @@ describe("EditProjectDialog", () => {
       expect(mockUpdateProject).toHaveBeenCalledWith("p-1", {
         name: "Acme",
         address: null,
+        budget: null,
+        budget_source: null,
       });
     });
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("renders budget and funding source inputs", () => {
+    render(
+      <EditProjectDialog project={FAKE_PROJECT} open={true} onOpenChange={vi.fn()} />
+    );
+    expect(screen.getByLabelText("Budget (€)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Funding source (optional)")).toBeInTheDocument();
+  });
+
+  it("prefills budget and budget_source from project", () => {
+    render(
+      <EditProjectDialog project={FAKE_PROJECT_WITH_BUDGET} open={true} onOpenChange={vi.fn()} />
+    );
+    const budgetInput = screen.getByLabelText("Budget (€)") as HTMLInputElement;
+    const sourceInput = screen.getByLabelText("Funding source (optional)") as HTMLInputElement;
+    expect(budgetInput.value).toBe("50000");
+    expect(sourceInput.value).toBe("Bank loan BNP");
+  });
+
+  it("includes budget and budget_source in update payload", async () => {
+    mockUpdateProject.mockResolvedValueOnce({
+      ...FAKE_PROJECT_WITH_BUDGET,
+      budget: 75000,
+    });
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+
+    render(
+      <EditProjectDialog
+        project={FAKE_PROJECT_WITH_BUDGET}
+        open={true}
+        onOpenChange={onOpenChange}
+      />
+    );
+
+    const budgetInput = screen.getByLabelText("Budget (€)");
+    await user.clear(budgetInput);
+    await user.type(budgetInput, "75000");
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(mockUpdateProject).toHaveBeenCalledWith("p-1", {
+        name: "Acme",
+        address: "12 rue X",
+        budget: 75000,
+        budget_source: "Bank loan BNP",
+      });
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("sends budget: null and budget_source: null when both are cleared", async () => {
+    mockUpdateProject.mockResolvedValueOnce({
+      ...FAKE_PROJECT_WITH_BUDGET,
+      budget: null,
+      budget_source: null,
+    });
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+
+    render(
+      <EditProjectDialog
+        project={FAKE_PROJECT_WITH_BUDGET}
+        open={true}
+        onOpenChange={onOpenChange}
+      />
+    );
+
+    await user.clear(screen.getByLabelText("Budget (€)"));
+    await user.clear(screen.getByLabelText("Funding source (optional)"));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(mockUpdateProject).toHaveBeenCalledWith("p-1", {
+        name: "Acme",
+        address: "12 rue X",
+        budget: null,
+        budget_source: null,
+      });
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("shows error when budget is negative", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <EditProjectDialog project={FAKE_PROJECT} open={true} onOpenChange={vi.fn()} />
+    );
+
+    await user.type(screen.getByLabelText("Budget (€)"), "-100");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(
+      await screen.findByText("Budget must be a positive number")
+    ).toBeInTheDocument();
+    expect(mockUpdateProject).not.toHaveBeenCalled();
   });
 
   it("disables inputs and button while submitting", async () => {

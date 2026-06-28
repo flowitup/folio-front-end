@@ -23,6 +23,10 @@ vi.mock("next-intl", () => ({
       projectNamePlaceholder: "e.g. Riverside Tower",
       projectAddressOptional: "Address (optional)",
       projectAddressPlaceholder: "e.g. 12 Rue des Martyrs, Paris",
+      budgetLabel: "Budget (€)",
+      budgetSourceLabelOptional: "Funding source (optional)",
+      budgetSourcePlaceholder: "e.g. Bank loan BNP",
+      budgetInvalid: "Budget must be a positive number",
       create: "Create",
       creating: "Creating...",
       cancel: "Cancel",
@@ -145,5 +149,64 @@ describe("CreateProjectDialog", () => {
 
     expect(mockCreateProject).not.toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("renders budget and funding source inputs", () => {
+    render(<CreateProjectDialog open={true} onOpenChange={vi.fn()} />);
+    expect(screen.getByLabelText("Budget (€)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Funding source (optional)")).toBeInTheDocument();
+  });
+
+  it("submits with budget and funding source when provided", async () => {
+    mockCreateProject.mockResolvedValueOnce(FAKE_PROJECT);
+    const user = userEvent.setup();
+
+    render(<CreateProjectDialog open={true} onOpenChange={vi.fn()} />);
+
+    await user.type(screen.getByLabelText("Project name"), "Riverside Tower");
+    await user.type(screen.getByLabelText("Budget (€)"), "100000");
+    await user.type(screen.getByLabelText("Funding source (optional)"), "Bank loan BNP");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() => {
+      expect(mockCreateProject).toHaveBeenCalledWith({
+        name: "Riverside Tower",
+        address: null,
+        budget: 100000,
+        budget_source: "Bank loan BNP",
+      });
+    });
+  });
+
+  it("omits budget and budget_source from payload when inputs are empty", async () => {
+    mockCreateProject.mockResolvedValueOnce(FAKE_PROJECT);
+    const user = userEvent.setup();
+
+    render(<CreateProjectDialog open={true} onOpenChange={vi.fn()} />);
+
+    await user.type(screen.getByLabelText("Project name"), "Nameless");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() => {
+      expect(mockCreateProject).toHaveBeenCalledWith({
+        name: "Nameless",
+        address: null,
+      });
+    });
+  });
+
+  it("shows error when budget is negative", async () => {
+    const user = userEvent.setup();
+
+    render(<CreateProjectDialog open={true} onOpenChange={vi.fn()} />);
+
+    await user.type(screen.getByLabelText("Project name"), "Test");
+    await user.type(screen.getByLabelText("Budget (€)"), "-500");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    expect(
+      await screen.findByText("Budget must be a positive number")
+    ).toBeInTheDocument();
+    expect(mockCreateProject).not.toHaveBeenCalled();
   });
 });

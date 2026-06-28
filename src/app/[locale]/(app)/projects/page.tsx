@@ -40,6 +40,7 @@ import { CreateProjectDialog } from "@/components/project/create-project-dialog"
 import { EditProjectDialog } from "@/components/project/edit-project-dialog";
 import { DeleteProjectDialog } from "@/components/project/delete-project-dialog";
 import type { Project, ProjectUser } from "@/types/project";
+import { fmtEUR, computeBudgetMeta } from "@/lib/projects/budget-display";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -182,13 +183,6 @@ export default function ProjectsPage() {
     router.push(`/${locale}/projects/${projectId}/photos`);
   };
 
-  const fmtEUR = (n: number) =>
-    new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-      maximumFractionDigits: 0,
-    }).format(n);
-
   const counts = {
     all: projects.length,
     active: projects.length,
@@ -250,12 +244,8 @@ export default function ProjectsPage() {
             const isLoadingThisProject = loadingUsers === project.id;
             const cover = (project as { cover?: string }).cover ?? coverFor(project.id);
             const phase = (project as { phase?: string }).phase ?? "Planning";
-            const progress =
-              typeof (project as { progress?: number }).progress === "number"
-                ? (project as { progress?: number }).progress!
-                : 0.05;
-            const budget = (project as { budget?: number }).budget ?? 0;
-            const spent = (project as { spent?: number }).spent ?? 0;
+            const { budget, spent, remaining, isOverBudget, progress } =
+              computeBudgetMeta(project.budget ?? 0, project.spent ?? 0);
             const isSelected = selectedProjectId === project.id;
             const userCount = project.user_count ?? 0;
             const visibleAvatars = Math.min(userCount, 4);
@@ -358,26 +348,47 @@ export default function ProjectsPage() {
                       </div>
                       <div className="progress-track">
                         <div
-                          className="progress-fill accent"
-                          style={{ width: `${progress * 100}%` }}
+                          className={`progress-fill ${isOverBudget ? "" : "accent"}`}
+                          style={{
+                            width: `${progress * 100}%`,
+                            ...(isOverBudget && { background: "var(--negative)" }),
+                          }}
                         />
                       </div>
                     </div>
 
                     {/* Meta row */}
-                    <div className="hairline mt-auto grid grid-cols-3 gap-4 border-t pt-4">
-                      <div>
-                        <div className="label-cap">{t("budget")}</div>
-                        <div className="font-display num mt-0.5 text-[15px]">
-                          {budget ? fmtEUR(budget) : "—"}
+                    <div className="hairline mt-auto border-t pt-4">
+                      {/* Budget / Spent / Remaining */}
+                      <div className="mb-3 grid grid-cols-3 gap-4">
+                        <div>
+                          <div className="label-cap">{t("budget")}</div>
+                          <div className="font-display num mt-0.5 text-[15px]">
+                            {budget ? fmtEUR(budget) : "—"}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="label-cap">{t("spent")}</div>
+                          <div className="font-display num mt-0.5 text-[15px]">
+                            {spent ? fmtEUR(spent) : "—"}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="label-cap">{t("remaining")}</div>
+                          <div
+                            className="font-display num mt-0.5 text-[15px]"
+                            style={isOverBudget ? { color: "var(--negative)" } : undefined}
+                          >
+                            {budget
+                              ? isOverBudget
+                                ? `${t("overBudget")} ${fmtEUR(Math.abs(remaining))}`
+                                : fmtEUR(remaining)
+                              : "—"}
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <div className="label-cap">{t("spent")}</div>
-                        <div className="font-display num mt-0.5 text-[15px]">
-                          {spent ? fmtEUR(spent) : "—"}
-                        </div>
-                      </div>
+
+                      {/* Team */}
                       <div>
                         <div className="label-cap">{t("team")}</div>
                         <div className="mt-1 flex -space-x-1.5">

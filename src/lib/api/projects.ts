@@ -9,6 +9,10 @@ export async function fetchProjects(): Promise<Project[]> {
 export interface CreateProjectPayload {
   name: string;
   address?: string | null;
+  /** Budget amount in EUR (≥ 0). Omit to leave unset. */
+  budget?: number;
+  /** Funding source description (≤ 120 chars). Omit to leave unset. */
+  budget_source?: string;
 }
 
 export async function createProject(payload: CreateProjectPayload): Promise<Project> {
@@ -19,6 +23,10 @@ export interface UpdateProjectPayload {
   name?: string;
   address?: string | null;
   invoice_prefix?: string | null;
+  /** Budget amount in EUR (≥ 0). Send null to clear. Omit to leave unchanged. */
+  budget?: number | null;
+  /** Funding source description (≤ 120 chars). Send null to clear. Omit to leave unchanged. */
+  budget_source?: string | null;
 }
 
 export async function updateProject(

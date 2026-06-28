@@ -16,6 +16,12 @@ export interface Project {
    * right controls even when their global role is the read-only default.
    */
   my_permissions?: string[];
+  /** Project budget amount in EUR. Null when no budget has been set. */
+  budget?: number | null;
+  /** Human-readable funding source (e.g. "Prêt bancaire BNP"). Null when not set. */
+  budget_source?: string | null;
+  /** Total money spent on this project (labor + materials; excludes released_funds). Always present, defaults to 0. */
+  spent?: number;
 }
 
 export interface ProjectListResponse {

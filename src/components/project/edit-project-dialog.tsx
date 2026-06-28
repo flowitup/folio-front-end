@@ -33,6 +33,8 @@ export function EditProjectDialog({
   const t = useTranslations("projects");
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
+  const [budget, setBudget] = useState("");
+  const [budgetSource, setBudgetSource] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +45,8 @@ export function EditProjectDialog({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(project.name);
       setAddress(project.address ?? "");
+      setBudget(project.budget != null ? String(project.budget) : "");
+      setBudgetSource(project.budget_source ?? "");
       setError(null);
       setIsSubmitting(false);
     }
@@ -63,19 +67,45 @@ export function EditProjectDialog({
 
     const trimmedName = name.trim();
     const trimmedAddress = address.trim();
+    const trimmedBudgetStr = budget.trim();
+    const trimmedBudgetSource = budgetSource.trim();
 
     if (!trimmedName) {
       setError(t("editProjectNameRequired"));
       return;
     }
 
+    // Resolve budget: empty string → null (clear); non-empty → parse
+    let budgetValue: number | null | undefined;
+    if (trimmedBudgetStr === "") {
+      budgetValue = null;
+    } else {
+      const parsed = parseFloat(trimmedBudgetStr);
+      if (isNaN(parsed) || parsed < 0) {
+        setError(t("budgetInvalid"));
+        return;
+      }
+      budgetValue = parsed;
+    }
+
+    const budgetSourceValue = trimmedBudgetSource || null;
+
     const payload = {
       name: trimmedName,
       address: trimmedAddress || null,
+      budget: budgetValue,
+      budget_source: budgetSourceValue,
     };
 
     // No-op: close without API call if nothing changed
-    if (payload.name === project.name && payload.address === project.address) {
+    const existingBudget = project.budget ?? null;
+    const existingBudgetSource = project.budget_source ?? null;
+    if (
+      payload.name === project.name &&
+      payload.address === project.address &&
+      payload.budget === existingBudget &&
+      payload.budget_source === existingBudgetSource
+    ) {
       onOpenChange(false);
       return;
     }
@@ -126,6 +156,32 @@ export function EditProjectDialog({
               onChange={(e) => setAddress(e.target.value)}
               placeholder={t("projectAddressPlaceholder")}
               maxLength={500}
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-project-budget">{t("budgetLabel")}</Label>
+            <Input
+              id="edit-project-budget"
+              inputMode="decimal"
+              value={budget}
+              onChange={(e) => setBudget(e.target.value)}
+              placeholder="0"
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-project-budget-source">
+              {t("budgetSourceLabelOptional")}
+            </Label>
+            <Input
+              id="edit-project-budget-source"
+              value={budgetSource}
+              onChange={(e) => setBudgetSource(e.target.value)}
+              placeholder={t("budgetSourcePlaceholder")}
+              maxLength={120}
               disabled={isSubmitting}
             />
           </div>

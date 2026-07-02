@@ -91,7 +91,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 return (
-                  <Link
+                  <Link prefetch={false}
                     key={item.key}
                     href={item.href}
                     onClick={onClose}
@@ -125,7 +125,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
               const Icon = item.icon;
               const active = isActive(item.href);
               return (
-                <Link
+                <Link prefetch={false}
                   key={item.key}
                   href={item.href}
                   onClick={onClose}
@@ -145,7 +145,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
 
           <div className="mx-4 my-1" style={{ borderTop: "1px solid var(--line)" }} />
 
-          <Link
+          <Link prefetch={false}
             href={settingsItem.href}
             onClick={onClose}
             className={cn(

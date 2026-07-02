@@ -105,7 +105,10 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
       style={{ background: "var(--paper)", borderColor: "var(--line)" }}
     >
       {/* Brand — links back to the dashboard (home) */}
-      <Link
+      {/* Nav links opt out of speculative prefetch: every page view would
+          otherwise fire ~14 concurrent RSC renders of authenticated routes,
+          which the edge rejects (503 on Sec-Purpose: prefetch bursts). */}
+      <Link prefetch={false}
         href="/dashboard"
         aria-label="Folio — home"
         className="flex items-center gap-3 px-5 py-5"
@@ -213,7 +216,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
                 pathWithoutLocale.startsWith(item.href + "/");
           const Icon = item.icon;
           return (
-            <Link
+            <Link prefetch={false}
               key={item.key}
               href={item.href}
               className={cn("nav-link", isActive && "active")}
@@ -238,7 +241,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
             pathWithoutLocale.startsWith(item.href + "/");
           const Icon = item.icon;
           return (
-            <Link
+            <Link prefetch={false}
               key={item.key}
               href={item.href}
               className={cn("nav-link", isActive && "active")}

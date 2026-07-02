@@ -412,11 +412,11 @@ describe("InvoiceForm", () => {
       expect(descriptionInputs[0]).toHaveValue("Initial Item");
     });
 
-    it("defaults to released_funds type when no initial values", () => {
+    it("defaults to materials_services type when no initial values", () => {
       render(<InvoiceForm onSubmit={mockOnSubmit} />);
 
       const typeSelect = screen.getByRole("combobox");
-      expect(typeSelect).toHaveValue("released_funds");
+      expect(typeSelect).toHaveValue("materials_services");
     });
   });
 });

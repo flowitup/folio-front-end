@@ -16,6 +16,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InvoiceForm } from "../invoice-form";
+import { formatEUR } from "@/lib/utils/formatters";
+// formatEUR emits U+202F/U+00A0 spaces; testing-library's default normalizer
+// collapses them to ASCII spaces, so match against the normalized string.
+const eur = (n: number) => formatEUR(n).replace(/[\u202f\u00a0]/g, " ");
+
 
 // ── Mock next-intl ─────────────────────────────────────────────────────────────
 
@@ -106,7 +111,7 @@ describe("InvoiceForm — VAT % field", () => {
 
     // rowTotal and grandTotal should both show 120.00
     await waitFor(() => {
-      expect(within(desktop).queryByText("120.00")).not.toBeNull();
+      expect(within(desktop).queryByText(eur(120))).not.toBeNull();
     });
   });
 
@@ -137,9 +142,9 @@ describe("InvoiceForm — VAT % field", () => {
     await user.type(sb2[4], "50");
     // vat_rate defaults to 0 — leave it
 
-    // Grand total = 110 + 100 = 210.00
+    // Grand total = 110 + 100 = 210,00 €
     await waitFor(() => {
-      const grandTotal = screen.queryByText(/totalAmount.*210\.00|210\.00/);
+      const grandTotal = screen.queryByText((content) => content.includes(eur(210)));
       expect(grandTotal).not.toBeNull();
     });
   });
@@ -207,7 +212,7 @@ describe("InvoiceForm — VAT % field", () => {
 
     // rowTotal should be 4 × 25 = 100.00 (no VAT applied)
     await waitFor(() => {
-      expect(desktop.queryByText("100.00")).not.toBeNull();
+      expect(desktop.queryByText(eur(100))).not.toBeNull();
     });
 
     // Fill recipient then submit to verify vat_rate defaults to 0 in payload

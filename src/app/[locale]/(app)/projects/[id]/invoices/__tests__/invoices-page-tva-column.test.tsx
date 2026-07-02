@@ -75,6 +75,11 @@ import { useParams, useSearchParams, useRouter, usePathname } from "next/navigat
 import { useAuth } from "@/context/AuthContext";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import InvoicesPage from "../page";
+import { formatEUR } from "@/lib/utils/formatters";
+// formatEUR emits U+202F/U+00A0 spaces; testing-library's default normalizer
+// collapses them to ASCII spaces, so match against the normalized string.
+const eur = (n: number) => formatEUR(n).replace(/[\u202f\u00a0]/g, " ");
+
 
 const mockUseParams = vi.mocked(useParams);
 const mockUseSearchParams = vi.mocked(useSearchParams);
@@ -225,7 +230,7 @@ describe("InvoicesPage — TVA column", () => {
     await waitFor(() => {
       const desktop = screen.getByTestId("invoices-table-desktop");
       // TVA cell = 200.00
-      expect(within(desktop).queryByText("200.00")).not.toBeNull();
+      expect(within(desktop).queryByText(eur(200))).not.toBeNull();
     });
   });
 

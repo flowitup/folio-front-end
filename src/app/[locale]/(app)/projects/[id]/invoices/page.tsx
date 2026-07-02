@@ -18,7 +18,7 @@ import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-t
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
 import { fetchTagsClient } from "@/lib/api/tags-client";
-import { formatDate } from "@/lib/utils/formatters";
+import { formatDate, formatEUR } from "@/lib/utils/formatters";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
 
@@ -160,8 +160,9 @@ export default function InvoicesPage() {
     .filter((g) => g.items.length > 0);
   const showGroups = activeTab === "all" && groupedInvoices.length > 0;
 
-  // Compute KPIs from current invoice list
-  const formatEUR = (n: number) =>
+  // Compute KPIs from current invoice list. KPI cards round to whole
+  // euros; row totals use the shared 2-decimal formatEUR.
+  const formatEURWhole = (n: number) =>
     new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "EUR",
@@ -189,36 +190,42 @@ export default function InvoicesPage() {
           <div
             className={`font-display num mt-2 text-[28px] font-medium leading-none${totalInvoiced < 0 ? " text-destructive" : ""}`}
           >
-            {formatEUR(totalInvoiced)}
+            {formatEURWhole(totalInvoiced)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("invoiceCount", { n: expenseInvoices.length })}
           </div>
         </div>
-        <div className="folio-card p-4 lg:p-5">
-          <div className="label-cap">{t("fundsReleased")}</div>
-          <div
-            className="font-display num mt-2 text-[22px] font-medium leading-none"
-            style={{ color: "var(--positive)" }}
-          >
-            {formatEUR(companySpentTotal)}
-            <span className="text-[16px]"> / </span>
-            {formatEUR(fundsReleasedTotal)}
+        {/* Funds-released amounts are project-level meta (unfiltered), so the
+            card only renders on tabs where released-funds invoices are in the
+            list — on other tabs its filtered count would contradict the
+            global amounts ("97 376 € … no expenses"). */}
+        {(activeTab === "all" || activeTab === "released_funds") && (
+          <div className="folio-card p-4 lg:p-5">
+            <div className="label-cap">{t("fundsReleased")}</div>
+            <div
+              className="font-display num mt-2 text-[22px] font-medium leading-none"
+              style={{ color: "var(--positive)" }}
+            >
+              {formatEURWhole(companySpentTotal)}
+              <span className="text-[16px]"> / </span>
+              {formatEURWhole(fundsReleasedTotal)}
+            </div>
+            <div className="num mt-1 text-[10px]" style={{ color: "var(--muted)" }}>
+              {t("refund.companySpentOfReleased")}
+            </div>
+            <div className="num mt-1 text-[11px]" style={{ color: "var(--muted)" }}>
+              {t("invoiceCount", { n: releasedFundsInvoices.length })}
+            </div>
           </div>
-          <div className="num mt-1 text-[10px]" style={{ color: "var(--muted)" }}>
-            {t("refund.companySpentOfReleased")}
-          </div>
-          <div className="num mt-1 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("invoiceCount", { n: releasedFundsInvoices.length })}
-          </div>
-        </div>
+        )}
         <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("types.labor")}</div>
           <div
             className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
             style={{ color: "var(--accent)" }}
           >
-            {formatEUR(laborInvoices.reduce((s, i) => s + i.total_amount, 0))}
+            {formatEURWhole(laborInvoices.reduce((s, i) => s + i.total_amount, 0))}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("invoiceCount", { n: laborInvoices.length })}
@@ -229,7 +236,7 @@ export default function InvoicesPage() {
           <div
             className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
           >
-            {formatEUR(materialsInvoices.reduce((s, i) => s + i.total_amount, 0))}
+            {formatEURWhole(materialsInvoices.reduce((s, i) => s + i.total_amount, 0))}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("invoiceCount", { n: materialsInvoices.length })}
@@ -241,7 +248,7 @@ export default function InvoicesPage() {
             className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
             style={{ color: "var(--muted)" }}
           >
-            {formatEUR(othersInvoices.reduce((s, i) => s + i.total_amount, 0))}
+            {formatEURWhole(othersInvoices.reduce((s, i) => s + i.total_amount, 0))}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("invoiceCount", { n: othersInvoices.length })}
@@ -253,7 +260,7 @@ export default function InvoicesPage() {
             <div
               className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px] text-destructive"
             >
-              {formatEUR(refundInvoices.reduce((s, i) => s + i.total_amount, 0))}
+              {formatEURWhole(refundInvoices.reduce((s, i) => s + i.total_amount, 0))}
             </div>
             <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
               {t("invoiceCount", { n: refundInvoices.length })}
@@ -490,14 +497,14 @@ export default function InvoicesPage() {
                                   </td>
                                   {showTvaCol && (
                                     <td className="num" style={{ textAlign: "right", color: "var(--muted)" }}>
-                                      {tvaAmount > 0 ? tvaAmount.toFixed(2) : "—"}
+                                      {tvaAmount > 0 ? formatEUR(tvaAmount) : "—"}
                                     </td>
                                   )}
                                   <td
                                     className={`num font-medium${invoice.total_amount < 0 ? " text-destructive" : ""}`}
                                     style={{ textAlign: "right" }}
                                   >
-                                    {invoice.total_amount.toFixed(2)}
+                                    {formatEUR(invoice.total_amount)}
                                   </td>
                                   <td
                                     style={{ textAlign: "right" }}

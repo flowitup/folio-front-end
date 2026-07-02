@@ -181,21 +181,24 @@ describe("InvoiceForm — mixed-sign unit_price gating", () => {
     expect(unitPriceInput.getAttribute("min")).toBe("0");
   });
 
-  it("min is cleared when switching type from released_funds to refund", async () => {
+  it("min follows the type's mixed-sign gating (released_funds → refund)", async () => {
     render(<InvoiceForm onSubmit={onSubmit} projectId="proj-1" />);
 
-    // Default type is released_funds — has min=0
+    // Default type is materials_services — mixed-sign allowed, no min clamp.
     const desktop = screen.getByTestId("invoice-items-desktop");
-    const numInputs = within(desktop).getAllByRole("spinbutton");
-    expect(numInputs[1].getAttribute("min")).toBe("0");
+    expect(within(desktop).getAllByRole("spinbutton")[1].getAttribute("min")).toBeNull();
 
-    // Switch to refund via fireEvent on the first select (type selector)
+    // released_funds forbids negative unit prices — min clamps to 0.
     const allSelects = screen.getAllByRole("combobox");
-    fireEvent.change(allSelects[0], { target: { value: "refund" } });
-
+    fireEvent.change(allSelects[0], { target: { value: "released_funds" } });
     await waitFor(() => {
-      const numInputsAfter = within(desktop).getAllByRole("spinbutton");
-      expect(numInputsAfter[1].getAttribute("min")).toBeNull();
+      expect(within(desktop).getAllByRole("spinbutton")[1].getAttribute("min")).toBe("0");
+    });
+
+    // refund re-allows mixed sign — min cleared again.
+    fireEvent.change(allSelects[0], { target: { value: "refund" } });
+    await waitFor(() => {
+      expect(within(desktop).getAllByRole("spinbutton")[1].getAttribute("min")).toBeNull();
     });
   });
 

@@ -11,7 +11,7 @@ import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
-import { formatDate } from "@/lib/utils/formatters";
+import { formatDate, formatEUR } from "@/lib/utils/formatters";
 import { fetchTagsClient } from "@/lib/api/tags-client";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
@@ -317,13 +317,13 @@ export function InvoiceDetailContent({
                               className="num text-[12px]"
                               style={{ color: "var(--muted)" }}
                             >
-                              {item.quantity} × {item.unit_price.toFixed(2)}
+                              {item.quantity} × {formatEUR(item.unit_price)}
                               {hasVat && (item.vat_rate ?? 0) > 0 && (
                                 <span className="ml-1">({(item.vat_rate ?? 0)}%)</span>
                               )}
                             </span>
                             <span className="num text-[13px] font-medium">
-                              {item.total.toFixed(2)}
+                              {formatEUR(item.total)}
                             </span>
                           </div>
                         </div>
@@ -336,13 +336,13 @@ export function InvoiceDetailContent({
                             style={{ borderColor: "var(--line)" }}
                           >
                             <span className="text-xs text-muted-foreground">{t("totalHt")}</span>
-                            <span className="num text-[13px]">{totalHt.toFixed(2)}</span>
+                            <span className="num text-[13px]">{formatEUR(totalHt)}</span>
                           </div>
                           <div
                             className="flex items-center justify-between px-3 py-1.5"
                           >
                             <span className="text-xs text-muted-foreground">{t("totalTva")}</span>
-                            <span className="num text-[13px]">{totalVat.toFixed(2)}</span>
+                            <span className="num text-[13px]">{formatEUR(totalVat)}</span>
                           </div>
                           <div
                             className="flex items-center justify-between px-3 py-2 border-t"
@@ -352,7 +352,7 @@ export function InvoiceDetailContent({
                               {t("totalTtc")}
                             </span>
                             <span className="num font-bold text-[13px]">
-                              {invoice.total_amount.toFixed(2)}
+                              {formatEUR(invoice.total_amount)}
                             </span>
                           </div>
                         </>
@@ -365,7 +365,7 @@ export function InvoiceDetailContent({
                             {t("totalAmount")}
                           </span>
                           <span className="num font-bold text-[13px]">
-                            {invoice.total_amount.toFixed(2)}
+                            {formatEUR(invoice.total_amount)}
                           </span>
                         </div>
                       )}
@@ -400,14 +400,14 @@ export function InvoiceDetailContent({
                             <tr key={i} className="border-b last:border-0">
                               <td className="px-3 py-1.5">{item.description}</td>
                               <td className="px-3 py-1.5 text-right">{item.quantity}</td>
-                              <td className="px-3 py-1.5 text-right">{item.unit_price.toFixed(2)}</td>
+                              <td className="px-3 py-1.5 text-right">{formatEUR(item.unit_price)}</td>
                               {hasVat && (
                                 <td className="px-3 py-1.5 text-right">
                                   {(item.vat_rate ?? 0) > 0 ? `${item.vat_rate}%` : "—"}
                                 </td>
                               )}
                               <td className="px-3 py-1.5 text-right font-medium">
-                                {item.total.toFixed(2)}
+                                {formatEUR(item.total)}
                               </td>
                             </tr>
                           ))}
@@ -423,7 +423,7 @@ export function InvoiceDetailContent({
                                   {t("totalHt")}
                                 </td>
                                 <td className="px-3 py-1 text-right text-xs">
-                                  {totalHt.toFixed(2)}
+                                  {formatEUR(totalHt)}
                                 </td>
                               </tr>
                               <tr>
@@ -434,7 +434,7 @@ export function InvoiceDetailContent({
                                   {t("totalTva")}
                                 </td>
                                 <td className="px-3 py-1 text-right text-xs">
-                                  {totalVat.toFixed(2)}
+                                  {formatEUR(totalVat)}
                                 </td>
                               </tr>
                               <tr className="border-t bg-muted/30">
@@ -445,7 +445,7 @@ export function InvoiceDetailContent({
                                   {t("totalTtc")}
                                 </td>
                                 <td className="px-3 py-1.5 text-right font-bold">
-                                  {invoice.total_amount.toFixed(2)}
+                                  {formatEUR(invoice.total_amount)}
                                 </td>
                               </tr>
                             </>
@@ -455,7 +455,7 @@ export function InvoiceDetailContent({
                                 {t("totalAmount")}
                               </td>
                               <td className="px-3 py-1.5 text-right font-bold">
-                                {invoice.total_amount.toFixed(2)}
+                                {formatEUR(invoice.total_amount)}
                               </td>
                             </tr>
                           )}

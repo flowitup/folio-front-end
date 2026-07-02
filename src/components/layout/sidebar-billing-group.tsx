@@ -91,7 +91,7 @@ export function SidebarBillingGroup({ pathWithoutLocale }: SidebarBillingGroupPr
               pathWithoutLocale.startsWith(item.href + "/");
             const Icon = item.icon;
             return (
-              <Link
+              <Link prefetch={false}
                 key={item.key}
                 href={item.href}
                 className={cn("nav-link", isActive && "active")}

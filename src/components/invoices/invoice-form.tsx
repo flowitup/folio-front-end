@@ -10,6 +10,7 @@ import { TagSelect } from "@/components/tags/tag-select";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import type { CreateInvoicePayload, Invoice, InvoiceType } from "@/types/invoice";
 import type { ProjectTag } from "@/lib/api/tags";
+import { formatEUR } from "@/lib/utils/formatters";
 
 interface LineItem {
   description: string;
@@ -76,7 +77,11 @@ export function InvoiceForm({
   const t = useTranslations("invoices");
   const tTags = useTranslations("tags");
 
-  const [type, setType] = useState<InvoiceType>(initialValues?.type ?? "released_funds");
+  // Default to materials_services — the everyday expense type. released_funds
+  // stays selectable but must never be the default: those invoices are
+  // normally auto-generated from company payments, and an accidental manual
+  // one silently inflates the funds-released total.
+  const [type, setType] = useState<InvoiceType>(initialValues?.type ?? "materials_services");
   const [issueDate, setIssueDate] = useState(initialValues?.issue_date ?? "");
   const [recipientName, setRecipientName] = useState(initialValues?.recipient_name ?? "");
   const [recipientAddress, setRecipientAddress] = useState(
@@ -348,7 +353,7 @@ export function InvoiceForm({
                     <option key={inv.id} value={inv.id}>
                       {inv.invoice_number}
                       {inv.total_amount != null
-                        ? ` — ${inv.total_amount.toFixed(2)}`
+                        ? ` — ${formatEUR(inv.total_amount)}`
                         : ""}
                     </option>
                   ))}
@@ -446,7 +451,7 @@ export function InvoiceForm({
                       />
                     </div>
                     <div className="col-span-1 text-right text-sm font-medium">
-                      {rowTotal.toFixed(2)}
+                      {formatEUR(rowTotal)}
                     </div>
                     <div className="col-span-1 flex justify-end">
                       <Button
@@ -534,7 +539,7 @@ export function InvoiceForm({
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">{t("total")}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{rowTotal.toFixed(2)}</span>
+                        <span className="text-sm font-medium">{formatEUR(rowTotal)}</span>
                         <Button
                           type="button"
                           variant="ghost"
@@ -556,7 +561,7 @@ export function InvoiceForm({
             {/* Grand Total */}
             <div className="flex justify-end border-t pt-2">
               <span className={`text-sm font-semibold${grandTotal < 0 ? " text-destructive" : ""}`}>
-                {t("totalAmount")}: {grandTotal.toFixed(2)}
+                {t("totalAmount")}: {formatEUR(grandTotal)}
               </span>
             </div>
           </div>

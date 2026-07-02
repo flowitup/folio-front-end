@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import {
@@ -81,6 +81,14 @@ export default function DashboardPage() {
   const t = useTranslations("dashboard");
   const fmtEUR = (n: number) => fmtEURForLocale(n, locale);
   const [alertDismissed, setAlertDismissed] = useState(false);
+  // Today chip is client-only: rendering new Date() during SSR hydrates
+  // against the server clock (UTC) and mismatches the browser's local date
+  // around midnight (React #418). Empty on SSR, filled after mount.
+  const [todayLabel, setTodayLabel] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional client-only value: must render after mount to avoid SSR clock mismatch
+    setTodayLabel(new Date().toLocaleDateString(locale, { day: "numeric", month: "short" }));
+  }, [locale]);
 
   const project = {
     name: selectedProject?.name ?? "Maison Lavandou",
@@ -343,9 +351,7 @@ export default function DashboardPage() {
           <div className="folio-card p-6">
             <div className="mb-4 flex items-center justify-between">
               <div className="label-cap">{t("todayOnSite")}</div>
-              <span className="stamp">
-                {new Date().toLocaleDateString(locale, { day: "numeric", month: "short" })}
-              </span>
+              <span className="stamp">{todayLabel}</span>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>

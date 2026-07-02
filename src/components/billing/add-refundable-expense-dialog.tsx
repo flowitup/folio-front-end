@@ -29,6 +29,7 @@ import {
   setRefundableStatus,
 } from "@/lib/api/billing/refundable-invoices";
 import type { RefundableExpense } from "@/types/invoice";
+import { formatEUR } from "@/lib/utils/formatters";
 
 interface AddRefundableExpenseDialogProps {
   open: boolean;
@@ -187,10 +188,7 @@ export function AddRefundableExpenseDialog({
                     <td className="p-2 font-mono text-xs">{expense.invoice_number}</td>
                     <td className="p-2">{expense.recipient_name}</td>
                     <td className="p-2 text-right tabular-nums">
-                      {expense.total_amount.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                      {formatEUR(expense.total_amount)}
                     </td>
                   </tr>
                 ))}

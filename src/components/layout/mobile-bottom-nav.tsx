@@ -74,7 +74,7 @@ export function MobileBottomNav() {
                   pathWithoutLocale.startsWith(item.href + "/");
 
             return (
-              <Link
+              <Link prefetch={false}
                 key={item.key}
                 href={item.href}
                 className={cn(

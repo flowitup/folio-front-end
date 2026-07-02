@@ -164,13 +164,9 @@ export async function fetchLaborMonthlySummary(
   );
 }
 
-// EUR formatter for French locale
-export function formatEUR(amount: number): string {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-  }).format(amount);
-}
+// EUR formatter for French locale — canonical implementation lives in
+// lib/utils/formatters; re-exported here for the many labor call sites.
+export { formatEUR } from "@/lib/utils/formatters";
 
 // ─── Labor Activities ────────────────────────────────────────────────────────
 

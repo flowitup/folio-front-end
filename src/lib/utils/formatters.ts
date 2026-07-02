@@ -13,6 +13,18 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
+ * Format a number as fr-FR EUR currency ("17 831,20 €").
+ * Canonical money formatter for UI tables and totals — deterministic
+ * across server and client (fixed locale, no browser dependence).
+ */
+export function formatEUR(amount: number): string {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+  }).format(amount)
+}
+
+/**
  * Format a date as dd/mm/YYYY (locale-independent).
  * Uses local (browser-timezone) calendar fields, matching prior
  * toLocaleDateString behavior, with manual zero-padding to avoid

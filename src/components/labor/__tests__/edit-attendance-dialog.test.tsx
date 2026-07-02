@@ -93,4 +93,19 @@ describe("EditAttendanceDialog", () => {
     renderDialog({ entry: null });
     expect(screen.queryByText("Alice")).not.toBeInTheDocument();
   });
+
+  it("sends explicit nulls when override and note are cleared", async () => {
+    // PATCH semantics: undefined would be dropped from the JSON body and the
+    // server would keep the old values — null is the only way to clear.
+    const { onSave } = renderDialog({
+      entry: { ...mockEntry, amount_override: 150, note: "stale" },
+    });
+    fireEvent.change(screen.getByLabelText(/override/i), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText(/^note$/i), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    await vi.waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ amount_override: null, note: null }),
+    );
+  });
 });

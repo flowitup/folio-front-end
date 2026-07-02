@@ -122,11 +122,13 @@ export function EditAttendanceDialog({
 
     setIsSaving(true);
     try {
+      // Explicit null clears the field on the server (PATCH semantics:
+      // an omitted field is left unchanged, so undefined can't clear).
       await onSave({
         shift_type: shiftType,
         supplement_hours: supplementHours,
-        amount_override: amountOverride ? parseFloat(amountOverride) : undefined,
-        note: note.trim() || undefined,
+        amount_override: amountOverride !== "" ? parseFloat(amountOverride) : null,
+        note: note.trim() || null,
         tag_id: tagId,
       });
       onOpenChange(false);

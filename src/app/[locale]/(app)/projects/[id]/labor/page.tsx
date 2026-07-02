@@ -44,6 +44,7 @@ import {
   fetchLaborDayDescriptions,
   setLaborDayDescription,
 } from "@/lib/api/labor";
+import { toDateKey } from "@/lib/utils/calendar-month";
 import { fetchLaborRolesAction, fetchProjectTagsAction } from "./actions";
 
 type TabType = "workers" | "attendance" | "summary";
@@ -136,6 +137,10 @@ export default function LaborPage() {
   const [summary, setSummary] = useState<LaborSummaryResponse | null>(null);
   const [monthlySummary, setMonthlySummary] = useState<LaborMonthlySummaryResponse | null>(null);
   const [summaryMonth, setSummaryMonth] = useState("");
+  // Workers with an entry dated today — feeds the "On site today" KPI.
+  // Fetched via a today-scoped summary so it is correct regardless of the
+  // month filter (the filtered summary describes the period, not today).
+  const [onSiteToday, setOnSiteToday] = useState(0);
 
   // Load workers
   const loadWorkers = useCallback(async () => {
@@ -196,6 +201,12 @@ export default function LaborPage() {
   const loadSummary = useCallback(async () => {
     setIsTabLoading(true);
     try {
+      // Today-scoped fetch for the "On site today" KPI — runs alongside the
+      // period fetch. Non-fatal: the KPI falls back to 0 if it fails.
+      const today = toDateKey(new Date());
+      const todayPromise = fetchLaborSummary(projectId, { from: today, to: today })
+        .then((d) => setOnSiteToday(d.rows.length))
+        .catch(() => setOnSiteToday(0));
       if (summaryMonth === "") {
         const data = await fetchLaborMonthlySummary(projectId);
         setMonthlySummary(data);
@@ -204,6 +215,7 @@ export default function LaborPage() {
         const data = await fetchLaborSummary(projectId, { from, to });
         setSummary(data);
       }
+      await todayPromise;
     } catch {
       setError("Failed to load summary");
     } finally {
@@ -517,6 +529,7 @@ export default function LaborPage() {
           summary={summary}
           monthlySummary={monthlySummary}
           workers={workers}
+          onSiteToday={onSiteToday}
           isLoading={isTabLoading}
           month={summaryMonth}
           onMonthChange={setSummaryMonth}

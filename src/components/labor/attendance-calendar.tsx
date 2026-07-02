@@ -173,7 +173,7 @@ export function AttendanceCalendar({
               <SelectValue placeholder={t("filterWorker")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t("filterWorker")}</SelectItem>
+              <SelectItem value="all">{t("filterWorkerAll")}</SelectItem>
               {workers.map((w) => (
                 <SelectItem key={w.id} value={w.id}>
                   {w.person_name ?? w.name}

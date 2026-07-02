@@ -542,6 +542,7 @@
     "filterMonthAll": "Tout l'historique",
     "filterMonthClear": "Effacer le filtre de mois",
     "filterWorker": "Ouvrier",
+    "filterWorkerAll": "Tous les ouvriers",
     "confirmDeactivate": "Désactiver cet ouvrier ?",
     "confirmDelete": "Supprimer cette entrée ?",
     "cancel": "Annuler",

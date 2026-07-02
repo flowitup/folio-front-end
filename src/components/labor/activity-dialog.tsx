@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toDateKey } from "@/lib/utils/calendar-month";
 import type { LaborActivity } from "@/types/labor";
 
 interface ActivityDialogProps {
@@ -47,7 +48,9 @@ export function ActivityDialog({
       setDate(editActivity.date);
       setTitle(editActivity.title);
     } else {
-      setDate(initialDate ?? new Date().toISOString().slice(0, 10));
+      // Local-time key — toISOString() is UTC and defaults to yesterday
+      // for TZs ahead of UTC in the early hours.
+      setDate(initialDate ?? toDateKey(new Date()));
       setTitle("");
     }
     setError(null);

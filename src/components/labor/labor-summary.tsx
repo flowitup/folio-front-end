@@ -8,6 +8,7 @@ import type { LaborSummaryResponse, LaborMonthlySummaryResponse, MonthlySummaryR
 import { formatEUR } from "@/lib/api/labor";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
+import { DEFAULT_ROLE_I18N_KEYS } from "@/lib/utils/default-role-names";
 
 interface LaborSummaryProps {
   projectId: string;
@@ -19,6 +20,10 @@ interface LaborSummaryProps {
    *  site (and tests) still type-check; sub-rows fall back to omitting
    *  the rate when this is empty. */
   workers?: Worker[];
+  /** Count of workers with an entry dated today (local date). Computed by
+   *  the page from a today-scoped summary fetch so it stays correct in both
+   *  the all-history and single-month views. */
+  onSiteToday?: number;
   isLoading: boolean;
   month: string;
   onMonthChange: (value: string) => void;
@@ -112,11 +117,13 @@ export function LaborSummary({
   summary,
   monthlySummary,
   workers,
+  onSiteToday = 0,
   isLoading,
   month,
   onMonthChange,
 }: LaborSummaryProps) {
   const t = useTranslations("labor");
+  const tRole = useTranslations("labor.role.defaults");
   const locale = useLocale();
   const [exportOpen, setExportOpen] = useState(false);
   // Year filter — null = "All years". Only meaningful when month filter
@@ -163,13 +170,15 @@ export function LaborSummary({
     return ids.size;
   }, [filteredMonthlyRows]);
 
-  // Lookup table: worker_id → daily_rate. We must NOT derive the rate
-  // from total_cost / days_worked — that blends full days, half days,
-  // and overrides into a misleading "effective" rate. The contract
-  // shown to users is the worker's configured rate (Worker.daily_rate).
-  const rateByWorkerId = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const w of workers ?? []) m.set(w.id, w.daily_rate);
+  // Lookup table: worker_id → Worker. We must NOT derive the rate from
+  // total_cost / days_worked — that blends full days, half days, and
+  // overrides into a misleading "effective" rate. The contract shown to
+  // users is the worker's configured rate: current_daily_rate (post
+  // rate-change, matches the Workers tab tiles) falling back to the base
+  // daily_rate for older API responses.
+  const workerById = useMemo(() => {
+    const m = new Map<string, Worker>();
+    for (const w of workers ?? []) m.set(w.id, w);
     return m;
   }, [workers]);
 
@@ -210,8 +219,9 @@ export function LaborSummary({
   const totalDays = isAllHistory
     ? filteredMonthlyRows.reduce((sum, r) => sum + r.total_days, 0)
     : summary?.total_days ?? 0;
-  const workerCount = summary?.rows.length ?? 0;
-  const onSiteToday = workerCount;
+  // "across N workers" caption: distinct workers over the visible months in
+  // all-history mode; the month's worker rows when a month is selected.
+  const workerCount = isAllHistory ? distinctWorkerCount : summary?.rows.length ?? 0;
 
   const totalBankedHours = summary?.total_banked_hours ?? 0;
   const totalBonusDays = summary?.total_bonus_days ?? 0;
@@ -511,8 +521,11 @@ export function LaborSummary({
                         // record — NOT total_cost / days_worked, which
                         // averages full + half + override shifts into
                         // a fractional value that doesn't match what
-                        // the user actually pays per day.
-                        const rate = rateByWorkerId.get(w.worker_id);
+                        // the user actually pays per day. Prefer the
+                        // current effective rate so this matches the
+                        // Workers tab after a scheduled rate change.
+                        const worker = workerById.get(w.worker_id);
+                        const rate = worker ? worker.current_daily_rate ?? worker.daily_rate : undefined;
                         rows.push(
                           <tr
                             key={`sub-${ym}-${w.worker_id}`}
@@ -627,7 +640,7 @@ export function LaborSummary({
               <thead>
                 <tr>
                   <th>{t("workerName")}</th>
-                  <th>{t("role")}</th>
+                  <th>{t("role.label")}</th>
                   <th style={{ textAlign: "right" }}>{t("daysWorked")}</th>
                   <th style={{ textAlign: "right" }}>{t("totalCost")}</th>
                   <th style={{ textAlign: "right" }}>{t("supplement.bonusDays")}</th>
@@ -641,6 +654,13 @@ export function LaborSummary({
                     .slice(0, 2)
                     .join("")
                     .toUpperCase();
+                  // Role comes from the workers list (summary rows carry
+                  // only id + name). Default seed roles resolve through
+                  // the locale map, custom roles display their DB name.
+                  const rowWorker = workerById.get(row.worker_id);
+                  const roleName = rowWorker?.role_id && DEFAULT_ROLE_I18N_KEYS[rowWorker.role_id]
+                    ? tRole(DEFAULT_ROLE_I18N_KEYS[rowWorker.role_id])
+                    : rowWorker?.role_name;
                   return (
                     <tr key={row.worker_id}>
                       <td>
@@ -649,7 +669,7 @@ export function LaborSummary({
                           <span>{row.worker_name}</span>
                         </div>
                       </td>
-                      <td style={{ color: "var(--muted)" }}>—</td>
+                      <td style={{ color: "var(--muted)" }}>{roleName ?? "—"}</td>
                       <td className="num" style={{ textAlign: "right" }}>
                         {formatDays(row.days_worked)}
                       </td>

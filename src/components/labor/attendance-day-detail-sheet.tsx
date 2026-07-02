@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatDate } from "@/lib/utils/formatters";
+import { toDateKey } from "@/lib/utils/calendar-month";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborEntryCard } from "@/components/labor/labor-entry-card";
 import { DayDescriptionField } from "@/components/labor/day-description-field";
@@ -132,8 +133,11 @@ export function AttendanceDayDetailSheet({
           <div className="flex-1 space-y-2 overflow-y-auto">
             {/* Day description — sits above worker cards, distinct from per-worker notes. */}
             {(dayDescription || (canManage && onSaveDayDescription)) && (
+              /* Local-time key — toISOString() would shift to the previous
+                 day for TZs ahead of UTC and save the description on the
+                 wrong date. */
               <DayDescriptionField
-                date={date ? date.toISOString().slice(0, 10) : ""}
+                date={date ? toDateKey(date) : ""}
                 value={dayDescription}
                 canManage={canManage}
                 onSave={onSaveDayDescription}

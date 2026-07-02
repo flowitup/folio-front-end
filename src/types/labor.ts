@@ -82,8 +82,11 @@ export interface LogAttendancePayload {
 }
 
 export interface UpdateAttendancePayload {
-  amount_override?: number;
-  note?: string;
+  /** null = clear the override (revert to the worker's daily rate).
+   *  Omit the field to leave it unchanged. */
+  amount_override?: number | null;
+  /** null = clear the note. Omit to leave unchanged. */
+  note?: string | null;
   shift_type?: ShiftType | null;
   supplement_hours?: number;
   tag_id?: string | null;

@@ -542,6 +542,7 @@
     "filterMonthAll": "All history",
     "filterMonthClear": "Clear month filter",
     "filterWorker": "Worker",
+    "filterWorkerAll": "All workers",
     "confirmDeactivate": "Deactivate this worker?",
     "confirmDelete": "Delete this entry?",
     "cancel": "Cancel",

@@ -1,10 +1,10 @@
 "use client";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
-import { formatDate } from "@/lib/utils/formatters";
+import { formatDate, formatMonthYear } from "@/lib/utils/formatters";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
@@ -36,6 +36,7 @@ export function InvoiceMobileCard({
 }: InvoiceMobileCardProps) {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
+  const locale = useLocale();
 
   return (
     <div
@@ -67,6 +68,11 @@ export function InvoiceMobileCard({
             {invoice.type === "refund" && invoice.refunds_invoice_number && (
               <span className="text-[11px]" style={{ color: "var(--muted)" }}>
                 {t("refundOf", { number: invoice.refunds_invoice_number })}
+              </span>
+            )}
+            {invoice.type === "labor" && invoice.service_month && (
+              <span className="stamp" data-testid="mobile-card-service-month">
+                {formatMonthYear(invoice.service_month, locale)}
               </span>
             )}
             {invoice.refundable_status != null && companyName ? (

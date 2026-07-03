@@ -336,6 +336,7 @@
       "refund": "Remboursement"
     },
     "issueDate": "Date d'émission",
+    "serviceMonth": "Mois de paiement",
     "recipient": "Destinataire",
     "recipientAddress": "Adresse",
     "totalAmount": "Total",
@@ -446,6 +447,7 @@
     "refundsInvoiceNone": "— aucune —",
     "refundOf": "Remboursement de {number}",
     "errorRefundExceedsSource": "Le remboursement dépasse le montant remboursable restant ({remaining}) pour cette facture.",
+    "errorServiceMonthNotAllowed": "Le mois de paiement ne peut être défini que pour les dépenses de main-d'œuvre.",
     "refund": {
       "status": {
         "refundable": "Remboursable",

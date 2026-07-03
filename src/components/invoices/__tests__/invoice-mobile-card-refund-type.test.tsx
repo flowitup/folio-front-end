@@ -18,6 +18,7 @@ vi.mock("next-intl", () => ({
     if (key === "refundOf" && values) return `Refund of ${values.number}`;
     return namespace ? `${namespace}.${key}` : key;
   },
+  useLocale: () => "en",
 }));
 
 vi.mock("@/lib/payment-methods/localize-method-label", () => ({
@@ -46,6 +47,7 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
     source_billing_document_id: null,
     is_auto_generated: false,
     refundable_status: null,
+    service_month: null,
     ...overrides,
   };
 }

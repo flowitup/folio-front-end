@@ -44,8 +44,10 @@ export default function NewInvoicePage() {
       router.push(`/${locale}/projects/${projectId}/invoices/${invoice.id}`);
     } catch (err) {
       setError(
-        classifySubmitError(err, (remaining) =>
-          t("errorRefundExceedsSource", { remaining })
+        classifySubmitError(
+          err,
+          (remaining) => t("errorRefundExceedsSource", { remaining }),
+          t("errorServiceMonthNotAllowed")
         )
       );
       setIsLoading(false);

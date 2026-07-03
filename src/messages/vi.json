@@ -336,6 +336,7 @@
       "refund": "Hoàn tiền"
     },
     "issueDate": "Ngày phát hành",
+    "serviceMonth": "Tháng thanh toán",
     "recipient": "Người nhận",
     "recipientAddress": "Địa chỉ",
     "totalAmount": "Tổng",
@@ -446,6 +447,7 @@
     "refundsInvoiceNone": "— không —",
     "refundOf": "Hoàn tiền cho {number}",
     "errorRefundExceedsSource": "Hoàn tiền vượt quá số tiền còn có thể hoàn ({remaining}) cho hóa đơn này.",
+    "errorServiceMonthNotAllowed": "Tháng thanh toán chỉ có thể được đặt cho chi phí nhân công.",
     "refund": {
       "status": {
         "refundable": "Có thể hoàn tiền",

@@ -159,6 +159,7 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
     source_billing_document_id: null,
     is_auto_generated: false,
     refundable_status: null,
+    service_month: null,
     ...overrides,
   };
 }

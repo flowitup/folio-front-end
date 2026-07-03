@@ -52,6 +52,24 @@ export function formatDate(date: Date | string): string {
 }
 
 /**
+ * Format a "YYYY-MM" or "YYYY-MM-DD" date string as a localized "Month Year"
+ * label (e.g. "June 2026", "juin 2026"). Used for the labor invoice
+ * "payment for month" field, which is stored as "YYYY-MM-01".
+ *
+ * Parses the year/month directly from the string (rather than via `new
+ * Date()`) to avoid UTC/local timezone day-shift issues — see formatDate.
+ * Returns the raw input unchanged if it doesn't match the expected shape.
+ */
+export function formatMonthYear(dateStr: string, locale: string): string {
+  const match = /^(\d{4})-(\d{2})(?:-\d{2})?$/.exec(dateStr)
+  if (!match) return dateStr
+  const [, yyyy, mm] = match
+  // Construct as UTC noon to sidestep any residual timezone rollover.
+  const d = new Date(Date.UTC(Number(yyyy), Number(mm) - 1, 1, 12))
+  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(d)
+}
+
+/**
  * Format a date and time as dd/mm/YYYY HH:MM (24h, locale-independent).
  */
 export function formatDateTime(date: Date | string): string {

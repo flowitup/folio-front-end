@@ -61,6 +61,12 @@ export interface Invoice {
    * The company-refund signal rides on refundable_status === 'refunded'.
    */
   has_bank_refund?: boolean;
+  /**
+   * Optional "payment for month" on labor expenses, format "YYYY-MM-01".
+   * Only meaningful when type === "labor"; null on all other types and on
+   * legacy labor invoices created before this field existed.
+   */
+  service_month: string | null;
 }
 
 export interface CreateInvoicePayload {
@@ -79,6 +85,12 @@ export interface CreateInvoicePayload {
    * Only valid when type=refund. Null clears the link; omitted = keep existing (on update).
    */
   refunds_invoice_id?: string | null;
+  /**
+   * "Payment for month", format "YYYY-MM-01". Only valid when type=labor —
+   * the backend returns 400 service_month_not_allowed otherwise.
+   * Null clears the value; omitted = keep existing (on update).
+   */
+  service_month?: string | null;
 }
 
 export type UpdateInvoicePayload = Partial<CreateInvoicePayload>;

@@ -92,6 +92,11 @@ export function InvoiceForm({
     initialValues?.payment_method_id ?? null
   );
   const [tagId, setTagId] = useState<string | null>(initialValues?.tag_id ?? null);
+  // Labor-only "payment for month", kept in the UI as "YYYY-MM" (native
+  // month input format) and converted to "YYYY-MM-01" on submit.
+  const [serviceMonth, setServiceMonth] = useState<string>(
+    initialValues?.service_month ? initialValues.service_month.slice(0, 7) : ""
+  );
   const [items, setItems] = useState<LineItem[]>(
     initialValues?.items && initialValues.items.length > 0
       ? initialValues.items.map((i) => ({
@@ -204,13 +209,19 @@ export function InvoiceForm({
       tag_id: tagId,
       // Include refunds_invoice_id only for refund type (null = no link / clear)
       ...(type === "refund" ? { refunds_invoice_id: refundsInvoiceId } : {}),
+      // Include service_month only for labor type (null = cleared/empty)
+      ...(type === "labor"
+        ? { service_month: serviceMonth ? `${serviceMonth}-01` : null }
+        : {}),
     };
 
     try {
       await onSubmit(payload);
     } catch (err) {
-      setError(classifySubmitError(err, (remaining: string) =>
-        t("errorRefundExceedsSource", { remaining })
+      setError(classifySubmitError(
+        err,
+        (remaining: string) => t("errorRefundExceedsSource", { remaining }),
+        t("errorServiceMonthNotAllowed")
       ));
     }
   };
@@ -359,6 +370,21 @@ export function InvoiceForm({
                   ))}
                 </select>
               </div>
+            </div>
+          )}
+
+          {/* Labor type: optional "payment for month" field */}
+          {type === "labor" && (
+            <div>
+              <label className="block text-xs font-medium mb-1">{t("serviceMonth")}</label>
+              <input
+                type="month"
+                value={serviceMonth}
+                onChange={(e) => setServiceMonth(e.target.value)}
+                className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:w-1/2"
+                disabled={isLoading}
+                data-testid="service-month-input"
+              />
             </div>
           )}
         </CardContent>
@@ -582,13 +608,18 @@ export function InvoiceForm({
 // ---------------------------------------------------------------------------
 
 /**
- * Classify a submit error, checking for RefundExceedsSourceError from the backend.
- * `formatCapError` receives the remaining amount string and returns the translated message.
+ * Classify a submit error, checking for known backend error codes.
+ * `formatCapError` receives the remaining amount string and returns the
+ * translated RefundExceedsSource message.
+ * `serviceMonthNotAllowedMessage`, when provided, is returned verbatim for
+ * the backend's `service_month_not_allowed` (service_month set on a
+ * non-labor invoice type).
  * Falls back to the raw error message, then a generic fallback.
  */
 export function classifySubmitError(
   err: unknown,
-  formatCapError: (remaining: string) => string
+  formatCapError: (remaining: string) => string,
+  serviceMonthNotAllowedMessage?: string
 ): string {
   if (err && typeof err === "object") {
     const e = err as Record<string, unknown>;
@@ -608,6 +639,10 @@ export function classifySubmitError(
       const match = message.match(/-?[\d]+[.,]?[\d]*/);
       const remaining = match ? match[0] : "—";
       return formatCapError(remaining);
+    }
+
+    if (code === "service_month_not_allowed" && serviceMonthNotAllowedMessage) {
+      return serviceMonthNotAllowedMessage;
     }
 
     if (typeof message === "string" && message.trim()) return message;

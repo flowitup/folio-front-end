@@ -336,6 +336,7 @@
       "refund": "Refund"
     },
     "issueDate": "Issue date",
+    "serviceMonth": "Payment for month",
     "recipient": "Recipient",
     "recipientAddress": "Address",
     "totalAmount": "Total",
@@ -446,6 +447,7 @@
     "refundsInvoiceNone": "— none —",
     "refundOf": "Refund of {number}",
     "errorRefundExceedsSource": "Refund exceeds the remaining refundable amount ({remaining}) for this invoice.",
+    "errorServiceMonthNotAllowed": "Payment for month can only be set on labor expenses.",
     "refund": {
       "status": {
         "refundable": "Refundable",

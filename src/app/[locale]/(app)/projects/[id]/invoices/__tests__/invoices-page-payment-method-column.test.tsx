@@ -114,6 +114,7 @@ function makeInvoice(overrides: Partial<Invoice>): Invoice {
     payment_method_label: null,
     source_billing_document_id: null,
     is_auto_generated: false,
+    service_month: null,
     ...overrides,
   };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Printer, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
-import { formatDate, formatEUR } from "@/lib/utils/formatters";
+import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 import { fetchTagsClient } from "@/lib/api/tags-client";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
@@ -70,6 +70,7 @@ export function InvoiceDetailContent({
 }: InvoiceDetailContentProps) {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
+  const locale = useLocale();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,8 +104,10 @@ export function InvoiceDetailContent({
       setIsEditing(false);
     } catch (err) {
       setError(
-        classifySubmitError(err, (remaining) =>
-          t("errorRefundExceedsSource", { remaining })
+        classifySubmitError(
+          err,
+          (remaining) => t("errorRefundExceedsSource", { remaining }),
+          t("errorServiceMonthNotAllowed")
         )
       );
     } finally {
@@ -203,6 +206,7 @@ export function InvoiceDetailContent({
             payment_method_id: invoice.payment_method_id ?? null,
             tag_id: invoice.tag_id ?? null,
             refunds_invoice_id: invoice.refunds_invoice_id ?? null,
+            service_month: invoice.service_month ?? null,
           }}
         />
       ) : (
@@ -270,6 +274,16 @@ export function InvoiceDetailContent({
                   </dt>
                   <dd className="mt-0.5 text-sm">
                     {t("refundOf", { number: invoice.refunds_invoice_number })}
+                  </dd>
+                </div>
+              )}
+              {invoice.type === "labor" && invoice.service_month && (
+                <div className="mt-2 border-t pt-2">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {t("serviceMonth")}
+                  </dt>
+                  <dd className="mt-0.5 text-sm">
+                    {formatMonthYear(invoice.service_month, locale)}
                   </dd>
                 </div>
               )}

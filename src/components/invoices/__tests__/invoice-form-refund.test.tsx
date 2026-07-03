@@ -109,6 +109,7 @@ function makeMsInvoice(id: string, number: string, total: number) {
     source_billing_document_id: null,
     is_auto_generated: false,
     refundable_status: null,
+    service_month: null,
   };
 }
 

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
+import { useLocale } from "next-intl";
 import { canOnProject } from "@/lib/auth/project-permissions";
 import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-t
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
 import { fetchTagsClient } from "@/lib/api/tags-client";
-import { formatDate, formatEUR } from "@/lib/utils/formatters";
+import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
 
@@ -33,6 +34,10 @@ const TVA_COLUMN_TABS: ReadonlySet<TabType> = new Set([
   "others",
 ]);
 
+// Tabs that show the "payment for month" column — labor only, since
+// service_month is exclusive to labor invoices.
+const MONTH_COLUMN_TABS: ReadonlySet<TabType> = new Set(["labor"]);
+
 /** Sum of VAT amounts across all items: Σ qty × price × (vat_rate/100). */
 function invoiceTva(items: Invoice["items"]): number {
   return items.reduce(
@@ -41,10 +46,12 @@ function invoiceTva(items: Invoice["items"]): number {
   );
 }
 
-// Base column count without TVA column.
+// Base column count without TVA/Month columns.
 const INVOICE_TABLE_COLUMN_COUNT_BASE = 7;
 // Column count when the TVA column is shown.
 const INVOICE_TABLE_COLUMN_COUNT_TVA = 8;
+// Column count when the Month column is shown (mutually exclusive with TVA).
+const INVOICE_TABLE_COLUMN_COUNT_MONTH = 8;
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp",
@@ -57,6 +64,7 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
 export default function InvoicesPage() {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
+  const locale = useLocale();
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -376,9 +384,12 @@ export default function InvoicesPage() {
             <div className="overflow-x-auto">
               {(() => {
                 const showTvaCol = TVA_COLUMN_TABS.has(activeTab);
+                const showMonthCol = MONTH_COLUMN_TABS.has(activeTab);
                 const colCount = showTvaCol
                   ? INVOICE_TABLE_COLUMN_COUNT_TVA
-                  : INVOICE_TABLE_COLUMN_COUNT_BASE;
+                  : showMonthCol
+                    ? INVOICE_TABLE_COLUMN_COUNT_MONTH
+                    : INVOICE_TABLE_COLUMN_COUNT_BASE;
                 return (
                 <table className="ledger">
                   <thead>
@@ -391,6 +402,7 @@ export default function InvoicesPage() {
                       {showTvaCol && (
                         <th style={{ textAlign: "right" }}>{t("colTva")}</th>
                       )}
+                      {showMonthCol && <th>{t("serviceMonth")}</th>}
                       <th style={{ textAlign: "right" }}>{t("totalAmount")}</th>
                       <th style={{ textAlign: "right" }}>{t("actions")}</th>
                     </tr>
@@ -498,6 +510,13 @@ export default function InvoicesPage() {
                                   {showTvaCol && (
                                     <td className="num" style={{ textAlign: "right", color: "var(--muted)" }}>
                                       {tvaAmount > 0 ? formatEUR(tvaAmount) : "—"}
+                                    </td>
+                                  )}
+                                  {showMonthCol && (
+                                    <td style={{ color: "var(--muted)" }}>
+                                      {invoice.service_month
+                                        ? formatMonthYear(invoice.service_month, locale)
+                                        : "—"}
                                     </td>
                                   )}
                                   <td

@@ -3,6 +3,7 @@ import {
   formatCurrency,
   formatDate,
   formatDateTime,
+  formatMonthYear,
   truncate,
   slugify,
   isValidEmail,
@@ -59,6 +60,34 @@ describe('formatDateTime', () => {
   it('should zero-pad time components', () => {
     const date = new Date(2026, 0, 18, 9, 5, 0)
     expect(formatDateTime(date)).toBe('18/01/2026 09:05')
+  })
+})
+
+describe('formatMonthYear', () => {
+  it('formats a "YYYY-MM-01" date string in English', () => {
+    expect(formatMonthYear('2026-06-01', 'en')).toBe('June 2026')
+  })
+
+  it('formats a "YYYY-MM" date string (no day component)', () => {
+    expect(formatMonthYear('2026-06', 'en')).toBe('June 2026')
+  })
+
+  it('formats in French', () => {
+    expect(formatMonthYear('2026-06-01', 'fr')).toBe('juin 2026')
+  })
+
+  it('formats in Vietnamese', () => {
+    // Intl renders Vietnamese month names as "tháng 6 năm 2026"
+    expect(formatMonthYear('2026-06-01', 'vi')).toContain('6')
+    expect(formatMonthYear('2026-06-01', 'vi')).toContain('2026')
+  })
+
+  it('zero-pads single-digit months consistently', () => {
+    expect(formatMonthYear('2026-01-01', 'en')).toBe('January 2026')
+  })
+
+  it('returns the raw string unchanged when it does not match YYYY-MM(-DD)', () => {
+    expect(formatMonthYear('not-a-date', 'en')).toBe('not-a-date')
   })
 })
 

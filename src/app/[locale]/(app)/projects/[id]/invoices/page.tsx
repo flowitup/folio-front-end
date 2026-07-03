@@ -1,11 +1,10 @@
 "use client";
 
 import { Fragment, useState, useEffect, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
-import { useLocale } from "next-intl";
 import { canOnProject } from "@/lib/auth/project-permissions";
 import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";

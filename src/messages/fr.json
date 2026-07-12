@@ -1158,7 +1158,8 @@
         "remove": "Retirer",
         "changeStatus": "Changer le statut",
         "refundedByCompany": "Remboursé par la société",
-        "refundedByBank": "Remboursé par la banque"
+        "refundedByBank": "Remboursé par la banque",
+        "refundedByBoth": "Remboursé par la société + la banque"
       },
       "dialog": {
         "title": "Ajouter une dépense remboursable",
@@ -1173,6 +1174,7 @@
         "refundedByBank": "Remboursé par la banque",
         "refundable": "À rembourser",
         "companyShare": "{percent}% société",
+        "bothShare": "{percent}% les deux",
         "bankShare": "{percent}% banque"
       }
     }

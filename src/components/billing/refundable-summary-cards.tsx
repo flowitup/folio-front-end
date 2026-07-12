@@ -32,11 +32,24 @@ export function RefundableSummaryCards({ summary }: RefundableSummaryCardsProps)
 
   if (!summary) return null;
 
-  const { refundable_amount, refunded_total, refunded_by_company, refunded_by_bank } = summary;
-  const companyPercent = toPercent(refunded_by_company, refunded_total);
-  // Complement of the company share so the two labels always sum to 100%
-  // (independent rounding could read 99% or 101% on e.g. a 50.4/49.6 split).
-  const bankPercent = refunded_total > 0 ? 100 - companyPercent : 0;
+  const {
+    refundable_amount,
+    refunded_total,
+    refunded_by_company,
+    refunded_by_bank,
+    refunded_by_both = 0,
+  } = summary;
+  // The company/bank cards are INVOLVEMENT figures: an expense refunded by
+  // both sides counts in full in each, so the two cards can exceed the total.
+  // The bar shows three EXCLUSIVE segments (company-only / both / bank-only)
+  // that always sum to refunded_total.
+  const companyOnly = refunded_by_company - refunded_by_both;
+  const bankOnly = refunded_by_bank - refunded_by_both;
+  const companyPercent = toPercent(companyOnly, refunded_total);
+  const bothPercent = toPercent(refunded_by_both, refunded_total);
+  // Last segment is the complement so the three labels always sum to 100%
+  // (independent rounding could read 99% or 101%).
+  const bankPercent = refunded_total > 0 ? 100 - companyPercent - bothPercent : 0;
 
   return (
     <div data-testid="refundable-summary-cards">
@@ -91,13 +104,23 @@ export function RefundableSummaryCards({ summary }: RefundableSummaryCardsProps)
               data-testid="refund-split-bar-company"
             />
             <div
+              className="bg-teal-500"
+              style={{ width: `${bothPercent}%` }}
+              data-testid="refund-split-bar-both"
+            />
+            <div
               className="bg-sky-600"
               style={{ width: `${bankPercent}%` }}
               data-testid="refund-split-bar-bank"
             />
           </div>
-          <div className="mt-1 flex justify-between text-xs text-muted-foreground">
+          <div className="mt-1 flex justify-between gap-2 text-xs text-muted-foreground">
             <span>{t("summary.companyShare", { percent: companyPercent })}</span>
+            {refunded_by_both > 0 && (
+              <span data-testid="refund-split-bar-both-label">
+                {t("summary.bothShare", { percent: bothPercent })}
+              </span>
+            )}
             <span>{t("summary.bankShare", { percent: bankPercent })}</span>
           </div>
         </div>

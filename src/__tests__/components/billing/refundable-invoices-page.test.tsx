@@ -326,6 +326,57 @@ describe("RefundableInvoicesPage", () => {
     expect(byCompany.getAttribute("data-disabled")).toBeNull();
   });
 
+  it("calls setRefundableStatus(id, 'refunded', 'both') when 'Refunded by company + bank' is selected", async () => {
+    const user = userEvent.setup();
+    const expense = makeExpense({ refundable_status: "refunded", refunded_by: "bank" });
+    mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
+
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => screen.getByText("Tower Block"));
+
+    await user.click(screen.getByRole("button", { name: /change status/i }));
+    await waitFor(() => {
+      if (document.querySelectorAll("[role='menuitem']").length === 0) {
+        throw new Error("menu items not rendered");
+      }
+    });
+
+    const item = Array.from(document.querySelectorAll("[role='menuitem']")).find(
+      (el) => /^refunded by company \+ bank$/i.test(el.textContent?.trim() ?? "")
+    )!;
+    await user.click(item);
+
+    await waitFor(() => {
+      expect(mockSet).toHaveBeenCalledWith("exp-1", "refunded", "both");
+    });
+  });
+
+  it("disables only the 'both' item when already refunded by both", async () => {
+    const user = userEvent.setup();
+    const expense = makeExpense({ refundable_status: "refunded", refunded_by: "both" });
+    mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
+
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => screen.getByText("Tower Block"));
+
+    await user.click(screen.getByRole("button", { name: /change status/i }));
+    await waitFor(() => {
+      if (document.querySelectorAll("[role='menuitem']").length === 0) {
+        throw new Error("menu items not rendered");
+      }
+    });
+
+    const items = Array.from(document.querySelectorAll("[role='menuitem']"));
+    const byCompany = items.find((el) => /^refunded by company$/i.test(el.textContent?.trim() ?? ""))!;
+    const byBank = items.find((el) => /^refunded by bank$/i.test(el.textContent?.trim() ?? ""))!;
+    const byBoth = items.find(
+      (el) => /^refunded by company \+ bank$/i.test(el.textContent?.trim() ?? "")
+    )!;
+    expect(byBoth.getAttribute("data-disabled")).not.toBeNull();
+    expect(byCompany.getAttribute("data-disabled")).toBeNull();
+    expect(byBank.getAttribute("data-disabled")).toBeNull();
+  });
+
   it("opens the Add dialog when the Add button is clicked", async () => {
     mockFetch.mockResolvedValue({ items: [], total: 0, summary: null });
     render(<RefundableInvoicesPage />);
@@ -366,6 +417,7 @@ describe("RefundableInvoicesPage", () => {
         refunded_total: 1000,
         refunded_by_company: 600,
         refunded_by_bank: 400,
+        refunded_by_both: 0,
       },
     });
 
@@ -384,6 +436,7 @@ describe("RefundableInvoicesPage", () => {
         refunded_total: 0,
         refunded_by_company: 0,
         refunded_by_bank: 0,
+        refunded_by_both: 0,
       },
     });
 

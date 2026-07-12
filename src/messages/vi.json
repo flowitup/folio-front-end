@@ -1158,7 +1158,8 @@
         "remove": "Gỡ bỏ",
         "changeStatus": "Đổi trạng thái",
         "refundedByCompany": "Được công ty hoàn tiền",
-        "refundedByBank": "Được ngân hàng hoàn tiền"
+        "refundedByBank": "Được ngân hàng hoàn tiền",
+        "refundedByBoth": "Được công ty + ngân hàng hoàn tiền"
       },
       "dialog": {
         "title": "Thêm chi phí hoàn tiền",
@@ -1173,6 +1174,7 @@
         "refundedByBank": "Ngân hàng đã hoàn",
         "refundable": "Chờ hoàn tiền",
         "companyShare": "{percent}% công ty",
+        "bothShare": "{percent}% cả hai",
         "bankShare": "{percent}% ngân hàng"
       }
     }

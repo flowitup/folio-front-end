@@ -64,9 +64,14 @@ export function RefundableExpenseRowActions({
     }
   }
 
-  // Already refunded by company: refunded_by is "company", null (legacy), or absent.
-  const alreadyRefundedByCompany = currentStatus === "refunded" && expense.refunded_by !== "bank";
-  const alreadyRefundedByBank = currentStatus === "refunded" && expense.refunded_by === "bank";
+  // Each item is disabled only when it matches the row's EXACT current source,
+  // so switching between company / bank / both is always one click.
+  // Legacy null (pre-refunded_by rows) reads as company.
+  const isRefunded = currentStatus === "refunded";
+  const alreadyRefundedByCompany =
+    isRefunded && (expense.refunded_by === "company" || expense.refunded_by == null);
+  const alreadyRefundedByBank = isRefunded && expense.refunded_by === "bank";
+  const alreadyRefundedByBoth = isRefunded && expense.refunded_by === "both";
 
   const stampClass = currentStatus
     ? REFUNDABLE_STATUS_STAMP[currentStatus]
@@ -120,6 +125,12 @@ export function RefundableExpenseRowActions({
             disabled={alreadyRefundedByBank}
           >
             {t("action.refundedByBank")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => handleSetStatus("refunded", "both")}
+            disabled={alreadyRefundedByBoth}
+          >
+            {t("action.refundedByBoth")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

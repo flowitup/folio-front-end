@@ -45,8 +45,11 @@ export function getRefundSource(input: {
 }): RefundSource {
   const isRefunded = input.refundable_status === "refunded";
   return {
+    // 'both' involves each side; legacy null counts as company.
     byCompany: isRefunded && input.refunded_by !== "bank",
-    byBank: Boolean(input.has_bank_refund) || (isRefunded && input.refunded_by === "bank"),
+    byBank:
+      Boolean(input.has_bank_refund) ||
+      (isRefunded && (input.refunded_by === "bank" || input.refunded_by === "both")),
   };
 }
 

@@ -1158,7 +1158,8 @@
         "remove": "Remove",
         "changeStatus": "Change status",
         "refundedByCompany": "Refunded by company",
-        "refundedByBank": "Refunded by bank"
+        "refundedByBank": "Refunded by bank",
+        "refundedByBoth": "Refunded by company + bank"
       },
       "dialog": {
         "title": "Add refundable expense",
@@ -1173,6 +1174,7 @@
         "refundedByBank": "Refunded by bank",
         "refundable": "Refundable",
         "companyShare": "{percent}% company",
+        "bothShare": "{percent}% both",
         "bankShare": "{percent}% bank"
       }
     }

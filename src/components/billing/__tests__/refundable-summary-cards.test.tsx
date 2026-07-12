@@ -46,6 +46,7 @@ function makeSummary(overrides: Partial<RefundableSummary> = {}): RefundableSumm
     refunded_total: 1000,
     refunded_by_company: 600,
     refunded_by_bank: 400,
+    refunded_by_both: 0,
     ...overrides,
   };
 }
@@ -101,6 +102,32 @@ describe("RefundableSummaryCards", () => {
     // 1/3 = 33.33% rounds to 33; 2/3 = 66.67% rounds to 67
     expect(screen.getByText("33% company")).toBeDefined();
     expect(screen.getByText("67% bank")).toBeDefined();
+  });
+
+  it("renders a 3-segment bar when an expense was refunded by both sides", () => {
+    // company involving 600, bank involving 500, both 100
+    // → exclusive segments: company-only 500 (50%), both 100 (10%), bank-only 400 (40%)
+    render(
+      <RefundableSummaryCards
+        summary={makeSummary({
+          refunded_total: 1000,
+          refunded_by_company: 600,
+          refunded_by_bank: 500,
+          refunded_by_both: 100,
+        })}
+      />
+    );
+    expect(screen.getByTestId("refund-split-bar-company").style.width).toBe("50%");
+    expect(screen.getByTestId("refund-split-bar-both").style.width).toBe("10%");
+    expect(screen.getByTestId("refund-split-bar-bank").style.width).toBe("40%");
+    expect(screen.getByText("50% company")).toBeDefined();
+    expect(screen.getByText("10% both")).toBeDefined();
+    expect(screen.getByText("40% bank")).toBeDefined();
+  });
+
+  it("hides the 'both' percent label when nothing was refunded by both", () => {
+    render(<RefundableSummaryCards summary={makeSummary()} />);
+    expect(screen.queryByTestId("refund-split-bar-both-label")).toBeNull();
   });
 
   it("labels always sum to 100% even when independent rounding would not", () => {

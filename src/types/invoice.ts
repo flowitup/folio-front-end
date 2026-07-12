@@ -131,7 +131,7 @@ export type InvoiceExportTypeFilter = InvoiceType | undefined;
 export type RefundableStatus = "refundable" | "refund_pending" | "refunded";
 
 /** Which entity carried out a reimbursement: the company itself, or the bank/vendor. */
-export type RefundedBy = "company" | "bank";
+export type RefundedBy = "company" | "bank" | "both";
 
 /**
  * A single file attached to a refundable expense invoice.
@@ -180,6 +180,10 @@ export interface RefundableExpense {
 export interface RefundableSummary {
   refundable_amount: number;
   refunded_total: number;
+  /** Refunded expenses involving the company ('company', legacy null, or 'both'). */
   refunded_by_company: number;
+  /** Refunded expenses involving the bank ('bank' or 'both'). */
   refunded_by_bank: number;
+  /** Overlap: expenses refunded by both sides (already included in each figure above). */
+  refunded_by_both: number;
 }

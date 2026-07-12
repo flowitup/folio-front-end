@@ -16,11 +16,13 @@ import vi from "../vi.json";
 const REFUNDABLE_KEYS = [
   "action.refundedByCompany",
   "action.refundedByBank",
+  "action.refundedByBoth",
   "summary.refundedTotal",
   "summary.refundedByCompany",
   "summary.refundedByBank",
   "summary.refundable",
   "summary.companyShare",
+  "summary.bothShare",
   "summary.bankShare",
 ] as const;
 

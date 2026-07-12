@@ -57,6 +57,12 @@ describe("getRefundSource", () => {
     ).toEqual({ byCompany: false, byBank: true });
   });
 
+  it("refunded_by='both' → company AND bank icons", () => {
+    expect(
+      getRefundSource({ refundable_status: "refunded", has_bank_refund: false, refunded_by: "both" })
+    ).toEqual({ byCompany: true, byBank: true });
+  });
+
   it("refunded_by='company' → company only", () => {
     expect(
       getRefundSource({ refundable_status: "refunded", has_bank_refund: false, refunded_by: "company" })

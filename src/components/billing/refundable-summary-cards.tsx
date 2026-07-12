@@ -21,7 +21,7 @@ interface RefundableSummaryCardsProps {
   summary: RefundableSummary | null;
 }
 
-/** Round a 0-1 share to a whole percent for display. */
+/** Round part/whole to a whole display percent (0 when whole is 0). */
 function toPercent(part: number, whole: number): number {
   if (whole <= 0) return 0;
   return Math.round((part / whole) * 100);
@@ -34,7 +34,9 @@ export function RefundableSummaryCards({ summary }: RefundableSummaryCardsProps)
 
   const { refundable_amount, refunded_total, refunded_by_company, refunded_by_bank } = summary;
   const companyPercent = toPercent(refunded_by_company, refunded_total);
-  const bankPercent = toPercent(refunded_by_bank, refunded_total);
+  // Complement of the company share so the two labels always sum to 100%
+  // (independent rounding could read 99% or 101% on e.g. a 50.4/49.6 split).
+  const bankPercent = refunded_total > 0 ? 100 - companyPercent : 0;
 
   return (
     <div data-testid="refundable-summary-cards">

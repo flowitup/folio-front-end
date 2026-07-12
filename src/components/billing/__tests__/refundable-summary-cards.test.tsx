@@ -102,4 +102,16 @@ describe("RefundableSummaryCards", () => {
     expect(screen.getByText("33% company")).toBeDefined();
     expect(screen.getByText("67% bank")).toBeDefined();
   });
+
+  it("labels always sum to 100% even when independent rounding would not", () => {
+    // 495/1000 → 49.5% rounds to 50; independently-rounded bank (50.5 → 51)
+    // would read 101%. The bank label is the complement, so 50/50.
+    render(
+      <RefundableSummaryCards
+        summary={makeSummary({ refunded_total: 1000, refunded_by_company: 495, refunded_by_bank: 505 })}
+      />
+    );
+    expect(screen.getByText("50% company")).toBeDefined();
+    expect(screen.getByText("50% bank")).toBeDefined();
+  });
 });

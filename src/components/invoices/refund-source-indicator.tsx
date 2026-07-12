@@ -16,11 +16,12 @@ import {
   getRefundSource,
   refundSourceI18nKey,
 } from "@/lib/invoices/refundable-status-display";
-import type { RefundableStatus } from "@/types/invoice";
+import type { RefundableStatus, RefundedBy } from "@/types/invoice";
 
 interface RefundSourceIndicatorProps {
   refundable_status?: RefundableStatus | null;
   has_bank_refund?: boolean | null;
+  refunded_by?: RefundedBy | null;
   /** Optional extra classes for the wrapper. */
   className?: string;
 }
@@ -28,10 +29,11 @@ interface RefundSourceIndicatorProps {
 export function RefundSourceIndicator({
   refundable_status,
   has_bank_refund,
+  refunded_by,
   className,
 }: RefundSourceIndicatorProps) {
   const t = useTranslations("invoices");
-  const source = getRefundSource({ refundable_status, has_bank_refund });
+  const source = getRefundSource({ refundable_status, has_bank_refund, refunded_by });
   const tooltipKey = refundSourceI18nKey(source);
 
   // Nothing to show when neither source refunded this expense.

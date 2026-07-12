@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { setRefundableStatus } from "@/lib/api/billing/refundable-invoices";
-import type { RefundableExpense, RefundableStatus } from "@/types/invoice";
+import type { RefundableExpense, RefundableStatus, RefundedBy } from "@/types/invoice";
 
 // Stamp color mapping consistent with billing status badge design system.
 export const REFUNDABLE_STATUS_STAMP: Record<RefundableStatus, string> = {
@@ -52,10 +52,10 @@ export function RefundableExpenseRowActions({
 
   const currentStatus = expense.refundable_status;
 
-  async function handleSetStatus(next: RefundableStatus | null) {
+  async function handleSetStatus(next: RefundableStatus | null, refundedBy?: RefundedBy) {
     setLoading(true);
     try {
-      await setRefundableStatus(expense.id, next);
+      await setRefundableStatus(expense.id, next, refundedBy);
       onReload();
     } catch {
       toast.error(t("updateError"));
@@ -63,6 +63,10 @@ export function RefundableExpenseRowActions({
       setLoading(false);
     }
   }
+
+  // Already refunded by company: refunded_by is "company", null (legacy), or absent.
+  const alreadyRefundedByCompany = currentStatus === "refunded" && expense.refunded_by !== "bank";
+  const alreadyRefundedByBank = currentStatus === "refunded" && expense.refunded_by === "bank";
 
   const stampClass = currentStatus
     ? REFUNDABLE_STATUS_STAMP[currentStatus]
@@ -106,10 +110,16 @@ export function RefundableExpenseRowActions({
             {t("status.refundPending")}
           </DropdownMenuItem>
           <DropdownMenuItem
-            onSelect={() => handleSetStatus("refunded")}
-            disabled={currentStatus === "refunded"}
+            onSelect={() => handleSetStatus("refunded", "company")}
+            disabled={alreadyRefundedByCompany}
           >
-            {t("status.refunded")}
+            {t("action.refundedByCompany")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => handleSetStatus("refunded", "bank")}
+            disabled={alreadyRefundedByBank}
+          >
+            {t("action.refundedByBank")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

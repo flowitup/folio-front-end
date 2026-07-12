@@ -263,6 +263,7 @@ export function InvoiceDetailContent({
                     <RefundSourceIndicator
                       refundable_status={invoice.refundable_status}
                       has_bank_refund={invoice.has_bank_refund}
+                      refunded_by={invoice.refunded_by}
                     />
                   </dd>
                 </div>

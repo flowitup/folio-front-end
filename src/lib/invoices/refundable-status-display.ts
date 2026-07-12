@@ -1,4 +1,4 @@
-import type { RefundableStatus } from "@/types/invoice";
+import type { RefundableStatus, RefundedBy } from "@/types/invoice";
 
 /**
  * Maps each refundable status to its CSS stamp class.
@@ -32,15 +32,21 @@ export interface RefundSource {
 /**
  * Derive the refund source from an expense/invoice. Pure — single source of truth
  * shared by the billing page, invoice detail, and mobile card.
- * Company is strictly 'refunded' (NOT 'refund_pending').
+ * Company is strictly 'refunded' (NOT 'refund_pending') AND refunded_by is not
+ * "bank" (null/absent/"company" all read as company-refunded, covering legacy
+ * rows written before refunded_by existed).
+ * Bank is either the legacy has_bank_refund signal (≥1 linked refund invoice)
+ * OR an explicit refunded_by === "bank" split.
  */
 export function getRefundSource(input: {
   refundable_status?: RefundableStatus | null;
   has_bank_refund?: boolean | null;
+  refunded_by?: RefundedBy | null;
 }): RefundSource {
+  const isRefunded = input.refundable_status === "refunded";
   return {
-    byCompany: input.refundable_status === "refunded",
-    byBank: Boolean(input.has_bank_refund),
+    byCompany: isRefunded && input.refunded_by !== "bank",
+    byBank: Boolean(input.has_bank_refund) || (isRefunded && input.refunded_by === "bank"),
   };
 }
 

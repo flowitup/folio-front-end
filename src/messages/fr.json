@@ -1156,7 +1156,9 @@
       },
       "action": {
         "remove": "Retirer",
-        "changeStatus": "Changer le statut"
+        "changeStatus": "Changer le statut",
+        "refundedByCompany": "Remboursé par la société",
+        "refundedByBank": "Remboursé par la banque"
       },
       "dialog": {
         "title": "Ajouter une dépense remboursable",
@@ -1164,6 +1166,14 @@
         "confirm": "Ajouter la sélection",
         "cancel": "Annuler",
         "empty": "Aucune dépense éligible trouvée."
+      },
+      "summary": {
+        "refundedTotal": "Total remboursé",
+        "refundedByCompany": "Remboursé par la société",
+        "refundedByBank": "Remboursé par la banque",
+        "refundable": "À rembourser",
+        "companyShare": "{percent}% société",
+        "bankShare": "{percent}% banque"
       }
     }
   },

@@ -130,7 +130,7 @@ describe("RefundableInvoicesPage", () => {
 
   it("renders rows with project name and colored status label", async () => {
     const expense = makeExpense({ refundable_status: "refund_pending" });
-    mockFetch.mockResolvedValue({ items: [expense], total: 1 });
+    mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
 
@@ -143,7 +143,7 @@ describe("RefundableInvoicesPage", () => {
   });
 
   it("renders 'refundable' status stamp label", async () => {
-    mockFetch.mockResolvedValue({ items: [makeExpense()], total: 1 });
+    mockFetch.mockResolvedValue({ items: [makeExpense()], total: 1, summary: null });
     render(<RefundableInvoicesPage />);
     await waitFor(() => {
       expect(screen.getByText("Refundable")).toBeDefined();
@@ -154,6 +154,7 @@ describe("RefundableInvoicesPage", () => {
     mockFetch.mockResolvedValue({
       items: [makeExpense({ refundable_status: "refunded" })],
       total: 1,
+      summary: null,
     });
     render(<RefundableInvoicesPage />);
     await waitFor(() => {
@@ -165,7 +166,7 @@ describe("RefundableInvoicesPage", () => {
     const expense = makeExpense({
       attachments: [{ id: "a1", filename: "receipt.pdf", mime_type: "application/pdf", size_bytes: 1024 }],
     });
-    mockFetch.mockResolvedValue({ items: [expense], total: 1 });
+    mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
     await waitFor(() => screen.getByText("Tower Block"));
@@ -178,7 +179,7 @@ describe("RefundableInvoicesPage", () => {
   });
 
   it("shows empty state when list is empty", async () => {
-    mockFetch.mockResolvedValue({ items: [], total: 0 });
+    mockFetch.mockResolvedValue({ items: [], total: 0, summary: null });
     render(<RefundableInvoicesPage />);
     await waitFor(() => {
       expect(screen.getByText("No refundable expenses yet.")).toBeDefined();
@@ -196,7 +197,7 @@ describe("RefundableInvoicesPage", () => {
   it("calls setRefundableStatus(id, null) when Remove is selected", async () => {
     const user = userEvent.setup();
     const expense = makeExpense();
-    mockFetch.mockResolvedValue({ items: [expense], total: 1 });
+    mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
     await waitFor(() => screen.getByText("Tower Block"));
@@ -217,16 +218,16 @@ describe("RefundableInvoicesPage", () => {
     await user.click(removeItem);
 
     await waitFor(() => {
-      expect(mockSet).toHaveBeenCalledWith("exp-1", null);
+      expect(mockSet).toHaveBeenCalledWith("exp-1", null, undefined);
     });
     // After remove the list reloads
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
-  it("calls setRefundableStatus(id, 'refunded') when Refunded is selected", async () => {
+  it("calls setRefundableStatus(id, 'refunded', 'company') when 'Refunded by company' is selected", async () => {
     const user = userEvent.setup();
     const expense = makeExpense({ refundable_status: "refund_pending" });
-    mockFetch.mockResolvedValue({ items: [expense], total: 1 });
+    mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
     await waitFor(() => screen.getByText("Tower Block"));
@@ -239,18 +240,94 @@ describe("RefundableInvoicesPage", () => {
       if (items.length === 0) throw new Error("menu items not rendered");
     });
 
-    const refundedItem = Array.from(document.querySelectorAll("[role='menuitem']")).find(
-      (el) => /^refunded$/i.test(el.textContent?.trim() ?? "")
+    const item = Array.from(document.querySelectorAll("[role='menuitem']")).find(
+      (el) => /^refunded by company$/i.test(el.textContent?.trim() ?? "")
     )!;
-    await user.click(refundedItem);
+    await user.click(item);
 
     await waitFor(() => {
-      expect(mockSet).toHaveBeenCalledWith("exp-1", "refunded");
+      expect(mockSet).toHaveBeenCalledWith("exp-1", "refunded", "company");
     });
   });
 
+  it("calls setRefundableStatus(id, 'refunded', 'bank') when 'Refunded by bank' is selected", async () => {
+    const user = userEvent.setup();
+    const expense = makeExpense({ refundable_status: "refund_pending" });
+    mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
+
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => screen.getByText("Tower Block"));
+
+    const trigger = screen.getByRole("button", { name: /change status/i });
+    await user.click(trigger);
+
+    await waitFor(() => {
+      const items = document.querySelectorAll("[role='menuitem']");
+      if (items.length === 0) throw new Error("menu items not rendered");
+    });
+
+    const item = Array.from(document.querySelectorAll("[role='menuitem']")).find(
+      (el) => /^refunded by bank$/i.test(el.textContent?.trim() ?? "")
+    )!;
+    await user.click(item);
+
+    await waitFor(() => {
+      expect(mockSet).toHaveBeenCalledWith("exp-1", "refunded", "bank");
+    });
+  });
+
+  it("disables 'Refunded by company' when already company-refunded (refunded_by null/company)", async () => {
+    const user = userEvent.setup();
+    const expense = makeExpense({ refundable_status: "refunded", refunded_by: null });
+    mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
+
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => screen.getByText("Tower Block"));
+
+    await user.click(screen.getByRole("button", { name: /change status/i }));
+    await waitFor(() => {
+      if (document.querySelectorAll("[role='menuitem']").length === 0) {
+        throw new Error("menu items not rendered");
+      }
+    });
+
+    const byCompany = Array.from(document.querySelectorAll("[role='menuitem']")).find(
+      (el) => /^refunded by company$/i.test(el.textContent?.trim() ?? "")
+    )!;
+    const byBank = Array.from(document.querySelectorAll("[role='menuitem']")).find(
+      (el) => /^refunded by bank$/i.test(el.textContent?.trim() ?? "")
+    )!;
+    expect(byCompany.getAttribute("data-disabled")).not.toBeNull();
+    expect(byBank.getAttribute("data-disabled")).toBeNull();
+  });
+
+  it("disables 'Refunded by bank' when already bank-refunded", async () => {
+    const user = userEvent.setup();
+    const expense = makeExpense({ refundable_status: "refunded", refunded_by: "bank" });
+    mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
+
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => screen.getByText("Tower Block"));
+
+    await user.click(screen.getByRole("button", { name: /change status/i }));
+    await waitFor(() => {
+      if (document.querySelectorAll("[role='menuitem']").length === 0) {
+        throw new Error("menu items not rendered");
+      }
+    });
+
+    const byCompany = Array.from(document.querySelectorAll("[role='menuitem']")).find(
+      (el) => /^refunded by company$/i.test(el.textContent?.trim() ?? "")
+    )!;
+    const byBank = Array.from(document.querySelectorAll("[role='menuitem']")).find(
+      (el) => /^refunded by bank$/i.test(el.textContent?.trim() ?? "")
+    )!;
+    expect(byBank.getAttribute("data-disabled")).not.toBeNull();
+    expect(byCompany.getAttribute("data-disabled")).toBeNull();
+  });
+
   it("opens the Add dialog when the Add button is clicked", async () => {
-    mockFetch.mockResolvedValue({ items: [], total: 0 });
+    mockFetch.mockResolvedValue({ items: [], total: 0, summary: null });
     render(<RefundableInvoicesPage />);
     await waitFor(() => screen.getByText("No refundable expenses yet."));
 
@@ -260,7 +337,7 @@ describe("RefundableInvoicesPage", () => {
 
   it("shows truncation notice when total > items.length", async () => {
     const items = [makeExpense({ id: "exp-1" }), makeExpense({ id: "exp-2", invoice_number: "INV-002" })];
-    mockFetch.mockResolvedValue({ items, total: 75 });
+    mockFetch.mockResolvedValue({ items, total: 75, summary: null });
 
     render(<RefundableInvoicesPage />);
     // Two rows with "Tower Block" — wait for the unique invoice number instead
@@ -272,11 +349,54 @@ describe("RefundableInvoicesPage", () => {
 
   it("does not show truncation notice when total === items.length", async () => {
     const items = [makeExpense()];
-    mockFetch.mockResolvedValue({ items, total: 1 });
+    mockFetch.mockResolvedValue({ items, total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
     await waitFor(() => screen.getByText("Tower Block"));
 
     expect(screen.queryByText(/Showing \d+ of \d+/)).toBeNull();
+  });
+
+  it("renders summary cards when the fetch returns a non-null summary", async () => {
+    mockFetch.mockResolvedValue({
+      items: [makeExpense()],
+      total: 1,
+      summary: {
+        refundable_amount: 500,
+        refunded_total: 1000,
+        refunded_by_company: 600,
+        refunded_by_bank: 400,
+      },
+    });
+
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("refundable-summary-cards")).toBeDefined();
+    });
+  });
+
+  it("renders summary cards even when the list is empty (non-null summary)", async () => {
+    mockFetch.mockResolvedValue({
+      items: [],
+      total: 0,
+      summary: {
+        refundable_amount: 0,
+        refunded_total: 0,
+        refunded_by_company: 0,
+        refunded_by_bank: 0,
+      },
+    });
+
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => screen.getByText("No refundable expenses yet."));
+    expect(screen.getByTestId("refundable-summary-cards")).toBeDefined();
+  });
+
+  it("renders nothing for summary cards when summary is null", async () => {
+    mockFetch.mockResolvedValue({ items: [makeExpense()], total: 1, summary: null });
+
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => screen.getByText("Tower Block"));
+    expect(screen.queryByTestId("refundable-summary-cards")).toBeNull();
   });
 });

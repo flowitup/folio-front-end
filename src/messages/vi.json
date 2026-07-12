@@ -1156,7 +1156,9 @@
       },
       "action": {
         "remove": "Gỡ bỏ",
-        "changeStatus": "Đổi trạng thái"
+        "changeStatus": "Đổi trạng thái",
+        "refundedByCompany": "Được công ty hoàn tiền",
+        "refundedByBank": "Được ngân hàng hoàn tiền"
       },
       "dialog": {
         "title": "Thêm chi phí hoàn tiền",
@@ -1164,6 +1166,14 @@
         "confirm": "Thêm đã chọn",
         "cancel": "Hủy",
         "empty": "Không tìm thấy chi phí phù hợp."
+      },
+      "summary": {
+        "refundedTotal": "Tổng đã hoàn",
+        "refundedByCompany": "Công ty đã hoàn",
+        "refundedByBank": "Ngân hàng đã hoàn",
+        "refundable": "Chờ hoàn tiền",
+        "companyShare": "{percent}% công ty",
+        "bankShare": "{percent}% ngân hàng"
       }
     }
   },

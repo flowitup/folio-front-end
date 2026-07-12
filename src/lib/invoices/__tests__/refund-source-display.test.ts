@@ -50,6 +50,30 @@ describe("getRefundSource", () => {
       byBank: false,
     });
   });
+
+  it("refunded_by='bank' → bank icon without has_bank_refund", () => {
+    expect(
+      getRefundSource({ refundable_status: "refunded", has_bank_refund: false, refunded_by: "bank" })
+    ).toEqual({ byCompany: false, byBank: true });
+  });
+
+  it("refunded_by='company' → company only", () => {
+    expect(
+      getRefundSource({ refundable_status: "refunded", has_bank_refund: false, refunded_by: "company" })
+    ).toEqual({ byCompany: true, byBank: false });
+  });
+
+  it("refunded_by=null (legacy) → company (backward compatible)", () => {
+    expect(
+      getRefundSource({ refundable_status: "refunded", has_bank_refund: false, refunded_by: null })
+    ).toEqual({ byCompany: true, byBank: false });
+  });
+
+  it("refunded_by='bank' plus has_bank_refund still just byBank (no double-count)", () => {
+    expect(
+      getRefundSource({ refundable_status: "refunded", has_bank_refund: true, refunded_by: "bank" })
+    ).toEqual({ byCompany: false, byBank: true });
+  });
 });
 
 describe("refundSourceI18nKey", () => {

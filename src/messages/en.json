@@ -1156,7 +1156,9 @@
       },
       "action": {
         "remove": "Remove",
-        "changeStatus": "Change status"
+        "changeStatus": "Change status",
+        "refundedByCompany": "Refunded by company",
+        "refundedByBank": "Refunded by bank"
       },
       "dialog": {
         "title": "Add refundable expense",
@@ -1164,6 +1166,14 @@
         "confirm": "Add selected",
         "cancel": "Cancel",
         "empty": "No eligible expenses found."
+      },
+      "summary": {
+        "refundedTotal": "Total refunded",
+        "refundedByCompany": "Refunded by company",
+        "refundedByBank": "Refunded by bank",
+        "refundable": "Refundable",
+        "companyShare": "{percent}% company",
+        "bankShare": "{percent}% bank"
       }
     }
   },

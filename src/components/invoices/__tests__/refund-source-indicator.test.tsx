@@ -37,4 +37,28 @@ describe("RefundSourceIndicator", () => {
     const wrapper = screen.getByTestId("refund-source-indicator");
     expect(wrapper.getAttribute("title")).toBe("invoices.refundSource.both");
   });
+
+  it("refunded_by='bank' → bank icon without has_bank_refund", () => {
+    render(
+      <RefundSourceIndicator
+        refundable_status="refunded"
+        has_bank_refund={false}
+        refunded_by="bank"
+      />
+    );
+    expect(screen.getByTestId("refund-source-bank")).toBeDefined();
+    expect(screen.queryByTestId("refund-source-company")).toBeNull();
+  });
+
+  it("refunded_by=null (legacy) → company icon", () => {
+    render(
+      <RefundSourceIndicator
+        refundable_status="refunded"
+        has_bank_refund={false}
+        refunded_by={null}
+      />
+    );
+    expect(screen.getByTestId("refund-source-company")).toBeDefined();
+    expect(screen.queryByTestId("refund-source-bank")).toBeNull();
+  });
 });

@@ -18,15 +18,17 @@ import { fetchRefundableExpenses } from "@/lib/api/billing/refundable-invoices";
 import { RefundableExpenseRowActions } from "@/components/billing/refundable-expense-row-actions";
 import { RefundableExpenseAttachmentsCell } from "@/components/billing/refundable-expense-attachments-cell";
 import { AddRefundableExpenseDialog } from "@/components/billing/add-refundable-expense-dialog";
+import { RefundableSummaryCards } from "@/components/billing/refundable-summary-cards";
 import { formatDate, formatEUR } from "@/lib/utils/formatters";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
-import type { RefundableExpense } from "@/types/invoice";
+import type { RefundableExpense, RefundableSummary } from "@/types/invoice";
 
 export default function RefundableInvoicesPage() {
   const t = useTranslations("billing.refundable");
 
   const [items, setItems] = useState<RefundableExpense[]>([]);
   const [total, setTotal] = useState<number>(0);
+  const [summary, setSummary] = useState<RefundableSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -44,6 +46,7 @@ export default function RefundableInvoicesPage() {
       const result = await fetchRefundableExpenses();
       setItems(result.items);
       setTotal(result.total);
+      setSummary(result.summary);
     } catch {
       setError(tRef.current("loadError"));
     } finally {
@@ -67,6 +70,8 @@ export default function RefundableInvoicesPage() {
           {t("addButton")}
         </Button>
       </div>
+
+      <RefundableSummaryCards summary={summary} />
 
       {/* Table */}
       {loading ? (
@@ -108,6 +113,7 @@ export default function RefundableInvoicesPage() {
                     <RefundSourceIndicator
                       refundable_status={expense.refundable_status}
                       has_bank_refund={expense.has_bank_refund}
+                      refunded_by={expense.refunded_by}
                     />
                   </td>
                   <td className="py-3 pr-4" colSpan={2}>

@@ -62,6 +62,14 @@ export interface Invoice {
    */
   has_bank_refund?: boolean;
   /**
+   * Which entity carried out the reimbursement. Only meaningful when
+   * refundable_status === 'refunded' — null/absent on any other status
+   * (the backend clears it server-side when the status leaves 'refunded').
+   * Legacy 'refunded' rows written before this field existed read as null
+   * and are treated as company-refunded for backward compatibility.
+   */
+  refunded_by?: RefundedBy | null;
+  /**
    * Optional "payment for month" on labor expenses, format "YYYY-MM-01".
    * Only meaningful when type === "labor"; null on all other types and on
    * legacy labor invoices created before this field existed.
@@ -122,6 +130,9 @@ export type InvoiceExportTypeFilter = InvoiceType | undefined;
 /** Status lifecycle for a materials & services expense claimed for reimbursement. */
 export type RefundableStatus = "refundable" | "refund_pending" | "refunded";
 
+/** Which entity carried out a reimbursement: the company itself, or the bank/vendor. */
+export type RefundedBy = "company" | "bank";
+
 /**
  * A single file attached to a refundable expense invoice.
  * Subset of InvoiceAttachment — only the fields the backend sends on this endpoint.
@@ -150,6 +161,25 @@ export interface RefundableExpense {
   refundable_status: RefundableStatus | null;
   /** True when ≥1 refund invoice links back to this expense (refunded by bank). */
   has_bank_refund: boolean;
+  /**
+   * Which entity carried out the reimbursement. Only meaningful when
+   * refundable_status === 'refunded' — null/absent on any other status
+   * (the backend clears it server-side when the status leaves 'refunded').
+   * Legacy 'refunded' rows written before this field existed read as null
+   * and are treated as company-refunded for backward compatibility.
+   */
+  refunded_by?: RefundedBy | null;
   /** Invoice files attached to this expense, ordered by upload time. */
   attachments: RefundableExpenseAttachment[];
+}
+
+/**
+ * Aggregated refund totals for the full filter set behind
+ * GET /billing/materials-expenses?refundable=true — not just the current page.
+ */
+export interface RefundableSummary {
+  refundable_amount: number;
+  refunded_total: number;
+  refunded_by_company: number;
+  refunded_by_bank: number;
 }

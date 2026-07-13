@@ -117,6 +117,9 @@ describe("RefundableSummaryCards", () => {
         })}
       />
     );
+    // Total card is the sum of reimbursement flows: 600 + 500 = 1100,
+    // NOT the unique expense sum (1000) — a both-refunded expense counts twice.
+    expect(screen.getByTestId("summary-card-refunded-total").textContent).toContain(formatEUR(1100));
     expect(screen.getByTestId("refund-split-bar-company").style.width).toBe("50%");
     expect(screen.getByTestId("refund-split-bar-both").style.width).toBe("10%");
     expect(screen.getByTestId("refund-split-bar-bank").style.width).toBe("40%");

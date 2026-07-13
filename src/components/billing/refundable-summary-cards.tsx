@@ -40,9 +40,12 @@ export function RefundableSummaryCards({ summary }: RefundableSummaryCardsProps)
     refunded_by_both = 0,
   } = summary;
   // The company/bank cards are INVOLVEMENT figures: an expense refunded by
-  // both sides counts in full in each, so the two cards can exceed the total.
-  // The bar shows three EXCLUSIVE segments (company-only / both / bank-only)
-  // that always sum to refunded_total.
+  // both sides counts in full in each. The "Total refunded" card is the sum
+  // of the two — the total of reimbursement FLOWS — so a both-refunded
+  // expense contributes twice (once per side). refunded_total (the unique
+  // expense sum) remains the bar's denominator: the bar shows three
+  // EXCLUSIVE segments (company-only / both / bank-only) that sum to it.
+  const totalRefundFlows = refunded_by_company + refunded_by_bank;
   const companyOnly = refunded_by_company - refunded_by_both;
   const bankOnly = refunded_by_bank - refunded_by_both;
   const companyPercent = toPercent(companyOnly, refunded_total);
@@ -57,7 +60,7 @@ export function RefundableSummaryCards({ summary }: RefundableSummaryCardsProps)
         <Card data-testid="summary-card-refunded-total">
           <CardContent className="space-y-1">
             <p className="text-xs uppercase text-muted-foreground">{t("summary.refundedTotal")}</p>
-            <p className="tabular-nums font-semibold text-lg">{formatEUR(refunded_total)}</p>
+            <p className="tabular-nums font-semibold text-lg">{formatEUR(totalRefundFlows)}</p>
           </CardContent>
         </Card>
 

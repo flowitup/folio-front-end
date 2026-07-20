@@ -142,7 +142,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.compute-version.outputs.version_bumped == 'true'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
 
@@ -183,7 +183,7 @@ jobs:
         run: git pull origin ${{ github.head_ref }} || true
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -211,7 +211,7 @@ jobs:
         run: git pull origin ${{ github.head_ref }} || true
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -238,7 +238,7 @@ jobs:
         run: git pull origin ${{ github.head_ref }} || true
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -265,7 +265,7 @@ jobs:
         run: git pull origin ${{ github.head_ref }} || true
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'

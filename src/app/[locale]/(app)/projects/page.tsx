@@ -244,8 +244,18 @@ export default function ProjectsPage() {
             const isLoadingThisProject = loadingUsers === project.id;
             const cover = (project as { cover?: string }).cover ?? coverFor(project.id);
             const phase = (project as { phase?: string }).phase ?? "Planning";
-            const { budget, spent, remaining, isOverBudget, progress } =
-              computeBudgetMeta(project.budget ?? 0, project.spent ?? 0);
+            const {
+              creditTotal,
+              spentByCredits,
+              spentPersonal,
+              remaining,
+              isOverBudget,
+              progress,
+            } = computeBudgetMeta(
+              project.budget ?? 0,
+              project.spent ?? 0,
+              project.spent_by_credits ?? 0,
+            );
             const isSelected = selectedProjectId === project.id;
             const userCount = project.user_count ?? 0;
             const visibleAvatars = Math.min(userCount, 4);
@@ -359,27 +369,37 @@ export default function ProjectsPage() {
 
                     {/* Meta row */}
                     <div className="hairline mt-auto border-t pt-4">
-                      {/* Budget / Spent / Remaining */}
-                      <div className="mb-3 grid grid-cols-3 gap-4">
+                      {/* Credit total / Spent by credit / Spent personal / Remaining.
+                          Two columns on narrow screens so the figures stay readable. */}
+                      <div className="mb-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <div>
-                          <div className="label-cap">{t("budget")}</div>
+                          {/* min-h reserves two label lines so a label that wraps in one
+                              locale (fr "Dépensé sur crédit") does not push its figure
+                              out of line with the other three. */}
+                          <div className="label-cap min-h-[3em]">{t("creditTotal")}</div>
                           <div className="font-display num mt-0.5 text-[15px]">
-                            {budget ? fmtEUR(budget) : "—"}
+                            {creditTotal ? fmtEUR(creditTotal) : "—"}
                           </div>
                         </div>
                         <div>
-                          <div className="label-cap">{t("spent")}</div>
+                          <div className="label-cap min-h-[3em]">{t("spentByCredits")}</div>
                           <div className="font-display num mt-0.5 text-[15px]">
-                            {spent ? fmtEUR(spent) : "—"}
+                            {spentByCredits ? fmtEUR(spentByCredits) : "—"}
                           </div>
                         </div>
                         <div>
-                          <div className="label-cap">{t("remaining")}</div>
+                          <div className="label-cap min-h-[3em]">{t("spentPersonal")}</div>
+                          <div className="font-display num mt-0.5 text-[15px]">
+                            {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="label-cap min-h-[3em]">{t("remaining")}</div>
                           <div
                             className="font-display num mt-0.5 text-[15px]"
                             style={isOverBudget ? { color: "var(--negative)" } : undefined}
                           >
-                            {budget
+                            {creditTotal
                               ? isOverBudget
                                 ? `${t("overBudget")} ${fmtEUR(Math.abs(remaining))}`
                                 : fmtEUR(remaining)

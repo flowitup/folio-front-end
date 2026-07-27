@@ -170,6 +170,17 @@
     "creditTotal": "Credit total",
     "spentByCredits": "Spent by credit",
     "spentPersonal": "Spent personal",
+    "breakdownTitle": "Where personal money went",
+    "laborPaid": "Labor — paid",
+    "laborUnpaid": "Labor — unpaid",
+    "laborUnpaidHint": "Owed to workers. Not included in the total above.",
+    "type": {
+      "materials_services": "Materials & services",
+      "others": "Others",
+      "refund": "Refunds",
+      "labor": "Labor",
+      "released_funds": "Released funds"
+    },
     "remaining": "Remaining",
     "overBudget": "Over by",
     "budgetLabel": "Credit total (€)",

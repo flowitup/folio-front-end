@@ -37,12 +37,9 @@ export interface BudgetMeta {
 /** Derive the credit meta-row values from a project's credit total and spend split. */
 export function computeBudgetMeta(
   creditTotal: number,
-  spentTotal: number,
+  spentPersonal: number,
   spentByCredits: number,
 ): BudgetMeta {
-  // Clamped: the credit figure is floored at 0 server-side (company refunds can
-  // exceed company spend), which would otherwise push the remainder negative.
-  const spentPersonal = Math.max(spentTotal - spentByCredits, 0);
   const remaining = creditTotal - spentByCredits;
   const isOverBudget = creditTotal > 0 && remaining < 0;
   // Clamp to [0, 1] — guards against negative spend (over-refund) producing a
@@ -50,4 +47,31 @@ export function computeBudgetMeta(
   const progress =
     creditTotal > 0 ? Math.max(0, Math.min(spentByCredits / creditTotal, 1)) : 0;
   return { creditTotal, spentByCredits, spentPersonal, remaining, isOverBudget, progress };
+}
+
+/** One row of the personal-spend breakdown. */
+export interface PersonalSpendRow {
+  /** Invoice type key — also the i18n key suffix. */
+  type: string;
+  amount: number;
+}
+
+/**
+ * Order the personal breakdown for display: labor first (it carries the paid/unpaid
+ * split users look for), then the remaining types by size, refunds last since they
+ * are credits back rather than spend.
+ */
+const TYPE_ORDER = ["labor", "materials_services", "others", "refund"];
+
+export function personalSpendRows(byType: Record<string, number> | undefined): PersonalSpendRow[] {
+  const entries = Object.entries(byType ?? {}).filter(([, amount]) => amount !== 0);
+  return entries
+    .map(([type, amount]) => ({ type, amount }))
+    .sort((a, b) => {
+      const ia = TYPE_ORDER.indexOf(a.type);
+      const ib = TYPE_ORDER.indexOf(b.type);
+      // Unknown types (a new invoice type shipped before this list is updated) sort last
+      // rather than disappearing.
+      return (ia === -1 ? TYPE_ORDER.length : ia) - (ib === -1 ? TYPE_ORDER.length : ib);
+    });
 }

@@ -16,12 +16,20 @@ export interface Project {
    * right controls even when their global role is the read-only default.
    */
   my_permissions?: string[];
-  /** Project budget amount in EUR. Null when no budget has been set. */
+  /**
+   * Total credit available for this project, in EUR. Null when none has been set.
+   * Displayed as "Credit total"; the API field keeps the older `budget` name.
+   */
   budget?: number | null;
   /** Human-readable funding source (e.g. "Prêt bancaire BNP"). Null when not set. */
   budget_source?: string | null;
   /** Total money spent on this project (labor + materials; excludes released_funds). Always present, defaults to 0. */
   spent?: number;
+  /**
+   * Portion of `spent` paid with company money — the credit line. Whatever is left
+   * (`spent - spent_by_credits`) came out of pocket. Always present, defaults to 0.
+   */
+  spent_by_credits?: number;
 }
 
 export interface ProjectListResponse {

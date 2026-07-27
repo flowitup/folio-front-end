@@ -170,6 +170,17 @@
     "creditTotal": "Crédit total",
     "spentByCredits": "Dépensé sur crédit",
     "spentPersonal": "Dépensé perso",
+    "breakdownTitle": "Où est passé l'argent perso",
+    "laborPaid": "Main-d'œuvre — payée",
+    "laborUnpaid": "Main-d'œuvre — impayée",
+    "laborUnpaidHint": "Dû aux ouvriers. Non compris dans le total ci-dessus.",
+    "type": {
+      "materials_services": "Matériaux & services",
+      "others": "Autres",
+      "refund": "Remboursements",
+      "labor": "Main-d'œuvre",
+      "released_funds": "Fonds débloqués"
+    },
     "remaining": "Restant",
     "overBudget": "Dépassement de",
     "budgetLabel": "Crédit total (€)",

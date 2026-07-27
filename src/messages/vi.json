@@ -170,6 +170,17 @@
     "creditTotal": "Tổng tín dụng",
     "spentByCredits": "Chi từ tín dụng",
     "spentPersonal": "Chi cá nhân",
+    "breakdownTitle": "Tiền cá nhân đã chi vào đâu",
+    "laborPaid": "Nhân công — đã trả",
+    "laborUnpaid": "Nhân công — chưa trả",
+    "laborUnpaidHint": "Còn nợ thợ. Không tính vào tổng ở trên.",
+    "type": {
+      "materials_services": "Vật tư & dịch vụ",
+      "others": "Khác",
+      "refund": "Hoàn tiền",
+      "labor": "Nhân công",
+      "released_funds": "Vốn đã giải ngân"
+    },
     "remaining": "Còn lại",
     "overBudget": "Vượt quá",
     "budgetLabel": "Tổng tín dụng (€)",

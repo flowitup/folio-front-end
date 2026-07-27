@@ -26,10 +26,19 @@ export interface Project {
   /** Total money spent on this project (labor + materials; excludes released_funds). Always present, defaults to 0. */
   spent?: number;
   /**
-   * Portion of `spent` paid with company money — the credit line. Whatever is left
-   * (`spent - spent_by_credits`) came out of pocket. Always present, defaults to 0.
+   * Portion of `spent` paid with company money — the credit line. Always present, defaults to 0.
    */
   spent_by_credits?: number;
+  /** Portion paid out of pocket. credits + personal + labor_unpaid === spent. */
+  spent_personal?: number;
+  /** Labor accrued from attendance entries. */
+  labor_accrued?: number;
+  /** Labor settled by labor-type invoices. */
+  labor_paid?: number;
+  /** Accrued but unsettled labor — owed to workers, not spent by anyone yet. */
+  labor_unpaid?: number;
+  /** Personal spend per invoice type; values sum to spent_personal. */
+  personal_by_type?: Record<string, number>;
 }
 
 export interface ProjectListResponse {

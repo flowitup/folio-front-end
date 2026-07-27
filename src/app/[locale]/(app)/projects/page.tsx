@@ -16,6 +16,7 @@ import {
   Trash2,
   Pencil,
   Images,
+  ChevronDown,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -40,7 +41,7 @@ import { CreateProjectDialog } from "@/components/project/create-project-dialog"
 import { EditProjectDialog } from "@/components/project/edit-project-dialog";
 import { DeleteProjectDialog } from "@/components/project/delete-project-dialog";
 import type { Project, ProjectUser } from "@/types/project";
-import { fmtEUR, computeBudgetMeta } from "@/lib/projects/budget-display";
+import { fmtEUR, computeBudgetMeta, personalSpendRows } from "@/lib/projects/budget-display";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -71,6 +72,9 @@ export default function ProjectsPage() {
   const [filterTab, setFilterTab] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
+  // Which card has its personal-spend breakdown open. Collapsed by default so the
+  // four-column row stays scannable on a long list.
+  const [openBreakdownId, setOpenBreakdownId] = useState<string | null>(null);
   const [projectUsers, setProjectUsers] = useState<Record<string, ProjectUser[]>>({});
   const [loadingUsers, setLoadingUsers] = useState<string | null>(null);
   const [addMemberProject, setAddMemberProject] = useState<{ id: string; name: string } | null>(
@@ -253,9 +257,13 @@ export default function ProjectsPage() {
               progress,
             } = computeBudgetMeta(
               project.budget ?? 0,
-              project.spent ?? 0,
+              project.spent_personal ?? 0,
               project.spent_by_credits ?? 0,
             );
+            const breakdownRows = personalSpendRows(project.personal_by_type);
+            const laborUnpaid = project.labor_unpaid ?? 0;
+            const hasBreakdown = breakdownRows.length > 0 || laborUnpaid > 0;
+            const isBreakdownOpen = openBreakdownId === project.id;
             const isSelected = selectedProjectId === project.id;
             const userCount = project.user_count ?? 0;
             const visibleAvatars = Math.min(userCount, 4);
@@ -389,9 +397,30 @@ export default function ProjectsPage() {
                         </div>
                         <div>
                           <div className="label-cap min-h-[3em]">{t("spentPersonal")}</div>
-                          <div className="font-display num mt-0.5 text-[15px]">
-                            {spentPersonal ? fmtEUR(spentPersonal) : "—"}
-                          </div>
+                          {hasBreakdown ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setOpenBreakdownId(isBreakdownOpen ? null : project.id)
+                              }
+                              aria-expanded={isBreakdownOpen}
+                              aria-controls={`breakdown-${project.id}`}
+                              className="font-display num mt-0.5 flex items-center gap-1 text-[15px] hover:underline"
+                            >
+                              {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                              <ChevronDown
+                                size={13}
+                                style={{
+                                  color: "var(--muted)",
+                                  transform: isBreakdownOpen ? "rotate(180deg)" : undefined,
+                                }}
+                              />
+                            </button>
+                          ) : (
+                            <div className="font-display num mt-0.5 text-[15px]">
+                              {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                            </div>
+                          )}
                         </div>
                         <div>
                           <div className="label-cap min-h-[3em]">{t("remaining")}</div>
@@ -407,6 +436,43 @@ export default function ProjectsPage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Personal spend breakdown — collapsed by default. Unpaid labor is
+                          separated by a rule because it is owed, not spent, and is deliberately
+                          NOT part of the personal total above. */}
+                      {hasBreakdown && isBreakdownOpen && (
+                        <div
+                          id={`breakdown-${project.id}`}
+                          className="hairline mb-3 rounded-md border p-3"
+                          style={{ background: "var(--surface-2, rgba(0,0,0,.02))" }}
+                        >
+                          <div className="label-cap mb-2">{t("breakdownTitle")}</div>
+                          {breakdownRows.map((row) => (
+                            <div
+                              key={row.type}
+                              className="flex items-baseline justify-between gap-3 py-0.5 text-[13px]"
+                            >
+                              <span style={{ color: "var(--muted)" }}>
+                                {row.type === "labor" ? t("laborPaid") : t(`type.${row.type}`)}
+                              </span>
+                              <span className="num">{fmtEUR(row.amount)}</span>
+                            </div>
+                          ))}
+                          {laborUnpaid > 0 && (
+                            <div className="hairline mt-2 border-t pt-2">
+                              <div className="flex items-baseline justify-between gap-3 text-[13px]">
+                                <span style={{ color: "var(--muted)" }}>{t("laborUnpaid")}</span>
+                                <span className="num" style={{ color: "var(--negative)" }}>
+                                  {fmtEUR(laborUnpaid)}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-[11px]" style={{ color: "var(--muted)" }}>
+                                {t("laborUnpaidHint")}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Team */}
                       <div>

@@ -10,7 +10,11 @@ import { InvoiceForm, classifySubmitError } from "@/components/invoices/invoice-
 import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
-import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
+import {
+  REFUND_STATUS_STAMP,
+  REFUND_STATUS_I18N,
+  refundStatusI18nKey,
+} from "@/lib/invoices/refundable-status-display";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 import { fetchTagsClient } from "@/lib/api/tags-client";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
@@ -257,7 +261,10 @@ export function InvoiceDetailContent({
                     )}
                     {invoice.refundable_status != null && (
                       <span className={REFUND_STATUS_STAMP[invoice.refundable_status]}>
-                        {t(REFUND_STATUS_I18N[invoice.refundable_status])}
+                        {t(
+                          refundStatusI18nKey(invoice) ??
+                            REFUND_STATUS_I18N[invoice.refundable_status]
+                        )}
                       </span>
                     )}
                     <RefundSourceIndicator

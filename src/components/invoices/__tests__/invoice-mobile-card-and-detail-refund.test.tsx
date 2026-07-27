@@ -164,6 +164,7 @@ describe("InvoiceMobileCard — refund arrow and stamps", () => {
   });
 
   it("renders 'refunded' stamp with positive class", () => {
+    // Legacy row (refunded_by absent) still reads as company-refunded.
     render(
       <InvoiceMobileCard
         invoice={makeInvoice({ refundable_status: "refunded" })}
@@ -174,8 +175,23 @@ describe("InvoiceMobileCard — refund arrow and stamps", () => {
       />,
     );
 
-    const stamp = screen.getByText("invoices.refund.status.refunded");
+    const stamp = screen.getByText("invoices.refundSource.company");
     expect(stamp.className).toBe("stamp positive");
+  });
+
+  it("names the bank — not the company — when refunded_by is 'bank'", () => {
+    render(
+      <InvoiceMobileCard
+        invoice={makeInvoice({ refundable_status: "refunded", refunded_by: "bank" })}
+        isOpen={false}
+        onToggle={vi.fn()}
+        formatAmount={formatAmount}
+        companyName="Co"
+      />,
+    );
+
+    expect(screen.getByText("invoices.refundSource.bank").className).toBe("stamp positive");
+    expect(screen.queryByText("invoices.refundSource.company")).toBeNull();
   });
 
   it("does NOT render any refund stamp when refundable_status is null", () => {

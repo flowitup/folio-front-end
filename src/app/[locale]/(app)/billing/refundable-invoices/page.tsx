@@ -110,11 +110,26 @@ export default function RefundableInvoicesPage() {
                     <RefundableExpenseAttachmentsCell attachments={expense.attachments} />
                   </td>
                   <td className="py-3 pr-4">
-                    <RefundSourceIndicator
-                      refundable_status={expense.refundable_status}
-                      has_bank_refund={expense.has_bank_refund}
-                      refunded_by={expense.refunded_by}
-                    />
+                    <span className="inline-flex items-center gap-1.5">
+                      <RefundSourceIndicator
+                        refundable_status={expense.refundable_status}
+                        has_bank_refund={expense.has_bank_refund}
+                        refunded_by={expense.refunded_by}
+                      />
+                      {/* FR number of the funds release auto-created for a bank
+                          refund. Self-hides when no release is linked. */}
+                      {expense.funds_release_number && (
+                        <span
+                          className="font-mono text-xs text-muted-foreground"
+                          title={t("fundsReleaseLabel", {
+                            number: expense.funds_release_number,
+                          })}
+                          data-testid="funds-release-number"
+                        >
+                          {expense.funds_release_number}
+                        </span>
+                      )}
+                    </span>
                   </td>
                   <td className="py-3 pr-4" colSpan={2}>
                     <RefundableExpenseRowActions

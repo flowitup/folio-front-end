@@ -198,56 +198,52 @@ function makeInvoice(overrides: Partial<Invoice>): Invoice {
 
 // ── Test suites ───────────────────────────────────────────────────────────────
 
-describe("InvoicesPage — total expenses KPI excludes released_funds", () => {
+describe("InvoicesPage — headline total reads the BE spent meta", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupNavigationMocks();
     setupAuthMock(false);
   });
 
-  it("headline total counts only non-released-funds invoices", async () => {
-    // 1 released_funds (97 376) + 1 labor (10 000) + 1 M&S (5 000).
-    // Total expenses KPI should be 10 000 + 5 000 = 15 000, not 112 376.
+  it("headline total sums expense rows only, never the released_funds amount", async () => {
+    // Released rows are capital flows: the headline sums the expense rows
+    // (10 000 + 5 000) — the 97 376 release must never leak into it.
     const invoices = [
       makeInvoice({ id: "rf-1", type: "released_funds", total_amount: 97376 }),
       makeInvoice({ id: "lab-1", type: "labor", total_amount: 10000 }),
       makeInvoice({ id: "ms-1", type: "materials_services", total_amount: 5000 }),
     ];
-    setupFetchMock(invoices);
+    setupFetchMock(invoices, { company_spent_total: 10000, personal_spent_total: 5000 });
     render(<InvoicesPage />);
 
     await waitFor(() => expect(screen.queryByText("invoices.noInvoices")).toBeNull(), {
       timeout: 5000,
     });
 
-    // The total KPI label is always present
-    expect(screen.getByText("invoices.totalInvoiced")).toBeDefined();
+    const summary = screen.getByTestId("expense-purses-summary");
+    const totalBlock = within(summary)
+      .getByText("invoices.summary.totalExpenses")
+      // Dark total card: label → inner block → card root.
+      .closest("div.flex.flex-col.justify-between") as HTMLElement;
+    expect(totalBlock).not.toBeNull();
 
-    // formatEUR uses fr-FR locale. Intl formats 15000 as "15 000 €" with a
-    // narrow no-break space (U+202F) between the number and "€", and a
-    // regular or no-break space as thousands separator.
-    // Use a regex to match the number portion only — avoids locale spacing differences.
-    const allAmountEls = screen.getAllByText(/15[^\d]*000/);
-    expect(allAmountEls.length).toBeGreaterThanOrEqual(1);
-
-    // Crucially: the number 97376 (released_funds alone) must NOT appear as the total
-    // — it would only appear if released_funds was incorrectly included.
-    // 97376 formatted → matches /97[^\d]*376/
-    // But it may appear in the funds-released card showing company_refunded/funds_released.
-    // So we check that the totalInvoiced KPI card element does NOT contain 97376.
-    const totalKpiCard = screen.getByText("invoices.totalInvoiced").closest(".folio-card");
-    expect(totalKpiCard?.textContent).not.toMatch(/97[^\d]*376/);
+    // formatEURWhole uses fr-FR spacing (narrow no-break spaces); match digits only.
+    expect(totalBlock.textContent).toMatch(/15[^\d]*000/);
+    expect(totalBlock.textContent).not.toMatch(/97[^\d]*376/);
+    // Expense count line renders (this file's intl mock drops params; exact
+    // per-purse counts are asserted in invoices-page-expense-purses-summary).
+    expect(totalBlock.textContent).toContain("invoices.invoiceCount");
   });
 });
 
-describe("InvoicesPage — funds released KPI shows company_spent / funds_released_company ratio", () => {
+describe("InvoicesPage — company purse shows company_spent / funds_released_company", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupNavigationMocks();
     setupAuthMock(false);
   });
 
-  it("renders company_spent_total / funds_released_company_total in the company funds released card", async () => {
+  it("renders company_spent_total and funds_released_company_total in the company purse", async () => {
     setupFetchMock([], {
       funds_released_company_total: 97376,
       company_spent_total: 10919,
@@ -255,13 +251,16 @@ describe("InvoicesPage — funds released KPI shows company_spent / funds_releas
     });
     render(<InvoicesPage />);
 
-    await waitFor(
+    const card = await waitFor(
       () => {
-        // companySpentOfReleasedCompany sub-caption key must appear
-        expect(screen.queryByText("invoices.refund.companySpentOfReleasedCompany")).not.toBeNull();
+        const el = screen.getByText("invoices.summary.companyPurse").closest(".folio-card");
+        expect(el).not.toBeNull();
+        return el as HTMLElement;
       },
       { timeout: 5000 },
     );
+    expect(card.textContent).toMatch(/10[^\d]*919/);
+    expect(card.textContent).toMatch(/97[^\d]*376/);
   });
 
   it("displays the BE-reduced company_spent_total verbatim (company refund already netted server-side)", async () => {
@@ -277,14 +276,14 @@ describe("InvoicesPage — funds released KPI shows company_spent / funds_releas
 
     const fundsCard = await waitFor(
       () => {
-        const card = screen.getByText("invoices.fundsReleasedCompany").closest(".folio-card");
+        const card = screen.getByText("invoices.summary.companyPurse").closest(".folio-card");
         expect(card).not.toBeNull();
         return card as HTMLElement;
       },
       { timeout: 5000 },
     );
 
-    // formatEUR uses fr-FR spacing (narrow no-break spaces); match digits only.
+    // formatEURWhole uses fr-FR spacing (narrow no-break spaces); match digits only.
     // Reduced numerator 4 242 and denominator 97 376 both appear in this card.
     expect(fundsCard.textContent).toMatch(/4[^\d]*242/);
     expect(fundsCard.textContent).toMatch(/97[^\d]*376/);

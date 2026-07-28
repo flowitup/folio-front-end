@@ -486,6 +486,20 @@
       "label": "Phân bổ giải ngân",
       "success": "Đã cập nhật phân bổ giải ngân",
       "error": "Cập nhật phân bổ giải ngân thất bại"
+    },
+    "summary": {
+      "totalExpenses": "Tổng chi phí",
+      "releasedAllSources": "Đã giải ngân, mọi nguồn",
+      "stillAvailable": "Còn khả dụng",
+      "companyPurse": "Quỹ công ty",
+      "personalPurse": "Quỹ cá nhân",
+      "released": "Đã giải ngân",
+      "spent": "Đã chi",
+      "left": "còn lại",
+      "ofReleased": "trên {amount} đã giải ngân",
+      "refundableCount": "{n, plural, other {# khoản chờ hoàn}}",
+      "credit": "Ghi có",
+      "refundsReceived": "{n, plural, other {Đã nhận # khoản hoàn tiền}}"
     }
   },
   "planning": {

@@ -179,7 +179,7 @@ describe("InvoicesPage — company funds released ratio reads company_spent_tota
     setupAuth(false);
   });
 
-  it("renders the companySpentOfReleasedCompany caption when company_spent_total > 0", async () => {
+  it("renders company_spent_total in the company purse when > 0", async () => {
     setupFetch([], {
       funds_released_total: 50000,
       company_spent_total: 12500,
@@ -187,25 +187,26 @@ describe("InvoicesPage — company funds released ratio reads company_spent_tota
     });
     render(<InvoicesPage />);
 
-    await waitFor(
+    const card = await waitFor(
       () => {
-        expect(
-          screen.queryByText("invoices.refund.companySpentOfReleasedCompany"),
-        ).not.toBeNull();
+        const el = screen
+          .getByText("invoices.summary.companyPurse")
+          .closest(".folio-card");
+        expect(el).not.toBeNull();
+        return el as HTMLElement;
       },
       { timeout: 5000 },
     );
+    expect(card.textContent).toMatch(/12[^\d]*500/);
   });
 
-  it("renders the ratio card even when company_spent_total is 0", async () => {
+  it("renders the company purse even when company_spent_total is 0", async () => {
     setupFetch([], { funds_released_total: 20000, company_spent_total: 0 });
     render(<InvoicesPage />);
 
     await waitFor(
       () => {
-        expect(
-          screen.queryByText("invoices.refund.companySpentOfReleasedCompany"),
-        ).not.toBeNull();
+        expect(screen.queryByText("invoices.summary.companyPurse")).not.toBeNull();
       },
       { timeout: 5000 },
     );

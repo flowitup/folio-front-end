@@ -486,6 +486,20 @@
       "label": "Release attribution",
       "success": "Release attribution updated",
       "error": "Failed to update release attribution"
+    },
+    "summary": {
+      "totalExpenses": "Total expenses",
+      "releasedAllSources": "Released, all sources",
+      "stillAvailable": "Still available",
+      "companyPurse": "Company purse",
+      "personalPurse": "Personal purse",
+      "released": "Released",
+      "spent": "Spent",
+      "left": "left",
+      "ofReleased": "of {amount} released",
+      "refundableCount": "{n, plural, =1 {1 refundable} other {# refundable}}",
+      "credit": "Credit",
+      "refundsReceived": "{n, plural, =1 {1 refund received} other {# refunds received}}"
     }
   },
   "planning": {

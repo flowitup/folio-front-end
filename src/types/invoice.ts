@@ -169,6 +169,12 @@ export interface RefundableExpense {
    * and are treated as company-refunded for backward compatibility.
    */
   refunded_by?: RefundedBy | null;
+  /**
+   * invoice_number (FR-YYYY-NNNN) of the auto-generated released_funds entry
+   * created when this expense was marked refunded by the bank. Absent/null when
+   * no release is linked — including on responses from before the field existed.
+   */
+  funds_release_number?: string | null;
   /** Invoice files attached to this expense, ordered by upload time. */
   attachments: RefundableExpenseAttachment[];
 }

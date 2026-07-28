@@ -16,7 +16,11 @@ import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
-import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
+import {
+  REFUND_STATUS_STAMP,
+  REFUND_STATUS_I18N,
+  refundStatusI18nKey,
+} from "@/lib/invoices/refundable-status-display";
 import { fetchTagsClient } from "@/lib/api/tags-client";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
@@ -501,7 +505,10 @@ export default function InvoicesPage() {
                                       )}
                                       {invoice.refundable_status != null && (
                                         <span className={REFUND_STATUS_STAMP[invoice.refundable_status]}>
-                                          {t(REFUND_STATUS_I18N[invoice.refundable_status])}
+                                          {t(
+                                            refundStatusI18nKey(invoice) ??
+                                              REFUND_STATUS_I18N[invoice.refundable_status]
+                                          )}
                                         </span>
                                       )}
                                     </div>

@@ -1145,6 +1145,7 @@
       "loadError": "Impossible de charger les dépenses.",
       "updateError": "Échec de la mise à jour du statut. Veuillez réessayer.",
       "truncatedNotice": "Affichage de {count} sur {total}",
+      "fundsReleaseLabel": "Fonds débloqués : {number}",
       "partialAddError": "Certaines dépenses n'ont pas pu être ajoutées. Veuillez réessayer.",
       "columns": {
         "project": "Chantier",

@@ -3,7 +3,11 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
-import { REFUND_STATUS_STAMP, REFUND_STATUS_I18N } from "@/lib/invoices/refundable-status-display";
+import {
+  REFUND_STATUS_STAMP,
+  REFUND_STATUS_I18N,
+  refundStatusI18nKey,
+} from "@/lib/invoices/refundable-status-display";
 import { formatDate, formatMonthYear } from "@/lib/utils/formatters";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import type { Invoice, InvoiceType } from "@/types/invoice";
@@ -88,7 +92,10 @@ export function InvoiceMobileCard({
             ) : null}
             {invoice.refundable_status != null && (
               <span className={REFUND_STATUS_STAMP[invoice.refundable_status]}>
-                {t(REFUND_STATUS_I18N[invoice.refundable_status])}
+                {t(
+                  refundStatusI18nKey(invoice) ??
+                    REFUND_STATUS_I18N[invoice.refundable_status]
+                )}
               </span>
             )}
             <RefundSourceIndicator

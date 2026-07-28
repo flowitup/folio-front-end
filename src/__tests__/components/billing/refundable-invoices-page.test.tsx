@@ -452,4 +452,67 @@ describe("RefundableInvoicesPage", () => {
     await waitFor(() => screen.getByText("Tower Block"));
     expect(screen.queryByTestId("refundable-summary-cards")).toBeNull();
   });
+
+  describe("linked funds-release number", () => {
+    it("renders the FR number when the expense has a linked release", async () => {
+      const expense = makeExpense({
+        refundable_status: "refunded",
+        refunded_by: "bank",
+        funds_release_number: "FR-2026-0004",
+      });
+      mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
+
+      render(<RefundableInvoicesPage />);
+      await waitFor(() => screen.getByText("Tower Block"));
+
+      const chip = screen.getByTestId("funds-release-number");
+      expect(chip.textContent).toBe("FR-2026-0004");
+      expect(chip.getAttribute("title")).toBe("Funds released: FR-2026-0004");
+      // Non-interactive span: title alone is invisible to screen readers,
+      // so the same localized string must also be exposed via aria-label.
+      expect(chip.getAttribute("aria-label")).toBe("Funds released: FR-2026-0004");
+    });
+
+    it("renders nothing when no release is linked", async () => {
+      const expense = makeExpense({
+        refundable_status: "refunded",
+        refunded_by: "company",
+      });
+      mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
+
+      render(<RefundableInvoicesPage />);
+      await waitFor(() => screen.getByText("Tower Block"));
+
+      expect(screen.queryByTestId("funds-release-number")).toBeNull();
+    });
+
+    it("renders nothing when funds_release_number is explicitly null", async () => {
+      const expense = makeExpense({
+        refundable_status: "refunded",
+        refunded_by: "bank",
+        funds_release_number: null,
+      });
+      mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
+
+      render(<RefundableInvoicesPage />);
+      await waitFor(() => screen.getByText("Tower Block"));
+
+      expect(screen.queryByTestId("funds-release-number")).toBeNull();
+    });
+
+    it("shows the bank source icon alongside the FR chip", async () => {
+      const expense = makeExpense({
+        refundable_status: "refunded",
+        refunded_by: "bank",
+        funds_release_number: "FR-2026-0007",
+      });
+      mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
+
+      render(<RefundableInvoicesPage />);
+      await waitFor(() => screen.getByText("Tower Block"));
+
+      expect(screen.getByTestId("refund-source-bank")).toBeDefined();
+      expect(screen.getByTestId("funds-release-number")).toBeDefined();
+    });
+  });
 });

@@ -24,6 +24,7 @@ const REFUNDABLE_KEYS = [
   "summary.companyShare",
   "summary.bothShare",
   "summary.bankShare",
+  "fundsReleaseLabel",
 ] as const;
 
 /** Walk a dot-path into a nested object and return the leaf value. */

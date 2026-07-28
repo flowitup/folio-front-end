@@ -375,15 +375,49 @@ describe("InvoicesPage — refund status stamps", () => {
   });
 
   it("renders 'refunded' stamp with positive class for refunded status", async () => {
+    // Legacy row (refunded_by absent) still reads as company-refunded.
     setupFetchMock([makeInvoice({ refundable_status: "refunded" })], { company_name: "Co" });
     render(<InvoicesPage />);
 
     await waitFor(
       () => {
         const desktop = screen.getByTestId("invoices-table-desktop");
-        const refundedStamp = within(desktop).queryByText("invoices.refund.status.refunded");
+        const refundedStamp = within(desktop).queryByText("invoices.refundSource.company");
         expect(refundedStamp).not.toBeNull();
         expect(refundedStamp?.className).toContain("stamp positive");
+      },
+      { timeout: 5000 },
+    );
+  });
+
+  it("names the bank — not the company — when refunded_by is 'bank'", async () => {
+    setupFetchMock(
+      [makeInvoice({ refundable_status: "refunded", refunded_by: "bank" })],
+      { company_name: "Co" },
+    );
+    render(<InvoicesPage />);
+
+    await waitFor(
+      () => {
+        const desktop = screen.getByTestId("invoices-table-desktop");
+        expect(within(desktop).queryByText("invoices.refundSource.bank")).not.toBeNull();
+        expect(within(desktop).queryByText("invoices.refundSource.company")).toBeNull();
+      },
+      { timeout: 5000 },
+    );
+  });
+
+  it("names both sides when refunded_by is 'both'", async () => {
+    setupFetchMock(
+      [makeInvoice({ refundable_status: "refunded", refunded_by: "both" })],
+      { company_name: "Co" },
+    );
+    render(<InvoicesPage />);
+
+    await waitFor(
+      () => {
+        const desktop = screen.getByTestId("invoices-table-desktop");
+        expect(within(desktop).queryByText("invoices.refundSource.both")).not.toBeNull();
       },
       { timeout: 5000 },
     );

@@ -468,6 +468,9 @@ describe("RefundableInvoicesPage", () => {
       const chip = screen.getByTestId("funds-release-number");
       expect(chip.textContent).toBe("FR-2026-0004");
       expect(chip.getAttribute("title")).toBe("Funds released: FR-2026-0004");
+      // Non-interactive span: title alone is invisible to screen readers,
+      // so the same localized string must also be exposed via aria-label.
+      expect(chip.getAttribute("aria-label")).toBe("Funds released: FR-2026-0004");
     });
 
     it("renders nothing when no release is linked", async () => {

@@ -69,9 +69,19 @@ export function refundSourceI18nKey(source: RefundSource): string | null {
  *
  * Non-refunded statuses map straight through REFUND_STATUS_I18N. A 'refunded'
  * status instead names the actual source(s) via the refundSource.* keys, so a
- * bank-refunded expense no longer claims the company reimbursed it. Falls back
- * to the plain 'refunded' label if no source can be derived, which keeps legacy
- * rows (refunded_by NULL, no linked refund invoice) rendering as before.
+ * bank-refunded expense no longer claims the company reimbursed it.
+ *
+ * A legacy row (refunded_by NULL, no linked refund invoice) derives
+ * byCompany=true from getRefundSource() and therefore renders
+ * "refundSource.company", NOT the plain "refund.status.refunded" label — it
+ * is treated as company-refunded, same as before, but through a different
+ * key. In en/fr the two keys happen to read identically ("Refunded by
+ * company" / "Remboursé par l'entreprise"), but they differ in vi ("Công ty
+ * đã hoàn tiền" vs "Được hoàn bởi công ty"), so this is a real (if subtle)
+ * wording change for Vietnamese users, not just an internal refactor.
+ * The REFUND_STATUS_I18N.refunded fallback below only fires when
+ * getRefundSource() derives neither source (byCompany and byBank both
+ * false) — never true for a legacy row.
  *
  * Returns null when there is no status to display.
  */

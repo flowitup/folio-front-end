@@ -124,6 +124,9 @@ export default function RefundableInvoicesPage() {
                           title={t("fundsReleaseLabel", {
                             number: expense.funds_release_number,
                           })}
+                          aria-label={t("fundsReleaseLabel", {
+                            number: expense.funds_release_number,
+                          })}
                           data-testid="funds-release-number"
                         >
                           {expense.funds_release_number}

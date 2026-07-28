@@ -489,8 +489,6 @@
     },
     "summary": {
       "totalExpenses": "Tổng chi phí",
-      "releasedAllSources": "Đã giải ngân, mọi nguồn",
-      "stillAvailable": "Còn khả dụng",
       "companyPurse": "Quỹ công ty",
       "personalPurse": "Quỹ cá nhân",
       "released": "Đã giải ngân",
@@ -499,7 +497,9 @@
       "ofReleased": "trên {amount} đã giải ngân",
       "refundableCount": "{n, plural, other {# khoản chờ hoàn}}",
       "credit": "Ghi có",
-      "refundsReceived": "{n, plural, other {Đã nhận # khoản hoàn tiền}}"
+      "refundsReceived": "{n, plural, other {Đã nhận # khoản hoàn tiền}}",
+      "pendingRefunds": "Hoàn tiền đang chờ",
+      "vsMonth": "{delta} so với {month}"
     }
   },
   "planning": {

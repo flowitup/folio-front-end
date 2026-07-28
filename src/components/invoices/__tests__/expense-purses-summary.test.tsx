@@ -138,11 +138,6 @@ describe("ExpensePursesSummary — overspent purse", () => {
     ).find((el) => /-4[^\d]*391/.test(el.textContent ?? ""));
     expect(dialValue).toBeDefined();
     expect(dialValue?.style.color).toBe("var(--negative)");
-    // Dark card "still available" shows the same signed figure.
-    const available = screen.getByText("invoices.summary.stillAvailable")
-      .nextElementSibling as HTMLElement;
-    expect(available.textContent).toMatch(/-4[^\d]*391/);
-    expect(available.style.color).toBe("rgb(219, 163, 143)");
   });
 
   it("keeps the dial ring capped at full when spending exceeds released", () => {
@@ -168,6 +163,73 @@ describe("ExpensePursesSummary — overspent purse", () => {
       const filled = parseFloat(arc.getAttribute("stroke-dasharray") ?? "0");
       expect(filled).toBeLessThanOrEqual(circumference + 0.001);
     }
+  });
+});
+
+describe("ExpensePursesSummary — dark-card KPIs", () => {
+  it("sums pending refunds over refundable + refund_pending personal expenses only", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "a", paid_by_personal: true, refundable_status: "refundable", total_amount: 1200 }),
+          makeInvoice({ id: "b", paid_by_personal: true, refundable_status: "refund_pending", total_amount: 800 }),
+          // Already refunded and company-paid rows don't count.
+          makeInvoice({ id: "c", paid_by_personal: true, refundable_status: "refunded", refunded_by: "bank", total_amount: 500 }),
+          makeInvoice({ id: "d", paid_by_personal: false, total_amount: 900 }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const amount = screen.getByText("invoices.summary.pendingRefunds")
+      .nextElementSibling as HTMLElement;
+    expect(amount.textContent).toMatch(/2[^\d]*000/);
+    expect(amount.style.color).toBe("rgb(241, 200, 163)");
+  });
+
+  it("renders one bar per month from project start, filling gap months", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "mar", issue_date: "2026-03-10", total_amount: 1000 }),
+          // April has no expense — still gets a (stub) bar.
+          makeInvoice({ id: "may", issue_date: "2026-05-05", total_amount: 3000 }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const bars = screen.getByTestId("monthly-spend-bars").children;
+    expect(bars.length).toBe(3); // Mar, Apr (gap), May
+    expect((bars[2] as HTMLElement).style.background).toBe("var(--accent)");
+  });
+
+  it("shows the latest month total with a delta vs the previous month", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "jun", issue_date: "2026-06-01", total_amount: 2000 }),
+          makeInvoice({ id: "jul", issue_date: "2026-07-01", total_amount: 1000 }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    // 1 000 vs 2 000 → −50%; mocked t() interpolates the raw params.
+    expect(
+      screen.getByText(/vsMonth\(\{"delta":"-50%","month":"Jun"\}\)/)
+    ).toBeDefined();
+  });
+
+  it("buckets labor by service_month instead of issue_date", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "w", type: "labor", issue_date: "2026-07-03", service_month: "2026-06-01", total_amount: 500 }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const bars = screen.getByTestId("monthly-spend-bars").children;
+    expect(bars.length).toBe(1); // single June bucket, no July bar
+    expect((bars[0] as HTMLElement).dataset.tip).toContain("Jun 2026");
   });
 });
 

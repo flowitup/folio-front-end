@@ -489,8 +489,6 @@
     },
     "summary": {
       "totalExpenses": "Total expenses",
-      "releasedAllSources": "Released, all sources",
-      "stillAvailable": "Still available",
       "companyPurse": "Company purse",
       "personalPurse": "Personal purse",
       "released": "Released",
@@ -499,7 +497,9 @@
       "ofReleased": "of {amount} released",
       "refundableCount": "{n, plural, =1 {1 refundable} other {# refundable}}",
       "credit": "Credit",
-      "refundsReceived": "{n, plural, =1 {1 refund received} other {# refunds received}}"
+      "refundsReceived": "{n, plural, =1 {1 refund received} other {# refunds received}}",
+      "pendingRefunds": "Pending refunds",
+      "vsMonth": "{delta} vs {month}"
     }
   },
   "planning": {

@@ -113,6 +113,64 @@ describe("ExpensePursesSummary — credit strip", () => {
   });
 });
 
+describe("ExpensePursesSummary — overspent purse", () => {
+  it("shows the true negative balance instead of clamping to 0 €", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ total_amount: 15310, paid_by_personal: true }),
+        ]}
+        meta={{
+          fundsReleasedTotal: 10919,
+          fundsReleasedCompanyTotal: 0,
+          fundsReleasedPersonalTotal: 10919,
+          companySpentTotal: 0,
+          personalSpentTotal: 15310,
+        }}
+      />
+    );
+    // Personal purse dial center: 10 919 − 15 310 = −4 391 €, in the negative color.
+    const personalCard = screen
+      .getByText("invoices.summary.personalPurse")
+      .closest(".folio-card") as HTMLElement;
+    const dialValue = Array.from(
+      personalCard.querySelectorAll<HTMLElement>(".num")
+    ).find((el) => /-4[^\d]*391/.test(el.textContent ?? ""));
+    expect(dialValue).toBeDefined();
+    expect(dialValue?.style.color).toBe("var(--negative)");
+    // Dark card "still available" shows the same signed figure.
+    const available = screen.getByText("invoices.summary.stillAvailable")
+      .nextElementSibling as HTMLElement;
+    expect(available.textContent).toMatch(/-4[^\d]*391/);
+    expect(available.style.color).toBe("rgb(219, 163, 143)");
+  });
+
+  it("keeps the dial ring capped at full when spending exceeds released", () => {
+    const { container } = render(
+      <ExpensePursesSummary
+        invoices={[]}
+        meta={{
+          fundsReleasedTotal: 1000,
+          fundsReleasedCompanyTotal: 0,
+          fundsReleasedPersonalTotal: 1000,
+          companySpentTotal: 0,
+          personalSpentTotal: 2000,
+        }}
+      />
+    );
+    // Every dial arc's dash length stays ≤ the full circumference (2π·44).
+    const circumference = 2 * Math.PI * 44;
+    const arcs = Array.from(
+      container.querySelectorAll<SVGCircleElement>("circle[stroke-dasharray]")
+    );
+    expect(arcs.length).toBeGreaterThan(0);
+    for (const arc of arcs) {
+      const filled = parseFloat(arc.getAttribute("stroke-dasharray") ?? "0");
+      expect(filled).toBeLessThanOrEqual(circumference + 0.001);
+    }
+  });
+});
+
 describe("ExpensePursesSummary — data-tip tooltip", () => {
   it("shows the tooltip on hover over a mark and hides it on leave", () => {
     render(

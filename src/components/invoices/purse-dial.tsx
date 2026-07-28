@@ -10,10 +10,12 @@ interface PurseDialProps {
   percent: number;
   /** Ring stroke color (CSS color, e.g. "var(--ink)" / "var(--accent)"). */
   color: string;
-  /** Formatted amount shown in the dial center (remaining €). */
+  /** Formatted amount shown in the dial center (remaining €, may be negative). */
   centerValue: string;
   /** Small caption under the center value (e.g. "left"). */
   centerLabel: string;
+  /** Center value color override (e.g. negative/overspent state). */
+  centerValueColor?: string;
   /** Tooltip payload, "label|value|meta" (see useDataTip). */
   dataTip?: string;
 }
@@ -23,7 +25,14 @@ const RADIUS = 44;
 const STROKE = 11;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-export function PurseDial({ percent, color, centerValue, centerLabel, dataTip }: PurseDialProps) {
+export function PurseDial({
+  percent,
+  color,
+  centerValue,
+  centerLabel,
+  centerValueColor,
+  dataTip,
+}: PurseDialProps) {
   const filled = (CIRCUMFERENCE * Math.min(100, Math.max(0, percent))) / 100;
   return (
     <div className="relative flex-none" style={{ width: SIZE, height: SIZE }} data-tip={dataTip}>
@@ -49,7 +58,10 @@ export function PurseDial({ percent, color, centerValue, centerLabel, dataTip }:
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-[1px]">
-        <div className="num text-[14.5px] font-medium" style={{ letterSpacing: "-.02em" }}>
+        <div
+          className="num text-[14.5px] font-medium"
+          style={{ letterSpacing: "-.02em", color: centerValueColor }}
+        >
           {centerValue}
         </div>
         <div className="label-cap" style={{ fontSize: 9.5 }}>

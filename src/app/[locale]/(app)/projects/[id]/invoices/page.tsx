@@ -114,8 +114,10 @@ export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [exportOpen, setExportOpen] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [fundsReleasedTotal, setFundsReleasedTotal] = useState(0);
+  const [fundsReleasedCompanyTotal, setFundsReleasedCompanyTotal] = useState(0);
+  const [fundsReleasedPersonalTotal, setFundsReleasedPersonalTotal] = useState(0);
   const [companySpentTotal, setCompanySpentTotal] = useState(0);
+  const [personalSpentTotal, setPersonalSpentTotal] = useState(0);
   const [companyName, setCompanyName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -132,8 +134,10 @@ export default function InvoicesPage() {
         tagFilter ?? undefined
       );
       setInvoices(res.invoices);
-      setFundsReleasedTotal(res.funds_released_total);
+      setFundsReleasedCompanyTotal(res.funds_released_company_total ?? 0);
+      setFundsReleasedPersonalTotal(res.funds_released_personal_total ?? 0);
       setCompanySpentTotal(res.company_spent_total ?? 0);
+      setPersonalSpentTotal(res.personal_spent_total ?? 0);
       setCompanyName(res.company_name ?? null);
     } catch {
       setError("Failed to load invoices");
@@ -184,6 +188,11 @@ export default function InvoicesPage() {
   const expenseInvoices = invoices.filter((i) => i.type !== "released_funds");
   const totalInvoiced = expenseInvoices.reduce((s, i) => s + i.total_amount, 0);
   const releasedFundsInvoices = invoices.filter((i) => i.type === "released_funds");
+  // Company vs personal attribution: personal-flagged releases are those paid
+  // via a personal-flagged payment method; every other released row (company,
+  // unflagged, or no method) counts as company.
+  const releasedFundsCompanyInvoices = releasedFundsInvoices.filter((i) => !i.paid_by_personal);
+  const releasedFundsPersonalInvoices = releasedFundsInvoices.filter((i) => i.paid_by_personal);
   const laborInvoices = invoices.filter((i) => i.type === "labor");
   const materialsInvoices = invoices.filter((i) => i.type === "materials_services");
   const othersInvoices = invoices.filter((i) => i.type === "others");
@@ -213,20 +222,39 @@ export default function InvoicesPage() {
             global amounts ("97 376 € … no expenses"). */}
         {(activeTab === "all" || activeTab === "released_funds") && (
           <div className="folio-card p-4 lg:p-5">
-            <div className="label-cap">{t("fundsReleased")}</div>
+            <div className="label-cap">{t("fundsReleasedCompany")}</div>
             <div
               className="font-display num mt-2 text-[22px] font-medium leading-none"
               style={{ color: "var(--positive)" }}
             >
               {formatEURWhole(companySpentTotal)}
               <span className="text-[16px]"> / </span>
-              {formatEURWhole(fundsReleasedTotal)}
+              {formatEURWhole(fundsReleasedCompanyTotal)}
             </div>
             <div className="num mt-1 text-[10px]" style={{ color: "var(--muted)" }}>
-              {t("refund.companySpentOfReleased")}
+              {t("refund.companySpentOfReleasedCompany")}
             </div>
             <div className="num mt-1 text-[11px]" style={{ color: "var(--muted)" }}>
-              {t("invoiceCount", { n: releasedFundsInvoices.length })}
+              {t("invoiceCount", { n: releasedFundsCompanyInvoices.length })}
+            </div>
+          </div>
+        )}
+        {(activeTab === "all" || activeTab === "released_funds") && (
+          <div className="folio-card p-4 lg:p-5">
+            <div className="label-cap">{t("fundsReleasedPersonal")}</div>
+            <div
+              className="font-display num mt-2 text-[22px] font-medium leading-none"
+              style={{ color: "var(--positive)" }}
+            >
+              {formatEURWhole(personalSpentTotal)}
+              <span className="text-[16px]"> / </span>
+              {formatEURWhole(fundsReleasedPersonalTotal)}
+            </div>
+            <div className="num mt-1 text-[10px]" style={{ color: "var(--muted)" }}>
+              {t("refund.personalSpentOfReleasedPersonal")}
+            </div>
+            <div className="num mt-1 text-[11px]" style={{ color: "var(--muted)" }}>
+              {t("invoiceCount", { n: releasedFundsPersonalInvoices.length })}
             </div>
           </div>
         )}

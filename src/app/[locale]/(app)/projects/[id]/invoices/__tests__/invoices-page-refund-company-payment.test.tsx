@@ -150,13 +150,23 @@ function setupAuthMock(canManage: boolean) {
 
 function setupFetchMock(
   invoices: Invoice[],
-  meta?: { funds_released_total?: number; company_spent_total?: number; company_name?: string | null }
+  meta?: {
+    funds_released_total?: number;
+    funds_released_company_total?: number;
+    funds_released_personal_total?: number;
+    company_spent_total?: number;
+    personal_spent_total?: number;
+    company_name?: string | null;
+  }
 ) {
   mockFetchInvoicesWithMeta.mockResolvedValue({
     invoices,
     total: invoices.length,
     funds_released_total: meta?.funds_released_total ?? 0,
+    funds_released_company_total: meta?.funds_released_company_total ?? 0,
+    funds_released_personal_total: meta?.funds_released_personal_total ?? 0,
     company_spent_total: meta?.company_spent_total ?? 0,
+    personal_spent_total: meta?.personal_spent_total ?? 0,
     company_name: meta?.company_name ?? null,
   });
 }
@@ -230,16 +240,16 @@ describe("InvoicesPage — total expenses KPI excludes released_funds", () => {
   });
 });
 
-describe("InvoicesPage — funds released KPI shows company_spent / funds_released ratio", () => {
+describe("InvoicesPage — funds released KPI shows company_spent / funds_released_company ratio", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupNavigationMocks();
     setupAuthMock(false);
   });
 
-  it("renders company_spent_total / funds_released_total in the funds released card", async () => {
+  it("renders company_spent_total / funds_released_company_total in the company funds released card", async () => {
     setupFetchMock([], {
-      funds_released_total: 97376,
+      funds_released_company_total: 97376,
       company_spent_total: 10919,
       company_name: "ANN ECO CONSTRUCTION",
     });
@@ -247,8 +257,8 @@ describe("InvoicesPage — funds released KPI shows company_spent / funds_releas
 
     await waitFor(
       () => {
-        // companySpentOfReleased sub-caption key must appear
-        expect(screen.queryByText("invoices.refund.companySpentOfReleased")).not.toBeNull();
+        // companySpentOfReleasedCompany sub-caption key must appear
+        expect(screen.queryByText("invoices.refund.companySpentOfReleasedCompany")).not.toBeNull();
       },
       { timeout: 5000 },
     );
@@ -259,7 +269,7 @@ describe("InvoicesPage — funds released KPI shows company_spent / funds_releas
     // floors at 0; the page must render that value as-is (no client recompute).
     // Here a 10 919 company spend was reduced to 4 242 by company refunds.
     setupFetchMock([], {
-      funds_released_total: 97376,
+      funds_released_company_total: 97376,
       company_spent_total: 4242,
       company_name: "ANN ECO CONSTRUCTION",
     });
@@ -267,7 +277,7 @@ describe("InvoicesPage — funds released KPI shows company_spent / funds_releas
 
     const fundsCard = await waitFor(
       () => {
-        const card = screen.getByText("invoices.fundsReleased").closest(".folio-card");
+        const card = screen.getByText("invoices.fundsReleasedCompany").closest(".folio-card");
         expect(card).not.toBeNull();
         return card as HTMLElement;
       },
@@ -521,14 +531,20 @@ describe("InvoicesPage — transfer to company payment action", () => {
         invoices: [makeInvoice({ type: "materials_services", refundable_status: null })],
         total: 1,
         funds_released_total: 0,
+        funds_released_company_total: 0,
+        funds_released_personal_total: 0,
         company_spent_total: 0,
+        personal_spent_total: 0,
         company_name: null,
       })
       .mockResolvedValue({
         invoices: [],
         total: 0,
         funds_released_total: 0,
+        funds_released_company_total: 0,
+        funds_released_personal_total: 0,
         company_spent_total: 0,
+        personal_spent_total: 0,
         company_name: null,
       });
 

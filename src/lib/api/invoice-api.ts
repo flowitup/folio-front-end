@@ -15,8 +15,24 @@ export interface InvoiceListResponse {
   invoices: Invoice[];
   total: number;
   funds_released_total: number;
+  /**
+   * Portion of funds_released_total paid via company-flagged (or unflagged/no-method)
+   * payment methods. Optional: absent on an old BE build during a FE-deploys-first
+   * window, when page.tsx falls back to `?? 0`.
+   */
+  funds_released_company_total?: number;
+  /**
+   * Portion of funds_released_total paid via personal-flagged payment methods.
+   * Optional: same FE-before-BE deploy-ordering caveat as funds_released_company_total.
+   */
+  funds_released_personal_total?: number;
   /** Total amount spent directly by the company (via company-flagged payment methods) across this project. */
   company_spent_total: number;
+  /**
+   * Total amount spent personally (via personal-flagged payment methods) across this
+   * project. Optional: same FE-before-BE deploy-ordering caveat as the split fields above.
+   */
+  personal_spent_total?: number;
   /** Name of the construction company associated with this project, if any. */
   company_name: string | null;
 }

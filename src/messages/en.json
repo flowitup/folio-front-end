@@ -329,7 +329,8 @@
     "builtins": {
       "cash": "Cash"
     },
-    "paidByCompany": "Paid by the company"
+    "paidByCompany": "Paid by the company",
+    "personalPayment": "Personal payment"
   },
   "errors": {
     "unauthorized": "Unauthorized",
@@ -409,7 +410,8 @@
       "fallback": "Preview not available for this file type. Download to view."
     },
     "totalInvoiced": "Total expenses",
-    "fundsReleased": "Funds released",
+    "fundsReleasedCompany": "Funds released — company",
+    "fundsReleasedPersonal": "Funds released — personal",
     "paid": "Paid",
     "pending": "Pending",
     "overdue": "Overdue",
@@ -472,12 +474,18 @@
       "transferSuccess": "Expense transferred to company payment",
       "transferForbidden": "Requires company admin access",
       "transferError": "Failed to transfer expense",
-      "companySpentOfReleased": "spent by company / released"
+      "companySpentOfReleasedCompany": "spent by company / released to company",
+      "personalSpentOfReleasedPersonal": "spent personally / released to personal"
     },
     "refundSource": {
       "company": "Refunded by company",
       "bank": "Refunded by bank",
       "both": "Refunded by company and bank"
+    },
+    "releaseAttribution": {
+      "label": "Release attribution",
+      "success": "Release attribution updated",
+      "error": "Failed to update release attribution"
     }
   },
   "planning": {

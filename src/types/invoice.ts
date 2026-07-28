@@ -46,6 +46,12 @@ export interface Invoice {
    */
   paid_by_company?: boolean;
   /**
+   * True when this invoice was paid with a personal-flagged payment method.
+   * Mutually exclusive with paid_by_company. On released_funds auto-invoices,
+   * drives whether the release is attributed to the company or personal card.
+   */
+  paid_by_personal?: boolean;
+  /**
    * UUID of the materials_services invoice that this refund invoice is linked to.
    * Only set on type=refund invoices; null/absent = unlinked refund.
    */

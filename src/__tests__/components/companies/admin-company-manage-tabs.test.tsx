@@ -250,8 +250,8 @@ describe("AdminCompanyManagePage — generate-token flow", () => {
 // ---------------------------------------------------------------------------
 
 const PAYMENT_METHODS = [
-  { id: "pm-1", companyId: "co-1", label: "Cash", isBuiltin: true, isActive: true, usageCount: 0, isCompanyPayment: false },
-  { id: "pm-2", companyId: "co-1", label: "Wise", isBuiltin: false, isActive: true, usageCount: 1, isCompanyPayment: false },
+  { id: "pm-1", companyId: "co-1", label: "Cash", isBuiltin: true, isActive: true, usageCount: 0, isCompanyPayment: false, isPersonalPayment: false },
+  { id: "pm-2", companyId: "co-1", label: "Wise", isBuiltin: false, isActive: true, usageCount: 1, isCompanyPayment: false, isPersonalPayment: false },
 ];
 
 describe("AdminCompanyManagePage — payments tab", () => {

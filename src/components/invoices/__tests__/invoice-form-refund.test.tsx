@@ -126,7 +126,10 @@ describe("InvoiceForm — mixed-sign unit_price gating", () => {
       invoices: [],
       total: 0,
       funds_released_total: 0,
+      funds_released_company_total: 0,
+      funds_released_personal_total: 0,
       company_spent_total: 0,
+      personal_spent_total: 0,
       company_name: null,
     });
   });
@@ -233,7 +236,10 @@ describe("InvoiceForm — signed values submitted as-is", () => {
       invoices: [],
       total: 0,
       funds_released_total: 0,
+      funds_released_company_total: 0,
+      funds_released_personal_total: 0,
       company_spent_total: 0,
+      personal_spent_total: 0,
       company_name: null,
     });
   });
@@ -281,7 +287,10 @@ describe("InvoiceForm — edit-load shows stored signed values", () => {
       invoices: [],
       total: 0,
       funds_released_total: 0,
+      funds_released_company_total: 0,
+      funds_released_personal_total: 0,
       company_spent_total: 0,
+      personal_spent_total: 0,
       company_name: null,
     });
   });
@@ -354,7 +363,10 @@ describe("InvoiceForm — refund link selector", () => {
       invoices: [],
       total: 0,
       funds_released_total: 0,
+      funds_released_company_total: 0,
+      funds_released_personal_total: 0,
       company_spent_total: 0,
+      personal_spent_total: 0,
       company_name: null,
     });
 
@@ -378,7 +390,10 @@ describe("InvoiceForm — refund link selector", () => {
       invoices: [ms1, ms2],
       total: 2,
       funds_released_total: 0,
+      funds_released_company_total: 0,
+      funds_released_personal_total: 0,
       company_spent_total: 0,
+      personal_spent_total: 0,
       company_name: null,
     });
 
@@ -404,7 +419,10 @@ describe("InvoiceForm — refund link selector", () => {
       invoices: [ms1, ms2],
       total: 2,
       funds_released_total: 0,
+      funds_released_company_total: 0,
+      funds_released_personal_total: 0,
       company_spent_total: 0,
+      personal_spent_total: 0,
       company_name: null,
     });
 
@@ -430,7 +448,10 @@ describe("InvoiceForm — refund link selector", () => {
       invoices: [ms1],
       total: 1,
       funds_released_total: 0,
+      funds_released_company_total: 0,
+      funds_released_personal_total: 0,
       company_spent_total: 0,
+      personal_spent_total: 0,
       company_name: null,
     });
 
@@ -467,7 +488,10 @@ describe("InvoiceForm — refund link selector", () => {
       invoices: [ms1],
       total: 1,
       funds_released_total: 0,
+      funds_released_company_total: 0,
+      funds_released_personal_total: 0,
       company_spent_total: 0,
+      personal_spent_total: 0,
       company_name: null,
     });
 
@@ -499,7 +523,10 @@ describe("InvoiceForm — refund link selector", () => {
       invoices: [],
       total: 0,
       funds_released_total: 0,
+      funds_released_company_total: 0,
+      funds_released_personal_total: 0,
       company_spent_total: 0,
+      personal_spent_total: 0,
       company_name: null,
     });
 
@@ -524,7 +551,10 @@ describe("InvoiceForm — cap error (RefundExceedsSourceError)", () => {
       invoices: [],
       total: 0,
       funds_released_total: 0,
+      funds_released_company_total: 0,
+      funds_released_personal_total: 0,
       company_spent_total: 0,
+      personal_spent_total: 0,
       company_name: null,
     });
   });

@@ -1,20 +1,19 @@
 /**
- * Tests for InvoicesPage — company/personal released-funds split cards.
+ * Tests for InvoicesPage — "Two purses" summary (design Expense Dataviz 1b).
  *
  * Covers:
- * - Company card renders companySpentTotal / fundsReleasedCompanyTotal with the
- *   fundsReleasedCompany label and companySpentOfReleasedCompany caption
- * - Personal card renders personalSpentTotal / fundsReleasedPersonalTotal with the
- *   fundsReleasedPersonal label and personalSpentOfReleasedPersonal caption
- * - Company card's invoice count excludes paid_by_personal rows
- * - Personal card's invoice count only includes paid_by_personal rows
+ * - Company purse renders the meta released/spent figures verbatim
+ * - Personal purse renders the meta released/spent figures verbatim
+ * - Purse stamps count attributed EXPENSE rows (company excludes personal rows,
+ *   personal counts only paid_by_personal rows)
+ * - Personal stamp switches to the refundable count when refund-tracked rows exist
  *
- * Dual-render note: jsdom renders both mobile and desktop views; the KPI cards
- * are not part of the dual-render split, so plain screen queries are safe here.
+ * Dual-render note: jsdom renders both mobile and desktop views; the summary
+ * is not part of the dual-render split, so plain screen queries are safe here.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import type { Invoice } from "@/types/invoice";
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
@@ -114,6 +113,7 @@ function setupAuth() {
 function setupFetch(
   invoices: Invoice[],
   meta?: {
+    funds_released_total?: number;
     funds_released_company_total?: number;
     funds_released_personal_total?: number;
     company_spent_total?: number;
@@ -124,7 +124,7 @@ function setupFetch(
   mockFetchInvoicesWithMeta.mockResolvedValue({
     invoices,
     total: invoices.length,
-    funds_released_total: 0,
+    funds_released_total: meta?.funds_released_total ?? 0,
     funds_released_company_total: meta?.funds_released_company_total ?? 0,
     funds_released_personal_total: meta?.funds_released_personal_total ?? 0,
     company_spent_total: meta?.company_spent_total ?? 0,
@@ -138,9 +138,9 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
     id: "inv-split-1",
     project_id: "proj-split-1",
     invoice_number: "INV-2026-0001",
-    type: "released_funds",
+    type: "materials_services",
     issue_date: "2026-06-01",
-    recipient_name: "Bank",
+    recipient_name: "Supplier",
     recipient_address: null,
     notes: null,
     items: [],
@@ -151,11 +151,19 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
     payment_method_id: null,
     payment_method_label: null,
     source_billing_document_id: null,
-    is_auto_generated: true,
+    is_auto_generated: false,
     refundable_status: null,
     service_month: null,
     ...overrides,
   };
+}
+
+async function findPurseCard(title: string): Promise<HTMLElement> {
+  return waitFor(() => {
+    const el = screen.getByText(title).closest(".folio-card");
+    expect(el).not.toBeNull();
+    return el as HTMLElement;
+  });
 }
 
 beforeEach(() => {
@@ -166,8 +174,8 @@ beforeEach(() => {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe("InvoicesPage — company released-funds card", () => {
-  it("renders companySpentTotal / fundsReleasedCompanyTotal with the company caption", async () => {
+describe("InvoicesPage — company purse card", () => {
+  it("renders the meta company released/spent figures verbatim", async () => {
     setupFetch([], {
       funds_released_company_total: 80000,
       company_spent_total: 30000,
@@ -175,37 +183,30 @@ describe("InvoicesPage — company released-funds card", () => {
     });
     render(<InvoicesPage />);
 
-    await waitFor(() => {
-      expect(screen.queryByText("invoices.fundsReleasedCompany")).not.toBeNull();
-      expect(screen.queryByText("invoices.refund.companySpentOfReleasedCompany")).not.toBeNull();
-    });
-
-    const card = screen.getByText("invoices.fundsReleasedCompany").closest(".folio-card");
-    expect(card?.textContent).toMatch(/30[^\d]*000/);
-    expect(card?.textContent).toMatch(/80[^\d]*000/);
+    const card = await findPurseCard("invoices.summary.companyPurse");
+    expect(card.textContent).toContain("invoices.summary.released");
+    expect(card.textContent).toContain("invoices.summary.spent");
+    expect(card.textContent).toMatch(/80[^\d]*000/);
+    expect(card.textContent).toMatch(/30[^\d]*000/);
   });
 
-  it("counts only non-personal released rows", async () => {
+  it("stamp counts only company-attributed expense rows", async () => {
     setupFetch([
-      makeInvoice({ id: "rf-company-1", paid_by_personal: false }),
-      makeInvoice({ id: "rf-company-2" }), // absent => company
-      makeInvoice({ id: "rf-personal-1", paid_by_personal: true }),
+      makeInvoice({ id: "exp-company-1", paid_by_personal: false }),
+      makeInvoice({ id: "exp-company-2" }), // absent flag => company
+      makeInvoice({ id: "exp-personal-1", paid_by_personal: true }),
+      // Released rows are capital flows — never counted as purse expenses.
+      makeInvoice({ id: "rf-1", type: "released_funds", is_auto_generated: true }),
     ]);
     render(<InvoicesPage />);
 
-    const companyCard = await waitFor(() => {
-      const el = screen.getByText("invoices.fundsReleasedCompany").closest(".folio-card");
-      expect(el).not.toBeNull();
-      return el as HTMLElement;
-    });
-
-    // 2 company rows (paid_by_personal=false or absent), the 3rd is personal.
-    expect(companyCard.textContent).toContain('invoices.invoiceCount({"n":2})');
+    const card = await findPurseCard("invoices.summary.companyPurse");
+    expect(card.textContent).toContain('invoices.invoiceCount({"n":2})');
   });
 });
 
-describe("InvoicesPage — personal released-funds card", () => {
-  it("renders personalSpentTotal / fundsReleasedPersonalTotal with the personal caption", async () => {
+describe("InvoicesPage — personal purse card", () => {
+  it("renders the meta personal released/spent figures verbatim", async () => {
     setupFetch([], {
       funds_released_personal_total: 5000,
       personal_spent_total: 1200,
@@ -213,31 +214,71 @@ describe("InvoicesPage — personal released-funds card", () => {
     });
     render(<InvoicesPage />);
 
-    await waitFor(() => {
-      expect(screen.queryByText("invoices.fundsReleasedPersonal")).not.toBeNull();
-      expect(screen.queryByText("invoices.refund.personalSpentOfReleasedPersonal")).not.toBeNull();
-    });
-
-    const card = screen.getByText("invoices.fundsReleasedPersonal").closest(".folio-card");
-    expect(card?.textContent).toMatch(/1[^\d]*200/);
-    expect(card?.textContent).toMatch(/5[^\d]*000/);
+    const card = await findPurseCard("invoices.summary.personalPurse");
+    expect(card.textContent).toMatch(/5[^\d]*000/);
+    expect(card.textContent).toMatch(/1[^\d]*200/);
   });
 
-  it("counts only paid_by_personal released rows", async () => {
+  it("stamp counts only paid_by_personal expense rows", async () => {
     setupFetch([
-      makeInvoice({ id: "rf-company-1", paid_by_personal: false }),
-      makeInvoice({ id: "rf-personal-1", paid_by_personal: true }),
-      makeInvoice({ id: "rf-personal-2", paid_by_personal: true }),
+      makeInvoice({ id: "exp-company-1", paid_by_personal: false }),
+      makeInvoice({ id: "exp-personal-1", paid_by_personal: true }),
+      makeInvoice({ id: "exp-personal-2", paid_by_personal: true }),
     ]);
     render(<InvoicesPage />);
 
-    const personalCard = await waitFor(() => {
-      const el = screen.getByText("invoices.fundsReleasedPersonal").closest(".folio-card");
-      expect(el).not.toBeNull();
-      return el as HTMLElement;
-    });
+    const card = await findPurseCard("invoices.summary.personalPurse");
+    expect(card.textContent).toContain('invoices.invoiceCount({"n":2})');
+  });
 
-    // 2 personal rows (paid_by_personal=true), the 1st is company.
-    expect(personalCard.textContent).toContain('invoices.invoiceCount({"n":2})');
+  it("stamp switches to the refundable count when refund-tracked rows exist", async () => {
+    setupFetch([
+      makeInvoice({ id: "p-1", paid_by_personal: true, refundable_status: "refundable" }),
+      makeInvoice({ id: "p-2", paid_by_personal: true, refundable_status: "refund_pending" }),
+      // Already refunded by the company → no longer awaiting, and counted as
+      // company money (BE bucket rule mirrored client-side).
+      makeInvoice({ id: "p-3", paid_by_personal: true, refundable_status: "refunded" }),
+      makeInvoice({ id: "p-4", paid_by_personal: true }),
+    ]);
+    render(<InvoicesPage />);
+
+    const card = await findPurseCard("invoices.summary.personalPurse");
+    expect(card.textContent).toContain('invoices.summary.refundableCount({"n":2})');
+  });
+});
+
+describe("InvoicesPage — purse type attribution", () => {
+  it("company-refunded personal expense moves to the company purse; bank-refunded stays personal", async () => {
+    setupFetch([
+      // Company reimbursed (refunded_by null → company by legacy default).
+      makeInvoice({
+        id: "co-refunded",
+        paid_by_personal: true,
+        refundable_status: "refunded",
+        total_amount: 700,
+      }),
+      // Bank refunded → still personal money spent.
+      makeInvoice({
+        id: "bank-refunded",
+        paid_by_personal: true,
+        refundable_status: "refunded",
+        refunded_by: "bank",
+        total_amount: 300,
+      }),
+    ]);
+    render(<InvoicesPage />);
+
+    const summary = await waitFor(() => screen.getByTestId("expense-purses-summary"));
+    const companyCard = within(summary)
+      .getByText("invoices.summary.companyPurse")
+      .closest(".folio-card") as HTMLElement;
+    const personalCard = within(summary)
+      .getByText("invoices.summary.personalPurse")
+      .closest(".folio-card") as HTMLElement;
+
+    expect(companyCard.textContent).toContain('invoices.invoiceCount({"n":1})');
+    expect(companyCard.textContent).toMatch(/700/);
+    expect(personalCard.textContent).toContain('invoices.invoiceCount({"n":1})');
+    expect(personalCard.textContent).toMatch(/300/);
   });
 });

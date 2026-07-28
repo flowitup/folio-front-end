@@ -55,6 +55,8 @@ const PERSONAL_CARD_BORDER = "#f1c8a3";
 // "Still available" on the dark ink card: --positive is too dark against ink;
 // this is its light-on-dark counterpart from the design doc.
 const AVAILABLE_ON_DARK = "#a8c48f";
+// Same idea for an overspent (negative) balance: --negative lightened for ink.
+const OVERSPENT_ON_DARK = "#dba38f";
 
 interface PurseBreakdown {
   count: number;
@@ -125,8 +127,10 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   const releasedTotal = meta.fundsReleasedTotal;
   const releasedPersonal = meta.fundsReleasedPersonalTotal ?? 0;
   const releasedCompany = meta.fundsReleasedCompanyTotal ?? releasedTotal - releasedPersonal;
+  // Balances stay signed so an overspent purse shows its true negative figure;
+  // only the progress visuals (ring, bar) cap at full.
   const spentTotal = company.spent + personal.spent;
-  const availableTotal = Math.max(0, releasedTotal - spentTotal);
+  const availableTotal = releasedTotal - spentTotal;
   const spentPct = releasedTotal > 0 ? Math.min(100, (spentTotal / releasedTotal) * 100) : 0;
 
   const monthYear = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" });
@@ -144,7 +148,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
     breakdown: PurseBreakdown,
     borderColor?: string
   ) => {
-    const left = Math.max(0, released - spent);
+    const left = released - spent;
     const pct = released > 0 ? Math.min(100, (spent / released) * 100) : 0;
     return (
       <div
@@ -160,6 +164,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
             percent={pct}
             color={dialColor}
             centerValue={formatEURWhole(left)}
+            centerValueColor={left < 0 ? "var(--negative)" : undefined}
             centerLabel={t("summary.left")}
             dataTip={`${title}|${formatEURWhole(left)}|${t("summary.ofReleased", {
               amount: formatEURWhole(released),
@@ -265,7 +270,10 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
             </div>
             <div className="flex justify-between text-[11.5px]">
               <span style={{ opacity: 0.72 }}>{t("summary.stillAvailable")}</span>
-              <span className="num" style={{ color: AVAILABLE_ON_DARK }}>
+              <span
+                className="num"
+                style={{ color: availableTotal < 0 ? OVERSPENT_ON_DARK : AVAILABLE_ON_DARK }}
+              >
                 {formatEURWhole(availableTotal)}
               </span>
             </div>

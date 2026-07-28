@@ -25,6 +25,18 @@ export function formatEUR(amount: number): string {
 }
 
 /**
+ * Format a number as whole-euro fr-FR EUR currency ("17 831 €").
+ * Used by summary/KPI figures where cents are visual noise.
+ */
+export function formatEURWhole(amount: number): string {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+/**
  * Format a date as dd/mm/YYYY (locale-independent).
  * Uses local (browser-timezone) calendar fields, matching prior
  * toLocaleDateString behavior, with manual zero-padding to avoid

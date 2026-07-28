@@ -11,6 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 import { fetchInvoicesWithMeta, deleteInvoice } from "@/lib/api/invoice-api";
+import {
+  ExpensePursesSummary,
+  type ExpenseSummaryMeta,
+} from "@/components/invoices/expense-purses-summary";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
@@ -114,10 +118,10 @@ export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [exportOpen, setExportOpen] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [fundsReleasedCompanyTotal, setFundsReleasedCompanyTotal] = useState(0);
-  const [fundsReleasedPersonalTotal, setFundsReleasedPersonalTotal] = useState(0);
-  const [companySpentTotal, setCompanySpentTotal] = useState(0);
-  const [personalSpentTotal, setPersonalSpentTotal] = useState(0);
+  const [summary, setSummary] = useState<{
+    invoices: Invoice[];
+    meta: ExpenseSummaryMeta;
+  } | null>(null);
   const [companyName, setCompanyName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,17 +132,28 @@ export default function InvoicesPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetchInvoicesWithMeta(
+      // The purses summary is project-level, so it always reads an UNFILTERED
+      // list; when the table itself is unfiltered a single request serves both.
+      const isUnfiltered = activeTab === "all" && !tagFilter;
+      const filteredPromise = fetchInvoicesWithMeta(
         projectId,
         activeTab !== "all" ? activeTab : undefined,
         tagFilter ?? undefined
       );
+      const summaryPromise = isUnfiltered ? filteredPromise : fetchInvoicesWithMeta(projectId);
+      const [res, sum] = await Promise.all([filteredPromise, summaryPromise]);
       setInvoices(res.invoices);
-      setFundsReleasedCompanyTotal(res.funds_released_company_total ?? 0);
-      setFundsReleasedPersonalTotal(res.funds_released_personal_total ?? 0);
-      setCompanySpentTotal(res.company_spent_total ?? 0);
-      setPersonalSpentTotal(res.personal_spent_total ?? 0);
       setCompanyName(res.company_name ?? null);
+      setSummary({
+        invoices: sum.invoices,
+        meta: {
+          fundsReleasedTotal: sum.funds_released_total ?? 0,
+          fundsReleasedCompanyTotal: sum.funds_released_company_total,
+          fundsReleasedPersonalTotal: sum.funds_released_personal_total,
+          companySpentTotal: sum.company_spent_total ?? 0,
+          personalSpentTotal: sum.personal_spent_total ?? 0,
+        },
+      });
     } catch {
       setError("Failed to load invoices");
     } finally {
@@ -175,138 +190,11 @@ export default function InvoicesPage() {
     .filter((g) => g.items.length > 0);
   const showGroups = activeTab === "all" && groupedInvoices.length > 0;
 
-  // Compute KPIs from current invoice list. KPI cards round to whole
-  // euros; row totals use the shared 2-decimal formatEUR.
-  const formatEURWhole = (n: number) =>
-    new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-      maximumFractionDigits: 0,
-    }).format(n);
-  // Total expenses intentionally excludes released_funds auto-invoices —
-  // those represent capital flows, not project expenses.
-  const expenseInvoices = invoices.filter((i) => i.type !== "released_funds");
-  const totalInvoiced = expenseInvoices.reduce((s, i) => s + i.total_amount, 0);
-  const releasedFundsInvoices = invoices.filter((i) => i.type === "released_funds");
-  // Company vs personal attribution: personal-flagged releases are those paid
-  // via a personal-flagged payment method; every other released row (company,
-  // unflagged, or no method) counts as company.
-  const releasedFundsCompanyInvoices = releasedFundsInvoices.filter((i) => !i.paid_by_personal);
-  const releasedFundsPersonalInvoices = releasedFundsInvoices.filter((i) => i.paid_by_personal);
-  const laborInvoices = invoices.filter((i) => i.type === "labor");
-  const materialsInvoices = invoices.filter((i) => i.type === "materials_services");
-  const othersInvoices = invoices.filter((i) => i.type === "others");
-  const refundInvoices = invoices.filter((i) => i.type === "refund");
-
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
-      {/* KPI Row — on mobile the headline total spans full width as a hero and
-          the type breakdowns tuck into a compact 2-up grid beneath it, so the
-          summary reads as one primary figure + supporting detail instead of a
-          tall stack of equal-weight cards. */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-6 lg:gap-4">
-        <div className="folio-card col-span-2 p-5 lg:col-span-1">
-          <div className="label-cap">{t("totalInvoiced")}</div>
-          <div
-            className={`font-display num mt-2 text-[28px] font-medium leading-none${totalInvoiced < 0 ? " text-destructive" : ""}`}
-          >
-            {formatEURWhole(totalInvoiced)}
-          </div>
-          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("invoiceCount", { n: expenseInvoices.length })}
-          </div>
-        </div>
-        {/* Funds-released amounts are project-level meta (unfiltered), so the
-            card only renders on tabs where released-funds invoices are in the
-            list — on other tabs its filtered count would contradict the
-            global amounts ("97 376 € … no expenses"). */}
-        {(activeTab === "all" || activeTab === "released_funds") && (
-          <div className="folio-card p-4 lg:p-5">
-            <div className="label-cap">{t("fundsReleasedCompany")}</div>
-            <div
-              className="font-display num mt-2 text-[22px] font-medium leading-none"
-              style={{ color: "var(--positive)" }}
-            >
-              {formatEURWhole(companySpentTotal)}
-              <span className="text-[16px]"> / </span>
-              {formatEURWhole(fundsReleasedCompanyTotal)}
-            </div>
-            <div className="num mt-1 text-[10px]" style={{ color: "var(--muted)" }}>
-              {t("refund.companySpentOfReleasedCompany")}
-            </div>
-            <div className="num mt-1 text-[11px]" style={{ color: "var(--muted)" }}>
-              {t("invoiceCount", { n: releasedFundsCompanyInvoices.length })}
-            </div>
-          </div>
-        )}
-        {(activeTab === "all" || activeTab === "released_funds") && (
-          <div className="folio-card p-4 lg:p-5">
-            <div className="label-cap">{t("fundsReleasedPersonal")}</div>
-            <div
-              className="font-display num mt-2 text-[22px] font-medium leading-none"
-              style={{ color: "var(--positive)" }}
-            >
-              {formatEURWhole(personalSpentTotal)}
-              <span className="text-[16px]"> / </span>
-              {formatEURWhole(fundsReleasedPersonalTotal)}
-            </div>
-            <div className="num mt-1 text-[10px]" style={{ color: "var(--muted)" }}>
-              {t("refund.personalSpentOfReleasedPersonal")}
-            </div>
-            <div className="num mt-1 text-[11px]" style={{ color: "var(--muted)" }}>
-              {t("invoiceCount", { n: releasedFundsPersonalInvoices.length })}
-            </div>
-          </div>
-        )}
-        <div className="folio-card p-4 lg:p-5">
-          <div className="label-cap">{t("types.labor")}</div>
-          <div
-            className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
-            style={{ color: "var(--accent)" }}
-          >
-            {formatEURWhole(laborInvoices.reduce((s, i) => s + i.total_amount, 0))}
-          </div>
-          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("invoiceCount", { n: laborInvoices.length })}
-          </div>
-        </div>
-        <div className="folio-card p-4 lg:p-5">
-          <div className="label-cap">{t("types.materials_services")}</div>
-          <div
-            className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
-          >
-            {formatEURWhole(materialsInvoices.reduce((s, i) => s + i.total_amount, 0))}
-          </div>
-          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("invoiceCount", { n: materialsInvoices.length })}
-          </div>
-        </div>
-        <div className="folio-card p-4 lg:p-5">
-          <div className="label-cap">{t("types.others")}</div>
-          <div
-            className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
-            style={{ color: "var(--muted)" }}
-          >
-            {formatEURWhole(othersInvoices.reduce((s, i) => s + i.total_amount, 0))}
-          </div>
-          <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("invoiceCount", { n: othersInvoices.length })}
-          </div>
-        </div>
-        {refundInvoices.length > 0 && (
-          <div className="folio-card p-4 lg:p-5">
-            <div className="label-cap">{t("types.refund")}</div>
-            <div
-              className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px] text-destructive"
-            >
-              {formatEURWhole(refundInvoices.reduce((s, i) => s + i.total_amount, 0))}
-            </div>
-            <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-              {t("invoiceCount", { n: refundInvoices.length })}
-            </div>
-          </div>
-        )}
-      </div>
+      {/* "Two purses" summary (design Expense Dataviz 1b) — project-level,
+          fed by an unfiltered fetch so tab/tag filters below never change it. */}
+      {summary && <ExpensePursesSummary invoices={summary.invoices} meta={summary.meta} />}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="seg">

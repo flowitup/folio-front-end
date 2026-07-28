@@ -489,8 +489,6 @@
     },
     "summary": {
       "totalExpenses": "Total dépenses",
-      "releasedAllSources": "Débloqué, toutes sources",
-      "stillAvailable": "Encore disponible",
       "companyPurse": "Caisse entreprise",
       "personalPurse": "Caisse personnelle",
       "released": "Débloqué",
@@ -499,7 +497,9 @@
       "ofReleased": "sur {amount} débloqués",
       "refundableCount": "{n, plural, =1 {1 remboursable} other {# remboursables}}",
       "credit": "Crédit",
-      "refundsReceived": "{n, plural, =1 {1 remboursement reçu} other {# remboursements reçus}}"
+      "refundsReceived": "{n, plural, =1 {1 remboursement reçu} other {# remboursements reçus}}",
+      "pendingRefunds": "Remboursements en attente",
+      "vsMonth": "{delta} vs {month}"
     }
   },
   "planning": {

@@ -11,8 +11,10 @@ import { useDataTip } from "./data-tip";
  *
  * Dark total card + company/personal purse cards side by side: each purse has
  * a dial (spent share of its released funds, center = what's left) and a
- * per-type mini-bar breakdown. Refund invoices sit in a credit strip below,
- * outside both purses.
+ * per-type mini-bar breakdown. The dark card's lower block shows the pending
+ * personal-refund amount and a month-by-month spend timeline since project
+ * start (latest month highlighted, with a delta vs the previous month).
+ * Refund invoices sit in a credit strip below, outside both purses.
  *
  * Figure sourcing:
  * - Purse released/spent come from the backend meta — the authoritative
@@ -52,11 +54,16 @@ const TYPE_BAR_COLOR: Record<ExpenseType, string> = {
 
 // Personal-purse card border — same tint `.stamp.accent` uses in globals.css.
 const PERSONAL_CARD_BORDER = "#f1c8a3";
-// "Still available" on the dark ink card: --positive is too dark against ink;
-// this is its light-on-dark counterpart from the design doc.
-const AVAILABLE_ON_DARK = "#a8c48f";
-// Same idea for an overspent (negative) balance: --negative lightened for ink.
-const OVERSPENT_ON_DARK = "#dba38f";
+// Pending-refunds amount on the dark ink card — the warm tint the refundable
+// stamp family uses, readable on ink.
+const PENDING_ON_DARK = "#f1c8a3";
+
+/** First day of the month for a "YYYY-MM" key — numeric args avoid the
+ * UTC-midnight day-shift of parsing date-only strings. */
+function monthDate(key: string): Date {
+  const [y, m] = key.split("-").map(Number);
+  return new Date(y, m - 1, 1);
+}
 
 interface PurseBreakdown {
   count: number;
@@ -97,8 +104,12 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   const company = emptyBreakdown();
   const personal = emptyBreakdown();
   let refundableCount = 0;
+  let refundableTotal = 0;
   let minDate = "";
   let maxDate = "";
+  // Spend per month since project start. Labor attributes to its service_month
+  // (payment month can lag the work), everything else to issue_date.
+  const monthlySpend: Record<string, { total: number; count: number }> = {};
   const refunds = invoices.filter((i) => i.type === "refund");
   const refundsTotal = refunds.reduce((s, i) => s + i.total_amount, 0);
 
@@ -117,7 +128,12 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
       (inv.refundable_status === "refundable" || inv.refundable_status === "refund_pending")
     ) {
       refundableCount += 1;
+      refundableTotal += inv.total_amount;
     }
+    const monthKey = (inv.service_month ?? inv.issue_date).slice(0, 7);
+    const month = (monthlySpend[monthKey] ??= { total: 0, count: 0 });
+    month.total += inv.total_amount;
+    month.count += 1;
     if (!minDate || inv.issue_date < minDate) minDate = inv.issue_date;
     if (!maxDate || inv.issue_date > maxDate) maxDate = inv.issue_date;
   }
@@ -127,13 +143,35 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   const releasedTotal = meta.fundsReleasedTotal;
   const releasedPersonal = meta.fundsReleasedPersonalTotal ?? 0;
   const releasedCompany = meta.fundsReleasedCompanyTotal ?? releasedTotal - releasedPersonal;
-  // Balances stay signed so an overspent purse shows its true negative figure;
-  // only the progress visuals (ring, bar) cap at full.
   const spentTotal = company.spent + personal.spent;
-  const availableTotal = releasedTotal - spentTotal;
-  const spentPct = releasedTotal > 0 ? Math.min(100, (spentTotal / releasedTotal) * 100) : 0;
+
+  // ── Month series from the first to the last active month, gaps filled ─────
+  const monthKeys = Object.keys(monthlySpend).sort();
+  const monthSeries: { key: string; total: number; count: number }[] = [];
+  if (monthKeys.length > 0) {
+    let [y, m] = monthKeys[0].split("-").map(Number);
+    const [endY, endM] = monthKeys[monthKeys.length - 1].split("-").map(Number);
+    while (y < endY || (y === endY && m <= endM)) {
+      const key = `${y}-${String(m).padStart(2, "0")}`;
+      monthSeries.push({ key, ...(monthlySpend[key] ?? { total: 0, count: 0 }) });
+      if (m === 12) {
+        y += 1;
+        m = 1;
+      } else {
+        m += 1;
+      }
+    }
+  }
+  const maxMonthTotal = Math.max(...monthSeries.map((mo) => mo.total), 0);
+  const lastMonth = monthSeries[monthSeries.length - 1];
+  const prevMonth = monthSeries[monthSeries.length - 2];
+  const deltaPct =
+    lastMonth && prevMonth && prevMonth.total > 0
+      ? Math.round(((lastMonth.total - prevMonth.total) / prevMonth.total) * 100)
+      : null;
 
   const monthYear = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" });
+  const monthOnly = new Intl.DateTimeFormat(locale, { month: "short" });
   const rangeText =
     minDate && maxDate
       ? ` · ${monthYear.format(new Date(minDate))} → ${monthYear.format(new Date(maxDate))}`
@@ -251,32 +289,57 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
             </div>
           </div>
           <div className="mt-5 flex flex-col gap-1.5">
-            <div className="flex justify-between text-[11.5px]" style={{ opacity: 0.72 }}>
-              <span>{t("summary.releasedAllSources")}</span>
-              <span className="num">{formatEURWhole(releasedTotal)}</span>
-            </div>
-            <div
-              className="h-1.5 overflow-hidden rounded-full"
-              style={{ background: "color-mix(in srgb, var(--paper) 18%, transparent)" }}
-            >
-              <div
-                className="h-full rounded-full"
-                data-tip={`${t("summary.spent")}|${formatEURWhole(spentTotal)}|${t(
-                  "summary.ofReleased",
-                  { amount: formatEURWhole(releasedTotal) }
-                )}`}
-                style={{ width: `${spentPct}%`, background: "var(--accent)" }}
-              />
-            </div>
             <div className="flex justify-between text-[11.5px]">
-              <span style={{ opacity: 0.72 }}>{t("summary.stillAvailable")}</span>
-              <span
-                className="num"
-                style={{ color: availableTotal < 0 ? OVERSPENT_ON_DARK : AVAILABLE_ON_DARK }}
-              >
-                {formatEURWhole(availableTotal)}
+              <span style={{ opacity: 0.72 }}>{t("summary.pendingRefunds")}</span>
+              <span className="num" style={{ color: PENDING_ON_DARK }}>
+                {formatEURWhole(refundableTotal)}
               </span>
             </div>
+            {monthSeries.length > 0 && (
+              <>
+                <div
+                  className="flex h-[30px] items-end gap-[3px]"
+                  data-testid="monthly-spend-bars"
+                >
+                  {monthSeries.map((mo, i) => (
+                    <span
+                      key={mo.key}
+                      className="flex-1 rounded-[2px]"
+                      data-tip={`${monthYear.format(monthDate(mo.key))}|${formatEURWhole(
+                        mo.total
+                      )}|${t("invoiceCount", { n: mo.count })}`}
+                      style={{
+                        // 4% floor keeps zero/tiny months visible in the timeline.
+                        height: `${
+                          maxMonthTotal > 0
+                            ? Math.max((mo.total / maxMonthTotal) * 100, 4)
+                            : 4
+                        }%`,
+                        background:
+                          i === monthSeries.length - 1
+                            ? "var(--accent)"
+                            : "color-mix(in srgb, var(--paper) 32%, transparent)",
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-between text-[11.5px]">
+                  <span style={{ opacity: 0.72 }}>{monthYear.format(monthDate(lastMonth.key))}</span>
+                  <span>
+                    <span className="num">{formatEURWhole(lastMonth.total)}</span>
+                    {deltaPct !== null && (
+                      <span style={{ opacity: 0.62 }}>
+                        {" · "}
+                        {t("summary.vsMonth", {
+                          delta: `${deltaPct > 0 ? "+" : ""}${deltaPct}%`,
+                          month: monthOnly.format(monthDate(prevMonth.key)),
+                        })}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

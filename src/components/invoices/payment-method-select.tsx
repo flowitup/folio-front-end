@@ -45,6 +45,14 @@ export interface PaymentMethodSelectProps {
   allowCreate?: boolean;
   disabled?: boolean;
   className?: string;
+  /**
+   * Optional caller-provided label snapshot for `value`, shown as the trigger
+   * label while the methods list hasn't been fetched yet (it lazy-loads on
+   * first popover open). Without this, a pre-set `value` renders the muted
+   * placeholder until the user opens the popover, making an already-attributed
+   * row look unattributed. Once the list loads, the fetched label takes over.
+   */
+  fallbackSelectedLabel?: string | null;
 }
 
 // Sentinel value used to signal "clear the selection"
@@ -61,6 +69,7 @@ export function PaymentMethodSelect({
   allowCreate = true,
   disabled = false,
   className,
+  fallbackSelectedLabel,
 }: PaymentMethodSelectProps) {
   const t = useTranslations("invoices.paymentMethod");
   const tBuiltins = useTranslations("paymentMethods.builtins");
@@ -75,8 +84,14 @@ export function PaymentMethodSelect({
   const selectedLabel = React.useMemo(() => {
     if (!value) return null;
     const raw = methods.find((m) => m.id === value)?.label ?? null;
-    return raw ? localizeMethodLabel(raw, tBuiltins) : null;
-  }, [value, methods, tBuiltins]);
+    if (raw) return localizeMethodLabel(raw, tBuiltins);
+    // Methods list hasn't been fetched yet (lazy-loads on first open) — show the
+    // caller-provided snapshot instead of falling through to the placeholder.
+    if (loadState === "idle" && fallbackSelectedLabel) {
+      return localizeMethodLabel(fallbackSelectedLabel, tBuiltins);
+    }
+    return null;
+  }, [value, methods, tBuiltins, loadState, fallbackSelectedLabel]);
 
   // -------------------------------------------------------------------------
   // Fetch on open

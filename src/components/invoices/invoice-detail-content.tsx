@@ -314,6 +314,7 @@ export function InvoiceDetailContent({
                           allowCreate={false}
                           disabled={isAttributing}
                           className="max-w-xs"
+                          fallbackSelectedLabel={invoice.payment_method_label}
                         />
                       </dd>
                     </div>

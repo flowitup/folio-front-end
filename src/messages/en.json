@@ -410,7 +410,6 @@
       "fallback": "Preview not available for this file type. Download to view."
     },
     "totalInvoiced": "Total expenses",
-    "fundsReleased": "Funds released",
     "fundsReleasedCompany": "Funds released — company",
     "fundsReleasedPersonal": "Funds released — personal",
     "paid": "Paid",
@@ -475,7 +474,6 @@
       "transferSuccess": "Expense transferred to company payment",
       "transferForbidden": "Requires company admin access",
       "transferError": "Failed to transfer expense",
-      "companySpentOfReleased": "spent by company / released",
       "companySpentOfReleasedCompany": "spent by company / released to company",
       "personalSpentOfReleasedPersonal": "spent personally / released to personal"
     },

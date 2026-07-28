@@ -19,7 +19,6 @@ const REFUND_KEYS = [
   "transferSuccess",
   "transferForbidden",
   "transferError",
-  "companySpentOfReleased",
 ] as const;
 
 /** Walk a dot-path into a nested object and return the leaf value. */

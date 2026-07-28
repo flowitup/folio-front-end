@@ -112,7 +112,8 @@ const METHODS = [CASH, BANK_TRANSFER];
 function renderSelect(
   value: string | null = null,
   onChange = vi.fn(),
-  allowCreate = true
+  allowCreate = true,
+  fallbackSelectedLabel?: string | null
 ) {
   return render(
     <PaymentMethodSelect
@@ -120,6 +121,7 @@ function renderSelect(
       value={value}
       onChange={onChange}
       allowCreate={allowCreate}
+      fallbackSelectedLabel={fallbackSelectedLabel}
     />
   );
 }
@@ -156,6 +158,46 @@ describe("PaymentMethodSelect — initial render (closed state)", () => {
     const trigger = screen.getByRole("combobox");
     expect(trigger).toBeDefined();
   });
+});
+
+describe("PaymentMethodSelect — fallbackSelectedLabel", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("shows fallbackSelectedLabel as the trigger label before the methods list loads", () => {
+    mockList.mockResolvedValue({ ok: true, data: METHODS });
+    renderSelect(CASH.id, vi.fn(), true, "Cash");
+
+    const trigger = screen.getByRole("combobox");
+    expect(trigger.textContent).toContain("Cash");
+    expect(trigger.textContent).not.toContain("Select a payment method");
+  });
+
+  it("omitting fallbackSelectedLabel keeps the existing placeholder-until-loaded behaviour", () => {
+    mockList.mockResolvedValue({ ok: true, data: METHODS });
+    renderSelect(CASH.id);
+
+    const trigger = screen.getByRole("combobox");
+    expect(trigger.textContent).toContain("Select a payment method");
+  });
+
+  it(
+    "prefers the fetched label over fallbackSelectedLabel once the methods list loads",
+    async () => {
+      mockList.mockResolvedValueOnce({ ok: true, data: METHODS });
+      renderSelect(BANK_TRANSFER.id, vi.fn(), true, "Stale Snapshot Label");
+
+      const trigger = screen.getByRole("combobox");
+      expect(trigger.textContent).toContain("Stale Snapshot Label");
+
+      await openPopover();
+
+      await waitFor(() => {
+        expect(trigger.textContent).toContain("Bank Transfer");
+        expect(trigger.textContent).not.toContain("Stale Snapshot Label");
+      });
+    },
+    15000
+  );
 });
 
 describe("PaymentMethodSelect — loading and rendering options", () => {

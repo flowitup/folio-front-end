@@ -410,8 +410,7 @@
       "fallback": "Aperçu non disponible pour ce type de fichier. Téléchargez-le pour le consulter."
     },
     "totalInvoiced": "Total dépenses",
-    "fundsReleased": "Fonds débloqués",
-    "fundsReleasedCompany": "Fonds débloqués — société",
+    "fundsReleasedCompany": "Fonds débloqués — entreprise",
     "fundsReleasedPersonal": "Fonds débloqués — personnel",
     "paid": "Payées",
     "pending": "En attente",
@@ -475,8 +474,7 @@
       "transferSuccess": "Dépense transférée au paiement de l'entreprise",
       "transferForbidden": "Nécessite un accès administrateur de l'entreprise",
       "transferError": "Échec du transfert de la dépense",
-      "companySpentOfReleased": "dépensé par l'entreprise / débloqué",
-      "companySpentOfReleasedCompany": "dépensé par la société / débloqué pour la société",
+      "companySpentOfReleasedCompany": "dépensé par l'entreprise / débloqué pour l'entreprise",
       "personalSpentOfReleasedPersonal": "dépensé à titre personnel / débloqué à titre personnel"
     },
     "refundSource": {

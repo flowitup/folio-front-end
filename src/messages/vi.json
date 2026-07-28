@@ -410,7 +410,6 @@
       "fallback": "Không thể xem trước loại tệp này. Hãy tải xuống để xem."
     },
     "totalInvoiced": "Tổng chi phí",
-    "fundsReleased": "Quỹ đã giải ngân",
     "fundsReleasedCompany": "Quỹ đã giải ngân — công ty",
     "fundsReleasedPersonal": "Quỹ đã giải ngân — cá nhân",
     "paid": "Đã thanh toán",
@@ -475,7 +474,6 @@
       "transferSuccess": "Đã chuyển chi phí sang thanh toán của công ty",
       "transferForbidden": "Cần quyền quản trị công ty",
       "transferError": "Chuyển chi phí thất bại",
-      "companySpentOfReleased": "công ty đã chi / đã giải ngân",
       "companySpentOfReleasedCompany": "công ty đã chi / đã giải ngân cho công ty",
       "personalSpentOfReleasedPersonal": "cá nhân đã chi / đã giải ngân cho cá nhân"
     },

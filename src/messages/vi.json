@@ -329,7 +329,8 @@
     "builtins": {
       "cash": "Tiền mặt"
     },
-    "paidByCompany": "Công ty thanh toán"
+    "paidByCompany": "Công ty thanh toán",
+    "personalPayment": "Thanh toán cá nhân"
   },
   "errors": {
     "unauthorized": "Không được phép",

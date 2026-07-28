@@ -329,7 +329,8 @@
     "builtins": {
       "cash": "Cash"
     },
-    "paidByCompany": "Paid by the company"
+    "paidByCompany": "Paid by the company",
+    "personalPayment": "Personal payment"
   },
   "errors": {
     "unauthorized": "Unauthorized",

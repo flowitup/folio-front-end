@@ -329,7 +329,8 @@
     "builtins": {
       "cash": "Espèces"
     },
-    "paidByCompany": "Payé par l'entreprise"
+    "paidByCompany": "Payé par l'entreprise",
+    "personalPayment": "Paiement personnel"
   },
   "errors": {
     "unauthorized": "Non autorisé",

@@ -3,9 +3,12 @@
 /**
  * PaymentMethodRow — single row in the payment methods list.
  *
- * Supports inline label editing and isCompanyPayment toggle (for all methods)
- * and delete action (disabled for built-ins). The delete confirmation dialog
- * is managed by the parent; this component only fires the callbacks.
+ * Supports inline label editing, isCompanyPayment/isPersonalPayment toggles
+ * (for all methods) and delete action (disabled for built-ins). The two
+ * toggles are mutually exclusive (radio-like): checking one clears the other
+ * locally, and save always sends both flags so the effective state on the
+ * server is explicit. The delete confirmation dialog is managed by the
+ * parent; this component only fires the callbacks.
  */
 
 import { useRef, useState } from "react";
@@ -24,7 +27,12 @@ import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 interface PaymentMethodRowProps {
   method: PaymentMethod;
   isMutating: boolean;
-  onRenameRequest: (id: string, newLabel: string, isCompanyPayment: boolean) => Promise<void>;
+  onRenameRequest: (
+    id: string,
+    newLabel: string,
+    isCompanyPayment: boolean,
+    isPersonalPayment: boolean
+  ) => Promise<void>;
   onDeleteRequest: (method: PaymentMethod) => void;
 }
 
@@ -45,19 +53,34 @@ export function PaymentMethodRow({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(method.label);
   const [editIsCompanyPayment, setEditIsCompanyPayment] = useState(method.isCompanyPayment);
+  const [editIsPersonalPayment, setEditIsPersonalPayment] = useState(method.isPersonalPayment);
   const [isSaving, setIsSaving] = useState(false);
   const savingRef = useRef(false);
 
   function startEdit() {
     setEditValue(method.label);
     setEditIsCompanyPayment(method.isCompanyPayment);
+    setEditIsPersonalPayment(method.isPersonalPayment);
     setIsEditing(true);
   }
 
   function cancelEdit() {
     setEditValue(method.label);
     setEditIsCompanyPayment(method.isCompanyPayment);
+    setEditIsPersonalPayment(method.isPersonalPayment);
     setIsEditing(false);
+  }
+
+  // Checking "paid by company" clears "personal", and vice-versa — the two
+  // flags are mutually exclusive on the BE (both true → 400).
+  function handleCompanyPaymentChange(checked: boolean) {
+    setEditIsCompanyPayment(checked);
+    if (checked) setEditIsPersonalPayment(false);
+  }
+
+  function handlePersonalPaymentChange(checked: boolean) {
+    setEditIsPersonalPayment(checked);
+    if (checked) setEditIsCompanyPayment(false);
   }
 
   async function handleSave() {
@@ -66,15 +89,19 @@ export function PaymentMethodRow({
     const effectiveLabel = trimmed || method.label;
     const labelChanged = effectiveLabel !== method.label;
     const companyPaymentChanged = editIsCompanyPayment !== method.isCompanyPayment;
+    const personalPaymentChanged = editIsPersonalPayment !== method.isPersonalPayment;
     // Nothing actually changed — bail without a network call
-    if ((!labelChanged && !companyPaymentChanged) || savingRef.current) {
+    if (
+      (!labelChanged && !companyPaymentChanged && !personalPaymentChanged) ||
+      savingRef.current
+    ) {
       setIsEditing(false);
       return;
     }
     savingRef.current = true;
     setIsSaving(true);
     try {
-      await onRenameRequest(method.id, effectiveLabel, editIsCompanyPayment);
+      await onRenameRequest(method.id, effectiveLabel, editIsCompanyPayment, editIsPersonalPayment);
       setIsEditing(false);
     } finally {
       setIsSaving(false);
@@ -114,11 +141,22 @@ export function PaymentMethodRow({
                 type="checkbox"
                 id={`is-company-payment-${method.id}`}
                 checked={editIsCompanyPayment}
-                onChange={(e) => setEditIsCompanyPayment(e.target.checked)}
+                onChange={(e) => handleCompanyPaymentChange(e.target.checked)}
                 disabled={isSaving}
                 className="h-3.5 w-3.5 cursor-pointer"
               />
               {t("paidByCompany")}
+            </label>
+            <label className="flex items-center gap-2 text-[12px] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                id={`is-personal-payment-${method.id}`}
+                checked={editIsPersonalPayment}
+                onChange={(e) => handlePersonalPaymentChange(e.target.checked)}
+                disabled={isSaving}
+                className="h-3.5 w-3.5 cursor-pointer"
+              />
+              {t("personalPayment")}
             </label>
           </div>
         ) : (
@@ -131,6 +169,11 @@ export function PaymentMethodRow({
         {method.isCompanyPayment && !isEditing && (
           <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
             {t("paidByCompany")}
+          </Badge>
+        )}
+        {method.isPersonalPayment && !isEditing && (
+          <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
+            {t("personalPayment")}
           </Badge>
         )}
         {method.isBuiltin && (

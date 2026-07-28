@@ -91,6 +91,7 @@ const BANK_TRANSFER = {
   isActive: true,
   usageCount: 0,
   isCompanyPayment: false,
+  isPersonalPayment: false,
 };
 
 const CASH = {
@@ -101,6 +102,7 @@ const CASH = {
   isActive: true,
   usageCount: 2,
   isCompanyPayment: false,
+  isPersonalPayment: false,
 };
 
 const METHODS = [CASH, BANK_TRANSFER];
@@ -328,6 +330,7 @@ describe("PaymentMethodSelect — inline create (+ Add affordance)", () => {
         isActive: true,
         usageCount: 0,
         isCompanyPayment: false,
+        isPersonalPayment: false,
       };
       const updatedList = [...METHODS, newMethod];
 

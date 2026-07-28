@@ -82,6 +82,7 @@ const PAYMENT_METHOD = {
   isActive: true,
   usageCount: 0,
   isCompanyPayment: false,
+  isPersonalPayment: false,
 };
 
 const BUILTIN_METHOD = {
@@ -92,6 +93,7 @@ const BUILTIN_METHOD = {
   isActive: true,
   usageCount: 3,
   isCompanyPayment: false,
+  isPersonalPayment: false,
 };
 
 const METHODS_LIST = [BUILTIN_METHOD, PAYMENT_METHOD];

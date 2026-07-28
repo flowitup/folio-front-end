@@ -15,8 +15,14 @@ export interface InvoiceListResponse {
   invoices: Invoice[];
   total: number;
   funds_released_total: number;
+  /** Portion of funds_released_total paid via company-flagged (or unflagged/no-method) payment methods. */
+  funds_released_company_total: number;
+  /** Portion of funds_released_total paid via personal-flagged payment methods. */
+  funds_released_personal_total: number;
   /** Total amount spent directly by the company (via company-flagged payment methods) across this project. */
   company_spent_total: number;
+  /** Total amount spent personally (via personal-flagged payment methods) across this project. */
+  personal_spent_total: number;
   /** Name of the construction company associated with this project, if any. */
   company_name: string | null;
 }

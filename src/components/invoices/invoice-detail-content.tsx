@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { toast } from "sonner";
 import { Printer, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InvoiceForm, classifySubmitError } from "@/components/invoices/invoice-form";
 import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
+import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import {
@@ -79,6 +81,7 @@ export function InvoiceDetailContent({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tags, setTags] = useState<ProjectTag[]>([]);
+  const [isAttributing, setIsAttributing] = useState(false);
 
   // Load project tags for the edit form tag selector. Non-fatal.
   useEffect(() => {
@@ -126,6 +129,27 @@ export function InvoiceDetailContent({
       onDeleted();
     } catch (err) {
       setError(extractErrorMessage(err, "Failed to delete invoice"));
+    }
+  };
+
+  /**
+   * Sets who an auto-generated released_funds row is attributed to (company vs
+   * personal) by updating its payment method. The backend only accepts
+   * payment_method_id in this PATCH — any other field is rejected — so this
+   * request must stay a single-field payload.
+   */
+  const handleAttributionChange = async (newPaymentMethodId: string | null) => {
+    setIsAttributing(true);
+    try {
+      const updated = await updateInvoice(invoice.project_id, invoice.id, {
+        payment_method_id: newPaymentMethodId,
+      });
+      onUpdated(updated);
+      toast.success(t("releaseAttribution.success"));
+    } catch (err) {
+      toast.error(extractErrorMessage(err, t("releaseAttribution.error")));
+    } finally {
+      setIsAttributing(false);
     }
   };
 
@@ -274,6 +298,26 @@ export function InvoiceDetailContent({
                     />
                   </dd>
                 </div>
+                {canManage &&
+                  invoice.is_auto_generated &&
+                  invoice.type === "released_funds" &&
+                  companyId && (
+                    <div className="col-span-2 sm:col-span-4">
+                      <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        {t("releaseAttribution.label")}
+                      </dt>
+                      <dd className="mt-0.5">
+                        <PaymentMethodSelect
+                          companyId={companyId}
+                          value={invoice.payment_method_id}
+                          onChange={handleAttributionChange}
+                          allowCreate={false}
+                          disabled={isAttributing}
+                          className="max-w-xs"
+                        />
+                      </dd>
+                    </div>
+                  )}
               </dl>
               {invoice.type === "refund" && invoice.refunds_invoice_number && (
                 <div className="mt-2 border-t pt-2">

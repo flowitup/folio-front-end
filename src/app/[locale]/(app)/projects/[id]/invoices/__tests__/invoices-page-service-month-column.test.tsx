@@ -100,7 +100,10 @@ function setupMocks(invoices: Invoice[]) {
     invoices,
     total: invoices.length,
     funds_released_total: 0,
+    funds_released_company_total: 0,
+    funds_released_personal_total: 0,
     company_spent_total: 0,
+    personal_spent_total: 0,
     company_name: null,
   });
 }

@@ -126,7 +126,10 @@ function setupFetch(
   invoices: Invoice[],
   meta?: {
     funds_released_total?: number;
+    funds_released_company_total?: number;
+    funds_released_personal_total?: number;
     company_spent_total?: number;
+    personal_spent_total?: number;
     company_name?: string | null;
   },
 ) {
@@ -134,7 +137,10 @@ function setupFetch(
     invoices,
     total: invoices.length,
     funds_released_total: meta?.funds_released_total ?? 0,
+    funds_released_company_total: meta?.funds_released_company_total ?? 0,
+    funds_released_personal_total: meta?.funds_released_personal_total ?? 0,
     company_spent_total: meta?.company_spent_total ?? 0,
+    personal_spent_total: meta?.personal_spent_total ?? 0,
     company_name: meta?.company_name ?? null,
   });
 }
@@ -166,14 +172,14 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
 
 // ── Tests: ratio card reads company_spent_total ────────────────────────────────
 
-describe("InvoicesPage — funds released ratio reads company_spent_total", () => {
+describe("InvoicesPage — company funds released ratio reads company_spent_total", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupNavigation();
     setupAuth(false);
   });
 
-  it("renders the companySpentOfReleased caption when company_spent_total > 0", async () => {
+  it("renders the companySpentOfReleasedCompany caption when company_spent_total > 0", async () => {
     setupFetch([], {
       funds_released_total: 50000,
       company_spent_total: 12500,
@@ -184,7 +190,7 @@ describe("InvoicesPage — funds released ratio reads company_spent_total", () =
     await waitFor(
       () => {
         expect(
-          screen.queryByText("invoices.refund.companySpentOfReleased"),
+          screen.queryByText("invoices.refund.companySpentOfReleasedCompany"),
         ).not.toBeNull();
       },
       { timeout: 5000 },
@@ -198,7 +204,7 @@ describe("InvoicesPage — funds released ratio reads company_spent_total", () =
     await waitFor(
       () => {
         expect(
-          screen.queryByText("invoices.refund.companySpentOfReleased"),
+          screen.queryByText("invoices.refund.companySpentOfReleasedCompany"),
         ).not.toBeNull();
       },
       { timeout: 5000 },

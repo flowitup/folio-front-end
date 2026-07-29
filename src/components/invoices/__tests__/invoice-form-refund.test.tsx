@@ -25,7 +25,7 @@ vi.mock("next-intl", () => ({
       "types.labor": "Labor",
       "types.materials_services": "Materials & Services",
       "types.others": "Others",
-      "types.refund": "Refund",
+      "types.refund": "Return",
       "issueDate": "Issue Date",
       "recipient": "Recipient",
       "recipientAddress": "Address",
@@ -47,7 +47,7 @@ vi.mock("next-intl", () => ({
       "refundHint": "Use a negative unit price for a credit/refund line.",
       "refundsInvoiceLabel": "Refunds invoice (Materials & Services)",
       "refundsInvoiceNone": "— none —",
-      "refundOf": values ? `Refund of ${values.number}` : "Refund of {number}",
+      "refundOf": values ? `Return of ${values.number}` : "Return of {number}",
       "errorRefundExceedsSource": values
         ? `Refund exceeds the remaining refundable amount (${values.remaining}) for this invoice.`
         : "Refund exceeds the remaining refundable amount ({remaining}) for this invoice.",

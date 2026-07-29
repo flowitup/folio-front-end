@@ -3,8 +3,8 @@
  *
  * Tests for refund-type styling in InvoiceMobileCard:
  * - Negative total_amount renders with text-destructive class
- * - type=refund shows "Refund of {number}" when refunds_invoice_number present
- * - type=refund without refunds_invoice_number shows no "Refund of" text
+ * - type=refund shows "Return of {number}" when refunds_invoice_number present
+ * - type=refund without refunds_invoice_number shows no "Return of" text
  * - Positive amount has no destructive class
  */
 
@@ -15,7 +15,7 @@ import type { Invoice } from "@/types/invoice";
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace?: string) => (key: string, values?: Record<string, unknown>) => {
-    if (key === "refundOf" && values) return `Refund of ${values.number}`;
+    if (key === "refundOf" && values) return `Return of ${values.number}`;
     return namespace ? `${namespace}.${key}` : key;
   },
   useLocale: () => "en",
@@ -86,7 +86,7 @@ describe("InvoiceMobileCard — refund type display", () => {
     expect(amountEl.className).not.toContain("text-destructive");
   });
 
-  it("shows 'Refund of {number}' when type=refund and refunds_invoice_number present", () => {
+  it("shows 'Return of {number}' when type=refund and refunds_invoice_number present", () => {
     render(
       <InvoiceMobileCard
         invoice={makeInvoice({
@@ -100,10 +100,10 @@ describe("InvoiceMobileCard — refund type display", () => {
       />,
     );
 
-    expect(screen.getByText("Refund of INV-001")).toBeDefined();
+    expect(screen.getByText("Return of INV-001")).toBeDefined();
   });
 
-  it("does NOT show 'Refund of' when refunds_invoice_number is absent", () => {
+  it("does NOT show 'Return of' when refunds_invoice_number is absent", () => {
     render(
       <InvoiceMobileCard
         invoice={makeInvoice({ type: "refund", total_amount: -170 })}
@@ -113,10 +113,10 @@ describe("InvoiceMobileCard — refund type display", () => {
       />,
     );
 
-    expect(screen.queryByText(/Refund of/)).toBeNull();
+    expect(screen.queryByText(/Return of/)).toBeNull();
   });
 
-  it("does NOT show 'Refund of' for non-refund type even with refunds_invoice_number", () => {
+  it("does NOT show 'Return of' for non-refund type even with refunds_invoice_number", () => {
     render(
       <InvoiceMobileCard
         invoice={makeInvoice({
@@ -130,7 +130,7 @@ describe("InvoiceMobileCard — refund type display", () => {
       />,
     );
 
-    expect(screen.queryByText(/Refund of/)).toBeNull();
+    expect(screen.queryByText(/Return of/)).toBeNull();
   });
 
   it("refund type shows 'stamp warning' class via TYPE_STAMP_CLASS", () => {

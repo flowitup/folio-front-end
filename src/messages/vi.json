@@ -177,9 +177,9 @@
     "type": {
       "materials_services": "Vật tư & dịch vụ",
       "others": "Khác",
-      "refund": "Hoàn tiền",
       "labor": "Nhân công",
-      "released_funds": "Vốn đã giải ngân"
+      "released_funds": "Vốn đã giải ngân",
+      "return": "Trả hàng"
     },
     "remaining": "Còn lại",
     "overBudget": "Vượt quá",
@@ -346,7 +346,7 @@
       "labor": "Nhân công",
       "materials_services": "Vật tư & dịch vụ",
       "others": "Khác",
-      "refund": "Hoàn tiền"
+      "return": "Trả hàng"
     },
     "issueDate": "Ngày phát hành",
     "serviceMonth": "Tháng thanh toán",
@@ -433,7 +433,7 @@
       "typeLabor": "Nhân công",
       "typeMaterialsServices": "Vật tư & dịch vụ",
       "typeOthers": "Khác",
-      "typeRefund": "Hoàn tiền",
+      "typeRefund": "Trả hàng",
       "format": "Định dạng",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",
@@ -456,11 +456,11 @@
       "noMethodsFound": "Không tìm thấy phương thức nào.",
       "failedToCreate": "Không thể tạo phương thức thanh toán"
     },
-    "refundHint": "Dùng đơn giá âm cho dòng hoàn tiền/giảm trừ và dương cho khoản tính phí; tổng là giá trị thực.",
-    "refundsInvoiceLabel": "Hóa đơn được hoàn (Vật tư & Dịch vụ)",
+    "refundHint": "Dùng đơn giá âm cho dòng trả hàng/giảm trừ và dương cho khoản tính phí; tổng là giá trị thực.",
+    "refundsInvoiceLabel": "Hóa đơn được trả hàng (Vật tư & Dịch vụ)",
     "refundsInvoiceNone": "— không —",
-    "refundOf": "Hoàn tiền cho {number}",
-    "errorRefundExceedsSource": "Hoàn tiền vượt quá số tiền còn có thể hoàn ({remaining}) cho hóa đơn này.",
+    "refundOf": "Trả hàng cho {number}",
+    "errorRefundExceedsSource": "Khoản trả hàng vượt quá số tiền còn lại ({remaining}) của hóa đơn này.",
     "errorServiceMonthNotAllowed": "Tháng thanh toán chỉ có thể được đặt cho chi phí nhân công.",
     "refund": {
       "status": {
@@ -497,7 +497,7 @@
       "ofReleased": "trên {amount} đã giải ngân",
       "refundableCount": "{n, plural, other {# khoản chờ hoàn}}",
       "credit": "Ghi có",
-      "refundsReceived": "{n, plural, other {Đã nhận # khoản hoàn tiền}}",
+      "refundsReceived": "{n, plural, other {Đã nhận # khoản trả hàng}}",
       "pendingRefunds": "Hoàn tiền đang chờ",
       "vsMonth": "{delta} so với {month}"
     }

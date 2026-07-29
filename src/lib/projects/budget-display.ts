@@ -61,7 +61,7 @@ export interface PersonalSpendRow {
  * split users look for), then the remaining types by size, refunds last since they
  * are credits back rather than spend.
  */
-const TYPE_ORDER = ["labor", "materials_services", "others", "refund"];
+const TYPE_ORDER = ["labor", "materials_services", "others", "return"];
 
 export function personalSpendRows(byType: Record<string, number> | undefined): PersonalSpendRow[] {
   const entries = Object.entries(byType ?? {}).filter(([, amount]) => amount !== 0);

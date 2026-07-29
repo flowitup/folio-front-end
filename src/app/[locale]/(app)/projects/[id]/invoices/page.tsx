@@ -65,7 +65,7 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   labor: "stamp accent",
   materials_services: "stamp positive",
   others: "stamp muted",
-  refund: "stamp warning",
+  return: "stamp warning",
 };
 
 export default function InvoicesPage() {
@@ -182,9 +182,9 @@ export default function InvoicesPage() {
     }
   };
 
-  const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services", "others", "refund"];
+  const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services", "others", "return"];
 
-  const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services", "others", "refund"];
+  const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services", "others", "return"];
   const groupedInvoices = GROUP_ORDER
     .map((type) => ({ type, items: invoices.filter((i) => i.type === type) }))
     .filter((g) => g.items.length > 0);
@@ -383,15 +383,15 @@ export default function InvoicesPage() {
                                         {t("auto")}
                                       </span>
                                     )}
-                                    {invoice.type === "refund" && (
+                                    {invoice.type === "return" && (
                                       <span
                                         className="stamp warning ml-2"
                                         style={{ fontSize: 10, verticalAlign: "middle" }}
                                       >
-                                        {t("types.refund")}
+                                        {t("types.return")}
                                       </span>
                                     )}
-                                    {invoice.type === "refund" && invoice.refunds_invoice_number && (
+                                    {invoice.type === "return" && invoice.refunds_invoice_number && (
                                       <span
                                         className="ml-2 text-[11px]"
                                         style={{ color: "var(--muted)" }}

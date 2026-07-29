@@ -22,7 +22,7 @@ vi.mock("next-intl", () => ({
       "types.labor": "Labor",
       "types.materials_services": "Materials & Services",
       "types.others": "Others",
-      "types.refund": "Refund",
+      "types.refund": "Return",
       issueDate: "Issue date",
       recipient: "Recipient",
       recipientAddress: "Address",

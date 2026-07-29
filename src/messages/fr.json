@@ -177,9 +177,9 @@
     "type": {
       "materials_services": "Matériaux & services",
       "others": "Autres",
-      "refund": "Remboursements",
       "labor": "Main-d'œuvre",
-      "released_funds": "Fonds débloqués"
+      "released_funds": "Fonds débloqués",
+      "return": "Avoirs"
     },
     "remaining": "Restant",
     "overBudget": "Dépassement de",
@@ -346,7 +346,7 @@
       "labor": "Main-d'œuvre",
       "materials_services": "Achats & prestations",
       "others": "Autres",
-      "refund": "Remboursement"
+      "return": "Avoir"
     },
     "issueDate": "Date d'émission",
     "serviceMonth": "Mois de paiement",
@@ -433,7 +433,7 @@
       "typeLabor": "Main-d'œuvre",
       "typeMaterialsServices": "Achats & prestations",
       "typeOthers": "Autres",
-      "typeRefund": "Remboursement",
+      "typeRefund": "Avoir",
       "format": "Format",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",
@@ -456,11 +456,11 @@
       "noMethodsFound": "Aucun moyen trouvé.",
       "failedToCreate": "Échec de la création du moyen de paiement"
     },
-    "refundHint": "Utilisez un prix unitaire négatif pour une ligne de crédit/remboursement et positif pour une charge ; le total est le net.",
-    "refundsInvoiceLabel": "Facture remboursée (Matériaux & Services)",
+    "refundHint": "Utilisez un prix unitaire négatif pour une ligne d'avoir et positif pour une charge ; le total est le net.",
+    "refundsInvoiceLabel": "Avoir sur facture (Matériaux & Services)",
     "refundsInvoiceNone": "— aucune —",
-    "refundOf": "Remboursement de {number}",
-    "errorRefundExceedsSource": "Le remboursement dépasse le montant remboursable restant ({remaining}) pour cette facture.",
+    "refundOf": "Avoir sur {number}",
+    "errorRefundExceedsSource": "L'avoir dépasse le montant restant ({remaining}) pour cette facture.",
     "errorServiceMonthNotAllowed": "Le mois de paiement ne peut être défini que pour les dépenses de main-d'œuvre.",
     "refund": {
       "status": {
@@ -497,7 +497,7 @@
       "ofReleased": "sur {amount} débloqués",
       "refundableCount": "{n, plural, =1 {1 remboursable} other {# remboursables}}",
       "credit": "Crédit",
-      "refundsReceived": "{n, plural, =1 {1 remboursement reçu} other {# remboursements reçus}}",
+      "refundsReceived": "{n, plural, =1 {1 avoir reçu} other {# avoirs reçus}}",
       "pendingRefunds": "Remboursements en attente",
       "vsMonth": "{delta} vs {month}"
     }

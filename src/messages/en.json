@@ -177,9 +177,9 @@
     "type": {
       "materials_services": "Materials & services",
       "others": "Others",
-      "refund": "Refunds",
       "labor": "Labor",
-      "released_funds": "Released funds"
+      "released_funds": "Released funds",
+      "return": "Returns"
     },
     "remaining": "Remaining",
     "overBudget": "Over by",
@@ -346,7 +346,7 @@
       "labor": "Labor",
       "materials_services": "Materials & Services",
       "others": "Others",
-      "refund": "Refund"
+      "return": "Return"
     },
     "issueDate": "Issue date",
     "serviceMonth": "Payment for month",
@@ -433,7 +433,7 @@
       "typeLabor": "Labor",
       "typeMaterialsServices": "Materials & Services",
       "typeOthers": "Others",
-      "typeRefund": "Refund",
+      "typeRefund": "Return",
       "format": "Format",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",
@@ -456,11 +456,11 @@
       "noMethodsFound": "No methods found.",
       "failedToCreate": "Failed to create payment method"
     },
-    "refundHint": "Use a negative unit price for a credit/refund line and a positive one for a charge; the total is the net.",
-    "refundsInvoiceLabel": "Refunds invoice (Materials & Services)",
+    "refundHint": "Use a negative unit price for a credit/return line and a positive one for a charge; the total is the net.",
+    "refundsInvoiceLabel": "Returns invoice (Materials & Services)",
     "refundsInvoiceNone": "— none —",
-    "refundOf": "Refund of {number}",
-    "errorRefundExceedsSource": "Refund exceeds the remaining refundable amount ({remaining}) for this invoice.",
+    "refundOf": "Return of {number}",
+    "errorRefundExceedsSource": "Return exceeds the remaining returnable amount ({remaining}) for this invoice.",
     "errorServiceMonthNotAllowed": "Payment for month can only be set on labor expenses.",
     "refund": {
       "status": {
@@ -497,7 +497,7 @@
       "ofReleased": "of {amount} released",
       "refundableCount": "{n, plural, =1 {1 refundable} other {# refundable}}",
       "credit": "Credit",
-      "refundsReceived": "{n, plural, =1 {1 refund received} other {# refunds received}}",
+      "refundsReceived": "{n, plural, =1 {1 return received} other {# returns received}}",
       "pendingRefunds": "Pending refunds",
       "vsMonth": "{delta} vs {month}"
     }

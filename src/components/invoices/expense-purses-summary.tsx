@@ -110,11 +110,11 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   // Spend per month since project start. Labor attributes to its service_month
   // (payment month can lag the work), everything else to issue_date.
   const monthlySpend: Record<string, { total: number; count: number }> = {};
-  const refunds = invoices.filter((i) => i.type === "refund");
+  const refunds = invoices.filter((i) => i.type === "return");
   const refundsTotal = refunds.reduce((s, i) => s + i.total_amount, 0);
 
   for (const inv of invoices) {
-    if (inv.type === "released_funds" || inv.type === "refund") continue;
+    if (inv.type === "released_funds" || inv.type === "return") continue;
     const purse = isPersonalExpense(inv) ? personal : company;
     purse.count += 1;
     const bucket = purse.types[inv.type as ExpenseType];

@@ -135,7 +135,7 @@ describe("InvoiceForm — mixed-sign unit_price gating", () => {
   });
 
   it("unit_price input has no min attribute for type=refund", async () => {
-    render(<InvoiceForm onSubmit={onSubmit} initialValues={{ type: "refund" }} projectId="proj-1" />);
+    render(<InvoiceForm onSubmit={onSubmit} initialValues={{ type: "return" }} projectId="proj-1" />);
 
     const desktop = screen.getByTestId("invoice-items-desktop");
     const numInputs = within(desktop).getAllByRole("spinbutton");
@@ -200,7 +200,7 @@ describe("InvoiceForm — mixed-sign unit_price gating", () => {
     });
 
     // refund re-allows mixed sign — min cleared again.
-    fireEvent.change(allSelects[0], { target: { value: "refund" } });
+    fireEvent.change(allSelects[0], { target: { value: "return" } });
     await waitFor(() => {
       expect(within(desktop).getAllByRole("spinbutton")[1].getAttribute("min")).toBeNull();
     });
@@ -208,7 +208,7 @@ describe("InvoiceForm — mixed-sign unit_price gating", () => {
 
   it("min restored when switching from refund back to labor", async () => {
     render(
-      <InvoiceForm onSubmit={onSubmit} initialValues={{ type: "refund" }} projectId="proj-1" />
+      <InvoiceForm onSubmit={onSubmit} initialValues={{ type: "return" }} projectId="proj-1" />
     );
 
     const desktop = screen.getByTestId("invoice-items-desktop");
@@ -249,7 +249,7 @@ describe("InvoiceForm — signed values submitted as-is", () => {
     render(
       <InvoiceForm
         onSubmit={onSubmit}
-        initialValues={{ type: "refund" }}
+        initialValues={{ type: "return" }}
         projectId="proj-1"
       />
     );
@@ -300,7 +300,7 @@ describe("InvoiceForm — edit-load shows stored signed values", () => {
       <InvoiceForm
         onSubmit={onSubmit}
         initialValues={{
-          type: "refund",
+          type: "return",
           recipient_name: "Supplier",
           items: [
             { description: "Credit note", quantity: 1, unit_price: -200, vat_rate: 0 },
@@ -321,7 +321,7 @@ describe("InvoiceForm — edit-load shows stored signed values", () => {
       <InvoiceForm
         onSubmit={onSubmit}
         initialValues={{
-          type: "refund",
+          type: "return",
           recipient_name: "Supplier",
           items: [
             { description: "Charge", quantity: 1, unit_price: 30, vat_rate: 0 },
@@ -373,7 +373,7 @@ describe("InvoiceForm — refund link selector", () => {
     render(
       <InvoiceForm
         onSubmit={onSubmit}
-        initialValues={{ type: "refund" }}
+        initialValues={{ type: "return" }}
         projectId="proj-1"
       />
     );
@@ -400,7 +400,7 @@ describe("InvoiceForm — refund link selector", () => {
     render(
       <InvoiceForm
         onSubmit={onSubmit}
-        initialValues={{ type: "refund" }}
+        initialValues={{ type: "return" }}
         projectId="proj-1"
       />
     );
@@ -429,7 +429,7 @@ describe("InvoiceForm — refund link selector", () => {
     render(
       <InvoiceForm
         onSubmit={onSubmit}
-        initialValues={{ type: "refund" }}
+        initialValues={{ type: "return" }}
         projectId="proj-1"
         editingInvoiceId="ms-1"
       />
@@ -459,7 +459,7 @@ describe("InvoiceForm — refund link selector", () => {
     render(
       <InvoiceForm
         onSubmit={onSubmit}
-        initialValues={{ type: "refund" }}
+        initialValues={{ type: "return" }}
         projectId="proj-1"
       />
     );
@@ -499,7 +499,7 @@ describe("InvoiceForm — refund link selector", () => {
     render(
       <InvoiceForm
         onSubmit={onSubmit}
-        initialValues={{ type: "refund" }}
+        initialValues={{ type: "return" }}
         projectId="proj-1"
       />
     );
@@ -533,7 +533,7 @@ describe("InvoiceForm — refund link selector", () => {
     render(
       <InvoiceForm
         onSubmit={onSubmit}
-        initialValues={{ type: "refund" }}
+        initialValues={{ type: "return" }}
         projectId="proj-1"
       />
     );
@@ -573,7 +573,7 @@ describe("InvoiceForm — cap error (RefundExceedsSourceError)", () => {
     render(
       <InvoiceForm
         onSubmit={onSubmit}
-        initialValues={{ type: "refund" }}
+        initialValues={{ type: "return" }}
         projectId="proj-1"
       />
     );

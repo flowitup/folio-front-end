@@ -143,8 +143,8 @@ describe("personalSpendRows", () => {
   });
 
   it("orders labor first and refunds last", () => {
-    const rows = personalSpendRows({ refund: -20, others: 5, labor: 100, materials_services: 50 });
-    expect(rows.map((r) => r.type)).toEqual(["labor", "materials_services", "others", "refund"]);
+    const rows = personalSpendRows({ return: -20, others: 5, labor: 100, materials_services: 50 });
+    expect(rows.map((r) => r.type)).toEqual(["labor", "materials_services", "others", "return"]);
   });
 
   it("keeps an unknown type rather than dropping it, sorted last", () => {

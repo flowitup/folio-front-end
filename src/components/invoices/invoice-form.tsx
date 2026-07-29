@@ -51,7 +51,7 @@ const INVOICE_TYPES: InvoiceType[] = [
   "labor",
   "materials_services",
   "others",
-  "refund",
+  "return",
 ];
 
 /**
@@ -60,7 +60,7 @@ const INVOICE_TYPES: InvoiceType[] = [
  */
 const MIXED_SIGN_TYPES: ReadonlySet<InvoiceType> = new Set([
   "materials_services",
-  "refund",
+  "return",
 ]);
 
 const emptyItem = (): LineItem => ({ description: "", quantity: 1, unit_price: 0, vat_rate: 0 });
@@ -114,18 +114,18 @@ export function InvoiceForm({
     initialValues?.refunds_invoice_id ?? null
   );
 
-  // List of M&S invoices for the link selector (loaded when type === "refund")
+  // List of M&S invoices for the link selector (loaded when type === "return")
   const [msInvoices, setMsInvoices] = useState<Invoice[]>([]);
   const [msLoading, setMsLoading] = useState(false);
 
-  // Load M&S invoices when type === "refund". Clear when switching away.
+  // Load M&S invoices when type === "return". Clear when switching away.
   // Using an async IIFE so all setState calls are inside async callbacks,
   // satisfying the react-hooks/set-state-in-effect rule.
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      if (type !== "refund" || !projectId) {
+      if (type !== "return" || !projectId) {
         if (!cancelled) {
           setMsInvoices([]);
           setMsLoading(false);
@@ -208,7 +208,7 @@ export function InvoiceForm({
       // Always include tag_id so updates can explicitly clear it (null).
       tag_id: tagId,
       // Include refunds_invoice_id only for refund type (null = no link / clear)
-      ...(type === "refund" ? { refunds_invoice_id: refundsInvoiceId } : {}),
+      ...(type === "return" ? { refunds_invoice_id: refundsInvoiceId } : {}),
       // Include service_month only for labor type (null = cleared/empty)
       ...(type === "labor"
         ? { service_month: serviceMonth ? `${serviceMonth}-01` : null }
@@ -340,7 +340,7 @@ export function InvoiceForm({
           </div>
 
           {/* Refund type: optional M&S link selector + hint */}
-          {type === "refund" && (
+          {type === "return" && (
             <div className="space-y-2">
               {/* Hint */}
               <p className="text-xs text-muted-foreground">{t("refundHint")}</p>

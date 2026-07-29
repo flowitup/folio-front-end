@@ -29,7 +29,7 @@ const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
   labor: "stamp accent",
   materials_services: "stamp positive",
   others: "stamp muted",
-  refund: "stamp warning",
+  return: "stamp warning",
 };
 
 interface InvoiceDetailContentProps {
@@ -320,7 +320,7 @@ export function InvoiceDetailContent({
                     </div>
                   )}
               </dl>
-              {invoice.type === "refund" && invoice.refunds_invoice_number && (
+              {invoice.type === "return" && invoice.refunds_invoice_number && (
                 <div className="mt-2 border-t pt-2">
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {t("refundsInvoiceLabel")}

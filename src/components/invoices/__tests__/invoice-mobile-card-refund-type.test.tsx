@@ -60,7 +60,7 @@ describe("InvoiceMobileCard — refund type display", () => {
   it("renders negative total_amount with text-destructive class", () => {
     render(
       <InvoiceMobileCard
-        invoice={makeInvoice({ type: "refund", total_amount: -200 })}
+        invoice={makeInvoice({ type: "return", total_amount: -200 })}
         isOpen={false}
         onToggle={vi.fn()}
         formatAmount={formatAmount}
@@ -90,7 +90,7 @@ describe("InvoiceMobileCard — refund type display", () => {
     render(
       <InvoiceMobileCard
         invoice={makeInvoice({
-          type: "refund",
+          type: "return",
           total_amount: -170,
           refunds_invoice_number: "INV-001",
         })}
@@ -106,7 +106,7 @@ describe("InvoiceMobileCard — refund type display", () => {
   it("does NOT show 'Return of' when refunds_invoice_number is absent", () => {
     render(
       <InvoiceMobileCard
-        invoice={makeInvoice({ type: "refund", total_amount: -170 })}
+        invoice={makeInvoice({ type: "return", total_amount: -170 })}
         isOpen={false}
         onToggle={vi.fn()}
         formatAmount={formatAmount}
@@ -136,15 +136,15 @@ describe("InvoiceMobileCard — refund type display", () => {
   it("refund type shows 'stamp warning' class via TYPE_STAMP_CLASS", () => {
     render(
       <InvoiceMobileCard
-        invoice={makeInvoice({ type: "refund", total_amount: -100 })}
+        invoice={makeInvoice({ type: "return", total_amount: -100 })}
         isOpen={false}
         onToggle={vi.fn()}
         formatAmount={formatAmount}
       />,
     );
 
-    // The type stamp renders via t(`types.refund`) which in mock returns "invoices.types.refund"
-    const typeStamp = screen.getByText("invoices.types.refund");
+    // The type stamp renders via t(`types.return`) which in mock returns "invoices.types.return"
+    const typeStamp = screen.getByText("invoices.types.return");
     expect(typeStamp.className).toContain("stamp");
     expect(typeStamp.className).toContain("warning");
   });

@@ -177,9 +177,9 @@
     "type": {
       "materials_services": "Materials & services",
       "others": "Others",
-      "refund": "Refunds",
       "labor": "Labor",
-      "released_funds": "Released funds"
+      "released_funds": "Released funds",
+      "return": "Returns"
     },
     "remaining": "Remaining",
     "overBudget": "Over by",
@@ -346,7 +346,7 @@
       "labor": "Labor",
       "materials_services": "Materials & Services",
       "others": "Others",
-      "refund": "Return"
+      "return": "Return"
     },
     "issueDate": "Issue date",
     "serviceMonth": "Payment for month",

@@ -177,9 +177,9 @@
     "type": {
       "materials_services": "Vật tư & dịch vụ",
       "others": "Khác",
-      "refund": "Hoàn tiền",
       "labor": "Nhân công",
-      "released_funds": "Vốn đã giải ngân"
+      "released_funds": "Vốn đã giải ngân",
+      "return": "Trả hàng"
     },
     "remaining": "Còn lại",
     "overBudget": "Vượt quá",
@@ -346,7 +346,7 @@
       "labor": "Nhân công",
       "materials_services": "Vật tư & dịch vụ",
       "others": "Khác",
-      "refund": "Trả hàng"
+      "return": "Trả hàng"
     },
     "issueDate": "Ngày phát hành",
     "serviceMonth": "Tháng thanh toán",

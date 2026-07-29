@@ -98,8 +98,8 @@ describe("ExpensePursesSummary — credit strip", () => {
       <ExpensePursesSummary
         invoices={[
           makeInvoice(),
-          makeInvoice({ id: "ref-1", type: "refund", total_amount: -3000 }),
-          makeInvoice({ id: "ref-2", type: "refund", total_amount: -1820 }),
+          makeInvoice({ id: "ref-1", type: "return", total_amount: -3000 }),
+          makeInvoice({ id: "ref-2", type: "return", total_amount: -1820 }),
         ]}
         meta={ZERO_META}
       />

@@ -17,7 +17,7 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   labor: "stamp accent",
   materials_services: "stamp positive",
   others: "stamp muted",
-  refund: "stamp warning",
+  return: "stamp warning",
 };
 
 interface InvoiceMobileCardProps {
@@ -69,7 +69,7 @@ export function InvoiceMobileCard({
             <span className={TYPE_STAMP_CLASS[invoice.type]}>
               {t(`types.${invoice.type}`)}
             </span>
-            {invoice.type === "refund" && invoice.refunds_invoice_number && (
+            {invoice.type === "return" && invoice.refunds_invoice_number && (
               <span className="text-[11px]" style={{ color: "var(--muted)" }}>
                 {t("refundOf", { number: invoice.refunds_invoice_number })}
               </span>

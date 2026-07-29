@@ -177,9 +177,9 @@
     "type": {
       "materials_services": "Matériaux & services",
       "others": "Autres",
-      "refund": "Remboursements",
       "labor": "Main-d'œuvre",
-      "released_funds": "Fonds débloqués"
+      "released_funds": "Fonds débloqués",
+      "return": "Avoirs"
     },
     "remaining": "Restant",
     "overBudget": "Dépassement de",
@@ -346,7 +346,7 @@
       "labor": "Main-d'œuvre",
       "materials_services": "Achats & prestations",
       "others": "Autres",
-      "refund": "Avoir"
+      "return": "Avoir"
     },
     "issueDate": "Date d'émission",
     "serviceMonth": "Mois de paiement",

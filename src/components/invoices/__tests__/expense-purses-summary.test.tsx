@@ -184,6 +184,9 @@ describe("ExpensePursesSummary — dark-card KPIs", () => {
       .nextElementSibling as HTMLElement;
     expect(amount.textContent).toMatch(/2[^\d]*000/);
     expect(amount.style.color).toBe("rgb(241, 200, 163)");
+    // The personal-purse stamp carries the same total next to the count.
+    const stamp = screen.getByText(/summary\.refundableCount/).closest(".stamp") as HTMLElement;
+    expect(stamp.textContent).toMatch(/·\s*2[^\d]*000/);
   });
 
   it("renders one bar per month from project start, filling gap months", () => {

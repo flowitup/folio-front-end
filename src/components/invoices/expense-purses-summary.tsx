@@ -356,6 +356,8 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
           refundableCount > 0 ? (
             <span className="stamp accent">
               {t("summary.refundableCount", { n: refundableCount })}
+              {" · "}
+              <span className="num">{formatEURWhole(refundableTotal)}</span>
             </span>
           ) : (
             <span className="stamp">{t("invoiceCount", { n: personal.count })}</span>

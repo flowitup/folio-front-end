@@ -6,28 +6,23 @@ import { useParams, useRouter, useSearchParams, usePathname } from "next/navigat
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { canOnProject } from "@/lib/auth/project-permissions";
-import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock, Plus } from "lucide-react";
+import { Loader2, Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Invoice, InvoiceType } from "@/types/invoice";
-import { fetchInvoicesWithMeta, deleteInvoice } from "@/lib/api/invoice-api";
+import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import {
   ExpensePursesSummary,
   type ExpenseSummaryMeta,
 } from "@/components/invoices/expense-purses-summary";
 import { ExpenseCommandBar, type ExpenseChip } from "@/components/invoices/expense-command-bar";
+import { ExpenseGroupedList } from "@/components/invoices/expense-grouped-list";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
-import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
-import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
-import {
-  REFUND_STATUS_STAMP,
-  REFUND_STATUS_I18N,
-  refundStatusI18nKey,
-} from "@/lib/invoices/refundable-status-display";
+import { groupByTimeline, groupByCategory } from "@/lib/invoices/expense-grouping";
 import { fetchTagsClient } from "@/lib/api/tags-client";
-import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
+import { formatEUR } from "@/lib/utils/formatters";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
 import {
@@ -47,45 +42,19 @@ function isViewVariant(value: string | null): value is ViewVariant {
   return value !== null && (VIEW_VARIANTS as readonly string[]).includes(value);
 }
 
-// Tabs that show a TVA column (computed from invoice items). Labor and "all" are excluded:
-// labor expenses are typically time-based and VAT-exempt in construction;
-// the "all" view groups multiple types and keeps a uniform layout.
-const TVA_COLUMN_TABS: ReadonlySet<TabType> = new Set([
-  "released_funds",
-  "materials_services",
-  "others",
-]);
-
-// Tabs that show the "payment for month" column — labor only, since
-// service_month is exclusive to labor invoices.
-const MONTH_COLUMN_TABS: ReadonlySet<TabType> = new Set(["labor"]);
-
-/** Sum of VAT amounts across all items: Σ qty × price × (vat_rate/100). */
-function invoiceTva(items: Invoice["items"]): number {
-  return items.reduce(
-    (sum, it) => sum + it.quantity * it.unit_price * ((it.vat_rate ?? 0) / 100),
-    0
-  );
-}
-
-// Base column count without TVA/Month columns.
-const INVOICE_TABLE_COLUMN_COUNT_BASE = 7;
-// Column count when the TVA column is shown.
-const INVOICE_TABLE_COLUMN_COUNT_TVA = 8;
-// Column count when the Month column is shown (mutually exclusive with TVA).
-const INVOICE_TABLE_COLUMN_COUNT_MONTH = 8;
-
+// Type → stamp hue for the grouped desktop list (timeline/category views).
+// Mobile card + other pages keep their own separate mapping (see
+// invoice-mobile-card.tsx) — do not repoint them at this one.
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
-  released_funds: "stamp",
+  released_funds: "stamp sage",
   labor: "stamp accent",
-  materials_services: "stamp positive",
-  others: "stamp muted",
-  return: "stamp warning",
+  materials_services: "stamp olive",
+  others: "stamp ochre",
+  return: "stamp amber",
 };
 
 export default function InvoicesPage() {
   const t = useTranslations("invoices");
-  const tBuiltins = useTranslations("paymentMethods.builtins");
   const locale = useLocale();
   const params = useParams();
   const router = useRouter();
@@ -204,16 +173,6 @@ export default function InvoicesPage() {
     loadInvoices();
   }, [loadInvoices]);
 
-  const handleDelete = async (invoice: Invoice) => {
-    if (!confirm(t("deleteConfirm"))) return;
-    try {
-      await deleteInvoice(projectId, invoice.id);
-      await loadInvoices();
-    } catch {
-      setError("Failed to delete invoice");
-    }
-  };
-
   const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services", "others", "return"];
 
   // Search + range filtering only — chip counts are computed from this list
@@ -246,6 +205,17 @@ export default function InvoicesPage() {
     .map((type) => ({ type, items: filteredInvoices.filter((i) => i.type === type) }))
     .filter((g) => g.items.length > 0);
   const showGroups = activeTab === "all" && groupedInvoices.length > 0;
+
+  // Desktop grouped list: "category" groups by type; "timeline" (and the
+  // "split" variant, whose own master-detail layout lands in a later phase)
+  // both fall back to the month/year grouping.
+  const desktopSections = useMemo(
+    () =>
+      variant === "category"
+        ? groupByCategory(filteredInvoices, t)
+        : groupByTimeline(filteredInvoices, locale),
+    [variant, filteredInvoices, t, locale]
+  );
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
@@ -337,13 +307,22 @@ export default function InvoicesPage() {
 
       {!isLoading && (
         <>
-        {filteredInvoices.length === 0 ? (
+        {invoices.length === 0 ? (
           <div className="folio-card overflow-hidden">
             <div
               className="flex items-center justify-center py-12 text-[13px]"
               style={{ color: "var(--muted)" }}
             >
               {t("noInvoices")}
+            </div>
+          </div>
+        ) : filteredInvoices.length === 0 ? (
+          <div className="folio-card overflow-hidden">
+            <div
+              className="flex items-center justify-center py-12 text-[13px]"
+              style={{ color: "var(--muted)" }}
+            >
+              {t("grouped.emptyFiltered")}
             </div>
           </div>
         ) : (
@@ -390,207 +369,19 @@ export default function InvoicesPage() {
             )}
           </div>
 
-          {/* Desktop table */}
-          <div className="folio-card hidden overflow-hidden lg:block" data-testid="invoices-table-desktop">
-            <div className="overflow-x-auto">
-              {(() => {
-                const showTvaCol = TVA_COLUMN_TABS.has(activeTab);
-                const showMonthCol = MONTH_COLUMN_TABS.has(activeTab);
-                const colCount = showTvaCol
-                  ? INVOICE_TABLE_COLUMN_COUNT_TVA
-                  : showMonthCol
-                    ? INVOICE_TABLE_COLUMN_COUNT_MONTH
-                    : INVOICE_TABLE_COLUMN_COUNT_BASE;
-                return (
-                <table className="ledger">
-                  <thead>
-                    <tr>
-                      <th style={{ width: 32 }}></th>
-                      <th>{t("invoiceNumber")}</th>
-                      <th>{t("issueDate")}</th>
-                      <th>{t("recipient")}</th>
-                      <th>{t("paymentMethod.label")}</th>
-                      {showTvaCol && (
-                        <th style={{ textAlign: "right" }}>{t("colTva")}</th>
-                      )}
-                      {showMonthCol && <th>{t("serviceMonth")}</th>}
-                      <th style={{ textAlign: "right" }}>{t("totalAmount")}</th>
-                      <th style={{ textAlign: "right" }}>{t("actions")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(showGroups ? groupedInvoices : [{ type: null, items: filteredInvoices }]).map(
-                      ({ type: groupType, items }) => (
-                        <Fragment key={groupType ?? "flat"}>
-                          {groupType && (
-                            <tr>
-                              <td
-                                colSpan={colCount}
-                                className="label-cap"
-                                style={{
-                                  paddingTop: 20,
-                                  paddingBottom: 8,
-                                  borderBottom: "1px solid var(--line)",
-                                }}
-                              >
-                                <span className={TYPE_STAMP_CLASS[groupType]}>
-                                  {t(`types.${groupType}`)}
-                                </span>
-                              </td>
-                            </tr>
-                          )}
-                          {items.map((invoice) => {
-                            const isOpen = selectedInvoiceId === invoice.id;
-                            const detailId = `invoice-detail-${invoice.id}`;
-                            const tvaAmount = showTvaCol ? invoiceTva(invoice.items) : 0;
-                            return (
-                              <Fragment key={invoice.id}>
-                                <tr
-                                  role="button"
-                                  tabIndex={0}
-                                  aria-expanded={isOpen}
-                                  aria-controls={detailId}
-                                  className="cursor-pointer"
-                                  style={isOpen ? { background: "var(--paper-2)" } : undefined}
-                                  onClick={() => toggleInvoice(invoice.id)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                      e.preventDefault();
-                                      toggleInvoice(invoice.id);
-                                    }
-                                  }}
-                                >
-                                  <td style={{ color: "var(--muted)" }}>
-                                    {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                                  </td>
-                                  <td className="num text-[12.5px]">
-                                    {invoice.invoice_number}
-                                    {invoice.is_auto_generated && (
-                                      <span
-                                        className="stamp ml-2"
-                                        title={t("autoGenerated")}
-                                        style={{ fontSize: 10, verticalAlign: "middle" }}
-                                      >
-                                        <Lock size={10} className="mr-0.5 inline" />
-                                        {t("auto")}
-                                      </span>
-                                    )}
-                                    {invoice.type === "return" && (
-                                      <span
-                                        className="stamp warning ml-2"
-                                        style={{ fontSize: 10, verticalAlign: "middle" }}
-                                      >
-                                        {t("types.return")}
-                                      </span>
-                                    )}
-                                    {invoice.type === "return" && invoice.refunds_invoice_number && (
-                                      <span
-                                        className="ml-2 text-[11px]"
-                                        style={{ color: "var(--muted)" }}
-                                      >
-                                        {t("refundOf", { number: invoice.refunds_invoice_number })}
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="num" style={{ color: "var(--muted)" }}>
-                                    {formatDate(invoice.issue_date)}
-                                  </td>
-                                  <td>{invoice.recipient_name}</td>
-                                  <td>
-                                    <div className="flex flex-wrap items-center gap-1">
-                                      {invoice.refundable_status != null && companyName ? (
-                                        <span className="stamp truncate max-w-[180px]">
-                                          {invoice.payment_method_label?.trim()
-                                            ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
-                                            : `→ ${companyName}`}
-                                        </span>
-                                      ) : invoice.payment_method_label?.trim() ? (
-                                        <span className="stamp">
-                                          {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}
-                                        </span>
-                                      ) : (
-                                        <span style={{ color: "var(--muted)" }}>—</span>
-                                      )}
-                                      {invoice.refundable_status != null && (
-                                        <span className={REFUND_STATUS_STAMP[invoice.refundable_status]}>
-                                          {t(
-                                            refundStatusI18nKey(invoice) ??
-                                              REFUND_STATUS_I18N[invoice.refundable_status]
-                                          )}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </td>
-                                  {showTvaCol && (
-                                    <td className="num" style={{ textAlign: "right", color: "var(--muted)" }}>
-                                      {tvaAmount > 0 ? formatEUR(tvaAmount) : "—"}
-                                    </td>
-                                  )}
-                                  {showMonthCol && (
-                                    <td style={{ color: "var(--muted)" }}>
-                                      {invoice.service_month
-                                        ? formatMonthYear(invoice.service_month, locale)
-                                        : "—"}
-                                    </td>
-                                  )}
-                                  <td
-                                    className={`num font-medium${invoice.total_amount < 0 ? " text-destructive" : ""}`}
-                                    style={{ textAlign: "right" }}
-                                  >
-                                    {formatEUR(invoice.total_amount)}
-                                  </td>
-                                  <td
-                                    style={{ textAlign: "right" }}
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className="flex items-center justify-end gap-1">
-                                      {canManageInvoices &&
-                                        invoice.type === "materials_services" &&
-                                        invoice.refundable_status == null &&
-                                        !invoice.paid_by_company && (
-                                          <TransferToCompanyPaymentAction
-                                            invoiceId={invoice.id}
-                                            onSuccess={loadInvoices}
-                                          />
-                                        )}
-                                      {canManageInvoices && !invoice.is_auto_generated && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0"
-                                          style={{ color: "var(--muted)" }}
-                                          onClick={() => handleDelete(invoice)}
-                                        >
-                                          <Trash2 size={13} />
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </td>
-                                </tr>
-                                {isOpen && (
-                                  <InvoiceDetailRow
-                                    projectId={projectId}
-                                    invoiceId={invoice.id}
-                                    canManage={canManageInvoices}
-                                    colSpan={colCount}
-                                    regionId={detailId}
-                                    onMutated={loadInvoices}
-                                    onCollapse={closeInvoice}
-                                    companyName={companyName}
-                                  />
-                                )}
-                              </Fragment>
-                            );
-                          })}
-                        </Fragment>
-                      )
-                    )}
-                  </tbody>
-                </table>
-                );
-              })()}
-            </div>
-          </div>
+          {/* Desktop grouped list (timeline year→month or category sections) */}
+          <ExpenseGroupedList
+            variant={variant === "category" ? "category" : "timeline"}
+            sections={desktopSections}
+            selectedInvoiceId={selectedInvoiceId}
+            onToggle={toggleInvoice}
+            companyName={companyName}
+            typeStampClass={TYPE_STAMP_CLASS}
+            projectId={projectId}
+            canManageInvoices={canManageInvoices}
+            onMutated={loadInvoices}
+            onCollapse={closeInvoice}
+          />
           </>
         )}
         </>

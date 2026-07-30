@@ -353,6 +353,11 @@
       "category": "Theo danh mục",
       "split": "Chế độ chia đôi"
     },
+    "grouped": {
+      "entries": "{n, plural, =1 {1 mục} other {# mục}}",
+      "net": "thực chi",
+      "emptyFiltered": "Không có chi phí phù hợp — xóa tìm kiếm hoặc khoảng thời gian."
+    },
     "searchPlaceholder": "Tìm theo người nhận, số hóa đơn, mục…",
     "clearSearch": "Xóa tìm kiếm",
     "dateRange": {

@@ -353,6 +353,11 @@
       "category": "Par catégorie",
       "split": "Vue scindée"
     },
+    "grouped": {
+      "entries": "{n, plural, =1 {1 entrée} other {# entrées}}",
+      "net": "net",
+      "emptyFiltered": "Aucune dépense correspondante — effacez la recherche ou la période."
+    },
     "searchPlaceholder": "Rechercher destinataire, n° facture, article…",
     "clearSearch": "Effacer la recherche",
     "dateRange": {

@@ -373,6 +373,34 @@ body {
     border-color: #e6c0ad;
     color: #8a3924;
   }
+  /* Expense page (redesign) — type hues for the timeline/category grouped
+     views. Kept distinct from .stamp.positive/.muted/.warning above, which
+     other pages still rely on. */
+  .stamp.sage {
+    background: #dfe6e2;
+    border-color: #b9c9c0;
+    color: #3f6055;
+  }
+  .stamp.olive {
+    background: #e6ecdc;
+    border-color: #d2deb8;
+    color: #4a6a3a;
+  }
+  .stamp.ochre {
+    background: #ece1d0;
+    border-color: #d8c4a4;
+    color: #7a5c33;
+  }
+  .stamp.amber {
+    background: #f5e9cf;
+    border-color: #e8d199;
+    color: #8e6418;
+  }
+
+  /* Expense grouped-list row (redesign phase 02) */
+  .expense-row:hover {
+    background: var(--paper-2);
+  }
 
   /* Phase ribbon */
   .phase-step {

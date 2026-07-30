@@ -353,6 +353,11 @@
       "category": "By category",
       "split": "Split view"
     },
+    "grouped": {
+      "entries": "{n, plural, =1 {1 entry} other {# entries}}",
+      "net": "net",
+      "emptyFiltered": "No matching expenses — clear the search or date range."
+    },
     "searchPlaceholder": "Search recipient, invoice #, item…",
     "clearSearch": "Clear search",
     "dateRange": {

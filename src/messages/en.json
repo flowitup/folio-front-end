@@ -358,6 +358,12 @@
       "net": "net",
       "emptyFiltered": "No matching expenses — clear the search or date range."
     },
+    "drawer": {
+      "close": "Close"
+    },
+    "split": {
+      "selectPrompt": "Select an expense to see its details"
+    },
     "searchPlaceholder": "Search recipient, invoice #, item…",
     "clearSearch": "Clear search",
     "dateRange": {

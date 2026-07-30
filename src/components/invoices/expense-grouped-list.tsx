@@ -5,20 +5,17 @@
  * produced by `groupByTimeline`/`groupByCategory` (src/lib/invoices/expense-grouping.ts)
  * as year/month or category headers, each wrapping a `folio-card` of rows.
  *
- * Row click keeps the existing `?invoice=` inline-toggle: the clicked row's
- * `InvoiceDetailRow` (asCard mode, same component the mobile card list uses)
- * renders directly below it inside the card. A future phase moves this into
- * a drawer — the wiring here is deliberately localized to `onToggle` so that
- * swap stays a small, contained change.
+ * Row click sets `?invoice=` on the page (via `onToggle`) so the detail
+ * drawer (`ExpenseDetailDrawer`, mounted once at the page level) opens with
+ * that invoice. The clicked row is highlighted (`isOpen`) while the drawer
+ * is showing it — no detail content renders inline here anymore.
  */
 
-import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 import type { ExpenseGroupSection } from "@/lib/invoices/expense-grouping";
 import type { ExpenseViewVariant } from "@/components/invoices/expense-row";
 import { ExpenseRow } from "@/components/invoices/expense-row";
-import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { formatEUR } from "@/lib/utils/formatters";
 
 interface ExpenseGroupedListProps {
@@ -28,10 +25,6 @@ interface ExpenseGroupedListProps {
   onToggle: (id: string) => void;
   companyName: string | null;
   typeStampClass: Record<InvoiceType, string>;
-  projectId: string;
-  canManageInvoices: boolean;
-  onMutated: () => void;
-  onCollapse: () => void;
 }
 
 export function ExpenseGroupedList({
@@ -41,10 +34,6 @@ export function ExpenseGroupedList({
   onToggle,
   companyName,
   typeStampClass,
-  projectId,
-  canManageInvoices,
-  onMutated,
-  onCollapse,
 }: ExpenseGroupedListProps) {
   const t = useTranslations("invoices");
 
@@ -101,32 +90,17 @@ export function ExpenseGroupedList({
             <div className="folio-card overflow-hidden">
               {section.rows.map((invoice: Invoice) => {
                 const isOpen = selectedInvoiceId === invoice.id;
-                const detailId = `invoice-detail-${invoice.id}`;
                 return (
-                  <Fragment key={invoice.id}>
-                    <ExpenseRow
-                      invoice={invoice}
-                      variant={variant}
-                      isOpen={isOpen}
-                      onOpen={() => onToggle(invoice.id)}
-                      companyName={companyName}
-                      typeStampClass={typeStampClass}
-                      regionId={detailId}
-                    />
-                    {isOpen && (
-                      <InvoiceDetailRow
-                        projectId={projectId}
-                        invoiceId={invoice.id}
-                        canManage={canManageInvoices}
-                        colSpan={1}
-                        regionId={detailId}
-                        onMutated={onMutated}
-                        onCollapse={onCollapse}
-                        companyName={companyName}
-                        asCard
-                      />
-                    )}
-                  </Fragment>
+                  <ExpenseRow
+                    key={invoice.id}
+                    invoice={invoice}
+                    variant={variant}
+                    isOpen={isOpen}
+                    onOpen={() => onToggle(invoice.id)}
+                    companyName={companyName}
+                    typeStampClass={typeStampClass}
+                    regionId={`invoice-detail-${invoice.id}`}
+                  />
                 );
               })}
             </div>

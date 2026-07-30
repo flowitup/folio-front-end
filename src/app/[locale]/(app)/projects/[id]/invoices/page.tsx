@@ -17,6 +17,8 @@ import {
 } from "@/components/invoices/expense-purses-summary";
 import { ExpenseCommandBar, type ExpenseChip } from "@/components/invoices/expense-command-bar";
 import { ExpenseGroupedList } from "@/components/invoices/expense-grouped-list";
+import { ExpenseDetailDrawer } from "@/components/invoices/expense-detail-drawer";
+import { ExpenseSplitView } from "@/components/invoices/expense-split-view";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
@@ -206,9 +208,8 @@ export default function InvoicesPage() {
     .filter((g) => g.items.length > 0);
   const showGroups = activeTab === "all" && groupedInvoices.length > 0;
 
-  // Desktop grouped list: "category" groups by type; "timeline" (and the
-  // "split" variant, whose own master-detail layout lands in a later phase)
-  // both fall back to the month/year grouping.
+  // Desktop grouped list (timeline/category variants only — "split" renders
+  // its own flat master-detail layout via ExpenseSplitView instead).
   const desktopSections = useMemo(
     () =>
       variant === "category"
@@ -216,6 +217,13 @@ export default function InvoicesPage() {
         : groupByTimeline(filteredInvoices, locale),
     [variant, filteredInvoices, t, locale]
   );
+
+  // Drawer target — looked up in the full (unfiltered) list so a deep link
+  // still resolves even if the current type/tag/search filters would hide
+  // the row from the desktop list.
+  const selectedInvoice = selectedInvoiceId
+    ? (invoices.find((inv) => inv.id === selectedInvoiceId) ?? null)
+    : null;
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
@@ -369,22 +377,42 @@ export default function InvoicesPage() {
             )}
           </div>
 
-          {/* Desktop grouped list (timeline year→month or category sections) */}
-          <ExpenseGroupedList
-            variant={variant === "category" ? "category" : "timeline"}
-            sections={desktopSections}
-            selectedInvoiceId={selectedInvoiceId}
-            onToggle={toggleInvoice}
-            companyName={companyName}
-            typeStampClass={TYPE_STAMP_CLASS}
-            projectId={projectId}
-            canManageInvoices={canManageInvoices}
-            onMutated={loadInvoices}
-            onCollapse={closeInvoice}
-          />
+          {/* Desktop: grouped list (timeline year→month / category sections)
+              or the split master-detail view — mutually exclusive by variant. */}
+          {variant === "split" ? (
+            <ExpenseSplitView
+              invoices={filteredInvoices}
+              projectId={projectId}
+              canManageInvoices={canManageInvoices}
+              companyName={companyName}
+              onMutated={loadInvoices}
+            />
+          ) : (
+            <ExpenseGroupedList
+              variant={variant === "category" ? "category" : "timeline"}
+              sections={desktopSections}
+              selectedInvoiceId={selectedInvoiceId}
+              onToggle={toggleInvoice}
+              companyName={companyName}
+              typeStampClass={TYPE_STAMP_CLASS}
+            />
+          )}
           </>
         )}
         </>
+      )}
+
+      {/* Detail drawer — timeline/category only; split shows detail inline. */}
+      {variant !== "split" && (
+        <ExpenseDetailDrawer
+          invoice={selectedInvoice}
+          projectId={projectId}
+          canManageInvoices={canManageInvoices}
+          companyName={companyName}
+          typeStampClass={TYPE_STAMP_CLASS}
+          onMutated={loadInvoices}
+          onClose={closeInvoice}
+        />
       )}
     </div>
   );

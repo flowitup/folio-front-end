@@ -358,6 +358,12 @@
       "net": "thực chi",
       "emptyFiltered": "Không có chi phí phù hợp — xóa tìm kiếm hoặc khoảng thời gian."
     },
+    "drawer": {
+      "close": "Đóng"
+    },
+    "split": {
+      "selectPrompt": "Chọn một khoản chi để xem chi tiết"
+    },
     "searchPlaceholder": "Tìm theo người nhận, số hóa đơn, mục…",
     "clearSearch": "Xóa tìm kiếm",
     "dateRange": {

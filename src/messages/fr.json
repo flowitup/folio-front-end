@@ -358,6 +358,12 @@
       "net": "net",
       "emptyFiltered": "Aucune dépense correspondante — effacez la recherche ou la période."
     },
+    "drawer": {
+      "close": "Fermer"
+    },
+    "split": {
+      "selectPrompt": "Sélectionnez une dépense pour voir ses détails"
+    },
     "searchPlaceholder": "Rechercher destinataire, n° facture, article…",
     "clearSearch": "Effacer la recherche",
     "dateRange": {

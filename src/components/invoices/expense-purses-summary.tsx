@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import type { Invoice } from "@/types/invoice";
 import { formatEUR, formatEURWhole } from "@/lib/utils/formatters";
+import { isPersonalExpense } from "@/lib/invoices/purse-attribution";
 import { PurseDial } from "./purse-dial";
 import { useDataTip } from "./data-tip";
 
@@ -72,17 +73,6 @@ interface PurseBreakdown {
   /** Client-side sum across the three expense types (mini-bar denominator). */
   spent: number;
   types: Record<ExpenseType, { total: number; count: number }>;
-}
-
-/**
- * Mirrors the BE bucket rule: a personally-paid expense the company already
- * reimbursed (status refunded, not by bank) counts as company money.
- */
-function isPersonalExpense(inv: Invoice): boolean {
-  return (
-    Boolean(inv.paid_by_personal) &&
-    !(inv.refundable_status === "refunded" && inv.refunded_by !== "bank")
-  );
 }
 
 function emptyBreakdown(): PurseBreakdown {

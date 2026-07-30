@@ -6,7 +6,7 @@ import { useParams, useRouter, useSearchParams, usePathname } from "next/navigat
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { canOnProject } from "@/lib/auth/project-permissions";
-import { Loader2, Download, Plus } from "lucide-react";
+import { Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Invoice, InvoiceType } from "@/types/invoice";
@@ -241,6 +241,7 @@ export default function InvoicesPage() {
         />
       )}
 
+      {/* Creation lives in the Topbar's "New expense" action — no duplicate here. */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="seg">
           {VIEW_VARIANTS.map((v) => (
@@ -254,12 +255,6 @@ export default function InvoicesPage() {
             </button>
           ))}
         </div>
-        {canManageInvoices && (
-          <Button onClick={() => router.push(`${pathname}/new`)}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t("newInvoice")}
-          </Button>
-        )}
       </div>
 
       <ExpenseCommandBar

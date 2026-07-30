@@ -348,6 +348,18 @@
       "others": "Autres",
       "return": "Avoir"
     },
+    "views": {
+      "timeline": "Chronologie",
+      "category": "Par catégorie",
+      "split": "Vue scindée"
+    },
+    "searchPlaceholder": "Rechercher destinataire, n° facture, article…",
+    "clearSearch": "Effacer la recherche",
+    "dateRange": {
+      "from": "Du mois",
+      "to": "Au mois",
+      "clear": "Effacer"
+    },
     "issueDate": "Date d'émission",
     "serviceMonth": "Mois de paiement",
     "recipient": "Destinataire",

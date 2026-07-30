@@ -348,6 +348,18 @@
       "others": "Others",
       "return": "Return"
     },
+    "views": {
+      "timeline": "Timeline",
+      "category": "By category",
+      "split": "Split view"
+    },
+    "searchPlaceholder": "Search recipient, invoice #, item…",
+    "clearSearch": "Clear search",
+    "dateRange": {
+      "from": "From month",
+      "to": "To month",
+      "clear": "Clear"
+    },
     "issueDate": "Issue date",
     "serviceMonth": "Payment for month",
     "recipient": "Recipient",

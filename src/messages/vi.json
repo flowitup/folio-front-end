@@ -348,6 +348,18 @@
       "others": "Khác",
       "return": "Trả hàng"
     },
+    "views": {
+      "timeline": "Dòng thời gian",
+      "category": "Theo danh mục",
+      "split": "Chế độ chia đôi"
+    },
+    "searchPlaceholder": "Tìm theo người nhận, số hóa đơn, mục…",
+    "clearSearch": "Xóa tìm kiếm",
+    "dateRange": {
+      "from": "Từ tháng",
+      "to": "Đến tháng",
+      "clear": "Xóa"
+    },
     "issueDate": "Ngày phát hành",
     "serviceMonth": "Tháng thanh toán",
     "recipient": "Người nhận",

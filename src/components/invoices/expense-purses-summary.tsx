@@ -41,6 +41,8 @@ interface ExpensePursesSummaryProps {
   /** Unfiltered project invoice list (all types). */
   invoices: Invoice[];
   meta: ExpenseSummaryMeta;
+  /** When provided, month bars become clickable and jump the command bar's range to that month. */
+  onMonthClick?: (key: string) => void;
 }
 
 const EXPENSE_TYPES = ["labor", "materials_services", "others"] as const;
@@ -95,7 +97,7 @@ function emptyBreakdown(): PurseBreakdown {
   };
 }
 
-export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryProps) {
+export function ExpensePursesSummary({ invoices, meta, onMonthClick }: ExpensePursesSummaryProps) {
   const t = useTranslations("invoices");
   const locale = useLocale();
   const { onMouseMove, onMouseLeave, overlay } = useDataTip();
@@ -304,10 +306,23 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
                   {monthSeries.map((mo, i) => (
                     <span
                       key={mo.key}
-                      className="flex-1 rounded-[2px]"
+                      role={onMonthClick ? "button" : undefined}
+                      tabIndex={onMonthClick ? 0 : undefined}
+                      className={`flex-1 rounded-[2px]${onMonthClick ? " cursor-pointer" : ""}`}
                       data-tip={`${monthYear.format(monthDate(mo.key))}|${formatEURWhole(
                         mo.total
                       )}|${t("invoiceCount", { n: mo.count })}`}
+                      onClick={onMonthClick ? () => onMonthClick(mo.key) : undefined}
+                      onKeyDown={
+                        onMonthClick
+                          ? (e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                onMonthClick(mo.key);
+                              }
+                            }
+                          : undefined
+                      }
                       style={{
                         // 4% floor keeps zero/tiny months visible in the timeline.
                         height: `${

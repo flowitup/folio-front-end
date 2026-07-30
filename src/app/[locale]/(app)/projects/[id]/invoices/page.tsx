@@ -1,12 +1,12 @@
 "use client";
 
-import { Fragment, useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { canOnProject } from "@/lib/auth/project-permissions";
-import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
+import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Invoice, InvoiceType } from "@/types/invoice";
@@ -15,6 +15,7 @@ import {
   ExpensePursesSummary,
   type ExpenseSummaryMeta,
 } from "@/components/invoices/expense-purses-summary";
+import { ExpenseCommandBar, type ExpenseChip } from "@/components/invoices/expense-command-bar";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
@@ -29,8 +30,22 @@ import { fetchTagsClient } from "@/lib/api/tags-client";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
+import {
+  matchesQuery,
+  inMonthRange,
+  chipCounts,
+  type ExpenseTabType,
+} from "@/lib/invoices/expense-filters";
 
-type TabType = "all" | InvoiceType;
+type TabType = ExpenseTabType;
+
+type ViewVariant = "timeline" | "category" | "split";
+const VIEW_VARIANTS: readonly ViewVariant[] = ["timeline", "category", "split"];
+const VIEW_STORAGE_KEY = "folio.expense.view";
+
+function isViewVariant(value: string | null): value is ViewVariant {
+  return value !== null && (VIEW_VARIANTS as readonly string[]).includes(value);
+}
 
 // Tabs that show a TVA column (computed from invoice items). Labor and "all" are excluded:
 // labor expenses are typically time-based and VAT-exempt in construction;
@@ -127,31 +142,48 @@ export default function InvoicesPage() {
   const [error, setError] = useState<string | null>(null);
   const [tags, setTags] = useState<ProjectTag[]>([]);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+
+  // View variant — persisted to localStorage, read lazily in an effect so the
+  // initial (SSR-matching) render always uses the "timeline" default.
+  const [variant, setVariant] = useState<ViewVariant>("timeline");
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
+      if (isViewVariant(stored)) setVariant(stored);
+    } catch {
+      // localStorage unavailable (private browsing, etc.) — keep the default.
+    }
+  }, []);
+  const changeVariant = (next: ViewVariant) => {
+    setVariant(next);
+    try {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, next);
+    } catch {
+      // Best-effort persistence only.
+    }
+  };
 
   const loadInvoices = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // The purses summary is project-level, so it always reads an UNFILTERED
-      // list; when the table itself is unfiltered a single request serves both.
-      const isUnfiltered = activeTab === "all" && !tagFilter;
-      const filteredPromise = fetchInvoicesWithMeta(
-        projectId,
-        activeTab !== "all" ? activeTab : undefined,
-        tagFilter ?? undefined
-      );
-      const summaryPromise = isUnfiltered ? filteredPromise : fetchInvoicesWithMeta(projectId);
-      const [res, sum] = await Promise.all([filteredPromise, summaryPromise]);
+      // Single unfiltered fetch feeds both the purses summary (always
+      // project-level) and the table/cards below — type/tag/search/range
+      // filtering all happen client-side (see expense-filters.ts).
+      const res = await fetchInvoicesWithMeta(projectId);
       setInvoices(res.invoices);
       setCompanyName(res.company_name ?? null);
       setSummary({
-        invoices: sum.invoices,
+        invoices: res.invoices,
         meta: {
-          fundsReleasedTotal: sum.funds_released_total ?? 0,
-          fundsReleasedCompanyTotal: sum.funds_released_company_total,
-          fundsReleasedPersonalTotal: sum.funds_released_personal_total,
-          companySpentTotal: sum.company_spent_total ?? 0,
-          personalSpentTotal: sum.personal_spent_total ?? 0,
+          fundsReleasedTotal: res.funds_released_total ?? 0,
+          fundsReleasedCompanyTotal: res.funds_released_company_total,
+          fundsReleasedPersonalTotal: res.funds_released_personal_total,
+          companySpentTotal: res.company_spent_total ?? 0,
+          personalSpentTotal: res.personal_spent_total ?? 0,
         },
       });
     } catch {
@@ -159,7 +191,7 @@ export default function InvoicesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, activeTab, tagFilter]);
+  }, [projectId]);
 
   // Load tags once for filter dropdown (non-fatal).
   useEffect(() => {
@@ -184,45 +216,105 @@ export default function InvoicesPage() {
 
   const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services", "others", "return"];
 
+  // Search + range filtering only — chip counts are computed from this list
+  // so switching the type chip never changes the numbers shown on the others.
+  const searchRangeFiltered = useMemo(
+    () => invoices.filter((inv) => matchesQuery(inv, q) && inMonthRange(inv, from, to)),
+    [invoices, q, from, to]
+  );
+  const counts = useMemo(() => chipCounts(searchRangeFiltered), [searchRangeFiltered]);
+  const chips: ExpenseChip[] = tabs.map((tab) => ({
+    key: tab,
+    label: tab === "all" ? t("all") : t(`types.${tab}`),
+    count: counts[tab],
+    active: activeTab === tab,
+  }));
+
+  // Full pipeline (type + tag on top of search/range) — what the table/cards render.
+  const filteredInvoices = useMemo(
+    () =>
+      searchRangeFiltered.filter((inv) => {
+        if (activeTab !== "all" && inv.type !== activeTab) return false;
+        if (tagFilter && inv.tag_id !== tagFilter) return false;
+        return true;
+      }),
+    [searchRangeFiltered, activeTab, tagFilter]
+  );
+
   const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services", "others", "return"];
   const groupedInvoices = GROUP_ORDER
-    .map((type) => ({ type, items: invoices.filter((i) => i.type === type) }))
+    .map((type) => ({ type, items: filteredInvoices.filter((i) => i.type === type) }))
     .filter((g) => g.items.length > 0);
   const showGroups = activeTab === "all" && groupedInvoices.length > 0;
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
       {/* "Two purses" summary (design Expense Dataviz 1b) — project-level,
-          fed by an unfiltered fetch so tab/tag filters below never change it. */}
-      {summary && <ExpensePursesSummary invoices={summary.invoices} meta={summary.meta} />}
+          fed by an unfiltered fetch so filters below never change it. Month
+          bars jump the command-bar range to that month. */}
+      {summary && (
+        <ExpensePursesSummary
+          invoices={summary.invoices}
+          meta={summary.meta}
+          onMonthClick={(key) => {
+            setFrom(key);
+            setTo(key);
+          }}
+        />
+      )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="seg">
-          {tabs.map((tab) => (
+          {VIEW_VARIANTS.map((v) => (
             <button
-              key={tab}
+              key={v}
               type="button"
-              onClick={() => setActiveTab(tab)}
-              className={activeTab === tab ? "on" : ""}
+              onClick={() => changeVariant(v)}
+              className={variant === v ? "on" : ""}
             >
-              {tab === "all" ? t("all") : t(`types.${tab}`)}
+              {t(`views.${v}`)}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          {tags.length > 0 && (
-            <TagFilterSelect
-              tags={tags}
-              value={tagFilter}
-              onChange={setTagFilter}
-            />
-          )}
-          <Button variant="outline" onClick={() => setExportOpen(true)}>
-            <Download className="mr-2 h-4 w-4" />
-            {t("export.trigger")}
+        {canManageInvoices && (
+          <Button onClick={() => router.push(`${pathname}/new`)}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("newInvoice")}
           </Button>
-        </div>
+        )}
       </div>
+
+      <ExpenseCommandBar
+        q={q}
+        onQChange={setQ}
+        searchPlaceholder={t("searchPlaceholder")}
+        clearSearchLabel={t("clearSearch")}
+        chips={chips}
+        onChipSelect={setActiveTab}
+        from={from}
+        to={to}
+        onFromChange={setFrom}
+        onToChange={setTo}
+        onClearRange={() => {
+          setFrom("");
+          setTo("");
+        }}
+        fromLabel={t("dateRange.from")}
+        toLabel={t("dateRange.to")}
+        clearRangeLabel={t("dateRange.clear")}
+      >
+        {tags.length > 0 && (
+          <TagFilterSelect
+            tags={tags}
+            value={tagFilter}
+            onChange={setTagFilter}
+          />
+        )}
+        <Button variant="outline" onClick={() => setExportOpen(true)}>
+          <Download className="mr-2 h-4 w-4" />
+          {t("export.trigger")}
+        </Button>
+      </ExpenseCommandBar>
 
       <InvoiceExportDialog
         projectId={projectId}
@@ -245,7 +337,7 @@ export default function InvoicesPage() {
 
       {!isLoading && (
         <>
-        {invoices.length === 0 ? (
+        {filteredInvoices.length === 0 ? (
           <div className="folio-card overflow-hidden">
             <div
               className="flex items-center justify-center py-12 text-[13px]"
@@ -258,7 +350,7 @@ export default function InvoicesPage() {
           <>
           {/* Mobile card list */}
           <div className="space-y-3 lg:hidden">
-            {(showGroups ? groupedInvoices : [{ type: null, items: invoices }]).map(
+            {(showGroups ? groupedInvoices : [{ type: null, items: filteredInvoices }]).map(
               ({ type: groupType, items }) => (
                 <Fragment key={groupType ?? "flat"}>
                   {groupType && (
@@ -327,7 +419,7 @@ export default function InvoicesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(showGroups ? groupedInvoices : [{ type: null, items: invoices }]).map(
+                    {(showGroups ? groupedInvoices : [{ type: null, items: filteredInvoices }]).map(
                       ({ type: groupType, items }) => (
                         <Fragment key={groupType ?? "flat"}>
                           {groupType && (

@@ -348,6 +348,29 @@
       "others": "Others",
       "return": "Return"
     },
+    "views": {
+      "timeline": "Timeline",
+      "category": "By category",
+      "split": "Split view"
+    },
+    "grouped": {
+      "entries": "{n, plural, =1 {1 entry} other {# entries}}",
+      "net": "net",
+      "emptyFiltered": "No matching expenses — clear the search or date range."
+    },
+    "drawer": {
+      "close": "Close"
+    },
+    "split": {
+      "selectPrompt": "Select an expense to see its details"
+    },
+    "searchPlaceholder": "Search recipient, invoice #, item…",
+    "clearSearch": "Clear search",
+    "dateRange": {
+      "from": "From month",
+      "to": "To month",
+      "clear": "Clear"
+    },
     "issueDate": "Issue date",
     "serviceMonth": "Payment for month",
     "recipient": "Recipient",

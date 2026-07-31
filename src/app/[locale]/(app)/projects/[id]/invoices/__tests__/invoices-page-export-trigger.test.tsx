@@ -199,8 +199,10 @@ describe("InvoicesPage — initialType carries through from active tab", () => {
       { timeout: 5000 },
     );
 
-    // Click the "labor" tab — the tab button text is t("types.labor") → "types.labor" via mock
-    const laborTab = screen.getAllByText("types.labor").find((el) => el.closest(".seg"))!;
+    // Click the "labor" chip — the chip button text is t("types.labor") → "types.labor" via mock
+    const laborTab = screen
+      .getAllByText("types.labor")
+      .find((el) => el.closest('[data-testid="expense-type-chips"]'))!;
     fireEvent.click(laborTab);
 
     // Now open the dialog
@@ -220,7 +222,11 @@ describe("InvoicesPage — initialType carries through from active tab", () => {
       { timeout: 5000 },
     );
 
-    fireEvent.click(screen.getAllByText("types.released_funds").find((el) => el.closest(".seg"))!);
+    fireEvent.click(
+      screen
+        .getAllByText("types.released_funds")
+        .find((el) => el.closest('[data-testid="expense-type-chips"]'))!,
+    );
     fireEvent.click(screen.getByText("export.trigger").closest("button")!);
 
     const dialog = screen.getByTestId("dialog-mock");
@@ -237,7 +243,11 @@ describe("InvoicesPage — initialType carries through from active tab", () => {
       { timeout: 5000 },
     );
 
-    fireEvent.click(screen.getAllByText("types.materials_services").find((el) => el.closest(".seg"))!);
+    fireEvent.click(
+      screen
+        .getAllByText("types.materials_services")
+        .find((el) => el.closest('[data-testid="expense-type-chips"]'))!,
+    );
     fireEvent.click(screen.getByText("export.trigger").closest("button")!);
 
     const dialog = screen.getByTestId("dialog-mock");

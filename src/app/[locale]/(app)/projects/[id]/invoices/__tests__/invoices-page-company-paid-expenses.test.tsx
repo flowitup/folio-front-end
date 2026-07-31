@@ -1,17 +1,21 @@
 /**
- * Tests for InvoicesPage — company-paid expenses: ratio card + transfer action gating.
+ * Tests for InvoicesPage — company-paid expenses: funds-released ratio card.
  *
  * Covers:
  * - Funds released card ratio reads from company_spent_total (not refunded)
- * - Transfer action hidden when invoice.paid_by_company=true (M&S, null status)
- * - Transfer action still shown when paid_by_company=false or absent
+ *
+ * Transfer-action visibility gating (paid_by_company) used to be tested here
+ * against the flat table's row-level button; that button now lives inside
+ * InvoiceDetailRow (opened on row click) — see
+ * invoice-detail-content-paid-by-company.test.tsx for that coverage, and
+ * transfer-to-company-payment-action.test.tsx for the click behavior itself.
  *
  * Dual-render note: jsdom renders both mobile and desktop views.
  * Desktop assertions are scoped via data-testid="invoices-table-desktop".
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import type { Invoice } from "@/types/invoice";
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
@@ -145,31 +149,6 @@ function setupFetch(
   });
 }
 
-function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
-  return {
-    id: "inv-cp-1",
-    project_id: "proj-cp-1",
-    invoice_number: "INV-2026-0001",
-    type: "materials_services",
-    issue_date: "2026-06-01",
-    recipient_name: "Supplier",
-    recipient_address: null,
-    notes: null,
-    items: [],
-    total_amount: 500,
-    created_by: "user-1",
-    created_at: "2026-06-01T00:00:00Z",
-    updated_at: "2026-06-01T00:00:00Z",
-    payment_method_id: null,
-    payment_method_label: null,
-    source_billing_document_id: null,
-    is_auto_generated: false,
-    refundable_status: null,
-    service_month: null,
-    ...overrides,
-  };
-}
-
 // ── Tests: ratio card reads company_spent_total ────────────────────────────────
 
 describe("InvoicesPage — company funds released ratio reads company_spent_total", () => {
@@ -210,86 +189,5 @@ describe("InvoicesPage — company funds released ratio reads company_spent_tota
       },
       { timeout: 5000 },
     );
-  });
-});
-
-// ── Tests: transfer action hidden when paid_by_company ────────────────────────
-
-describe("InvoicesPage — transfer action hidden for paid_by_company invoices", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    setupNavigation();
-    setupAuth(true);
-  });
-
-  it("hides transfer action for M&S null-status invoice when paid_by_company=true", async () => {
-    setupFetch([
-      makeInvoice({ type: "materials_services", refundable_status: null, paid_by_company: true }),
-    ]);
-    render(<InvoicesPage />);
-
-    await waitFor(
-      () => screen.getByTestId("invoices-table-desktop"),
-      { timeout: 5000 },
-    );
-
-    const desktop = screen.getByTestId("invoices-table-desktop");
-    expect(
-      within(desktop).queryByRole("button", { name: "invoices.refund.action.transfer" }),
-    ).toBeNull();
-  });
-
-  it("shows transfer action for M&S null-status invoice when paid_by_company=false", async () => {
-    setupFetch([
-      makeInvoice({ type: "materials_services", refundable_status: null, paid_by_company: false }),
-    ]);
-    render(<InvoicesPage />);
-
-    await waitFor(
-      () => {
-        const desktop = screen.getByTestId("invoices-table-desktop");
-        expect(
-          within(desktop).queryByRole("button", { name: "invoices.refund.action.transfer" }),
-        ).not.toBeNull();
-      },
-      { timeout: 5000 },
-    );
-  });
-
-  it("shows transfer action for M&S null-status invoice when paid_by_company is absent", async () => {
-    // paid_by_company omitted (undefined) — should default to showing the action
-    setupFetch([makeInvoice({ type: "materials_services", refundable_status: null })]);
-    render(<InvoicesPage />);
-
-    await waitFor(
-      () => {
-        const desktop = screen.getByTestId("invoices-table-desktop");
-        expect(
-          within(desktop).queryByRole("button", { name: "invoices.refund.action.transfer" }),
-        ).not.toBeNull();
-      },
-      { timeout: 5000 },
-    );
-  });
-
-  it("still hides transfer action when refundable_status is already set (regardless of paid_by_company)", async () => {
-    setupFetch([
-      makeInvoice({
-        type: "materials_services",
-        refundable_status: "refundable",
-        paid_by_company: false,
-      }),
-    ], { company_name: "Co" });
-    render(<InvoicesPage />);
-
-    await waitFor(
-      () => screen.getByTestId("invoices-table-desktop"),
-      { timeout: 5000 },
-    );
-
-    const desktop = screen.getByTestId("invoices-table-desktop");
-    expect(
-      within(desktop).queryByRole("button", { name: "invoices.refund.action.transfer" }),
-    ).toBeNull();
   });
 });

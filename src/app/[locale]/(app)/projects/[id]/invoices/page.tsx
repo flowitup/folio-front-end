@@ -1,76 +1,70 @@
 "use client";
 
-import { Fragment, useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { canOnProject } from "@/lib/auth/project-permissions";
-import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
+import { Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Invoice, InvoiceType } from "@/types/invoice";
-import { fetchInvoicesWithMeta, deleteInvoice } from "@/lib/api/invoice-api";
+import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import {
   ExpensePursesSummary,
   type ExpenseSummaryMeta,
 } from "@/components/invoices/expense-purses-summary";
+import { ExpenseCommandBar, type ExpenseChip } from "@/components/invoices/expense-command-bar";
+import { ExpenseGroupedList } from "@/components/invoices/expense-grouped-list";
+import { ExpenseDetailDrawer } from "@/components/invoices/expense-detail-drawer";
+import { ExpenseSplitView } from "@/components/invoices/expense-split-view";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
-import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
-import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
-import {
-  REFUND_STATUS_STAMP,
-  REFUND_STATUS_I18N,
-  refundStatusI18nKey,
-} from "@/lib/invoices/refundable-status-display";
+import { groupByTimeline, groupByCategory } from "@/lib/invoices/expense-grouping";
 import { fetchTagsClient } from "@/lib/api/tags-client";
-import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
+import { formatEUR } from "@/lib/utils/formatters";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
+import {
+  matchesQuery,
+  inMonthRange,
+  chipCounts,
+  type ExpenseTabType,
+} from "@/lib/invoices/expense-filters";
 
-type TabType = "all" | InvoiceType;
+type TabType = ExpenseTabType;
 
-// Tabs that show a TVA column (computed from invoice items). Labor and "all" are excluded:
-// labor expenses are typically time-based and VAT-exempt in construction;
-// the "all" view groups multiple types and keeps a uniform layout.
-const TVA_COLUMN_TABS: ReadonlySet<TabType> = new Set([
-  "released_funds",
-  "materials_services",
-  "others",
-]);
+type ViewVariant = "timeline" | "category" | "split";
+const VIEW_VARIANTS: readonly ViewVariant[] = ["timeline", "category", "split"];
+const VIEW_STORAGE_KEY = "folio.expense.view";
 
-// Tabs that show the "payment for month" column — labor only, since
-// service_month is exclusive to labor invoices.
-const MONTH_COLUMN_TABS: ReadonlySet<TabType> = new Set(["labor"]);
-
-/** Sum of VAT amounts across all items: Σ qty × price × (vat_rate/100). */
-function invoiceTva(items: Invoice["items"]): number {
-  return items.reduce(
-    (sum, it) => sum + it.quantity * it.unit_price * ((it.vat_rate ?? 0) / 100),
-    0
-  );
+function isViewVariant(value: string | null): value is ViewVariant {
+  return value !== null && (VIEW_VARIANTS as readonly string[]).includes(value);
 }
 
-// Base column count without TVA/Month columns.
-const INVOICE_TABLE_COLUMN_COUNT_BASE = 7;
-// Column count when the TVA column is shown.
-const INVOICE_TABLE_COLUMN_COUNT_TVA = 8;
-// Column count when the Month column is shown (mutually exclusive with TVA).
-const INVOICE_TABLE_COLUMN_COUNT_MONTH = 8;
-
+// Type → stamp hue for the grouped desktop list (timeline/category views).
+// Mobile card + other pages keep their own separate mapping (see
+// invoice-mobile-card.tsx) — do not repoint them at this one.
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
-  released_funds: "stamp",
+  released_funds: "stamp sage",
   labor: "stamp accent",
-  materials_services: "stamp positive",
-  others: "stamp muted",
-  return: "stamp warning",
+  materials_services: "stamp olive",
+  others: "stamp ochre",
+  return: "stamp amber",
 };
+
+const GROUP_ORDER: InvoiceType[] = [
+  "released_funds",
+  "labor",
+  "materials_services",
+  "others",
+  "return",
+];
 
 export default function InvoicesPage() {
   const t = useTranslations("invoices");
-  const tBuiltins = useTranslations("paymentMethods.builtins");
   const locale = useLocale();
   const params = useParams();
   const router = useRouter();
@@ -127,31 +121,48 @@ export default function InvoicesPage() {
   const [error, setError] = useState<string | null>(null);
   const [tags, setTags] = useState<ProjectTag[]>([]);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+
+  // View variant — persisted to localStorage, read lazily in an effect so the
+  // initial (SSR-matching) render always uses the "timeline" default.
+  const [variant, setVariant] = useState<ViewVariant>("timeline");
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
+      if (isViewVariant(stored)) setVariant(stored);
+    } catch {
+      // localStorage unavailable (private browsing, etc.) — keep the default.
+    }
+  }, []);
+  const changeVariant = (next: ViewVariant) => {
+    setVariant(next);
+    try {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, next);
+    } catch {
+      // Best-effort persistence only.
+    }
+  };
 
   const loadInvoices = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // The purses summary is project-level, so it always reads an UNFILTERED
-      // list; when the table itself is unfiltered a single request serves both.
-      const isUnfiltered = activeTab === "all" && !tagFilter;
-      const filteredPromise = fetchInvoicesWithMeta(
-        projectId,
-        activeTab !== "all" ? activeTab : undefined,
-        tagFilter ?? undefined
-      );
-      const summaryPromise = isUnfiltered ? filteredPromise : fetchInvoicesWithMeta(projectId);
-      const [res, sum] = await Promise.all([filteredPromise, summaryPromise]);
+      // Single unfiltered fetch feeds both the purses summary (always
+      // project-level) and the table/cards below — type/tag/search/range
+      // filtering all happen client-side (see expense-filters.ts).
+      const res = await fetchInvoicesWithMeta(projectId);
       setInvoices(res.invoices);
       setCompanyName(res.company_name ?? null);
       setSummary({
-        invoices: sum.invoices,
+        invoices: res.invoices,
         meta: {
-          fundsReleasedTotal: sum.funds_released_total ?? 0,
-          fundsReleasedCompanyTotal: sum.funds_released_company_total,
-          fundsReleasedPersonalTotal: sum.funds_released_personal_total,
-          companySpentTotal: sum.company_spent_total ?? 0,
-          personalSpentTotal: sum.personal_spent_total ?? 0,
+          fundsReleasedTotal: res.funds_released_total ?? 0,
+          fundsReleasedCompanyTotal: res.funds_released_company_total,
+          fundsReleasedPersonalTotal: res.funds_released_personal_total,
+          companySpentTotal: res.company_spent_total ?? 0,
+          personalSpentTotal: res.personal_spent_total ?? 0,
         },
       });
     } catch {
@@ -159,7 +170,7 @@ export default function InvoicesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, activeTab, tagFilter]);
+  }, [projectId]);
 
   // Load tags once for filter dropdown (non-fatal).
   useEffect(() => {
@@ -172,57 +183,122 @@ export default function InvoicesPage() {
     loadInvoices();
   }, [loadInvoices]);
 
-  const handleDelete = async (invoice: Invoice) => {
-    if (!confirm(t("deleteConfirm"))) return;
-    try {
-      await deleteInvoice(projectId, invoice.id);
-      await loadInvoices();
-    } catch {
-      setError("Failed to delete invoice");
-    }
-  };
-
   const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services", "others", "return"];
 
-  const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services", "others", "return"];
-  const groupedInvoices = GROUP_ORDER
-    .map((type) => ({ type, items: invoices.filter((i) => i.type === type) }))
-    .filter((g) => g.items.length > 0);
+  // Search + range filtering only — chip counts are computed from this list
+  // so switching the type chip never changes the numbers shown on the others.
+  const searchRangeFiltered = useMemo(
+    () => invoices.filter((inv) => matchesQuery(inv, q) && inMonthRange(inv, from, to)),
+    [invoices, q, from, to]
+  );
+  const counts = useMemo(() => chipCounts(searchRangeFiltered), [searchRangeFiltered]);
+  const chips: ExpenseChip[] = tabs.map((tab) => ({
+    key: tab,
+    label: tab === "all" ? t("all") : t(`types.${tab}`),
+    count: counts[tab],
+    active: activeTab === tab,
+  }));
+
+  // Full pipeline (type + tag on top of search/range) — what the table/cards render.
+  const filteredInvoices = useMemo(
+    () =>
+      searchRangeFiltered.filter((inv) => {
+        if (activeTab !== "all" && inv.type !== activeTab) return false;
+        if (tagFilter && inv.tag_id !== tagFilter) return false;
+        return true;
+      }),
+    [searchRangeFiltered, activeTab, tagFilter]
+  );
+
+  const groupedInvoices = useMemo(
+    () =>
+      GROUP_ORDER.map((type) => ({ type, items: filteredInvoices.filter((i) => i.type === type) })).filter(
+        (g) => g.items.length > 0
+      ),
+    [filteredInvoices]
+  );
   const showGroups = activeTab === "all" && groupedInvoices.length > 0;
+
+  // Desktop grouped list (timeline/category variants only — "split" renders
+  // its own flat master-detail layout via ExpenseSplitView instead).
+  const desktopSections = useMemo(
+    () =>
+      variant === "category"
+        ? groupByCategory(filteredInvoices, t)
+        : groupByTimeline(filteredInvoices, locale),
+    [variant, filteredInvoices, t, locale]
+  );
+
+  // Drawer target — looked up in the full (unfiltered) list so a deep link
+  // still resolves even if the current type/tag/search filters would hide
+  // the row from the desktop list.
+  const selectedInvoice = selectedInvoiceId
+    ? (invoices.find((inv) => inv.id === selectedInvoiceId) ?? null)
+    : null;
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
       {/* "Two purses" summary (design Expense Dataviz 1b) — project-level,
-          fed by an unfiltered fetch so tab/tag filters below never change it. */}
-      {summary && <ExpensePursesSummary invoices={summary.invoices} meta={summary.meta} />}
+          fed by an unfiltered fetch so filters below never change it. Month
+          bars jump the command-bar range to that month. */}
+      {summary && (
+        <ExpensePursesSummary
+          invoices={summary.invoices}
+          meta={summary.meta}
+          onMonthClick={(key) => {
+            setFrom(key);
+            setTo(key);
+          }}
+        />
+      )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Creation lives in the Topbar's "New expense" action — no duplicate here. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="seg">
-          {tabs.map((tab) => (
+          {VIEW_VARIANTS.map((v) => (
             <button
-              key={tab}
+              key={v}
               type="button"
-              onClick={() => setActiveTab(tab)}
-              className={activeTab === tab ? "on" : ""}
+              onClick={() => changeVariant(v)}
+              className={variant === v ? "on" : ""}
             >
-              {tab === "all" ? t("all") : t(`types.${tab}`)}
+              {t(`views.${v}`)}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          {tags.length > 0 && (
-            <TagFilterSelect
-              tags={tags}
-              value={tagFilter}
-              onChange={setTagFilter}
-            />
-          )}
-          <Button variant="outline" onClick={() => setExportOpen(true)}>
-            <Download className="mr-2 h-4 w-4" />
-            {t("export.trigger")}
-          </Button>
-        </div>
       </div>
+
+      <ExpenseCommandBar
+        q={q}
+        onQChange={setQ}
+        searchPlaceholder={t("searchPlaceholder")}
+        clearSearchLabel={t("clearSearch")}
+        chips={chips}
+        onChipSelect={setActiveTab}
+        from={from}
+        to={to}
+        onFromChange={setFrom}
+        onToChange={setTo}
+        onClearRange={() => {
+          setFrom("");
+          setTo("");
+        }}
+        fromLabel={t("dateRange.from")}
+        toLabel={t("dateRange.to")}
+        clearRangeLabel={t("dateRange.clear")}
+      >
+        {tags.length > 0 && (
+          <TagFilterSelect
+            tags={tags}
+            value={tagFilter}
+            onChange={setTagFilter}
+          />
+        )}
+        <Button variant="outline" onClick={() => setExportOpen(true)}>
+          <Download className="mr-2 h-4 w-4" />
+          {t("export.trigger")}
+        </Button>
+      </ExpenseCommandBar>
 
       <InvoiceExportDialog
         projectId={projectId}
@@ -254,11 +330,20 @@ export default function InvoicesPage() {
               {t("noInvoices")}
             </div>
           </div>
+        ) : filteredInvoices.length === 0 ? (
+          <div className="folio-card overflow-hidden">
+            <div
+              className="flex items-center justify-center py-12 text-[13px]"
+              style={{ color: "var(--muted)" }}
+            >
+              {t("grouped.emptyFiltered")}
+            </div>
+          </div>
         ) : (
           <>
           {/* Mobile card list */}
           <div className="space-y-3 lg:hidden">
-            {(showGroups ? groupedInvoices : [{ type: null, items: invoices }]).map(
+            {(showGroups ? groupedInvoices : [{ type: null, items: filteredInvoices }]).map(
               ({ type: groupType, items }) => (
                 <Fragment key={groupType ?? "flat"}>
                   {groupType && (
@@ -298,210 +383,42 @@ export default function InvoicesPage() {
             )}
           </div>
 
-          {/* Desktop table */}
-          <div className="folio-card hidden overflow-hidden lg:block" data-testid="invoices-table-desktop">
-            <div className="overflow-x-auto">
-              {(() => {
-                const showTvaCol = TVA_COLUMN_TABS.has(activeTab);
-                const showMonthCol = MONTH_COLUMN_TABS.has(activeTab);
-                const colCount = showTvaCol
-                  ? INVOICE_TABLE_COLUMN_COUNT_TVA
-                  : showMonthCol
-                    ? INVOICE_TABLE_COLUMN_COUNT_MONTH
-                    : INVOICE_TABLE_COLUMN_COUNT_BASE;
-                return (
-                <table className="ledger">
-                  <thead>
-                    <tr>
-                      <th style={{ width: 32 }}></th>
-                      <th>{t("invoiceNumber")}</th>
-                      <th>{t("issueDate")}</th>
-                      <th>{t("recipient")}</th>
-                      <th>{t("paymentMethod.label")}</th>
-                      {showTvaCol && (
-                        <th style={{ textAlign: "right" }}>{t("colTva")}</th>
-                      )}
-                      {showMonthCol && <th>{t("serviceMonth")}</th>}
-                      <th style={{ textAlign: "right" }}>{t("totalAmount")}</th>
-                      <th style={{ textAlign: "right" }}>{t("actions")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(showGroups ? groupedInvoices : [{ type: null, items: invoices }]).map(
-                      ({ type: groupType, items }) => (
-                        <Fragment key={groupType ?? "flat"}>
-                          {groupType && (
-                            <tr>
-                              <td
-                                colSpan={colCount}
-                                className="label-cap"
-                                style={{
-                                  paddingTop: 20,
-                                  paddingBottom: 8,
-                                  borderBottom: "1px solid var(--line)",
-                                }}
-                              >
-                                <span className={TYPE_STAMP_CLASS[groupType]}>
-                                  {t(`types.${groupType}`)}
-                                </span>
-                              </td>
-                            </tr>
-                          )}
-                          {items.map((invoice) => {
-                            const isOpen = selectedInvoiceId === invoice.id;
-                            const detailId = `invoice-detail-${invoice.id}`;
-                            const tvaAmount = showTvaCol ? invoiceTva(invoice.items) : 0;
-                            return (
-                              <Fragment key={invoice.id}>
-                                <tr
-                                  role="button"
-                                  tabIndex={0}
-                                  aria-expanded={isOpen}
-                                  aria-controls={detailId}
-                                  className="cursor-pointer"
-                                  style={isOpen ? { background: "var(--paper-2)" } : undefined}
-                                  onClick={() => toggleInvoice(invoice.id)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                      e.preventDefault();
-                                      toggleInvoice(invoice.id);
-                                    }
-                                  }}
-                                >
-                                  <td style={{ color: "var(--muted)" }}>
-                                    {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                                  </td>
-                                  <td className="num text-[12.5px]">
-                                    {invoice.invoice_number}
-                                    {invoice.is_auto_generated && (
-                                      <span
-                                        className="stamp ml-2"
-                                        title={t("autoGenerated")}
-                                        style={{ fontSize: 10, verticalAlign: "middle" }}
-                                      >
-                                        <Lock size={10} className="mr-0.5 inline" />
-                                        {t("auto")}
-                                      </span>
-                                    )}
-                                    {invoice.type === "return" && (
-                                      <span
-                                        className="stamp warning ml-2"
-                                        style={{ fontSize: 10, verticalAlign: "middle" }}
-                                      >
-                                        {t("types.return")}
-                                      </span>
-                                    )}
-                                    {invoice.type === "return" && invoice.refunds_invoice_number && (
-                                      <span
-                                        className="ml-2 text-[11px]"
-                                        style={{ color: "var(--muted)" }}
-                                      >
-                                        {t("refundOf", { number: invoice.refunds_invoice_number })}
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="num" style={{ color: "var(--muted)" }}>
-                                    {formatDate(invoice.issue_date)}
-                                  </td>
-                                  <td>{invoice.recipient_name}</td>
-                                  <td>
-                                    <div className="flex flex-wrap items-center gap-1">
-                                      {invoice.refundable_status != null && companyName ? (
-                                        <span className="stamp truncate max-w-[180px]">
-                                          {invoice.payment_method_label?.trim()
-                                            ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
-                                            : `→ ${companyName}`}
-                                        </span>
-                                      ) : invoice.payment_method_label?.trim() ? (
-                                        <span className="stamp">
-                                          {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}
-                                        </span>
-                                      ) : (
-                                        <span style={{ color: "var(--muted)" }}>—</span>
-                                      )}
-                                      {invoice.refundable_status != null && (
-                                        <span className={REFUND_STATUS_STAMP[invoice.refundable_status]}>
-                                          {t(
-                                            refundStatusI18nKey(invoice) ??
-                                              REFUND_STATUS_I18N[invoice.refundable_status]
-                                          )}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </td>
-                                  {showTvaCol && (
-                                    <td className="num" style={{ textAlign: "right", color: "var(--muted)" }}>
-                                      {tvaAmount > 0 ? formatEUR(tvaAmount) : "—"}
-                                    </td>
-                                  )}
-                                  {showMonthCol && (
-                                    <td style={{ color: "var(--muted)" }}>
-                                      {invoice.service_month
-                                        ? formatMonthYear(invoice.service_month, locale)
-                                        : "—"}
-                                    </td>
-                                  )}
-                                  <td
-                                    className={`num font-medium${invoice.total_amount < 0 ? " text-destructive" : ""}`}
-                                    style={{ textAlign: "right" }}
-                                  >
-                                    {formatEUR(invoice.total_amount)}
-                                  </td>
-                                  <td
-                                    style={{ textAlign: "right" }}
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className="flex items-center justify-end gap-1">
-                                      {canManageInvoices &&
-                                        invoice.type === "materials_services" &&
-                                        invoice.refundable_status == null &&
-                                        !invoice.paid_by_company && (
-                                          <TransferToCompanyPaymentAction
-                                            invoiceId={invoice.id}
-                                            onSuccess={loadInvoices}
-                                          />
-                                        )}
-                                      {canManageInvoices && !invoice.is_auto_generated && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0"
-                                          style={{ color: "var(--muted)" }}
-                                          onClick={() => handleDelete(invoice)}
-                                        >
-                                          <Trash2 size={13} />
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </td>
-                                </tr>
-                                {isOpen && (
-                                  <InvoiceDetailRow
-                                    projectId={projectId}
-                                    invoiceId={invoice.id}
-                                    canManage={canManageInvoices}
-                                    colSpan={colCount}
-                                    regionId={detailId}
-                                    onMutated={loadInvoices}
-                                    onCollapse={closeInvoice}
-                                    companyName={companyName}
-                                  />
-                                )}
-                              </Fragment>
-                            );
-                          })}
-                        </Fragment>
-                      )
-                    )}
-                  </tbody>
-                </table>
-                );
-              })()}
-            </div>
-          </div>
+          {/* Desktop: grouped list (timeline year→month / category sections)
+              or the split master-detail view — mutually exclusive by variant. */}
+          {variant === "split" ? (
+            <ExpenseSplitView
+              invoices={filteredInvoices}
+              projectId={projectId}
+              canManageInvoices={canManageInvoices}
+              companyName={companyName}
+              onMutated={loadInvoices}
+            />
+          ) : (
+            <ExpenseGroupedList
+              variant={variant === "category" ? "category" : "timeline"}
+              sections={desktopSections}
+              selectedInvoiceId={selectedInvoiceId}
+              onToggle={toggleInvoice}
+              companyName={companyName}
+              typeStampClass={TYPE_STAMP_CLASS}
+            />
+          )}
           </>
         )}
         </>
+      )}
+
+      {/* Detail drawer — timeline/category only; split shows detail inline. */}
+      {variant !== "split" && (
+        <ExpenseDetailDrawer
+          invoice={selectedInvoice}
+          projectId={projectId}
+          canManageInvoices={canManageInvoices}
+          companyName={companyName}
+          typeStampClass={TYPE_STAMP_CLASS}
+          onMutated={loadInvoices}
+          onClose={closeInvoice}
+        />
       )}
     </div>
   );

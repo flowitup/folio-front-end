@@ -55,6 +55,14 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   return: "stamp amber",
 };
 
+const GROUP_ORDER: InvoiceType[] = [
+  "released_funds",
+  "labor",
+  "materials_services",
+  "others",
+  "return",
+];
+
 export default function InvoicesPage() {
   const t = useTranslations("invoices");
   const locale = useLocale();
@@ -202,10 +210,13 @@ export default function InvoicesPage() {
     [searchRangeFiltered, activeTab, tagFilter]
   );
 
-  const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services", "others", "return"];
-  const groupedInvoices = GROUP_ORDER
-    .map((type) => ({ type, items: filteredInvoices.filter((i) => i.type === type) }))
-    .filter((g) => g.items.length > 0);
+  const groupedInvoices = useMemo(
+    () =>
+      GROUP_ORDER.map((type) => ({ type, items: filteredInvoices.filter((i) => i.type === type) })).filter(
+        (g) => g.items.length > 0
+      ),
+    [filteredInvoices]
+  );
   const showGroups = activeTab === "all" && groupedInvoices.length > 0;
 
   // Desktop grouped list (timeline/category variants only — "split" renders

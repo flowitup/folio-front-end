@@ -99,7 +99,6 @@ export function ExpenseGroupedList({
                     onOpen={() => onToggle(invoice.id)}
                     companyName={companyName}
                     typeStampClass={typeStampClass}
-                    regionId={`invoice-detail-${invoice.id}`}
                   />
                 );
               })}

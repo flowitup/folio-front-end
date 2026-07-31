@@ -66,7 +66,6 @@ describe("ExpenseRow — payment method cell", () => {
         onOpen={vi.fn()}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -82,7 +81,6 @@ describe("ExpenseRow — payment method cell", () => {
         onOpen={vi.fn()}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -98,7 +96,6 @@ describe("ExpenseRow — payment method cell", () => {
         onOpen={vi.fn()}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -117,7 +114,6 @@ describe("ExpenseRow — payment method cell", () => {
         onOpen={vi.fn()}
         companyName="ANN ECO CONSTRUCTION"
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -133,7 +129,6 @@ describe("ExpenseRow — payment method cell", () => {
         onOpen={vi.fn()}
         companyName="ANN ECO CONSTRUCTION"
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -151,7 +146,6 @@ describe("ExpenseRow — recipient cell stamps", () => {
         onOpen={vi.fn()}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -167,7 +161,6 @@ describe("ExpenseRow — recipient cell stamps", () => {
         onOpen={vi.fn()}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -185,7 +178,6 @@ describe("ExpenseRow — type stamp", () => {
         onOpen={vi.fn()}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -204,7 +196,6 @@ describe("ExpenseRow — amount cell", () => {
         onOpen={vi.fn()}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -221,7 +212,6 @@ describe("ExpenseRow — amount cell", () => {
         onOpen={vi.fn()}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -240,7 +230,6 @@ describe("ExpenseRow — date cell", () => {
         onOpen={vi.fn()}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -257,7 +246,6 @@ describe("ExpenseRow — date cell", () => {
         onOpen={vi.fn()}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -277,7 +265,6 @@ describe("ExpenseRow — interaction", () => {
         onOpen={onOpen}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -295,7 +282,6 @@ describe("ExpenseRow — interaction", () => {
         onOpen={onOpen}
         companyName={null}
         typeStampClass={TYPE_STAMP_CLASS}
-        regionId="detail-1"
       />
     );
 
@@ -303,5 +289,22 @@ describe("ExpenseRow — interaction", () => {
     fireEvent.keyDown(row, { key: "Enter" });
     fireEvent.keyDown(row, { key: " " });
     expect(onOpen).toHaveBeenCalledTimes(2);
+  });
+
+  it("advertises the disclosure via aria-haspopup, not a dangling aria-controls", () => {
+    render(
+      <ExpenseRow
+        invoice={makeInvoice()}
+        variant="timeline"
+        isOpen={false}
+        onOpen={vi.fn()}
+        companyName={null}
+        typeStampClass={TYPE_STAMP_CLASS}
+      />
+    );
+
+    const row = screen.getByRole("button");
+    expect(row.getAttribute("aria-haspopup")).toBe("dialog");
+    expect(row.hasAttribute("aria-controls")).toBe(false);
   });
 });

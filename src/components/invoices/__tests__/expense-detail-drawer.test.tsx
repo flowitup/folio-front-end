@@ -7,8 +7,8 @@
  * chrome: open/close wiring, Esc, backdrop click, and body scroll-lock.
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, fireEvent, cleanup, act } from "@testing-library/react";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 import { ExpenseDetailDrawer } from "../expense-detail-drawer";
 
@@ -22,6 +22,39 @@ vi.mock("../invoice-detail-row", () => ({
     <div data-testid="invoice-detail-row">{invoiceId}</div>
   ),
 }));
+
+/**
+ * Controllable `window.matchMedia` stub for `(min-width: 1024px)` — lets
+ * tests simulate desktop vs. mobile viewports and fire the `change` event
+ * the drawer listens for on resize.
+ */
+function mockMatchMedia(initialMatches: boolean) {
+  let matches = initialMatches;
+  const listeners = new Set<(e: MediaQueryListEvent) => void>();
+  const mql = {
+    get matches() {
+      return matches;
+    },
+    media: "(min-width: 1024px)",
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: (event: string, cb: (e: MediaQueryListEvent) => void) => {
+      if (event === "change") listeners.add(cb);
+    },
+    removeEventListener: (event: string, cb: (e: MediaQueryListEvent) => void) => {
+      if (event === "change") listeners.delete(cb);
+    },
+    dispatchEvent: () => false,
+  } as unknown as MediaQueryList;
+  window.matchMedia = vi.fn().mockReturnValue(mql);
+  return {
+    setMatches(next: boolean) {
+      matches = next;
+      listeners.forEach((cb) => cb({ matches: next } as MediaQueryListEvent));
+    },
+  };
+}
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp sage",
@@ -72,6 +105,12 @@ function renderDrawer(invoice: Invoice | null, onClose = vi.fn()) {
     ),
   };
 }
+
+// Default to desktop for every test unless a test overrides it — matches
+// this drawer's real usage (it never mounts below `lg` in the first place).
+beforeEach(() => {
+  mockMatchMedia(true);
+});
 
 afterEach(() => {
   cleanup();
@@ -188,8 +227,78 @@ describe("ExpenseDetailDrawer", () => {
     document.body.removeChild(nested);
   });
 
-  it("is hidden below lg via the wrapping class", () => {
+});
+
+describe("ExpenseDetailDrawer — desktop-only mount (H1)", () => {
+  it("does not mount and does not lock body scroll when the viewport is below lg", () => {
+    mockMatchMedia(false);
     const { container } = renderDrawer(makeInvoice());
-    expect(container.querySelector(".hidden.lg\\:block")).not.toBeNull();
+    expect(container.innerHTML).toBe("");
+    expect(screen.queryByTestId("expense-detail-drawer")).toBeNull();
+    expect(document.body.style.overflow).toBe("");
+  });
+
+  it("mounts and locks body scroll once the viewport crosses into desktop", () => {
+    const media = mockMatchMedia(false);
+    renderDrawer(makeInvoice());
+    expect(screen.queryByTestId("expense-detail-drawer")).toBeNull();
+    expect(document.body.style.overflow).toBe("");
+
+    act(() => media.setMatches(true));
+
+    expect(screen.getByTestId("expense-detail-drawer")).toBeDefined();
+    expect(document.body.style.overflow).toBe("hidden");
+  });
+
+  it("unmounts and releases the scroll-lock on a desktop→mobile resize", () => {
+    const media = mockMatchMedia(true);
+    renderDrawer(makeInvoice());
+    expect(screen.getByTestId("expense-detail-drawer")).toBeDefined();
+    expect(document.body.style.overflow).toBe("hidden");
+
+    act(() => media.setMatches(false));
+
+    expect(screen.queryByTestId("expense-detail-drawer")).toBeNull();
+    expect(document.body.style.overflow).toBe("");
+  });
+});
+
+describe("ExpenseDetailDrawer — focus management (M3)", () => {
+  it("focuses the close button on open and restores focus to the trigger on close", () => {
+    const trigger = document.createElement("button");
+    trigger.textContent = "open row";
+    document.body.appendChild(trigger);
+    trigger.focus();
+    expect(document.activeElement).toBe(trigger);
+
+    const { rerender } = render(
+      <ExpenseDetailDrawer
+        invoice={makeInvoice()}
+        projectId="proj-1"
+        canManageInvoices
+        companyName={null}
+        typeStampClass={TYPE_STAMP_CLASS}
+        onMutated={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    const [, panelCloseButton] = screen.getAllByLabelText("invoices.drawer.close");
+    expect(document.activeElement).toBe(panelCloseButton);
+
+    rerender(
+      <ExpenseDetailDrawer
+        invoice={null}
+        projectId="proj-1"
+        canManageInvoices
+        companyName={null}
+        typeStampClass={TYPE_STAMP_CLASS}
+        onMutated={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(document.activeElement).toBe(trigger);
+    document.body.removeChild(trigger);
   });
 });

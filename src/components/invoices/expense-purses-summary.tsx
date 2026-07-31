@@ -298,6 +298,11 @@ export function ExpensePursesSummary({ invoices, meta, onMonthClick }: ExpensePu
                       key={mo.key}
                       role={onMonthClick ? "button" : undefined}
                       tabIndex={onMonthClick ? 0 : undefined}
+                      aria-label={
+                        onMonthClick
+                          ? `${monthYear.format(monthDate(mo.key))} · ${formatEURWhole(mo.total)}`
+                          : undefined
+                      }
                       className={`flex-1 rounded-[2px]${onMonthClick ? " cursor-pointer" : ""}`}
                       data-tip={`${monthYear.format(monthDate(mo.key))}|${formatEURWhole(
                         mo.total

@@ -68,22 +68,27 @@ export function ExpenseSplitView({
   // selection drops out of the filtered list later (e.g. a filter change),
   // re-default to the first row too. This synchronizes local state with two
   // external inputs (the `invoices` prop, fetched by the parent, and the
-  // URL) that can't be resolved at render time — the URL param also needs
-  // stripping as a side effect once consumed.
+  // URL) that can't be resolved at render time — the URL param is stripped
+  // as a side effect on first consumption regardless of whether the id was
+  // found, so a stale/foreign id never lingers to reopen the drawer later
+  // (e.g. after switching to Timeline/Category).
   useEffect(() => {
     if (selectedId && sorted.some((inv) => inv.id === selectedId)) return;
 
     if (!didHydrateFromUrl.current) {
       didHydrateFromUrl.current = true;
       const fromUrl = searchParams.get("invoice");
-      if (fromUrl && sorted.some((inv) => inv.id === fromUrl)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setSelectedId(fromUrl);
+      if (fromUrl) {
+        const found = sorted.some((inv) => inv.id === fromUrl);
+        if (found) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setSelectedId(fromUrl);
+        }
         const params = new URLSearchParams(searchParams.toString());
         params.delete("invoice");
         const qs = params.toString();
         router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-        return;
+        if (found) return;
       }
     }
 
@@ -146,14 +151,6 @@ export function ExpenseSplitView({
             </button>
           );
         })}
-        {sorted.length === 0 && (
-          <div
-            className="flex items-center justify-center px-10 py-10 text-[13px]"
-            style={{ color: "var(--muted)" }}
-          >
-            {t("grouped.emptyFiltered")}
-          </div>
-        )}
       </div>
 
       <div className="sticky top-4">

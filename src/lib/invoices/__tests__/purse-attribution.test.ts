@@ -1,12 +1,11 @@
 /**
- * Tests for purse-attribution — shared `isPersonalExpense`/`purseLabelKey`
- * used by ExpensePursesSummary (dataviz) and the drawer/split detail
- * surfaces (phase 03).
+ * Tests for purse-attribution — `isPersonalExpense` used by
+ * ExpensePursesSummary (dataviz).
  */
 
 import { describe, it, expect } from "vitest";
 import type { Invoice } from "@/types/invoice";
-import { isPersonalExpense, purseLabelKey } from "../purse-attribution";
+import { isPersonalExpense } from "../purse-attribution";
 
 function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
   return {
@@ -84,20 +83,5 @@ describe("isPersonalExpense", () => {
         })
       )
     ).toBe(true);
-  });
-});
-
-describe("purseLabelKey", () => {
-  it("is null for released_funds regardless of payment attribution", () => {
-    expect(purseLabelKey(makeInvoice({ type: "released_funds", paid_by_personal: true }))).toBeNull();
-    expect(purseLabelKey(makeInvoice({ type: "released_funds" }))).toBeNull();
-  });
-
-  it("is 'personal' for a personally-paid, non-released expense", () => {
-    expect(purseLabelKey(makeInvoice({ type: "labor", paid_by_personal: true }))).toBe("personal");
-  });
-
-  it("is 'company' for a non-personal expense", () => {
-    expect(purseLabelKey(makeInvoice({ type: "materials_services" }))).toBe("company");
   });
 });

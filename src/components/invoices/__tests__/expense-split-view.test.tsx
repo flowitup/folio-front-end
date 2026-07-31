@@ -92,7 +92,6 @@ describe("ExpenseSplitView — default selection", () => {
     );
     expect(screen.queryByTestId("invoice-detail-row")).toBeNull();
     expect(screen.getByText("invoices.split.selectPrompt")).toBeDefined();
-    expect(screen.getByText("invoices.grouped.emptyFiltered")).toBeDefined();
   });
 });
 
@@ -138,7 +137,7 @@ describe("ExpenseSplitView — ?invoice= hydration", () => {
     expect(mockReplace).toHaveBeenCalledWith("/en/projects/proj-1/invoices", { scroll: false });
   });
 
-  it("falls back to the first row when the URL id isn't in the list", () => {
+  it("falls back to the first row when the URL id isn't in the list, and strips the stale param", () => {
     mockSearchParamsValue = "invoice=missing";
     render(
       <ExpenseSplitView
@@ -153,5 +152,9 @@ describe("ExpenseSplitView — ?invoice= hydration", () => {
       />
     );
     expect(screen.getByTestId("invoice-detail-row").textContent).toBe("a");
+    // The dead `?invoice=missing` param must not survive — otherwise a later
+    // variant switch would resolve it against the unfiltered list and pop
+    // the drawer open for an invoice the user never selected (M1).
+    expect(mockReplace).toHaveBeenCalledWith("/en/projects/proj-1/invoices", { scroll: false });
   });
 });

@@ -27,7 +27,6 @@ interface ExpenseRowProps {
   onOpen: () => void;
   companyName: string | null;
   typeStampClass: Record<InvoiceType, string>;
-  regionId: string;
 }
 
 /** dd from an ISO "YYYY-MM-DD" date string, parsed from the literal parts (no timezone drift). */
@@ -59,7 +58,6 @@ export function ExpenseRow({
   onOpen,
   companyName,
   typeStampClass,
-  regionId,
 }: ExpenseRowProps) {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
@@ -76,7 +74,7 @@ export function ExpenseRow({
       role="button"
       tabIndex={0}
       aria-expanded={isOpen}
-      aria-controls={regionId}
+      aria-haspopup="dialog"
       className="expense-row cursor-pointer items-center"
       style={{
         display: "grid",

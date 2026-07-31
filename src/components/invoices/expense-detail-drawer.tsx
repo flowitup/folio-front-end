@@ -2,8 +2,13 @@
 
 /**
  * Right-side detail drawer for the Timeline/Category expense views (design
- * Expense redesign — phase 03). Desktop-only (hidden below `lg`, where the
- * mobile card list keeps its own inline detail path).
+ * Expense redesign — phase 03). Desktop-only — below `lg` the component
+ * doesn't mount at all (tracked via `matchMedia("(min-width: 1024px)")`),
+ * so its body scroll-lock and Esc listener never run on mobile, where the
+ * mobile card list keeps its own inline detail path. The match is read
+ * lazily in an effect (default `false`) so the SSR/initial render never
+ * mounts the drawer; a `change` listener releases the scroll-lock and
+ * unmounts the drawer immediately on a desktop→mobile resize.
  *
  * The body reuses `InvoiceDetailRow` (asCard mode) unmodified — the same
  * surface the mobile card list and the split view mount — so attachments,
@@ -13,11 +18,13 @@
  * a quick-glance identity strip while the body scrolls.
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Lock, X } from "lucide-react";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
+
+const DESKTOP_QUERY = "(min-width: 1024px)";
 
 interface ExpenseDetailDrawerProps {
   /** The selected invoice (from the already-loaded list), or null when closed. */
@@ -40,7 +47,27 @@ export function ExpenseDetailDrawer({
   onClose,
 }: ExpenseDetailDrawerProps) {
   const t = useTranslations("invoices");
-  const open = invoice !== null;
+
+  // Track viewport via matchMedia rather than CSS-only hiding, so the
+  // scroll-lock/Esc effects below never run below `lg` in the first place.
+  // Default false is SSR-safe; the real value is read on mount.
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia(DESKTOP_QUERY);
+    // Sync from an external source (the viewport) that isn't knowable during
+    // SSR/first render — mirrors the localStorage-read pattern used for the
+    // view-variant default elsewhere on this page.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsDesktop(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  const open = invoice !== null && isDesktop;
+
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   // Body scroll-lock while the drawer is open.
   useEffect(() => {
@@ -66,10 +93,22 @@ export function ExpenseDetailDrawer({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
-  if (!invoice) return null;
+  // Minimal focus management (full trap intentionally waived): move focus
+  // into the panel on open, restore it to whatever had focus before on close.
+  useEffect(() => {
+    if (!open) return;
+    previouslyFocusedRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+    return () => {
+      previouslyFocusedRef.current?.focus();
+    };
+  }, [open]);
+
+  if (!open || !invoice) return null;
 
   return (
-    <div className="hidden lg:block" data-testid="expense-detail-drawer">
+    <div data-testid="expense-detail-drawer">
       <button
         type="button"
         aria-label={t("drawer.close")}
@@ -111,6 +150,7 @@ export function ExpenseDetailDrawer({
             )}
           </div>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             aria-label={t("drawer.close")}

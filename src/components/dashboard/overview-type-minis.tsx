@@ -102,7 +102,12 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref }: OverviewTypeMini
                   </>
                 )}
               </div>
-              <svg width={CHART_W} height={CHART_H} viewBox={`0 0 ${CHART_W} ${CHART_H}`} aria-hidden="true" style={{ display: "block" }}>
+              <svg
+                viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+                aria-hidden="true"
+                className="block h-auto w-full"
+                style={{ maxWidth: CHART_W }}
+              >
                 <line x1={0} x2={CHART_W} y1={BASELINE_Y} y2={BASELINE_Y} stroke="var(--line)" strokeWidth={1} />
                 {bucket.monthly.map((p, i) => (
                   <rect

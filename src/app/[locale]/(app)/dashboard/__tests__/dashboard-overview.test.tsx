@@ -202,3 +202,67 @@ describe("DashboardPage — agenda grouping", () => {
     expect(overdueStamps.length).toBeGreaterThan(0);
   });
 });
+
+describe("DashboardPage — project switch race (H1)", () => {
+  it("ignores a stale response that resolves after switching to another project", async () => {
+    const projectA: Partial<Project> = { id: "p-a", name: "Project A", budget: 1000 };
+    const projectB: Partial<Project> = { id: "p-b", name: "Project B", budget: 2000 };
+
+    let resolveA: (value: unknown) => void = () => {};
+    const pendingA = new Promise((resolve) => {
+      resolveA = resolve;
+    });
+
+    mockUseProject.mockReturnValue({ selectedProject: projectA });
+    mockFetchInvoicesWithMeta.mockImplementation((pid: string) => {
+      if (pid === "p-a") return pendingA;
+      return Promise.resolve({
+        invoices: [
+          mkInvoice({ type: "labor", issue_date: "2026-07-05", total_amount: 200, paid_by_personal: false }),
+        ],
+        funds_released_total: 2000,
+        company_spent_total: 200,
+        personal_spent_total: 0,
+        company_name: null,
+      });
+    });
+    mockFetchTasks.mockResolvedValue([]);
+
+    const { rerender } = renderDashboard();
+
+    // Switch to project B before A's fetch has resolved.
+    mockUseProject.mockReturnValue({ selectedProject: projectB });
+    rerender(
+      <NextIntlClientProvider locale="en" messages={enMessages}>
+        <DashboardPage />
+      </NextIntlClientProvider>
+    );
+
+    // B's headline lands: budget 2000, spent 200 → left 1800. Read via the
+    // "Remaining" label's sibling — the raw figure also coincidentally
+    // matches the company purse's "left" in this fixture.
+    const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
+    const normalizeSpaces = (s: string) => s.replace(/[  ]/g, " ");
+    const headlineValue = () =>
+      normalizeSpaces(moneyPanel.getByText("Remaining").nextElementSibling?.textContent ?? "");
+    await waitFor(() => expect(headlineValue()).toBe(eur(1800)));
+
+    // A's stale response resolves late (budget 1000, spent 999 → left 1) — a
+    // race would overwrite B's figures with A's; the cancelled-flag guard
+    // must drop it instead.
+    resolveA({
+      invoices: [
+        mkInvoice({ type: "labor", issue_date: "2026-07-05", total_amount: 999, paid_by_personal: false }),
+      ],
+      funds_released_total: 1000,
+      company_spent_total: 999,
+      personal_spent_total: 0,
+      company_name: null,
+    });
+    // Let the (would-be) stale update's microtask chain fully drain before
+    // asserting it never landed.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(headlineValue()).toBe(eur(1800));
+  });
+});

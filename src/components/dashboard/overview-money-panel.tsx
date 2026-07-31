@@ -54,7 +54,14 @@ export interface OverviewMoneyPanelProps {
   monthDelta: MonthDelta;
   pendingRefunds: PendingRefunds;
   purses: MoneyPurseView[];
+  /** True while the underlying invoices fetch hasn't settled yet for the
+   * current project — figures aren't real yet (e.g. spentTotal defaults to
+   * 0), so show placeholders instead of a briefly-wrong "full budget
+   * remaining" flash. */
+  loading?: boolean;
 }
+
+const PLACEHOLDER = "—";
 
 /** Dark ink "ledger" card — headline credit remaining, this month's spend with
  * a 6-month sparkline, the credit progress bar, and the company/personal
@@ -66,12 +73,14 @@ export function OverviewMoneyPanel({
   monthDelta,
   pendingRefunds,
   purses,
+  loading = false,
 }: OverviewMoneyPanelProps) {
   const t = useTranslations("dashboard");
   const tInvoices = useTranslations("invoices");
   const tProjects = useTranslations("projects");
   const locale = useLocale();
   const monthFmt = new Intl.DateTimeFormat(locale, { month: "short" });
+  const fig = (value: string) => (loading ? PLACEHOLDER : value);
 
   const sparkMax = Math.max(...monthlySeries.map((p) => p.total), 1);
   const sparkX = (i: number) => 4 + i * 30;
@@ -106,16 +115,19 @@ export function OverviewMoneyPanel({
               {stamp}
             </span>
           </div>
-          <div className="num mt-1 text-[17px] font-medium" style={{ letterSpacing: "-.02em" }}>
-            {formatEURWhole(left)}{" "}
+          <div
+            className="num mt-1 text-[17px] font-medium"
+            style={{ letterSpacing: "-.02em", color: !loading && left < 0 ? NEGATIVE_ON_DARK : undefined }}
+          >
+            {fig(formatEURWhole(left))}{" "}
             <span className="font-sans text-[11px]" style={{ opacity: 0.6 }}>
               {tInvoices("summary.left")}
             </span>
           </div>
           <div className="mt-0.5 text-[11px]" style={{ opacity: 0.62 }}>
-            {tInvoices("summary.released")} <span className="num">{formatEURWhole(purse.released)}</span>
+            {tInvoices("summary.released")} <span className="num">{fig(formatEURWhole(purse.released))}</span>
             {" · "}
-            {tInvoices("summary.spent")} <span className="num">{formatEURWhole(purse.spent)}</span>
+            {tInvoices("summary.spent")} <span className="num">{fig(formatEURWhole(purse.spent))}</span>
           </div>
         </div>
       </div>
@@ -125,7 +137,7 @@ export function OverviewMoneyPanel({
   return (
     <div
       className="rounded-[14px] p-6"
-      style={{ background: "var(--ink)", color: "var(--paper)" }}
+      style={{ background: "var(--ink)", color: "var(--paper)", opacity: loading ? 0.55 : 1, transition: "opacity 150ms" }}
       data-testid="overview-money-panel"
     >
       <div className="flex flex-wrap items-start justify-between gap-6">
@@ -136,9 +148,9 @@ export function OverviewMoneyPanel({
             </div>
             <div
               className="num mt-2 text-[34px] font-medium leading-none"
-              style={{ letterSpacing: "-.02em", color: budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined }}
+              style={{ letterSpacing: "-.02em", color: !loading && budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined }}
             >
-              {formatEURWhole(budgetMetrics.left)}
+              {fig(formatEURWhole(budgetMetrics.left))}
             </div>
           </div>
           <div className="flex items-end gap-6" style={{ borderLeft: "1px solid rgba(245,241,234,0.14)", paddingLeft: 32 }}>
@@ -147,22 +159,28 @@ export function OverviewMoneyPanel({
                 {t("money.spentThisMonth")}
               </div>
               <div className="num mt-2.5 text-[24px] font-medium leading-none" style={{ letterSpacing: "-.02em" }}>
-                {formatEURWhole(monthDelta.current.total)}
+                {fig(formatEURWhole(monthDelta.current.total))}
               </div>
               <div className="mt-1.5 text-[11px]" style={{ opacity: 0.62 }}>
-                {monthDelta.deltaPct !== null && monthDelta.previous && (
-                  <span style={{ color: monthDelta.deltaPct < 0 ? POSITIVE_ON_DARK : undefined }}>
-                    {tInvoices("summary.vsMonth", {
-                      delta: `${monthDelta.deltaPct > 0 ? "+" : ""}${monthDelta.deltaPct}%`,
-                      month: monthFmt.format(monthKeyToDate(monthDelta.previous.key)),
-                    })}
-                    {" · "}
-                  </span>
+                {loading ? (
+                  PLACEHOLDER
+                ) : (
+                  <>
+                    {monthDelta.deltaPct !== null && monthDelta.previous && (
+                      <span style={{ color: monthDelta.deltaPct < 0 ? POSITIVE_ON_DARK : undefined }}>
+                        {tInvoices("summary.vsMonth", {
+                          delta: `${monthDelta.deltaPct > 0 ? "+" : ""}${monthDelta.deltaPct}%`,
+                          month: monthFmt.format(monthKeyToDate(monthDelta.previous.key)),
+                        })}
+                        {" · "}
+                      </span>
+                    )}
+                    {tInvoices("invoiceCount", { n: monthDelta.current.count })}
+                  </>
                 )}
-                {tInvoices("invoiceCount", { n: monthDelta.current.count })}
               </div>
             </div>
-            {sparkPts.length > 0 && (
+            {!loading && sparkPts.length > 0 && (
               <div>
                 <svg width={158} height={40} viewBox="0 0 158 40" aria-hidden="true">
                   <path d={sparkArea} fill="rgba(232,132,60,0.14)" />
@@ -187,7 +205,7 @@ export function OverviewMoneyPanel({
             )}
           </div>
         </div>
-        {pendingRefunds.count > 0 && (
+        {!loading && pendingRefunds.count > 0 && (
           <span
             className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-medium uppercase tracking-[0.05em]"
             style={{ background: REFUND_PILL_BG, border: `1px solid ${REFUND_PILL_BORDER}`, color: REFUND_PILL_TEXT }}
@@ -201,15 +219,19 @@ export function OverviewMoneyPanel({
         <div className="relative h-[10px] overflow-hidden rounded-full" style={{ background: TRACK_BG }}>
           <span
             className="absolute inset-y-0 left-0 rounded-full"
-            style={{ background: "var(--accent)", width: `${budgetMetrics.pctClamped}%` }}
+            style={{ background: "var(--accent)", width: loading ? "0%" : `${budgetMetrics.pctClamped}%` }}
           />
         </div>
         <div className="mt-2 flex justify-between text-[11px]" style={{ opacity: 0.62 }}>
           <span>{formatEURWhole(0)}</span>
           <span>
-            <span className="num">{t("money.pctSpent", { pct: budgetMetrics.pct, spent: formatEURWhole(spentTotal) })}</span>
+            <span className="num">
+              {loading
+                ? PLACEHOLDER
+                : t("money.pctSpent", { pct: budgetMetrics.pct, spent: formatEURWhole(spentTotal) })}
+            </span>
           </span>
-          <span>{formatEURWhole(budgetMetrics.denominator)}</span>
+          <span>{fig(formatEURWhole(budgetMetrics.denominator))}</span>
         </div>
       </div>
 

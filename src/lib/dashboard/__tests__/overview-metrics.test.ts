@@ -189,6 +189,15 @@ describe("computePendingRefunds", () => {
     ];
     expect(computePendingRefunds(invoices)).toEqual({ count: 2, total: 150 });
   });
+
+  it("excludes released_funds/return rows even if flagged personal+refundable (BE-unreachable edge, FE shouldn't rely on the guard)", () => {
+    const invoices = [
+      mkInvoice({ type: "released_funds", issue_date: "2026-06-01", total_amount: 900, paid_by_personal: true, refundable_status: "refundable" }),
+      mkInvoice({ type: "return", issue_date: "2026-06-01", total_amount: 60, paid_by_personal: true, refundable_status: "refund_pending" }),
+      mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 100, paid_by_personal: true, refundable_status: "refundable" }),
+    ];
+    expect(computePendingRefunds(invoices)).toEqual({ count: 1, total: 100 });
+  });
 });
 
 describe("buildPurseViews", () => {

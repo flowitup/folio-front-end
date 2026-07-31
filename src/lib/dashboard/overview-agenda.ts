@@ -8,6 +8,11 @@ import { toDateKey, startOfWeekMonday, addWeeks } from "@/lib/planning/week";
 export type AgendaGroupKey = "overdue" | "today" | "thisWeek";
 export const AGENDA_GROUP_ORDER: readonly AgendaGroupKey[] = ["overdue", "today", "thisWeek"];
 
+/** Overdue items are capped below the total item budget so a project with a
+ * long overdue backlog can't starve the Today/This week groups — the card is
+ * titled "This week" and should keep showing this week's items. */
+const OVERDUE_GROUP_CAP = 3;
+
 export interface AgendaGroup {
   key: AgendaGroupKey;
   tasks: Task[];
@@ -43,10 +48,13 @@ export function groupAgendaTasks(
   }
 
   // Cap total items across groups (Overdue/Today take priority over This
-  // week), then drop any group left empty by the cap.
+  // week), then drop any group left empty by the cap. Overdue is additionally
+  // capped at OVERDUE_GROUP_CAP so a long backlog can't consume the whole
+  // budget and hide Today/This week.
   let remaining = maxItems;
   return AGENDA_GROUP_ORDER.map((key) => {
-    const capped = byGroup[key].slice(0, Math.max(remaining, 0));
+    const groupCap = key === "overdue" ? Math.min(OVERDUE_GROUP_CAP, remaining) : remaining;
+    const capped = byGroup[key].slice(0, Math.max(groupCap, 0));
     remaining -= capped.length;
     return { key, tasks: capped };
   }).filter((g) => g.tasks.length > 0);

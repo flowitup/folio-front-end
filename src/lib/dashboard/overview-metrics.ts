@@ -143,6 +143,7 @@ export function computePendingRefunds(invoices: Invoice[]): PendingRefunds {
   let count = 0;
   let total = 0;
   for (const inv of invoices) {
+    if (!isSpendInvoice(inv)) continue;
     if (!isPersonalExpense(inv)) continue;
     if (inv.refundable_status === "refundable" || inv.refundable_status === "refund_pending") {
       count += 1;

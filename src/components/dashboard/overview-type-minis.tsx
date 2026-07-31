@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { formatEURWhole } from "@/lib/utils/formatters";
+import { useDataTip } from "@/components/invoices/data-tip";
 import {
   monthKeyToDate,
   sharedMonthlyMax,
@@ -38,6 +39,9 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref }: OverviewTypeMini
   const tInvoices = useTranslations("invoices");
   const locale = useLocale();
   const monthFmt = new Intl.DateTimeFormat(locale, { month: "short" });
+  // Same delegated hover tooltip the Expense summary uses on its month bars.
+  const monthYearFmt = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" });
+  const { onMouseMove, onMouseLeave, overlay } = useDataTip();
 
   const sharedMax = sharedMonthlyMax(buckets);
   const sixMonthTotal = buckets.reduce((s, b) => s + b.total, 0);
@@ -45,7 +49,12 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref }: OverviewTypeMini
   const last = buckets[0]?.monthly[buckets[0].monthly.length - 1];
 
   return (
-    <div className="folio-card flex flex-col p-6" data-testid="overview-type-minis">
+    <div
+      className="folio-card flex flex-col p-6"
+      data-testid="overview-type-minis"
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+    >
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <div className="flex items-baseline gap-2.5">
           <h2 className="font-display text-[18px] font-semibold tracking-tight">
@@ -138,6 +147,21 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref }: OverviewTypeMini
                 {heights.map((h, i) => (
                   <circle key={`${bucket.monthly[i].key}-dot`} cx={midX(i)} cy={(BASELINE_Y - h).toFixed(1)} r={2.75} fill="var(--ink)" stroke="var(--card-paper)" strokeWidth={1.5} />
                 ))}
+                {/* Invisible per-month hit areas (painted last = on top) so the
+                    hover target is the full column, not just the thin bar. */}
+                {bucket.monthly.map((p, i) => (
+                  <rect
+                    key={`${p.key}-hit`}
+                    x={barX(i) - 5}
+                    y={BASELINE_Y - PLOT_H - 6}
+                    width={34}
+                    height={PLOT_H + 24}
+                    fill="transparent"
+                    data-tip={`${monthYearFmt.format(monthKeyToDate(p.key))}|${formatEURWhole(
+                      p.total
+                    )}|${tInvoices("invoiceCount", { n: p.count })}`}
+                  />
+                ))}
               </svg>
             </div>
           );
@@ -154,6 +178,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref }: OverviewTypeMini
           </span>
         </span>
       </div>
+      {overlay}
     </div>
   );
 }

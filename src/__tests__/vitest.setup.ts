@@ -26,23 +26,6 @@ Element.prototype.releasePointerCapture = () => {}
 // Mock scrollIntoView (not supported in jsdom)
 Element.prototype.scrollIntoView = () => {}
 
-// Default matchMedia stub (jsdom has none) — reports "no match" so components
-// gating on viewport queries (e.g. desktop-only drawers) default safely.
-// Tests that need a specific match/change behavior override window.matchMedia
-// locally.
-if (typeof window.matchMedia === 'undefined') {
-  window.matchMedia = (query: string): MediaQueryList => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => false,
-  })
-}
-
 // Global localStorage mock (ensures localStorage is always available in tests)
 const localStorageStore: Record<string, string> = {}
 Object.defineProperty(window, 'localStorage', {

@@ -3,7 +3,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import type { Invoice } from "@/types/invoice";
 import { formatEUR, formatEURWhole } from "@/lib/utils/formatters";
-import { isPersonalExpense } from "@/lib/invoices/purse-attribution";
 import { PurseDial } from "./purse-dial";
 import { useDataTip } from "./data-tip";
 
@@ -42,8 +41,6 @@ interface ExpensePursesSummaryProps {
   /** Unfiltered project invoice list (all types). */
   invoices: Invoice[];
   meta: ExpenseSummaryMeta;
-  /** When provided, month bars become clickable and jump the command bar's range to that month. */
-  onMonthClick?: (key: string) => void;
 }
 
 const EXPENSE_TYPES = ["labor", "materials_services", "others"] as const;
@@ -75,6 +72,17 @@ interface PurseBreakdown {
   types: Record<ExpenseType, { total: number; count: number }>;
 }
 
+/**
+ * Mirrors the BE bucket rule: a personally-paid expense the company already
+ * reimbursed (status refunded, not by bank) counts as company money.
+ */
+function isPersonalExpense(inv: Invoice): boolean {
+  return (
+    Boolean(inv.paid_by_personal) &&
+    !(inv.refundable_status === "refunded" && inv.refunded_by !== "bank")
+  );
+}
+
 function emptyBreakdown(): PurseBreakdown {
   return {
     count: 0,
@@ -87,7 +95,7 @@ function emptyBreakdown(): PurseBreakdown {
   };
 }
 
-export function ExpensePursesSummary({ invoices, meta, onMonthClick }: ExpensePursesSummaryProps) {
+export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryProps) {
   const t = useTranslations("invoices");
   const locale = useLocale();
   const { onMouseMove, onMouseLeave, overlay } = useDataTip();
@@ -296,28 +304,10 @@ export function ExpensePursesSummary({ invoices, meta, onMonthClick }: ExpensePu
                   {monthSeries.map((mo, i) => (
                     <span
                       key={mo.key}
-                      role={onMonthClick ? "button" : undefined}
-                      tabIndex={onMonthClick ? 0 : undefined}
-                      aria-label={
-                        onMonthClick
-                          ? `${monthYear.format(monthDate(mo.key))} · ${formatEURWhole(mo.total)}`
-                          : undefined
-                      }
-                      className={`flex-1 rounded-[2px]${onMonthClick ? " cursor-pointer" : ""}`}
+                      className="flex-1 rounded-[2px]"
                       data-tip={`${monthYear.format(monthDate(mo.key))}|${formatEURWhole(
                         mo.total
                       )}|${t("invoiceCount", { n: mo.count })}`}
-                      onClick={onMonthClick ? () => onMonthClick(mo.key) : undefined}
-                      onKeyDown={
-                        onMonthClick
-                          ? (e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                onMonthClick(mo.key);
-                              }
-                            }
-                          : undefined
-                      }
                       style={{
                         // 4% floor keeps zero/tiny months visible in the timeline.
                         height: `${

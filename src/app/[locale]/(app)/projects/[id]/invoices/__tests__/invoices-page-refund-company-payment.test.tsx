@@ -7,19 +7,16 @@
  * - Payment method arrow renders for refund-tracked M&S row, absent when refundable_status null
  * - Refund status stamp renders per status (refundable/refund_pending/refunded)
  * - "refunded" status uses "stamp positive" class
- *
- * Transfer-action visibility gating + click behavior used to be tested here
- * against the flat table's row-level button; that button now lives inside
- * InvoiceDetailRow (opened on row click) — see
- * invoice-detail-content-paid-by-company.test.tsx for the gating, and
- * transfer-to-company-payment-action.test.tsx for the click behavior itself.
+ * - Transfer action visible only for M&S + null refundable_status + canManageInvoices
+ * - Transfer action calls setRefundableStatus("refundable") on click + reloads
+ * - Transfer action shows forbidden toast on 403
  *
  * Dual-render note: jsdom renders both mobile cards and desktop table.
  * Desktop table assertions are scoped via data-testid="invoices-table-desktop".
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, within, fireEvent } from "@testing-library/react";
 import type { Invoice } from "@/types/invoice";
 
 // ── Module mocks (hoisted before dynamic imports) ─────────────────────────────
@@ -97,6 +94,17 @@ vi.mock("@/components/invoices/invoice-mobile-card", () => ({
   ),
 }));
 
+vi.mock("@/lib/api/billing/refundable-invoices", () => ({
+  setRefundableStatus: vi.fn(),
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 vi.mock("@/lib/api/tags-client", () => ({
   fetchTagsClient: vi.fn().mockResolvedValue([]),
 }));
@@ -106,6 +114,9 @@ vi.mock("@/lib/api/tags-client", () => ({
 import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
+import { setRefundableStatus } from "@/lib/api/billing/refundable-invoices";
+import { toast } from "sonner";
+import { ApiError } from "@/lib/api/http";
 import InvoicesPage from "../page";
 
 const mockUseParams = vi.mocked(useParams);
@@ -114,6 +125,7 @@ const mockUseRouter = vi.mocked(useRouter);
 const mockUsePathname = vi.mocked(usePathname);
 const mockUseAuth = vi.mocked(useAuth);
 const mockFetchInvoicesWithMeta = vi.mocked(fetchInvoicesWithMeta);
+const mockSetRefundableStatus = vi.mocked(setRefundableStatus);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -436,3 +448,179 @@ describe("InvoicesPage — refund status stamps", () => {
   });
 });
 
+describe("InvoicesPage — transfer to company payment action", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupNavigationMocks();
+  });
+
+  it("shows transfer button for M&S row with null refundable_status when canManageInvoices", async () => {
+    setupAuthMock(true);
+    setupFetchMock([makeInvoice({ type: "materials_services", refundable_status: null })]);
+    render(<InvoicesPage />);
+
+    await waitFor(
+      () => {
+        const desktop = screen.getByTestId("invoices-table-desktop");
+        // aria-label is the i18n key via mock
+        expect(
+          within(desktop).queryByRole("button", { name: "invoices.refund.action.transfer" }),
+        ).not.toBeNull();
+      },
+      { timeout: 5000 },
+    );
+  });
+
+  it("does NOT show transfer button when canManageInvoices is false", async () => {
+    setupAuthMock(false);
+    setupFetchMock([makeInvoice({ type: "materials_services", refundable_status: null })]);
+    render(<InvoicesPage />);
+
+    await waitFor(
+      () => screen.getByTestId("invoices-table-desktop"),
+      { timeout: 5000 },
+    );
+
+    const desktop = screen.getByTestId("invoices-table-desktop");
+    expect(
+      within(desktop).queryByRole("button", { name: "invoices.refund.action.transfer" }),
+    ).toBeNull();
+  });
+
+  it("does NOT show transfer button for M&S row when refundable_status is already set", async () => {
+    setupAuthMock(true);
+    setupFetchMock([makeInvoice({ type: "materials_services", refundable_status: "refundable" })], {
+      company_name: "Co",
+    });
+    render(<InvoicesPage />);
+
+    await waitFor(
+      () => screen.getByTestId("invoices-table-desktop"),
+      { timeout: 5000 },
+    );
+
+    const desktop = screen.getByTestId("invoices-table-desktop");
+    expect(
+      within(desktop).queryByRole("button", { name: "invoices.refund.action.transfer" }),
+    ).toBeNull();
+  });
+
+  it("does NOT show transfer button for non-M&S invoice types", async () => {
+    setupAuthMock(true);
+    setupFetchMock([makeInvoice({ type: "labor", refundable_status: null })]);
+    render(<InvoicesPage />);
+
+    await waitFor(
+      () => screen.getByTestId("invoices-table-desktop"),
+      { timeout: 5000 },
+    );
+
+    const desktop = screen.getByTestId("invoices-table-desktop");
+    expect(
+      within(desktop).queryByRole("button", { name: "invoices.refund.action.transfer" }),
+    ).toBeNull();
+  });
+
+  it("calls setRefundableStatus('refundable') and reloads on click", async () => {
+    setupAuthMock(true);
+    mockSetRefundableStatus.mockResolvedValue(undefined);
+    // First call returns the initial list, second call (after reload) returns empty
+    mockFetchInvoicesWithMeta
+      .mockResolvedValueOnce({
+        invoices: [makeInvoice({ type: "materials_services", refundable_status: null })],
+        total: 1,
+        funds_released_total: 0,
+        funds_released_company_total: 0,
+        funds_released_personal_total: 0,
+        company_spent_total: 0,
+        personal_spent_total: 0,
+        company_name: null,
+      })
+      .mockResolvedValue({
+        invoices: [],
+        total: 0,
+        funds_released_total: 0,
+        funds_released_company_total: 0,
+        funds_released_personal_total: 0,
+        company_spent_total: 0,
+        personal_spent_total: 0,
+        company_name: null,
+      });
+
+    render(<InvoicesPage />);
+
+    const transferBtn = await waitFor(
+      () => {
+        const desktop = screen.getByTestId("invoices-table-desktop");
+        return within(desktop).getByRole("button", { name: "invoices.refund.action.transfer" });
+      },
+      { timeout: 5000 },
+    );
+
+    fireEvent.click(transferBtn);
+
+    await waitFor(
+      () => {
+        expect(mockSetRefundableStatus).toHaveBeenCalledWith("inv-base", "refundable");
+        expect(vi.mocked(toast.success)).toHaveBeenCalledWith(
+          "invoices.refund.transferSuccess",
+        );
+      },
+      { timeout: 5000 },
+    );
+  });
+
+  it("shows forbidden toast on 403", async () => {
+    setupAuthMock(true);
+    mockSetRefundableStatus.mockRejectedValue(new ApiError("Forbidden", 403));
+    setupFetchMock([makeInvoice({ type: "materials_services", refundable_status: null })]);
+
+    render(<InvoicesPage />);
+
+    const transferBtn = await waitFor(
+      () => {
+        const desktop = screen.getByTestId("invoices-table-desktop");
+        return within(desktop).getByRole("button", { name: "invoices.refund.action.transfer" });
+      },
+      { timeout: 5000 },
+    );
+
+    fireEvent.click(transferBtn);
+
+    await waitFor(
+      () => {
+        expect(vi.mocked(toast.error)).toHaveBeenCalledWith(
+          "invoices.refund.transferForbidden",
+        );
+      },
+      { timeout: 5000 },
+    );
+  });
+
+  it("shows generic error toast on non-403 failure", async () => {
+    setupAuthMock(true);
+    mockSetRefundableStatus.mockRejectedValue(new Error("Server error"));
+    setupFetchMock([makeInvoice({ type: "materials_services", refundable_status: null })]);
+
+    render(<InvoicesPage />);
+
+    const transferBtn = await waitFor(
+      () => {
+        const desktop = screen.getByTestId("invoices-table-desktop");
+        return within(desktop).getByRole("button", { name: "invoices.refund.action.transfer" });
+      },
+      { timeout: 5000 },
+    );
+
+    fireEvent.click(transferBtn);
+
+    await waitFor(
+      () => {
+        expect(vi.mocked(toast.error)).toHaveBeenCalledWith(
+          "invoices.refund.transferError",
+        );
+      },
+      { timeout: 5000 },
+    );
+  });
+});

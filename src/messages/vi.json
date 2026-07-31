@@ -71,60 +71,26 @@
     }
   },
   "dashboard": {
-    "title": "Tổng quan",
-    "welcome": "Bức tranh hằng ngày về tiến độ công trình của bạn.",
-    "activeProjects": "Dự án đang hoạt động",
-    "pendingTasks": "Công việc chờ xử lý",
-    "teamMembers": "Thành viên nhóm",
-    "awaitingData": "Đang chờ dữ liệu",
-    "recentActivity": "Hoạt động gần đây",
-    "noActivity": "Không có hoạt động gần đây",
-    "inProgress": "Đang thực hiện",
-    "phaseLabel": "Giai đoạn {n} · {name}",
-    "started": "Khởi công",
-    "targetHandover": "Bàn giao dự kiến",
-    "dayOf": "Ngày {day} / {total}",
-    "onTrack": "đúng tiến độ",
-    "logEntry": "Ghi nhật ký",
-    "dailyReport": "Báo cáo ngày",
-    "plot": "Lô đất",
-    "buildPhases": "Các giai đoạn",
-    "viewGantt": "Xem Gantt",
-    "phases": {
-      "site": "Chuẩn bị mặt bằng",
-      "foundation": "Móng",
-      "framing": "Khung",
-      "roof": "Mái & vỏ ngoài",
-      "mep": "Điện & nước",
-      "finish": "Hoàn thiện nội thất",
-      "handover": "Bàn giao"
+    "loadError": "Không thể tải dữ liệu tổng quan",
+    "money": {
+      "spentThisMonth": "Đã chi tháng này",
+      "pctSpent": "{pct}% đã chi · {spent}"
     },
-    "phaseDone": "✓ xong",
-    "phaseInProgress": "Đang làm",
-    "budgetVsActual": "Ngân sách vs thực tế",
-    "budgetOf": "trên {total}",
-    "spentSoFar": "đã chi tới nay",
-    "todayOnSite": "Hôm nay tại công trường",
-    "workersLabel": "công nhân",
-    "hoursSoFar": "giờ đến nay",
-    "laborToday": "nhân công hôm nay",
-    "rebarInspectionTitle": "Lịch kiểm tra cốt thép",
-    "rebarInspectionBody": "Mai 10:00 — bureau de contrôle Apave. Antoine cần có mặt.",
-    "dismiss": "Bỏ qua",
-    "siteProgress": "Tiến độ công trường",
-    "recentPhotos": "Ảnh mới",
-    "journal": "Nhật ký",
-    "seeFullJournal": "Xem toàn bộ nhật ký",
-    "budget": {
-      "foundation": "Móng & mặt bằng",
-      "framing": "Khung & kết cấu",
-      "envelope": "Mái & vỏ ngoài",
-      "mep": "Điện & nước",
-      "finish": "Hoàn thiện nội thất",
-      "reserve": "Dự phòng"
+    "spendByType": {
+      "title": "Chi tiêu hàng tháng theo loại",
+      "rangeShared": "{from} – {to} · cùng thang đo",
+      "viewExpense": "Chi phí",
+      "currentHighlighted": "Tháng hiện tại được làm nổi bật · đường xu hướng chồng lên",
+      "sixMonthSpend": "Chi tiêu 6 tháng"
     },
-    "fundsReleased": "Quỹ đã giải ngân",
-    "fundsReleasedDesc": "Tổng hóa đơn đã thanh toán tạo tự động"
+    "agenda": {
+      "title": "Tuần này",
+      "viewAll": "Lịch trình",
+      "overdue": "Quá hạn",
+      "today": "Hôm nay",
+      "thisWeek": "Tuần này",
+      "empty": "Không có việc gì trong tuần này."
+    }
   },
   "projects": {
     "title": "Dự án",

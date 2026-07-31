@@ -71,60 +71,26 @@
     }
   },
   "dashboard": {
-    "title": "Aperçu",
-    "welcome": "Une photo quotidienne de l'avancement de votre chantier.",
-    "activeProjects": "Projets actifs",
-    "pendingTasks": "Tâches en attente",
-    "teamMembers": "Membres de l'équipe",
-    "awaitingData": "En attente de données",
-    "recentActivity": "Activité récente",
-    "noActivity": "Aucune activité récente à afficher",
-    "inProgress": "En cours",
-    "phaseLabel": "Phase {n} · {name}",
-    "started": "Démarré",
-    "targetHandover": "Livraison prévue",
-    "dayOf": "Jour {day} sur {total}",
-    "onTrack": "dans les temps",
-    "logEntry": "Saisir une entrée",
-    "dailyReport": "Rapport quotidien",
-    "plot": "Parcelle",
-    "buildPhases": "Phases du chantier",
-    "viewGantt": "Voir Gantt",
-    "phases": {
-      "site": "Préparation site",
-      "foundation": "Fondations",
-      "framing": "Charpente",
-      "roof": "Toiture & enveloppe",
-      "mep": "Plomberie & électricité",
-      "finish": "Finitions intérieures",
-      "handover": "Livraison"
+    "loadError": "Impossible de charger les données de l'aperçu",
+    "money": {
+      "spentThisMonth": "Dépensé ce mois-ci",
+      "pctSpent": "{pct}% dépensé · {spent}"
     },
-    "phaseDone": "✓ terminé",
-    "phaseInProgress": "En cours",
-    "budgetVsActual": "Budget vs réel",
-    "budgetOf": "sur {total}",
-    "spentSoFar": "dépensé à ce jour",
-    "todayOnSite": "Aujourd'hui sur site",
-    "workersLabel": "ouvriers",
-    "hoursSoFar": "heures à ce jour",
-    "laborToday": "main-d'œuvre du jour",
-    "rebarInspectionTitle": "Inspection ferraillage prévue",
-    "rebarInspectionBody": "Demain 10h00 — bureau de contrôle Apave. Antoine doit être sur site.",
-    "dismiss": "Ignorer",
-    "siteProgress": "Avancement chantier",
-    "recentPhotos": "Photos récentes",
-    "journal": "Journal",
-    "seeFullJournal": "Voir le journal complet",
-    "budget": {
-      "foundation": "Fondations & site",
-      "framing": "Charpente & structure",
-      "envelope": "Toiture & enveloppe",
-      "mep": "Plomberie & électricité",
-      "finish": "Finitions intérieures",
-      "reserve": "Réserve"
+    "spendByType": {
+      "title": "Dépenses mensuelles par type",
+      "rangeShared": "{from} – {to} · échelle commune",
+      "viewExpense": "Dépenses",
+      "currentHighlighted": "Mois en cours en surbrillance · tendance superposée",
+      "sixMonthSpend": "Dépenses sur 6 mois"
     },
-    "fundsReleased": "Fonds débloqués",
-    "fundsReleasedDesc": "Total des factures payées créées automatiquement"
+    "agenda": {
+      "title": "Cette semaine",
+      "viewAll": "Agenda",
+      "overdue": "En retard",
+      "today": "Aujourd'hui",
+      "thisWeek": "Cette semaine",
+      "empty": "Rien à l'agenda cette semaine."
+    }
   },
   "projects": {
     "title": "Projets",

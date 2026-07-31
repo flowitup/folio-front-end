@@ -71,60 +71,26 @@
     }
   },
   "dashboard": {
-    "title": "Overview",
-    "welcome": "A daily picture of how your build is coming together.",
-    "activeProjects": "Active Projects",
-    "pendingTasks": "Pending Tasks",
-    "teamMembers": "Team Members",
-    "awaitingData": "Awaiting data",
-    "recentActivity": "Recent activity",
-    "noActivity": "No recent activity to display",
-    "inProgress": "In progress",
-    "phaseLabel": "Phase {n} · {name}",
-    "started": "Started",
-    "targetHandover": "Target handover",
-    "dayOf": "Day {day} of {total}",
-    "onTrack": "on track",
-    "logEntry": "Log entry",
-    "dailyReport": "Daily report",
-    "plot": "Plot",
-    "buildPhases": "Build phases",
-    "viewGantt": "View Gantt",
-    "phases": {
-      "site": "Site prep",
-      "foundation": "Foundation",
-      "framing": "Framing",
-      "roof": "Roof & envelope",
-      "mep": "Plumbing & electric",
-      "finish": "Interior finish",
-      "handover": "Handover"
+    "loadError": "Failed to load overview data",
+    "money": {
+      "spentThisMonth": "Spent this month",
+      "pctSpent": "{pct}% spent · {spent}"
     },
-    "phaseDone": "✓ done",
-    "phaseInProgress": "In progress",
-    "budgetVsActual": "Budget vs actual",
-    "budgetOf": "of {total}",
-    "spentSoFar": "spent so far",
-    "todayOnSite": "Today on site",
-    "workersLabel": "workers",
-    "hoursSoFar": "hours so far",
-    "laborToday": "labor today",
-    "rebarInspectionTitle": "Rebar inspection scheduled",
-    "rebarInspectionBody": "Tomorrow 10:00 — bureau de contrôle Apave. Antoine to be on site.",
-    "dismiss": "Dismiss",
-    "siteProgress": "Site progress",
-    "recentPhotos": "Recent photos",
-    "journal": "Journal",
-    "seeFullJournal": "See full journal",
-    "budget": {
-      "foundation": "Foundation & site",
-      "framing": "Framing & structure",
-      "envelope": "Roof & envelope",
-      "mep": "Plumbing & electric",
-      "finish": "Interior finish",
-      "reserve": "Reserve"
+    "spendByType": {
+      "title": "Monthly spend by type",
+      "rangeShared": "{from} – {to} · shared scale",
+      "viewExpense": "Expense",
+      "currentHighlighted": "Current month highlighted · trend line overlaid",
+      "sixMonthSpend": "6-month spend"
     },
-    "fundsReleased": "Funds released",
-    "fundsReleasedDesc": "Total paid invoices auto-created from billing"
+    "agenda": {
+      "title": "This week",
+      "viewAll": "Agenda",
+      "overdue": "Overdue",
+      "today": "Today",
+      "thisWeek": "This week",
+      "empty": "Nothing on the agenda this week."
+    }
   },
   "projects": {
     "title": "Projects",

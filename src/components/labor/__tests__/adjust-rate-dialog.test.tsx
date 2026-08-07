@@ -173,7 +173,10 @@ describe("AdjustRateDialog — history list", () => {
       // €150.00 appears twice: once as the worker's current_daily_rate header,
       // once as RATE_CHANGE_1's daily_rate in the history list.
       expect(screen.getAllByText("€150.00").length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText("€180.00")).toBeDefined();
+      // Date-dependent: once RATE_CHANGE_2's effective_date (2026-08-01) is in the
+      // past, €180.00 also becomes the current-rate header — assert presence,
+      // not uniqueness, so the test holds on both sides of that date.
+      expect(screen.getAllByText("€180.00").length).toBeGreaterThanOrEqual(1);
     });
   });
 

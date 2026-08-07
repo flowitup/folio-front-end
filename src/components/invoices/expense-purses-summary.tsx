@@ -21,12 +21,14 @@ import { useDataTip } from "./data-tip";
  *   buckets (flagged payment methods only, refunds netted, company-refunded
  *   rows reassigned).
  * - The dark card's total is a client-side sum over ALL expense rows (any
- *   payment method, refunds excluded — they live in the credit strip), so it
- *   always matches the table below even when some expenses carry no flagged
- *   method and therefore sit outside both meta buckets.
- * - Per-type rows are client-side attribution and may drift from the meta
- *   purse spent when refunds/unflagged rows exist; the purse headers stay
- *   the source of truth for who paid.
+ *   payment method) NET of refunds: each `return` row is subtracted from the
+ *   purse that received the money back, so Total = company spent + personal
+ *   spent. The credit strip below still itemizes the refunds received.
+ * - Per-type rows are client-side attribution, also net of refunds — a refund
+ *   is deducted from the category of the invoice it refunds (fallback:
+ *   materials & services, the only refund-tracked type). They may still drift
+ *   from the meta purse spent when unflagged rows exist; the purse headers
+ *   stay the source of truth for who paid.
  */
 export interface ExpenseSummaryMeta {
   fundsReleasedTotal: number;
@@ -139,6 +141,27 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   }
   const expenseCount = company.count + personal.count;
 
+  // ── Net refunds into the purses ───────────────────────────────────────────
+  // Each `return` is subtracted from the purse that received the money back
+  // (its own paid_by flags — mirrors the BE netting) and from the category of
+  // the invoice it refunds. Unlinked refunds fall back to materials & services,
+  // the only refund-tracked type. Counts stay expense-only: the credit strip
+  // below carries the refund count.
+  const invoiceById = new Map(invoices.map((i) => [i.id, i]));
+  for (const ref of refunds) {
+    const purse = isPersonalExpense(ref) ? personal : company;
+    const sourceType = ref.refunds_invoice_id
+      ? invoiceById.get(ref.refunds_invoice_id)?.type
+      : undefined;
+    const type: ExpenseType = (EXPENSE_TYPES as readonly string[]).includes(
+      sourceType ?? ""
+    )
+      ? (sourceType as ExpenseType)
+      : "materials_services";
+    purse.types[type].total += ref.total_amount; // negative amount
+    purse.spent += ref.total_amount;
+  }
+
   // ── Meta figures (purse headers) + client expense total (dark card) ───────
   const releasedTotal = meta.fundsReleasedTotal;
   const releasedPersonal = meta.fundsReleasedPersonalTotal ?? 0;
@@ -227,7 +250,12 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
         <div className="flex flex-col gap-2.5">
           {EXPENSE_TYPES.map((type) => {
             const row = breakdown.types[type];
-            const width = breakdown.spent > 0 ? (row.total / breakdown.spent) * 100 : 0;
+            // Clamp to [0, 100]: refund netting can push a small category
+            // negative (over-refunded), which must not render a negative bar.
+            const width =
+              breakdown.spent > 0
+                ? Math.min(100, Math.max(0, (row.total / breakdown.spent) * 100))
+                : 0;
             return (
               <div key={type} className="flex items-center gap-2.5">
                 <span

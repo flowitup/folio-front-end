@@ -113,6 +113,108 @@ describe("ExpensePursesSummary — credit strip", () => {
   });
 });
 
+describe("ExpensePursesSummary — refund netting", () => {
+  it("deducts refunds from the dark-card total so it equals company + personal spent", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "exp-1", total_amount: 10000 }), // company
+          makeInvoice({ id: "exp-2", total_amount: 5000, paid_by_personal: true }),
+          makeInvoice({
+            id: "ref-1",
+            type: "return",
+            total_amount: -1000,
+            refunds_invoice_id: "exp-1",
+          }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    // Headline = 10 000 + 5 000 − 1 000 = 14 000 (net), not 15 000 (gross).
+    // Scoped to the headline element: the monthly timeline stays gross by
+    // design, so 15 000 legitimately appears elsewhere on the card.
+    const headline = screen.getByText("invoices.summary.totalExpenses")
+      .nextElementSibling as HTMLElement;
+    expect(headline.textContent).toMatch(/14[^\d]*000/);
+    expect(headline.textContent).not.toMatch(/15[^\d]*000/);
+  });
+
+  it("deducts a linked refund from the refunded invoice's category and purse", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "exp-lab", type: "labor", total_amount: 2000 }),
+          makeInvoice({ id: "exp-mat", total_amount: 3000 }),
+          makeInvoice({
+            id: "ref-lab",
+            type: "return",
+            total_amount: -500,
+            refunds_invoice_id: "exp-lab",
+          }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const card = screen
+      .getByText("invoices.summary.companyPurse")
+      .closest(".folio-card") as HTMLElement;
+    // Labor row shows 2 000 − 500 = 1 500; materials stays 3 000.
+    expect(card.textContent).toMatch(/1[^\d]*500/);
+    expect(card.textContent).toMatch(/3[^\d]*000/);
+    expect(card.textContent).not.toMatch(/2[^\d]*000/);
+  });
+
+  it("falls back to materials & services for unlinked refunds and follows paid_by for the purse", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "exp-p", total_amount: 4000, paid_by_personal: true }),
+          makeInvoice({
+            id: "ref-p",
+            type: "return",
+            total_amount: -250,
+            paid_by_personal: true,
+            refunds_invoice_id: null,
+          }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const card = screen
+      .getByText("invoices.summary.personalPurse")
+      .closest(".folio-card") as HTMLElement;
+    // Personal materials row nets to 4 000 − 250 = 3 750.
+    expect(card.textContent).toMatch(/3[^\d]*750/);
+    expect(card.textContent).not.toMatch(/4[^\d]*000/);
+  });
+
+  it("never renders a negative-width bar when a category is over-refunded", () => {
+    const { container } = render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "exp-oth", type: "others", total_amount: 100 }),
+          makeInvoice({ id: "exp-mat2", total_amount: 1000 }),
+          makeInvoice({
+            id: "ref-oth",
+            type: "return",
+            total_amount: -300,
+            refunds_invoice_id: "exp-oth",
+          }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const bars = Array.from(
+      container.querySelectorAll<HTMLElement>(".folio-card span[data-tip]")
+    );
+    for (const bar of bars) {
+      const width = parseFloat(bar.style.width || "0");
+      expect(width).toBeGreaterThanOrEqual(0);
+      expect(width).toBeLessThanOrEqual(100);
+    }
+  });
+});
+
 describe("ExpensePursesSummary — overspent purse", () => {
   it("shows the true negative balance instead of clamping to 0 €", () => {
     render(

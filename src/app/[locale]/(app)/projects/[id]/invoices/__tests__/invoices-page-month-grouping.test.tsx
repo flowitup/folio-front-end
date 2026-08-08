@@ -290,6 +290,67 @@ describe("InvoicesPage — month-grouped all tab", () => {
     ).not.toBeNull();
   });
 
+  it("collapses a month via its header toggle (rows + stamps hidden, subtotal kept) and restores it on re-click", async () => {
+    setupMocks(fixture());
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByText("LAB-2026-0001");
+
+    const juneToggle = within(desktop).getByRole("button", { name: "June 2026" });
+    expect(juneToggle.getAttribute("aria-expanded")).toBe("true");
+
+    fireEvent.click(juneToggle);
+    expect(juneToggle.getAttribute("aria-expanded")).toBe("false");
+    // June contents hidden…
+    expect(within(desktop).queryByText("LAB-2026-0001")).toBeNull();
+    expect(within(desktop).queryByText("ARC-2026-0050")).toBeNull();
+    expect(within(desktop).queryByText("invoices.types.return")).toBeNull();
+    // …but the header keeps the subtotal, and July is untouched.
+    const juneHeader = within(desktop).getByTestId("invoices-month-header-desktop-2026-06");
+    expect(juneHeader.textContent).toContain(formatEUR(55));
+    expect(within(desktop).queryByText("ARC-2026-0100")).not.toBeNull();
+
+    fireEvent.click(juneToggle);
+    expect(within(desktop).queryByText("LAB-2026-0001")).not.toBeNull();
+  });
+
+  it("collapse state is shared with the mobile list (one page-level state, dual render)", async () => {
+    setupMocks(fixture());
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByText("LAB-2026-0001");
+
+    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+    // The mobile June header's toggle reflects the same collapsed state.
+    const mobileJune = screen.getByTestId("invoices-month-header-mobile-2026-06");
+    expect(
+      within(mobileJune).getByRole("button", { name: "June 2026" }).getAttribute("aria-expanded")
+    ).toBe("false");
+  });
+
+  it("re-expands a collapsed month when a deep-link selects one of its invoices", async () => {
+    setupMocks(fixture());
+    const { rerender } = render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByText("LAB-2026-0001");
+    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+    expect(within(desktop).queryByText("LAB-2026-0001")).toBeNull();
+
+    // Simulate ?invoice=june-pay arriving (URL paste / back button).
+    mockUseSearchParams.mockReturnValue(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { get: (k: string) => (k === "invoice" ? "june-pay" : null), toString: () => "invoice=june-pay" } as any
+    );
+    rerender(<InvoicesPage />);
+
+    await waitFor(() => {
+      expect(within(desktop).queryByText("LAB-2026-0001")).not.toBeNull();
+    });
+  });
+
   it("opens the inline detail from a flat labor row via the ?invoice= URL toggle", async () => {
     setupMocks(fixture());
     render(<InvoicesPage />);

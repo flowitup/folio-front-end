@@ -317,6 +317,8 @@
     "issueDate": "Issue date",
     "serviceMonth": "Payment for month",
     "recipient": "Recipient",
+    "workerPicker": "Worker",
+    "workerNotLinked": "Not linked",
     "recipientAddress": "Address",
     "totalAmount": "Total",
     "items": "Line items",
@@ -442,6 +444,9 @@
     "appliedToMethodHintWithLabel": "The return's payment method will follow the selected invoice's method ({label}).",
     "paidWithAvoir": "Paid with avoir {number} ({amount})",
     "errorServiceMonthNotAllowed": "Payment for month can only be set on labor expenses.",
+    "serviceMonthRequired": "Payment for month is required for labor expenses.",
+    "errorWorkerLinkNotAllowed": "A worker can only be linked on labor expenses.",
+    "errorWorkerNotInProject": "The selected worker is not part of this project.",
     "refund": {
       "status": {
         "refundable": "Refundable",
@@ -482,6 +487,11 @@
       "outstandingAvoirs": "{n, plural, =1 {1 outstanding avoir} other {# outstanding avoirs}}",
       "pendingRefunds": "Pending refunds",
       "vsMonth": "{delta} vs {month}"
+    },
+    "byWorker": {
+      "totalPaid": "Total paid",
+      "lastPayment": "Last payment",
+      "noMonthGroup": "No month"
     }
   },
   "planning": {
@@ -588,6 +598,7 @@
     "summaryToggleBreakdown": "Toggle per-worker breakdown",
     "summaryDrillDown": "Click to view per-worker breakdown",
     "summaryMonthPickerAll": "All months",
+    "summaryUnassignedHint": "+ {n} unassigned",
     "workersBadge": "{n} workers",
     "role": {
       "label": "Role",
@@ -744,6 +755,38 @@
       "effectiveFrom": "From {date}",
       "errorRatePositive": "Rate must be greater than 0",
       "errorGeneric": "An error occurred"
+    },
+    "payments": {
+      "tab": "Payments",
+      "statusColumn": "Status",
+      "owed": "Owed",
+      "paid": "Paid",
+      "balance": "Balance",
+      "status": {
+        "unpaid": "Unpaid",
+        "partial": "Partial",
+        "settled": "Settled",
+        "overpaid": "Overpaid"
+      },
+      "recordPayment": "Record payment",
+      "recordPaymentFor": "Record payment for {name}",
+      "recordedToast": "Payment recorded",
+      "recordFailed": "Failed to record payment",
+      "errorWorkerRequired": "Select a worker",
+      "errorAmountPositive": "Amount must be greater than 0",
+      "expandInvoices": "Show invoices",
+      "collapseInvoices": "Hide invoices",
+      "viewInExpenses": "View in Expenses",
+      "unassignedTitle": "Unassigned",
+      "unassignedHint": "{n} unassigned",
+      "invoiceCount": "{n} invoice(s)",
+      "assignWorker": "Assign worker",
+      "assignedToast": "Invoice assigned",
+      "assignFailed": "Failed to assign",
+      "noMonthTitle": "No month set",
+      "assignToMonth": "Assign to {month}",
+      "emptyMonth": "No data for this month",
+      "loadFailed": "Failed to load payment data"
     }
   },
   "acceptInvite": {

@@ -317,6 +317,8 @@
     "issueDate": "Ngày phát hành",
     "serviceMonth": "Tháng thanh toán",
     "recipient": "Người nhận",
+    "workerPicker": "Công nhân",
+    "workerNotLinked": "Chưa liên kết",
     "recipientAddress": "Địa chỉ",
     "totalAmount": "Tổng",
     "items": "Danh mục",
@@ -442,6 +444,9 @@
     "appliedToMethodHintWithLabel": "Phương thức thanh toán của khoản trả hàng sẽ theo phương thức của hóa đơn đã chọn ({label}).",
     "paidWithAvoir": "Đã thanh toán bằng avoir {number} ({amount})",
     "errorServiceMonthNotAllowed": "Tháng thanh toán chỉ có thể được đặt cho chi phí nhân công.",
+    "serviceMonthRequired": "Tháng thanh toán là bắt buộc đối với chi phí nhân công.",
+    "errorWorkerLinkNotAllowed": "Chỉ có thể liên kết công nhân với chi phí nhân công.",
+    "errorWorkerNotInProject": "Công nhân đã chọn không thuộc dự án này.",
     "refund": {
       "status": {
         "refundable": "Có thể hoàn tiền",
@@ -482,6 +487,11 @@
       "outstandingAvoirs": "{n, plural, other {# avoir chưa áp dụng}}",
       "pendingRefunds": "Hoàn tiền đang chờ",
       "vsMonth": "{delta} so với {month}"
+    },
+    "byWorker": {
+      "totalPaid": "Tổng đã trả",
+      "lastPayment": "Lần trả gần nhất",
+      "noMonthGroup": "Không có tháng"
     }
   },
   "planning": {
@@ -588,6 +598,7 @@
     "summaryToggleBreakdown": "Hiển thị chi tiết theo công nhân",
     "summaryDrillDown": "Nhấn để xem chi tiết theo công nhân",
     "summaryMonthPickerAll": "Tất cả tháng",
+    "summaryUnassignedHint": "+ {n} chưa gán",
     "workersBadge": "{n} công nhân",
     "role": {
       "label": "Vai trò",
@@ -744,6 +755,38 @@
       "effectiveFrom": "Từ ngày {date}",
       "errorRatePositive": "Mức lương phải lớn hơn 0",
       "errorGeneric": "Đã xảy ra lỗi"
+    },
+    "payments": {
+      "tab": "Thanh toán",
+      "statusColumn": "Trạng thái",
+      "owed": "Phải trả",
+      "paid": "Đã trả",
+      "balance": "Số dư",
+      "status": {
+        "unpaid": "Chưa trả",
+        "partial": "Trả một phần",
+        "settled": "Đã thanh toán đủ",
+        "overpaid": "Trả dư"
+      },
+      "recordPayment": "Ghi nhận thanh toán",
+      "recordPaymentFor": "Ghi nhận thanh toán cho {name}",
+      "recordedToast": "Đã ghi nhận thanh toán",
+      "recordFailed": "Không thể ghi nhận thanh toán",
+      "errorWorkerRequired": "Vui lòng chọn nhân công",
+      "errorAmountPositive": "Số tiền phải lớn hơn 0",
+      "expandInvoices": "Hiện hóa đơn",
+      "collapseInvoices": "Ẩn hóa đơn",
+      "viewInExpenses": "Xem trong Chi phí",
+      "unassignedTitle": "Chưa gán",
+      "unassignedHint": "{n} chưa gán",
+      "invoiceCount": "{n} hóa đơn",
+      "assignWorker": "Gán nhân công",
+      "assignedToast": "Đã gán hóa đơn",
+      "assignFailed": "Không thể gán hóa đơn",
+      "noMonthTitle": "Chưa có tháng",
+      "assignToMonth": "Gán vào {month}",
+      "emptyMonth": "Không có dữ liệu cho tháng này",
+      "loadFailed": "Không thể tải dữ liệu thanh toán"
     }
   },
   "acceptInvite": {

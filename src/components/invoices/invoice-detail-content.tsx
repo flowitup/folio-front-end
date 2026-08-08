@@ -115,7 +115,9 @@ export function InvoiceDetailContent({
           err,
           (remaining) => t("errorRefundExceedsSource", { remaining }),
           t("errorServiceMonthNotAllowed"),
-          t("errorAppliedExceedsTarget")
+          t("errorAppliedExceedsTarget"),
+          t("errorWorkerLinkNotAllowed"),
+          t("errorWorkerNotInProject")
         )
       );
     } finally {
@@ -238,6 +240,7 @@ export function InvoiceDetailContent({
             service_month: invoice.service_month ?? null,
             settled_via: invoice.settled_via ?? null,
             applied_to_invoice_id: invoice.applied_to_invoice_id ?? null,
+            worker_id: invoice.worker_id ?? null,
           }}
         />
       ) : (

@@ -19,12 +19,13 @@ import { ViewToggle, type AttendanceViewMode } from "@/components/labor/view-tog
 import { LogDayDialog } from "@/components/labor/log-day-dialog";
 import { EditAttendanceDialog } from "@/components/labor/edit-attendance-dialog";
 import { LaborSummary } from "@/components/labor/labor-summary";
+import { LaborPaymentsTab } from "@/components/labor/labor-payments-tab";
 
 import { ActivityDialog } from "@/components/labor/activity-dialog";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 
-import type { Worker, LaborEntry, LaborActivity, LaborDayDescription, LaborSummaryResponse, LaborMonthlySummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
+import type { Worker, LaborEntry, LaborActivity, LaborDayDescription, LaborSummaryResponse, LaborMonthlySummaryResponse, LaborPaymentsSummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
 import type { ProjectTag } from "@/lib/api/tags";
 import {
@@ -37,6 +38,7 @@ import {
   deleteAttendance,
   fetchLaborSummary,
   fetchLaborMonthlySummary,
+  fetchLaborPaymentsSummary,
   fetchLaborActivities,
   createLaborActivity,
   updateLaborActivity,
@@ -47,7 +49,7 @@ import {
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { fetchLaborRolesAction, fetchProjectTagsAction } from "./actions";
 
-type TabType = "workers" | "attendance" | "summary";
+type TabType = "workers" | "attendance" | "summary" | "payments";
 
 function monthToRange(month: string) {
   if (!month) return { from: undefined, to: undefined };
@@ -76,6 +78,10 @@ export default function LaborPage() {
   // so a user invited as a project admin/manager can manage labor here.
   const projectPerms = projects.find((p) => p.id === projectId)?.my_permissions;
   const canManageLabor = canOnProject("project:manage_labor", user?.permissions, projectPerms);
+  // Payments tab mutations are invoice writes (record payment, quick-assign
+  // worker/month), so they're gated on the invoices permission — same flag
+  // the Invoices page uses — not the labor-entry permission above.
+  const canManageInvoices = canOnProject("project:manage_invoices", user?.permissions, projectPerms);
 
   // State
   const [activeTab, setActiveTab] = useState<TabType>("summary");
@@ -141,6 +147,18 @@ export default function LaborPage() {
   // Fetched via a today-scoped summary so it is correct regardless of the
   // month filter (the filtered summary describes the period, not today).
   const [onSiteToday, setOnSiteToday] = useState(0);
+
+  // Recorded-payments rollup (labor invoices) — fetched once here (not
+  // per-tab) so both the Summary tab's Paid/Balance columns and the
+  // Payments tab share one fetch instead of each re-fetching on every tab
+  // switch. `loadPaymentsSummary` is also handed to the Payments tab so its
+  // mutations (record payment, quick-assign) refresh this shared state.
+  const [paymentsSummary, setPaymentsSummary] = useState<LaborPaymentsSummaryResponse | null>(null);
+  const loadPaymentsSummary = useCallback(async (): Promise<LaborPaymentsSummaryResponse> => {
+    const data = await fetchLaborPaymentsSummary(projectId);
+    setPaymentsSummary(data);
+    return data;
+  }, [projectId]);
 
   // Load workers
   const loadWorkers = useCallback(async () => {
@@ -223,13 +241,18 @@ export default function LaborPage() {
     }
   }, [projectId, summaryMonth]);
 
-  // Initial load — workers + roles + tags in parallel.
+  // Initial load — workers + roles + tags + payments summary in parallel.
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
       setError(null);
       await Promise.all([
         loadWorkers(),
+        loadPaymentsSummary().catch(() => {
+          // Non-fatal: the Paid/Balance columns and the Payments tab's
+          // default-month pick degrade gracefully (dashes / current month)
+          // when this fails; the rest of the page still loads.
+        }),
         fetchLaborRolesAction().then((result) => {
           if (result.success) {
             setRoles(result.data.roles);
@@ -246,7 +269,7 @@ export default function LaborPage() {
       setIsLoading(false);
     };
     load();
-  }, [loadWorkers, projectId]);
+  }, [loadWorkers, loadPaymentsSummary, projectId]);
 
   useEffect(() => {
     if (activeTab === "attendance") {
@@ -379,14 +402,14 @@ export default function LaborPage() {
       {/* Segmented tabs */}
       <div className="flex items-center">
         <div className="seg w-full sm:w-auto">
-          {(["summary", "attendance", "workers"] as const).map((tab) => (
+          {(["summary", "attendance", "workers", "payments"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
               className={activeTab === tab ? "on" : ""}
             >
-              {t(tab)}
+              {tab === "payments" ? t("payments.tab") : t(tab)}
             </button>
           ))}
         </div>
@@ -530,9 +553,20 @@ export default function LaborPage() {
           monthlySummary={monthlySummary}
           workers={workers}
           onSiteToday={onSiteToday}
+          paymentsSummary={paymentsSummary}
           isLoading={isTabLoading}
           month={summaryMonth}
           onMonthChange={setSummaryMonth}
+        />
+      )}
+
+      {!isLoading && activeTab === "payments" && (
+        <LaborPaymentsTab
+          projectId={projectId}
+          canManage={canManageInvoices}
+          workers={workers}
+          paymentsSummary={paymentsSummary}
+          onReloadPaymentsSummary={loadPaymentsSummary}
         />
       )}
 

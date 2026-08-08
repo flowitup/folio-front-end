@@ -1,11 +1,20 @@
 /**
- * Tests for InvoicesPage — labor "payment for month" (service_month) column
+ * Tests for InvoicesPage — labor "payment for month" (service_month) display
+ *
+ * Phase 09 replaced the labor tab's flat table (with a per-row Month
+ * column) with the worker-grouped LaborInvoicesByWorker accordion, whose
+ * expanded history groups invoices under service_month headers instead —
+ * the per-row Month cell/column is gone by design (redundant under
+ * headers). This file was updated accordingly; see
+ * labor-invoices-by-worker.test.tsx for the grouping component's own
+ * dedicated unit coverage (month order, no-month-last, totals, etc.).
  *
  * Covers:
- * - Month column header appears on the labor tab only
- * - Month column is absent on the "all" and other type tabs
- * - Month cell shows the localized "Month Year" label when service_month is set
- * - Month cell shows "—" when service_month is null
+ * - The flat table's Month column never renders (not on labor, materials_services,
+ *   or "all" — the header cell was removed entirely, not just hidden per-tab)
+ * - The labor tab renders the grouped accordion instead of the flat table
+ * - Expanding a worker group shows the localized "Month Year" header when
+ *   service_month is set, and the "No month" header when it's null
  *
  * Dual-render note: jsdom renders both mobile cards and the desktop table.
  * Assertions on the desktop table are scoped via data-testid="invoices-table-desktop"
@@ -137,7 +146,7 @@ describe("InvoicesPage — service_month column", () => {
     vi.clearAllMocks();
   });
 
-  it("shows the Month column header on the labor tab", async () => {
+  it("labor tab renders the worker-grouped view instead of the flat table (no serviceMonth column header anywhere)", async () => {
     setupMocks([makeInvoice({ type: "labor" })]);
     render(<InvoicesPage />);
 
@@ -148,7 +157,8 @@ describe("InvoicesPage — service_month column", () => {
 
     await waitFor(() => {
       const desktop = screen.getByTestId("invoices-table-desktop");
-      expect(within(desktop).queryByText("invoices.serviceMonth")).not.toBeNull();
+      expect(within(desktop).queryByText("invoices.serviceMonth")).toBeNull();
+      expect(within(desktop).queryByTestId("labor-by-worker-desktop")).not.toBeNull();
     });
   });
 
@@ -178,7 +188,7 @@ describe("InvoicesPage — service_month column", () => {
     });
   });
 
-  it("renders the localized month/year when service_month is set", async () => {
+  it("shows the localized month/year as the worker group's last-payment chip when service_month is set", async () => {
     setupMocks([makeInvoice({ type: "labor", service_month: "2026-06-01" })]);
     render(<InvoicesPage />);
 
@@ -193,7 +203,7 @@ describe("InvoicesPage — service_month column", () => {
     });
   });
 
-  it("renders '—' in the Month cell when service_month is null", async () => {
+  it("groups a service_month-less labor invoice under the 'No month' history header once its worker group expands", async () => {
     setupMocks([makeInvoice({ type: "labor", service_month: null })]);
     render(<InvoicesPage />);
 
@@ -202,10 +212,14 @@ describe("InvoicesPage — service_month column", () => {
     const tabBtn = screen.getByRole("button", { name: /invoices\.types\.labor/i });
     fireEvent.click(tabBtn);
 
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    // worker_id is unset on this fixture, so the invoice lands in the
+    // Unassigned group — expand it to reveal the month-grouped history.
+    const group = await within(desktop).findByTestId("labor-by-worker-group-desktop-unassigned");
+    fireEvent.click(group.querySelector("button")!);
+
     await waitFor(() => {
-      const desktop = screen.getByTestId("invoices-table-desktop");
-      const dashes = within(desktop).queryAllByText("—");
-      expect(dashes.length).toBeGreaterThanOrEqual(1);
+      expect(within(desktop).queryByText("invoices.byWorker.noMonthGroup")).not.toBeNull();
     });
   });
 });

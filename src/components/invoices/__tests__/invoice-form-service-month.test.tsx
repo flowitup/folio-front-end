@@ -5,7 +5,9 @@
  * - month input renders when type === "labor"
  * - month input is absent for other invoice types
  * - submit maps "2026-06" → "2026-06-01" in the payload
- * - empty month input omits/nulls service_month in the payload
+ * - empty month blocks submission for a NEW labor invoice (required)
+ * - empty month is still allowed when editing a legacy labor invoice
+ * - service_month omitted from the payload for non-labor types
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -43,6 +45,9 @@ vi.mock("next-intl", () => ({
       errorDescriptionRequired: "Description is required",
       errorQuantityPositive: "Quantity must be greater than 0",
       errorServiceMonthNotAllowed: "Payment for month can only be set on labor expenses.",
+      serviceMonthRequired: "Payment for month is required for labor expenses.",
+      workerPicker: "Worker",
+      workerNotLinked: "Not linked",
       "select.label": "Select tag",
     };
     return map[key] ?? key;
@@ -91,7 +96,9 @@ describe("InvoiceForm — service_month field", () => {
     );
     expect(screen.getByTestId("service-month-input")).toBeDefined();
 
-    const typeSelect = screen.getByRole("combobox");
+    // The first combobox is always the type selector — the worker picker
+    // (also a <select>, hence also role="combobox") renders alongside it.
+    const typeSelect = screen.getAllByRole("combobox")[0];
     fireEvent.change(typeSelect, { target: { value: "others" } });
 
     expect(screen.queryByTestId("service-month-input")).toBeNull();
@@ -102,8 +109,11 @@ describe("InvoiceForm — service_month field", () => {
       <InvoiceForm onSubmit={mockOnSubmit} initialValues={{ type: "labor" }} />
     );
 
-    const recipientInput = screen.getAllByRole("textbox")[0];
-    fireEvent.change(recipientInput, { target: { value: "Worker Co" } });
+    // New + labor + unlinked worker picker: the free-text recipient is
+    // required too (see invoice-form-unlinked-labor-recipient.test.tsx).
+    fireEvent.change(screen.getByTestId("unlinked-labor-recipient-input"), {
+      target: { value: "June Worker" },
+    });
 
     const descInput = screen.getAllByPlaceholderText(/description/i)[0];
     fireEvent.change(descInput, { target: { value: "June labor" } });
@@ -119,13 +129,45 @@ describe("InvoiceForm — service_month field", () => {
     expect(payload.service_month).toBe("2026-06-01");
   });
 
-  it("submits null service_month when the month field is left empty", async () => {
+  it("marks the month input required for a NEW labor invoice and blocks submission when empty", async () => {
     render(
       <InvoiceForm onSubmit={mockOnSubmit} initialValues={{ type: "labor" }} />
     );
 
-    const recipientInput = screen.getAllByRole("textbox")[0];
-    fireEvent.change(recipientInput, { target: { value: "Worker Co" } });
+    // required is set client-side; the browser's own constraint validation
+    // stops the submit event before React's handler runs (same behavior the
+    // recipient field already relies on elsewhere in this form).
+    const monthInput = screen.getByTestId("service-month-input");
+    expect(monthInput).toBeRequired();
+
+    const descInput = screen.getAllByPlaceholderText(/description/i)[0];
+    fireEvent.change(descInput, { target: { value: "June labor" } });
+
+    const submitBtn = screen.getByRole("button", { name: /save/i });
+    fireEvent.click(submitBtn);
+
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+  });
+
+  it("does not mark the month input required when editing an existing labor invoice", () => {
+    render(
+      <InvoiceForm
+        onSubmit={mockOnSubmit}
+        initialValues={{ type: "labor" }}
+        editingInvoiceId="inv-legacy"
+      />
+    );
+    expect(screen.getByTestId("service-month-input")).not.toBeRequired();
+  });
+
+  it("submits null service_month when editing a legacy labor invoice with an empty month", async () => {
+    render(
+      <InvoiceForm
+        onSubmit={mockOnSubmit}
+        initialValues={{ type: "labor", recipient_name: "Worker Co" }}
+        editingInvoiceId="inv-legacy"
+      />
+    );
 
     const descInput = screen.getAllByPlaceholderText(/description/i)[0];
     fireEvent.change(descInput, { target: { value: "June labor" } });

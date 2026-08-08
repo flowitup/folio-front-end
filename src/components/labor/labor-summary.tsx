@@ -4,11 +4,19 @@ import { useMemo, useState, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Calendar, ChevronRight, ChevronDown, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { LaborSummaryResponse, LaborMonthlySummaryResponse, MonthlySummaryRow, Worker } from "@/types/labor";
+import type {
+  LaborSummaryResponse,
+  LaborMonthlySummaryResponse,
+  LaborPaymentsSummaryResponse,
+  LaborPaymentsMonthBucket,
+  MonthlySummaryRow,
+  Worker,
+} from "@/types/labor";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { DEFAULT_ROLE_I18N_KEYS } from "@/lib/utils/default-role-names";
+import { findMonthBucket } from "@/components/labor/labor-payments-tab-state";
 
 interface LaborSummaryProps {
   projectId: string;
@@ -24,6 +32,11 @@ interface LaborSummaryProps {
    *  the page from a today-scoped summary fetch so it stays correct in both
    *  the all-history and single-month views. */
   onSiteToday?: number;
+  /** Recorded-payments rollup (labor invoices), used to derive the Paid
+   *  column in both table modes and Balance in single-month mode. Optional
+   *  so legacy call sites/tests that don't share this fetch still render —
+   *  Paid falls back to "—" and Balance to the full Total everywhere. */
+  paymentsSummary?: LaborPaymentsSummaryResponse | null;
   isLoading: boolean;
   month: string;
   onMonthChange: (value: string) => void;
@@ -118,6 +131,7 @@ export function LaborSummary({
   monthlySummary,
   workers,
   onSiteToday = 0,
+  paymentsSummary,
   isLoading,
   month,
   onMonthChange,
@@ -226,6 +240,53 @@ export function LaborSummary({
   const totalBankedHours = summary?.total_banked_hours ?? 0;
   const totalBonusDays = summary?.total_bonus_days ?? 0;
   const totalBonusCost = summary?.total_bonus_cost ?? 0;
+
+  // ── Paid/Balance lookups (labor-payments-summary) ──────────────────────
+  // Single-month mode: the one bucket matching the viewed month (or null
+  // when nothing has been paid that month yet, or the fetch wasn't shared).
+  const monthBucket = useMemo(
+    () => findMonthBucket(paymentsSummary ?? null, month),
+    [paymentsSummary, month],
+  );
+  const paidByWorkerId = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const w of monthBucket?.workers ?? []) m.set(w.worker_id, w.paid);
+    return m;
+  }, [monthBucket]);
+  // Grand-total Paid/Balance for the single-month footer — summed from the
+  // same per-worker matches as the rows above (NOT the bucket's total_paid,
+  // which also folds in unassigned payments that aren't attributable to any
+  // row here — see the all-history rule below for where that belongs).
+  const footerPaid = useMemo(() => {
+    if (!summary) return 0;
+    return summary.rows.reduce((sum, r) => sum + (paidByWorkerId.get(r.worker_id) ?? 0), 0);
+  }, [summary, paidByWorkerId]);
+  const footerBalance = (summary?.total_cost ?? 0) - footerPaid;
+
+  // All-history mode: every bucket keyed by "yyyy-mm" so each visible month
+  // header/sub-row can look up its own Paid figure in O(1).
+  const bucketByMonthKey = useMemo(() => {
+    const m = new Map<string, LaborPaymentsMonthBucket>();
+    for (const b of paymentsSummary?.months ?? []) {
+      if (b.year != null && b.month != null) {
+        m.set(`${b.year}-${String(b.month).padStart(2, "0")}`, b);
+      }
+    }
+    return m;
+  }, [paymentsSummary]);
+  // Month-header Paid = bucket.total_paid, which already folds in
+  // assigned + unassigned payments for that month (the money that actually
+  // left). Deliberately no Balance column in this mode: recorded payments
+  // aren't tracked per bonus day, so subtracting Paid from this table's
+  // bonus-inclusive Total would produce a figure that doesn't reconcile —
+  // Balance only appears in single-month mode, where both sides are scoped
+  // to the same worker+month.
+  const totalPaidAllHistory = useMemo(() => {
+    return filteredMonthlyRows.reduce((sum, r) => {
+      const ym = `${r.year}-${String(r.month).padStart(2, "0")}`;
+      return sum + (bucketByMonthKey.get(ym)?.total_paid ?? 0);
+    }, 0);
+  }, [filteredMonthlyRows, bucketByMonthKey]);
 
   if (isLoading) {
     return (
@@ -427,12 +488,16 @@ export function LaborSummary({
                     <th style={{ textAlign: "right" }}>{t("daysWorked")}</th>
                     <th>{t("summaryCostColumn")}</th>
                     <th style={{ textAlign: "right" }}>{t("totalCost")}</th>
+                    <th style={{ textAlign: "right" }}>{t("payments.paid")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredMonthlyRows.flatMap((row) => {
                     const ym = `${row.year}-${String(row.month).padStart(2, "0")}`;
                     const open = openMonths.has(ym);
+                    const bucket = bucketByMonthKey.get(ym);
+                    const monthPaid = bucket?.total_paid ?? 0;
+                    const monthUnassignedCount = bucket?.unassigned_count ?? 0;
                     const rows: React.ReactNode[] = [
                       <tr
                         key={`row-${ym}`}
@@ -512,6 +577,24 @@ export function LaborSummary({
                         >
                           {formatEUR(row.total_cost)}
                         </td>
+                        <td
+                          className="num text-[13px] font-medium tabular-nums"
+                          style={{ textAlign: "right" }}
+                        >
+                          {monthPaid > 0 ? (
+                            formatEUR(monthPaid)
+                          ) : (
+                            <span style={{ color: "var(--muted)" }}>—</span>
+                          )}
+                          {monthUnassignedCount > 0 && (
+                            <span
+                              className="num"
+                              style={{ marginLeft: 6, fontSize: 10.5, color: "var(--muted)" }}
+                            >
+                              {t("summaryUnassignedHint", { n: monthUnassignedCount })}
+                            </span>
+                          )}
+                        </td>
                       </tr>,
                     ];
                     if (open) {
@@ -526,6 +609,8 @@ export function LaborSummary({
                         // Workers tab after a scheduled rate change.
                         const worker = workerById.get(w.worker_id);
                         const rate = worker ? worker.current_daily_rate ?? worker.daily_rate : undefined;
+                        const workerPaid =
+                          bucket?.workers.find((wb) => wb.worker_id === w.worker_id)?.paid ?? 0;
                         rows.push(
                           <tr
                             key={`sub-${ym}-${w.worker_id}`}
@@ -601,6 +686,16 @@ export function LaborSummary({
                             >
                               {formatEUR(w.total_cost)}
                             </td>
+                            <td
+                              className="num text-[12.5px] font-medium tabular-nums"
+                              style={{ textAlign: "right", border: "none", paddingTop: 6, paddingBottom: 6 }}
+                            >
+                              {workerPaid > 0 ? (
+                                formatEUR(workerPaid)
+                              ) : (
+                                <span style={{ color: "var(--muted)" }}>—</span>
+                              )}
+                            </td>
                           </tr>,
                         );
                       }
@@ -625,6 +720,12 @@ export function LaborSummary({
                     >
                       {formatEUR(totalCost)}
                     </td>
+                    <td
+                      className="num font-medium tabular-nums"
+                      style={{ textAlign: "right" }}
+                    >
+                      {totalPaidAllHistory > 0 ? formatEUR(totalPaidAllHistory) : "—"}
+                    </td>
                   </tr>
                 </tfoot>
               </table>
@@ -643,6 +744,8 @@ export function LaborSummary({
                   <th>{t("role.label")}</th>
                   <th style={{ textAlign: "right" }}>{t("daysWorked")}</th>
                   <th style={{ textAlign: "right" }}>{t("totalCost")}</th>
+                  <th style={{ textAlign: "right" }}>{t("payments.paid")}</th>
+                  <th style={{ textAlign: "right" }}>{t("payments.balance")}</th>
                   <th style={{ textAlign: "right" }}>{t("supplement.bonusDays")}</th>
                 </tr>
               </thead>
@@ -661,6 +764,11 @@ export function LaborSummary({
                   const roleName = rowWorker?.role_id && DEFAULT_ROLE_I18N_KEYS[rowWorker.role_id]
                     ? tRole(DEFAULT_ROLE_I18N_KEYS[rowWorker.role_id])
                     : rowWorker?.role_name;
+                  // Paid matched by worker_id within the viewed month's
+                  // bucket; Balance is this row's already-rendered Total
+                  // minus Paid — never recompute the cost side.
+                  const rowPaid = paidByWorkerId.get(row.worker_id) ?? 0;
+                  const rowBalance = row.total_cost - rowPaid;
                   return (
                     <tr key={row.worker_id}>
                       <td>
@@ -675,6 +783,16 @@ export function LaborSummary({
                       </td>
                       <td className="num font-medium" style={{ textAlign: "right" }}>
                         {formatEUR(row.total_cost)}
+                      </td>
+                      <td className="num" style={{ textAlign: "right" }}>
+                        {rowPaid > 0 ? (
+                          formatEUR(rowPaid)
+                        ) : (
+                          <span style={{ color: "var(--muted)" }}>—</span>
+                        )}
+                      </td>
+                      <td className="num font-medium" style={{ textAlign: "right" }}>
+                        {formatEUR(rowBalance)}
                       </td>
                       <td className="num" style={{ textAlign: "right" }}>
                         {row.banked_hours > 0 ? (
@@ -702,6 +820,12 @@ export function LaborSummary({
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {formatEUR(summary.total_cost)}
+                  </td>
+                  <td className="num font-medium" style={{ textAlign: "right" }}>
+                    {footerPaid > 0 ? formatEUR(footerPaid) : "—"}
+                  </td>
+                  <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
+                    {formatEUR(footerBalance)}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {totalBonusCost > 0 ? formatEUR(totalBonusCost) : "—"}

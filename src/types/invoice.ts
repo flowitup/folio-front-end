@@ -110,6 +110,15 @@ export interface Invoice {
    * applied_to_invoice_id) — i.e. what paid for it. Empty array when none.
    */
   paid_with_returns?: { invoice_number: string; total_amount: number }[];
+  /**
+   * UUID of the worker this labor invoice pays. Only meaningful when
+   * type === "labor"; null/absent means the expense isn't linked to a
+   * specific worker record (legacy rows, or intentionally left unlinked —
+   * the FE shows a "Not linked" placeholder in that case). The backend
+   * server-snapshots recipient_name from the worker's name whenever this
+   * is set.
+   */
+  worker_id?: string | null;
 }
 
 export interface CreateInvoicePayload {
@@ -145,6 +154,13 @@ export interface CreateInvoicePayload {
    * Null clears the link; omitted = keep existing (on update).
    */
   applied_to_invoice_id?: string | null;
+  /**
+   * UUID of the worker this labor invoice pays. Only valid when type=labor —
+   * the backend returns 400 worker_link_not_allowed otherwise, and
+   * worker_not_in_project if the worker isn't on this project. Null clears
+   * the link; omitted = keep existing (on update).
+   */
+  worker_id?: string | null;
 }
 
 export type UpdateInvoicePayload = Partial<CreateInvoicePayload>;

@@ -282,3 +282,40 @@ export interface CreateRateChangePayload {
   effective_date: string;
   daily_rate: number;
 }
+
+// ─── Labor payments summary ──────────────────────────────────────────────────
+
+/** Per-worker paid total within a single month bucket. */
+export interface LaborPaymentsWorkerBucket {
+  worker_id: string;
+  worker_name: string;
+  /** Sum of labor invoice totals for this worker within the bucket's month. */
+  paid: number;
+  /** Count of labor invoices contributing to `paid`. */
+  invoice_count: number;
+}
+
+/**
+ * One month's aggregate of recorded labor payments (invoices of type=labor).
+ * `year`/`month` are both null for the special "no service_month" bucket,
+ * which holds labor invoices that were never assigned a payment month.
+ */
+export interface LaborPaymentsMonthBucket {
+  year: number | null;
+  month: number | null;
+  total_paid: number;
+  workers: LaborPaymentsWorkerBucket[];
+  /** Sum of this bucket's labor invoices that have no worker_id. */
+  unassigned_paid: number;
+  /** Count of this bucket's labor invoices that have no worker_id. */
+  unassigned_count: number;
+}
+
+export interface LaborPaymentsSummaryResponse {
+  /**
+   * Sorted most-recent first (year DESC, month DESC). A bucket with
+   * year=null and month=null (if present) holds labor invoices without a
+   * service_month.
+   */
+  months: LaborPaymentsMonthBucket[];
+}

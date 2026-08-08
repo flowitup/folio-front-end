@@ -87,6 +87,12 @@ vi.mock("@/components/tags/tag-select", () => ({
   TagSelect: () => <div data-testid="tag-select" />,
 }));
 
+// Worker picker's fetcher — not under test here; stub so switching to type=labor
+// with a projectId doesn't issue a real network call.
+vi.mock("@/lib/api/labor", () => ({
+  fetchWorkers: vi.fn().mockResolvedValue([]),
+}));
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makeMsInvoice(id: string, number: string, total: number) {

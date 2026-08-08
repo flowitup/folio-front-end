@@ -23,6 +23,8 @@ export const GROUP_ORDER: InvoiceType[] = [
 
 export interface MonthCategoryGroup {
   type: InvoiceType;
+  /** Net Σ total_amount of this type in the month — negative for return-heavy groups. */
+  subtotal: number;
   /** Invoices of this type in the month, issue_date desc (invoice_number desc tiebreak). */
   items: Invoice[];
 }
@@ -65,16 +67,20 @@ export function groupInvoicesByMonth(invoices: Invoice[]): InvoiceMonthGroup[] {
     ([monthKey, monthInvoices]) => ({
       monthKey,
       subtotal: monthInvoices.reduce((sum, inv) => sum + inv.total_amount, 0),
-      categories: GROUP_ORDER.map((type) => ({
-        type,
-        items: monthInvoices
+      categories: GROUP_ORDER.map((type) => {
+        const items = monthInvoices
           .filter((inv) => inv.type === type)
           .sort(
             (a, b) =>
               b.issue_date.localeCompare(a.issue_date) ||
               b.invoice_number.localeCompare(a.invoice_number)
-          ),
-      })).filter((c) => c.items.length > 0),
+          );
+        return {
+          type,
+          subtotal: items.reduce((sum, inv) => sum + inv.total_amount, 0),
+          items,
+        };
+      }).filter((c) => c.items.length > 0),
     })
   );
 

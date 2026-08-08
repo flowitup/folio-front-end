@@ -76,6 +76,8 @@ interface TableSection {
   monthKey: string | null;
   monthHeader: { monthKey: string; subtotal: number } | null;
   type: InvoiceType | null;
+  /** Net Σ total_amount of the category inside its month (null on flat type tabs). */
+  typeSubtotal: number | null;
   items: Invoice[];
 }
 
@@ -247,10 +249,20 @@ export default function InvoicesPage() {
             monthHeader:
               idx === 0 ? { monthKey: mg.monthKey, subtotal: mg.subtotal } : null,
             type: c.type,
+            typeSubtotal: c.subtotal,
             items: c.items,
           }))
         )
-      : [{ key: "flat", monthKey: null, monthHeader: null, type: null, items: invoices }];
+      : [
+          {
+            key: "flat",
+            monthKey: null,
+            monthHeader: null,
+            type: null,
+            typeSubtotal: null,
+            items: invoices,
+          },
+        ];
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
@@ -333,7 +345,7 @@ export default function InvoicesPage() {
                 onMutated={loadInvoices}
               />
             ) : (
-              sections.map(({ key, monthKey, monthHeader, type: groupType, items }) => {
+              sections.map(({ key, monthKey, monthHeader, type: groupType, typeSubtotal, items }) => {
                   const isCollapsed = monthKey !== null && collapsedMonths.has(monthKey);
                   return (
                   <Fragment key={key}>
@@ -367,10 +379,19 @@ export default function InvoicesPage() {
                       </div>
                     )}
                     {!isCollapsed && groupType && (
-                      <div className="flex items-center gap-2 pt-3">
+                      <div className="flex items-center justify-between gap-2 pt-3">
                         <span className={TYPE_STAMP_CLASS[groupType]}>
                           {t(`types.${groupType}`)}
                         </span>
+                        {typeSubtotal !== null && (
+                          <span
+                            className="num text-[12px]"
+                            style={{ color: "var(--muted)" }}
+                            data-testid={`invoices-type-subtotal-mobile-${monthKey}-${groupType}`}
+                          >
+                            {formatEUR(typeSubtotal)}
+                          </span>
+                        )}
                       </div>
                     )}
                     {!isCollapsed && items.map((invoice) => {
@@ -442,7 +463,7 @@ export default function InvoicesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sections.map(({ key, monthKey, monthHeader, type: groupType, items }) => {
+                    {sections.map(({ key, monthKey, monthHeader, type: groupType, typeSubtotal, items }) => {
                         const isCollapsed = monthKey !== null && collapsedMonths.has(monthKey);
                         return (
                         <Fragment key={key}>
@@ -495,9 +516,20 @@ export default function InvoicesPage() {
                                   borderBottom: "1px solid var(--line)",
                                 }}
                               >
-                                <span className={TYPE_STAMP_CLASS[groupType]}>
-                                  {t(`types.${groupType}`)}
-                                </span>
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className={TYPE_STAMP_CLASS[groupType]}>
+                                    {t(`types.${groupType}`)}
+                                  </span>
+                                  {typeSubtotal !== null && (
+                                    <span
+                                      className="num text-[12px]"
+                                      style={{ color: "var(--muted)" }}
+                                      data-testid={`invoices-type-subtotal-desktop-${monthKey}-${groupType}`}
+                                    >
+                                      {formatEUR(typeSubtotal)}
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           )}

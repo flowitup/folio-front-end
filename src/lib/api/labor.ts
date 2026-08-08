@@ -14,6 +14,7 @@ import type {
   ConflictsResponse,
   LaborSummaryResponse,
   LaborMonthlySummaryResponse,
+  LaborPaymentsSummaryResponse,
   LaborEntryParams,
   SummaryParams,
   LaborExportFormat,
@@ -161,6 +162,19 @@ export async function fetchLaborMonthlySummary(
 ): Promise<LaborMonthlySummaryResponse> {
   return api.get<LaborMonthlySummaryResponse>(
     `/projects/${projectId}/labor-monthly-summary`,
+  );
+}
+
+/**
+ * Per-worker/per-month rollup of recorded labor payments (invoices of
+ * type=labor), used by the Payments tab to derive each worker's "paid"
+ * figure and the unassigned/no-month buckets. See LaborPaymentsSummaryResponse.
+ */
+export async function fetchLaborPaymentsSummary(
+  projectId: string,
+): Promise<LaborPaymentsSummaryResponse> {
+  return api.get<LaborPaymentsSummaryResponse>(
+    `/projects/${projectId}/labor-payments-summary`,
   );
 }
 

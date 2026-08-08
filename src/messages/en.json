@@ -749,6 +749,38 @@
       "effectiveFrom": "From {date}",
       "errorRatePositive": "Rate must be greater than 0",
       "errorGeneric": "An error occurred"
+    },
+    "payments": {
+      "tab": "Payments",
+      "statusColumn": "Status",
+      "owed": "Owed",
+      "paid": "Paid",
+      "balance": "Balance",
+      "status": {
+        "unpaid": "Unpaid",
+        "partial": "Partial",
+        "settled": "Settled",
+        "overpaid": "Overpaid"
+      },
+      "recordPayment": "Record payment",
+      "recordPaymentFor": "Record payment for {name}",
+      "recordedToast": "Payment recorded",
+      "recordFailed": "Failed to record payment",
+      "errorWorkerRequired": "Select a worker",
+      "errorAmountPositive": "Amount must be greater than 0",
+      "expandInvoices": "Show invoices",
+      "collapseInvoices": "Hide invoices",
+      "viewInExpenses": "View in Expenses",
+      "unassignedTitle": "Unassigned",
+      "unassignedHint": "{n} unassigned",
+      "invoiceCount": "{n} invoice(s)",
+      "assignWorker": "Assign worker",
+      "assignedToast": "Invoice assigned",
+      "assignFailed": "Failed to assign",
+      "noMonthTitle": "No month set",
+      "assignToMonth": "Assign to {month}",
+      "emptyMonth": "No data for this month",
+      "loadFailed": "Failed to load payment data"
     }
   },
   "acceptInvite": {

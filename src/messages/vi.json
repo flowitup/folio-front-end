@@ -749,6 +749,38 @@
       "effectiveFrom": "Từ ngày {date}",
       "errorRatePositive": "Mức lương phải lớn hơn 0",
       "errorGeneric": "Đã xảy ra lỗi"
+    },
+    "payments": {
+      "tab": "Thanh toán",
+      "statusColumn": "Trạng thái",
+      "owed": "Phải trả",
+      "paid": "Đã trả",
+      "balance": "Số dư",
+      "status": {
+        "unpaid": "Chưa trả",
+        "partial": "Trả một phần",
+        "settled": "Đã thanh toán đủ",
+        "overpaid": "Trả dư"
+      },
+      "recordPayment": "Ghi nhận thanh toán",
+      "recordPaymentFor": "Ghi nhận thanh toán cho {name}",
+      "recordedToast": "Đã ghi nhận thanh toán",
+      "recordFailed": "Không thể ghi nhận thanh toán",
+      "errorWorkerRequired": "Vui lòng chọn nhân công",
+      "errorAmountPositive": "Số tiền phải lớn hơn 0",
+      "expandInvoices": "Hiện hóa đơn",
+      "collapseInvoices": "Ẩn hóa đơn",
+      "viewInExpenses": "Xem trong Chi phí",
+      "unassignedTitle": "Chưa gán",
+      "unassignedHint": "{n} chưa gán",
+      "invoiceCount": "{n} hóa đơn",
+      "assignWorker": "Gán nhân công",
+      "assignedToast": "Đã gán hóa đơn",
+      "assignFailed": "Không thể gán hóa đơn",
+      "noMonthTitle": "Chưa có tháng",
+      "assignToMonth": "Gán vào {month}",
+      "emptyMonth": "Không có dữ liệu cho tháng này",
+      "loadFailed": "Không thể tải dữ liệu thanh toán"
     }
   },
   "acceptInvite": {

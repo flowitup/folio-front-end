@@ -19,6 +19,7 @@ import { ViewToggle, type AttendanceViewMode } from "@/components/labor/view-tog
 import { LogDayDialog } from "@/components/labor/log-day-dialog";
 import { EditAttendanceDialog } from "@/components/labor/edit-attendance-dialog";
 import { LaborSummary } from "@/components/labor/labor-summary";
+import { LaborPaymentsTab } from "@/components/labor/labor-payments-tab";
 
 import { ActivityDialog } from "@/components/labor/activity-dialog";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
@@ -47,7 +48,7 @@ import {
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { fetchLaborRolesAction, fetchProjectTagsAction } from "./actions";
 
-type TabType = "workers" | "attendance" | "summary";
+type TabType = "workers" | "attendance" | "summary" | "payments";
 
 function monthToRange(month: string) {
   if (!month) return { from: undefined, to: undefined };
@@ -76,6 +77,10 @@ export default function LaborPage() {
   // so a user invited as a project admin/manager can manage labor here.
   const projectPerms = projects.find((p) => p.id === projectId)?.my_permissions;
   const canManageLabor = canOnProject("project:manage_labor", user?.permissions, projectPerms);
+  // Payments tab mutations are invoice writes (record payment, quick-assign
+  // worker/month), so they're gated on the invoices permission — same flag
+  // the Invoices page uses — not the labor-entry permission above.
+  const canManageInvoices = canOnProject("project:manage_invoices", user?.permissions, projectPerms);
 
   // State
   const [activeTab, setActiveTab] = useState<TabType>("summary");
@@ -379,14 +384,14 @@ export default function LaborPage() {
       {/* Segmented tabs */}
       <div className="flex items-center">
         <div className="seg w-full sm:w-auto">
-          {(["summary", "attendance", "workers"] as const).map((tab) => (
+          {(["summary", "attendance", "workers", "payments"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
               className={activeTab === tab ? "on" : ""}
             >
-              {t(tab)}
+              {tab === "payments" ? t("payments.tab") : t(tab)}
             </button>
           ))}
         </div>
@@ -534,6 +539,10 @@ export default function LaborPage() {
           month={summaryMonth}
           onMonthChange={setSummaryMonth}
         />
+      )}
+
+      {!isLoading && activeTab === "payments" && (
+        <LaborPaymentsTab projectId={projectId} canManage={canManageInvoices} workers={workers} />
       )}
 
       {/* Dialogs */}

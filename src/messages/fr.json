@@ -749,6 +749,38 @@
       "effectiveFrom": "À partir du {date}",
       "errorRatePositive": "Le tarif doit être supérieur à 0",
       "errorGeneric": "Une erreur est survenue"
+    },
+    "payments": {
+      "tab": "Paiements",
+      "statusColumn": "Statut",
+      "owed": "Dû",
+      "paid": "Payé",
+      "balance": "Solde",
+      "status": {
+        "unpaid": "Impayé",
+        "partial": "Partiel",
+        "settled": "Soldé",
+        "overpaid": "Trop-perçu"
+      },
+      "recordPayment": "Enregistrer un paiement",
+      "recordPaymentFor": "Enregistrer un paiement pour {name}",
+      "recordedToast": "Paiement enregistré",
+      "recordFailed": "Échec de l'enregistrement du paiement",
+      "errorWorkerRequired": "Sélectionnez un ouvrier",
+      "errorAmountPositive": "Le montant doit être supérieur à 0",
+      "expandInvoices": "Afficher les factures",
+      "collapseInvoices": "Masquer les factures",
+      "viewInExpenses": "Voir dans les dépenses",
+      "unassignedTitle": "Non attribué",
+      "unassignedHint": "{n} non attribuée(s)",
+      "invoiceCount": "{n} facture(s)",
+      "assignWorker": "Attribuer un ouvrier",
+      "assignedToast": "Facture attribuée",
+      "assignFailed": "Échec de l'attribution",
+      "noMonthTitle": "Sans mois",
+      "assignToMonth": "Attribuer à {month}",
+      "emptyMonth": "Aucune donnée pour ce mois",
+      "loadFailed": "Échec du chargement des paiements"
     }
   },
   "acceptInvite": {

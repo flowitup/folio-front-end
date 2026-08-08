@@ -13,7 +13,7 @@
  * Zero-paid renders as "—" everywhere, per the locked design decision.
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { LaborSummary } from "../labor-summary";
 import type {

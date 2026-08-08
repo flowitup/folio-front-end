@@ -218,6 +218,17 @@ describe("LaborInvoicesByWorker — recipient identity on history rows", () => {
     expect(screen.getByTestId("labor-by-worker-invoice-recipient-desktop-i4").textContent).toBe("Djamel B.");
   });
 
+  it("keeps linked-group rows recipient-free (the group header already names the worker)", async () => {
+    const invoices = [
+      makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i4", worker_id: null, recipient_name: "Djamel B." }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+
+    fireEvent.click(screen.getByTestId("labor-by-worker-group-desktop-w-alice").querySelector("button")!);
+    expect((await screen.findByTestId("labor-by-worker-invoice-recipient-desktop-i1")).textContent).toBe("");
+  });
+
   it("falls back to an em dash when recipient_name is empty", async () => {
     const invoices = [
       makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
@@ -240,6 +251,17 @@ describe("LaborInvoicesByWorker — single-group auto-expand", () => {
     // History visible without any click.
     expect(await screen.findByTestId("labor-by-worker-history-desktop")).toBeInTheDocument();
     expect(screen.getByTestId("labor-by-worker-invoice-recipient-desktop-i4").textContent).toBe("Djamel B.");
+  });
+
+  it("keeps linked-group rows recipient-free (the group header already names the worker)", async () => {
+    const invoices = [
+      makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i4", worker_id: null, recipient_name: "Djamel B." }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+
+    fireEvent.click(screen.getByTestId("labor-by-worker-group-desktop-w-alice").querySelector("button")!);
+    expect((await screen.findByTestId("labor-by-worker-invoice-recipient-desktop-i1")).textContent).toBe("");
   });
 
   it("does not auto-expand when several groups exist", () => {

@@ -105,13 +105,14 @@ export function LaborWorkerGroupHistory({
                     </span>
                     {/* Recipient is the ONLY identity an unassigned (legacy free-text)
                         labor invoice has — omitting it makes those rows indistinguishable.
-                        Shown for linked groups too so rows align with the page's
-                        invoice-table columns (number · date · recipient · method · total). */}
+                        In linked groups it would just repeat the group's worker name, so
+                        the cell stays empty there (the track remains, keeping columns
+                        aligned across groups). */}
                     <span
                       className="min-w-0 flex-1 truncate text-[12.5px]"
                       data-testid={`labor-by-worker-invoice-recipient-${variant}-${inv.id}`}
                     >
-                      {inv.recipient_name || "—"}
+                      {isUnassignedGroup ? inv.recipient_name || "—" : ""}
                     </span>
                     <span className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
                       {methodLabel ?? "—"}

@@ -13,7 +13,7 @@
  * Zero-paid renders as "—" everywhere, per the locked design decision.
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { LaborSummary } from "../labor-summary";
 import type {
@@ -312,5 +312,50 @@ describe("LaborSummary — Paid column (all-history mode)", () => {
     // 700 (July) + 0 (June) = 700.
     const footerRow = screen.getByText("grandTotal").closest("tr")!;
     expect(footerRow.textContent).toContain("€700.00");
+  });
+});
+
+describe("LaborSummary — past-month unpaid warning (all-history mode)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-15T12:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const monthly: LaborMonthlySummaryResponse = {
+    rows: [
+      { year: 2026, month: 8, total_days: 4, total_cost: 400, workers: [{ worker_id: "w1", worker_name: "Alice", days_worked: 4, total_cost: 400 }] },
+      { year: 2026, month: 7, total_days: 10, total_cost: 1000, workers: [{ worker_id: "w1", worker_name: "Alice", days_worked: 10, total_cost: 1000 }] },
+      { year: 2026, month: 6, total_days: 5, total_cost: 500, workers: [{ worker_id: "w1", worker_name: "Alice", days_worked: 5, total_cost: 500 }] },
+    ],
+  };
+  const payments: LaborPaymentsSummaryResponse = {
+    months: [
+      { year: 2026, month: 8, total_paid: 0, workers: [], unassigned_paid: 0, unassigned_count: 0 },
+      { year: 2026, month: 7, total_paid: 700, workers: [{ worker_id: "w1", worker_name: "Alice", paid: 700, invoice_count: 1 }], unassigned_paid: 0, unassigned_count: 0 },
+      { year: 2026, month: 6, total_paid: 500, workers: [{ worker_id: "w1", worker_name: "Alice", paid: 500, invoice_count: 1 }], unassigned_paid: 0, unassigned_count: 0 },
+    ],
+  };
+
+  it("warns on past months with a shortfall, never on the current month or settled months", () => {
+    render(
+      <LaborSummary
+        {...baseProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+        paymentsSummary={payments}
+      />,
+    );
+
+    // July: past, 1000 owed vs 700 paid -> warn with the 300 shortfall.
+    const warn = screen.getByTestId("month-unpaid-warning-2026-07");
+    expect(warn.textContent).toContain("300");
+    // August: current month, unpaid -> deliberately NOT flagged.
+    expect(screen.queryByTestId("month-unpaid-warning-2026-08")).toBeNull();
+    // June: fully settled -> no warning.
+    expect(screen.queryByTestId("month-unpaid-warning-2026-06")).toBeNull();
   });
 });

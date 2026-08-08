@@ -255,12 +255,18 @@ export function InvoiceDetailContent({
                   </dt>
                   <dd className="mt-0.5 text-sm">{formatDate(invoice.issue_date)}</dd>
                 </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    {t("recipient")}
-                  </dt>
-                  <dd className="mt-0.5 text-sm">{invoice.recipient_name}</dd>
-                </div>
+                {/* A worker-linked labor invoice is already identified by its worker
+                    (group header, picker); the recipient snapshot would repeat the
+                    same name. Unassigned labor invoices keep it — it is their only
+                    identity. Print/PDF documents keep the payee unconditionally. */}
+                {!(invoice.type === "labor" && invoice.worker_id) && (
+                  <div>
+                    <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t("recipient")}
+                    </dt>
+                    <dd className="mt-0.5 text-sm">{invoice.recipient_name}</dd>
+                  </div>
+                )}
                 {invoice.recipient_address && (
                   <div>
                     <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">

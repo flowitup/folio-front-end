@@ -498,6 +498,14 @@ export function LaborSummary({
                     const bucket = bucketByMonthKey.get(ym);
                     const monthPaid = bucket?.total_paid ?? 0;
                     const monthUnassignedCount = bucket?.unassigned_count ?? 0;
+                    // Warn on CLOSED months whose charges aren't fully settled.
+                    // The current month is excluded — being mid-month unpaid is
+                    // normal, not a problem to flag. Compares against the same
+                    // total this table displays; 1-cent epsilon absorbs rounding.
+                    const now = new Date();
+                    const isPastMonth = row.year < now.getFullYear() || (row.year === now.getFullYear() && row.month < now.getMonth() + 1);
+                    const monthShortfall = row.total_cost - monthPaid;
+                    const showUnpaidWarning = isPastMonth && monthShortfall > 0.01;
                     const rows: React.ReactNode[] = [
                       <tr
                         key={`row-${ym}`}
@@ -532,6 +540,16 @@ export function LaborSummary({
                         </td>
                         <td className="font-display text-[14px] font-semibold tracking-tight">
                           {formatYearMonthLabel(row, locale)}
+                          {showUnpaidWarning && (
+                            <span
+                              className="stamp warning num"
+                              style={{ marginLeft: 8, verticalAlign: "middle" }}
+                              title={t("summaryUnpaidWarningTitle")}
+                              data-testid={`month-unpaid-warning-${ym}`}
+                            >
+                              {t("summaryUnpaidWarning", { amount: formatEUR(monthShortfall) })}
+                            </span>
+                          )}
                         </td>
                         {/* Avatar stack + "N workers" caption. The stack
                             previews who was on site that month so a

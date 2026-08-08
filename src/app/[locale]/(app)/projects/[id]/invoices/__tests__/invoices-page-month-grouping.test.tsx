@@ -85,6 +85,7 @@ const mockUseAuth = vi.mocked(useAuth);
 const mockFetchInvoicesWithMeta = vi.mocked(fetchInvoicesWithMeta);
 
 const routerPush = vi.fn();
+const routerReplace = vi.fn();
 
 function setupMocks(invoices: Invoice[]) {
   mockUseParams.mockReturnValue({ id: "proj-mg-1", locale: "en" });
@@ -94,7 +95,7 @@ function setupMocks(invoices: Invoice[]) {
   );
   mockUseRouter.mockReturnValue(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    { push: routerPush, replace: vi.fn(), refresh: vi.fn() } as any
+    { push: routerPush, replace: routerReplace, refresh: vi.fn() } as any
   );
   mockUsePathname.mockReturnValue("/en/projects/proj-mg-1/invoices");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -328,6 +329,32 @@ describe("InvoicesPage — month-grouped all tab", () => {
     expect(
       within(mobileJune).getByRole("button", { name: "June 2026" }).getAttribute("aria-expanded")
     ).toBe("false");
+  });
+
+  it("collapsing the month holding the open ?invoice= detail closes the detail so the guard can't re-expand it", async () => {
+    setupMocks(fixture());
+    // Page loads with ?invoice=june-pay already selected (deep link).
+    mockUseSearchParams.mockReturnValue(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { get: (k: string) => (k === "invoice" ? "june-pay" : null), toString: () => "invoice=june-pay" } as any
+    );
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByText("LAB-2026-0001");
+
+    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+
+    // The selection is cleared via replace() with a URL carrying no ?invoice=;
+    // with no live selection, a refetch-triggered guard run has nothing to
+    // re-expand — the user's collapse sticks.
+    await waitFor(() => {
+      expect(routerReplace).toHaveBeenCalledWith(
+        expect.not.stringContaining("invoice="),
+        expect.anything()
+      );
+    });
+    expect(within(desktop).queryByText("LAB-2026-0001")).toBeNull();
   });
 
   it("re-expands a collapsed month when a deep-link selects one of its invoices", async () => {

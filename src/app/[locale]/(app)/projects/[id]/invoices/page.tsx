@@ -131,16 +131,25 @@ export default function InvoicesPage() {
   // Collapsed month sections on the "all" tab (keys "YYYY-MM"). Default empty
   // = every month expanded; collapsing is opt-in, session-only state.
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
 
   const toggleMonth = (monthKey: string) => {
+    const isCollapsing = !collapsedMonths.has(monthKey);
     setCollapsedMonths((prev) => {
       const next = new Set(prev);
       if (next.has(monthKey)) next.delete(monthKey);
       else next.add(monthKey);
       return next;
     });
+    // Collapsing the month that holds the open ?invoice= detail also closes
+    // the detail — the URL never points at unmounted UI, and the deep-link
+    // guard below can't re-expand a month the user just closed when a
+    // refetch gives `invoices` a new identity.
+    if (isCollapsing && selectedInvoiceId) {
+      const selected = invoices.find((inv) => inv.id === selectedInvoiceId);
+      if (selected && monthKeyForInvoice(selected) === monthKey) closeInvoice();
+    }
   };
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [summary, setSummary] = useState<{
     invoices: Invoice[];
     meta: ExpenseSummaryMeta;
@@ -197,8 +206,10 @@ export default function InvoicesPage() {
 
   // Deep-link guard: a ?invoice=<id> selection landing in a collapsed month
   // (URL paste, back button) re-expands that month so the inline detail is
-  // reachable. Runs on selection change only — it never fights a collapse
-  // the user makes afterwards.
+  // reachable. It can't fight a user's collapse because toggleMonth clears
+  // the selection when collapsing the selected invoice's month — a live
+  // selection never points into a collapsed month, so refetches (which give
+  // `invoices` a new identity and re-run this effect) find nothing to expand.
   useEffect(() => {
     if (!selectedInvoiceId) return;
     const selected = invoices.find((inv) => inv.id === selectedInvoiceId);
@@ -339,7 +350,7 @@ export default function InvoicesPage() {
                             type="button"
                             onClick={() => toggleMonth(monthHeader.monthKey)}
                             aria-expanded={!isCollapsed}
-                            className="label-cap flex cursor-pointer items-center gap-1.5"
+                            className="label-cap -mx-2 -my-2 flex cursor-pointer items-center gap-1.5 px-2 py-2"
                             style={{ fontSize: 12, color: "var(--ink)" }}
                           >
                             {isCollapsed ? (
@@ -455,7 +466,7 @@ export default function InvoicesPage() {
                                       type="button"
                                       onClick={() => toggleMonth(monthHeader.monthKey)}
                                       aria-expanded={!isCollapsed}
-                                      className="label-cap flex cursor-pointer items-center gap-1.5"
+                                      className="label-cap -mx-2 -my-2 flex cursor-pointer items-center gap-1.5 px-2 py-2"
                                       style={{ fontSize: 12, color: "var(--ink)" }}
                                     >
                                       {isCollapsed ? (

@@ -788,7 +788,9 @@
       "assignToMonth": "Assign to {month}",
       "emptyMonth": "No data for this month",
       "loadFailed": "Failed to load payment data"
-    }
+    },
+    "summaryUnpaidWarning": "{amount} unpaid",
+    "summaryUnpaidWarningTitle": "Labor charges for this month are not fully paid"
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

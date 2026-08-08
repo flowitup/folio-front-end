@@ -788,7 +788,9 @@
       "assignToMonth": "Gán vào {month}",
       "emptyMonth": "Không có dữ liệu cho tháng này",
       "loadFailed": "Không thể tải dữ liệu thanh toán"
-    }
+    },
+    "summaryUnpaidWarning": "{amount} chưa trả",
+    "summaryUnpaidWarningTitle": "Chi phí nhân công tháng này chưa được trả đủ"
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

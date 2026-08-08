@@ -14,6 +14,7 @@ import { Calendar, ChevronDown, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborPaymentRow } from "@/components/labor/labor-payment-row";
+import { PaidSplitCaption } from "@/components/labor/paid-split-caption";
 import type { WorkerPaymentRow } from "@/components/labor/labor-payments-tab-state";
 
 export interface LaborPaymentsWorkerTableProps {
@@ -27,6 +28,10 @@ export interface LaborPaymentsWorkerTableProps {
   isLoading: boolean;
   rows: WorkerPaymentRow[];
   totals: { days: number; owed: number; paid: number; balance: number };
+  /** Flagged-method split of the viewed month's paid total (whole bucket:
+   *  worker-linked + unassigned), for the caption under the grand-total
+   *  Paid. Zeros hide the caption. */
+  monthSplit?: { company: number; personal: number };
   reloadSignal: number;
   onOpenRecordDialog: () => void;
   onRecordPaymentForWorker: (workerId: string) => void;
@@ -41,6 +46,7 @@ export function LaborPaymentsWorkerTable({
   isLoading,
   rows,
   totals,
+  monthSplit,
   reloadSignal,
   onOpenRecordDialog,
   onRecordPaymentForWorker,
@@ -141,6 +147,13 @@ export function LaborPaymentsWorkerTable({
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right" }}>
                     {formatEUR(totals.paid)}
+                    {monthSplit && (
+                      <PaidSplitCaption
+                        company={monthSplit.company}
+                        personal={monthSplit.personal}
+                        testId="payments-month-paid-split"
+                      />
+                    )}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {formatEUR(totals.balance)}

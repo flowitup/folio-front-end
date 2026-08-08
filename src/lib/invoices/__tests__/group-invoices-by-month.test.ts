@@ -90,6 +90,20 @@ describe("groupInvoicesByMonth", () => {
     expect(groups[0].subtotal).toBeCloseTo(290.84, 5);
   });
 
+  it("computes a net subtotal per category inside the month, negative for return groups", () => {
+    const groups = groupInvoicesByMonth([
+      makeInvoice({ id: "i1", type: "materials_services", issue_date: "2026-06-05", total_amount: 500 }),
+      makeInvoice({ id: "i2", type: "materials_services", issue_date: "2026-06-09", total_amount: 120.5 }),
+      makeInvoice({ id: "i3", type: "labor", issue_date: "2026-06-10", service_month: "2026-06-01", total_amount: 80 }),
+      makeInvoice({ id: "i4", type: "return", issue_date: "2026-06-14", total_amount: -209.16 }),
+    ]);
+    expect(groups).toHaveLength(1);
+    const byType = Object.fromEntries(groups[0].categories.map((c) => [c.type, c.subtotal]));
+    expect(byType.labor).toBe(80);
+    expect(byType.materials_services).toBeCloseTo(620.5, 5);
+    expect(byType.return).toBeCloseTo(-209.16, 5);
+  });
+
   it("places a July-issued June-service labor invoice in the June section alongside June expenses", () => {
     const groups = groupInvoicesByMonth([
       makeInvoice({ id: "june-mat", type: "materials_services", issue_date: "2026-06-20", total_amount: 50 }),

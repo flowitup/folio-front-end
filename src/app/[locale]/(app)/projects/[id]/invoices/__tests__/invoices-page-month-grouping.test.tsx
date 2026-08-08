@@ -242,6 +242,54 @@ describe("InvoicesPage — month-grouped all tab", () => {
     expect(text.indexOf("invoices.types.others", idxJune)).toBe(-1);
   });
 
+  it("shows a net per-type subtotal next to each category stamp on desktop", async () => {
+    setupMocks(fixture());
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByTestId("invoices-month-header-desktop-2026-06");
+
+    // June: labor 25, materials 50, return -20 — each next to its own stamp.
+    expect(
+      within(desktop).getByTestId("invoices-type-subtotal-desktop-2026-06-labor").textContent
+    ).toBe(formatEUR(25));
+    expect(
+      within(desktop).getByTestId("invoices-type-subtotal-desktop-2026-06-materials_services")
+        .textContent
+    ).toBe(formatEUR(50));
+    expect(
+      within(desktop).getByTestId("invoices-type-subtotal-desktop-2026-06-return").textContent
+    ).toBe(formatEUR(-20));
+    // July only has materials.
+    expect(
+      within(desktop).getByTestId("invoices-type-subtotal-desktop-2026-07-materials_services")
+        .textContent
+    ).toBe(formatEUR(10));
+  });
+
+  it("shows the per-type subtotal in the mobile card list and hides it when the month collapses", async () => {
+    setupMocks(fixture());
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByText("LAB-2026-0001");
+
+    expect(
+      screen.getByTestId("invoices-type-subtotal-mobile-2026-06-return").textContent
+    ).toBe(formatEUR(-20));
+
+    // Collapsing June removes its category rows (and their subtotals) in both renders.
+    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+    expect(screen.queryByTestId("invoices-type-subtotal-mobile-2026-06-return")).toBeNull();
+    expect(
+      within(desktop).queryByTestId("invoices-type-subtotal-desktop-2026-06-labor")
+    ).toBeNull();
+    // July stays expanded with its subtotal intact.
+    expect(
+      within(desktop).queryByTestId("invoices-type-subtotal-desktop-2026-07-materials_services")
+    ).not.toBeNull();
+  });
+
   it("mirrors the month structure in the mobile card list", async () => {
     setupMocks(fixture());
     render(<InvoicesPage />);

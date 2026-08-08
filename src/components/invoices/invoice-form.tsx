@@ -8,9 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
 import { TagSelect } from "@/components/tags/tag-select";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
-import type { CreateInvoicePayload, Invoice, InvoiceType } from "@/types/invoice";
+import type { CreateInvoicePayload, Invoice, InvoiceType, SettledVia } from "@/types/invoice";
 import type { ProjectTag } from "@/lib/api/tags";
 import { formatEUR } from "@/lib/utils/formatters";
+import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 
 interface LineItem {
   description: string;
@@ -76,6 +77,7 @@ export function InvoiceForm({
 }: InvoiceFormProps) {
   const t = useTranslations("invoices");
   const tTags = useTranslations("tags");
+  const tBuiltins = useTranslations("paymentMethods.builtins");
 
   // Default to materials_services — the everyday expense type. released_funds
   // stays selectable but must never be the default: those invoices are
@@ -152,6 +154,62 @@ export function InvoiceForm({
     return () => { cancelled = true; };
   }, [type, projectId, editingInvoiceId]);
 
+  // settled_via: how this return was settled — 'cash' (default) or 'avoir'
+  // (supplier credit note). null = untouched — either a brand-new return not
+  // yet decided, or a legacy row where this field was never set. Stays null
+  // on submit unless the user actively picks an option (mirrors refundsInvoiceId).
+  const [settledVia, setSettledVia] = useState<SettledVia | null>(
+    initialValues?.settled_via ?? null
+  );
+  // applied_to_invoice_id: the invoice this avoir return pays off. Only
+  // meaningful when settledVia === "avoir" — cleared whenever the type/via
+  // switches away from an avoir return.
+  const [appliedToInvoiceId, setAppliedToInvoiceId] = useState<string | null>(
+    initialValues?.applied_to_invoice_id ?? null
+  );
+
+  // List of invoices eligible as an avoir's "applied to" target — any type
+  // except return/released_funds. Loaded when type === "return" && settledVia
+  // === "avoir". Uses a single unfiltered fetch, client-filtered (mirrors the
+  // M&S loader above but needs a broader type set, so a server-side ?type=
+  // filter doesn't fit in one request).
+  const [linkableInvoices, setLinkableInvoices] = useState<Invoice[]>([]);
+  const [linkableLoading, setLinkableLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      if (type !== "return" || settledVia !== "avoir" || !projectId) {
+        if (!cancelled) {
+          setLinkableInvoices([]);
+          setLinkableLoading(false);
+        }
+        return;
+      }
+      if (!cancelled) setLinkableLoading(true);
+      try {
+        const res = await fetchInvoicesWithMeta(projectId);
+        if (!cancelled) {
+          const filtered = res.invoices.filter(
+            (inv) =>
+              inv.type !== "return" &&
+              inv.type !== "released_funds" &&
+              inv.id !== editingInvoiceId
+          );
+          setLinkableInvoices(filtered);
+        }
+      } catch {
+        if (!cancelled) setLinkableInvoices([]);
+      } finally {
+        if (!cancelled) setLinkableLoading(false);
+      }
+    }
+
+    void load();
+    return () => { cancelled = true; };
+  }, [type, settledVia, projectId, editingInvoiceId]);
+
   // Grand total is TTC: qty × unit_price × (1 + vat_rate/100).
   // Legacy items without a vat_rate are treated as 0 % VAT.
   const grandTotal = items.reduce(
@@ -207,8 +265,16 @@ export function InvoiceForm({
       payment_method_id: paymentMethodId,
       // Always include tag_id so updates can explicitly clear it (null).
       tag_id: tagId,
-      // Include refunds_invoice_id only for refund type (null = no link / clear)
-      ...(type === "return" ? { refunds_invoice_id: refundsInvoiceId } : {}),
+      // Include refunds_invoice_id, settled_via, and applied_to_invoice_id only
+      // for return type (null = no link/unset / clear). settled_via stays null
+      // when untouched — see the settledVia state comment above.
+      ...(type === "return"
+        ? {
+            refunds_invoice_id: refundsInvoiceId,
+            settled_via: settledVia,
+            applied_to_invoice_id: appliedToInvoiceId,
+          }
+        : {}),
       // Include service_month only for labor type (null = cleared/empty)
       ...(type === "labor"
         ? { service_month: serviceMonth ? `${serviceMonth}-01` : null }
@@ -370,6 +436,68 @@ export function InvoiceForm({
                   ))}
                 </select>
               </div>
+
+              {/* Settled via: cash refund (default) or avoir credit note */}
+              <div>
+                <label className="block text-xs font-medium mb-1">
+                  {t("settledVia.label")}
+                </label>
+                <select
+                  value={settledVia ?? "cash"}
+                  onChange={(e) => {
+                    const next = e.target.value as SettledVia;
+                    setSettledVia(next);
+                    if (next !== "avoir") setAppliedToInvoiceId(null);
+                  }}
+                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  disabled={isLoading}
+                  data-testid="settled-via-select"
+                >
+                  <option value="cash">{t("settledVia.cash")}</option>
+                  <option value="avoir">{t("settledVia.avoir")}</option>
+                </select>
+              </div>
+
+              {/* Applied-to invoice picker — avoir only */}
+              {settledVia === "avoir" && (
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium mb-1">
+                    {t("appliedToInvoiceLabel")}
+                  </label>
+                  <select
+                    value={appliedToInvoiceId ?? ""}
+                    onChange={(e) =>
+                      setAppliedToInvoiceId(e.target.value === "" ? null : e.target.value)
+                    }
+                    className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    disabled={isLoading || linkableLoading}
+                    data-testid="applied-to-invoice-select"
+                  >
+                    <option value="">{t("appliedToInvoiceNone")}</option>
+                    {linkableInvoices.map((inv) => (
+                      <option key={inv.id} value={inv.id}>
+                        {inv.invoice_number}
+                        {inv.total_amount != null
+                          ? ` — ${formatEUR(inv.total_amount)}`
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {appliedToInvoiceId && (() => {
+                    const target = linkableInvoices.find((inv) => inv.id === appliedToInvoiceId);
+                    const label = target?.payment_method_label?.trim()
+                      ? localizeMethodLabel(target.payment_method_label, tBuiltins)
+                      : null;
+                    return (
+                      <p className="text-xs text-muted-foreground" data-testid="applied-to-method-hint">
+                        {label
+                          ? t("appliedToMethodHintWithLabel", { label })
+                          : t("appliedToMethodHint")}
+                      </p>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           )}
 

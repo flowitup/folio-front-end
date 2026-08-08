@@ -426,7 +426,20 @@
     "refundsInvoiceLabel": "Hóa đơn được trả hàng (Vật tư & Dịch vụ)",
     "refundsInvoiceNone": "— không —",
     "refundOf": "Trả hàng cho {number}",
+    "appliedTo": "Áp dụng cho {number}",
     "errorRefundExceedsSource": "Khoản trả hàng vượt quá số tiền còn lại ({remaining}) của hóa đơn này.",
+    "settledVia": {
+      "label": "Thanh toán qua",
+      "cash": "Hoàn tiền mặt",
+      "avoir": "Avoir (tín dụng nhà cung cấp)",
+      "avoirBadge": "Avoir",
+      "outstanding": "Avoir chưa áp dụng"
+    },
+    "appliedToInvoiceLabel": "Áp dụng cho hóa đơn",
+    "appliedToInvoiceNone": "— không —",
+    "appliedToMethodHint": "Phương thức thanh toán của khoản trả hàng sẽ theo phương thức của hóa đơn đã chọn.",
+    "appliedToMethodHintWithLabel": "Phương thức thanh toán của khoản trả hàng sẽ theo phương thức của hóa đơn đã chọn ({label}).",
+    "paidWithAvoir": "Đã thanh toán bằng avoir {number} ({amount})",
     "errorServiceMonthNotAllowed": "Tháng thanh toán chỉ có thể được đặt cho chi phí nhân công.",
     "refund": {
       "status": {
@@ -464,6 +477,8 @@
       "refundableCount": "{n, plural, other {# khoản chờ hoàn}}",
       "credit": "Ghi có",
       "refundsReceived": "{n, plural, other {Đã nhận # khoản trả hàng}}",
+      "returnsReceived": "Đã nhận trả hàng ({n})",
+      "outstandingAvoirs": "{n, plural, other {# avoir chưa áp dụng}}",
       "pendingRefunds": "Hoàn tiền đang chờ",
       "vsMonth": "{delta} so với {month}"
     }

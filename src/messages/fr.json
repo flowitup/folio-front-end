@@ -426,7 +426,20 @@
     "refundsInvoiceLabel": "Avoir sur facture (Matériaux & Services)",
     "refundsInvoiceNone": "— aucune —",
     "refundOf": "Avoir sur {number}",
+    "appliedTo": "Imputé sur {number}",
     "errorRefundExceedsSource": "L'avoir dépasse le montant restant ({remaining}) pour cette facture.",
+    "settledVia": {
+      "label": "Réglé via",
+      "cash": "Remboursement en espèces",
+      "avoir": "Avoir (crédit fournisseur)",
+      "avoirBadge": "Avoir",
+      "outstanding": "Avoir en attente"
+    },
+    "appliedToInvoiceLabel": "Imputé sur la facture",
+    "appliedToInvoiceNone": "— aucune —",
+    "appliedToMethodHint": "Le mode de paiement de l'avoir suivra celui de la facture sélectionnée.",
+    "appliedToMethodHintWithLabel": "Le mode de paiement de l'avoir suivra celui de la facture sélectionnée ({label}).",
+    "paidWithAvoir": "Réglé avec l'avoir {number} ({amount})",
     "errorServiceMonthNotAllowed": "Le mois de paiement ne peut être défini que pour les dépenses de main-d'œuvre.",
     "refund": {
       "status": {
@@ -464,6 +477,8 @@
       "refundableCount": "{n, plural, =1 {1 remboursable} other {# remboursables}}",
       "credit": "Crédit",
       "refundsReceived": "{n, plural, =1 {1 avoir reçu} other {# avoirs reçus}}",
+      "returnsReceived": "Avoirs reçus ({n})",
+      "outstandingAvoirs": "{n, plural, =1 {1 avoir en attente} other {# avoirs en attente}}",
       "pendingRefunds": "Remboursements en attente",
       "vsMonth": "{delta} vs {month}"
     }

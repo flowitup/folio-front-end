@@ -11,9 +11,10 @@
  * dedicated slim dialog as the fallback when reuse isn't a good fit.
  * Posts directly via createInvoice, same endpoint invoice-form uses.
  *
- * Payment method selection is intentionally omitted (not required by the
- * spec's field list); the created invoice can still be edited afterward via
- * the normal invoices flow if a payment method needs to be attached.
+ * Payment method is optional and only offered when the project has a
+ * company (methods are company-scoped — same gate as invoice-form). It
+ * feeds the labor payments company/personal split; leaving it empty keeps
+ * the payment unattributed, editable later via the normal invoices flow.
  */
 
 import { useEffect, useState } from "react";
@@ -30,6 +31,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LaborWorkerSelect } from "@/components/invoices/labor-worker-select";
+import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
 import { createInvoice } from "@/lib/api/invoice-api";
 import { formatMonthYear } from "@/lib/utils/formatters";
 import type { Worker } from "@/types/labor";
@@ -49,6 +51,9 @@ export interface RecordLaborPaymentDialogProps {
   worker: Worker | null;
   /** Viewed month, "YYYY-MM" — becomes service_month "YYYY-MM-01" on submit. */
   month: string;
+  /** The project's company id. Payment methods are company-scoped, so the
+   *  optional method picker only renders when this is set. */
+  companyId?: string | null;
   onSaved: () => void;
 }
 
@@ -58,6 +63,7 @@ export function RecordLaborPaymentDialog({
   onOpenChange,
   worker,
   month,
+  companyId,
   onSaved,
 }: RecordLaborPaymentDialogProps) {
   const t = useTranslations("labor.payments");
@@ -70,6 +76,7 @@ export function RecordLaborPaymentDialog({
   const [issueDate, setIssueDate] = useState(todayKey());
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<string>("");
+  const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,6 +89,7 @@ export function RecordLaborPaymentDialog({
     setIssueDate(todayKey());
     setDescription(name ? `${name} — ${formatMonthYear(month, locale)}` : "");
     setAmount("");
+    setPaymentMethodId(null);
     setError(null);
   }, [open, worker, month, locale]);
 
@@ -108,7 +116,7 @@ export function RecordLaborPaymentDialog({
           vat_rate: 0,
         },
       ],
-      payment_method_id: null,
+      payment_method_id: paymentMethodId,
       tag_id: null,
       service_month: `${month}-01`,
       worker_id: workerId,
@@ -189,6 +197,20 @@ export function RecordLaborPaymentDialog({
               data-testid="record-payment-amount"
             />
           </div>
+
+          {companyId && (
+            <div>
+              <label className="mb-1 block text-xs font-medium">
+                {tInvoices("paymentMethod.label")}
+              </label>
+              <PaymentMethodSelect
+                companyId={companyId}
+                value={paymentMethodId}
+                onChange={setPaymentMethodId}
+                disabled={isSaving}
+              />
+            </div>
+          )}
 
           {error && (
             <Alert variant="destructive">

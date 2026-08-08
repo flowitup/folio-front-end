@@ -17,6 +17,7 @@ import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { DEFAULT_ROLE_I18N_KEYS } from "@/lib/utils/default-role-names";
 import { findMonthBucket } from "@/components/labor/labor-payments-tab-state";
+import { PaidSplitCaption } from "@/components/labor/paid-split-caption";
 
 interface LaborSummaryProps {
   projectId: string;
@@ -286,6 +287,20 @@ export function LaborSummary({
       const ym = `${r.year}-${String(r.month).padStart(2, "0")}`;
       return sum + (bucketByMonthKey.get(ym)?.total_paid ?? 0);
     }, 0);
+  }, [filteredMonthlyRows, bucketByMonthKey]);
+  // Company/personal split of totalPaidAllHistory — same visible-month scope,
+  // so the footer caption always reconciles with the rows above it.
+  const totalSplitAllHistory = useMemo(() => {
+    return filteredMonthlyRows.reduce(
+      (acc, r) => {
+        const ym = `${r.year}-${String(r.month).padStart(2, "0")}`;
+        const bucket = bucketByMonthKey.get(ym);
+        acc.company += bucket?.company_paid ?? 0;
+        acc.personal += bucket?.personal_paid ?? 0;
+        return acc;
+      },
+      { company: 0, personal: 0 },
+    );
   }, [filteredMonthlyRows, bucketByMonthKey]);
 
   if (isLoading) {
@@ -628,6 +643,11 @@ export function LaborSummary({
                               {t("summaryUnassignedHint", { n: monthUnassignedCount })}
                             </span>
                           )}
+                          <PaidSplitCaption
+                            company={bucket?.company_paid ?? 0}
+                            personal={bucket?.personal_paid ?? 0}
+                            testId={`month-paid-split-${ym}`}
+                          />
                         </td>
                       </tr>,
                     ];
@@ -759,6 +779,11 @@ export function LaborSummary({
                       style={{ textAlign: "right" }}
                     >
                       {totalPaidAllHistory > 0 ? formatEUR(totalPaidAllHistory) : "—"}
+                      <PaidSplitCaption
+                        company={totalSplitAllHistory.company}
+                        personal={totalSplitAllHistory.personal}
+                        testId="all-history-paid-split"
+                      />
                     </td>
                   </tr>
                 </tfoot>

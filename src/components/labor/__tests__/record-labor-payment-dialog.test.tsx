@@ -55,6 +55,28 @@ vi.mock("@/components/invoices/labor-worker-select", () => ({
   ),
 }));
 
+vi.mock("@/components/invoices/payment-method-select", () => ({
+  PaymentMethodSelect: ({
+    companyId,
+    value,
+    onChange,
+  }: {
+    companyId: string;
+    value: string | null;
+    onChange: (id: string | null) => void;
+  }) => (
+    <select
+      data-testid="payment-method-select-mock"
+      data-company-id={companyId}
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value || null)}
+    >
+      <option value="">None</option>
+      <option value="pm-1">Cash</option>
+    </select>
+  ),
+}));
+
 import { createInvoice } from "@/lib/api/invoice-api";
 import { toast } from "sonner";
 
@@ -164,5 +186,44 @@ describe("RecordLaborPaymentDialog — no worker preselected (header trigger)", 
     const [, payload] = mockCreateInvoice.mock.calls[0];
     expect(payload.worker_id).toBe("worker-9");
     expect(payload.recipient_name).toBe("Header Picked Worker");
+  });
+});
+
+describe("RecordLaborPaymentDialog — optional payment method picker", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("hides the picker when the project has no company", () => {
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} />);
+    expect(screen.queryByTestId("payment-method-select-mock")).not.toBeInTheDocument();
+  });
+
+  it("renders the picker scoped to the project's company", () => {
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} companyId="co-1" />);
+    expect(screen.getByTestId("payment-method-select-mock")).toHaveAttribute("data-company-id", "co-1");
+  });
+
+  it("posts the chosen payment_method_id", async () => {
+    mockCreateInvoice.mockResolvedValue({ id: "inv-1" } as never);
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} companyId="co-1" />);
+
+    fireEvent.change(screen.getByTestId("payment-method-select-mock"), { target: { value: "pm-1" } });
+    fireEvent.change(screen.getByTestId("record-payment-amount"), { target: { value: "500" } });
+    fireEvent.click(screen.getByText("invoices.save"));
+
+    await waitFor(() => expect(mockCreateInvoice).toHaveBeenCalledTimes(1));
+    expect(mockCreateInvoice.mock.calls[0][1]).toMatchObject({ payment_method_id: "pm-1" });
+  });
+
+  it("still posts null when the picker is left untouched", async () => {
+    mockCreateInvoice.mockResolvedValue({ id: "inv-1" } as never);
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} companyId="co-1" />);
+
+    fireEvent.change(screen.getByTestId("record-payment-amount"), { target: { value: "500" } });
+    fireEvent.click(screen.getByText("invoices.save"));
+
+    await waitFor(() => expect(mockCreateInvoice).toHaveBeenCalledTimes(1));
+    expect(mockCreateInvoice.mock.calls[0][1]).toMatchObject({ payment_method_id: null });
   });
 });

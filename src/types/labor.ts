@@ -309,6 +309,15 @@ export interface LaborPaymentsMonthBucket {
   unassigned_paid: number;
   /** Count of this bucket's labor invoices that have no worker_id. */
   unassigned_count: number;
+  /**
+   * Flagged-method split of the bucket's paid total (company/personal
+   * payment-method flags, worker-linked + unassigned alike). Invoices with
+   * no method or an unflagged one count in neither figure, so
+   * company_paid + personal_paid <= total_paid. Optional: a not-yet-redeployed
+   * BE omits them (FE and BE deploys are not ordered) — treat missing as 0.
+   */
+  company_paid?: number;
+  personal_paid?: number;
 }
 
 export interface LaborPaymentsSummaryResponse {

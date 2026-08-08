@@ -284,3 +284,36 @@ describe("LaborPaymentsTab — shared payments summary from a parent", () => {
     expect(mockFetchLaborPaymentsSummary).toHaveBeenCalledWith("p1");
   });
 });
+
+describe("LaborPaymentsTab — company/personal split caption under grand-total Paid", () => {
+  it("renders the caption from the viewed month's bucket split", async () => {
+    mockFetchLaborPaymentsSummary.mockResolvedValue({
+      months: [
+        {
+          year: 2026,
+          month: 7,
+          total_paid: 300,
+          workers: [{ worker_id: "w1", worker_name: "Alice", paid: 300, invoice_count: 1 }],
+          unassigned_paid: 0,
+          unassigned_count: 0,
+          company_paid: 100,
+          personal_paid: 200,
+        },
+      ],
+    });
+
+    render(<LaborPaymentsTab projectId="p1" canManage workers={WORKERS} />);
+    await screen.findByTestId("row-w1");
+
+    const caption = await screen.findByTestId("payments-month-paid-split");
+    expect(caption.textContent).toContain("labor.payments.companyShare");
+    expect(caption.textContent).toContain("labor.payments.personalShare");
+  });
+
+  it("hides the caption when the bucket has no flagged split (e.g. old BE response)", async () => {
+    render(<LaborPaymentsTab projectId="p1" canManage workers={WORKERS} />);
+    await screen.findByTestId("row-w1");
+
+    expect(screen.queryByTestId("payments-month-paid-split")).toBeNull();
+  });
+});

@@ -30,6 +30,9 @@ export interface LaborPaymentsTabProps {
    *  invoice write, not a labor-entry write. */
   canManage: boolean;
   workers: Worker[];
+  /** The project's company id — enables the optional payment-method picker
+   *  in the record dialog (methods are company-scoped). Null/omitted hides it. */
+  companyId?: string | null;
   /** Share the payments-summary fetch with a parent (labor/page.tsx lifts
    *  it so the Summary tab's Paid column and this tab don't each fetch it
    *  independently). Omit both to keep this tab fully self-contained. */
@@ -47,6 +50,7 @@ export function LaborPaymentsTab({
   projectId,
   canManage,
   workers,
+  companyId,
   paymentsSummary,
   onReloadPaymentsSummary,
 }: LaborPaymentsTabProps) {
@@ -62,6 +66,7 @@ export function LaborPaymentsTab({
     error,
     rows,
     totals,
+    bucket,
     unassignedInvoices,
     noMonthInvoices,
     noMonthLoading,
@@ -112,6 +117,7 @@ export function LaborPaymentsTab({
         isLoading={isMonthLoading}
         rows={rows}
         totals={totals}
+        monthSplit={{ company: bucket?.company_paid ?? 0, personal: bucket?.personal_paid ?? 0 }}
         reloadSignal={reloadSignal}
         onOpenRecordDialog={() => setRecordDialog({ open: true, worker: null })}
         onRecordPaymentForWorker={(workerId) => {
@@ -154,6 +160,7 @@ export function LaborPaymentsTab({
         onOpenChange={(open) => setRecordDialog((prev) => ({ ...prev, open }))}
         worker={recordDialog.worker}
         month={month}
+        companyId={companyId}
         onSaved={handleRecordSaved}
       />
     </div>

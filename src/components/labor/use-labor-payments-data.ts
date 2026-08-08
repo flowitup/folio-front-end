@@ -208,6 +208,7 @@ export function useLaborPaymentsData(
     error,
     rows,
     totals,
+    bucket,
     unassignedInvoices,
     noMonthInvoices,
     noMonthLoading,

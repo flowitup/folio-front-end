@@ -762,6 +762,8 @@
       "statusColumn": "Trạng thái",
       "owed": "Phải trả",
       "paid": "Đã trả",
+      "companyShare": "Công ty {amount}",
+      "personalShare": "Cá nhân {amount}",
       "balance": "Số dư",
       "status": {
         "unpaid": "Chưa trả",

@@ -428,6 +428,7 @@
     "refundOf": "Return of {number}",
     "appliedTo": "Applied to {number}",
     "errorRefundExceedsSource": "Return exceeds the remaining returnable amount ({remaining}) for this invoice.",
+    "errorAppliedExceedsTarget": "The avoir amount exceeds the target invoice's total.",
     "settledVia": {
       "label": "Settled via",
       "cash": "Cash refund",

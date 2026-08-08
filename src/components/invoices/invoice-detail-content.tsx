@@ -114,7 +114,8 @@ export function InvoiceDetailContent({
         classifySubmitError(
           err,
           (remaining) => t("errorRefundExceedsSource", { remaining }),
-          t("errorServiceMonthNotAllowed")
+          t("errorServiceMonthNotAllowed"),
+          t("errorAppliedExceedsTarget")
         )
       );
     } finally {

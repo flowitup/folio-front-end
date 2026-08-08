@@ -6,6 +6,10 @@
  * - service_month_not_allowed classified via the dedicated message
  * - service_month_not_allowed falls through to the raw message when no
  *   dedicated message is supplied (caller opted out)
+ * - AppliedExceedsTarget classified via the dedicated message (both the
+ *   route's discriminator code and the exception class name)
+ * - AppliedExceedsTarget falls through to the raw message when no
+ *   dedicated message is supplied (caller opted out)
  * - unknown error codes fall back to the raw message, then a generic default
  */
 
@@ -40,6 +44,43 @@ describe("classifySubmitError", () => {
   it("falls back to the raw backend message when no dedicated message is supplied", () => {
     const err = {
       data: { error: "service_month_not_allowed", message: "raw backend message" },
+    };
+    const result = classifySubmitError(err, (remaining) => `capped at ${remaining}`);
+    expect(result).toBe("raw backend message");
+  });
+
+  it("classifies AppliedExceedsTarget via the dedicated message", () => {
+    const err = {
+      data: {
+        error: "AppliedExceedsTarget",
+        message: "Applied amount exceeds target invoice total. Remaining applicable: 50",
+      },
+    };
+    const result = classifySubmitError(
+      err,
+      (remaining) => `capped at ${remaining}`,
+      "service month not allowed",
+      "The avoir amount exceeds the target invoice's total."
+    );
+    expect(result).toBe("The avoir amount exceeds the target invoice's total.");
+  });
+
+  it("classifies the AppliedAmountExceedsTargetError class-name fallback", () => {
+    const err = {
+      data: { error: "AppliedAmountExceedsTargetError", message: "raw" },
+    };
+    const result = classifySubmitError(
+      err,
+      (remaining) => `capped at ${remaining}`,
+      undefined,
+      "The avoir amount exceeds the target invoice's total."
+    );
+    expect(result).toBe("The avoir amount exceeds the target invoice's total.");
+  });
+
+  it("falls back to the raw backend message for AppliedExceedsTarget when no dedicated message is supplied", () => {
+    const err = {
+      data: { error: "AppliedExceedsTarget", message: "raw backend message" },
     };
     const result = classifySubmitError(err, (remaining) => `capped at ${remaining}`);
     expect(result).toBe("raw backend message");

@@ -428,6 +428,7 @@
     "refundOf": "Trả hàng cho {number}",
     "appliedTo": "Áp dụng cho {number}",
     "errorRefundExceedsSource": "Khoản trả hàng vượt quá số tiền còn lại ({remaining}) của hóa đơn này.",
+    "errorAppliedExceedsTarget": "Số tiền avoir vượt quá tổng số tiền của hóa đơn được áp dụng.",
     "settledVia": {
       "label": "Thanh toán qua",
       "cash": "Hoàn tiền mặt",

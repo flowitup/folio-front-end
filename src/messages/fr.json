@@ -428,6 +428,7 @@
     "refundOf": "Avoir sur {number}",
     "appliedTo": "Imputé sur {number}",
     "errorRefundExceedsSource": "L'avoir dépasse le montant restant ({remaining}) pour cette facture.",
+    "errorAppliedExceedsTarget": "Le montant de l'avoir dépasse le total de la facture visée.",
     "settledVia": {
       "label": "Réglé via",
       "cash": "Remboursement en espèces",

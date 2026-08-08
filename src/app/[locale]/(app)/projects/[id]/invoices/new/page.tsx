@@ -47,7 +47,8 @@ export default function NewInvoicePage() {
         classifySubmitError(
           err,
           (remaining) => t("errorRefundExceedsSource", { remaining }),
-          t("errorServiceMonthNotAllowed")
+          t("errorServiceMonthNotAllowed"),
+          t("errorAppliedExceedsTarget")
         )
       );
       setIsLoading(false);

@@ -9,6 +9,8 @@
  *   the target carries a payment_method_label, generic text otherwise)
  * - Submitted payload carries settled_via + applied_to_invoice_id only for
  *   type=return; untouched settled_via stays null
+ * - Cap error (AppliedExceedsTarget 400) rendered inline as the localized
+ *   "avoir exceeds target total" message
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -57,6 +59,7 @@ vi.mock("next-intl", () => ({
       "appliedToMethodHintWithLabel": values
         ? `The return's payment method will follow the selected invoice's method (${values.label}).`
         : "The return's payment method will follow the selected invoice's method ({label}).",
+      "errorAppliedExceedsTarget": "The avoir amount exceeds the target invoice's total.",
       // tags namespace passthrough
       "select.label": "Phase Tag",
       // paymentMethods.builtins namespace passthrough
@@ -401,5 +404,50 @@ describe("InvoiceForm — submitted payload", () => {
     const payload = onSubmit.mock.calls[0][0];
     expect(payload).not.toHaveProperty("settled_via");
     expect(payload).not.toHaveProperty("applied_to_invoice_id");
+  });
+});
+
+describe("InvoiceForm — cap error (AppliedExceedsTarget)", () => {
+  const onSubmit = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFetchInvoices.mockResolvedValue(emptyMetaResponse([makeInvoice("ms-1", "INV-001", 300)]));
+  });
+
+  it("renders the localized message inline when the backend returns AppliedExceedsTarget", async () => {
+    // Simulate the API error shape: { error: "AppliedExceedsTarget", message, status_code: 400 }
+    const capError = Object.assign(new Error("cap exceeded"), {
+      data: {
+        error: "AppliedExceedsTarget",
+        message: "Applied amount exceeds target invoice total. Remaining applicable: 50",
+      },
+    });
+    onSubmit.mockRejectedValueOnce(capError);
+
+    const user = userEvent.setup();
+    render(<InvoiceForm onSubmit={onSubmit} initialValues={{ type: "return" }} projectId="proj-1" />);
+
+    const textInputs = screen.getAllByRole("textbox");
+    await user.type(textInputs[0], "Supplier");
+    const descInputs = screen.getAllByPlaceholderText(/description/i);
+    await user.type(descInputs[0], "Credit note");
+
+    const settledVia = await screen.findByTestId("settled-via-select");
+    fireEvent.change(settledVia, { target: { value: "avoir" } });
+    const picker = await screen.findByTestId("applied-to-invoice-select");
+    await user.selectOptions(picker as HTMLSelectElement, "ms-1");
+
+    const submitBtn = screen.getByRole("button", { name: /save/i });
+    await user.click(submitBtn);
+
+    await waitFor(() => {
+      // The raw backend message ("Remaining applicable: 50") must NOT leak through —
+      // the localized static message is shown instead.
+      expect(
+        screen.getByText("The avoir amount exceeds the target invoice's total.")
+      ).toBeDefined();
+      expect(screen.queryByText(/Remaining applicable/i)).toBeNull();
+    });
   });
 });

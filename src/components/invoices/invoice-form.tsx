@@ -287,7 +287,8 @@ export function InvoiceForm({
       setError(classifySubmitError(
         err,
         (remaining: string) => t("errorRefundExceedsSource", { remaining }),
-        t("errorServiceMonthNotAllowed")
+        t("errorServiceMonthNotAllowed"),
+        t("errorAppliedExceedsTarget")
       ));
     }
   };
@@ -742,12 +743,16 @@ export function InvoiceForm({
  * `serviceMonthNotAllowedMessage`, when provided, is returned verbatim for
  * the backend's `service_month_not_allowed` (service_month set on a
  * non-labor invoice type).
+ * `appliedExceedsTargetMessage`, when provided, is returned verbatim for the
+ * backend's `AppliedExceedsTarget` (avoir amount exceeds the target
+ * invoice's remaining applicable total).
  * Falls back to the raw error message, then a generic fallback.
  */
 export function classifySubmitError(
   err: unknown,
   formatCapError: (remaining: string) => string,
-  serviceMonthNotAllowedMessage?: string
+  serviceMonthNotAllowedMessage?: string,
+  appliedExceedsTargetMessage?: string
 ): string {
   if (err && typeof err === "object") {
     const e = err as Record<string, unknown>;
@@ -771,6 +776,13 @@ export function classifySubmitError(
 
     if (code === "service_month_not_allowed" && serviceMonthNotAllowedMessage) {
       return serviceMonthNotAllowedMessage;
+    }
+
+    if (
+      (code === "AppliedExceedsTarget" || code === "AppliedAmountExceedsTargetError") &&
+      appliedExceedsTargetMessage
+    ) {
+      return appliedExceedsTargetMessage;
     }
 
     if (typeof message === "string" && message.trim()) return message;

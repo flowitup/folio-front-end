@@ -8,7 +8,7 @@
  * so that component stays presentational (CLAUDE.md's 200-line guidance).
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { fetchLaborSummary, fetchLaborMonthlySummary, fetchLaborPaymentsSummary } from "@/lib/api/labor";
@@ -22,8 +22,23 @@ import {
   monthToDateRange,
 } from "@/components/labor/labor-payments-tab-state";
 
-export function useLaborPaymentsData(projectId: string) {
+/**
+ * @param sharedPaymentsSummary Pass the parent's already-loaded payments
+ *   summary (labor/page.tsx lifts this fetch so the Summary tab's Paid
+ *   column and this tab don't each fetch it independently) plus its reload
+ *   function. Omit both for standalone/self-contained usage (this hook then
+ *   fetches its own copy, matching the original behavior).
+ */
+export function useLaborPaymentsData(
+  projectId: string,
+  sharedPaymentsSummary?: LaborPaymentsSummaryResponse | null,
+  reloadSharedPaymentsSummary?: () => Promise<LaborPaymentsSummaryResponse>,
+) {
   const t = useTranslations("labor.payments");
+  // Both must be provided together — a caller that shares the summary value
+  // but forgets the reload function (or vice versa) falls back to the
+  // self-contained fetch rather than crashing on a missing reload call.
+  const isShared = sharedPaymentsSummary !== undefined && reloadSharedPaymentsSummary !== undefined;
 
   const [month, setMonth] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +52,10 @@ export function useLaborPaymentsData(projectId: string) {
   const [error, setError] = useState<string | null>(null);
 
   const [laborSummary, setLaborSummary] = useState<LaborSummaryResponse | null>(null);
-  const [paymentsSummary, setPaymentsSummary] = useState<LaborPaymentsSummaryResponse | null>(null);
+  // Own fetch/state — only used when the caller doesn't share one (see
+  // `isShared` above).
+  const [ownPaymentsSummary, setOwnPaymentsSummary] = useState<LaborPaymentsSummaryResponse | null>(null);
+  const paymentsSummary = isShared ? sharedPaymentsSummary ?? null : ownPaymentsSummary;
   const [unassignedInvoices, setUnassignedInvoices] = useState<Invoice[]>([]);
   const [noMonthInvoices, setNoMonthInvoices] = useState<Invoice[]>([]);
   const [noMonthLoading, setNoMonthLoading] = useState(false);
@@ -46,10 +64,18 @@ export function useLaborPaymentsData(projectId: string) {
   const bump = () => setReloadSignal((v) => v + 1);
 
   const loadPaymentsSummary = useCallback(async () => {
+    if (isShared) return reloadSharedPaymentsSummary!();
     const data = await fetchLaborPaymentsSummary(projectId);
-    setPaymentsSummary(data);
+    setOwnPaymentsSummary(data);
     return data;
-  }, [projectId]);
+  }, [projectId, isShared, reloadSharedPaymentsSummary]);
+
+  // Captures the payments summary available at mount, for the one-time
+  // default-month pick below — read via ref (not a dependency) so a later
+  // payments update (e.g. after recording a payment) doesn't re-run that
+  // effect and silently reset the user's selected month.
+  const mountPaymentsSummaryRef = useRef(paymentsSummary);
+  mountPaymentsSummaryRef.current = paymentsSummary;
 
   const loadNoMonthInvoices = useCallback(async () => {
     setNoMonthLoading(true);
@@ -77,14 +103,20 @@ export function useLaborPaymentsData(projectId: string) {
   );
 
   // Initial load: monthly-entries rollup (for default-month calc) + payments
-  // summary + the month-independent no-month bucket, in parallel.
+  // summary + the month-independent no-month bucket, in parallel. When the
+  // payments summary is shared from a parent, reuse the mount-time value
+  // instead of re-fetching (avoids a redundant call to the same endpoint the
+  // parent already resolved before this tab could even mount).
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const [monthly, payments] = await Promise.all([fetchLaborMonthlySummary(projectId), loadPaymentsSummary()]);
+        const [monthly, payments] = await Promise.all([
+          fetchLaborMonthlySummary(projectId),
+          isShared ? Promise.resolve(mountPaymentsSummaryRef.current) : loadPaymentsSummary(),
+        ]);
         if (!cancelled) setMonth(pickDefaultMonth(monthly, payments));
       } catch {
         if (!cancelled) setError(t("loadFailed"));
@@ -96,6 +128,12 @@ export function useLaborPaymentsData(projectId: string) {
     return () => {
       cancelled = true;
     };
+    // `isShared` (and the mount-time ref it gates) is intentionally excluded:
+    // this effect picks the default month exactly once at mount from
+    // whatever payments summary was available then. Including it would
+    // re-run the pick — and refetch the monthly rollup — on every later
+    // payments update, silently overriding the user's selected month.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, loadPaymentsSummary, loadNoMonthInvoices, t]);
 
   // Refetch owed + unassigned whenever the viewed month changes.

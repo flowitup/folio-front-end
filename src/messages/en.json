@@ -593,6 +593,7 @@
     "summaryToggleBreakdown": "Toggle per-worker breakdown",
     "summaryDrillDown": "Click to view per-worker breakdown",
     "summaryMonthPickerAll": "All months",
+    "summaryUnassignedHint": "+ {n} unassigned",
     "workersBadge": "{n} workers",
     "role": {
       "label": "Role",

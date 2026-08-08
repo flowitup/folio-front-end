@@ -17,7 +17,7 @@ import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import type { Worker } from "@/types/labor";
+import type { Worker, LaborPaymentsSummaryResponse } from "@/types/labor";
 import { useLaborPaymentsData } from "@/components/labor/use-labor-payments-data";
 import { LaborPaymentsWorkerTable } from "@/components/labor/labor-payments-worker-table";
 import { UnassignedLaborInvoices } from "@/components/labor/unassigned-labor-invoices";
@@ -30,6 +30,11 @@ export interface LaborPaymentsTabProps {
    *  invoice write, not a labor-entry write. */
   canManage: boolean;
   workers: Worker[];
+  /** Share the payments-summary fetch with a parent (labor/page.tsx lifts
+   *  it so the Summary tab's Paid column and this tab don't each fetch it
+   *  independently). Omit both to keep this tab fully self-contained. */
+  paymentsSummary?: LaborPaymentsSummaryResponse | null;
+  onReloadPaymentsSummary?: () => Promise<LaborPaymentsSummaryResponse>;
 }
 
 function formatMonthLabel(month: string, locale: string): string {
@@ -38,7 +43,13 @@ function formatMonthLabel(month: string, locale: string): string {
   return new Date(y, m - 1, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
 }
 
-export function LaborPaymentsTab({ projectId, canManage, workers }: LaborPaymentsTabProps) {
+export function LaborPaymentsTab({
+  projectId,
+  canManage,
+  workers,
+  paymentsSummary,
+  onReloadPaymentsSummary,
+}: LaborPaymentsTabProps) {
   const t = useTranslations("labor.payments");
   const tLabor = useTranslations("labor");
   const locale = useLocale();
@@ -58,7 +69,7 @@ export function LaborPaymentsTab({ projectId, canManage, workers }: LaborPayment
     handleAssignWorker,
     handleAssignMonth,
     handleRecordSaved,
-  } = useLaborPaymentsData(projectId);
+  } = useLaborPaymentsData(projectId, paymentsSummary, onReloadPaymentsSummary);
 
   const [recordDialog, setRecordDialog] = useState<{ open: boolean; worker: Worker | null }>({
     open: false,

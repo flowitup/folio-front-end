@@ -593,6 +593,7 @@
     "summaryToggleBreakdown": "Hiển thị chi tiết theo công nhân",
     "summaryDrillDown": "Nhấn để xem chi tiết theo công nhân",
     "summaryMonthPickerAll": "Tất cả tháng",
+    "summaryUnassignedHint": "+ {n} chưa gán",
     "workersBadge": "{n} công nhân",
     "role": {
       "label": "Vai trò",

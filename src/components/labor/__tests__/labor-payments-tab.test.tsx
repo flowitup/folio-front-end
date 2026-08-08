@@ -243,3 +243,44 @@ describe("LaborPaymentsTab — quick-assign payloads", () => {
     );
   });
 });
+
+describe("LaborPaymentsTab — shared payments summary from a parent", () => {
+  it("reuses a parent-supplied paymentsSummary instead of fetching its own", async () => {
+    // labor/page.tsx lifts this fetch so the Summary tab's Paid column and
+    // this tab share one call instead of each re-fetching on every tab
+    // switch — passing both props should skip this component's own fetch.
+    const sharedPaymentsSummary = {
+      months: [
+        {
+          year: 2026,
+          month: 7,
+          total_paid: 300,
+          workers: [{ worker_id: "w1", worker_name: "Alice", paid: 300, invoice_count: 1 }],
+          unassigned_paid: 0,
+          unassigned_count: 0,
+        },
+      ],
+    };
+    const onReloadPaymentsSummary = vi.fn().mockResolvedValue(sharedPaymentsSummary);
+
+    render(
+      <LaborPaymentsTab
+        projectId="p1"
+        canManage
+        workers={WORKERS}
+        paymentsSummary={sharedPaymentsSummary}
+        onReloadPaymentsSummary={onReloadPaymentsSummary}
+      />,
+    );
+
+    const row = await screen.findByTestId("row-w1");
+    expect(row).toHaveAttribute("data-paid", "300");
+    expect(mockFetchLaborPaymentsSummary).not.toHaveBeenCalled();
+  });
+
+  it("still fetches its own payments summary when used standalone (no shared props)", async () => {
+    render(<LaborPaymentsTab projectId="p1" canManage workers={WORKERS} />);
+    await screen.findByTestId("row-w1");
+    expect(mockFetchLaborPaymentsSummary).toHaveBeenCalledWith("p1");
+  });
+});

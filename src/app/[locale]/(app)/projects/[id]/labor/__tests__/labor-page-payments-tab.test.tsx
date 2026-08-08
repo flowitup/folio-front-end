@@ -72,6 +72,7 @@ vi.mock("@/lib/api/labor", () => ({
     total_bonus_cost: 0,
   }),
   fetchLaborMonthlySummary: vi.fn().mockResolvedValue({ rows: [] }),
+  fetchLaborPaymentsSummary: vi.fn().mockResolvedValue({ months: [] }),
   fetchLaborActivities: vi.fn().mockResolvedValue([]),
   createLaborActivity: vi.fn(),
   updateLaborActivity: vi.fn(),

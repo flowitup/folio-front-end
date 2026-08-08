@@ -593,6 +593,7 @@
     "summaryToggleBreakdown": "Afficher le détail par ouvrier",
     "summaryDrillDown": "Cliquer pour voir le détail par ouvrier",
     "summaryMonthPickerAll": "Tous les mois",
+    "summaryUnassignedHint": "+ {n} non attribué(s)",
     "workersBadge": "{n} ouvriers",
     "role": {
       "label": "Rôle",

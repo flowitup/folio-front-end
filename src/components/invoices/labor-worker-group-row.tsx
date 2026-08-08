@@ -101,6 +101,9 @@ export function LaborWorkerGroupRow(props: LaborWorkerGroupRowProps) {
         onClick={onToggle}
         aria-expanded={expanded}
         className="flex w-full flex-wrap items-center gap-3 px-4 py-3 text-left"
+        // Whole-row tint (not just the chip) so currently-active workers pop
+        // out while scanning the list.
+        style={props.activeThisMonth ? { background: "var(--positive-tint)" } : undefined}
       >
         {chevron}
         {avatar}
@@ -116,6 +119,7 @@ export function LaborWorkerGroupRow(props: LaborWorkerGroupRowProps) {
         onClick={onToggle}
         aria-expanded={expanded}
         className="folio-card flex w-full flex-col gap-2 p-4 text-left"
+        style={props.activeThisMonth ? { background: "var(--positive-tint)" } : undefined}
       >
         <span className="flex items-center justify-between gap-2">
           <span className="flex min-w-0 items-center gap-2">

@@ -278,6 +278,12 @@ describe("LaborInvoicesByWorker — on-site-this-month highlight", () => {
     expect(await screen.findByTestId("labor-by-worker-active-desktop-w-alice")).toBeInTheDocument();
     expect(screen.queryByTestId("labor-by-worker-active-desktop-w-bruno")).toBeNull();
     expect(screen.queryByTestId("labor-by-worker-active-desktop-unassigned")).toBeNull();
+
+    // The whole row is tinted, not just the chip.
+    const activeRowBtn = screen.getByTestId("labor-by-worker-group-desktop-w-alice").querySelector("button")!;
+    expect(activeRowBtn.style.background).toContain("--positive-tint");
+    const idleRowBtn = screen.getByTestId("labor-by-worker-group-desktop-w-bruno").querySelector("button")!;
+    expect(idleRowBtn.style.background).toBe("");
     // Queried the CURRENT calendar month.
     const [, params] = mockFetchLaborSummary.mock.calls[0];
     expect(params?.from).toMatch(/^\d{4}-\d{2}-01$/);

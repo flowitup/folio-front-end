@@ -13,7 +13,7 @@
  * testids are suffixed accordingly so tests can scope queries.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { updateInvoice } from "@/lib/api/invoice-api";
@@ -74,6 +74,17 @@ export function LaborInvoicesByWorker({
       cancelled = true;
     };
   }, [projectId, canManage, hasUnassigned]);
+
+  // A single group is the whole labor ledger (typically a legacy project where
+  // every invoice is Unassigned) — collapsed-by-default would hide every labor
+  // invoice behind one row. Expand it once; the ref keeps a user's later
+  // collapse from being fought by re-renders.
+  const didAutoExpandRef = useRef(false);
+  useEffect(() => {
+    if (didAutoExpandRef.current || groups.length !== 1) return;
+    didAutoExpandRef.current = true;
+    setExpandedGroups((prev) => (prev.size > 0 ? prev : new Set([groups[0].workerId])));
+  }, [groups]);
 
   // Deep-link support: auto-expand whichever group holds the ?invoice=<id> row
   // so the inline detail from a shared link is actually reachable.

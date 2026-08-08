@@ -94,10 +94,20 @@ export function LaborWorkerGroupHistory({
                     <span className="num text-[12px]" style={{ color: "var(--muted)" }}>
                       {formatDate(inv.issue_date)}
                     </span>
-                    <span className="num text-[13px] font-medium">{formatEUR(inv.total_amount)}</span>
+                    {/* Recipient is the ONLY identity an unassigned (legacy free-text)
+                        labor invoice has — omitting it makes those rows indistinguishable.
+                        Shown for linked groups too so rows align with the page's
+                        invoice-table columns (number · date · recipient · method · total). */}
+                    <span
+                      className="min-w-0 flex-1 truncate text-[12.5px]"
+                      data-testid={`labor-by-worker-invoice-recipient-${variant}-${inv.id}`}
+                    >
+                      {inv.recipient_name || "—"}
+                    </span>
                     <span className="text-[12px]" style={{ color: "var(--muted)" }}>
                       {methodLabel ?? "—"}
                     </span>
+                    <span className="num text-[13px] font-medium">{formatEUR(inv.total_amount)}</span>
                     {isUnassignedGroup && canManage && (
                       <span onClick={(e) => e.stopPropagation()}>
                         <AssignWorkerSelect

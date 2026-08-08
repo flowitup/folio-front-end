@@ -131,6 +131,8 @@ describe("LaborInvoicesByWorker — expand/collapse and month history", () => {
       makeInvoice({ id: "i1", worker_id: "w-alice", service_month: "2026-03-01" }),
       makeInvoice({ id: "i2", worker_id: "w-alice", service_month: "2026-06-01" }),
       makeInvoice({ id: "i3", worker_id: "w-alice", service_month: null }),
+      // Second group so nothing auto-expands — this test exercises the manual click.
+      makeInvoice({ id: "x9", worker_id: null, service_month: "2026-06-01" }),
     ];
     render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
 
@@ -146,7 +148,7 @@ describe("LaborInvoicesByWorker — expand/collapse and month history", () => {
     const invoices = [makeInvoice({ id: "inv-42", worker_id: "w-alice", service_month: "2026-06-01" })];
     render(<LaborInvoicesByWorker {...baseProps({ invoices, onToggleInvoice })} />);
 
-    fireEvent.click(screen.getByTestId("labor-by-worker-group-desktop-w-alice").querySelector("button")!);
+    // Sole group auto-expands; the invoice row is reachable without a group click.
     const row = await screen.findByTestId("labor-by-worker-invoice-desktop-inv-42");
     fireEvent.click(row);
 
@@ -168,7 +170,7 @@ describe("LaborInvoicesByWorker — quick-assign on Unassigned rows", () => {
     const invoices = [makeInvoice({ id: "inv-9", worker_id: null })];
     render(<LaborInvoicesByWorker {...baseProps({ invoices, onMutated })} />);
 
-    fireEvent.click(screen.getByTestId("labor-by-worker-group-desktop-unassigned").querySelector("button")!);
+    // Sole (Unassigned) group auto-expands on mount.
     await waitFor(() => expect(mockFetchWorkers).toHaveBeenCalledWith("p1"));
 
     const trigger = await screen.findByTestId("assign-worker-select");
@@ -184,7 +186,7 @@ describe("LaborInvoicesByWorker — quick-assign on Unassigned rows", () => {
     const invoices = [makeInvoice({ id: "inv-9", worker_id: null })];
     render(<LaborInvoicesByWorker {...baseProps({ invoices, canManage: false })} />);
 
-    fireEvent.click(screen.getByTestId("labor-by-worker-group-desktop-unassigned").querySelector("button")!);
+    // Sole (Unassigned) group auto-expands on mount.
     await screen.findByTestId("labor-by-worker-invoice-desktop-inv-9");
 
     expect(mockFetchWorkers).not.toHaveBeenCalled();
@@ -196,5 +198,62 @@ describe("LaborInvoicesByWorker — empty input", () => {
   it("renders nothing when invoices is empty", () => {
     const { container } = render(<LaborInvoicesByWorker {...baseProps({ invoices: [] })} />);
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("LaborInvoicesByWorker — recipient identity on history rows", () => {
+  it("shows each invoice's recipient_name in the expanded history (legacy unassigned rows are otherwise anonymous)", async () => {
+    const invoices = [
+      makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i4", worker_id: null, recipient_name: "Djamel B.", total_amount: 30 }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+
+    const unassignedRow = screen.getByRole("button", { name: /labor\.payments\.unassignedTitle/ });
+    fireEvent.click(unassignedRow);
+
+    expect(screen.getByTestId("labor-by-worker-invoice-recipient-desktop-i4").textContent).toBe("Djamel B.");
+  });
+
+  it("falls back to an em dash when recipient_name is empty", async () => {
+    const invoices = [
+      makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i9", worker_id: null, recipient_name: "" }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+    fireEvent.click(screen.getByRole("button", { name: /labor\.payments\.unassignedTitle/ }));
+    expect(screen.getByTestId("labor-by-worker-invoice-recipient-desktop-i9").textContent).toBe("—");
+  });
+});
+
+describe("LaborInvoicesByWorker — single-group auto-expand", () => {
+  it("auto-expands when the only group is Unassigned (legacy project: nothing hidden behind one row)", async () => {
+    const invoices = [
+      makeInvoice({ id: "i4", worker_id: null, recipient_name: "Djamel B." }),
+      makeInvoice({ id: "i5", worker_id: null, recipient_name: "Karim", service_month: "2026-07-01" }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+
+    // History visible without any click.
+    expect(await screen.findByTestId("labor-by-worker-history-desktop")).toBeInTheDocument();
+    expect(screen.getByTestId("labor-by-worker-invoice-recipient-desktop-i4").textContent).toBe("Djamel B.");
+  });
+
+  it("does not auto-expand when several groups exist", () => {
+    const invoices = [
+      makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i4", worker_id: null, recipient_name: "Loose Co" }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+    expect(screen.queryByTestId("labor-by-worker-history-desktop")).toBeNull();
+  });
+
+  it("keeps a user's collapse of the auto-expanded group (no re-expand fight)", async () => {
+    const invoices = [makeInvoice({ id: "i4", worker_id: null, recipient_name: "Djamel B." })];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+    expect(await screen.findByTestId("labor-by-worker-history-desktop")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /labor\.payments\.unassignedTitle/ }));
+    expect(screen.queryByTestId("labor-by-worker-history-desktop")).toBeNull();
   });
 });

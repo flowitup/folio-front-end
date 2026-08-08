@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState, useEffect, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
@@ -27,7 +27,8 @@ import {
   refundStatusI18nKey,
 } from "@/lib/invoices/refundable-status-display";
 import { fetchTagsClient } from "@/lib/api/tags-client";
-import { formatDate, formatEUR } from "@/lib/utils/formatters";
+import { groupInvoicesByMonth } from "@/lib/invoices/group-invoices-by-month";
+import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
 
@@ -63,9 +64,23 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
   return: "stamp warning",
 };
 
+/**
+ * One render section of the ledger. The "all" tab emits one section per
+ * (month, category) pair — `monthHeader` set only on the month's first
+ * category so the month row renders once. Type tabs emit a single flat
+ * section with no header and no stamp.
+ */
+interface TableSection {
+  key: string;
+  monthHeader: { monthKey: string; subtotal: number } | null;
+  type: InvoiceType | null;
+  items: Invoice[];
+}
+
 export default function InvoicesPage() {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
+  const locale = useLocale();
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -178,11 +193,21 @@ export default function InvoicesPage() {
 
   const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services", "others", "return"];
 
-  const GROUP_ORDER: InvoiceType[] = ["released_funds", "labor", "materials_services", "others", "return"];
-  const groupedInvoices = GROUP_ORDER
-    .map((type) => ({ type, items: invoices.filter((i) => i.type === type) }))
-    .filter((g) => g.items.length > 0);
-  const showGroups = activeTab === "all" && groupedInvoices.length > 0;
+  // Month → category sections for the "all" tab, computed client-side over
+  // whatever the fetch returned (tag filters compose for free). Labor buckets
+  // by service_month (fallback issue_date), everything else by issue_date.
+  const sections: TableSection[] =
+    activeTab === "all"
+      ? groupInvoicesByMonth(invoices).flatMap((mg) =>
+          mg.categories.map((c, idx) => ({
+            key: `${mg.monthKey}-${c.type}`,
+            monthHeader:
+              idx === 0 ? { monthKey: mg.monthKey, subtotal: mg.subtotal } : null,
+            type: c.type,
+            items: c.items,
+          }))
+        )
+      : [{ key: "flat", monthHeader: null, type: null, items: invoices }];
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
@@ -265,9 +290,21 @@ export default function InvoicesPage() {
                 onMutated={loadInvoices}
               />
             ) : (
-              (showGroups ? groupedInvoices : [{ type: null, items: invoices }]).map(
-                ({ type: groupType, items }) => (
-                  <Fragment key={groupType ?? "flat"}>
+              sections.map(({ key, monthHeader, type: groupType, items }) => (
+                  <Fragment key={key}>
+                    {monthHeader && (
+                      <div
+                        className="flex items-baseline justify-between gap-3 pt-4"
+                        data-testid={`invoices-month-header-mobile-${monthHeader.monthKey}`}
+                      >
+                        <span className="label-cap" style={{ fontSize: 12, color: "var(--ink)" }}>
+                          {formatMonthYear(monthHeader.monthKey, locale)}
+                        </span>
+                        <span className="num text-[13px] font-medium">
+                          {formatEUR(monthHeader.subtotal)}
+                        </span>
+                      </div>
+                    )}
                     {groupType && (
                       <div className="flex items-center gap-2 pt-3">
                         <span className={TYPE_STAMP_CLASS[groupType]}>
@@ -275,20 +312,7 @@ export default function InvoicesPage() {
                         </span>
                       </div>
                     )}
-                    {groupType === "labor" ? (
-                      <LaborInvoicesByWorker
-                        invoices={items}
-                        projectId={projectId}
-                        variant="mobile"
-                        canManage={canManageInvoices}
-                        companyName={companyName}
-                        selectedInvoiceId={selectedInvoiceId}
-                        onToggleInvoice={toggleInvoice}
-                        onCloseInvoice={closeInvoice}
-                        onMutated={loadInvoices}
-                      />
-                    ) : (
-                      items.map((invoice) => {
+                    {items.map((invoice) => {
                         const isOpen = selectedInvoiceId === invoice.id;
                         return (
                           <InvoiceMobileCard
@@ -312,11 +336,9 @@ export default function InvoicesPage() {
                             />
                           </InvoiceMobileCard>
                         );
-                      })
-                    )}
+                      })}
                   </Fragment>
-                )
-              )
+              ))
             )}
           </div>
 
@@ -358,9 +380,32 @@ export default function InvoicesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(showGroups ? groupedInvoices : [{ type: null, items: invoices }]).map(
-                      ({ type: groupType, items }) => (
-                        <Fragment key={groupType ?? "flat"}>
+                    {sections.map(({ key, monthHeader, type: groupType, items }) => (
+                        <Fragment key={key}>
+                          {monthHeader && (
+                            <tr data-testid={`invoices-month-header-desktop-${monthHeader.monthKey}`}>
+                              <td
+                                colSpan={colCount}
+                                style={{
+                                  paddingTop: 24,
+                                  paddingBottom: 6,
+                                  borderBottom: "1px solid var(--line)",
+                                }}
+                              >
+                                <div className="flex items-baseline justify-between gap-3">
+                                  <span
+                                    className="label-cap"
+                                    style={{ fontSize: 12, color: "var(--ink)" }}
+                                  >
+                                    {formatMonthYear(monthHeader.monthKey, locale)}
+                                  </span>
+                                  <span className="num text-[13px] font-medium">
+                                    {formatEUR(monthHeader.subtotal)}
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
                           {groupType && (
                             <tr>
                               <td
@@ -378,23 +423,7 @@ export default function InvoicesPage() {
                               </td>
                             </tr>
                           )}
-                          {groupType === "labor" ? (
-                            <tr>
-                              <td colSpan={colCount} className="p-0">
-                                <LaborInvoicesByWorker
-                                  invoices={items}
-                                  projectId={projectId}
-                                  variant="desktop"
-                                  canManage={canManageInvoices}
-                                  companyName={companyName}
-                                  selectedInvoiceId={selectedInvoiceId}
-                                  onToggleInvoice={toggleInvoice}
-                                  onCloseInvoice={closeInvoice}
-                                  onMutated={loadInvoices}
-                                />
-                              </td>
-                            </tr>
-                          ) : items.map((invoice) => {
+                          {items.map((invoice) => {
                             const isOpen = selectedInvoiceId === invoice.id;
                             const detailId = `invoice-detail-${invoice.id}`;
                             const tvaAmount = showTvaCol ? invoiceTva(invoice.items) : 0;
@@ -560,8 +589,7 @@ export default function InvoicesPage() {
                             );
                           })}
                         </Fragment>
-                      )
-                    )}
+                    ))}
                   </tbody>
                 </table>
                 );

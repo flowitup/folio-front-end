@@ -267,6 +267,29 @@ describe("InvoicesPage — month-grouped all tab", () => {
     });
   });
 
+  it("stamps desktop labor rows with their service month so cross-month bucketing is explained", async () => {
+    setupMocks(fixture());
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    const stamp = await within(desktop).findByTestId("labor-service-month-desktop");
+    expect(stamp.textContent).toBe("June 2026");
+  });
+
+  it("exposes month headers as headings for screen-reader navigation", async () => {
+    setupMocks(fixture());
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByTestId("invoices-month-header-desktop-2026-06");
+    expect(
+      within(desktop).getByRole("heading", { name: "June 2026" })
+    ).not.toBeNull();
+    expect(
+      within(desktop).getByRole("heading", { name: "July 2026" })
+    ).not.toBeNull();
+  });
+
   it("opens the inline detail from a flat labor row via the ?invoice= URL toggle", async () => {
     setupMocks(fixture());
     render(<InvoicesPage />);

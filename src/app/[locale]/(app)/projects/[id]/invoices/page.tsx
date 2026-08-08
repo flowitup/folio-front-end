@@ -297,9 +297,9 @@ export default function InvoicesPage() {
                         className="flex items-baseline justify-between gap-3 pt-4"
                         data-testid={`invoices-month-header-mobile-${monthHeader.monthKey}`}
                       >
-                        <span className="label-cap" style={{ fontSize: 12, color: "var(--ink)" }}>
+                        <h3 className="label-cap" style={{ fontSize: 12, color: "var(--ink)" }}>
                           {formatMonthYear(monthHeader.monthKey, locale)}
-                        </span>
+                        </h3>
                         <span className="num text-[13px] font-medium">
                           {formatEUR(monthHeader.subtotal)}
                         </span>
@@ -393,12 +393,15 @@ export default function InvoicesPage() {
                                 }}
                               >
                                 <div className="flex items-baseline justify-between gap-3">
-                                  <span
+                                  {/* h3 (unstyled by preflight, so visually identical to a
+                                      span) gives screen readers heading navigation across
+                                      month sections that row markup alone can't provide. */}
+                                  <h3
                                     className="label-cap"
                                     style={{ fontSize: 12, color: "var(--ink)" }}
                                   >
                                     {formatMonthYear(monthHeader.monthKey, locale)}
-                                  </span>
+                                  </h3>
                                   <span className="num text-[13px] font-medium">
                                     {formatEUR(monthHeader.subtotal)}
                                   </span>
@@ -457,6 +460,18 @@ export default function InvoicesPage() {
                                       >
                                         <Lock size={10} className="mr-0.5 inline" />
                                         {t("auto")}
+                                      </span>
+                                    )}
+                                    {/* On the month-grouped all tab a labor row can sit under a
+                                        month ≠ its issue month — the service-month stamp says
+                                        which month the payment is FOR (mirrors the mobile card). */}
+                                    {invoice.type === "labor" && invoice.service_month && (
+                                      <span
+                                        className="stamp ml-2"
+                                        style={{ fontSize: 10, verticalAlign: "middle" }}
+                                        data-testid="labor-service-month-desktop"
+                                      >
+                                        {formatMonthYear(invoice.service_month, locale)}
                                       </span>
                                     )}
                                     {invoice.type === "return" && (

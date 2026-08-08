@@ -2,6 +2,13 @@
 
 export type InvoiceType = "released_funds" | "labor" | "materials_services" | "others" | "return";
 
+/**
+ * How a `return` invoice was settled: 'cash' = refunded out via bank/cash (no
+ * link needed); 'avoir' = a supplier credit note applied against another
+ * invoice. Only meaningful when type === 'return'.
+ */
+export type SettledVia = "cash" | "avoir";
+
 interface InvoiceItem {
   description: string;
   quantity: number;
@@ -81,6 +88,28 @@ export interface Invoice {
    * legacy labor invoices created before this field existed.
    */
   service_month: string | null;
+  /**
+   * How this return was settled — 'cash' or 'avoir' (supplier credit note).
+   * null = not yet decided, or a legacy return row written before this field
+   * existed. Only meaningful when type === 'return'.
+   */
+  settled_via?: SettledVia | null;
+  /**
+   * UUID of the invoice this avoir return is applied to ("paid with returns"
+   * on that target). Only set when type === 'return' && settled_via ===
+   * 'avoir'; null = unlinked ("outstanding" avoir).
+   */
+  applied_to_invoice_id?: string | null;
+  /**
+   * Invoice number of applied_to_invoice_id's target (read-only enrichment
+   * from the backend). Present when applied_to_invoice_id is set.
+   */
+  applied_to_invoice_number?: string | null;
+  /**
+   * Avoir return invoices applied to THIS invoice (reverse of
+   * applied_to_invoice_id) — i.e. what paid for it. Empty array when none.
+   */
+  paid_with_returns?: { invoice_number: string; total_amount: number }[];
 }
 
 export interface CreateInvoicePayload {
@@ -105,6 +134,17 @@ export interface CreateInvoicePayload {
    * Null clears the value; omitted = keep existing (on update).
    */
   service_month?: string | null;
+  /**
+   * How the return is settled — 'cash' or 'avoir'. Only valid when
+   * type='return'. Null clears the field; omitted = keep existing (on update).
+   */
+  settled_via?: SettledVia | null;
+  /**
+   * UUID of the invoice this avoir return is applied to. Only valid when
+   * type='return' && settled_via='avoir' — the backend rejects it otherwise.
+   * Null clears the link; omitted = keep existing (on update).
+   */
+  applied_to_invoice_id?: string | null;
 }
 
 export type UpdateInvoicePayload = Partial<CreateInvoicePayload>;

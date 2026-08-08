@@ -426,7 +426,21 @@
     "refundsInvoiceLabel": "Returns invoice (Materials & Services)",
     "refundsInvoiceNone": "— none —",
     "refundOf": "Return of {number}",
+    "appliedTo": "Applied to {number}",
     "errorRefundExceedsSource": "Return exceeds the remaining returnable amount ({remaining}) for this invoice.",
+    "errorAppliedExceedsTarget": "The avoir amount exceeds the target invoice's total.",
+    "settledVia": {
+      "label": "Settled via",
+      "cash": "Cash refund",
+      "avoir": "Avoir (supplier credit)",
+      "avoirBadge": "Avoir",
+      "outstanding": "Outstanding avoir"
+    },
+    "appliedToInvoiceLabel": "Applied to invoice",
+    "appliedToInvoiceNone": "— none —",
+    "appliedToMethodHint": "The return's payment method will follow the selected invoice's method.",
+    "appliedToMethodHintWithLabel": "The return's payment method will follow the selected invoice's method ({label}).",
+    "paidWithAvoir": "Paid with avoir {number} ({amount})",
     "errorServiceMonthNotAllowed": "Payment for month can only be set on labor expenses.",
     "refund": {
       "status": {
@@ -464,6 +478,8 @@
       "refundableCount": "{n, plural, =1 {1 refundable} other {# refundable}}",
       "credit": "Credit",
       "refundsReceived": "{n, plural, =1 {1 return received} other {# returns received}}",
+      "returnsReceived": "Returns received ({n})",
+      "outstandingAvoirs": "{n, plural, =1 {1 outstanding avoir} other {# outstanding avoirs}}",
       "pendingRefunds": "Pending refunds",
       "vsMonth": "{delta} vs {month}"
     }

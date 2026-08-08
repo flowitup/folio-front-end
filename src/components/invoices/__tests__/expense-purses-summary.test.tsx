@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import type { Invoice } from "@/types/invoice";
 import { ExpensePursesSummary } from "../expense-purses-summary";
 
@@ -108,8 +108,10 @@ describe("ExpensePursesSummary — credit strip", () => {
     expect(
       screen.getByText('invoices.summary.refundsReceived({"n":2})')
     ).toBeDefined();
-    // Net −4 820 €, fr-FR formatted; match the digits only.
-    expect(screen.getByText(/4[^\d]*820/)).toBeDefined();
+    // Net −4 820 €, fr-FR formatted; match the digits only. Scoped to the
+    // headline total testid — the per-purse split row below can carry the
+    // same figure when every refund lands in one purse.
+    expect(screen.getByTestId("credit-strip-total").textContent).toMatch(/4[^\d]*820/);
   });
 });
 
@@ -358,5 +360,139 @@ describe("ExpensePursesSummary — data-tip tooltip", () => {
     fireEvent.mouseLeave(root);
     // The fixed overlay is gone (only the original mark text can remain).
     expect(root.querySelector(".fixed.z-50")).toBeNull();
+  });
+});
+
+describe("ExpensePursesSummary — avoir returns (per-purse rows, strip split, outstanding chip)", () => {
+  // Fixture: one company M&S expense + one personal M&S expense, each with a
+  // return netted against it; the personal return is an outstanding avoir
+  // (settled_via='avoir', no applied_to_invoice_id yet), the company return is
+  // a plain cash return.
+  const invoices: Invoice[] = [
+    makeInvoice({ id: "exp-company", total_amount: 10000 }),
+    makeInvoice({ id: "exp-personal", total_amount: 8000, paid_by_personal: true }),
+    makeInvoice({
+      id: "ref-company",
+      type: "return",
+      total_amount: -1500,
+      refunds_invoice_id: "exp-company",
+      settled_via: "cash",
+    }),
+    makeInvoice({
+      id: "ref-personal",
+      type: "return",
+      total_amount: -2000,
+      paid_by_personal: true,
+      refunds_invoice_id: "exp-personal",
+      settled_via: "avoir",
+      applied_to_invoice_id: null,
+    }),
+  ];
+
+  const META = {
+    fundsReleasedTotal: 30000,
+    fundsReleasedCompanyTotal: 20000,
+    fundsReleasedPersonalTotal: 10000,
+    companySpentTotal: 8500,
+    personalSpentTotal: 6000,
+  };
+
+  it("renders a 'Returns received' row on each purse card with the netted count + amount", () => {
+    render(<ExpensePursesSummary invoices={invoices} meta={META} />);
+
+    const companyRow = screen.getByTestId("purse-returns-row-company");
+    expect(companyRow.textContent).toContain('invoices.summary.returnsReceived({"n":1})');
+    expect(companyRow.textContent).toMatch(/1[^\d]*500/);
+
+    const personalRow = screen.getByTestId("purse-returns-row-personal");
+    expect(personalRow.textContent).toContain('invoices.summary.returnsReceived({"n":1})');
+    expect(personalRow.textContent).toMatch(/2[^\d]*000/);
+  });
+
+  it("omits the 'Returns received' row when a purse has no returns", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[makeInvoice({ id: "exp-1", total_amount: 500 })]}
+        meta={ZERO_META}
+      />
+    );
+    expect(screen.queryByTestId("purse-returns-row-company")).toBeNull();
+    expect(screen.queryByTestId("purse-returns-row-personal")).toBeNull();
+  });
+
+  it("splits the credit strip into company/personal totals", () => {
+    render(<ExpensePursesSummary invoices={invoices} meta={META} />);
+
+    const split = screen.getByTestId("credit-strip-split");
+    expect(split.textContent).toMatch(/1[^\d]*500/);
+    expect(split.textContent).toMatch(/2[^\d]*000/);
+  });
+
+  it("shows the outstanding-avoirs chip when an avoir return has no applied_to_invoice_id", () => {
+    render(<ExpensePursesSummary invoices={invoices} meta={META} />);
+
+    const chip = screen.getByTestId("outstanding-avoirs-chip");
+    expect(chip.textContent).toContain('invoices.summary.outstandingAvoirs({"n":1})');
+    expect(chip.textContent).toMatch(/2[^\d]*000/);
+  });
+
+  it("hides the outstanding-avoirs chip when every avoir return is applied", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "exp-1", total_amount: 5000 }),
+          makeInvoice({
+            id: "ref-1",
+            type: "return",
+            total_amount: -800,
+            settled_via: "avoir",
+            applied_to_invoice_id: "exp-1",
+          }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    expect(screen.queryByTestId("outstanding-avoirs-chip")).toBeNull();
+  });
+
+  it("hides the outstanding-avoirs chip when returns are cash-settled", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "exp-1", total_amount: 5000 }),
+          makeInvoice({
+            id: "ref-1",
+            type: "return",
+            total_amount: -800,
+            settled_via: "cash",
+          }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    expect(screen.queryByTestId("outstanding-avoirs-chip")).toBeNull();
+  });
+
+  it("keeps the purse Spent headers equal to the BE meta values (netting not double-applied client-side)", () => {
+    render(<ExpensePursesSummary invoices={invoices} meta={META} />);
+
+    // Spent header reads the raw meta.companySpentTotal / meta.personalSpentTotal
+    // verbatim — the client-side return netting only feeds the type bars/rows,
+    // never the header figure itself.
+    const companyCard = screen
+      .getByText("invoices.summary.companyPurse")
+      .closest(".folio-card") as HTMLElement;
+    const spentLine = within(companyCard)
+      .getByText("invoices.summary.spent")
+      .closest("div") as HTMLElement;
+    expect(spentLine.textContent).toMatch(/8[^\d]*500/);
+
+    const personalCard = screen
+      .getByText("invoices.summary.personalPurse")
+      .closest(".folio-card") as HTMLElement;
+    const personalSpentLine = within(personalCard)
+      .getByText("invoices.summary.spent")
+      .closest("div") as HTMLElement;
+    expect(personalSpentLine.textContent).toMatch(/6[^\d]*000/);
   });
 });

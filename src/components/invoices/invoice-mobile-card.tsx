@@ -69,11 +69,28 @@ export function InvoiceMobileCard({
             <span className={TYPE_STAMP_CLASS[invoice.type]}>
               {t(`types.${invoice.type}`)}
             </span>
+            {invoice.type === "return" && invoice.settled_via === "avoir" && (
+              <span className="stamp accent" data-testid="avoir-badge">
+                {t("settledVia.avoirBadge")}
+              </span>
+            )}
             {invoice.type === "return" && invoice.refunds_invoice_number && (
               <span className="text-[11px]" style={{ color: "var(--muted)" }}>
                 {t("refundOf", { number: invoice.refunds_invoice_number })}
               </span>
             )}
+            {invoice.type === "return" && invoice.applied_to_invoice_number && (
+              <span className="text-[11px]" style={{ color: "var(--muted)" }} data-testid="applied-to-label">
+                {t("appliedTo", { number: invoice.applied_to_invoice_number })}
+              </span>
+            )}
+            {invoice.type === "return" &&
+              invoice.settled_via === "avoir" &&
+              !invoice.applied_to_invoice_id && (
+                <span className="stamp" data-testid="outstanding-avoir-stamp">
+                  {t("settledVia.outstanding")}
+                </span>
+              )}
             {invoice.type === "labor" && invoice.service_month && (
               <span className="stamp" data-testid="mobile-card-service-month">
                 {formatMonthYear(invoice.service_month, locale)}

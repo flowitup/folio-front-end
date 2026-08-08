@@ -762,6 +762,8 @@
       "statusColumn": "Statut",
       "owed": "Dû",
       "paid": "Payé",
+      "companyShare": "Société {amount}",
+      "personalShare": "Personnel {amount}",
       "balance": "Solde",
       "status": {
         "unpaid": "Impayé",

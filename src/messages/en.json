@@ -762,6 +762,8 @@
       "statusColumn": "Status",
       "owed": "Owed",
       "paid": "Paid",
+      "companyShare": "Company {amount}",
+      "personalShare": "Personal {amount}",
       "balance": "Balance",
       "status": {
         "unpaid": "Unpaid",

@@ -487,3 +487,116 @@ describe("LaborSummary — overpaid balance tint (single-month mode)", () => {
     expect(screen.getByTestId("footer-overpaid")).toBeInTheDocument();
   });
 });
+
+describe("LaborSummary — company/personal paid split caption (all-history mode)", () => {
+  const monthlySummary: LaborMonthlySummaryResponse = {
+    rows: [
+      {
+        year: 2026,
+        month: 7,
+        total_days: 10,
+        total_cost: 1000,
+        workers: [{ worker_id: "w1", worker_name: "Alice", days_worked: 10, total_cost: 1000 }],
+      },
+      {
+        year: 2026,
+        month: 6,
+        total_days: 5,
+        total_cost: 500,
+        workers: [{ worker_id: "w1", worker_name: "Alice", days_worked: 5, total_cost: 500 }],
+      },
+      {
+        year: 2026,
+        month: 5,
+        total_days: 2,
+        total_cost: 200,
+        workers: [{ worker_id: "w1", worker_name: "Alice", days_worked: 2, total_cost: 200 }],
+      },
+    ],
+  };
+
+  // July: both halves; June: personal only; May: no split (e.g. unflagged
+  // methods) — caption absent even though the month has paid amounts.
+  const paymentsSummary: LaborPaymentsSummaryResponse = {
+    months: [
+      {
+        year: 2026,
+        month: 7,
+        total_paid: 700,
+        workers: [{ worker_id: "w1", worker_name: "Alice", paid: 700, invoice_count: 2 }],
+        unassigned_paid: 0,
+        unassigned_count: 0,
+        company_paid: 550,
+        personal_paid: 150,
+      },
+      {
+        year: 2026,
+        month: 6,
+        total_paid: 400,
+        workers: [{ worker_id: "w1", worker_name: "Alice", paid: 400, invoice_count: 1 }],
+        unassigned_paid: 0,
+        unassigned_count: 0,
+        company_paid: 0,
+        personal_paid: 400,
+      },
+      {
+        year: 2026,
+        month: 5,
+        total_paid: 200,
+        workers: [{ worker_id: "w1", worker_name: "Alice", paid: 200, invoice_count: 1 }],
+        unassigned_paid: 0,
+        unassigned_count: 0,
+        company_paid: 0,
+        personal_paid: 0,
+      },
+    ],
+  };
+
+  function renderAllHistory() {
+    return render(
+      <LaborSummary
+        {...baseProps}
+        summary={null}
+        monthlySummary={monthlySummary}
+        month=""
+        paymentsSummary={paymentsSummary}
+      />,
+    );
+  }
+
+  it("month row shows both halves joined with a separator", () => {
+    renderAllHistory();
+    const caption = screen.getByTestId("month-paid-split-2026-07");
+    expect(caption.textContent).toContain('payments.companyShare:{"amount":"€550.00"}');
+    expect(caption.textContent).toContain('payments.personalShare:{"amount":"€150.00"}');
+    expect(caption.textContent).toContain(" · ");
+  });
+
+  it("renders only the non-zero half", () => {
+    renderAllHistory();
+    const caption = screen.getByTestId("month-paid-split-2026-06");
+    expect(caption.textContent).toContain('payments.personalShare:{"amount":"€400.00"}');
+    expect(caption.textContent).not.toContain("companyShare");
+    expect(caption.textContent).not.toContain(" · ");
+  });
+
+  it("renders no caption when the month's split is all-zero (unflagged/no-method payments)", () => {
+    renderAllHistory();
+    expect(screen.queryByTestId("month-paid-split-2026-05")).toBeNull();
+  });
+
+  it("footer aggregates the split across visible months", () => {
+    renderAllHistory();
+    const caption = screen.getByTestId("all-history-paid-split");
+    expect(caption.textContent).toContain('payments.companyShare:{"amount":"€550.00"}');
+    expect(caption.textContent).toContain('payments.personalShare:{"amount":"€550.00"}');
+  });
+
+  it("renders no captions at all when paymentsSummary is absent", () => {
+    render(
+      <LaborSummary {...baseProps} summary={null} monthlySummary={monthlySummary} month="" paymentsSummary={null} />,
+    );
+    expect(screen.queryByTestId("month-paid-split-2026-07")).toBeNull();
+    expect(screen.queryByTestId("all-history-paid-split")).toBeNull();
+  });
+});

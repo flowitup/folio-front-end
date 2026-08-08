@@ -47,6 +47,7 @@ import {
   setLaborDayDescription,
 } from "@/lib/api/labor";
 import { toDateKey } from "@/lib/utils/calendar-month";
+import { fetchProjectById } from "@/lib/api/projects";
 import { fetchLaborRolesAction, fetchProjectTagsAction } from "./actions";
 
 type TabType = "workers" | "attendance" | "summary" | "payments";
@@ -93,6 +94,25 @@ export default function LaborPage() {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [showAddWorker, setShowAddWorker] = useState(false);
   const [editWorker, setEditWorker] = useState<Worker | null>(null);
+
+  // The project's company id — gates the payment-method picker in the
+  // Payments tab's record dialog (methods are company-scoped). The projects
+  // LIST doesn't carry company_id, so resolve it from the single-project GET
+  // (same precedent as invoices/new). Non-fatal: null just hides the picker.
+  const [companyId, setCompanyId] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetchProjectById(projectId)
+      .then((p) => {
+        if (!cancelled) setCompanyId(p.company_id ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setCompanyId(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
 
   // Roles state
   const [roles, setRoles] = useState<LaborRole[]>([]);
@@ -565,6 +585,7 @@ export default function LaborPage() {
           projectId={projectId}
           canManage={canManageInvoices}
           workers={workers}
+          companyId={companyId}
           paymentsSummary={paymentsSummary}
           onReloadPaymentsSummary={loadPaymentsSummary}
         />

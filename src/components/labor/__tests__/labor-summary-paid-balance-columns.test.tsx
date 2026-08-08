@@ -359,3 +359,131 @@ describe("LaborSummary — past-month unpaid warning (all-history mode)", () => 
     expect(screen.queryByTestId("month-unpaid-warning-2026-06")).toBeNull();
   });
 });
+
+describe("LaborSummary — overpaid warning (all-history mode)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-15T12:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const monthly: LaborMonthlySummaryResponse = {
+    rows: [
+      { year: 2026, month: 8, total_days: 4, total_cost: 400, workers: [{ worker_id: "w1", worker_name: "Alice", days_worked: 4, total_cost: 400 }] },
+      { year: 2026, month: 7, total_days: 10, total_cost: 1000, workers: [{ worker_id: "w1", worker_name: "Alice", days_worked: 10, total_cost: 1000 }] },
+      { year: 2026, month: 6, total_days: 5, total_cost: 500, workers: [{ worker_id: "w1", worker_name: "Alice", days_worked: 5, total_cost: 500 }] },
+    ],
+  };
+  const payments: LaborPaymentsSummaryResponse = {
+    months: [
+      // August (current month): 400 owed vs 650 paid -> overpaid by 250.
+      { year: 2026, month: 8, total_paid: 650, workers: [{ worker_id: "w1", worker_name: "Alice", paid: 650, invoice_count: 1 }], unassigned_paid: 0, unassigned_count: 0 },
+      // July: 1000 owed vs 1400 paid -> overpaid by 400.
+      { year: 2026, month: 7, total_paid: 1400, workers: [{ worker_id: "w1", worker_name: "Alice", paid: 1400, invoice_count: 2 }], unassigned_paid: 0, unassigned_count: 0 },
+      // June: exactly settled -> no badge of either kind.
+      { year: 2026, month: 6, total_paid: 500, workers: [{ worker_id: "w1", worker_name: "Alice", paid: 500, invoice_count: 1 }], unassigned_paid: 0, unassigned_count: 0 },
+    ],
+  };
+
+  it("warns on any month paid over its labor charge — current month included", () => {
+    render(
+      <LaborSummary
+        {...baseProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+        paymentsSummary={payments}
+      />,
+    );
+
+    // July: past month overpaid -> badge with the 400 excess.
+    const july = screen.getByTestId("month-overpaid-warning-2026-07");
+    expect(july.textContent).toContain("400");
+    // August: overpaying is anomalous even mid-month -> badge with the 250 excess.
+    const august = screen.getByTestId("month-overpaid-warning-2026-08");
+    expect(august.textContent).toContain("250");
+    // June: exactly settled -> neither badge.
+    expect(screen.queryByTestId("month-overpaid-warning-2026-06")).toBeNull();
+    expect(screen.queryByTestId("month-unpaid-warning-2026-06")).toBeNull();
+  });
+
+  it("never shows unpaid and overpaid badges on the same month", () => {
+    render(
+      <LaborSummary
+        {...baseProps}
+        summary={null}
+        monthlySummary={monthly}
+        month=""
+        paymentsSummary={payments}
+      />,
+    );
+    for (const ym of ["2026-06", "2026-07", "2026-08"]) {
+      const both =
+        screen.queryByTestId(`month-unpaid-warning-${ym}`) != null &&
+        screen.queryByTestId(`month-overpaid-warning-${ym}`) != null;
+      expect(both).toBe(false);
+    }
+  });
+});
+
+describe("LaborSummary — overpaid balance tint (single-month mode)", () => {
+  const summary: LaborSummaryResponse = {
+    rows: [
+      summaryRow({ worker_id: "w1", worker_name: "Alice", total_cost: 500 }),
+      summaryRow({ worker_id: "w2", worker_name: "Bob", total_cost: 500 }),
+    ],
+    total_days: 10,
+    total_cost: 1000,
+    total_banked_hours: 0,
+    total_bonus_days: 0,
+    total_bonus_cost: 0,
+  };
+  const paymentsSummary: LaborPaymentsSummaryResponse = {
+    months: [
+      {
+        year: 2026,
+        month: 6,
+        total_paid: 1100,
+        workers: [
+          // Alice: 500 owed vs 800 paid -> balance -300, flagged overpaid.
+          { worker_id: "w1", worker_name: "Alice", paid: 800, invoice_count: 2 },
+          // Bob: 500 owed vs 300 paid -> balance 200, not flagged.
+          { worker_id: "w2", worker_name: "Bob", paid: 300, invoice_count: 1 },
+        ],
+        unassigned_paid: 0,
+        unassigned_count: 0,
+      },
+    ],
+  };
+
+  it("flags a worker whose Paid exceeds their Total for the month", () => {
+    render(
+      <LaborSummary
+        {...baseProps}
+        summary={summary}
+        monthlySummary={null}
+        month="2026-06"
+        paymentsSummary={paymentsSummary}
+      />,
+    );
+    const flagged = screen.getByTestId("worker-overpaid-w1");
+    expect(flagged.textContent).toContain("-300");
+    expect(screen.queryByTestId("worker-overpaid-w2")).toBeNull();
+  });
+
+  it("flags the footer Balance when the month as a whole is overpaid", () => {
+    render(
+      <LaborSummary
+        {...baseProps}
+        summary={summary}
+        monthlySummary={null}
+        month="2026-06"
+        paymentsSummary={paymentsSummary}
+      />,
+    );
+    // Footer: 1000 owed vs 1100 paid -> balance -100 -> flagged.
+    expect(screen.getByTestId("footer-overpaid")).toBeInTheDocument();
+  });
+});

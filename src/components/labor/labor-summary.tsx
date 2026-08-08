@@ -506,6 +506,12 @@ export function LaborSummary({
                     const isPastMonth = row.year < now.getFullYear() || (row.year === now.getFullYear() && row.month < now.getMonth() + 1);
                     const monthShortfall = row.total_cost - monthPaid;
                     const showUnpaidWarning = isPastMonth && monthShortfall > 0.01;
+                    // Warn on ANY month whose recorded payments exceed its
+                    // charges — unlike the unpaid case, overpaying is
+                    // anomalous even mid-month, so the current month is not
+                    // excluded. Same 1-cent epsilon as the shortfall check.
+                    const monthOverpay = monthPaid - row.total_cost;
+                    const showOverpaidWarning = monthOverpay > 0.01;
                     const rows: React.ReactNode[] = [
                       <tr
                         key={`row-${ym}`}
@@ -548,6 +554,16 @@ export function LaborSummary({
                               data-testid={`month-unpaid-warning-${ym}`}
                             >
                               {t("summaryUnpaidWarning", { amount: formatEUR(monthShortfall) })}
+                            </span>
+                          )}
+                          {showOverpaidWarning && (
+                            <span
+                              className="stamp negative num"
+                              style={{ marginLeft: 8, verticalAlign: "middle" }}
+                              title={t("summaryOverpaidWarningTitle")}
+                              data-testid={`month-overpaid-warning-${ym}`}
+                            >
+                              {t("summaryOverpaidWarning", { amount: formatEUR(monthOverpay) })}
                             </span>
                           )}
                         </td>
@@ -809,7 +825,20 @@ export function LaborSummary({
                           <span style={{ color: "var(--muted)" }}>—</span>
                         )}
                       </td>
-                      <td className="num font-medium" style={{ textAlign: "right" }}>
+                      {/* Negative balance = this worker was paid more than the
+                          month's charge — tint it as an overpay so it can't be
+                          misread as money still owed. */}
+                      <td
+                        className="num font-medium"
+                        style={{
+                          textAlign: "right",
+                          ...(rowBalance < -0.01
+                            ? { color: "var(--negative)" }
+                            : {}),
+                        }}
+                        title={rowBalance < -0.01 ? t("summaryOverpaidWarningTitle") : undefined}
+                        data-testid={rowBalance < -0.01 ? `worker-overpaid-${row.worker_id}` : undefined}
+                      >
                         {formatEUR(rowBalance)}
                       </td>
                       <td className="num" style={{ textAlign: "right" }}>
@@ -842,7 +871,15 @@ export function LaborSummary({
                   <td className="num font-medium" style={{ textAlign: "right" }}>
                     {footerPaid > 0 ? formatEUR(footerPaid) : "—"}
                   </td>
-                  <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
+                  <td
+                    className="num font-medium"
+                    style={{
+                      textAlign: "right",
+                      color: footerBalance < -0.01 ? "var(--negative)" : "var(--accent-ink)",
+                    }}
+                    title={footerBalance < -0.01 ? t("summaryOverpaidWarningTitle") : undefined}
+                    data-testid={footerBalance < -0.01 ? "footer-overpaid" : undefined}
+                  >
                     {formatEUR(footerBalance)}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>

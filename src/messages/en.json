@@ -790,7 +790,9 @@
       "loadFailed": "Failed to load payment data"
     },
     "summaryUnpaidWarning": "{amount} unpaid",
-    "summaryUnpaidWarningTitle": "Labor charges for this month are not fully paid"
+    "summaryUnpaidWarningTitle": "Labor charges for this month are not fully paid",
+    "summaryOverpaidWarning": "{amount} overpaid",
+    "summaryOverpaidWarningTitle": "Payments recorded for this month exceed its labor charges"
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

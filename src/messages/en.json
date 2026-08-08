@@ -317,6 +317,8 @@
     "issueDate": "Issue date",
     "serviceMonth": "Payment for month",
     "recipient": "Recipient",
+    "workerPicker": "Worker",
+    "workerNotLinked": "Not linked",
     "recipientAddress": "Address",
     "totalAmount": "Total",
     "items": "Line items",
@@ -442,6 +444,9 @@
     "appliedToMethodHintWithLabel": "The return's payment method will follow the selected invoice's method ({label}).",
     "paidWithAvoir": "Paid with avoir {number} ({amount})",
     "errorServiceMonthNotAllowed": "Payment for month can only be set on labor expenses.",
+    "serviceMonthRequired": "Payment for month is required for labor expenses.",
+    "errorWorkerLinkNotAllowed": "A worker can only be linked on labor expenses.",
+    "errorWorkerNotInProject": "The selected worker is not part of this project.",
     "refund": {
       "status": {
         "refundable": "Refundable",

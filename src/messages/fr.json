@@ -317,6 +317,8 @@
     "issueDate": "Date d'émission",
     "serviceMonth": "Mois de paiement",
     "recipient": "Destinataire",
+    "workerPicker": "Ouvrier",
+    "workerNotLinked": "Non lié",
     "recipientAddress": "Adresse",
     "totalAmount": "Total",
     "items": "Lignes",
@@ -442,6 +444,9 @@
     "appliedToMethodHintWithLabel": "Le mode de paiement de l'avoir suivra celui de la facture sélectionnée ({label}).",
     "paidWithAvoir": "Réglé avec l'avoir {number} ({amount})",
     "errorServiceMonthNotAllowed": "Le mois de paiement ne peut être défini que pour les dépenses de main-d'œuvre.",
+    "serviceMonthRequired": "Le mois de paiement est requis pour les dépenses de main-d'œuvre.",
+    "errorWorkerLinkNotAllowed": "Un ouvrier ne peut être lié qu'aux dépenses de main-d'œuvre.",
+    "errorWorkerNotInProject": "L'ouvrier sélectionné ne fait pas partie de ce projet.",
     "refund": {
       "status": {
         "refundable": "Remboursable",

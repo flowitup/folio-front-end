@@ -6,6 +6,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
+import { LaborWorkerSelect } from "@/components/invoices/labor-worker-select";
 import { TagSelect } from "@/components/tags/tag-select";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import type { CreateInvoicePayload, Invoice, InvoiceType, SettledVia } from "@/types/invoice";
@@ -98,6 +99,12 @@ export function InvoiceForm({
   // month input format) and converted to "YYYY-MM-01" on submit.
   const [serviceMonth, setServiceMonth] = useState<string>(
     initialValues?.service_month ? initialValues.service_month.slice(0, 7) : ""
+  );
+  // Labor-only worker link (UUID or null = "Not linked"). Preselects from
+  // initialValues.worker_id on edit; cleared when the type is switched away
+  // from labor (see the type <select>'s onChange below).
+  const [workerId, setWorkerId] = useState<string | null>(
+    initialValues?.worker_id ?? null
   );
   const [items, setItems] = useState<LineItem[]>(
     initialValues?.items && initialValues.items.length > 0
@@ -229,7 +236,15 @@ export function InvoiceForm({
     setItems((prev) => prev.filter((_, i) => i !== index));
 
   const validate = (): string | null => {
-    if (!recipientName.trim()) return t("errorRecipientRequired");
+    // Labor type replaces the recipient text input with the worker picker —
+    // recipient_name is optional there (server-snapshotted from the linked
+    // worker, or kept as-is for a legacy unlinked row).
+    if (type !== "labor" && !recipientName.trim()) return t("errorRecipientRequired");
+    // service_month is required for NEW labor invoices only — editing a
+    // legacy row that predates this field must not be blocked by it.
+    if (type === "labor" && !editingInvoiceId && !serviceMonth) {
+      return t("serviceMonthRequired");
+    }
     if (items.length === 0) return t("errorAtLeastOneItem");
     for (const item of items) {
       if (!item.description.trim()) return t("errorDescriptionRequired");
@@ -275,9 +290,13 @@ export function InvoiceForm({
             applied_to_invoice_id: appliedToInvoiceId,
           }
         : {}),
-      // Include service_month only for labor type (null = cleared/empty)
+      // Include service_month + worker_id only for labor type
+      // (service_month null = cleared/empty; worker_id null = "Not linked")
       ...(type === "labor"
-        ? { service_month: serviceMonth ? `${serviceMonth}-01` : null }
+        ? {
+            service_month: serviceMonth ? `${serviceMonth}-01` : null,
+            worker_id: workerId,
+          }
         : {}),
     };
 
@@ -288,7 +307,9 @@ export function InvoiceForm({
         err,
         (remaining: string) => t("errorRefundExceedsSource", { remaining }),
         t("errorServiceMonthNotAllowed"),
-        t("errorAppliedExceedsTarget")
+        t("errorAppliedExceedsTarget"),
+        t("errorWorkerLinkNotAllowed"),
+        t("errorWorkerNotInProject")
       ));
     }
   };
@@ -313,7 +334,14 @@ export function InvoiceForm({
               <label className="block text-xs font-medium mb-1">{t("type")}</label>
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value as InvoiceType)}
+                onChange={(e) => {
+                  const newType = e.target.value as InvoiceType;
+                  setType(newType);
+                  // Clear the worker link when leaving labor — the BE clears
+                  // it server-side too, so keeping stale FE state around
+                  // would only mislead a switch-back.
+                  if (newType !== "labor") setWorkerId(null);
+                }}
                 className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 disabled={isLoading}
               >
@@ -337,21 +365,41 @@ export function InvoiceForm({
               />
             </div>
 
-            {/* Recipient Name */}
-            <div>
-              <label className="block text-xs font-medium mb-1">
-                {t("recipient")} <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="text"
-                value={recipientName}
-                onChange={(e) => setRecipientName(e.target.value)}
-                placeholder={t("recipient")}
-                className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                disabled={isLoading}
-                required
-              />
-            </div>
+            {/* Recipient: worker picker for labor, free-text for other types */}
+            {type === "labor" ? (
+              <div>
+                <label className="block text-xs font-medium mb-1">
+                  {t("workerPicker")}
+                </label>
+                <LaborWorkerSelect
+                  projectId={projectId}
+                  value={workerId}
+                  onChange={(id, worker) => {
+                    setWorkerId(id);
+                    // Snapshot the display name locally too — the backend
+                    // re-snapshots recipient_name server-side, but this keeps
+                    // the field consistent if displayed before the reload.
+                    if (worker) setRecipientName(worker.person_name ?? worker.name);
+                  }}
+                  disabled={isLoading}
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-medium mb-1">
+                  {t("recipient")} <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                  placeholder={t("recipient")}
+                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  disabled={isLoading}
+                  required
+                />
+              </div>
+            )}
 
             {/* Payment Method */}
             {companyId && (
@@ -502,16 +550,21 @@ export function InvoiceForm({
             </div>
           )}
 
-          {/* Labor type: optional "payment for month" field */}
+          {/* Labor type: "payment for month" field — required for new invoices,
+              optional when editing a legacy row that predates this field */}
           {type === "labor" && (
             <div>
-              <label className="block text-xs font-medium mb-1">{t("serviceMonth")}</label>
+              <label className="block text-xs font-medium mb-1">
+                {t("serviceMonth")}
+                {!editingInvoiceId && <span className="text-destructive"> *</span>}
+              </label>
               <input
                 type="month"
                 value={serviceMonth}
                 onChange={(e) => setServiceMonth(e.target.value)}
                 className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:w-1/2"
                 disabled={isLoading}
+                required={!editingInvoiceId}
                 data-testid="service-month-input"
               />
             </div>
@@ -746,13 +799,19 @@ export function InvoiceForm({
  * `appliedExceedsTargetMessage`, when provided, is returned verbatim for the
  * backend's `AppliedExceedsTarget` (avoir amount exceeds the target
  * invoice's remaining applicable total).
+ * `workerLinkNotAllowedMessage`, when provided, is returned verbatim for the
+ * backend's `worker_link_not_allowed` (worker_id set on a non-labor type).
+ * `workerNotInProjectMessage`, when provided, is returned verbatim for the
+ * backend's `worker_not_in_project` (worker_id references another project).
  * Falls back to the raw error message, then a generic fallback.
  */
 export function classifySubmitError(
   err: unknown,
   formatCapError: (remaining: string) => string,
   serviceMonthNotAllowedMessage?: string,
-  appliedExceedsTargetMessage?: string
+  appliedExceedsTargetMessage?: string,
+  workerLinkNotAllowedMessage?: string,
+  workerNotInProjectMessage?: string
 ): string {
   if (err && typeof err === "object") {
     const e = err as Record<string, unknown>;
@@ -783,6 +842,14 @@ export function classifySubmitError(
       appliedExceedsTargetMessage
     ) {
       return appliedExceedsTargetMessage;
+    }
+
+    if (code === "worker_link_not_allowed" && workerLinkNotAllowedMessage) {
+      return workerLinkNotAllowedMessage;
+    }
+
+    if (code === "worker_not_in_project" && workerNotInProjectMessage) {
+      return workerNotInProjectMessage;
     }
 
     if (typeof message === "string" && message.trim()) return message;

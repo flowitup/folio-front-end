@@ -40,11 +40,17 @@ export interface InvoiceListResponse {
 export const fetchInvoicesWithMeta = (
   projectId: string,
   type?: string,
-  tagId?: string
+  tagId?: string,
+  /** Filter to labor invoices for a given "payment for month" (YYYY-MM-01). */
+  serviceMonth?: string,
+  /** Filter to labor invoices linked to a specific worker UUID. */
+  workerId?: string
 ): Promise<InvoiceListResponse> => {
   const params = new URLSearchParams();
   if (type) params.set("type", type);
   if (tagId) params.set("tag_id", tagId);
+  if (serviceMonth) params.set("service_month", serviceMonth);
+  if (workerId) params.set("worker_id", workerId);
   const qs = params.toString();
   return api.get<InvoiceListResponse>(
     `/projects/${projectId}/invoices${qs ? `?${qs}` : ""}`

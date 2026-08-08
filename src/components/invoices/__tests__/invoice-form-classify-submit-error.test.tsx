@@ -10,6 +10,8 @@
  *   route's discriminator code and the exception class name)
  * - AppliedExceedsTarget falls through to the raw message when no
  *   dedicated message is supplied (caller opted out)
+ * - worker_link_not_allowed / worker_not_in_project classified via their
+ *   dedicated messages, with the same raw-message fallback
  * - unknown error codes fall back to the raw message, then a generic default
  */
 
@@ -81,6 +83,43 @@ describe("classifySubmitError", () => {
   it("falls back to the raw backend message for AppliedExceedsTarget when no dedicated message is supplied", () => {
     const err = {
       data: { error: "AppliedExceedsTarget", message: "raw backend message" },
+    };
+    const result = classifySubmitError(err, (remaining) => `capped at ${remaining}`);
+    expect(result).toBe("raw backend message");
+  });
+
+  it("classifies worker_link_not_allowed via the dedicated message", () => {
+    const err = {
+      data: { error: "worker_link_not_allowed" },
+    };
+    const result = classifySubmitError(
+      err,
+      (remaining) => `capped at ${remaining}`,
+      "service month not allowed",
+      undefined,
+      "A worker can only be linked on labor expenses."
+    );
+    expect(result).toBe("A worker can only be linked on labor expenses.");
+  });
+
+  it("classifies worker_not_in_project via the dedicated message", () => {
+    const err = {
+      data: { error: "worker_not_in_project" },
+    };
+    const result = classifySubmitError(
+      err,
+      (remaining) => `capped at ${remaining}`,
+      "service month not allowed",
+      undefined,
+      "A worker can only be linked on labor expenses.",
+      "The selected worker is not part of this project."
+    );
+    expect(result).toBe("The selected worker is not part of this project.");
+  });
+
+  it("falls back to the raw backend message when worker error codes have no dedicated message", () => {
+    const err = {
+      data: { error: "worker_not_in_project", message: "raw backend message" },
     };
     const result = classifySubmitError(err, (remaining) => `capped at ${remaining}`);
     expect(result).toBe("raw backend message");

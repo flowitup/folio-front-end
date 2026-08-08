@@ -393,7 +393,9 @@ describe("InvoiceForm", () => {
   describe("Initial values", () => {
     it("populates form with initial values", async () => {
       const initialValues = {
-        type: "labor" as const,
+        // Not "labor" — that type swaps the recipient text input for the
+        // worker picker, which this test doesn't exercise.
+        type: "materials_services" as const,
         issue_date: "2024-01-15",
         recipient_name: "Test Client",
         recipient_address: "123 Main St",

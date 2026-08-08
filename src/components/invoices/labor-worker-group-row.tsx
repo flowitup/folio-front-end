@@ -30,6 +30,8 @@ export interface LaborWorkerGroupRowProps {
   onCloseInvoice: () => void;
   onMutated: () => void;
   onAssignWorker: (invoiceId: string, workerId: string) => void;
+  /** Worker has logged attendance in the current calendar month — highlights who is actually on site right now. */
+  activeThisMonth?: boolean;
 }
 
 export function LaborWorkerGroupRow(props: LaborWorkerGroupRowProps) {
@@ -59,6 +61,12 @@ export function LaborWorkerGroupRow(props: LaborWorkerGroupRowProps) {
   ) : (
     <ChevronRight size={14} style={{ color: "var(--muted)" }} aria-hidden="true" />
   );
+
+  const activeStamp = props.activeThisMonth ? (
+    <span className="stamp positive" data-testid={`labor-by-worker-active-${testIdSuffix}`}>
+      {tByWorker("activeThisMonth")}
+    </span>
+  ) : null;
 
   const countStamp = (
     <span className="stamp num" data-testid={`labor-by-worker-count-${testIdSuffix}`}>
@@ -97,6 +105,7 @@ export function LaborWorkerGroupRow(props: LaborWorkerGroupRowProps) {
         {chevron}
         {avatar}
         <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">{displayName}</span>
+        {activeStamp}
         {countStamp}
         {lastPaymentStamp}
         {totalPaidValue}
@@ -117,6 +126,7 @@ export function LaborWorkerGroupRow(props: LaborWorkerGroupRowProps) {
           {totalPaidValue}
         </span>
         <span className="flex items-center gap-1.5">
+          {activeStamp}
           {countStamp}
           {lastPaymentStamp}
         </span>

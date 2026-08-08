@@ -35,6 +35,7 @@ vi.mock("@/lib/api/invoice-api", () => ({
 
 vi.mock("@/lib/api/labor", () => ({
   fetchWorkers: vi.fn(),
+  fetchLaborSummary: vi.fn(),
 }));
 
 vi.mock("@/components/invoices/invoice-detail-row", () => ({
@@ -44,10 +45,11 @@ vi.mock("@/components/invoices/invoice-detail-row", () => ({
 }));
 
 import { updateInvoice } from "@/lib/api/invoice-api";
-import { fetchWorkers } from "@/lib/api/labor";
+import { fetchLaborSummary, fetchWorkers } from "@/lib/api/labor";
 
 const mockUpdateInvoice = vi.mocked(updateInvoice);
 const mockFetchWorkers = vi.mocked(fetchWorkers);
+const mockFetchLaborSummary = vi.mocked(fetchLaborSummary);
 
 const WORKERS: Worker[] = [
   { id: "w-alice", project_id: "p1", name: "Alice", phone: null, daily_rate: 100, is_active: true, created_at: "" },
@@ -98,6 +100,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockFetchWorkers.mockResolvedValue(WORKERS);
   mockUpdateInvoice.mockResolvedValue({} as Invoice);
+  mockFetchLaborSummary.mockResolvedValue({ rows: [], total_days: 0, total_cost: 0 } as never);
 });
 
 describe("LaborInvoicesByWorker — group order and figures", () => {
@@ -131,6 +134,8 @@ describe("LaborInvoicesByWorker — expand/collapse and month history", () => {
       makeInvoice({ id: "i1", worker_id: "w-alice", service_month: "2026-03-01" }),
       makeInvoice({ id: "i2", worker_id: "w-alice", service_month: "2026-06-01" }),
       makeInvoice({ id: "i3", worker_id: "w-alice", service_month: null }),
+      // Second group so nothing auto-expands — this test exercises the manual click.
+      makeInvoice({ id: "x9", worker_id: null, service_month: "2026-06-01" }),
     ];
     render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
 
@@ -146,7 +151,7 @@ describe("LaborInvoicesByWorker — expand/collapse and month history", () => {
     const invoices = [makeInvoice({ id: "inv-42", worker_id: "w-alice", service_month: "2026-06-01" })];
     render(<LaborInvoicesByWorker {...baseProps({ invoices, onToggleInvoice })} />);
 
-    fireEvent.click(screen.getByTestId("labor-by-worker-group-desktop-w-alice").querySelector("button")!);
+    // Sole group auto-expands; the invoice row is reachable without a group click.
     const row = await screen.findByTestId("labor-by-worker-invoice-desktop-inv-42");
     fireEvent.click(row);
 
@@ -168,7 +173,7 @@ describe("LaborInvoicesByWorker — quick-assign on Unassigned rows", () => {
     const invoices = [makeInvoice({ id: "inv-9", worker_id: null })];
     render(<LaborInvoicesByWorker {...baseProps({ invoices, onMutated })} />);
 
-    fireEvent.click(screen.getByTestId("labor-by-worker-group-desktop-unassigned").querySelector("button")!);
+    // Sole (Unassigned) group auto-expands on mount.
     await waitFor(() => expect(mockFetchWorkers).toHaveBeenCalledWith("p1"));
 
     const trigger = await screen.findByTestId("assign-worker-select");
@@ -184,7 +189,7 @@ describe("LaborInvoicesByWorker — quick-assign on Unassigned rows", () => {
     const invoices = [makeInvoice({ id: "inv-9", worker_id: null })];
     render(<LaborInvoicesByWorker {...baseProps({ invoices, canManage: false })} />);
 
-    fireEvent.click(screen.getByTestId("labor-by-worker-group-desktop-unassigned").querySelector("button")!);
+    // Sole (Unassigned) group auto-expands on mount.
     await screen.findByTestId("labor-by-worker-invoice-desktop-inv-9");
 
     expect(mockFetchWorkers).not.toHaveBeenCalled();
@@ -196,5 +201,93 @@ describe("LaborInvoicesByWorker — empty input", () => {
   it("renders nothing when invoices is empty", () => {
     const { container } = render(<LaborInvoicesByWorker {...baseProps({ invoices: [] })} />);
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("LaborInvoicesByWorker — recipient identity on history rows", () => {
+  it("shows each invoice's recipient_name in the expanded history (legacy unassigned rows are otherwise anonymous)", async () => {
+    const invoices = [
+      makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i4", worker_id: null, recipient_name: "Djamel B.", total_amount: 30 }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+
+    const unassignedRow = screen.getByRole("button", { name: /labor\.payments\.unassignedTitle/ });
+    fireEvent.click(unassignedRow);
+
+    expect(screen.getByTestId("labor-by-worker-invoice-recipient-desktop-i4").textContent).toBe("Djamel B.");
+  });
+
+  it("falls back to an em dash when recipient_name is empty", async () => {
+    const invoices = [
+      makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i9", worker_id: null, recipient_name: "" }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+    fireEvent.click(screen.getByRole("button", { name: /labor\.payments\.unassignedTitle/ }));
+    expect(screen.getByTestId("labor-by-worker-invoice-recipient-desktop-i9").textContent).toBe("—");
+  });
+});
+
+describe("LaborInvoicesByWorker — single-group auto-expand", () => {
+  it("auto-expands when the only group is Unassigned (legacy project: nothing hidden behind one row)", async () => {
+    const invoices = [
+      makeInvoice({ id: "i4", worker_id: null, recipient_name: "Djamel B." }),
+      makeInvoice({ id: "i5", worker_id: null, recipient_name: "Karim", service_month: "2026-07-01" }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+
+    // History visible without any click.
+    expect(await screen.findByTestId("labor-by-worker-history-desktop")).toBeInTheDocument();
+    expect(screen.getByTestId("labor-by-worker-invoice-recipient-desktop-i4").textContent).toBe("Djamel B.");
+  });
+
+  it("does not auto-expand when several groups exist", () => {
+    const invoices = [
+      makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i4", worker_id: null, recipient_name: "Loose Co" }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+    expect(screen.queryByTestId("labor-by-worker-history-desktop")).toBeNull();
+  });
+
+  it("keeps a user's collapse of the auto-expanded group (no re-expand fight)", async () => {
+    const invoices = [makeInvoice({ id: "i4", worker_id: null, recipient_name: "Djamel B." })];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+    expect(await screen.findByTestId("labor-by-worker-history-desktop")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /labor\.payments\.unassignedTitle/ }));
+    expect(screen.queryByTestId("labor-by-worker-history-desktop")).toBeNull();
+  });
+});
+
+describe("LaborInvoicesByWorker — on-site-this-month highlight", () => {
+  it("stamps linked groups whose worker has current-month attendance, never Unassigned", async () => {
+    mockFetchLaborSummary.mockResolvedValue({
+      rows: [{ worker_id: "w-alice", days_worked: 3 }, { worker_id: "w-bruno", days_worked: 0 }],
+      total_days: 3,
+      total_cost: 450,
+    } as never);
+    const invoices = [
+      makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i2", worker_id: "w-bruno", recipient_name: "Bruno", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i4", worker_id: null, recipient_name: "Loose Co" }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+
+    expect(await screen.findByTestId("labor-by-worker-active-desktop-w-alice")).toBeInTheDocument();
+    expect(screen.queryByTestId("labor-by-worker-active-desktop-w-bruno")).toBeNull();
+    expect(screen.queryByTestId("labor-by-worker-active-desktop-unassigned")).toBeNull();
+    // Queried the CURRENT calendar month.
+    const [, params] = mockFetchLaborSummary.mock.calls[0];
+    expect(params?.from).toMatch(/^\d{4}-\d{2}-01$/);
+    expect(params?.to?.slice(0, 7)).toBe(params?.from?.slice(0, 7));
+  });
+
+  it("skips the attendance fetch entirely when only Unassigned exists", async () => {
+    const invoices = [makeInvoice({ id: "i4", worker_id: null, recipient_name: "Loose Co" })];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+    await screen.findByTestId("labor-by-worker-history-desktop");
+    expect(mockFetchLaborSummary).not.toHaveBeenCalled();
   });
 });

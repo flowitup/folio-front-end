@@ -491,7 +491,8 @@
     "byWorker": {
       "totalPaid": "Tổng đã trả",
       "lastPayment": "Lần trả gần nhất",
-      "noMonthGroup": "Không có tháng"
+      "noMonthGroup": "Không có tháng",
+      "activeThisMonth": "Có mặt tháng này"
     }
   },
   "planning": {

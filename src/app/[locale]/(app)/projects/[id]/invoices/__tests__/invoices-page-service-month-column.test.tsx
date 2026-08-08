@@ -214,9 +214,9 @@ describe("InvoicesPage — service_month column", () => {
 
     const desktop = await screen.findByTestId("invoices-table-desktop");
     // worker_id is unset on this fixture, so the invoice lands in the
-    // Unassigned group — expand it to reveal the month-grouped history.
-    const group = await within(desktop).findByTestId("labor-by-worker-group-desktop-unassigned");
-    fireEvent.click(group.querySelector("button")!);
+    // Unassigned group — the sole group auto-expands, revealing the
+    // month-grouped history without a click.
+    await within(desktop).findByTestId("labor-by-worker-group-desktop-unassigned");
 
     await waitFor(() => {
       expect(within(desktop).queryByText("invoices.byWorker.noMonthGroup")).not.toBeNull();

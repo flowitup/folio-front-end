@@ -487,6 +487,11 @@
       "outstandingAvoirs": "{n, plural, =1 {1 outstanding avoir} other {# outstanding avoirs}}",
       "pendingRefunds": "Pending refunds",
       "vsMonth": "{delta} vs {month}"
+    },
+    "byWorker": {
+      "totalPaid": "Total paid",
+      "lastPayment": "Last payment",
+      "noMonthGroup": "No month"
     }
   },
   "planning": {

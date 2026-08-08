@@ -487,6 +487,11 @@
       "outstandingAvoirs": "{n, plural, =1 {1 avoir en attente} other {# avoirs en attente}}",
       "pendingRefunds": "Remboursements en attente",
       "vsMonth": "{delta} vs {month}"
+    },
+    "byWorker": {
+      "totalPaid": "Total payé",
+      "lastPayment": "Dernier paiement",
+      "noMonthGroup": "Sans mois"
     }
   },
   "planning": {

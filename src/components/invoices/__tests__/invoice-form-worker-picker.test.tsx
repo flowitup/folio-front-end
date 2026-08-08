@@ -4,6 +4,11 @@
  * Covers:
  * - Worker picker renders only for type=labor; free-text recipient renders
  *   for all other types
+ * - New (create-mode) labor invoice left "Not linked" shows the free-text
+ *   recipient alongside the picker; hides once a worker is selected
+ * - Edit mode never shows the free-text recipient, linked or not (see
+ *   invoice-form-unlinked-labor-recipient.test.tsx for the full
+ *   create-mode-unlinked coverage — required gate + payload shape)
  * - Submitting a labor invoice sends the selected worker_id and syncs
  *   recipient_name from the worker's display name
  * - Switching type away from labor and back clears the previously
@@ -109,12 +114,39 @@ describe("InvoiceForm — labor worker picker", () => {
     expect(screen.getByPlaceholderText("Recipient")).toBeDefined();
   });
 
-  it("renders the worker picker and hides the free-text recipient for type=labor", () => {
+  it("renders the worker picker for type=labor", () => {
     render(
       <InvoiceForm onSubmit={mockOnSubmit} initialValues={{ type: "labor" }} projectId="proj-1" />
     );
     expect(screen.getByTestId("labor-worker-select")).toBeDefined();
-    expect(screen.queryByPlaceholderText("Recipient")).toBeNull();
+  });
+
+  it("hides the free-text recipient once a worker is selected (create mode)", async () => {
+    render(
+      <InvoiceForm onSubmit={mockOnSubmit} initialValues={{ type: "labor" }} projectId="proj-1" />
+    );
+
+    // Default state is "Not linked" — the free-text recipient shows
+    // alongside the picker (H1 fix: recipient_name is required here).
+    expect(screen.getByTestId("unlinked-labor-recipient-input")).toBeDefined();
+
+    const picker = await screen.findByTestId("labor-worker-select");
+    await waitFor(() => expect(within(picker).getByText("Amy Active")).toBeDefined());
+    fireEvent.change(picker, { target: { value: "worker-a" } });
+
+    expect(screen.queryByTestId("unlinked-labor-recipient-input")).toBeNull();
+  });
+
+  it("never shows the free-text recipient in edit mode, even when unlinked", () => {
+    render(
+      <InvoiceForm
+        onSubmit={mockOnSubmit}
+        initialValues={{ type: "labor", recipient_name: "Legacy Co", service_month: null }}
+        projectId="proj-1"
+        editingInvoiceId="inv-legacy"
+      />
+    );
+    expect(screen.queryByTestId("unlinked-labor-recipient-input")).toBeNull();
   });
 
   it("submits worker_id and syncs recipient_name from the selected worker", async () => {
@@ -206,6 +238,11 @@ describe("InvoiceForm — labor worker picker", () => {
 
     expect(screen.getByTestId("service-month-input")).toBeRequired();
 
+    // Fill the (now required, unlinked) recipient too, so the block below
+    // is specifically the missing-month check, not the recipient one.
+    fireEvent.change(screen.getByTestId("unlinked-labor-recipient-input"), {
+      target: { value: "June Worker" },
+    });
     const descInput = screen.getAllByPlaceholderText(/description/i)[0];
     fireEvent.change(descInput, { target: { value: "June labor" } });
 
@@ -221,6 +258,9 @@ describe("InvoiceForm — labor worker picker", () => {
 
     const monthInput = screen.getByTestId("service-month-input");
     fireEvent.change(monthInput, { target: { value: "2026-06" } });
+    fireEvent.change(screen.getByTestId("unlinked-labor-recipient-input"), {
+      target: { value: "June Worker" },
+    });
     const descInput = screen.getAllByPlaceholderText(/description/i)[0];
     fireEvent.change(descInput, { target: { value: "June labor" } });
 

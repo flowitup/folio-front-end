@@ -48,7 +48,9 @@ export default function NewInvoicePage() {
           err,
           (remaining) => t("errorRefundExceedsSource", { remaining }),
           t("errorServiceMonthNotAllowed"),
-          t("errorAppliedExceedsTarget")
+          t("errorAppliedExceedsTarget"),
+          t("errorWorkerLinkNotAllowed"),
+          t("errorWorkerNotInProject")
         )
       );
       setIsLoading(false);

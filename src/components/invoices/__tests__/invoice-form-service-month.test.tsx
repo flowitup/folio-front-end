@@ -109,6 +109,12 @@ describe("InvoiceForm — service_month field", () => {
       <InvoiceForm onSubmit={mockOnSubmit} initialValues={{ type: "labor" }} />
     );
 
+    // New + labor + unlinked worker picker: the free-text recipient is
+    // required too (see invoice-form-unlinked-labor-recipient.test.tsx).
+    fireEvent.change(screen.getByTestId("unlinked-labor-recipient-input"), {
+      target: { value: "June Worker" },
+    });
+
     const descInput = screen.getAllByPlaceholderText(/description/i)[0];
     fireEvent.change(descInput, { target: { value: "June labor" } });
 

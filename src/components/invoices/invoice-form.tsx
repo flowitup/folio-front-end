@@ -217,6 +217,13 @@ export function InvoiceForm({
     return () => { cancelled = true; };
   }, [type, settledVia, projectId, editingInvoiceId]);
 
+  // True when a NEW labor invoice has no worker linked — there's no worker
+  // record for the backend to snapshot recipient_name from, so the free-text
+  // recipient input reappears and is required (see JSX below). Edit mode
+  // stays exempt: existing/legacy rows may predate a worker link.
+  const needsUnlinkedLaborRecipient = type === "labor" && !editingInvoiceId && !workerId;
+  const recipientNameRequired = type !== "labor" || needsUnlinkedLaborRecipient;
+
   // Grand total is TTC: qty × unit_price × (1 + vat_rate/100).
   // Legacy items without a vat_rate are treated as 0 % VAT.
   const grandTotal = items.reduce(
@@ -236,10 +243,14 @@ export function InvoiceForm({
     setItems((prev) => prev.filter((_, i) => i !== index));
 
   const validate = (): string | null => {
-    // Labor type replaces the recipient text input with the worker picker —
-    // recipient_name is optional there (server-snapshotted from the linked
-    // worker, or kept as-is for a legacy unlinked row).
-    if (type !== "labor" && !recipientName.trim()) return t("errorRecipientRequired");
+    // Labor type replaces the recipient text input with the worker picker
+    // when a worker is linked (server snapshots recipient_name from the
+    // worker record) or when editing a legacy/existing row (kept as-is,
+    // optional). But a brand-new labor invoice left "Not linked" has no
+    // worker to snapshot from, so the free-text input reappears (see JSX
+    // below) and recipient_name is required there too — the backend rejects
+    // an empty recipient_name regardless of type.
+    if (recipientNameRequired && !recipientName.trim()) return t("errorRecipientRequired");
     // service_month is required for NEW labor invoices only — editing a
     // legacy row that predates this field must not be blocked by it.
     if (type === "labor" && !editingInvoiceId && !serviceMonth) {
@@ -397,6 +408,29 @@ export function InvoiceForm({
                   className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   disabled={isLoading}
                   required
+                />
+              </div>
+            )}
+
+            {/* New labor invoice, no worker linked: the picker alone can't
+                supply recipient_name (no worker to snapshot from), so fall
+                back to the free-text input. Required — an empty
+                recipient_name is rejected by the backend. Hidden again once
+                a worker is picked, and never shown in edit mode. */}
+            {needsUnlinkedLaborRecipient && (
+              <div>
+                <label className="block text-xs font-medium mb-1">
+                  {t("recipient")} <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                  placeholder={t("recipient")}
+                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  disabled={isLoading}
+                  required
+                  data-testid="unlinked-labor-recipient-input"
                 />
               </div>
             )}

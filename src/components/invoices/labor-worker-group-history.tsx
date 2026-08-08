@@ -76,7 +76,16 @@ export function LaborWorkerGroupHistory({
                     role="button"
                     tabIndex={0}
                     aria-expanded={isOpen}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-md px-2 py-2 cursor-pointer"
+                    // Desktop: fixed grid tracks so number/date/recipient/method/amount
+                    // line up as columns across every row and every group (a plain
+                    // justify-between flex scatters them at content-dependent
+                    // positions). The last track is always reserved so amounts align
+                    // whether or not a row carries the quick-assign control.
+                    className={
+                      variant === "desktop"
+                        ? "grid grid-cols-[150px_95px_minmax(0,1fr)_170px_120px_170px] items-center gap-2 rounded-md px-2 py-2 cursor-pointer"
+                        : "flex flex-wrap items-center justify-between gap-2 rounded-md px-2 py-2 cursor-pointer"
+                    }
                     style={isOpen ? { background: "var(--paper-2)" } : undefined}
                     onClick={() => onToggleInvoice(inv.id)}
                     onKeyDown={(e) => {
@@ -104,11 +113,13 @@ export function LaborWorkerGroupHistory({
                     >
                       {inv.recipient_name || "—"}
                     </span>
-                    <span className="text-[12px]" style={{ color: "var(--muted)" }}>
+                    <span className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
                       {methodLabel ?? "—"}
                     </span>
-                    <span className="num text-[13px] font-medium">{formatEUR(inv.total_amount)}</span>
-                    {isUnassignedGroup && canManage && (
+                    <span className={variant === "desktop" ? "num text-right text-[13px] font-medium" : "num text-[13px] font-medium"}>
+                      {formatEUR(inv.total_amount)}
+                    </span>
+                    {isUnassignedGroup && canManage ? (
                       <span onClick={(e) => e.stopPropagation()}>
                         <AssignWorkerSelect
                           workers={workers}
@@ -116,6 +127,8 @@ export function LaborWorkerGroupHistory({
                           onChange={(workerId) => onAssignWorker(inv.id, workerId)}
                         />
                       </span>
+                    ) : (
+                      variant === "desktop" && <span aria-hidden="true" />
                     )}
                   </li>
                   {isOpen && (

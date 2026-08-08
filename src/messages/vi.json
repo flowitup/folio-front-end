@@ -790,7 +790,9 @@
       "loadFailed": "Không thể tải dữ liệu thanh toán"
     },
     "summaryUnpaidWarning": "{amount} chưa trả",
-    "summaryUnpaidWarningTitle": "Chi phí nhân công tháng này chưa được trả đủ"
+    "summaryUnpaidWarningTitle": "Chi phí nhân công tháng này chưa được trả đủ",
+    "summaryOverpaidWarning": "{amount} trả dư",
+    "summaryOverpaidWarningTitle": "Số tiền đã trả trong tháng này vượt quá chi phí nhân công"
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

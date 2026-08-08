@@ -790,7 +790,9 @@
       "loadFailed": "Échec du chargement des paiements"
     },
     "summaryUnpaidWarning": "{amount} impayé",
-    "summaryUnpaidWarningTitle": "Les charges de main-d'œuvre de ce mois ne sont pas entièrement payées"
+    "summaryUnpaidWarningTitle": "Les charges de main-d'œuvre de ce mois ne sont pas entièrement payées",
+    "summaryOverpaidWarning": "{amount} trop-payé",
+    "summaryOverpaidWarningTitle": "Les paiements enregistrés pour ce mois dépassent les charges de main-d'œuvre"
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",

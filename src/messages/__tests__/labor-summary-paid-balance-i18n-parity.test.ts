@@ -27,3 +27,29 @@ describe("labor.summaryUnassignedHint i18n parity", () => {
     }
   });
 });
+
+describe("labor summary unpaid/overpaid warning i18n parity", () => {
+  const keys = [
+    "summaryUnpaidWarning",
+    "summaryUnpaidWarningTitle",
+    "summaryOverpaidWarning",
+    "summaryOverpaidWarningTitle",
+  ] as const;
+
+  it("all warning keys are present and non-empty in en/fr/vi", () => {
+    for (const messages of [en, fr, vi]) {
+      for (const key of keys) {
+        const value = messages.labor[key];
+        expect(typeof value).toBe("string");
+        expect(value.trim().length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("badge labels carry the {amount} placeholder in every locale", () => {
+    for (const messages of [en, fr, vi]) {
+      expect(messages.labor.summaryUnpaidWarning).toContain("{amount}");
+      expect(messages.labor.summaryOverpaidWarning).toContain("{amount}");
+    }
+  });
+});

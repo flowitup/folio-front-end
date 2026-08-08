@@ -491,7 +491,8 @@
     "byWorker": {
       "totalPaid": "Total paid",
       "lastPayment": "Last payment",
-      "noMonthGroup": "No month"
+      "noMonthGroup": "No month",
+      "activeThisMonth": "On site this month"
     }
   },
   "planning": {

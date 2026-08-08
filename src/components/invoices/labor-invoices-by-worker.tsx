@@ -17,7 +17,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { updateInvoice } from "@/lib/api/invoice-api";
-import { fetchWorkers } from "@/lib/api/labor";
+import { fetchLaborSummary, fetchWorkers } from "@/lib/api/labor";
 import { groupLaborInvoicesByWorker } from "@/lib/invoices/group-labor-invoices-by-worker";
 import { LaborWorkerGroupRow } from "@/components/invoices/labor-worker-group-row";
 import type { Invoice } from "@/types/invoice";
@@ -50,9 +50,38 @@ export function LaborInvoicesByWorker({
   const tPayments = useTranslations("labor.payments");
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<Set<string | null>>(new Set());
+  const [activeWorkerIds, setActiveWorkerIds] = useState<Set<string>>(new Set());
 
   const groups = useMemo(() => groupLaborInvoicesByWorker(invoices), [invoices]);
   const hasUnassigned = groups.some((g) => g.workerId === null);
+  const hasLinkedGroups = groups.some((g) => g.workerId !== null);
+
+  // Highlight workers with logged attendance in the CURRENT calendar month —
+  // answers "who is actually on site right now" while scanning payment history.
+  // Attendance (labor-summary), not payments, is the signal: a worker can be
+  // active without having been paid yet this month.
+  useEffect(() => {
+    if (!hasLinkedGroups) {
+      setActiveWorkerIds(new Set());
+      return;
+    }
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+    let cancelled = false;
+    fetchLaborSummary(projectId, { from: `${y}-${m}-01`, to: `${y}-${m}-${String(lastDay).padStart(2, "0")}` })
+      .then((res) => {
+        if (cancelled) return;
+        setActiveWorkerIds(new Set(res.rows.filter((r) => r.days_worked > 0).map((r) => r.worker_id)));
+      })
+      .catch(() => {
+        if (!cancelled) setActiveWorkerIds(new Set());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, hasLinkedGroups]);
 
   // The worker list is only needed for the Unassigned group's quick-assign
   // picker — skip the fetch entirely when there's nothing to assign, or the
@@ -139,6 +168,7 @@ export function LaborInvoicesByWorker({
           onCloseInvoice={onCloseInvoice}
           onMutated={onMutated}
           onAssignWorker={handleAssignWorker}
+          activeThisMonth={group.workerId !== null && activeWorkerIds.has(group.workerId)}
         />
       ))}
     </div>

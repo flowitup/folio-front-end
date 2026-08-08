@@ -35,6 +35,7 @@ vi.mock("@/lib/api/invoice-api", () => ({
 
 vi.mock("@/lib/api/labor", () => ({
   fetchWorkers: vi.fn(),
+  fetchLaborSummary: vi.fn(),
 }));
 
 vi.mock("@/components/invoices/invoice-detail-row", () => ({
@@ -44,10 +45,11 @@ vi.mock("@/components/invoices/invoice-detail-row", () => ({
 }));
 
 import { updateInvoice } from "@/lib/api/invoice-api";
-import { fetchWorkers } from "@/lib/api/labor";
+import { fetchLaborSummary, fetchWorkers } from "@/lib/api/labor";
 
 const mockUpdateInvoice = vi.mocked(updateInvoice);
 const mockFetchWorkers = vi.mocked(fetchWorkers);
+const mockFetchLaborSummary = vi.mocked(fetchLaborSummary);
 
 const WORKERS: Worker[] = [
   { id: "w-alice", project_id: "p1", name: "Alice", phone: null, daily_rate: 100, is_active: true, created_at: "" },
@@ -98,6 +100,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockFetchWorkers.mockResolvedValue(WORKERS);
   mockUpdateInvoice.mockResolvedValue({} as Invoice);
+  mockFetchLaborSummary.mockResolvedValue({ rows: [], total_days: 0, total_cost: 0 } as never);
 });
 
 describe("LaborInvoicesByWorker — group order and figures", () => {
@@ -255,5 +258,36 @@ describe("LaborInvoicesByWorker — single-group auto-expand", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /labor\.payments\.unassignedTitle/ }));
     expect(screen.queryByTestId("labor-by-worker-history-desktop")).toBeNull();
+  });
+});
+
+describe("LaborInvoicesByWorker — on-site-this-month highlight", () => {
+  it("stamps linked groups whose worker has current-month attendance, never Unassigned", async () => {
+    mockFetchLaborSummary.mockResolvedValue({
+      rows: [{ worker_id: "w-alice", days_worked: 3 }, { worker_id: "w-bruno", days_worked: 0 }],
+      total_days: 3,
+      total_cost: 450,
+    } as never);
+    const invoices = [
+      makeInvoice({ id: "i1", worker_id: "w-alice", recipient_name: "Alice", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i2", worker_id: "w-bruno", recipient_name: "Bruno", service_month: "2026-06-01" }),
+      makeInvoice({ id: "i4", worker_id: null, recipient_name: "Loose Co" }),
+    ];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+
+    expect(await screen.findByTestId("labor-by-worker-active-desktop-w-alice")).toBeInTheDocument();
+    expect(screen.queryByTestId("labor-by-worker-active-desktop-w-bruno")).toBeNull();
+    expect(screen.queryByTestId("labor-by-worker-active-desktop-unassigned")).toBeNull();
+    // Queried the CURRENT calendar month.
+    const [, params] = mockFetchLaborSummary.mock.calls[0];
+    expect(params?.from).toMatch(/^\d{4}-\d{2}-01$/);
+    expect(params?.to?.slice(0, 7)).toBe(params?.from?.slice(0, 7));
+  });
+
+  it("skips the attendance fetch entirely when only Unassigned exists", async () => {
+    const invoices = [makeInvoice({ id: "i4", worker_id: null, recipient_name: "Loose Co" })];
+    render(<LaborInvoicesByWorker {...baseProps({ invoices })} />);
+    await screen.findByTestId("labor-by-worker-history-desktop");
+    expect(mockFetchLaborSummary).not.toHaveBeenCalled();
   });
 });

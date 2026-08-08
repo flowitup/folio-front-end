@@ -235,6 +235,8 @@ export function InvoiceDetailContent({
             tag_id: invoice.tag_id ?? null,
             refunds_invoice_id: invoice.refunds_invoice_id ?? null,
             service_month: invoice.service_month ?? null,
+            settled_via: invoice.settled_via ?? null,
+            applied_to_invoice_id: invoice.applied_to_invoice_id ?? null,
           }}
         />
       ) : (
@@ -297,6 +299,18 @@ export function InvoiceDetailContent({
                       refunded_by={invoice.refunded_by}
                     />
                   </dd>
+                  {invoice.paid_with_returns && invoice.paid_with_returns.length > 0 && (
+                    <div className="mt-1 flex flex-col gap-0.5" data-testid="paid-with-avoir">
+                      {invoice.paid_with_returns.map((r) => (
+                        <span key={r.invoice_number} className="text-xs text-muted-foreground">
+                          {t("paidWithAvoir", {
+                            number: r.invoice_number,
+                            amount: formatEUR(r.total_amount),
+                          })}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {canManage &&
                   invoice.is_auto_generated &&

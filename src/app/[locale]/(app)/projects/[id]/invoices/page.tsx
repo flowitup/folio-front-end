@@ -391,6 +391,15 @@ export default function InvoicesPage() {
                                         {t("types.return")}
                                       </span>
                                     )}
+                                    {invoice.type === "return" && invoice.settled_via === "avoir" && (
+                                      <span
+                                        className="stamp accent ml-2"
+                                        style={{ fontSize: 10, verticalAlign: "middle" }}
+                                        data-testid="avoir-badge-desktop"
+                                      >
+                                        {t("settledVia.avoirBadge")}
+                                      </span>
+                                    )}
                                     {invoice.type === "return" && invoice.refunds_invoice_number && (
                                       <span
                                         className="ml-2 text-[11px]"
@@ -399,6 +408,26 @@ export default function InvoicesPage() {
                                         {t("refundOf", { number: invoice.refunds_invoice_number })}
                                       </span>
                                     )}
+                                    {invoice.type === "return" && invoice.applied_to_invoice_number && (
+                                      <span
+                                        className="ml-2 text-[11px]"
+                                        style={{ color: "var(--muted)" }}
+                                        data-testid="applied-to-label-desktop"
+                                      >
+                                        {t("appliedTo", { number: invoice.applied_to_invoice_number })}
+                                      </span>
+                                    )}
+                                    {invoice.type === "return" &&
+                                      invoice.settled_via === "avoir" &&
+                                      !invoice.applied_to_invoice_id && (
+                                        <span
+                                          className="stamp ml-2"
+                                          style={{ fontSize: 10, verticalAlign: "middle" }}
+                                          data-testid="outstanding-avoir-stamp-desktop"
+                                        >
+                                          {t("settledVia.outstanding")}
+                                        </span>
+                                      )}
                                   </td>
                                   <td className="num" style={{ color: "var(--muted)" }}>
                                     {formatDate(invoice.issue_date)}

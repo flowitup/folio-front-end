@@ -72,6 +72,10 @@ interface PurseBreakdown {
   /** Client-side sum across the three expense types (mini-bar denominator). */
   spent: number;
   types: Record<ExpenseType, { total: number; count: number }>;
+  /** Number of `return` invoices netted into this purse (credit-strip drill-down). */
+  returnsCount: number;
+  /** Sum of those returns' total_amount — negative (credit-strip drill-down). */
+  returnsTotal: number;
 }
 
 /**
@@ -94,6 +98,8 @@ function emptyBreakdown(): PurseBreakdown {
       materials_services: { total: 0, count: 0 },
       others: { total: 0, count: 0 },
     },
+    returnsCount: 0,
+    returnsTotal: 0,
   };
 }
 
@@ -146,8 +152,11 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   // (its own paid_by flags — mirrors the BE netting) and from the category of
   // the invoice it refunds. Unlinked refunds fall back to materials & services,
   // the only refund-tracked type. Counts stay expense-only: the credit strip
-  // below carries the refund count.
+  // below carries the refund count. Per-purse returnsCount/returnsTotal and the
+  // outstanding-avoirs sum are accumulated in the same pass (no second loop).
   const invoiceById = new Map(invoices.map((i) => [i.id, i]));
+  let outstandingAvoirsCount = 0;
+  let outstandingAvoirsTotal = 0;
   for (const ref of refunds) {
     const purse = isPersonalExpense(ref) ? personal : company;
     const sourceType = ref.refunds_invoice_id
@@ -160,6 +169,12 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
       : "materials_services";
     purse.types[type].total += ref.total_amount; // negative amount
     purse.spent += ref.total_amount;
+    purse.returnsCount += 1;
+    purse.returnsTotal += ref.total_amount;
+    if (ref.settled_via === "avoir" && !ref.applied_to_invoice_id) {
+      outstandingAvoirsCount += 1;
+      outstandingAvoirsTotal += ref.total_amount;
+    }
   }
 
   // ── Meta figures (purse headers) + client expense total (dark card) ───────
@@ -207,6 +222,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
     released: number,
     spent: number,
     breakdown: PurseBreakdown,
+    purseKey: "company" | "personal",
     borderColor?: string
   ) => {
     const left = released - spent;
@@ -283,6 +299,19 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
               </div>
             );
           })}
+          {breakdown.returnsCount > 0 && (
+            <div
+              className="flex items-center justify-between text-[11.5px]"
+              data-testid={`purse-returns-row-${purseKey}`}
+            >
+              <span style={{ color: "var(--muted)" }}>
+                {t("summary.returnsReceived", { n: breakdown.returnsCount })}
+              </span>
+              <span className="num font-medium text-destructive">
+                {formatEURWhole(breakdown.returnsTotal)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -377,7 +406,8 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
           "var(--ink)",
           releasedCompany,
           meta.companySpentTotal,
-          company
+          company,
+          "company"
         )}
         {purseCard(
           t("summary.personalPurse"),
@@ -394,22 +424,44 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
           releasedPersonal,
           meta.personalSpentTotal,
           personal,
+          "personal",
           PERSONAL_CARD_BORDER
         )}
       </div>
 
       {refunds.length > 0 && (
         <div
-          className="flex items-center gap-2.5 rounded-[10px] bg-white px-3 py-2.5"
+          className="flex flex-col gap-1.5 rounded-[10px] bg-white px-3 py-2.5"
           style={{ border: "1px dashed var(--line-2)" }}
+          data-testid="credit-strip"
         >
-          <span className="stamp warning">{t("summary.credit")}</span>
-          <span className="text-[12.5px]" style={{ color: "var(--ink-2)" }}>
-            {t("summary.refundsReceived", { n: refunds.length })}
-          </span>
-          <span className="num ml-auto text-[12.5px] font-medium text-destructive">
-            {formatEUR(refundsTotal)}
-          </span>
+          <div className="flex items-center gap-2.5">
+            <span className="stamp warning">{t("summary.credit")}</span>
+            <span className="text-[12.5px]" style={{ color: "var(--ink-2)" }}>
+              {t("summary.refundsReceived", { n: refunds.length })}
+            </span>
+            <span
+              className="num ml-auto text-[12.5px] font-medium text-destructive"
+              data-testid="credit-strip-total"
+            >
+              {formatEUR(refundsTotal)}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="text-[11px]" style={{ color: "var(--muted)" }} data-testid="credit-strip-split">
+              {t("summary.companyPurse")}{" "}
+              <span className="num text-destructive">{formatEUR(company.returnsTotal)}</span>
+              {" · "}
+              {t("summary.personalPurse")}{" "}
+              <span className="num text-destructive">{formatEUR(personal.returnsTotal)}</span>
+            </span>
+            {outstandingAvoirsCount > 0 && (
+              <span className="stamp" data-testid="outstanding-avoirs-chip">
+                {t("summary.outstandingAvoirs", { n: outstandingAvoirsCount })}{" "}
+                <span className="num">{formatEUR(outstandingAvoirsTotal)}</span>
+              </span>
+            )}
+          </div>
         </div>
       )}
 

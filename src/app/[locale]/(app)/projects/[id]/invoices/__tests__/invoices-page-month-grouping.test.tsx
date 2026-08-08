@@ -85,6 +85,7 @@ const mockUseAuth = vi.mocked(useAuth);
 const mockFetchInvoicesWithMeta = vi.mocked(fetchInvoicesWithMeta);
 
 const routerPush = vi.fn();
+const routerReplace = vi.fn();
 
 function setupMocks(invoices: Invoice[]) {
   mockUseParams.mockReturnValue({ id: "proj-mg-1", locale: "en" });
@@ -94,7 +95,7 @@ function setupMocks(invoices: Invoice[]) {
   );
   mockUseRouter.mockReturnValue(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    { push: routerPush, replace: vi.fn(), refresh: vi.fn() } as any
+    { push: routerPush, replace: routerReplace, refresh: vi.fn() } as any
   );
   mockUsePathname.mockReturnValue("/en/projects/proj-mg-1/invoices");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -288,6 +289,93 @@ describe("InvoicesPage — month-grouped all tab", () => {
     expect(
       within(desktop).getByRole("heading", { name: "July 2026" })
     ).not.toBeNull();
+  });
+
+  it("collapses a month via its header toggle (rows + stamps hidden, subtotal kept) and restores it on re-click", async () => {
+    setupMocks(fixture());
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByText("LAB-2026-0001");
+
+    const juneToggle = within(desktop).getByRole("button", { name: "June 2026" });
+    expect(juneToggle.getAttribute("aria-expanded")).toBe("true");
+
+    fireEvent.click(juneToggle);
+    expect(juneToggle.getAttribute("aria-expanded")).toBe("false");
+    // June contents hidden…
+    expect(within(desktop).queryByText("LAB-2026-0001")).toBeNull();
+    expect(within(desktop).queryByText("ARC-2026-0050")).toBeNull();
+    expect(within(desktop).queryByText("invoices.types.return")).toBeNull();
+    // …but the header keeps the subtotal, and July is untouched.
+    const juneHeader = within(desktop).getByTestId("invoices-month-header-desktop-2026-06");
+    expect(juneHeader.textContent).toContain(formatEUR(55));
+    expect(within(desktop).queryByText("ARC-2026-0100")).not.toBeNull();
+
+    fireEvent.click(juneToggle);
+    expect(within(desktop).queryByText("LAB-2026-0001")).not.toBeNull();
+  });
+
+  it("collapse state is shared with the mobile list (one page-level state, dual render)", async () => {
+    setupMocks(fixture());
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByText("LAB-2026-0001");
+
+    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+    // The mobile June header's toggle reflects the same collapsed state.
+    const mobileJune = screen.getByTestId("invoices-month-header-mobile-2026-06");
+    expect(
+      within(mobileJune).getByRole("button", { name: "June 2026" }).getAttribute("aria-expanded")
+    ).toBe("false");
+  });
+
+  it("collapsing the month holding the open ?invoice= detail closes the detail so the guard can't re-expand it", async () => {
+    setupMocks(fixture());
+    // Page loads with ?invoice=june-pay already selected (deep link).
+    mockUseSearchParams.mockReturnValue(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { get: (k: string) => (k === "invoice" ? "june-pay" : null), toString: () => "invoice=june-pay" } as any
+    );
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByText("LAB-2026-0001");
+
+    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+
+    // The selection is cleared via replace() with a URL carrying no ?invoice=;
+    // with no live selection, a refetch-triggered guard run has nothing to
+    // re-expand — the user's collapse sticks.
+    await waitFor(() => {
+      expect(routerReplace).toHaveBeenCalledWith(
+        expect.not.stringContaining("invoice="),
+        expect.anything()
+      );
+    });
+    expect(within(desktop).queryByText("LAB-2026-0001")).toBeNull();
+  });
+
+  it("re-expands a collapsed month when a deep-link selects one of its invoices", async () => {
+    setupMocks(fixture());
+    const { rerender } = render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    await within(desktop).findByText("LAB-2026-0001");
+    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+    expect(within(desktop).queryByText("LAB-2026-0001")).toBeNull();
+
+    // Simulate ?invoice=june-pay arriving (URL paste / back button).
+    mockUseSearchParams.mockReturnValue(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { get: (k: string) => (k === "invoice" ? "june-pay" : null), toString: () => "invoice=june-pay" } as any
+    );
+    rerender(<InvoicesPage />);
+
+    await waitFor(() => {
+      expect(within(desktop).queryByText("LAB-2026-0001")).not.toBeNull();
+    });
   });
 
   it("opens the inline detail from a flat labor row via the ?invoice= URL toggle", async () => {

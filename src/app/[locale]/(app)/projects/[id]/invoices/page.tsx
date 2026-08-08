@@ -27,7 +27,7 @@ import {
   refundStatusI18nKey,
 } from "@/lib/invoices/refundable-status-display";
 import { fetchTagsClient } from "@/lib/api/tags-client";
-import { groupInvoicesByMonth } from "@/lib/invoices/group-invoices-by-month";
+import { groupInvoicesByMonth, monthKeyForInvoice } from "@/lib/invoices/group-invoices-by-month";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 import type { ProjectTag } from "@/lib/api/tags";
@@ -66,12 +66,14 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
 
 /**
  * One render section of the ledger. The "all" tab emits one section per
- * (month, category) pair — `monthHeader` set only on the month's first
- * category so the month row renders once. Type tabs emit a single flat
- * section with no header and no stamp.
+ * (month, category) pair — `monthKey` on every section (drives collapse),
+ * `monthHeader` set only on the month's first category so the month row
+ * renders once. Type tabs emit a single flat section with no header and
+ * no stamp.
  */
 interface TableSection {
   key: string;
+  monthKey: string | null;
   monthHeader: { monthKey: string; subtotal: number } | null;
   type: InvoiceType | null;
   items: Invoice[];
@@ -126,7 +128,28 @@ export default function InvoicesPage() {
 
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [exportOpen, setExportOpen] = useState(false);
+  // Collapsed month sections on the "all" tab (keys "YYYY-MM"). Default empty
+  // = every month expanded; collapsing is opt-in, session-only state.
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+
+  const toggleMonth = (monthKey: string) => {
+    const isCollapsing = !collapsedMonths.has(monthKey);
+    setCollapsedMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(monthKey)) next.delete(monthKey);
+      else next.add(monthKey);
+      return next;
+    });
+    // Collapsing the month that holds the open ?invoice= detail also closes
+    // the detail — the URL never points at unmounted UI, and the deep-link
+    // guard below can't re-expand a month the user just closed when a
+    // refetch gives `invoices` a new identity.
+    if (isCollapsing && selectedInvoiceId) {
+      const selected = invoices.find((inv) => inv.id === selectedInvoiceId);
+      if (selected && monthKeyForInvoice(selected) === monthKey) closeInvoice();
+    }
+  };
   const [summary, setSummary] = useState<{
     invoices: Invoice[];
     meta: ExpenseSummaryMeta;
@@ -181,6 +204,25 @@ export default function InvoicesPage() {
     loadInvoices();
   }, [loadInvoices]);
 
+  // Deep-link guard: a ?invoice=<id> selection landing in a collapsed month
+  // (URL paste, back button) re-expands that month so the inline detail is
+  // reachable. It can't fight a user's collapse because toggleMonth clears
+  // the selection when collapsing the selected invoice's month — a live
+  // selection never points into a collapsed month, so refetches (which give
+  // `invoices` a new identity and re-run this effect) find nothing to expand.
+  useEffect(() => {
+    if (!selectedInvoiceId) return;
+    const selected = invoices.find((inv) => inv.id === selectedInvoiceId);
+    if (!selected) return;
+    const monthKey = monthKeyForInvoice(selected);
+    setCollapsedMonths((prev) => {
+      if (!prev.has(monthKey)) return prev;
+      const next = new Set(prev);
+      next.delete(monthKey);
+      return next;
+    });
+  }, [selectedInvoiceId, invoices]);
+
   const handleDelete = async (invoice: Invoice) => {
     if (!confirm(t("deleteConfirm"))) return;
     try {
@@ -201,13 +243,14 @@ export default function InvoicesPage() {
       ? groupInvoicesByMonth(invoices).flatMap((mg) =>
           mg.categories.map((c, idx) => ({
             key: `${mg.monthKey}-${c.type}`,
+            monthKey: mg.monthKey,
             monthHeader:
               idx === 0 ? { monthKey: mg.monthKey, subtotal: mg.subtotal } : null,
             type: c.type,
             items: c.items,
           }))
         )
-      : [{ key: "flat", monthHeader: null, type: null, items: invoices }];
+      : [{ key: "flat", monthKey: null, monthHeader: null, type: null, items: invoices }];
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
@@ -290,29 +333,47 @@ export default function InvoicesPage() {
                 onMutated={loadInvoices}
               />
             ) : (
-              sections.map(({ key, monthHeader, type: groupType, items }) => (
+              sections.map(({ key, monthKey, monthHeader, type: groupType, items }) => {
+                  const isCollapsed = monthKey !== null && collapsedMonths.has(monthKey);
+                  return (
                   <Fragment key={key}>
                     {monthHeader && (
                       <div
                         className="flex items-baseline justify-between gap-3 pt-4"
                         data-testid={`invoices-month-header-mobile-${monthHeader.monthKey}`}
                       >
-                        <h3 className="label-cap" style={{ fontSize: 12, color: "var(--ink)" }}>
-                          {formatMonthYear(monthHeader.monthKey, locale)}
+                        {/* Disclosure pattern: the h3 WRAPS the toggle button so
+                            heading navigation survives (role=button children are
+                            presentational — a button wrapping the h3 would eat it). */}
+                        <h3>
+                          <button
+                            type="button"
+                            onClick={() => toggleMonth(monthHeader.monthKey)}
+                            aria-expanded={!isCollapsed}
+                            className="label-cap -mx-2 -my-2 flex cursor-pointer items-center gap-1.5 px-2 py-2"
+                            style={{ fontSize: 12, color: "var(--ink)" }}
+                          >
+                            {isCollapsed ? (
+                              <ChevronRight size={14} style={{ color: "var(--muted)" }} aria-hidden="true" />
+                            ) : (
+                              <ChevronDown size={14} style={{ color: "var(--muted)" }} aria-hidden="true" />
+                            )}
+                            {formatMonthYear(monthHeader.monthKey, locale)}
+                          </button>
                         </h3>
                         <span className="num text-[13px] font-medium">
                           {formatEUR(monthHeader.subtotal)}
                         </span>
                       </div>
                     )}
-                    {groupType && (
+                    {!isCollapsed && groupType && (
                       <div className="flex items-center gap-2 pt-3">
                         <span className={TYPE_STAMP_CLASS[groupType]}>
                           {t(`types.${groupType}`)}
                         </span>
                       </div>
                     )}
-                    {items.map((invoice) => {
+                    {!isCollapsed && items.map((invoice) => {
                         const isOpen = selectedInvoiceId === invoice.id;
                         return (
                           <InvoiceMobileCard
@@ -338,7 +399,8 @@ export default function InvoicesPage() {
                         );
                       })}
                   </Fragment>
-              ))
+                  );
+              })
             )}
           </div>
 
@@ -380,7 +442,9 @@ export default function InvoicesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sections.map(({ key, monthHeader, type: groupType, items }) => (
+                    {sections.map(({ key, monthKey, monthHeader, type: groupType, items }) => {
+                        const isCollapsed = monthKey !== null && collapsedMonths.has(monthKey);
+                        return (
                         <Fragment key={key}>
                           {monthHeader && (
                             <tr data-testid={`invoices-month-header-desktop-${monthHeader.monthKey}`}>
@@ -393,14 +457,25 @@ export default function InvoicesPage() {
                                 }}
                               >
                                 <div className="flex items-baseline justify-between gap-3">
-                                  {/* h3 (unstyled by preflight, so visually identical to a
-                                      span) gives screen readers heading navigation across
-                                      month sections that row markup alone can't provide. */}
-                                  <h3
-                                    className="label-cap"
-                                    style={{ fontSize: 12, color: "var(--ink)" }}
-                                  >
-                                    {formatMonthYear(monthHeader.monthKey, locale)}
+                                  {/* Disclosure pattern: h3 wraps the toggle button — the
+                                      heading keeps screen-reader section navigation (a
+                                      button wrapping the h3 would flatten it to
+                                      presentational), the button carries expand state. */}
+                                  <h3>
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleMonth(monthHeader.monthKey)}
+                                      aria-expanded={!isCollapsed}
+                                      className="label-cap -mx-2 -my-2 flex cursor-pointer items-center gap-1.5 px-2 py-2"
+                                      style={{ fontSize: 12, color: "var(--ink)" }}
+                                    >
+                                      {isCollapsed ? (
+                                        <ChevronRight size={14} style={{ color: "var(--muted)" }} aria-hidden="true" />
+                                      ) : (
+                                        <ChevronDown size={14} style={{ color: "var(--muted)" }} aria-hidden="true" />
+                                      )}
+                                      {formatMonthYear(monthHeader.monthKey, locale)}
+                                    </button>
                                   </h3>
                                   <span className="num text-[13px] font-medium">
                                     {formatEUR(monthHeader.subtotal)}
@@ -409,7 +484,7 @@ export default function InvoicesPage() {
                               </td>
                             </tr>
                           )}
-                          {groupType && (
+                          {!isCollapsed && groupType && (
                             <tr>
                               <td
                                 colSpan={colCount}
@@ -426,7 +501,7 @@ export default function InvoicesPage() {
                               </td>
                             </tr>
                           )}
-                          {items.map((invoice) => {
+                          {!isCollapsed && items.map((invoice) => {
                             const isOpen = selectedInvoiceId === invoice.id;
                             const detailId = `invoice-detail-${invoice.id}`;
                             const tvaAmount = showTvaCol ? invoiceTva(invoice.items) : 0;
@@ -604,7 +679,8 @@ export default function InvoicesPage() {
                             );
                           })}
                         </Fragment>
-                    ))}
+                        );
+                    })}
                   </tbody>
                 </table>
                 );

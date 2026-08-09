@@ -196,6 +196,9 @@ describe("InvoicesPage — month-grouped all tab", () => {
     // June nets materials 50 + labor 25 + return -20 = 55.
     expect(headers[1].textContent).toContain("June 2026");
     expect(headers[1].textContent).toContain(formatEUR(55));
+    // Each band carries its entry count next to the label (i18n key under mock).
+    expect(headers[0].textContent).toContain("invoices.monthEntries");
+    expect(headers[1].textContent).toContain("invoices.monthEntries");
   });
 
   it("buckets the July-issued June-service labor invoice under June, as a flat row with the worker name", async () => {
@@ -279,7 +282,7 @@ describe("InvoicesPage — month-grouped all tab", () => {
     ).toBe(formatEUR(-20));
 
     // Collapsing June removes its category rows (and their subtotals) in both renders.
-    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+    fireEvent.click(within(desktop).getByRole("button", { name: /^June 2026/ }));
     expect(screen.queryByTestId("invoices-type-subtotal-mobile-2026-06-return")).toBeNull();
     expect(
       within(desktop).queryByTestId("invoices-type-subtotal-desktop-2026-06-labor")
@@ -332,10 +335,10 @@ describe("InvoicesPage — month-grouped all tab", () => {
     const desktop = await screen.findByTestId("invoices-table-desktop");
     await within(desktop).findByTestId("invoices-month-header-desktop-2026-06");
     expect(
-      within(desktop).getByRole("heading", { name: "June 2026" })
+      within(desktop).getByRole("heading", { name: /June 2026/ })
     ).not.toBeNull();
     expect(
-      within(desktop).getByRole("heading", { name: "July 2026" })
+      within(desktop).getByRole("heading", { name: /July 2026/ })
     ).not.toBeNull();
   });
 
@@ -346,7 +349,7 @@ describe("InvoicesPage — month-grouped all tab", () => {
     const desktop = await screen.findByTestId("invoices-table-desktop");
     await within(desktop).findByText("LAB-2026-0001");
 
-    const juneToggle = within(desktop).getByRole("button", { name: "June 2026" });
+    const juneToggle = within(desktop).getByRole("button", { name: /^June 2026/ });
     expect(juneToggle.getAttribute("aria-expanded")).toBe("true");
 
     fireEvent.click(juneToggle);
@@ -371,11 +374,11 @@ describe("InvoicesPage — month-grouped all tab", () => {
     const desktop = await screen.findByTestId("invoices-table-desktop");
     await within(desktop).findByText("LAB-2026-0001");
 
-    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+    fireEvent.click(within(desktop).getByRole("button", { name: /^June 2026/ }));
     // The mobile June header's toggle reflects the same collapsed state.
     const mobileJune = screen.getByTestId("invoices-month-header-mobile-2026-06");
     expect(
-      within(mobileJune).getByRole("button", { name: "June 2026" }).getAttribute("aria-expanded")
+      within(mobileJune).getByRole("button", { name: /^June 2026/ }).getAttribute("aria-expanded")
     ).toBe("false");
   });
 
@@ -391,7 +394,7 @@ describe("InvoicesPage — month-grouped all tab", () => {
     const desktop = await screen.findByTestId("invoices-table-desktop");
     await within(desktop).findByText("LAB-2026-0001");
 
-    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+    fireEvent.click(within(desktop).getByRole("button", { name: /^June 2026/ }));
 
     // The selection is cleared via replace() with a URL carrying no ?invoice=;
     // with no live selection, a refetch-triggered guard run has nothing to
@@ -411,7 +414,7 @@ describe("InvoicesPage — month-grouped all tab", () => {
 
     const desktop = await screen.findByTestId("invoices-table-desktop");
     await within(desktop).findByText("LAB-2026-0001");
-    fireEvent.click(within(desktop).getByRole("button", { name: "June 2026" }));
+    fireEvent.click(within(desktop).getByRole("button", { name: /^June 2026/ }));
     expect(within(desktop).queryByText("LAB-2026-0001")).toBeNull();
 
     // Simulate ?invoice=june-pay arriving (URL paste / back button).

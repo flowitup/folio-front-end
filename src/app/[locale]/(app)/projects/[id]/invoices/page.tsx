@@ -74,7 +74,7 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
 interface TableSection {
   key: string;
   monthKey: string | null;
-  monthHeader: { monthKey: string; subtotal: number } | null;
+  monthHeader: { monthKey: string; subtotal: number; count: number } | null;
   type: InvoiceType | null;
   /** Net Σ total_amount of the category inside its month (null on flat type tabs). */
   typeSubtotal: number | null;
@@ -247,7 +247,13 @@ export default function InvoicesPage() {
             key: `${mg.monthKey}-${c.type}`,
             monthKey: mg.monthKey,
             monthHeader:
-              idx === 0 ? { monthKey: mg.monthKey, subtotal: mg.subtotal } : null,
+              idx === 0
+                ? {
+                    monthKey: mg.monthKey,
+                    subtotal: mg.subtotal,
+                    count: mg.categories.reduce((n, cat) => n + cat.items.length, 0),
+                  }
+                : null,
             type: c.type,
             typeSubtotal: c.subtotal,
             items: c.items,
@@ -425,8 +431,15 @@ export default function InvoicesPage() {
             )}
           </div>
 
-          {/* Desktop table */}
-          <div className="folio-card hidden overflow-hidden lg:block" data-testid="invoices-table-desktop">
+          {/* Desktop table. The card must NOT clip (overflow-hidden) on the
+              ledger tabs: the sticky thead + month bands pin against the page
+              scroll area, and any overflow ancestor between them and the
+              scroller kills position:sticky. The labor tab renders its own
+              nested layout with no sticky parts, so it keeps corner clipping. */}
+          <div
+            className={`folio-card hidden lg:block${activeTab === "labor" ? " overflow-hidden" : ""}`}
+            data-testid="invoices-table-desktop"
+          >
             {activeTab === "labor" ? (
               <LaborInvoicesByWorker
                 invoices={invoices}
@@ -440,14 +453,13 @@ export default function InvoicesPage() {
                 onMutated={loadInvoices}
               />
             ) : (
-            <div className="overflow-x-auto">
-              {(() => {
+              (() => {
                 const showTvaCol = TVA_COLUMN_TABS.has(activeTab);
                 const colCount = showTvaCol
                   ? INVOICE_TABLE_COLUMN_COUNT_TVA
                   : INVOICE_TABLE_COLUMN_COUNT_BASE;
                 return (
-                <table className="ledger">
+                <table className="ledger ledger-sticky">
                   <thead>
                     <tr>
                       <th style={{ width: 32 }}></th>
@@ -469,15 +481,23 @@ export default function InvoicesPage() {
                         <Fragment key={key}>
                           {monthHeader && (
                             <tr data-testid={`invoices-month-header-desktop-${monthHeader.monthKey}`}>
+                              {/* Ledger band (design "Expense Table Month Style"): a full-width
+                                  paper-2 strip that pins just below the sticky thead. top:36
+                                  overlaps the thead's ~37px box by 1px so no sub-pixel seam of
+                                  scrolled rows can bleed between the two sticky layers. */}
                               <td
                                 colSpan={colCount}
                                 style={{
-                                  paddingTop: 24,
-                                  paddingBottom: 6,
+                                  position: "sticky",
+                                  top: 36,
+                                  zIndex: 2,
+                                  background: "var(--paper-2)",
+                                  borderTop: "1px solid var(--line)",
                                   borderBottom: "1px solid var(--line)",
+                                  padding: "10px 16px",
                                 }}
                               >
-                                <div className="flex items-baseline justify-between gap-3">
+                                <div className="flex items-center justify-between gap-3">
                                   {/* Disclosure pattern: h3 wraps the toggle button — the
                                       heading keeps screen-reader section navigation (a
                                       button wrapping the h3 would flatten it to
@@ -488,7 +508,7 @@ export default function InvoicesPage() {
                                       onClick={() => toggleMonth(monthHeader.monthKey)}
                                       aria-expanded={!isCollapsed}
                                       className="label-cap -mx-2 -my-2 flex cursor-pointer items-center gap-1.5 px-2 py-2"
-                                      style={{ fontSize: 12, color: "var(--ink)" }}
+                                      style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)" }}
                                     >
                                       {isCollapsed ? (
                                         <ChevronRight size={14} style={{ color: "var(--muted)" }} aria-hidden="true" />
@@ -496,9 +516,12 @@ export default function InvoicesPage() {
                                         <ChevronDown size={14} style={{ color: "var(--muted)" }} aria-hidden="true" />
                                       )}
                                       {formatMonthYear(monthHeader.monthKey, locale)}
+                                      <span style={{ fontWeight: 500, color: "var(--muted)" }}>
+                                        · {t("monthEntries", { n: monthHeader.count })}
+                                      </span>
                                     </button>
                                   </h3>
-                                  <span className="num text-[13px] font-medium">
+                                  <span className="num text-[14px] font-semibold">
                                     {formatEUR(monthHeader.subtotal)}
                                   </span>
                                 </div>
@@ -511,7 +534,7 @@ export default function InvoicesPage() {
                                 colSpan={colCount}
                                 className="label-cap"
                                 style={{
-                                  paddingTop: 20,
+                                  paddingTop: 14,
                                   paddingBottom: 8,
                                   borderBottom: "1px solid var(--line)",
                                 }}
@@ -716,8 +739,7 @@ export default function InvoicesPage() {
                   </tbody>
                 </table>
                 );
-              })()}
-            </div>
+              })()
             )}
           </div>
           </>

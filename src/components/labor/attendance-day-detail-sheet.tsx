@@ -200,6 +200,7 @@ export function AttendanceDayDetailSheet({
                   onChange={handleTagChange}
                   disabled={savingTag}
                   placeholder={isMixed ? t("dayTag.mixed") : undefined}
+                  mixed={isMixed}
                 />
               </div>
             )}

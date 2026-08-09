@@ -113,6 +113,7 @@ function DayTagAction({
             onChange={handleChange}
             disabled={saving}
             placeholder={isMixed ? t("dayTag.mixed") : undefined}
+            mixed={isMixed}
           />
         </div>
       </PopoverContent>

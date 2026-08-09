@@ -184,6 +184,29 @@ describe("AttendanceDayDetailSheet — day tag", () => {
     expect(onSaveDayTag).toHaveBeenCalledWith(null);
   });
 
+  it("calls onSaveDayTag with null when 'No tag' is chosen from a mixed-tag day", () => {
+    const onSaveDayTag = vi.fn().mockResolvedValue(undefined);
+    const entries = [
+      makeEntry({ id: "e1", tag_id: EXCAVATION.id }),
+      makeEntry({ id: "e2", worker_id: "worker-2", tag_id: FOUNDATION.id }),
+    ];
+    render(
+      <AttendanceDayDetailSheet
+        {...defaultSheetProps}
+        entries={entries}
+        tags={TAGS}
+        onSaveDayTag={onSaveDayTag}
+      />,
+    );
+
+    const row = screen.getByTestId("day-tag-select");
+    fireEvent.click(within(row).getByRole("combobox"));
+    const noTagOption = screen.getAllByRole("option")[0];
+    fireEvent.click(noTagOption);
+
+    expect(onSaveDayTag).toHaveBeenCalledWith(null);
+  });
+
   it("hides the tag row when the project has no tags", () => {
     render(
       <AttendanceDayDetailSheet
@@ -328,6 +351,33 @@ describe("AttendanceTable — day tag badges + action", () => {
   it("calls onSaveDayTag(date, null) when clearing via the popover", async () => {
     const onSaveDayTag = vi.fn().mockResolvedValue(undefined);
     const entries = [makeEntry({ id: "e1", date: "2026-04-15", tag_id: EXCAVATION.id })];
+    render(
+      <AttendanceTable
+        {...defaultTableProps}
+        entries={entries}
+        tags={TAGS}
+        onSaveDayTag={onSaveDayTag}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText("dayTag.action"));
+
+    const popover = await screen.findByTestId("day-tag-popover");
+    fireEvent.click(within(popover).getByRole("combobox"));
+    const noTagOption = (await screen.findAllByRole("option"))[0];
+    fireEvent.click(noTagOption);
+
+    await waitFor(() => {
+      expect(onSaveDayTag).toHaveBeenCalledWith("2026-04-15", null);
+    });
+  });
+
+  it("calls onSaveDayTag(date, null) when 'No tag' is chosen from a mixed-tag day", async () => {
+    const onSaveDayTag = vi.fn().mockResolvedValue(undefined);
+    const entries = [
+      makeEntry({ id: "e1", date: "2026-04-15", tag_id: EXCAVATION.id }),
+      makeEntry({ id: "e2", worker_id: "worker-2", date: "2026-04-15", tag_id: FOUNDATION.id }),
+    ];
     render(
       <AttendanceTable
         {...defaultTableProps}

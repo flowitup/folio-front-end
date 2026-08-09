@@ -45,6 +45,7 @@ import {
   deleteLaborActivity,
   fetchLaborDayDescriptions,
   setLaborDayDescription,
+  setLaborDayTag,
 } from "@/lib/api/labor";
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { fetchProjectById } from "@/lib/api/projects";
@@ -417,6 +418,18 @@ export default function LaborPage() {
     }
   };
 
+  // Bulk-sets tag_id on every entry logged for `date` (overwrite). Used by
+  // the calendar day sheet's TagSelect and the table's day-header tag action.
+  const handleSaveDayTag = async (date: string, tagId: string | null) => {
+    try {
+      const result = await setLaborDayTag(projectId, { date, tag_id: tagId });
+      await loadEntries();
+      toast.success(t("dayTag.updated", { count: result.updated_count }));
+    } catch {
+      toast.error(t("dayTag.saveFailed"));
+    }
+  };
+
   return (
     <div className="fade-up flex min-h-full flex-col gap-4 px-4 pb-12 lg:gap-6 lg:px-8">
       {/* Segmented tabs */}
@@ -529,6 +542,7 @@ export default function LaborPage() {
               workers={workers}
               activities={activities}
               dayDescriptions={dayDescriptions}
+              tags={tags}
               isLoading={isTabLoading}
               canManage={canManageLabor}
               month={entriesMonth}
@@ -543,6 +557,7 @@ export default function LaborPage() {
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
               onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
               onSaveDayDescription={canManageLabor ? handleSaveDayDescription : undefined}
+              onSaveDayTag={canManageLabor ? handleSaveDayTag : undefined}
             />
           ) : (
             <AttendanceTable
@@ -550,6 +565,7 @@ export default function LaborPage() {
               workers={workers}
               activities={activities}
               dayDescriptions={dayDescriptions}
+              tags={tags}
               isLoading={isTabLoading}
               canManage={canManageLabor}
               month={entriesMonth}
@@ -560,6 +576,7 @@ export default function LaborPage() {
               onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
               onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
+              onSaveDayTag={canManageLabor ? handleSaveDayTag : undefined}
               onSaveDayDescription={canManageLabor ? handleSaveDayDescription : undefined}
             />
           )}

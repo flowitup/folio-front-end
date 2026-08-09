@@ -262,6 +262,23 @@ export interface LaborDayDescriptionListResponse {
   day_descriptions: LaborDayDescription[];
 }
 
+// ─── Labor day tag (bulk-set tag_id across a day's entries) ─────────────────
+
+export interface LaborDayTagPayload {
+  /** ISO YYYY-MM-DD */
+  date: string;
+  /** null clears the tag on every entry of the day. */
+  tag_id: string | null;
+}
+
+export interface LaborDayTagResponse {
+  /** Number of labor entries updated by this call. */
+  updated_count: number;
+  /** ISO YYYY-MM-DD, echoed back. */
+  date: string;
+  tag_id: string | null;
+}
+
 // ─── Worker rate changes ─────────────────────────────────────────────────────
 
 export interface WorkerRateChange {

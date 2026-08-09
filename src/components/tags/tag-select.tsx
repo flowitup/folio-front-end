@@ -18,6 +18,11 @@ import type { ProjectTag } from "@/lib/api/tags";
 
 // Sentinel value Radix uses when no item is selected / "no tag" is chosen.
 const NO_TAG_VALUE = "__no_tag__";
+// Sentinel used only when the day's entries disagree on tag_id (mixed state).
+// There is no corresponding SelectItem — it exists purely so the controlled
+// Select value differs from NO_TAG_VALUE, so picking "No tag" from a mixed
+// day fires a real onValueChange instead of being a silent no-op.
+const MIXED_VALUE = "__mixed__";
 
 interface TagSelectProps {
   tags: ProjectTag[];
@@ -25,6 +30,13 @@ interface TagSelectProps {
   onChange: (tagId: string | null) => void;
   disabled?: boolean;
   placeholder?: string;
+  /**
+   * True when the underlying entries disagree on tag_id. Forces the
+   * controlled value to a dedicated sentinel (distinct from "no tag") so
+   * that selecting "No tag" always emits a change event. Caller still
+   * passes `value={null}` and a `placeholder` describing the mixed state.
+   */
+  mixed?: boolean;
 }
 
 function ColorDot({ color }: { color: string }) {
@@ -43,6 +55,7 @@ export function TagSelect({
   onChange,
   disabled,
   placeholder,
+  mixed,
 }: TagSelectProps) {
   const t = useTranslations("tags");
 
@@ -50,7 +63,7 @@ export function TagSelect({
     onChange(v === NO_TAG_VALUE ? null : v);
   }
 
-  const selectValue = value ?? NO_TAG_VALUE;
+  const selectValue = mixed ? MIXED_VALUE : (value ?? NO_TAG_VALUE);
 
   return (
     <Select
@@ -62,7 +75,7 @@ export function TagSelect({
         <SelectValue
           placeholder={placeholder ?? t("select.placeholder")}
         >
-          {selectValue !== NO_TAG_VALUE ? (
+          {selectValue !== NO_TAG_VALUE && selectValue !== MIXED_VALUE ? (
             (() => {
               const tag = tags.find((tag) => tag.id === selectValue);
               return tag ? (

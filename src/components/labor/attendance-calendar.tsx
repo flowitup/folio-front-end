@@ -34,6 +34,7 @@ import {
   toDateKey,
 } from "@/lib/utils/calendar-month";
 import type { LaborEntry, LaborActivity, LaborDayDescription, Worker } from "@/types/labor";
+import type { ProjectTag } from "@/lib/api/tags";
 
 interface AttendanceCalendarProps {
   entries: LaborEntry[];
@@ -42,6 +43,8 @@ interface AttendanceCalendarProps {
   activities?: LaborActivity[];
   /** Day-level descriptions for the current month scope. */
   dayDescriptions?: LaborDayDescription[];
+  /** Project-scoped phase tags. Empty = tagging UI hidden (existing convention). */
+  tags?: ProjectTag[];
   isLoading: boolean;
   canManage: boolean;
   /** YYYY-MM — empty defaults to current month for the calendar. */
@@ -62,6 +65,8 @@ interface AttendanceCalendarProps {
   onDeleteActivity?: (activity: LaborActivity) => void;
   /** Save (upsert) the day description. Caller refetches. */
   onSaveDayDescription?: (date: string, description: string) => Promise<void>;
+  /** Bulk-set tag_id on every entry of a day. Caller refetches. */
+  onSaveDayTag?: (date: string, tagId: string | null) => Promise<void>;
 }
 
 export function AttendanceCalendar({
@@ -69,6 +74,7 @@ export function AttendanceCalendar({
   workers,
   activities = [],
   dayDescriptions = [],
+  tags = [],
   isLoading,
   canManage,
   month,
@@ -83,6 +89,7 @@ export function AttendanceCalendar({
   onEditActivity,
   onDeleteActivity,
   onSaveDayDescription,
+  onSaveDayTag,
 }: AttendanceCalendarProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
@@ -102,6 +109,12 @@ export function AttendanceCalendar({
     const next = new Date(cursor.getFullYear(), cursor.getMonth() + delta, 1);
     onMonthChange(formatMonthTag(next));
   }
+
+  // Tag lookup by id — feeds CalendarCell's color-dot badges.
+  const tagMap = useMemo(
+    () => Object.fromEntries(tags.map((tag) => [tag.id, tag])),
+    [tags],
+  );
 
   // Apply worker filter at the entry level. "all" or empty = no filter.
   const filteredEntries = useMemo(() => {
@@ -192,6 +205,7 @@ export function AttendanceCalendar({
         activities={activities}
         locale={locale}
         workerMap={workerMap}
+        tagMap={tagMap}
         onDayClick={(d) => {
           const key = toDateKey(d);
           const hasEntries = filteredEntries.some((e) => e.date === key);
@@ -209,6 +223,7 @@ export function AttendanceCalendar({
         entries={dayEntries}
         activities={dayActivities}
         dayDescription={dayDescription}
+        tags={tags}
         open={selectedDate !== null}
         onOpenChange={(o) => {
           if (!o) setSelectedDate(null);
@@ -236,6 +251,11 @@ export function AttendanceCalendar({
         onEditActivity={onEditActivity}
         onDeleteActivity={onDeleteActivity}
         onSaveDayDescription={onSaveDayDescription}
+        onSaveDayTag={
+          selectedDate && onSaveDayTag
+            ? (tagId) => onSaveDayTag(toDateKey(selectedDate), tagId)
+            : undefined
+        }
       />
     </div>
   );

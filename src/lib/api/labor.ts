@@ -28,6 +28,8 @@ import type {
   CreateRateChangePayload,
   LaborDayDescription,
   LaborDayDescriptionListResponse,
+  LaborDayTagPayload,
+  LaborDayTagResponse,
 } from "@/types/labor";
 import { api, ApiError } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
@@ -237,6 +239,23 @@ export async function setLaborDayDescription(
   payload: { date: string; description: string },
 ): Promise<void> {
   await api.put<unknown>(`/projects/${projectId}/labor-day-descriptions`, payload);
+}
+
+// ─── Labor day tag ───────────────────────────────────────────────────────────
+
+/**
+ * Bulk-set `tag_id` on every labor entry logged for `payload.date`
+ * (overwrite semantics). `tag_id: null` clears the tag for the whole day.
+ * A day with zero entries returns `updated_count: 0` — not an error.
+ */
+export async function setLaborDayTag(
+  projectId: string,
+  payload: LaborDayTagPayload,
+): Promise<LaborDayTagResponse> {
+  return api.put<LaborDayTagResponse>(
+    `/projects/${projectId}/labor-entries/day-tag`,
+    payload,
+  );
 }
 
 // ─── Worker rate changes ─────────────────────────────────────────────────────

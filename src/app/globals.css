@@ -489,6 +489,31 @@ body {
   table.ledger tr:hover td {
     background: var(--paper-2);
   }
+  /* Sticky-header variant: only for tables sitting directly in the page
+     scroll area (no overflow ancestor, or sticky silently dies). The thead
+     pins to the top of .scroll-area; banded section rows can pin below it
+     with their own sticky offset. Top corners are rounded on the header
+     cells themselves because the host card must not clip (overflow-hidden
+     would break the stickiness). */
+  table.ledger.ledger-sticky th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+  table.ledger.ledger-sticky th:first-child {
+    border-top-left-radius: calc(var(--radius) - 1px);
+  }
+  table.ledger.ledger-sticky th:last-child {
+    border-top-right-radius: calc(var(--radius) - 1px);
+  }
+  /* Bottom corners too (hover paints cell backgrounds that would otherwise
+     poke square past the card's rounded border). */
+  table.ledger.ledger-sticky tr:last-child td:first-child {
+    border-bottom-left-radius: calc(var(--radius) - 1px);
+  }
+  table.ledger.ledger-sticky tr:last-child td:last-child {
+    border-bottom-right-radius: calc(var(--radius) - 1px);
+  }
 
   /* Status dots */
   .dot {

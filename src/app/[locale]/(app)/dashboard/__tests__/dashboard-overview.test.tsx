@@ -153,8 +153,17 @@ describe("DashboardPage — money panel figures", () => {
     // +25% vs June (400 → 500).
     expect(moneyPanel.getByText(/\+25% vs Jun/)).toBeInTheDocument();
 
-    // Pending refunds pill: 1 refundable expense, 400 €.
-    expect(moneyPanel.getByText(new RegExp(`Pending refunds · ${eur(400)}`))).toBeInTheDocument();
+    // Refundable pills: the single 400 € expense is owed back by BOTH channels
+    // (company hasn't reimbursed, bank hasn't refunded), so it counts in each.
+    // The two pills are separate balances and are never summed.
+    // Normalize NBSP/narrow-NBSP from the currency formatter to plain spaces.
+    const norm = (s: string | null) => (s ?? "").replace(/\s/g, " ");
+    expect(norm(moneyPanel.getByTestId("dashboard-refundable-by-company").textContent)).toBe(
+      norm(`Refundable · company · ${eur(400)}`)
+    );
+    expect(norm(moneyPanel.getByTestId("dashboard-refundable-by-bank").textContent)).toBe(
+      norm(`Refundable · bank · ${eur(400)}`)
+    );
 
     // Company purse: released 3500 (3500 = 5000 - 1500), spent 500 → left 3000.
     expect(moneyPanel.getByText(eur(3000))).toBeInTheDocument();

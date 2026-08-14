@@ -65,6 +65,9 @@ const PERSONAL_CARD_BORDER = "#f1c8a3";
 // emerald/sky company-vs-bank pairing RefundSourceIndicator established.
 const REFUNDABLE_COMPANY_ON_DARK = "#f1c8a3";
 const REFUNDABLE_BANK_ON_DARK = "#9dc9e8";
+// Same bank hue darkened for the light purse card, where the on-ink tint would
+// wash out. Mirrors what `.stamp.accent` does for the company channel.
+const REFUNDABLE_BANK_INK = "#3d7ea6";
 
 /** First day of the month for a "YYYY-MM" key — numeric args avoid the
  * UTC-midnight day-shift of parsing date-only strings. */
@@ -469,11 +472,37 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
         )}
         {purseCard(
           t("summary.personalPurse"),
-          refundableCount > 0 ? (
-            <span className="stamp accent">
-              {t("summary.refundableCount", { n: refundableCount })}
-              {" · "}
-              <span className="num">{formatEURWhole(refundableTotal)}</span>
+          // One stamp per reimbursement channel, stacked. Same overlapping
+          // balances as the dark card — never a total and a subtotal — so each
+          // carries its own count and icon. Falls back to the plain expense
+          // count only when neither channel is owed anything.
+          refundableCount > 0 || bankOutstandingCount > 0 ? (
+            <span className="flex flex-col items-end gap-1">
+              {refundableCount > 0 && (
+                <span
+                  className="stamp accent inline-flex items-center gap-1"
+                  title={t("summary.refundableByCompany")}
+                  data-testid="personal-purse-refundable-company"
+                >
+                  <Building2 size={11} aria-hidden />
+                  {t("summary.refundableCount", { n: refundableCount })}
+                  {" · "}
+                  <span className="num">{formatEURWhole(refundableTotal)}</span>
+                </span>
+              )}
+              {bankOutstandingCount > 0 && (
+                <span
+                  className="stamp inline-flex items-center gap-1"
+                  style={{ color: REFUNDABLE_BANK_INK, borderColor: REFUNDABLE_BANK_INK }}
+                  title={t("summary.refundableByBank")}
+                  data-testid="personal-purse-refundable-bank"
+                >
+                  <Landmark size={11} aria-hidden />
+                  {t("summary.refundableCount", { n: bankOutstandingCount })}
+                  {" · "}
+                  <span className="num">{formatEURWhole(bankOutstandingTotal)}</span>
+                </span>
+              )}
             </span>
           ) : (
             <span className="stamp">{t("invoiceCount", { n: personal.count })}</span>

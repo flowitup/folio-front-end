@@ -288,8 +288,8 @@ describe("ExpensePursesSummary — dark-card KPIs", () => {
       .getByText(/\d/) as HTMLElement;
     expect(amount.textContent).toMatch(/2[^\d]*000/);
     expect(amount.style.color).toBe("rgb(241, 200, 163)");
-    // The personal-purse stamp carries the same total next to the count.
-    const stamp = screen.getByText(/summary\.refundableCount/).closest(".stamp") as HTMLElement;
+    // The personal-purse company stamp carries the same total next to the count.
+    const stamp = screen.getByTestId("personal-purse-refundable-company");
     expect(stamp.textContent).toMatch(/·\s*2[^\d]*000/);
   });
 

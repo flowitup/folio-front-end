@@ -276,9 +276,23 @@ describe("InvoicesPage — purse type attribution", () => {
       .getByText("invoices.summary.personalPurse")
       .closest(".folio-card") as HTMLElement;
 
+    // SPEND attribution (the purse each expense belongs to) is unchanged:
+    // the company-refunded 700 sits in the company purse, the bank-refunded
+    // 300 stays personal.
     expect(companyCard.textContent).toContain('invoices.invoiceCount({"n":1})');
     expect(companyCard.textContent).toMatch(/700/);
-    expect(personalCard.textContent).toContain('invoices.invoiceCount({"n":1})');
     expect(personalCard.textContent).toMatch(/300/);
+
+    // The personal-purse stamps are RECEIVABLES, not spend — money the user
+    // fronted, split by who still owes it back. Neither expense is company-
+    // outstanding (both already refunded), so no company stamp renders. The
+    // bank still owes the 700 (refunded_by='company'), and that money comes
+    // back to the person even though the expense now sits in the company
+    // purse — so it is deliberately counted here, cross-purse.
+    expect(within(personalCard).queryByTestId("personal-purse-refundable-company")).toBeNull();
+    const bankStamp = within(personalCard).getByTestId("personal-purse-refundable-bank");
+    expect(bankStamp.textContent).toMatch(/700/);
+    // The bank-refunded 300 is settled on the bank side and must not appear.
+    expect(bankStamp.textContent).not.toMatch(/300/);
   });
 });

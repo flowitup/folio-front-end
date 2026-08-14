@@ -18,6 +18,11 @@ const POSITIVE_ON_DARK = "#a8c69a";
 const REFUND_PILL_BG = "rgba(232,132,60,0.16)";
 const REFUND_PILL_BORDER = "rgba(241,200,163,0.35)";
 const REFUND_PILL_TEXT = "#f1c8a3";
+// Bank-channel pill — cool counterpart to the warm company pill, mirroring the
+// emerald/sky company-vs-bank pairing RefundSourceIndicator established.
+const BANK_PILL_BG = "rgba(60,132,232,0.16)";
+const BANK_PILL_BORDER = "rgba(157,201,232,0.35)";
+const BANK_PILL_TEXT = "#9dc9e8";
 const DIAL_TRACK = "rgba(245,241,234,0.16)";
 const DIVIDER = "rgba(245,241,234,0.12)";
 const TRACK_BG = "rgba(245,241,234,0.14)";
@@ -53,6 +58,9 @@ export interface OverviewMoneyPanelProps {
   monthlySeries: MonthlySpendPoint[];
   monthDelta: MonthDelta;
   pendingRefunds: PendingRefunds;
+  /** Bank-channel outstanding — overlaps pendingRefunds by design; the two are
+   * separate balances and are never summed. */
+  bankOutstanding: PendingRefunds;
   purses: MoneyPurseView[];
   /** True while the underlying invoices fetch hasn't settled yet for the
    * current project — figures aren't real yet (e.g. spentTotal defaults to
@@ -72,6 +80,7 @@ export function OverviewMoneyPanel({
   monthlySeries,
   monthDelta,
   pendingRefunds,
+  bankOutstanding,
   purses,
   loading = false,
 }: OverviewMoneyPanelProps) {
@@ -205,12 +214,29 @@ export function OverviewMoneyPanel({
             )}
           </div>
         </div>
-        {!loading && pendingRefunds.count > 0 && (
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-medium uppercase tracking-[0.05em]"
-            style={{ background: REFUND_PILL_BG, border: `1px solid ${REFUND_PILL_BORDER}`, color: REFUND_PILL_TEXT }}
-          >
-            {tInvoices("summary.pendingRefunds")} · {formatEURWhole(pendingRefunds.total)}
+        {/* Two independent outstanding balances, one per reimbursement channel.
+            They overlap — an expense neither side refunded counts in both — so
+            each pill names its own channel and they are never summed. */}
+        {!loading && (pendingRefunds.count > 0 || bankOutstanding.count > 0) && (
+          <span className="flex flex-wrap items-center justify-end gap-1.5">
+            {pendingRefunds.count > 0 && (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-medium uppercase tracking-[0.05em]"
+                style={{ background: REFUND_PILL_BG, border: `1px solid ${REFUND_PILL_BORDER}`, color: REFUND_PILL_TEXT }}
+                data-testid="dashboard-refundable-by-company"
+              >
+                {tInvoices("summary.refundableByCompany")} · {formatEURWhole(pendingRefunds.total)}
+              </span>
+            )}
+            {bankOutstanding.count > 0 && (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-medium uppercase tracking-[0.05em]"
+                style={{ background: BANK_PILL_BG, border: `1px solid ${BANK_PILL_BORDER}`, color: BANK_PILL_TEXT }}
+                data-testid="dashboard-refundable-by-bank"
+              >
+                {tInvoices("summary.refundableByBank")} · {formatEURWhole(bankOutstanding.total)}
+              </span>
+            )}
           </span>
         )}
       </div>

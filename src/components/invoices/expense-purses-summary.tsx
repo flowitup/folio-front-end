@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { Building2, Landmark } from "lucide-react";
 import type { Invoice } from "@/types/invoice";
 import { formatEUR, formatEURWhole } from "@/lib/utils/formatters";
 import { PurseDial } from "./purse-dial";
@@ -20,6 +21,9 @@ import { useDataTip } from "./data-tip";
  * - Purse released/spent come from the backend meta — the authoritative
  *   buckets (flagged payment methods only, refunds netted, company-refunded
  *   rows reassigned).
+ * - The two refundable figures on the dark card are SEPARATE OUTSTANDING
+ *   BALANCES, one per reimbursement channel — never a split of one total.
+ *   See the accumulation below for why they overlap and must not be summed.
  * - The dark card's total is a client-side sum over ALL expense rows (any
  *   payment method) NET of refunds: each `return` row is subtracted from the
  *   purse that received the money back, so Total = company spent + personal
@@ -56,9 +60,11 @@ const TYPE_BAR_COLOR: Record<ExpenseType, string> = {
 
 // Personal-purse card border — same tint `.stamp.accent` uses in globals.css.
 const PERSONAL_CARD_BORDER = "#f1c8a3";
-// Pending-refunds amount on the dark ink card — the warm tint the refundable
-// stamp family uses, readable on ink.
-const PENDING_ON_DARK = "#f1c8a3";
+// Refundable amounts on the dark ink card. Company keeps the warm tint the
+// refundable stamp family uses; bank gets a cool counterpart, mirroring the
+// emerald/sky company-vs-bank pairing RefundSourceIndicator established.
+const REFUNDABLE_COMPANY_ON_DARK = "#f1c8a3";
+const REFUNDABLE_BANK_ON_DARK = "#9dc9e8";
 
 /** First day of the month for a "YYYY-MM" key — numeric args avoid the
  * UTC-midnight day-shift of parsing date-only strings. */
@@ -113,6 +119,9 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   const personal = emptyBreakdown();
   let refundableCount = 0;
   let refundableTotal = 0;
+  // Bank channel — see the accumulation in the loop below.
+  let bankOutstandingCount = 0;
+  let bankOutstandingTotal = 0;
   let minDate = "";
   let maxDate = "";
   // Spend per month since project start. Labor attributes to its service_month
@@ -131,12 +140,34 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
       purse.spent += inv.total_amount;
       bucket.count += 1;
     }
+    // Company channel: what the company still owes the person back.
+    // refundable_status tracks ONLY this channel — it flips to 'refunded' the
+    // moment the company settles, regardless of the bank.
     if (
       purse === personal &&
       (inv.refundable_status === "refundable" || inv.refundable_status === "refund_pending")
     ) {
       refundableCount += 1;
       refundableTotal += inv.total_amount;
+    }
+    // Bank channel: a second, independent reimbursement that pays the person
+    // back directly. Because refundable_status ignores it, a bank-outstanding
+    // expense may already read as 'refunded' (company settled) and may sit in
+    // either purse — so this is deliberately NOT gated on `purse` or status.
+    // Bank settlement lives solely in refunded_by ('bank' | 'both'); every
+    // other value, including NULL on a still-pending row, means still owed.
+    // This set OVERLAPS the company figure above (an expense neither side has
+    // refunded counts in both). They are two balances, never parts of a whole
+    // — do not sum them. Refund tracking only ever applies to
+    // materials_services, which the released_funds/return guard above already
+    // excludes, so no extra type check is needed here.
+    if (
+      inv.refundable_status &&
+      inv.refunded_by !== "bank" &&
+      inv.refunded_by !== "both"
+    ) {
+      bankOutstandingCount += 1;
+      bankOutstandingTotal += inv.total_amount;
     }
     const monthKey = (inv.service_month ?? inv.issue_date).slice(0, 7);
     const month = (monthlySpend[monthKey] ??= { total: 0, count: 0 });
@@ -346,10 +377,37 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
             </div>
           </div>
           <div className="mt-5 flex flex-col gap-1.5">
-            <div className="flex justify-between text-[11.5px]">
-              <span style={{ opacity: 0.72 }}>{t("summary.pendingRefunds")}</span>
-              <span className="num" style={{ color: PENDING_ON_DARK }}>
+            {/* Two independent outstanding balances, one per reimbursement
+                channel. Each row is self-labelled with its own count so the
+                pair never reads as total + subtotal. */}
+            <div
+              className="flex justify-between text-[11.5px]"
+              data-testid="refundable-by-company"
+              data-tip={`${t("summary.refundableByCompany")}|${formatEURWhole(
+                refundableTotal
+              )}|${t("summary.refundableCount", { n: refundableCount })}`}
+            >
+              <span className="flex items-center gap-1.5" style={{ opacity: 0.72 }}>
+                <Building2 size={12} aria-hidden />
+                {t("summary.refundableByCompany")}
+              </span>
+              <span className="num" style={{ color: REFUNDABLE_COMPANY_ON_DARK }}>
                 {formatEURWhole(refundableTotal)}
+              </span>
+            </div>
+            <div
+              className="flex justify-between text-[11.5px]"
+              data-testid="refundable-by-bank"
+              data-tip={`${t("summary.refundableByBank")}|${formatEURWhole(
+                bankOutstandingTotal
+              )}|${t("summary.refundableCount", { n: bankOutstandingCount })}`}
+            >
+              <span className="flex items-center gap-1.5" style={{ opacity: 0.72 }}>
+                <Landmark size={12} aria-hidden />
+                {t("summary.refundableByBank")}
+              </span>
+              <span className="num" style={{ color: REFUNDABLE_BANK_ON_DARK }}>
+                {formatEURWhole(bankOutstandingTotal)}
               </span>
             </div>
             {monthSeries.length > 0 && (

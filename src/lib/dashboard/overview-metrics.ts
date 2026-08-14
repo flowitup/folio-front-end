@@ -137,8 +137,34 @@ export interface PendingRefunds {
   total: number;
 }
 
+/** Expenses the BANK still owes back — the second reimbursement channel.
+ *
+ * refundable_status tracks only the COMPANY channel (it flips to 'refunded'
+ * the moment the company settles), so bank-outstanding expenses are invisible
+ * to computePendingRefunds. Bank settlement lives solely in refunded_by
+ * ('bank' | 'both'); every other value, including NULL on a still-pending row,
+ * means still owed.
+ *
+ * Deliberately NOT gated on isPersonalExpense: a company-reimbursed expense is
+ * reassigned to the company purse yet the bank still owes it. This set OVERLAPS
+ * computePendingRefunds — the two are separate balances, never parts of a
+ * whole, and must not be summed. Same rule as the Expense page's dark card. */
+export function computeBankOutstanding(invoices: Invoice[]): PendingRefunds {
+  let count = 0;
+  let total = 0;
+  for (const inv of invoices) {
+    if (!isSpendInvoice(inv)) continue;
+    if (!inv.refundable_status) continue;
+    if (inv.refunded_by === "bank" || inv.refunded_by === "both") continue;
+    count += 1;
+    total += inv.total_amount;
+  }
+  return { count, total };
+}
+
 /** Personal expenses still awaiting reimbursement (refundable or already
- * requested) — same rule as the Expense page's dark card "Pending refunds" line. */
+ * requested) — same rule as the Expense page's dark card "Pending refunds" line.
+ * Company channel only; see computeBankOutstanding for the bank side. */
 export function computePendingRefunds(invoices: Invoice[]): PendingRefunds {
   let count = 0;
   let total = 0;

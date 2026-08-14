@@ -15,6 +15,7 @@ import {
   computeMonthDelta,
   computeBudgetMetrics,
   computePendingRefunds,
+  computeBankOutstanding,
   buildPurseViews,
   buildTypeMonthlyBuckets,
   type MonthDelta,
@@ -149,6 +150,7 @@ export default function DashboardPage() {
     [selectedProject?.budget, spentTotal, activeMeta.fundsReleasedTotal]
   );
   const pendingRefunds = useMemo(() => computePendingRefunds(activeInvoices), [activeInvoices]);
+  const bankOutstanding = useMemo(() => computeBankOutstanding(activeInvoices), [activeInvoices]);
   const purses = useMemo(() => buildPurseViews(activeInvoices, activeMeta), [activeInvoices, activeMeta]);
   const typeBuckets = useMemo(
     () =>
@@ -177,6 +179,7 @@ export default function DashboardPage() {
         monthlySeries={monthlySeries}
         monthDelta={monthDelta}
         pendingRefunds={pendingRefunds}
+        bankOutstanding={bankOutstanding}
         purses={purses}
         loading={showLoading}
       />

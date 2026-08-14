@@ -487,6 +487,8 @@
       "returnsReceived": "Đã nhận trả hàng ({n})",
       "outstandingAvoirs": "{n, plural, other {# avoir chưa áp dụng}}",
       "pendingRefunds": "Hoàn tiền đang chờ",
+      "refundableByCompany": "Chờ hoàn · công ty",
+      "refundableByBank": "Chờ hoàn · ngân hàng",
       "vsMonth": "{delta} so với {month}"
     },
     "byWorker": {

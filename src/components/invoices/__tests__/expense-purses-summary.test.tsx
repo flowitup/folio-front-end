@@ -284,13 +284,65 @@ describe("ExpensePursesSummary — dark-card KPIs", () => {
         meta={ZERO_META}
       />
     );
-    const amount = screen.getByText("invoices.summary.pendingRefunds")
-      .nextElementSibling as HTMLElement;
+    const amount = within(screen.getByTestId("refundable-by-company"))
+      .getByText(/\d/) as HTMLElement;
     expect(amount.textContent).toMatch(/2[^\d]*000/);
     expect(amount.style.color).toBe("rgb(241, 200, 163)");
     // The personal-purse stamp carries the same total next to the count.
     const stamp = screen.getByText(/summary\.refundableCount/).closest(".stamp") as HTMLElement;
     expect(stamp.textContent).toMatch(/·\s*2[^\d]*000/);
+  });
+
+  it("tracks the bank channel independently of refundable_status", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          // Neither side settled — counts in BOTH balances.
+          makeInvoice({ id: "a", paid_by_personal: true, refundable_status: "refundable", total_amount: 1200 }),
+          // Company reimbursed, bank has not — company balance only drops this
+          // one; the bank still owes it. This is the row the old single
+          // "pending refunds" figure silently lost.
+          makeInvoice({ id: "b", paid_by_personal: true, refundable_status: "refunded", refunded_by: "company", total_amount: 500 }),
+          // Both settled — in neither balance.
+          makeInvoice({ id: "c", paid_by_personal: true, refundable_status: "refunded", refunded_by: "both", total_amount: 300 }),
+          // Bank settled, company did not reimburse — out of the bank balance.
+          makeInvoice({ id: "d", paid_by_personal: true, refundable_status: "refunded", refunded_by: "bank", total_amount: 700 }),
+          // Not refund-tracked at all.
+          makeInvoice({ id: "e", paid_by_personal: false, total_amount: 900 }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const companyAmount = within(screen.getByTestId("refundable-by-company"))
+      .getByText(/\d/) as HTMLElement;
+    const bankAmount = within(screen.getByTestId("refundable-by-bank"))
+      .getByText(/\d/) as HTMLElement;
+    // Company: only "a" is still owed back by the company.
+    expect(companyAmount.textContent).toMatch(/1[^\d]*200/);
+    // Bank: "a" + "b" = 1 700 — deliberately overlapping the company figure
+    // and larger than it, so the two must never be summed or stacked.
+    expect(bankAmount.textContent).toMatch(/1[^\d]*700/);
+    expect(bankAmount.style.color).toBe("rgb(157, 201, 232)");
+  });
+
+  it("counts a bank-outstanding expense regardless of which purse holds it", () => {
+    // A company-reimbursed expense is reassigned to the COMPANY purse by
+    // isPersonalExpense, yet the bank still owes it — the bank balance must
+    // not be gated on the personal purse.
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "b", paid_by_personal: true, refundable_status: "refunded", refunded_by: "company", total_amount: 640 }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const companyAmount = within(screen.getByTestId("refundable-by-company"))
+      .getByText(/\d/) as HTMLElement;
+    const bankAmount = within(screen.getByTestId("refundable-by-bank"))
+      .getByText(/\d/) as HTMLElement;
+    expect(companyAmount.textContent).toMatch(/0/);
+    expect(bankAmount.textContent).toMatch(/640/);
   });
 
   it("renders one bar per month from project start, filling gap months", () => {

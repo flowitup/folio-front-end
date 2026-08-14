@@ -487,6 +487,8 @@
       "returnsReceived": "Returns received ({n})",
       "outstandingAvoirs": "{n, plural, =1 {1 outstanding avoir} other {# outstanding avoirs}}",
       "pendingRefunds": "Pending refunds",
+      "refundableByCompany": "Refundable · company",
+      "refundableByBank": "Refundable · bank",
       "vsMonth": "{delta} vs {month}"
     },
     "byWorker": {

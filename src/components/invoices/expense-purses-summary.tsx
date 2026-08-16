@@ -6,6 +6,13 @@ import type { Invoice } from "@/types/invoice";
 import { formatEUR, formatEURWhole } from "@/lib/utils/formatters";
 import { PurseDial } from "./purse-dial";
 import { useDataTip } from "./data-tip";
+import {
+  EXPENSE_TYPES,
+  ExpenseTypeBreakdown,
+  emptyBreakdown,
+  type ExpenseType,
+  type PurseBreakdown,
+} from "./expense-type-breakdown";
 
 /**
  * "Two purses" expenses summary (design Expense Dataviz 1b).
@@ -15,7 +22,10 @@ import { useDataTip } from "./data-tip";
  * per-type mini-bar breakdown. The dark card's lower block shows the pending
  * personal-refund amount and a month-by-month spend timeline since project
  * start (latest month highlighted, with a delta vs the previous month).
- * Refund invoices sit in a credit strip below, outside both purses.
+ * Beneath the cards, `ExpenseTypeBreakdown` re-plots the same per-type figures
+ * type-first on a single shared scale — the reading the purse mini-bars cannot
+ * give, since those are each scaled to their own purse. Refund invoices sit in
+ * a credit strip below, outside both purses.
  *
  * Figure sourcing:
  * - Purse released/spent come from the backend meta — the authoritative
@@ -49,9 +59,6 @@ interface ExpensePursesSummaryProps {
   meta: ExpenseSummaryMeta;
 }
 
-const EXPENSE_TYPES = ["labor", "materials_services", "others"] as const;
-type ExpenseType = (typeof EXPENSE_TYPES)[number];
-
 const TYPE_BAR_COLOR: Record<ExpenseType, string> = {
   labor: "var(--accent)",
   materials_services: "var(--ink-2)",
@@ -76,17 +83,6 @@ function monthDate(key: string): Date {
   return new Date(y, m - 1, 1);
 }
 
-interface PurseBreakdown {
-  count: number;
-  /** Client-side sum across the three expense types (mini-bar denominator). */
-  spent: number;
-  types: Record<ExpenseType, { total: number; count: number }>;
-  /** Number of `return` invoices netted into this purse (credit-strip drill-down). */
-  returnsCount: number;
-  /** Sum of those returns' total_amount — negative (credit-strip drill-down). */
-  returnsTotal: number;
-}
-
 /**
  * Mirrors the BE bucket rule: a personally-paid expense the company already
  * reimbursed (status refunded, not by bank) counts as company money.
@@ -96,20 +92,6 @@ function isPersonalExpense(inv: Invoice): boolean {
     Boolean(inv.paid_by_personal) &&
     !(inv.refundable_status === "refunded" && inv.refunded_by !== "bank")
   );
-}
-
-function emptyBreakdown(): PurseBreakdown {
-  return {
-    count: 0,
-    spent: 0,
-    types: {
-      labor: { total: 0, count: 0 },
-      materials_services: { total: 0, count: 0 },
-      others: { total: 0, count: 0 },
-    },
-    returnsCount: 0,
-    returnsTotal: 0,
-  };
 }
 
 export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryProps) {
@@ -515,6 +497,9 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
           PERSONAL_CARD_BORDER
         )}
       </div>
+
+      {/* Type-first companion to the purse cards — same figures, shared scale. */}
+      <ExpenseTypeBreakdown company={company} personal={personal} />
 
       {refunds.length > 0 && (
         <div

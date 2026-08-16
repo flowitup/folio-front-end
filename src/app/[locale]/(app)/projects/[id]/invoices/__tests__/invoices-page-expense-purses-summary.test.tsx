@@ -296,3 +296,53 @@ describe("InvoicesPage — purse type attribution", () => {
     expect(bankStamp.textContent).not.toMatch(/300/);
   });
 });
+
+describe("InvoicesPage — expenses-by-type breakdown", () => {
+  it("renders one row per spent type, split across both purses, on the shared scale", async () => {
+    setupFetch(
+      [
+        makeInvoice({ id: "ms-company", type: "materials_services", total_amount: 40000 }),
+        makeInvoice({
+          id: "ms-personal",
+          type: "materials_services",
+          total_amount: 10000,
+          paid_by_personal: true,
+        }),
+        makeInvoice({ id: "labor-company", type: "labor", total_amount: 5000 }),
+        makeInvoice({
+          id: "labor-personal",
+          type: "labor",
+          total_amount: 20000,
+          paid_by_personal: true,
+        }),
+        // Capital flow — must not appear as a type row.
+        makeInvoice({ id: "rf-1", type: "released_funds", is_auto_generated: true }),
+      ],
+      { company_spent_total: 45000, personal_spent_total: 30000 },
+    );
+    render(<InvoicesPage />);
+
+    const block = await waitFor(() => screen.getByTestId("expense-type-breakdown"));
+
+    // Materials & services (50 000) outranks labor (25 000); nobody spent on "others".
+    const order = Array.from(
+      block.querySelectorAll<HTMLElement>('[data-testid^="type-row-"]'),
+    ).map((el) => el.dataset.testid);
+    expect(order).toEqual(["type-row-materials_services", "type-row-labor"]);
+
+    // Shared scale: labor's whole bar is half of materials & services'.
+    const width = (purse: string, type: string) =>
+      Number.parseFloat(
+        within(block).getByTestId(`type-segment-${purse}-${type}`).style.width,
+      );
+    const ms = width("company", "materials_services") + width("personal", "materials_services");
+    const labor = width("company", "labor") + width("personal", "labor");
+    expect(ms).toBeCloseTo(100, 5);
+    expect(labor).toBeCloseTo(50, 5);
+
+    // Totals reconcile with the two purses combined.
+    expect(
+      within(block).getByTestId("type-breakdown-total").textContent!.replace(/[^0-9]/g, ""),
+    ).toContain("75000");
+  });
+});

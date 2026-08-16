@@ -490,7 +490,12 @@
       "pendingRefunds": "Hoàn tiền đang chờ",
       "refundableByCompany": "Chờ hoàn · công ty",
       "refundableByBank": "Chờ hoàn · ngân hàng",
-      "vsMonth": "{delta} so với {month}"
+      "vsMonth": "{delta} so với {month}",
+      "byType": "Chi phí theo loại",
+      "netOfReturns": "đã trừ hoàn trả",
+      "paidByCompany": "công ty",
+      "paidByPersonal": "cá nhân",
+      "sumOfTypes": "Tổng"
     },
     "byWorker": {
       "totalPaid": "Tổng đã trả",

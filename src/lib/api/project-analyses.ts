@@ -26,7 +26,8 @@ export interface ProjectAnalysis {
   tags: string[];
   created_at: string;
   updated_at: string;
-  /** Relative API path — do not fetch directly; use project-analysis-blob.ts. */
+  /** Relative backend path — the viewer loads the report through the
+   * same-origin proxy at /api/projects/<id>/analyses/<id>/content instead. */
   content_url: string;
 }
 

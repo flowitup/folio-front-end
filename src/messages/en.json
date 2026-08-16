@@ -1388,8 +1388,7 @@
       "unknownUploader": "Former member"
     },
     "viewer": {
-      "loading": "Loading report…",
-      "error": "Failed to load the report — try again"
+      "loading": "Loading report…"
     },
     "edit": {
       "trigger": "Edit",

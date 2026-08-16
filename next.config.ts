@@ -94,6 +94,35 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
 ];
 
+// The analysis-report proxy route (/api/projects/<id>/analyses/<id>/content)
+// serves stored, untrusted HTML reports into a sandboxed iframe. It needs its
+// own policy, because the app policy above would (a) strip the report's
+// webfonts and (b) forbid framing it at all via frame-ancestors 'none' +
+// X-Frame-Options: DENY.
+//
+// This is safe ONLY because the embedding iframe is sandboxed without
+// `allow-same-origin` (see analysis-viewer.tsx), giving the report an opaque
+// origin with no access to Folio's cookies, storage, or parent DOM. The
+// relaxations below are scoped to this single path and nothing else.
+const analysisReportHeaders = [
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'none'",
+      "img-src 'self' data: https:",
+      "style-src 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src https://fonts.gstatic.com",
+      "script-src 'unsafe-inline'",
+      "frame-ancestors 'self'",
+    ].join("; "),
+  },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "no-referrer" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
+];
+
 const nextConfig: NextConfig = {
   output: "standalone",
   turbopack: {
@@ -104,6 +133,12 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: securityHeaders,
+      },
+      // Listed after the catch-all so its keys override the app policy for
+      // this one path. Keep it last.
+      {
+        source: "/api/projects/:projectId/analyses/:analysisId/content",
+        headers: analysisReportHeaders,
       },
     ];
   },

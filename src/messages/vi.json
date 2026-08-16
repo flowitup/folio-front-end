@@ -1388,8 +1388,7 @@
       "unknownUploader": "Thành viên cũ"
     },
     "viewer": {
-      "loading": "Đang tải báo cáo…",
-      "error": "Không tải được báo cáo — vui lòng thử lại"
+      "loading": "Đang tải báo cáo…"
     },
     "edit": {
       "trigger": "Chỉnh sửa",

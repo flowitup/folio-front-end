@@ -1388,8 +1388,7 @@
       "unknownUploader": "Ancien membre"
     },
     "viewer": {
-      "loading": "Chargement du rapport…",
-      "error": "Échec du chargement du rapport — réessayez"
+      "loading": "Chargement du rapport…"
     },
     "edit": {
       "trigger": "Modifier",

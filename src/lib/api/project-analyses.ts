@@ -4,12 +4,10 @@
  * Server-only — imports next/headers via sessionAuthHeader.
  * Client components must NOT import this; go through server actions instead.
  *
- * Note on tags: the backend repository exposes `list_tags_for_project` at the
- * application layer but no route wires it up (unlike
- * `GET /projects/<id>/documents/tags`, which project-documents.ts calls). There
- * is no `GET /projects/<id>/analyses/tags` endpoint to call from here, so the
- * UI derives its tag filter from the tags present in the currently loaded page
- * instead of a dedicated wrapper. See the phase-05 report for the backend gap.
+ * Note on tags: the tag filter options come from
+ * `GET /projects/<id>/analyses/tags` (the project's whole tag vocabulary), not
+ * from the tags present in the currently loaded page — otherwise a tag that
+ * only appears on page 2 would be missing from the filter.
  */
 
 import { env } from "@/lib/config/env";
@@ -124,6 +122,35 @@ export async function listProjectAnalyses(
     throw await buildHttpError(response, "Failed to list analyses");
   }
   return response.json() as Promise<ProjectAnalysisPage>;
+}
+
+/**
+ * List every distinct tag used by a project's analyses, for the filter UI.
+ */
+export async function listProjectAnalysisTags(projectId: string): Promise<string[]> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/analyses/tags`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          ...authHeaders,
+        },
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error listing analysis tags: ${String(err)}`);
+  }
+  if (!response.ok) {
+    throw await buildHttpError(response, "Failed to list analysis tags");
+  }
+  const body = (await response.json()) as { tags: string[] };
+  return body.tags;
 }
 
 /**

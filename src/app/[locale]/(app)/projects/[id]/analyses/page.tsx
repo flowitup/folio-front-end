@@ -8,7 +8,7 @@
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
-import { listProjectAnalyses } from "@/lib/api/project-analyses";
+import { listProjectAnalyses, listProjectAnalysisTags } from "@/lib/api/project-analyses";
 import { listMembers } from "@/lib/api/members";
 import { getProjectById } from "@/lib/api/projects-server";
 import { AnalysesPanel } from "./analyses-panel";
@@ -26,8 +26,9 @@ export default async function AnalysesPage({ params }: PageProps) {
     redirect(`/${locale}/login`);
   }
 
-  // Parallel fetch — project metadata, members, and the first page of analyses.
-  const [project, members, analysesResult] = await Promise.all([
+  // Parallel fetch — project metadata, members, the first page of analyses,
+  // and the project's full tag vocabulary for the filter.
+  const [project, members, analysesResult, availableTags] = await Promise.all([
     getProjectById(projectId).catch(() => null),
     listMembers(projectId).catch(() => []),
     listProjectAnalyses(projectId).catch(() => ({
@@ -36,6 +37,7 @@ export default async function AnalysesPage({ params }: PageProps) {
       page: 1,
       per_page: 24,
     })),
+    listProjectAnalysisTags(projectId).catch(() => [] as string[]),
   ]);
 
   // Membership gate: admin (*:*) or project member (non-null project means
@@ -63,6 +65,7 @@ export default async function AnalysesPage({ params }: PageProps) {
         projectId={projectId}
         initialAnalyses={analysesResult.items}
         initialTotal={analysesResult.total}
+        availableTags={availableTags}
         members={adaptedMembers}
       />
     </div>

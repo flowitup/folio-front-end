@@ -5,13 +5,10 @@
  * Manages: list state, search (debounced), tag filter, pagination, and the
  * upload/edit/delete flows.
  *
- * Tag filter data source: the backend has no `GET .../analyses/tags`
- * endpoint (unlike project-documents, which exposes one) — see the doc
- * comment in src/lib/api/project-analyses.ts. Available tags are therefore
- * derived from the currently loaded page of results rather than fetched
- * separately; the filter chip list will only reflect tags visible on the
- * current page/search, which is an acceptable degradation given the missing
- * backend contract.
+ * Tag filter data source: the project's whole tag vocabulary is fetched
+ * server-side via `GET .../analyses/tags` and passed in as `availableTags`,
+ * then unioned with the tags on the loaded rows so a tag added by an upload
+ * in this session appears in the filter right away.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -37,6 +34,8 @@ type Props = {
   projectId: string;
   initialAnalyses: ProjectAnalysis[];
   initialTotal: number;
+  /** The project's whole tag vocabulary, from GET .../analyses/tags. */
+  availableTags: string[];
   members: Member[];
 };
 
@@ -53,6 +52,7 @@ export function AnalysesPanel({
   projectId,
   initialAnalyses,
   initialTotal,
+  availableTags: serverTags,
   members,
 }: Props) {
   const t = useTranslations("analyses");
@@ -113,12 +113,15 @@ export function AnalysesPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, debouncedQuery, selectedTags, page]);
 
-  // ---- Derived available tags (current page only — see file-level comment) ----
+  // ---- Available tags ----
+  // The project's full vocabulary comes from the server, unioned with tags on
+  // the loaded rows so a tag introduced by an upload in this session shows up
+  // in the filter immediately, without waiting for a page refresh.
   const availableTags = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(serverTags);
     for (const a of list) for (const tag of a.tags) set.add(tag);
     return Array.from(set).sort();
-  }, [list]);
+  }, [serverTags, list]);
 
   // ---- Handlers ----
 

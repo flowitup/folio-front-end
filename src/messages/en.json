@@ -490,7 +490,12 @@
       "pendingRefunds": "Pending refunds",
       "refundableByCompany": "Refundable · company",
       "refundableByBank": "Refundable · bank",
-      "vsMonth": "{delta} vs {month}"
+      "vsMonth": "{delta} vs {month}",
+      "byType": "Expenses by type",
+      "netOfReturns": "net of returns",
+      "paidByCompany": "company",
+      "paidByPersonal": "personal",
+      "sumOfTypes": "Total"
     },
     "byWorker": {
       "totalPaid": "Total paid",

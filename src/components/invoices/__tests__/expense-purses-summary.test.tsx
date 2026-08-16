@@ -548,3 +548,63 @@ describe("ExpensePursesSummary — avoir returns (per-purse rows, strip split, o
     expect(personalSpentLine.textContent).toMatch(/6[^\d]*000/);
   });
 });
+
+describe("ExpensePursesSummary — type-first breakdown wiring", () => {
+  // Same shape as the avoir fixture above: company M&S 10 000 − 1 500 return,
+  // personal M&S 8 000 − 2 000 return → 8 500 / 6 000 net, 14 500 combined.
+  const invoices: Invoice[] = [
+    makeInvoice({ id: "exp-company", total_amount: 10000 }),
+    makeInvoice({ id: "exp-personal", total_amount: 8000, paid_by_personal: true }),
+    makeInvoice({
+      id: "ref-company",
+      type: "return",
+      total_amount: -1500,
+      refunds_invoice_id: "exp-company",
+      settled_via: "cash",
+    }),
+    makeInvoice({
+      id: "ref-personal",
+      type: "return",
+      total_amount: -2000,
+      paid_by_personal: true,
+      refunds_invoice_id: "exp-personal",
+      settled_via: "avoir",
+    }),
+  ];
+
+  const META = {
+    fundsReleasedTotal: 30000,
+    fundsReleasedCompanyTotal: 20000,
+    fundsReleasedPersonalTotal: 10000,
+    companySpentTotal: 8500,
+    personalSpentTotal: 6000,
+  };
+
+  it("renders the breakdown fed by the same netted figures as the purse cards", () => {
+    render(<ExpensePursesSummary invoices={invoices} meta={META} />);
+
+    const block = screen.getByTestId("expense-type-breakdown");
+    // Only the type both purses spent on survives the zero-row filter.
+    expect(within(block).getByTestId("type-row-materials_services")).toBeTruthy();
+    expect(within(block).queryByTestId("type-row-labor")).toBeNull();
+
+    // Net of returns on both sides, and the row total is their sum.
+    const row = within(block).getByTestId("type-row-materials_services");
+    expect(row.textContent).toMatch(/8[^\d]*500/);
+    expect(row.textContent).toMatch(/6[^\d]*000/);
+    expect(
+      within(block).getByTestId("type-total-materials_services").textContent!.replace(/[^0-9]/g, "")
+    ).toBe("14500");
+  });
+
+  it("reconciles its footer total with the dark card's total expenses", () => {
+    const { container } = render(<ExpensePursesSummary invoices={invoices} meta={META} />);
+
+    const digits = (el: Element) => el.textContent!.replace(/[^0-9]/g, "");
+    const footer = digits(screen.getByTestId("type-breakdown-total"));
+    // The dark card renders the same client-summed figure at 34px.
+    const darkTotal = container.querySelector(".text-\\[34px\\]") as HTMLElement;
+    expect(footer).toContain(digits(darkTotal));
+    expect(digits(darkTotal)).toBe("14500");
+  });
+});

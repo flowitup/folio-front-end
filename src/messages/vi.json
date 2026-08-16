@@ -16,6 +16,7 @@
     "planning": "Kế hoạch",
     "notes": "Ghi chú",
     "documents": "Tài liệu",
+    "analyses": "Phân tích",
     "photos": "Hình ảnh",
     "members": "Thành viên",
     "projectSettings": "Cài đặt",
@@ -1351,6 +1352,81 @@
       "success": "Đã đổi tên tài liệu",
       "errorForbidden": "Chỉ người tải lên hoặc quản trị viên dự án mới có thể đổi tên tài liệu này",
       "errorServer": "Đổi tên thất bại"
+    }
+  },
+  "analyses": {
+    "title": "Phân tích",
+    "empty": {
+      "title": "Chưa có báo cáo phân tích nào",
+      "body": "Tải lên một báo cáo HTML độc lập để bắt đầu xây dựng thư viện."
+    },
+    "upload": {
+      "trigger": "Tải lên phân tích",
+      "dialogTitle": "Tải lên báo cáo phân tích",
+      "file": "Báo cáo HTML",
+      "fileHint": "Tệp .html độc lập, tối đa 2 MB",
+      "titleField": "Tiêu đề",
+      "summaryField": "Tóm tắt",
+      "sourceUrlField": "URL nguồn",
+      "tagsField": "Nhãn",
+      "submit": "Tải lên",
+      "submitting": "Đang tải lên…",
+      "cancel": "Hủy",
+      "success": "Đã tải lên phân tích",
+      "tooLarge": "Tệp quá lớn (tối đa 2 MB)",
+      "invalidFile": "Tệp không được hỗ trợ — chọn một báo cáo .html"
+    },
+    "search": {
+      "placeholder": "Tìm kiếm phân tích…"
+    },
+    "filter": {
+      "allTags": "Tất cả",
+      "clearTags": "Xóa nhãn"
+    },
+    "card": {
+      "uploadedBy": "Tải lên bởi {name}",
+      "unknownUploader": "Thành viên cũ"
+    },
+    "viewer": {
+      "loading": "Đang tải báo cáo…",
+      "error": "Không tải được báo cáo — vui lòng thử lại"
+    },
+    "edit": {
+      "trigger": "Chỉnh sửa",
+      "dialogTitle": "Chỉnh sửa phân tích",
+      "titleField": "Tiêu đề",
+      "summaryField": "Tóm tắt",
+      "sourceUrlField": "URL nguồn",
+      "tagsField": "Nhãn",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "saving": "Đang lưu…",
+      "success": "Đã cập nhật phân tích"
+    },
+    "delete": {
+      "trigger": "Xóa",
+      "confirmTitle": "Xóa phân tích?",
+      "confirmBody": "Bạn có chắc chắn muốn xóa \"{title}\" không? Hành động này không thể hoàn tác từ giao diện.",
+      "cancel": "Hủy",
+      "confirm": "Xóa",
+      "confirming": "Đang xóa…",
+      "success": "Đã xóa phân tích"
+    },
+    "errors": {
+      "tooLarge": "Tệp quá lớn (tối đa 2 MB)",
+      "invalidFile": "Tệp không được hỗ trợ — chọn một báo cáo .html",
+      "validation": "Vui lòng kiểm tra biểu mẫu và thử lại",
+      "forbidden": "Chỉ người tải lên, chủ sở hữu dự án hoặc quản trị viên mới có thể thực hiện việc này",
+      "notFound": "Không tìm thấy phân tích",
+      "rateLimited": "Quá nhiều yêu cầu — vui lòng chậm lại",
+      "generic": "Đã xảy ra lỗi — vui lòng thử lại"
+    },
+    "toast": {
+      "listLoadError": "Không tải được danh sách phân tích"
+    },
+    "pagination": {
+      "prev": "Trước",
+      "next": "Tiếp"
     }
   },
   "members": {

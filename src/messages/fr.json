@@ -16,6 +16,7 @@
     "planning": "Planification",
     "notes": "Notes",
     "documents": "Documents",
+    "analyses": "Analyses",
     "photos": "Photos",
     "members": "Membres",
     "projectSettings": "Paramètres",
@@ -1351,6 +1352,81 @@
       "success": "Document renommé",
       "errorForbidden": "Seul l'importateur ou un administrateur du projet peut renommer ce document",
       "errorServer": "Échec du renommage"
+    }
+  },
+  "analyses": {
+    "title": "Analyses",
+    "empty": {
+      "title": "Aucun rapport d'analyse pour le moment",
+      "body": "Téléversez un rapport HTML autonome pour démarrer la bibliothèque."
+    },
+    "upload": {
+      "trigger": "Téléverser une analyse",
+      "dialogTitle": "Téléverser un rapport d'analyse",
+      "file": "Rapport HTML",
+      "fileHint": "Fichier .html autonome, 2 Mo maximum",
+      "titleField": "Titre",
+      "summaryField": "Résumé",
+      "sourceUrlField": "URL source",
+      "tagsField": "Étiquettes",
+      "submit": "Téléverser",
+      "submitting": "Téléversement…",
+      "cancel": "Annuler",
+      "success": "Analyse téléversée",
+      "tooLarge": "Trop volumineux (2 Mo maximum)",
+      "invalidFile": "Fichier non pris en charge — choisissez un rapport .html"
+    },
+    "search": {
+      "placeholder": "Rechercher des analyses…"
+    },
+    "filter": {
+      "allTags": "Toutes",
+      "clearTags": "Effacer les étiquettes"
+    },
+    "card": {
+      "uploadedBy": "Téléversé par {name}",
+      "unknownUploader": "Ancien membre"
+    },
+    "viewer": {
+      "loading": "Chargement du rapport…",
+      "error": "Échec du chargement du rapport — réessayez"
+    },
+    "edit": {
+      "trigger": "Modifier",
+      "dialogTitle": "Modifier l'analyse",
+      "titleField": "Titre",
+      "summaryField": "Résumé",
+      "sourceUrlField": "URL source",
+      "tagsField": "Étiquettes",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "success": "Analyse mise à jour"
+    },
+    "delete": {
+      "trigger": "Supprimer",
+      "confirmTitle": "Supprimer l'analyse ?",
+      "confirmBody": "Voulez-vous vraiment supprimer « {title} » ? Cette action est irréversible depuis l'interface.",
+      "cancel": "Annuler",
+      "confirm": "Supprimer",
+      "confirming": "Suppression…",
+      "success": "Analyse supprimée"
+    },
+    "errors": {
+      "tooLarge": "Trop volumineux (2 Mo maximum)",
+      "invalidFile": "Fichier non pris en charge — choisissez un rapport .html",
+      "validation": "Vérifiez le formulaire et réessayez",
+      "forbidden": "Seuls la personne ayant téléversé le rapport, le propriétaire du projet ou un administrateur peuvent effectuer cette action",
+      "notFound": "Analyse introuvable",
+      "rateLimited": "Trop de requêtes — ralentissez",
+      "generic": "Une erreur est survenue — réessayez"
+    },
+    "toast": {
+      "listLoadError": "Échec du chargement des analyses"
+    },
+    "pagination": {
+      "prev": "Précédent",
+      "next": "Suivant"
     }
   },
   "members": {

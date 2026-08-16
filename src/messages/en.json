@@ -16,6 +16,7 @@
     "planning": "Planning",
     "notes": "Notes",
     "documents": "Documents",
+    "analyses": "Analyses",
     "photos": "Photos",
     "members": "Members",
     "projectSettings": "Settings",
@@ -1351,6 +1352,81 @@
       "success": "Document renamed",
       "errorForbidden": "Only the uploader or a project admin can rename this document",
       "errorServer": "Failed to rename"
+    }
+  },
+  "analyses": {
+    "title": "Analyses",
+    "empty": {
+      "title": "No analysis reports yet",
+      "body": "Upload a self-contained HTML report to start building the library."
+    },
+    "upload": {
+      "trigger": "Upload analysis",
+      "dialogTitle": "Upload an analysis report",
+      "file": "HTML report",
+      "fileHint": "Self-contained .html file, up to 2 MB",
+      "titleField": "Title",
+      "summaryField": "Summary",
+      "sourceUrlField": "Source URL",
+      "tagsField": "Tags",
+      "submit": "Upload",
+      "submitting": "Uploading…",
+      "cancel": "Cancel",
+      "success": "Analysis uploaded",
+      "tooLarge": "Too large (max 2 MB)",
+      "invalidFile": "Unsupported file — pick an .html report"
+    },
+    "search": {
+      "placeholder": "Search analyses…"
+    },
+    "filter": {
+      "allTags": "All",
+      "clearTags": "Clear tags"
+    },
+    "card": {
+      "uploadedBy": "Uploaded by {name}",
+      "unknownUploader": "Former member"
+    },
+    "viewer": {
+      "loading": "Loading report…",
+      "error": "Failed to load the report — try again"
+    },
+    "edit": {
+      "trigger": "Edit",
+      "dialogTitle": "Edit analysis",
+      "titleField": "Title",
+      "summaryField": "Summary",
+      "sourceUrlField": "Source URL",
+      "tagsField": "Tags",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "success": "Analysis updated"
+    },
+    "delete": {
+      "trigger": "Delete",
+      "confirmTitle": "Delete analysis?",
+      "confirmBody": "Are you sure you want to delete \"{title}\"? This cannot be undone from the UI.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "confirming": "Deleting…",
+      "success": "Analysis deleted"
+    },
+    "errors": {
+      "tooLarge": "Too large (max 2 MB)",
+      "invalidFile": "Unsupported file — pick an .html report",
+      "validation": "Please check the form and try again",
+      "forbidden": "Only the uploader, the project owner, or an admin can do this",
+      "notFound": "Analysis not found",
+      "rateLimited": "Too many requests — slow down",
+      "generic": "Something went wrong — try again"
+    },
+    "toast": {
+      "listLoadError": "Failed to load analyses"
+    },
+    "pagination": {
+      "prev": "Prev",
+      "next": "Next"
     }
   },
   "members": {

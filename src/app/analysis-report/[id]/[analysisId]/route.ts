@@ -1,6 +1,11 @@
 /**
  * Same-origin proxy that serves a stored analysis report to the viewer iframe.
  *
+ * Mounted at /analysis-report/<projectId>/<analysisId>, deliberately NOT under
+ * /api: in production the whole /api/* prefix is routed to the Flask backend,
+ * so a Next route handler there is shadowed and 404s. It only appeared to work
+ * locally because the frontend and backend run on separate ports there.
+ *
  * Why this route exists rather than passing markup through `srcdoc`:
  * a `srcdoc` document INHERITS the embedding page's Content-Security-Policy.
  * Folio's app CSP is deliberately tight (`font-src 'self' data:`, no external

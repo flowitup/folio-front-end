@@ -4,7 +4,7 @@
  * AnalysisViewer — the security-critical reader for a stored analysis report.
  *
  * The report is loaded from the same-origin proxy route
- * `/api/projects/<id>/analyses/<id>/content`, which attaches the session and
+ * `/analysis-report/<projectId>/<analysisId>`, which attaches the session and
  * serves the markup with the report's own CSP. See that route for why the
  * markup is NOT passed through `srcdoc` (a srcdoc document inherits the app's
  * CSP and loses the report's webfonts).
@@ -30,7 +30,7 @@ export function AnalysisViewer({ projectId, analysisId, title }: Props) {
   const t = useTranslations("analyses.viewer");
   const [loaded, setLoaded] = useState(false);
 
-  const src = `/api/projects/${encodeURIComponent(projectId)}/analyses/${encodeURIComponent(analysisId)}/content`;
+  const src = `/analysis-report/${encodeURIComponent(projectId)}/${encodeURIComponent(analysisId)}`;
 
   return (
     <div className="relative h-full w-full">

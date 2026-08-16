@@ -94,7 +94,7 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
 ];
 
-// The analysis-report proxy route (/api/projects/<id>/analyses/<id>/content)
+// The analysis-report proxy route (/analysis-report/<projectId>/<analysisId>)
 // serves stored, untrusted HTML reports into a sandboxed iframe. It needs its
 // own policy, because the app policy above would (a) strip the report's
 // webfonts and (b) forbid framing it at all via frame-ancestors 'none' +
@@ -137,7 +137,7 @@ const nextConfig: NextConfig = {
       // Listed after the catch-all so its keys override the app policy for
       // this one path. Keep it last.
       {
-        source: "/api/projects/:projectId/analyses/:analysisId/content",
+        source: "/analysis-report/:projectId/:analysisId",
         headers: analysisReportHeaders,
       },
     ];

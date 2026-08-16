@@ -63,7 +63,7 @@ describe("AnalysisViewer", () => {
 
     it("COMMENT: Adding 'allow-same-origin' would turn stored reports into stored XSS", () => {
       // This test documents the security rationale: the iframe is loaded from a
-      // same-origin proxy route (/api/projects/X/analyses/Y/content), which serves
+      // same-origin proxy route (/analysis-report/X/Y), which serves
       // the stored HTML report. If allow-same-origin were added to sandbox, the
       // document would synchronize with Folio's real origin, gaining access to
       // session cookies, localStorage, and parent DOM — enabling stored XSS.
@@ -94,7 +94,7 @@ describe("AnalysisViewer", () => {
 
       const iframe = container.querySelector("iframe") as HTMLIFrameElement;
       expect(iframe).toBeDefined();
-      expect(iframe.src).toContain(`/api/projects/${PROJECT_ID}/analyses/${ANALYSIS_ID}/content`);
+      expect(iframe.src).toContain(`/analysis-report/${PROJECT_ID}/${ANALYSIS_ID}`);
     });
 
     it("URL-encodes project and analysis IDs in src", () => {

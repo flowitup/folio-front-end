@@ -11,6 +11,7 @@ import {
   buildPurseViews,
   buildTypeMonthlyBuckets,
   sharedMonthlyMax,
+  buildReturnCredits,
 } from "@/lib/dashboard/overview-metrics";
 
 let seq = 0;
@@ -81,14 +82,14 @@ describe("isPersonalExpense", () => {
 });
 
 describe("computeSpentTotal", () => {
-  it("sums spend types and excludes released_funds and return", () => {
+  it("sums spend types, excludes released_funds, and nets returns", () => {
     const invoices = [
       mkInvoice({ type: "labor", issue_date: "2026-06-01", total_amount: 100 }),
       mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 50 }),
       mkInvoice({ type: "released_funds", issue_date: "2026-06-01", total_amount: 500 }),
-      mkInvoice({ type: "return", issue_date: "2026-06-01", total_amount: 20 }),
+      mkInvoice({ type: "return", issue_date: "2026-06-01", total_amount: -20 }),
     ];
-    expect(computeSpentTotal(invoices)).toBe(150);
+    expect(computeSpentTotal(invoices)).toBe(130);
   });
 });
 
@@ -114,35 +115,59 @@ describe("buildMonthlySpendSeries", () => {
     expect(series[1]).toMatchObject({ key: "2026-06", total: 0 });
   });
 
-  it("excludes released_funds and return rows", () => {
+  it("excludes released_funds but nets return rows into the month they landed", () => {
     const invoices = [
       mkInvoice({ type: "released_funds", issue_date: "2026-06-01", total_amount: 1000 }),
-      mkInvoice({ type: "return", issue_date: "2026-06-01", total_amount: 30 }),
+      mkInvoice({ type: "return", issue_date: "2026-06-01", total_amount: -30 }),
     ];
     const series = buildMonthlySpendSeries(invoices, 1, new Date(2026, 5, 1));
-    expect(series[0].total).toBe(0);
+    // released_funds contributes nothing; the return pulls the month negative.
+    expect(series[0]).toMatchObject({ total: -30, credited: -30, creditCount: 1 });
+    // A credit is not an expense — it must not inflate the count.
+    expect(series[0].count).toBe(0);
+  });
+
+  it("credits a return to its OWN month, not the refunded invoice's", () => {
+    const source = mkInvoice({
+      type: "materials_services",
+      issue_date: "2026-04-10",
+      total_amount: 500,
+    });
+    const invoices = [
+      source,
+      mkInvoice({
+        type: "return",
+        issue_date: "2026-06-20",
+        total_amount: -200,
+        refunds_invoice_id: source.id,
+      }),
+    ];
+    const series = buildMonthlySpendSeries(invoices, 3, new Date(2026, 5, 1)); // Apr, May, Jun
+    // April keeps the full purchase — already-reported months are never rewritten.
+    expect(series[0]).toMatchObject({ key: "2026-04", total: 500, credited: 0 });
+    expect(series[2]).toMatchObject({ key: "2026-06", total: -200, credited: -200, creditCount: 1 });
   });
 });
 
 describe("computeMonthDelta", () => {
   it("computes a rounded percent change vs the previous point", () => {
     const series = [
-      { key: "2026-05", total: 100, count: 1 },
-      { key: "2026-06", total: 92, count: 1 },
+      { key: "2026-05", total: 100, count: 1, credited: 0, creditCount: 0 },
+      { key: "2026-06", total: 92, count: 1, credited: 0, creditCount: 0 },
     ];
     expect(computeMonthDelta(series).deltaPct).toBe(-8);
   });
 
   it("is null when the previous month had zero spend (avoids ÷0)", () => {
     const series = [
-      { key: "2026-05", total: 0, count: 0 },
-      { key: "2026-06", total: 92, count: 1 },
+      { key: "2026-05", total: 0, count: 0, credited: 0, creditCount: 0 },
+      { key: "2026-06", total: 92, count: 1, credited: 0, creditCount: 0 },
     ];
     expect(computeMonthDelta(series).deltaPct).toBeNull();
   });
 
   it("is null with a single point (no previous month)", () => {
-    const series = [{ key: "2026-06", total: 92, count: 1 }];
+    const series = [{ key: "2026-06", total: 92, count: 1, credited: 0, creditCount: 0 }];
     const delta = computeMonthDelta(series);
     expect(delta.deltaPct).toBeNull();
     expect(delta.previous).toBeNull();
@@ -295,5 +320,95 @@ describe("buildTypeMonthlyBuckets / sharedMonthlyMax", () => {
   it("sharedMonthlyMax floors at 1 with no spend anywhere (avoids ÷0 bar heights)", () => {
     const buckets = buildTypeMonthlyBuckets([], 3, new Date(2026, 5, 1));
     expect(sharedMonthlyMax(buckets)).toBe(1);
+  });
+});
+
+describe("buildReturnCredits", () => {
+  it("attributes a linked return to the type of the invoice it refunds", () => {
+    const labor = mkInvoice({ type: "labor", issue_date: "2026-05-02", total_amount: 900 });
+    const credits = buildReturnCredits([
+      labor,
+      mkInvoice({
+        type: "return",
+        issue_date: "2026-06-11",
+        total_amount: -100,
+        refunds_invoice_id: labor.id,
+      }),
+    ]);
+    expect(credits).toEqual([{ type: "labor", monthKey: "2026-06", amount: -100 }]);
+  });
+
+  it("falls back to materials_services for an unlinked return", () => {
+    const credits = buildReturnCredits([
+      mkInvoice({ type: "return", issue_date: "2026-06-11", total_amount: -75 }),
+    ]);
+    expect(credits[0].type).toBe("materials_services");
+  });
+
+  it("falls back when the refunded invoice is not in the list", () => {
+    const credits = buildReturnCredits([
+      mkInvoice({
+        type: "return",
+        issue_date: "2026-06-11",
+        total_amount: -75,
+        refunds_invoice_id: "missing-id",
+      }),
+    ]);
+    expect(credits[0].type).toBe("materials_services");
+  });
+
+  it("ignores non-return rows", () => {
+    expect(
+      buildReturnCredits([
+        mkInvoice({ type: "labor", issue_date: "2026-06-01", total_amount: 10 }),
+        mkInvoice({ type: "released_funds", issue_date: "2026-06-01", total_amount: 10 }),
+      ])
+    ).toEqual([]);
+  });
+});
+
+describe("buildTypeMonthlyBuckets — netting", () => {
+  const source = mkInvoice({
+    type: "materials_services",
+    issue_date: "2026-06-01",
+    total_amount: 1000,
+  });
+  const invoices = [
+    source,
+    mkInvoice({ type: "labor", issue_date: "2026-06-01", total_amount: 400 }),
+    mkInvoice({
+      type: "return",
+      issue_date: "2026-06-01",
+      total_amount: -250,
+      refunds_invoice_id: source.id,
+    }),
+  ];
+
+  it("deducts a return from its own type only", () => {
+    const buckets = buildTypeMonthlyBuckets(invoices, 1, new Date(2026, 5, 15));
+    const byType = Object.fromEntries(buckets.map((b) => [b.type, b]));
+    expect(byType.materials_services.total).toBe(750);
+    expect(byType.labor.total).toBe(400);
+    expect(byType.others.total).toBe(0);
+  });
+
+  it("marks the month the credit landed in, on that type only", () => {
+    const buckets = buildTypeMonthlyBuckets(invoices, 1, new Date(2026, 5, 15));
+    const byType = Object.fromEntries(buckets.map((b) => [b.type, b]));
+    expect(byType.materials_services.monthly[0]).toMatchObject({ credited: -250, creditCount: 1 });
+    expect(byType.labor.monthly[0]).toMatchObject({ credited: 0, creditCount: 0 });
+  });
+
+  it("keeps counts expense-only so 'N expenses' stays truthful", () => {
+    const buckets = buildTypeMonthlyBuckets(invoices, 1, new Date(2026, 5, 15));
+    const ms = buckets.find((b) => b.type === "materials_services")!;
+    expect(ms.count).toBe(1);
+  });
+
+  it("reconciles with computeSpentTotal when every row is inside the window", () => {
+    const buckets = buildTypeMonthlyBuckets(invoices, 1, new Date(2026, 5, 15));
+    const summed = buckets.reduce((s, b) => s + b.total, 0);
+    expect(summed).toBe(computeSpentTotal(invoices));
+    expect(summed).toBe(1150);
   });
 });

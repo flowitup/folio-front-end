@@ -7,9 +7,28 @@
  * Expense attribution mirrors `expense-purses-summary.tsx` (the Expense page
  * "Two purses" dataviz): a personally-paid expense the company already
  * reimbursed (status refunded, not by bank) counts as company money, and
- * `released_funds`/`return` rows are excluded from "spend" — released_funds
- * marks money moving into the project (not a purchase) and return rows are
- * credits, not spend.
+ * `released_funds` rows are excluded from "spend" — they mark money moving
+ * into the project, not a purchase.
+ *
+ * Spend here is NET of returns, so every overview figure reconciles with the
+ * Expense page's total-expenses card and with the purse figures beside it
+ * (which come from backend meta and were always net). A return is attributed
+ * on two independent axes:
+ *
+ * - MONTH: the return's own issue month, never the refunded invoice's. This
+ *   matches `groupInvoicesByMonth`, whose ledger subtotals already net a
+ *   credit into the month it landed (and already go negative when a month is
+ *   return-heavy). Netting into the refunded invoice's month instead would
+ *   retroactively rewrite months that have already been reported.
+ * - TYPE: the type of the invoice it refunds, falling back to
+ *   materials_services for unlinked returns — the same rule
+ *   `expense-type-breakdown.tsx` uses, and the only refund-tracked type.
+ *
+ * Each month point carries its own `credited`/`creditCount` alongside the net
+ * total, so a chart can mark the months where a credit landed and explain a
+ * dip in place rather than leaving it mysterious. A month whose returns exceed
+ * its purchases has a negative total; callers floor bar heights, so it draws
+ * as a baseline stub while the figure itself stays truthful.
  */
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
@@ -18,6 +37,10 @@ export const EXPENSE_TYPES: readonly ExpenseType[] = ["labor", "materials_servic
 
 function isSpendInvoice(inv: Invoice): boolean {
   return inv.type === "labor" || inv.type === "materials_services" || inv.type === "others";
+}
+
+function isExpenseType(t: InvoiceType | undefined): t is ExpenseType {
+  return t === "labor" || t === "materials_services" || t === "others";
 }
 
 /** Mirrors the BE bucket rule (see expense-purses-summary.tsx). */
@@ -43,17 +66,53 @@ export function monthKeyToDate(key: string): Date {
   return new Date(y, m - 1, 1);
 }
 
-/** All-time sum across spend invoices — the same client-side total the
- * Expense page's dark "Total expenses" card shows. */
+export interface ReturnCredit {
+  /** Category the credit reduces — see the module docstring. */
+  type: ExpenseType;
+  /** "YYYY-MM" the credit landed in — the return's own month. */
+  monthKey: string;
+  /** Negative, straight from the return invoice. */
+  amount: number;
+}
+
+/**
+ * One credit per `return` invoice, resolved onto the (type, month) axes the
+ * spend aggregations bucket by. Returns are excluded from `isSpendInvoice`,
+ * so every aggregation that wants to be net folds these in on top.
+ */
+export function buildReturnCredits(invoices: Invoice[]): ReturnCredit[] {
+  const typeById = new Map(invoices.map((i) => [i.id, i.type]));
+  const credits: ReturnCredit[] = [];
+  for (const inv of invoices) {
+    if (inv.type !== "return") continue;
+    const sourceType = inv.refunds_invoice_id ? typeById.get(inv.refunds_invoice_id) : undefined;
+    credits.push({
+      type: isExpenseType(sourceType) ? sourceType : "materials_services",
+      monthKey: monthKeyOf(inv),
+      amount: inv.total_amount,
+    });
+  }
+  return credits;
+}
+
+/** All-time sum across spend invoices, net of returns — the same client-side
+ * total the Expense page's dark "Total expenses" card shows. */
 export function computeSpentTotal(invoices: Invoice[]): number {
-  return invoices.filter(isSpendInvoice).reduce((s, i) => s + i.total_amount, 0);
+  const spend = invoices.filter(isSpendInvoice).reduce((s, i) => s + i.total_amount, 0);
+  return buildReturnCredits(invoices).reduce((s, c) => s + c.amount, spend);
 }
 
 export interface MonthlySpendPoint {
   /** "YYYY-MM" */
   key: string;
+  /** Net of the returns credited to this month — may be negative. */
   total: number;
+  /** Expenses only; credits are not expenses and never inflate this. */
   count: number;
+  /** Σ of returns credited to this month — negative, 0 when none. */
+  credited: number;
+  /** How many return invoices landed in this month. */
+  creditCount: number;
 }
 
 /**
@@ -61,20 +120,38 @@ export interface MonthlySpendPoint {
  * with zero totals so the series is always exactly `months` long. Attributes
  * labor to its `service_month` (payment can lag the work); everything else
  * to `issue_date`.
+ *
+ * `credits` are folded into month totals but never into counts: a return is a
+ * credit, not an expense, so "N expenses" keeps meaning what it says while the
+ * money figure goes net. Defaults to the returns found in `invoices`, so a
+ * caller passing the full list gets net figures with no extra wiring; callers
+ * working on a pre-filtered slice (per type) pass their own.
  */
 export function buildMonthlySpendSeries(
   invoices: Invoice[],
   months = 6,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
+  credits: ReturnCredit[] = buildReturnCredits(invoices)
 ): MonthlySpendPoint[] {
-  const byMonth = new Map<string, { total: number; count: number }>();
+  const byMonth = new Map<string, Omit<MonthlySpendPoint, "key">>();
+  const bucketFor = (key: string) => {
+    const existing = byMonth.get(key);
+    if (existing) return existing;
+    const fresh = { total: 0, count: 0, credited: 0, creditCount: 0 };
+    byMonth.set(key, fresh);
+    return fresh;
+  };
   for (const inv of invoices) {
     if (!isSpendInvoice(inv)) continue;
-    const key = monthKeyOf(inv);
-    const bucket = byMonth.get(key) ?? { total: 0, count: 0 };
+    const bucket = bucketFor(monthKeyOf(inv));
     bucket.total += inv.total_amount;
     bucket.count += 1;
-    byMonth.set(key, bucket);
+  }
+  for (const credit of credits) {
+    const bucket = bucketFor(credit.monthKey);
+    bucket.total += credit.amount;
+    bucket.credited += credit.amount;
+    bucket.creditCount += 1;
   }
   const anchor = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
   const series: MonthlySpendPoint[] = [];
@@ -82,7 +159,13 @@ export function buildMonthlySpendSeries(
     const d = new Date(anchor.getFullYear(), anchor.getMonth() - i, 1);
     const key = ymKey(d);
     const bucket = byMonth.get(key);
-    series.push({ key, total: bucket?.total ?? 0, count: bucket?.count ?? 0 });
+    series.push({
+      key,
+      total: bucket?.total ?? 0,
+      count: bucket?.count ?? 0,
+      credited: bucket?.credited ?? 0,
+      creditCount: bucket?.creditCount ?? 0,
+    });
   }
   return series;
 }
@@ -226,17 +309,20 @@ export interface TypeMonthlyBucket {
   deltaPct: number | null;
 }
 
-/** Per-type 6-month buckets for the "Monthly spend by type" small multiples. */
+/** Per-type 6-month buckets for the "Monthly spend by type" small multiples,
+ * each net of the returns attributed to that type. */
 export function buildTypeMonthlyBuckets(
   invoices: Invoice[],
   months = 6,
   referenceDate: Date = new Date()
 ): TypeMonthlyBucket[] {
+  const credits = buildReturnCredits(invoices);
   return EXPENSE_TYPES.map((type) => {
     const monthly = buildMonthlySpendSeries(
       invoices.filter((i) => i.type === type),
       months,
-      referenceDate
+      referenceDate,
+      credits.filter((c) => c.type === type)
     );
     const total = monthly.reduce((s, m) => s + m.total, 0);
     const count = monthly.reduce((s, m) => s + m.count, 0);

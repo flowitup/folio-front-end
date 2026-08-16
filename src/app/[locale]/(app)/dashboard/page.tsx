@@ -47,7 +47,7 @@ const EMPTY_INVOICES: Invoice[] = [];
 const EMPTY_TASKS: Task[] = [];
 const EMPTY_MONTHLY_SERIES: MonthlySpendPoint[] = [];
 const EMPTY_MONTH_DELTA: MonthDelta = {
-  current: { key: "", total: 0, count: 0 },
+  current: { key: "", total: 0, count: 0, credited: 0, creditCount: 0 },
   previous: null,
   deltaPct: null,
 };

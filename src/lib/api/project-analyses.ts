@@ -27,7 +27,7 @@ export interface ProjectAnalysis {
   created_at: string;
   updated_at: string;
   /** Relative backend path — the viewer loads the report through the
-   * same-origin proxy at /api/projects/<id>/analyses/<id>/content instead. */
+   * same-origin proxy at /analysis-report/<projectId>/<analysisId> instead. */
   content_url: string;
 }
 

@@ -84,7 +84,9 @@ export const config = {
      * - favicon.ico (favicon)
      * - public folder files
      * - api routes
+     * - analysis-report (the analyses viewer proxy route; it is not a
+     *   localized page and must not be redirected to /<locale>/...)
      */
-    "/((?!_next/static|_next/image|favicon.ico|public|api).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public|api|analysis-report).*)",
   ],
 };

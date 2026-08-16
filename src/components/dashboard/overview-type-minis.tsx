@@ -24,7 +24,15 @@ const CHART_W = 212;
 const CHART_H = 118;
 const BAR_W = 24;
 const BASELINE_Y = 100;
-const PLOT_H = 86;
+// Bars stop short of the top so the return markers below always have clear
+// headroom above the tallest bar (and its trend dot) — see RETURN_MARKER_Y.
+const PLOT_H = 80;
+
+// Downward chevron marking a month a credit landed in, drawn above the column.
+// Points down because the credit pulls that month's net spend down.
+const RETURN_MARKER_Y = 5;
+const RETURN_MARKER_HALF_W = 4;
+const RETURN_MARKER_H = 5;
 
 interface OverviewTypeMinisProps {
   buckets: TypeMonthlyBucket[];
@@ -66,6 +74,8 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref }: OverviewTypeMini
                 from: monthFmt.format(monthKeyToDate(first.key)),
                 to: monthFmt.format(monthKeyToDate(last.key)),
               })}
+              {" · "}
+              {tInvoices("summary.netOfReturns")}
             </span>
           )}
         </div>
@@ -162,6 +172,33 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref }: OverviewTypeMini
                     )}|${tInvoices("invoiceCount", { n: p.count })}`}
                   />
                 ))}
+                {/* Return markers, painted after the column hit areas so the
+                    marker's own (smaller) hit area wins the hover and shows
+                    the credit rather than the month's net total. */}
+                {bucket.monthly.map((p, i) =>
+                  p.creditCount > 0 ? (
+                    <g key={`${p.key}-credit`} data-testid={`return-marker-${bucket.type}-${p.key}`}>
+                      <path
+                        d={`M ${midX(i) - RETURN_MARKER_HALF_W},${RETURN_MARKER_Y} L ${
+                          midX(i) + RETURN_MARKER_HALF_W
+                        },${RETURN_MARKER_Y} L ${midX(i)},${RETURN_MARKER_Y + RETURN_MARKER_H} Z`}
+                        fill="var(--negative)"
+                      />
+                      <rect
+                        x={midX(i) - 9}
+                        y={0}
+                        width={18}
+                        height={16}
+                        fill="transparent"
+                        data-tip={`${monthYearFmt.format(
+                          monthKeyToDate(p.key)
+                        )}|${formatEURWhole(p.credited)}|${tInvoices("summary.returnsReceived", {
+                          n: p.creditCount,
+                        })}`}
+                      />
+                    </g>
+                  ) : null
+                )}
               </svg>
             </div>
           );

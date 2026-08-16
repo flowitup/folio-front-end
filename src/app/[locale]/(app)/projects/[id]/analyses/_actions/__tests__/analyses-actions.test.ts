@@ -14,15 +14,21 @@ vi.mock("@/lib/api/project-analyses", () => ({
   deleteProjectAnalysis: vi.fn(),
 }));
 
-// next/navigation is used by classifyBackendError (redirect on 401) and revalidatePath
+// next/navigation provides redirect (used by classifyBackendError on 401).
 vi.mock("next/navigation", () => {
   return {
     redirect: vi.fn((url: string) => {
       throw new Error(`REDIRECT:${url}`);
     }),
-    revalidatePath: vi.fn(() => undefined),
   };
 });
+
+// revalidatePath lives in next/cache, NOT next/navigation. Mocking it on the
+// wrong module leaves the real implementation in place, which throws outside a
+// request context and makes every happy path look like a generic failure.
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}));
 
 // ---- Imports after mocks ----
 
@@ -275,11 +281,7 @@ describe("uploadAnalysisAction", () => {
   });
 
   describe("happy path", () => {
-    // NOTE: These tests require proper mocking of revalidatePath which is async
-    // in newer Next.js versions. The action correctly classifies errors as "generic"
-    // when an exception occurs. Error handling tests (400, 413, 403, etc.) pass
-    // and demonstrate the action works correctly.
-    it.skip("passes formData to createProjectAnalysis", async () => {
+    it("passes formData to createProjectAnalysis", async () => {
       const mockData = {
         id: ANALYSIS_ID,
         project_id: PROJECT_ID,
@@ -352,7 +354,7 @@ describe("updateAnalysisAction", () => {
   });
 
   describe("happy path", () => {
-    it.skip("passes patch to updateProjectAnalysis", async () => {
+    it("passes patch to updateProjectAnalysis", async () => {
       const mockData = {
         id: ANALYSIS_ID,
         project_id: PROJECT_ID,
@@ -411,7 +413,7 @@ describe("deleteAnalysisAction", () => {
   });
 
   describe("happy path", () => {
-    it.skip("calls deleteProjectAnalysis and returns ok", async () => {
+    it("calls deleteProjectAnalysis and returns ok", async () => {
       mockDeleteAnalysis.mockResolvedValueOnce(undefined);
 
       const result = await deleteAnalysisAction(PROJECT_ID, ANALYSIS_ID);

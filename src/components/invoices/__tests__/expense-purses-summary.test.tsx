@@ -588,10 +588,15 @@ describe("ExpensePursesSummary — type-first breakdown wiring", () => {
     expect(within(block).getByTestId("type-row-materials_services")).toBeTruthy();
     expect(within(block).queryByTestId("type-row-labor")).toBeNull();
 
-    // Net of returns on both sides, and the row total is their sum.
-    const row = within(block).getByTestId("type-row-materials_services");
-    expect(row.textContent).toMatch(/8[^\d]*500/);
-    expect(row.textContent).toMatch(/6[^\d]*000/);
+    // Net of returns on both sides. Since the redesign the per-purse amounts
+    // live on the segment tooltips rather than as a text sub-line, so assert
+    // them where a user actually reads them.
+    const tipFor = (purse: "company" | "personal") =>
+      within(block)
+        .getByTestId(`type-segment-${purse}-materials_services`)
+        .getAttribute("data-tip")!;
+    expect(tipFor("company")).toMatch(/8[^\d]*500/);
+    expect(tipFor("personal")).toMatch(/6[^\d]*000/);
     expect(
       within(block).getByTestId("type-total-materials_services").textContent!.replace(/[^0-9]/g, "")
     ).toBe("14500");

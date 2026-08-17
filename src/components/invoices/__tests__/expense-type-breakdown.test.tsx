@@ -21,6 +21,7 @@ import { render, screen } from "@testing-library/react";
 import {
   ExpenseTypeBreakdown,
   emptyBreakdown,
+  niceAxisMax,
   type ExpenseType,
   type PurseBreakdown,
 } from "../expense-type-breakdown";
@@ -85,19 +86,32 @@ describe("ExpenseTypeBreakdown — row ordering", () => {
 });
 
 describe("ExpenseTypeBreakdown — shared scale", () => {
-  it("measures every row against the largest type total", () => {
+  it("measures every row against the rounded axis ceiling", () => {
     render(<ExpenseTypeBreakdown company={COMPANY} personal={PERSONAL} />);
 
-    // The largest type fills the track; the others are its proportional share.
+    // 55 976,32 rounds up to a 60 000 axis, so the longest bar deliberately
+    // stops short of the track end — that is the cost of a readable axis.
     const ms =
       segmentWidth("company", "materials_services") +
       segmentWidth("personal", "materials_services");
     const labor = segmentWidth("company", "labor") + segmentWidth("personal", "labor");
     const others = segmentWidth("company", "others") + segmentWidth("personal", "others");
 
-    expect(ms).toBeCloseTo(100, 5);
-    expect(labor).toBeCloseTo((13180 / 55976.32) * 100, 4);
-    expect(others).toBeCloseTo((1933.62 / 55976.32) * 100, 4);
+    expect(ms).toBeCloseTo((55976.32 / 60000) * 100, 4);
+    expect(labor).toBeCloseTo((13180 / 60000) * 100, 4);
+    expect(others).toBeCloseTo((1933.62 / 60000) * 100, 4);
+    expect(ms).toBeLessThan(100);
+  });
+
+  it("keeps the ratios between rows intact — one denominator, whatever it is", () => {
+    render(<ExpenseTypeBreakdown company={COMPANY} personal={PERSONAL} />);
+    const ms =
+      segmentWidth("company", "materials_services") +
+      segmentWidth("personal", "materials_services");
+    const labor = segmentWidth("company", "labor") + segmentWidth("personal", "labor");
+    // The invariant that actually matters: bar lengths are proportional to
+    // amounts, regardless of what the shared denominator happens to be.
+    expect(labor / ms).toBeCloseTo(13180 / 55976.32, 6);
   });
 
   it("keeps rows comparable: labor's company segment is shorter than materials' despite a longer personal segment", () => {
@@ -192,5 +206,74 @@ describe("ExpenseTypeBreakdown — reconciliation", () => {
       .getByTestId("type-breakdown-total")
       .textContent!.replace(/[^0-9]/g, "");
     expect(rendered).toContain("71090");
+  });
+});
+
+describe("niceAxisMax", () => {
+  it("rounds a real project's largest type up to a readable ceiling", () => {
+    // The case the axis exists for: 55 976,32 → 60 000, i.e. steps of 15 000.
+    expect(niceAxisMax(55976.32)).toBe(60000);
+  });
+
+  it("always lands at or above the value it has to contain", () => {
+    for (const v of [1, 37, 480, 1933.62, 13180, 55976.32, 250000, 1_234_567]) {
+      expect(niceAxisMax(v)).toBeGreaterThanOrEqual(v);
+    }
+  });
+
+  it("divides into four equal steps with no repeating fraction", () => {
+    for (const v of [1933.62, 13180, 55976.32, 250000, 1_234_567]) {
+      const step = niceAxisMax(v) / 4;
+      // A step a reader can hold in their head: at most 3 significant digits.
+      expect(Number(step.toPrecision(3))).toBe(step);
+    }
+  });
+
+  it("leaves an exactly-round value alone rather than jumping a whole step", () => {
+    expect(niceAxisMax(60000)).toBe(60000);
+    expect(niceAxisMax(3000)).toBe(3000);
+  });
+
+  it("returns 0 for nothing to plot", () => {
+    expect(niceAxisMax(0)).toBe(0);
+    expect(niceAxisMax(-5)).toBe(0);
+  });
+});
+
+describe("ExpenseTypeBreakdown — axis and shares", () => {
+  it("labels five ticks across the shared scale", () => {
+    render(<ExpenseTypeBreakdown company={COMPANY} personal={PERSONAL} />);
+    const ticks = screen.getByTestId("type-axis");
+    const labels = Array.from(ticks.children).map((el) => el.textContent);
+    expect(labels).toHaveLength(5);
+    // 0 · 15k · 30k · 45k · 60k — the ceiling is the last tick.
+    expect(labels[0]).toBe("0");
+    expect(labels[4]).toMatch(/60/);
+    expect(labels[2]).toMatch(/30/);
+  });
+
+  it("states the ceiling in the header so a bar length can be read as an amount", () => {
+    render(<ExpenseTypeBreakdown company={COMPANY} personal={PERSONAL} />);
+    const header = screen.getByText(/invoices\.summary\.sharedScaleTo/);
+    expect(header.textContent).toMatch(/60[^0-9]*000/);
+  });
+
+  it("shows each type's share of the total, summing to ~100%", () => {
+    render(<ExpenseTypeBreakdown company={COMPANY} personal={PERSONAL} />);
+    const share = (type: string) =>
+      Number.parseInt(screen.getByTestId(`type-share-${type}`).textContent!, 10);
+    expect(share("materials_services")).toBe(79);
+    expect(share("labor")).toBe(19);
+    expect(share("others")).toBe(3);
+    // Rounding can drift a point either way; it must not drift further.
+    const sum = share("materials_services") + share("labor") + share("others");
+    expect(Math.abs(sum - 100)).toBeLessThanOrEqual(1);
+  });
+
+  it("counts both purses' invoices under the type name", () => {
+    render(<ExpenseTypeBreakdown company={COMPANY} personal={PERSONAL} />);
+    const row = screen.getByTestId("type-row-materials_services");
+    // 36 company + 38 personal.
+    expect(row.textContent).toContain('invoices.invoiceCount({"n":74})');
   });
 });

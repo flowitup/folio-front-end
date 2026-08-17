@@ -495,7 +495,8 @@
       "netOfReturns": "net of returns",
       "paidByCompany": "company",
       "paidByPersonal": "personal",
-      "sumOfTypes": "Total"
+      "sumOfTypes": "Total",
+      "sharedScaleTo": "shared scale to {amount}"
     },
     "byWorker": {
       "totalPaid": "Total paid",

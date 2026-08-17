@@ -495,7 +495,8 @@
       "netOfReturns": "đã trừ hoàn trả",
       "paidByCompany": "công ty",
       "paidByPersonal": "cá nhân",
-      "sumOfTypes": "Tổng"
+      "sumOfTypes": "Tổng",
+      "sharedScaleTo": "thang chung đến {amount}"
     },
     "byWorker": {
       "totalPaid": "Tổng đã trả",

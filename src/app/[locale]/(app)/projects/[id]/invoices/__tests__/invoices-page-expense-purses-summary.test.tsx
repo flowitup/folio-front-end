@@ -330,15 +330,17 @@ describe("InvoicesPage — expenses-by-type breakdown", () => {
     ).map((el) => el.dataset.testid);
     expect(order).toEqual(["type-row-materials_services", "type-row-labor"]);
 
-    // Shared scale: labor's whole bar is half of materials & services'.
+    // Shared scale: labor (25 000) is half of materials & services (50 000),
+    // whatever rounded ceiling the axis picks for the two of them.
     const width = (purse: string, type: string) =>
       Number.parseFloat(
         within(block).getByTestId(`type-segment-${purse}-${type}`).style.width,
       );
     const ms = width("company", "materials_services") + width("personal", "materials_services");
     const labor = width("company", "labor") + width("personal", "labor");
-    expect(ms).toBeCloseTo(100, 5);
-    expect(labor).toBeCloseTo(50, 5);
+    expect(labor / ms).toBeCloseTo(0.5, 6);
+    // 50 000 rounds up to a 60 000 axis, so the longest bar stops short.
+    expect(ms).toBeCloseTo((50000 / 60000) * 100, 4);
 
     // Totals reconcile with the two purses combined.
     expect(

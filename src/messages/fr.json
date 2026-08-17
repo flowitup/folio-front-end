@@ -495,7 +495,8 @@
       "netOfReturns": "net des avoirs",
       "paidByCompany": "entreprise",
       "paidByPersonal": "personnel",
-      "sumOfTypes": "Total"
+      "sumOfTypes": "Total",
+      "sharedScaleTo": "échelle commune jusqu'à {amount}"
     },
     "byWorker": {
       "totalPaid": "Total payé",

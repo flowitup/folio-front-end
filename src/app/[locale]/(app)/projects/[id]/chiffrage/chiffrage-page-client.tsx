@@ -35,6 +35,8 @@ import { ArticleRow, DragHandle } from "@/components/chiffrage/article-row";
 import { ArticleFormDialog } from "@/components/chiffrage/article-form-dialog";
 import { ChiffrageTotals } from "@/components/chiffrage/chiffrage-totals";
 import { PosteCard } from "@/components/chiffrage/poste-card";
+import { PosteStores } from "@/components/chiffrage/poste-stores";
+import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
 import { ProvisioningTable } from "@/components/chiffrage/provisioning-table";
 import {
@@ -44,10 +46,12 @@ import {
 import {
   createArticleAction,
   createPosteAction,
+  createStoreAction,
   createQuoteAction,
   createUnitAction,
   deleteArticleAction,
   deletePosteAction,
+  deleteStoreAction,
   deleteQuoteAction,
   getChiffrageAction,
   reorderArticleAction,
@@ -55,12 +59,14 @@ import {
   selectQuoteAction,
   updateArticleAction,
   updatePosteAction,
+  updateStoreAction,
   updateQuoteAction,
 } from "./_actions/chiffrage-actions";
 import type {
   ChiffrageArticle,
   ChiffragePoste,
   ChiffrageQuote,
+  ChiffrageStore,
   ChiffrageTree,
   ChiffrageUnit,
 } from "@/lib/api/chiffrage";
@@ -148,6 +154,11 @@ export function ChiffragePageClient({
     posteId: string | null;
     article: ChiffrageArticle | null;
   }>({ open: false, posteId: null, article: null });
+  const [storeDialog, setStoreDialog] = useState<{
+    open: boolean;
+    posteId: string | null;
+    store: ChiffrageStore | null;
+  }>({ open: false, posteId: null, store: null });
   const [quoteDialog, setQuoteDialog] = useState<{
     open: boolean;
     articleId: string | null;
@@ -317,6 +328,37 @@ export function ChiffragePageClient({
                           );
                         }
                       }}
+                      stores={
+                        <PosteStores
+                          stores={poste.stores}
+                          canManage={canManage}
+                          onAdd={() =>
+                            setStoreDialog({
+                              open: true,
+                              posteId: poste.id,
+                              store: null,
+                            })
+                          }
+                          onEdit={(store) =>
+                            setStoreDialog({
+                              open: true,
+                              posteId: poste.id,
+                              store,
+                            })
+                          }
+                          onDelete={(store) => {
+                            if (
+                              confirm(
+                                t("confirmDeleteStore", { name: store.name }),
+                              )
+                            ) {
+                              void mutate(() =>
+                                deleteStoreAction(projectId, store.id),
+                              );
+                            }
+                          }}
+                        />
+                      }
                       onAddArticle={() =>
                         setArticleDialog({
                           open: true,
@@ -433,6 +475,23 @@ export function ChiffragePageClient({
                 : createPosteAction(projectId, values),
             );
             if (ok) setPosteDialog({ open: false, poste: null });
+          }}
+        />
+      ) : null}
+
+      {storeDialog.open ? (
+        <StoreFormDialog
+          open
+          store={storeDialog.store}
+          submitting={submitting}
+          onOpenChange={(open) => setStoreDialog((s) => ({ ...s, open }))}
+          onSubmit={async (values) => {
+            const ok = await mutate(() =>
+              storeDialog.store
+                ? updateStoreAction(projectId, storeDialog.store.id, values)
+                : createStoreAction(projectId, storeDialog.posteId!, values),
+            );
+            if (ok) setStoreDialog({ open: false, posteId: null, store: null });
           }}
         />
       ) : null}

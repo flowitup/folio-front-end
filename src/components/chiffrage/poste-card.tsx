@@ -18,6 +18,8 @@ interface Props {
   onEdit: () => void;
   onDelete: () => void;
   onAddArticle: () => void;
+  /** Rendered between the header and the articles: the shops to visit. */
+  stores?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -28,6 +30,7 @@ export function PosteCard({
   onEdit,
   onDelete,
   onAddArticle,
+  stores,
   children,
 }: Props) {
   const t = useTranslations("chiffrage");
@@ -82,6 +85,8 @@ export function PosteCard({
           </div>
         ) : null}
       </header>
+
+      {stores}
 
       {poste.articles.length === 0 ? (
         <p className="px-4 py-4 text-sm text-muted-foreground">

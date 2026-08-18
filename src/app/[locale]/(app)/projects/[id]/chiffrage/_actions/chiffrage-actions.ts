@@ -14,10 +14,12 @@ import {
   createArticle,
   createPoste,
   createQuote,
+  createStore,
   createUnit,
   deleteArticle,
   deletePoste,
   deleteQuote,
+  deleteStore,
   deleteUnit,
   getChiffrage,
   listUnits,
@@ -27,15 +29,18 @@ import {
   updateArticle,
   updatePoste,
   updateQuote,
+  updateStore,
   type ArticlePayload,
   type ChiffrageArticle,
   type ChiffragePoste,
   type ChiffrageQuote,
+  type ChiffrageStore,
   type ChiffrageTree,
   type ChiffrageUnit,
   type PostePayload,
   type QuotePayload,
   type ReorderPayload,
+  type StorePayload,
 } from "@/lib/api/chiffrage";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -113,6 +118,28 @@ export async function reorderPosteAction(
   payload: ReorderPayload
 ): Promise<Result<ChiffragePoste>> {
   return run(projectId, () => reorderPoste(projectId, posteId, payload));
+}
+
+// --- stores ----------------------------------------------------------------
+
+export async function createStoreAction(
+  projectId: string,
+  posteId: string,
+  payload: StorePayload
+): Promise<Result<ChiffrageStore>> {
+  return run(projectId, () => createStore(projectId, posteId, payload));
+}
+
+export async function updateStoreAction(
+  projectId: string,
+  storeId: string,
+  payload: StorePayload
+): Promise<Result<ChiffrageStore>> {
+  return run(projectId, () => updateStore(projectId, storeId, payload));
+}
+
+export async function deleteStoreAction(projectId: string, storeId: string): Promise<Result<void>> {
+  return run(projectId, () => deleteStore(projectId, storeId));
 }
 
 // --- articles --------------------------------------------------------------

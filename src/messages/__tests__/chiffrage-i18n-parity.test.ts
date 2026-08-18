@@ -20,8 +20,12 @@ const locales: Record<string, Messages> = {
   vi: vi as unknown as Messages,
 };
 
-/** Symbols and fiscal abbreviations legitimately read the same in every locale. */
-const SHARED_BY_DESIGN = new Set(["tva"]);
+/**
+ * Values that legitimately read the same in every locale: fiscal abbreviations,
+ * and the sample address — the chantiers are in France, so the example stays a
+ * French street address whichever language the UI is read in.
+ */
+const SHARED_BY_DESIGN = new Set(["tva", "storeAddressPlaceholder"]);
 
 describe("chiffrage i18n", () => {
   it("defines the namespace in every locale", () => {

@@ -187,14 +187,21 @@ describe("DashboardPage — money panel figures", () => {
     const card = await screen.findByTestId("overview-type-minis");
 
     // 3 type charts × 6 month columns each, delegated to the shared data-tip hook.
-    const hits = card.querySelectorAll("[data-tip]");
-    expect(hits.length).toBe(18);
-    // July has the labor spend seeded in this suite (system time pinned to 2026-07-15).
-    const julyLabor = [...hits].find((el) => el.getAttribute("data-tip")?.startsWith("Jul 2026|"));
-    expect(julyLabor).toBeTruthy();
-    const [, value, meta] = julyLabor!.getAttribute("data-tip")!.split("|");
-    expect(value.replace(/[\u202f\u00a0]/g, " ")).toBe(eur(500));
-    expect(meta).toMatch(/expense/);
+    // `referenceDate` is deliberately null until a post-mount effect sets it
+    // (SSR clock-mismatch guard), so the card renders once with empty buckets
+    // — every column at 0 — before the real data arrives. Awaiting the card
+    // alone resolves on that first paint, which is why this has to poll for
+    // the settled value like the sibling assertions above do.
+    await waitFor(() => {
+      const hits = card.querySelectorAll("[data-tip]");
+      expect(hits.length).toBe(18);
+      // July has the labor spend seeded in this suite (time pinned to 2026-07-15).
+      const julyLabor = [...hits].find((el) => el.getAttribute("data-tip")?.startsWith("Jul 2026|"));
+      expect(julyLabor).toBeTruthy();
+      const [, value, meta] = julyLabor!.getAttribute("data-tip")!.split("|");
+      expect(value.replace(/[\u202f\u00a0]/g, " ")).toBe(eur(500));
+      expect(meta).toMatch(/expense/);
+    });
   });
 });
 

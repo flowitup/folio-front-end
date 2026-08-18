@@ -8,7 +8,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import { MapPin, Pencil, Plus, Store, Trash2 } from "lucide-react";
+import { Globe, MapPin, Pencil, Plus, Store, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { ChiffrageStore } from "@/lib/api/chiffrage";
@@ -81,7 +81,9 @@ export function PosteStores({
               >
                 <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <span className="min-w-0">
-                  <span className="block text-sm font-medium">{store.name}</span>
+                  <span className="block text-sm font-medium">
+                    {store.name}
+                  </span>
                   {store.address ? (
                     <span className="block text-xs text-muted-foreground">
                       {store.address}
@@ -89,30 +91,44 @@ export function PosteStores({
                   ) : null}
                 </span>
               </a>
-              {canManage ? (
-                <div className="flex shrink-0 items-center gap-0.5">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => onEdit(store)}
-                    aria-label={t("editStore")}
+              <div className="flex shrink-0 items-center gap-0.5">
+                {store.website_url ? (
+                  <a
+                    href={store.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                    title={t("openWebsite")}
+                    aria-label={t("openWebsite")}
                   >
-                    <Pencil className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => onDelete(store)}
-                    aria-label={t("deleteStore")}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : null}
+                    <Globe className="h-3.5 w-3.5" />
+                  </a>
+                ) : null}
+                {canManage ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => onEdit(store)}
+                      aria-label={t("editStore")}
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => onDelete(store)}
+                      aria-label={t("deleteStore")}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

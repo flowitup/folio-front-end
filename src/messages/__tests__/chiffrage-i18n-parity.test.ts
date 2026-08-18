@@ -25,7 +25,11 @@ const locales: Record<string, Messages> = {
  * and the sample address — the chantiers are in France, so the example stays a
  * French street address whichever language the UI is read in.
  */
-const SHARED_BY_DESIGN = new Set(["tva", "storeAddressPlaceholder"]);
+const SHARED_BY_DESIGN = new Set([
+  "tva",
+  "storeAddressPlaceholder",
+  "storeWebsitePlaceholder",
+]);
 
 describe("chiffrage i18n", () => {
   it("defines the namespace in every locale", () => {

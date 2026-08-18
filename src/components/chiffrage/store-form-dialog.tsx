@@ -22,7 +22,11 @@ interface Props {
   store: ChiffrageStore | null;
   submitting: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: { name: string; address: string | null }) => void;
+  onSubmit: (values: {
+    name: string;
+    address: string | null;
+    website_url: string | null;
+  }) => void;
 }
 
 export function StoreFormDialog({
@@ -37,11 +41,16 @@ export function StoreFormDialog({
   // reset the form for each new target — no effect needed.
   const [name, setName] = useState(store?.name ?? "");
   const [address, setAddress] = useState(store?.address ?? "");
+  const [website, setWebsite] = useState(store?.website_url ?? "");
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    onSubmit({ name: name.trim(), address: address.trim() || null });
+    onSubmit({
+      name: name.trim(),
+      address: address.trim() || null,
+      website_url: website.trim() || null,
+    });
   };
 
   return (
@@ -77,6 +86,18 @@ export function StoreFormDialog({
               <p className="text-xs text-muted-foreground">
                 {t("storeAddressHint")}
               </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="store-website">{t("storeWebsiteOptional")}</Label>
+              <Input
+                id="store-website"
+                type="url"
+                inputMode="url"
+                value={website}
+                maxLength={500}
+                placeholder={t("storeWebsitePlaceholder")}
+                onChange={(e) => setWebsite(e.target.value)}
+              />
             </div>
           </div>
           <DialogFooter>

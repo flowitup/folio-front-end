@@ -23,6 +23,7 @@ const store = (over: Partial<ChiffrageStore> = {}): ChiffrageStore => ({
   poste_id: "p1",
   name: "Leroy Merlin Ivry",
   address: "45 av de Verdun, 94200 Ivry-sur-Seine",
+  website_url: null,
   position: 1000,
   ...over,
 });
@@ -69,6 +70,59 @@ describe("PosteStores", () => {
     const link = screen.getByRole("link", { name: /Leroy Merlin Ivry/ });
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
+  });
+
+  it("links to the shop's website when one is recorded", () => {
+    render(
+      <PosteStores
+        stores={[store({ website_url: "https://www.leroymerlin.fr/magasin/ivry" })]}
+        canManage
+        onAdd={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+      />,
+    );
+    const link = screen.getByLabelText("openWebsite");
+    expect(link).toHaveAttribute("href", "https://www.leroymerlin.fr/magasin/ivry");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
+  });
+
+  it("shows no website link when none was recorded", () => {
+    render(
+      <PosteStores stores={[store()]} canManage onAdd={() => {}} onEdit={() => {}} onDelete={() => {}} />,
+    );
+    expect(screen.queryByLabelText("openWebsite")).not.toBeInTheDocument();
+  });
+
+  it("keeps the website reachable for a read-only member", () => {
+    // The map and website links are information, not editing — they stay.
+    render(
+      <PosteStores
+        stores={[store({ website_url: "https://www.pointp.fr" })]}
+        canManage={false}
+        onAdd={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+      />,
+    );
+    expect(screen.getByLabelText("openWebsite")).toBeInTheDocument();
+    expect(screen.queryByLabelText("editStore")).not.toBeInTheDocument();
+  });
+
+  it("does not nest the website link inside the map link", () => {
+    // Nested anchors are invalid HTML and would eat the map tap target.
+    render(
+      <PosteStores
+        stores={[store({ website_url: "https://www.pointp.fr" })]}
+        canManage
+        onAdd={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+      />,
+    );
+    const web = screen.getByLabelText("openWebsite");
+    expect(web.closest("a")).toBe(web);
   });
 
   it("hides every editing control from a read-only member", () => {

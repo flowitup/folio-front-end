@@ -51,6 +51,15 @@ export interface ChiffrageArticle {
   total_ttc: number;
 }
 
+/** A shop to visit for a poste's purchases. */
+export interface ChiffrageStore {
+  id: string;
+  poste_id: string;
+  name: string;
+  address: string | null;
+  position: number;
+}
+
 export interface ChiffragePoste {
   id: string;
   project_id: string;
@@ -58,6 +67,7 @@ export interface ChiffragePoste {
   note: string | null;
   position: number;
   articles: ChiffrageArticle[];
+  stores: ChiffrageStore[];
   subtotal_ht: number;
   subtotal_ttc: number;
 }
@@ -80,6 +90,11 @@ export interface ChiffrageUnit {
 export interface PostePayload {
   name?: string;
   note?: string | null;
+}
+
+export interface StorePayload {
+  name?: string;
+  address?: string | null;
 }
 
 export interface ArticlePayload {
@@ -205,6 +220,38 @@ export async function reorderPoste(
     { method: "POST", body: payload },
     "Failed to reorder poste"
   );
+}
+
+// ---------------------------------------------------------------------------
+// Stores — where to go and buy
+// ---------------------------------------------------------------------------
+
+export async function createStore(
+  projectId: string,
+  posteId: string,
+  payload: StorePayload
+): Promise<ChiffrageStore> {
+  return request<ChiffrageStore>(
+    `${base(projectId)}/postes/${posteId}/stores`,
+    { method: "POST", body: payload },
+    "Failed to add store"
+  );
+}
+
+export async function updateStore(
+  projectId: string,
+  storeId: string,
+  payload: StorePayload
+): Promise<ChiffrageStore> {
+  return request<ChiffrageStore>(
+    `${base(projectId)}/stores/${storeId}`,
+    { method: "PATCH", body: payload },
+    "Failed to update store"
+  );
+}
+
+export async function deleteStore(projectId: string, storeId: string): Promise<void> {
+  return request<void>(`${base(projectId)}/stores/${storeId}`, { method: "DELETE" }, "Failed to delete store");
 }
 
 // ---------------------------------------------------------------------------

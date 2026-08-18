@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { ArticleImage } from "@/components/chiffrage/article-image";
 import { Button } from "@/components/ui/button";
 import { QuoteComparisonTable } from "@/components/chiffrage/quote-comparison-table";
 import { money, quantity } from "@/components/chiffrage/format";
@@ -23,6 +24,7 @@ import type { ChiffrageArticle, ChiffrageQuote } from "@/lib/api/chiffrage";
 
 interface Props {
   article: ChiffrageArticle;
+  projectId: string;
   canManage: boolean;
   expanded: boolean;
   busyQuoteId: string | null;
@@ -31,6 +33,9 @@ interface Props {
   onEdit: () => void;
   onDelete: () => void;
   onAddQuote: () => void;
+  onManageImage: () => void;
+  /** Bumped after an image change to force the thumbnail to refetch. */
+  imageVersion: number;
   onSelectQuote: (quote: ChiffrageQuote) => void;
   onEditQuote: (quote: ChiffrageQuote) => void;
   onDeleteQuote: (quote: ChiffrageQuote) => void;
@@ -38,6 +43,7 @@ interface Props {
 
 export function ArticleRow({
   article,
+  projectId,
   canManage,
   expanded,
   busyQuoteId,
@@ -46,6 +52,8 @@ export function ArticleRow({
   onEdit,
   onDelete,
   onAddQuote,
+  onManageImage,
+  imageVersion,
   onSelectQuote,
   onEditQuote,
   onDeleteQuote,
@@ -73,6 +81,20 @@ export function ArticleRow({
             <ChevronRight className="h-4 w-4" />
           )}
         </Button>
+
+        {canManage ? (
+          <button
+            type="button"
+            onClick={onManageImage}
+            className="shrink-0 rounded"
+            title={t("articleImage")}
+            aria-label={t("articleImage")}
+          >
+            <ArticleImage projectId={projectId} imageRef={article.image_ref} alt={article.name} version={imageVersion} />
+          </button>
+        ) : (
+          <ArticleImage projectId={projectId} imageRef={article.image_ref} alt={article.name} version={imageVersion} />
+        )}
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">

@@ -45,6 +45,7 @@ function article(quotes: ChiffrageQuote[], overrides: Partial<ChiffrageArticle> 
     note: null,
     position: 1000,
     quotes,
+    image_ref: null,
     effective_quote_id: effective?.id ?? null,
     effective_source: effective ? (effective.is_selected ? "selected" : "cheapest") : "none",
     total_ht: 129,

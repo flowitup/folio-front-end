@@ -36,6 +36,12 @@ export interface ChiffrageQuote {
   is_selected: boolean;
 }
 
+/** Which endpoint serves an article's thumbnail. */
+export interface ChiffrageImageRef {
+  kind: "article" | "library";
+  id: string;
+}
+
 export interface ChiffrageArticle {
   id: string;
   poste_id: string;
@@ -45,6 +51,7 @@ export interface ChiffrageArticle {
   note: string | null;
   position: number;
   quotes: ChiffrageQuote[];
+  image_ref: ChiffrageImageRef | null;
   effective_quote_id: string | null;
   effective_source: EffectiveSource;
   total_ht: number;
@@ -221,6 +228,47 @@ export async function reorderPoste(
     `${base(projectId)}/postes/${posteId}/reorder`,
     { method: "POST", body: payload },
     "Failed to reorder poste"
+  );
+}
+
+export async function uploadArticleImage(projectId: string, articleId: string, file: File): Promise<void> {
+  // Server-side with a Bearer header: Flask-JWT-Extended skips the cookie-CSRF
+  // check when Authorization is present, which a browser-side multipart POST
+  // cannot satisfy (it needs X-CSRF-TOKEN and 401s without it).
+  const authHeaders = await sessionAuthHeader();
+  const form = new FormData();
+  form.append("image", file);
+
+  const response = await fetch(
+    `${env.apiBaseUrl}/projects/${projectId}/chiffrage/articles/${articleId}/image`,
+    {
+      // No Content-Type — fetch sets the multipart boundary itself.
+      method: "POST",
+      headers: { ...authHeaders },
+      body: form,
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) throw await buildHttpError(response, "Failed to upload the image");
+}
+
+export async function setArticleImageFromUrl(
+  projectId: string,
+  articleId: string,
+  url: string
+): Promise<void> {
+  return request<void>(
+    `${base(projectId)}/articles/${articleId}/image-from-url`,
+    { method: "POST", body: { url } },
+    "Failed to fetch the image"
+  );
+}
+
+export async function deleteArticleImage(projectId: string, articleId: string): Promise<void> {
+  return request<void>(
+    `${base(projectId)}/articles/${articleId}/image`,
+    { method: "DELETE" },
+    "Failed to remove the image"
   );
 }
 

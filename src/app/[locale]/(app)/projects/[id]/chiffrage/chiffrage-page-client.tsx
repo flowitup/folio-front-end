@@ -36,6 +36,7 @@ import { ArticleFormDialog } from "@/components/chiffrage/article-form-dialog";
 import { ChiffrageTotals } from "@/components/chiffrage/chiffrage-totals";
 import { PosteCard } from "@/components/chiffrage/poste-card";
 import { PosteStores } from "@/components/chiffrage/poste-stores";
+import { ArticleImageDialog } from "@/components/chiffrage/article-image-dialog";
 import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
 import { ProvisioningTable } from "@/components/chiffrage/provisioning-table";
@@ -47,6 +48,7 @@ import {
   createArticleAction,
   createPosteAction,
   createStoreAction,
+  deleteArticleImageAction,
   createQuoteAction,
   createUnitAction,
   deleteArticleAction,
@@ -59,7 +61,9 @@ import {
   selectQuoteAction,
   updateArticleAction,
   updatePosteAction,
+  setArticleImageFromUrlAction,
   updateStoreAction,
+  uploadArticleImageAction,
   updateQuoteAction,
 } from "./_actions/chiffrage-actions";
 import type {
@@ -154,6 +158,13 @@ export function ChiffragePageClient({
     posteId: string | null;
     article: ChiffrageArticle | null;
   }>({ open: false, posteId: null, article: null });
+  const [imageDialog, setImageDialog] = useState<{
+    open: boolean;
+    article: ChiffrageArticle | null;
+  }>({ open: false, article: null });
+  // Blob URLs are cached per image_ref; bumping this forces a refetch after a
+  // change, since the ref itself may be unchanged (same article id).
+  const [imageVersion, setImageVersion] = useState(0);
   const [storeDialog, setStoreDialog] = useState<{
     open: boolean;
     posteId: string | null;
@@ -380,6 +391,9 @@ export function ChiffragePageClient({
                             <SortableItem key={article.id} id={article.id}>
                               {(articleHandle) => (
                                 <ArticleRow
+                                  projectId={projectId}
+                                  imageVersion={imageVersion}
+                                  onManageImage={() => setImageDialog({ open: true, article })}
                                   article={article}
                                   canManage={canManage}
                                   expanded={expanded.has(article.id)}
@@ -475,6 +489,35 @@ export function ChiffragePageClient({
                 : createPosteAction(projectId, values),
             );
             if (ok) setPosteDialog({ open: false, poste: null });
+          }}
+        />
+      ) : null}
+
+      {imageDialog.open && imageDialog.article ? (
+        <ArticleImageDialog
+          open
+          article={imageDialog.article}
+          onOpenChange={(open) => setImageDialog((s) => ({ ...s, open }))}
+          onUpload={async (formData) => {
+            const ok = await mutate(() =>
+              uploadArticleImageAction(projectId, imageDialog.article!.id, formData)
+            );
+            if (ok) setImageVersion((v) => v + 1);
+            return ok;
+          }}
+          onFromUrl={async (url) => {
+            const ok = await mutate(() =>
+              setArticleImageFromUrlAction(projectId, imageDialog.article!.id, url)
+            );
+            if (ok) setImageVersion((v) => v + 1);
+            return ok;
+          }}
+          onRemove={async () => {
+            const ok = await mutate(() =>
+              deleteArticleImageAction(projectId, imageDialog.article!.id)
+            );
+            if (ok) setImageVersion((v) => v + 1);
+            return ok;
           }}
         />
       ) : null}

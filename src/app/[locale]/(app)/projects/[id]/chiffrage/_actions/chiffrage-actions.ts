@@ -18,6 +18,7 @@ import {
   createUnit,
   deleteArticle,
   deletePoste,
+  deleteArticleImage,
   deleteQuote,
   deleteStore,
   deleteUnit,
@@ -26,6 +27,8 @@ import {
   reorderArticle,
   reorderPoste,
   selectQuote,
+  setArticleImageFromUrl,
+  uploadArticleImage,
   updateArticle,
   updatePoste,
   updateQuote,
@@ -118,6 +121,33 @@ export async function reorderPosteAction(
   payload: ReorderPayload
 ): Promise<Result<ChiffragePoste>> {
   return run(projectId, () => reorderPoste(projectId, posteId, payload));
+}
+
+// --- article image ---------------------------------------------------------
+
+export async function uploadArticleImageAction(
+  projectId: string,
+  articleId: string,
+  formData: FormData
+): Promise<Result<void>> {
+  const file = formData.get("image");
+  if (!(file instanceof File)) return { ok: false, error: "invalid" };
+  return run(projectId, () => uploadArticleImage(projectId, articleId, file));
+}
+
+export async function setArticleImageFromUrlAction(
+  projectId: string,
+  articleId: string,
+  url: string
+): Promise<Result<void>> {
+  return run(projectId, () => setArticleImageFromUrl(projectId, articleId, url));
+}
+
+export async function deleteArticleImageAction(
+  projectId: string,
+  articleId: string
+): Promise<Result<void>> {
+  return run(projectId, () => deleteArticleImage(projectId, articleId));
 }
 
 // --- stores ----------------------------------------------------------------

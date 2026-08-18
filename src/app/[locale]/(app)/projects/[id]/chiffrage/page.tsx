@@ -54,6 +54,7 @@ export default async function ChiffragePage({ params }: PageProps) {
       <ChiffragePageClient
         projectId={projectId}
         canManage={canManage}
+        companyId={project?.company_id ?? null}
         initialTree={tree}
         initialUnits={units}
       />

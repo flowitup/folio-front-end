@@ -68,6 +68,8 @@ import type {
 interface Props {
   projectId: string;
   canManage: boolean;
+  /** Company owning the project, or null — gates the bibliothèque picker. */
+  companyId: string | null;
   initialTree: ChiffrageTree;
   initialUnits: ChiffrageUnit[];
 }
@@ -123,6 +125,7 @@ function SortableItem({
 export function ChiffragePageClient({
   projectId,
   canManage,
+  companyId,
   initialTree,
   initialUnits,
 }: Props) {
@@ -467,6 +470,7 @@ export function ChiffragePageClient({
           open
           quote={quoteDialog.quote}
           submitting={submitting}
+          companyId={companyId}
           onOpenChange={(open) => setQuoteDialog((p) => ({ ...p, open }))}
           onSubmit={async (values: QuoteFormValues) => {
             const ok = await mutate(() =>

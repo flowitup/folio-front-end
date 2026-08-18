@@ -23,12 +23,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { htToTtc, money, ttcToHt } from "@/components/chiffrage/format";
+import { SupplierProductPicker } from "@/components/chiffrage/supplier-product-picker";
 import type { ChiffrageQuote } from "@/lib/api/chiffrage";
 
 const TVA_PRESETS = ["20", "10", "5.5"];
 
 export interface QuoteFormValues {
   supplier_name: string;
+  supplier_id: string | null;
+  library_product_id: string | null;
   unit_price_ht: string;
   tva_rate: string;
   product_url: string | null;
@@ -39,6 +42,8 @@ interface Props {
   open: boolean;
   quote: ChiffrageQuote | null;
   submitting: boolean;
+  /** Enables the bibliothèque picker; null when the project has no company. */
+  companyId: string | null;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: QuoteFormValues) => void;
 }
@@ -47,6 +52,7 @@ export function QuoteFormDialog({
   open,
   quote,
   submitting,
+  companyId,
   onOpenChange,
   onSubmit,
 }: Props) {
@@ -59,6 +65,8 @@ export function QuoteFormDialog({
   const [tva, setTva] = useState(quote ? String(quote.tva_rate) : "20");
   const [url, setUrl] = useState(quote?.product_url ?? "");
   const [note, setNote] = useState(quote?.note ?? "");
+  const [supplierId, setSupplierId] = useState<string | null>(quote?.supplier_id ?? null);
+  const [productId, setProductId] = useState<string | null>(quote?.library_product_id ?? null);
 
   const priceNum = Number(price);
   const tvaNum = Number(tva);
@@ -88,6 +96,8 @@ export function QuoteFormDialog({
     if (!valid) return;
     onSubmit({
       supplier_name: supplier.trim(),
+      supplier_id: supplierId,
+      library_product_id: productId,
       unit_price_ht: htValue.toFixed(4),
       tva_rate: tva,
       product_url: url.trim() || null,
@@ -104,6 +114,22 @@ export function QuoteFormDialog({
             <DialogDescription>{t("quoteDialogHint")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <SupplierProductPicker
+              companyId={companyId}
+              onPick={(picked) => {
+                // Prefill, never overwrite silently: the price is a past
+                // purchase and the user still confirms it on the HT/TTC tabs.
+                if (picked.supplierName) setSupplier(picked.supplierName);
+                setSupplierId(picked.supplierId);
+                setProductId(picked.productId);
+                if (picked.productUrl) setUrl(picked.productUrl);
+                if (picked.suggestedPrice) {
+                  setMode("ht");
+                  setPrice(picked.suggestedPrice);
+                }
+              }}
+            />
+
             <div className="space-y-2">
               <Label htmlFor="quote-supplier">{t("supplier")}</Label>
               <Input

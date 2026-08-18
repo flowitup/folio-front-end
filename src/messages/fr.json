@@ -69,7 +69,8 @@
       "factures": "Factures",
       "templates": "Modèles",
       "refundableInvoices": "Remboursables"
-    }
+    },
+    "chiffrage": "Chiffrage"
   },
   "dashboard": {
     "loadError": "Impossible de charger les données de l'aperçu",
@@ -1874,6 +1875,7 @@
     "addArticle": "Ajouter un article",
     "addQuote": "Ajouter un prix",
     "addUnit": "Ajouter une unité",
+    "allSuppliers": "Tous les fournisseurs",
     "article": "Article",
     "articleDialogHint": "La quantité nécessaire, et dans quelle unité.",
     "articleName": "Nom de l’article",
@@ -1907,9 +1909,11 @@
     "newUnitPlaceholder": "ex. sac de 25 kg",
     "noArticlesYet": "Aucun article dans ce poste pour l’instant.",
     "noPrice": "Sans prix",
+    "noProductsFound": "Aucun produit trouvé.",
     "noQuotesYet": "Aucun prix fournisseur. Ajoutez-en un pour comparer.",
     "noteOptional": "Note (facultatif)",
     "openProductPage": "Ouvrir la fiche produit",
+    "pickFromLibrary": "Choisir dans la bibliothèque",
     "poste": "Poste",
     "posteDialogHint": "Regroupez ce que vous devez acheter, par exemple Lumière ou Plomberie.",
     "posteName": "Nom du poste",
@@ -1928,6 +1932,7 @@
     "retainThisQuote": "Retenir ce prix pour le budget",
     "retained": "Retenu",
     "save": "Enregistrer",
+    "searchProducts": "Rechercher un produit…",
     "selectUnit": "Choisir une unité",
     "storedAsHt": "Enregistré : {ht} HT · {ttc} TTC",
     "subtitle": "Listez ce qu’il faut acheter, comparez les prix fournisseurs et obtenez le budget à prévoir.",

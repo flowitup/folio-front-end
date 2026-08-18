@@ -69,7 +69,8 @@
       "factures": "Invoices",
       "templates": "Templates",
       "refundableInvoices": "Refundable"
-    }
+    },
+    "chiffrage": "Cost planning"
   },
   "dashboard": {
     "loadError": "Failed to load overview data",
@@ -1874,6 +1875,7 @@
     "addArticle": "Add an item",
     "addQuote": "Add a price",
     "addUnit": "Add a unit",
+    "allSuppliers": "All suppliers",
     "article": "Item",
     "articleDialogHint": "How much of it you need, and in which unit.",
     "articleName": "Item name",
@@ -1907,9 +1909,11 @@
     "newUnitPlaceholder": "e.g. 25 kg bag",
     "noArticlesYet": "No items yet in this section.",
     "noPrice": "No price",
+    "noProductsFound": "No product found.",
     "noQuotesYet": "No supplier price yet. Add one to compare.",
     "noteOptional": "Note (optional)",
     "openProductPage": "Open product page",
+    "pickFromLibrary": "Pick from the library",
     "poste": "Section",
     "posteDialogHint": "Group what you need to buy, for example Lighting or Plumbing.",
     "posteName": "Section name",
@@ -1928,6 +1932,7 @@
     "retainThisQuote": "Retain this price for the budget",
     "retained": "Retained",
     "save": "Save",
+    "searchProducts": "Search a product…",
     "selectUnit": "Choose a unit",
     "storedAsHt": "Stored as {ht} excl. tax · {ttc} incl. tax",
     "subtitle": "List what to buy, compare supplier prices, and get the amount to budget.",

@@ -69,7 +69,8 @@
       "factures": "Hóa đơn",
       "templates": "Mẫu tài liệu",
       "refundableInvoices": "Hoàn tiền"
-    }
+    },
+    "chiffrage": "Hoạch toán"
   },
   "dashboard": {
     "loadError": "Không thể tải dữ liệu tổng quan",
@@ -1874,6 +1875,7 @@
     "addArticle": "Thêm vật tư",
     "addQuote": "Thêm báo giá",
     "addUnit": "Thêm đơn vị",
+    "allSuppliers": "Tất cả nhà cung cấp",
     "article": "Vật tư",
     "articleDialogHint": "Cần bao nhiêu và tính theo đơn vị nào.",
     "articleName": "Tên vật tư",
@@ -1907,9 +1909,11 @@
     "newUnitPlaceholder": "ví dụ bao 25 kg",
     "noArticlesYet": "Hạng mục này chưa có vật tư nào.",
     "noPrice": "Chưa có giá",
+    "noProductsFound": "Không tìm thấy sản phẩm.",
     "noQuotesYet": "Chưa có báo giá nào. Thêm vào để so sánh.",
     "noteOptional": "Ghi chú (không bắt buộc)",
     "openProductPage": "Mở trang sản phẩm",
+    "pickFromLibrary": "Chọn từ thư viện",
     "poste": "Hạng mục",
     "posteDialogHint": "Gom những thứ cần mua theo nhóm, ví dụ Đèn chiếu sáng hay Cấp thoát nước.",
     "posteName": "Tên hạng mục",
@@ -1928,6 +1932,7 @@
     "retainThisQuote": "Chọn báo giá này để tính dự trù",
     "retained": "Đã chọn",
     "save": "Lưu",
+    "searchProducts": "Tìm sản phẩm…",
     "selectUnit": "Chọn đơn vị",
     "storedAsHt": "Lưu: {ht} HT · {ttc} TTC",
     "subtitle": "Liệt kê những thứ cần mua, so sánh giá các nhà cung cấp và biết số tiền cần dự trù.",

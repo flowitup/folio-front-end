@@ -29,6 +29,7 @@ const SHARED_BY_DESIGN = new Set([
   "tva",
   "storeAddressPlaceholder",
   "storeWebsitePlaceholder",
+  "imageFromUrlPlaceholder",
 ]);
 
 describe("chiffrage i18n", () => {

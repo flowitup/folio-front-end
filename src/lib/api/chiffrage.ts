@@ -57,6 +57,7 @@ export interface ChiffrageStore {
   poste_id: string;
   name: string;
   address: string | null;
+  website_url: string | null;
   position: number;
 }
 
@@ -95,6 +96,7 @@ export interface PostePayload {
 export interface StorePayload {
   name?: string;
   address?: string | null;
+  website_url?: string | null;
 }
 
 export interface ArticlePayload {

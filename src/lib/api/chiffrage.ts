@@ -42,6 +42,21 @@ export interface ChiffrageImageRef {
   id: string;
 }
 
+/** A room of the chantier, declared once and reused by every poste. */
+export interface ChiffrageRoom {
+  id: string;
+  name: string;
+  position: number;
+}
+
+/** What one room costs inside one poste. room_id null = unassigned. */
+export interface ChiffrageRoomSubtotal {
+  room_id: string | null;
+  subtotal_ht: number;
+  subtotal_ttc: number;
+  article_count: number;
+}
+
 export interface ChiffrageArticle {
   id: string;
   poste_id: string;
@@ -49,6 +64,7 @@ export interface ChiffrageArticle {
   quantity: number;
   unit: string | null;
   note: string | null;
+  room_id: string | null;
   position: number;
   quotes: ChiffrageQuote[];
   image_ref: ChiffrageImageRef | null;
@@ -76,6 +92,7 @@ export interface ChiffragePoste {
   position: number;
   articles: ChiffrageArticle[];
   stores: ChiffrageStore[];
+  room_subtotals: ChiffrageRoomSubtotal[];
   subtotal_ht: number;
   subtotal_ttc: number;
 }
@@ -83,6 +100,7 @@ export interface ChiffragePoste {
 export interface ChiffrageTree {
   project_id: string;
   postes: ChiffragePoste[];
+  rooms: ChiffrageRoom[];
   total_ht: number;
   total_ttc: number;
   unpriced_article_count: number;
@@ -111,6 +129,7 @@ export interface ArticlePayload {
   quantity?: number | string;
   unit?: string | null;
   note?: string | null;
+  room_id?: string | null;
 }
 
 export interface QuotePayload {
@@ -269,6 +288,42 @@ export async function deleteArticleImage(projectId: string, articleId: string): 
     `${base(projectId)}/articles/${articleId}/image`,
     { method: "DELETE" },
     "Failed to remove the image"
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Rooms — the chantier's pièces
+// ---------------------------------------------------------------------------
+
+export async function listRooms(projectId: string): Promise<ChiffrageRoom[]> {
+  return request<ChiffrageRoom[]>(`${base(projectId)}/rooms`, { method: "GET" }, "Failed to load rooms");
+}
+
+export async function createRoom(projectId: string, name: string): Promise<ChiffrageRoom> {
+  return request<ChiffrageRoom>(
+    `${base(projectId)}/rooms`,
+    { method: "POST", body: { name } },
+    "Failed to create the room"
+  );
+}
+
+export async function updateRoom(
+  projectId: string,
+  roomId: string,
+  name: string
+): Promise<ChiffrageRoom> {
+  return request<ChiffrageRoom>(
+    `${base(projectId)}/rooms/${roomId}`,
+    { method: "PATCH", body: { name } },
+    "Failed to rename the room"
+  );
+}
+
+export async function deleteRoom(projectId: string, roomId: string): Promise<void> {
+  return request<void>(
+    `${base(projectId)}/rooms/${roomId}`,
+    { method: "DELETE" },
+    "Failed to delete the room"
   );
 }
 

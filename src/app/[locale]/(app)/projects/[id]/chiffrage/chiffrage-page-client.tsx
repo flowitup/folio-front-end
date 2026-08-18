@@ -36,6 +36,7 @@ import { ArticleFormDialog } from "@/components/chiffrage/article-form-dialog";
 import { ChiffrageTotals } from "@/components/chiffrage/chiffrage-totals";
 import { PosteCard } from "@/components/chiffrage/poste-card";
 import { PosteStores } from "@/components/chiffrage/poste-stores";
+import { RoomHeading } from "@/components/chiffrage/room-heading";
 import { ArticleImageDialog } from "@/components/chiffrage/article-image-dialog";
 import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
@@ -47,6 +48,7 @@ import {
 import {
   createArticleAction,
   createPosteAction,
+  createRoomAction,
   createStoreAction,
   deleteArticleImageAction,
   createQuoteAction,
@@ -70,6 +72,7 @@ import type {
   ChiffrageArticle,
   ChiffragePoste,
   ChiffrageQuote,
+  ChiffrageRoom,
   ChiffrageStore,
   ChiffrageTree,
   ChiffrageUnit,
@@ -211,6 +214,44 @@ export function ChiffragePageClient({
     },
     [refresh],
   );
+
+  /**
+   * Lay a poste's articles out room by room. Rooms follow the project's
+   * declared order and unassigned items come last, matching how the backend
+   * orders room_subtotals — the two must agree or the headings would show one
+   * room's figure above another room's items.
+   */
+  const byRoom = (poste: ChiffragePoste) => {
+    const rank = new Map(tree.rooms.map((r, i) => [r.id, i]));
+    const sorted = [...poste.articles].sort((a, b) => {
+      const ra = a.room_id === null ? Number.MAX_SAFE_INTEGER : (rank.get(a.room_id) ?? rank.size);
+      const rb = b.room_id === null ? Number.MAX_SAFE_INTEGER : (rank.get(b.room_id) ?? rank.size);
+      return ra === rb ? a.position - b.position : ra - rb;
+    });
+    const rows: Array<
+      { kind: "heading"; key: string; roomId: string | null } | { kind: "article"; article: ChiffrageArticle }
+    > = [];
+    let current: string | null | undefined = undefined;
+    for (const article of sorted) {
+      if (article.room_id !== current) {
+        current = article.room_id;
+        rows.push({ kind: "heading", key: `h-${current ?? "none"}`, roomId: current });
+      }
+      rows.push({ kind: "article", article });
+    }
+    return { sorted, rows };
+  };
+
+  const addRoom = async (name: string): Promise<ChiffrageRoom | null> => {
+    const res = await createRoomAction(projectId, name);
+    if (!res.ok) {
+      toast.error(res.error);
+      return null;
+    }
+    // Rooms live on the tree, so extend it rather than keeping a second copy.
+    setTree((prev) => ({ ...prev, rooms: [...prev.rooms, res.data] }));
+    return res.data;
+  };
 
   const addUnit = async (symbol: string): Promise<ChiffrageUnit | null> => {
     const res = await createUnitAction(projectId, symbol);
@@ -384,12 +425,26 @@ export function ChiffragePageClient({
                         onDragEnd={(e) => void onDragEndArticles(poste, e)}
                       >
                         <SortableContext
-                          items={poste.articles.map((a) => a.id)}
+                          items={byRoom(poste).sorted.map((a) => a.id)}
                           strategy={verticalListSortingStrategy}
                         >
-                          {poste.articles.map((article) => (
-                            <SortableItem key={article.id} id={article.id}>
-                              {(articleHandle) => (
+                          {byRoom(poste).rows.map((row) =>
+                            row.kind === "heading" ? (
+                              <RoomHeading
+                                key={row.key}
+                                name={
+                                  tree.rooms.find((r) => r.id === row.roomId)
+                                    ?.name ?? null
+                                }
+                                subtotal={poste.room_subtotals.find(
+                                  (s) => s.room_id === row.roomId,
+                                )}
+                              />
+                            ) : (
+                            <SortableItem key={row.article.id} id={row.article.id}>
+                              {(articleHandle) => {
+                                const article = row.article;
+                                return (
                                 <ArticleRow
                                   projectId={projectId}
                                   imageVersion={imageVersion}
@@ -460,9 +515,11 @@ export function ChiffragePageClient({
                                     }
                                   }}
                                 />
-                              )}
+                              );
+                              }}
                             </SortableItem>
-                          ))}
+                            ),
+                          )}
                         </SortableContext>
                       </DndContext>
                     </PosteCard>
@@ -546,7 +603,9 @@ export function ChiffragePageClient({
           units={units}
           submitting={submitting}
           onOpenChange={(open) => setArticleDialog((p) => ({ ...p, open }))}
+          rooms={tree.rooms}
           onCreateUnit={addUnit}
+          onCreateRoom={addRoom}
           onSubmit={async (values) => {
             const ok = await mutate(() =>
               articleDialog.article

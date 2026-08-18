@@ -21,7 +21,8 @@
     "members": "Membres",
     "projectSettings": "Paramètres",
     "settings": "Paramètres",
-    "more": "Plus"
+    "more": "Plus",
+    "chiffrage": "Chiffrage"
   },
   "auth": {
     "welcomeBack": "Bienvenue",
@@ -69,8 +70,7 @@
       "factures": "Factures",
       "templates": "Modèles",
       "refundableInvoices": "Remboursables"
-    },
-    "chiffrage": "Chiffrage"
+    }
   },
   "dashboard": {
     "loadError": "Impossible de charger les données de l'aperçu",

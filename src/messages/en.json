@@ -21,7 +21,8 @@
     "members": "Members",
     "projectSettings": "Settings",
     "settings": "Settings",
-    "more": "More"
+    "more": "More",
+    "chiffrage": "Cost planning"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -69,8 +70,7 @@
       "factures": "Invoices",
       "templates": "Templates",
       "refundableInvoices": "Refundable"
-    },
-    "chiffrage": "Cost planning"
+    }
   },
   "dashboard": {
     "loadError": "Failed to load overview data",

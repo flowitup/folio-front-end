@@ -21,7 +21,8 @@
     "members": "Thành viên",
     "projectSettings": "Cài đặt",
     "settings": "Cài đặt",
-    "more": "Thêm"
+    "more": "Thêm",
+    "chiffrage": "Hoạch toán"
   },
   "auth": {
     "welcomeBack": "Chào mừng trở lại",
@@ -69,8 +70,7 @@
       "factures": "Hóa đơn",
       "templates": "Mẫu tài liệu",
       "refundableInvoices": "Hoàn tiền"
-    },
-    "chiffrage": "Hoạch toán"
+    }
   },
   "dashboard": {
     "loadError": "Không thể tải dữ liệu tổng quan",

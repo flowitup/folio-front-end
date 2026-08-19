@@ -2,7 +2,7 @@
  * Tests for InvoicesPage — month-grouped "All" tab
  *
  * The "all" tab groups the ledger by month (newest first, header = localized
- * month label + net subtotal), with per-type category sections inside each
+ * month label + expense-only net subtotal), with per-type category sections inside each
  * month. Labor invoices bucket under their service_month (fallback
  * issue_date) and render as FLAT standard rows (recipient = worker-name
  * snapshot) — the per-worker accordion is gone from the "all" tab but stays
@@ -199,6 +199,36 @@ describe("InvoicesPage — month-grouped all tab", () => {
     // Each band carries its entry count next to the label (i18n key under mock).
     expect(headers[0].textContent).toContain("invoices.monthEntries");
     expect(headers[1].textContent).toContain("invoices.monthEntries");
+  });
+
+  it("keeps a released-funds disbursement out of the month total while still listing it", async () => {
+    setupMocks([
+      ...fixture(),
+      makeInvoice({
+        id: "june-cap",
+        invoice_number: "FIN-2026-0001",
+        type: "released_funds",
+        issue_date: "2026-06-02",
+        total_amount: 100_000,
+      }),
+    ]);
+    render(<InvoicesPage />);
+
+    const desktop = await screen.findByTestId("invoices-table-desktop");
+    const june = await within(desktop).findByTestId("invoices-month-header-desktop-2026-06");
+
+    // Header stays at the expense net (50 + 25 − 20) — the injection is capital in.
+    expect(june.textContent).toContain(formatEUR(55));
+    expect(june.textContent).not.toContain(formatEUR(100_055));
+    // …and the header says so, so the number is not read as "everything below".
+    expect(june.textContent).toContain("invoices.monthExpensesLabel");
+
+    // The row and its own category subtotal are still rendered inside the month.
+    expect(within(desktop).queryByText("FIN-2026-0001")).not.toBeNull();
+    expect(
+      within(desktop).getByTestId("invoices-type-subtotal-desktop-2026-06-released_funds")
+        .textContent
+    ).toContain(formatEUR(100_000));
   });
 
   it("buckets the July-issued June-service labor invoice under June, as a flat row with the worker name", async () => {

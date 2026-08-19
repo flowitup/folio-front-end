@@ -45,9 +45,13 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [bounds, setBounds] = useState<DialogBounds | null>(null);
+  // Bumped to re-run the loader after the presigned URL turns out to be dead
+  const [fallbackNonce, setFallbackNonce] = useState(0);
 
   // Keep a ref to the revoke function so we can call it on cleanup
   const revokeRef = useRef<(() => void) | null>(null);
+  // Doc id whose presigned URL already failed — guards against a retry loop
+  const presignedFailedRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Revoke previous blob URL and reset state when doc changes
@@ -71,7 +75,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
       try {
         // For PDFs: try presigned GET URL first (bypasses Flask streaming,
         // enables progressive page-by-page rendering via PDF.js)
-        if (currentDoc.kind === "pdf") {
+        if (currentDoc.kind === "pdf" && presignedFailedRef.current !== currentDoc.id) {
           const preview = await fetchDocumentPreviewUrl(projectId, currentDoc.id, controller.signal);
           if (preview && !controller.signal.aborted) {
             setPresignedUrl(preview.url);
@@ -108,7 +112,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
     return () => {
       controller.abort();
     };
-  }, [doc, projectId]);
+  }, [doc, projectId, fallbackNonce]);
 
   // Revoke on unmount
   useEffect(() => {
@@ -119,6 +123,14 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
       }
     };
   }, []);
+
+  function handlePresignedFailure() {
+    if (!doc || presignedFailedRef.current === doc.id) return;
+    presignedFailedRef.current = doc.id;
+    setPresignedUrl(null);
+    setLoading(true);
+    setFallbackNonce((n) => n + 1);
+  }
 
   async function handleDownload() {
     if (!doc) return;
@@ -184,6 +196,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
             <PdfCanvasViewer
               src={presignedUrl}
               label={doc?.filename}
+              onLoadError={handlePresignedFailure}
             />
           )}
 

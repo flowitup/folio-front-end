@@ -12,6 +12,11 @@ type PdfCanvasViewerProps = {
   data?: ArrayBuffer;
   /** Accessible label for the viewer container */
   label?: string;
+  /**
+   * Called when the PDF fails to load (unreachable URL, corrupt bytes).
+   * Lets the caller degrade to another source instead of showing a dead pane.
+   */
+  onLoadError?: (message: string) => void;
 };
 
 type PageState = {
@@ -43,7 +48,7 @@ function loadPdfjs() {
  * as they scroll into view via IntersectionObserver. Much faster perceived
  * load than the `<embed>` approach which waits for the entire file.
  */
-export function PdfCanvasViewer({ src, data, label }: PdfCanvasViewerProps) {
+export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasViewerProps) {
   // Unique prefix for canvas IDs — prevents collision if multiple viewers mount
   const idPrefix = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -58,6 +63,9 @@ export function PdfCanvasViewer({ src, data, label }: PdfCanvasViewerProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
   // Guard against canvas writes after unmount
   const mountedRef = useRef(true);
+  // Held in a ref so a caller's inline callback never re-triggers the load effect
+  const onLoadErrorRef = useRef(onLoadError);
+  onLoadErrorRef.current = onLoadError;
 
   useEffect(() => {
     return () => {
@@ -162,6 +170,7 @@ export function PdfCanvasViewer({ src, data, label }: PdfCanvasViewerProps) {
         if (cancelled) return;
         const msg = err instanceof Error ? err.message : String(err);
         setError(msg);
+        onLoadErrorRef.current?.(msg);
       } finally {
         if (!cancelled) setLoading(false);
       }

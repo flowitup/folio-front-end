@@ -1,7 +1,8 @@
 /**
  * Client-side grouping helpers for the Expenses page's month-grouped "All"
- * tab: top-level month sections (newest first, net subtotal), each holding
- * per-type category groups in the canonical ledger order.
+ * tab: top-level month sections (newest first, expense-only net subtotal —
+ * released funds excluded), each holding per-type category groups in the
+ * canonical ledger order.
  *
  * Pure, framework-free functions operating on an already-fetched Invoice[]
  * (whatever the list fetch returned — tag-filtered or not). Labor invoices
@@ -21,6 +22,16 @@ export const GROUP_ORDER: InvoiceType[] = [
   "return",
 ];
 
+/**
+ * Whether a row's `total_amount` belongs in a "money spent" figure: the three
+ * expense types plus `return` (negative, nets spend back down). Excludes
+ * `released_funds` — that is capital coming INTO the project, and counting one
+ * disbursement as spend dwarfs a month's real expenses.
+ */
+function countsTowardSpend(type: InvoiceType): boolean {
+  return type !== "released_funds";
+}
+
 export interface MonthCategoryGroup {
   type: InvoiceType;
   /** Net Σ total_amount of this type in the month — negative for return-heavy groups. */
@@ -32,8 +43,13 @@ export interface MonthCategoryGroup {
 export interface InvoiceMonthGroup {
   /** "YYYY-MM" key the section is bucketed under. */
   monthKey: string;
-  /** Net Σ total_amount across the month's invoices — returns (negative) included. */
-  subtotal: number;
+  /**
+   * Net Σ total_amount of the month's SPEND rows — the three expense types
+   * with returns (negative) netted in. `released_funds` rows are excluded:
+   * they are capital coming into the project, not money spent, and a single
+   * disbursement otherwise dwarfs a month's real expenses.
+   */
+  expenseSubtotal: number;
   /** Non-empty category groups, in GROUP_ORDER. */
   categories: MonthCategoryGroup[];
 }
@@ -66,7 +82,10 @@ export function groupInvoicesByMonth(invoices: Invoice[]): InvoiceMonthGroup[] {
   const groups: InvoiceMonthGroup[] = Array.from(buckets.entries()).map(
     ([monthKey, monthInvoices]) => ({
       monthKey,
-      subtotal: monthInvoices.reduce((sum, inv) => sum + inv.total_amount, 0),
+      expenseSubtotal: monthInvoices.reduce(
+        (sum, inv) => (countsTowardSpend(inv.type) ? sum + inv.total_amount : sum),
+        0
+      ),
       categories: GROUP_ORDER.map((type) => {
         const items = monthInvoices
           .filter((inv) => inv.type === type)

@@ -74,7 +74,7 @@ const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
 interface TableSection {
   key: string;
   monthKey: string | null;
-  monthHeader: { monthKey: string; subtotal: number; count: number } | null;
+  monthHeader: { monthKey: string; expenseSubtotal: number; count: number } | null;
   type: InvoiceType | null;
   /** Net Σ total_amount of the category inside its month (null on flat type tabs). */
   typeSubtotal: number | null;
@@ -250,7 +250,7 @@ export default function InvoicesPage() {
               idx === 0
                 ? {
                     monthKey: mg.monthKey,
-                    subtotal: mg.subtotal,
+                    expenseSubtotal: mg.expenseSubtotal,
                     count: mg.categories.reduce((n, cat) => n + cat.items.length, 0),
                   }
                 : null,
@@ -379,8 +379,16 @@ export default function InvoicesPage() {
                             {formatMonthYear(monthHeader.monthKey, locale)}
                           </button>
                         </h3>
-                        <span className="num text-[13px] font-medium">
-                          {formatEUR(monthHeader.subtotal)}
+                        {/* Expenses-only figure: released-funds rows sit in the
+                            section below but never in this total, so the label
+                            keeps it from reading as "sum of everything here". */}
+                        <span className="flex items-baseline gap-1.5">
+                          <span className="label-cap" style={{ fontSize: 10, color: "var(--muted)" }}>
+                            {t("monthExpensesLabel")}
+                          </span>
+                          <span className="num text-[13px] font-medium">
+                            {formatEUR(monthHeader.expenseSubtotal)}
+                          </span>
                         </span>
                       </div>
                     )}
@@ -521,8 +529,17 @@ export default function InvoicesPage() {
                                       </span>
                                     </button>
                                   </h3>
-                                  <span className="num text-[14px] font-semibold">
-                                    {formatEUR(monthHeader.subtotal)}
+                                  {/* Expenses-only figure — see the mobile header note. */}
+                                  <span className="flex items-baseline gap-1.5">
+                                    <span
+                                      className="label-cap"
+                                      style={{ fontSize: 10, fontWeight: 500, color: "var(--muted)" }}
+                                    >
+                                      {t("monthExpensesLabel")}
+                                    </span>
+                                    <span className="num text-[14px] font-semibold">
+                                      {formatEUR(monthHeader.expenseSubtotal)}
+                                    </span>
                                   </span>
                                 </div>
                               </td>

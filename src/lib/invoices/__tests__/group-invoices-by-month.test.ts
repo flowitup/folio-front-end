@@ -2,7 +2,8 @@
  * Tests for the pure grouping helper behind the Expenses page's
  * month-grouped "All" tab: month-key resolution (labor service_month vs
  * issue_date), month ordering, per-month category order with empty skips,
- * net subtotals, and row ordering inside a category.
+ * expense-only month subtotals (released funds excluded), net category
+ * subtotals, and row ordering inside a category.
  */
 
 import { describe, it, expect } from "vitest";
@@ -81,13 +82,36 @@ describe("groupInvoicesByMonth", () => {
     expect(GROUP_ORDER).toEqual(["released_funds", "labor", "materials_services", "others", "return"]);
   });
 
-  it("computes a net subtotal per month, negative returns included", () => {
+  it("computes a net month subtotal, negative returns included", () => {
     const groups = groupInvoicesByMonth([
       makeInvoice({ id: "i1", type: "materials_services", issue_date: "2026-06-05", total_amount: 500 }),
       makeInvoice({ id: "i2", type: "return", issue_date: "2026-06-14", total_amount: -209.16 }),
     ]);
     expect(groups).toHaveLength(1);
-    expect(groups[0].subtotal).toBeCloseTo(290.84, 5);
+    expect(groups[0].expenseSubtotal).toBeCloseTo(290.84, 5);
+  });
+
+  it("leaves released funds out of the month subtotal while still listing them", () => {
+    const groups = groupInvoicesByMonth([
+      makeInvoice({ id: "cap", type: "released_funds", issue_date: "2026-05-02", total_amount: 100_000 }),
+      makeInvoice({ id: "mat", type: "materials_services", issue_date: "2026-05-05", total_amount: 500 }),
+      makeInvoice({ id: "lab", type: "labor", issue_date: "2026-05-10", service_month: "2026-05-01", total_amount: 250 }),
+      makeInvoice({ id: "ret", type: "return", issue_date: "2026-05-14", total_amount: -50 }),
+    ]);
+    expect(groups).toHaveLength(1);
+    // 500 + 250 − 50 — the 100 000 injection is capital in, not money spent.
+    expect(groups[0].expenseSubtotal).toBeCloseTo(700, 5);
+    // The category is still rendered with its own literal subtotal.
+    const released = groups[0].categories.find((c) => c.type === "released_funds");
+    expect(released?.subtotal).toBe(100_000);
+  });
+
+  it("reports a zero month subtotal when the month holds only released funds", () => {
+    const groups = groupInvoicesByMonth([
+      makeInvoice({ id: "cap", type: "released_funds", issue_date: "2026-04-02", total_amount: 40_000 }),
+    ]);
+    expect(groups[0].expenseSubtotal).toBe(0);
+    expect(groups[0].categories.map((c) => c.type)).toEqual(["released_funds"]);
   });
 
   it("computes a net subtotal per category inside the month, negative for return groups", () => {
@@ -118,7 +142,7 @@ describe("groupInvoicesByMonth", () => {
     ]);
     expect(groups.map((g) => g.monthKey)).toEqual(["2026-07", "2026-06"]);
     const june = groups[1];
-    expect(june.subtotal).toBe(75);
+    expect(june.expenseSubtotal).toBe(75);
     expect(june.categories.map((c) => c.type)).toEqual(["labor", "materials_services"]);
     expect(june.categories[0].items.map((i) => i.id)).toEqual(["june-pay"]);
   });

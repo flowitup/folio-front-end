@@ -17,6 +17,7 @@ import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BacklogBar } from "@/components/planning/backlog-bar";
 import { KanbanColumn } from "@/components/planning/kanban-column";
+import { KanbanMobilePager } from "@/components/planning/kanban-mobile-pager";
 import { TaskCard } from "@/components/planning/task-card";
 import { TaskDetailDrawer } from "@/components/planning/task-detail-drawer";
 import { TaskCreateDialog } from "@/components/planning/task-create-dialog";
@@ -246,8 +247,17 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
             onTaskClick={(t) => setSelected(t.id)}
           />
 
+          {/* One column at a time on phones, all 4 side by side from `lg`. */}
+          <div className="lg:hidden" data-testid="kanban-mobile">
+            <KanbanMobilePager
+              tasksByStatus={tasksByStatus}
+              onAdd={(status) => setCreateState({ status, dueDate: null })}
+              onTaskClick={(task) => setSelected(task.id)}
+            />
+          </div>
+
           {/* 4 columns */}
-          <div className="flex gap-3 overflow-x-auto pb-2">
+          <div className="hidden gap-3 overflow-x-auto pb-2 lg:flex" data-testid="kanban-desktop">
             {BOARD_COLUMNS.map((status) => (
               <KanbanColumn
                 key={status}

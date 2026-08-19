@@ -37,11 +37,11 @@ export default async function AppLayout({
         <Sidebar canViewBilling={canViewBilling} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Topbar />
-          {/* Content scaled down so less scrolling is needed; zoom reflows
-              layout (shrinks scroll height) unlike transform: scale. Sidebar
-              and Topbar stay at 100%. */}
-          <main className="scroll-area flex-1 pb-16 lg:pb-0">
-            <div style={{ zoom: 0.8 }}>{children}</div>
+          {/* `.app-density` applies zoom: 0.8 at `lg` and up only — see
+              globals.css for why mobile stays at 100%. Sidebar and Topbar are
+              outside it and always render at 100%. */}
+          <main className="scroll-area flex-1 pb-[7.25rem] lg:pb-0">
+            <div className="app-density">{children}</div>
           </main>
         </div>
         <MobileBottomNav />

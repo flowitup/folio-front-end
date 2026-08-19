@@ -552,6 +552,10 @@
       "medium": "Vừa",
       "high": "Cao",
       "urgent": "Khẩn cấp"
+    },
+    "pager": {
+      "previousColumn": "Cột trước",
+      "nextColumn": "Cột sau"
     }
   },
   "labor": {

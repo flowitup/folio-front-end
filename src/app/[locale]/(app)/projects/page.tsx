@@ -286,8 +286,14 @@ export default function ProjectsPage() {
                   <button
                     type="button"
                     onClick={() => openProject(project.id)}
-                    className="relative cursor-pointer text-left"
-                    style={{ background: cover, minHeight: isFeatured ? 280 : 220 }}
+                    className={`relative cursor-pointer text-left ${
+                      // A decorative cover should not eat half a phone screen;
+                      // full height returns once the card sits beside its text.
+                      isFeatured
+                        ? "min-h-[170px] sm:min-h-[280px]"
+                        : "min-h-[150px] sm:min-h-[220px]"
+                    }`}
+                    style={{ background: cover }}
                   >
                     <div className="blueprint-grid absolute inset-0 opacity-25" />
                     <div className="paper-noise absolute inset-0" />

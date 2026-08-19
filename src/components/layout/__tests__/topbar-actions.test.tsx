@@ -112,7 +112,7 @@ describe("Topbar action button wiring", () => {
     setup({ pathname: "/en/projects" });
     const user = userEvent.setup();
     render(<Topbar />);
-    await user.click(screen.getByRole("button", { name: /projects.newProject/ }));
+    await user.click(screen.getByTestId("topbar-action-desktop"));
     expect(mockPush).toHaveBeenCalledWith("/en/projects?new=1");
   });
 
@@ -120,7 +120,7 @@ describe("Topbar action button wiring", () => {
     setup({ pathname: "/en/projects/p-1/planning", selectedProjectId: "p-1" });
     const user = userEvent.setup();
     render(<Topbar />);
-    await user.click(screen.getByRole("button", { name: /planning.newTask/ }));
+    await user.click(screen.getByTestId("topbar-action-desktop"));
     expect(mockPush).toHaveBeenCalledWith("/en/projects/p-1/planning?new=1");
   });
 
@@ -128,7 +128,7 @@ describe("Topbar action button wiring", () => {
     setup({ pathname: "/en/projects/p-1/labor", selectedProjectId: "p-1" });
     const user = userEvent.setup();
     render(<Topbar />);
-    await user.click(screen.getByRole("button", { name: /labor.logDay/ }));
+    await user.click(screen.getByTestId("topbar-action-desktop"));
     expect(mockPush).toHaveBeenCalledWith("/en/projects/p-1/labor?logDay=1");
   });
 
@@ -136,7 +136,7 @@ describe("Topbar action button wiring", () => {
     setup({ pathname: "/en/projects/p-1/invoices", selectedProjectId: "p-1" });
     const user = userEvent.setup();
     render(<Topbar />);
-    await user.click(screen.getByRole("button", { name: /invoices.newInvoice/ }));
+    await user.click(screen.getByTestId("topbar-action-desktop"));
     expect(mockPush).toHaveBeenCalledWith("/en/projects/p-1/invoices/new");
   });
 
@@ -144,7 +144,7 @@ describe("Topbar action button wiring", () => {
     setup({ pathname: "/en/projects/p-1/planning" });
     const user = userEvent.setup();
     render(<Topbar />);
-    await user.click(screen.getByRole("button", { name: /planning.newTask/ }));
+    await user.click(screen.getByTestId("topbar-action-desktop"));
     expect(mockPush).not.toHaveBeenCalled();
   });
 });

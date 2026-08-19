@@ -12,9 +12,15 @@ interface KanbanColumnProps {
   tasks: Task[];
   onAdd?: () => void;
   onTaskClick: (task: Task) => void;
+  /**
+   * Suppress the column's own title row. Set by the mobile pager, which
+   * already names the visible column in its own header — rendering both
+   * prints the column name twice.
+   */
+  hideHeader?: boolean;
 }
 
-export function KanbanColumn({ status, title, tasks, onAdd, onTaskClick }: KanbanColumnProps) {
+export function KanbanColumn({ status, title, tasks, onAdd, onTaskClick, hideHeader = false }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${status}`,
     data: { type: "column", status },
@@ -22,8 +28,8 @@ export function KanbanColumn({ status, title, tasks, onAdd, onTaskClick }: Kanba
 
   return (
     <div className="lane flex flex-shrink-0 flex-col">
-      <div className="mb-2 flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
+      <div className={`mb-2 flex items-center px-1 ${hideHeader ? "justify-end" : "justify-between"}`}>
+        <div className={`flex items-center gap-2 ${hideHeader ? "hidden" : ""}`}>
           <h3 className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
             {title}
           </h3>

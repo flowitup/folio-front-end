@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Sun, Moon, Plus, LogOut, ChevronDown, Check } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { MobileActionBar } from "@/components/layout/mobile-action-bar";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -136,6 +137,7 @@ export function Topbar() {
   const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
 
   return (
+    <>
     <header className="flex items-start justify-between gap-4 px-4 pb-3 pt-4 lg:gap-6 lg:px-8 lg:pb-4 lg:pt-6">
       <div className="min-w-0 flex-1">
         {title && (
@@ -232,11 +234,12 @@ export function Topbar() {
         {actionLabel && (
           <button
             type="button"
-            className="btn btn-primary"
+            className="btn btn-primary hidden lg:inline-flex"
             onClick={handleAction}
             aria-label={actionLabel}
+            data-testid="topbar-action-desktop"
           >
-            <Plus size={14} /> <span className="hidden lg:inline">{actionLabel}</span>
+            <Plus size={14} /> <span>{actionLabel}</span>
           </button>
         )}
 
@@ -270,5 +273,7 @@ export function Topbar() {
         )}
       </div>
     </header>
+    {actionLabel && <MobileActionBar label={actionLabel} onAction={handleAction} />}
+    </>
   );
 }

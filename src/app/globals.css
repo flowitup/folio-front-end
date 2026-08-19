@@ -45,6 +45,18 @@
   --transition-fast: 140ms ease;
   --transition-base: 160ms ease;
 
+  /* ─── Mobile density scale ───
+     The desktop UI is rendered inside a `zoom: 0.8` wrapper (see the (app)
+     layout), which buys density on a large screen but shrinks an already
+     small phone viewport and overrides the browser's own text-size setting.
+     Below `lg` the zoom is off and these tokens carry the spacing instead. */
+  --m-gutter: 16px;
+  --m-gap: 12px;
+  --m-card-pad: 14px;
+  --m-tap: 44px;
+  --m-navh: 60px;
+  --m-barh: 56px;
+
   /* ─── Shadcn theme variables (mapped to Folio) ─── */
   --background: var(--paper);
   --foreground: var(--ink);
@@ -128,6 +140,18 @@ html,
 body {
   background: var(--paper);
   color: var(--ink);
+}
+
+/* Desktop density: the app content is scaled to 80% so more fits on a large
+   screen. `zoom` (not `transform: scale`) because it reflows layout and so
+   shrinks scroll height too. Deliberately NOT applied below `lg`: a phone
+   viewport is already small, and `zoom` overrides the reader's own browser
+   text-size setting, which is an accessibility regression on a device where
+   that setting is most used. */
+@media (min-width: 1024px) {
+  .app-density {
+    zoom: 0.8;
+  }
 }
 
 body {
@@ -595,6 +619,101 @@ body {
     backdrop-filter: blur(2px);
     z-index: 40;
   }
+
+  /* ─── Mobile primitives (all inert at `lg` and up) ─── */
+
+  /* Sticky primary action, floating above the bottom nav so the page's main
+     verb sits under the thumb instead of in the top-right corner. */
+  .mobile-action-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--m-navh) + env(safe-area-inset-bottom, 0px));
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 var(--m-gutter);
+    height: var(--m-barh);
+    /* Fades the scrolling content out behind the bar rather than cutting it. */
+    background: linear-gradient(to top, var(--paper) 62%, rgba(245, 241, 234, 0));
+    pointer-events: none;
+  }
+  .mobile-action-bar > * {
+    pointer-events: auto;
+  }
+  .mobile-action-bar .btn {
+    min-height: var(--m-tap);
+    flex: 1;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  /* Horizontal snap rail — for groups that are a grid on desktop and would
+     crush below ~90px per cell on a phone. Bleeds into the page gutter. */
+  .mobile-rail {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin-inline: calc(var(--m-gutter) * -1);
+    padding-inline: var(--m-gutter);
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+  .mobile-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-rail > * {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+  }
+
+  /* Touch targets. The topbar's icon buttons are sized for a mouse (~30px);
+     on a phone they are the app's most-used chrome and need a finger-sized
+     hit area. Padding rather than height so the icon stays optically centred
+     and the visual weight of the row is unchanged. */
+  @media (max-width: 1023px) {
+    .btn-quiet {
+      min-height: var(--m-tap);
+      min-width: var(--m-tap);
+    }
+    .avatar {
+      min-height: 38px;
+      min-width: 38px;
+    }
+    /* Tab strips are the primary way to move between views on these pages. */
+    .seg > button {
+      min-height: 40px;
+    }
+  }
+
+  /* Segmented control — replaces desktop tab strips on mobile. */
+  .mobile-segmented {
+    display: flex;
+    gap: 3px;
+    padding: 3px;
+    background: var(--paper-2);
+    border: 1px solid var(--line-2);
+    border-radius: 12px;
+  }
+  .mobile-segmented > button {
+    flex: 1;
+    min-height: 36px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
+  .mobile-segmented > button[aria-pressed="true"] {
+    background: var(--card-paper);
+    color: var(--ink);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  }
 }
 
 /* ─── Decorative utilities ─── */
@@ -788,6 +907,33 @@ body {
   color: var(--muted); display: inline-flex; padding: 2px;
 }
 .search-clear:hover { color: var(--ink); }
+
+/* The notes toolbar is a single nowrap row with a 210px-min search box; at
+   phone widths chips + search exceed the viewport and push the page into a
+   horizontal scroll. Wrap the row and let search take a line of its own. */
+@media (max-width: 1023px) {
+  .notes-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .search-field {
+    margin-left: 0;
+    min-width: 0;
+    width: 100%;
+    height: 40px;
+  }
+  .chip {
+    height: 36px;
+  }
+  .notes-grid {
+    columns: 1;
+  }
+  /* Keyboard-shortcut hint ("⌘↵ to save") — nowrap, and there is no keyboard
+     to shortcut on a phone. */
+  .quickadd-hint {
+    display: none;
+  }
+}
 
 /* ─── Masonry wall + cards ─── */
 .notes-grid { columns: 284px; column-gap: 16px; margin-top: 6px; }

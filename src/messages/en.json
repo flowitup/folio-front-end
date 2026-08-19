@@ -552,6 +552,10 @@
       "medium": "Medium",
       "high": "High",
       "urgent": "Urgent"
+    },
+    "pager": {
+      "previousColumn": "Previous column",
+      "nextColumn": "Next column"
     }
   },
   "labor": {

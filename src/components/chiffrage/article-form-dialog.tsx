@@ -16,12 +16,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UnitSelect } from "@/components/chiffrage/unit-select";
-import type { ChiffrageArticle, ChiffrageUnit } from "@/lib/api/chiffrage";
+import { RoomSelect } from "@/components/chiffrage/room-select";
+import type { ChiffrageArticle, ChiffrageRoom, ChiffrageUnit } from "@/lib/api/chiffrage";
 
 interface Props {
   open: boolean;
   article: ChiffrageArticle | null;
   units: ChiffrageUnit[];
+  rooms: ChiffrageRoom[];
   submitting: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: {
@@ -29,18 +31,22 @@ interface Props {
     quantity: string;
     unit: string | null;
     note: string | null;
+    room_id: string | null;
   }) => void;
   onCreateUnit: (symbol: string) => Promise<ChiffrageUnit | null>;
+  onCreateRoom: (name: string) => Promise<ChiffrageRoom | null>;
 }
 
 export function ArticleFormDialog({
   open,
   article,
   units,
+  rooms,
   submitting,
   onOpenChange,
   onSubmit,
   onCreateUnit,
+  onCreateRoom,
 }: Props) {
   const t = useTranslations("chiffrage");
   // Mounted only while open (see the page shell), so initialisers are the reset.
@@ -48,6 +54,7 @@ export function ArticleFormDialog({
   const [qty, setQty] = useState(article ? String(article.quantity) : "1");
   const [unit, setUnit] = useState<string | null>(article?.unit ?? null);
   const [note, setNote] = useState(article?.note ?? "");
+  const [roomId, setRoomId] = useState<string | null>(article?.room_id ?? null);
 
   const qtyValid =
     qty.trim() !== "" && Number(qty) >= 0 && !Number.isNaN(Number(qty));
@@ -60,6 +67,7 @@ export function ArticleFormDialog({
       quantity: qty,
       unit,
       note: note.trim() || null,
+      room_id: roomId,
     });
   };
 
@@ -74,6 +82,15 @@ export function ArticleFormDialog({
             <DialogDescription>{t("articleDialogHint")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>{t("room")}</Label>
+              <RoomSelect
+                value={roomId}
+                rooms={rooms}
+                onChange={setRoomId}
+                onCreateRoom={onCreateRoom}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="article-name">{t("articleName")}</Label>
               <Input

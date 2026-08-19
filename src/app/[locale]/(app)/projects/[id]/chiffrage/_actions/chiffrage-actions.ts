@@ -18,8 +18,10 @@ import {
   createUnit,
   deleteArticle,
   deletePoste,
+  createRoom,
   deleteArticleImage,
   deleteQuote,
+  deleteRoom,
   deleteStore,
   deleteUnit,
   getChiffrage,
@@ -32,11 +34,13 @@ import {
   updateArticle,
   updatePoste,
   updateQuote,
+  updateRoom,
   updateStore,
   type ArticlePayload,
   type ChiffrageArticle,
   type ChiffragePoste,
   type ChiffrageQuote,
+  type ChiffrageRoom,
   type ChiffrageStore,
   type ChiffrageTree,
   type ChiffrageUnit,
@@ -121,6 +125,27 @@ export async function reorderPosteAction(
   payload: ReorderPayload
 ): Promise<Result<ChiffragePoste>> {
   return run(projectId, () => reorderPoste(projectId, posteId, payload));
+}
+
+// --- rooms -----------------------------------------------------------------
+
+export async function createRoomAction(
+  projectId: string,
+  name: string
+): Promise<Result<ChiffrageRoom>> {
+  return run(projectId, () => createRoom(projectId, name));
+}
+
+export async function updateRoomAction(
+  projectId: string,
+  roomId: string,
+  name: string
+): Promise<Result<ChiffrageRoom>> {
+  return run(projectId, () => updateRoom(projectId, roomId, name));
+}
+
+export async function deleteRoomAction(projectId: string, roomId: string): Promise<Result<void>> {
+  return run(projectId, () => deleteRoom(projectId, roomId));
 }
 
 // --- article image ---------------------------------------------------------

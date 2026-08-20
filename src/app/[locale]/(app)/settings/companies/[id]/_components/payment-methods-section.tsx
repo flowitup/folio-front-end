@@ -8,6 +8,10 @@
  * passes it as `initial`. After each mutation the section refetches via the
  * server action so usage_count stays accurate.
  *
+ * When `readOnly` is set (settings viewers without the admin permission the
+ * backend requires for mutations) the add form, edit and delete affordances
+ * are hidden and the list renders as a plain read-only inventory.
+ *
  * Split across three files:
  *   - payment-methods-section.tsx   (this file — Card, list, dialog state)
  *   - payment-method-row.tsx        (single row with edit-in-place + badges)
@@ -51,6 +55,10 @@ import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 interface PaymentMethodsSectionProps {
   initial: PaymentMethod[];
   companyId: string;
+  /** Hide every mutation control — viewer cannot manage this company's methods. */
+  readOnly?: boolean;
+  /** Replaces the default card description (e.g. a read-only explanation). */
+  descriptionOverride?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -60,6 +68,8 @@ interface PaymentMethodsSectionProps {
 export function PaymentMethodsSection({
   initial,
   companyId,
+  readOnly = false,
+  descriptionOverride,
 }: PaymentMethodsSectionProps) {
   const t = useTranslations("paymentMethods");
 
@@ -166,16 +176,18 @@ export function PaymentMethodsSection({
         <CardHeader>
           <CardTitle className="text-[16px]">{t("title")}</CardTitle>
           <CardDescription className="text-[13px]">
-            {t("description")}
+            {descriptionOverride ?? t("description")}
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          <PaymentMethodAddForm isMutating={isMutating} onAdd={handleAdd} />
+          {!readOnly && (
+            <PaymentMethodAddForm isMutating={isMutating} onAdd={handleAdd} />
+          )}
 
           {methods.length === 0 ? (
             <p className="text-[13px] py-4 text-center" style={{ color: "var(--muted)" }}>
-              {t("noMethods")}
+              {readOnly ? t("noMethodsReadOnly") : t("noMethods")}
             </p>
           ) : (
             <ul className="divide-y-0" aria-label={t("title")}>
@@ -186,6 +198,7 @@ export function PaymentMethodsSection({
                   isMutating={isMutating}
                   onRenameRequest={handleRename}
                   onDeleteRequest={setDeletingMethod}
+                  readOnly={readOnly}
                 />
               ))}
             </ul>

@@ -264,7 +264,8 @@
     },
     "companies": {
       "backToSettings": "Retour aux paramètres"
-    }
+    },
+    "paymentMethods": "Moyens de paiement"
   },
   "paymentMethods": {
     "title": "Moyens de paiement",
@@ -298,7 +299,12 @@
       "cash": "Espèces"
     },
     "paidByCompany": "Payé par l'entreprise",
-    "personalPayment": "Paiement personnel"
+    "personalPayment": "Paiement personnel",
+    "companyLabel": "Société",
+    "noCompanies": "Vous n’êtes rattaché à aucune société. Ajoutez-en une depuis « Mes sociétés » pour gérer ses moyens de paiement.",
+    "loadError": "Impossible de charger les moyens de paiement. Veuillez réessayer.",
+    "noMethodsReadOnly": "Aucun moyen de paiement n’a encore été configuré.",
+    "readOnlyNote": "Comment les factures peuvent être payées pour cette société. Seul un administrateur peut ajouter, renommer ou supprimer un moyen."
   },
   "errors": {
     "unauthorized": "Non autorisé",

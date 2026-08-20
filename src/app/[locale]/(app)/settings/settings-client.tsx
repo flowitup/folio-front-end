@@ -8,6 +8,7 @@ import { UsersSection } from "./users/users-section";
 import { InvoicePrefixSection } from "./invoice-prefix-section";
 import { MyCompaniesSection } from "@/components/companies/my-companies-section";
 import { AdminCompaniesSection } from "@/components/companies/admin-companies-section";
+import { PaymentMethodsSettingsSection } from "@/components/payment-methods/payment-methods-settings-section";
 import type { Role } from "@/lib/api/roles";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import pkg from "../../../../../package.json";
@@ -17,6 +18,7 @@ const BASE_SECTION_KEYS = [
   "team",
   "billing",
   "my-companies",
+  "payment-methods",
   "notifications",
   "users",
   "about",
@@ -57,6 +59,7 @@ export function SettingsClient({ roles, projects }: Props) {
     "team",
     "billing",
     "my-companies",
+    "payment-methods",
     "notifications",
     "users",
     "about",
@@ -73,7 +76,9 @@ export function SettingsClient({ roles, projects }: Props) {
                 ? t("users.title")
                 : key === "my-companies"
                   ? t("myCompanies.title")
-                  : t(key);
+                  : key === "payment-methods"
+                    ? t("paymentMethods")
+                    : t(key);
             return (
               <button
                 key={key}
@@ -147,6 +152,12 @@ export function SettingsClient({ roles, projects }: Props) {
           </div>
         )}
 
+        {active === "payment-methods" && (
+          <section className="folio-card p-7">
+            <PaymentMethodsSettingsSection />
+          </section>
+        )}
+
         {active === "about" && (
           <section className="folio-card p-7">
             <h3 className="font-display text-[22px] font-medium tracking-tight">
@@ -166,6 +177,7 @@ export function SettingsClient({ roles, projects }: Props) {
           active !== "project" &&
           active !== "users" &&
           active !== "my-companies" &&
+          active !== "payment-methods" &&
           active !== "about" && (
             <section className="folio-card p-12 text-center">
               <p className="font-display text-[20px] font-medium tracking-tight">{t(active)}</p>

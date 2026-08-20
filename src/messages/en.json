@@ -264,7 +264,8 @@
     },
     "companies": {
       "backToSettings": "Back to Settings"
-    }
+    },
+    "paymentMethods": "Payment methods"
   },
   "paymentMethods": {
     "title": "Payment methods",
@@ -298,7 +299,12 @@
       "cash": "Cash"
     },
     "paidByCompany": "Paid by the company",
-    "personalPayment": "Personal payment"
+    "personalPayment": "Personal payment",
+    "companyLabel": "Company",
+    "noCompanies": "You are not attached to any company yet. Add one from “My companies” to manage its payment methods.",
+    "loadError": "Could not load payment methods. Please try again.",
+    "noMethodsReadOnly": "No payment methods have been set up yet.",
+    "readOnlyNote": "How invoices can be paid for this company. Only an administrator can add, rename or remove a method."
   },
   "errors": {
     "unauthorized": "Unauthorized",

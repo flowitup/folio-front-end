@@ -21,7 +21,8 @@ function quote(overrides: Partial<ChiffrageQuote> = {}): ChiffrageQuote {
   return {
     id: "q1",
     article_id: "a1",
-    supplier_id: null,
+    store_id: null,
+  supplier_id: null,
     supplier_name: "Leroy Merlin",
     library_product_id: null,
     unit_price_ht: 10.75,
@@ -65,6 +66,7 @@ describe("QuoteComparisonTable", () => {
     render(
       <QuoteComparisonTable
         article={article([cheap, dear])}
+        stores={[]}
         canManage
         busyQuoteId={null}
         onSelect={noop}
@@ -85,6 +87,7 @@ describe("QuoteComparisonTable", () => {
     render(
       <QuoteComparisonTable
         article={article([cheap, dear])}
+        stores={[]}
         canManage
         busyQuoteId={null}
         onSelect={noop}
@@ -105,6 +108,7 @@ describe("QuoteComparisonTable", () => {
     render(
       <QuoteComparisonTable
         article={article([cheap, retained])}
+        stores={[]}
         canManage
         busyQuoteId={null}
         onSelect={noop}
@@ -126,6 +130,7 @@ describe("QuoteComparisonTable", () => {
     render(
       <QuoteComparisonTable
         article={article([quote()])}
+        stores={[]}
         canManage={false}
         busyQuoteId={null}
         onSelect={noop}
@@ -146,6 +151,7 @@ describe("QuoteComparisonTable", () => {
     render(
       <QuoteComparisonTable
         article={article([retained])}
+        stores={[]}
         canManage
         busyQuoteId={null}
         onSelect={onSelect}
@@ -164,6 +170,7 @@ describe("QuoteComparisonTable", () => {
     render(
       <QuoteComparisonTable
         article={article([], { effective_quote_id: null, effective_source: "none", total_ht: 0, total_ttc: 0 })}
+        stores={[]}
         canManage
         busyQuoteId={null}
         onSelect={noop}

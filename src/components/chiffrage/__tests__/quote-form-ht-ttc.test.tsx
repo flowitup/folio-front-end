@@ -24,20 +24,51 @@ vi.mock("../supplier-product-picker", () => ({
   SupplierProductPicker: () => null,
 }));
 
-async function fill(price: string, mode: "ht" | "ttc", tva?: string) {
-  const onSubmit = vi.fn();
+/** The project's shops. A price must point at one of these. */
+const SHOPS = [
+  {
+    id: "shop-lm",
+    project_id: "proj1",
+    name: "Leroy Merlin",
+    address: null,
+    website_url: null,
+    position: 1000,
+  },
+  {
+    id: "shop-pp",
+    project_id: "proj1",
+    name: "Point P",
+    address: null,
+    website_url: null,
+    position: 2000,
+  },
+];
+
+/** Open the shop popover and choose one by name. */
+async function pickShop(user: ReturnType<typeof userEvent.setup>, name: string) {
+  await user.click(screen.getByTestId("store-select-trigger"));
+  await user.click(screen.getByText(name));
+}
+
+function renderDialog(onSubmit = vi.fn(), onCreateStore = vi.fn()) {
   render(
     <QuoteFormDialog
       open
       quote={null}
       submitting={false}
       companyId={null}
+      stores={SHOPS}
       onOpenChange={() => {}}
       onSubmit={onSubmit}
+      onCreateStore={onCreateStore}
     />
   );
-  const user = userEvent.setup();
-  await user.type(screen.getByLabelText("supplier"), "Leroy Merlin");
+  return { onSubmit, onCreateStore, user: userEvent.setup() };
+}
+
+async function fill(price: string, mode: "ht" | "ttc", tva?: string) {
+  const { onSubmit, user } = renderDialog();
+  await pickShop(user, "Leroy Merlin");
   if (tva) {
     const tvaInput = screen.getByLabelText("tvaRate");
     await user.clear(tvaInput);
@@ -82,21 +113,81 @@ describe("QuoteFormDialog HT/TTC handling", () => {
     expect(screen.getByTestId("price-conversion")).toHaveTextContent("12,90");
   });
 
-  it("refuses to submit without a fournisseur", async () => {
-    const onSubmit = vi.fn();
-    render(
-      <QuoteFormDialog
-        open
-        quote={null}
-        submitting={false}
-        companyId={null}
-        onOpenChange={() => {}}
-        onSubmit={onSubmit}
-      />
-    );
-    await userEvent.type(screen.getByLabelText("unitPrice"), "10");
-    expect(screen.getByRole("button", { name: "create" })).toBeDisabled();
+  it("records which shop the price came from", async () => {
+    const { onSubmit, user } = renderDialog();
+    await pickShop(user, "Point P");
+    await user.type(screen.getByLabelText("unitPrice"), "10");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    // The link, not the name, is what makes two prices aggregate.
+    expect(onSubmit.mock.calls[0][0].store_id).toBe("shop-pp");
+    expect(onSubmit.mock.calls[0][0].supplier_name).toBe("Point P");
+  });
+
+  it("refuses to submit without a shop, and says why", async () => {
+    const { onSubmit, user } = renderDialog();
+    await user.type(screen.getByLabelText("unitPrice"), "10");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
     expect(onSubmit).not.toHaveBeenCalled();
+    // The button stays live on purpose: a dead one left the user guessing
+    // which field was blocking the price, which is what felt broken.
+    expect(screen.getByTestId("quote-form-error")).toHaveTextContent(
+      "storeRequired"
+    );
+  });
+
+  it("confirms the converted price before a shop is chosen", async () => {
+    const { user } = renderDialog();
+    await user.type(screen.getByLabelText("unitPrice"), "10");
+    expect(screen.getByTestId("price-conversion")).toHaveTextContent("10,00");
+  });
+
+  it("clears the error once the shop is chosen", async () => {
+    const { onSubmit, user } = renderDialog();
+    await user.type(screen.getByLabelText("unitPrice"), "10");
+    await user.click(screen.getByRole("button", { name: "create" }));
+    expect(screen.getByTestId("quote-form-error")).toBeInTheDocument();
+
+    await pickShop(user, "Point P");
+    expect(screen.queryByTestId("quote-form-error")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "create" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports a missing price rather than a missing shop", async () => {
+    const { onSubmit, user } = renderDialog();
+    await pickShop(user, "Point P");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByTestId("quote-form-error")).toHaveTextContent(
+      "priceRequired"
+    );
+  });
+
+  it("adds a shop inline and uses it straight away", async () => {
+    const created = {
+      id: "shop-new",
+      project_id: "proj1",
+      name: "Brico Dépôt",
+      address: null,
+      website_url: null,
+      position: 3000,
+    };
+    const onCreateStore = vi.fn().mockResolvedValue(created);
+    const { onSubmit, user } = renderDialog(vi.fn(), onCreateStore);
+
+    await user.click(screen.getByTestId("store-select-trigger"));
+    await user.type(screen.getByTestId("store-select-new"), "Brico Dépôt");
+    await user.click(screen.getByLabelText("addStore"));
+
+    expect(onCreateStore).toHaveBeenCalledWith("Brico Dépôt");
+    await user.type(screen.getByLabelText("unitPrice"), "10");
+    await user.click(screen.getByRole("button", { name: "create" }));
+    expect(onSubmit.mock.calls[0][0].store_id).toBe("shop-new");
   });
 });
 

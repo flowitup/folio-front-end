@@ -18,10 +18,17 @@ import {
   formatDelta,
   money,
 } from "@/components/chiffrage/format";
-import type { ChiffrageArticle, ChiffrageQuote } from "@/lib/api/chiffrage";
+import { shopNameFor } from "@/components/chiffrage/shop-label";
+import type {
+  ChiffrageArticle,
+  ChiffrageQuote,
+  ChiffrageStore,
+} from "@/lib/api/chiffrage";
 
 interface Props {
   article: ChiffrageArticle;
+  /** The project's shops — a price names its shop through the link, not text. */
+  stores: ChiffrageStore[];
   canManage: boolean;
   busyQuoteId: string | null;
   onSelect: (quote: ChiffrageQuote) => void;
@@ -31,6 +38,7 @@ interface Props {
 
 export function QuoteComparisonTable({
   article,
+  stores,
   canManage,
   busyQuoteId,
   onSelect,
@@ -86,7 +94,7 @@ export function QuoteComparisonTable({
                 <td className="px-4 py-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">
-                      {q.supplier_name ?? t("unnamedSupplier")}
+                      {shopNameFor(q, stores) ?? t("unnamedSupplier")}
                     </span>
                     {q.product_url ? (
                       <a

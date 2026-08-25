@@ -25,6 +25,8 @@ export type EffectiveSource = "selected" | "cheapest" | "none";
 export interface ChiffrageQuote {
   id: string;
   article_id: string;
+  /** The project shop this price was recorded at — what makes it comparable. */
+  store_id: string | null;
   supplier_id: string | null;
   supplier_name: string | null;
   library_product_id: string | null;
@@ -77,11 +79,28 @@ export interface ChiffrageArticle {
 /** A shop to visit for a poste's purchases. */
 export interface ChiffrageStore {
   id: string;
-  poste_id: string;
+  project_id: string;
   name: string;
   address: string | null;
   website_url: string | null;
   position: number;
+}
+
+/**
+ * What one shop would cost for a set of articles.
+ *
+ * `covers_all` is not decoration: a basket that skips the items a shop has no
+ * price for makes the least complete shop look cheapest. Never present a
+ * basket total without its coverage, and never mark a partial one as cheapest.
+ */
+export interface ChiffrageStoreBasket {
+  store_id: string;
+  basket_ht: number;
+  basket_ttc: number;
+  priced_article_count: number;
+  total_article_count: number;
+  missing_article_ids: string[];
+  covers_all: boolean;
 }
 
 export interface ChiffragePoste {
@@ -91,7 +110,8 @@ export interface ChiffragePoste {
   note: string | null;
   position: number;
   articles: ChiffrageArticle[];
-  stores: ChiffrageStore[];
+  /** What each shop would cost for this section alone, best-covering first. */
+  store_baskets: ChiffrageStoreBasket[];
   room_subtotals: ChiffrageRoomSubtotal[];
   subtotal_ht: number;
   subtotal_ttc: number;
@@ -101,6 +121,10 @@ export interface ChiffrageTree {
   project_id: string;
   postes: ChiffragePoste[];
   rooms: ChiffrageRoom[];
+  /** The project's shops, declared once and shared by every section. */
+  stores: ChiffrageStore[];
+  /** What each shop would cost for the whole project, best-covering first. */
+  store_baskets: ChiffrageStoreBasket[];
   total_ht: number;
   total_ttc: number;
   unpriced_article_count: number;
@@ -135,6 +159,7 @@ export interface ArticlePayload {
 export interface QuotePayload {
   unit_price_ht?: number | string;
   tva_rate?: number | string;
+  store_id?: string | null;
   supplier_id?: string | null;
   supplier_name?: string | null;
   library_product_id?: string | null;
@@ -328,16 +353,15 @@ export async function deleteRoom(projectId: string, roomId: string): Promise<voi
 }
 
 // ---------------------------------------------------------------------------
-// Stores — where to go and buy
+// Stores — the shops the project buys from, declared once
 // ---------------------------------------------------------------------------
 
 export async function createStore(
   projectId: string,
-  posteId: string,
   payload: StorePayload
 ): Promise<ChiffrageStore> {
   return request<ChiffrageStore>(
-    `${base(projectId)}/postes/${posteId}/stores`,
+    `${base(projectId)}/stores`,
     { method: "POST", body: payload },
     "Failed to add store"
   );

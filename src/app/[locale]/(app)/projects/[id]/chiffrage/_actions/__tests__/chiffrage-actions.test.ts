@@ -66,10 +66,11 @@ describe("chiffrage actions", () => {
     expect(res).toEqual({ ok: false, error: "Unknown unit 'parsec' for this project." });
   });
 
-  it("explains a duplicate unit rather than echoing a status code", async () => {
+  it("explains a name clash rather than echoing a status code", async () => {
     api.createUnit.mockRejectedValue(Object.assign(new Error("boom"), { status: 409, body: null }));
     const res = await createUnitAction(PROJECT, "u");
-    expect(res).toEqual({ ok: false, error: "That unit already exists." });
+    // 409 covers units, rooms and shops, so the fallback names none of them.
+    expect(res).toEqual({ ok: false, error: "That name is already taken." });
   });
 
   it("explains a permission failure in the user's terms", async () => {

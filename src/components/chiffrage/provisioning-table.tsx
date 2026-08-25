@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { money, quantity } from "@/components/chiffrage/format";
+import { shopNameFor } from "@/components/chiffrage/shop-label";
 import type { ChiffrageTree } from "@/lib/api/chiffrage";
 
 export function ProvisioningTable({ tree }: { tree: ChiffrageTree }) {
@@ -82,7 +83,7 @@ export function ProvisioningTable({ tree }: { tree: ChiffrageTree }) {
                 </td>
                 <td className="px-4 py-2">
                   <span className="mr-2">
-                    {quote?.supplier_name ?? t("unnamedSupplier")}
+                    {shopNameFor(quote, tree.stores) ?? t("unnamedSupplier")}
                   </span>
                   {article.effective_source === "cheapest" ? (
                     <Badge variant="secondary">{t("autoCheapest")}</Badge>

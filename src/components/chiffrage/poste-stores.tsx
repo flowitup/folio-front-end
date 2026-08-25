@@ -1,14 +1,19 @@
 "use client";
 
 /**
- * The shops to visit for a poste — a shopping run, not a single address.
+ * The shops to visit for this section — a shopping run, not a single address.
+ *
+ * Derived, not hand-maintained: these are exactly the shops that carry a price
+ * on one of this section's items, so the list cannot drift from the costing.
+ * Shops themselves are declared once for the project; a shop with nothing
+ * priced here simply does not appear until it has a price on this section.
  *
  * Each entry links out to a map search so the address is one tap away from
  * navigation on a phone, which is where this list actually gets used.
  */
 
 import { useTranslations } from "next-intl";
-import { Globe, MapPin, Pencil, Plus, Store, Trash2 } from "lucide-react";
+import { Globe, MapPin, Pencil, Store } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { ChiffrageStore } from "@/lib/api/chiffrage";
@@ -22,18 +27,10 @@ export function mapsUrl(store: ChiffrageStore): string {
 interface Props {
   stores: ChiffrageStore[];
   canManage: boolean;
-  onAdd: () => void;
   onEdit: (store: ChiffrageStore) => void;
-  onDelete: (store: ChiffrageStore) => void;
 }
 
-export function PosteStores({
-  stores,
-  canManage,
-  onAdd,
-  onEdit,
-  onDelete,
-}: Props) {
+export function PosteStores({ stores, canManage, onEdit }: Props) {
   const t = useTranslations("chiffrage");
 
   if (stores.length === 0 && !canManage) return null;
@@ -45,22 +42,12 @@ export function PosteStores({
         <span className="text-xs font-medium text-muted-foreground">
           {t("storesLabel")}
         </span>
-        {canManage ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="ml-auto h-6 px-2"
-            onClick={onAdd}
-          >
-            <Plus className="mr-1 h-3 w-3" />
-            <span className="text-xs">{t("addStore")}</span>
-          </Button>
-        ) : null}
       </div>
 
       {stores.length === 0 ? (
-        <p className="mt-1 text-xs text-muted-foreground">{t("noStoresYet")}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t("noShopPricedHere")}
+        </p>
       ) : (
         <ul className="mt-1.5 space-y-1">
           {stores.map((store) => (
@@ -105,28 +92,16 @@ export function PosteStores({
                   </a>
                 ) : null}
                 {canManage ? (
-                  <>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0"
-                      onClick={() => onEdit(store)}
-                      aria-label={t("editStore")}
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0"
-                      onClick={() => onDelete(store)}
-                      aria-label={t("deleteStore")}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => onEdit(store)}
+                    aria-label={t("editStore")}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
                 ) : null}
               </div>
             </li>

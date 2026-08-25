@@ -13,13 +13,16 @@ import vi from "../vi.json";
 
 const BANK_RELEASE_KEYS = [
   "title",
-  "remainingToRelease",
   "overDrawn",
-  "releasedOf",
-  "released",
-  "pctReleased",
-  "releasedInMonth",
-  "cumulativeReleased",
+  "drawsMeta",
+  "headlineMeta",
+  "segmentHint",
+  "creditLabel",
+  "leftLabel",
+  "drawsByMonth",
+  "drawsInMonth",
+  "largestDraw",
+  "lastDraw",
   "noCredit",
   "noCreditHint",
   "openSettings",
@@ -53,7 +56,7 @@ describe("projects.bankRelease i18n parity — key set symmetry", () => {
 });
 
 describe("projects.bankRelease i18n parity — values are translated", () => {
-  for (const key of ["title", "remainingToRelease", "noCredit"] as const) {
+  for (const key of ["title", "drawsByMonth", "noCredit"] as const) {
     it(`fr.${key} differs from en`, () => {
       expect(locales.fr[key]).not.toBe(locales.en[key]);
     });

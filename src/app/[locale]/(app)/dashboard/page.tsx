@@ -190,7 +190,6 @@ export default function DashboardPage() {
         credit={selectedProject?.budget}
         releasedTotal={activeMeta.fundsReleasedTotal}
         invoices={activeInvoices}
-        source={selectedProject?.budget_source}
         settingsHref={projectSettingsHref}
         loading={showLoading}
       />

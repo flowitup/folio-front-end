@@ -45,52 +45,99 @@ export function computeBankReleaseMetrics(
   };
 }
 
-export interface ReleasePoint {
+/** One `released_funds` invoice, reduced to what the draw ledger renders. */
+export interface BankDraw {
+  id: string;
+  /** Invoice number, e.g. "FR-2026-0009" — the draw's identity in tooltips. */
+  number: string;
+  /** issue_date "YYYY-MM-DD" — the day the bank moved the money. */
+  date: string;
+  amount: number;
+}
+
+export interface DrawMonthPoint {
   /** "YYYY-MM" */
   key: string;
-  /** Amount released during that month. */
+  /** Amount drawn during that month (0 for gap months). */
   amount: number;
   /** Number of release invoices in that month. */
   count: number;
-  /** Running total released up to and including that month. */
-  cumulative: number;
+}
+
+export interface DrawSeries {
+  /** All draws, oldest first (issue_date, then invoice number). */
+  draws: BankDraw[];
+  /** Continuous month buckets from first to last draw, gaps at zero. */
+  months: DrawMonthPoint[];
+  totalDrawn: number;
+  /** Biggest single draw (earliest wins a tie). Null when no draws. */
+  largest: BankDraw | null;
+  /** Most recent draw. Null when no draws. */
+  last: BankDraw | null;
 }
 
 /**
- * Monthly draw-down series built from the project's `released_funds` rows,
- * from the first release month to the last, gaps filled with zero months so
- * the timeline reads continuously. Releases attribute to `issue_date` — the
- * day the bank moved the money — never to `service_month` (a release is not
- * work performed over a period).
+ * Per-draw ledger built from the project's `released_funds` rows: the ordered
+ * draw list (track segments), continuous monthly buckets (bars — gaps filled
+ * with zero months so the timeline reads continuously), and the largest/last
+ * draw stats. Draws attribute to `issue_date` — the day the bank moved the
+ * money — never to `service_month` (a release is not work performed over a
+ * period).
  */
-export function buildReleaseSeries(invoices: Invoice[]): ReleasePoint[] {
+export function buildDrawSeries(invoices: Invoice[]): DrawSeries {
+  const draws: BankDraw[] = invoices
+    .filter((inv) => inv.type === "released_funds")
+    .map((inv) => ({
+      id: inv.id,
+      number: inv.invoice_number,
+      date: inv.issue_date,
+      amount: inv.total_amount,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.number.localeCompare(b.number));
+
   const byMonth = new Map<string, { amount: number; count: number }>();
-  for (const inv of invoices) {
-    if (inv.type !== "released_funds") continue;
-    const key = inv.issue_date.slice(0, 7);
+  let totalDrawn = 0;
+  let largest: BankDraw | null = null;
+  for (const draw of draws) {
+    totalDrawn += draw.amount;
+    if (!largest || draw.amount > largest.amount) largest = draw;
+    const key = draw.date.slice(0, 7);
     const bucket = byMonth.get(key) ?? { amount: 0, count: 0 };
-    bucket.amount += inv.total_amount;
+    bucket.amount += draw.amount;
     bucket.count += 1;
     byMonth.set(key, bucket);
   }
-  const keys = [...byMonth.keys()].sort();
-  if (keys.length === 0) return [];
 
-  const series: ReleasePoint[] = [];
-  let [year, month] = keys[0].split("-").map(Number);
-  const [endYear, endMonth] = keys[keys.length - 1].split("-").map(Number);
-  let cumulative = 0;
-  while (year < endYear || (year === endYear && month <= endMonth)) {
-    const key = `${year}-${String(month).padStart(2, "0")}`;
-    const bucket = byMonth.get(key) ?? { amount: 0, count: 0 };
-    cumulative += bucket.amount;
-    series.push({ key, amount: bucket.amount, count: bucket.count, cumulative });
-    if (month === 12) {
-      year += 1;
-      month = 1;
-    } else {
-      month += 1;
+  const months: DrawMonthPoint[] = [];
+  let [year, month] = (draws[0]?.date ?? "").slice(0, 7).split("-").map(Number);
+  const [endYear, endMonth] = (draws[draws.length - 1]?.date ?? "")
+    .slice(0, 7)
+    .split("-")
+    .map(Number);
+  // A non-"YYYY-MM…" issue_date parses to NaN and would spin this walk
+  // forever (NaN never reaches 12, year never advances) — freezing the tab,
+  // not throwing. Integer bounds guarantee termination.
+  if (
+    [year, month, endYear, endMonth].every(Number.isInteger)
+  ) {
+    while (year < endYear || (year === endYear && month <= endMonth)) {
+      const key = `${year}-${String(month).padStart(2, "0")}`;
+      const bucket = byMonth.get(key) ?? { amount: 0, count: 0 };
+      months.push({ key, amount: bucket.amount, count: bucket.count });
+      if (month === 12) {
+        year += 1;
+        month = 1;
+      } else {
+        month += 1;
+      }
     }
   }
-  return series;
+
+  return {
+    draws,
+    months,
+    totalDrawn,
+    largest,
+    last: draws.length > 0 ? draws[draws.length - 1] : null,
+  };
 }

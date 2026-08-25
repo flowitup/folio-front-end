@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { updateInvoicePrefix } from "./actions";
+import { BankCreditCard } from "./bank-credit-card";
 import type { Project } from "@/types/project";
 
 const PREFIX_RE = /^[A-Z0-9]{0,8}$/;
@@ -54,6 +55,10 @@ export function ProjectSettingsClient({ project }: Props) {
           {t("settingsTitle")}
         </h2>
       </div>
+
+      {/* Bank credit card — initial credit granted by the bank; funds
+          releases are deducted from it on the Overview/Expense charts. */}
+      <BankCreditCard project={project} />
 
       {/* Invoice prefix card */}
       <div className="folio-card p-7">

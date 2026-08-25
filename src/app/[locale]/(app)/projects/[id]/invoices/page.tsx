@@ -15,6 +15,7 @@ import {
   ExpensePursesSummary,
   type ExpenseSummaryMeta,
 } from "@/components/invoices/expense-purses-summary";
+import { BankReleaseChart } from "@/components/project/bank-release-chart";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
@@ -92,6 +93,7 @@ export default function InvoicesPage() {
   const projectId = params.id as string;
   const { user } = useAuth();
   const { projects } = useProject();
+  const project = projects.find((p) => p.id === projectId) ?? null;
 
   // The selected invoice id lives in `?invoice=<id>` so the modal is deep-linkable
   const selectedInvoiceId = searchParams.get("invoice");
@@ -275,6 +277,18 @@ export default function InvoicesPage() {
       {/* "Two purses" summary (design Expense Dataviz 1b) — project-level,
           fed by an unfiltered fetch so tab/tag filters below never change it. */}
       {summary && <ExpensePursesSummary invoices={summary.invoices} meta={summary.meta} />}
+
+      {/* Bank draw-down — what the bank still holds of the project's credit.
+          Same figures the Overview shows, so the two pages never disagree. */}
+      {summary && (
+        <BankReleaseChart
+          credit={project?.budget}
+          releasedTotal={summary.meta.fundsReleasedTotal}
+          invoices={summary.invoices}
+          source={project?.budget_source}
+          settingsHref={`/${locale}/projects/${projectId}/settings`}
+        />
+      )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="seg">

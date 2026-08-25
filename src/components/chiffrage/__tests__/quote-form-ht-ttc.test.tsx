@@ -82,7 +82,7 @@ describe("QuoteFormDialog HT/TTC handling", () => {
     expect(screen.getByTestId("price-conversion")).toHaveTextContent("12,90");
   });
 
-  it("refuses to submit without a fournisseur", async () => {
+  it("refuses to submit without a fournisseur, and says why", async () => {
     const onSubmit = vi.fn();
     render(
       <QuoteFormDialog
@@ -94,9 +94,78 @@ describe("QuoteFormDialog HT/TTC handling", () => {
         onSubmit={onSubmit}
       />
     );
-    await userEvent.type(screen.getByLabelText("unitPrice"), "10");
-    expect(screen.getByRole("button", { name: "create" })).toBeDisabled();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("unitPrice"), "10");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
     expect(onSubmit).not.toHaveBeenCalled();
+    // The button stays live on purpose: a dead one left the user guessing
+    // which field was blocking the price, which is what felt broken.
+    expect(screen.getByTestId("quote-form-error")).toHaveTextContent(
+      "supplierRequired"
+    );
+  });
+
+  it("confirms the converted price before a fournisseur is named", async () => {
+    render(
+      <QuoteFormDialog
+        open
+        quote={null}
+        submitting={false}
+        companyId={null}
+        onOpenChange={() => {}}
+        onSubmit={vi.fn()}
+      />
+    );
+    await userEvent.type(screen.getByLabelText("unitPrice"), "10");
+    expect(screen.getByTestId("price-conversion")).toHaveTextContent("10,00");
+  });
+
+  it("clears the error once the missing field is filled in", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <QuoteFormDialog
+        open
+        quote={null}
+        submitting={false}
+        companyId={null}
+        onOpenChange={() => {}}
+        onSubmit={onSubmit}
+      />
+    );
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("unitPrice"), "10");
+    await user.click(screen.getByRole("button", { name: "create" }));
+    expect(screen.getByTestId("quote-form-error")).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("supplier"), "Point P");
+    expect(screen.queryByTestId("quote-form-error")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "create" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit.mock.calls[0][0].supplier_name).toBe("Point P");
+  });
+
+  it("reports a missing price rather than a missing fournisseur", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <QuoteFormDialog
+        open
+        quote={null}
+        submitting={false}
+        companyId={null}
+        onOpenChange={() => {}}
+        onSubmit={onSubmit}
+      />
+    );
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("supplier"), "Point P");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByTestId("quote-form-error")).toHaveTextContent(
+      "priceRequired"
+    );
   });
 });
 

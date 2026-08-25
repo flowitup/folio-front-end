@@ -29,7 +29,7 @@ import type { ChiffrageQuote } from "@/lib/api/chiffrage";
 const TVA_PRESETS = ["20", "10", "5.5"];
 
 export interface QuoteFormValues {
-  supplier_name: string;
+  supplier_name: string | null;
   supplier_id: string | null;
   library_product_id: string | null;
   unit_price_ht: string;
@@ -68,24 +68,29 @@ export function QuoteFormDialog({
   const [supplierId, setSupplierId] = useState<string | null>(quote?.supplier_id ?? null);
   const [productId, setProductId] = useState<string | null>(quote?.library_product_id ?? null);
 
+  // Surfaced after a submit attempt, never while the user is still typing.
+  const [error, setError] = useState<string | null>(null);
+
   const priceNum = Number(price);
   const tvaNum = Number(tva);
-  const valid =
-    supplier.trim() !== "" &&
-    price.trim() !== "" &&
-    !Number.isNaN(priceNum) &&
-    priceNum >= 0 &&
-    !Number.isNaN(tvaNum) &&
-    tvaNum >= 0 &&
-    tvaNum <= 100;
+  // Price validity is deliberately independent of the fournisseur: the HT/TTC
+  // preview has to confirm the figure as soon as it is typed, whatever else is
+  // still blank, or the price looks like it was not registered at all.
+  const priceValid =
+    price.trim() !== "" && !Number.isNaN(priceNum) && priceNum >= 0;
+  const tvaValid = !Number.isNaN(tvaNum) && tvaNum >= 0 && tvaNum <= 100;
+  // A supplier picked from the bibliothèque identifies the fournisseur even
+  // when the name box is empty — the same rule the backend applies.
+  const supplierValid = supplier.trim() !== "" || supplierId !== null;
+  const converts = priceValid && tvaValid;
 
   // What actually gets stored, whichever way the user typed it.
-  const htValue = valid
+  const htValue = converts
     ? mode === "ht"
       ? priceNum
       : ttcToHt(priceNum, tvaNum)
     : 0;
-  const ttcValue = valid
+  const ttcValue = converts
     ? mode === "ht"
       ? htToTtc(priceNum, tvaNum)
       : priceNum
@@ -93,9 +98,25 @@ export function QuoteFormDialog({
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!valid) return;
+    // Validated on submit rather than by disabling the button: a dead button
+    // tells the user nothing about which field is holding the price back.
+    if (!priceValid) {
+      setError(t("priceRequired"));
+      return;
+    }
+    if (!tvaValid) {
+      setError(t("tvaInvalid"));
+      return;
+    }
+    if (!supplierValid) {
+      setError(t("supplierRequired"));
+      return;
+    }
+    setError(null);
     onSubmit({
-      supplier_name: supplier.trim(),
+      // Null rather than "" when the fournisseur is identified by id alone,
+      // so the comparison table can fall back to its unnamed-supplier label.
+      supplier_name: supplier.trim() || null,
       supplier_id: supplierId,
       library_product_id: productId,
       unit_price_ht: htValue.toFixed(4),
@@ -127,17 +148,31 @@ export function QuoteFormDialog({
                   setMode("ht");
                   setPrice(picked.suggestedPrice);
                 }
+                setError(null);
               }}
             />
 
             <div className="space-y-2">
-              <Label htmlFor="quote-supplier">{t("supplier")}</Label>
+              {/* The asterisk sits beside the Label, not inside it, so the
+                  field's accessible name stays the plain label; aria-required
+                  on the input is what carries the rule to assistive tech. */}
+              <div className="flex items-center gap-1">
+                <Label htmlFor="quote-supplier">{t("supplier")}</Label>
+                <span aria-hidden="true" className="text-destructive">
+                  *
+                </span>
+              </div>
               <Input
                 id="quote-supplier"
                 value={supplier}
                 maxLength={120}
+                aria-required="true"
+                aria-invalid={error !== null && !supplierValid}
                 placeholder={t("supplierPlaceholder")}
-                onChange={(e) => setSupplier(e.target.value)}
+                onChange={(e) => {
+                  setSupplier(e.target.value);
+                  setError(null);
+                }}
                 autoFocus
               />
             </div>
@@ -177,9 +212,13 @@ export function QuoteFormDialog({
                     ? t("pricePlaceholderHt")
                     : t("pricePlaceholderTtc")
                 }
-                onChange={(e) => setPrice(e.target.value)}
+                aria-invalid={error !== null && !priceValid}
+                onChange={(e) => {
+                  setPrice(e.target.value);
+                  setError(null);
+                }}
               />
-              {valid ? (
+              {converts ? (
                 <p
                   className="text-xs text-muted-foreground"
                   data-testid="price-conversion"
@@ -203,7 +242,11 @@ export function QuoteFormDialog({
                   step="0.1"
                   inputMode="decimal"
                   value={tva}
-                  onChange={(e) => setTva(e.target.value)}
+                  aria-invalid={error !== null && !tvaValid}
+                  onChange={(e) => {
+                    setTva(e.target.value);
+                    setError(null);
+                  }}
                   className="w-24"
                 />
                 <div className="flex gap-1">
@@ -243,6 +286,16 @@ export function QuoteFormDialog({
                 onChange={(e) => setNote(e.target.value)}
               />
             </div>
+
+            {error ? (
+              <p
+                className="text-sm text-destructive"
+                role="alert"
+                data-testid="quote-form-error"
+              >
+                {error}
+              </p>
+            ) : null}
           </div>
           <DialogFooter>
             <Button
@@ -252,7 +305,7 @@ export function QuoteFormDialog({
             >
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={submitting || !valid}>
+            <Button type="submit" disabled={submitting}>
               {quote ? t("save") : t("create")}
             </Button>
           </DialogFooter>

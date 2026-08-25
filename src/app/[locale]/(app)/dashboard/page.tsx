@@ -27,6 +27,7 @@ import { OverviewMoneyPanel } from "@/components/dashboard/overview-money-panel"
 import { OverviewTypeMinis } from "@/components/dashboard/overview-type-minis";
 import { OverviewAgenda } from "@/components/dashboard/overview-agenda";
 import { OverviewWeatherCard } from "@/components/dashboard/overview-weather-card";
+import { BankReleaseChart } from "@/components/project/bank-release-chart";
 
 const MONTHS_BACK = 6;
 
@@ -164,6 +165,7 @@ export default function DashboardPage() {
 
   const viewExpenseHref = projectId ? `/${locale}/projects/${projectId}/invoices` : null;
   const planningHref = projectId ? `/${locale}/projects/${projectId}/planning` : null;
+  const projectSettingsHref = projectId ? `/${locale}/projects/${projectId}/settings` : null;
 
   return (
     <div className="fade-up space-y-5 px-4 pb-12 lg:px-8">
@@ -181,6 +183,15 @@ export default function DashboardPage() {
         pendingRefunds={pendingRefunds}
         bankOutstanding={bankOutstanding}
         purses={purses}
+        loading={showLoading}
+      />
+
+      <BankReleaseChart
+        credit={selectedProject?.budget}
+        releasedTotal={activeMeta.fundsReleasedTotal}
+        invoices={activeInvoices}
+        source={selectedProject?.budget_source}
+        settingsHref={projectSettingsHref}
         loading={showLoading}
       />
 

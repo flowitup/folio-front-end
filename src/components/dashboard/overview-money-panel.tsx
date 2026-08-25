@@ -153,7 +153,7 @@ export function OverviewMoneyPanel({
         <div className="flex flex-wrap items-start gap-9">
           <div>
             <div className="text-[10.5px] font-medium uppercase tracking-[0.1em]" style={{ opacity: 0.6 }}>
-              {tProjects("remaining")}
+              {tProjects("remainingToSpend")}
             </div>
             <div
               className="num mt-2 text-[34px] font-medium leading-none"

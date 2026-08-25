@@ -1,10 +1,11 @@
 /**
  * poste-stores.test.tsx
  *
- * A poste holds a run of shops, not a single address. These pin that every
- * shop is listed, that the map link is built from the address (falling back to
- * the name when no address was recorded), and that a read-only member sees the
- * addresses but none of the editing controls.
+ * A section's shop run is derived from the prices recorded on its items, so
+ * this component only displays — adding and removing shops is a project-level
+ * concern now. These pin that every shop passed in is listed, that the map link
+ * is built from the address (falling back to the name when none was recorded),
+ * and that a read-only member sees the addresses but no editing control.
  */
 
 import { describe, it, expect, vi } from "vitest";
@@ -20,7 +21,7 @@ vi.mock("next-intl", () => ({
 
 const store = (over: Partial<ChiffrageStore> = {}): ChiffrageStore => ({
   id: "s1",
-  poste_id: "p1",
+  project_id: "proj1",
   name: "Leroy Merlin Ivry",
   address: "45 av de Verdun, 94200 Ivry-sur-Seine",
   website_url: null,
@@ -37,7 +38,7 @@ const STORES = [
 describe("PosteStores", () => {
   it("lists every shop of the poste, not just the first", () => {
     render(
-      <PosteStores stores={STORES} canManage onAdd={() => {}} onEdit={() => {}} onDelete={() => {}} />,
+      <PosteStores stores={STORES} canManage onEdit={() => {}} />,
     );
     expect(screen.getAllByTestId("poste-store")).toHaveLength(3);
     expect(screen.getByText("Leroy Merlin Ivry")).toBeInTheDocument();
@@ -47,7 +48,7 @@ describe("PosteStores", () => {
 
   it("shows the address under each shop that has one", () => {
     render(
-      <PosteStores stores={STORES} canManage onAdd={() => {}} onEdit={() => {}} onDelete={() => {}} />,
+      <PosteStores stores={STORES} canManage onEdit={() => {}} />,
     );
     expect(screen.getByText("45 av de Verdun, 94200 Ivry-sur-Seine")).toBeInTheDocument();
     expect(screen.getByText("12 rue Charles Fourier")).toBeInTheDocument();
@@ -65,7 +66,7 @@ describe("PosteStores", () => {
 
   it("opens the map in a new tab without leaking the referrer", () => {
     render(
-      <PosteStores stores={STORES} canManage onAdd={() => {}} onEdit={() => {}} onDelete={() => {}} />,
+      <PosteStores stores={STORES} canManage onEdit={() => {}} />,
     );
     const link = screen.getByRole("link", { name: /Leroy Merlin Ivry/ });
     expect(link).toHaveAttribute("target", "_blank");
@@ -77,9 +78,7 @@ describe("PosteStores", () => {
       <PosteStores
         stores={[store({ website_url: "https://www.leroymerlin.fr/magasin/ivry" })]}
         canManage
-        onAdd={() => {}}
         onEdit={() => {}}
-        onDelete={() => {}}
       />,
     );
     const link = screen.getByLabelText("openWebsite");
@@ -90,7 +89,7 @@ describe("PosteStores", () => {
 
   it("shows no website link when none was recorded", () => {
     render(
-      <PosteStores stores={[store()]} canManage onAdd={() => {}} onEdit={() => {}} onDelete={() => {}} />,
+      <PosteStores stores={[store()]} canManage onEdit={() => {}} />,
     );
     expect(screen.queryByLabelText("openWebsite")).not.toBeInTheDocument();
   });
@@ -101,9 +100,7 @@ describe("PosteStores", () => {
       <PosteStores
         stores={[store({ website_url: "https://www.pointp.fr" })]}
         canManage={false}
-        onAdd={() => {}}
         onEdit={() => {}}
-        onDelete={() => {}}
       />,
     );
     expect(screen.getByLabelText("openWebsite")).toBeInTheDocument();
@@ -116,9 +113,7 @@ describe("PosteStores", () => {
       <PosteStores
         stores={[store({ website_url: "https://www.pointp.fr" })]}
         canManage
-        onAdd={() => {}}
         onEdit={() => {}}
-        onDelete={() => {}}
       />,
     );
     const web = screen.getByLabelText("openWebsite");
@@ -130,41 +125,30 @@ describe("PosteStores", () => {
       <PosteStores
         stores={STORES}
         canManage={false}
-        onAdd={() => {}}
         onEdit={() => {}}
-        onDelete={() => {}}
       />,
     );
     // The addresses stay readable — only the controls go.
     expect(screen.getByText("Leroy Merlin Ivry")).toBeInTheDocument();
-    expect(screen.queryByText("addStore")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("editStore")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("deleteStore")).not.toBeInTheDocument();
   });
 
   it("renders nothing for a read-only member when the poste has no shop", () => {
     const { container } = render(
-      <PosteStores stores={[]} canManage={false} onAdd={() => {}} onEdit={() => {}} onDelete={() => {}} />,
+      <PosteStores stores={[]} canManage={false} onEdit={() => {}} />,
     );
     expect(container).toBeEmptyDOMElement();
   });
 
   it("invites a manager to add the first shop", () => {
-    render(<PosteStores stores={[]} canManage onAdd={() => {}} onEdit={() => {}} onDelete={() => {}} />);
-    expect(screen.getByText("noStoresYet")).toBeInTheDocument();
-    expect(screen.getByText("addStore")).toBeInTheDocument();
+    render(<PosteStores stores={[]} canManage onEdit={() => {}} />);
+    expect(screen.getByText("noShopPricedHere")).toBeInTheDocument();
   });
 
-  it("routes edit and delete to the right shop", async () => {
+  it("routes edit to the right shop", async () => {
     const onEdit = vi.fn();
-    const onDelete = vi.fn();
-    render(
-      <PosteStores stores={STORES} canManage onAdd={() => {}} onEdit={onEdit} onDelete={onDelete} />,
-    );
+    render(<PosteStores stores={STORES} canManage onEdit={onEdit} />);
     await userEvent.click(screen.getAllByLabelText("editStore")[1]);
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ name: "Point P Vitry" }));
-
-    await userEvent.click(screen.getAllByLabelText("deleteStore")[2]);
-    expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ name: "Rexel Paris 13" }));
   });
 });

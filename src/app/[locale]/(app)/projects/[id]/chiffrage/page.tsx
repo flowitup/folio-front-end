@@ -23,7 +23,9 @@ interface PageProps {
 const EMPTY_TREE = (projectId: string): ChiffrageTree => ({
   project_id: projectId,
   postes: [],
-    rooms: [],
+  rooms: [],
+  stores: [],
+  store_baskets: [],
   total_ht: 0,
   total_ttc: 0,
   unpriced_article_count: 0,

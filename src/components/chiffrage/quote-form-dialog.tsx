@@ -23,12 +23,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { htToTtc, money, ttcToHt } from "@/components/chiffrage/format";
+import { StoreSelect } from "@/components/chiffrage/store-select";
 import { SupplierProductPicker } from "@/components/chiffrage/supplier-product-picker";
-import type { ChiffrageQuote } from "@/lib/api/chiffrage";
+import type { ChiffrageQuote, ChiffrageStore } from "@/lib/api/chiffrage";
 
 const TVA_PRESETS = ["20", "10", "5.5"];
 
 export interface QuoteFormValues {
+  store_id: string | null;
   supplier_name: string | null;
   supplier_id: string | null;
   library_product_id: string | null;
@@ -44,8 +46,11 @@ interface Props {
   submitting: boolean;
   /** Enables the bibliothèque picker; null when the project has no company. */
   companyId: string | null;
+  /** The project's shops — a price must name one of these. */
+  stores: ChiffrageStore[];
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: QuoteFormValues) => void;
+  onCreateStore: (name: string) => Promise<ChiffrageStore | null>;
 }
 
 export function QuoteFormDialog({
@@ -53,13 +58,15 @@ export function QuoteFormDialog({
   quote,
   submitting,
   companyId,
+  stores,
   onOpenChange,
   onSubmit,
+  onCreateStore,
 }: Props) {
   const t = useTranslations("chiffrage");
   // Mounted only while open (see the page shell), so initialisers are the reset.
   // Editing always starts on the HT tab because HT is what is stored.
-  const [supplier, setSupplier] = useState(quote?.supplier_name ?? "");
+  const [storeId, setStoreId] = useState<string | null>(quote?.store_id ?? null);
   const [mode, setMode] = useState<"ht" | "ttc">("ht");
   const [price, setPrice] = useState(quote ? String(quote.unit_price_ht) : "");
   const [tva, setTva] = useState(quote ? String(quote.tva_rate) : "20");
@@ -79,9 +86,8 @@ export function QuoteFormDialog({
   const priceValid =
     price.trim() !== "" && !Number.isNaN(priceNum) && priceNum >= 0;
   const tvaValid = !Number.isNaN(tvaNum) && tvaNum >= 0 && tvaNum <= 100;
-  // A supplier picked from the bibliothèque identifies the fournisseur even
-  // when the name box is empty — the same rule the backend applies.
-  const supplierValid = supplier.trim() !== "" || supplierId !== null;
+  // The shop is what makes the price comparable, so it is what is required.
+  const storeValid = storeId !== null;
   const converts = priceValid && tvaValid;
 
   // What actually gets stored, whichever way the user typed it.
@@ -108,15 +114,16 @@ export function QuoteFormDialog({
       setError(t("tvaInvalid"));
       return;
     }
-    if (!supplierValid) {
-      setError(t("supplierRequired"));
+    if (!storeValid) {
+      setError(t("storeRequired"));
       return;
     }
     setError(null);
     onSubmit({
-      // Null rather than "" when the fournisseur is identified by id alone,
-      // so the comparison table can fall back to its unnamed-supplier label.
-      supplier_name: supplier.trim() || null,
+      store_id: storeId,
+      // A readable snapshot of the shop, kept so deleting the shop later never
+      // blanks the row out. The link, not this string, drives the comparison.
+      supplier_name: stores.find((s) => s.id === storeId)?.name ?? null,
       supplier_id: supplierId,
       library_product_id: productId,
       unit_price_ht: htValue.toFixed(4),
@@ -140,7 +147,16 @@ export function QuoteFormDialog({
               onPick={(picked) => {
                 // Prefill, never overwrite silently: the price is a past
                 // purchase and the user still confirms it on the HT/TTC tabs.
-                if (picked.supplierName) setSupplier(picked.supplierName);
+                // The library supplier is matched to a shop by name when the
+                // project already has one; otherwise the user picks it.
+                if (picked.supplierName) {
+                  const match = stores.find(
+                    (s) =>
+                      s.name.trim().toLowerCase() ===
+                      picked.supplierName!.trim().toLowerCase(),
+                  );
+                  if (match) setStoreId(match.id);
+                }
                 setSupplierId(picked.supplierId);
                 setProductId(picked.productId);
                 if (picked.productUrl) setUrl(picked.productUrl);
@@ -154,27 +170,26 @@ export function QuoteFormDialog({
 
             <div className="space-y-2">
               {/* The asterisk sits beside the Label, not inside it, so the
-                  field's accessible name stays the plain label; aria-required
-                  on the input is what carries the rule to assistive tech. */}
+                  field's accessible name stays the plain label. */}
               <div className="flex items-center gap-1">
-                <Label htmlFor="quote-supplier">{t("supplier")}</Label>
+                <Label htmlFor="quote-store">{t("shop")}</Label>
                 <span aria-hidden="true" className="text-destructive">
                   *
                 </span>
               </div>
-              <Input
-                id="quote-supplier"
-                value={supplier}
-                maxLength={120}
-                aria-required="true"
-                aria-invalid={error !== null && !supplierValid}
-                placeholder={t("supplierPlaceholder")}
-                onChange={(e) => {
-                  setSupplier(e.target.value);
+              <StoreSelect
+                value={storeId}
+                stores={stores}
+                invalid={error !== null && !storeValid}
+                onChange={(id) => {
+                  setStoreId(id);
                   setError(null);
                 }}
-                autoFocus
+                onCreateStore={onCreateStore}
               />
+              <p className="text-xs text-muted-foreground">
+                {t("shopHelp")}
+              </p>
             </div>
 
             <div className="space-y-2">

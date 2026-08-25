@@ -63,7 +63,7 @@ function classifyBackendError(err: unknown): string {
   if (e?.body?.message) return e.body.message;
   if (e?.status === 403) return "You do not have permission to modify this chiffrage.";
   if (e?.status === 404) return "This item no longer exists.";
-  if (e?.status === 409) return "That unit already exists.";
+  if (e?.status === 409) return "That name is already taken.";
   return e?.message ?? "Unknown error";
 }
 
@@ -179,10 +179,9 @@ export async function deleteArticleImageAction(
 
 export async function createStoreAction(
   projectId: string,
-  posteId: string,
   payload: StorePayload
 ): Promise<Result<ChiffrageStore>> {
-  return run(projectId, () => createStore(projectId, posteId, payload));
+  return run(projectId, () => createStore(projectId, payload));
 }
 
 export async function updateStoreAction(

@@ -38,6 +38,7 @@ import { PosteCard } from "@/components/chiffrage/poste-card";
 import { PosteStores } from "@/components/chiffrage/poste-stores";
 import { RoomHeading } from "@/components/chiffrage/room-heading";
 import { ArticleImageDialog } from "@/components/chiffrage/article-image-dialog";
+import { StoreComparison } from "@/components/chiffrage/store-comparison";
 import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
 import { ProvisioningTable } from "@/components/chiffrage/provisioning-table";
@@ -242,6 +243,31 @@ export function ChiffragePageClient({
     return { sorted, rows };
   };
 
+  /**
+   * The shops to visit for a section: exactly those carrying a price on one of
+   * its items. Derived rather than hand-kept, so the list cannot drift from the
+   * costing it is supposed to describe.
+   */
+  const shopsPricedIn = (poste: ChiffragePoste): ChiffrageStore[] => {
+    const ids = new Set(
+      poste.articles.flatMap((a) =>
+        a.quotes.map((q) => q.store_id).filter((id): id is string => id !== null),
+      ),
+    );
+    return tree.stores.filter((s) => ids.has(s.id));
+  };
+
+  const addStore = async (name: string): Promise<ChiffrageStore | null> => {
+    const res = await createStoreAction(projectId, { name });
+    if (!res.ok) {
+      toast.error(res.error);
+      return null;
+    }
+    // Shops live on the tree, so extend it rather than keeping a second copy.
+    setTree((prev) => ({ ...prev, stores: [...prev.stores, res.data] }));
+    return res.data;
+  };
+
   const addRoom = async (name: string): Promise<ChiffrageRoom | null> => {
     const res = await createRoomAction(projectId, name);
     if (!res.ok) {
@@ -382,15 +408,8 @@ export function ChiffragePageClient({
                       }}
                       stores={
                         <PosteStores
-                          stores={poste.stores}
+                          stores={shopsPricedIn(poste)}
                           canManage={canManage}
-                          onAdd={() =>
-                            setStoreDialog({
-                              open: true,
-                              posteId: poste.id,
-                              store: null,
-                            })
-                          }
                           onEdit={(store) =>
                             setStoreDialog({
                               open: true,
@@ -398,17 +417,6 @@ export function ChiffragePageClient({
                               store,
                             })
                           }
-                          onDelete={(store) => {
-                            if (
-                              confirm(
-                                t("confirmDeleteStore", { name: store.name }),
-                              )
-                            ) {
-                              void mutate(() =>
-                                deleteStoreAction(projectId, store.id),
-                              );
-                            }
-                          }}
                         />
                       }
                       onAddArticle={() =>
@@ -447,6 +455,7 @@ export function ChiffragePageClient({
                                 return (
                                 <ArticleRow
                                   projectId={projectId}
+                                  stores={tree.stores}
                                   imageVersion={imageVersion}
                                   onManageImage={() => setImageDialog({ open: true, article })}
                                   article={article}
@@ -522,6 +531,19 @@ export function ChiffragePageClient({
                           )}
                         </SortableContext>
                       </DndContext>
+                      {poste.store_baskets.length > 0 ? (
+                        <div className="border-t p-3">
+                          <StoreComparison
+                            baskets={poste.store_baskets}
+                            stores={tree.stores}
+                            bestMixHt={poste.subtotal_ht}
+                            title={t("compareShopsSectionTitle", {
+                              name: poste.name,
+                            })}
+                            subtitle={t("compareShopsSectionSubtitle")}
+                          />
+                        </div>
+                      ) : null}
                     </PosteCard>
                   )}
                 </SortableItem>
@@ -530,6 +552,14 @@ export function ChiffragePageClient({
           </SortableContext>
         </DndContext>
       )}
+
+      <StoreComparison
+        baskets={tree.store_baskets}
+        stores={tree.stores}
+        bestMixHt={tree.total_ht}
+        title={t("compareShopsTitle")}
+        subtitle={t("compareShopsSubtitle")}
+      />
 
       <ProvisioningTable tree={tree} />
 
@@ -589,7 +619,7 @@ export function ChiffragePageClient({
             const ok = await mutate(() =>
               storeDialog.store
                 ? updateStoreAction(projectId, storeDialog.store.id, values)
-                : createStoreAction(projectId, storeDialog.posteId!, values),
+                : createStoreAction(projectId, values),
             );
             if (ok) setStoreDialog({ open: false, posteId: null, store: null });
           }}
@@ -632,6 +662,8 @@ export function ChiffragePageClient({
           quote={quoteDialog.quote}
           submitting={submitting}
           companyId={companyId}
+          stores={tree.stores}
+          onCreateStore={addStore}
           onOpenChange={(open) => setQuoteDialog((p) => ({ ...p, open }))}
           onSubmit={async (values: QuoteFormValues) => {
             const ok = await mutate(() =>

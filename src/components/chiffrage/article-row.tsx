@@ -20,10 +20,16 @@ import { ArticleImage } from "@/components/chiffrage/article-image";
 import { Button } from "@/components/ui/button";
 import { QuoteComparisonTable } from "@/components/chiffrage/quote-comparison-table";
 import { money, quantity } from "@/components/chiffrage/format";
-import type { ChiffrageArticle, ChiffrageQuote } from "@/lib/api/chiffrage";
+import type {
+  ChiffrageArticle,
+  ChiffrageQuote,
+  ChiffrageStore,
+} from "@/lib/api/chiffrage";
 
 interface Props {
   article: ChiffrageArticle;
+  /** The project's shops, so each price can name the shop it points at. */
+  stores: ChiffrageStore[];
   projectId: string;
   canManage: boolean;
   expanded: boolean;
@@ -43,6 +49,7 @@ interface Props {
 
 export function ArticleRow({
   article,
+  stores,
   projectId,
   canManage,
   expanded,
@@ -160,6 +167,7 @@ export function ArticleRow({
         <div className="bg-muted/30">
           <QuoteComparisonTable
             article={article}
+            stores={stores}
             canManage={canManage}
             busyQuoteId={busyQuoteId}
             onSelect={onSelectQuote}

@@ -270,12 +270,12 @@ describe("DashboardPage — project switch race (H1)", () => {
     );
 
     // B's headline lands: budget 2000, spent 200 → left 1800. Read via the
-    // "Remaining" label's sibling — the raw figure also coincidentally
+    // "Remaining to spend" label's sibling — the raw figure also coincidentally
     // matches the company purse's "left" in this fixture.
     const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
     const normalizeSpaces = (s: string) => s.replace(/[  ]/g, " ");
     const headlineValue = () =>
-      normalizeSpaces(moneyPanel.getByText("Remaining").nextElementSibling?.textContent ?? "");
+      normalizeSpaces(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent ?? "");
     await waitFor(() => expect(headlineValue()).toBe(eur(1800)));
 
     // A's stale response resolves late (budget 1000, spent 999 → left 1) — a

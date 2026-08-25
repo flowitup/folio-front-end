@@ -150,6 +150,7 @@
       "return": "Returns"
     },
     "remaining": "Remaining",
+    "remainingToSpend": "Remaining to spend",
     "overBudget": "Over by",
     "budgetLabel": "Credit total (€)",
     "budgetSourceLabelOptional": "Funding source (optional)",

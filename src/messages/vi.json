@@ -150,6 +150,7 @@
       "return": "Trả hàng"
     },
     "remaining": "Còn lại",
+    "remainingToSpend": "Còn lại để chi",
     "overBudget": "Vượt quá",
     "budgetLabel": "Tổng tín dụng (€)",
     "budgetSourceLabelOptional": "Nguồn tài trợ (tùy chọn)",

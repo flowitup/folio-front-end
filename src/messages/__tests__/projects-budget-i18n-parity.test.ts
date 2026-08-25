@@ -12,6 +12,7 @@ import vi from "../vi.json";
 
 const BUDGET_KEYS = [
   "remaining",
+  "remainingToSpend",
   "overBudget",
   "budgetLabel",
   "budgetSourceLabelOptional",

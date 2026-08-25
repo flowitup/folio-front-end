@@ -150,6 +150,7 @@
       "return": "Avoirs"
     },
     "remaining": "Restant",
+    "remainingToSpend": "Reste à dépenser",
     "overBudget": "Dépassement de",
     "budgetLabel": "Crédit total (€)",
     "budgetSourceLabelOptional": "Source de financement (facultatif)",

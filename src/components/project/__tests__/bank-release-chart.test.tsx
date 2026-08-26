@@ -75,7 +75,11 @@ describe("BankReleaseChart", () => {
         credit={100000}
         releasedTotal={30000}
         invoices={[
-          makeRelease({ issue_date: "2026-01-10", total_amount: 20000 }),
+          makeRelease({
+            issue_date: "2026-01-10",
+            total_amount: 20000,
+            invoice_number: "FR-2026-0001",
+          }),
           makeRelease({ issue_date: "2026-03-05", total_amount: 10000 }),
         ]}
       />
@@ -86,27 +90,11 @@ describe("BankReleaseChart", () => {
     expect(track.children).toHaveLength(3);
     expect((track.children[0] as HTMLElement).style.width).toBe("calc(20% - 2px)");
     expect((track.children[1] as HTMLElement).style.width).toBe("calc(10% - 2px)");
+    // Each segment carries its draw's identity for the hover data-tip
+    // (whitespace normalized — euro amounts use narrow no-break spaces).
+    const tip = track.children[0].getAttribute("data-tip") ?? "";
+    expect(tip.replace(/\s/g, "")).toBe("FR-2026-0001\u00b710/01/2026|20000\u20ac");
     expect(screen.getByText("projects.bankRelease.segmentHint")).toBeInTheDocument();
-  });
-
-  it("renders one bar column per month between the first and last draw", () => {
-    render(
-      <BankReleaseChart
-        credit={100000}
-        releasedTotal={30000}
-        invoices={[
-          makeRelease({ issue_date: "2026-01-10", total_amount: 18500 }),
-          makeRelease({ issue_date: "2026-03-05", total_amount: 10000 }),
-        ]}
-      />
-    );
-    const bars = screen.getByTestId("bank-release-bars");
-    expect(bars.children).toHaveLength(3);
-    // The gap month (Feb) renders an empty slot — no label, no bar.
-    expect(bars.children[1].children).toHaveLength(0);
-    // Compact value labels above the bars — fr decimal comma in every locale.
-    expect(screen.getByText("18,5k")).toBeInTheDocument();
-    expect(screen.getByText("10k")).toBeInTheDocument();
   });
 
   it("carries largest and last draw in the stats footer", () => {
@@ -143,7 +131,7 @@ describe("BankReleaseChart", () => {
     ).toBe("/en/projects/proj-1/settings");
   });
 
-  it("still renders the monthly draw bars when no credit is recorded", () => {
+  it("keeps the draws meta and footer when no credit is recorded", () => {
     render(
       <BankReleaseChart
         credit={null}
@@ -152,8 +140,10 @@ describe("BankReleaseChart", () => {
       />
     );
     expect(screen.getByTestId("bank-release-no-credit")).toBeInTheDocument();
-    expect(screen.getByTestId("bank-release-bars")).toBeInTheDocument();
+    // No track without a credit denominator, but the header meta and the
+    // largest/last stats still describe the draws that exist.
     expect(screen.queryByTestId("bank-release-track")).not.toBeInTheDocument();
+    expect(screen.getByTestId("bank-release-stats")).toBeInTheDocument();
   });
 
   it("labels an over-drawn credit, shows the absolute overrun and drops the tail", () => {
@@ -173,7 +163,7 @@ describe("BankReleaseChart", () => {
     expect((track.children[0] as HTMLElement).style.width).toBe("calc(100% - 2px)");
   });
 
-  it("hides figures, track, bars and stats while loading", () => {
+  it("hides figures, track and stats while loading", () => {
     render(
       <BankReleaseChart
         credit={200000}
@@ -184,7 +174,6 @@ describe("BankReleaseChart", () => {
     );
     expect(screen.getByTestId("bank-release-remaining")).toHaveTextContent("—");
     expect(screen.queryByTestId("bank-release-track")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("bank-release-bars")).not.toBeInTheDocument();
     expect(screen.queryByTestId("bank-release-stats")).not.toBeInTheDocument();
   });
 

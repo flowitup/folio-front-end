@@ -18,8 +18,7 @@ import type { Invoice } from "@/types/invoice";
  * Headline is `credit − released`: what the bank still holds of the crédit
  * immobilier recorded in project settings. Below it, a segmented pill track
  * slices the credit into one segment per draw with a hatched tail for what is
- * left, then a deliberately NON-cumulative "Draws by month" bar chart shows
- * each month's draw on its own scale (gap months are part of the story), and
+ * left — hovering a segment reveals that draw's number, date and amount — and
  * a stats footer carries the largest and last draw.
  *
  * Figure sourcing: `releasedTotal` comes from the backend invoices meta
@@ -46,10 +45,6 @@ const PLACEHOLDER = "—";
 const SEGMENT_ALT = "#5a5348";
 const TRACK_HATCH =
   "repeating-linear-gradient(-45deg, rgba(232,132,60,.18) 0 3px, rgba(251,231,212,.6) 3px 7px)";
-// Tallest month bar in px; the chart row leaves headroom for value labels.
-const MAX_BAR_PX = 100;
-// Floor keeps a tiny draw visible as more than a hairline.
-const MIN_BAR_PX = 2;
 
 export function BankReleaseChart({
   credit,
@@ -65,10 +60,9 @@ export function BankReleaseChart({
   const metrics = computeBankReleaseMetrics(credit, releasedTotal);
   // Memoized: the data-tip hook re-renders the card on every mousemove.
   const series = useMemo(() => buildDrawSeries(invoices), [invoices]);
-  const { monthYear, monthOnly, pctFmt } = useMemo(
+  const { monthYear, pctFmt } = useMemo(
     () => ({
       monthYear: new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }),
-      monthOnly: new Intl.DateTimeFormat(locale, { month: "short" }),
       pctFmt: new Intl.NumberFormat(locale, { style: "percent" }),
     }),
     [locale]
@@ -82,8 +76,6 @@ export function BankReleaseChart({
   const segmentPct = (amount: number) =>
     segmentDenominator > 0 ? (amount / segmentDenominator) * 100 : 0;
 
-  const maxMonth = Math.max(...series.months.map((m) => m.amount), 1);
-  const lastMonthKey = series.last?.date.slice(0, 7);
   const overDrawn = metrics.remaining < 0;
 
   return (
@@ -230,66 +222,9 @@ export function BankReleaseChart({
         </div>
       )}
 
-      {/* Draws by month — each month's draw on its own scale, NOT cumulative */}
-      {!loading && series.months.length > 0 ? (
-        <div className="mt-5">
-          <div className="label-cap" style={{ color: "var(--muted)" }}>
-            {t("drawsByMonth")}
-          </div>
-          <div
-            className="mt-2 flex h-[118px] items-end gap-1.5"
-            style={{ borderBottom: "1px solid var(--line)" }}
-            data-testid="bank-release-bars"
-          >
-            {series.months.map((point) => (
-              <span
-                key={point.key}
-                className="flex min-w-0 flex-1 flex-col justify-end"
-                data-tip={
-                  point.count > 0
-                    ? `${monthYear.format(monthDate(point.key))}|${formatEURWhole(
-                        point.amount
-                      )}|${t("drawsInMonth", { count: point.count })}`
-                    : undefined
-                }
-              >
-                {point.amount > 0 ? (
-                  <>
-                    <span
-                      className="num mb-[2px] whitespace-nowrap text-center text-[9px]"
-                      style={{ color: "var(--muted)" }}
-                    >
-                      {formatK(point.amount)}
-                    </span>
-                    <span
-                      className="rounded-t-[3px]"
-                      style={{
-                        height: `${Math.max(
-                          Math.round((point.amount / maxMonth) * MAX_BAR_PX),
-                          MIN_BAR_PX
-                        )}px`,
-                        background:
-                          point.key === lastMonthKey ? "var(--accent)" : "var(--ink-2)",
-                      }}
-                    />
-                  </>
-                ) : null}
-              </span>
-            ))}
-          </div>
-          <div className="mt-1.5 flex gap-1.5">
-            {series.months.map((point) => (
-              <span
-                key={point.key}
-                className="min-w-0 flex-1 text-center text-[9px]"
-                style={{ color: "var(--muted-2)" }}
-              >
-                {monthOnly.format(monthDate(point.key))}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : !loading ? (
+      {/* Draw details live on the track: each segment's hover tip carries the
+          draw's number, date and amount — no separate breakdown chart. */}
+      {!loading && series.draws.length === 0 ? (
         <div className="mt-4 text-[11.5px]" style={{ color: "var(--muted)" }}>
           {t("noReleases")}
         </div>
@@ -343,13 +278,4 @@ export function BankReleaseChart({
 function monthDate(key: string): Date {
   const [y, m] = key.split("-").map(Number);
   return new Date(y, m - 1, 1);
-}
-
-/** Compact thousands label for bar values: 40000 → "40k", 18500 → "18,5k".
- * fr-FR like every money figure in the app (see formatEURWhole), so the
- * decimal comma matches the euro amounts around it in all locales. */
-function formatK(amount: number): string {
-  return `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(
-    amount / 1000
-  )}k`;
 }

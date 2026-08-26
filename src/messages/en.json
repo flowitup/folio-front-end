@@ -164,8 +164,6 @@
       "segmentHint": "One segment per draw · drawn <a>{amount}</a>",
       "creditLabel": "Credit <a>{amount}</a>",
       "leftLabel": "{amount} left",
-      "drawsByMonth": "Draws by month",
-      "drawsInMonth": "{count, plural, one {# draw} other {# draws}}",
       "largestDraw": "Largest draw",
       "lastDraw": "Last draw",
       "noCredit": "No bank credit recorded",

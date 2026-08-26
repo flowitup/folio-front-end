@@ -55,20 +55,9 @@ export interface BankDraw {
   amount: number;
 }
 
-export interface DrawMonthPoint {
-  /** "YYYY-MM" */
-  key: string;
-  /** Amount drawn during that month (0 for gap months). */
-  amount: number;
-  /** Number of release invoices in that month. */
-  count: number;
-}
-
 export interface DrawSeries {
   /** All draws, oldest first (issue_date, then invoice number). */
   draws: BankDraw[];
-  /** Continuous month buckets from first to last draw, gaps at zero. */
-  months: DrawMonthPoint[];
   totalDrawn: number;
   /** Biggest single draw (earliest wins a tie). Null when no draws. */
   largest: BankDraw | null;
@@ -78,11 +67,9 @@ export interface DrawSeries {
 
 /**
  * Per-draw ledger built from the project's `released_funds` rows: the ordered
- * draw list (track segments), continuous monthly buckets (bars — gaps filled
- * with zero months so the timeline reads continuously), and the largest/last
- * draw stats. Draws attribute to `issue_date` — the day the bank moved the
- * money — never to `service_month` (a release is not work performed over a
- * period).
+ * draw list (track segments) and the largest/last draw stats. Draws attribute
+ * to `issue_date` — the day the bank moved the money — never to
+ * `service_month` (a release is not work performed over a period).
  */
 export function buildDrawSeries(invoices: Invoice[]): DrawSeries {
   const draws: BankDraw[] = invoices
@@ -95,47 +82,15 @@ export function buildDrawSeries(invoices: Invoice[]): DrawSeries {
     }))
     .sort((a, b) => a.date.localeCompare(b.date) || a.number.localeCompare(b.number));
 
-  const byMonth = new Map<string, { amount: number; count: number }>();
   let totalDrawn = 0;
   let largest: BankDraw | null = null;
   for (const draw of draws) {
     totalDrawn += draw.amount;
     if (!largest || draw.amount > largest.amount) largest = draw;
-    const key = draw.date.slice(0, 7);
-    const bucket = byMonth.get(key) ?? { amount: 0, count: 0 };
-    bucket.amount += draw.amount;
-    bucket.count += 1;
-    byMonth.set(key, bucket);
-  }
-
-  const months: DrawMonthPoint[] = [];
-  let [year, month] = (draws[0]?.date ?? "").slice(0, 7).split("-").map(Number);
-  const [endYear, endMonth] = (draws[draws.length - 1]?.date ?? "")
-    .slice(0, 7)
-    .split("-")
-    .map(Number);
-  // A non-"YYYY-MM…" issue_date parses to NaN and would spin this walk
-  // forever (NaN never reaches 12, year never advances) — freezing the tab,
-  // not throwing. Integer bounds guarantee termination.
-  if (
-    [year, month, endYear, endMonth].every(Number.isInteger)
-  ) {
-    while (year < endYear || (year === endYear && month <= endMonth)) {
-      const key = `${year}-${String(month).padStart(2, "0")}`;
-      const bucket = byMonth.get(key) ?? { amount: 0, count: 0 };
-      months.push({ key, amount: bucket.amount, count: bucket.count });
-      if (month === 12) {
-        year += 1;
-        month = 1;
-      } else {
-        month += 1;
-      }
-    }
   }
 
   return {
     draws,
-    months,
     totalDrawn,
     largest,
     last: draws.length > 0 ? draws[draws.length - 1] : null,

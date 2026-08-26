@@ -1,33 +1,32 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Landmark } from "lucide-react";
-import { formatEURWhole } from "@/lib/utils/formatters";
+import { formatDate, formatEURWhole } from "@/lib/utils/formatters";
 import { useDataTip } from "@/components/invoices/data-tip";
 import {
   computeBankReleaseMetrics,
-  buildReleaseSeries,
-  type ReleasePoint,
+  buildDrawSeries,
 } from "@/lib/dashboard/bank-release-metrics";
 import type { Invoice } from "@/types/invoice";
 
 /**
- * "Remaining to release from the bank" card, shared by the Overview dashboard
- * and the Expense ledger so both read the same figure.
+ * "Draw ledger" card (design 2b), shared by the Overview dashboard and the
+ * Expense ledger so both read the same figure.
  *
  * Headline is `credit − released`: what the bank still holds of the crédit
- * immobilier recorded in project settings. Below it, a draw-down track splits
- * the credit into released (accent) vs still-at-the-bank (track), and a
- * month-by-month timeline plots the CUMULATIVE amount released as a share of
- * the credit — so the bars climb toward the dashed credit ceiling and the gap
- * above the last bar is exactly the headline figure.
+ * immobilier recorded in project settings. Below it, a segmented pill track
+ * slices the credit into one segment per draw with a hatched tail for what is
+ * left, then a deliberately NON-cumulative "Draws by month" bar chart shows
+ * each month's draw on its own scale (gap months are part of the story), and
+ * a stats footer carries the largest and last draw.
  *
  * Figure sourcing: `releasedTotal` comes from the backend invoices meta
- * (`funds_released_total`, authoritative); the monthly split is derived
- * client-side from the same project's `released_funds` rows, so the last
- * bar's cumulative can differ marginally from the meta only if a release row
- * is missing from the fetched list.
+ * (`funds_released_total`, authoritative); the per-draw split is derived
+ * client-side from the same project's `released_funds` rows, so the track can
+ * differ marginally from the meta only if a release row is missing from the
+ * fetched list.
  */
 interface BankReleaseChartProps {
   /** Project credit total (crédit immobilier). Null/0 → prompt to set it. */
@@ -36,8 +35,6 @@ interface BankReleaseChartProps {
   releasedTotal: number;
   /** Unfiltered project invoice list; only `released_funds` rows are read. */
   invoices: Invoice[];
-  /** Funding source label (e.g. "Prêt bancaire BNP"), shown as a stamp. */
-  source?: string | null;
   /** Link to project settings for the empty state. Null hides the link. */
   settingsHref?: string | null;
   /** True while the invoices fetch hasn't settled — figures aren't real yet. */
@@ -45,14 +42,19 @@ interface BankReleaseChartProps {
 }
 
 const PLACEHOLDER = "—";
-// Floor keeps a zero/near-zero cumulative month visible on the timeline.
-const MIN_BAR_PCT = 3;
+// Warm dark pair for alternating track segments (design literal, no token).
+const SEGMENT_ALT = "#5a5348";
+const TRACK_HATCH =
+  "repeating-linear-gradient(-45deg, rgba(232,132,60,.18) 0 3px, rgba(251,231,212,.6) 3px 7px)";
+// Tallest month bar in px; the chart row leaves headroom for value labels.
+const MAX_BAR_PX = 100;
+// Floor keeps a tiny draw visible as more than a hairline.
+const MIN_BAR_PX = 2;
 
 export function BankReleaseChart({
   credit,
   releasedTotal,
   invoices,
-  source,
   settingsHref,
   loading = false,
 }: BankReleaseChartProps) {
@@ -61,92 +63,154 @@ export function BankReleaseChart({
   const { onMouseMove, onMouseLeave, overlay } = useDataTip();
 
   const metrics = computeBankReleaseMetrics(credit, releasedTotal);
-  const series = buildReleaseSeries(invoices);
-  const monthYear = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" });
-  const monthOnly = new Intl.DateTimeFormat(locale, { month: "short" });
+  // Memoized: the data-tip hook re-renders the card on every mousemove.
+  const series = useMemo(() => buildDrawSeries(invoices), [invoices]);
+  const { monthYear, monthOnly, pctFmt } = useMemo(
+    () => ({
+      monthYear: new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }),
+      monthOnly: new Intl.DateTimeFormat(locale, { month: "short" }),
+      pctFmt: new Intl.NumberFormat(locale, { style: "percent" }),
+    }),
+    [locale]
+  );
   const fig = (value: string) => (loading ? PLACEHOLDER : value);
 
-  // Bar denominator: the credit ceiling once known, else the final cumulative
-  // (so the timeline still has a readable shape before a credit is recorded).
-  const ceiling = metrics.hasCredit
-    ? metrics.credit
-    : Math.max(series[series.length - 1]?.cumulative ?? 0, 1);
-  const barPct = (point: ReleasePoint) =>
-    Math.max(Math.min((point.cumulative / ceiling) * 100, 100), MIN_BAR_PCT);
+  // Segment widths clamp so the drawn slices never overflow the pill even if
+  // more was drawn than the recorded credit (a state settings validation is
+  // meant to prevent): the denominator grows to the drawn total in that case.
+  const segmentDenominator = Math.max(metrics.credit, series.totalDrawn);
+  const segmentPct = (amount: number) =>
+    segmentDenominator > 0 ? (amount / segmentDenominator) * 100 : 0;
 
+  const maxMonth = Math.max(...series.months.map((m) => m.amount), 1);
+  const lastMonthKey = series.last?.date.slice(0, 7);
   const overDrawn = metrics.remaining < 0;
 
   return (
     <div
-      className="folio-card flex flex-col gap-4 p-5"
+      className="folio-card p-6"
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       data-testid="bank-release-chart"
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Landmark size={16} style={{ color: "var(--accent)" }} aria-hidden="true" />
-          <span className="text-[12.5px] font-semibold">{t("title")}</span>
-        </div>
-        {source ? <span className="stamp">{source}</span> : null}
+        <span className="text-[12.5px] font-semibold">{t("title")}</span>
+        {!loading && series.draws.length > 0 ? (
+          <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("drawsMeta", {
+              count: series.draws.length,
+              first: monthYear.format(monthDate(series.draws[0].date)),
+              last: monthYear.format(monthDate(series.draws[series.draws.length - 1].date)),
+            })}
+          </span>
+        ) : null}
       </div>
 
       {metrics.hasCredit ? (
         <>
-          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-            <div>
-              <div className="label-cap" style={{ color: "var(--muted)" }}>
-                {overDrawn ? t("overDrawn") : t("remainingToRelease")}
-              </div>
-              <div
-                className="num mt-1.5 text-[30px] font-medium leading-none"
-                style={{
-                  letterSpacing: "-.02em",
-                  color: overDrawn && !loading ? "var(--negative)" : undefined,
-                }}
-                data-testid="bank-release-remaining"
-              >
-                {fig(formatEURWhole(Math.abs(metrics.remaining)))}
-              </div>
-            </div>
-            <div className="text-[11.5px]" style={{ color: "var(--muted)" }}>
-              {t("releasedOf", {
-                released: fig(formatEURWhole(metrics.released)),
+          <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            {overDrawn && !loading ? (
+              <span className="label-cap w-full" style={{ color: "var(--muted)" }}>
+                {t("overDrawn")}
+              </span>
+            ) : null}
+            <span
+              className="num text-[42px] font-medium leading-none"
+              style={{
+                letterSpacing: "-.02em",
+                color: overDrawn && !loading ? "var(--negative)" : undefined,
+              }}
+              data-testid="bank-release-remaining"
+            >
+              {fig(formatEURWhole(Math.abs(metrics.remaining)))}
+            </span>
+            <span className="text-[13px]" style={{ color: "var(--muted)" }}>
+              {t.rich("headlineMeta", {
                 credit: fig(formatEURWhole(metrics.credit)),
+                pct: fig(pctFmt.format(metrics.pct / 100)),
+                c: (chunks) => (
+                  <span className="num" style={{ color: "var(--ink-2)" }}>
+                    {chunks}
+                  </span>
+                ),
+                p: (chunks) => (
+                  <span className="num" style={{ color: "var(--accent-ink)" }}>
+                    {chunks}
+                  </span>
+                ),
               })}
-            </div>
+            </span>
           </div>
 
-          {/* Draw-down track: released vs still at the bank */}
-          <div>
-            <span
-              className="block h-[10px] overflow-hidden rounded-full"
-              style={{ background: "var(--paper-2)" }}
-            >
-              <span
-                className="block h-full rounded-full"
-                data-tip={`${t("released")}|${formatEURWhole(metrics.released)}|${t("pctReleased", {
-                  pct: metrics.pct,
-                })}`}
-                style={{
-                  width: loading ? "0%" : `${metrics.pctClamped}%`,
-                  background: overDrawn ? "var(--negative)" : "var(--accent)",
-                }}
-              />
-            </span>
-            <div
-              className="mt-1.5 flex justify-between text-[11px]"
-              style={{ color: "var(--muted)" }}
-            >
-              <span>{formatEURWhole(0)}</span>
-              <span className="num">{loading ? PLACEHOLDER : t("pctReleased", { pct: metrics.pct })}</span>
-              <span className="num">{fig(formatEURWhole(metrics.credit))}</span>
-            </div>
-          </div>
+          {/* Segmented credit track: one slice per draw, hatched tail = left */}
+          {!loading ? (
+            <>
+              <div
+                className="mt-[18px] flex h-7 gap-[2px] overflow-hidden rounded-full"
+                data-testid="bank-release-track"
+              >
+                {series.draws.map((draw, i) => (
+                  <span
+                    key={draw.id}
+                    className="flex-none"
+                    data-tip={`${draw.number} · ${formatDate(draw.date)}|${formatEURWhole(
+                      draw.amount
+                    )}`}
+                    // Each segment gives back its 2px flex gap so the hatched
+                    // tail keeps its exact remaining share — otherwise the
+                    // shrinkable tail absorbs all N gaps and vanishes while
+                    // the headline still shows money left at the bank.
+                    style={{
+                      width: `calc(${segmentPct(draw.amount)}% - 2px)`,
+                      background: i % 2 === 1 ? SEGMENT_ALT : "var(--ink-2)",
+                    }}
+                  />
+                ))}
+                {metrics.remaining > 0 ? (
+                  <span
+                    className="flex min-w-0 flex-1 items-center justify-center overflow-hidden"
+                    style={{ background: TRACK_HATCH }}
+                  >
+                    <span
+                      className="num whitespace-nowrap text-[11px] font-semibold"
+                      style={{ color: "var(--accent-ink)" }}
+                    >
+                      {t("leftLabel", { amount: formatEURWhole(metrics.remaining) })}
+                    </span>
+                  </span>
+                ) : null}
+              </div>
+              <div
+                className="mt-1.5 flex justify-between gap-3 text-[10.5px]"
+                style={{ color: "var(--muted)" }}
+              >
+                <span>
+                  {t.rich("segmentHint", {
+                    amount: formatEURWhole(series.totalDrawn),
+                    a: (chunks) => (
+                      <span className="num" style={{ color: "var(--ink-2)" }}>
+                        {chunks}
+                      </span>
+                    ),
+                  })}
+                </span>
+                <span>
+                  {t.rich("creditLabel", {
+                    amount: formatEURWhole(metrics.credit),
+                    a: (chunks) => (
+                      <span className="num" style={{ color: "var(--ink-2)" }}>
+                        {chunks}
+                      </span>
+                    ),
+                  })}
+                </span>
+              </div>
+            </>
+          ) : null}
         </>
       ) : (
         <div
-          className="rounded-lg border border-dashed px-4 py-3 text-[11.5px]"
+          className="mt-4 rounded-lg border border-dashed px-4 py-3 text-[11.5px]"
           style={{ borderColor: "var(--line-2)", color: "var(--muted)" }}
           data-testid="bank-release-no-credit"
         >
@@ -166,45 +230,106 @@ export function BankReleaseChart({
         </div>
       )}
 
-      {/* Cumulative draw-down timeline */}
-      {!loading && series.length > 0 ? (
-        <div>
-          <div
-            className="flex h-[52px] items-end gap-[3px]"
-            style={{
-              borderTop: metrics.hasCredit ? "1px dashed var(--line-2)" : undefined,
-            }}
-            data-testid="bank-release-bars"
-          >
-            {series.map((point, i) => (
-              <span
-                key={point.key}
-                className="flex-1 rounded-[2px]"
-                data-tip={`${monthYear.format(monthDate(point.key))}|${formatEURWhole(
-                  point.cumulative
-                )}|${t("releasedInMonth", { amount: formatEURWhole(point.amount) })}`}
-                style={{
-                  height: `${barPct(point)}%`,
-                  background:
-                    i === series.length - 1
-                      ? "var(--accent)"
-                      : "color-mix(in srgb, var(--accent) 34%, var(--paper-2))",
-                }}
-              />
-            ))}
+      {/* Draws by month — each month's draw on its own scale, NOT cumulative */}
+      {!loading && series.months.length > 0 ? (
+        <div className="mt-5">
+          <div className="label-cap" style={{ color: "var(--muted)" }}>
+            {t("drawsByMonth")}
           </div>
           <div
-            className="mt-1.5 flex justify-between text-[10.5px]"
-            style={{ color: "var(--muted)" }}
+            className="mt-2 flex h-[118px] items-end gap-1.5"
+            style={{ borderBottom: "1px solid var(--line)" }}
+            data-testid="bank-release-bars"
           >
-            <span>{monthOnly.format(monthDate(series[0].key))}</span>
-            <span>{t("cumulativeReleased")}</span>
-            <span>{monthOnly.format(monthDate(series[series.length - 1].key))}</span>
+            {series.months.map((point) => (
+              <span
+                key={point.key}
+                className="flex min-w-0 flex-1 flex-col justify-end"
+                data-tip={
+                  point.count > 0
+                    ? `${monthYear.format(monthDate(point.key))}|${formatEURWhole(
+                        point.amount
+                      )}|${t("drawsInMonth", { count: point.count })}`
+                    : undefined
+                }
+              >
+                {point.amount > 0 ? (
+                  <>
+                    <span
+                      className="num mb-[2px] whitespace-nowrap text-center text-[9px]"
+                      style={{ color: "var(--muted)" }}
+                    >
+                      {formatK(point.amount)}
+                    </span>
+                    <span
+                      className="rounded-t-[3px]"
+                      style={{
+                        height: `${Math.max(
+                          Math.round((point.amount / maxMonth) * MAX_BAR_PX),
+                          MIN_BAR_PX
+                        )}px`,
+                        background:
+                          point.key === lastMonthKey ? "var(--accent)" : "var(--ink-2)",
+                      }}
+                    />
+                  </>
+                ) : null}
+              </span>
+            ))}
+          </div>
+          <div className="mt-1.5 flex gap-1.5">
+            {series.months.map((point) => (
+              <span
+                key={point.key}
+                className="min-w-0 flex-1 text-center text-[9px]"
+                style={{ color: "var(--muted-2)" }}
+              >
+                {monthOnly.format(monthDate(point.key))}
+              </span>
+            ))}
           </div>
         </div>
       ) : !loading ? (
-        <div className="text-[11.5px]" style={{ color: "var(--muted)" }}>
+        <div className="mt-4 text-[11.5px]" style={{ color: "var(--muted)" }}>
           {t("noReleases")}
+        </div>
+      ) : null}
+
+      {/* Stats footer: largest / last draw (no average — removed on request) */}
+      {!loading && series.largest && series.last ? (
+        <div
+          className="mt-4 flex flex-wrap gap-x-9 gap-y-3 border-t pt-3.5"
+          style={{ borderColor: "var(--line)" }}
+          data-testid="bank-release-stats"
+        >
+          <div>
+            <div
+              className="text-[9.5px] font-medium uppercase"
+              style={{ letterSpacing: ".1em", color: "var(--muted)" }}
+            >
+              {t("largestDraw")}
+            </div>
+            <div className="mt-[3px] text-[14px] font-medium">
+              <span className="num">{formatEURWhole(series.largest.amount)}</span>{" "}
+              <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+                {monthYear.format(monthDate(series.largest.date))}
+              </span>
+            </div>
+          </div>
+          <div>
+            <div
+              className="text-[9.5px] font-medium uppercase"
+              style={{ letterSpacing: ".1em", color: "var(--muted)" }}
+            >
+              {t("lastDraw")}
+            </div>
+            <div className="mt-[3px] text-[14px] font-medium">
+              <span className="num">{formatEURWhole(series.last.amount)}</span>{" "}
+              <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+                {formatDate(series.last.date)}
+              </span>
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -213,9 +338,18 @@ export function BankReleaseChart({
   );
 }
 
-/** First day of the month for a "YYYY-MM" key — numeric args avoid the
- * UTC-midnight day-shift of parsing date-only strings. */
+/** First day of the month for a "YYYY-MM" or "YYYY-MM-DD" key — numeric args
+ * avoid the UTC-midnight day-shift of parsing date-only strings. */
 function monthDate(key: string): Date {
   const [y, m] = key.split("-").map(Number);
   return new Date(y, m - 1, 1);
+}
+
+/** Compact thousands label for bar values: 40000 → "40k", 18500 → "18,5k".
+ * fr-FR like every money figure in the app (see formatEURWhole), so the
+ * decimal comma matches the euro amounts around it in all locales. */
+function formatK(amount: number): string {
+  return `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(
+    amount / 1000
+  )}k`;
 }

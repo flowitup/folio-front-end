@@ -1,9 +1,10 @@
 /**
- * Unit tests for BankReleaseChart — the "remaining to release from the bank"
- * card shared by the Overview dashboard and the Expense ledger.
+ * Unit tests for BankReleaseChart — the "Draw ledger" card (design 2b) shared
+ * by the Overview dashboard and the Expense ledger.
  *
- * Covers the states the page tests don't: no credit recorded, a normal
- * draw-down, an over-drawn credit, and the loading placeholder.
+ * Covers the states the page tests don't: no credit recorded (with and
+ * without draws), a normal draw-down, an over-drawn credit, the loading
+ * placeholder, and the per-draw track / monthly bars / stats footer.
  */
 
 import { describe, it, expect, vi } from "vitest";
@@ -12,19 +13,26 @@ import type { Invoice } from "@/types/invoice";
 import { BankReleaseChart } from "../bank-release-chart";
 
 vi.mock("next-intl", () => ({
-  useTranslations: (namespace?: string) =>
-    (key: string, params?: Record<string, unknown>) => {
+  useTranslations: (namespace?: string) => {
+    const plain = (key: string, params?: Record<string, unknown>) => {
       const full = namespace ? `${namespace}.${key}` : key;
       return params ? `${full}(${JSON.stringify(params)})` : full;
-    },
+    };
+    // t.rich renders as the bare key — tag chunks are style-only here.
+    return Object.assign(plain, {
+      rich: (key: string) => (namespace ? `${namespace}.${key}` : key),
+    });
+  },
   useLocale: () => "en",
 }));
 
+let seq = 0;
 function makeRelease(overrides: Partial<Invoice> = {}): Invoice {
+  seq += 1;
   return {
-    id: "inv-1",
+    id: `inv-${seq}`,
     project_id: "proj-1",
-    invoice_number: "INV-2026-0001",
+    invoice_number: `FR-2026-${String(seq).padStart(4, "0")}`,
     type: "released_funds",
     issue_date: "2026-06-01",
     recipient_name: "Bank",
@@ -46,20 +54,77 @@ function makeRelease(overrides: Partial<Invoice> = {}): Invoice {
 }
 
 describe("BankReleaseChart", () => {
-  it("shows the remaining amount when a credit is set", () => {
+  it("shows the remaining amount and headline meta when a credit is set", () => {
     render(
       <BankReleaseChart
         credit={200000}
         releasedTotal={75000}
         invoices={[makeRelease({ total_amount: 75000 })]}
-        source="Prêt BNP"
       />
     );
     // 200 000 − 75 000, whole-euro fr-FR formatting (narrow no-break spaces).
     const remaining = screen.getByTestId("bank-release-remaining").textContent ?? "";
     expect(remaining.replace(/\s/g, "")).toBe("125000€");
-    expect(screen.getByText("Prêt BNP")).toBeInTheDocument();
+    expect(screen.getByText("projects.bankRelease.headlineMeta")).toBeInTheDocument();
     expect(screen.queryByTestId("bank-release-no-credit")).not.toBeInTheDocument();
+  });
+
+  it("renders one track segment per draw plus the hatched remaining tail", () => {
+    render(
+      <BankReleaseChart
+        credit={100000}
+        releasedTotal={30000}
+        invoices={[
+          makeRelease({ issue_date: "2026-01-10", total_amount: 20000 }),
+          makeRelease({ issue_date: "2026-03-05", total_amount: 10000 }),
+        ]}
+      />
+    );
+    const track = screen.getByTestId("bank-release-track");
+    // 2 draw segments + 1 remaining tail. Each segment gives back its 2px
+    // flex gap so the hatched tail keeps its exact remaining share.
+    expect(track.children).toHaveLength(3);
+    expect((track.children[0] as HTMLElement).style.width).toBe("calc(20% - 2px)");
+    expect((track.children[1] as HTMLElement).style.width).toBe("calc(10% - 2px)");
+    expect(screen.getByText("projects.bankRelease.segmentHint")).toBeInTheDocument();
+  });
+
+  it("renders one bar column per month between the first and last draw", () => {
+    render(
+      <BankReleaseChart
+        credit={100000}
+        releasedTotal={30000}
+        invoices={[
+          makeRelease({ issue_date: "2026-01-10", total_amount: 18500 }),
+          makeRelease({ issue_date: "2026-03-05", total_amount: 10000 }),
+        ]}
+      />
+    );
+    const bars = screen.getByTestId("bank-release-bars");
+    expect(bars.children).toHaveLength(3);
+    // The gap month (Feb) renders an empty slot — no label, no bar.
+    expect(bars.children[1].children).toHaveLength(0);
+    // Compact value labels above the bars — fr decimal comma in every locale.
+    expect(screen.getByText("18,5k")).toBeInTheDocument();
+    expect(screen.getByText("10k")).toBeInTheDocument();
+  });
+
+  it("carries largest and last draw in the stats footer", () => {
+    render(
+      <BankReleaseChart
+        credit={100000}
+        releasedTotal={30000}
+        invoices={[
+          makeRelease({ issue_date: "2026-01-10", total_amount: 20000 }),
+          makeRelease({ issue_date: "2026-03-05", total_amount: 10000 }),
+        ]}
+      />
+    );
+    const stats = screen.getByTestId("bank-release-stats");
+    expect(stats).toHaveTextContent("projects.bankRelease.largestDraw");
+    expect(stats).toHaveTextContent("projects.bankRelease.lastDraw");
+    // Last draw shows its full DD/MM/YYYY date per the app-wide convention.
+    expect(stats).toHaveTextContent("05/03/2026");
   });
 
   it("prompts for the credit when none is recorded", () => {
@@ -78,7 +143,20 @@ describe("BankReleaseChart", () => {
     ).toBe("/en/projects/proj-1/settings");
   });
 
-  it("labels an over-drawn credit and shows the absolute overrun", () => {
+  it("still renders the monthly draw bars when no credit is recorded", () => {
+    render(
+      <BankReleaseChart
+        credit={null}
+        releasedTotal={20000}
+        invoices={[makeRelease({ issue_date: "2026-01-10", total_amount: 20000 })]}
+      />
+    );
+    expect(screen.getByTestId("bank-release-no-credit")).toBeInTheDocument();
+    expect(screen.getByTestId("bank-release-bars")).toBeInTheDocument();
+    expect(screen.queryByTestId("bank-release-track")).not.toBeInTheDocument();
+  });
+
+  it("labels an over-drawn credit, shows the absolute overrun and drops the tail", () => {
     render(
       <BankReleaseChart
         credit={100000}
@@ -89,23 +167,13 @@ describe("BankReleaseChart", () => {
     expect(screen.getByText("projects.bankRelease.overDrawn")).toBeInTheDocument();
     const remaining = screen.getByTestId("bank-release-remaining").textContent ?? "";
     expect(remaining.replace(/\s/g, "")).toBe("30000€");
+    // Segment widths clamp to the pill; no hatched remaining tail.
+    const track = screen.getByTestId("bank-release-track");
+    expect(track.children).toHaveLength(1);
+    expect((track.children[0] as HTMLElement).style.width).toBe("calc(100% - 2px)");
   });
 
-  it("renders one timeline bar per month between the first and last release", () => {
-    render(
-      <BankReleaseChart
-        credit={100000}
-        releasedTotal={30000}
-        invoices={[
-          makeRelease({ id: "a", issue_date: "2026-01-10", total_amount: 20000 }),
-          makeRelease({ id: "b", issue_date: "2026-03-05", total_amount: 10000 }),
-        ]}
-      />
-    );
-    expect(screen.getByTestId("bank-release-bars").children).toHaveLength(3);
-  });
-
-  it("hides figures and the timeline while loading", () => {
+  it("hides figures, track, bars and stats while loading", () => {
     render(
       <BankReleaseChart
         credit={200000}
@@ -115,11 +183,16 @@ describe("BankReleaseChart", () => {
       />
     );
     expect(screen.getByTestId("bank-release-remaining")).toHaveTextContent("—");
+    expect(screen.queryByTestId("bank-release-track")).not.toBeInTheDocument();
     expect(screen.queryByTestId("bank-release-bars")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("bank-release-stats")).not.toBeInTheDocument();
   });
 
   it("says so when a credit exists but nothing has been released", () => {
     render(<BankReleaseChart credit={200000} releasedTotal={0} invoices={[]} />);
     expect(screen.getByText("projects.bankRelease.noReleases")).toBeInTheDocument();
+    // Track is a full-width hatch: no draw segments, only the remaining tail.
+    expect(screen.getByTestId("bank-release-track").children).toHaveLength(1);
+    expect(screen.queryByTestId("bank-release-stats")).not.toBeInTheDocument();
   });
 });

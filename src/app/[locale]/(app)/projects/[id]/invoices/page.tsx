@@ -285,7 +285,6 @@ export default function InvoicesPage() {
           credit={project?.budget}
           releasedTotal={summary.meta.fundsReleasedTotal}
           invoices={summary.invoices}
-          source={project?.budget_source}
           settingsHref={`/${locale}/projects/${projectId}/settings`}
         />
       )}

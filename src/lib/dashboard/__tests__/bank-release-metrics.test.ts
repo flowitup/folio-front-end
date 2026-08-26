@@ -71,7 +71,6 @@ describe("buildDrawSeries", () => {
       mkInvoice({ type: "materials_services", issue_date: "2026-03-04", total_amount: 900 }),
     ]);
     expect(series.draws).toEqual([]);
-    expect(series.months).toEqual([]);
     expect(series.totalDrawn).toBe(0);
     expect(series.largest).toBeNull();
     expect(series.last).toBeNull();
@@ -88,22 +87,6 @@ describe("buildDrawSeries", () => {
     expect(series.totalDrawn).toBe(30_000);
   });
 
-  it("buckets draws by issue month, filling gaps across a year boundary", () => {
-    const series = buildDrawSeries([
-      mkInvoice({ type: "released_funds", issue_date: "2025-11-01", total_amount: 1_000 }),
-      mkInvoice({ type: "released_funds", issue_date: "2025-11-20", total_amount: 500 }),
-      mkInvoice({ type: "released_funds", issue_date: "2026-02-01", total_amount: 2_000 }),
-    ]);
-    expect(series.months.map((p) => p.key)).toEqual([
-      "2025-11",
-      "2025-12",
-      "2026-01",
-      "2026-02",
-    ]);
-    expect(series.months.map((p) => p.amount)).toEqual([1_500, 0, 0, 2_000]);
-    expect(series.months.map((p) => p.count)).toEqual([2, 0, 0, 1]);
-  });
-
   it("identifies the largest and the last draw", () => {
     const series = buildDrawSeries([
       mkInvoice({ type: "released_funds", issue_date: "2026-01-10", total_amount: 40_000 }),
@@ -116,18 +99,7 @@ describe("buildDrawSeries", () => {
     expect(series.last?.amount).toBe(12_000);
   });
 
-  it("terminates with no month buckets on a malformed issue_date", () => {
-    // A non-"YYYY-MM…" date parses to NaN; without the integer guard the
-    // month walk never terminates and freezes the tab.
-    const series = buildDrawSeries([
-      mkInvoice({ type: "released_funds", issue_date: "not-a-date", total_amount: 5_000 }),
-    ]);
-    expect(series.months).toEqual([]);
-    expect(series.draws).toHaveLength(1);
-    expect(series.totalDrawn).toBe(5_000);
-  });
-
-  it("uses issue_date, not service_month, for a draw", () => {
+  it("carries issue_date, not service_month, as a draw's date", () => {
     const series = buildDrawSeries([
       mkInvoice({
         type: "released_funds",
@@ -136,7 +108,7 @@ describe("buildDrawSeries", () => {
         total_amount: 7_000,
       }),
     ]);
-    expect(series.months).toHaveLength(1);
-    expect(series.months[0].key).toBe("2026-05");
+    expect(series.draws).toHaveLength(1);
+    expect(series.draws[0].date).toBe("2026-05-06");
   });
 });

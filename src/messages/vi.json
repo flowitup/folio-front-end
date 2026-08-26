@@ -164,8 +164,6 @@
       "segmentHint": "Mỗi đoạn một lần giải ngân · đã rút <a>{amount}</a>",
       "creditLabel": "Tín dụng <a>{amount}</a>",
       "leftLabel": "còn {amount}",
-      "drawsByMonth": "Giải ngân theo tháng",
-      "drawsInMonth": "{count, plural, other {# lần giải ngân}}",
       "largestDraw": "Giải ngân lớn nhất",
       "lastDraw": "Giải ngân gần nhất",
       "noCredit": "Chưa ghi nhận tín dụng ngân hàng",

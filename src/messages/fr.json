@@ -164,8 +164,6 @@
       "segmentHint": "Un segment par déblocage · débloqué <a>{amount}</a>",
       "creditLabel": "Crédit <a>{amount}</a>",
       "leftLabel": "{amount} restants",
-      "drawsByMonth": "Déblocages par mois",
-      "drawsInMonth": "{count, plural, one {# déblocage} other {# déblocages}}",
       "largestDraw": "Plus gros déblocage",
       "lastDraw": "Dernier déblocage",
       "noCredit": "Aucun crédit bancaire enregistré",

@@ -19,8 +19,6 @@ const BANK_RELEASE_KEYS = [
   "segmentHint",
   "creditLabel",
   "leftLabel",
-  "drawsByMonth",
-  "drawsInMonth",
   "largestDraw",
   "lastDraw",
   "noCredit",
@@ -56,7 +54,7 @@ describe("projects.bankRelease i18n parity — key set symmetry", () => {
 });
 
 describe("projects.bankRelease i18n parity — values are translated", () => {
-  for (const key of ["title", "drawsByMonth", "noCredit"] as const) {
+  for (const key of ["title", "largestDraw", "noCredit"] as const) {
     it(`fr.${key} differs from en`, () => {
       expect(locales.fr[key]).not.toBe(locales.en[key]);
     });

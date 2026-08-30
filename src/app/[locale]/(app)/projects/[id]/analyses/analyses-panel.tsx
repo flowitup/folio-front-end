@@ -141,16 +141,11 @@ export function AnalysesPanel({
 
   return (
     <div className="space-y-6">
-      {/* Header — the page title lives in the Topbar (analyses is a
-          TOPBAR_KEYS page, like documents), so only the upload action
-          renders here. */}
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <AnalysisUpload projectId={projectId} onUploaded={handleUploaded} />
-      </div>
-
-      {/* Search + tag filter */}
-      <div className="flex flex-col gap-3">
-        <div className="relative max-w-sm">
+      {/* Toolbar — one calm row: search, tag filter, count, upload. The page
+          title lives in the Topbar (analyses is a TOPBAR_KEYS page, like
+          documents). */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full max-w-[280px]">
           <Search
             className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
@@ -213,6 +208,13 @@ export function AnalysesPanel({
             )}
           </div>
         )}
+
+        <div className="ms-auto flex items-center gap-3">
+          <span className="text-xs text-muted-foreground">
+            {t("toolbar.count", { count: total })}
+          </span>
+          <AnalysisUpload projectId={projectId} onUploaded={handleUploaded} />
+        </div>
       </div>
 
       {/* Grid / empty state */}

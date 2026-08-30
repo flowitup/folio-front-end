@@ -1389,6 +1389,15 @@
   "analyses": {
     "title": "Analyses",
     "subtitle": "Saved reports and guides for this build.",
+    "toolbar": {
+      "count": "{count, plural, one {# report} other {# reports}}"
+    },
+    "detail": {
+      "uploadedByLabel": "Uploaded by",
+      "addedLabel": "Added",
+      "sourceLabel": "Source",
+      "inThisLibrary": "In this library"
+    },
     "empty": {
       "title": "No analysis reports yet",
       "body": "Upload a self-contained HTML report to start building the library."

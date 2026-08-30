@@ -1389,6 +1389,15 @@
   "analyses": {
     "title": "Analyses",
     "subtitle": "Rapports et guides enregistrés pour ce chantier.",
+    "toolbar": {
+      "count": "{count, plural, one {# rapport} other {# rapports}}"
+    },
+    "detail": {
+      "uploadedByLabel": "Ajouté par",
+      "addedLabel": "Ajouté le",
+      "sourceLabel": "Source",
+      "inThisLibrary": "Dans cette bibliothèque"
+    },
     "empty": {
       "title": "Aucun rapport d'analyse pour le moment",
       "body": "Téléversez un rapport HTML autonome pour démarrer la bibliothèque."

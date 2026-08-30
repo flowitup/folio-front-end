@@ -39,9 +39,14 @@ export default async function AppLayout({
           <Topbar />
           {/* Content scaled down so less scrolling is needed; zoom reflows
               layout (shrinks scroll height) unlike transform: scale. Sidebar
-              and Topbar stay at 100%. */}
+              and Topbar stay at 100%. The zoom div is h-full so pages can
+              opt into filling the visible scroll area with their own h-full
+              (percentages resolve across the zoom boundary; taller pages
+              simply overflow and scroll as before). */}
           <main className="scroll-area flex-1 pb-16 lg:pb-0">
-            <div style={{ zoom: 0.8 }}>{children}</div>
+            <div style={{ zoom: 0.8 }} className="h-full">
+              {children}
+            </div>
           </main>
         </div>
         <MobileBottomNav />

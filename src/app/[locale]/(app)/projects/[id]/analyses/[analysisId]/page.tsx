@@ -43,7 +43,10 @@ export default async function AnalysisDetailPage({ params }: PageProps) {
   const canManage = hasAdminPermission || isProjectOwner || isUploader;
 
   return (
-    <div className="flex h-[75vh] min-h-[600px] flex-col gap-4 px-6 py-6">
+    // h-full fills the app shell's visible scroll area (the zoomed layout div
+    // is h-full); a vh-based height would be scaled down by the shell's
+    // zoom: 0.8 and leave dead space below the viewer.
+    <div className="flex h-full min-h-[600px] flex-col gap-4 px-6 py-6">
       <AnalysisDetailPanel projectId={projectId} analysis={analysis} canManage={canManage} />
     </div>
   );

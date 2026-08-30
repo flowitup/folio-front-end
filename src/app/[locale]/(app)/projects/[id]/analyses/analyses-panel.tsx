@@ -141,9 +141,10 @@ export function AnalysesPanel({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">{t("title")}</h1>
+      {/* Header — the page title lives in the Topbar (analyses is a
+          TOPBAR_KEYS page, like documents), so only the upload action
+          renders here. */}
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <AnalysisUpload projectId={projectId} onUploaded={handleUploaded} />
       </div>
 

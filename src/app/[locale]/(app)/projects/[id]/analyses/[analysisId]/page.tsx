@@ -75,6 +75,10 @@ export default async function AnalysisDetailPage({ params }: PageProps) {
     // zoom: 0.8 and leave dead space below the viewer.
     <div className="flex h-full min-h-[600px] flex-col gap-4 px-6 py-6">
       <AnalysisDetailPanel
+        // Keyed by analysis id: the meta rail links to sibling analyses, and
+        // without the key the un-keyed client component would keep the
+        // previous report's useState across that same-segment navigation.
+        key={analysisId}
         projectId={projectId}
         analysis={analysis}
         canManage={canManage}

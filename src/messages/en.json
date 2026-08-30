@@ -1388,6 +1388,7 @@
   },
   "analyses": {
     "title": "Analyses",
+    "subtitle": "Saved reports and guides for this build.",
     "empty": {
       "title": "No analysis reports yet",
       "body": "Upload a self-contained HTML report to start building the library."

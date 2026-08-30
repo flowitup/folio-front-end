@@ -1388,6 +1388,7 @@
   },
   "analyses": {
     "title": "Analyses",
+    "subtitle": "Rapports et guides enregistrés pour ce chantier.",
     "empty": {
       "title": "Aucun rapport d'analyse pour le moment",
       "body": "Téléversez un rapport HTML autonome pour démarrer la bibliothèque."

@@ -1389,6 +1389,15 @@
   "analyses": {
     "title": "Phân tích",
     "subtitle": "Báo cáo và hướng dẫn đã lưu cho công trình.",
+    "toolbar": {
+      "count": "{count, plural, other {# báo cáo}}"
+    },
+    "detail": {
+      "uploadedByLabel": "Người tải lên",
+      "addedLabel": "Ngày thêm",
+      "sourceLabel": "Nguồn",
+      "inThisLibrary": "Trong thư viện này"
+    },
     "empty": {
       "title": "Chưa có báo cáo phân tích nào",
       "body": "Tải lên một báo cáo HTML độc lập để bắt đầu xây dựng thư viện."

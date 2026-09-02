@@ -18,6 +18,8 @@ import {
 import { BankReleaseChart } from "@/components/project/bank-release-chart";
 import { InvoiceDetailRow } from "@/components/invoices/invoice-detail-row";
 import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
+import { InvoiceHighlightPicker } from "@/components/invoices/invoice-highlight-picker";
+import { highlightRowTint } from "@/lib/invoices/highlight-colors";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
 import { LaborInvoicesByWorker } from "@/components/invoices/labor-invoices-by-worker";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
@@ -598,7 +600,13 @@ export default function InvoicesPage() {
                                   aria-expanded={isOpen}
                                   aria-controls={detailId}
                                   className="cursor-pointer"
-                                  style={isOpen ? { background: "var(--paper-2)" } : undefined}
+                                  style={
+                                    isOpen
+                                      ? { background: "var(--paper-2)" }
+                                      : highlightRowTint(invoice.highlight_color)
+                                        ? { background: highlightRowTint(invoice.highlight_color) }
+                                        : undefined
+                                  }
                                   onClick={() => toggleInvoice(invoice.id)}
                                   onKeyDown={(e) => {
                                     if (e.key === "Enter" || e.key === " ") {
@@ -725,6 +733,12 @@ export default function InvoicesPage() {
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <div className="flex items-center justify-end gap-1">
+                                      {canManageInvoices && !invoice.is_auto_generated && (
+                                        <InvoiceHighlightPicker
+                                          invoice={invoice}
+                                          onUpdated={loadInvoices}
+                                        />
+                                      )}
                                       {canManageInvoices &&
                                         invoice.type === "materials_services" &&
                                         invoice.refundable_status == null &&

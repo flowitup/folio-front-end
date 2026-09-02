@@ -20,6 +20,7 @@ import {
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 import { fetchTagsClient } from "@/lib/api/tags-client";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
+import { InvoiceHighlightPicker } from "@/components/invoices/invoice-highlight-picker";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
 import type { ProjectTag } from "@/lib/api/tags";
@@ -186,6 +187,7 @@ export function InvoiceDetailContent({
             )}
           {canManage && !isEditing && !invoice.is_auto_generated && (
             <>
+              <InvoiceHighlightPicker invoice={invoice} onUpdated={onUpdated} />
               <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
                 <Pencil className="h-4 w-4 mr-1" />
                 {t("edit")}

@@ -10,6 +10,7 @@ import {
 } from "@/lib/invoices/refundable-status-display";
 import { formatDate, formatMonthYear } from "@/lib/utils/formatters";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
+import { highlightRowTint } from "@/lib/invoices/highlight-colors";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
@@ -45,7 +46,13 @@ export function InvoiceMobileCard({
   return (
     <div
       className="folio-card overflow-hidden"
-      style={isOpen ? { background: "var(--paper-2)" } : undefined}
+      style={
+        isOpen
+          ? { background: "var(--paper-2)" }
+          : highlightRowTint(invoice.highlight_color)
+            ? { background: highlightRowTint(invoice.highlight_color) }
+            : undefined
+      }
     >
       <button
         type="button"

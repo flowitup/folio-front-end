@@ -362,6 +362,19 @@
     "all": "Tất cả",
     "actions": "Thao tác",
     "printPdf": "In / Lưu PDF",
+    "highlight": {
+      "label": "Màu đánh dấu",
+      "clear": "Xóa",
+      "error": "Cập nhật đánh dấu thất bại",
+      "colors": {
+        "red": "Đỏ",
+        "orange": "Cam",
+        "yellow": "Vàng",
+        "green": "Xanh lá",
+        "blue": "Xanh dương",
+        "purple": "Tím"
+      }
+    },
     "edit": "Chỉnh sửa",
     "cancel": "Hủy",
     "save": "Lưu",

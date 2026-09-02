@@ -9,6 +9,13 @@ export type InvoiceType = "released_funds" | "labor" | "materials_services" | "o
  */
 export type SettledVia = "cash" | "avoir";
 
+/**
+ * Fixed palette for the optional row-highlight color. Stored as a plain string;
+ * null/absent means no highlight. Applies to invoices of every type. The BE
+ * enforces the same palette (schema Literal + CHECK constraint).
+ */
+export type HighlightColor = "red" | "orange" | "yellow" | "green" | "blue" | "purple";
+
 interface InvoiceItem {
   description: string;
   quantity: number;
@@ -119,6 +126,11 @@ export interface Invoice {
    * is set.
    */
   worker_id?: string | null;
+  /**
+   * Optional row-highlight color from the fixed palette. null/absent = no
+   * highlight. Purely visual — the list row / card tints to this color.
+   */
+  highlight_color?: HighlightColor | null;
 }
 
 export interface CreateInvoicePayload {
@@ -161,6 +173,11 @@ export interface CreateInvoicePayload {
    * the link; omitted = keep existing (on update).
    */
   worker_id?: string | null;
+  /**
+   * Optional row-highlight color from the fixed palette. Null clears the
+   * highlight; omitted = keep existing (on update). Valid on any invoice type.
+   */
+  highlight_color?: HighlightColor | null;
 }
 
 export type UpdateInvoicePayload = Partial<CreateInvoicePayload>;

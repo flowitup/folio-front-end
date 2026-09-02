@@ -362,6 +362,19 @@
     "all": "All",
     "actions": "Actions",
     "printPdf": "Print / Save PDF",
+    "highlight": {
+      "label": "Highlight color",
+      "clear": "Clear",
+      "error": "Failed to update highlight",
+      "colors": {
+        "red": "Red",
+        "orange": "Orange",
+        "yellow": "Yellow",
+        "green": "Green",
+        "blue": "Blue",
+        "purple": "Purple"
+      }
+    },
     "edit": "Edit",
     "cancel": "Cancel",
     "save": "Save",

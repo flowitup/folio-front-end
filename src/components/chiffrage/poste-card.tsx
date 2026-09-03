@@ -5,7 +5,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { money } from "@/components/chiffrage/format";
@@ -15,6 +15,9 @@ interface Props {
   poste: ChiffragePoste;
   canManage: boolean;
   dragHandle?: React.ReactNode;
+  /** Whether the section body (shops + articles) is hidden. */
+  collapsed: boolean;
+  onToggleCollapse: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onAddArticle: () => void;
@@ -27,6 +30,8 @@ export function PosteCard({
   poste,
   canManage,
   dragHandle,
+  collapsed,
+  onToggleCollapse,
   onEdit,
   onDelete,
   onAddArticle,
@@ -39,6 +44,21 @@ export function PosteCard({
     <section className="rounded-lg border bg-card" data-testid="poste-card">
       <header className="flex items-center gap-2 border-b px-3 py-2">
         {dragHandle ?? (canManage ? <span className="w-4" /> : null)}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="shrink-0"
+          onClick={onToggleCollapse}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? t("expandSection") : t("collapseSection")}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </Button>
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-semibold">{poste.name}</h3>
           {poste.note ? (
@@ -86,14 +106,18 @@ export function PosteCard({
         ) : null}
       </header>
 
-      {stores}
+      {collapsed ? null : (
+        <>
+          {stores}
 
-      {poste.articles.length === 0 ? (
-        <p className="px-4 py-4 text-sm text-muted-foreground">
-          {t("noArticlesYet")}
-        </p>
-      ) : (
-        <div>{children}</div>
+          {poste.articles.length === 0 ? (
+            <p className="px-4 py-4 text-sm text-muted-foreground">
+              {t("noArticlesYet")}
+            </p>
+          ) : (
+            <div>{children}</div>
+          )}
+        </>
       )}
     </section>
   );

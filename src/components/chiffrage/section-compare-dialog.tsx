@@ -164,7 +164,11 @@ export function SectionCompareDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-h-[85vh] max-w-4xl overflow-y-auto"
+        // DialogContent's default caps width at sm:max-w-lg; the head-to-head
+        // table needs room, so widen it on desktop (the sm: variant must be
+        // overridden, not the base, or the default wins at ≥640px) and cap the
+        // height so a long section scrolls inside the modal.
+        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto sm:max-w-4xl"
         data-testid="section-compare-dialog"
       >
         <DialogHeader>

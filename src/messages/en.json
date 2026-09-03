@@ -1946,6 +1946,7 @@
     "compareShopsSectionSubtitle": "What this section costs at each shop.",
     "collapseSection": "Collapse section",
     "expandSection": "Expand section",
+    "compareToggle": "Compare",
     "compareShopsSectionTitle": "Compare shops — {name}",
     "compareShopsSubtitle": "What the whole project costs at each shop, and what each one does not stock.",
     "compareShopsTitle": "Compare shops",

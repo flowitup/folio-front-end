@@ -149,6 +149,9 @@ export function ChiffragePageClient({
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   // Postes collapsed by the reader; empty by default so sections open as before.
   const [collapsedPostes, setCollapsedPostes] = useState<Set<string>>(new Set());
+  // Postes whose per-section shop comparison is expanded; empty by default so
+  // the comparison is shown only on demand, from the header's Compare toggle.
+  const [comparingPostes, setComparingPostes] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [busyQuoteId, setBusyQuoteId] = useState<string | null>(null);
 
@@ -207,6 +210,14 @@ export function ChiffragePageClient({
 
   const toggleCollapse = (posteId: string) =>
     setCollapsedPostes((prev) => {
+      const next = new Set(prev);
+      if (next.has(posteId)) next.delete(posteId);
+      else next.add(posteId);
+      return next;
+    });
+
+  const toggleCompare = (posteId: string) =>
+    setComparingPostes((prev) => {
       const next = new Set(prev);
       if (next.has(posteId)) next.delete(posteId);
       else next.add(posteId);
@@ -413,6 +424,24 @@ export function ChiffragePageClient({
                       dragHandle={canManage ? handle : undefined}
                       collapsed={collapsedPostes.has(poste.id)}
                       onToggleCollapse={() => toggleCollapse(poste.id)}
+                      canCompare={poste.store_baskets.length > 0}
+                      comparing={comparingPostes.has(poste.id)}
+                      onToggleCompare={() => toggleCompare(poste.id)}
+                      compare={
+                        poste.store_baskets.length > 0 ? (
+                          <div className="border-b p-3">
+                            <StoreComparison
+                              baskets={poste.store_baskets}
+                              stores={tree.stores}
+                              bestMixHt={poste.subtotal_ht}
+                              title={t("compareShopsSectionTitle", {
+                                name: poste.name,
+                              })}
+                              subtitle={t("compareShopsSectionSubtitle")}
+                            />
+                          </div>
+                        ) : undefined
+                      }
                       onEdit={() => setPosteDialog({ open: true, poste })}
                       onDelete={() => {
                         if (
@@ -548,19 +577,6 @@ export function ChiffragePageClient({
                           )}
                         </SortableContext>
                       </DndContext>
-                      {poste.store_baskets.length > 0 ? (
-                        <div className="border-t p-3">
-                          <StoreComparison
-                            baskets={poste.store_baskets}
-                            stores={tree.stores}
-                            bestMixHt={poste.subtotal_ht}
-                            title={t("compareShopsSectionTitle", {
-                              name: poste.name,
-                            })}
-                            subtitle={t("compareShopsSectionSubtitle")}
-                          />
-                        </div>
-                      ) : null}
                     </PosteCard>
                   )}
                 </SortableItem>

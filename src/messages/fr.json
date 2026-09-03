@@ -1946,6 +1946,7 @@
     "compareShopsSectionSubtitle": "Ce que coûte ce poste dans chaque magasin.",
     "collapseSection": "Réduire le poste",
     "expandSection": "Développer le poste",
+    "compareToggle": "Comparer",
     "compareShopsSectionTitle": "Comparer les magasins — {name}",
     "compareShopsSubtitle": "Ce que coûte tout le projet dans chaque magasin, et ce que chacun ne vend pas.",
     "compareShopsTitle": "Comparer les magasins",

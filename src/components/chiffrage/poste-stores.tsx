@@ -3,10 +3,11 @@
 /**
  * The shops to visit for this section — a shopping run, not a single address.
  *
- * Derived, not hand-maintained: these are exactly the shops that carry a price
- * on one of this section's items, so the list cannot drift from the costing.
- * Shops themselves are declared once for the project; a shop with nothing
- * priced here simply does not appear until it has a price on this section.
+ * Derived, not hand-maintained: these are exactly the shops whose price was
+ * retained on one of this section's items — the store on each item's effective
+ * quote — so the list cannot drift from the costing. A shop that only has a
+ * losing competing quote does not appear; you only need to visit where you
+ * actually buy. Shops themselves are declared once for the project.
  *
  * Each entry links out to a map search so the address is one tap away from
  * navigation on a phone, which is where this list actually gets used.

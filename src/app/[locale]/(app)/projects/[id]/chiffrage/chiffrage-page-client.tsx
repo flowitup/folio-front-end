@@ -254,15 +254,20 @@ export function ChiffragePageClient({
   };
 
   /**
-   * The shops to visit for a section: exactly those carrying a price on one of
-   * its items. Derived rather than hand-kept, so the list cannot drift from the
-   * costing it is supposed to describe.
+   * The shops to visit for a section: exactly those whose price was retained on
+   * one of its items — the store on each article's effective (selected or
+   * cheapest) quote, the same one the provisioning plan buys from. A shop that
+   * merely has a competing quote here does not appear; you only need to visit
+   * where you actually buy. Derived rather than hand-kept, so the list cannot
+   * drift from the costing it describes.
    */
-  const shopsPricedIn = (poste: ChiffragePoste): ChiffrageStore[] => {
+  const shopsRetainedIn = (poste: ChiffragePoste): ChiffrageStore[] => {
     const ids = new Set(
-      poste.articles.flatMap((a) =>
-        a.quotes.map((q) => q.store_id).filter((id): id is string => id !== null),
-      ),
+      poste.articles.flatMap((a) => {
+        if (!a.effective_quote_id) return [];
+        const retained = a.quotes.find((q) => q.id === a.effective_quote_id);
+        return retained?.store_id ? [retained.store_id] : [];
+      }),
     );
     return tree.stores.filter((s) => ids.has(s.id));
   };
@@ -420,7 +425,7 @@ export function ChiffragePageClient({
                       }}
                       stores={
                         <PosteStores
-                          stores={shopsPricedIn(poste)}
+                          stores={shopsRetainedIn(poste)}
                           canManage={canManage}
                           onEdit={(store) =>
                             setStoreDialog({

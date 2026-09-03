@@ -52,6 +52,9 @@ const poste = (over: Partial<ChiffragePoste> = {}): ChiffragePoste => ({
 const renderCard = (over: {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  canCompare?: boolean;
+  comparing?: boolean;
+  onToggleCompare?: () => void;
   posteOver?: Partial<ChiffragePoste>;
 } = {}) =>
   render(
@@ -60,10 +63,14 @@ const renderCard = (over: {
       canManage
       collapsed={over.collapsed ?? false}
       onToggleCollapse={over.onToggleCollapse ?? (() => {})}
+      canCompare={over.canCompare ?? false}
+      comparing={over.comparing ?? false}
+      onToggleCompare={over.onToggleCompare ?? (() => {})}
       onEdit={() => {}}
       onDelete={() => {}}
       onAddArticle={() => {}}
       stores={<div data-testid="poste-shops">shops</div>}
+      compare={<div data-testid="poste-compare">compare</div>}
     >
       <div data-testid="poste-body">items</div>
     </PosteCard>,
@@ -96,10 +103,14 @@ describe("PosteCard collapse", () => {
         canManage
         collapsed
         onToggleCollapse={() => {}}
+        canCompare={false}
+        comparing={false}
+        onToggleCompare={() => {}}
         onEdit={() => {}}
         onDelete={() => {}}
         onAddArticle={() => {}}
         stores={<div data-testid="poste-shops">shops</div>}
+        compare={<div data-testid="poste-compare">compare</div>}
       >
         <div data-testid="poste-body">items</div>
       </PosteCard>,
@@ -119,5 +130,82 @@ describe("PosteCard collapse", () => {
     renderCard({ collapsed: true, posteOver: { articles: [] } });
     expect(screen.queryByText("noArticlesYet")).not.toBeInTheDocument();
     expect(screen.getByLabelText("expandSection")).toBeInTheDocument();
+  });
+});
+
+describe("PosteCard shop comparison toggle", () => {
+  it("offers the Compare control only when the section has baskets", () => {
+    const { rerender } = renderCard({ canCompare: false });
+    expect(screen.queryByRole("button", { name: "compareToggle" })).toBeNull();
+
+    rerender(
+      <PosteCard
+        poste={poste()}
+        canManage
+        collapsed={false}
+        onToggleCollapse={() => {}}
+        canCompare
+        comparing={false}
+        onToggleCompare={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onAddArticle={() => {}}
+        stores={<div data-testid="poste-shops">shops</div>}
+        compare={<div data-testid="poste-compare">compare</div>}
+      >
+        <div data-testid="poste-body">items</div>
+      </PosteCard>,
+    );
+    expect(
+      screen.getByRole("button", { name: "compareToggle" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the comparison only while expanded, and reports state via aria-pressed", () => {
+    const { rerender } = renderCard({ canCompare: true, comparing: false });
+    expect(screen.queryByTestId("poste-compare")).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "compareToggle" }),
+    ).toHaveAttribute("aria-pressed", "false");
+
+    rerender(
+      <PosteCard
+        poste={poste()}
+        canManage
+        collapsed={false}
+        onToggleCollapse={() => {}}
+        canCompare
+        comparing
+        onToggleCompare={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onAddArticle={() => {}}
+        stores={<div data-testid="poste-shops">shops</div>}
+        compare={<div data-testid="poste-compare">compare</div>}
+      >
+        <div data-testid="poste-body">items</div>
+      </PosteCard>,
+    );
+    expect(screen.getByTestId("poste-compare")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "compareToggle" }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("keeps the comparison visible even when the section body is collapsed", () => {
+    // The Compare toggle stands on its own — you should not have to expand the
+    // whole section to read its shop comparison.
+    renderCard({ collapsed: true, canCompare: true, comparing: true });
+    expect(screen.getByTestId("poste-compare")).toBeInTheDocument();
+    expect(screen.queryByTestId("poste-body")).toBeNull();
+  });
+
+  it("asks the parent to toggle when the Compare control is clicked", async () => {
+    const onToggleCompare = vi.fn();
+    renderCard({ canCompare: true, onToggleCompare });
+    await userEvent.click(
+      screen.getByRole("button", { name: "compareToggle" }),
+    );
+    expect(onToggleCompare).toHaveBeenCalledTimes(1);
   });
 });

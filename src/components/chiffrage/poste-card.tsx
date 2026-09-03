@@ -5,7 +5,14 @@
  */
 
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Pencil,
+  Plus,
+  Scale,
+  Trash2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { money } from "@/components/chiffrage/format";
@@ -18,11 +25,22 @@ interface Props {
   /** Whether the section body (shops + articles) is hidden. */
   collapsed: boolean;
   onToggleCollapse: () => void;
+  /** Whether this section has shop baskets worth a comparison. */
+  canCompare: boolean;
+  /** Whether the per-section shop comparison is expanded. */
+  comparing: boolean;
+  onToggleCompare: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onAddArticle: () => void;
   /** Rendered between the header and the articles: the shops to visit. */
   stores?: React.ReactNode;
+  /**
+   * The per-section shop comparison, shown on demand under the header. Kept
+   * outside the collapse gate so the Compare toggle works on its own, without
+   * having to expand the whole section first.
+   */
+  compare?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -32,10 +50,14 @@ export function PosteCard({
   dragHandle,
   collapsed,
   onToggleCollapse,
+  canCompare,
+  comparing,
+  onToggleCompare,
   onEdit,
   onDelete,
   onAddArticle,
   stores,
+  compare,
   children,
 }: Props) {
   const t = useTranslations("chiffrage");
@@ -73,6 +95,20 @@ export function PosteCard({
             {money(poste.subtotal_ttc)} {t("ttcShort")}
           </p>
         </div>
+        {canCompare ? (
+          <Button
+            type="button"
+            variant={comparing ? "secondary" : "ghost"}
+            size="sm"
+            className="shrink-0"
+            onClick={onToggleCompare}
+            aria-pressed={comparing}
+            title={t("compareToggle")}
+          >
+            <Scale className="h-4 w-4" />
+            <span className="ml-1 hidden sm:inline">{t("compareToggle")}</span>
+          </Button>
+        ) : null}
         {canManage ? (
           <div className="flex shrink-0 items-center gap-1">
             <Button
@@ -105,6 +141,8 @@ export function PosteCard({
           </div>
         ) : null}
       </header>
+
+      {comparing ? compare : null}
 
       {collapsed ? null : (
         <>

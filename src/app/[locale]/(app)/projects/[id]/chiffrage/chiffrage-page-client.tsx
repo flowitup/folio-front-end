@@ -147,6 +147,8 @@ export function ChiffragePageClient({
   const [tree, setTree] = useState(initialTree);
   const [units, setUnits] = useState(initialUnits);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  // Postes collapsed by the reader; empty by default so sections open as before.
+  const [collapsedPostes, setCollapsedPostes] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [busyQuoteId, setBusyQuoteId] = useState<string | null>(null);
 
@@ -200,6 +202,14 @@ export function ChiffragePageClient({
       const next = new Set(prev);
       if (next.has(articleId)) next.delete(articleId);
       else next.add(articleId);
+      return next;
+    });
+
+  const toggleCollapse = (posteId: string) =>
+    setCollapsedPostes((prev) => {
+      const next = new Set(prev);
+      if (next.has(posteId)) next.delete(posteId);
+      else next.add(posteId);
       return next;
     });
 
@@ -396,6 +406,8 @@ export function ChiffragePageClient({
                       poste={poste}
                       canManage={canManage}
                       dragHandle={canManage ? handle : undefined}
+                      collapsed={collapsedPostes.has(poste.id)}
+                      onToggleCollapse={() => toggleCollapse(poste.id)}
                       onEdit={() => setPosteDialog({ open: true, poste })}
                       onDelete={() => {
                         if (

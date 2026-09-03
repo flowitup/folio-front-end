@@ -1944,6 +1944,8 @@
     "close": "Fermer",
     "collapseQuotes": "Masquer les prix fournisseurs",
     "compareShopsSectionSubtitle": "Ce que coûte ce poste dans chaque magasin.",
+    "collapseSection": "Réduire le poste",
+    "expandSection": "Développer le poste",
     "compareShopsSectionTitle": "Comparer les magasins — {name}",
     "compareShopsSubtitle": "Ce que coûte tout le projet dans chaque magasin, et ce que chacun ne vend pas.",
     "compareShopsTitle": "Comparer les magasins",

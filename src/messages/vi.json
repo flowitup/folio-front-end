@@ -1944,6 +1944,8 @@
     "close": "Đóng",
     "collapseQuotes": "Ẩn các báo giá",
     "compareShopsSectionSubtitle": "Chi phí của hạng mục này tại mỗi cửa hàng.",
+    "collapseSection": "Thu gọn hạng mục",
+    "expandSection": "Mở rộng hạng mục",
     "compareShopsSectionTitle": "So sánh cửa hàng — {name}",
     "compareShopsSubtitle": "Chi phí toàn dự án tại mỗi cửa hàng, và những gì mỗi nơi không có hàng.",
     "compareShopsTitle": "So sánh cửa hàng",

@@ -38,10 +38,9 @@ import { PosteCard } from "@/components/chiffrage/poste-card";
 import { PosteStores } from "@/components/chiffrage/poste-stores";
 import { RoomHeading } from "@/components/chiffrage/room-heading";
 import { ArticleImageDialog } from "@/components/chiffrage/article-image-dialog";
-import { StoreComparison } from "@/components/chiffrage/store-comparison";
+import { SectionCompareDialog } from "@/components/chiffrage/section-compare-dialog";
 import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
-import { ProvisioningTable } from "@/components/chiffrage/provisioning-table";
 import {
   QuoteFormDialog,
   type QuoteFormValues,
@@ -149,9 +148,11 @@ export function ChiffragePageClient({
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   // Postes collapsed by the reader; empty by default so sections open as before.
   const [collapsedPostes, setCollapsedPostes] = useState<Set<string>>(new Set());
-  // Postes whose per-section shop comparison is expanded; empty by default so
-  // the comparison is shown only on demand, from the header's Compare toggle.
-  const [comparingPostes, setComparingPostes] = useState<Set<string>>(new Set());
+  // The section whose head-to-head shop comparison modal is open, if any.
+  const [compareDialog, setCompareDialog] = useState<{
+    open: boolean;
+    poste: ChiffragePoste | null;
+  }>({ open: false, poste: null });
   const [submitting, setSubmitting] = useState(false);
   const [busyQuoteId, setBusyQuoteId] = useState<string | null>(null);
 
@@ -210,14 +211,6 @@ export function ChiffragePageClient({
 
   const toggleCollapse = (posteId: string) =>
     setCollapsedPostes((prev) => {
-      const next = new Set(prev);
-      if (next.has(posteId)) next.delete(posteId);
-      else next.add(posteId);
-      return next;
-    });
-
-  const toggleCompare = (posteId: string) =>
-    setComparingPostes((prev) => {
       const next = new Set(prev);
       if (next.has(posteId)) next.delete(posteId);
       else next.add(posteId);
@@ -425,22 +418,8 @@ export function ChiffragePageClient({
                       collapsed={collapsedPostes.has(poste.id)}
                       onToggleCollapse={() => toggleCollapse(poste.id)}
                       canCompare={poste.store_baskets.length > 0}
-                      comparing={comparingPostes.has(poste.id)}
-                      onToggleCompare={() => toggleCompare(poste.id)}
-                      compare={
-                        poste.store_baskets.length > 0 ? (
-                          <div className="border-b p-3">
-                            <StoreComparison
-                              baskets={poste.store_baskets}
-                              stores={tree.stores}
-                              bestMixHt={poste.subtotal_ht}
-                              title={t("compareShopsSectionTitle", {
-                                name: poste.name,
-                              })}
-                              subtitle={t("compareShopsSectionSubtitle")}
-                            />
-                          </div>
-                        ) : undefined
+                      onCompare={() =>
+                        setCompareDialog({ open: true, poste })
                       }
                       onEdit={() => setPosteDialog({ open: true, poste })}
                       onDelete={() => {
@@ -586,15 +565,17 @@ export function ChiffragePageClient({
         </DndContext>
       )}
 
-      <StoreComparison
-        baskets={tree.store_baskets}
-        stores={tree.stores}
-        bestMixHt={tree.total_ht}
-        title={t("compareShopsTitle")}
-        subtitle={t("compareShopsSubtitle")}
-      />
-
-      <ProvisioningTable tree={tree} />
+      {compareDialog.open && compareDialog.poste ? (
+        <SectionCompareDialog
+          key={compareDialog.poste.id}
+          open
+          poste={compareDialog.poste}
+          stores={tree.stores}
+          onOpenChange={(open) =>
+            setCompareDialog((prev) => ({ ...prev, open }))
+          }
+        />
+      ) : null}
 
       {posteDialog.open ? (
         <PosteFormDialog

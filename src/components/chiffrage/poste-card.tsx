@@ -27,20 +27,13 @@ interface Props {
   onToggleCollapse: () => void;
   /** Whether this section has shop baskets worth a comparison. */
   canCompare: boolean;
-  /** Whether the per-section shop comparison is expanded. */
-  comparing: boolean;
-  onToggleCompare: () => void;
+  /** Open the head-to-head shop comparison for this section. */
+  onCompare: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onAddArticle: () => void;
   /** Rendered between the header and the articles: the shops to visit. */
   stores?: React.ReactNode;
-  /**
-   * The per-section shop comparison, shown on demand under the header. Kept
-   * outside the collapse gate so the Compare toggle works on its own, without
-   * having to expand the whole section first.
-   */
-  compare?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -51,13 +44,11 @@ export function PosteCard({
   collapsed,
   onToggleCollapse,
   canCompare,
-  comparing,
-  onToggleCompare,
+  onCompare,
   onEdit,
   onDelete,
   onAddArticle,
   stores,
-  compare,
   children,
 }: Props) {
   const t = useTranslations("chiffrage");
@@ -98,11 +89,10 @@ export function PosteCard({
         {canCompare ? (
           <Button
             type="button"
-            variant={comparing ? "secondary" : "ghost"}
+            variant="ghost"
             size="sm"
             className="shrink-0"
-            onClick={onToggleCompare}
-            aria-pressed={comparing}
+            onClick={onCompare}
             title={t("compareToggle")}
           >
             <Scale className="h-4 w-4" />
@@ -141,8 +131,6 @@ export function PosteCard({
           </div>
         ) : null}
       </header>
-
-      {comparing ? compare : null}
 
       {collapsed ? null : (
         <>

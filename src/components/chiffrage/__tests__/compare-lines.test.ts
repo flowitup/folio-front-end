@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  bestMixHt,
   buildCompareLines,
   formatGapPercent,
   lineVerdict,
@@ -73,6 +74,15 @@ describe("lineVerdict", () => {
     expect(v.cheaper).toBe("b");
   });
 
+  it("drops the percentage when the cheaper price is zero", () => {
+    expect(lineVerdict(quote("qa", "A", 0), quote("qb", "B", 12))).toEqual({
+      kind: "gap",
+      gap: 12,
+      pct: null,
+      cheaper: "a",
+    });
+  });
+
   it("calls equal prices a tie and a missing side unpriced", () => {
     expect(lineVerdict(quote("qa", "A", 289), quote("qb", "B", 289))).toEqual({ kind: "tie" });
     expect(lineVerdict(quote("qa", "A", 289), null)).toEqual({ kind: "unpriced" });
@@ -121,6 +131,17 @@ describe("buildCompareLines / summarizeLines", () => {
       "B",
     );
     expect(lines.map((l) => l.article.id)).toEqual(["first", "second"]);
+  });
+});
+
+describe("bestMixHt", () => {
+  it("sums the cheapest quote per item times quantity, skipping unquoted items", () => {
+    const articles = [
+      article("a", 1, [quote("q1", "A", 10), quote("q2", "B", 8)], 2),
+      article("b", 2, [quote("q3", "A", 5)], 3),
+      article("c", 3, []),
+    ];
+    expect(bestMixHt(articles)).toBe(8 * 2 + 5 * 3);
   });
 });
 

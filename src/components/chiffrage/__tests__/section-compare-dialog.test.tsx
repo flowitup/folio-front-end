@@ -247,6 +247,23 @@ describe("SectionCompareDialog", () => {
     expect(cells[2].textContent).toBe("—");
   });
 
+  it("measures the strip against the cheapest-per-item mix, not the effective subtotal", () => {
+    // Alpha's full basket is 15 HT; cheapest per item is 10 + 5 = 15 too, so
+    // it matches the best mix even though the poste subtotal says otherwise.
+    const pinnedDearer: ChiffragePoste = { ...poste(), subtotal_ht: 17, subtotal_ttc: 20 };
+    render(
+      <SectionCompareDialog
+        open
+        poste={pinnedDearer}
+        stores={[ALPHA, BRAVO]}
+        onOpenChange={() => {}}
+      />,
+    );
+    expect(screen.getAllByTestId("compare-basket-card")[0].textContent).toContain(
+      "compareEqualsBestMix",
+    );
+  });
+
   it("flags a partial basket in the footer", () => {
     renderDialog();
     expect(screen.getByTestId("compare-footer-coverage").textContent).toBe(
@@ -261,8 +278,10 @@ describe("SectionCompareDialog", () => {
 
     fireEvent.click(screen.getByTestId("compare-diff-toggle"));
 
-    // Both items have at least one quote, so both open.
-    expect(screen.getAllByTestId("section-compare-note-row")).toHaveLength(2);
+    // Only item one has notes that differ; item two stays closed (its own
+    // chevron still opens it).
+    expect(screen.getAllByTestId("section-compare-note-row")).toHaveLength(1);
+    expect(screen.getAllByTestId("section-compare-row")[0]).toHaveAttribute("data-expanded", "true");
     expect(screen.getByTestId("compare-diff-legend")).toBeInTheDocument();
     expect(screen.getByTestId("compare-diff-toggle")).toHaveAttribute(
       "aria-pressed",
@@ -273,7 +292,7 @@ describe("SectionCompareDialog", () => {
 
   it("starts expanded when showDifferencesDefault is set and nothing is remembered", () => {
     renderDialog(true);
-    expect(screen.getAllByTestId("section-compare-note-row")).toHaveLength(2);
+    expect(screen.getAllByTestId("section-compare-note-row")).toHaveLength(1);
   });
 
   it("lets the remembered choice win over showDifferencesDefault", () => {
@@ -300,7 +319,7 @@ describe("SectionCompareDialog", () => {
     localStorage.setItem(SHOW_DIFFERENCES_STORAGE_KEY, "1");
     renderDialog();
     const panels = screen.getAllByTestId("section-compare-note-row");
-    expect(panels).toHaveLength(2);
+    expect(panels).toHaveLength(1);
     const noteA = within(panels[0]).getByTestId("compare-note-a");
     const noteB = within(panels[0]).getByTestId("compare-note-b");
     const alphaMarks = [...noteA.querySelectorAll("mark")].map((m) => m.textContent);
@@ -313,15 +332,18 @@ describe("SectionCompareDialog", () => {
     expect(noteB.textContent).not.toContain("compareCheaperLabel");
     // Gap sentence: Bravo is 2,00 € more per unit (+20 %), 2,00 € on 1 unit.
     expect(plain(within(panels[0]).getByTestId("compare-gap-explanation").textContent)).toBe(
-      "compareGapExplanation(Bravo|Alpha|2,00 €|+20 %|2,00 €|1)",
+      "compareGapExplanation(Bravo|Alpha|2,00 €|2,00 €|1|+20 %)",
     );
   });
 
   it("says 'no note' for a quote without one and 'no quote' where there is none", () => {
-    localStorage.setItem(SHOW_DIFFERENCES_STORAGE_KEY, "1");
     renderDialog();
-    const panel = screen.getAllByTestId("section-compare-note-row")[1];
-    // Item two: Alpha priced it with no note; Bravo has no quote at all.
+    // Item two has no note differences, so "expand all" leaves it closed;
+    // open it from its chevron. Alpha priced it with no note; Bravo has no
+    // quote at all.
+    const rows = screen.getAllByTestId("section-compare-row");
+    fireEvent.click(within(rows[1]).getByTestId("compare-row-toggle"));
+    const panel = screen.getByTestId("section-compare-note-row");
     expect(within(panel).getByTestId("compare-note-a").textContent).toContain("compareNoNote");
     expect(within(panel).getByTestId("compare-note-b").textContent).toContain("compareNoQuote");
     expect(within(panel).queryByTestId("note-diff")).toBeNull();

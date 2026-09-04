@@ -9,6 +9,7 @@
  * many things differ before anyone expands it.
  */
 
+import { formatDelta } from "@/components/chiffrage/format";
 import {
   diffQuoteNotes,
   type NoteSegment,
@@ -16,8 +17,12 @@ import {
 import type { ChiffrageArticle, ChiffrageQuote } from "@/lib/api/chiffrage";
 
 export type LineVerdict =
-  /** Both shops priced it and the prices differ. `gap` is B − A per unit. */
-  | { kind: "gap"; gap: number; pct: number; cheaper: "a" | "b" }
+  /**
+   * Both shops priced it and the prices differ. `gap` is B − A per unit;
+   * `pct` is relative to the cheaper price, or null when that price is 0 €
+   * (a ratio against zero would read as "no difference").
+   */
+  | { kind: "gap"; gap: number; pct: number | null; cheaper: "a" | "b" }
   /** Both shops priced it at the same unit price. */
   | { kind: "tie" }
   /** At least one side has no quote — nothing to compare on price. */
@@ -66,7 +71,7 @@ export function lineVerdict(
   return {
     kind: "gap",
     gap,
-    pct: cheapest > 0 ? gap / cheapest : 0,
+    pct: cheapest > 0 ? gap / cheapest : null,
     cheaper: gap > 0 ? "a" : "b",
   };
 }
@@ -119,13 +124,22 @@ export function summarizeLines(lines: CompareLine[]): CompareSummary {
   return summary;
 }
 
-const SIGNED_PERCENT = new Intl.NumberFormat("fr-FR", {
-  style: "percent",
-  maximumFractionDigits: 1,
-  signDisplay: "always",
-});
-
 /** "+11,7 %" — one decimal, always signed, so the direction is never implied. */
 export function formatGapPercent(pct: number): string {
-  return SIGNED_PERCENT.format(pct);
+  return formatDelta(pct, 1);
+}
+
+/**
+ * Cheapest quote per item, summed — what buying each item wherever it is
+ * cheapest would cost. Not the poste subtotal: that follows the *effective*
+ * quote, which a user may have pinned to a dearer one.
+ */
+export function bestMixHt(articles: ChiffrageArticle[]): number {
+  let total = 0;
+  for (const article of articles) {
+    if (article.quotes.length === 0) continue;
+    const cheapest = Math.min(...article.quotes.map((q) => q.unit_price_ht));
+    total += cheapest * article.quantity;
+  }
+  return total;
 }

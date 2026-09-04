@@ -33,14 +33,21 @@ export function CompareLineDetails({ line, shopAName, shopBName }: Props) {
     const dearer = verdict.cheaper === "a" ? shopBName : shopAName;
     const cheaper = verdict.cheaper === "a" ? shopAName : shopBName;
     const gap = Math.abs(verdict.gap);
-    return t("compareGapExplanation", {
+    const values = {
       dearer,
       cheaper,
       gap: money(gap),
-      pct: formatGapPercent(Math.abs(verdict.pct)),
       lineGap: money(gap * article.quantity),
       qty: `${quantity(article.quantity)}${article.unit ? ` ${article.unit}` : ""}`,
-    });
+    };
+    // No percentage when the cheaper price is 0 € — a ratio against zero
+    // would read as "no difference".
+    return verdict.pct === null
+      ? t("compareGapExplanationNoPct", values)
+      : t("compareGapExplanation", {
+          ...values,
+          pct: formatGapPercent(Math.abs(verdict.pct)),
+        });
   };
 
   // A shop with a quote but no note reads "No note"; a shop with no quote at

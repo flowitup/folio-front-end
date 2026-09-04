@@ -18,7 +18,7 @@
  * the first time.
  */
 
-import { Fragment, useId, useState } from "react";
+import { Fragment, useId, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronRight, ListChecks } from "lucide-react";
 
@@ -40,6 +40,7 @@ import {
 import { CompareBasketStrip } from "@/components/chiffrage/compare-basket-strip";
 import { CompareLineDetails } from "@/components/chiffrage/compare-line-details";
 import {
+  bestMixHt,
   buildCompareLines,
   formatGapPercent,
   summarizeLines,
@@ -126,10 +127,19 @@ export function SectionCompareDialog({
   const nameA = nameOf(shopA, t("compareDialogShopA"));
   const nameB = nameOf(shopB, t("compareDialogShopB"));
 
-  const lines = buildCompareLines(poste.articles, shopA, shopB);
+  // Diffing every note is the expensive part; only redo it when the pair or
+  // the section changes, not on every row toggle.
+  const lines = useMemo(
+    () => buildCompareLines(poste.articles, shopA, shopB),
+    [poste.articles, shopA, shopB],
+  );
+  const bestMix = useMemo(() => bestMixHt(poste.articles), [poste.articles]);
   const summary = summarizeLines(lines);
+  // "Expand all differences" means exactly that: rows whose notes differ.
+  // Any other row with a quote can still be opened from its own chevron.
   const isOpen = (line: CompareLine) =>
-    line.expandable && (rowOverrides[line.article.id] ?? allOpen);
+    line.expandable &&
+    (rowOverrides[line.article.id] ?? (allOpen && line.differenceCount > 0));
   const anyOpen = lines.some(isOpen);
 
   const toggleAll = () => {
@@ -159,6 +169,7 @@ export function SectionCompareDialog({
     id: string,
     letter: string,
     value: string | null,
+    other: string | null,
     onChange: (v: string) => void,
     label: string,
   ) => (
@@ -177,7 +188,8 @@ export function SectionCompareDialog({
       </SelectTrigger>
       <SelectContent>
         {stores.map((s) => (
-          <SelectItem key={s.id} value={s.id}>
+          // A shop against itself is all ties — keep the other side's pick out.
+          <SelectItem key={s.id} value={s.id} disabled={s.id === other}>
             {s.name}
           </SelectItem>
         ))}
@@ -232,10 +244,14 @@ export function SectionCompareDialog({
           {signed}
         </span>
         <span className="block text-xs text-muted-foreground">
-          {t("compareGapAt", {
-            pct: formatGapPercent(v.pct),
-            shop: v.cheaper === "a" ? nameB : nameA,
-          })}
+          {v.pct === null
+            ? v.cheaper === "a"
+              ? nameB
+              : nameA
+            : t("compareGapAt", {
+                pct: formatGapPercent(v.pct),
+                shop: v.cheaper === "a" ? nameB : nameA,
+              })}
         </span>
       </span>
     );
@@ -257,7 +273,8 @@ export function SectionCompareDialog({
   };
 
   const partialBaskets = [basketA, basketB].filter(
-    (b) => b != null && b.priced_article_count > 0 && !b.covers_all,
+    (b, i, all) =>
+      b != null && b.priced_article_count > 0 && !b.covers_all && all.indexOf(b) === i,
   );
 
   return (
@@ -283,16 +300,16 @@ export function SectionCompareDialog({
             </DialogDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            {picker(shopAId, "A", shopA, setShopA, t("compareDialogShopA"))}
+            {picker(shopAId, "A", shopA, shopB, setShopA, t("compareDialogShopA"))}
             <span className="label-cap text-muted-foreground">vs</span>
-            {picker(shopBId, "B", shopB, setShopB, t("compareDialogShopB"))}
+            {picker(shopBId, "B", shopB, shopA, setShopB, t("compareDialogShopB"))}
           </div>
         </DialogHeader>
 
         <CompareBasketStrip
           baskets={poste.store_baskets}
           stores={stores}
-          bestMixHt={poste.subtotal_ht}
+          bestMixHt={bestMix}
         />
 
         <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-3">

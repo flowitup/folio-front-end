@@ -67,7 +67,6 @@ const renderCard = (over: {
       onEdit={() => {}}
       onDelete={() => {}}
       onAddArticle={() => {}}
-      stores={<div data-testid="poste-shops">shops</div>}
     >
       <div data-testid="poste-body">items</div>
     </PosteCard>,
@@ -76,13 +75,11 @@ const renderCard = (over: {
 describe("PosteCard collapse", () => {
   it("shows the body when open", () => {
     renderCard({ collapsed: false });
-    expect(screen.getByTestId("poste-shops")).toBeInTheDocument();
     expect(screen.getByTestId("poste-body")).toBeInTheDocument();
   });
 
   it("hides the body when collapsed, keeping the header and subtotal", () => {
     renderCard({ collapsed: true });
-    expect(screen.queryByTestId("poste-shops")).not.toBeInTheDocument();
     expect(screen.queryByTestId("poste-body")).not.toBeInTheDocument();
     // The header still names the section and shows its running total.
     expect(screen.getByText("Lighting")).toBeInTheDocument();
@@ -105,7 +102,6 @@ describe("PosteCard collapse", () => {
         onEdit={() => {}}
         onDelete={() => {}}
         onAddArticle={() => {}}
-        stores={<div data-testid="poste-shops">shops</div>}
       >
         <div data-testid="poste-body">items</div>
       </PosteCard>,
@@ -144,7 +140,6 @@ describe("PosteCard shop comparison", () => {
         onEdit={() => {}}
         onDelete={() => {}}
         onAddArticle={() => {}}
-        stores={<div data-testid="poste-shops">shops</div>}
       >
         <div data-testid="poste-body">items</div>
       </PosteCard>,

@@ -35,11 +35,9 @@ import { ArticleRow, DragHandle } from "@/components/chiffrage/article-row";
 import { ArticleFormDialog } from "@/components/chiffrage/article-form-dialog";
 import { ChiffrageTotals } from "@/components/chiffrage/chiffrage-totals";
 import { PosteCard } from "@/components/chiffrage/poste-card";
-import { PosteStores } from "@/components/chiffrage/poste-stores";
 import { RoomHeading } from "@/components/chiffrage/room-heading";
 import { ArticleImageDialog } from "@/components/chiffrage/article-image-dialog";
 import { SectionCompareDialog } from "@/components/chiffrage/section-compare-dialog";
-import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
 import {
   QuoteFormDialog,
@@ -64,7 +62,6 @@ import {
   updateArticleAction,
   updatePosteAction,
   setArticleImageFromUrlAction,
-  updateStoreAction,
   uploadArticleImageAction,
   updateQuoteAction,
 } from "./_actions/chiffrage-actions";
@@ -175,11 +172,6 @@ export function ChiffragePageClient({
   // Blob URLs are cached per image_ref; bumping this forces a refetch after a
   // change, since the ref itself may be unchanged (same article id).
   const [imageVersion, setImageVersion] = useState(0);
-  const [storeDialog, setStoreDialog] = useState<{
-    open: boolean;
-    posteId: string | null;
-    store: ChiffrageStore | null;
-  }>({ open: false, posteId: null, store: null });
   const [quoteDialog, setQuoteDialog] = useState<{
     open: boolean;
     articleId: string | null;
@@ -255,25 +247,6 @@ export function ChiffragePageClient({
       rows.push({ kind: "article", article });
     }
     return { sorted, rows };
-  };
-
-  /**
-   * The shops to visit for a section: exactly those whose price was retained on
-   * one of its items — the store on each article's effective (selected or
-   * cheapest) quote, the same one the provisioning plan buys from. A shop that
-   * merely has a competing quote here does not appear; you only need to visit
-   * where you actually buy. Derived rather than hand-kept, so the list cannot
-   * drift from the costing it describes.
-   */
-  const shopsRetainedIn = (poste: ChiffragePoste): ChiffrageStore[] => {
-    const ids = new Set(
-      poste.articles.flatMap((a) => {
-        if (!a.effective_quote_id) return [];
-        const retained = a.quotes.find((q) => q.id === a.effective_quote_id);
-        return retained?.store_id ? [retained.store_id] : [];
-      }),
-    );
-    return tree.stores.filter((s) => ids.has(s.id));
   };
 
   const addStore = async (name: string): Promise<ChiffrageStore | null> => {
@@ -431,19 +404,6 @@ export function ChiffragePageClient({
                           );
                         }
                       }}
-                      stores={
-                        <PosteStores
-                          stores={shopsRetainedIn(poste)}
-                          canManage={canManage}
-                          onEdit={(store) =>
-                            setStoreDialog({
-                              open: true,
-                              posteId: poste.id,
-                              store,
-                            })
-                          }
-                        />
-                      }
                       onAddArticle={() =>
                         setArticleDialog({
                           open: true,
@@ -619,23 +579,6 @@ export function ChiffragePageClient({
             );
             if (ok) setImageVersion((v) => v + 1);
             return ok;
-          }}
-        />
-      ) : null}
-
-      {storeDialog.open ? (
-        <StoreFormDialog
-          open
-          store={storeDialog.store}
-          submitting={submitting}
-          onOpenChange={(open) => setStoreDialog((s) => ({ ...s, open }))}
-          onSubmit={async (values) => {
-            const ok = await mutate(() =>
-              storeDialog.store
-                ? updateStoreAction(projectId, storeDialog.store.id, values)
-                : createStoreAction(projectId, values),
-            );
-            if (ok) setStoreDialog({ open: false, posteId: null, store: null });
           }}
         />
       ) : null}

@@ -6,6 +6,10 @@
  * Every quote is shown HT *and* TTC because suppliers publish inconsistently;
  * the delta column is computed against the cheapest HT so the user can see what
  * choosing a dearer offer actually costs before deciding.
+ *
+ * Notes are diffed against each other: the words one quote has that another
+ * lacks (a size, an option, a discount) are highlighted so the reason behind a
+ * price gap is visible without reading every note twice.
  */
 
 import { useTranslations } from "next-intl";
@@ -18,6 +22,14 @@ import {
   formatDelta,
   money,
 } from "@/components/chiffrage/format";
+import {
+  NOTE_DIFF_MARK_CLASS,
+  NoteDiffText,
+} from "@/components/chiffrage/note-diff-text";
+import {
+  diffQuoteNotes,
+  hasNoteDifferences,
+} from "@/components/chiffrage/quote-note-diff";
 import { shopNameFor } from "@/components/chiffrage/shop-label";
 import type {
   ChiffrageArticle,
@@ -56,6 +68,8 @@ export function QuoteComparisonTable({
   }
 
   const cheapest = Math.min(...article.quotes.map((q) => q.unit_price_ht));
+  const noteDiff = diffQuoteNotes(article.quotes.map((q) => q.note));
+  const showLegend = hasNoteDifferences(noteDiff);
 
   return (
     <div className="overflow-x-auto">
@@ -80,7 +94,7 @@ export function QuoteComparisonTable({
           </tr>
         </thead>
         <tbody>
-          {article.quotes.map((q) => {
+          {article.quotes.map((q, i) => {
             const isEffective = q.id === article.effective_quote_id;
             const isCheapest = q.unit_price_ht === cheapest;
             const delta = deltaVsCheapest(q.unit_price_ht, cheapest);
@@ -119,7 +133,7 @@ export function QuoteComparisonTable({
                   </div>
                   {q.note ? (
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {q.note}
+                      <NoteDiffText segments={noteDiff[i]} />
                     </p>
                   ) : null}
                 </td>
@@ -177,6 +191,15 @@ export function QuoteComparisonTable({
           })}
         </tbody>
       </table>
+      {showLegend ? (
+        <p
+          className="px-4 pb-2 text-xs text-muted-foreground"
+          data-testid="quote-note-diff-legend"
+        >
+          <mark className={NOTE_DIFF_MARK_CLASS}>{t("compareDiffLegendSample")}</mark>{" "}
+          {t("compareDiffLegend")}
+        </p>
+      ) : null}
     </div>
   );
 }

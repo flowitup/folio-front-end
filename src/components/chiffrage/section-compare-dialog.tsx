@@ -9,11 +9,19 @@
  * recorded quotes — a shop with no quote for an item shows a dash, never a
  * zero, so a gap never reads as free. The pickers list every project shop, so
  * you can line up a shop that prices nothing here (it simply shows dashes).
+ *
+ * Prices alone do not say *why* two shops differ — the quote notes do (sizes,
+ * options, discount, catalogue price). "Show differences" adds a muted line
+ * under each item with both notes, the words unique to one side highlighted.
+ * It is off by default to keep the table readable, and the choice is kept in
+ * localStorage so it survives reopening the dialog.
  */
 
-import { useId, useState } from "react";
+import { Fragment, useId, useState } from "react";
 import { useTranslations } from "next-intl";
+import { ListChecks } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -29,10 +37,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { money, quantity } from "@/components/chiffrage/format";
+import {
+  NOTE_DIFF_MARK_CLASS,
+  NoteDiffText,
+} from "@/components/chiffrage/note-diff-text";
+import {
+  diffQuoteNotes,
+  type NoteSegment,
+} from "@/components/chiffrage/quote-note-diff";
 import { StoreComparison } from "@/components/chiffrage/store-comparison";
 import type {
   ChiffrageArticle,
   ChiffragePoste,
+  ChiffrageQuote,
   ChiffrageStore,
 } from "@/lib/api/chiffrage";
 
@@ -44,18 +61,18 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-/** Cheapest recorded price for an article at a shop, or null if none. */
-function priceAt(
+/** Remembers whether the note differences are expanded. */
+export const SHOW_DIFFERENCES_STORAGE_KEY = "chiffrage.compareShowDifferences";
+
+/** Cheapest recorded quote for an article at a shop, or null if none. */
+function quoteAt(
   article: ChiffrageArticle,
   storeId: string | null,
-): { ht: number; ttc: number } | null {
+): ChiffrageQuote | null {
   if (!storeId) return null;
   const quotes = article.quotes.filter((q) => q.store_id === storeId);
   if (quotes.length === 0) return null;
-  const cheapest = quotes.reduce((a, b) =>
-    b.unit_price_ht < a.unit_price_ht ? b : a,
-  );
-  return { ht: cheapest.unit_price_ht, ttc: cheapest.unit_price_ttc };
+  return quotes.reduce((a, b) => (b.unit_price_ht < a.unit_price_ht ? b : a));
 }
 
 /** The two best-covering shops, used as the default pair to compare. */
@@ -71,6 +88,23 @@ function defaultPair(poste: ChiffragePoste): [string | null, string | null] {
   return [ranked[0]?.store_id ?? null, ranked[1]?.store_id ?? null];
 }
 
+/** Read the remembered toggle; localStorage may be unavailable (private mode). */
+function readShowDifferences(): boolean {
+  try {
+    return localStorage.getItem(SHOW_DIFFERENCES_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeShowDifferences(value: boolean): void {
+  try {
+    localStorage.setItem(SHOW_DIFFERENCES_STORAGE_KEY, value ? "1" : "0");
+  } catch {
+    // Nothing to do — the choice just won't be remembered.
+  }
+}
+
 export function SectionCompareDialog({
   open,
   poste,
@@ -81,8 +115,17 @@ export function SectionCompareDialog({
   const [initialA, initialB] = defaultPair(poste);
   const [shopA, setShopA] = useState<string | null>(initialA);
   const [shopB, setShopB] = useState<string | null>(initialB);
+  // The dialog only mounts once opened, on the client, so the remembered
+  // choice can seed the state directly — no hydration to disagree with.
+  const [showDiff, setShowDiff] = useState(readShowDifferences);
   const shopAId = useId();
   const shopBId = useId();
+
+  const toggleDiff = () => {
+    const next = !showDiff;
+    setShowDiff(next);
+    writeShowDifferences(next);
+  };
 
   const byId = new Map(stores.map((s) => [s.id, s]));
   const articles = [...poste.articles].sort((a, b) => a.position - b.position);
@@ -128,19 +171,24 @@ export function SectionCompareDialog({
     </div>
   );
 
-  const priceCell = (
-    p: { ht: number; ttc: number } | null,
-    cheaper: boolean,
-  ) => {
-    if (!p) return <span className="text-muted-foreground">—</span>;
+  const priceCell = (q: ChiffrageQuote | null, cheaper: boolean) => {
+    if (!q) return <span className="text-muted-foreground">—</span>;
     return (
       <span className={cheaper ? "font-semibold text-primary" : undefined}>
-        <span className="block tabular-nums">{money(p.ht)}</span>
+        <span className="block tabular-nums">{money(q.unit_price_ht)}</span>
         <span className="block text-xs text-muted-foreground tabular-nums">
-          {money(p.ttc)}
+          {money(q.unit_price_ttc)}
         </span>
       </span>
     );
+  };
+
+  // A shop with a quote but no note reads "No note"; a shop with no quote at
+  // all stays blank — the dash in the price cell above already says so.
+  const noteCell = (q: ChiffrageQuote | null, segments: NoteSegment[]) => {
+    if (!q) return null;
+    if (!q.note) return <span className="italic">{t("compareNoNote")}</span>;
+    return <NoteDiffText segments={segments} />;
   };
 
   const basketCell = (
@@ -190,10 +238,35 @@ export function SectionCompareDialog({
           />
         ) : null}
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-end gap-3">
           {picker(shopAId, shopA, setShopA, t("compareDialogShopA"))}
           {picker(shopBId, shopB, setShopB, t("compareDialogShopB"))}
+          <Button
+            type="button"
+            variant={showDiff ? "secondary" : "outline"}
+            size="sm"
+            aria-pressed={showDiff}
+            onClick={toggleDiff}
+            data-testid="compare-diff-toggle"
+          >
+            <ListChecks className="h-4 w-4" />
+            <span className="ml-1">
+              {showDiff ? t("compareHideDifferences") : t("compareShowDifferences")}
+            </span>
+          </Button>
         </div>
+
+        {showDiff ? (
+          <p
+            className="text-xs text-muted-foreground"
+            data-testid="compare-diff-legend"
+          >
+            <mark className={NOTE_DIFF_MARK_CLASS}>
+              {t("compareDiffLegendSample")}
+            </mark>{" "}
+            {t("compareDiffLegend")}
+          </p>
+        ) : null}
 
         <div className="overflow-x-auto">
           <table
@@ -218,28 +291,52 @@ export function SectionCompareDialog({
             </thead>
             <tbody>
               {articles.map((a) => {
-                const pa = priceAt(a, shopA);
-                const pb = priceAt(a, shopB);
-                const aCheaper = pa != null && pb != null && pa.ht < pb.ht;
-                const bCheaper = pa != null && pb != null && pb.ht < pa.ht;
+                const qa = quoteAt(a, shopA);
+                const qb = quoteAt(a, shopB);
+                const aCheaper =
+                  qa != null && qb != null && qa.unit_price_ht < qb.unit_price_ht;
+                const bCheaper =
+                  qa != null && qb != null && qb.unit_price_ht < qa.unit_price_ht;
+                // Only worth a line when at least one side has a quote to explain.
+                const withNotes = showDiff && (qa != null || qb != null);
+                const [segA, segB] = withNotes
+                  ? diffQuoteNotes([qa?.note, qb?.note])
+                  : [[], []];
                 return (
-                  <tr
-                    key={a.id}
-                    className="border-b last:border-0"
-                    data-testid="section-compare-row"
-                  >
-                    <td className="px-3 py-2">{a.name}</td>
-                    <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
-                      {quantity(a.quantity)}
-                      {a.unit ? ` ${a.unit}` : ""}
-                    </td>
-                    <td className="px-3 py-2 text-right align-top">
-                      {priceCell(pa, aCheaper)}
-                    </td>
-                    <td className="px-3 py-2 text-right align-top">
-                      {priceCell(pb, bCheaper)}
-                    </td>
-                  </tr>
+                  <Fragment key={a.id}>
+                    <tr
+                      className={withNotes ? undefined : "border-b last:border-0"}
+                      data-testid="section-compare-row"
+                    >
+                      <td className="px-3 py-2">{a.name}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                        {quantity(a.quantity)}
+                        {a.unit ? ` ${a.unit}` : ""}
+                      </td>
+                      <td className="px-3 py-2 text-right align-top">
+                        {priceCell(qa, aCheaper)}
+                      </td>
+                      <td className="px-3 py-2 text-right align-top">
+                        {priceCell(qb, bCheaper)}
+                      </td>
+                    </tr>
+                    {withNotes ? (
+                      <tr
+                        className="border-b text-xs text-muted-foreground last:border-0"
+                        data-testid="section-compare-note-row"
+                      >
+                        <td className="px-3 pb-2 align-top" colSpan={2}>
+                          {t("compareNotesRowLabel")}
+                        </td>
+                        <td className="max-w-xs px-3 pb-2 text-left align-top">
+                          {noteCell(qa, segA)}
+                        </td>
+                        <td className="max-w-xs px-3 pb-2 text-left align-top">
+                          {noteCell(qb, segB)}
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
                 );
               })}
             </tbody>

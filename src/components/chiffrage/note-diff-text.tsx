@@ -7,7 +7,7 @@ import type { NoteSegment } from "@/components/chiffrage/quote-note-diff";
 
 /** Shared highlight style, also used by the legend so the swatch matches. */
 export const NOTE_DIFF_MARK_CLASS =
-  "rounded-sm bg-amber-200/70 px-0.5 text-amber-950 dark:bg-amber-400/25 dark:text-amber-100";
+  "rounded-sm bg-[var(--accent-tint)] px-0.5 text-[var(--accent-ink)]";
 
 export function NoteDiffText({
   segments,

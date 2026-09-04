@@ -49,10 +49,10 @@ export function deltaVsCheapest(price: number, cheapest: number): number | null 
 }
 
 /** Format a delta as a signed percentage, e.g. "+15 %". */
-export function formatDelta(delta: number): string {
+export function formatDelta(delta: number, maximumFractionDigits = 0): string {
   return new Intl.NumberFormat("fr-FR", {
     style: "percent",
-    maximumFractionDigits: 0,
+    maximumFractionDigits,
     signDisplay: "always",
   }).format(delta);
 }

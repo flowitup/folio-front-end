@@ -164,11 +164,13 @@ export function SectionCompareDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        // DialogContent's default caps width at sm:max-w-lg; the head-to-head
-        // table needs room, so widen it on desktop (the sm: variant must be
-        // overridden, not the base, or the default wins at ≥640px) and cap the
-        // height so a long section scrolls inside the modal.
-        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto sm:max-w-4xl"
+        // Large by default and user-resizable: `resize` + `overflow-auto` add a
+        // drag grip at the bottom-right corner. The width caps must override the
+        // `sm:` variant (DialogContent defaults to `sm:max-w-lg`, which wins at
+        // ≥640px over any base width) — hence `sm:max-w-[…]`. Min/max keep the
+        // drag inside sane bounds; the height caps at the viewport so a long
+        // section scrolls inside rather than off-screen.
+        className="flex max-h-[92vh] min-h-[24rem] w-[min(96vw,1280px)] max-w-[96vw] resize flex-col overflow-auto sm:max-w-[96vw]"
         data-testid="section-compare-dialog"
       >
         <DialogHeader>

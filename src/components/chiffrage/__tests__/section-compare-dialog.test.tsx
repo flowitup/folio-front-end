@@ -7,10 +7,13 @@
  * the cheaper shop per line is highlighted.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { beforeEach, describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 
-import { SectionCompareDialog } from "../section-compare-dialog";
+import {
+  SHOW_DIFFERENCES_STORAGE_KEY,
+  SectionCompareDialog,
+} from "../section-compare-dialog";
 import type {
   ChiffrageArticle,
   ChiffragePoste,
@@ -37,6 +40,7 @@ const quote = (
   storeId: string,
   ht: number,
   ttc: number,
+  note: string | null = null,
 ): ChiffrageQuote => ({
   id,
   article_id: articleId,
@@ -48,7 +52,7 @@ const quote = (
   tva_rate: 20,
   unit_price_ttc: ttc,
   product_url: null,
-  note: null,
+  note,
   is_selected: false,
 });
 
@@ -85,8 +89,8 @@ const poste = (): ChiffragePoste => ({
   position: 0,
   articles: [
     article("a1", "Item one", 1000, [
-      quote("q1", "a1", "A", 10, 12),
-      quote("q2", "a1", "B", 12, 14),
+      quote("q1", "a1", "A", 10, 12, "Coulissant 1800×2200 VR Somfy radio, remise 42 %"),
+      quote("q2", "a1", "B", 12, 14, "Coulissant 1800×2200 VR Somfy filaire, remise 35 %"),
     ]),
     article("a2", "Item two", 2000, [quote("q3", "a2", "A", 5, 6)]),
   ],
@@ -127,6 +131,10 @@ const renderDialog = () =>
   );
 
 describe("SectionCompareDialog", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it("defaults to the two best-covering shops, one row per item", () => {
     renderDialog();
     const table = screen.getByTestId("section-compare-table");
@@ -201,5 +209,45 @@ describe("SectionCompareDialog", () => {
     // cells: [label (colspan 2), Alpha basket, empty column].
     expect(cells[cells.length - 1].textContent).toBe("—");
     expect(cells[cells.length - 2].textContent).toContain("€");
+  });
+
+  it("keeps the note differences collapsed until asked, then remembers it", () => {
+    renderDialog();
+    expect(screen.queryByTestId("section-compare-note-row")).toBeNull();
+    expect(screen.queryByTestId("compare-diff-legend")).toBeNull();
+
+    fireEvent.click(screen.getByTestId("compare-diff-toggle"));
+
+    expect(screen.getByTestId("compare-diff-legend")).toBeInTheDocument();
+    expect(screen.getByTestId("compare-diff-toggle")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(localStorage.getItem(SHOW_DIFFERENCES_STORAGE_KEY)).toBe("1");
+  });
+
+  it("shows both notes under an item with only the differing words marked", () => {
+    localStorage.setItem(SHOW_DIFFERENCES_STORAGE_KEY, "1");
+    renderDialog();
+    const noteRows = screen.getAllByTestId("section-compare-note-row");
+    // Item one has quotes on both sides; item two only on Alpha.
+    expect(noteRows).toHaveLength(2);
+    const cells = noteRows[0].querySelectorAll("td");
+    const alphaMarks = [...cells[1].querySelectorAll("mark")].map((m) => m.textContent);
+    const bravoMarks = [...cells[2].querySelectorAll("mark")].map((m) => m.textContent);
+    expect(alphaMarks).toEqual(["radio", "42"]);
+    expect(bravoMarks).toEqual(["filaire", "35"]);
+    expect(cells[1].textContent).toBe("Coulissant 1800×2200 VR Somfy radio, remise 42 %");
+  });
+
+  it("says 'no note' for a quote without one and stays blank where there is no quote", () => {
+    localStorage.setItem(SHOW_DIFFERENCES_STORAGE_KEY, "1");
+    renderDialog();
+    const noteRows = screen.getAllByTestId("section-compare-note-row");
+    const cells = noteRows[1].querySelectorAll("td");
+    // Item two: Alpha priced it with no note; Bravo has no quote at all.
+    expect(cells[1].textContent).toBe("compareNoNote");
+    expect(cells[2].textContent).toBe("");
+    expect(within(noteRows[1]).queryByTestId("note-diff")).toBeNull();
   });
 });

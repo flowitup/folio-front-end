@@ -180,4 +180,44 @@ describe("QuoteComparisonTable", () => {
     );
     expect(screen.getByText("noQuotesYet")).toBeInTheDocument();
   });
+
+  it("highlights what one quote's note says that the other's does not", () => {
+    render(
+      <QuoteComparisonTable
+        article={article([
+          quote({ id: "q1", note: "Coulissant 1800×2200, VR Somfy radio, remise 42 %" }),
+          quote({ id: "q2", supplier_name: "Point P", note: "Coulissant 1800×2200, VR Somfy filaire, remise 38 %" }),
+        ])}
+        stores={[]}
+        canManage={false}
+        busyQuoteId={null}
+        onSelect={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+      />,
+    );
+    const rows = screen.getAllByTestId("quote-row");
+    const marks = (row: HTMLElement) =>
+      within(row).getAllByTestId("note-diff").map((m) => m.textContent);
+    expect(marks(rows[0])).toEqual(["radio", "42"]);
+    expect(marks(rows[1])).toEqual(["filaire", "38"]);
+    expect(screen.getByTestId("quote-note-diff-legend")).toBeInTheDocument();
+  });
+
+  it("shows a lone note plainly, with no highlight and no legend", () => {
+    render(
+      <QuoteComparisonTable
+        article={article([quote({ id: "q1", note: "VR Somfy radio" })])}
+        stores={[]}
+        canManage={false}
+        busyQuoteId={null}
+        onSelect={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+      />,
+    );
+    expect(screen.getByText("VR Somfy radio")).toBeInTheDocument();
+    expect(screen.queryByTestId("note-diff")).toBeNull();
+    expect(screen.queryByTestId("quote-note-diff-legend")).toBeNull();
+  });
 });

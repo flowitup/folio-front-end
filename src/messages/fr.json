@@ -611,7 +611,7 @@
     "note": "Note",
     "effectiveCost": "Coût",
     "noEntries": "Aucune entrée trouvée",
-    "duplicateEntry": "Cet ouvrier a déjà une entrée pour cette date",
+    "duplicateEntry": "Cet ouvrier a déjà une entrée pour cette date (une journée pointée par l'ouvrier doit être validée, pas ajoutée à nouveau)",
     "daysWorked": "Jours",
     "totalCost": "Total",
     "grandTotal": "Total général",
@@ -850,7 +850,18 @@
     "summaryUnpaidWarning": "{amount} impayé",
     "summaryUnpaidWarningTitle": "Les charges de main-d'œuvre de ce mois ne sont pas entièrement payées",
     "summaryOverpaidWarning": "{amount} trop-payé",
-    "summaryOverpaidWarningTitle": "Les paiements enregistrés pour ce mois dépassent les charges de main-d'œuvre"
+    "summaryOverpaidWarningTitle": "Les paiements enregistrés pour ce mois dépassent les charges de main-d'œuvre",
+    "validate": "Valider",
+    "reject": "Refuser",
+    "status": {
+      "pending": "En attente de validation",
+      "unpricedPending": "Pointé par l'ouvrier — non compté tant qu'un responsable ne l'a pas validé",
+      "validated": "Journée de {worker} validée",
+      "rejected": "Journée de {worker} refusée — il peut la repointer",
+      "confirmReject": "Refuser la journée de {worker} ? L'entrée est supprimée et l'ouvrier pourra la repointer.",
+      "validateFailed": "Validation impossible. Réessayez.",
+      "rejectFailed": "Refus impossible. Réessayez."
+    }
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",
@@ -995,16 +1006,28 @@
   "notifications": {
     "aria": {
       "bell": "Notifications",
-      "goToNote": "Aller à la note : {title}"
+      "goToNote": "Aller à la note : {title}",
+      "goToAttendance": "Voir les pointages : {worker}"
     },
     "title": "Rappels",
     "empty": "Aucun rappel pour le moment",
     "dismissButton": "Ignorer",
     "errors": {
-      "dismissFailed": "Impossible d'ignorer. Réessayez."
+      "dismissFailed": "Impossible d'ignorer. Réessayez.",
+      "validateFailed": "Validation impossible. Réessayez.",
+      "rejectFailed": "Refus impossible. Réessayez."
     },
     "skeleton": {
       "loading": "Chargement des rappels..."
+    },
+    "attendance": {
+      "title": "Pointages à valider",
+      "validate": "Valider",
+      "reject": "Refuser",
+      "confirmReject": "Confirmer le refus",
+      "cancel": "Annuler",
+      "validated": "Journée de {worker} validée",
+      "rejected": "Journée de {worker} refusée"
     }
   },
   "billing": {

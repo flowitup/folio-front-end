@@ -57,6 +57,9 @@ interface AttendanceCalendarProps {
   onLogDay?: (date: string) => void;
   /** Open the edit dialog for a single existing entry. */
   onEditEntry?: (entry: LaborEntry) => void;
+  /** Manager actions on worker-submitted (pending) rows. */
+  onValidate?: (entry: LaborEntry) => void;
+  onReject?: (entry: LaborEntry) => void;
   /** Worker lookup for role-aware chip colors. See CalendarCell. */
   workerMap?: Record<string, Worker>;
   /** Activity CRUD callbacks. */
@@ -84,6 +87,8 @@ export function AttendanceCalendar({
   onDelete,
   onLogDay,
   onEditEntry,
+  onValidate,
+  onReject,
   workerMap,
   onAddActivity,
   onEditActivity,
@@ -231,6 +236,8 @@ export function AttendanceCalendar({
         canManage={canManage}
         onDelete={onDelete}
         onEdit={onEditEntry}
+        onValidate={onValidate}
+        onReject={onReject}
         onAddMore={
           selectedDate && onLogDay
             ? () => {

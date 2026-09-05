@@ -3,7 +3,8 @@
 /**
  * NotificationsBell — entry component for the notifications system.
  * Wraps shadcn Popover around a bell button with badge.
- * Polls via useNotificationsPoll; optimistic dismiss with rollback on error.
+ * Polls via useNotificationsPoll; optimistic dismiss / validate / reject with rollback on error.
+ * Badge = note reminders + attendance entries awaiting this user's validation.
  */
 
 import { useState, useCallback } from "react";
@@ -14,7 +15,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { useNotificationsPoll } from "@/components/notifications/use-notifications-poll";
 import { dismissNotificationAction } from "@/components/notifications/actions";
-import type { DueNotification } from "@/lib/api/notifications";
+import { rejectAttendance, validateAttendance } from "@/lib/api/labor";
+import type {
+  AttendancePending,
+  DueNotification,
+  NotificationsFeed,
+} from "@/lib/api/notifications";
 
 function getBadgeLabel(count: number): string | null {
   if (count <= 0) return null;
@@ -25,11 +31,16 @@ function getBadgeLabel(count: number): string | null {
 export function NotificationsBell() {
   const t = useTranslations("notifications");
   const [items, setItems] = useState<DueNotification[]>([]);
+  const [attendance, setAttendance] = useState<AttendancePending[]>([]);
+  // Entry ids with a validate/reject request in flight — their buttons are disabled
+  // so a double-click cannot fire twice (a second reject would 404 and toast an error).
+  const [settlingIds, setSettlingIds] = useState<ReadonlySet<string>>(() => new Set());
   const [isOpen, setIsOpen] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
 
-  const handleUpdate = useCallback((updated: DueNotification[]) => {
-    setItems(updated);
+  const handleUpdate = useCallback((feed: NotificationsFeed) => {
+    setItems(feed.items);
+    setAttendance(feed.attendance);
     setHasLoaded(true);
   }, []);
 
@@ -55,7 +66,58 @@ export function NotificationsBell() {
     [items, t]
   );
 
-  const badge = getBadgeLabel(items.length);
+  // Validate / reject share the same optimistic-remove + rollback shape. Both the
+  // removal and the restore are functional updates so a poll tick landing mid-flight
+  // (with, say, a new submission) is never clobbered by a stale snapshot.
+  const settleAttendance = useCallback(
+    async (
+      item: AttendancePending,
+      action: (projectId: string, entryId: string) => Promise<void>,
+      successKey: string,
+      errorKey: string
+    ) => {
+      let alreadyInFlight = false;
+      setSettlingIds((current) => {
+        if (current.has(item.entry_id)) {
+          alreadyInFlight = true;
+          return current;
+        }
+        return new Set(current).add(item.entry_id);
+      });
+      if (alreadyInFlight) return;
+      setAttendance((current) => current.filter((a) => a.entry_id !== item.entry_id));
+      try {
+        await action(item.project_id, item.entry_id);
+        toast.success(t(successKey, { worker: item.worker_name }));
+      } catch {
+        setAttendance((current) =>
+          current.some((a) => a.entry_id === item.entry_id) ? current : [item, ...current]
+        );
+        toast.error(t(errorKey));
+      } finally {
+        setSettlingIds((current) => {
+          const next = new Set(current);
+          next.delete(item.entry_id);
+          return next;
+        });
+      }
+    },
+    [t]
+  );
+
+  const handleValidate = useCallback(
+    (item: AttendancePending) =>
+      settleAttendance(item, validateAttendance, "attendance.validated", "errors.validateFailed"),
+    [settleAttendance]
+  );
+
+  const handleReject = useCallback(
+    (item: AttendancePending) =>
+      settleAttendance(item, rejectAttendance, "attendance.rejected", "errors.rejectFailed"),
+    [settleAttendance]
+  );
+
+  const badge = getBadgeLabel(items.length + attendance.length);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -87,8 +149,12 @@ export function NotificationsBell() {
       >
         <NotificationsDropdown
           items={items}
+          attendance={attendance}
           isLoading={!hasLoaded}
           onDismiss={handleDismiss}
+          onValidate={handleValidate}
+          onReject={handleReject}
+          settlingIds={settlingIds}
           onClickRow={() => setIsOpen(false)}
         />
       </PopoverContent>

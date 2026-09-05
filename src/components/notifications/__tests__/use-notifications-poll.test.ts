@@ -8,7 +8,7 @@
  *   trap that vi.runAllTimersAsync() hits when setTimeout reschedules itself.
  *
  * Covers:
- * - Fires fetchDueNotificationsAction immediately on mount
+ * - Fires fetchNotificationsFeedAction immediately on mount
  * - Fires a second time after intervalMs elapses
  * - Does NOT poll when document.hidden = true (schedules 5s recheck instead)
  * - Resumes polling when visibility restored
@@ -21,15 +21,15 @@ import { renderHook, act } from "@testing-library/react";
 // ---- Module mocks (before imports) ----
 
 vi.mock("../actions", () => ({
-  fetchDueNotificationsAction: vi.fn(),
+  fetchNotificationsFeedAction: vi.fn(),
   dismissNotificationAction: vi.fn(),
 }));
 
 // ---- Imports after mocks ----
 
 const { useNotificationsPoll } = await import("../use-notifications-poll");
-const { fetchDueNotificationsAction } = await import("../actions");
-const mockFetch = vi.mocked(fetchDueNotificationsAction);
+const { fetchNotificationsFeedAction } = await import("../actions");
+const mockFetch = vi.mocked(fetchNotificationsFeedAction);
 
 // ---- Fixture notification ----
 
@@ -63,8 +63,8 @@ describe("useNotificationsPoll — initial poll on mount", () => {
     vi.restoreAllMocks();
   });
 
-  it("calls fetchDueNotificationsAction immediately on mount", async () => {
-    mockFetch.mockResolvedValue([ITEM]);
+  it("calls fetchNotificationsFeedAction immediately on mount", async () => {
+    mockFetch.mockResolvedValue({ items: [ITEM], attendance: [] });
     const onUpdate = vi.fn();
 
     renderHook(() =>
@@ -80,7 +80,7 @@ describe("useNotificationsPoll — initial poll on mount", () => {
   });
 
   it("calls onUpdate with returned items after initial poll", async () => {
-    mockFetch.mockResolvedValue([ITEM]);
+    mockFetch.mockResolvedValue({ items: [ITEM], attendance: [] });
     const onUpdate = vi.fn();
 
     renderHook(() =>
@@ -91,7 +91,7 @@ describe("useNotificationsPoll — initial poll on mount", () => {
       await vi.advanceTimersByTimeAsync(10);
     });
 
-    expect(onUpdate).toHaveBeenCalledWith([ITEM]);
+    expect(onUpdate).toHaveBeenCalledWith({ items: [ITEM], attendance: [] });
   });
 });
 
@@ -109,7 +109,7 @@ describe("useNotificationsPoll — interval polling", () => {
   });
 
   it("fires a second poll after intervalMs elapses", async () => {
-    mockFetch.mockResolvedValue([]);
+    mockFetch.mockResolvedValue({ items: [], attendance: [] });
     const onUpdate = vi.fn();
 
     renderHook(() =>
@@ -146,7 +146,7 @@ describe("useNotificationsPoll — visibility API", () => {
 
   it("does NOT poll when document.hidden is true on mount", async () => {
     Object.defineProperty(document, "hidden", { configurable: true, value: true });
-    mockFetch.mockResolvedValue([]);
+    mockFetch.mockResolvedValue({ items: [], attendance: [] });
     const onUpdate = vi.fn();
 
     renderHook(() =>
@@ -163,7 +163,7 @@ describe("useNotificationsPoll — visibility API", () => {
 
   it("fires poll immediately when tab becomes visible", async () => {
     Object.defineProperty(document, "hidden", { configurable: true, value: true });
-    mockFetch.mockResolvedValue([]);
+    mockFetch.mockResolvedValue({ items: [], attendance: [] });
     const onUpdate = vi.fn();
 
     renderHook(() =>
@@ -201,7 +201,7 @@ describe("useNotificationsPoll — cleanup on unmount", () => {
   });
 
   it("stops polling after unmount (no further calls after interval)", async () => {
-    mockFetch.mockResolvedValue([]);
+    mockFetch.mockResolvedValue({ items: [], attendance: [] });
     const onUpdate = vi.fn();
 
     const { unmount } = renderHook(() =>

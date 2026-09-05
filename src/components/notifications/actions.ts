@@ -3,13 +3,13 @@
 /**
  * Notification server actions
  * Client components call these instead of importing lib/api/notifications directly.
- * fetchDueNotificationsAction swallows errors (bell silently shows last-known state).
+ * fetchNotificationsFeedAction swallows errors (bell silently shows last-known state).
  * dismissNotificationAction maps backend errors for optimistic-rollback handling.
  */
 
 import { listDueNotifications, dismissNotification } from "@/lib/api/notifications";
 import { getSession } from "@/lib/auth/session";
-import type { DueNotification } from "@/lib/api/notifications";
+import type { NotificationsFeed } from "@/lib/api/notifications";
 
 // ---- UUID validation ----
 
@@ -39,15 +39,15 @@ function classifyBackendError(err: unknown): string {
 // ---- Actions ----
 
 /**
- * Fetch all due notifications for the current user.
- * Returns empty array on any error — bell shows last-known state without disrupting UI.
+ * Fetch the whole bell feed (note reminders + attendance awaiting validation).
+ * Returns an empty feed on any error — the bell keeps its last-known state.
  */
-export async function fetchDueNotificationsAction(): Promise<DueNotification[]> {
+export async function fetchNotificationsFeedAction(): Promise<NotificationsFeed> {
   try {
     const result = await listDueNotifications();
-    return result.items;
+    return { items: result.items, attendance: result.attendance_pending ?? [] };
   } catch {
-    return [];
+    return { items: [], attendance: [] };
   }
 }
 

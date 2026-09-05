@@ -3,7 +3,7 @@
  * Mirrors admin/users/actions.test.ts pattern.
  *
  * Covers:
- * - fetchDueNotificationsAction: returns items on success, returns [] on any error
+ * - fetchNotificationsFeedAction: returns {items, attendance} on success, empty feed on any error
  * - dismissNotificationAction: UUID validation + classifyBackendError mapping
  */
 
@@ -28,7 +28,7 @@ vi.mock("@/lib/auth/session", () => ({
 
 // ---- Imports after mocks ----
 
-const { fetchDueNotificationsAction, dismissNotificationAction } = await import("../actions");
+const { fetchNotificationsFeedAction, dismissNotificationAction } = await import("../actions");
 const { listDueNotifications, dismissNotification } = await import("@/lib/api/notifications");
 const mockList = vi.mocked(listDueNotifications);
 const mockDismiss = vi.mocked(dismissNotification);
@@ -68,53 +68,55 @@ function makeNotification(noteId = NOTE_ID) {
 const NOTE_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 const BAD_UUID = "not-a-uuid";
 
-// ---- fetchDueNotificationsAction ----
+// ---- fetchNotificationsFeedAction ----
 
-describe("fetchDueNotificationsAction — happy path", () => {
+describe("fetchNotificationsFeedAction — happy path", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns items array from listDueNotifications", async () => {
+  it("returns the feed from listDueNotifications", async () => {
     const item = makeNotification();
     mockList.mockResolvedValueOnce({ items: [item], count: 1 });
 
-    const result = await fetchDueNotificationsAction();
-    expect(result).toHaveLength(1);
-    expect(result[0].note.id).toBe(NOTE_ID);
+    const result = await fetchNotificationsFeedAction();
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].note.id).toBe(NOTE_ID);
+    // Older backends omit attendance_pending — treated as an empty list.
+    expect(result.attendance).toEqual([]);
     expect(mockList).toHaveBeenCalledTimes(1);
   });
 
-  it("returns empty array when listDueNotifications returns empty", async () => {
+  it("returns an empty feed when listDueNotifications returns empty", async () => {
     mockList.mockResolvedValueOnce({ items: [], count: 0 });
-    const result = await fetchDueNotificationsAction();
-    expect(result).toEqual([]);
+    const result = await fetchNotificationsFeedAction();
+    expect(result).toEqual({ items: [], attendance: [] });
   });
 });
 
-describe("fetchDueNotificationsAction — graceful error handling", () => {
+describe("fetchNotificationsFeedAction — graceful error handling", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns [] on 500 error (bell shows last-known state without disrupting UI)", async () => {
+  it("returns an empty feed on 500 error (bell shows last-known state without disrupting UI)", async () => {
     mockList.mockRejectedValueOnce(httpError(500));
-    const result = await fetchDueNotificationsAction();
-    expect(result).toEqual([]);
+    const result = await fetchNotificationsFeedAction();
+    expect(result).toEqual({ items: [], attendance: [] });
   });
 
-  it("returns [] on 401 error (auth expired — don't crash the page)", async () => {
+  it("returns an empty feed on 401 error (auth expired — don't crash the page)", async () => {
     mockList.mockRejectedValueOnce(httpError(401));
-    const result = await fetchDueNotificationsAction();
-    expect(result).toEqual([]);
+    const result = await fetchNotificationsFeedAction();
+    expect(result).toEqual({ items: [], attendance: [] });
   });
 
-  it("returns [] on network error", async () => {
+  it("returns an empty feed on network error", async () => {
     mockList.mockRejectedValueOnce(new Error("Network error"));
-    const result = await fetchDueNotificationsAction();
-    expect(result).toEqual([]);
+    const result = await fetchNotificationsFeedAction();
+    expect(result).toEqual({ items: [], attendance: [] });
   });
 
-  it("returns [] on 429 rate-limit error", async () => {
+  it("returns an empty feed on 429 rate-limit error", async () => {
     mockList.mockRejectedValueOnce(httpError(429));
-    const result = await fetchDueNotificationsAction();
-    expect(result).toEqual([]);
+    const result = await fetchNotificationsFeedAction();
+    expect(result).toEqual({ items: [], attendance: [] });
   });
 });
 

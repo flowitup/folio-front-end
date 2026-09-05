@@ -611,7 +611,7 @@
     "note": "Note",
     "effectiveCost": "Cost",
     "noEntries": "No entries found",
-    "duplicateEntry": "This worker already has an entry for this date",
+    "duplicateEntry": "This worker already has an entry for this date (a day logged by the worker must be validated instead of re-added)",
     "daysWorked": "Days",
     "totalCost": "Total",
     "grandTotal": "Grand total",
@@ -850,7 +850,18 @@
     "summaryUnpaidWarning": "{amount} unpaid",
     "summaryUnpaidWarningTitle": "Labor charges for this month are not fully paid",
     "summaryOverpaidWarning": "{amount} overpaid",
-    "summaryOverpaidWarningTitle": "Payments recorded for this month exceed its labor charges"
+    "summaryOverpaidWarningTitle": "Payments recorded for this month exceed its labor charges",
+    "validate": "Validate",
+    "reject": "Reject",
+    "status": {
+      "pending": "Pending validation",
+      "unpricedPending": "Logged by the worker — unpriced until a manager validates it",
+      "validated": "{worker}'s day validated",
+      "rejected": "{worker}'s day rejected — they can log it again",
+      "confirmReject": "Reject {worker}'s day? The entry is removed and the worker can log it again.",
+      "validateFailed": "Couldn't validate. Try again.",
+      "rejectFailed": "Couldn't reject. Try again."
+    }
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",
@@ -995,16 +1006,28 @@
   "notifications": {
     "aria": {
       "bell": "Notifications",
-      "goToNote": "Go to note: {title}"
+      "goToNote": "Go to note: {title}",
+      "goToAttendance": "Go to attendance: {worker}"
     },
     "title": "Reminders",
     "empty": "No reminders right now",
     "dismissButton": "Dismiss",
     "errors": {
-      "dismissFailed": "Couldn't dismiss. Try again."
+      "dismissFailed": "Couldn't dismiss. Try again.",
+      "validateFailed": "Couldn't validate. Try again.",
+      "rejectFailed": "Couldn't reject. Try again."
     },
     "skeleton": {
       "loading": "Loading reminders..."
+    },
+    "attendance": {
+      "title": "Attendance to validate",
+      "validate": "Validate",
+      "reject": "Reject",
+      "confirmReject": "Confirm reject",
+      "cancel": "Cancel",
+      "validated": "{worker}'s day validated",
+      "rejected": "{worker}'s day rejected"
     }
   },
   "billing": {

@@ -611,7 +611,7 @@
     "note": "Ghi chú",
     "effectiveCost": "Chi phí",
     "noEntries": "Không có dữ liệu",
-    "duplicateEntry": "Công nhân đã có bản ghi cho ngày này",
+    "duplicateEntry": "Công nhân đã có bản ghi cho ngày này (ngày do công nhân tự chấm cần được duyệt thay vì thêm lại)",
     "daysWorked": "Số ngày",
     "totalCost": "Tổng",
     "grandTotal": "Tổng cộng",
@@ -850,7 +850,18 @@
     "summaryUnpaidWarning": "{amount} chưa trả",
     "summaryUnpaidWarningTitle": "Chi phí nhân công tháng này chưa được trả đủ",
     "summaryOverpaidWarning": "{amount} trả dư",
-    "summaryOverpaidWarningTitle": "Số tiền đã trả trong tháng này vượt quá chi phí nhân công"
+    "summaryOverpaidWarningTitle": "Số tiền đã trả trong tháng này vượt quá chi phí nhân công",
+    "validate": "Duyệt",
+    "reject": "Từ chối",
+    "status": {
+      "pending": "Chờ duyệt",
+      "unpricedPending": "Công nhân tự chấm — chưa tính tiền cho đến khi quản lý duyệt",
+      "validated": "Đã duyệt ngày công của {worker}",
+      "rejected": "Đã từ chối ngày công của {worker} — công nhân có thể chấm lại",
+      "confirmReject": "Từ chối ngày công của {worker}? Bản ghi sẽ bị xóa và công nhân có thể chấm lại.",
+      "validateFailed": "Không duyệt được. Thử lại.",
+      "rejectFailed": "Không từ chối được. Thử lại."
+    }
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",
@@ -995,16 +1006,28 @@
   "notifications": {
     "aria": {
       "bell": "Thông báo",
-      "goToNote": "Đi đến ghi chú: {title}"
+      "goToNote": "Đi đến ghi chú: {title}",
+      "goToAttendance": "Xem chấm công: {worker}"
     },
     "title": "Nhắc nhở",
     "empty": "Không có nhắc nhở nào lúc này",
     "dismissButton": "Bỏ qua",
     "errors": {
-      "dismissFailed": "Không thể bỏ qua. Vui lòng thử lại."
+      "dismissFailed": "Không thể bỏ qua. Vui lòng thử lại.",
+      "validateFailed": "Không duyệt được. Thử lại.",
+      "rejectFailed": "Không từ chối được. Thử lại."
     },
     "skeleton": {
       "loading": "Đang tải nhắc nhở..."
+    },
+    "attendance": {
+      "title": "Chấm công chờ duyệt",
+      "validate": "Duyệt",
+      "reject": "Từ chối",
+      "confirmReject": "Xác nhận từ chối",
+      "cancel": "Hủy",
+      "validated": "Đã duyệt ngày công của {worker}",
+      "rejected": "Đã từ chối ngày công của {worker}"
     }
   },
   "billing": {

@@ -54,6 +54,8 @@ interface ChipDescriptor {
   chipColor: string;
   shiftType: ShiftType | null;
   supplementHours: number;
+  /** Worker-submitted day not yet validated — drawn hollow, unpriced. */
+  pending: boolean;
 }
 
 /** Max distinct tag color dots shown before collapsing to "+N". */
@@ -98,7 +100,11 @@ export function CalendarCell({
     );
     // De-duplicate by worker_id — same worker could appear twice on a day
     // if a supplement-only entry coexists with a shift entry, but we only
-    // want one chip per worker.
+    // want one chip per worker. The chip is hollow when ANY of that worker's
+    // rows for the day is still pending, whatever the row order.
+    const pendingWorkers = new Set(
+      entries.filter((e) => e.status === "pending").map((e) => e.worker_id),
+    );
     const seen = new Set<string>();
     const list: ChipDescriptor[] = [];
     for (const e of entries) {
@@ -115,6 +121,7 @@ export function CalendarCell({
         chipColor,
         shiftType: e.shift_type,
         supplementHours: e.supplement_hours,
+        pending: pendingWorkers.has(id),
       });
     }
     const shown = list.slice(0, maxChips);
@@ -209,9 +216,18 @@ export function CalendarCell({
           {chips.map((c) => (
             <span
               key={c.id}
-              title={c.name}
-              className="text-[10px] inline-flex items-center gap-1 truncate rounded-full px-1.5 py-0.5 text-white"
-              style={{ backgroundColor: c.chipColor, maxWidth: "100%" }}
+              title={c.pending ? `${c.name} · ${t("status.pending")}` : c.name}
+              data-pending={c.pending || undefined}
+              className={
+                c.pending
+                  ? "text-[10px] inline-flex items-center gap-1 truncate rounded-full border border-dashed bg-transparent px-1.5 py-0.5"
+                  : "text-[10px] inline-flex items-center gap-1 truncate rounded-full px-1.5 py-0.5 text-white"
+              }
+              style={
+                c.pending
+                  ? { borderColor: c.chipColor, color: c.chipColor, maxWidth: "100%" }
+                  : { backgroundColor: c.chipColor, maxWidth: "100%" }
+              }
             >
               {c.name}
               {c.shiftType === "half" && (

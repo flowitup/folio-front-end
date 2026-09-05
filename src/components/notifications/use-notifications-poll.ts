@@ -10,13 +10,13 @@
 "use client";
 
 import { useEffect } from "react";
-import type { DueNotification } from "@/lib/api/notifications";
-import { fetchDueNotificationsAction } from "@/components/notifications/actions";
+import type { NotificationsFeed } from "@/lib/api/notifications";
+import { fetchNotificationsFeedAction } from "@/components/notifications/actions";
 
 interface UseNotificationsPollOptions {
   intervalMs: number;
   jitterMs: number;
-  onUpdate: (items: DueNotification[]) => void;
+  onUpdate: (feed: NotificationsFeed) => void;
 }
 
 export function useNotificationsPoll({
@@ -38,8 +38,8 @@ export function useNotificationsPoll({
       }
 
       try {
-        const items = await fetchDueNotificationsAction();
-        if (!cancelled) onUpdate(items);
+        const feed = await fetchNotificationsFeedAction();
+        if (!cancelled) onUpdate(feed);
       } catch {
         // Swallow — don't disrupt UI; last-known state stays visible
       }

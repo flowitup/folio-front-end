@@ -2,19 +2,38 @@
 
 /**
  * NotificationsDropdown — popover content for the notifications bell.
- * Shows skeleton on first load, empty state when no items, or list of NotificationRow.
+ * Shows skeleton on first load, empty state when nothing is due, otherwise the
+ * attendance-to-validate section (managers) followed by note reminders.
  */
 
 import { BellOff } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { AttendancePendingRow } from "@/components/notifications/attendance-pending-row";
 import { NotificationRow } from "@/components/notifications/notification-row";
-import type { DueNotification } from "@/lib/api/notifications";
+import type { AttendancePending, DueNotification } from "@/lib/api/notifications";
 
 interface NotificationsDropdownProps {
   items: DueNotification[];
+  /** Worker-submitted days awaiting this user's validation. Defaults to none. */
+  attendance?: AttendancePending[];
   isLoading: boolean;
   onDismiss: (noteId: string) => void;
+  onValidate?: (item: AttendancePending) => void;
+  onReject?: (item: AttendancePending) => void;
+  /** Entry ids whose validate/reject request is in flight (buttons disabled). */
+  settlingIds?: ReadonlySet<string>;
   onClickRow: () => void;
+}
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <p
+      className="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide"
+      style={{ color: "var(--muted-foreground)" }}
+    >
+      {children}
+    </p>
+  );
 }
 
 function SkeletonRow() {
@@ -40,11 +59,16 @@ function SkeletonRow() {
 
 export function NotificationsDropdown({
   items,
+  attendance = [],
   isLoading,
   onDismiss,
+  onValidate,
+  onReject,
+  settlingIds,
   onClickRow,
 }: NotificationsDropdownProps) {
   const t = useTranslations("notifications");
+  const isEmpty = items.length === 0 && attendance.length === 0;
   return (
     <div className="flex flex-col">
       {/* Header */}
@@ -66,7 +90,7 @@ export function NotificationsDropdown({
             <SkeletonRow />
             <SkeletonRow />
           </>
-        ) : items.length === 0 ? (
+        ) : isEmpty ? (
           // Empty state
           <div
             className="flex flex-col items-center gap-2 py-8 text-center"
@@ -76,15 +100,36 @@ export function NotificationsDropdown({
             <p className="text-sm">{t("empty")}</p>
           </div>
         ) : (
-          // List
-          items.map((item) => (
-            <NotificationRow
-              key={item.note.id}
-              item={item}
-              onDismiss={onDismiss}
-              onNavigate={onClickRow}
-            />
-          ))
+          <>
+            {attendance.length > 0 && (
+              <section aria-label={t("attendance.title")}>
+                <SectionLabel>{t("attendance.title")}</SectionLabel>
+                {attendance.map((item) => (
+                  <AttendancePendingRow
+                    key={item.entry_id}
+                    item={item}
+                    busy={settlingIds?.has(item.entry_id) ?? false}
+                    onValidate={onValidate}
+                    onReject={onReject}
+                    onNavigate={onClickRow}
+                  />
+                ))}
+              </section>
+            )}
+            {items.length > 0 && (
+              <section aria-label={t("title")}>
+                {attendance.length > 0 && <SectionLabel>{t("title")}</SectionLabel>}
+                {items.map((item) => (
+                  <NotificationRow
+                    key={item.note.id}
+                    item={item}
+                    onDismiss={onDismiss}
+                    onNavigate={onClickRow}
+                  />
+                ))}
+              </section>
+            )}
+          </>
         )}
       </div>
     </div>

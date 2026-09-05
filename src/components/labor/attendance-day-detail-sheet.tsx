@@ -54,6 +54,9 @@ interface AttendanceDayDetailSheetProps {
   onDelete: (entry: LaborEntry) => void;
   /** Tapping a card → opens EditAttendanceDialog. Optional. */
   onEdit?: (entry: LaborEntry) => void;
+  /** Manager actions on worker-submitted (pending) rows. */
+  onValidate?: (entry: LaborEntry) => void;
+  onReject?: (entry: LaborEntry) => void;
   /** "+ Log more" button → opens LogDayDialog for this date. Optional. */
   onAddMore?: () => void;
   /** Activity CRUD callbacks. */
@@ -80,6 +83,8 @@ export function AttendanceDayDetailSheet({
   canManage,
   onDelete,
   onEdit,
+  onValidate,
+  onReject,
   onAddMore,
   onAddActivity,
   onEditActivity,
@@ -212,6 +217,8 @@ export function AttendanceDayDetailSheet({
                 canManage={canManage}
                 onDelete={onDelete}
                 onEdit={canManage ? onEdit : undefined}
+                onValidate={onValidate}
+                onReject={onReject}
               />
             ))}
 

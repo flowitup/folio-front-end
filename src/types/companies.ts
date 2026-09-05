@@ -18,6 +18,11 @@ export interface Company {
   logo_url: string | null;
   default_payment_terms: string | null;
   prefix_override: string | null;
+  /**
+   * Reusable 8-character code members type on the mobile app to join the company.
+   * Present only for superadmins (stripped for everyone else); null when none is active.
+   */
+  join_code?: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;

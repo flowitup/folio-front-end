@@ -1,7 +1,8 @@
 "use client";
 
 /**
- * RedeemInviteTokenDialog — lets a user paste an invite token to attach a company.
+ * RedeemInviteTokenDialog — lets a user paste an invite token (or type a reusable
+ * 8-character company code) to attach a company.
  *
  * Success: toast + close dialog + calls onAttached() so parent can refresh list.
  * All failure cases (410, expired, wrong, already-redeemed) surface a single
@@ -25,14 +26,17 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { redeemInviteTokenAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
-import type { MyCompany } from "@/types/companies";
+import {
+  joinCompanyByCodeAction,
+  redeemInviteTokenAction,
+} from "@/app/[locale]/(app)/settings/_actions/companies-actions";
+import { looksLikeJoinCode } from "@/lib/companies/join-code";
 
 interface RedeemInviteTokenDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Called after a successful redemption with the newly attached company. */
-  onAttached: (company: MyCompany) => void;
+  /** Called after a successful redemption or join; the parent reloads its list. */
+  onAttached: () => void;
 }
 
 export function RedeemInviteTokenDialog({
@@ -61,7 +65,10 @@ export function RedeemInviteTokenDialog({
     setIsSubmitting(true);
 
     try {
-      const result = await redeemInviteTokenAction(trimmed);
+      // An 8-character value is a company join code; anything longer is an invite token.
+      const result = looksLikeJoinCode(trimmed)
+        ? await joinCompanyByCodeAction(trimmed)
+        : await redeemInviteTokenAction(trimmed);
 
       if (!result.ok) {
         // Error surfacing policy (chosen behavior, reviewed 2026-05-07):
@@ -90,7 +97,7 @@ export function RedeemInviteTokenDialog({
       toast.success(t("invite.successToast"));
       setToken("");
       onOpenChange(false);
-      onAttached(result.data);
+      onAttached();
     } catch {
       toast.error(t("invite.tokenInvalidError"));
     } finally {

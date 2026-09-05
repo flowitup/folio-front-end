@@ -57,6 +57,8 @@ vi.mock(
     deleteCompanyAction: vi.fn(),
     generateInviteTokenAction: vi.fn(),
     revokeInviteTokenAction: vi.fn(),
+    setJoinCodeAction: vi.fn(),
+    revokeJoinCodeAction: vi.fn(),
     fetchAttachedUsersAction: vi.fn().mockResolvedValue({ ok: true, data: [] }),
   })
 );
@@ -160,6 +162,8 @@ describe("AdminCompanyManagePage — tab switching", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /generate invite/i })).toBeDefined();
+      // The reusable company join code card sits on the same tab.
+      expect(screen.getByTestId("company-join-code-card")).toBeDefined();
       expect(screen.getByRole("button", { name: /revoke active token/i })).toBeDefined();
     });
   });

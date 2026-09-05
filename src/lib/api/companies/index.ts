@@ -6,3 +6,4 @@
 export * from "./companies";
 export * from "./invite-tokens";
 export * from "./attached-users";
+export * from "./join-code";

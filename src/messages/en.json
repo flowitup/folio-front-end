@@ -1569,8 +1569,8 @@
     },
     "invite": {
       "dialogTitle": "Attach a company",
-      "inputLabel": "Invite token",
-      "inputPlaceholder": "Paste the token your admin shared…",
+      "inputLabel": "Invite token or company code",
+      "inputPlaceholder": "Paste the token or type the 8-character company code…",
       "attachCta": "Attach",
       "successToast": "Company attached successfully.",
       "tokenInvalidError": "Invite token is invalid, expired, or already used."
@@ -1638,7 +1638,26 @@
           "deletedToast": "Company deleted."
         },
         "paymentsLoading": "Loading payment methods…",
-        "paymentsLoadError": "Failed to load payment methods"
+        "paymentsLoadError": "Failed to load payment methods",
+        "joinCode": {
+          "title": "Company code",
+          "description": "Reusable code members type in the Folio mobile app (\"Join a company\") after signing up with their phone number. They join as members.",
+          "none": "No active code. Create one to let people join from the mobile app.",
+          "create": "Create code",
+          "renew": "New code",
+          "revoke": "Revoke code",
+          "copy": "Copy",
+          "copied": "Copied",
+          "renewConfirm": "The current code will stop working immediately; people who already joined keep their access. Continue?",
+          "revokeConfirm": "Nobody will be able to join with this code anymore; people who already joined keep their access.",
+          "createdToast": "Company code created.",
+          "renewedToast": "New company code created.",
+          "revokedToast": "Company code revoked.",
+          "copiedToast": "Code copied to clipboard.",
+          "copyFailed": "Could not copy the code.",
+          "genericError": "An unexpected error occurred.",
+          "policyNote": "The code can be used by any number of people until it is revoked or renewed. Share it outside Folio (SMS, WhatsApp…)."
+        }
       }
     },
     "form": {

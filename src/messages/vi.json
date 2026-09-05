@@ -535,13 +535,19 @@
       "paidByCompany": "công ty",
       "paidByPersonal": "cá nhân",
       "sumOfTypes": "Tổng",
-      "sharedScaleTo": "thang chung đến {amount}"
+      "sharedScaleTo": "thang chung đến {amount}",
+      "cashAdvance": "gồm {amount} tiền mặt tạm ứng"
     },
     "byWorker": {
       "totalPaid": "Tổng đã trả",
       "lastPayment": "Lần trả gần nhất",
       "noMonthGroup": "Không có tháng",
       "activeThisMonth": "Có mặt tháng này"
+    },
+    "cashAdvance": {
+      "label": "Tạm ứng tiền mặt của công ty",
+      "hint": "Tiền công ty giao (vd. tiền mặt để trả nhân công). Không tính vào vốn giải ngân — hiển thị là đã chi trong túi tiền công ty. Ghi các khoản trả bằng tiền này theo phương thức tiền mặt của bạn, không dùng phương thức công ty, để tránh tính hai lần.",
+      "badge": "Tạm ứng"
     }
   },
   "planning": {

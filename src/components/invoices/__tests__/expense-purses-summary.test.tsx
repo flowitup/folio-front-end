@@ -613,3 +613,62 @@ describe("ExpensePursesSummary — type-first breakdown wiring", () => {
     expect(digits(darkTotal)).toBe("14500");
   });
 });
+
+describe("ExpensePursesSummary — company cash advance", () => {
+  const meta = {
+    fundsReleasedTotal: 108295,
+    fundsReleasedCompanyTotal: 97376,
+    fundsReleasedPersonalTotal: 10919,
+    companySpentTotal: 54329,
+    personalSpentTotal: 26948,
+    companyCashAdvancedTotal: 3000,
+  };
+
+  it("adds the advance to the company purse spent and shows the 'incl.' sub-line", () => {
+    render(<ExpensePursesSummary invoices={[]} meta={meta} />);
+    const line = screen.getByTestId("purse-cash-advance-company");
+    expect(line.textContent).toContain("invoices.summary.cashAdvance");
+    expect(line.textContent).toMatch(/3[^\d]*000/);
+
+    const companyCard = screen
+      .getByText("invoices.summary.companyPurse")
+      .closest(".folio-card") as HTMLElement;
+    // Spent = 54 329 + 3 000 = 57 329; left = 97 376 − 57 329 = 40 047.
+    const nums = Array.from(companyCard.querySelectorAll<HTMLElement>(".num")).map(
+      (el) => el.textContent ?? ""
+    );
+    expect(nums.some((txt) => /57[^\d]*329/.test(txt))).toBe(true);
+    expect(nums.some((txt) => /40[^\d]*047/.test(txt))).toBe(true);
+  });
+
+  it("never touches the personal purse", () => {
+    render(<ExpensePursesSummary invoices={[]} meta={meta} />);
+    expect(screen.queryByTestId("purse-cash-advance-personal")).toBeNull();
+    const personalCard = screen
+      .getByText("invoices.summary.personalPurse")
+      .closest(".folio-card") as HTMLElement;
+    const nums = Array.from(personalCard.querySelectorAll<HTMLElement>(".num")).map(
+      (el) => el.textContent ?? ""
+    );
+    // Released stays 10 919 — the advance is not a reimbursement of a personal expense.
+    expect(nums.some((txt) => /10[^\d]*919/.test(txt))).toBe(true);
+  });
+
+  it("hides the sub-line when the meta field is absent or zero (older BE)", () => {
+    const { companyCashAdvancedTotal: _omit, ...withoutAdvance } = meta;
+    void _omit;
+    const { unmount } = render(<ExpensePursesSummary invoices={[]} meta={withoutAdvance} />);
+    expect(screen.queryByTestId("purse-cash-advance-company")).toBeNull();
+    unmount();
+    render(<ExpensePursesSummary invoices={[]} meta={{ ...meta, companyCashAdvancedTotal: 0 }} />);
+    expect(screen.queryByTestId("purse-cash-advance-company")).toBeNull();
+    const companyCard = screen
+      .getByText("invoices.summary.companyPurse")
+      .closest(".folio-card") as HTMLElement;
+    const nums = Array.from(companyCard.querySelectorAll<HTMLElement>(".num")).map(
+      (el) => el.textContent ?? ""
+    );
+    expect(nums.some((txt) => /54[^\d]*329/.test(txt))).toBe(true);
+  });
+});
+

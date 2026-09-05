@@ -33,6 +33,13 @@ export interface InvoiceListResponse {
    * project. Optional: same FE-before-BE deploy-ordering caveat as the split fields above.
    */
   personal_spent_total?: number;
+  /**
+   * Company money handed to a person (released_funds rows flagged is_cash_advance).
+   * Kept OUT of the funds_released_* totals and of company_spent_total by the backend;
+   * the company purse card adds it to its spend. Optional: same FE-before-BE
+   * deploy-ordering caveat as the split fields above.
+   */
+  company_cash_advanced_total?: number;
   /** Name of the construction company associated with this project, if any. */
   company_name: string | null;
 }

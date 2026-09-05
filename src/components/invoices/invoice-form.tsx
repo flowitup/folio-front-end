@@ -106,6 +106,13 @@ export function InvoiceForm({
   const [workerId, setWorkerId] = useState<string | null>(
     initialValues?.worker_id ?? null
   );
+  // released_funds-only "company cash advance" flag: this release records money
+  // the company handed to a person (e.g. cash for labor) rather than client
+  // money arriving. Cleared when the type is switched away from released_funds
+  // (the BE clears it server-side too).
+  const [isCashAdvance, setIsCashAdvance] = useState<boolean>(
+    initialValues?.is_cash_advance ?? false
+  );
   const [items, setItems] = useState<LineItem[]>(
     initialValues?.items && initialValues.items.length > 0
       ? initialValues.items.map((i) => ({
@@ -309,6 +316,9 @@ export function InvoiceForm({
             worker_id: workerId,
           }
         : {}),
+      // Include is_cash_advance only for released_funds (the BE rejects it on
+      // every other type); false explicitly clears the flag on edit.
+      ...(type === "released_funds" ? { is_cash_advance: isCashAdvance } : {}),
     };
 
     try {
@@ -352,6 +362,7 @@ export function InvoiceForm({
                   // it server-side too, so keeping stale FE state around
                   // would only mislead a switch-back.
                   if (newType !== "labor") setWorkerId(null);
+                  if (newType !== "released_funds") setIsCashAdvance(false);
                 }}
                 className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 disabled={isLoading}
@@ -602,6 +613,26 @@ export function InvoiceForm({
                 data-testid="service-month-input"
               />
             </div>
+          )}
+
+          {/* Released funds: company cash advance flag — this release is company
+              money handed to a person, not client money. Excluded from the
+              released totals; shown in the company purse as spent. */}
+          {type === "released_funds" && (
+            <label className="flex items-start gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={isCashAdvance}
+                onChange={(e) => setIsCashAdvance(e.target.checked)}
+                disabled={isLoading}
+                className="mt-0.5"
+                data-testid="cash-advance-checkbox"
+              />
+              <span>
+                <span className="font-medium">{t("cashAdvance.label")}</span>
+                <span className="block text-muted-foreground">{t("cashAdvance.hint")}</span>
+              </span>
+            </label>
           )}
         </CardContent>
       </Card>

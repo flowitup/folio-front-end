@@ -149,3 +149,31 @@ describe("InvoiceMobileCard — refund type display", () => {
     expect(typeStamp.className).toContain("warning");
   });
 });
+
+describe("InvoiceMobileCard — cash advance badge", () => {
+  const formatAmount = (n: number) => `${n.toFixed(2)} €`;
+
+  it("shows the badge on a released_funds row flagged as a cash advance", () => {
+    render(
+      <InvoiceMobileCard
+        invoice={makeInvoice({ type: "released_funds", total_amount: 3000, is_cash_advance: true })}
+        isOpen={false}
+        onToggle={vi.fn()}
+        formatAmount={formatAmount}
+      />,
+    );
+    expect(screen.getByTestId("cash-advance-badge").textContent).toBe("invoices.cashAdvance.badge");
+  });
+
+  it("shows no badge on an ordinary release", () => {
+    render(
+      <InvoiceMobileCard
+        invoice={makeInvoice({ type: "released_funds", total_amount: 3000 })}
+        isOpen={false}
+        onToggle={vi.fn()}
+        formatAmount={formatAmount}
+      />,
+    );
+    expect(screen.queryByTestId("cash-advance-badge")).toBeNull();
+  });
+});

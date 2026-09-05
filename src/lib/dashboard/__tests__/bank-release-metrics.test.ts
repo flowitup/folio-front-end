@@ -111,4 +111,19 @@ describe("buildDrawSeries", () => {
     expect(series.draws).toHaveLength(1);
     expect(series.draws[0].date).toBe("2026-05-06");
   });
+
+  it("skips cash-advance releases — company money handed out is not a bank draw", () => {
+    const series = buildDrawSeries([
+      mkInvoice({ type: "released_funds", issue_date: "2026-05-25", total_amount: 97_376 }),
+      mkInvoice({
+        type: "released_funds",
+        issue_date: "2026-09-06",
+        total_amount: 3_000,
+        is_cash_advance: true,
+      }),
+    ]);
+    expect(series.draws).toHaveLength(1);
+    expect(series.totalDrawn).toBe(97_376);
+    expect(series.last?.amount).toBe(97_376);
+  });
 });

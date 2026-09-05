@@ -5,7 +5,8 @@
  *
  * Four tabs (manual implementation — no Tabs primitive in this project):
  *   1. Edit   — update all company fields
- *   2. Invites — generate / revoke invite token; shows TokenGeneratedDialog one-shot
+ *   2. Invites — generate / revoke invite token; shows TokenGeneratedDialog one-shot,
+ *               plus the reusable company join code card (mobile onboarding)
  *   3. Users  — AttachedUsersTable with Boot action
  *   4. Delete — destructive AlertDialog
  *
@@ -35,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { TokenGeneratedDialog } from "@/components/companies/token-generated-dialog";
 import { AttachedUsersTable } from "@/components/companies/attached-users-table";
+import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-card";
 import {
   updateCompanyAction,
   deleteCompanyAction,
@@ -506,6 +508,9 @@ export function AdminCompanyManagePage({
               {t("admin.manage.invites.policyNote")}
             </p>
           </div>
+
+          {/* Reusable company code typed by members on the mobile app */}
+          <CompanyJoinCodeCard companyId={company.id} initialCode={company.join_code ?? null} />
 
           {/* Token generated dialog */}
           <TokenGeneratedDialog

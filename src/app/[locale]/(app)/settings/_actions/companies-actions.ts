@@ -37,6 +37,12 @@ import {
   bootAttachedUser,
   setMemberRole,
 } from "@/lib/api/companies/attached-users";
+import {
+  setJoinCode,
+  revokeJoinCode,
+  joinCompanyByCode,
+} from "@/lib/api/companies/join-code";
+import { normalizeJoinCode } from "@/lib/companies/join-code";
 import { getSession } from "@/lib/auth/session";
 import type { Company, MyCompany, CompanyInviteTokenGenerated, AttachedUser } from "@/types/companies";
 import type { CreateCompanyPayload, UpdateCompanyPayload } from "@/lib/api/companies/companies";
@@ -275,6 +281,49 @@ export async function redeemInviteTokenAction(token: string): Promise<ActionResu
   if (!token || typeof token !== "string" || token.length > 512) return invalid();
   try {
     const data = await redeemInviteToken(token);
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: await classifyBackendError(err) };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Join-code actions (reusable company code, superadmin-managed)
+// ---------------------------------------------------------------------------
+
+/** Create or renew the company's join code; returns the new plaintext code. */
+export async function setJoinCodeAction(companyId: string): Promise<ActionResult<string>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId)) return invalid();
+  try {
+    const data = await setJoinCode(companyId);
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: await classifyBackendError(err) };
+  }
+}
+
+export async function revokeJoinCodeAction(companyId: string): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId)) return invalid();
+  try {
+    await revokeJoinCode(companyId);
+    return { ok: true, data: undefined };
+  } catch (err) {
+    return { ok: false, error: await classifyBackendError(err) };
+  }
+}
+
+/** Join a company as member with its code (dashes/case tolerated). Unknown code → not_found. */
+export async function joinCompanyByCodeAction(code: string): Promise<ActionResult<Company>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  const normalized = typeof code === "string" ? normalizeJoinCode(code) : "";
+  if (normalized.length < 4 || normalized.length > 32) return invalid();
+  try {
+    const data = await joinCompanyByCode(normalized);
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: await classifyBackendError(err) };

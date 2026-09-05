@@ -1569,8 +1569,8 @@
     },
     "invite": {
       "dialogTitle": "Liên kết công ty",
-      "inputLabel": "Mã mời",
-      "inputPlaceholder": "Dán mã mời do quản trị viên cung cấp…",
+      "inputLabel": "Mã mời hoặc mã công ty",
+      "inputPlaceholder": "Dán mã mời hoặc nhập mã công ty 8 ký tự…",
       "attachCta": "Liên kết",
       "successToast": "Đã liên kết công ty thành công.",
       "tokenInvalidError": "Mã mời không hợp lệ, đã hết hạn hoặc đã được sử dụng."
@@ -1638,7 +1638,26 @@
           "deletedToast": "Đã xóa công ty."
         },
         "paymentsLoading": "Đang tải phương thức thanh toán…",
-        "paymentsLoadError": "Không tải được phương thức thanh toán"
+        "paymentsLoadError": "Không tải được phương thức thanh toán",
+        "joinCode": {
+          "title": "Mã công ty",
+          "description": "Mã dùng lại được, thành viên nhập trong app Folio trên điện thoại (\"Tham gia vào công ty\") sau khi tạo tài khoản bằng số điện thoại. Họ tham gia với vai trò thành viên.",
+          "none": "Chưa có mã. Tạo mã để mọi người tham gia từ app điện thoại.",
+          "create": "Tạo mã",
+          "renew": "Mã mới",
+          "revoke": "Thu hồi mã",
+          "copy": "Sao chép",
+          "copied": "Đã chép",
+          "renewConfirm": "Mã hiện tại sẽ ngừng hoạt động ngay; người đã tham gia vẫn giữ quyền truy cập. Tiếp tục?",
+          "revokeConfirm": "Không ai có thể tham gia bằng mã này nữa; người đã tham gia vẫn giữ quyền truy cập.",
+          "createdToast": "Đã tạo mã công ty.",
+          "renewedToast": "Đã tạo mã công ty mới.",
+          "revokedToast": "Đã thu hồi mã công ty.",
+          "copiedToast": "Đã sao chép mã.",
+          "copyFailed": "Không sao chép được mã.",
+          "genericError": "Đã xảy ra lỗi không mong muốn.",
+          "policyNote": "Mã dùng được cho bao nhiêu người cũng được cho tới khi thu hồi hoặc tạo mã mới. Gửi mã ngoài Folio (SMS, WhatsApp…)."
+        }
       }
     },
     "form": {

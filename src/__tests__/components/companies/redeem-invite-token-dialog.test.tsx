@@ -39,13 +39,18 @@ vi.mock(
   "@/app/[locale]/(app)/settings/_actions/companies-actions",
   () => ({
     redeemInviteTokenAction: vi.fn(),
+    joinCompanyByCodeAction: vi.fn(),
   })
 );
 
-import { redeemInviteTokenAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
+import {
+  joinCompanyByCodeAction,
+  redeemInviteTokenAction,
+} from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import { toast } from "sonner";
 
 const mockRedeem = vi.mocked(redeemInviteTokenAction);
+const mockJoin = vi.mocked(joinCompanyByCodeAction);
 const mockToast = toast as unknown as {
   success: ReturnType<typeof vi.fn>;
   error: ReturnType<typeof vi.fn>;
@@ -98,7 +103,7 @@ describe("test_redeem_invite_token_uniform_error_on_410", () => {
     });
 
     renderDialog();
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "bad-token" } });
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "bad-token-xyz" } });
 
     await act(async () => {
       fireEvent.submit(screen.getByRole("textbox").closest("form")!);
@@ -175,7 +180,7 @@ describe("test_redeem_invite_token_uniform_error_on_410", () => {
 describe("RedeemInviteTokenDialog — success path", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("calls onAttached with the company and closes dialog on success", async () => {
+  it("calls onAttached and closes dialog on success", async () => {
     mockRedeem.mockResolvedValueOnce({ ok: true, data: ATTACHED_COMPANY });
     const onAttached = vi.fn();
     const onOpenChange = vi.fn();
@@ -196,7 +201,8 @@ describe("RedeemInviteTokenDialog — success path", () => {
 
     await waitFor(() => {
       expect(mockRedeem).toHaveBeenCalledWith("valid-token");
-      expect(onAttached).toHaveBeenCalledWith(ATTACHED_COMPANY);
+      expect(onAttached).toHaveBeenCalledOnce();
+      expect(mockJoin).not.toHaveBeenCalled();
       expect(mockToast.success).toHaveBeenCalledOnce();
     });
   });
@@ -291,5 +297,51 @@ describe("RedeemInviteTokenDialog — submit guard", () => {
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "tok" } });
     const submitBtn = screen.getByRole("button", { name: /attach/i });
     expect((submitBtn as HTMLButtonElement).disabled).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Company join code (8 characters) goes through joinCompanyByCodeAction
+// ---------------------------------------------------------------------------
+
+describe("RedeemInviteTokenDialog — company code path", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("routes an 8-character code (dash + lowercase tolerated) to joinCompanyByCodeAction", async () => {
+    mockJoin.mockResolvedValueOnce({ ok: true, data: ATTACHED_COMPANY });
+    const onAttached = vi.fn();
+
+    renderDialog(onAttached);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: " uynv-lygl " } });
+
+    await act(async () => {
+      fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+    });
+
+    await waitFor(() => {
+      expect(mockJoin).toHaveBeenCalledWith("uynv-lygl");
+      expect(mockRedeem).not.toHaveBeenCalled();
+      expect(onAttached).toHaveBeenCalledOnce();
+      expect(mockToast.success).toHaveBeenCalledOnce();
+    });
+  });
+
+  it("unknown code (not_found) → uniform invalid toast", async () => {
+    mockJoin.mockResolvedValueOnce({
+      ok: false,
+      error: { code: "not_found", message: "Unknown or revoked company code" },
+    });
+
+    renderDialog();
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "AAAA2222" } });
+
+    await act(async () => {
+      fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+    });
+
+    await waitFor(() => {
+      const [msg] = mockToast.error.mock.calls[0] as [string];
+      expect(msg.toLowerCase()).toMatch(/invalid|expired|used/);
+    });
   });
 });

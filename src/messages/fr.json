@@ -1569,8 +1569,8 @@
     },
     "invite": {
       "dialogTitle": "Rattacher une société",
-      "inputLabel": "Jeton d'invitation",
-      "inputPlaceholder": "Collez le jeton partagé par votre administrateur…",
+      "inputLabel": "Jeton d'invitation ou code société",
+      "inputPlaceholder": "Collez le jeton ou saisissez le code société à 8 caractères…",
       "attachCta": "Rattacher",
       "successToast": "Société rattachée avec succès.",
       "tokenInvalidError": "Le jeton d'invitation est invalide, expiré ou déjà utilisé."
@@ -1638,7 +1638,26 @@
           "deletedToast": "Société supprimée."
         },
         "paymentsLoading": "Chargement des moyens de paiement…",
-        "paymentsLoadError": "Échec du chargement des moyens de paiement"
+        "paymentsLoadError": "Échec du chargement des moyens de paiement",
+        "joinCode": {
+          "title": "Code société",
+          "description": "Code réutilisable que les membres saisissent dans l'application mobile Folio (« Rejoindre une société ») après s'être inscrits avec leur numéro de téléphone. Ils rejoignent en tant que membres.",
+          "none": "Aucun code actif. Créez-en un pour permettre de rejoindre la société depuis l'application mobile.",
+          "create": "Créer un code",
+          "renew": "Nouveau code",
+          "revoke": "Révoquer le code",
+          "copy": "Copier",
+          "copied": "Copié",
+          "renewConfirm": "Le code actuel cessera de fonctionner immédiatement ; les personnes déjà rattachées gardent leur accès. Continuer ?",
+          "revokeConfirm": "Plus personne ne pourra rejoindre la société avec ce code ; les personnes déjà rattachées gardent leur accès.",
+          "createdToast": "Code société créé.",
+          "renewedToast": "Nouveau code société créé.",
+          "revokedToast": "Code société révoqué.",
+          "copiedToast": "Code copié dans le presse-papiers.",
+          "copyFailed": "Impossible de copier le code.",
+          "genericError": "Une erreur inattendue s'est produite.",
+          "policyNote": "Le code peut être utilisé par un nombre illimité de personnes jusqu'à sa révocation ou son renouvellement. Partagez-le hors de Folio (SMS, WhatsApp…)."
+        }
       }
     },
     "form": {

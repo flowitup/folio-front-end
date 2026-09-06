@@ -83,9 +83,6 @@ vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock("@/lib/api/tags-client", () => ({
-  fetchTagsClient: vi.fn().mockResolvedValue([]),
-}));
 
 // ── Imports after mocks ───────────────────────────────────────────────────────
 

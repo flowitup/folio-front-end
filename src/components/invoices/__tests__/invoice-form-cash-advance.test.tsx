@@ -51,10 +51,6 @@ vi.mock("@/components/invoices/payment-method-select", () => ({
   PaymentMethodSelect: () => null,
 }));
 
-vi.mock("@/components/tags/tag-select", () => ({
-  TagSelect: () => null,
-}));
-
 function fillRequired() {
   fireEvent.change(screen.getByPlaceholderText("Recipient"), {
     target: { value: "ANN ECO CONSTRUCTION → CASH Trung" },

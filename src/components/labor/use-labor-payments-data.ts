@@ -94,7 +94,7 @@ export function useLaborPaymentsData(
       const range = monthToDateRange(m);
       const [summary, unassignedRes] = await Promise.all([
         range ? fetchLaborSummary(projectId, range) : Promise.resolve(null),
-        fetchInvoicesWithMeta(projectId, "labor", undefined, `${m}-01`),
+        fetchInvoicesWithMeta(projectId, "labor", `${m}-01`),
       ]);
       setLaborSummary(summary);
       setUnassignedInvoices(unassignedRes.invoices.filter((inv) => !inv.worker_id));

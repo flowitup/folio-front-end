@@ -17,24 +17,19 @@
  * Plan: 260512-2341-labor-calendar-and-bulk-log → phase-02 (2c).
  */
 
-import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
-import { Plus, XIcon, Pencil, Trash2, ClipboardList, Tag } from "lucide-react";
+import { Plus, XIcon, Pencil, Trash2, ClipboardList } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatDate } from "@/lib/utils/formatters";
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborEntryCard } from "@/components/labor/labor-entry-card";
 import { DayDescriptionField } from "@/components/labor/day-description-field";
-import { TagSelect } from "@/components/tags/tag-select";
 import type { LaborEntry, LaborActivity } from "@/types/labor";
-import type { ProjectTag } from "@/lib/api/tags";
 
 interface AttendanceDayDetailSheetProps {
   /** The day this sheet describes. Null = closed. */
@@ -45,8 +40,6 @@ interface AttendanceDayDetailSheetProps {
   activities?: LaborActivity[];
   /** Day-level description text (separate from per-worker notes and activities). */
   dayDescription?: string;
-  /** Project-scoped phase tags. Empty = tagging UI hidden (existing convention). */
-  tags?: ProjectTag[];
   /** Open/close binding. */
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -65,11 +58,6 @@ interface AttendanceDayDetailSheetProps {
   onDeleteActivity?: (activity: LaborActivity) => void;
   /** Saves the day description (upsert). Caller refetches. */
   onSaveDayDescription?: (date: string, description: string) => Promise<void>;
-  /**
-   * Bulk-sets tag_id on every entry of this day (overwrite). Date is bound by
-   * the caller (see AttendanceCalendar). Undefined hides the tag row.
-   */
-  onSaveDayTag?: (tagId: string | null) => Promise<void>;
 }
 
 export function AttendanceDayDetailSheet({
@@ -77,7 +65,6 @@ export function AttendanceDayDetailSheet({
   entries,
   activities = [],
   dayDescription = "",
-  tags = [],
   open,
   onOpenChange,
   canManage,
@@ -90,37 +77,12 @@ export function AttendanceDayDetailSheet({
   onEditActivity,
   onDeleteActivity,
   onSaveDayDescription,
-  onSaveDayTag,
 }: AttendanceDayDetailSheetProps) {
   const t = useTranslations("labor");
   const dayTotal = entries.reduce(
     (sum, e) => sum + Number(e.effective_cost ?? 0),
     0,
   );
-
-  // Common tag across the day's entries; null when entries disagree (mixed)
-  // or there are no entries yet. Tracks in-flight saves to disable the
-  // picker while a bulk update is inflight.
-  const commonTagId = useMemo(() => {
-    if (entries.length === 0) return null;
-    const first = entries[0].tag_id ?? null;
-    const mixed = entries.some((e) => (e.tag_id ?? null) !== first);
-    return mixed ? undefined : first;
-  }, [entries]);
-  const isMixed = commonTagId === undefined;
-  const [savingTag, setSavingTag] = useState(false);
-
-  const handleTagChange = async (tagId: string | null) => {
-    if (!onSaveDayTag) return;
-    setSavingTag(true);
-    try {
-      await onSaveDayTag(tagId);
-    } catch {
-      toast.error(t("dayTag.saveFailed"));
-    } finally {
-      setSavingTag(false);
-    }
-  };
 
   // Localized weekday + canonical dd/mm/YYYY date — "Mercredi 13/05/2026".
   // Weekday follows the browser locale; the numeric date is always dd/mm/YYYY.
@@ -185,29 +147,6 @@ export function AttendanceDayDetailSheet({
                 canManage={canManage}
                 onSave={onSaveDayDescription}
               />
-            )}
-
-            {/* "Tag this day" — bulk-sets tag_id on every entry of the day.
-                Hidden when the project has no tags yet or the viewer can't
-                manage labor (existing tags.length > 0 convention). */}
-            {tags.length > 0 && canManage && onSaveDayTag && (
-              <div
-                data-testid="day-tag-select"
-                className="space-y-1 px-1 pb-1 pt-0.5"
-              >
-                <Label className="text-muted-foreground flex items-center gap-1 text-xs font-medium">
-                  <Tag className="h-3 w-3" />
-                  {t("dayTag.label")}
-                </Label>
-                <TagSelect
-                  tags={tags}
-                  value={isMixed ? null : commonTagId}
-                  onChange={handleTagChange}
-                  disabled={savingTag}
-                  placeholder={isMixed ? t("dayTag.mixed") : undefined}
-                  mixed={isMixed}
-                />
-              </div>
             )}
 
             {entries.map((entry) => (

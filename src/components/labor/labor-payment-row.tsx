@@ -82,7 +82,7 @@ export function LaborPaymentRow({
     async function load() {
       if (!cancelled) setLoadingInvoices(true);
       try {
-        const res = await fetchInvoicesWithMeta(projectId, "labor", undefined, `${month}-01`, row.worker_id);
+        const res = await fetchInvoicesWithMeta(projectId, "labor", `${month}-01`, row.worker_id);
         if (!cancelled) setInvoices(res.invoices);
       } catch {
         if (!cancelled) setInvoices([]);

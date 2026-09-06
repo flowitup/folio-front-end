@@ -169,45 +169,4 @@ describe("buildBulkPayload", () => {
     expect(p.supplement_hours).toBeUndefined();
     expect(p.note).toBeUndefined();
   });
-
-  it("does not include tag_id when not set on tile state (bulk tag applied by caller)", () => {
-    // buildBulkPayload does NOT inject tag_id — that responsibility sits
-    // in LogDayDialog.doSave which maps over the result and adds bulkTag.
-    const states = buildTileStates([worker("w1", "A")], [], "2026-05-13");
-    states.w1.checked = true;
-    const [p] = buildBulkPayload(states);
-    // tag_id is not in the tile state interface, so it must be absent here.
-    expect("tag_id" in p).toBe(false);
-  });
-
-  it("bulk tag stamping: map over payload adds tag_id to all entries", () => {
-    // Simulate what LogDayDialog.doSave does: apply bulkTag after buildBulkPayload.
-    const states = buildTileStates(
-      [worker("w1", "A"), worker("w2", "B")],
-      [],
-      "2026-05-13",
-    );
-    states.w1.checked = true;
-    states.w2.checked = true;
-    const baseEntries = buildBulkPayload(states);
-    const bulkTag = "tag-uuid-123";
-    const payload = bulkTag
-      ? baseEntries.map((e) => ({ ...e, tag_id: bulkTag }))
-      : baseEntries;
-    expect(payload).toHaveLength(2);
-    expect(payload[0].tag_id).toBe("tag-uuid-123");
-    expect(payload[1].tag_id).toBe("tag-uuid-123");
-  });
-
-  it("bulk tag omitted: payload has no tag_id when bulkTag is null", () => {
-    const states = buildTileStates([worker("w1", "A")], [], "2026-05-13");
-    states.w1.checked = true;
-    const baseEntries = buildBulkPayload(states);
-    const bulkTag = null;
-    const payload = bulkTag
-      ? baseEntries.map((e) => ({ ...e, tag_id: bulkTag }))
-      : baseEntries;
-    expect(payload).toHaveLength(1);
-    expect("tag_id" in payload[0]).toBe(false);
-  });
 });

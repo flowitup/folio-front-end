@@ -29,11 +29,8 @@ import {
   REFUND_STATUS_I18N,
   refundStatusI18nKey,
 } from "@/lib/invoices/refundable-status-display";
-import { fetchTagsClient } from "@/lib/api/tags-client";
 import { groupInvoicesByMonth, monthKeyForInvoice } from "@/lib/invoices/group-invoices-by-month";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
-import { TagFilterSelect } from "@/components/tags/tag-filter-select";
-import type { ProjectTag } from "@/lib/api/tags";
 
 type TabType = "all" | InvoiceType;
 
@@ -163,8 +160,6 @@ export default function InvoicesPage() {
   const [companyName, setCompanyName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tags, setTags] = useState<ProjectTag[]>([]);
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
 
   const loadInvoices = useCallback(async () => {
     setIsLoading(true);
@@ -172,11 +167,10 @@ export default function InvoicesPage() {
     try {
       // The purses summary is project-level, so it always reads an UNFILTERED
       // list; when the table itself is unfiltered a single request serves both.
-      const isUnfiltered = activeTab === "all" && !tagFilter;
+      const isUnfiltered = activeTab === "all";
       const filteredPromise = fetchInvoicesWithMeta(
         projectId,
-        activeTab !== "all" ? activeTab : undefined,
-        tagFilter ?? undefined
+        activeTab !== "all" ? activeTab : undefined
       );
       const summaryPromise = isUnfiltered ? filteredPromise : fetchInvoicesWithMeta(projectId);
       const [res, sum] = await Promise.all([filteredPromise, summaryPromise]);
@@ -198,14 +192,7 @@ export default function InvoicesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, activeTab, tagFilter]);
-
-  // Load tags once for filter dropdown (non-fatal).
-  useEffect(() => {
-    fetchTagsClient(projectId)
-      .then(setTags)
-      .catch(() => setTags([]));
-  }, [projectId]);
+  }, [projectId, activeTab]);
 
   useEffect(() => {
     loadInvoices();
@@ -306,13 +293,6 @@ export default function InvoicesPage() {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          {tags.length > 0 && (
-            <TagFilterSelect
-              tags={tags}
-              value={tagFilter}
-              onChange={setTagFilter}
-            />
-          )}
           <Button variant="outline" onClick={() => setExportOpen(true)}>
             <Download className="mr-2 h-4 w-4" />
             {t("export.trigger")}

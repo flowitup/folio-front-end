@@ -5,13 +5,11 @@ import {
   fetchLaborRoles,
   createLaborRole,
 } from "@/lib/api/labor-roles";
-import { listTags } from "@/lib/api/tags";
 import type {
   LaborRole,
   LaborRoleListResponse,
   CreateLaborRolePayload,
 } from "@/types/labor-role";
-import type { ProjectTag } from "@/lib/api/tags";
 
 // ---- Error classification ----
 
@@ -41,30 +39,7 @@ export type RoleListActionResult =
   | { success: true; data: LaborRoleListResponse }
   | { success: false; error: string };
 
-// ---- Result types (tags) ----
-
-export type TagsActionResult =
-  | { success: true; tags: ProjectTag[] }
-  | { success: false; error: string };
-
 // ---- Actions ----
-
-/**
- * Fetch project-scoped phase tags. Non-fatal — missing tags don't
- * prevent the attendance tab from loading.
- */
-export async function fetchProjectTagsAction(
-  projectId: string,
-): Promise<TagsActionResult> {
-  try {
-    const result = await listTags(projectId);
-    return { success: true, tags: result.items };
-  } catch (err: unknown) {
-    const e = err as { status?: number };
-    if (e.status === 401) redirect("/login");
-    return { success: false, error: "generic" };
-  }
-}
 
 /**
  * Fetch all labor roles and the default color palette.

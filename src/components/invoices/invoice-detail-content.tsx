@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { Printer, Pencil, Trash2 } from "lucide-react";
@@ -18,12 +18,10 @@ import {
   refundStatusI18nKey,
 } from "@/lib/invoices/refundable-status-display";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
-import { fetchTagsClient } from "@/lib/api/tags-client";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import { InvoiceHighlightPicker } from "@/components/invoices/invoice-highlight-picker";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
-import type { ProjectTag } from "@/lib/api/tags";
 
 const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp",
@@ -81,15 +79,7 @@ export function InvoiceDetailContent({
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tags, setTags] = useState<ProjectTag[]>([]);
   const [isAttributing, setIsAttributing] = useState(false);
-
-  // Load project tags for the edit form tag selector. Non-fatal.
-  useEffect(() => {
-    fetchTagsClient(invoice.project_id)
-      .then(setTags)
-      .catch(() => setTags([]));
-  }, [invoice.project_id]);
 
   /** Extract a user-facing message from an API error, falling back to a default. */
   function extractErrorMessage(err: unknown, fallback: string): string {
@@ -221,7 +211,6 @@ export function InvoiceDetailContent({
           onSubmit={handleUpdate}
           isLoading={isSaving}
           companyId={companyId}
-          tags={tags}
           projectId={invoice.project_id}
           editingInvoiceId={invoice.id}
           initialValues={{
@@ -237,7 +226,6 @@ export function InvoiceDetailContent({
               vat_rate: item.vat_rate ?? 0,
             })),
             payment_method_id: invoice.payment_method_id ?? null,
-            tag_id: invoice.tag_id ?? null,
             refunds_invoice_id: invoice.refunds_invoice_id ?? null,
             service_month: invoice.service_month ?? null,
             settled_via: invoice.settled_via ?? null,

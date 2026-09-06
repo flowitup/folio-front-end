@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 import { buildMonthGrid, toDateKey } from "@/lib/utils/calendar-month";
 import { CalendarCell } from "@/components/labor/calendar-cell";
 import type { LaborEntry, LaborActivity, Worker } from "@/types/labor";
-import type { ProjectTag } from "@/lib/api/tags";
 
 interface CalendarMonthGridProps {
   year: number;
@@ -36,8 +35,6 @@ interface CalendarMonthGridProps {
   className?: string;
   /** Worker lookup for role-aware chip colors. See CalendarCell. */
   workerMap?: Record<string, Worker>;
-  /** Tag lookup for color-dot badges. See CalendarCell. */
-  tagMap?: Record<string, ProjectTag>;
 }
 
 export function CalendarMonthGrid({
@@ -49,7 +46,6 @@ export function CalendarMonthGrid({
   locale,
   className,
   workerMap,
-  tagMap,
 }: CalendarMonthGridProps) {
   const effectiveLocale = locale ?? (typeof navigator !== "undefined" ? navigator.language : "en-US");
 
@@ -129,7 +125,6 @@ export function CalendarMonthGrid({
               activities={dayActivities}
               onClick={(d) => d && onDayClick?.(d)}
               workerMap={workerMap}
-              tagMap={tagMap}
             />
           );
         })}

@@ -23,11 +23,9 @@ import { LaborPaymentsTab } from "@/components/labor/labor-payments-tab";
 
 import { ActivityDialog } from "@/components/labor/activity-dialog";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
-import { TagFilterSelect } from "@/components/tags/tag-filter-select";
 
 import type { Worker, LaborEntry, LaborActivity, LaborDayDescription, LaborSummaryResponse, LaborMonthlySummaryResponse, LaborPaymentsSummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
-import type { ProjectTag } from "@/lib/api/tags";
 import {
   fetchWorkers,
   createWorker,
@@ -47,11 +45,10 @@ import {
   deleteLaborActivity,
   fetchLaborDayDescriptions,
   setLaborDayDescription,
-  setLaborDayTag,
 } from "@/lib/api/labor";
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { fetchProjectById } from "@/lib/api/projects";
-import { fetchLaborRolesAction, fetchProjectTagsAction } from "./actions";
+import { fetchLaborRolesAction } from "./actions";
 
 type TabType = "workers" | "attendance" | "summary" | "payments";
 
@@ -121,9 +118,6 @@ export default function LaborPage() {
   const [roles, setRoles] = useState<LaborRole[]>([]);
   const [palette, setPalette] = useState<string[]>([]);
 
-  // Tags state
-  const [tags, setTags] = useState<ProjectTag[]>([]);
-
   // Worker lookup map for role-aware chip colors in calendar cells.
   const workerMap = useMemo(
     () => Object.fromEntries(workers.map((w) => [w.id, w])),
@@ -151,7 +145,6 @@ export default function LaborPage() {
   // see GET /labor-entries default limit). The month picker is opt-in.
   const [entriesMonth, setEntriesMonth] = useState("");
   const [entriesWorkerFilter, setEntriesWorkerFilter] = useState("all");
-  const [entriesTagFilter, setEntriesTagFilter] = useState<string | null>(null);
   // Calendar default per plan; list view stays available as fallback for
   // power users who want "all history" scroll (cook 2d).
   const [attendanceView, setAttendanceView] = useState<AttendanceViewMode>(
@@ -204,7 +197,6 @@ export default function LaborPage() {
         from,
         to,
         worker_id: entriesWorkerFilter !== "all" ? entriesWorkerFilter : undefined,
-        tag_id: entriesTagFilter ?? undefined,
       });
       setEntries(data);
     } catch {
@@ -212,7 +204,7 @@ export default function LaborPage() {
     } finally {
       setIsTabLoading(false);
     }
-  }, [projectId, entriesMonth, entriesWorkerFilter, entriesTagFilter]);
+  }, [projectId, entriesMonth, entriesWorkerFilter]);
 
   const loadActivities = useCallback(async () => {
     try {
@@ -264,7 +256,7 @@ export default function LaborPage() {
     }
   }, [projectId, summaryMonth]);
 
-  // Initial load — workers + roles + tags + payments summary in parallel.
+  // Initial load — workers + roles + payments summary in parallel.
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
@@ -284,15 +276,11 @@ export default function LaborPage() {
           // Non-fatal: roles are enhancement only; missing roles doesn't
           // prevent the page from loading.
         }),
-        fetchProjectTagsAction(projectId).then((result) => {
-          if (result.success) setTags(result.tags);
-          // Non-fatal: tags are optional enhancement.
-        }),
       ]);
       setIsLoading(false);
     };
     load();
-  }, [loadWorkers, loadPaymentsSummary, projectId]);
+  }, [loadWorkers, loadPaymentsSummary]);
 
   useEffect(() => {
     if (activeTab === "attendance") {
@@ -469,18 +457,6 @@ export default function LaborPage() {
     }
   };
 
-  // Bulk-sets tag_id on every entry logged for `date` (overwrite). Used by
-  // the calendar day sheet's TagSelect and the table's day-header tag action.
-  const handleSaveDayTag = async (date: string, tagId: string | null) => {
-    try {
-      const result = await setLaborDayTag(projectId, { date, tag_id: tagId });
-      await loadEntries();
-      toast.success(t("dayTag.updated", { count: result.updated_count }));
-    } catch {
-      toast.error(t("dayTag.saveFailed"));
-    }
-  };
-
   return (
     <div className="fade-up flex min-h-full flex-col gap-4 px-4 pb-12 lg:gap-6 lg:px-8">
       {/* Segmented tabs */}
@@ -546,13 +522,6 @@ export default function LaborPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <ViewToggle value={attendanceView} onChange={setAttendanceView} />
-                  {tags.length > 0 && (
-                    <TagFilterSelect
-                      tags={tags}
-                      value={entriesTagFilter}
-                      onChange={setEntriesTagFilter}
-                    />
-                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Export PDF — opens a dialog to pick the worker + month range. */}
@@ -593,7 +562,6 @@ export default function LaborPage() {
               workers={workers}
               activities={activities}
               dayDescriptions={dayDescriptions}
-              tags={tags}
               isLoading={isTabLoading}
               canManage={canManageLabor}
               month={entriesMonth}
@@ -610,7 +578,6 @@ export default function LaborPage() {
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
               onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
               onSaveDayDescription={canManageLabor ? handleSaveDayDescription : undefined}
-              onSaveDayTag={canManageLabor ? handleSaveDayTag : undefined}
             />
           ) : (
             <AttendanceTable
@@ -618,7 +585,6 @@ export default function LaborPage() {
               workers={workers}
               activities={activities}
               dayDescriptions={dayDescriptions}
-              tags={tags}
               isLoading={isTabLoading}
               canManage={canManageLabor}
               month={entriesMonth}
@@ -631,7 +597,6 @@ export default function LaborPage() {
               onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
               onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
-              onSaveDayTag={canManageLabor ? handleSaveDayTag : undefined}
               onSaveDayDescription={canManageLabor ? handleSaveDayDescription : undefined}
             />
           )}
@@ -694,7 +659,6 @@ export default function LaborPage() {
         entries={entries}
         initialDate={logDayDate}
         onSaved={loadEntries}
-        tags={tags}
       />
 
       <EditAttendanceDialog
@@ -704,7 +668,6 @@ export default function LaborPage() {
         }}
         entry={editEntry}
         onSave={handleUpdateAttendance}
-        tags={tags}
       />
 
       <ActivityDialog

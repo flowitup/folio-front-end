@@ -64,10 +64,6 @@ vi.mock("@/components/invoices/payment-method-select", () => ({
   PaymentMethodSelect: () => null,
 }));
 
-vi.mock("@/components/tags/tag-select", () => ({
-  TagSelect: () => null,
-}));
-
 vi.mock("@/lib/api/labor", () => ({
   fetchWorkers: vi.fn(),
 }));

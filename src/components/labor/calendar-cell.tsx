@@ -22,7 +22,6 @@ import { getFrenchHolidayKey } from "@/lib/utils/french-holidays";
 import { personColor, workerColor } from "@/lib/utils/person-color";
 import { formatEUR } from "@/lib/api/labor";
 import type { LaborEntry, LaborActivity, Worker, ShiftType } from "@/types/labor";
-import type { ProjectTag } from "@/lib/api/tags";
 
 interface CalendarCellProps {
   /** The Date this cell represents, or null for grid padding cells. */
@@ -41,11 +40,6 @@ interface CalendarCellProps {
    * personColor(worker_id) when absent for backward compat.
    */
   workerMap?: Record<string, Worker>;
-  /**
-   * Tag lookup map keyed by tag id. When provided, distinct tag colors
-   * among the day's entries render as small dots (max 3 + overflow count).
-   */
-  tagMap?: Record<string, ProjectTag>;
 }
 
 interface ChipDescriptor {
@@ -58,9 +52,6 @@ interface ChipDescriptor {
   pending: boolean;
 }
 
-/** Max distinct tag color dots shown before collapsing to "+N". */
-const MAX_TAG_DOTS = 3;
-
 export function CalendarCell({
   date,
   entries,
@@ -68,29 +59,9 @@ export function CalendarCell({
   onClick,
   maxChips = 3,
   workerMap,
-  tagMap,
 }: CalendarCellProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
-
-  // Distinct tag colors among the day's entries (dedup by tag id), capped
-  // to MAX_TAG_DOTS with an overflow count for the rest.
-  const { tagDots, tagOverflow } = useMemo(() => {
-    if (!tagMap) return { tagDots: [], tagOverflow: 0 };
-    const seen = new Set<string>();
-    const list: { id: string; name: string; color: string }[] = [];
-    for (const e of entries) {
-      if (!e.tag_id || seen.has(e.tag_id)) continue;
-      const tag = tagMap[e.tag_id];
-      if (!tag) continue;
-      seen.add(e.tag_id);
-      list.push({ id: tag.id, name: tag.name, color: tag.color });
-    }
-    return {
-      tagDots: list.slice(0, MAX_TAG_DOTS),
-      tagOverflow: Math.max(0, list.length - MAX_TAG_DOTS),
-    };
-  }, [entries, tagMap]);
 
   // Aggregate the day's data once per render.
   const { dayTotal, chips, overflow } = useMemo(() => {
@@ -176,27 +147,6 @@ export function CalendarCell({
           {date.getDate()}
         </span>
         <div className="flex items-center gap-1">
-          {tagDots.length > 0 && (
-            <div
-              data-testid="calendar-cell-tag-dots"
-              className="flex items-center gap-0.5"
-            >
-              {tagDots.map((tag) => (
-                <span
-                  key={tag.id}
-                  title={tag.name}
-                  aria-hidden="true"
-                  className="inline-block h-2 w-2 flex-shrink-0 rounded-full"
-                  style={{ backgroundColor: tag.color }}
-                />
-              ))}
-              {tagOverflow > 0 && (
-                <span className="text-muted-foreground text-[9px] font-medium">
-                  +{tagOverflow}
-                </span>
-              )}
-            </div>
-          )}
           {dayTotal > 0 && (
             <span className="text-muted-foreground text-xs tabular-nums">
               {formatEUR(dayTotal)}

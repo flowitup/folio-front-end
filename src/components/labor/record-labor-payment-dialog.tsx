@@ -117,7 +117,6 @@ export function RecordLaborPaymentDialog({
         },
       ],
       payment_method_id: paymentMethodId,
-      tag_id: null,
       service_month: `${month}-01`,
       worker_id: workerId,
     };

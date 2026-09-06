@@ -10,9 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InvoiceForm, classifySubmitError } from "@/components/invoices/invoice-form";
 import { createInvoice } from "@/lib/api/invoice-api";
 import { fetchProjectById } from "@/lib/api/projects";
-import { fetchTagsClient } from "@/lib/api/tags-client";
 import type { CreateInvoicePayload } from "@/types/invoice";
-import type { ProjectTag } from "@/lib/api/tags";
 
 export default function NewInvoicePage() {
   const t = useTranslations("invoices");
@@ -24,16 +22,12 @@ export default function NewInvoicePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
-  const [tags, setTags] = useState<ProjectTag[]>([]);
 
-  // Fetch project + tags in parallel. Both are non-fatal.
+  // Fetch the project for its company id. Non-fatal.
   useEffect(() => {
     fetchProjectById(projectId)
       .then((p) => setCompanyId(p.company_id ?? null))
       .catch(() => setCompanyId(null));
-    fetchTagsClient(projectId)
-      .then(setTags)
-      .catch(() => setTags([]));
   }, [projectId]);
 
   const handleSubmit = async (payload: CreateInvoicePayload) => {
@@ -83,7 +77,6 @@ export default function NewInvoicePage() {
         isLoading={isLoading}
         companyId={companyId}
         projectId={projectId}
-        tags={tags}
       />
     </div>
   );

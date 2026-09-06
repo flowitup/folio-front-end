@@ -157,9 +157,9 @@ beforeEach(() => {
     total_bonus_cost: 0,
   });
   // Differentiate the two call shapes: the month-scoped unassigned fetch
-  // passes a serviceMonth (4th arg); the no-month fetch omits it.
+  // passes a serviceMonth (3rd arg); the no-month fetch omits it.
   mockFetchInvoicesWithMeta.mockImplementation((async (...args: unknown[]) => {
-    const serviceMonth = args[3];
+    const serviceMonth = args[2];
     if (serviceMonth) {
       return makeInvoiceMeta([{ id: "inv-unassigned", worker_id: null, service_month: "2026-07-01" }]);
     }

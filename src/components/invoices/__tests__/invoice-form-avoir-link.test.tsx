@@ -60,8 +60,6 @@ vi.mock("next-intl", () => ({
         ? `The return's payment method will follow the selected invoice's method (${values.label}).`
         : "The return's payment method will follow the selected invoice's method ({label}).",
       "errorAppliedExceedsTarget": "The avoir amount exceeds the target invoice's total.",
-      // tags namespace passthrough
-      "select.label": "Phase Tag",
       // paymentMethods.builtins namespace passthrough
       "cash": "Cash",
     };
@@ -89,12 +87,9 @@ import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 
 const mockFetchInvoices = vi.mocked(fetchInvoicesWithMeta);
 
-// Stub PaymentMethodSelect and TagSelect (not under test)
+// Stub PaymentMethodSelect (not under test)
 vi.mock("@/components/invoices/payment-method-select", () => ({
   PaymentMethodSelect: () => <div data-testid="payment-method-select" />,
-}));
-vi.mock("@/components/tags/tag-select", () => ({
-  TagSelect: () => <div data-testid="tag-select" />,
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

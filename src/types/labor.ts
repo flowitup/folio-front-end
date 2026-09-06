@@ -91,7 +91,6 @@ export interface LogAttendancePayload {
   note?: string;
   shift_type?: ShiftType | null;
   supplement_hours?: number;
-  tag_id?: string | null;
 }
 
 export interface UpdateAttendancePayload {
@@ -102,7 +101,6 @@ export interface UpdateAttendancePayload {
   note?: string | null;
   shift_type?: ShiftType | null;
   supplement_hours?: number;
-  tag_id?: string | null;
 }
 
 // ─── Bulk log (Phase 3) ──────────────────────────────────────────────────────
@@ -113,7 +111,6 @@ export interface BulkLogEntry {
   supplement_hours?: number;
   amount_override?: number;
   note?: string;
-  tag_id?: string | null;
 }
 
 export interface BulkLogPayload {
@@ -211,7 +208,6 @@ export interface LaborEntryParams {
   from?: string;
   to?: string;
   worker_id?: string;
-  tag_id?: string;
 }
 
 export interface SummaryParams {
@@ -273,23 +269,6 @@ export interface LaborDayDescription {
 
 export interface LaborDayDescriptionListResponse {
   day_descriptions: LaborDayDescription[];
-}
-
-// ─── Labor day tag (bulk-set tag_id across a day's entries) ─────────────────
-
-export interface LaborDayTagPayload {
-  /** ISO YYYY-MM-DD */
-  date: string;
-  /** null clears the tag on every entry of the day. */
-  tag_id: string | null;
-}
-
-export interface LaborDayTagResponse {
-  /** Number of labor entries updated by this call. */
-  updated_count: number;
-  /** ISO YYYY-MM-DD, echoed back. */
-  date: string;
-  tag_id: string | null;
 }
 
 // ─── Worker rate changes ─────────────────────────────────────────────────────

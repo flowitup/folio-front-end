@@ -150,8 +150,6 @@ export interface CreateInvoicePayload {
   items: Omit<InvoiceItem, "total">[];  // vat_rate is included via InvoiceItem (minus total)
   /** Optional payment method UUID. Null or omitted = no payment method. */
   payment_method_id?: string | null;
-  /** Optional phase tag UUID. Null or omitted = no tag. */
-  tag_id?: string | null;
   /**
    * UUID of the materials_services invoice this refund is linked to.
    * Only valid when type=refund. Null clears the link; omitted = keep existing (on update).

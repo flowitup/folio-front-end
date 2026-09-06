@@ -105,9 +105,6 @@ vi.mock("sonner", () => ({
   },
 }));
 
-vi.mock("@/lib/api/tags-client", () => ({
-  fetchTagsClient: vi.fn().mockResolvedValue([]),
-}));
 
 // ── Imports after mocks ───────────────────────────────────────────────────────
 

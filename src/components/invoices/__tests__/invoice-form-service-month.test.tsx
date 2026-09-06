@@ -54,14 +54,10 @@ vi.mock("next-intl", () => ({
   },
 }));
 
-// ── Mock PaymentMethodSelect and TagSelect (not relevant here) ────────────────
+// ── Mock PaymentMethodSelect (not relevant here) ──────────────────────────────
 
 vi.mock("@/components/invoices/payment-method-select", () => ({
   PaymentMethodSelect: () => null,
-}));
-
-vi.mock("@/components/tags/tag-select", () => ({
-  TagSelect: () => null,
 }));
 
 describe("InvoiceForm — service_month field", () => {

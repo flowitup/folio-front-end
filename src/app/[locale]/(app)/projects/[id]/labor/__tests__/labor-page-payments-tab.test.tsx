@@ -83,7 +83,6 @@ vi.mock("@/lib/api/labor", () => ({
 
 vi.mock("../actions", () => ({
   fetchLaborRolesAction: vi.fn().mockResolvedValue({ success: true, data: { roles: [], palette: [] } }),
-  fetchProjectTagsAction: vi.fn().mockResolvedValue({ success: true, tags: [] }),
 }));
 
 vi.mock("@/components/labor/worker-list", () => ({ WorkerList: () => <div data-testid="worker-list" /> }));
@@ -96,7 +95,6 @@ vi.mock("@/components/labor/edit-attendance-dialog", () => ({ EditAttendanceDial
 vi.mock("@/components/labor/labor-summary", () => ({ LaborSummary: () => <div data-testid="labor-summary" /> }));
 vi.mock("@/components/labor/activity-dialog", () => ({ ActivityDialog: () => null }));
 vi.mock("@/components/labor/labor-export-dialog", () => ({ LaborExportDialog: () => null }));
-vi.mock("@/components/tags/tag-filter-select", () => ({ TagFilterSelect: () => null }));
 
 vi.mock("@/components/labor/labor-payments-tab", () => ({
   LaborPaymentsTab: (props: { projectId: string; canManage: boolean; workers: Worker[] }) => (

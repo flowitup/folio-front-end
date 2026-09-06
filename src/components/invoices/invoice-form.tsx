@@ -7,10 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
 import { LaborWorkerSelect } from "@/components/invoices/labor-worker-select";
-import { TagSelect } from "@/components/tags/tag-select";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import type { CreateInvoicePayload, Invoice, InvoiceType, SettledVia } from "@/types/invoice";
-import type { ProjectTag } from "@/lib/api/tags";
 import { formatEUR } from "@/lib/utils/formatters";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 
@@ -32,11 +30,6 @@ interface InvoiceFormProps {
    * When null/undefined, the payment method field is hidden.
    */
   companyId?: string | null;
-  /**
-   * Project-scoped phase tags for the tag selector.
-   * When empty or omitted, the tag field is hidden.
-   */
-  tags?: ProjectTag[];
   /**
    * Project ID — required to fetch the M&S invoice list for the refund link selector.
    * When absent, the link selector shows no options (graceful degradation).
@@ -72,12 +65,10 @@ export function InvoiceForm({
   initialValues,
   isLoading,
   companyId,
-  tags = [],
   projectId,
   editingInvoiceId,
 }: InvoiceFormProps) {
   const t = useTranslations("invoices");
-  const tTags = useTranslations("tags");
   const tBuiltins = useTranslations("paymentMethods.builtins");
 
   // Default to materials_services — the everyday expense type. released_funds
@@ -94,7 +85,6 @@ export function InvoiceForm({
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(
     initialValues?.payment_method_id ?? null
   );
-  const [tagId, setTagId] = useState<string | null>(initialValues?.tag_id ?? null);
   // Labor-only "payment for month", kept in the UI as "YYYY-MM" (native
   // month input format) and converted to "YYYY-MM-01" on submit.
   const [serviceMonth, setServiceMonth] = useState<string>(
@@ -296,8 +286,6 @@ export function InvoiceForm({
       })),
       // Always include payment_method_id so updates can explicitly clear it (null).
       payment_method_id: paymentMethodId,
-      // Always include tag_id so updates can explicitly clear it (null).
-      tag_id: tagId,
       // Include refunds_invoice_id, settled_via, and applied_to_invoice_id only
       // for return type (null = no link/unset / clear). settled_via stays null
       // when untouched — see the settledVia state comment above.
@@ -454,19 +442,6 @@ export function InvoiceForm({
                   companyId={companyId}
                   value={paymentMethodId}
                   onChange={setPaymentMethodId}
-                  disabled={isLoading}
-                />
-              </div>
-            )}
-
-            {/* Phase Tag */}
-            {tags.length > 0 && (
-              <div>
-                <label className="block text-xs font-medium mb-1">{tTags("select.label")}</label>
-                <TagSelect
-                  tags={tags}
-                  value={tagId}
-                  onChange={setTagId}
                   disabled={isLoading}
                 />
               </div>

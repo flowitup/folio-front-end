@@ -45,9 +45,6 @@ vi.mock("@/components/invoices/invoice-attachments", () => ({
   InvoiceAttachments: () => <div data-testid="invoice-attachments" />,
 }));
 
-vi.mock("@/lib/api/tags-client", () => ({
-  fetchTagsClient: vi.fn().mockResolvedValue([]),
-}));
 
 vi.mock("@/lib/api/invoice-api", () => ({
   updateInvoice: vi.fn(),

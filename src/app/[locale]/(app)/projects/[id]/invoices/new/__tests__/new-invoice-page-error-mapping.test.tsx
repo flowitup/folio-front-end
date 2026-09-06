@@ -43,9 +43,6 @@ vi.mock("@/lib/api/projects", () => ({
   fetchProjectById: vi.fn().mockResolvedValue({ id: "proj-1", company_id: null }),
 }));
 
-vi.mock("@/lib/api/tags-client", () => ({
-  fetchTagsClient: vi.fn().mockResolvedValue([]),
-}));
 
 // Keep the real classifySubmitError (that's what this fix is about) but
 // replace InvoiceForm with a minimal stub that exposes onSubmit via a button.

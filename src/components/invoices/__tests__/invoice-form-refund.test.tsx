@@ -51,8 +51,6 @@ vi.mock("next-intl", () => ({
       "errorRefundExceedsSource": values
         ? `Refund exceeds the remaining refundable amount (${values.remaining}) for this invoice.`
         : "Refund exceeds the remaining refundable amount ({remaining}) for this invoice.",
-      // tags namespace passthrough
-      "select.label": "Phase Tag",
     };
 
     // Flat key lookup (namespace is stripped from the key in the mock)
@@ -79,12 +77,9 @@ import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 
 const mockFetchInvoices = vi.mocked(fetchInvoicesWithMeta);
 
-// Stub PaymentMethodSelect and TagSelect (not under test)
+// Stub PaymentMethodSelect (not under test)
 vi.mock("@/components/invoices/payment-method-select", () => ({
   PaymentMethodSelect: () => <div data-testid="payment-method-select" />,
-}));
-vi.mock("@/components/tags/tag-select", () => ({
-  TagSelect: () => <div data-testid="tag-select" />,
 }));
 
 // Worker picker's fetcher — not under test here; stub so switching to type=labor

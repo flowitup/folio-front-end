@@ -139,7 +139,6 @@ describe("RecordLaborPaymentDialog — worker preselected (row trigger)", () => 
       worker_id: "worker-1",
       service_month: "2026-07-01",
       payment_method_id: null,
-      tag_id: null,
     });
     expect(payload.items).toEqual([
       { description: expect.stringContaining("Jean Dupont"), quantity: 1, unit_price: 1200, vat_rate: 0 },

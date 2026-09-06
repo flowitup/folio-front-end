@@ -65,9 +65,6 @@ vi.mock("@/components/invoices/invoice-mobile-card", () => ({
   ),
 }));
 
-vi.mock("@/lib/api/tags-client", () => ({
-  fetchTagsClient: vi.fn().mockResolvedValue([]),
-}));
 
 // ── Imports after mocks ───────────────────────────────────────────────────────
 

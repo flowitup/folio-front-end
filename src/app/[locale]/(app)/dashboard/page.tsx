@@ -37,6 +37,8 @@ interface OverviewMeta {
   fundsReleasedPersonalTotal?: number;
   companySpentTotal: number;
   personalSpentTotal: number;
+  /** Company money handed to a person (cash-advance releases); 0 on older BE. */
+  companyCashAdvancedTotal?: number;
 }
 
 const EMPTY_META: OverviewMeta = {
@@ -110,6 +112,7 @@ export default function DashboardPage() {
           fundsReleasedPersonalTotal: invoiceRes.funds_released_personal_total,
           companySpentTotal: invoiceRes.company_spent_total ?? 0,
           personalSpentTotal: invoiceRes.personal_spent_total ?? 0,
+          companyCashAdvancedTotal: invoiceRes.company_cash_advanced_total ?? 0,
         });
         setTasks(taskRes);
         setLoaded(true);

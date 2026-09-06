@@ -190,6 +190,7 @@ export default function InvoicesPage() {
           fundsReleasedPersonalTotal: sum.funds_released_personal_total,
           companySpentTotal: sum.company_spent_total ?? 0,
           personalSpentTotal: sum.personal_spent_total ?? 0,
+          companyCashAdvancedTotal: sum.company_cash_advanced_total ?? 0,
         },
       });
     } catch {
@@ -628,6 +629,16 @@ export default function InvoicesPage() {
                                       >
                                         <Lock size={10} className="mr-0.5 inline" />
                                         {t("auto")}
+                                      </span>
+                                    )}
+                                    {invoice.type === "released_funds" && invoice.is_cash_advance && (
+                                      <span
+                                        className="stamp accent ml-2"
+                                        title={t("cashAdvance.hint")}
+                                        style={{ fontSize: 10, verticalAlign: "middle" }}
+                                        data-testid="cash-advance-badge-desktop"
+                                      >
+                                        {t("cashAdvance.badge")}
                                       </span>
                                     )}
                                     {/* On the month-grouped all tab a labor row can sit under a

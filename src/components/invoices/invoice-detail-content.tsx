@@ -243,6 +243,7 @@ export function InvoiceDetailContent({
             settled_via: invoice.settled_via ?? null,
             applied_to_invoice_id: invoice.applied_to_invoice_id ?? null,
             worker_id: invoice.worker_id ?? null,
+            is_cash_advance: invoice.is_cash_advance ?? false,
           }}
         />
       ) : (

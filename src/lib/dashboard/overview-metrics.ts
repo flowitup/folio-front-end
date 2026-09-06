@@ -275,10 +275,14 @@ interface InvoiceMetaLike {
   fundsReleasedPersonalTotal?: number;
   companySpentTotal: number;
   personalSpentTotal?: number;
+  /** Company money handed to a person (cash-advance releases); absent on older BE. */
+  companyCashAdvancedTotal?: number;
 }
 
 /** Company/personal purse figures — released & spent come from the backend
- * meta (authoritative), counts are derived client-side over the same list. */
+ * meta (authoritative), counts are derived client-side over the same list.
+ * The company purse's spent also carries the cash advanced to people, exactly
+ * as the Expense page's purse card does, so both views show the same "left". */
 export function buildPurseViews(invoices: Invoice[], meta: InvoiceMetaLike): MoneyPurseView[] {
   let companyCount = 0;
   let personalCount = 0;
@@ -290,7 +294,12 @@ export function buildPurseViews(invoices: Invoice[], meta: InvoiceMetaLike): Mon
   const releasedPersonal = meta.fundsReleasedPersonalTotal ?? 0;
   const releasedCompany = meta.fundsReleasedCompanyTotal ?? meta.fundsReleasedTotal - releasedPersonal;
   return [
-    { key: "company", released: releasedCompany, spent: meta.companySpentTotal, count: companyCount },
+    {
+      key: "company",
+      released: releasedCompany,
+      spent: meta.companySpentTotal + (meta.companyCashAdvancedTotal ?? 0),
+      count: companyCount,
+    },
     {
       key: "personal",
       released: releasedPersonal,

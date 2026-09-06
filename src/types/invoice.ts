@@ -131,6 +131,14 @@ export interface Invoice {
    * highlight. Purely visual — the list row / card tints to this color.
    */
   highlight_color?: HighlightColor | null;
+  /**
+   * True on a released_funds row that records company money handed to a
+   * person (typically cash) to pay site expenses on its behalf. Excluded
+   * from every funds-released total by the backend and reported in the list
+   * meta as company_cash_advanced_total; the company purse shows it as spend
+   * ("incl. X cash advance"). Absent on older BE builds — treat as false.
+   */
+  is_cash_advance?: boolean;
 }
 
 export interface CreateInvoicePayload {
@@ -178,6 +186,12 @@ export interface CreateInvoicePayload {
    * highlight; omitted = keep existing (on update). Valid on any invoice type.
    */
   highlight_color?: HighlightColor | null;
+  /**
+   * Company cash advance flag. Only valid when type='released_funds' — the
+   * backend returns 400 cash_advance_not_allowed otherwise. Omitted = keep
+   * existing (on update) / false (on create).
+   */
+  is_cash_advance?: boolean;
 }
 
 export type UpdateInvoicePayload = Partial<CreateInvoicePayload>;

@@ -31,6 +31,12 @@ import {
  * - Purse released/spent come from the backend meta — the authoritative
  *   buckets (flagged payment methods only, refunds netted, company-refunded
  *   rows reassigned).
+ * - The company purse's spent ALSO includes `companyCashAdvancedTotal`: money
+ *   the company handed to a person (released_funds rows flagged
+ *   is_cash_advance). The backend keeps that figure out of every released
+ *   total and out of company_spent_total, so the card adds it here and labels
+ *   it "incl. X cash advance". It never touches the personal purse — that
+ *   purse's "released" is bank reimbursements of expenses paid personally.
  * - The two refundable figures on the dark card are SEPARATE OUTSTANDING
  *   BALANCES, one per reimbursement channel — never a split of one total.
  *   See the accumulation below for why they overlap and must not be summed.
@@ -51,6 +57,11 @@ export interface ExpenseSummaryMeta {
   fundsReleasedPersonalTotal?: number;
   companySpentTotal: number;
   personalSpentTotal: number;
+  /**
+   * Company money handed to a person (cash-advance releases). Optional: absent
+   * on older BE — treated as 0. Added to the company purse's spent only.
+   */
+  companyCashAdvancedTotal?: number;
 }
 
 interface ExpensePursesSummaryProps {
@@ -197,6 +208,11 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   const releasedTotal = meta.fundsReleasedTotal;
   const releasedPersonal = meta.fundsReleasedPersonalTotal ?? 0;
   const releasedCompany = meta.fundsReleasedCompanyTotal ?? releasedTotal - releasedPersonal;
+  const cashAdvanced = meta.companyCashAdvancedTotal ?? 0;
+  // Company purse spend = company-paid expenses + cash handed out to people. The
+  // handover left the company's hands, so it is spent from the purse's point of
+  // view even though the expenses it pays for are booked elsewhere when paid.
+  const companySpent = meta.companySpentTotal + cashAdvanced;
   const spentTotal = company.spent + personal.spent;
 
   // ── Month series from the first to the last active month, gaps filled ─────
@@ -239,6 +255,8 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
     spent: number,
     breakdown: PurseBreakdown,
     purseKey: "company" | "personal",
+    /** Part of `spent` that is cash handed out (company purse only); 0 hides the line. */
+    cashAdvancedPart: number,
     borderColor?: string
   ) => {
     const left = released - spent;
@@ -276,6 +294,16 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
                 {formatEURWhole(spent)}
               </span>
             </div>
+            {cashAdvancedPart > 0 && (
+              <div
+                className="text-[11px]"
+                style={{ color: "var(--accent)" }}
+                data-testid={`purse-cash-advance-${purseKey}`}
+                data-tip={`${title}|${formatEURWhole(cashAdvancedPart)}|${t("cashAdvance.label")}`}
+              >
+                {t("summary.cashAdvance", { amount: formatEURWhole(cashAdvancedPart) })}
+              </div>
+            )}
           </div>
         </div>
         <div style={{ height: 1, background: "var(--paper-2)" }} />
@@ -448,9 +476,10 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
           <span className="stamp">{t("invoiceCount", { n: company.count })}</span>,
           "var(--ink)",
           releasedCompany,
-          meta.companySpentTotal,
+          companySpent,
           company,
-          "company"
+          "company",
+          cashAdvanced
         )}
         {purseCard(
           t("summary.personalPurse"),
@@ -494,6 +523,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
           meta.personalSpentTotal,
           personal,
           "personal",
+          0,
           PERSONAL_CARD_BORDER
         )}
       </div>

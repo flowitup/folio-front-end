@@ -535,13 +535,19 @@
       "paidByCompany": "company",
       "paidByPersonal": "personal",
       "sumOfTypes": "Total",
-      "sharedScaleTo": "shared scale to {amount}"
+      "sharedScaleTo": "shared scale to {amount}",
+      "cashAdvance": "incl. {amount} cash advance"
     },
     "byWorker": {
       "totalPaid": "Total paid",
       "lastPayment": "Last payment",
       "noMonthGroup": "No month",
       "activeThisMonth": "On site this month"
+    },
+    "cashAdvance": {
+      "label": "Company cash advance",
+      "hint": "Money the company handed over (e.g. cash to pay labor). Not counted as released funds — shown in the company purse as spent. Record what you pay with this cash under your own cash method, not a company method, so it is not counted twice.",
+      "badge": "Cash advance"
     }
   },
   "planning": {

@@ -72,8 +72,11 @@ export interface DrawSeries {
  * `service_month` (a release is not work performed over a period).
  */
 export function buildDrawSeries(invoices: Invoice[]): DrawSeries {
+  // Cash-advance releases are company money handed to a person, not a draw
+  // from the bank credit — the backend keeps them out of funds_released_total
+  // for the same reason, so the draw ledger must skip them too.
   const draws: BankDraw[] = invoices
-    .filter((inv) => inv.type === "released_funds")
+    .filter((inv) => inv.type === "released_funds" && !inv.is_cash_advance)
     .map((inv) => ({
       id: inv.id,
       number: inv.invoice_number,

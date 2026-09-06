@@ -535,13 +535,19 @@
       "paidByCompany": "entreprise",
       "paidByPersonal": "personnel",
       "sumOfTypes": "Total",
-      "sharedScaleTo": "échelle commune jusqu'à {amount}"
+      "sharedScaleTo": "échelle commune jusqu'à {amount}",
+      "cashAdvance": "dont {amount} d'avance en espèces"
     },
     "byWorker": {
       "totalPaid": "Total payé",
       "lastPayment": "Dernier paiement",
       "noMonthGroup": "Sans mois",
       "activeThisMonth": "Sur site ce mois-ci"
+    },
+    "cashAdvance": {
+      "label": "Avance en espèces de l'entreprise",
+      "hint": "Argent remis par l'entreprise (ex. espèces pour payer la main-d'œuvre). Non compté dans les fonds débloqués — affiché comme dépensé dans la bourse entreprise. Enregistrez ce que vous payez avec ces espèces sous votre propre moyen de paiement, pas celui de l'entreprise, pour ne pas compter deux fois.",
+      "badge": "Avance espèces"
     }
   },
   "planning": {

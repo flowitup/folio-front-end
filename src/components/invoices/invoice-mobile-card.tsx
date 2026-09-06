@@ -81,6 +81,11 @@ export function InvoiceMobileCard({
                 {t("settledVia.avoirBadge")}
               </span>
             )}
+            {invoice.type === "released_funds" && invoice.is_cash_advance && (
+              <span className="stamp accent" data-testid="cash-advance-badge">
+                {t("cashAdvance.badge")}
+              </span>
+            )}
             {invoice.type === "return" && invoice.refunds_invoice_number && (
               <span className="text-[11px]" style={{ color: "var(--muted)" }}>
                 {t("refundOf", { number: invoice.refunds_invoice_number })}

@@ -294,6 +294,19 @@ describe("buildPurseViews", () => {
     expect(purses[0].released).toBe(750);
     expect(purses[1].released).toBe(250);
   });
+
+  it("adds the company cash advance to the company purse spent only", () => {
+    const purses = buildPurseViews([], {
+      fundsReleasedTotal: 1000,
+      fundsReleasedCompanyTotal: 750,
+      fundsReleasedPersonalTotal: 250,
+      companySpentTotal: 100,
+      personalSpentTotal: 40,
+      companyCashAdvancedTotal: 3000,
+    });
+    expect(purses[0].spent).toBe(3100);
+    expect(purses[1]).toEqual({ key: "personal", released: 250, spent: 40, count: 0 });
+  });
 });
 
 describe("buildTypeMonthlyBuckets / sharedMonthlyMax", () => {

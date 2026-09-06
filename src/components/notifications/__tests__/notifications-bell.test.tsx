@@ -43,15 +43,23 @@ vi.mock("sonner", () => ({
   },
 }));
 
+vi.mock("@/lib/api/labor", () => ({
+  validateAttendance: vi.fn(),
+  rejectAttendance: vi.fn(),
+}));
+
 vi.mock("../actions", () => ({
-  fetchDueNotificationsAction: vi.fn(),
+  fetchNotificationsFeedAction: vi.fn(),
   dismissNotificationAction: vi.fn(),
 }));
 
 // ---- Imports after mocks ----
 
-const { fetchDueNotificationsAction, dismissNotificationAction } = await import("../actions");
-const mockFetch = vi.mocked(fetchDueNotificationsAction);
+const { fetchNotificationsFeedAction, dismissNotificationAction } = await import("../actions");
+const { validateAttendance, rejectAttendance } = await import("@/lib/api/labor");
+const mockValidate = vi.mocked(validateAttendance);
+const mockReject = vi.mocked(rejectAttendance);
+const mockFetch = vi.mocked(fetchNotificationsFeedAction);
 const mockDismiss = vi.mocked(dismissNotificationAction);
 
 const { toast } = await import("sonner");
@@ -101,7 +109,7 @@ describe("NotificationsBell — badge display", () => {
   });
 
   it("shows no badge when there are 0 notifications", async () => {
-    mockFetch.mockResolvedValue([]);
+    mockFetch.mockResolvedValue({ items: [], attendance: [] });
     render(<NotificationsBell />);
     await flushTick();
 
@@ -111,7 +119,7 @@ describe("NotificationsBell — badge display", () => {
 
   it("shows badge with count when 1-9 notifications", async () => {
     const items = [makeNotification("n1"), makeNotification("n2")];
-    mockFetch.mockResolvedValue(items);
+    mockFetch.mockResolvedValue({ items, attendance: [] });
     render(<NotificationsBell />);
     await flushTick();
 
@@ -120,20 +128,115 @@ describe("NotificationsBell — badge display", () => {
 
   it('shows "9+" badge when more than 9 notifications', async () => {
     const items = Array.from({ length: 10 }, (_, i) => makeNotification(`n${i}`));
-    mockFetch.mockResolvedValue(items);
+    mockFetch.mockResolvedValue({ items, attendance: [] });
     render(<NotificationsBell />);
     await flushTick();
 
     expect(screen.getByText("9+")).toBeDefined();
   });
 
+  it("counts attendance awaiting validation in the badge", async () => {
+    const items = [makeNotification("n1")];
+    const attendance = [
+      {
+        kind: "attendance_pending" as const,
+        entry_id: "e1",
+        project_id: "p1",
+        project_name: "Chantier",
+        worker_id: "w1",
+        worker_name: "Tho",
+        date: "2026-09-06",
+        shift_type: "full" as const,
+        supplement_hours: 0,
+        note: null,
+        submitted_at: "2026-09-06T06:00:00",
+      },
+    ];
+    mockFetch.mockResolvedValue({ items, attendance });
+    render(<NotificationsBell />);
+    await flushTick();
+
+    expect(screen.getByText("2")).toBeDefined();
+  });
+
   it('shows "9" badge for exactly 9 notifications (boundary)', async () => {
     const items = Array.from({ length: 9 }, (_, i) => makeNotification(`n${i}`));
-    mockFetch.mockResolvedValue(items);
+    mockFetch.mockResolvedValue({ items, attendance: [] });
     render(<NotificationsBell />);
     await flushTick();
 
     expect(screen.getByText("9")).toBeDefined();
+  });
+});
+
+const PENDING = {
+  kind: "attendance_pending" as const,
+  entry_id: "e1",
+  project_id: "p1",
+  project_name: "Chantier",
+  worker_id: "w1",
+  worker_name: "Tho",
+  date: "2026-09-06",
+  shift_type: "full" as const,
+  supplement_hours: 0,
+  note: null,
+  submitted_at: "2026-09-06T06:00:00",
+};
+
+describe("NotificationsBell — validate / reject attendance", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  async function openBellWithPending() {
+    mockFetch.mockResolvedValue({ items: [], attendance: [PENDING] });
+    render(<NotificationsBell />);
+    await flushTick();
+    expect(screen.getByText("1")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "notifications.aria.bell" }));
+    await flushTick();
+  }
+
+  it("validate removes the row at once, clears the badge and toasts success", async () => {
+    mockValidate.mockResolvedValue(undefined);
+    await openBellWithPending();
+    fireEvent.click(screen.getByLabelText("notifications.attendance.validate"));
+    await flushTick();
+
+    expect(mockValidate).toHaveBeenCalledWith("p1", "e1");
+    expect(screen.queryByText("Tho")).toBeNull();
+    expect(screen.queryByText("1")).toBeNull();
+    expect(toast.success).toHaveBeenCalled();
+  });
+
+  it("a failed validate restores the row and toasts the error", async () => {
+    mockValidate.mockRejectedValue(new Error("boom"));
+    await openBellWithPending();
+    fireEvent.click(screen.getByLabelText("notifications.attendance.validate"));
+    await flushTick();
+
+    expect(screen.getByText("Tho")).toBeDefined();
+    expect(toast.error).toHaveBeenCalledWith("notifications.errors.validateFailed");
+  });
+
+  it("reject only calls the API after the inline confirmation", async () => {
+    mockReject.mockResolvedValue(undefined);
+    await openBellWithPending();
+    fireEvent.click(screen.getByLabelText("notifications.attendance.reject"));
+    expect(mockReject).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText("notifications.attendance.confirmReject"));
+    await flushTick();
+
+    expect(mockReject).toHaveBeenCalledWith("p1", "e1");
+    expect(screen.queryByText("Tho")).toBeNull();
   });
 });
 
@@ -143,7 +246,7 @@ describe("NotificationsBell — popover", () => {
     vi.useFakeTimers();
     vi.spyOn(Math, "random").mockReturnValue(0.5);
     Object.defineProperty(document, "hidden", { configurable: true, value: false });
-    mockFetch.mockResolvedValue([]);
+    mockFetch.mockResolvedValue({ items: [], attendance: [] });
   });
 
   afterEach(() => {
@@ -177,7 +280,7 @@ describe("NotificationsBell — dismiss flow", () => {
 
   it("optimistically removes dismissed item from list (badge decrements)", async () => {
     const items = [makeNotification("n1"), makeNotification("n2")];
-    mockFetch.mockResolvedValue(items);
+    mockFetch.mockResolvedValue({ items, attendance: [] });
     mockDismiss.mockResolvedValue({ success: true });
 
     render(<NotificationsBell />);
@@ -204,7 +307,7 @@ describe("NotificationsBell — dismiss flow", () => {
 
   it("rolls back dismissed item and shows error toast on failure", async () => {
     const items = [makeNotification("n1")];
-    mockFetch.mockResolvedValue(items);
+    mockFetch.mockResolvedValue({ items, attendance: [] });
     mockDismiss.mockResolvedValue({ success: false, error: "generic" });
 
     render(<NotificationsBell />);
@@ -233,7 +336,7 @@ describe("NotificationsBell — polling cadence", () => {
     vi.useFakeTimers();
     vi.spyOn(Math, "random").mockReturnValue(0.5); // jitter = 0
     Object.defineProperty(document, "hidden", { configurable: true, value: false });
-    mockFetch.mockResolvedValue([]);
+    mockFetch.mockResolvedValue({ items: [], attendance: [] });
   });
 
   afterEach(() => {

@@ -17,9 +17,32 @@ export interface DueNotification {
   dismissed: boolean; // BE always sends this; v1 always false but must be declared
 }
 
+/** A worker-submitted attendance day awaiting the current user's validation. */
+export interface AttendancePending {
+  kind: "attendance_pending";
+  entry_id: string;
+  project_id: string;
+  project_name: string;
+  worker_id: string;
+  worker_name: string;
+  date: string; // YYYY-MM-DD
+  shift_type: "full" | "half" | "overtime" | null;
+  supplement_hours: number;
+  note: string | null;
+  submitted_at: string;
+}
+
 export interface NotificationsListResult {
   items: DueNotification[];
+  /** Absent on older backends — treat as empty. */
+  attendance_pending?: AttendancePending[];
   count: number;
+}
+
+/** What the bell renders: note reminders plus attendance to validate. */
+export interface NotificationsFeed {
+  items: DueNotification[];
+  attendance: AttendancePending[];
 }
 
 // ---- Error helper ----

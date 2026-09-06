@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -36,6 +36,8 @@ import {
   fetchLaborEntries,
   updateAttendance,
   deleteAttendance,
+  validateAttendance,
+  rejectAttendance,
   fetchLaborSummary,
   fetchLaborMonthlySummary,
   fetchLaborPaymentsSummary,
@@ -304,6 +306,20 @@ export default function LaborPage() {
     if (activeTab === "summary") loadSummary();
   }, [activeTab, loadSummary]);
 
+  // Deep links (the bell's "attendance to validate" rows) pick a tab via ?tab=.
+  // An effect, not a state initializer: the manager may already be on this page
+  // when the URL changes, and Next does not remount the client page then.
+  // Strip the param after consuming so a later manual tab switch survives reloads.
+  useEffect(() => {
+    const requested = searchParams.get("tab");
+    if (requested !== "workers" && requested !== "attendance" && requested !== "payments") return;
+    setActiveTab(requested);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("tab");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [searchParams, router, pathname]);
+
   // Topbar "+ Log day" hands off via ?logDay=1 — jump to the attendance tab
   // and open the bulk-log dialog. Strip the param after consuming.
   useEffect(() => {
@@ -371,6 +387,41 @@ export default function LaborPage() {
       await loadEntries();
     } catch {
       setError("Failed to delete entry");
+    }
+  };
+
+  // Worker-submitted days: validating prices the row; rejecting removes it so
+  // the worker can log the day again. Entries reload here; the summary tab
+  // reloads itself when opened (see the activeTab effect above). A second
+  // click on the same row while the first request is in flight is ignored.
+  const settlingEntryIds = useRef(new Set<string>());
+
+  const handleValidateEntry = async (entry: LaborEntry) => {
+    if (settlingEntryIds.current.has(entry.id)) return;
+    settlingEntryIds.current.add(entry.id);
+    try {
+      await validateAttendance(projectId, entry.id);
+      toast.success(t("status.validated", { worker: entry.worker_name }));
+      await loadEntries();
+    } catch {
+      toast.error(t("status.validateFailed"));
+    } finally {
+      settlingEntryIds.current.delete(entry.id);
+    }
+  };
+
+  const handleRejectEntry = async (entry: LaborEntry) => {
+    if (settlingEntryIds.current.has(entry.id)) return;
+    if (!window.confirm(t("status.confirmReject", { worker: entry.worker_name }))) return;
+    settlingEntryIds.current.add(entry.id);
+    try {
+      await rejectAttendance(projectId, entry.id);
+      toast.success(t("status.rejected", { worker: entry.worker_name }));
+      await loadEntries();
+    } catch {
+      toast.error(t("status.rejectFailed"));
+    } finally {
+      settlingEntryIds.current.delete(entry.id);
     }
   };
 
@@ -550,6 +601,8 @@ export default function LaborPage() {
               onMonthChange={setEntriesMonth}
               onWorkerFilterChange={setEntriesWorkerFilter}
               onDelete={handleDeleteEntry}
+              onValidate={canManageLabor ? handleValidateEntry : undefined}
+              onReject={canManageLabor ? handleRejectEntry : undefined}
               onLogDay={canManageLabor ? handleOpenLogDay : undefined}
               onEditEntry={canManageLabor ? setEditEntry : undefined}
               workerMap={workerMap}
@@ -573,6 +626,8 @@ export default function LaborPage() {
               onMonthChange={setEntriesMonth}
               onWorkerFilterChange={setEntriesWorkerFilter}
               onDelete={handleDeleteEntry}
+              onValidate={canManageLabor ? handleValidateEntry : undefined}
+              onReject={canManageLabor ? handleRejectEntry : undefined}
               onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
               onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}

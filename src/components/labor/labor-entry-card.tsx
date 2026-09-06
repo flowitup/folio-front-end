@@ -9,7 +9,7 @@
  * Plan: 260512-2341-labor-calendar-and-bulk-log → phase-02 (2a).
  */
 
-import { Trash2 } from "lucide-react";
+import { Check, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatEUR } from "@/lib/api/labor";
 import { personInitials, workerColor } from "@/lib/utils/person-color";
-import type { LaborEntry, ShiftType } from "@/types/labor";
+import { isPendingEntry, type LaborEntry, type ShiftType } from "@/types/labor";
 
 function EntryAvatar({
   initials,
@@ -43,6 +43,9 @@ interface LaborEntryCardProps {
   onDelete: (entry: LaborEntry) => void;
   /** Optional — tapping the row triggers edit. */
   onEdit?: (entry: LaborEntry) => void;
+  /** Manager actions for a worker-submitted (pending) row. */
+  onValidate?: (entry: LaborEntry) => void;
+  onReject?: (entry: LaborEntry) => void;
 }
 
 export function LaborEntryCard({
@@ -50,8 +53,11 @@ export function LaborEntryCard({
   canManage,
   onDelete,
   onEdit,
+  onValidate,
+  onReject,
 }: LaborEntryCardProps) {
   const t = useTranslations("labor");
+  const pending = isPendingEntry(entry);
 
   const shiftLabel: Record<ShiftType, string> = {
     full: t("shiftFull"),
@@ -117,6 +123,17 @@ export function LaborEntryCard({
               +{entry.supplement_hours}h
             </Badge>
           )}
+
+          {pending && (
+            <Badge
+              variant="outline"
+              className="border-amber-500/60 bg-amber-500/10 text-xs text-amber-700 dark:text-amber-300"
+              title={t("status.unpricedPending")}
+              data-testid="entry-pending-badge"
+            >
+              {t("status.pending")}
+            </Badge>
+          )}
         </div>
 
         {entry.note && (
@@ -126,11 +143,20 @@ export function LaborEntryCard({
         )}
       </div>
 
-      {/* Amount + override marker */}
+      {/* Amount + override marker — a pending day is unpriced until validated */}
       <div className="flex flex-none flex-col items-end">
-        <span className="text-primary text-sm font-semibold tabular-nums">
-          {formatEUR(entry.effective_cost)}
-        </span>
+        {pending ? (
+          <span
+            className="text-muted-foreground text-sm font-semibold tabular-nums"
+            title={t("status.unpricedPending")}
+          >
+            —
+          </span>
+        ) : (
+          <span className="text-primary text-sm font-semibold tabular-nums">
+            {formatEUR(entry.effective_cost)}
+          </span>
+        )}
         {entry.amount_override !== null && (
           <span className="text-muted-foreground text-[10px] uppercase tracking-wide">
             {t("override")}
@@ -138,7 +164,40 @@ export function LaborEntryCard({
         )}
       </div>
 
-      {canManage && (
+      {canManage && pending && (onValidate || onReject) ? (
+        <div className="flex flex-none items-center">
+          {onValidate && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-primary flex-none"
+              onClick={(e) => {
+                e.stopPropagation();
+                onValidate(entry);
+              }}
+              aria-label={t("validate")}
+              title={t("validate")}
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+          )}
+          {onReject && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-destructive flex-none"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReject(entry);
+              }}
+              aria-label={t("reject")}
+              title={t("reject")}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      ) : canManage ? (
         <Button
           variant="ghost"
           size="icon"
@@ -151,7 +210,7 @@ export function LaborEntryCard({
         >
           <Trash2 className="h-4 w-4" />
         </Button>
-      )}
+      ) : null}
     </div>
   );
 }

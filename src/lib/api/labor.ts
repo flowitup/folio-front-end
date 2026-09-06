@@ -144,6 +144,16 @@ export async function deleteAttendance(projectId: string, entryId: string): Prom
   await api.delete(`/projects/${projectId}/labor-entries/${entryId}`);
 }
 
+/** Manager: validate a worker-submitted (pending) entry so it becomes priced. Idempotent. */
+export async function validateAttendance(projectId: string, entryId: string): Promise<void> {
+  await api.post(`/projects/${projectId}/labor-entries/${entryId}/validate`, {});
+}
+
+/** Manager: reject a pending entry — the row is deleted so the worker can log the day again. */
+export async function rejectAttendance(projectId: string, entryId: string): Promise<void> {
+  await api.post(`/projects/${projectId}/labor-entries/${entryId}/reject`, {});
+}
+
 // Summary API
 export async function fetchLaborSummary(projectId: string, params?: SummaryParams): Promise<LaborSummaryResponse> {
   const url = buildUrl(`/projects/${projectId}/labor-summary`, {

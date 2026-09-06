@@ -28,6 +28,7 @@ import { LaborEntryCard } from "@/components/labor/labor-entry-card";
 import { DayDescriptionField } from "@/components/labor/day-description-field";
 import { TagSelect } from "@/components/tags/tag-select";
 import type { LaborEntry, LaborActivity, LaborDayDescription, Worker } from "@/types/labor";
+import { isPendingEntry } from "@/types/labor";
 import type { ProjectTag } from "@/lib/api/tags";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatEUR } from "@/lib/api/labor";
@@ -46,6 +47,9 @@ interface AttendanceTableProps {
   onMonthChange: (value: string) => void;
   onWorkerFilterChange: (value: string) => void;
   onDelete: (entry: LaborEntry) => void;
+  /** Manager actions on worker-submitted (pending) rows. */
+  onValidate?: (entry: LaborEntry) => void;
+  onReject?: (entry: LaborEntry) => void;
   onAddActivity?: (date: string) => void;
   onEditActivity?: (activity: LaborActivity) => void;
   onDeleteActivity?: (activity: LaborActivity) => void;
@@ -192,6 +196,8 @@ export function AttendanceTable({
   onMonthChange,
   onWorkerFilterChange,
   onDelete,
+  onValidate,
+  onReject,
   onAddActivity,
   onEditActivity,
   onDeleteActivity,
@@ -331,7 +337,7 @@ export function AttendanceTable({
                           </span>
                           <span aria-hidden="true">·</span>
                           <span className="text-foreground font-semibold tabular-nums">
-                            {formatEUR(dayTotal)}
+                            {dayEntries.every(isPendingEntry) ? "—" : formatEUR(dayTotal)}
                           </span>
                         </>
                       )}
@@ -362,6 +368,8 @@ export function AttendanceTable({
                           entry={entry}
                           canManage={canManage}
                           onDelete={(e) => setConfirmDelete(e)}
+                          onValidate={onValidate}
+                          onReject={onReject}
                         />
                       ))}
                       {dayActivities.map((activity) => (

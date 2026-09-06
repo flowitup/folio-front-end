@@ -51,6 +51,9 @@ export interface UpdateWorkerPayload {
   role_id?: string | null;
 }
 
+/** Worker-submitted rows stay `pending` (unpriced) until a manager validates them. */
+export type AttendanceStatus = "pending" | "validated";
+
 export interface LaborEntry {
   id: string;
   worker_id: string;
@@ -64,6 +67,16 @@ export interface LaborEntry {
   created_at: string;
   role_color?: string | null;
   tag_id?: string | null;
+  // Validation workflow — absent on older API responses means validated.
+  status?: AttendanceStatus;
+  submitted_by_user_id?: string | null;
+  validated_by_user_id?: string | null;
+  validated_at?: string | null;
+}
+
+/** True for a worker-submitted day a manager has not validated yet. */
+export function isPendingEntry(entry: Pick<LaborEntry, "status">): boolean {
+  return entry.status === "pending";
 }
 
 export interface LaborEntryListResponse {

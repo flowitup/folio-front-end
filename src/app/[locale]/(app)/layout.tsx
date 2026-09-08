@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { ProjectProvider } from "@/context/ProjectContext";
+import { ChatProvider } from "@/context/ChatContext";
 
 export default async function AppLayout({
   children,
@@ -41,6 +42,8 @@ export default async function AppLayout({
 
   return (
     <ProjectProvider>
+      {/* One channel poll per tab feeds the sidebar / topbar / More-sheet chat badges. */}
+      <ChatProvider>
       <div className="flex h-screen overflow-hidden" style={{ background: "var(--paper)" }}>
         <Sidebar canViewBilling={canViewBilling} />
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -59,6 +62,7 @@ export default async function AppLayout({
         </div>
         <MobileBottomNav />
       </div>
+      </ChatProvider>
     </ProjectProvider>
   );
 }

@@ -21,7 +21,8 @@
     "projectSettings": "Settings",
     "settings": "Settings",
     "more": "More",
-    "chiffrage": "Cost planning"
+    "chiffrage": "Cost planning",
+    "chat": "Chat"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -2240,6 +2241,36 @@
       "generic": "Something went wrong. Please try again.",
       "multipleCandidates": "Several people match this phone number.",
       "phoneAlreadyInCompany": "This phone number is already in your company."
+    }
+  },
+  "chat": {
+    "title": "Team chat",
+    "subtitle": "The same channels as the mobile app — your company and each project.",
+    "open": "Open chat",
+    "unread": "{count, plural, one {# unread} other {# unread}}",
+    "channels": "Channels",
+    "kind": {
+      "company": "Company",
+      "project": "Project"
+    },
+    "membersCount": "{count, plural, one {# member} other {# members}}",
+    "placeholder": "Message…",
+    "send": "Send",
+    "attachImage": "Add a photo",
+    "removeImage": "Remove photo",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "empty": "No messages yet.",
+    "noChannels": "You are not in any channel yet.",
+    "disabled": "Chat is not enabled on this server.",
+    "loadError": "Couldn't load messages.",
+    "retry": "Retry",
+    "seenBy": "Seen by {names}",
+    "errors": {
+      "sendFailed": "Couldn't send. Try again.",
+      "tooLarge": "Photo is too large (10 MB max).",
+      "unsupportedType": "Only JPEG, PNG and WebP photos are supported.",
+      "forbidden": "You are not a member of this channel."
     }
   }
 }

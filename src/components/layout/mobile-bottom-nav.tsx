@@ -45,6 +45,7 @@ export function MobileBottomNav() {
 
   const moreIsActive =
     pathWithoutLocale.startsWith("/settings") ||
+    pathWithoutLocale.startsWith("/chat") ||
     pathWithoutLocale.startsWith("/billing") ||
     (selectedProjectId
       ? pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/labor`) ||

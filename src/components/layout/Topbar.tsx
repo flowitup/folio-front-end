@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { Sun, Moon, Plus, LogOut, ChevronDown, Check } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
+import { ChatTopbarButton } from "@/components/chat/chat-topbar-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
@@ -20,7 +21,7 @@ import {
 
 // Page meta keys reference message keys in `topbar.*` (title/subtitle) and
 // `projects/planning/labor/invoices.newProject|newTask|logDay|newInvoice` for actions.
-type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents" | "analyses";
+type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents" | "analyses" | "chat";
 
 const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; actionKey?: string }> = {
   dashboard: {
@@ -73,6 +74,12 @@ const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; acti
     subtitleKey: "analyses.subtitle",
     // No topbar action — Upload analysis lives inline in the analyses panel.
   },
+  chat: {
+    // Reuse the chat namespace (en/fr/vi) like documents/analyses above.
+    titleKey: "chat.title",
+    subtitleKey: "chat.subtitle",
+    // No topbar action — the composer lives in the thread.
+  },
 };
 
 export function Topbar() {
@@ -96,6 +103,7 @@ export function Topbar() {
   if (pathWithoutLocale === "/" || pathWithoutLocale === "/dashboard") pageKey = "dashboard";
   else if (pathWithoutLocale === "/projects") pageKey = "projects";
   else if (pathWithoutLocale === "/settings") pageKey = "settings";
+  else if (pathWithoutLocale === "/chat") pageKey = "chat";
   else {
     const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)/);
     if (projectMatch && (projectMatch[1] in TOPBAR_KEYS)) {
@@ -238,6 +246,7 @@ export function Topbar() {
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-1 lg:gap-2">
+        <ChatTopbarButton />
         <NotificationsBell />
         <button
           type="button"

@@ -21,8 +21,7 @@ export interface BulkAddResultItem {
   project_name: string | null;
   status:
     | "added"
-    | "already_member_same_role"
-    | "already_member_different_role"
+    | "already_member"
     | "project_not_found";
 }
 

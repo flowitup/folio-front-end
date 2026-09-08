@@ -24,20 +24,14 @@ export function renderBulkAddResultsToasts(
   t: TranslateFn
 ): void {
   const added = results.filter((r) => r.status === "added");
-  const sameRole = results.filter((r) => r.status === "already_member_same_role");
-  const diffRole = results.filter(
-    (r) => r.status === "already_member_different_role"
-  );
+  const alreadyMember = results.filter((r) => r.status === "already_member");
   const notFound = results.filter((r) => r.status === "project_not_found");
 
   if (added.length > 0) {
     toast.success(t("added", { count: added.length }));
   }
-  if (sameRole.length > 0) {
-    toast.info(t("alreadyMember", { count: sameRole.length }));
-  }
-  if (diffRole.length > 0) {
-    toast.warning(t("differentRole", { count: diffRole.length }));
+  if (alreadyMember.length > 0) {
+    toast.info(t("alreadyMember", { count: alreadyMember.length }));
   }
   if (notFound.length > 0) {
     toast.error(t("notFound", { count: notFound.length }));

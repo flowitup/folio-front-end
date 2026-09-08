@@ -180,7 +180,7 @@ describe("bulkAddMembershipsAction — happy path", () => {
         {
           project_id: "55555555-5555-5555-5555-555555555555",
           project_name: "P2",
-          status: "already_member_same_role",
+          status: "already_member",
         },
         {
           project_id: "66666666-6666-6666-6666-666666666666",
@@ -201,7 +201,7 @@ describe("bulkAddMembershipsAction — happy path", () => {
     expect(result.results).toHaveLength(3);
     expect(result.results?.map((r) => r.status)).toEqual([
       "added",
-      "already_member_same_role",
+      "already_member",
       "project_not_found",
     ]);
   });

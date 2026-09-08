@@ -151,7 +151,7 @@ describe("BulkAddForm", () => {
       const results = [
         { project_id: "p1", project_name: "P1", status: "added" as const },
         { project_id: "p2", project_name: "P2", status: "added" as const },
-        { project_id: "p3", project_name: "P3", status: "already_member_same_role" as const },
+        { project_id: "p3", project_name: "P3", status: "already_member" as const },
         { project_id: "p4", project_name: null, status: "project_not_found" as const },
       ];
 
@@ -170,49 +170,13 @@ describe("BulkAddForm", () => {
 
       // added = 2 → toast.success
       expect(mockToast.success).toHaveBeenCalledOnce();
-      // already_member_same_role = 1 → toast.info
+      // already_member = 1 → toast.info
       expect(mockToast.info).toHaveBeenCalledOnce();
       // project_not_found = 1 → toast.error
       expect(mockToast.error).toHaveBeenCalledOnce();
       // No different-role → toast.warning not called
       expect(mockToast.warning).not.toHaveBeenCalled();
     });
-
-    it("fires warning toast for already_member_different_role results", async () => {
-      const { renderBulkAddResultsToasts } = await import("../results-toast-renderer");
-
-      const results = [
-        { project_id: "p1", project_name: "P1", status: "already_member_different_role" as const },
-      ];
-
-      const t = (key: string, values?: Record<string, string | number | Date>) => {
-        if (values) {
-          return Object.entries(values).reduce<string>(
-            (acc, [k, v]) => acc.replace(`{${k}}`, String(v)),
-            key
-          );
-        }
-        return key;
-      };
-
-      renderBulkAddResultsToasts(results, t);
-
-      expect(mockToast.warning).toHaveBeenCalledOnce();
-      expect(mockToast.success).not.toHaveBeenCalled();
-      expect(mockToast.info).not.toHaveBeenCalled();
-      expect(mockToast.error).not.toHaveBeenCalled();
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Max-50 cap
-  // ---------------------------------------------------------------------------
-
-  describe("Max-50 project cap", () => {
-    // CI timing note: 50 sequential userEvent.click pointer-simulations push past
-    // the 5000ms default in slower CI runners. fireEvent.click triggers the same
-    // React state path synchronously (no pointer simulation), keeping wall time
-    // under 1s even on shared CI runners. Explicit timeout adds headroom.
     it(
       "renders cap caption and disables unchecked checkboxes when 50 projects are selected",
       async () => {

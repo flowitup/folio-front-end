@@ -3,7 +3,6 @@ import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { listMembers } from "@/lib/api/members";
 import { listInvitations } from "@/lib/api/invitations";
-import { listRoles } from "@/lib/api/roles";
 import { getProjectById } from "@/lib/api/projects-server";
 import { can, isCompanyAdmin, isPlatformOps } from "@/lib/auth/permissions";
 import { MembersTable } from "./members-table";
@@ -22,10 +21,9 @@ export default async function MembersPage({ params }: PageProps) {
   }
 
   // Parallel fetch — if members/invites fail (e.g. 403), fallback to empty arrays
-  const [members, invites, roles, project] = await Promise.all([
+  const [members, invites, project] = await Promise.all([
     listMembers(projectId).catch(() => []),
     listInvitations(projectId, "pending").catch(() => []),
-    listRoles().catch(() => []),
     getProjectById(projectId).catch(() => null),
   ]);
 
@@ -59,7 +57,6 @@ export default async function MembersPage({ params }: PageProps) {
       companyId={project?.company_id ?? null}
       members={members}
       invites={invites}
-      roles={roles}
       canInvite={canInvite}
       canManageMembers={canManageMembers}
       canAssignMembers={canAssignMembers}

@@ -47,21 +47,20 @@ function isEmail(value: string): boolean {
  */
 export async function inviteMemberAction(
   projectId: string,
-  email: string,
-  roleId: string
+  email: string
 ): Promise<CreateInvitationResult> {
   const session = await getSession();
   if (!session?.accessToken) {
     throw Object.assign(new Error("Unauthorized"), { status: 401 });
   }
-  if (!isUuid(projectId) || !isUuid(roleId)) {
+  if (!isUuid(projectId)) {
     throw Object.assign(new Error("Invalid identifiers"), { status: 400 });
   }
   if (!email || !isEmail(email)) {
     throw Object.assign(new Error("Invalid email"), { status: 400 });
   }
 
-  const result = await createInvitation({ project_id: projectId, email, role_id: roleId });
+  const result = await createInvitation({ project_id: projectId, email });
   // Route groups like `(app)` are stripped from Next.js cache keys, so
   // including them here makes the call a silent no-op. Use the resolved
   // path template without route-group segments.

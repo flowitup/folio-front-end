@@ -20,7 +20,6 @@ import { AssignMemberDialog } from "@/components/projects/assign-member-dialog";
 import { revokeInviteAction, removeMemberAction } from "./actions";
 import type { ProjectMember } from "@/lib/api/members";
 import type { PendingInvitation } from "@/lib/api/invitations";
-import type { Role } from "@/lib/api/roles";
 import { formatDate } from "@/lib/utils/formatters";
 
 interface MembersTableProps {
@@ -31,7 +30,6 @@ interface MembersTableProps {
   /** Legacy role list — only used to resolve the "member" role id the outsider
       e-mail invite still must send (schema requires role_id); no longer
       surfaced as a picker. */
-  roles: Role[];
   canInvite: boolean;
   canManageMembers: boolean;
   /** Gates the "Assign member" button + dialog — matches the backend's
@@ -70,7 +68,6 @@ export function MembersTable({
   companyId,
   members,
   invites,
-  roles,
   canInvite,
   canManageMembers,
   canAssignMembers,
@@ -86,11 +83,6 @@ export function MembersTable({
   const [editing, setEditing] = useState<ProjectMember | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
-  // Only the "member" role has a stable id in every deployment (seeded);
-  // the invite dialog no longer lets the caller pick a role, it always
-  // invites as a plain member — the assign flow (insiders) is the one that
-  // sets manager vs member.
-  const memberRoleId = roles.find((r) => r.name.toLowerCase() === "member")?.id;
 
   const handleRevoke = async (invitationId: string) => {
     if (!confirm(t("revokeConfirm"))) return;
@@ -145,8 +137,6 @@ export function MembersTable({
               size="sm"
               onClick={() => setInviteDialogOpen(true)}
               className="gap-1.5"
-              disabled={!memberRoleId}
-              title={!memberRoleId ? t("invite.unavailable") : undefined}
             >
               <UserPlus aria-hidden="true" size={14} />
               {t("invite.button")}
@@ -399,12 +389,11 @@ export function MembersTable({
         )}
       </section>
 
-      {canInvite && memberRoleId && (
+      {canInvite && (
         <InviteMemberDialog
           open={inviteDialogOpen}
           onOpenChange={setInviteDialogOpen}
           projectId={projectId}
-          memberRoleId={memberRoleId}
         />
       )}
 

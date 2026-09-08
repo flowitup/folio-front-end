@@ -292,6 +292,27 @@
     "paymentMethods": "Phương thức thanh toán",
     "company": {
       "title": "Công ty"
+    },
+    "notificationPrefs": {
+      "title": "Thông báo",
+      "intro": "Thông báo đẩy được gửi đến ứng dụng Folio trên điện thoại. Hãy chọn những gì bạn muốn nhận.",
+      "loading": "Đang tải cài đặt của bạn…",
+      "loadError": "Không tải được cài đặt thông báo của bạn.",
+      "saveError": "Không lưu được thay đổi; cài đặt trước đó được giữ nguyên.",
+      "pushEnabled": "Thông báo đẩy",
+      "pushEnabledDesc": "Công tắc chính — tắt sẽ tắt tất cả các mục bên dưới.",
+      "categories": {
+        "chat": "Trò chuyện nhóm",
+        "chatDesc": "Tin nhắn mới trong kênh công ty và công trình của bạn",
+        "attendance": "Chấm công",
+        "attendanceDesc": "Ngày công cần duyệt, kết quả duyệt và yêu cầu chỉnh sửa",
+        "tasks": "Công việc",
+        "tasksDesc": "Công việc được giao cho bạn hoặc chuyển sang cột khác",
+        "membership": "Nhóm & quyền truy cập",
+        "membershipDesc": "Được thêm vào công trình hoặc công ty, thay đổi vai trò và quyền, lời mời được chấp nhận",
+        "billing": "Tiền",
+        "billingDesc": "Hoàn tiền chi phí của bạn, thay đổi trạng thái báo giá và hóa đơn"
+      }
     }
   },
   "paymentMethods": {

@@ -292,6 +292,27 @@
     "paymentMethods": "Payment methods",
     "company": {
       "title": "Company"
+    },
+    "notificationPrefs": {
+      "title": "Notifications",
+      "intro": "Push notifications reach you in the Folio mobile app. Choose what gets through.",
+      "loading": "Loading your settings…",
+      "loadError": "Could not load your notification settings.",
+      "saveError": "Could not save that change; the previous setting was kept.",
+      "pushEnabled": "Push notifications",
+      "pushEnabledDesc": "The master switch — off silences everything below.",
+      "categories": {
+        "chat": "Team chat",
+        "chatDesc": "New messages in your company and project channels",
+        "attendance": "Attendance",
+        "attendanceDesc": "Days to validate, validation decisions and change requests",
+        "tasks": "Tasks",
+        "tasksDesc": "Tasks assigned to you or moved to another column",
+        "membership": "Team & access",
+        "membershipDesc": "Added to a project or company, role and permission changes, accepted invitations",
+        "billing": "Money",
+        "billingDesc": "Refunds on your expenses, quote and invoice status changes"
+      }
     }
   },
   "paymentMethods": {

@@ -139,3 +139,40 @@ export async function dismissNotification(noteId: string): Promise<void> {
     throw await buildHttpError(response, "Failed to dismiss notification");
   }
 }
+
+// ---- Push notification preferences ----
+
+import type {
+  NotificationPreferences,
+  NotificationPreferencesUpdate,
+} from "@/types/notification-preferences";
+
+export type {
+  NotificationCategory,
+  NotificationPreferences,
+  NotificationPreferencesUpdate,
+} from "@/types/notification-preferences";
+
+export async function getNotificationPreferences(): Promise<NotificationPreferences> {
+  const authHeaders = await sessionAuthHeader();
+  const response = await fetch(`${env.apiBaseUrl}/notifications/preferences`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-cache", ...authHeaders },
+    cache: "no-store",
+  });
+  if (!response.ok) throw await buildHttpError(response, "Failed to load notification preferences");
+  return (await response.json()) as NotificationPreferences;
+}
+
+export async function updateNotificationPreferences(
+  changes: NotificationPreferencesUpdate
+): Promise<NotificationPreferences> {
+  const authHeaders = await sessionAuthHeader();
+  const response = await fetch(`${env.apiBaseUrl}/notifications/preferences`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders },
+    body: JSON.stringify(changes),
+  });
+  if (!response.ok) throw await buildHttpError(response, "Failed to update notification preferences");
+  return (await response.json()) as NotificationPreferences;
+}

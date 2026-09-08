@@ -292,6 +292,27 @@
     "paymentMethods": "Moyens de paiement",
     "company": {
       "title": "Entreprise"
+    },
+    "notificationPrefs": {
+      "title": "Notifications",
+      "intro": "Les notifications push arrivent dans l’application mobile Folio. Choisissez ce qui vous parvient.",
+      "loading": "Chargement de vos réglages…",
+      "loadError": "Impossible de charger vos réglages de notification.",
+      "saveError": "Enregistrement impossible ; le réglage précédent a été conservé.",
+      "pushEnabled": "Notifications push",
+      "pushEnabledDesc": "L’interrupteur général — désactivé, tout ce qui suit est silencieux.",
+      "categories": {
+        "chat": "Discussion d’équipe",
+        "chatDesc": "Nouveaux messages dans vos canaux d’entreprise et de chantier",
+        "attendance": "Présences",
+        "attendanceDesc": "Journées à valider, décisions de validation et demandes de modification",
+        "tasks": "Tâches",
+        "tasksDesc": "Tâches qui vous sont attribuées ou déplacées dans une autre colonne",
+        "membership": "Équipe et accès",
+        "membershipDesc": "Ajout à un chantier ou une entreprise, changements de rôle et de permissions, invitations acceptées",
+        "billing": "Argent",
+        "billingDesc": "Remboursements de vos dépenses, changements de statut des devis et factures"
+      }
     }
   },
   "paymentMethods": {

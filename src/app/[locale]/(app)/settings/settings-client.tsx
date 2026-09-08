@@ -10,6 +10,7 @@ import { MyCompaniesSection } from "@/components/companies/my-companies-section"
 import { AdminCompaniesSection } from "@/components/companies/admin-companies-section";
 import { CompanySettingsSection } from "@/components/companies/company-settings-section";
 import { PaymentMethodsSettingsSection } from "@/components/payment-methods/payment-methods-settings-section";
+import { NotificationPreferencesSection } from "@/components/notifications/notification-preferences-section";
 import { isPlatformOps, isCompanyAdmin } from "@/lib/auth/permissions";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import pkg from "../../../../../package.json";
@@ -168,6 +169,12 @@ export function SettingsClient({ projects }: Props) {
           </section>
         )}
 
+        {active === "notifications" && (
+          <section className="folio-card p-7">
+            <NotificationPreferencesSection />
+          </section>
+        )}
+
         {active === "about" && (
           <section className="folio-card p-7">
             <h3 className="font-display text-[22px] font-medium tracking-tight">
@@ -189,6 +196,7 @@ export function SettingsClient({ projects }: Props) {
           active !== "users" &&
           active !== "my-companies" &&
           active !== "payment-methods" &&
+          active !== "notifications" &&
           active !== "about" && (
             <section className="folio-card p-12 text-center">
               <p className="font-display text-[20px] font-medium tracking-tight">{t(active)}</p>

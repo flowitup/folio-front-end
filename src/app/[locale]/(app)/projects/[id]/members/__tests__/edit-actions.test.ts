@@ -3,9 +3,8 @@
  * updateUserProfileAction, removeMemberAction.
  *
  * Covers input validation (UUID / email), error status propagation, and the
- * happy path (delegates to the API wrapper + revalidates). Role changes moved
- * to AssignMemberDialog (assignProjectMemberAction) — this file no longer
- * covers updateMemberRoleAction (removed with the legacy role_id column).
+ * happy path (delegates to the API wrapper + revalidates). Granting project
+ * access is AssignMemberDialog's concern (assignProjectMemberAction).
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";

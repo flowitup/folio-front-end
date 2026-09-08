@@ -9,7 +9,6 @@ export interface User {
   id: string;
   email: string;
   permissions: string[];
-  roles: string[];
   /**
    * Companies the user is attached to (company-as-tenant model). Empty on the
    * POST /auth/login response (backend limitation — that endpoint does not

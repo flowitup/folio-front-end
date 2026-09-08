@@ -54,13 +54,12 @@ describe("AuthContext.login", () => {
   it("populates user.companies from the post-login /auth/me refetch", async () => {
     mockLoginAction.mockResolvedValue({
       success: true,
-      user: { id: "u1", email: "admin2@example.com", permissions: [], roles: [] },
+      user: { id: "u1", email: "admin2@example.com", permissions: [] },
     });
     mockGetCurrentUserAction.mockResolvedValue({
       id: "u1",
       email: "admin2@example.com",
       permissions: [],
-      roles: [],
       companies: [
         { id: "c1", legal_name: "Folio Demo SARL", role: "admin", is_primary: true },
       ],
@@ -83,7 +82,7 @@ describe("AuthContext.login", () => {
   it("falls back to the login response user if the /auth/me refetch fails", async () => {
     mockLoginAction.mockResolvedValue({
       success: true,
-      user: { id: "u2", email: "user.eve@example.com", permissions: [], roles: [] },
+      user: { id: "u2", email: "user.eve@example.com", permissions: [] },
     });
     mockGetCurrentUserAction.mockResolvedValue(null);
 

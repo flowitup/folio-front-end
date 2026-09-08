@@ -1,11 +1,11 @@
 /**
  * Tests for admin/users server actions.
  *
- * Covers (review fixes):
- * - M2 + N1: classifyBackendError maps body fields to discriminated i18n keys
- *   (403 forbidden vs roleNotAllowed; 404 user vs role; 422 tooMany vs generic).
- * - M3: empty projectIds returns "projectsRequired" (matches existing i18n key).
- * - M5: action-level happy-path — pass-through of results array on 200.
+ * Covers:
+ * - classifyBackendError maps status + body onto i18n error keys
+ *   (403 forbidden, 404 userNotFound, 422 tooMany vs generic).
+ * - empty projectIds returns "projectsRequired" (matches existing i18n key).
+ * - action-level happy-path — pass-through of results array on 200.
  *
  * The underlying lib/api/admin wrappers are mocked so we can shape thrown
  * errors with both `.status` and `.body` (the populated fields are what
@@ -55,7 +55,6 @@ function httpError(
 
 const VALID_USER = "11111111-1111-1111-1111-111111111111";
 const VALID_PROJECT = "22222222-2222-2222-2222-222222222222";
-const VALID_ROLE = "33333333-3333-3333-3333-333333333333";
 
 // ---- Tests ----
 
@@ -65,19 +64,13 @@ describe("bulkAddMembershipsAction — input validation", () => {
   });
 
   it("rejects non-UUID userId with userNotFound", async () => {
-    const result = await bulkAddMembershipsAction("not-a-uuid", [VALID_PROJECT], VALID_ROLE);
+    const result = await bulkAddMembershipsAction("not-a-uuid", [VALID_PROJECT]);
     expect(result).toEqual({ success: false, error: "userNotFound" });
     expect(mockBulkAdd).not.toHaveBeenCalled();
   });
 
-  it("rejects non-UUID roleId with roleNotFound", async () => {
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], "bad-role");
-    expect(result).toEqual({ success: false, error: "roleNotFound" });
-    expect(mockBulkAdd).not.toHaveBeenCalled();
-  });
-
   it("rejects empty projectIds with projectsRequired (M3 i18n key)", async () => {
-    const result = await bulkAddMembershipsAction(VALID_USER, [], VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, []);
     expect(result).toEqual({ success: false, error: "projectsRequired" });
     expect(mockBulkAdd).not.toHaveBeenCalled();
   });
@@ -86,58 +79,42 @@ describe("bulkAddMembershipsAction — input validation", () => {
     const ids = Array.from({ length: 51 }, (_, i) =>
       `${"4".repeat(8)}-${"4".repeat(4)}-${"4".repeat(4)}-${"4".repeat(4)}-${i.toString().padStart(12, "0")}`
     );
-    const result = await bulkAddMembershipsAction(VALID_USER, ids, VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, ids);
     expect(result).toEqual({ success: false, error: "tooMany" });
     expect(mockBulkAdd).not.toHaveBeenCalled();
   });
 
   it("rejects non-UUID project entries with generic", async () => {
-    const result = await bulkAddMembershipsAction(VALID_USER, ["not-uuid"], VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, ["not-uuid"]);
     expect(result).toEqual({ success: false, error: "generic" });
     expect(mockBulkAdd).not.toHaveBeenCalled();
   });
 });
 
-describe("bulkAddMembershipsAction — backend error mapping (M2 + N1)", () => {
+describe("bulkAddMembershipsAction — backend error mapping", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("403 with 'superadmin' in message → roleNotAllowed", async () => {
-    mockBulkAdd.mockRejectedValueOnce(
-      httpError(403, { error: "Forbidden", message: "Cannot assign superadmin role." })
-    );
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], VALID_ROLE);
-    expect(result).toEqual({ success: false, error: "roleNotAllowed" });
-  });
-
-  it("403 generic → forbidden", async () => {
+  it("403 → forbidden", async () => {
     mockBulkAdd.mockRejectedValueOnce(
       httpError(403, { error: "Forbidden", message: "Permission denied." })
     );
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT]);
     expect(result).toEqual({ success: false, error: "forbidden" });
   });
 
-  it("404 with 'role' in message → roleNotFound", async () => {
-    mockBulkAdd.mockRejectedValueOnce(
-      httpError(404, { message: "Role not found." })
-    );
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], VALID_ROLE);
-    expect(result).toEqual({ success: false, error: "roleNotFound" });
-  });
-
-  it("404 without 'role' in message → userNotFound", async () => {
+  it("404 → userNotFound", async () => {
     mockBulkAdd.mockRejectedValueOnce(
       httpError(404, { message: "Target user not found." })
     );
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT]);
     expect(result).toEqual({ success: false, error: "userNotFound" });
   });
 
   it("400 → tooMany (rare; FE pre-validates)", async () => {
     mockBulkAdd.mockRejectedValueOnce(httpError(400, { message: "Empty list" }));
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT]);
     expect(result).toEqual({ success: false, error: "tooMany" });
   });
 
@@ -145,7 +122,7 @@ describe("bulkAddMembershipsAction — backend error mapping (M2 + N1)", () => {
     mockBulkAdd.mockRejectedValueOnce(
       httpError(422, { message: "Validation failed: project_ids must have at most 50 items." })
     );
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT]);
     expect(result).toEqual({ success: false, error: "tooMany" });
   });
 
@@ -153,48 +130,43 @@ describe("bulkAddMembershipsAction — backend error mapping (M2 + N1)", () => {
     mockBulkAdd.mockRejectedValueOnce(
       httpError(422, { message: "Some other validation issue." })
     );
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT]);
     expect(result).toEqual({ success: false, error: "generic" });
   });
 
   it("429 → rateLimited", async () => {
     mockBulkAdd.mockRejectedValueOnce(httpError(429, { message: "Too many requests." }));
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT]);
     expect(result).toEqual({ success: false, error: "rateLimited" });
   });
 
   it("500 → generic", async () => {
     mockBulkAdd.mockRejectedValueOnce(httpError(500, null));
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT]);
     expect(result).toEqual({ success: false, error: "generic" });
   });
 
   it("missing body still classifies by status (403 → forbidden)", async () => {
     mockBulkAdd.mockRejectedValueOnce(httpError(403, null));
-    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT], VALID_ROLE);
+    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT]);
     expect(result).toEqual({ success: false, error: "forbidden" });
   });
 });
 
-describe("bulkAddMembershipsAction — happy path (M5)", () => {
+describe("bulkAddMembershipsAction — happy path", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("forwards user_id, project_ids, role_id and returns the results array", async () => {
+  it("forwards user_id + project_ids and returns the results array", async () => {
     mockBulkAdd.mockResolvedValueOnce({
       results: [
         { project_id: VALID_PROJECT, project_name: "P1", status: "added" },
       ],
     });
-    const result = await bulkAddMembershipsAction(
-      VALID_USER,
-      [VALID_PROJECT],
-      VALID_ROLE
-    );
+    const result = await bulkAddMembershipsAction(VALID_USER, [VALID_PROJECT]);
     expect(mockBulkAdd).toHaveBeenCalledWith(VALID_USER, {
       project_ids: [VALID_PROJECT],
-      role_id: VALID_ROLE,
     });
     expect(result.success).toBe(true);
     expect(result.results).toHaveLength(1);
@@ -208,7 +180,7 @@ describe("bulkAddMembershipsAction — happy path (M5)", () => {
         {
           project_id: "55555555-5555-5555-5555-555555555555",
           project_name: "P2",
-          status: "already_member_same_role",
+          status: "already_member",
         },
         {
           project_id: "66666666-6666-6666-6666-666666666666",
@@ -223,14 +195,13 @@ describe("bulkAddMembershipsAction — happy path (M5)", () => {
         VALID_PROJECT,
         "55555555-5555-5555-5555-555555555555",
         "66666666-6666-6666-6666-666666666666",
-      ],
-      VALID_ROLE
+      ]
     );
     expect(result.success).toBe(true);
     expect(result.results).toHaveLength(3);
     expect(result.results?.map((r) => r.status)).toEqual([
       "added",
-      "already_member_same_role",
+      "already_member",
       "project_not_found",
     ]);
   });

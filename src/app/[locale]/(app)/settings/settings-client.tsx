@@ -11,7 +11,6 @@ import { AdminCompaniesSection } from "@/components/companies/admin-companies-se
 import { CompanySettingsSection } from "@/components/companies/company-settings-section";
 import { PaymentMethodsSettingsSection } from "@/components/payment-methods/payment-methods-settings-section";
 import { isPlatformOps, isCompanyAdmin } from "@/lib/auth/permissions";
-import type { Role } from "@/lib/api/roles";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import pkg from "../../../../../package.json";
 
@@ -29,7 +28,6 @@ const BASE_SECTION_KEYS = [
 type SectionKey = (typeof BASE_SECTION_KEYS)[number] | "project";
 
 interface Props {
-  roles: Role[];
   projects: ProjectSummary[];
 }
 
@@ -46,7 +44,7 @@ function initialActiveFromHash(): SectionKey {
   return ALL_VALID_KEYS.includes(hash) ? (hash as SectionKey) : "profile";
 }
 
-export function SettingsClient({ roles, projects }: Props) {
+export function SettingsClient({ projects }: Props) {
   const t = useTranslations("settings");
   const { user } = useAuth();
   const { selectedProject } = useProject();
@@ -151,7 +149,7 @@ export function SettingsClient({ roles, projects }: Props) {
 
         {active === "users" && (
           <section className="folio-card p-7">
-            <UsersSection roles={roles} projects={projects} />
+            <UsersSection projects={projects} />
           </section>
         )}
 

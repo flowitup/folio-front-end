@@ -27,9 +27,6 @@ interface MembersTableProps {
   companyId: string | null;
   members: ProjectMember[];
   invites: PendingInvitation[];
-  /** Legacy role list — only used to resolve the "member" role id the outsider
-      e-mail invite still must send (schema requires role_id); no longer
-      surfaced as a picker. */
   canInvite: boolean;
   canManageMembers: boolean;
   /** Gates the "Assign member" button + dialog — matches the backend's

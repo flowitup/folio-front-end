@@ -1448,6 +1448,10 @@
       "success": "Document renommé",
       "errorForbidden": "Seul l'importateur ou un administrateur du projet peut renommer ce document",
       "errorServer": "Échec du renommage"
+    },
+    "restricted": {
+      "title": "Les documents ne sont pas accessibles avec votre rôle",
+      "body": "Seuls les administrateurs et les gestionnaires du projet peuvent ouvrir la bibliothèque de documents. Demandez à un administrateur si vous avez besoin d’un fichier."
     }
   },
   "analyses": {

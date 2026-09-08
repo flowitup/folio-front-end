@@ -1,8 +1,8 @@
 /**
  * Analysis detail page — server component.
  * Fetches the analysis metadata server-side, resolves edit/delete rights
- * (uploader, project owner, or admin — see the BE routes.py authorization
- * note), and renders the header + sandboxed viewer.
+ * (effective project:update — admin/manager only), and renders the header +
+ * sandboxed viewer.
  */
 
 import { notFound, redirect } from "next/navigation";
@@ -50,15 +50,14 @@ export default async function AnalysisDetailPage({ params }: PageProps) {
     })),
   ]);
 
-  // No owner_id bypass (D6, removed) — edit rights follow project:update
-  // (admin/manager) or being the uploader of this specific analysis.
+  // No owner_id and no uploader bypass — every analysis write now requires
+  // effective project:update, so an uploader who is only a member must not be
+  // offered edit/delete controls that would 403.
   const effectivePerms = project?.my_permissions ?? session.user.permissions;
   const hasAdminPermission = isPlatformOps(effectivePerms);
-  const isUploader = analysis.uploader_id === session.user.id;
   const canManage =
     hasAdminPermission ||
-    can("project:update", session.user.permissions, project?.my_permissions) ||
-    isUploader;
+    can("project:update", session.user.permissions, project?.my_permissions);
 
   const uploader = members.find((m) => m.user_id === analysis.uploader_id);
   const uploaderName = uploader?.display_name || uploader?.email || "";

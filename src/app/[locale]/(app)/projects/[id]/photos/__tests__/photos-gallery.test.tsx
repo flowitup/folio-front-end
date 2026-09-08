@@ -68,7 +68,6 @@ vi.mock("sonner", () => {
 // ---- Helpers ----
 
 const PROJECT_ID = "11111111-1111-1111-1111-111111111111";
-const CURRENT_USER_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 
 function makePhoto(id: string, capturedAt: string, caption: string | null = null): ProjectPhoto {
   return {
@@ -106,7 +105,6 @@ describe("PhotosGallery — empty state", () => {
         initialPhotos={[]}
         initialTotal={0}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
     expect(screen.getByText("photos.empty.title")).toBeDefined();
@@ -120,7 +118,6 @@ describe("PhotosGallery — empty state", () => {
         initialPhotos={[]}
         initialTotal={0}
         canEdit={true}
-        currentUserId={CURRENT_USER_ID}
       />
     );
     expect(screen.getByText("photos.empty.title")).toBeDefined();
@@ -136,7 +133,6 @@ describe("PhotosGallery — empty state", () => {
         initialPhotos={[]}
         initialTotal={0}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
     // No section elements with date labels
@@ -160,7 +156,6 @@ describe("PhotosGallery — date groups", () => {
         initialPhotos={photos}
         initialTotal={2}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -177,7 +172,6 @@ describe("PhotosGallery — date groups", () => {
         initialPhotos={photos}
         initialTotal={1}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -198,7 +192,6 @@ describe("PhotosGallery — date groups", () => {
         initialPhotos={photos}
         initialTotal={3}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -219,7 +212,6 @@ describe("PhotosGallery — date groups", () => {
         initialPhotos={photos}
         initialTotal={2}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -242,7 +234,6 @@ describe("PhotosGallery — date groups", () => {
         initialPhotos={[photo]}
         initialTotal={1}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -262,7 +253,6 @@ describe("PhotosGallery — thumbnail rendering", () => {
         initialPhotos={photos}
         initialTotal={1}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -282,7 +272,6 @@ describe("PhotosGallery — thumbnail rendering", () => {
         initialPhotos={photos}
         initialTotal={1}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -305,7 +294,6 @@ describe("PhotosGallery — thumbnail rendering", () => {
         initialPhotos={photos}
         initialTotal={3}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -337,7 +325,6 @@ describe("PhotosGallery — lightbox opens on thumb click", () => {
         initialPhotos={photos}
         initialTotal={1}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -368,7 +355,6 @@ describe("PhotosGallery — lightbox opens on thumb click", () => {
         initialPhotos={photos}
         initialTotal={1}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -387,7 +373,6 @@ describe("PhotosGallery — canEdit flag", () => {
         initialPhotos={[makePhoto("x", "2024-06-15T10:00:00Z")]}
         initialTotal={1}
         canEdit={false}
-        currentUserId={CURRENT_USER_ID}
       />
     );
     // "addPhotos" button should NOT appear in the header when canEdit=false
@@ -401,7 +386,6 @@ describe("PhotosGallery — canEdit flag", () => {
         initialPhotos={[makePhoto("x", "2024-06-15T10:00:00Z")]}
         initialTotal={1}
         canEdit={true}
-        currentUserId={CURRENT_USER_ID}
       />
     );
     expect(screen.getByText("photos.addPhotos")).toBeDefined();
@@ -414,7 +398,6 @@ describe("PhotosGallery — canEdit flag", () => {
         initialPhotos={[]}
         initialTotal={0}
         canEdit={true}
-        currentUserId={CURRENT_USER_ID}
       />
     );
 
@@ -424,5 +407,53 @@ describe("PhotosGallery — canEdit flag", () => {
 
     // PhotosUpload panel should now be visible (it has a caption label input)
     expect(screen.getByText("photos.caption.label")).toBeDefined();
+  });
+});
+
+// ── Lightbox write controls ───────────────────────────────────────────────────
+
+describe("PhotosGallery — lightbox write controls follow canEdit", () => {
+  async function openLightbox(canEdit: boolean) {
+    const { fetchProjectPhotoBlob } = await import("@/lib/api/project-photo-blob");
+    vi.mocked(fetchProjectPhotoBlob).mockResolvedValue({
+      objectUrl: "blob:fake-thumb-url",
+      contentType: "image/jpeg",
+      revoke: vi.fn(),
+    });
+
+    render(
+      <PhotosGallery
+        projectId={PROJECT_ID}
+        initialPhotos={[makePhoto("own1", "2024-06-15T10:00:00Z", "My upload")]}
+        initialTotal={1}
+        canEdit={canEdit}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "My upload" })).toBeDefined();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "My upload" }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("photos.cancel")).toBeDefined();
+    });
+  }
+
+  it("offers no edit/delete to a member, not even on a photo they uploaded", async () => {
+    await openLightbox(false);
+
+    expect(screen.queryByText("photos.edit")).toBeNull();
+    expect(screen.queryByText("photos.delete")).toBeNull();
+  });
+
+  it("offers edit and delete to a manager", async () => {
+    await openLightbox(true);
+
+    expect(screen.getByText("photos.edit")).toBeDefined();
+    expect(screen.getByText("photos.delete")).toBeDefined();
   });
 });

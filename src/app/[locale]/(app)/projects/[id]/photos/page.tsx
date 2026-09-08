@@ -46,7 +46,6 @@ export default async function PhotosPage({ params }: PageProps) {
   const effectivePerms = project.my_permissions ?? session.user.permissions;
   const hasAdminPermission = isPlatformOps(effectivePerms);
   const canEdit = hasAdminPermission || can("project:update", session.user.permissions, project.my_permissions);
-  const currentUserId = session.user.id;
 
   return (
     <div className="px-6 py-6">
@@ -55,7 +54,6 @@ export default async function PhotosPage({ params }: PageProps) {
         initialPhotos={photosResult.items}
         initialTotal={photosResult.total}
         canEdit={canEdit}
-        currentUserId={currentUserId}
       />
     </div>
   );

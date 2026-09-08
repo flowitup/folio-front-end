@@ -37,6 +37,8 @@ type Props = {
   /** The project's whole tag vocabulary, from GET .../analyses/tags. */
   availableTags: string[];
   members: Member[];
+  /** Write rights (effective `project:update`) — hides the upload control. */
+  canManage: boolean;
 };
 
 // ---- Helpers ----
@@ -54,6 +56,7 @@ export function AnalysesPanel({
   initialTotal,
   availableTags: serverTags,
   members,
+  canManage,
 }: Props) {
   const t = useTranslations("analyses");
 
@@ -213,7 +216,9 @@ export function AnalysesPanel({
           <span className="text-xs text-muted-foreground">
             {t("toolbar.count", { count: total })}
           </span>
-          <AnalysisUpload projectId={projectId} onUploaded={handleUploaded} />
+          {canManage && (
+            <AnalysisUpload projectId={projectId} onUploaded={handleUploaded} />
+          )}
         </div>
       </div>
 

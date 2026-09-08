@@ -1448,6 +1448,10 @@
       "success": "Document renamed",
       "errorForbidden": "Only the uploader or a project admin can rename this document",
       "errorServer": "Failed to rename"
+    },
+    "restricted": {
+      "title": "Documents are not available for your role",
+      "body": "Only project admins and managers can open the document library. Ask an admin if you need a file from it."
     }
   },
   "analyses": {

@@ -11,7 +11,7 @@ import { getSession } from "@/lib/auth/session";
 import { listProjectAnalyses, listProjectAnalysisTags } from "@/lib/api/project-analyses";
 import { listMembers } from "@/lib/api/members";
 import { getProjectById } from "@/lib/api/projects-server";
-import { isPlatformOps } from "@/lib/auth/permissions";
+import { can, isPlatformOps } from "@/lib/auth/permissions";
 import { AnalysesPanel } from "./analyses-panel";
 
 interface PageProps {
@@ -53,6 +53,13 @@ export default async function AnalysesPage({ params }: PageProps) {
     redirect(`/${locale}/projects`);
   }
 
+  // Write rights on the library (effective project:update): a member reads the
+  // reports but never uploads, edits or deletes one — the backend rejects
+  // every analysis write without it.
+  const canManage =
+    hasAdminPermission ||
+    can("project:update", session.user.permissions, project?.my_permissions);
+
   // Adapt ProjectMember[] to the shape the panel/card components expect.
   const adaptedMembers = members.map((m) => ({
     id: m.user_id,
@@ -68,6 +75,7 @@ export default async function AnalysesPage({ params }: PageProps) {
         initialTotal={analysesResult.total}
         availableTags={availableTags}
         members={adaptedMembers}
+        canManage={canManage}
       />
     </div>
   );

@@ -69,12 +69,12 @@ describe("NotesView — empty state", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("shows empty state when no notes", () => {
-    render(<NotesView projectId={PROJECT_ID} initialNotes={[]} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[]} canEdit />);
     expect(screen.getByText("notes.empty.title")).toBeDefined();
   });
 
   it("does not show toolbar when no notes", () => {
-    render(<NotesView projectId={PROJECT_ID} initialNotes={[]} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[]} canEdit />);
     expect(screen.queryByPlaceholderText("notes.search.placeholder")).toBeNull();
   });
 });
@@ -86,18 +86,18 @@ describe("NotesView — rendering notes", () => {
 
   it("renders note titles", () => {
     const notes = [makeNote("n1"), makeNote("n2")];
-    render(<NotesView projectId={PROJECT_ID} initialNotes={notes} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={notes} canEdit />);
     expect(screen.getByText("Note n1")).toBeDefined();
     expect(screen.getByText("Note n2")).toBeDefined();
   });
 
   it("shows toolbar when notes are present", () => {
-    render(<NotesView projectId={PROJECT_ID} initialNotes={[makeNote("n1")]} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[makeNote("n1")]} canEdit />);
     expect(screen.getByPlaceholderText("notes.search.placeholder")).toBeDefined();
   });
 
   it("groups notes under a section heading", () => {
-    render(<NotesView projectId={PROJECT_ID} initialNotes={[makeNote("n1")]} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[makeNote("n1")]} canEdit />);
     // today/yesterday/week/earlier — one of these headings should appear
     const headings = screen.queryAllByRole("heading", { level: 2 });
     expect(headings.length).toBeGreaterThan(0);
@@ -113,7 +113,7 @@ describe("NotesView — optimistic add", () => {
     const serverNote = makeNote("server-id");
     mockCreate.mockResolvedValueOnce({ success: true, note: serverNote } as never);
 
-    render(<NotesView projectId={PROJECT_ID} initialNotes={[]} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[]} canEdit />);
 
     // Type in QuickAdd title
     const input = screen.getByPlaceholderText("notes.quickAdd.placeholderTitle");
@@ -136,7 +136,7 @@ describe("NotesView — optimistic add", () => {
   it("removes temp note on createNoteAction failure", async () => {
     mockCreate.mockResolvedValueOnce({ success: false, error: "generic" } as never);
 
-    render(<NotesView projectId={PROJECT_ID} initialNotes={[]} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[]} canEdit />);
 
     const input = screen.getByPlaceholderText("notes.quickAdd.placeholderTitle");
     fireEvent.focus(input);
@@ -164,7 +164,7 @@ describe("NotesView — optimistic delete with undo", () => {
 
   it("removes note immediately on delete and calls toast", async () => {
     const note = makeNote("del-1");
-    render(<NotesView projectId={PROJECT_ID} initialNotes={[note]} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[note]} canEdit />);
 
     expect(screen.getByText("Note del-1")).toBeDefined();
 
@@ -178,7 +178,7 @@ describe("NotesView — optimistic delete with undo", () => {
   it("calls deleteNoteAction after undo window expires", async () => {
     mockDelete.mockResolvedValueOnce({ success: true } as never);
     const note = makeNote("del-2");
-    render(<NotesView projectId={PROJECT_ID} initialNotes={[note]} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[note]} canEdit />);
 
     fireEvent.click(screen.getByRole("button", { name: /notes\.actions\.delete/i }));
 
@@ -203,7 +203,7 @@ describe("NotesView — category filter", () => {
       makeNote("d1", { category: "delivery", title: "Delivery note" }),
       makeNote("g1", { category: "general", title: "General note" }),
     ];
-    render(<NotesView projectId={PROJECT_ID} initialNotes={notes} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={notes} canEdit />);
 
     // Multiple elements may show "notes.categories.delivery" (chip + card tag)
     // Find the chip button specifically (inside .filter-chips)
@@ -223,7 +223,7 @@ describe("NotesView — category filter", () => {
 
   it("shows no-match state when filter yields no results", async () => {
     const notes = [makeNote("g1", { category: "general", title: "General note" })];
-    render(<NotesView projectId={PROJECT_ID} initialNotes={notes} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={notes} canEdit />);
 
     // Click call chip — no call notes exist but it won't appear unless counts > 0
     // Instead use search to produce no-match
@@ -246,7 +246,7 @@ describe("NotesView — search", () => {
       makeNote("a1", { title: "Alpha note" }),
       makeNote("b1", { title: "Beta note" }),
     ];
-    render(<NotesView projectId={PROJECT_ID} initialNotes={notes} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={notes} canEdit />);
 
     fireEvent.change(screen.getByPlaceholderText("notes.search.placeholder"), {
       target: { value: "Alpha" },
@@ -259,7 +259,7 @@ describe("NotesView — search", () => {
   });
 
   it("shows clear button when query is non-empty and clears on click", async () => {
-    render(<NotesView projectId={PROJECT_ID} initialNotes={[makeNote("n1")]} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[makeNote("n1")]} canEdit />);
 
     const searchInput = screen.getByPlaceholderText("notes.search.placeholder");
     fireEvent.change(searchInput, { target: { value: "test" } });
@@ -275,7 +275,7 @@ describe("NotesView — search", () => {
       makeNote("a1", { title: "A", description: "unique-desc-xyz" }),
       makeNote("b1", { title: "B", description: null }),
     ];
-    render(<NotesView projectId={PROJECT_ID} initialNotes={notes} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={notes} canEdit />);
 
     fireEvent.change(screen.getByPlaceholderText("notes.search.placeholder"), {
       target: { value: "unique-desc-xyz" },
@@ -298,7 +298,7 @@ describe("NotesView — update note", () => {
     const updatedNote = { ...note, title: "Updated title" };
     mockUpdate.mockResolvedValueOnce({ success: true, note: updatedNote } as never);
 
-    render(<NotesView projectId={PROJECT_ID} initialNotes={[note]} />);
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[note]} canEdit />);
 
     // Click edit button to enter edit mode (avoids article click ambiguity)
     fireEvent.click(screen.getByRole("button", { name: /notes\.actions\.edit/i }));

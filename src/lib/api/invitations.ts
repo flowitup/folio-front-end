@@ -23,7 +23,8 @@ export interface PendingInvitation {
 export interface CreateInvitationPayload {
   project_id: string;
   email: string;
-  role_id: string;
+  /** Legacy roles table id; optional since the back-end defaults to the member role. */
+  role_id?: string;
 }
 
 export type CreateInvitationResult =

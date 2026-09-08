@@ -64,7 +64,6 @@ const mockToast = toast as unknown as {
   error: ReturnType<typeof vi.fn>;
 };
 
-const MEMBER_ROLE_ID = "role-member-1";
 
 function renderDialog(open = true, onOpenChange = vi.fn()) {
   return render(
@@ -72,7 +71,6 @@ function renderDialog(open = true, onOpenChange = vi.fn()) {
       open={open}
       onOpenChange={onOpenChange}
       projectId="proj-123"
-      memberRoleId={MEMBER_ROLE_ID}
     />
   );
 }
@@ -105,7 +103,7 @@ describe("InviteMemberDialog", () => {
       await user.click(screen.getByRole("button", { name: /send invitation/i }));
     }
 
-    it("calls inviteMemberAction with the fixed member role id", async () => {
+    it("calls inviteMemberAction with the project and email only", async () => {
       mockInviteAction.mockResolvedValueOnce({
         kind: "invitation_sent",
         invitation_id: "inv-1",
@@ -115,11 +113,7 @@ describe("InviteMemberDialog", () => {
       await fillAndSubmit("new@example.com");
 
       await waitFor(() => {
-        expect(mockInviteAction).toHaveBeenCalledWith(
-          "proj-123",
-          "new@example.com",
-          MEMBER_ROLE_ID
-        );
+        expect(mockInviteAction).toHaveBeenCalledWith("proj-123", "new@example.com");
       });
     });
 

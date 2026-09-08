@@ -5,12 +5,10 @@
  * member of the project's company). Distinct from AssignMemberDialog
  * (insiders, searched from the company directory, no e-mail step).
  *
- * No role picker: every invite is sent as the fixed "member" role
- * (`memberRoleId`, resolved server-side from the legacy roles table — the
- * `create_invitation` schema still requires a `role_id`, see phase-05 risk
- * notes). An admin who wants the new member to manage the project can
- * promote them afterwards via Settings › Company or re-assign as manager
- * once they've joined.
+ * No role picker: every invite is sent as a plain member; the back-end
+ * defaults the legacy role until Phase 4 drops it. An admin who wants the
+ * new member to manage the project can promote them afterwards via
+ * Settings › Company or re-assign them as manager once they've joined.
  */
 
 import { useState } from "react";
@@ -35,14 +33,12 @@ interface InviteMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  memberRoleId: string;
 }
 
 export function InviteMemberDialog({
   open,
   onOpenChange,
   projectId,
-  memberRoleId,
 }: InviteMemberDialogProps) {
   const t = useTranslations("members");
   const router = useRouter();
@@ -55,7 +51,7 @@ export function InviteMemberDialog({
 
     setIsSubmitting(true);
     try {
-      const result = await inviteMemberAction(projectId, email.trim(), memberRoleId);
+      const result = await inviteMemberAction(projectId, email.trim());
 
       if (result.kind === "invitation_sent") {
         toast.success(t("toast.inviteSent", { email: email.trim() }));

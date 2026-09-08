@@ -11,6 +11,7 @@ import { getSession } from "@/lib/auth/session";
 import { getProjectAnalysis, listProjectAnalyses } from "@/lib/api/project-analyses";
 import { listMembers } from "@/lib/api/members";
 import { getProjectById } from "@/lib/api/projects-server";
+import { can, isPlatformOps } from "@/lib/auth/permissions";
 import { AnalysisDetailPanel } from "./analysis-detail-panel";
 
 interface PageProps {
@@ -49,11 +50,15 @@ export default async function AnalysisDetailPage({ params }: PageProps) {
     })),
   ]);
 
+  // No owner_id bypass (D6, removed) — edit rights follow project:update
+  // (admin/manager) or being the uploader of this specific analysis.
   const effectivePerms = project?.my_permissions ?? session.user.permissions;
-  const hasAdminPermission = effectivePerms.includes("*:*");
-  const isProjectOwner = project?.owner_id === session.user.id;
+  const hasAdminPermission = isPlatformOps(effectivePerms);
   const isUploader = analysis.uploader_id === session.user.id;
-  const canManage = hasAdminPermission || isProjectOwner || isUploader;
+  const canManage =
+    hasAdminPermission ||
+    can("project:update", session.user.permissions, project?.my_permissions) ||
+    isUploader;
 
   const uploader = members.find((m) => m.user_id === analysis.uploader_id);
   const uploaderName = uploader?.display_name || uploader?.email || "";

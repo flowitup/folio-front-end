@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { env } from "@/lib/config/env";
 import type { User, AuthSession } from "./types";
@@ -22,8 +23,14 @@ function decodeJwtPayload(token: string): { exp?: number } | null {
 /**
  * Get current session from server-side cookies.
  * Use in Server Components and Server Actions.
+ *
+ * Wrapped in React's `cache()` so multiple calls within the same request
+ * (e.g. a page and several sibling server components each calling
+ * getSession()/getCurrentUser()) share one `GET /auth/me` round trip instead
+ * of firing it once per caller. Request-scoped only — never leaks across
+ * requests/users.
  */
-export async function getSession(): Promise<AuthSession | null> {
+export const getSession = cache(async (): Promise<AuthSession | null> => {
   const cookieStore = await cookies();
   const token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
 
@@ -59,7 +66,7 @@ export async function getSession(): Promise<AuthSession | null> {
   } catch {
     return null;
   }
-}
+});
 
 /**
  * Get current user from session.

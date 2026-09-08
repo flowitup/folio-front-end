@@ -10,7 +10,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import LaborPage from "../page";
+import { LaborPageClient } from "../labor-page-client";
 import type { Worker } from "@/types/labor";
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
@@ -115,7 +115,7 @@ describe("LaborPage — Payments tab", () => {
   });
 
   it("renders a Payments tab button alongside the existing three", async () => {
-    render(<LaborPage />);
+    render(<LaborPageClient initialDate="2026-09-08" />);
     await waitFor(() => expect(screen.getByTestId("labor-summary")).toBeInTheDocument());
 
     expect(screen.getByRole("button", { name: "labor.payments.tab" })).toBeInTheDocument();
@@ -125,13 +125,13 @@ describe("LaborPage — Payments tab", () => {
   });
 
   it("defaults to the Summary tab, not Payments", async () => {
-    render(<LaborPage />);
+    render(<LaborPageClient initialDate="2026-09-08" />);
     await waitFor(() => expect(screen.getByTestId("labor-summary")).toBeInTheDocument());
     expect(screen.queryByTestId("labor-payments-tab")).not.toBeInTheDocument();
   });
 
   it("switches to LaborPaymentsTab on click, passing projectId + workers + invoices-permission flag", async () => {
-    render(<LaborPage />);
+    render(<LaborPageClient initialDate="2026-09-08" />);
     await waitFor(() => expect(screen.getByTestId("labor-summary")).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole("button", { name: "labor.payments.tab" }));
@@ -151,7 +151,7 @@ describe("LaborPage — Payments tab", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
-    render(<LaborPage />);
+    render(<LaborPageClient initialDate="2026-09-08" />);
     await waitFor(() => expect(screen.getByTestId("labor-summary")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "labor.payments.tab" }));
 

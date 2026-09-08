@@ -7,7 +7,7 @@ import "server-only";
 
 import { env } from "@/lib/config/env";
 import { sessionAuthHeader } from "@/lib/api/auth-header";
-import type { AttachedUser } from "@/types/companies";
+import type { AttachedUser, CompanyRole } from "@/types/companies";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -96,7 +96,7 @@ export async function bootAttachedUser(companyId: string, userId: string): Promi
 export async function setMemberRole(
   companyId: string,
   userId: string,
-  role: "admin" | "member"
+  role: CompanyRole
 ): Promise<void> {
   const authHeaders = await sessionAuthHeader();
   let response: Response;

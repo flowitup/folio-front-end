@@ -15,7 +15,7 @@ import type {
 import { formatEUR } from "@/lib/api/labor";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { capitalizeFirst } from "@/lib/utils/capitalize-first";
-import { DEFAULT_ROLE_I18N_KEYS } from "@/lib/utils/default-role-names";
+import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
 import { findMonthBucket } from "@/components/labor/labor-payments-tab-state";
 import { PaidSplitCaption } from "@/components/labor/paid-split-caption";
 
@@ -820,9 +820,10 @@ export function LaborSummary({
                   // only id + name). Default seed roles resolve through
                   // the locale map, custom roles display their DB name.
                   const rowWorker = workerById.get(row.worker_id);
-                  const roleName = rowWorker?.role_id && DEFAULT_ROLE_I18N_KEYS[rowWorker.role_id]
-                    ? tRole(DEFAULT_ROLE_I18N_KEYS[rowWorker.role_id])
-                    : rowWorker?.role_name;
+                  const rowRoleKey = rowWorker
+                    ? resolveDefaultRoleI18nKey({ id: rowWorker.role_id, name: rowWorker.role_name })
+                    : null;
+                  const roleName = rowRoleKey ? tRole(rowRoleKey) : rowWorker?.role_name;
                   // Paid matched by worker_id within the viewed month's
                   // bucket; Balance is this row's already-rendered Total
                   // minus Paid — never recompute the cost side.

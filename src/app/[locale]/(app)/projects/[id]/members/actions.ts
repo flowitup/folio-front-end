@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createInvitation, revokeInvitation } from "@/lib/api/invitations";
 import type { CreateInvitationResult } from "@/lib/api/invitations";
-import { updateMemberRole, removeMember } from "@/lib/api/members";
+import { unassignProjectMember } from "@/lib/api/assignments";
+import { removeMember as removeMemberLegacy } from "@/lib/api/members";
 import { updateUser } from "@/lib/api/admin";
 import { getSession } from "@/lib/auth/session";
 
@@ -91,31 +92,6 @@ export async function revokeInviteAction(
 }
 
 /**
- * Server action: change a member's project role. Takes effect immediately
- * (membership-role permissions are resolved per request on the backend).
- */
-export async function updateMemberRoleAction(
-  projectId: string,
-  userId: string,
-  roleId: string
-): Promise<void> {
-  const session = await getSession();
-  if (!session?.accessToken) {
-    throw Object.assign(new Error("Unauthorized"), { status: 401 });
-  }
-  if (!isUuid(projectId) || !isUuid(userId) || !isUuid(roleId)) {
-    throw Object.assign(new Error("Invalid identifiers"), { status: 400 });
-  }
-
-  try {
-    await updateMemberRole(projectId, userId, roleId);
-  } catch (err) {
-    rethrowWithStatus(err);
-  }
-  revalidatePath(membersPath(projectId), "page");
-}
-
-/**
  * Server action: update a member's profile (email and/or display name).
  * Superadmin-only on the backend; email is the login identity.
  */
@@ -144,7 +120,15 @@ export async function updateUserProfileAction(
 }
 
 /**
- * Server action: remove a member from the project.
+ * Server action: remove an assigned manager/member from the project. The
+ * single removal path for BOTH the project members page and the projects
+ * list team panel (projects/page.tsx) — no separate client-side call exists.
+ *
+ * DELETE /projects/<id>/assignments/<userId> — the new insider-assignment
+ * surface (assign via AssignMemberDialog, remove here). Falls back to the
+ * legacy DELETE /projects/<id>/users/<userId> on a 404 so this keeps working
+ * against a backend still on the pre-Phase-2/3 assignment contract (see the
+ * BE Phase 2/3 vs 4 rollout note in the plan's Risk Assessment).
  */
 export async function removeMemberAction(projectId: string, userId: string): Promise<void> {
   const session = await getSession();
@@ -156,8 +140,18 @@ export async function removeMemberAction(projectId: string, userId: string): Pro
   }
 
   try {
-    await removeMember(projectId, userId);
+    await unassignProjectMember(projectId, userId);
   } catch (err) {
+    const status = (err as { status?: number }).status;
+    if (status === 404) {
+      try {
+        await removeMemberLegacy(projectId, userId);
+      } catch (legacyErr) {
+        rethrowWithStatus(legacyErr);
+      }
+      revalidatePath(membersPath(projectId), "page");
+      return;
+    }
     rethrowWithStatus(err);
   }
   revalidatePath(membersPath(projectId), "page");

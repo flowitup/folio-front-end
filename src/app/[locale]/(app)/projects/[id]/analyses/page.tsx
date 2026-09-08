@@ -11,6 +11,7 @@ import { getSession } from "@/lib/auth/session";
 import { listProjectAnalyses, listProjectAnalysisTags } from "@/lib/api/project-analyses";
 import { listMembers } from "@/lib/api/members";
 import { getProjectById } from "@/lib/api/projects-server";
+import { isPlatformOps } from "@/lib/auth/permissions";
 import { AnalysesPanel } from "./analyses-panel";
 
 interface PageProps {
@@ -40,12 +41,12 @@ export default async function AnalysesPage({ params }: PageProps) {
     listProjectAnalysisTags(projectId).catch(() => [] as string[]),
   ]);
 
-  // Membership gate: admin (*:*) or project member (non-null project means
+  // Membership gate: platform ops or project member (non-null project means
   // access granted by BE). Use the project's EFFECTIVE permissions (global ∪
-  // membership-role perms) so a project admin sees the same controls as a
-  // global admin.
+  // membership-role perms) so a project admin/manager sees the same controls
+  // as platform ops.
   const effectivePerms = project?.my_permissions ?? session.user.permissions;
-  const hasAdminPermission = effectivePerms.includes("*:*");
+  const hasAdminPermission = isPlatformOps(effectivePerms);
 
   // If the project fetch failed entirely (403/404), redirect.
   if (!project && !hasAdminPermission) {

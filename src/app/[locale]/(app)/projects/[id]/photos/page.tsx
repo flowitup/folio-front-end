@@ -9,6 +9,7 @@ import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { getProjectById } from "@/lib/api/projects-server";
 import { listProjectPhotos } from "@/lib/api/project-photos";
+import { can, isPlatformOps } from "@/lib/auth/permissions";
 import { PhotosGallery } from "./photos-gallery";
 
 interface PageProps {
@@ -40,12 +41,11 @@ export default async function PhotosPage({ params }: PageProps) {
     notFound();
   }
 
-  // Effective per-project perms (global ∪ membership-role) so a project admin
-  // gets edit access, not just global superadmins/owners.
+  // Effective per-project perms (global ∪ membership-role) so a project
+  // admin/manager gets edit access. No owner_id bypass (D6, removed).
   const effectivePerms = project.my_permissions ?? session.user.permissions;
-  const hasAdminPermission = effectivePerms.includes("*:*");
-  const isProjectOwner = project.owner_id === session.user.id;
-  const canEdit = hasAdminPermission || isProjectOwner;
+  const hasAdminPermission = isPlatformOps(effectivePerms);
+  const canEdit = hasAdminPermission || can("project:update", session.user.permissions, project.my_permissions);
   const currentUserId = session.user.id;
 
   return (

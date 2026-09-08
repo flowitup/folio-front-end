@@ -8,6 +8,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { useTheme } from "@/context/ThemeContext";
+import { can, canCreateProject } from "@/lib/auth/permissions";
 import { type Locale } from "@/i18n/config";
 import {
   DropdownMenu,
@@ -105,7 +106,22 @@ export function Topbar() {
   const cfg = pageKey ? TOPBAR_KEYS[pageKey] : null;
   const title = cfg ? tTopbar(cfg.titleKey) : null;
   const subtitle = cfg ? tTopbar(cfg.subtitleKey) : null;
-  const actionLabel = cfg?.actionKey ? tTopbar(cfg.actionKey) : null;
+  // "New project" is admin-only (project:create, global or any admin company);
+  // "Log day" opens the manager bulk-log dialog, not the member day roster;
+  // "New invoice" writes an invoice; "New task" edits the plan — hide every
+  // action for a caller who lacks the matching permission so no control
+  // ever renders that would 403.
+  const canShowAction =
+    pageKey === "projects"
+      ? canCreateProject(user?.permissions, user?.companies)
+      : pageKey === "labor"
+        ? can("project:manage_labor", user?.permissions, selectedProject?.my_permissions)
+        : pageKey === "invoices"
+          ? can("project:manage_invoices", user?.permissions, selectedProject?.my_permissions)
+          : pageKey === "planning"
+            ? can("project:update", user?.permissions, selectedProject?.my_permissions)
+            : true;
+  const actionLabel = cfg?.actionKey && canShowAction ? tTopbar(cfg.actionKey) : null;
 
   const projectName = selectedProject?.name;
   const initials = user?.email?.charAt(0).toUpperCase() ?? "·";

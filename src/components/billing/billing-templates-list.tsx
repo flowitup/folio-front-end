@@ -212,9 +212,11 @@ function TemplateSection({ label, templates, onDelete }: TemplateSectionProps) {
 
 interface BillingTemplatesListProps {
   initialTemplates: BillingDocumentTemplate[];
+  /** Company currently scoping this list (from BillingTemplatesCompanyScope's picker) — carried onto the "New template" link so the created template lands in the company the admin is viewing, not always their primary one. */
+  companyId?: string | null;
 }
 
-export function BillingTemplatesList({ initialTemplates }: BillingTemplatesListProps) {
+export function BillingTemplatesList({ initialTemplates, companyId }: BillingTemplatesListProps) {
   const router = useRouter();
   const locale = useLocale();
   const tList = useTranslations("billing.templates.list");
@@ -223,6 +225,7 @@ export function BillingTemplatesList({ initialTemplates }: BillingTemplatesListP
   const devisTemplates = templates.filter((t) => t.kind === "devis");
   const factureTemplates = templates.filter((t) => t.kind === "facture");
   const isEmpty = templates.length === 0;
+  const newTemplatePath = `/${locale}/billing/templates/new${companyId ? `?company_id=${companyId}` : ""}`;
 
   function handleDelete(id: string) {
     setTemplates((prev) => prev.filter((t) => t.id !== id));
@@ -240,7 +243,7 @@ export function BillingTemplatesList({ initialTemplates }: BillingTemplatesListP
         </div>
         <Button
           size="sm"
-          onClick={() => router.push(`/${locale}/billing/templates/new`)}
+          onClick={() => router.push(newTemplatePath)}
         >
           <Plus size={13} className="mr-1" />
           {tList("new")}
@@ -259,7 +262,7 @@ export function BillingTemplatesList({ initialTemplates }: BillingTemplatesListP
           </div>
           <Button
             size="sm"
-            onClick={() => router.push(`/${locale}/billing/templates/new`)}
+            onClick={() => router.push(newTemplatePath)}
           >
             <Plus size={13} className="mr-1" />
             {tList("empty.cta")}

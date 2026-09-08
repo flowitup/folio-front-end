@@ -225,12 +225,13 @@ export async function listBillingDocumentsAction(
 }
 
 export async function listBillingTemplatesAction(
-  kind?: BillingDocumentKind
+  kind?: BillingDocumentKind,
+  companyId?: string
 ): Promise<ActionResult<BillingDocumentTemplate[]>> {
   const auth = await requireSession();
   if (!auth.ok) return auth;
   try {
-    const data = await fetchBillingTemplates(kind);
+    const data = await fetchBillingTemplates(kind, companyId);
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: classifyBackendError(err) };

@@ -41,6 +41,13 @@ vi.mock("@/context/ProjectContext", () => ({
   useProject: () => mockUseProject(),
 }));
 
+// Sidebar reads the caller's permissions/companies to gate "New project" —
+// give it a platform-ops user so the pill tests below aren't affected by
+// that gate being off.
+vi.mock("@/context/AuthContext", () => ({
+  useAuth: () => ({ user: { permissions: ["*:*"], companies: [] } }),
+}));
+
 const LONG_NAME = "14 Rue Florentin, 75008 Paris, France — Rénovation complète";
 
 function setupWithName(name: string) {

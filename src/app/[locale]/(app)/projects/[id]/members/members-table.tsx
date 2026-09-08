@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { InviteMemberDialog } from "./invite-member-dialog";
 import { EditMemberDialog } from "./edit-member-dialog";
+import { AssignMemberDialog } from "@/components/projects/assign-member-dialog";
 import { revokeInviteAction, removeMemberAction } from "./actions";
 import type { ProjectMember } from "@/lib/api/members";
 import type { PendingInvitation } from "@/lib/api/invitations";
@@ -24,11 +25,22 @@ import { formatDate } from "@/lib/utils/formatters";
 
 interface MembersTableProps {
   projectId: string;
+  companyId: string | null;
   members: ProjectMember[];
   invites: PendingInvitation[];
+  /** Legacy role list — only used to resolve the "member" role id the outsider
+      e-mail invite still must send (schema requires role_id); no longer
+      surfaced as a picker. */
   roles: Role[];
   canInvite: boolean;
   canManageMembers: boolean;
+  /** Gates the "Assign member" button + dialog — matches the backend's
+      require_project_access(write=True) on PUT /assignments/<userId> (i.e.
+      project:update), distinct from canManageMembers (project:manage_users). */
+  canAssignMembers: boolean;
+  /** Caller's company-admin standing — only an admin may assign the manager
+      role (assignments.ts: "manager may only assign member"). */
+  callerIsCompanyAdmin: boolean;
   canEditIdentity: boolean;
   currentUserId: string;
 }
@@ -55,20 +67,30 @@ function memberInitials(member: ProjectMember): string {
 
 export function MembersTable({
   projectId,
+  companyId,
   members,
   invites,
   roles,
   canInvite,
   canManageMembers,
+  canAssignMembers,
+  callerIsCompanyAdmin,
   canEditIdentity,
   currentUserId,
 }: MembersTableProps) {
   const t = useTranslations("members");
   const router = useRouter();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<ProjectMember | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  // Only the "member" role has a stable id in every deployment (seeded);
+  // the invite dialog no longer lets the caller pick a role, it always
+  // invites as a plain member — the assign flow (insiders) is the one that
+  // sets manager vs member.
+  const memberRoleId = roles.find((r) => r.name.toLowerCase() === "member")?.id;
 
   const handleRevoke = async (invitationId: string) => {
     if (!confirm(t("revokeConfirm"))) return;
@@ -106,12 +128,31 @@ export function MembersTable({
       {/* Page header */}
       <div className="flex items-center justify-between pt-2">
         <h1 className="font-display text-[22px] font-semibold">{t("title")}</h1>
-        {canInvite && (
-          <Button size="sm" onClick={() => setDialogOpen(true)} className="gap-1.5">
-            <UserPlus aria-hidden="true" size={14} />
-            {t("invite.button")}
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {canAssignMembers && companyId && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setAssignDialogOpen(true)}
+              className="gap-1.5"
+            >
+              <Users aria-hidden="true" size={14} />
+              {t("assign.button")}
+            </Button>
+          )}
+          {canInvite && (
+            <Button
+              size="sm"
+              onClick={() => setInviteDialogOpen(true)}
+              className="gap-1.5"
+              disabled={!memberRoleId}
+              title={!memberRoleId ? t("invite.unavailable") : undefined}
+            >
+              <UserPlus aria-hidden="true" size={14} />
+              {t("invite.button")}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Members table */}
@@ -150,7 +191,6 @@ export function MembersTable({
                     className="mt-3 flex items-center justify-between border-t pt-2.5"
                     style={{ borderColor: "var(--line)" }}
                   >
-                    <span className="stamp">{member.role_name}</span>
                     <span className="num text-[12px]" style={{ color: "var(--muted)" }}>
                       {formatDate(member.joined_at)}
                     </span>
@@ -192,7 +232,6 @@ export function MembersTable({
                   <TableHead style={{ width: 40 }} />
                   <TableHead>{t("col.name")}</TableHead>
                   <TableHead>{t("col.email")}</TableHead>
-                  <TableHead>{t("col.role")}</TableHead>
                   <TableHead>{t("col.joined")}</TableHead>
                   {canManageMembers && (
                     <TableHead style={{ textAlign: "right" }}>
@@ -220,9 +259,6 @@ export function MembersTable({
                     </TableCell>
                     <TableCell style={{ color: "var(--muted)" }}>
                       {member.email}
-                    </TableCell>
-                    <TableCell>
-                      <span className="stamp">{member.role_name}</span>
                     </TableCell>
                     <TableCell className="num" style={{ color: "var(--muted)" }}>
                       {formatDate(member.joined_at)}
@@ -263,7 +299,7 @@ export function MembersTable({
         )}
       </section>
 
-      {/* Pending invitations table */}
+      {/* Pending invitations table (outsiders — no role picker, always "member") */}
       <section>
         <div className="label-cap mb-3">{t("tab.pending")}</div>
         {invites.length === 0 ? (
@@ -284,7 +320,6 @@ export function MembersTable({
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="truncate font-medium">{invite.email}</div>
-                        <span className="stamp mt-1.5 inline-flex">{invite.role_name}</span>
                       </div>
                       {canInvite && (
                         <Button
@@ -319,7 +354,6 @@ export function MembersTable({
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("col.email")}</TableHead>
-                  <TableHead>{t("col.role")}</TableHead>
                   <TableHead>{t("col.expires")}</TableHead>
                   <TableHead>{t("col.invitedBy")}</TableHead>
                   {canInvite && (
@@ -333,9 +367,6 @@ export function MembersTable({
                 {invites.map((invite) => (
                   <TableRow key={invite.id}>
                     <TableCell>{invite.email}</TableCell>
-                    <TableCell>
-                      <span className="stamp">{invite.role_name}</span>
-                    </TableCell>
                     <TableCell className="num" style={{ color: "var(--muted)" }}>
                       {(() => {
                         const days = expiresInDays(invite.expires_at);
@@ -368,12 +399,23 @@ export function MembersTable({
         )}
       </section>
 
-      {canInvite && (
+      {canInvite && memberRoleId && (
         <InviteMemberDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
+          open={inviteDialogOpen}
+          onOpenChange={setInviteDialogOpen}
           projectId={projectId}
-          roles={roles}
+          memberRoleId={memberRoleId}
+        />
+      )}
+
+      {canAssignMembers && companyId && (
+        <AssignMemberDialog
+          open={assignDialogOpen}
+          onOpenChange={setAssignDialogOpen}
+          projectId={projectId}
+          companyId={companyId}
+          excludeUserIds={members.map((m) => m.user_id)}
+          canAssignManager={callerIsCompanyAdmin}
         />
       )}
 
@@ -383,7 +425,6 @@ export function MembersTable({
           onOpenChange={(open) => !open && setEditing(null)}
           projectId={projectId}
           member={editing}
-          roles={roles}
           canEditIdentity={canEditIdentity}
         />
       )}

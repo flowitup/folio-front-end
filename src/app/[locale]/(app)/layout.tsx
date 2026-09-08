@@ -27,6 +27,14 @@ export default async function AppLayout({
     redirect(`/${locale}/login`);
   }
 
+  // Onboarding gate: a signed-in user with no company (fresh sign-up, or a
+  // company they detached from) must create or join one before using the app.
+  // Enforced in dashboard/layout.tsx rather than here — this shared layout
+  // also wraps /onboarding itself, and Server Component layouts have no
+  // pathname API to avoid a self-redirect loop without one (login always
+  // lands on /dashboard, so gating there covers "after sign-up/login"
+  // without touching the existing proxy.ts auth/locale middleware).
+
   // Per-company admin gate: only show the billing nav to users who can access
   // billing (superadmin or admin of at least one company).
   const canViewBilling = await hasBillingAccess();

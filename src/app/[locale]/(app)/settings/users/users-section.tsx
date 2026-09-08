@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
+import { isPlatformOps } from "@/lib/auth/permissions";
 import { BulkAddForm } from "./bulk-add-form";
 import type { Role } from "@/lib/api/roles";
 import type { ProjectSummary } from "@/lib/api/projects-server";
@@ -14,7 +15,7 @@ interface Props {
 export function UsersSection({ roles, projects }: Props) {
   const t = useTranslations("settings.users");
   const { user } = useAuth();
-  const isSuperadmin = (user?.permissions ?? []).includes("*:*");
+  const isSuperadmin = isPlatformOps(user?.permissions);
 
   if (!isSuperadmin) {
     return (

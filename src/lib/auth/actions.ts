@@ -6,6 +6,7 @@ import { env } from "@/lib/config/env";
 import type { LoginCredentials, LoginResponse, User, AcceptInvitePayload } from "./types";
 import { acceptInvite } from "@/lib/api/invitations";
 import { parseCookie } from "./cookie-parser";
+import { getCurrentUser } from "./session";
 
 /**
  * Forward Set-Cookie headers from the BE auth response onto the Next.js
@@ -83,6 +84,20 @@ export async function login(
       error: "An unexpected error occurred",
     };
   }
+}
+
+/**
+ * Fetch the canonical current-user record via `GET /auth/me`.
+ *
+ * `POST /auth/login` does not reliably populate `user.companies` (backend
+ * limitation — see `types.ts`), so callers that need an up-to-date company
+ * list right after login (or after any action that can change company
+ * membership) must re-fetch through this action rather than trust the
+ * login response's embedded user. Relies on the cookies already set by
+ * `login()` in the same request/response cycle.
+ */
+export async function getCurrentUserAction(): Promise<User | null> {
+  return getCurrentUser();
 }
 
 /**

@@ -18,7 +18,7 @@ import { formatEUR } from "@/lib/api/labor";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { AdjustRateDialog } from "@/components/labor/adjust-rate-dialog";
 import { workerColor, personInitials } from "@/lib/utils/person-color";
-import { DEFAULT_ROLE_I18N_KEYS } from "@/lib/utils/default-role-names";
+import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
 import { cn } from "@/lib/utils";
 
 /**
@@ -138,9 +138,10 @@ export function WorkerList({
                         style={{ backgroundColor: worker.role_color ?? undefined }}
                         aria-hidden="true"
                       />
-                      {worker.role_id && DEFAULT_ROLE_I18N_KEYS[worker.role_id]
-                        ? tRole(DEFAULT_ROLE_I18N_KEYS[worker.role_id])
-                        : worker.role_name}
+                      {(() => {
+                        const key = resolveDefaultRoleI18nKey({ id: worker.role_id, name: worker.role_name });
+                        return key ? tRole(key) : worker.role_name;
+                      })()}
                     </span>
                   )}
                 </div>

@@ -1,15 +1,20 @@
 /**
  * Tests for the member-edit server actions:
- * updateMemberRoleAction, updateUserProfileAction, removeMemberAction.
+ * updateUserProfileAction, removeMemberAction.
  *
  * Covers input validation (UUID / email), error status propagation, and the
- * happy path (delegates to the API wrapper + revalidates).
+ * happy path (delegates to the API wrapper + revalidates). Role changes moved
+ * to AssignMemberDialog (assignProjectMemberAction) — this file no longer
+ * covers updateMemberRoleAction (removed with the legacy role_id column).
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("@/lib/api/assignments", () => ({
+  unassignProjectMember: vi.fn(),
+}));
+
 vi.mock("@/lib/api/members", () => ({
-  updateMemberRole: vi.fn(),
   removeMember: vi.fn(),
 }));
 
@@ -34,20 +39,19 @@ vi.mock("@/lib/auth/session", () => ({
   }),
 }));
 
-const { updateMemberRoleAction, updateUserProfileAction, removeMemberAction } =
-  await import("../actions");
-const { updateMemberRole, removeMember } = await import("@/lib/api/members");
+const { updateUserProfileAction, removeMemberAction } = await import("../actions");
+const { unassignProjectMember } = await import("@/lib/api/assignments");
+const { removeMember } = await import("@/lib/api/members");
 const { updateUser } = await import("@/lib/api/admin");
 const { revalidatePath } = await import("next/cache");
 
-const mockUpdateRole = vi.mocked(updateMemberRole);
-const mockRemove = vi.mocked(removeMember);
+const mockUnassign = vi.mocked(unassignProjectMember);
+const mockRemoveMemberLegacy = vi.mocked(removeMember);
 const mockUpdateUser = vi.mocked(updateUser);
 const mockRevalidate = vi.mocked(revalidatePath);
 
 const PID = "22222222-2222-2222-2222-222222222222";
 const UID = "33333333-3333-3333-3333-333333333333";
-const RID = "44444444-4444-4444-4444-444444444444";
 
 function httpError(status: number): Error & { status: number } {
   return Object.assign(new Error(`HTTP ${status}`), { status });
@@ -55,25 +59,6 @@ function httpError(status: number): Error & { status: number } {
 
 beforeEach(() => {
   vi.clearAllMocks();
-});
-
-describe("updateMemberRoleAction", () => {
-  it("delegates to the API and revalidates on success", async () => {
-    mockUpdateRole.mockResolvedValue({ user_id: UID, role_id: RID, role_name: "manager" });
-    await updateMemberRoleAction(PID, UID, RID);
-    expect(mockUpdateRole).toHaveBeenCalledWith(PID, UID, RID);
-    expect(mockRevalidate).toHaveBeenCalled();
-  });
-
-  it("rejects non-UUID ids with 400 before any API call", async () => {
-    await expect(updateMemberRoleAction("nope", UID, RID)).rejects.toMatchObject({ status: 400 });
-    expect(mockUpdateRole).not.toHaveBeenCalled();
-  });
-
-  it("propagates the API error status (403)", async () => {
-    mockUpdateRole.mockRejectedValue(httpError(403));
-    await expect(updateMemberRoleAction(PID, UID, RID)).rejects.toMatchObject({ status: 403 });
-  });
 });
 
 describe("updateUserProfileAction", () => {
@@ -100,15 +85,37 @@ describe("updateUserProfileAction", () => {
 });
 
 describe("removeMemberAction", () => {
-  it("removes the member and revalidates", async () => {
-    mockRemove.mockResolvedValue(undefined);
+  it("unassigns the member and revalidates", async () => {
+    mockUnassign.mockResolvedValue(undefined);
     await removeMemberAction(PID, UID);
-    expect(mockRemove).toHaveBeenCalledWith(PID, UID);
+    expect(mockUnassign).toHaveBeenCalledWith(PID, UID);
+    expect(mockRemoveMemberLegacy).not.toHaveBeenCalled();
     expect(mockRevalidate).toHaveBeenCalled();
   });
 
   it("rejects non-UUID ids with 400", async () => {
     await expect(removeMemberAction(PID, "bad")).rejects.toMatchObject({ status: 400 });
-    expect(mockRemove).not.toHaveBeenCalled();
+    expect(mockUnassign).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the legacy /users/<id> removal on a 404 from the assignments endpoint", async () => {
+    mockUnassign.mockRejectedValue(httpError(404));
+    mockRemoveMemberLegacy.mockResolvedValue(undefined);
+    await removeMemberAction(PID, UID);
+    expect(mockUnassign).toHaveBeenCalledWith(PID, UID);
+    expect(mockRemoveMemberLegacy).toHaveBeenCalledWith(PID, UID);
+    expect(mockRevalidate).toHaveBeenCalled();
+  });
+
+  it("propagates a non-404 error from the assignments endpoint without falling back", async () => {
+    mockUnassign.mockRejectedValue(httpError(403));
+    await expect(removeMemberAction(PID, UID)).rejects.toMatchObject({ status: 403 });
+    expect(mockRemoveMemberLegacy).not.toHaveBeenCalled();
+  });
+
+  it("propagates an error from the legacy fallback itself", async () => {
+    mockUnassign.mockRejectedValue(httpError(404));
+    mockRemoveMemberLegacy.mockRejectedValue(httpError(500));
+    await expect(removeMemberAction(PID, UID)).rejects.toMatchObject({ status: 500 });
   });
 });

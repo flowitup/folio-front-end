@@ -116,6 +116,9 @@
     "creating": "Création...",
     "createProjectError": "Échec de la création du projet. Veuillez réessayer.",
     "createProjectNameRequired": "Le nom du projet est requis",
+    "createProjectCompanyLabel": "Entreprise",
+    "createProjectCompanyPlaceholder": "Choisir une entreprise",
+    "createProjectCompanyRequired": "Choisissez l'entreprise à laquelle appartient ce projet",
     "teamMembers": "Membres de l'équipe",
     "noMembers": "Aucun membre assigné",
     "addMember": "Ajouter",
@@ -204,7 +207,11 @@
     "invoicePrefixExample": "Aperçu : {prefix}-{year}-0001",
     "settingsSaved": "Paramètres enregistrés",
     "settingsSaveError": "Impossible d'enregistrer les paramètres. Veuillez réessayer.",
-    "invoicePrefixInvalid": "Le préfixe doit contenir uniquement des lettres majuscules et des chiffres (A-Z, 0-9), max 8 caractères."
+    "invoicePrefixInvalid": "Le préfixe doit contenir uniquement des lettres majuscules et des chiffres (A-Z, 0-9), max 8 caractères.",
+    "waitingForAssignment": {
+      "title": "En attente d'affectation",
+      "description": "L'administrateur de votre entreprise ne vous a pas encore ajouté à un chantier."
+    }
   },
   "settings": {
     "title": "Paramètres",
@@ -282,7 +289,10 @@
     "companies": {
       "backToSettings": "Retour aux paramètres"
     },
-    "paymentMethods": "Moyens de paiement"
+    "paymentMethods": "Moyens de paiement",
+    "company": {
+      "title": "Entreprise"
+    }
   },
   "paymentMethods": {
     "title": "Moyens de paiement",
@@ -858,6 +868,21 @@
       "confirmReject": "Refuser la journée de {worker} ? L'entrée est supprimée et l'ouvrier pourra la repointer.",
       "validateFailed": "Validation impossible. Réessayez.",
       "rejectFailed": "Refus impossible. Réessayez."
+    },
+    "roster": {
+      "title": "Présences du jour",
+      "today": "Aujourd'hui",
+      "loadError": "Impossible de charger les présences.",
+      "empty": "Personne de prévu ce jour-là.",
+      "statusPresent": "Présent",
+      "statusPending": "En attente",
+      "statusAbsent": "Absent",
+      "col": {
+        "name": "Nom",
+        "status": "Statut",
+        "hours": "Heures",
+        "dayType": "Type de journée"
+      }
     }
   },
   "acceptInvite": {
@@ -1025,6 +1050,11 @@
       "cancel": "Annuler",
       "validated": "Journée de {worker} validée",
       "rejected": "Journée de {worker} refusée"
+    },
+    "companyEvents": {
+      "title": "Nouveaux membres",
+      "joined": "{name} a rejoint votre entreprise",
+      "aria": "Aller dans Réglages pour assigner {name} à un projet"
     }
   },
   "billing": {
@@ -1088,7 +1118,8 @@
           "saveFailed": "Échec de l'enregistrement du modèle. Veuillez réessayer.",
           "deleteFailed": "Échec de la suppression du modèle. Veuillez réessayer."
         }
-      }
+      },
+      "companyLabel": "Entreprise"
     },
     "devis": {
       "list": {
@@ -1521,6 +1552,7 @@
     },
     "invite": {
       "button": "Inviter un membre",
+      "unavailable": "Les invitations sont temporairement indisponibles. Réessayez sous peu.",
       "dialogTitle": "Inviter un nouveau membre",
       "dialogDescription": "Ajoutez quelqu'un à ce projet. S'il a déjà un compte Folio, il sera ajouté directement. Sinon, nous lui enverrons un lien d'invitation valable 7 jours.",
       "emailLabel": "Adresse e-mail",
@@ -1566,6 +1598,19 @@
         "emailTaken": "Cet e-mail est déjà utilisé",
         "forbidden": "Vous n'avez pas la permission de faire cela"
       }
+    },
+    "assign": {
+      "button": "Assigner un membre",
+      "dialogTitle": "Assigner un membre",
+      "dialogDescription": "Assignez un membre existant de l'entreprise à ce projet en tant que manager ou membre.",
+      "personLabel": "Personne",
+      "personPlaceholder": "Rechercher par nom ou téléphone…",
+      "personEmpty": "Aucune personne correspondante",
+      "roleLabel": "Rôle",
+      "roleMember": "Membre",
+      "roleManager": "Manager",
+      "submit": "Assigner",
+      "successToast": "Membre assigné."
     }
   },
   "companies": {
@@ -1649,7 +1694,8 @@
           "roleMember": "Membre",
           "makeAdmin": "Promouvoir admin",
           "makeMember": "Rétrograder membre",
-          "roleUpdatedToast": "Rôle mis à jour"
+          "roleUpdatedToast": "Rôle mis à jour",
+          "roleManager": "Manager"
         },
         "delete": {
           "title": "Supprimer la société",
@@ -2058,5 +2104,117 @@
     "compareExpandRow": "Afficher les notes de {name}",
     "compareShopsEyebrow": "Comparer les magasins",
     "compareGapExplanationNoPct": "{dearer} coûte {gap} de plus par unité — {lineGap} sur cette ligne de {qty}. {cheaper} est moins cher."
+  },
+  "onboarding": {
+    "title": "Bienvenue sur Folio",
+    "subtitle": "Créez votre entreprise ou rejoignez-en une avec un code pour commencer.",
+    "createCompanyCta": "Créer une entreprise",
+    "createCompanyHint": "Démarrez de zéro — vous serez l'administrateur.",
+    "joinCompanyCta": "Saisir un code d'adhésion",
+    "joinCompanyHint": "Votre administrateur peut vous donner un code à 8 caractères.",
+    "back": "Retour",
+    "create": {
+      "legalNameLabel": "Nom de l'entreprise",
+      "addressLabel": "Adresse",
+      "submit": "Créer l'entreprise",
+      "successToast": "Entreprise créée."
+    },
+    "join": {
+      "codeLabel": "Code d'adhésion",
+      "codePlaceholder": "ex. AB12CD34",
+      "submit": "Rejoindre",
+      "successToast": "Vous avez rejoint {company}."
+    }
+  },
+  "companySettings": {
+    "notAdmin": "Vous n'êtes administrateur d'aucune entreprise.",
+    "companyPicker": {
+      "label": "Entreprise"
+    },
+    "members": {
+      "title": "Membres",
+      "description": "Gérez les rôles et les accès des personnes de votre entreprise.",
+      "importFromCompany": "Importer depuis une entreprise",
+      "addByPhone": "Ajouter par téléphone",
+      "empty": "Aucun membre pour l'instant.",
+      "col": {
+        "nameEmail": "Nom / E-mail",
+        "role": "Rôle"
+      },
+      "roleAdmin": "Admin",
+      "roleManager": "Manager",
+      "roleMember": "Membre",
+      "customPermissions": "Permissions personnalisées",
+      "roleUpdatedToast": "Rôle mis à jour."
+    },
+    "addByPhone": {
+      "dialogTitle": "Ajouter un membre par téléphone",
+      "dialogDescription": "Intégrez un ouvrier ou un manager avec son numéro de téléphone.",
+      "phoneLabel": "Numéro de téléphone",
+      "nameLabel": "Nom (facultatif)",
+      "roleLabel": "Rôle",
+      "roleMember": "Membre",
+      "roleManager": "Manager",
+      "candidatesHint": "Plusieurs personnes correspondent à ce numéro — choisissez la bonne.",
+      "candidatesPlaceholder": "Sélectionner une personne",
+      "cancel": "Annuler",
+      "submit": "Ajouter",
+      "addedToast": "{name} ajouté(e)."
+    },
+    "import": {
+      "dialogTitle": "Importer des membres",
+      "dialogDescription": "Copiez des profils depuis une autre entreprise que vous administrez.",
+      "sourcePlaceholder": "Entreprise source",
+      "empty": "Aucun membre à importer.",
+      "cancel": "Annuler",
+      "submit": "{count, plural, =0 {Importer} one {Importer # membre} other {Importer # membres}}",
+      "importedToast": "{count, plural, =0 {Aucun membre importé} one {# membre importé} other {# membres importés}}"
+    },
+    "grants": {
+      "dialogTitle": "Permissions personnalisées pour {name}",
+      "dialogDescription": "Accordez ou refusez des permissions spécifiques, pour toute l'entreprise ou un seul projet. Un refus l'emporte toujours.",
+      "empty": "Aucune permission personnalisée définie.",
+      "effectGrant": "Accorder",
+      "effectDeny": "Refuser",
+      "scopeCompanyWide": "Toute l'entreprise",
+      "permissionPlaceholder": "Sélectionner une permission",
+      "add": "Ajouter",
+      "remove": "Retirer",
+      "savedToast": "Enregistré.",
+      "permission": {
+        "project_update": "Modifier le projet",
+        "project_invite": "Inviter des membres",
+        "project_manage_users": "Gérer les membres",
+        "project_manage_labor": "Gérer la main-d'œuvre",
+        "project_manage_invoices": "Gérer les factures",
+        "project_log_own_attendance": "Pointer ses propres présences",
+        "bibliotheque_manage": "Gérer la bibliothèque",
+        "project_view_pay": "Voir la paie"
+      }
+    },
+    "directory": {
+      "title": "Annuaire",
+      "description": "Toutes les personnes liées à votre entreprise, avec ou sans compte.",
+      "empty": "Personne dans l'annuaire pour l'instant.",
+      "col": {
+        "name": "Nom",
+        "phone": "Téléphone",
+        "status": "Statut",
+        "assignedProjects": "Projets assignés"
+      },
+      "pending": "En attente",
+      "linked": "Lié"
+    },
+    "errors": {
+      "unauthorized": "Vous devez être connecté.",
+      "validation": "Certaines informations sont invalides.",
+      "forbidden": "Vous n'avez pas la permission de faire cela.",
+      "notFound": "Introuvable.",
+      "conflict": "Cela entre en conflit avec des données existantes.",
+      "rateLimited": "Trop de tentatives. Réessayez plus tard.",
+      "generic": "Une erreur est survenue. Veuillez réessayer.",
+      "multipleCandidates": "Plusieurs personnes correspondent à ce numéro.",
+      "phoneAlreadyInCompany": "Ce numéro de téléphone est déjà dans votre entreprise."
+    }
   }
 }

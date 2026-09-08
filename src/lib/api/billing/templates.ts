@@ -44,15 +44,19 @@ function baseUrl(): string {
 // ---------------------------------------------------------------------------
 
 /**
- * List all billing document templates for the current user.
- * Optionally filter by kind.
+ * List billing document templates. Optionally filter by kind and scope to a
+ * specific company (the caller must administer it, or be platform ops);
+ * without companyId, the backend falls back to the caller's primary admin
+ * company — pass it explicitly to let an admin of multiple companies switch.
  */
 export async function fetchBillingTemplates(
-  kind?: BillingDocumentKind
+  kind?: BillingDocumentKind,
+  companyId?: string
 ): Promise<BillingDocumentTemplate[]> {
   const authHeaders = await sessionAuthHeader();
   const params = new URLSearchParams();
   if (kind) params.set("kind", kind);
+  if (companyId) params.set("company_id", companyId);
   const query = params.toString();
 
   let response: Response;

@@ -44,7 +44,7 @@ import {
 } from "@/lib/api/companies/join-code";
 import { normalizeJoinCode } from "@/lib/companies/join-code";
 import { getSession } from "@/lib/auth/session";
-import type { Company, MyCompany, CompanyInviteTokenGenerated, AttachedUser } from "@/types/companies";
+import type { Company, MyCompany, CompanyInviteTokenGenerated, AttachedUser, CompanyRole } from "@/types/companies";
 import type { CreateCompanyPayload, UpdateCompanyPayload } from "@/lib/api/companies/companies";
 
 // ---------------------------------------------------------------------------
@@ -366,12 +366,12 @@ export async function bootAttachedUserAction(
 export async function setMemberRoleAction(
   companyId: string,
   userId: string,
-  role: "admin" | "member"
+  role: CompanyRole
 ): Promise<ActionResult<void>> {
   const auth = await requireSession();
   if (!auth.ok) return auth;
   if (!isUuid(companyId) || !isUuid(userId)) return invalid();
-  if (role !== "admin" && role !== "member") return invalid();
+  if (role !== "admin" && role !== "manager" && role !== "member") return invalid();
   try {
     await setMemberRole(companyId, userId, role);
     return { ok: true, data: undefined };

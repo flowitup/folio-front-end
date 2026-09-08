@@ -32,17 +32,35 @@ export interface AttendancePending {
   submitted_at: string;
 }
 
+/**
+ * A member joined a company the caller admins without being assigned to any
+ * project yet — surfaced to admins only (Phase 2 onboarding, `list_new_members_usecase`).
+ * Deliberately excluded from the badge `count` (no client has shipped UI for
+ * this feed before now — bumping the badge would be a silent behavior change
+ * for every existing admin session).
+ */
+export interface CompanyEvent {
+  user_id: string;
+  display_name: string;
+  company_id: string;
+  attached_at: string;
+}
+
 export interface NotificationsListResult {
   items: DueNotification[];
   /** Absent on older backends — treat as empty. */
   attendance_pending?: AttendancePending[];
+  /** Absent on older backends — treat as empty. Admins only. */
+  company_events?: CompanyEvent[];
   count: number;
 }
 
-/** What the bell renders: note reminders plus attendance to validate. */
+/** What the bell renders: note reminders, attendance to validate, and company events. */
 export interface NotificationsFeed {
   items: DueNotification[];
   attendance: AttendancePending[];
+  /** Optional so existing feed literals (tests, older callers) stay valid — treat as empty. */
+  companyEvents?: CompanyEvent[];
 }
 
 // ---- Error helper ----

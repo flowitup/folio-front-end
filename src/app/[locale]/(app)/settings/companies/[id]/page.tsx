@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { fetchCompany, fetchAttachedUsers } from "@/lib/api/companies";
+import { isPlatformOps } from "@/lib/auth/permissions";
 import { AdminCompanyManagePage } from "@/components/companies/admin-company-manage-page";
 
 interface Props {
@@ -22,7 +23,7 @@ export default async function CompanyManagePage({ params }: Props) {
 
   // Permission gate — non-admins see /settings
   const session = await getSession();
-  const isAdmin = session?.user.permissions.includes("*:*") ?? false;
+  const isAdmin = isPlatformOps(session?.user.permissions);
   if (!isAdmin) {
     redirect(`/${locale}/settings`);
   }

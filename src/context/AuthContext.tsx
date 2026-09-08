@@ -13,6 +13,7 @@ import type { User, AuthState, LoginCredentials } from "@/lib/auth/types";
 import {
   login as loginAction,
   logout as logoutAction,
+  getCurrentUserAction,
 } from "@/lib/auth/actions";
 
 interface AuthContextType extends AuthState {
@@ -55,13 +56,37 @@ export function AuthProvider({
       const result = await loginAction(credentials);
 
       if (result.success && result.user) {
+        // POST /auth/login does not reliably populate `user.companies`
+        // (see types.ts). Re-fetch via /auth/me (same cookies, already
+        // forwarded by loginAction) so gates that read companies right
+        // after login (onboarding, "New project", Settings › Company)
+        // see the real list instead of an empty one. Fall back to the
+        // login response's embedded user — merging in any `companies` it
+        // did carry — if the re-fetch itself fails.
+        const freshUser = await getCurrentUserAction();
+        const user = freshUser ?? {
+          ...result.user,
+          companies: result.user.companies ?? [],
+        };
         setState({
-          user: result.user,
+          user,
           isAuthenticated: true,
           isLoading: false,
         });
+        // A trailing router.refresh() here used to silently strand the user
+        // on /login: push() starts an async RSC fetch for /dashboard without
+        // blocking, and calling refresh() in the same tick issues a second
+        // router action before push's navigation has committed — the router
+        // ends up refreshing the CURRENT route (still /login at dispatch
+        // time) instead of landing on the pushed one, so the URL never
+        // changes even though the /dashboard fetch itself succeeded (caught
+        // live via Playwright: window.location.href stayed on /login with
+        // no console error). Confirmed unnecessary besides that: /dashboard
+        // is never in the client Router Cache at this point (login always
+        // starts from /login, under the same not-yet-visited route), so
+        // push() alone already fetches every layout server-side fresh,
+        // including the session-reading root layout.
         router.push(`/${locale}/dashboard`);
-        router.refresh();
         return { success: true };
       }
 

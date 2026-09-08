@@ -41,6 +41,7 @@ describe("NoteCard — read view", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     expect(screen.getByText("Test Note Title")).toBeDefined();
@@ -56,6 +57,7 @@ describe("NoteCard — read view", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     expect(screen.getByText("notes.categories.payment")).toBeDefined();
@@ -71,6 +73,7 @@ describe("NoteCard — read view", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     expect(screen.getByText("Some body text")).toBeDefined();
@@ -86,6 +89,7 @@ describe("NoteCard — read view", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     expect(screen.queryByRole("paragraph")).toBeNull();
@@ -101,6 +105,7 @@ describe("NoteCard — read view", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     expect(screen.getByText(/notes\.addedLabel/)).toBeDefined();
@@ -117,6 +122,7 @@ describe("NoteCard — read view", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     const article = screen.getByRole("article");
@@ -134,6 +140,7 @@ describe("NoteCard — read view", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     expect(screen.getByRole("button", { name: /notes\.actions\.edit/i })).toBeDefined();
@@ -152,6 +159,7 @@ describe("NoteCard — read view", () => {
         onCancel={vi.fn()}
         onDelete={onDelete}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     fireEvent.click(screen.getByRole("button", { name: /notes\.actions\.delete/i }));
@@ -172,6 +180,7 @@ describe("NoteCard — done checkbox", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     expect(screen.getByRole("button", { name: /notes\.markDone/i })).toBeDefined();
@@ -187,6 +196,7 @@ describe("NoteCard — done checkbox", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     expect(screen.getByRole("button", { name: /notes\.markOpen/i })).toBeDefined();
@@ -204,6 +214,7 @@ describe("NoteCard — done checkbox", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={onToggleDone}
+        canEdit={true}
       />
     );
     fireEvent.click(screen.getByRole("button", { name: /notes\.markDone/i }));
@@ -221,6 +232,7 @@ describe("NoteCard — done checkbox", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     fireEvent.click(screen.getByRole("button", { name: /notes\.markDone/i }));
@@ -237,6 +249,7 @@ describe("NoteCard — done checkbox", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     const article = screen.getByRole("article");
@@ -253,6 +266,7 @@ describe("NoteCard — done checkbox", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     const article = screen.getByRole("article");
@@ -273,6 +287,7 @@ describe("NoteCard — edit mode", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     expect(screen.getByPlaceholderText("notes.editor.placeholderTitle")).toBeDefined();
@@ -288,6 +303,7 @@ describe("NoteCard — edit mode", () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onToggleDone={vi.fn()}
+        canEdit={true}
       />
     );
     expect(screen.queryByRole("article")).toBeNull();

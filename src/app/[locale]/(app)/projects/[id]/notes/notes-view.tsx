@@ -21,9 +21,15 @@ import type { ActiveCat } from "./filter-chips";
 interface NotesViewProps {
   projectId: string;
   initialNotes: Note[];
+  /**
+   * Write rights on the journal (effective `project:update`). A member reads
+   * the wall but gets no capture box and no per-card actions — every note
+   * write is admin/manager-only on the backend.
+   */
+  canEdit: boolean;
 }
 
-export function NotesView({ projectId, initialNotes }: NotesViewProps) {
+export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) {
   const t = useTranslations("notes");
   const { notes, editingId, setEditingId, handleAdd, handleSave, handleDelete, handleToggleDone } =
     useNotesState(projectId, initialNotes);
@@ -51,7 +57,7 @@ export function NotesView({ projectId, initialNotes }: NotesViewProps) {
 
   return (
     <div className="notes-wrap wide">
-      <QuickAdd onAdd={(p) => void handleAdd(p)} disabled={false} />
+      {canEdit && <QuickAdd onAdd={(p) => void handleAdd(p)} disabled={false} />}
 
       {!isEmpty && (
         <NotesToolbar
@@ -100,6 +106,7 @@ export function NotesView({ projectId, initialNotes }: NotesViewProps) {
                   onCancel={() => setEditingId(null)}
                   onDelete={handleDelete}
                   onToggleDone={handleToggleDone}
+                  canEdit={canEdit}
                 />
               ))}
             </div>

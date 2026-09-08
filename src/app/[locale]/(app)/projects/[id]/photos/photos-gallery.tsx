@@ -14,9 +14,8 @@ interface Props {
   projectId: string;
   initialPhotos: ProjectPhoto[];
   initialTotal: number;
+  /** Write rights on the project's photos (effective `project:update`). */
   canEdit: boolean;
-  /** Server-resolved id of the authenticated user; used for per-photo edit rights. */
-  currentUserId: string;
 }
 
 /**
@@ -29,7 +28,6 @@ export function PhotosGallery({
   initialPhotos,
   initialTotal,
   canEdit,
-  currentUserId,
 }: Props) {
   const t = useTranslations("photos");
   const format = useFormatter();
@@ -215,7 +213,6 @@ export function PhotosGallery({
         projectId={projectId}
         photo={selectedPhoto}
         canEdit={canEdit}
-        currentUserId={currentUserId}
         onClose={() => setSelectedPhoto(null)}
         onDeleted={handleDeleted}
         onUpdated={handleUpdated}

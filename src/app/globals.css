@@ -800,6 +800,8 @@ body {
   transition: box-shadow var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
 }
 .note-card:hover { box-shadow: var(--shadow-task); transform: translateY(-1px); border-color: var(--line-2); }
+/* Read-only wall (caller without write rights): nothing to click into. */
+.note-card.read-only { cursor: default; }
 .nc-head {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px; margin-bottom: 9px; min-height: 22px;

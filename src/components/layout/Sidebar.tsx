@@ -24,7 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
-import { canCreateProject } from "@/lib/auth/permissions";
+import { can, canCreateProject } from "@/lib/auth/permissions";
 import { FolioLogo } from "@/components/folio-logo";
 import {
   DropdownMenu,
@@ -63,6 +63,14 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
   } = useProject();
   const { user } = useAuth();
   const canShowNewProject = canCreateProject(user?.permissions, user?.companies);
+  // Documents are admin/manager-only: the backend requires effective
+  // project:update on every documents route, reads included, so a company
+  // member must not even see the entry point.
+  const canSeeDocuments = can(
+    "project:update",
+    user?.permissions,
+    selectedProject?.my_permissions
+  );
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
   const projectNav = [
@@ -77,7 +85,9 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
           { key: "chiffrage", href: `/projects/${selectedProjectId}/chiffrage`, icon: Calculator },
           { key: "members", href: `/projects/${selectedProjectId}/members`, icon: Users },
           { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
-          { key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files },
+          ...(canSeeDocuments
+            ? [{ key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files }]
+            : []),
           { key: "analyses", href: `/projects/${selectedProjectId}/analyses`, icon: FileSearch },
         ]
       : []),

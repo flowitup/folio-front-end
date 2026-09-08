@@ -23,6 +23,8 @@ interface NoteCardProps {
   onCancel: () => void;
   onDelete: (noteId: string) => void;
   onToggleDone: (noteId: string) => void;
+  /** Write rights: without them the card is read-only (no edit/delete/done). */
+  canEdit: boolean;
 }
 
 /** Format created_at ISO for the "Added …" footer label */
@@ -45,6 +47,7 @@ export function NoteCard({
   onCancel,
   onDelete,
   onToggleDone,
+  canEdit,
 }: NoteCardProps) {
   const t = useTranslations("notes");
   const [isSaving, setIsSaving] = useState(false);
@@ -52,7 +55,7 @@ export function NoteCard({
   const cat = CATEGORY_MAP[note.category] ?? CATEGORY_MAP.general;
   const isDone = note.status === "done";
 
-  if (isEditing) {
+  if (isEditing && canEdit) {
     return (
       <div className="grid-item">
         <NoteEditor
@@ -76,42 +79,54 @@ export function NoteCard({
   return (
     <div className="grid-item">
       <article
-        className={"note-card" + (isDone ? " done" : "")}
+        className={"note-card" + (isDone ? " done" : "") + (canEdit ? "" : " read-only")}
         onClick={(e) => {
+          if (!canEdit) return;
           if (!(e.target as Element).closest(".nc-actions")) onStartEdit();
         }}
       >
         <div className="nc-head">
-          <button
-            type="button"
-            className={"check" + (isDone ? " checked" : "")}
-            aria-label={isDone ? t("markOpen") : t("markDone")}
-            onClick={(e) => { e.stopPropagation(); onToggleDone(note.id); }}
-          >
-            {isDone && <Check size={12} strokeWidth={3} />}
-          </button>
+          {canEdit ? (
+            <button
+              type="button"
+              className={"check" + (isDone ? " checked" : "")}
+              aria-label={isDone ? t("markOpen") : t("markDone")}
+              onClick={(e) => { e.stopPropagation(); onToggleDone(note.id); }}
+            >
+              {isDone && <Check size={12} strokeWidth={3} />}
+            </button>
+          ) : (
+            <span
+              className={"check" + (isDone ? " checked" : "")}
+              aria-hidden
+            >
+              {isDone && <Check size={12} strokeWidth={3} />}
+            </span>
+          )}
           <span className="nc-tag">
             <span className="cat-dot" style={{ background: cat.dotColor }} />
             {t(`categories.${cat.id}`)}
           </span>
-          <div className="nc-actions">
-            <button
-              type="button"
-              className="icon-btn"
-              onClick={onStartEdit}
-              aria-label={t("actions.edit")}
-            >
-              <Pencil size={14} />
-            </button>
-            <button
-              type="button"
-              className="icon-btn danger"
-              onClick={(e) => { e.stopPropagation(); onDelete(note.id); }}
-              aria-label={t("actions.delete")}
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
+          {canEdit && (
+            <div className="nc-actions">
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={onStartEdit}
+                aria-label={t("actions.edit")}
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                type="button"
+                className="icon-btn danger"
+                onClick={(e) => { e.stopPropagation(); onDelete(note.id); }}
+                aria-label={t("actions.delete")}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          )}
         </div>
 
         <h3 className="nc-title font-display">{note.title}</h3>

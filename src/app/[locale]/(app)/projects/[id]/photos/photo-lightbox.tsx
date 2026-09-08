@@ -31,10 +31,13 @@ import { Label } from "@/components/ui/label";
 interface Props {
   projectId: string;
   photo: ProjectPhoto | null;
-  /** True when the viewer is an admin or project owner (all-photo edit rights). */
+  /**
+   * Write rights on the project's photos (effective `project:update`). There is
+   * no per-uploader bypass: the backend rejects every photo write without that
+   * permission, so a member never gets edit/delete controls on their own
+   * uploads either.
+   */
   canEdit: boolean;
-  /** Server-resolved id of the authenticated user; grants edit rights on own photos. */
-  currentUserId: string;
   onClose: () => void;
   onDeleted: (photoId: string) => void;
   onUpdated: (photo: ProjectPhoto) => void;
@@ -48,7 +51,6 @@ export function PhotoLightbox({
   projectId,
   photo,
   canEdit,
-  currentUserId,
   onClose,
   onDeleted,
   onUpdated,
@@ -184,9 +186,6 @@ export function PhotoLightbox({
 
   const open = photo !== null;
 
-  // Per-photo edit right: admin/owner (canEdit) OR the uploader of this photo.
-  const canEditThisPhoto = canEdit || (photo !== null && photo.uploaderId === currentUserId);
-
   // Format date for display
   const displayDate = photo?.capturedAt
     ? new Date(photo.capturedAt).toLocaleDateString(undefined, {
@@ -242,7 +241,7 @@ export function PhotoLightbox({
                   <p className="text-xs text-muted-foreground">{displayDate}</p>
                 )}
                 <div className="flex gap-2">
-                  {canEditThisPhoto && (
+                  {canEdit && (
                     <Button
                       type="button"
                       variant="outline"
@@ -252,7 +251,7 @@ export function PhotoLightbox({
                       {t("edit")}
                     </Button>
                   )}
-                  {canEditThisPhoto && (
+                  {canEdit && (
                     <Button
                       type="button"
                       variant="destructive"

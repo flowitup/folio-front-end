@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/auth/permissions";
 
 interface MobileMoreSheetProps {
   open: boolean;
@@ -28,7 +30,15 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
   const locale = useLocale();
   const t = useTranslations("navigation");
   const tBilling = useTranslations("sidebar.billing");
-  const { selectedProjectId } = useProject();
+  const { selectedProjectId, selectedProject } = useProject();
+  const { user } = useAuth();
+  // Mirror of the desktop sidebar gate: documents need effective
+  // project:update, so members never get the entry point.
+  const canSeeDocuments = can(
+    "project:update",
+    user?.permissions,
+    selectedProject?.my_permissions
+  );
   const pathWithoutLocale =
     pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
@@ -37,7 +47,9 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
         { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
         { key: "members", href: `/projects/${selectedProjectId}/members`, icon: Users },
         { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
-        { key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files },
+        ...(canSeeDocuments
+          ? [{ key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files }]
+          : []),
         { key: "analyses", href: `/projects/${selectedProjectId}/analyses`, icon: FileSearch },
       ]
     : [];

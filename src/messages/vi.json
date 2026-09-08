@@ -1448,6 +1448,10 @@
       "success": "Đã đổi tên tài liệu",
       "errorForbidden": "Chỉ người tải lên hoặc quản trị viên dự án mới có thể đổi tên tài liệu này",
       "errorServer": "Đổi tên thất bại"
+    },
+    "restricted": {
+      "title": "Vai trò của bạn không truy cập được tài liệu",
+      "body": "Chỉ quản trị viên và quản lý dự án mới mở được thư viện tài liệu. Hãy hỏi quản trị viên nếu bạn cần một tệp."
     }
   },
   "analyses": {

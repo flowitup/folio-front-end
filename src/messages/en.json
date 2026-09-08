@@ -116,6 +116,9 @@
     "creating": "Creating...",
     "createProjectError": "Failed to create project. Please try again.",
     "createProjectNameRequired": "Project name is required",
+    "createProjectCompanyLabel": "Company",
+    "createProjectCompanyPlaceholder": "Choose a company",
+    "createProjectCompanyRequired": "Choose which company this project belongs to",
     "teamMembers": "Team members",
     "noMembers": "No members assigned yet",
     "addMember": "Add",
@@ -204,7 +207,11 @@
     "invoicePrefixExample": "Preview: {prefix}-{year}-0001",
     "settingsSaved": "Settings saved",
     "settingsSaveError": "Could not save settings. Please try again.",
-    "invoicePrefixInvalid": "Prefix must contain only uppercase letters and digits (A-Z, 0-9), max 8 characters."
+    "invoicePrefixInvalid": "Prefix must contain only uppercase letters and digits (A-Z, 0-9), max 8 characters.",
+    "waitingForAssignment": {
+      "title": "Waiting to be assigned",
+      "description": "Your company admin hasn't added you to a construction site yet."
+    }
   },
   "settings": {
     "title": "Settings",
@@ -282,7 +289,10 @@
     "companies": {
       "backToSettings": "Back to Settings"
     },
-    "paymentMethods": "Payment methods"
+    "paymentMethods": "Payment methods",
+    "company": {
+      "title": "Company"
+    }
   },
   "paymentMethods": {
     "title": "Payment methods",
@@ -858,6 +868,21 @@
       "confirmReject": "Reject {worker}'s day? The entry is removed and the worker can log it again.",
       "validateFailed": "Couldn't validate. Try again.",
       "rejectFailed": "Couldn't reject. Try again."
+    },
+    "roster": {
+      "title": "Day roster",
+      "today": "Today",
+      "loadError": "Couldn't load the roster.",
+      "empty": "No one scheduled for this day.",
+      "statusPresent": "Present",
+      "statusPending": "Pending",
+      "statusAbsent": "Absent",
+      "col": {
+        "name": "Name",
+        "status": "Status",
+        "hours": "Hours",
+        "dayType": "Day type"
+      }
     }
   },
   "acceptInvite": {
@@ -1025,6 +1050,11 @@
       "cancel": "Cancel",
       "validated": "{worker}'s day validated",
       "rejected": "{worker}'s day rejected"
+    },
+    "companyEvents": {
+      "title": "New members",
+      "joined": "{name} joined your company",
+      "aria": "Go to Settings to assign {name} to a project"
     }
   },
   "billing": {
@@ -1088,7 +1118,8 @@
           "saveFailed": "Failed to save template. Please try again.",
           "deleteFailed": "Failed to delete template. Please try again."
         }
-      }
+      },
+      "companyLabel": "Company"
     },
     "devis": {
       "list": {
@@ -1521,6 +1552,7 @@
     },
     "invite": {
       "button": "Invite member",
+      "unavailable": "Invites are temporarily unavailable. Please try again shortly.",
       "dialogTitle": "Invite a new member",
       "dialogDescription": "Add someone to this project. If they already have a Folio account, they'll be added directly. Otherwise we'll email a 7-day invite link.",
       "emailLabel": "Email address",
@@ -1566,6 +1598,19 @@
         "emailTaken": "That email is already in use",
         "forbidden": "You don't have permission to do that"
       }
+    },
+    "assign": {
+      "button": "Assign member",
+      "dialogTitle": "Assign a member",
+      "dialogDescription": "Assign an existing company member to this project as manager or member.",
+      "personLabel": "Person",
+      "personPlaceholder": "Search by name or phone…",
+      "personEmpty": "No matching person",
+      "roleLabel": "Role",
+      "roleMember": "Member",
+      "roleManager": "Manager",
+      "submit": "Assign",
+      "successToast": "Member assigned."
     }
   },
   "companies": {
@@ -1649,7 +1694,8 @@
           "roleMember": "Member",
           "makeAdmin": "Make admin",
           "makeMember": "Make member",
-          "roleUpdatedToast": "Role updated"
+          "roleUpdatedToast": "Role updated",
+          "roleManager": "Manager"
         },
         "delete": {
           "title": "Delete company",
@@ -2058,5 +2104,117 @@
     "compareExpandRow": "Show notes for {name}",
     "compareShopsEyebrow": "Compare shops",
     "compareGapExplanationNoPct": "{dearer} is {gap} more per unit — {lineGap} on this line of {qty}. {cheaper} is cheaper."
+  },
+  "onboarding": {
+    "title": "Welcome to Folio",
+    "subtitle": "Create your company or join one with a code to get started.",
+    "createCompanyCta": "Create a company",
+    "createCompanyHint": "Start fresh — you'll be the admin.",
+    "joinCompanyCta": "Enter a join code",
+    "joinCompanyHint": "Your admin can give you an 8-character code.",
+    "back": "Back",
+    "create": {
+      "legalNameLabel": "Company name",
+      "addressLabel": "Address",
+      "submit": "Create company",
+      "successToast": "Company created."
+    },
+    "join": {
+      "codeLabel": "Join code",
+      "codePlaceholder": "e.g. AB12CD34",
+      "submit": "Join",
+      "successToast": "Joined {company}."
+    }
+  },
+  "companySettings": {
+    "notAdmin": "You are not an admin of any company.",
+    "companyPicker": {
+      "label": "Company"
+    },
+    "members": {
+      "title": "Members",
+      "description": "Manage roles and access for people in your company.",
+      "importFromCompany": "Import from company",
+      "addByPhone": "Add by phone",
+      "empty": "No members yet.",
+      "col": {
+        "nameEmail": "Name / Email",
+        "role": "Role"
+      },
+      "roleAdmin": "Admin",
+      "roleManager": "Manager",
+      "roleMember": "Member",
+      "customPermissions": "Custom permissions",
+      "roleUpdatedToast": "Role updated."
+    },
+    "addByPhone": {
+      "dialogTitle": "Add member by phone",
+      "dialogDescription": "Onboard a worker or manager by their phone number.",
+      "phoneLabel": "Phone number",
+      "nameLabel": "Name (optional)",
+      "roleLabel": "Role",
+      "roleMember": "Member",
+      "roleManager": "Manager",
+      "candidatesHint": "Several people match this phone number — pick the right one.",
+      "candidatesPlaceholder": "Select a person",
+      "cancel": "Cancel",
+      "submit": "Add",
+      "addedToast": "{name} added."
+    },
+    "import": {
+      "dialogTitle": "Import members",
+      "dialogDescription": "Copy profiles from another company you admin into this one.",
+      "sourcePlaceholder": "Source company",
+      "empty": "No members to import.",
+      "cancel": "Cancel",
+      "submit": "{count, plural, =0 {Import} one {Import # member} other {Import # members}}",
+      "importedToast": "{count, plural, =0 {No members imported} one {# member imported} other {# members imported}}"
+    },
+    "grants": {
+      "dialogTitle": "Custom permissions for {name}",
+      "dialogDescription": "Grant or deny specific permissions, company-wide or for a single project. A deny always wins.",
+      "empty": "No custom permissions set.",
+      "effectGrant": "Grant",
+      "effectDeny": "Deny",
+      "scopeCompanyWide": "Company-wide",
+      "permissionPlaceholder": "Select a permission",
+      "add": "Add",
+      "remove": "Remove",
+      "savedToast": "Saved.",
+      "permission": {
+        "project_update": "Edit project",
+        "project_invite": "Invite members",
+        "project_manage_users": "Manage members",
+        "project_manage_labor": "Manage labor",
+        "project_manage_invoices": "Manage invoices",
+        "project_log_own_attendance": "Log own attendance",
+        "bibliotheque_manage": "Manage library",
+        "project_view_pay": "View pay"
+      }
+    },
+    "directory": {
+      "title": "Directory",
+      "description": "Everyone linked to your company, whether or not they have an account yet.",
+      "empty": "No one in the directory yet.",
+      "col": {
+        "name": "Name",
+        "phone": "Phone",
+        "status": "Status",
+        "assignedProjects": "Assigned projects"
+      },
+      "pending": "Pending",
+      "linked": "Linked"
+    },
+    "errors": {
+      "unauthorized": "You need to be signed in.",
+      "validation": "Some information is invalid.",
+      "forbidden": "You don't have permission to do that.",
+      "notFound": "Not found.",
+      "conflict": "This conflicts with existing data.",
+      "rateLimited": "Too many attempts. Try again later.",
+      "generic": "Something went wrong. Please try again.",
+      "multipleCandidates": "Several people match this phone number.",
+      "phoneAlreadyInCompany": "This phone number is already in your company."
+    }
   }
 }

@@ -22,7 +22,9 @@ import {
   FileSearch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
+import { canCreateProject } from "@/lib/auth/permissions";
 import { FolioLogo } from "@/components/folio-logo";
 import {
   DropdownMenu,
@@ -59,6 +61,8 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
     selectedProject,
     selectProject,
   } = useProject();
+  const { user } = useAuth();
+  const canShowNewProject = canCreateProject(user?.permissions, user?.companies);
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
   const projectNav = [
@@ -198,10 +202,12 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
                 <FolderOpen size={14} />
                 {tProjects("title")}
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => router.push("/projects?new=1")}>
-                <Plus size={14} />
-                {tProjects("newProject")}
-              </DropdownMenuItem>
+              {canShowNewProject && (
+                <DropdownMenuItem onSelect={() => router.push("/projects?new=1")}>
+                  <Plus size={14} />
+                  {tProjects("newProject")}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

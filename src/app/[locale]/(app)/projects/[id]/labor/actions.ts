@@ -5,6 +5,8 @@ import {
   fetchLaborRoles,
   createLaborRole,
 } from "@/lib/api/labor-roles";
+import { fetchDayRoster } from "@/lib/api/roster";
+import type { RosterResponse } from "@/lib/api/roster";
 import type {
   LaborRole,
   LaborRoleListResponse,
@@ -72,6 +74,28 @@ export async function createLaborRoleAction(
       color: payload.color.trim(),
     });
     return { success: true, role };
+  } catch (err: unknown) {
+    return { success: false, error: classifyBackendError(err) };
+  }
+}
+
+// ---- Day roster (member-safe: name, presence, hours, day type — never pay) ----
+
+export type RosterActionResult =
+  | { success: true; data: RosterResponse }
+  | { success: false; error: string };
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Fetch the day roster for a project. `date` must be YYYY-MM-DD. */
+export async function fetchDayRosterAction(
+  projectId: string,
+  date: string
+): Promise<RosterActionResult> {
+  if (!DATE_RE.test(date)) return { success: false, error: "validation" };
+  try {
+    const data = await fetchDayRoster(projectId, date);
+    return { success: true, data };
   } catch (err: unknown) {
     return { success: false, error: classifyBackendError(err) };
   }

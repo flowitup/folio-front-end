@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
-import { canOnProject } from "@/lib/auth/project-permissions";
+import { can } from "@/lib/auth/permissions";
 import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -127,7 +127,7 @@ export default function InvoicesPage() {
   // Effective per-project permissions (global role UNION this project's
   // membership-role perms) — not just the global JWT permissions.
   const projectPerms = projects.find((p) => p.id === projectId)?.my_permissions;
-  const canManageInvoices = canOnProject("project:manage_invoices", user?.permissions, projectPerms);
+  const canManageInvoices = can("project:manage_invoices", user?.permissions, projectPerms);
 
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [exportOpen, setExportOpen] = useState(false);

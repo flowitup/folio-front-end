@@ -18,6 +18,7 @@ import { dismissNotificationAction } from "@/components/notifications/actions";
 import { rejectAttendance, validateAttendance } from "@/lib/api/labor";
 import type {
   AttendancePending,
+  CompanyEvent,
   DueNotification,
   NotificationsFeed,
 } from "@/lib/api/notifications";
@@ -32,6 +33,7 @@ export function NotificationsBell() {
   const t = useTranslations("notifications");
   const [items, setItems] = useState<DueNotification[]>([]);
   const [attendance, setAttendance] = useState<AttendancePending[]>([]);
+  const [companyEvents, setCompanyEvents] = useState<CompanyEvent[]>([]);
   // Entry ids with a validate/reject request in flight — their buttons are disabled
   // so a double-click cannot fire twice (a second reject would 404 and toast an error).
   const [settlingIds, setSettlingIds] = useState<ReadonlySet<string>>(() => new Set());
@@ -41,6 +43,7 @@ export function NotificationsBell() {
   const handleUpdate = useCallback((feed: NotificationsFeed) => {
     setItems(feed.items);
     setAttendance(feed.attendance);
+    setCompanyEvents(feed.companyEvents ?? []);
     setHasLoaded(true);
   }, []);
 
@@ -117,6 +120,8 @@ export function NotificationsBell() {
     [settleAttendance]
   );
 
+  // company_events deliberately excluded from the badge count — matches the
+  // backend's own "count" field semantics (see notifications routes.py).
   const badge = getBadgeLabel(items.length + attendance.length);
 
   return (
@@ -150,6 +155,7 @@ export function NotificationsBell() {
         <NotificationsDropdown
           items={items}
           attendance={attendance}
+          companyEvents={companyEvents}
           isLoading={!hasLoaded}
           onDismiss={handleDismiss}
           onValidate={handleValidate}

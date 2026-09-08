@@ -77,7 +77,17 @@ function setup(opts: {
 }) {
   mockPathname = opts.pathname;
   mockUseAuth.mockReturnValue({
-    user: { email: "user@test.com", permissions: [] },
+    // project:manage_labor / project:manage_invoices / project:update so
+    // those gated topbar actions ("Log day", "New invoice", "New task")
+    // render, plus company-admin standing so canCreateProject ("New
+    // project", M2: ignores the legacy project:create claim alone) also
+    // renders — these tests cover navigation wiring, not the permission
+    // gates themselves.
+    user: {
+      email: "user@test.com",
+      permissions: ["project:manage_labor", "project:manage_invoices", "project:update"],
+      companies: [{ id: "c1", legal_name: "Test Co", role: "admin", is_primary: true }],
+    },
     logout: vi.fn(),
     isLoading: false,
   });
@@ -132,6 +142,17 @@ describe("Topbar action button wiring", () => {
     expect(mockPush).toHaveBeenCalledWith("/en/projects/p-1/labor?logDay=1");
   });
 
+  it("labor: action button is NOT rendered for a member without project:manage_labor (D3 roster persona)", () => {
+    setup({ pathname: "/en/projects/p-1/labor", selectedProjectId: "p-1" });
+    mockUseAuth.mockReturnValue({
+      user: { email: "member@test.com", permissions: [] },
+      logout: vi.fn(),
+      isLoading: false,
+    });
+    render(<Topbar />);
+    expect(screen.queryByRole("button", { name: /labor.logDay/ })).toBeNull();
+  });
+
   it("invoices: clicking action navigates to /en/projects/:id/invoices/new", async () => {
     setup({ pathname: "/en/projects/p-1/invoices", selectedProjectId: "p-1" });
     const user = userEvent.setup();
@@ -146,6 +167,28 @@ describe("Topbar action button wiring", () => {
     render(<Topbar />);
     await user.click(screen.getByRole("button", { name: /planning.newTask/ }));
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("invoices: action button is NOT rendered without project:manage_invoices (M9)", () => {
+    setup({ pathname: "/en/projects/p-1/invoices", selectedProjectId: "p-1" });
+    mockUseAuth.mockReturnValue({
+      user: { email: "member@test.com", permissions: [] },
+      logout: vi.fn(),
+      isLoading: false,
+    });
+    render(<Topbar />);
+    expect(screen.queryByRole("button", { name: /invoices.newInvoice/ })).toBeNull();
+  });
+
+  it("planning: action button is NOT rendered without project:update (M9)", () => {
+    setup({ pathname: "/en/projects/p-1/planning", selectedProjectId: "p-1" });
+    mockUseAuth.mockReturnValue({
+      user: { email: "member@test.com", permissions: [] },
+      logout: vi.fn(),
+      isLoading: false,
+    });
+    render(<Topbar />);
+    expect(screen.queryByRole("button", { name: /planning.newTask/ })).toBeNull();
   });
 });
 

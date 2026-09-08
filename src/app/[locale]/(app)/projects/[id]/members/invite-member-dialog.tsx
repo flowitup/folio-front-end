@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * InviteMemberDialog — e-mail invitation for an OUTSIDER (someone not yet a
+ * member of the project's company). Distinct from AssignMemberDialog
+ * (insiders, searched from the company directory, no e-mail step).
+ *
+ * No role picker: every invite is sent as the fixed "member" role
+ * (`memberRoleId`, resolved server-side from the legacy roles table — the
+ * `create_invitation` schema still requires a `role_id`, see phase-05 risk
+ * notes). An admin who wants the new member to manage the project can
+ * promote them afterwards via Settings › Company or re-assign as manager
+ * once they've joined.
+ */
+
 import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
@@ -16,42 +29,33 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { inviteMemberAction } from "./actions";
-import type { Role } from "@/lib/api/roles";
 
 interface InviteMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  roles: Role[];
+  memberRoleId: string;
 }
 
 export function InviteMemberDialog({
   open,
   onOpenChange,
   projectId,
-  roles,
+  memberRoleId,
 }: InviteMemberDialogProps) {
   const t = useTranslations("members");
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [roleId, setRoleId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !roleId) return;
+    if (!email.trim()) return;
 
     setIsSubmitting(true);
     try {
-      const result = await inviteMemberAction(projectId, email.trim(), roleId);
+      const result = await inviteMemberAction(projectId, email.trim(), memberRoleId);
 
       if (result.kind === "invitation_sent") {
         toast.success(t("toast.inviteSent", { email: email.trim() }));
@@ -62,7 +66,6 @@ export function InviteMemberDialog({
 
       onOpenChange(false);
       setEmail("");
-      setRoleId("");
       router.refresh();
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
@@ -115,42 +118,6 @@ export function InviteMemberDialog({
             </p>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="invite-role" aria-required="true">
-              {t("invite.roleLabel")}
-            </Label>
-            <Select
-              value={roleId}
-              onValueChange={setRoleId}
-              required
-              disabled={isSubmitting}
-            >
-              <SelectTrigger id="invite-role">
-                <SelectValue placeholder={t("invite.rolePlaceholder")} />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role.id} value={role.id}>
-                    <span className="flex flex-col items-start gap-0.5">
-                      <span className="font-medium capitalize">{role.name}</span>
-                      {role.description && (
-                        <span
-                          className="text-[11px]"
-                          style={{ color: "var(--muted)" }}
-                        >
-                          {role.description}
-                        </span>
-                      )}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-              {t("invite.roleHint")}
-            </p>
-          </div>
-
           <DialogFooter className="gap-2 sm:gap-2">
             <Button
               type="button"
@@ -162,7 +129,7 @@ export function InviteMemberDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || !email.trim() || !roleId}
+              disabled={isSubmitting || !email.trim()}
               className="gap-1.5"
             >
               {isSubmitting && (

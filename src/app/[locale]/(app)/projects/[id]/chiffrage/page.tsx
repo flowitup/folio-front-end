@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 
 import { getSession } from "@/lib/auth/session";
-import { canOnProject } from "@/lib/auth/project-permissions";
+import { can } from "@/lib/auth/permissions";
 import { getChiffrage, listUnits, type ChiffrageTree, type ChiffrageUnit } from "@/lib/api/chiffrage";
 import { getProjectById } from "@/lib/api/projects-server";
 import { ChiffragePageClient } from "./chiffrage-page-client";
@@ -46,7 +46,7 @@ export default async function ChiffragePage({ params }: PageProps) {
     getProjectById(projectId).catch(() => null),
   ]);
 
-  const canManage = canOnProject(
+  const canManage = can(
     "project:manage_invoices",
     session.user.permissions,
     project?.my_permissions

@@ -28,8 +28,13 @@ export interface Company {
   updated_at: string;
 }
 
-/** Per-company role governing billing + member management access. */
-export type CompanyRole = "admin" | "member";
+/**
+ * Per-company role (roles-permissions-redesign: company is the tenant).
+ * admin governs billing + member management + implicit rights on every
+ * company project; manager/member are per-project assigned (see
+ * `src/lib/auth/permissions.ts`).
+ */
+export type CompanyRole = "admin" | "manager" | "member";
 
 /** Company as seen from the current user's attachment (includes relationship fields). */
 export interface MyCompany extends Company {

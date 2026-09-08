@@ -16,41 +16,34 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  updateMemberRoleAction,
-  updateUserProfileAction,
-} from "./actions";
+import { updateUserProfileAction } from "./actions";
 import type { ProjectMember } from "@/lib/api/members";
-import type { Role } from "@/lib/api/roles";
 
 interface EditMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
   member: ProjectMember | null;
-  roles: Role[];
   /** Whether the caller may edit identity fields (email / display name). */
   canEditIdentity: boolean;
 }
 
+/**
+ * Identity-only editor (email / display name). Project role is no longer
+ * editable here — it is set at assignment time (AssignMemberDialog) and
+ * changed by re-assigning; the members table dropped its Role column and
+ * picker (roles-permissions-redesign: manager/member is a project
+ * assignment, not a per-project role_id).
+ */
 export function EditMemberDialog({
   open,
   onOpenChange,
   projectId,
   member,
-  roles,
   canEditIdentity,
 }: EditMemberDialogProps) {
   const t = useTranslations("members");
   const router = useRouter();
-  const [roleId, setRoleId] = useState(member?.role_id ?? "");
   const [displayName, setDisplayName] = useState(member?.display_name ?? "");
   const [email, setEmail] = useState(member?.email ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,17 +52,15 @@ export function EditMemberDialog({
   const [lastUserId, setLastUserId] = useState(member?.user_id ?? null);
   if (member && member.user_id !== lastUserId) {
     setLastUserId(member.user_id);
-    setRoleId(member.role_id ?? "");
     setDisplayName(member.display_name ?? "");
     setEmail(member.email ?? "");
   }
 
   if (!member) return null;
 
-  const roleChanged = roleId !== "" && roleId !== member.role_id;
   const nameChanged = canEditIdentity && displayName.trim() !== (member.display_name ?? "");
   const emailChanged = canEditIdentity && email.trim().toLowerCase() !== member.email.toLowerCase();
-  const hasChanges = roleChanged || nameChanged || emailChanged;
+  const hasChanges = nameChanged || emailChanged;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,15 +68,10 @@ export function EditMemberDialog({
 
     setIsSubmitting(true);
     try {
-      if (roleChanged) {
-        await updateMemberRoleAction(projectId, member.user_id, roleId);
-      }
-      if (nameChanged || emailChanged) {
-        const payload: { email?: string; display_name?: string | null } = {};
-        if (emailChanged) payload.email = email.trim();
-        if (nameChanged) payload.display_name = displayName.trim() || null;
-        await updateUserProfileAction(projectId, member.user_id, payload);
-      }
+      const payload: { email?: string; display_name?: string | null } = {};
+      if (emailChanged) payload.email = email.trim();
+      if (nameChanged) payload.display_name = displayName.trim() || null;
+      await updateUserProfileAction(projectId, member.user_id, payload);
       toast.success(t("edit.toast.saved"));
       onOpenChange(false);
       router.refresh();
@@ -150,32 +136,6 @@ export function EditMemberDialog({
               </div>
             </>
           )}
-
-          <div className="space-y-1.5">
-            <Label htmlFor="edit-role">{t("edit.roleLabel")}</Label>
-            <Select value={roleId} onValueChange={setRoleId} disabled={isSubmitting}>
-              <SelectTrigger id="edit-role">
-                <SelectValue placeholder={t("invite.rolePlaceholder")} />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role.id} value={role.id} textValue={role.name}>
-                    <span className="flex flex-col items-start gap-0.5">
-                      <span className="font-medium capitalize">{role.name}</span>
-                      {role.description && (
-                        <span className="text-[11px]" style={{ color: "var(--muted)" }}>
-                          {role.description}
-                        </span>
-                      )}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-              {t("edit.roleHint")}
-            </p>
-          </div>
 
           <DialogFooter className="gap-2 sm:gap-2">
             <Button

@@ -13,6 +13,8 @@ export interface CreateProjectPayload {
   budget?: number;
   /** Funding source description (≤ 120 chars). Omit to leave unset. */
   budget_source?: string;
+  /** Company to attach the project to. Optional — omit for a single-company admin (backend defaults to their one company); required to pick a target when the caller administers more than one. */
+  company_id?: string;
 }
 
 export async function createProject(payload: CreateProjectPayload): Promise<Project> {
@@ -56,6 +58,7 @@ export async function addUserToProject(projectId: string, userId: string): Promi
   await api.post(`/projects/${projectId}/users`, { user_id: userId });
 }
 
-export async function removeUserFromProject(projectId: string, userId: string): Promise<void> {
-  await api.delete(`/projects/${projectId}/users/${userId}`);
-}
+// Member REMOVAL has a single path: removeMemberAction (server action, in
+// projects/[id]/members/actions.ts — assignment DELETE with a legacy
+// /users/<id> fallback on 404), used by both the members page and the
+// projects list team panel. No client-side removeUserFromProject here.

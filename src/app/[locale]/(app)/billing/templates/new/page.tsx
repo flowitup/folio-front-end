@@ -1,8 +1,12 @@
 /**
  * New template page — server component.
  *
- * Optional query param:
+ * Optional query params:
  *   ?kind=devis|facture  — pre-selects the kind select in the form.
+ *   ?company_id=<uuid>   — carried from the templates list's company picker
+ *                          (BillingTemplatesCompanyScope) so the created
+ *                          template lands in the company being viewed, not
+ *                          always the caller's primary admin company.
  *
  * Renders BillingTemplateForm in create mode.
  * Auth: handled by layout middleware.
@@ -20,6 +24,9 @@ export default async function NewTemplatePage({ searchParams }: NewTemplatePageP
   const kindParam = typeof params.kind === "string" ? params.kind : undefined;
   const initialKind: BillingDocumentKind | undefined =
     kindParam === "devis" || kindParam === "facture" ? kindParam : undefined;
+  const initialCompanyId = typeof params.company_id === "string" ? params.company_id : undefined;
 
-  return <BillingTemplateForm mode="create" initialKind={initialKind} />;
+  return (
+    <BillingTemplateForm mode="create" initialKind={initialKind} initialCompanyId={initialCompanyId} />
+  );
 }

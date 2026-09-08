@@ -10,12 +10,15 @@ import { BellOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AttendancePendingRow } from "@/components/notifications/attendance-pending-row";
 import { NotificationRow } from "@/components/notifications/notification-row";
-import type { AttendancePending, DueNotification } from "@/lib/api/notifications";
+import { CompanyEventRow } from "@/components/notifications/company-event-row";
+import type { AttendancePending, CompanyEvent, DueNotification } from "@/lib/api/notifications";
 
 interface NotificationsDropdownProps {
   items: DueNotification[];
   /** Worker-submitted days awaiting this user's validation. Defaults to none. */
   attendance?: AttendancePending[];
+  /** Members who joined a company the caller admins without a project assignment yet. */
+  companyEvents?: CompanyEvent[];
   isLoading: boolean;
   onDismiss: (noteId: string) => void;
   onValidate?: (item: AttendancePending) => void;
@@ -60,6 +63,7 @@ function SkeletonRow() {
 export function NotificationsDropdown({
   items,
   attendance = [],
+  companyEvents = [],
   isLoading,
   onDismiss,
   onValidate,
@@ -68,7 +72,7 @@ export function NotificationsDropdown({
   onClickRow,
 }: NotificationsDropdownProps) {
   const t = useTranslations("notifications");
-  const isEmpty = items.length === 0 && attendance.length === 0;
+  const isEmpty = items.length === 0 && attendance.length === 0 && companyEvents.length === 0;
   return (
     <div className="flex flex-col">
       {/* Header */}
@@ -126,6 +130,14 @@ export function NotificationsDropdown({
                     onDismiss={onDismiss}
                     onNavigate={onClickRow}
                   />
+                ))}
+              </section>
+            )}
+            {companyEvents.length > 0 && (
+              <section aria-label={t("companyEvents.title")}>
+                <SectionLabel>{t("companyEvents.title")}</SectionLabel>
+                {companyEvents.map((event) => (
+                  <CompanyEventRow key={`${event.company_id}-${event.user_id}`} item={event} onNavigate={onClickRow} />
                 ))}
               </section>
             )}

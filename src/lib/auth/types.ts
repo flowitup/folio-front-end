@@ -3,11 +3,20 @@
  * Shared types for authentication across frontend
  */
 
+import type { UserCompanySummary } from "./permissions";
+
 export interface User {
   id: string;
   email: string;
   permissions: string[];
   roles: string[];
+  /**
+   * Companies the user is attached to (company-as-tenant model). Empty on the
+   * POST /auth/login response (backend limitation — that endpoint does not
+   * populate it); always populated on GET /auth/me. Defensive default to []
+   * at every read site since older/legacy responses may omit it entirely.
+   */
+  companies?: UserCompanySummary[];
 }
 
 export interface AuthSession {

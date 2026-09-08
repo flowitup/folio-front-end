@@ -74,6 +74,8 @@ export type BillingTemplateFormProps =
   | {
       mode: "create";
       initialKind?: BillingDocumentKind;
+      /** Company to create the template under — carried from the list's company picker. Omitted → backend defaults to the caller's primary admin company. */
+      initialCompanyId?: string;
     }
   | {
       mode: "edit";
@@ -98,6 +100,9 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
   const [kind, setKind] = useState<BillingDocumentKind>(
     isEdit ? template!.kind : (props as { mode: "create"; initialKind?: BillingDocumentKind }).initialKind ?? "devis"
   );
+  const createCompanyId = isEdit
+    ? undefined
+    : (props as { mode: "create"; initialCompanyId?: string }).initialCompanyId;
   const [name, setName] = useState(template?.name ?? "");
   const [defaultVatRate, setDefaultVatRate] = useState<string>(
     template?.default_vat_rate ?? "20"
@@ -172,7 +177,11 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         toast.success("Template saved.");
         router.push(listPath);
       } else {
-        const result = await createBillingTemplateAction({ kind, ...payload });
+        const result = await createBillingTemplateAction({
+          kind,
+          ...payload,
+          ...(createCompanyId ? { company_id: createCompanyId } : {}),
+        });
         if (!result.ok) {
           if (result.error.code === "conflict") {
             setFormError(tForm("errors.duplicateName"));

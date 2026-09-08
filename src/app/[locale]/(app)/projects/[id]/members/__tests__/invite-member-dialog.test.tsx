@@ -1,12 +1,16 @@
 /**
- * Tests for InviteMemberDialog component
+ * Tests for InviteMemberDialog component.
+ *
+ * No role picker (roles-permissions-redesign): every outsider invite is sent
+ * as the fixed "member" role id resolved by the parent (MembersTable). Role
+ * assignment/promotion happens post-join via AssignMemberDialog or Settings ›
+ * Company.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InviteMemberDialog } from "../invite-member-dialog";
-import type { Role } from "@/lib/api/roles";
 
 // Mock server action
 vi.mock("../actions", () => ({
@@ -20,8 +24,6 @@ vi.mock("next-intl", () => ({
     const t: Record<string, string> = {
       "invite.dialogTitle": "Invite a new member",
       "invite.emailLabel": "Email address",
-      "invite.roleLabel": "Role",
-      "invite.rolePlaceholder": "Select a role",
       "invite.submit": "Send invitation",
       "invite.submitting": "Sending...",
       "invite.cancel": "Cancel",
@@ -62,10 +64,7 @@ const mockToast = toast as unknown as {
   error: ReturnType<typeof vi.fn>;
 };
 
-const ROLES: Role[] = [
-  { id: "role-1", name: "Member", description: "Can view and edit" },
-  { id: "role-2", name: "Viewer", description: "Read-only access" },
-];
+const MEMBER_ROLE_ID = "role-member-1";
 
 function renderDialog(open = true, onOpenChange = vi.fn()) {
   return render(
@@ -73,7 +72,7 @@ function renderDialog(open = true, onOpenChange = vi.fn()) {
       open={open}
       onOpenChange={onOpenChange}
       projectId="proj-123"
-      roles={ROLES}
+      memberRoleId={MEMBER_ROLE_ID}
     />
   );
 }
@@ -84,27 +83,13 @@ describe("InviteMemberDialog", () => {
   });
 
   describe("Rendering", () => {
-    it("renders email and role inputs when open", () => {
+    it("renders only an email input when open — no role picker", () => {
       renderDialog();
       expect(screen.getByLabelText(/email address/i)).toBeDefined();
-      expect(screen.getByRole("combobox")).toBeDefined();
+      expect(screen.queryByRole("combobox")).toBeNull();
     });
 
-    it("renders role select with provided roles", async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      // Open the role select
-      const trigger = screen.getByRole("combobox");
-      await user.click(trigger);
-
-      await waitFor(() => {
-        expect(screen.getByText("Member")).toBeDefined();
-        expect(screen.getByText("Viewer")).toBeDefined();
-      });
-    });
-
-    it("submit button is disabled when email or role is empty", () => {
+    it("submit button is disabled when email is empty", () => {
       renderDialog();
       const submitBtn = screen.getByRole("button", { name: /send invitation/i });
       expect(submitBtn).toBeDisabled();
@@ -112,37 +97,28 @@ describe("InviteMemberDialog", () => {
   });
 
   describe("Submission", () => {
-    async function fillAndSubmit(email = "new@example.com", roleIndex = 0) {
+    async function fillAndSubmit(email = "new@example.com") {
       const user = userEvent.setup();
       renderDialog();
 
-      // Fill email
       await user.type(screen.getByLabelText(/email address/i), email);
-
-      // Select a role
-      const trigger = screen.getByRole("combobox");
-      await user.click(trigger);
-      await waitFor(() => screen.getByText(ROLES[roleIndex].name));
-      await user.click(screen.getByText(ROLES[roleIndex].name));
-
-      // Submit
       await user.click(screen.getByRole("button", { name: /send invitation/i }));
     }
 
-    it("calls inviteMemberAction with correct args on submit", async () => {
+    it("calls inviteMemberAction with the fixed member role id", async () => {
       mockInviteAction.mockResolvedValueOnce({
         kind: "invitation_sent",
         invitation_id: "inv-1",
         expires_at: "2099-01-01",
       });
 
-      await fillAndSubmit("new@example.com", 0);
+      await fillAndSubmit("new@example.com");
 
       await waitFor(() => {
         expect(mockInviteAction).toHaveBeenCalledWith(
           "proj-123",
           "new@example.com",
-          "role-1"
+          MEMBER_ROLE_ID
         );
       });
     });

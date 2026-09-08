@@ -10,6 +10,7 @@ import { getSession } from "@/lib/auth/session";
 import { listProjectDocuments, listDocumentTags } from "@/lib/api/project-documents";
 import { listMembers } from "@/lib/api/members";
 import { getProjectById } from "@/lib/api/projects-server";
+import { can, isPlatformOps } from "@/lib/auth/permissions";
 import { DocumentsPanel } from "./documents-panel";
 
 interface PageProps {
@@ -38,20 +39,20 @@ export default async function DocumentsPage({ params }: PageProps) {
     listDocumentTags(projectId).catch(() => [] as string[]),
   ]);
 
-  // Membership gate: admin (*:*) or project member (non-null project means access granted by BE).
-  // Use the project's EFFECTIVE permissions (global ∪ membership-role perms) so a
-  // project admin sees the same controls as a global admin; fall back to the
-  // global JWT perms when the project wasn't loaded (e.g. global admin, non-member).
+  // Membership gate: platform ops or project member (non-null project means access
+  // granted by BE). Use the project's EFFECTIVE permissions (global ∪ membership-role
+  // perms) so a project admin/manager sees the same controls as platform ops.
   const effectivePerms = project?.my_permissions ?? session.user.permissions;
-  const hasAdminPermission = effectivePerms.includes("*:*");
-  const isProjectOwner = project?.owner_id === session.user.id;
+  const hasAdminPermission = isPlatformOps(effectivePerms);
 
   // If the project fetch failed entirely (403/404), redirect
   if (!project && !hasAdminPermission) {
     redirect(`/${locale}/projects`);
   }
 
-  const isAdminOrOwner = hasAdminPermission || isProjectOwner;
+  // No owner_id bypass (D6, owner bypass removed) — edit rights follow the
+  // same project:update permission admins/managers get from the matrix.
+  const isAdminOrOwner = hasAdminPermission || can("project:update", session.user.permissions, project?.my_permissions);
 
   // Adapt ProjectMember[] to the shape the panel/list components expect
   const adaptedMembers = members.map((m) => ({

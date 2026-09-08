@@ -5,7 +5,7 @@ import { listMembers } from "@/lib/api/members";
 import { listInvitations } from "@/lib/api/invitations";
 import { listRoles } from "@/lib/api/roles";
 import { getProjectById } from "@/lib/api/projects-server";
-import { canOnProject } from "@/lib/auth/project-permissions";
+import { can, isCompanyAdmin, isPlatformOps } from "@/lib/auth/permissions";
 import { MembersTable } from "./members-table";
 
 interface PageProps {
@@ -30,28 +30,40 @@ export default async function MembersPage({ params }: PageProps) {
   ]);
 
   // Server-side permission check (authoritative). Invite + manage-members honor
-  // the caller's EFFECTIVE per-project permissions (global role UNION their
-  // membership-role perms on this project), so a project manager/admin can
-  // invite and manage members even when their global role is the read-only
-  // default. Mirrors the backend gates.
+  // the caller's EFFECTIVE per-project permissions (global role UNION the
+  // resolver-computed my_permissions for this project — admin implicit rights,
+  // assigned manager/member role, and any D8 grant/deny already folded in by
+  // the backend). No owner_id bypass — the owner bypass was removed (D6):
+  // the project creator is auto-assigned as manager and gets rights that way.
   const perms = session.user.permissions ?? [];
   const projectPerms = project?.my_permissions;
-  const isProjectOwner = project?.owner_id === session.user.id;
-  const canInvite = canOnProject("project:invite", perms, projectPerms) || isProjectOwner;
-  const canManageMembers = canOnProject("project:manage_users", perms, projectPerms) || isProjectOwner;
+  const canInvite = can("project:invite", perms, projectPerms);
+  const canManageMembers = can("project:manage_users", perms, projectPerms);
+  // The assign flow calls PUT /projects/<id>/assignments/<userId>, which the
+  // backend gates with require_project_access(write=True) — i.e. project:update,
+  // not project:manage_users. Gate the button/dialog on the matching permission
+  // so it never renders a control that would 403.
+  const canAssignMembers = can("project:update", perms, projectPerms);
+  // Manager is an admin-only role to hand out (assignments.ts: "admin may
+  // assign any role; manager may only assign member") — derived from the
+  // caller's per-company role, not a project permission.
+  const callerIsCompanyAdmin = isCompanyAdmin(session.user.companies, project?.company_id ?? null, perms);
   // Editing identity (email / display name) is a GLOBAL concern (it changes how
   // the user signs in everywhere), so it stays gated on the caller's global
   // role only — never the per-project membership role.
-  const canEditIdentity = perms.includes("user:update") || perms.includes("*:*");
+  const canEditIdentity = perms.includes("user:update") || isPlatformOps(perms);
 
   return (
     <MembersTable
       projectId={projectId}
+      companyId={project?.company_id ?? null}
       members={members}
       invites={invites}
       roles={roles}
       canInvite={canInvite}
       canManageMembers={canManageMembers}
+      canAssignMembers={canAssignMembers}
+      callerIsCompanyAdmin={callerIsCompanyAdmin}
       canEditIdentity={canEditIdentity}
       currentUserId={session.user.id}
     />

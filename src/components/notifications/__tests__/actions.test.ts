@@ -88,7 +88,7 @@ describe("fetchNotificationsFeedAction — happy path", () => {
   it("returns an empty feed when listDueNotifications returns empty", async () => {
     mockList.mockResolvedValueOnce({ items: [], count: 0 });
     const result = await fetchNotificationsFeedAction();
-    expect(result).toEqual({ items: [], attendance: [] });
+    expect(result).toEqual({ items: [], attendance: [], companyEvents: [] });
   });
 });
 
@@ -98,25 +98,25 @@ describe("fetchNotificationsFeedAction — graceful error handling", () => {
   it("returns an empty feed on 500 error (bell shows last-known state without disrupting UI)", async () => {
     mockList.mockRejectedValueOnce(httpError(500));
     const result = await fetchNotificationsFeedAction();
-    expect(result).toEqual({ items: [], attendance: [] });
+    expect(result).toEqual({ items: [], attendance: [], companyEvents: [] });
   });
 
   it("returns an empty feed on 401 error (auth expired — don't crash the page)", async () => {
     mockList.mockRejectedValueOnce(httpError(401));
     const result = await fetchNotificationsFeedAction();
-    expect(result).toEqual({ items: [], attendance: [] });
+    expect(result).toEqual({ items: [], attendance: [], companyEvents: [] });
   });
 
   it("returns an empty feed on network error", async () => {
     mockList.mockRejectedValueOnce(new Error("Network error"));
     const result = await fetchNotificationsFeedAction();
-    expect(result).toEqual({ items: [], attendance: [] });
+    expect(result).toEqual({ items: [], attendance: [], companyEvents: [] });
   });
 
   it("returns an empty feed on 429 rate-limit error", async () => {
     mockList.mockRejectedValueOnce(httpError(429));
     const result = await fetchNotificationsFeedAction();
-    expect(result).toEqual({ items: [], attendance: [] });
+    expect(result).toEqual({ items: [], attendance: [], companyEvents: [] });
   });
 });
 

@@ -150,6 +150,8 @@ export interface CreateBillingTemplatePayload {
   notes?: string | null;
   terms?: string | null;
   default_vat_rate?: string | null;
+  /** Company the template is scoped to. Optional — defaults to the caller's primary admin company if omitted; required to target a non-primary company when the caller admins more than one. */
+  company_id?: string;
 }
 
 export interface UpdateBillingTemplatePayload {

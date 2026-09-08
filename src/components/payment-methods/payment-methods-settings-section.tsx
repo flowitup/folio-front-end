@@ -11,10 +11,11 @@
  *   2. Default to the primary company, else the first one.
  *   3. Render a company picker only when the caller has more than one.
  *
- * Permissions: the backend requires the global admin permission ("*:*") for
- * every create/update/delete, while listing is open to any company member.
- * Non-admins therefore get a read-only inventory instead of controls that
- * would always fail with 403.
+ * Permissions: the backend accepts platform ops OR an admin of THIS company
+ * for every create/update/delete (`CreatePaymentMethodUseCase` etc. check
+ * `is_platform_admin() OR is_company_admin(company_id)`); listing is open to
+ * any company member. Non-admins-of-this-company get a read-only inventory
+ * instead of controls that would always fail with 403.
  *
  * PaymentMethodsSection seeds its local state from `initial`, so it is keyed by
  * company id to force a remount when the selection changes.
@@ -31,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/context/AuthContext";
+import { isCompanyAdmin } from "@/lib/auth/permissions";
 import { PaymentMethodsSection } from "@/app/[locale]/(app)/settings/companies/[id]/_components/payment-methods-section";
 import { listPaymentMethodsAction } from "@/app/[locale]/(app)/settings/companies/[id]/_actions/payment-methods-actions";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
@@ -51,7 +53,6 @@ type MethodsResult =
 export function PaymentMethodsSettingsSection() {
   const t = useTranslations("paymentMethods");
   const { user } = useAuth();
-  const canManage = (user?.permissions ?? []).includes("*:*");
 
   const [companies, setCompanies] = useState<MyCompany[]>([]);
   const [companiesState, setCompaniesState] = useState<LoadState>("loading");
@@ -109,6 +110,10 @@ export function PaymentMethodsSettingsSection() {
   // A result for a different company means the switch is still in flight.
   const methodsForSelection =
     methodsResult && methodsResult.companyId === selectedId ? methodsResult : null;
+
+  // Admin of THIS specific company (or platform ops) — the selected company
+  // may differ from a company the caller admins elsewhere.
+  const canManage = isCompanyAdmin(user?.companies, selectedId, user?.permissions);
 
   // ---- Render ----
 

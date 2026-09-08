@@ -164,8 +164,16 @@ export function AttachedUsersTable({
                   >
                     {u.role === "admin"
                       ? t("admin.manage.attached.roleAdmin")
-                      : t("admin.manage.attached.roleMember")}
+                      : u.role === "manager"
+                        ? t("admin.manage.attached.roleManager")
+                        : t("admin.manage.attached.roleMember")}
                   </span>
+                  {/* Quick role toggle. Admin rows demote to member; manager
+                      AND member rows promote to admin — a manager's
+                      per-project assignment isn't touched by this (that
+                      stays a Settings › Company members-table 3-way select),
+                      it only flips their company-wide admin standing, same
+                      as it always could for a plain member. */}
                   <Button
                     variant="ghost"
                     size="sm"

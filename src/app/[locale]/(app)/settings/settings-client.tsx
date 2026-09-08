@@ -8,7 +8,9 @@ import { UsersSection } from "./users/users-section";
 import { InvoicePrefixSection } from "./invoice-prefix-section";
 import { MyCompaniesSection } from "@/components/companies/my-companies-section";
 import { AdminCompaniesSection } from "@/components/companies/admin-companies-section";
+import { CompanySettingsSection } from "@/components/companies/company-settings-section";
 import { PaymentMethodsSettingsSection } from "@/components/payment-methods/payment-methods-settings-section";
+import { isPlatformOps, isCompanyAdmin } from "@/lib/auth/permissions";
 import type { Role } from "@/lib/api/roles";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import pkg from "../../../../../package.json";
@@ -16,6 +18,7 @@ import pkg from "../../../../../package.json";
 const BASE_SECTION_KEYS = [
   "profile",
   "team",
+  "company",
   "billing",
   "my-companies",
   "payment-methods",
@@ -50,13 +53,18 @@ export function SettingsClient({ roles, projects }: Props) {
   // Lazy initializer reads window.location.hash once at mount — no effect needed.
   const [active, setActive] = useState<SectionKey>(initialActiveFromHash);
 
-  const isSuperadmin = (user?.permissions ?? []).includes("*:*");
+  const isSuperadmin = isPlatformOps(user?.permissions);
+  const isAnyCompanyAdmin = isCompanyAdmin(user?.companies, null, user?.permissions);
   const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
 
   const sectionKeys: SectionKey[] = [
     "profile",
     ...(selectedProject ? ["project" as const] : []),
     "team",
+    // Company self-service (members, D8 grants, add-by-phone, import, join
+    // code, directory) — only rendered for a company admin; nothing here
+    // would do anything but 403 for a manager/member.
+    ...(isAnyCompanyAdmin ? (["company"] as const) : []),
     "billing",
     "my-companies",
     "payment-methods",
@@ -78,7 +86,9 @@ export function SettingsClient({ roles, projects }: Props) {
                   ? t("myCompanies.title")
                   : key === "payment-methods"
                     ? t("paymentMethods")
-                    : t(key);
+                    : key === "company"
+                      ? t("company.title")
+                      : t(key);
             return (
               <button
                 key={key}
@@ -145,6 +155,8 @@ export function SettingsClient({ roles, projects }: Props) {
           </section>
         )}
 
+        {active === "company" && isAnyCompanyAdmin && <CompanySettingsSection />}
+
         {active === "my-companies" && (
           <div className="space-y-5">
             <MyCompaniesSection />
@@ -175,6 +187,7 @@ export function SettingsClient({ roles, projects }: Props) {
 
         {active !== "profile" &&
           active !== "project" &&
+          active !== "company" &&
           active !== "users" &&
           active !== "my-companies" &&
           active !== "payment-methods" &&

@@ -17,6 +17,7 @@ import {
   Pencil,
   Images,
   ChevronDown,
+  Clock,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -34,7 +35,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { fetchProjectUsers, removeUserFromProject } from "@/lib/api/projects";
+import { fetchProjectUsers } from "@/lib/api/projects";
+import { removeMemberAction } from "@/app/[locale]/(app)/projects/[id]/members/actions";
+import { can, canCreateProject } from "@/lib/auth/permissions";
 import { AddMemberDialog } from "@/components/project/add-member-dialog";
 import { ProjectCoverPhotos } from "@/components/project/project-cover-photos";
 import { CreateProjectDialog } from "@/components/project/create-project-dialog";
@@ -89,15 +92,15 @@ export default function ProjectsPage() {
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [deleteProjectState, setDeleteProjectState] = useState<Project | null>(null);
 
-  // Mirror BE rule in app/api/v1/projects/decorators.py::can_mutate_project:
-  //   admin (project:create) OR owner. Wildcards expand via the BE's
-  //   _has_permission helper; we mirror them here for the same UX gating.
-  const canMutateProject = (project: Project) =>
-    !!user &&
-    (project.owner_id === user.id ||
-      user.permissions.includes("project:create") ||
-      user.permissions.includes("project:*") ||
-      user.permissions.includes("*:*"));
+  // No owner_id bypass (D6, removed) — edit/delete are gated on the project's
+  // resolver-computed my_permissions (admin implicit rights, assigned
+  // manager role, or a D8 grant already folded in by the backend).
+  const canEditProject = (project: Project) =>
+    can("project:update", user?.permissions, project.my_permissions);
+  // project:delete is admin-only (never granted to manager/member, D2/D8) —
+  // matches the matrix, so gating on my_permissions alone is correct here.
+  const canDeleteProject = (project: Project) =>
+    can("project:delete", user?.permissions, project.my_permissions);
 
   // Open dialog when external triggers (Topbar/Sidebar) navigate with ?new=1.
   useEffect(() => {
@@ -112,9 +115,11 @@ export default function ProjectsPage() {
     selectProject(project.id);
   };
 
-  const canManageUsers =
-    user?.permissions?.some((p) => p === "project:manage_users" || p === "*:*" || p === "project:*") ??
-    false;
+  const canManageUsers = (project: Project) =>
+    can("project:manage_users", user?.permissions, project.my_permissions);
+
+  const canCreate = canCreateProject(user?.permissions, user?.companies);
+  const adminCompanies = (user?.companies ?? []).filter((c) => c.role === "admin");
 
   const filteredProjects = projects.filter((p) => {
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
@@ -158,7 +163,7 @@ export default function ProjectsPage() {
   const handleRemoveUser = async () => {
     if (!removeMember) return;
     try {
-      await removeUserFromProject(removeMember.projectId, removeMember.userId);
+      await removeMemberAction(removeMember.projectId, removeMember.userId);
       setProjectUsers((prev) => {
 
         const { [removeMember.projectId]: _, ...rest } = prev;
@@ -243,7 +248,9 @@ export default function ProjectsPage() {
           {filteredProjects.map((project, idx) => {
             const isFeatured = idx === 0;
             const isExpanded = expandedProjectId === project.id;
-            const canMutate = canMutateProject(project);
+            const canEdit = canEditProject(project);
+            const canDelete = canDeleteProject(project);
+            const canManageThisProjectUsers = canManageUsers(project);
             const users = projectUsers[project.id] || [];
             const isLoadingThisProject = loadingUsers === project.id;
             const cover = (project as { cover?: string }).cover ?? coverFor(project.id);
@@ -337,12 +344,12 @@ export default function ProjectsPage() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          {canMutate && (
+                          {canEdit && (
                             <DropdownMenuItem onSelect={() => setEditProject(project)}>
                               <Pencil size={14} /> {t("editProject")}
                             </DropdownMenuItem>
                           )}
-                          {canMutate && (
+                          {canDelete && (
                             <DropdownMenuItem
                               variant="destructive"
                               onSelect={() => setDeleteProjectState(project)}
@@ -350,7 +357,7 @@ export default function ProjectsPage() {
                               <Trash2 size={14} /> {t("deleteProject")}
                             </DropdownMenuItem>
                           )}
-                          {canMutate && <DropdownMenuSeparator />}
+                          {(canEdit || canDelete) && <DropdownMenuSeparator />}
                           <DropdownMenuItem onSelect={() => toggleExpand(project.id)}>
                             {expandedProjectId === project.id ? t("hideTeam") : t("showTeam")}
                           </DropdownMenuItem>
@@ -546,7 +553,7 @@ export default function ProjectsPage() {
                   >
                     <div className="mb-3 flex items-center justify-between">
                       <div className="label-cap">{t("teamMembers")}</div>
-                      {canManageUsers && (
+                      {canManageThisProjectUsers && (
                         <button
                           type="button"
                           onClick={() =>
@@ -585,7 +592,7 @@ export default function ProjectsPage() {
                                 {t("memberRole")}
                               </div>
                             </div>
-                            {canManageUsers && (
+                            {canManageThisProjectUsers && (
                               <button
                                 type="button"
                                 onClick={() =>
@@ -617,7 +624,12 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      {!isLoading && !error && projects.length === 0 && (
+      {/* Empty state: two personas. A company admin (or legacy global
+          project:create holder) sees the "create your first project" CTA.
+          A manager/member with no assigned project sees a passive waiting
+          state instead — there is no control they could use here that
+          wouldn't 403 on the backend. */}
+      {!isLoading && !error && projects.length === 0 && canCreate && (
         <div className="folio-card flex flex-col items-center justify-center py-16 text-center">
           <div className="mb-4 rounded-xl p-4" style={{ background: "var(--paper-2)" }}>
             <Building2 size={36} style={{ color: "var(--muted)" }} />
@@ -639,10 +651,25 @@ export default function ProjectsPage() {
         </div>
       )}
 
+      {!isLoading && !error && projects.length === 0 && !canCreate && (
+        <div className="folio-card flex flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 rounded-xl p-4" style={{ background: "var(--paper-2)" }}>
+            <Clock size={36} style={{ color: "var(--muted)" }} />
+          </div>
+          <h3 className="font-display text-[20px] font-medium tracking-tight">
+            {t("waitingForAssignment.title")}
+          </h3>
+          <p className="mt-1 max-w-sm text-[13px]" style={{ color: "var(--muted)" }}>
+            {t("waitingForAssignment.description")}
+          </p>
+        </div>
+      )}
+
       <CreateProjectDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onCreated={handleProjectCreated}
+        adminCompanies={adminCompanies}
       />
 
       <EditProjectDialog

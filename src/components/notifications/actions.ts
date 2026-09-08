@@ -45,9 +45,13 @@ function classifyBackendError(err: unknown): string {
 export async function fetchNotificationsFeedAction(): Promise<NotificationsFeed> {
   try {
     const result = await listDueNotifications();
-    return { items: result.items, attendance: result.attendance_pending ?? [] };
+    return {
+      items: result.items,
+      attendance: result.attendance_pending ?? [],
+      companyEvents: result.company_events ?? [],
+    };
   } catch {
-    return { items: [], attendance: [] };
+    return { items: [], attendance: [], companyEvents: [] };
   }
 }
 

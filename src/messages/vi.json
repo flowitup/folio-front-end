@@ -116,6 +116,9 @@
     "creating": "Đang tạo...",
     "createProjectError": "Tạo dự án thất bại. Vui lòng thử lại.",
     "createProjectNameRequired": "Tên dự án là bắt buộc",
+    "createProjectCompanyLabel": "Công ty",
+    "createProjectCompanyPlaceholder": "Chọn một công ty",
+    "createProjectCompanyRequired": "Chọn công ty mà dự án này thuộc về",
     "teamMembers": "Thành viên",
     "noMembers": "Chưa có thành viên nào",
     "addMember": "Thêm",
@@ -204,7 +207,11 @@
     "invoicePrefixExample": "Xem trước: {prefix}-{year}-0001",
     "settingsSaved": "Đã lưu cài đặt",
     "settingsSaveError": "Không thể lưu cài đặt. Vui lòng thử lại.",
-    "invoicePrefixInvalid": "Tiền tố chỉ được chứa chữ in hoa và số (A-Z, 0-9), tối đa 8 ký tự."
+    "invoicePrefixInvalid": "Tiền tố chỉ được chứa chữ in hoa và số (A-Z, 0-9), tối đa 8 ký tự.",
+    "waitingForAssignment": {
+      "title": "Chờ quản lý thêm bạn vào công trình",
+      "description": "Quản trị viên công ty sẽ thêm bạn vào một công trình khi sẵn sàng."
+    }
   },
   "settings": {
     "title": "Cài đặt",
@@ -282,7 +289,10 @@
     "companies": {
       "backToSettings": "Quay lại Cài đặt"
     },
-    "paymentMethods": "Phương thức thanh toán"
+    "paymentMethods": "Phương thức thanh toán",
+    "company": {
+      "title": "Công ty"
+    }
   },
   "paymentMethods": {
     "title": "Phương thức thanh toán",
@@ -858,6 +868,21 @@
       "confirmReject": "Từ chối ngày công của {worker}? Bản ghi sẽ bị xóa và công nhân có thể chấm lại.",
       "validateFailed": "Không duyệt được. Thử lại.",
       "rejectFailed": "Không từ chối được. Thử lại."
+    },
+    "roster": {
+      "title": "Danh sách chấm công trong ngày",
+      "today": "Hôm nay",
+      "loadError": "Không thể tải danh sách chấm công.",
+      "empty": "Không có ai được lên lịch cho ngày này.",
+      "statusPresent": "Có mặt",
+      "statusPending": "Đang chờ",
+      "statusAbsent": "Vắng mặt",
+      "col": {
+        "name": "Tên",
+        "status": "Trạng thái",
+        "hours": "Số giờ",
+        "dayType": "Loại ngày công"
+      }
     }
   },
   "acceptInvite": {
@@ -1025,6 +1050,11 @@
       "cancel": "Hủy",
       "validated": "Đã duyệt ngày công của {worker}",
       "rejected": "Đã từ chối ngày công của {worker}"
+    },
+    "companyEvents": {
+      "title": "Thành viên mới",
+      "joined": "{name} đã tham gia công ty của bạn",
+      "aria": "Đi tới Cài đặt để thêm {name} vào một dự án"
     }
   },
   "billing": {
@@ -1088,7 +1118,8 @@
           "saveFailed": "Lưu mẫu thất bại. Vui lòng thử lại.",
           "deleteFailed": "Xóa mẫu thất bại. Vui lòng thử lại."
         }
-      }
+      },
+      "companyLabel": "Công ty"
     },
     "devis": {
       "list": {
@@ -1521,6 +1552,7 @@
     },
     "invite": {
       "button": "Mời thành viên",
+      "unavailable": "Tính năng mời tạm thời không khả dụng. Vui lòng thử lại sau.",
       "dialogTitle": "Mời thành viên mới",
       "dialogDescription": "Thêm một người vào dự án này. Nếu họ đã có tài khoản Folio, họ sẽ được thêm trực tiếp. Nếu chưa, chúng tôi sẽ gửi link mời có hiệu lực 7 ngày qua email.",
       "emailLabel": "Địa chỉ email",
@@ -1566,6 +1598,19 @@
         "emailTaken": "Email này đã được sử dụng",
         "forbidden": "Bạn không có quyền thực hiện điều này"
       }
+    },
+    "assign": {
+      "button": "Thêm thành viên vào dự án",
+      "dialogTitle": "Thêm thành viên vào dự án",
+      "dialogDescription": "Thêm một thành viên hiện có của công ty vào dự án này với vai trò quản lý hoặc thành viên.",
+      "personLabel": "Người",
+      "personPlaceholder": "Tìm theo tên hoặc số điện thoại…",
+      "personEmpty": "Không tìm thấy người phù hợp",
+      "roleLabel": "Vai trò",
+      "roleMember": "Thành viên",
+      "roleManager": "Quản lý",
+      "submit": "Thêm vào dự án",
+      "successToast": "Đã thêm thành viên vào dự án."
     }
   },
   "companies": {
@@ -1649,7 +1694,8 @@
           "roleMember": "Thành viên",
           "makeAdmin": "Đặt làm quản trị",
           "makeMember": "Đặt làm thành viên",
-          "roleUpdatedToast": "Đã cập nhật vai trò"
+          "roleUpdatedToast": "Đã cập nhật vai trò",
+          "roleManager": "Quản lý"
         },
         "delete": {
           "title": "Xóa công ty",
@@ -2058,5 +2104,117 @@
     "compareExpandRow": "Xem ghi chú của {name}",
     "compareShopsEyebrow": "So sánh cửa hàng",
     "compareGapExplanationNoPct": "{dearer} đắt hơn {gap} mỗi đơn vị — {lineGap} cho dòng này với {qty}. {cheaper} rẻ hơn."
+  },
+  "onboarding": {
+    "title": "Chào mừng đến với Folio",
+    "subtitle": "Tạo công ty của bạn hoặc nhập mã để tham gia một công ty có sẵn.",
+    "createCompanyCta": "Tạo công ty",
+    "createCompanyHint": "Bắt đầu mới — bạn sẽ là quản trị viên.",
+    "joinCompanyCta": "Nhập mã tham gia",
+    "joinCompanyHint": "Quản trị viên của bạn có thể cung cấp mã gồm 8 ký tự.",
+    "back": "Quay lại",
+    "create": {
+      "legalNameLabel": "Tên công ty",
+      "addressLabel": "Địa chỉ",
+      "submit": "Tạo công ty",
+      "successToast": "Đã tạo công ty."
+    },
+    "join": {
+      "codeLabel": "Mã tham gia",
+      "codePlaceholder": "vd. AB12CD34",
+      "submit": "Tham gia",
+      "successToast": "Đã tham gia {company}."
+    }
+  },
+  "companySettings": {
+    "notAdmin": "Bạn không phải là quản trị viên của công ty nào.",
+    "companyPicker": {
+      "label": "Công ty"
+    },
+    "members": {
+      "title": "Thành viên",
+      "description": "Quản lý vai trò và quyền truy cập cho mọi người trong công ty của bạn.",
+      "importFromCompany": "Nhập từ công ty khác",
+      "addByPhone": "Thêm bằng số điện thoại",
+      "empty": "Chưa có thành viên nào.",
+      "col": {
+        "nameEmail": "Tên / Email",
+        "role": "Vai trò"
+      },
+      "roleAdmin": "Quản trị viên",
+      "roleManager": "Quản lý",
+      "roleMember": "Thành viên",
+      "customPermissions": "Quyền tuỳ chỉnh",
+      "roleUpdatedToast": "Đã cập nhật vai trò."
+    },
+    "addByPhone": {
+      "dialogTitle": "Thêm thành viên bằng số điện thoại",
+      "dialogDescription": "Thêm thợ hoặc quản lý bằng số điện thoại của họ.",
+      "phoneLabel": "Số điện thoại",
+      "nameLabel": "Tên (không bắt buộc)",
+      "roleLabel": "Vai trò",
+      "roleMember": "Thành viên",
+      "roleManager": "Quản lý",
+      "candidatesHint": "Có nhiều người khớp với số điện thoại này — hãy chọn đúng người.",
+      "candidatesPlaceholder": "Chọn một người",
+      "cancel": "Huỷ",
+      "submit": "Thêm",
+      "addedToast": "Đã thêm {name}."
+    },
+    "import": {
+      "dialogTitle": "Nhập thành viên",
+      "dialogDescription": "Sao chép hồ sơ từ một công ty khác mà bạn quản trị vào công ty này.",
+      "sourcePlaceholder": "Công ty nguồn",
+      "empty": "Không có thành viên để nhập.",
+      "cancel": "Huỷ",
+      "submit": "{count, plural, other {Nhập # thành viên}}",
+      "importedToast": "{count, plural, other {Đã nhập # thành viên}}"
+    },
+    "grants": {
+      "dialogTitle": "Quyền tuỳ chỉnh cho {name}",
+      "dialogDescription": "Cấp hoặc từ chối quyền cụ thể, áp dụng cho toàn công ty hoặc một dự án. Từ chối luôn được ưu tiên.",
+      "empty": "Chưa có quyền tuỳ chỉnh nào.",
+      "effectGrant": "Cấp quyền",
+      "effectDeny": "Từ chối",
+      "scopeCompanyWide": "Toàn công ty",
+      "permissionPlaceholder": "Chọn quyền",
+      "add": "Thêm",
+      "remove": "Xoá",
+      "savedToast": "Đã lưu.",
+      "permission": {
+        "project_update": "Chỉnh sửa dự án",
+        "project_invite": "Mời thành viên",
+        "project_manage_users": "Quản lý thành viên",
+        "project_manage_labor": "Quản lý nhân công",
+        "project_manage_invoices": "Quản lý hoá đơn",
+        "project_log_own_attendance": "Chấm công cho bản thân",
+        "bibliotheque_manage": "Quản lý thư viện",
+        "project_view_pay": "Xem lương"
+      }
+    },
+    "directory": {
+      "title": "Danh bạ",
+      "description": "Tất cả những người liên kết với công ty của bạn, dù đã có tài khoản hay chưa.",
+      "empty": "Chưa có ai trong danh bạ.",
+      "col": {
+        "name": "Tên",
+        "phone": "Số điện thoại",
+        "status": "Trạng thái",
+        "assignedProjects": "Dự án được giao"
+      },
+      "pending": "Đang chờ",
+      "linked": "Đã liên kết"
+    },
+    "errors": {
+      "unauthorized": "Bạn cần đăng nhập.",
+      "validation": "Một số thông tin không hợp lệ.",
+      "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+      "notFound": "Không tìm thấy.",
+      "conflict": "Xung đột với dữ liệu hiện có.",
+      "rateLimited": "Quá nhiều lần thử. Vui lòng thử lại sau.",
+      "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+      "multipleCandidates": "Có nhiều người khớp với số điện thoại này.",
+      "phoneAlreadyInCompany": "Số điện thoại này đã có trong công ty của bạn."
+    }
   }
 }

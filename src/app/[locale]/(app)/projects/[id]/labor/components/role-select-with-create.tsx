@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RoleColorPicker } from "./role-color-picker";
 import { createLaborRoleAction } from "../actions";
-import { DEFAULT_ROLE_I18N_KEYS } from "@/lib/utils/default-role-names";
+import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
 import type { LaborRole } from "@/types/labor-role";
 
 interface RoleSelectWithCreateProps {
@@ -60,8 +60,10 @@ export function RoleSelectWithCreate({
 
   const selectedRole = value ? roles.find((r) => r.id === value) : null;
   const roleName = React.useCallback(
-    (role: LaborRole) =>
-      DEFAULT_ROLE_I18N_KEYS[role.id] ? tRole(DEFAULT_ROLE_I18N_KEYS[role.id]) : role.name,
+    (role: LaborRole) => {
+      const key = resolveDefaultRoleI18nKey(role);
+      return key ? tRole(key) : role.name;
+    },
     [tRole],
   );
 

@@ -29,11 +29,9 @@ interface EditMemberDialogProps {
 }
 
 /**
- * Identity-only editor (email / display name). Project role is no longer
- * editable here — it is set at assignment time (AssignMemberDialog) and
- * changed by re-assigning; the members table dropped its Role column and
- * picker (roles-permissions-redesign: manager/member is a project
- * assignment, not a per-project role_id).
+ * Identity-only editor (email / display name). Project access is granted and
+ * revoked through AssignMemberDialog; membership itself carries no role, so
+ * this dialog has no role picker.
  */
 export function EditMemberDialog({
   open,

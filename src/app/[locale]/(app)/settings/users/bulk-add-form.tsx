@@ -7,34 +7,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { UserSearch } from "./user-search";
 import { bulkAddMembershipsAction } from "./actions";
 import { renderBulkAddResultsToasts } from "./results-toast-renderer";
-import type { Role } from "@/lib/api/roles";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import type { UserSearchItem } from "@/lib/api/admin";
 
 const MAX_PROJECTS = 50;
 
 interface BulkAddFormProps {
-  roles: Role[];
   projects: ProjectSummary[];
 }
 
-export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
+/**
+ * Platform-ops tool: attach an existing user to one or more projects.
+ * Project access carries no role — permissions come from the company role
+ * and per-project grants — so the form is user + projects only.
+ */
+export function BulkAddForm({ projects }: BulkAddFormProps) {
   const t = useTranslations("admin.bulkAdd");
   const tToast = useTranslations("admin.bulkAdd.toast");
 
   const [selectedUser, setSelectedUser] = useState<UserSearchItem | null>(null);
   const [projectIds, setProjectIds] = useState<string[]>([]);
-  const [roleId, setRoleId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [projectFilter, setProjectFilter] = useState("");
@@ -65,18 +60,9 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
       setError(t("errors.projectsRequired"));
       return;
     }
-    if (!roleId) {
-      setError(t("errors.roleRequired"));
-      return;
-    }
-
     setIsSubmitting(true);
     try {
-      const result = await bulkAddMembershipsAction(
-        selectedUser.id,
-        projectIds,
-        roleId
-      );
+      const result = await bulkAddMembershipsAction(selectedUser.id, projectIds);
 
       if (!result.success) {
         const key = result.error ?? "generic";
@@ -88,7 +74,7 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
         renderBulkAddResultsToasts(result.results, tToast);
       }
 
-      // Reset project selection on success; keep user + role for repeated use
+      // Reset project selection on success; keep the user for repeated use
       setProjectIds([]);
       setProjectFilter("");
     } finally {
@@ -112,37 +98,6 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
           {t("userSearch.selected", { email: selectedUser.email })}
         </p>
       )}
-
-      {/* Role select */}
-      <div className="space-y-1.5">
-        <Label htmlFor="role-select" aria-required="true">
-          {t("role.label")}
-        </Label>
-        <Select
-          value={roleId}
-          onValueChange={(v) => { setRoleId(v); setError(null); }}
-          disabled={isSubmitting}
-        >
-          <SelectTrigger id="role-select">
-            <SelectValue placeholder={t("role.placeholder")} />
-          </SelectTrigger>
-          <SelectContent>
-            {roles.map((role) => (
-              <SelectItem key={role.id} value={role.id}>
-                <span className="font-medium">{role.name}</span>
-                {role.description && (
-                  <span
-                    className="ml-1.5 text-[11px]"
-                    style={{ color: "var(--muted-foreground)" }}
-                  >
-                    — {role.description}
-                  </span>
-                )}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
       {/* Project multi-select */}
       <div className="space-y-1.5">
@@ -219,12 +174,7 @@ export function BulkAddForm({ roles, projects }: BulkAddFormProps) {
 
       <Button
         type="submit"
-        disabled={
-          isSubmitting ||
-          !selectedUser ||
-          projectIds.length < 1 ||
-          !roleId
-        }
+        disabled={isSubmitting || !selectedUser || projectIds.length < 1}
       >
         {isSubmitting ? t("submitting") : t("submit")}
       </Button>

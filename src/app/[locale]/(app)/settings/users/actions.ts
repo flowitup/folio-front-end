@@ -32,26 +32,15 @@ function isUuid(value: string): boolean {
   return UUID_RE.test(value);
 }
 
-/** Inspect a thrown fetch-error's response body to discriminate between
- *  similar status codes (e.g. 404 user vs role; 403 perm vs role-not-allowed). */
+/** Map a thrown fetch-error onto an i18n error key, inspecting the response
+ *  body where the status alone is ambiguous. */
 function classifyBackendError(err: unknown): string {
   const e = err as { status?: number; body?: { error?: string; message?: string } };
   const status = e.status;
-  const errorClass = e.body?.error ?? "";
   const message = (e.body?.message ?? "").toLowerCase();
 
-  // M2 / N1 — body inspection differentiates same-status causes:
-  if (status === 403) {
-    if (errorClass === "Forbidden" && message.includes("superadmin")) {
-      return "roleNotAllowed";
-    }
-    return "forbidden";
-  }
-  if (status === 404) {
-    // BE message includes "Target user" or "Role" prefix
-    if (message.includes("role")) return "roleNotFound";
-    return "userNotFound";
-  }
+  if (status === 403) return "forbidden";
+  if (status === 404) return "userNotFound";
   if (status === 400) return "tooMany"; // EmptyProjectListError / TooManyProjectsError; FE pre-validates so rare
   if (status === 422) {
     // Pydantic ValidationError — usually wrong-types or out-of-bounds project_ids
@@ -63,14 +52,13 @@ function classifyBackendError(err: unknown): string {
 }
 
 /**
- * Server action: bulk-add a user to multiple projects under one role.
+ * Server action: bulk-add a user to multiple projects.
  * Validates inputs server-side before hitting the backend.
  * Maps known HTTP status codes (with response-body inspection) to i18n error keys.
  */
 export async function bulkAddMembershipsAction(
   userId: string,
-  projectIds: string[],
-  roleId: string
+  projectIds: string[]
 ): Promise<{ success: boolean; results?: BulkAddResultItem[]; error?: string }> {
   const session = await getSession();
   if (!session?.accessToken) {
@@ -79,9 +67,6 @@ export async function bulkAddMembershipsAction(
   // --- Server-side input validation ---
   if (!userId || !isUuid(userId)) {
     return { success: false, error: "userNotFound" };
-  }
-  if (!roleId || !isUuid(roleId)) {
-    return { success: false, error: "roleNotFound" };
   }
   if (!Array.isArray(projectIds) || projectIds.length < 1) {
     // M3 — match the existing i18n key admin.bulkAdd.errors.projectsRequired.
@@ -95,10 +80,7 @@ export async function bulkAddMembershipsAction(
   }
 
   try {
-    const result = await bulkAddMemberships(userId, {
-      project_ids: projectIds,
-      role_id: roleId,
-    });
+    const result = await bulkAddMemberships(userId, { project_ids: projectIds });
     return { success: true, results: result.results };
   } catch (err: unknown) {
     return { success: false, error: classifyBackendError(err) };

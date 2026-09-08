@@ -62,13 +62,13 @@ export async function searchUsers(
 }
 
 /**
- * Bulk-add a user to multiple projects under one role.
+ * Bulk-add a user to multiple projects.
  * Requires superadmin session.
  * Throws with `.status` attached on non-2xx.
  */
 export async function bulkAddMemberships(
   userId: string,
-  payload: { project_ids: string[]; role_id: string }
+  payload: { project_ids: string[] }
 ): Promise<{ results: BulkAddResultItem[] }> {
   const authHeaders = await sessionAuthHeader();
 
@@ -128,7 +128,7 @@ export async function updateUser(
  * Parse a non-2xx response and produce an Error carrying both `.status`
  * and `.body` (the parsed JSON, if any). The server-action layer uses
  * the body fields (`error`, `message`) to discriminate same-status causes
- * — e.g. 403 forbidden vs roleNotAllowed, 404 user vs role.
+ * — e.g. a 422 on `project_ids` vs any other validation failure.
  */
 async function buildHttpError(
   response: Response,

@@ -43,7 +43,7 @@ describe("UsersSection", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockUseAuth.mockReturnValue({ user: { permissions: ["*:*"] } } as any);
 
-    render(<UsersSection roles={[]} projects={[]} />);
+    render(<UsersSection projects={[]} />);
 
     expect(screen.getByTestId("bulk-add-form")).toBeDefined();
   });
@@ -52,7 +52,7 @@ describe("UsersSection", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockUseAuth.mockReturnValue({ user: { permissions: [] } } as any);
 
-    render(<UsersSection roles={[]} projects={[]} />);
+    render(<UsersSection projects={[]} />);
 
     expect(
       screen.getByText("You don't have authorization to change roles of users.")

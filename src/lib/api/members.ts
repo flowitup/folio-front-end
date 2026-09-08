@@ -11,9 +11,7 @@ export interface ProjectMember {
   user_id: string;
   email: string;
   display_name: string | null;
-  role_name: string;
   joined_at: string;
-  role_id: string | null;
 }
 
 /** Error carrying `.status` (and parsed `.body`) for server-action discrimination. */
@@ -61,37 +59,6 @@ export async function listMembers(projectId: string): Promise<ProjectMember[]> {
   // BE returns { members: [...], total: N }; unwrap to array.
   const data: { members: ProjectMember[] } = await response.json();
   return data.members ?? [];
-}
-
-/**
- * Change a member's role on a project. The new role's permissions take effect
- * immediately (project-scoped checks resolve the membership role per request).
- * Throws with `.status` attached on non-2xx.
- */
-export async function updateMemberRole(
-  projectId: string,
-  userId: string,
-  roleId: string
-): Promise<{ user_id: string; role_id: string; role_name: string }> {
-  const authHeaders = await sessionAuthHeader();
-  let response: Response;
-  try {
-    response = await fetch(
-      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/members/${encodeURIComponent(userId)}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({ role_id: roleId }),
-        cache: "no-store",
-      }
-    );
-  } catch (err) {
-    throw new Error(`Network error updating member role: ${String(err)}`);
-  }
-  if (!response.ok) {
-    throw await buildHttpError(response, "Failed to update member role");
-  }
-  return response.json();
 }
 
 /**

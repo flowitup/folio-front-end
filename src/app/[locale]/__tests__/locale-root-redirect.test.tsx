@@ -40,7 +40,7 @@ beforeEach(() => {
 describe("locale root page redirect", () => {
   it("redirects authenticated user to /<locale>/dashboard", async () => {
     mockGetSession.mockResolvedValue({
-      user: { id: "u1", email: "u@example.com", name: "U", roles: [], permissions: [] },
+      user: { id: "u1", email: "u@example.com", name: "U", permissions: [] },
       accessToken: "tok",
       expiresAt: Date.now() + 60_000,
     } as never);

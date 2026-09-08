@@ -52,7 +52,7 @@ function renderWith(locale: "en" | "fr" | "vi") {
   const messages = { en: enMessages, fr: frMessages, vi: viMessages }[locale];
   return render(
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <SettingsClient roles={[]} projects={[]} />
+      <SettingsClient projects={[]} />
     </NextIntlClientProvider>
   );
 }

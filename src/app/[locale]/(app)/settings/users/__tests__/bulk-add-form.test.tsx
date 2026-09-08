@@ -3,7 +3,7 @@
  *
  * Covers:
  * - Initial rendering (form fields visible, submit disabled)
- * - Submit disabled until user + ≥1 project + role are chosen
+ * - Submit disabled until a user and ≥1 project are chosen
  * - Calls bulkAddMembershipsAction with correct args on submit
  * - Renders proper toast on mixed-result response (success/info/warning/error)
  * - Displays inline error on action rejection (success:false)
@@ -14,7 +14,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BulkAddForm } from "../bulk-add-form";
-import type { Role } from "@/lib/api/roles";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 
 // ---- Module mocks ----
@@ -64,11 +63,6 @@ const mockToast = toast as unknown as {
 
 // ---- Test fixtures ----
 
-const ROLES: Role[] = [
-  { id: "role-member", name: "Member", description: "Can view and edit" },
-  { id: "role-viewer", name: "Viewer", description: "Read-only" },
-];
-
 const PROJECTS: ProjectSummary[] = [
   { id: "proj-1", name: "Project Alpha" },
   { id: "proj-2", name: "Project Beta" },
@@ -78,8 +72,8 @@ const PROJECTS: ProjectSummary[] = [
 // Valid UUID format required by the server action validator
 const VALID_USER_ID = "11111111-1111-1111-1111-111111111111";
 
-function renderForm(roles = ROLES, projects = PROJECTS) {
-  return render(<BulkAddForm roles={roles} projects={projects} />);
+function renderForm(projects = PROJECTS) {
+  return render(<BulkAddForm projects={projects} />);
 }
 
 describe("BulkAddForm", () => {
@@ -92,15 +86,15 @@ describe("BulkAddForm", () => {
   // ---------------------------------------------------------------------------
 
   describe("Rendering", () => {
-    it("renders with empty initial state: user search, project list, role select, submit button visible", () => {
+    it("renders with empty initial state: user search, project list, submit button visible", () => {
       renderForm();
       // User search input
       expect(screen.getByRole("textbox", { name: /user/i })).toBeDefined();
       // Project checkboxes for each project
       expect(screen.getByRole("checkbox", { name: /Project Alpha/i })).toBeDefined();
       expect(screen.getByRole("checkbox", { name: /Project Beta/i })).toBeDefined();
-      // Role combobox
-      expect(screen.getByRole("combobox")).toBeDefined();
+      // No role picker — project access carries no role
+      expect(screen.queryByRole("combobox")).toBeNull();
       // Submit button present
       expect(screen.getByRole("button", { name: /add/i })).toBeDefined();
     });
@@ -111,21 +105,7 @@ describe("BulkAddForm", () => {
       expect(submit).toBeDisabled();
     });
 
-    it("submit remains disabled when only user is selected (no project, no role)", async () => {
-      // We cannot fully select a user without the search dropdown in this unit test
-      // (the UserSearch component needs searchUsersAction), so we verify via the
-      // BulkAddForm's own disabled logic: no project + no role → disabled.
-      renderForm();
-      await act(async () => {
-        // Check a project
-        await userEvent.click(screen.getByRole("checkbox", { name: /Project Alpha/i }));
-      });
-      // Still no role → still disabled
-      const submit = screen.getByRole("button", { name: /add/i });
-      expect(submit).toBeDisabled();
-    });
-
-    it("submit remains disabled when only project(s) are checked (no user, no role)", async () => {
+    it("submit remains disabled when only project(s) are checked (no user)", async () => {
       renderForm();
       await act(async () => {
         await userEvent.click(screen.getByRole("checkbox", { name: /Project Alpha/i }));
@@ -142,7 +122,7 @@ describe("BulkAddForm", () => {
   describe("Action invocation", () => {
     /**
      * Helper: simulate the form in the "ready to submit" state by directly
-     * triggering checkbox + role selection.  We bypass UserSearch here because
+     * triggering checkbox selection.  We bypass UserSearch here because
      * that component has its own debounce + search tests; BulkAddForm tests
      * treat selectedUser as an internal concern and test the submit guard logic.
      *
@@ -242,7 +222,7 @@ describe("BulkAddForm", () => {
           name: `Project ${i + 1}`,
         }));
 
-        renderForm(ROLES, manyProjects);
+        renderForm(manyProjects);
 
         // Batch all 50 clicks inside a single act() so React only flushes once.
         await act(async () => {
@@ -316,11 +296,7 @@ describe("BulkAddForm", () => {
       mockAction.mockResolvedValueOnce({ success: false, error: "forbidden" });
 
       // Verify the mock is set up correctly
-      const result = await mockAction(
-        VALID_USER_ID,
-        ["proj-uuid-00"],
-        "role-member"
-      );
+      const result = await mockAction(VALID_USER_ID, ["proj-uuid-00"]);
       expect(result.success).toBe(false);
       expect(result.error).toBe("forbidden");
     });
@@ -333,7 +309,7 @@ describe("BulkAddForm", () => {
         ],
       });
 
-      const result = await mockAction(VALID_USER_ID, ["p1"], "role-member");
+      const result = await mockAction(VALID_USER_ID, ["p1"]);
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(1);
     });

@@ -1,6 +1,7 @@
 /**
- * The floating chat button exists only once the backend confirms FEATURE_CHAT, hides while
- * the drawer is open, carries the total unread pill and opens the selected project's channel.
+ * The floating chat button exists only once the backend confirms FEATURE_CHAT, becomes the
+ * close toggle while the widget is open, carries the total unread pill and opens the selected
+ * project's channel.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -12,6 +13,7 @@ vi.mock("next-intl", () => ({
 }));
 
 const mockOpenChat = vi.fn();
+const mockCloseChat = vi.fn();
 
 const mockUseProject = vi.fn();
 vi.mock("@/context/ProjectContext", () => ({
@@ -24,7 +26,7 @@ vi.mock("@/context/ChatContext", () => ({
 }));
 
 function chat(overrides: Record<string, unknown>) {
-  return { isOpen: false, openChat: mockOpenChat, ...overrides };
+  return { isOpen: false, openChat: mockOpenChat, closeChat: mockCloseChat, ...overrides };
 }
 
 beforeEach(() => {
@@ -43,10 +45,15 @@ describe("ChatFab", () => {
     expect(screen.queryByTestId("chat-fab")).toBeNull();
   });
 
-  it("hides while the drawer is open", () => {
+  it("turns into the close toggle while the widget is open", () => {
     mockUseChat.mockReturnValue(chat({ enabled: true, unread: 0, isOpen: true }));
     render(<ChatFab />);
-    expect(screen.queryByTestId("chat-fab")).toBeNull();
+    const fab = screen.getByTestId("chat-fab");
+    expect(fab).toHaveAttribute("aria-expanded", "true");
+    expect(fab).toHaveAttribute("aria-label", "chat.close");
+    fireEvent.click(fab);
+    expect(mockCloseChat).toHaveBeenCalledTimes(1);
+    expect(mockOpenChat).not.toHaveBeenCalled();
   });
 
   it("shows the unread pill and opens the selected project's channel", () => {

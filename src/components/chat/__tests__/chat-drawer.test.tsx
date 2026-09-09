@@ -1,7 +1,8 @@
 /**
- * The chat drawer renders only while open, hosts the panel on the requested channel,
- * toggles between compact and split layouts on desktop, and closes on the X, the backdrop
- * and Escape.
+ * The chat drawer renders only while open, hosts the panel on the requested channel, is a
+ * support-chat widget (no backdrop) by default on desktop, expands to a full-height split
+ * drawer with a backdrop, is a full-screen sheet on narrow viewports, and closes on the X,
+ * the backdrop and Escape.
  */
 
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -46,27 +47,34 @@ describe("ChatDrawer", () => {
     expect(panelProps).not.toHaveBeenCalled();
   });
 
-  it("opens compact on the requested channel and expands to the split layout", () => {
+  it("opens as a widget (no backdrop) on the requested channel and expands to the split drawer", () => {
     render(<ChatDrawer />);
-    expect(screen.getByTestId("chat-drawer")).toHaveAttribute("data-expanded", "false");
+    const drawer = screen.getByTestId("chat-drawer");
+    expect(drawer).toHaveAttribute("data-shape", "widget");
+    expect(drawer).toHaveAttribute("aria-modal", "false");
+    expect(screen.queryByTestId("chat-drawer-backdrop")).toBeNull();
     expect(panelProps).toHaveBeenLastCalledWith(expect.objectContaining({ initialChannelKey: "project:p1", layout: "stack" }));
     fireEvent.click(screen.getByTestId("chat-drawer-expand"));
-    expect(screen.getByTestId("chat-drawer")).toHaveAttribute("data-expanded", "true");
+    expect(screen.getByTestId("chat-drawer")).toHaveAttribute("data-shape", "drawer");
+    expect(screen.getByTestId("chat-drawer-backdrop")).toBeInTheDocument();
     expect(panelProps).toHaveBeenLastCalledWith(expect.objectContaining({ layout: "split" }));
   });
 
-  it("never splits on narrow viewports and hides the expand toggle", () => {
+  it("is a full-screen sheet on narrow viewports, without the expand toggle", () => {
     mockDesktop = false;
     render(<ChatDrawer />);
+    expect(screen.getByTestId("chat-drawer")).toHaveAttribute("data-shape", "sheet");
     expect(screen.queryByTestId("chat-drawer-expand")).toBeNull();
+    expect(screen.getByTestId("chat-drawer-backdrop")).toBeInTheDocument();
     expect(panelProps).toHaveBeenLastCalledWith(expect.objectContaining({ layout: "stack" }));
   });
 
-  it("closes on the X button, the backdrop and Escape", () => {
+  it("closes on the X button, Escape, and the backdrop once expanded", () => {
     render(<ChatDrawer />);
     fireEvent.click(screen.getByTestId("chat-drawer-close"));
-    fireEvent.click(screen.getByTestId("chat-drawer-backdrop"));
     fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.click(screen.getByTestId("chat-drawer-expand"));
+    fireEvent.click(screen.getByTestId("chat-drawer-backdrop"));
     expect(mockClose).toHaveBeenCalledTimes(3);
   });
 });

@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { UserSearch } from "./user-search";
 import { bulkAddMembershipsAction } from "./actions";
 import { renderBulkAddResultsToasts } from "./results-toast-renderer";
+import { projectDisplayName, projectMatchesSearch } from "@/lib/projects/project-display-name";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import type { UserSearchItem } from "@/lib/api/admin";
 
@@ -34,11 +35,7 @@ export function BulkAddForm({ projects }: BulkAddFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [projectFilter, setProjectFilter] = useState("");
 
-  const filteredProjects = projectFilter.trim()
-    ? projects.filter((p) =>
-        p.name.toLowerCase().includes(projectFilter.toLowerCase())
-      )
-    : projects;
+  const filteredProjects = projects.filter((p) => projectMatchesSearch(p, projectFilter));
 
   function toggleProject(id: string) {
     setProjectIds((prev) => {
@@ -151,9 +148,9 @@ export function BulkAddForm({ projects }: BulkAddFormProps) {
                     disabled={disabled}
                     onChange={() => toggleProject(project.id)}
                     className="h-4 w-4 rounded border accent-primary"
-                    aria-label={project.name}
+                    aria-label={projectDisplayName(project)}
                   />
-                  {project.name}
+                  {projectDisplayName(project)}
                 </label>
               );
             })

@@ -41,9 +41,9 @@ test.describe("Dashboard flow", () => {
 
     await page.goto("/en/dashboard");
 
-    // Hero heading reflects the selected project's name (not the fallback).
+    // Hero heading reflects the selected project's label — its address (not the fallback).
     await expect(
-      page.getByRole("heading", { name: SEED_PROJECTS.downtown, level: 2 }),
+      page.getByRole("heading", { name: SEED_PROJECTS.downtownLabel, level: 2 }),
     ).toBeVisible({ timeout: 15_000 });
 
     // Structural element: the "Build phases" ribbon section header.

@@ -39,6 +39,7 @@ const mockDeleteProject = vi.mocked(deleteProject);
 const FAKE_PROJECT = {
   id: "p-1",
   name: "Acme",
+  // Projects are labelled by address everywhere, so the confirmation text is the address too.
   address: "12 rue X",
   owner_id: "u-1",
   user_count: 3,
@@ -60,7 +61,7 @@ describe("DeleteProjectDialog", () => {
     );
 
     expect(screen.getByText("Delete project?")).toBeInTheDocument();
-    expect(screen.getAllByText("Acme")).toHaveLength(2); // Once in header, once in label
+    expect(screen.getAllByText("12 rue X")).toHaveLength(2); // Once in header, once in label
     expect(screen.getByText("This action cannot be undone.")).toBeInTheDocument();
     expect(screen.getByText("All associated data will be deleted.")).toBeInTheDocument();
     expect(screen.getByText("Billing documents will be archived.")).toBeInTheDocument();
@@ -109,7 +110,7 @@ describe("DeleteProjectDialog", () => {
     );
 
     const input = screen.getByPlaceholderText("e.g. Acme");
-    await user.type(input, "Acme");
+    await user.type(input, "12 rue X");
 
     const deleteButton = screen.getByRole("button", { name: "Delete" });
     expect(deleteButton).not.toBeDisabled();
@@ -127,7 +128,7 @@ describe("DeleteProjectDialog", () => {
     );
 
     const input = screen.getByPlaceholderText("e.g. Acme");
-    await user.type(input, "Acme  ");
+    await user.type(input, "12 rue X  ");
 
     const deleteButton = screen.getByRole("button", { name: "Delete" });
     expect(deleteButton).not.toBeDisabled();
@@ -150,7 +151,7 @@ describe("DeleteProjectDialog", () => {
     );
 
     const input = screen.getByPlaceholderText("e.g. Acme");
-    await user.type(input, "Acme");
+    await user.type(input, "12 rue X");
     await user.click(screen.getByRole("button", { name: "Delete" }));
 
     await waitFor(() => {
@@ -194,7 +195,7 @@ describe("DeleteProjectDialog", () => {
     );
 
     const input = screen.getByPlaceholderText("e.g. Acme") as HTMLInputElement;
-    await user.type(input, "Acme");
+    await user.type(input, "12 rue X");
 
     const deleteButton = screen.getByRole("button", { name: "Delete" });
     expect(deleteButton).not.toBeDisabled();
@@ -213,7 +214,7 @@ describe("DeleteProjectDialog", () => {
     });
 
     // Input text should still be there
-    expect(input.value).toBe("Acme");
+    expect(input.value).toBe("12 rue X");
 
     // Verify API was called
     expect(mockDeleteProject).toHaveBeenCalledWith("p-1");
@@ -239,7 +240,7 @@ describe("DeleteProjectDialog", () => {
     // The label for that input should contain both "Type" and the project name
     const label = document.querySelector('label[for="delete-project-confirm"]');
     expect(label?.textContent).toContain("Type");
-    expect(label?.textContent).toContain("Acme");
+    expect(label?.textContent).toContain("12 rue X");
   });
 
   it("does not call onDeleted if project is null", () => {
@@ -280,7 +281,7 @@ describe("DeleteProjectDialog", () => {
     );
 
     const input = screen.getByPlaceholderText("e.g. Acme") as HTMLInputElement;
-    await user.type(input, "Acme");
+    await user.type(input, "12 rue X");
 
     const deleteButton = screen.getByRole("button", { name: "Delete" });
     await user.click(deleteButton);
@@ -309,7 +310,7 @@ describe("DeleteProjectDialog", () => {
     );
 
     const input = screen.getByPlaceholderText("e.g. Acme");
-    await user.type(input, "Acme");
+    await user.type(input, "12 rue X");
 
     const deleteButton = screen.getByRole("button", { name: "Delete" });
     expect(deleteButton).not.toBeDisabled();
@@ -339,5 +340,26 @@ describe("DeleteProjectDialog", () => {
     // New delete button should be disabled
     const newDeleteButton = screen.getByRole("button", { name: "Delete" });
     expect(newDeleteButton).toBeDisabled();
+  });
+
+  it("rejects the stored name when the project is labelled by its address", async () => {
+    const user = userEvent.setup();
+    render(<DeleteProjectDialog project={FAKE_PROJECT} open={true} onOpenChange={vi.fn()} />);
+    await user.type(screen.getByPlaceholderText("e.g. Acme"), "Acme");
+    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+  });
+
+  it("falls back to the name as the confirmation text when the project has no address", async () => {
+    const user = userEvent.setup();
+    render(
+      <DeleteProjectDialog
+        project={{ ...FAKE_PROJECT, address: null }}
+        open={true}
+        onOpenChange={vi.fn()}
+      />
+    );
+    expect(screen.getAllByText("Acme")).toHaveLength(2);
+    await user.type(screen.getByPlaceholderText("e.g. Acme"), "Acme");
+    expect(screen.getByRole("button", { name: "Delete" })).not.toBeDisabled();
   });
 });

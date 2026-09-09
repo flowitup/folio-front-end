@@ -29,6 +29,8 @@ export const SEED_USERS = {
 /** Seeded project names (seed_project.py), owned by admin. */
 export const SEED_PROJECTS = {
   downtown: "Downtown Office Tower",
+  /** Projects are labelled by address in the UI; this is the seeded address of `downtown`. */
+  downtownLabel: "123 Main Street, Suite 100",
   riverside: "Riverside Apartments",
   mall: "Shopping Mall Renovation",
 } as const;

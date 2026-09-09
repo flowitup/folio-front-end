@@ -60,6 +60,7 @@ import type {
 } from "@/types/billing";
 import type { MyCompany } from "@/types/companies";
 import type { ProjectSummary } from "@/lib/api/projects-server";
+import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 
 // ---------------------------------------------------------------------------
@@ -672,7 +673,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
               </SelectItem>
               {(props.projects ?? []).map((p) => (
                 <SelectItem key={p.id} value={p.id}>
-                  {p.name}
+                  {projectDisplayName(p)}
                 </SelectItem>
               ))}
             </SelectContent>

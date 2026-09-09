@@ -63,6 +63,20 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+describe("Sidebar project switcher — address as the project label", () => {
+  it("shows the address instead of the name when the project has one", () => {
+    mockUseProject.mockReturnValue({
+      projects: [{ id: "p-1", name: "Villa Ngoc", address: "8 rue des Lilas, Arcueil" }],
+      selectedProjectId: "p-1",
+      selectedProject: { id: "p-1", name: "Villa Ngoc", address: "8 rue des Lilas, Arcueil" },
+      selectProject: vi.fn(),
+    });
+    render(<Sidebar />);
+    expect(screen.getByTitle("8 rue des Lilas, Arcueil")).toBeInTheDocument();
+    expect(screen.queryByText("Villa Ngoc")).not.toBeInTheDocument();
+  });
+});
+
 describe("Sidebar project switcher — full name visibility", () => {
   it("exposes the complete project name via the title tooltip", () => {
     setupWithName(LONG_NAME);

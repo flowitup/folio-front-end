@@ -85,7 +85,7 @@ test.describe("Billing ↔ project release-funds flow", () => {
 
     // Select the project in the optional project picker.
     await page.click("#project-picker");
-    await page.getByRole("option", { name: SEED_PROJECTS.downtown }).click();
+    await page.getByRole("option", { name: SEED_PROJECTS.downtownLabel }).click();
 
     // Add a line item. Description is a free-text Combobox: open it, type into
     // the CommandInput, then Enter to commit the typed value.

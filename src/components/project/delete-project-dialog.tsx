@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { deleteProject } from "@/lib/api/projects";
+import { projectDisplayName } from "@/lib/projects/project-display-name";
 import type { Project } from "@/types/project";
 
 interface DeleteProjectDialogProps {
@@ -46,9 +47,11 @@ export function DeleteProjectDialog({
   }, [project?.id, open]);
 
   if (!project) return null;
+  // Users identify projects by the same label shown everywhere else (address, else name).
+  const projectLabel = projectDisplayName(project);
 
   const handleDelete = async () => {
-    if (!project || confirmText.trim() !== project.name) return;
+    if (!project || confirmText.trim() !== projectLabel) return;
     setIsDeleting(true);
     setError(null);
     try {
@@ -79,7 +82,7 @@ export function DeleteProjectDialog({
               {t("deleteProjectTitle")}
             </AlertDialogTitle>
             <p className="text-sm" style={{ color: "var(--muted)" }}>
-              {project.name}
+              {projectLabel}
             </p>
           </div>
         </div>
@@ -94,7 +97,7 @@ export function DeleteProjectDialog({
         {/* Confirmation input — t.rich not used in this codebase; using inline <strong> fallback */}
         <div className="space-y-2">
           <Label htmlFor="delete-project-confirm">
-            {t("deleteProjectTypeToConfirm")} <strong>{project.name}</strong>
+            {t("deleteProjectTypeToConfirm")} <strong>{projectLabel}</strong>
           </Label>
           <Input
             id="delete-project-confirm"
@@ -111,7 +114,7 @@ export function DeleteProjectDialog({
           <AlertDialogCancel disabled={isDeleting}>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            disabled={confirmText.trim() !== project.name || isDeleting}
+            disabled={confirmText.trim() !== projectLabel || isDeleting}
             style={{ background: "var(--negative)", color: "white" }}
           >
             {isDeleting ? (

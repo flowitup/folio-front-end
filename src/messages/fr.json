@@ -2241,5 +2241,37 @@
       "multipleCandidates": "Plusieurs personnes correspondent à ce numéro.",
       "phoneAlreadyInCompany": "Ce numéro de téléphone est déjà dans votre entreprise."
     }
+  },
+  "chat": {
+    "title": "Discussion d'équipe",
+    "open": "Ouvrir la discussion",
+    "close": "Fermer la discussion",
+    "expand": "Agrandir",
+    "collapse": "Réduire",
+    "unread": "{count, plural, one {# non lu} other {# non lus}}",
+    "channels": "Canaux",
+    "kind": {
+      "company": "Société",
+      "project": "Chantier"
+    },
+    "membersCount": "{count, plural, one {# membre} other {# membres}}",
+    "placeholder": "Message…",
+    "send": "Envoyer",
+    "attachImage": "Ajouter une photo",
+    "removeImage": "Retirer la photo",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "empty": "Pas encore de message.",
+    "noChannels": "Vous n'êtes encore dans aucun canal.",
+    "disabled": "La discussion n'est pas activée sur ce serveur.",
+    "loadError": "Impossible de charger les messages.",
+    "retry": "Réessayer",
+    "seenBy": "Vu par {names}",
+    "errors": {
+      "sendFailed": "Envoi impossible. Réessayez.",
+      "tooLarge": "Photo trop lourde (10 Mo max).",
+      "unsupportedType": "Seules les photos JPEG, PNG et WebP sont acceptées.",
+      "forbidden": "Vous n'êtes pas membre de ce canal."
+    }
   }
 }

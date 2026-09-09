@@ -2241,5 +2241,37 @@
       "multipleCandidates": "Có nhiều người khớp với số điện thoại này.",
       "phoneAlreadyInCompany": "Số điện thoại này đã có trong công ty của bạn."
     }
+  },
+  "chat": {
+    "title": "Trò chuyện nhóm",
+    "open": "Mở trò chuyện",
+    "close": "Đóng trò chuyện",
+    "expand": "Mở rộng",
+    "collapse": "Thu gọn",
+    "unread": "{count, plural, other {# chưa đọc}}",
+    "channels": "Kênh",
+    "kind": {
+      "company": "Công ty",
+      "project": "Công trình"
+    },
+    "membersCount": "{count, plural, other {# thành viên}}",
+    "placeholder": "Nhắn tin…",
+    "send": "Gửi",
+    "attachImage": "Thêm ảnh",
+    "removeImage": "Bỏ ảnh",
+    "today": "Hôm nay",
+    "yesterday": "Hôm qua",
+    "empty": "Chưa có tin nhắn.",
+    "noChannels": "Bạn chưa tham gia kênh nào.",
+    "disabled": "Máy chủ này chưa bật trò chuyện.",
+    "loadError": "Không tải được tin nhắn.",
+    "retry": "Thử lại",
+    "seenBy": "{names} đã xem",
+    "errors": {
+      "sendFailed": "Gửi không thành công. Thử lại.",
+      "tooLarge": "Ảnh quá lớn (tối đa 10 MB).",
+      "unsupportedType": "Chỉ hỗ trợ ảnh JPEG, PNG và WebP.",
+      "forbidden": "Bạn không phải thành viên của kênh này."
+    }
   }
 }

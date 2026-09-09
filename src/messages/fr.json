@@ -2244,8 +2244,10 @@
   },
   "chat": {
     "title": "Discussion d'équipe",
-    "subtitle": "Les mêmes canaux que l'application mobile — votre société et chaque chantier.",
     "open": "Ouvrir la discussion",
+    "close": "Fermer la discussion",
+    "expand": "Agrandir",
+    "collapse": "Réduire",
     "unread": "{count, plural, one {# non lu} other {# non lus}}",
     "channels": "Canaux",
     "kind": {

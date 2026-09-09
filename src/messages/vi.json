@@ -2244,8 +2244,10 @@
   },
   "chat": {
     "title": "Trò chuyện nhóm",
-    "subtitle": "Cùng các kênh với ứng dụng di động — công ty của bạn và từng công trình.",
     "open": "Mở trò chuyện",
+    "close": "Đóng trò chuyện",
+    "expand": "Mở rộng",
+    "collapse": "Thu gọn",
     "unread": "{count, plural, other {# chưa đọc}}",
     "channels": "Kênh",
     "kind": {

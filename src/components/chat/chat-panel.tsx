@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * /chat page body. Owns channel selection, the 5 s message poll of the open thread,
+ * Chat drawer body. Owns channel selection, the 5 s message poll of the open thread,
  * read markers and sending; channels + the feature flag come from ChatContext (shared
- * with the shell badges). Desktop: channel list left, thread right. Narrow widths:
- * channel chips above the thread, like the phone app.
+ * with the floating button). `layout="split"`: channel list left, thread right (expanded
+ * drawer). `layout="stack"`: channel chips above the thread, like the phone app.
  *
  * Default channel: `initialChannelKey` (deep link), else the selected project's channel,
  * else the first channel (company channels come first from the backend).
@@ -42,7 +42,15 @@ function sendErrorKey(error: unknown): string {
   return "errors.sendFailed";
 }
 
-export function ChatPanel({ initialChannelKey }: { initialChannelKey?: string | null }) {
+export type ChatPanelLayout = "split" | "stack";
+
+export function ChatPanel({
+  initialChannelKey,
+  layout = "stack",
+}: {
+  initialChannelKey?: string | null;
+  layout?: ChatPanelLayout;
+}) {
   const t = useTranslations("chat");
   const { user } = useAuth();
   const { selectedProjectId } = useProject();
@@ -185,19 +193,23 @@ export function ChatPanel({ initialChannelKey }: { initialChannelKey?: string | 
 
   return (
     <div className="flex h-full min-h-0" data-testid="chat-panel">
-      <aside
-        className="hidden w-[260px] flex-shrink-0 flex-col overflow-y-auto border-r p-3 lg:flex"
-        style={{ borderColor: "var(--line)" }}
-      >
-        <div className="label-cap px-3 pb-2 pt-1">{t("channels")}</div>
-        <ChatChannelList channels={channels} selectedKey={channelKey} onSelect={setSelected} />
-      </aside>
+      {layout === "split" ? (
+        <aside
+          className="flex w-[240px] flex-shrink-0 flex-col overflow-y-auto border-r p-3"
+          style={{ borderColor: "var(--line)" }}
+        >
+          <div className="label-cap px-3 pb-2 pt-1">{t("channels")}</div>
+          <ChatChannelList channels={channels} selectedKey={channelKey} onSelect={setSelected} />
+        </aside>
+      ) : null}
 
       <section className="flex min-w-0 flex-1 flex-col">
         <ChatThreadHeader channel={channel} members={members} />
-        <div className="border-b lg:hidden" style={{ borderColor: "var(--line)" }}>
-          <ChatChannelChips channels={channels} selectedKey={channelKey} onSelect={setSelected} />
-        </div>
+        {layout === "stack" ? (
+          <div className="border-b" style={{ borderColor: "var(--line)" }}>
+            <ChatChannelChips channels={channels} selectedKey={channelKey} onSelect={setSelected} />
+          </div>
+        ) : null}
 
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto" data-testid="chat-scroll">
           <div className="flex min-h-full flex-col justify-end p-4">

@@ -99,6 +99,31 @@ describe("useVisiblePoll", () => {
     expect(fetcher).toHaveBeenCalledTimes(4);
   });
 
+  it("fetches once in a hidden tab, then pauses until the tab is visible again", async () => {
+    const fetcher = vi.fn().mockResolvedValue("v");
+    let hidden = true;
+    Object.defineProperty(document, "hidden", { configurable: true, get: () => hidden });
+    try {
+      renderHook(() => useVisiblePoll({ enabled: true, intervalMs: 1_000, fetcher, onUpdate: vi.fn() }));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(fetcher).toHaveBeenCalledTimes(1); // first fetch runs even while hidden
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(12_000);
+      });
+      expect(fetcher).toHaveBeenCalledTimes(1); // no polling while hidden
+      hidden = false;
+      await act(async () => {
+        document.dispatchEvent(new Event("visibilitychange"));
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(fetcher).toHaveBeenCalledTimes(2); // immediate refetch on return
+    } finally {
+      Object.defineProperty(document, "hidden", { configurable: true, value: false });
+    }
+  });
+
   it("reports errors through onError and keeps polling", async () => {
     const fetcher = vi.fn().mockRejectedValueOnce(new Error("boom")).mockResolvedValue("ok");
     const onError = vi.fn();

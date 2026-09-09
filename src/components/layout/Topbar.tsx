@@ -20,7 +20,7 @@ import {
 
 // Page meta keys reference message keys in `topbar.*` (title/subtitle) and
 // `projects/planning/labor/invoices.newProject|newTask|logDay|newInvoice` for actions.
-type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents" | "analyses" | "chat";
+type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents" | "analyses";
 
 const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; actionKey?: string }> = {
   dashboard: {
@@ -73,12 +73,6 @@ const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; acti
     subtitleKey: "analyses.subtitle",
     // No topbar action — Upload analysis lives inline in the analyses panel.
   },
-  chat: {
-    // Reuse the chat namespace (en/fr/vi) like documents/analyses above.
-    titleKey: "chat.title",
-    subtitleKey: "chat.subtitle",
-    // No topbar action — the composer lives in the thread. Entry point = floating button.
-  },
 };
 
 export function Topbar() {
@@ -102,7 +96,6 @@ export function Topbar() {
   if (pathWithoutLocale === "/" || pathWithoutLocale === "/dashboard") pageKey = "dashboard";
   else if (pathWithoutLocale === "/projects") pageKey = "projects";
   else if (pathWithoutLocale === "/settings") pageKey = "settings";
-  else if (pathWithoutLocale === "/chat") pageKey = "chat";
   else {
     const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)/);
     if (projectMatch && (projectMatch[1] in TOPBAR_KEYS)) {

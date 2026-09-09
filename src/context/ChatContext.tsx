@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * ChatContext — one place that knows whether chat is enabled and keeps the channel list
- * (with unread counts) fresh for the whole app shell: sidebar entry, topbar button,
- * mobile "More" sheet and the /chat page all read from here, so there is a single
- * channel poll per tab (30 s ± 5 s, paused while hidden) instead of one per consumer.
+ * ChatContext — one place that knows whether chat is enabled, keeps the channel list
+ * (with unread counts) fresh for the whole app shell (one channel poll per tab, 30 s ± 5 s,
+ * paused while hidden), and owns the open/closed state of the chat drawer so the floating
+ * button and the drawer stay in sync.
  *
  * `useChat()` outside a provider returns the "off" state so shell components stay
  * renderable in isolation (tests, storybook-style previews).
@@ -30,6 +30,12 @@ interface ChatContextValue {
   unread: number;
   /** Refetch channels now (after sending or marking read). */
   refreshChannels: () => Promise<void>;
+  /** Whether the chat drawer is open. */
+  isOpen: boolean;
+  /** Channel the drawer was asked to open on (null = default resolution). */
+  requestedChannelKey: string | null;
+  openChat: (channelKey?: string | null) => void;
+  closeChat: () => void;
 }
 
 const OFF: ChatContextValue = {
@@ -39,6 +45,10 @@ const OFF: ChatContextValue = {
   channelsError: false,
   unread: 0,
   refreshChannels: async () => {},
+  isOpen: false,
+  requestedChannelKey: null,
+  openChat: () => {},
+  closeChat: () => {},
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -55,6 +65,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setChannelsError(false);
   }, []);
   const onError = useCallback(() => setChannelsError(true), []);
+  const [isOpen, setIsOpen] = useState(false);
+  const [requestedChannelKey, setRequestedChannelKey] = useState<string | null>(null);
+  const openChat = useCallback((channelKey?: string | null) => {
+    setRequestedChannelKey(channelKey ?? null);
+    setIsOpen(true);
+  }, []);
+  const closeChat = useCallback(() => setIsOpen(false), []);
 
   const { refresh } = useVisiblePoll({
     enabled: enabled === true,
@@ -73,8 +90,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       channelsError,
       unread: channels.reduce((sum, channel) => sum + channel.unread_count, 0),
       refreshChannels: refresh,
+      isOpen,
+      requestedChannelKey,
+      openChat,
+      closeChat,
     }),
-    [enabled, channels, channelsLoaded, channelsError, refresh]
+    [enabled, channels, channelsLoaded, channelsError, refresh, isOpen, requestedChannelKey, openChat, closeChat]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

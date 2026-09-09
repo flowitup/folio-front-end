@@ -2244,8 +2244,10 @@
   },
   "chat": {
     "title": "Team chat",
-    "subtitle": "The same channels as the mobile app — your company and each project.",
     "open": "Open chat",
+    "close": "Close chat",
+    "expand": "Expand",
+    "collapse": "Collapse",
     "unread": "{count, plural, one {# unread} other {# unread}}",
     "channels": "Channels",
     "kind": {

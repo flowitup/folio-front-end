@@ -83,7 +83,7 @@ afterEach(() => {
 describe("ChatPanel", () => {
   it("opens the selected project's channel by default, loads its thread and marks it read", async () => {
     setChat();
-    render(<ChatPanel />);
+    render(<ChatPanel layout="split" />);
     await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
     expect(listChatMessages.mock.calls[0][0]).toBe("project:p1");
     expect(markChatChannelRead).toHaveBeenCalledWith("project:p1");
@@ -93,7 +93,7 @@ describe("ChatPanel", () => {
 
   it("honours a deep-linked channel and switches channels on click", async () => {
     setChat();
-    render(<ChatPanel initialChannelKey="company:c1" />);
+    render(<ChatPanel initialChannelKey="company:c1" layout="split" />);
     await waitFor(() => expect(listChatMessages.mock.calls[0][0]).toBe("company:c1"));
     expect(screen.getByTestId("chat-title")).toHaveTextContent("Chung");
 
@@ -139,15 +139,23 @@ describe("ChatPanel", () => {
 
   it("keeps the open thread when the polled channel list is re-ordered", async () => {
     setChat();
-    const { rerender } = render(<ChatPanel />);
+    const { rerender } = render(<ChatPanel layout="split" />);
     await waitFor(() => expect(screen.getByTestId("chat-title")).toHaveTextContent("Villa Bleue"));
     // Next poll: another channel now sorts first and the project channel is no longer the default.
     mockUseProject.mockReturnValue({ selectedProjectId: null });
     setChat({ channels: [...channels].reverse().concat([{ ...channels[0], key: "company:c9", id: "c9", name: "Autre" }]) });
-    rerender(<ChatPanel />);
+    rerender(<ChatPanel layout="split" />);
     await new Promise((r) => setTimeout(r, 50));
     expect(screen.getByTestId("chat-title")).toHaveTextContent("Villa Bleue");
     expect(markChatChannelRead).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders channel chips instead of the list in the stacked (compact) layout", async () => {
+    setChat();
+    render(<ChatPanel />);
+    await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
+    expect(screen.queryByTestId("chat-channel-list")).toBeNull();
+    expect(screen.getByTestId("chat-chip-project:p1")).toHaveAttribute("aria-selected", "true");
   });
 
   it("offers a retry when the channel list cannot be loaded", () => {

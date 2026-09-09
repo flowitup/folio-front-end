@@ -3,7 +3,8 @@
 /**
  * useVisiblePoll — generic polling hook for browser-direct fetches.
  *   - fires immediately when enabled, then every `intervalMs` ± `jitterMs`
- *   - pauses while the tab is hidden (Page Visibility API) and refetches on return
+ *   - pauses while the tab is hidden (Page Visibility API) and refetches on return; the very
+ *     first fetch runs even in a background tab so the data is ready when the user switches
  *   - `refresh()` fetches now (after a send, on channel switch) and re-arms the timer
  *   - a stale response (superseded by a newer tick, or after unmount) is dropped
  *   - consecutive failures back off (interval × 2^n, capped at 60 s) so a dead session or a
@@ -80,8 +81,8 @@ export function useVisiblePoll<T>({
     if (!state.active) return;
     // A pending timer (interval or hidden-tab recheck) must not race the fetch we start now.
     clearTimer();
-    if (typeof document !== "undefined" && document.hidden) {
-      // Background tab: recheck soon instead of hitting the API.
+    if (typeof document !== "undefined" && document.hidden && state.run > 0) {
+      // Background tab (after the first fetch): recheck soon instead of hitting the API.
       schedule(5_000);
       return;
     }

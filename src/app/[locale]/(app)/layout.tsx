@@ -8,6 +8,7 @@ import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { ProjectProvider } from "@/context/ProjectContext";
 import { ChatProvider } from "@/context/ChatContext";
 import { ChatFab } from "@/components/chat/chat-fab";
+import { ChatDrawer } from "@/components/chat/chat-drawer";
 
 export default async function AppLayout({
   children,
@@ -62,8 +63,10 @@ export default async function AppLayout({
           </main>
         </div>
         <MobileBottomNav />
-        {/* Floating chat button — outside the zoomed <main> so its fixed offsets stay true. */}
+        {/* Floating chat button + right-side drawer — outside the zoomed <main> so their
+            fixed offsets stay true. */}
         <ChatFab />
+        <ChatDrawer />
       </div>
       </ChatProvider>
     </ProjectProvider>

@@ -46,7 +46,7 @@ export function ChatPanel({ initialChannelKey }: { initialChannelKey?: string | 
   const t = useTranslations("chat");
   const { user } = useAuth();
   const { selectedProjectId } = useProject();
-  const { enabled, channels, channelsLoaded, refreshChannels } = useChat();
+  const { enabled, channels, channelsLoaded, channelsError, refreshChannels } = useChat();
 
   const [selected, setSelected] = useState<string | null>(initialChannelKey ?? null);
   const channelKey = useMemo(() => {
@@ -57,6 +57,11 @@ export function ChatPanel({ initialChannelKey }: { initialChannelKey?: string | 
     return channels[0]?.key ?? null;
   }, [channels, selected, selectedProjectId]);
   const channel = channels.find((c) => c.key === channelKey) ?? null;
+  // Latch the resolved default so a re-ordered channel poll can never move the open thread
+  // (and mark a channel read) without a click.
+  useEffect(() => {
+    if (!selected && channelKey) setSelected(channelKey);
+  }, [selected, channelKey]);
 
   const [page, setPage] = useState<ChatMessagePage | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -84,21 +89,28 @@ export function ChatPanel({ initialChannelKey }: { initialChannelKey?: string | 
     setLoadFailed(false);
   }, [channelKey]);
 
+  // Newest instant already covered by a read marker per channel, so an open + the first page
+  // (or a burst of incoming messages) produce one POST /read instead of one per message.
+  const markedRef = useRef<{ key: string; upTo: number } | null>(null);
   const markRead = useCallback(
-    async (key: string) => {
+    async (key: string, upTo: number) => {
+      const marked = markedRef.current;
+      if (marked && marked.key === key && marked.upTo >= upTo) return;
+      markedRef.current = { key, upTo };
       try {
         await markChatChannelRead(key);
         await refreshChannels();
       } catch {
-        // Read markers are best effort; the next open retries.
+        // Read markers are best effort; the next message or open retries.
+        if (markedRef.current?.key === key) markedRef.current = null;
       }
     },
     [refreshChannels]
   );
 
-  // Opening (or switching to) a channel clears its unread marker.
+  // Opening (or switching to) a channel clears its unread marker up to now.
   useEffect(() => {
-    if (active && channelKey) void markRead(channelKey);
+    if (active && channelKey) void markRead(channelKey, Date.now());
   }, [active, channelKey, markRead]);
 
   const items = page?.items ?? [];
@@ -106,14 +118,15 @@ export function ChatPanel({ initialChannelKey }: { initialChannelKey?: string | 
   const lastMessage = items[items.length - 1];
   const lastMessageId = lastMessage?.id;
   const lastMessageMine = lastMessage?.mine ?? true;
+  const lastMessageAt = lastMessage ? Date.parse(lastMessage.created_at) : 0;
 
   // Keep the thread anchored to the newest message; an incoming one is read since the
   // thread is open, so move the marker too (that shows this reader's avatar to the sender).
   useEffect(() => {
     const node = scrollRef.current;
     if (node) node.scrollTop = node.scrollHeight;
-    if (lastMessageId && !lastMessageMine && channelKey) void markRead(channelKey);
-  }, [lastMessageId, lastMessageMine, channelKey, markRead]);
+    if (lastMessageId && !lastMessageMine && channelKey) void markRead(channelKey, lastMessageAt);
+  }, [lastMessageId, lastMessageMine, lastMessageAt, channelKey, markRead]);
 
   const seen = useMemo(
     () => seenByMessage(page?.items ?? [], page?.members ?? [], user?.id),
@@ -147,9 +160,21 @@ export function ChatPanel({ initialChannelKey }: { initialChannelKey?: string | 
   if (enabled === false) {
     return <PanelNotice testId="chat-disabled">{t("disabled")}</PanelNotice>;
   }
+  if (channelsError && channels.length === 0) {
+    return (
+      <PanelNotice testId="chat-channels-error">
+        <div className="flex flex-col items-center gap-2">
+          <span>{t("loadError")}</span>
+          <button type="button" className="btn btn-quiet" onClick={() => void refreshChannels()}>
+            {t("retry")}
+          </button>
+        </div>
+      </PanelNotice>
+    );
+  }
   if (enabled === null || (!channelsLoaded && channels.length === 0)) {
     return (
-      <PanelNotice testId="chat-loading">
+      <PanelNotice testId="chat-loading" aria-busy="true">
         <Loader2 size={20} className="animate-spin" aria-hidden="true" />
       </PanelNotice>
     );
@@ -209,12 +234,21 @@ export function ChatPanel({ initialChannelKey }: { initialChannelKey?: string | 
   );
 }
 
-function PanelNotice({ children, testId }: { children: React.ReactNode; testId: string }) {
+function PanelNotice({
+  children,
+  testId,
+  ...rest
+}: {
+  children: React.ReactNode;
+  testId: string;
+  "aria-busy"?: React.AriaAttributes["aria-busy"];
+}) {
   return (
     <div
       className="flex h-full items-center justify-center p-8 text-center text-[13px]"
       style={{ color: "var(--muted)" }}
       data-testid={testId}
+      {...rest}
     >
       {children}
     </div>

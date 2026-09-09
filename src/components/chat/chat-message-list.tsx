@@ -112,10 +112,14 @@ export function ChatMessageList({
         const label = dayDividerLabel(group.dayKey);
         return (
           <div key={group.dayKey} className="flex flex-col gap-2.5">
-            <div className="mb-1 text-center text-[11px]" style={{ color: "var(--muted)" }}>
-              {"token" in label ? t(label.token) : label.date}
-              {" · "}
-              {`${group.dayKey.slice(8, 10)}/${group.dayKey.slice(5, 7)}`}
+            <div
+              className="mb-1 text-center text-[11px]"
+              style={{ color: "var(--muted)" }}
+              data-testid="chat-day-divider"
+            >
+              {"token" in label
+                ? `${t(label.token)} · ${group.dayKey.slice(8, 10)}/${group.dayKey.slice(5, 7)}`
+                : label.date}
             </div>
             {group.messages.map((message, index) => (
               <MessageRow

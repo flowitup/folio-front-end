@@ -10,13 +10,15 @@ import { useRef, useState, type KeyboardEvent } from "react";
 import { ImagePlus, Loader2, Send, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CHAT_ATTACHMENT_TYPES, CHAT_MAX_ATTACHMENT_BYTES } from "@/lib/api/chat-client";
+import { withInferredContentType } from "@/lib/media/infer-content-type";
 
 export type ComposerRejection = "tooLarge" | "unsupportedType";
 
-/** Why a picked file cannot be sent, or null when acceptable. */
+/** Why a picked file cannot be sent, or null when acceptable (call after `withInferredContentType`). */
 export function rejectAttachment(file: File): ComposerRejection | null {
-  if (!(CHAT_ATTACHMENT_TYPES as readonly string[]).includes(file.type)) return "unsupportedType";
-  if (file.size === 0 || file.size > CHAT_MAX_ATTACHMENT_BYTES) return "tooLarge";
+  if (!(CHAT_ATTACHMENT_TYPES as readonly string[]).includes(file.type) || file.size === 0)
+    return "unsupportedType";
+  if (file.size > CHAT_MAX_ATTACHMENT_BYTES) return "tooLarge";
   return null;
 }
 
@@ -56,12 +58,15 @@ export function ChatComposer({
 
   function onPick(picked: File | undefined) {
     if (!picked) return;
-    const reason = rejectAttachment(picked);
+    // Camera / AirDrop files can arrive with an empty MIME type — re-tag from the extension
+    // (same helper as photo uploads) before validating, so real photos are not refused.
+    const normalized = withInferredContentType(picked);
+    const reason = rejectAttachment(normalized);
     if (reason) {
       onReject(reason);
       return;
     }
-    setFile(picked);
+    setFile(normalized);
   }
 
   return (

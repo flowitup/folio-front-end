@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/auth/permissions";
-import { ChatNavLink } from "@/components/chat/chat-nav-link";
 
 interface MobileMoreSheetProps {
   open: boolean;
@@ -126,9 +125,6 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
           {projectItems.length > 0 && (
             <div className="mx-4 my-1" style={{ borderTop: "1px solid var(--line)" }} />
           )}
-
-          {/* Team chat — self-gated on the backend feature flag. */}
-          <ChatNavLink pathWithoutLocale={pathWithoutLocale} variant="sheet" onNavigate={onClose} />
 
           <div className="mb-2">
             <div

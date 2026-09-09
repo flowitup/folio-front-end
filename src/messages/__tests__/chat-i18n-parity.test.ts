@@ -1,6 +1,6 @@
 /**
- * i18n parity for the `chat` namespace and its navigation entry: en/fr/vi must expose
- * the same keys (Vietnamese is a real audience).
+ * i18n parity for the `chat` namespace: en/fr/vi must expose the same keys
+ * (Vietnamese is a real audience).
  */
 
 import { describe, expect, it } from "vitest";
@@ -38,13 +38,6 @@ describe("chat i18n parity", () => {
     expect(enKeys.length).toBeGreaterThan(10);
     expect(getAllKeys(fr.chat)).toEqual(enKeys);
     expect(getAllKeys(vi.chat)).toEqual(enKeys);
-  });
-
-  it("has the navigation.chat label in every locale", () => {
-    for (const messages of [en, fr, vi]) {
-      expect(typeof messages.navigation.chat).toBe("string");
-      expect((messages.navigation.chat as string).length).toBeGreaterThan(0);
-    }
   });
 
   it("uses ICU plural syntax for counts (next-intl), not i18next _one/_other keys", () => {

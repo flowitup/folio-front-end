@@ -34,7 +34,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarBillingGroup } from "@/components/layout/sidebar-billing-group";
-import { ChatNavLink } from "@/components/chat/chat-nav-link";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -247,9 +246,6 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
             </Link>
           );
         })}
-
-        {/* Team chat — only when the backend enables the feature (self-gated). */}
-        <ChatNavLink pathWithoutLocale={pathWithoutLocale} variant="sidebar" />
 
         {/* Billing group — after project-scoped nav, before Settings.
             Only rendered for users who can access billing (company admins / superadmin). */}

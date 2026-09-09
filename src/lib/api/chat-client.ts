@@ -201,7 +201,13 @@ export async function fetchChatAttachmentBlob(
     { method: "GET" },
     signal
   );
-  const blob = await res.blob();
+  // Rebuild the blob with an allowlisted image type: a blob: URL runs same-origin, so a
+  // stored attachment ever served as text/html must never render as a document.
+  const served = res.headers.get("content-type")?.split(";")[0].trim() ?? "";
+  const type = (CHAT_ATTACHMENT_TYPES as readonly string[]).includes(served)
+    ? served
+    : "application/octet-stream";
+  const blob = new Blob([await res.arrayBuffer()], { type });
   const objectUrl = URL.createObjectURL(blob);
   return { objectUrl, revoke: () => URL.revokeObjectURL(objectUrl) };
 }

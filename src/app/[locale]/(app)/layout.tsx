@@ -7,6 +7,7 @@ import { Topbar } from "@/components/layout/Topbar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { ProjectProvider } from "@/context/ProjectContext";
 import { ChatProvider } from "@/context/ChatContext";
+import { ChatFab } from "@/components/chat/chat-fab";
 
 export default async function AppLayout({
   children,
@@ -42,7 +43,7 @@ export default async function AppLayout({
 
   return (
     <ProjectProvider>
-      {/* One channel poll per tab feeds the sidebar / topbar / More-sheet chat badges. */}
+      {/* One channel poll per tab feeds the floating chat button badge and the /chat page. */}
       <ChatProvider>
       <div className="flex h-screen overflow-hidden" style={{ background: "var(--paper)" }}>
         <Sidebar canViewBilling={canViewBilling} />
@@ -61,6 +62,8 @@ export default async function AppLayout({
           </main>
         </div>
         <MobileBottomNav />
+        {/* Floating chat button — outside the zoomed <main> so its fixed offsets stay true. */}
+        <ChatFab />
       </div>
       </ChatProvider>
     </ProjectProvider>

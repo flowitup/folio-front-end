@@ -16,6 +16,7 @@ vi.mock("@/lib/config/env", () => ({
 
 import {
   ChatApiError,
+  fetchChatAttachmentBlob,
   fetchChatFeatures,
   listChatChannels,
   listChatMessages,
@@ -99,6 +100,24 @@ describe("chat-client", () => {
     await expect(markChatChannelRead("company:1")).resolves.toBeUndefined();
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("builds attachment blobs only with allowlisted image types", async () => {
+    const urls: string[] = [];
+    vi.stubGlobal("URL", {
+      ...URL,
+      createObjectURL: (blob: Blob) => {
+        urls.push(blob.type);
+        return `blob:${blob.type}`;
+      },
+      revokeObjectURL: vi.fn(),
+    });
+    fetchMock
+      .mockResolvedValueOnce(new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { "Content-Type": "image/png" } }))
+      .mockResolvedValueOnce(new Response("<script>", { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }));
+    await fetchChatAttachmentBlob("m1");
+    await fetchChatAttachmentBlob("m2");
+    expect(urls).toEqual(["image/png", "application/octet-stream"]);
   });
 
   it("throws a ChatApiError carrying status and body on failure", async () => {

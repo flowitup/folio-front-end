@@ -6,12 +6,17 @@
  *   - pauses while the tab is hidden (Page Visibility API) and refetches on return
  *   - `refresh()` fetches now (after a send, on channel switch) and re-arms the timer
  *   - a stale response (superseded by a newer tick, or after unmount) is dropped
+ *   - consecutive failures back off (interval × 2^n, capped at 60 s) so a dead session or a
+ *     down backend is not hammered every few seconds; a success resets the cadence
  *
  * Generalised from `use-notifications-poll.ts`; the fetcher/onUpdate callbacks are read
  * through refs so callers may pass inline closures without restarting the loop.
  */
 
 import { useCallback, useEffect, useRef } from "react";
+
+/** Longest pause between two attempts once the fetcher keeps failing. */
+export const MAX_BACKOFF_MS = 60_000;
 
 interface UseVisiblePollOptions<T> {
   enabled: boolean;
@@ -36,9 +41,14 @@ export function useVisiblePoll<T>({
   const fetcherRef = useRef(fetcher);
   const onUpdateRef = useRef(onUpdate);
   const onErrorRef = useRef(onError);
-  fetcherRef.current = fetcher;
-  onUpdateRef.current = onUpdate;
-  onErrorRef.current = onError;
+  // Synced in an effect (not during render): React may discard a render, and a fetcher
+  // closed over uncommitted props must never drive a tick. Declared before the poll effect
+  // so a resetKey restart already sees the fresh callbacks.
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+    onUpdateRef.current = onUpdate;
+    onErrorRef.current = onError;
+  });
 
   // Mutable loop state shared between the effect and refresh().
   const loop = useRef<{
@@ -46,7 +56,8 @@ export function useVisiblePoll<T>({
     controller: AbortController | null;
     run: number;
     active: boolean;
-  }>({ timer: null, controller: null, run: 0, active: false });
+    failures: number;
+  }>({ timer: null, controller: null, run: 0, active: false, failures: 0 });
 
   const clearTimer = () => {
     if (loop.current.timer) {
@@ -67,6 +78,8 @@ export function useVisiblePoll<T>({
   const tick = useCallback(async () => {
     const state = loop.current;
     if (!state.active) return;
+    // A pending timer (interval or hidden-tab recheck) must not race the fetch we start now.
+    clearTimer();
     if (typeof document !== "undefined" && document.hidden) {
       // Background tab: recheck soon instead of hitting the API.
       schedule(5_000);
@@ -78,20 +91,27 @@ export function useVisiblePoll<T>({
     const run = ++state.run;
     try {
       const value = await fetcherRef.current(controller.signal);
-      if (state.active && run === state.run) onUpdateRef.current(value);
+      if (state.active && run === state.run) {
+        state.failures = 0;
+        onUpdateRef.current(value);
+      }
     } catch (error) {
-      if (state.active && run === state.run && !controller.signal.aborted)
+      if (state.active && run === state.run && !controller.signal.aborted) {
+        state.failures += 1;
         onErrorRef.current?.(error);
+      }
     }
     if (!state.active || run !== state.run) return;
     const jitter = jitterMs ? Math.floor((Math.random() - 0.5) * 2 * jitterMs) : 0;
-    schedule(intervalMs + jitter);
+    const backoff = Math.min(intervalMs * 2 ** state.failures, MAX_BACKOFF_MS);
+    schedule(Math.max(backoff, intervalMs) + jitter);
   }, [intervalMs, jitterMs, schedule]);
 
   useEffect(() => {
     const state = loop.current;
     if (!enabled) return;
     state.active = true;
+    state.failures = 0;
     void tick();
 
     const onVisibilityChange = () => {

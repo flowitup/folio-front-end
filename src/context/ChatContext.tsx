@@ -24,6 +24,8 @@ interface ChatContextValue {
   channels: ChatChannel[];
   /** Whether the first channel fetch has completed. */
   channelsLoaded: boolean;
+  /** Last channel fetch failed (cleared by the next success); lets /chat offer a retry. */
+  channelsError: boolean;
   /** Sum of unread counts across channels (badge). */
   unread: number;
   /** Refetch channels now (after sending or marking read). */
@@ -34,6 +36,7 @@ const OFF: ChatContextValue = {
   enabled: false,
   channels: [],
   channelsLoaded: false,
+  channelsError: false,
   unread: 0,
   refreshChannels: async () => {},
 };
@@ -44,11 +47,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const enabled = useChatFeature();
   const [channels, setChannels] = useState<ChatChannel[]>([]);
   const [channelsLoaded, setChannelsLoaded] = useState(false);
+  const [channelsError, setChannelsError] = useState(false);
 
   const onUpdate = useCallback((items: ChatChannel[]) => {
     setChannels(items);
     setChannelsLoaded(true);
+    setChannelsError(false);
   }, []);
+  const onError = useCallback(() => setChannelsError(true), []);
 
   const { refresh } = useVisiblePoll({
     enabled: enabled === true,
@@ -56,6 +62,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     jitterMs: CHAT_CHANNELS_JITTER_MS,
     fetcher: (signal) => listChatChannels(signal),
     onUpdate,
+    onError,
   });
 
   const value = useMemo<ChatContextValue>(
@@ -63,10 +70,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       enabled,
       channels,
       channelsLoaded,
+      channelsError,
       unread: channels.reduce((sum, channel) => sum + channel.unread_count, 0),
       refreshChannels: refresh,
     }),
-    [enabled, channels, channelsLoaded, refresh]
+    [enabled, channels, channelsLoaded, channelsError, refresh]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

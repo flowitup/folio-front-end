@@ -55,6 +55,7 @@ function setChat(overrides: Partial<ReturnType<typeof mockUseChat>> = {}) {
     enabled: true,
     channels,
     channelsLoaded: true,
+    channelsError: false,
     unread: 3,
     refreshChannels,
     ...overrides,
@@ -134,6 +135,27 @@ describe("ChatPanel", () => {
     });
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("chat.errors.tooLarge"));
     expect(input.value).toBe("photo");
+  });
+
+  it("keeps the open thread when the polled channel list is re-ordered", async () => {
+    setChat();
+    const { rerender } = render(<ChatPanel />);
+    await waitFor(() => expect(screen.getByTestId("chat-title")).toHaveTextContent("Villa Bleue"));
+    // Next poll: another channel now sorts first and the project channel is no longer the default.
+    mockUseProject.mockReturnValue({ selectedProjectId: null });
+    setChat({ channels: [...channels].reverse().concat([{ ...channels[0], key: "company:c9", id: "c9", name: "Autre" }]) });
+    rerender(<ChatPanel />);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByTestId("chat-title")).toHaveTextContent("Villa Bleue");
+    expect(markChatChannelRead).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers a retry when the channel list cannot be loaded", () => {
+    setChat({ channels: [], channelsLoaded: false, channelsError: true, unread: 0 });
+    render(<ChatPanel />);
+    fireEvent.click(screen.getByText("chat.retry"));
+    expect(refreshChannels).toHaveBeenCalled();
+    expect(screen.getByTestId("chat-channels-error")).toBeInTheDocument();
   });
 
   it("shows the disabled notice when the feature is off and the no-channel notice when empty", () => {

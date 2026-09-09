@@ -69,6 +69,36 @@ describe("useVisiblePoll", () => {
     expect(fetcher).toHaveBeenCalledTimes(3);
   });
 
+  it("backs off exponentially while the fetcher keeps failing, then recovers", async () => {
+    const fetcher = vi.fn().mockRejectedValue(new Error("down"));
+    renderHook(() => useVisiblePoll({ enabled: true, intervalMs: 1_000, fetcher, onUpdate: vi.fn() }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(fetcher).toHaveBeenCalledTimes(1); // failure #1 → next in 2 s
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000);
+    });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000);
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2); // failure #2 → next in 4 s
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3_000);
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    fetcher.mockResolvedValue("up");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000);
+    });
+    expect(fetcher).toHaveBeenCalledTimes(3); // success → back to the 1 s cadence
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000);
+    });
+    expect(fetcher).toHaveBeenCalledTimes(4);
+  });
+
   it("reports errors through onError and keeps polling", async () => {
     const fetcher = vi.fn().mockRejectedValueOnce(new Error("boom")).mockResolvedValue("ok");
     const onError = vi.fn();
@@ -78,8 +108,9 @@ describe("useVisiblePoll", () => {
       await vi.advanceTimersByTimeAsync(0);
     });
     expect(onError).toHaveBeenCalledTimes(1);
+    // One failure → the next attempt waits 2 × interval.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(500);
+      await vi.advanceTimersByTimeAsync(1_000);
     });
     expect(onUpdate).toHaveBeenCalledWith("ok");
   });

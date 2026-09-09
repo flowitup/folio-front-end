@@ -4,7 +4,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { Sun, Moon, Plus, LogOut, ChevronDown, Check } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
-import { ChatTopbarButton } from "@/components/chat/chat-topbar-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
@@ -78,7 +77,7 @@ const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; acti
     // Reuse the chat namespace (en/fr/vi) like documents/analyses above.
     titleKey: "chat.title",
     subtitleKey: "chat.subtitle",
-    // No topbar action — the composer lives in the thread.
+    // No topbar action — the composer lives in the thread. Entry point = floating button.
   },
 };
 
@@ -246,7 +245,6 @@ export function Topbar() {
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-1 lg:gap-2">
-        <ChatTopbarButton />
         <NotificationsBell />
         <button
           type="button"

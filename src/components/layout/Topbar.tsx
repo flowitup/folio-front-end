@@ -7,6 +7,7 @@ import { NotificationsBell } from "@/components/notifications/notifications-bell
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
+import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { useTheme } from "@/context/ThemeContext";
 import { can, canCreateProject } from "@/lib/auth/permissions";
 import { type Locale } from "@/i18n/config";
@@ -123,7 +124,7 @@ export function Topbar() {
             : true;
   const actionLabel = cfg?.actionKey && canShowAction ? tTopbar(cfg.actionKey) : null;
 
-  const projectName = selectedProject?.name;
+  const projectName = selectedProject ? projectDisplayName(selectedProject) : undefined;
   const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
 
   const handleSwitchProject = (projectId: string) => {
@@ -223,9 +224,9 @@ export function Topbar() {
                       className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white"
                       style={{ background: p.id === selectedProjectId ? "var(--accent)" : "var(--muted)" }}
                     >
-                      {p.name.charAt(0).toUpperCase()}
+                      {projectDisplayName(p).charAt(0).toUpperCase()}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-[13px]">{p.name}</span>
+                    <span className="min-w-0 flex-1 truncate text-[13px]">{projectDisplayName(p)}</span>
                     {p.id === selectedProjectId && (
                       <Check size={14} className="flex-shrink-0" style={{ color: "var(--accent)" }} />
                     )}

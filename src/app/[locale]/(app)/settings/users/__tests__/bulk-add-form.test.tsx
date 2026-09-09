@@ -85,6 +85,14 @@ describe("BulkAddForm", () => {
   // Rendering
   // ---------------------------------------------------------------------------
 
+  describe("Project labels", () => {
+    it("labels a project by its address and hides the stored name", () => {
+      renderForm([{ id: "proj-4", name: "Project Delta", address: "4 rue Delta, Arcueil" }]);
+      expect(screen.getByRole("checkbox", { name: "4 rue Delta, Arcueil" })).toBeDefined();
+      expect(screen.queryByText("Project Delta")).toBeNull();
+    });
+  });
+
   describe("Rendering", () => {
     it("renders with empty initial state: user search, project list, submit button visible", () => {
       renderForm();

@@ -12,6 +12,8 @@ import type { Project } from "@/types/project";
 export interface ProjectSummary {
   id: string;
   name: string;
+  /** Site address — the label users see for a project; falls back to `name` when absent. */
+  address?: string | null;
 }
 
 /**

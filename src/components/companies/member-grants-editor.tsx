@@ -37,6 +37,7 @@ import {
   removeMemberGrantAction,
 } from "@/app/[locale]/(app)/settings/_actions/company-settings-actions";
 import type { GrantEffect, MemberGrantRow } from "@/lib/api/member-grants";
+import { projectDisplayName } from "@/lib/projects/project-display-name";
 import type { AttachedUser } from "@/types/companies";
 
 interface Props {
@@ -109,7 +110,8 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
 
   function projectName(id: string | null): string {
     if (!id) return t("scopeCompanyWide");
-    return projects.find((p) => p.id === id)?.name ?? id;
+    const project = projects.find((p) => p.id === id);
+    return project ? projectDisplayName(project) : id;
   }
 
   function permissionLabel(permission: string): string {
@@ -224,7 +226,7 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
                   <SelectItem value={COMPANY_WIDE}>{t("scopeCompanyWide")}</SelectItem>
                   {projects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.name}
+                      {projectDisplayName(p)}
                     </SelectItem>
                   ))}
                 </SelectContent>

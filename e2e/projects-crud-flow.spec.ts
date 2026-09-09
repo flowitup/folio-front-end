@@ -44,7 +44,7 @@ test.describe("Projects CRUD flow", () => {
     await page.goto("/en/projects");
 
     await expect(
-      page.getByRole("heading", { name: SEED_PROJECTS.downtown }),
+      page.getByRole("heading", { name: SEED_PROJECTS.downtownLabel }),
     ).toBeVisible({ timeout: 15_000 });
   });
 
@@ -54,10 +54,12 @@ test.describe("Projects CRUD flow", () => {
 
     // Wait for the list to settle so the seeded data (non-empty state) is rendered.
     await expect(
-      page.getByRole("heading", { name: SEED_PROJECTS.downtown }),
+      page.getByRole("heading", { name: SEED_PROJECTS.downtownLabel }),
     ).toBeVisible({ timeout: 15_000 });
 
     const newName = `E2E Project ${Date.now()}`;
+    // Cards are labelled by address, so that is what must appear after creation.
+    const newAddress = `${Date.now() % 1000} Rue des Tests, 75001 Paris`;
 
     // Open the create dialog. The "New project" button lives in the Topbar and
     // routes to ?new=1, which the projects page consumes to open the dialog.
@@ -68,7 +70,7 @@ test.describe("Projects CRUD flow", () => {
     // Dialog is open — fields are id-anchored.
     await page.waitForSelector("#create-project-name", { timeout: 10_000 });
     await page.fill("#create-project-name", newName);
-    await page.fill("#create-project-address", "1 Rue des Tests, 75001 Paris");
+    await page.fill("#create-project-address", newAddress);
 
     // Submit ("Create"). On success the dialog closes and the list refetches.
     await page.getByRole("button", { name: "Create", exact: true }).click();
@@ -80,7 +82,7 @@ test.describe("Projects CRUD flow", () => {
     // .first() would resolve to that hidden node on a phone viewport. The mobile
     // shell surfaces the name in the topbar switcher / card instead.
     await expect(
-      page.getByText(newName).filter({ visible: true }).first()
+      page.getByText(newAddress).filter({ visible: true }).first()
     ).toBeVisible({ timeout: 15_000 });
   });
 });

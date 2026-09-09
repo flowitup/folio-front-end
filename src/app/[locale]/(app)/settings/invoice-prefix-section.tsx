@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useProject } from "@/context/ProjectContext";
+import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { updateInvoicePrefix } from "./_actions/invoice-prefix-actions";
 
 const PREFIX_RE = /^[A-Z0-9]{0,8}$/;
@@ -54,7 +55,7 @@ export function InvoicePrefixSection() {
             {t("settingsTitle")}
           </h3>
           <p className="mt-0.5 text-[13px]" style={{ color: "var(--muted)" }}>
-            {selectedProject.name}
+            {projectDisplayName(selectedProject)}
           </p>
         </div>
       </div>

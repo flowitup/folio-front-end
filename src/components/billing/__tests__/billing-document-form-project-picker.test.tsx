@@ -294,6 +294,21 @@ describe("BillingDocumentForm — project picker", () => {
       expect(screen.getByText("Project Alpha")).toBeDefined();
     });
 
+    it("labels the selected project by its address when it has one", () => {
+      render(
+        <BillingDocumentForm
+          mode="edit"
+          kind="devis"
+          document={BASE_DOCUMENT}
+          attachedCompanies={[COMPANY]}
+          projects={[{ ...PROJECT_A, address: "10 quai Alpha, Lyon" }, PROJECT_B]}
+        />
+      );
+
+      expect(screen.getByText("10 quai Alpha, Lyon")).toBeDefined();
+      expect(screen.queryByText("Project Alpha")).toBeNull();
+    });
+
     it("submitting always sends project_id in update payload", async () => {
       mockUpdate.mockResolvedValue({ ok: true, data: BASE_DOCUMENT });
 

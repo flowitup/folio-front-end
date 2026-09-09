@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
+import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { can, canCreateProject } from "@/lib/auth/permissions";
 import { FolioLogo } from "@/components/folio-logo";
 import {
@@ -157,9 +158,9 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
                 <div className="min-w-0 flex-1">
                   <div
                     className="line-clamp-2 text-[13px] font-medium leading-snug"
-                    title={selectedProject?.name ?? undefined}
+                    title={selectedProject ? projectDisplayName(selectedProject) : undefined}
                   >
-                    {selectedProject?.name ?? tProjects("selectProject")}
+                    {selectedProject ? projectDisplayName(selectedProject) : tProjects("selectProject")}
                   </div>
                   {selectedProject && (selectedPhase || selectedProgress > 0) && (
                     <div className="num text-[11px]" style={{ color: "var(--muted)" }}>
@@ -187,15 +188,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
                       style={{ background: cover }}
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[13px] font-medium">{p.name}</div>
-                      {p.address && (
-                        <div
-                          className="truncate text-[11px]"
-                          style={{ color: "var(--muted)" }}
-                        >
-                          {p.address}
-                        </div>
-                      )}
+                      <div className="truncate text-[13px] font-medium">{projectDisplayName(p)}</div>
                     </div>
                     {isActive && (
                       <Check

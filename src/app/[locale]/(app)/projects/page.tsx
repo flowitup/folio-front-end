@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import { projectDisplayName, projectMatchesSearch } from "@/lib/projects/project-display-name";
 import { useAuth } from "@/context/AuthContext";
 import {
   Plus,
@@ -80,7 +81,7 @@ export default function ProjectsPage() {
   const [openBreakdownId, setOpenBreakdownId] = useState<string | null>(null);
   const [projectUsers, setProjectUsers] = useState<Record<string, ProjectUser[]>>({});
   const [loadingUsers, setLoadingUsers] = useState<string | null>(null);
-  const [addMemberProject, setAddMemberProject] = useState<{ id: string; name: string } | null>(
+  const [addMemberProject, setAddMemberProject] = useState<{ id: string; label: string } | null>(
     null,
   );
   const [removeMember, setRemoveMember] = useState<{
@@ -122,7 +123,7 @@ export default function ProjectsPage() {
   const adminCompanies = (user?.companies ?? []).filter((c) => c.role === "admin");
 
   const filteredProjects = projects.filter((p) => {
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (!projectMatchesSearch(p, search)) return false;
     return true;
   });
 
@@ -322,16 +323,8 @@ export default function ProjectsPage() {
                     <div className="mb-3 flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <h3 className="font-display text-[26px] font-medium leading-tight tracking-tight">
-                          {project.name}
+                          {projectDisplayName(project)}
                         </h3>
-                        {project.address && (
-                          <p
-                            className="mt-0.5 truncate text-[13px]"
-                            style={{ color: "var(--muted)" }}
-                          >
-                            {project.address}
-                          </p>
-                        )}
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -557,7 +550,7 @@ export default function ProjectsPage() {
                         <button
                           type="button"
                           onClick={() =>
-                            setAddMemberProject({ id: project.id, name: project.name })
+                            setAddMemberProject({ id: project.id, label: projectDisplayName(project) })
                           }
                           className="btn btn-ghost"
                           style={{ padding: "5px 10px", fontSize: 12 }}
@@ -691,7 +684,7 @@ export default function ProjectsPage() {
       {addMemberProject && (
         <AddMemberDialog
           projectId={addMemberProject.id}
-          projectName={addMemberProject.name}
+          projectName={addMemberProject.label}
           open={!!addMemberProject}
           onOpenChange={(open) => !open && setAddMemberProject(null)}
           onMemberAdded={handleMemberAdded}

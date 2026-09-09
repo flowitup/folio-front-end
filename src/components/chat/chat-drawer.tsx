@@ -1,10 +1,17 @@
 "use client";
 
 /**
- * Chat drawer — slides in from the right over the app (never a full page). Compact by
- * default (thread + channel chips, 440 px); "Expand" widens it to a split view with the
- * channel list. Full-width on narrow viewports. Backdrop click and Escape close it; the
- * panel unmounts on close so its 5 s thread poll stops.
+ * Chat drawer — the chat surface opened by the floating button, never a full page.
+ *
+ * Three shapes:
+ *   - widget (desktop default): a support-chat style card, 380 × 600 px, anchored above the
+ *     floating button at the bottom right; no backdrop, the page stays usable; the button
+ *     becomes the close toggle.
+ *   - drawer (desktop, "Expand"): full-height panel on the right, 860 px, channel list +
+ *     thread, with a backdrop.
+ *   - sheet (narrow viewports): full-screen.
+ * Escape and the X close it in every shape; the panel unmounts on close so its 5 s thread
+ * poll stops.
  *
  * Mounted in the (app) layout outside the zoom:0.8 content wrapper (fixed offsets inside
  * it rescale) and above the mobile bottom nav (z-50).
@@ -16,6 +23,16 @@ import { useTranslations } from "next-intl";
 import { useChat } from "@/context/ChatContext";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
+
+export type ChatDrawerShape = "widget" | "drawer" | "sheet";
+
+const SHAPE_CLASS: Record<ChatDrawerShape, string> = {
+  // Above the 52 px button (24 px margin + 52 px + 12 px gap = 88 px), capped by the viewport.
+  widget:
+    "fixed right-6 bottom-[88px] z-[70] flex w-[380px] max-w-[calc(100vw-48px)] h-[600px] max-h-[calc(100vh-112px)] flex-col overflow-hidden rounded-2xl border shadow-2xl",
+  drawer: "fixed inset-y-0 right-0 z-[70] flex w-[860px] max-w-full flex-col border-l shadow-2xl",
+  sheet: "fixed inset-0 z-[70] flex w-full flex-col",
+};
 
 export function ChatDrawer() {
   const t = useTranslations("chat");
@@ -33,23 +50,25 @@ export function ChatDrawer() {
   }, [isOpen, closeChat]);
 
   if (!isOpen) return null;
-  const split = isDesktop && expanded;
+  const shape: ChatDrawerShape = !isDesktop ? "sheet" : expanded ? "drawer" : "widget";
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-[60] bg-black/25"
-        onClick={closeChat}
-        aria-hidden="true"
-        data-testid="chat-drawer-backdrop"
-      />
+      {shape !== "widget" ? (
+        <div
+          className="fixed inset-0 z-[60] bg-black/25"
+          onClick={closeChat}
+          aria-hidden="true"
+          data-testid="chat-drawer-backdrop"
+        />
+      ) : null}
       <aside
         role="dialog"
-        aria-modal="true"
+        aria-modal={shape !== "widget"}
         aria-label={t("title")}
         data-testid="chat-drawer"
-        data-expanded={split ? "true" : "false"}
-        className="fixed inset-y-0 right-0 z-[70] flex w-full flex-col border-l shadow-2xl transition-[width] duration-200 lg:w-[440px] data-[expanded=true]:lg:w-[860px]"
+        data-shape={shape}
+        className={SHAPE_CLASS[shape]}
         style={{ background: "var(--paper)", borderColor: "var(--line)" }}
       >
         <div
@@ -80,7 +99,10 @@ export function ChatDrawer() {
           </button>
         </div>
         <div className="min-h-0 flex-1">
-          <ChatPanel initialChannelKey={requestedChannelKey} layout={split ? "split" : "stack"} />
+          <ChatPanel
+            initialChannelKey={requestedChannelKey}
+            layout={shape === "drawer" ? "split" : "stack"}
+          />
         </div>
       </aside>
     </>

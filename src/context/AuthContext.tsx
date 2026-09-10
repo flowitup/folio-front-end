@@ -15,10 +15,15 @@ import {
   logout as logoutAction,
   getCurrentUserAction,
 } from "@/lib/auth/actions";
+import { verifyOtpAction } from "@/lib/auth/otp-actions";
 
 interface AuthContextType extends AuthState {
   login: (
     credentials: LoginCredentials
+  ) => Promise<{ success: boolean; error?: string }>;
+  loginWithPhone: (
+    phone: string,
+    code: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
@@ -49,6 +54,46 @@ export function AuthProvider({
 
   const isLoading = state.isLoading || isPending;
 
+  // Shared post-login handling for both email/password and phone/SMS-code
+  // sign-in, extracted so the two paths cannot drift out of sync — each
+  // must re-fetch the canonical user and navigate the exact same way.
+  const completeLogin = useCallback(
+    async (loggedInUser: User) => {
+      // POST /auth/login does not reliably populate `user.companies`
+      // (see types.ts). Re-fetch via /auth/me (same cookies, already
+      // forwarded by loginAction) so gates that read companies right
+      // after login (onboarding, "New project", Settings › Company)
+      // see the real list instead of an empty one. Fall back to the
+      // login response's embedded user — merging in any `companies` it
+      // did carry — if the re-fetch itself fails.
+      const freshUser = await getCurrentUserAction();
+      const user = freshUser ?? {
+        ...loggedInUser,
+        companies: loggedInUser.companies ?? [],
+      };
+      setState({
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+      // A trailing router.refresh() here used to silently strand the user
+      // on /login: push() starts an async RSC fetch for /dashboard without
+      // blocking, and calling refresh() in the same tick issues a second
+      // router action before push's navigation has committed — the router
+      // ends up refreshing the CURRENT route (still /login at dispatch
+      // time) instead of landing on the pushed one, so the URL never
+      // changes even though the /dashboard fetch itself succeeded (caught
+      // live via Playwright: window.location.href stayed on /login with
+      // no console error). Confirmed unnecessary besides that: /dashboard
+      // is never in the client Router Cache at this point (login always
+      // starts from /login, under the same not-yet-visited route), so
+      // push() alone already fetches every layout server-side fresh,
+      // including the session-reading root layout.
+      router.push(`/${locale}/dashboard`);
+    },
+    [router, locale]
+  );
+
   const login = useCallback(
     async (credentials: LoginCredentials) => {
       setState((prev) => ({ ...prev, isLoading: true }));
@@ -56,44 +101,31 @@ export function AuthProvider({
       const result = await loginAction(credentials);
 
       if (result.success && result.user) {
-        // POST /auth/login does not reliably populate `user.companies`
-        // (see types.ts). Re-fetch via /auth/me (same cookies, already
-        // forwarded by loginAction) so gates that read companies right
-        // after login (onboarding, "New project", Settings › Company)
-        // see the real list instead of an empty one. Fall back to the
-        // login response's embedded user — merging in any `companies` it
-        // did carry — if the re-fetch itself fails.
-        const freshUser = await getCurrentUserAction();
-        const user = freshUser ?? {
-          ...result.user,
-          companies: result.user.companies ?? [],
-        };
-        setState({
-          user,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-        // A trailing router.refresh() here used to silently strand the user
-        // on /login: push() starts an async RSC fetch for /dashboard without
-        // blocking, and calling refresh() in the same tick issues a second
-        // router action before push's navigation has committed — the router
-        // ends up refreshing the CURRENT route (still /login at dispatch
-        // time) instead of landing on the pushed one, so the URL never
-        // changes even though the /dashboard fetch itself succeeded (caught
-        // live via Playwright: window.location.href stayed on /login with
-        // no console error). Confirmed unnecessary besides that: /dashboard
-        // is never in the client Router Cache at this point (login always
-        // starts from /login, under the same not-yet-visited route), so
-        // push() alone already fetches every layout server-side fresh,
-        // including the session-reading root layout.
-        router.push(`/${locale}/dashboard`);
+        await completeLogin(result.user);
         return { success: true };
       }
 
       setState((prev) => ({ ...prev, isLoading: false }));
       return { success: false, error: result.error };
     },
-    [router, locale]
+    [completeLogin]
+  );
+
+  const loginWithPhone = useCallback(
+    async (phone: string, code: string) => {
+      setState((prev) => ({ ...prev, isLoading: true }));
+
+      const result = await verifyOtpAction(phone, code);
+
+      if (result.success && result.user) {
+        await completeLogin(result.user);
+        return { success: true };
+      }
+
+      setState((prev) => ({ ...prev, isLoading: false }));
+      return { success: false, error: result.error };
+    },
+    [completeLogin]
   );
 
   const logout = useCallback(() => {
@@ -116,6 +148,7 @@ export function AuthProvider({
         ...state,
         isLoading,
         login,
+        loginWithPhone,
         logout,
       }}
     >

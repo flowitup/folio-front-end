@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
+import { getAuthConfig } from "@/lib/api/auth-config";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { FolioLogo } from "@/components/folio-logo";
 
@@ -19,6 +20,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   const params = await searchParams;
   const callbackUrl = params.callbackUrl || `/${locale}/dashboard`;
+  const config = await getAuthConfig();
 
   return (
     <div className="grid min-h-screen grid-cols-12">
@@ -44,7 +46,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </p>
 
           <div className="mt-8">
-            <LoginForm callbackUrl={callbackUrl} />
+            <LoginForm callbackUrl={callbackUrl} loginMode={config.login_mode} />
           </div>
         </div>
       </div>

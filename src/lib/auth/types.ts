@@ -56,3 +56,12 @@ export interface AcceptInvitePayload {
   name: string;
   password: string;
 }
+
+/** Which sign-in method(s) this deployment offers, per `GET /auth/config`. */
+export type LoginMode = "email" | "phone" | "both";
+
+export interface AuthConfig {
+  login_mode: LoginMode;
+  session: "persistent" | "expiring";
+  signup: boolean;
+}

@@ -4,13 +4,79 @@ import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import type { LoginMode } from "@/lib/auth/types";
+import { PhoneLoginForm } from "./PhoneLoginForm";
 
 interface LoginFormProps {
   callbackUrl?: string;
+  loginMode: LoginMode;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future callbackUrl redirect
-export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
+export function LoginForm({ callbackUrl = "/dashboard", loginMode }: LoginFormProps) {
+  // "both" opens on the phone form first; the toggle below swaps to email
+  // and back. Local to this component (not persisted) since it is only a
+  // display preference for the current visit.
+  const [showEmailForm, setShowEmailForm] = useState(loginMode === "email");
+
+  if (loginMode === "phone") {
+    return <PhoneLoginForm />;
+  }
+
+  if (loginMode === "both" && !showEmailForm) {
+    return (
+      <PhoneLoginForm
+        useEmailInsteadSlot={<UseEmailInsteadToggle onClick={() => setShowEmailForm(true)} />}
+      />
+    );
+  }
+
+  return (
+    <EmailLoginForm
+      usePhoneInsteadSlot={
+        loginMode === "both" ? (
+          <UsePhoneInsteadToggle onClick={() => setShowEmailForm(false)} />
+        ) : undefined
+      }
+    />
+  );
+}
+
+function UseEmailInsteadToggle({ onClick }: { onClick: () => void }) {
+  const t = useTranslations("auth");
+  return (
+    <button
+      type="button"
+      data-testid="login-use-email"
+      onClick={onClick}
+      className="text-[13px] underline"
+      style={{ color: "var(--muted)" }}
+    >
+      {t("useEmailInstead")}
+    </button>
+  );
+}
+
+function UsePhoneInsteadToggle({ onClick }: { onClick: () => void }) {
+  const t = useTranslations("auth");
+  return (
+    <button
+      type="button"
+      data-testid="login-use-phone"
+      onClick={onClick}
+      className="text-[13px] underline"
+      style={{ color: "var(--muted)" }}
+    >
+      {t("usePhoneInstead")}
+    </button>
+  );
+}
+
+interface EmailLoginFormProps {
+  usePhoneInsteadSlot?: React.ReactNode;
+}
+
+function EmailLoginForm({ usePhoneInsteadSlot }: EmailLoginFormProps) {
   const { login, isLoading } = useAuth();
   const t = useTranslations("auth");
   const [email, setEmail] = useState("");
@@ -102,6 +168,8 @@ export function LoginForm({ callbackUrl = "/dashboard" }: LoginFormProps) {
           </>
         )}
       </button>
+
+      {usePhoneInsteadSlot && <div className="text-center">{usePhoneInsteadSlot}</div>}
     </form>
   );
 }

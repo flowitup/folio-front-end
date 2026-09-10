@@ -7,6 +7,12 @@ import { ADMIN } from "./seed-data";
  */
 export async function loginAs(page: Page, email: string, password: string): Promise<void> {
   await page.goto("/en/login");
+  // The local backend runs LOGIN_MODE=both, so the page now opens on the
+  // phone form; switch to email before filling the password-login fields.
+  const useEmailToggle = page.locator('[data-testid="login-use-email"]');
+  if (await useEmailToggle.isVisible().catch(() => false)) {
+    await useEmailToggle.click();
+  }
   await page.fill("#email", email);
   await page.fill("#password", password);
   await page.getByRole("button", { name: "Sign in" }).click();

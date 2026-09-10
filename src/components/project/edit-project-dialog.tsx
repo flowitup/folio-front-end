@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { updateProject } from "@/lib/api/projects";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/auth/permissions";
 import type { Project } from "@/types/project";
 
 interface EditProjectDialogProps {
@@ -31,6 +33,11 @@ export function EditProjectDialog({
   onUpdated,
 }: EditProjectDialogProps) {
   const t = useTranslations("projects");
+  const { user } = useAuth();
+  // Financing side: without `project:view_budget` the backend both withholds
+  // the figure and refuses a PUT that carries it, so the fields are hidden AND
+  // left out of the payload — otherwise a plain rename would come back 403.
+  const canViewBudget = can("project:view_budget", user?.permissions, project?.my_permissions);
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [budget, setBudget] = useState("");
@@ -93,18 +100,19 @@ export function EditProjectDialog({
     const payload = {
       name: trimmedName,
       address: trimmedAddress || null,
-      budget: budgetValue,
-      budget_source: budgetSourceValue,
+      ...(canViewBudget ? { budget: budgetValue, budget_source: budgetSourceValue } : {}),
     };
 
     // No-op: close without API call if nothing changed
     const existingBudget = project.budget ?? null;
     const existingBudgetSource = project.budget_source ?? null;
+    const budgetUnchanged =
+      !canViewBudget ||
+      (payload.budget === existingBudget && payload.budget_source === existingBudgetSource);
     if (
       payload.name === project.name &&
       payload.address === project.address &&
-      payload.budget === existingBudget &&
-      payload.budget_source === existingBudgetSource
+      budgetUnchanged
     ) {
       onOpenChange(false);
       return;
@@ -160,31 +168,35 @@ export function EditProjectDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-project-budget">{t("budgetLabel")}</Label>
-            <Input
-              id="edit-project-budget"
-              inputMode="decimal"
-              value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-              placeholder="0"
-              disabled={isSubmitting}
-            />
-          </div>
+          {canViewBudget && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="edit-project-budget">{t("budgetLabel")}</Label>
+                <Input
+                  id="edit-project-budget"
+                  inputMode="decimal"
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  placeholder="0"
+                  disabled={isSubmitting}
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-project-budget-source">
-              {t("budgetSourceLabelOptional")}
-            </Label>
-            <Input
-              id="edit-project-budget-source"
-              value={budgetSource}
-              onChange={(e) => setBudgetSource(e.target.value)}
-              placeholder={t("budgetSourcePlaceholder")}
-              maxLength={120}
-              disabled={isSubmitting}
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-project-budget-source">
+                  {t("budgetSourceLabelOptional")}
+                </Label>
+                <Input
+                  id="edit-project-budget-source"
+                  value={budgetSource}
+                  onChange={(e) => setBudgetSource(e.target.value)}
+                  placeholder={t("budgetSourcePlaceholder")}
+                  maxLength={120}
+                  disabled={isSubmitting}
+                />
+              </div>
+            </>
+          )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 

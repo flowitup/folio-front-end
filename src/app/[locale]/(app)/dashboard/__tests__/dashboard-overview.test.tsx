@@ -36,6 +36,12 @@ vi.mock("@/context/ProjectContext", () => ({
   useProject: () => mockUseProject(),
 }));
 
+vi.mock("@/context/AuthContext", () => ({
+  // The caller holds project:view_budget — these specs are not about the
+  // financing gate, so they render the full money surface.
+  useAuth: () => ({ user: { permissions: ["project:view_budget"] } }),
+}));
+
 function mkInvoice(partial: Partial<Invoice> & Pick<Invoice, "type" | "issue_date" | "total_amount">): Invoice {
   return {
     id: `inv-${Math.random()}`,

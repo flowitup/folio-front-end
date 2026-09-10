@@ -17,6 +17,12 @@ vi.mock("@/lib/api/projects", () => ({
   updateProject: vi.fn(),
 }));
 
+vi.mock("@/context/AuthContext", () => ({
+  // The caller holds project:view_budget — these specs are not about the
+  // financing gate, so they render the full money surface.
+  useAuth: () => ({ user: { permissions: ["project:view_budget"] } }),
+}));
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => {
     const t: Record<string, string> = {

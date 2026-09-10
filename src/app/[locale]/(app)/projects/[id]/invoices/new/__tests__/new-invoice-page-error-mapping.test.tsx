@@ -43,6 +43,12 @@ vi.mock("@/lib/api/projects", () => ({
   fetchProjectById: vi.fn().mockResolvedValue({ id: "proj-1", company_id: null }),
 }));
 
+vi.mock("@/context/AuthContext", () => ({
+  // The caller holds project:view_budget — these specs are not about the
+  // financing gate, so they render the full money surface.
+  useAuth: () => ({ user: { permissions: ["project:view_budget"] } }),
+}));
+
 
 // Keep the real classifySubmitError (that's what this fix is about) but
 // replace InvoiceForm with a minimal stub that exposes onSubmit via a button.

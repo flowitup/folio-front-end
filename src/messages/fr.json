@@ -2214,7 +2214,8 @@
         "project_manage_invoices": "Gérer les factures",
         "project_log_own_attendance": "Pointer ses propres présences",
         "bibliotheque_manage": "Gérer la bibliothèque",
-        "project_view_pay": "Voir la paie"
+        "project_view_pay": "Voir la paie",
+        "project_view_budget": "Voir le budget et les fonds débloqués"
       }
     },
     "directory": {

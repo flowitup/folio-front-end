@@ -28,6 +28,8 @@ import { OverviewTypeMinis } from "@/components/dashboard/overview-type-minis";
 import { OverviewAgenda } from "@/components/dashboard/overview-agenda";
 import { OverviewWeatherCard } from "@/components/dashboard/overview-weather-card";
 import { BankReleaseChart } from "@/components/project/bank-release-chart";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/auth/permissions";
 
 const MONTHS_BACK = 6;
 
@@ -66,6 +68,7 @@ const EMPTY_TYPE_BUCKETS: TypeMonthlyBucket[] = EXPENSE_TYPES.map((type) => ({
 
 export default function DashboardPage() {
   const { selectedProject } = useProject();
+  const { user } = useAuth();
   const locale = useLocale();
   const t = useTranslations("dashboard");
   const projectId = selectedProject?.id;
@@ -166,6 +169,12 @@ export default function DashboardPage() {
     [activeTasks, referenceDate]
   );
 
+  // Financing side of the project. Without `project:view_budget` the backend
+  // already withholds the budget and zeroes every released-funds total, so the
+  // draw-down chart and the budget-relative parts of the money panel are hidden
+  // rather than drawn against zeros.
+  const canViewBudget = can("project:view_budget", user?.permissions, selectedProject?.my_permissions);
+
   const viewExpenseHref = projectId ? `/${locale}/projects/${projectId}/invoices` : null;
   const planningHref = projectId ? `/${locale}/projects/${projectId}/planning` : null;
   const projectSettingsHref = projectId ? `/${locale}/projects/${projectId}/settings` : null;
@@ -187,15 +196,18 @@ export default function DashboardPage() {
         bankOutstanding={bankOutstanding}
         purses={purses}
         loading={showLoading}
+        canViewBudget={canViewBudget}
       />
 
-      <BankReleaseChart
-        credit={selectedProject?.budget}
-        releasedTotal={activeMeta.fundsReleasedTotal}
-        invoices={activeInvoices}
-        settingsHref={projectSettingsHref}
-        loading={showLoading}
-      />
+      {canViewBudget && (
+        <BankReleaseChart
+          credit={selectedProject?.budget}
+          releasedTotal={activeMeta.fundsReleasedTotal}
+          invoices={activeInvoices}
+          settingsHref={projectSettingsHref}
+          loading={showLoading}
+        />
+      )}
 
       <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="min-w-0">

@@ -2214,7 +2214,8 @@
         "project_manage_invoices": "Quản lý hoá đơn",
         "project_log_own_attendance": "Chấm công cho bản thân",
         "bibliotheque_manage": "Quản lý thư viện",
-        "project_view_pay": "Xem lương"
+        "project_view_pay": "Xem lương",
+        "project_view_budget": "Xem ngân sách & vốn giải ngân"
       }
     },
     "directory": {

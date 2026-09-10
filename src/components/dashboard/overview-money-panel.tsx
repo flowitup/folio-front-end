@@ -67,6 +67,14 @@ export interface OverviewMoneyPanelProps {
    * 0), so show placeholders instead of a briefly-wrong "full budget
    * remaining" flash. */
   loading?: boolean;
+  /**
+   * Whether the caller holds `project:view_budget`. False drops everything
+   * measured against the project's financing: the "remaining to spend"
+   * headline (budget − spent), the credit progress bar, and the purse dials
+   * (spend as a share of released funds). The spend figures the caller does
+   * own — total spent, this month, the sparkline, outstanding refunds — stay.
+   */
+  canViewBudget?: boolean;
 }
 
 const PLACEHOLDER = "—";
@@ -83,6 +91,7 @@ export function OverviewMoneyPanel({
   bankOutstanding,
   purses,
   loading = false,
+  canViewBudget = true,
 }: OverviewMoneyPanelProps) {
   const t = useTranslations("dashboard");
   const tInvoices = useTranslations("invoices");
@@ -153,13 +162,17 @@ export function OverviewMoneyPanel({
         <div className="flex flex-wrap items-start gap-9">
           <div>
             <div className="text-[10.5px] font-medium uppercase tracking-[0.1em]" style={{ opacity: 0.6 }}>
-              {tProjects("remainingToSpend")}
+              {canViewBudget ? tProjects("remainingToSpend") : tInvoices("summary.spent")}
             </div>
             <div
               className="num mt-2 text-[34px] font-medium leading-none"
-              style={{ letterSpacing: "-.02em", color: !loading && budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined }}
+              style={{
+                letterSpacing: "-.02em",
+                color:
+                  !loading && canViewBudget && budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined,
+              }}
             >
-              {fig(formatEURWhole(budgetMetrics.left))}
+              {fig(formatEURWhole(canViewBudget ? budgetMetrics.left : spentTotal))}
             </div>
           </div>
           <div className="flex items-end gap-6" style={{ borderLeft: "1px solid rgba(245,241,234,0.14)", paddingLeft: 32 }}>
@@ -241,42 +254,48 @@ export function OverviewMoneyPanel({
         )}
       </div>
 
-      <div className="mt-[18px]">
-        <div className="relative h-[10px] overflow-hidden rounded-full" style={{ background: TRACK_BG }}>
-          <span
-            className="absolute inset-y-0 left-0 rounded-full"
-            style={{ background: "var(--accent)", width: loading ? "0%" : `${budgetMetrics.pctClamped}%` }}
-          />
-        </div>
-        <div className="mt-2 flex justify-between text-[11px]" style={{ opacity: 0.62 }}>
-          <span>{formatEURWhole(0)}</span>
-          <span>
-            <span className="num">
-              {loading
-                ? PLACEHOLDER
-                : t("money.pctSpent", { pct: budgetMetrics.pct, spent: formatEURWhole(spentTotal) })}
+      {/* Credit progress + purse dials are measured against the project's
+          financing, so both are budget-gated. */}
+      {canViewBudget && (
+        <div className="mt-[18px]">
+          <div className="relative h-[10px] overflow-hidden rounded-full" style={{ background: TRACK_BG }}>
+            <span
+              className="absolute inset-y-0 left-0 rounded-full"
+              style={{ background: "var(--accent)", width: loading ? "0%" : `${budgetMetrics.pctClamped}%` }}
+            />
+          </div>
+          <div className="mt-2 flex justify-between text-[11px]" style={{ opacity: 0.62 }}>
+            <span>{formatEURWhole(0)}</span>
+            <span>
+              <span className="num">
+                {loading
+                  ? PLACEHOLDER
+                  : t("money.pctSpent", { pct: budgetMetrics.pct, spent: formatEURWhole(spentTotal) })}
+              </span>
             </span>
-          </span>
-          <span>{fig(formatEURWhole(budgetMetrics.denominator))}</span>
+            <span>{fig(formatEURWhole(budgetMetrics.denominator))}</span>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="mt-5 grid grid-cols-1 gap-8 pt-5 sm:grid-cols-2" style={{ borderTop: `1px solid ${DIVIDER}` }}>
-        {purseRow(
-          company,
-          tInvoices("summary.companyPurse"),
-          tInvoices("invoiceCount", { n: company?.count ?? 0 }),
-          "var(--paper)"
-        )}
-        {purseRow(
-          personal,
-          tInvoices("summary.personalPurse"),
-          pendingRefunds.count > 0
-            ? `${tInvoices("summary.refundableCount", { n: pendingRefunds.count })} · ${formatEURWhole(pendingRefunds.total)}`
-            : tInvoices("invoiceCount", { n: personal?.count ?? 0 }),
-          "var(--accent)"
-        )}
-      </div>
+      {canViewBudget && (
+        <div className="mt-5 grid grid-cols-1 gap-8 pt-5 sm:grid-cols-2" style={{ borderTop: `1px solid ${DIVIDER}` }}>
+          {purseRow(
+            company,
+            tInvoices("summary.companyPurse"),
+            tInvoices("invoiceCount", { n: company?.count ?? 0 }),
+            "var(--paper)"
+          )}
+          {purseRow(
+            personal,
+            tInvoices("summary.personalPurse"),
+            pendingRefunds.count > 0
+              ? `${tInvoices("summary.refundableCount", { n: pendingRefunds.count })} · ${formatEURWhole(pendingRefunds.total)}`
+              : tInvoices("invoiceCount", { n: personal?.count ?? 0 }),
+            "var(--accent)"
+          )}
+        </div>
+      )}
     </div>
   );
 }

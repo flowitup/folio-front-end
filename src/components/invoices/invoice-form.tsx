@@ -39,6 +39,13 @@ interface InvoiceFormProps {
    * ID of the invoice being edited. Excluded from the M&S selector list.
    */
   editingInvoiceId?: string;
+  /**
+   * Whether the caller holds `project:view_budget`. False drops "Released
+   * funds" from the type picker — the backend refuses to record or retype a
+   * release without it, so offering the option would only produce a 403.
+   * Defaults to true so callers that never surface releases stay unchanged.
+   */
+  canRecordReleases?: boolean;
 }
 
 const INVOICE_TYPES: InvoiceType[] = [
@@ -48,6 +55,10 @@ const INVOICE_TYPES: InvoiceType[] = [
   "others",
   "return",
 ];
+
+const SPEND_ONLY_INVOICE_TYPES: InvoiceType[] = INVOICE_TYPES.filter(
+  (t) => t !== "released_funds"
+);
 
 /**
  * Types that allow mixed-sign (negative) unit_price on line items.
@@ -67,6 +78,7 @@ export function InvoiceForm({
   companyId,
   projectId,
   editingInvoiceId,
+  canRecordReleases = true,
 }: InvoiceFormProps) {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
@@ -355,7 +367,7 @@ export function InvoiceForm({
                 className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 disabled={isLoading}
               >
-                {INVOICE_TYPES.map((tp) => (
+                {(canRecordReleases ? INVOICE_TYPES : SPEND_ONLY_INVOICE_TYPES).map((tp) => (
                   <option key={tp} value={tp}>
                     {t(`types.${tp}`)}
                   </option>

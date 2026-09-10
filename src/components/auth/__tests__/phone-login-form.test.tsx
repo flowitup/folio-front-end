@@ -2,9 +2,10 @@
  * PhoneLoginForm — phone + SMS-code sign-in flow.
  *
  * Covers: send-code step calling requestOtpAction and moving to the code
- * step with the number shown, throttled request errors staying on step 1,
- * code submission calling loginWithPhone, invalid-code errors staying on
- * step 2, and "Change number" returning to step 1.
+ * step with the number shown in E.164, non-French numbers refused before any
+ * request, throttled request errors staying on step 1, code submission calling
+ * loginWithPhone, invalid-code errors staying on step 2, and "Change number"
+ * returning to step 1.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -15,6 +16,7 @@ import { PhoneLoginForm } from "../PhoneLoginForm";
 const TRANSLATIONS: Record<string, string> = {
   phoneLabel: "Phone number",
   phonePlaceholder: "06 12 34 56 78",
+  phoneHint: "French numbers only, e.g. 06 12 34 56 78",
   sendCode: "Send code",
   sendingCode: "Sending code...",
   codeSentTo: "Code sent to {phone}",
@@ -26,7 +28,7 @@ const TRANSLATIONS: Record<string, string> = {
   resendIn: "Resend in {seconds}s",
   changeNumber: "Change number",
   errorPhoneRequired: "Please enter your phone number",
-  errorInvalidPhone: "Invalid phone number",
+  errorInvalidPhone: "Enter a French phone number",
   errorCodeRequired: "Please enter the 6-digit code",
   errorInvalidCode: "Wrong or expired code",
   errorThrottled: "Too many requests. Wait a minute and try again.",
@@ -73,10 +75,33 @@ describe("PhoneLoginForm", () => {
     await user.click(screen.getByRole("button", { name: /Send code/i }));
 
     await waitFor(() => {
-      expect(mockRequestOtpAction).toHaveBeenCalledWith("0612345678");
+      expect(mockRequestOtpAction).toHaveBeenCalledWith("+33612345678");
     });
-    expect(screen.getByText("Code sent to 0612345678")).toBeInTheDocument();
+    expect(screen.getByText("Code sent to +33612345678")).toBeInTheDocument();
     expect(screen.getByLabelText("Code")).toBeInTheDocument();
+  });
+
+  it("refuses a non-French number without asking for a code", async () => {
+    const user = userEvent.setup();
+    render(<PhoneLoginForm />);
+
+    await user.type(screen.getByLabelText("Phone number"), "+84912345678");
+    await user.click(screen.getByRole("button", { name: /Send code/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Enter a French phone number")).toBeInTheDocument();
+    });
+    expect(mockRequestOtpAction).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Code")).toBeNull();
+  });
+
+  it("tells the user up front that only French numbers work", () => {
+    render(<PhoneLoginForm />);
+
+    expect(
+      screen.getByText("French numbers only, e.g. 06 12 34 56 78")
+    ).toBeInTheDocument();
   });
 
   it("shows the throttled error and stays on the phone step", async () => {
@@ -111,7 +136,7 @@ describe("PhoneLoginForm", () => {
     await user.click(screen.getByRole("button", { name: /Sign in/i }));
 
     await waitFor(() => {
-      expect(mockLoginWithPhone).toHaveBeenCalledWith("0612345678", "123456");
+      expect(mockLoginWithPhone).toHaveBeenCalledWith("+33612345678", "123456");
     });
   });
 

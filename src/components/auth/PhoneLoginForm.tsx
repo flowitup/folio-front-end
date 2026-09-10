@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { requestOtpAction, type RequestOtpError } from "@/lib/auth/otp-actions";
+import { normalizeFrenchPhone } from "@/lib/auth/phone-number";
 
 // Matches the backend's resend-throttle window (`resend_after_seconds`) so
 // the client-side countdown never lets the user tap "Resend" before the
@@ -38,6 +39,8 @@ export function PhoneLoginForm({ useEmailInsteadSlot }: PhoneLoginFormProps) {
 
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [phone, setPhone] = useState("");
+  // E.164 form of the number the code was sent to — what the code step shows and verifies.
+  const [normalizedPhone, setNormalizedPhone] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   // requestOtpAction is a plain server action, not wired into AuthContext,
@@ -75,19 +78,28 @@ export function PhoneLoginForm({ useEmailInsteadSlot }: PhoneLoginFormProps) {
       setError(t("errorPhoneRequired"));
       return;
     }
-    const ok = await sendCode(trimmed);
+    // Sign-in codes go out through a French gateway: refuse anything else here,
+    // before the request, so the user sees why instead of a generic failure.
+    const french = normalizeFrenchPhone(trimmed);
+    if (!french) {
+      setError(t("errorInvalidPhone"));
+      return;
+    }
+    const ok = await sendCode(french);
     if (ok) {
+      setNormalizedPhone(french);
       setStep("code");
     }
   };
 
   const handleResend = async () => {
     setError(null);
-    await sendCode(phone.trim());
+    await sendCode(normalizedPhone);
   };
 
   const handleChangeNumber = () => {
     setStep("phone");
+    setNormalizedPhone("");
     setCode("");
     setError(null);
     setCooldown(0);
@@ -102,7 +114,7 @@ export function PhoneLoginForm({ useEmailInsteadSlot }: PhoneLoginFormProps) {
       return;
     }
 
-    const result = await loginWithPhone(phone.trim(), trimmedCode);
+    const result = await loginWithPhone(normalizedPhone, trimmedCode);
     if (!result.success) {
       const key =
         result.error === "invalid_code"
@@ -150,6 +162,9 @@ export function PhoneLoginForm({ useEmailInsteadSlot }: PhoneLoginFormProps) {
             placeholder={t("phonePlaceholder")}
             className="folio-input mt-1"
           />
+          <p className="mt-1 text-[12px]" style={{ color: "var(--muted)" }}>
+            {t("phoneHint")}
+          </p>
         </div>
 
         <button
@@ -180,7 +195,7 @@ export function PhoneLoginForm({ useEmailInsteadSlot }: PhoneLoginFormProps) {
       {errorBanner}
 
       <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-        {t("codeSentTo", { phone: phone.trim() })}
+        {t("codeSentTo", { phone: normalizedPhone })}
       </p>
 
       <div>

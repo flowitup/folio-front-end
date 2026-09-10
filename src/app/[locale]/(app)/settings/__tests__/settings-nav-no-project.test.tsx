@@ -16,12 +16,27 @@ import viMessages from "@/messages/vi.json";
 import { SettingsClient } from "../settings-client";
 
 vi.mock("@/context/AuthContext", () => ({
-  useAuth: () => ({ user: { email: "u@example.com", permissions: [] } }),
+  useAuth: () => ({
+    user: { email: "u@example.com", display_name: null, phone: null, permissions: [] },
+  }),
 }));
 
 vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
   usePathname: () => "/settings",
+}));
+
+// ProfileForm (rendered by the default "profile" tab) calls next/navigation's
+// useRouter() to refresh after save — stub it since no app router is mounted
+// in this test.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
+// profile-actions.ts is a "use server" module — not exercised by this nav
+// test, but stub it so importing ProfileForm never touches next/headers.
+vi.mock("@/app/[locale]/(app)/settings/_actions/profile-actions", () => ({
+  updateProfileAction: vi.fn(),
 }));
 
 vi.mock("@/context/ProjectContext", () => ({

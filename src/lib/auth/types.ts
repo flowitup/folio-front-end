@@ -9,6 +9,10 @@ export interface User {
   id: string;
   email: string;
   permissions: string[];
+  /** Optional profile fields — absent on older/legacy responses, so read defensively. */
+  display_name?: string | null;
+  /** Phone-only sign-in rollout: null/undefined until the user sets one. */
+  phone?: string | null;
   /**
    * Companies the user is attached to (company-as-tenant model). Empty on the
    * POST /auth/login response (backend limitation — that endpoint does not
@@ -55,4 +59,13 @@ export interface AcceptInvitePayload {
   token: string;
   name: string;
   password: string;
+}
+
+/** Which sign-in method(s) this deployment offers, per `GET /auth/config`. */
+export type LoginMode = "email" | "phone" | "both";
+
+export interface AuthConfig {
+  login_mode: LoginMode;
+  session: "persistent" | "expiring";
+  signup: boolean;
 }

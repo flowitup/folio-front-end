@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { updateInvoicePrefix } from "./actions";
 import { BankCreditCard } from "./bank-credit-card";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/auth/permissions";
 import type { Project } from "@/types/project";
 
 const PREFIX_RE = /^[A-Z0-9]{0,8}$/;
@@ -19,6 +21,10 @@ interface Props {
 
 export function ProjectSettingsClient({ project }: Props) {
   const t = useTranslations("projects");
+  const { user } = useAuth();
+  // The bank credit IS the project budget: the card reads `project.budget` and
+  // charts the releases drawn against it, so it belongs to the financing side.
+  const canViewBudget = can("project:view_budget", user?.permissions, project.my_permissions);
   const [prefix, setPrefix] = useState(project.invoice_prefix ?? "");
   const [saving, setSaving] = useState(false);
   const currentYear = new Date().getFullYear();
@@ -58,7 +64,7 @@ export function ProjectSettingsClient({ project }: Props) {
 
       {/* Bank credit card — initial credit granted by the bank; funds
           releases are deducted from it on the Overview/Expense charts. */}
-      <BankCreditCard project={project} />
+      {canViewBudget && <BankCreditCard project={project} />}
 
       {/* Invoice prefix card */}
       <div className="folio-card p-7">

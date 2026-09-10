@@ -102,8 +102,10 @@ function setupMocks() {
     { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() } as any
   );
   mockUsePathname.mockReturnValue("/en/projects/proj-test-1/invoices");
+  // project:view_budget — this spec renders the financing surface (the
+  // released-funds tab / purses card), which is hidden without it.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mockUseAuth.mockReturnValue({ user: { permissions: [] } } as any);
+  mockUseAuth.mockReturnValue({ user: { permissions: ["project:view_budget"] } } as any);
   mockFetchInvoicesWithMeta.mockResolvedValue({
     invoices: [],
     total: 0,

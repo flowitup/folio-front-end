@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InvoiceForm, classifySubmitError } from "@/components/invoices/invoice-form";
 import { createInvoice } from "@/lib/api/invoice-api";
 import { fetchProjectById } from "@/lib/api/projects";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/auth/permissions";
 import type { CreateInvoicePayload } from "@/types/invoice";
 
 export default function NewInvoicePage() {
@@ -22,13 +24,23 @@ export default function NewInvoicePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [projectPerms, setProjectPerms] = useState<string[] | undefined>(undefined);
+  const { user } = useAuth();
 
-  // Fetch the project for its company id. Non-fatal.
+  // Fetch the project for its company id and this caller's effective
+  // permissions on it. Non-fatal.
   useEffect(() => {
     fetchProjectById(projectId)
-      .then((p) => setCompanyId(p.company_id ?? null))
+      .then((p) => {
+        setCompanyId(p.company_id ?? null);
+        setProjectPerms(p.my_permissions);
+      })
       .catch(() => setCompanyId(null));
   }, [projectId]);
+
+  // Without `project:view_budget` the backend refuses to record a release, so
+  // the type is dropped from the picker rather than offered as a future 403.
+  const canViewBudget = can("project:view_budget", user?.permissions, projectPerms);
 
   const handleSubmit = async (payload: CreateInvoicePayload) => {
     setIsLoading(true);
@@ -77,6 +89,7 @@ export default function NewInvoicePage() {
         isLoading={isLoading}
         companyId={companyId}
         projectId={projectId}
+        canRecordReleases={canViewBudget}
       />
     </div>
   );

@@ -268,6 +268,14 @@ export default function ProjectsPage() {
               project.spent_personal ?? 0,
               project.spent_by_credits ?? 0,
             );
+            // Financing side of this project: the backend nulls `budget` without
+            // `project:view_budget`, so the credit/remaining columns and the
+            // drawdown bar are hidden rather than shown as "—" and a flat 0%.
+            const canViewBudget = can(
+              "project:view_budget",
+              user?.permissions,
+              project.my_permissions
+            );
             const breakdownRows = personalSpendRows(project.personal_by_type);
             const laborUnpaid = project.labor_unpaid ?? 0;
             const hasBreakdown = breakdownRows.length > 0 || laborUnpaid > 0;
@@ -358,37 +366,45 @@ export default function ProjectsPage() {
                       </DropdownMenu>
                     </div>
 
-                    {/* Progress */}
-                    <div className="mb-4">
-                      <div className="mb-1.5 flex items-center justify-between text-[12px]">
-                        <span style={{ color: "var(--muted)" }}>{t("progress")}</span>
-                        <span className="num font-medium">{Math.round(progress * 100)}%</span>
+                    {/* Progress — drawdown of the credit, so budget-gated. */}
+                    {canViewBudget && (
+                      <div className="mb-4">
+                        <div className="mb-1.5 flex items-center justify-between text-[12px]">
+                          <span style={{ color: "var(--muted)" }}>{t("progress")}</span>
+                          <span className="num font-medium">{Math.round(progress * 100)}%</span>
+                        </div>
+                        <div className="progress-track">
+                          <div
+                            className={`progress-fill ${isOverBudget ? "" : "accent"}`}
+                            style={{
+                              width: `${progress * 100}%`,
+                              ...(isOverBudget && { background: "var(--negative)" }),
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="progress-track">
-                        <div
-                          className={`progress-fill ${isOverBudget ? "" : "accent"}`}
-                          style={{
-                            width: `${progress * 100}%`,
-                            ...(isOverBudget && { background: "var(--negative)" }),
-                          }}
-                        />
-                      </div>
-                    </div>
+                    )}
 
                     {/* Meta row */}
                     <div className="hairline mt-auto border-t pt-4">
                       {/* Credit total / Spent by credit / Spent personal / Remaining.
                           Two columns on narrow screens so the figures stay readable. */}
-                      <div className="mb-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                        <div>
-                          {/* min-h reserves two label lines so a label that wraps in one
-                              locale (fr "Dépensé sur crédit") does not push its figure
-                              out of line with the other three. */}
-                          <div className="label-cap min-h-[3em]">{t("creditTotal")}</div>
-                          <div className="font-display num mt-0.5 text-[15px]">
-                            {creditTotal ? fmtEUR(creditTotal) : "—"}
+                      <div
+                        className={`mb-3 grid grid-cols-2 gap-4 ${
+                          canViewBudget ? "sm:grid-cols-4" : "sm:grid-cols-2"
+                        }`}
+                      >
+                        {canViewBudget && (
+                          <div>
+                            {/* min-h reserves two label lines so a label that wraps in one
+                                locale (fr "Dépensé sur crédit") does not push its figure
+                                out of line with the other three. */}
+                            <div className="label-cap min-h-[3em]">{t("creditTotal")}</div>
+                            <div className="font-display num mt-0.5 text-[15px]">
+                              {creditTotal ? fmtEUR(creditTotal) : "—"}
+                            </div>
                           </div>
-                        </div>
+                        )}
                         <div>
                           <div className="label-cap min-h-[3em]">{t("spentByCredits")}</div>
                           <div className="font-display num mt-0.5 text-[15px]">
@@ -422,19 +438,21 @@ export default function ProjectsPage() {
                             </div>
                           )}
                         </div>
-                        <div>
-                          <div className="label-cap min-h-[3em]">{t("remaining")}</div>
-                          <div
-                            className="font-display num mt-0.5 text-[15px]"
-                            style={isOverBudget ? { color: "var(--negative)" } : undefined}
-                          >
-                            {creditTotal
-                              ? isOverBudget
-                                ? `${t("overBudget")} ${fmtEUR(Math.abs(remaining))}`
-                                : fmtEUR(remaining)
-                              : "—"}
+                        {canViewBudget && (
+                          <div>
+                            <div className="label-cap min-h-[3em]">{t("remaining")}</div>
+                            <div
+                              className="font-display num mt-0.5 text-[15px]"
+                              style={isOverBudget ? { color: "var(--negative)" } : undefined}
+                            >
+                              {creditTotal
+                                ? isOverBudget
+                                  ? `${t("overBudget")} ${fmtEUR(Math.abs(remaining))}`
+                                  : fmtEUR(remaining)
+                                : "—"}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Personal spend breakdown — collapsed by default. Unpaid labor is

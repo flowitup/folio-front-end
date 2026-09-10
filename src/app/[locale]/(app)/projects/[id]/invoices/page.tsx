@@ -128,6 +128,11 @@ export default function InvoicesPage() {
   // membership-role perms) — not just the global JWT permissions.
   const projectPerms = projects.find((p) => p.id === projectId)?.my_permissions;
   const canManageInvoices = can("project:manage_invoices", user?.permissions, projectPerms);
+  // Financing side of the project: the released-funds tab, the two-purses card
+  // and the bank draw-down all read money the backend now withholds without
+  // `project:view_budget` (it strips the rows and zeroes the totals), so they
+  // are hidden rather than rendered empty.
+  const canViewBudget = can("project:view_budget", user?.permissions, projectPerms);
 
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [exportOpen, setExportOpen] = useState(false);
@@ -227,7 +232,9 @@ export default function InvoicesPage() {
     }
   };
 
-  const tabs: TabType[] = ["all", "released_funds", "labor", "materials_services", "others", "return"];
+  const tabs: TabType[] = canViewBudget
+    ? ["all", "released_funds", "labor", "materials_services", "others", "return"]
+    : ["all", "labor", "materials_services", "others", "return"];
 
   // Month → category sections for the "all" tab, computed client-side over
   // whatever the fetch returned (tag filters compose for free). Labor buckets
@@ -266,11 +273,13 @@ export default function InvoicesPage() {
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
       {/* "Two purses" summary (design Expense Dataviz 1b) — project-level,
           fed by an unfiltered fetch so tab/tag filters below never change it. */}
-      {summary && <ExpensePursesSummary invoices={summary.invoices} meta={summary.meta} />}
+      {summary && canViewBudget && (
+        <ExpensePursesSummary invoices={summary.invoices} meta={summary.meta} />
+      )}
 
       {/* Bank draw-down — what the bank still holds of the project's credit.
           Same figures the Overview shows, so the two pages never disagree. */}
-      {summary && (
+      {summary && canViewBudget && (
         <BankReleaseChart
           credit={project?.budget}
           releasedTotal={summary.meta.fundsReleasedTotal}

@@ -114,7 +114,11 @@ function setupNavigation() {
 }
 
 function setupAuth(canManage: boolean) {
-  const perms = canManage ? ["project:manage_invoices"] : [];
+  // project:view_budget is unconditional here: these specs render the purses
+  // card, which the financing gate hides — `canManage` only toggles writes.
+  const perms = canManage
+    ? ["project:manage_invoices", "project:view_budget"]
+    : ["project:view_budget"];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockUseAuth.mockReturnValue({ user: { permissions: perms } } as any);
 }

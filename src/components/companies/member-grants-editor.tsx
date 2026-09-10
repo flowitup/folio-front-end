@@ -63,6 +63,7 @@ const LABELED_PERMISSIONS = new Set([
   "project:log_own_attendance",
   "bibliotheque:manage",
   "project:view_pay",
+  "project:view_budget",
 ]);
 
 export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Props) {

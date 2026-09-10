@@ -3,6 +3,7 @@
 import { env } from "@/lib/config/env";
 import type { LoginResponse, User } from "./types";
 import { setForwardedCookies } from "./forward-cookies";
+import { normalizeFrenchPhone } from "./phone-number";
 
 export type RequestOtpError = "invalid_phone" | "throttled" | "sms_failed" | "unavailable" | "unknown";
 export type VerifyOtpError = "invalid_code" | "throttled" | "unavailable" | "unknown";
@@ -31,12 +32,18 @@ export async function requestOtpAction(phone: string): Promise<RequestOtpResult>
   if (!trimmedPhone) {
     return { success: false, error: "invalid_phone" };
   }
+  // Sign-in codes leave through a French SMS gateway. The backend enforces the
+  // same rule, but stopping here means a foreign number never leaves the server.
+  const frenchPhone = normalizeFrenchPhone(trimmedPhone);
+  if (!frenchPhone) {
+    return { success: false, error: "invalid_phone" };
+  }
 
   try {
     const response = await fetch(`${env.apiBaseUrl}/auth/otp/request`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: trimmedPhone }),
+      body: JSON.stringify({ phone: frenchPhone }),
     });
 
     if (response.status === 202) {
@@ -71,6 +78,11 @@ export async function verifyOtpAction(phone: string, code: string): Promise<Veri
   if (!trimmedPhone) {
     return { success: false, error: "invalid_code" };
   }
+  // Same French-only rule as the request step: a code can only exist for a French number.
+  const frenchPhone = normalizeFrenchPhone(trimmedPhone);
+  if (!frenchPhone) {
+    return { success: false, error: "invalid_code" };
+  }
   if (!/^\d{6}$/.test(trimmedCode)) {
     return { success: false, error: "invalid_code" };
   }
@@ -79,7 +91,7 @@ export async function verifyOtpAction(phone: string, code: string): Promise<Veri
     const response = await fetch(`${env.apiBaseUrl}/auth/otp/verify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: trimmedPhone, code: trimmedCode }),
+      body: JSON.stringify({ phone: frenchPhone, code: trimmedCode }),
     });
 
     if (!response.ok) {

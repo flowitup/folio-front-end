@@ -250,6 +250,14 @@
     "ownerLine": "Chủ · {project}",
     "email": "Email",
     "phone": "Điện thoại",
+    "displayName": "Tên hiển thị",
+    "emailReadOnlyHint": "Email chỉ có thể được thay đổi bởi quản trị viên",
+    "save": "Lưu",
+    "saving": "Đang lưu…",
+    "profileSaved": "Đã lưu hồ sơ",
+    "errorInvalidPhone": "Số điện thoại không hợp lệ",
+    "errorPhoneTaken": "Số điện thoại này đã được dùng cho một tài khoản khác",
+    "errorSaveFailed": "Không thể lưu hồ sơ của bạn. Vui lòng thử lại.",
     "language": "Ngôn ngữ",
     "languageDesc": "Ngôn ngữ giao diện Folio. Lưu giữ qua các phiên.",
     "currentlySetTo": "Hiện đang dùng {lang}.",
@@ -1728,6 +1736,7 @@
         },
         "attached": {
           "nameEmail": "Tên / Email",
+          "namePhone": "Tên / Số điện thoại",
           "attachedAt": "Ngày liên kết",
           "primaryBadge": "Chính",
           "boot": "Xóa người dùng",
@@ -2185,6 +2194,7 @@
       "empty": "Chưa có thành viên nào.",
       "col": {
         "nameEmail": "Tên / Email",
+        "namePhone": "Tên / Số điện thoại",
         "role": "Vai trò"
       },
       "roleAdmin": "Quản trị viên",

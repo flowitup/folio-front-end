@@ -114,6 +114,7 @@ const INITIAL_USERS: AttachedUser[] = [
     user_id: "user-1",
     email: "alice@example.com",
     display_name: "Alice",
+    phone: null,
     is_primary: true,
     attached_at: "2026-01-01T00:00:00Z",
     role: "admin",

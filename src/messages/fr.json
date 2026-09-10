@@ -250,6 +250,14 @@
     "ownerLine": "Propriétaire · {project}",
     "email": "E-mail",
     "phone": "Téléphone",
+    "displayName": "Nom affiché",
+    "emailReadOnlyHint": "L'e-mail ne peut être modifié que par un administrateur",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "profileSaved": "Profil enregistré",
+    "errorInvalidPhone": "Numéro de téléphone invalide",
+    "errorPhoneTaken": "Ce numéro de téléphone est déjà utilisé par un autre compte",
+    "errorSaveFailed": "Impossible d'enregistrer votre profil. Veuillez réessayer.",
     "language": "Langue",
     "languageDesc": "Langue de l'interface Folio. Conservée entre les sessions.",
     "currentlySetTo": "Actuellement défini sur {lang}.",
@@ -1728,6 +1736,7 @@
         },
         "attached": {
           "nameEmail": "Nom / E-mail",
+          "namePhone": "Nom / Téléphone",
           "attachedAt": "Rattaché le",
           "primaryBadge": "Principale",
           "boot": "Retirer l'utilisateur",
@@ -2185,6 +2194,7 @@
       "empty": "Aucun membre pour l'instant.",
       "col": {
         "nameEmail": "Nom / E-mail",
+        "namePhone": "Nom / Téléphone",
         "role": "Rôle"
       },
       "roleAdmin": "Admin",

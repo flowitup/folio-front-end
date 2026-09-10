@@ -250,6 +250,14 @@
     "ownerLine": "Owner · {project}",
     "email": "Email",
     "phone": "Phone",
+    "displayName": "Display name",
+    "emailReadOnlyHint": "Email can only be changed by an administrator",
+    "save": "Save",
+    "saving": "Saving…",
+    "profileSaved": "Profile saved",
+    "errorInvalidPhone": "Invalid phone number",
+    "errorPhoneTaken": "This phone number is already used by another account",
+    "errorSaveFailed": "Couldn't save your profile. Please try again.",
     "language": "Language",
     "languageDesc": "Folio interface language. Persists across sessions.",
     "currentlySetTo": "Currently set to {lang}.",
@@ -1728,6 +1736,7 @@
         },
         "attached": {
           "nameEmail": "Name / Email",
+          "namePhone": "Name / Phone",
           "attachedAt": "Attached",
           "primaryBadge": "Primary",
           "boot": "Boot user",
@@ -2185,6 +2194,7 @@
       "empty": "No members yet.",
       "col": {
         "nameEmail": "Name / Email",
+        "namePhone": "Name / Phone",
         "role": "Role"
       },
       "roleAdmin": "Admin",

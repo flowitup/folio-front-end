@@ -11,6 +11,7 @@ import { AdminCompaniesSection } from "@/components/companies/admin-companies-se
 import { CompanySettingsSection } from "@/components/companies/company-settings-section";
 import { PaymentMethodsSettingsSection } from "@/components/payment-methods/payment-methods-settings-section";
 import { NotificationPreferencesSection } from "@/components/notifications/notification-preferences-section";
+import { ProfileForm } from "@/components/settings/profile-form";
 import { isPlatformOps, isCompanyAdmin } from "@/lib/auth/permissions";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import pkg from "../../../../../package.json";
@@ -54,7 +55,6 @@ export function SettingsClient({ projects }: Props) {
 
   const isSuperadmin = isPlatformOps(user?.permissions);
   const isAnyCompanyAdmin = isCompanyAdmin(user?.companies, null, user?.permissions);
-  const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
 
   const sectionKeys: SectionKey[] = [
     "profile",
@@ -108,43 +108,7 @@ export function SettingsClient({ projects }: Props) {
 
       {/* Content */}
       <div className="col-span-12 space-y-5 lg:col-span-9">
-        {active === "profile" && (
-          <section className="folio-card p-7">
-            <div className="mb-5 flex items-center gap-4">
-              <div
-                className="flex h-16 w-16 items-center justify-center rounded-full font-display text-[24px] font-medium text-white"
-                style={{ background: "var(--accent)" }}
-              >
-                {initials}
-              </div>
-              <div>
-                <h2 className="font-display text-[22px] font-medium tracking-tight">
-                  {user?.email ?? "Camille Roux"}
-                </h2>
-                <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-                  {t("ownerLine", { project: "Maison Lavandou" })}
-                </p>
-              </div>
-            </div>
-
-            <div className="ink-divider my-5" />
-
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div>
-                <label className="label-cap">{t("email")}</label>
-                <input
-                  className="folio-input mt-1.5"
-                  type="email"
-                  defaultValue={user?.email ?? ""}
-                />
-              </div>
-              <div>
-                <label className="label-cap">{t("phone")}</label>
-                <input className="folio-input mt-1.5" type="tel" defaultValue="+33 6 12 34 56 78" />
-              </div>
-            </div>
-          </section>
-        )}
+        {active === "profile" && <ProfileForm />}
 
         {active === "project" && selectedProject && <InvoicePrefixSection />}
 

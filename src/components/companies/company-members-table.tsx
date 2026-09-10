@@ -143,7 +143,7 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("col.nameEmail")}</TableHead>
+                <TableHead>{t("col.namePhone")}</TableHead>
                 <TableHead>{t("col.role")}</TableHead>
                 <TableHead className="w-[100px]" />
               </TableRow>
@@ -152,12 +152,13 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
               {users.map((u) => (
                 <TableRow key={u.user_id}>
                   <TableCell>
-                    <div className="text-[13px] font-medium">{u.display_name ?? u.email}</div>
-                    {u.display_name && (
-                      <div className="text-[12px]" style={{ color: "var(--muted)" }}>
-                        {u.email}
-                      </div>
-                    )}
+                    <div className="text-[13px] font-medium">{u.display_name ?? u.phone ?? u.email}</div>
+                    {/* Phone-only sign-in is rolling out: show the phone when
+                        set, otherwise an em dash so an admin can spot at a
+                        glance who still needs to add one. */}
+                    <div className="text-[12px]" style={{ color: "var(--muted)" }}>
+                      {u.phone ?? "—"}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Select

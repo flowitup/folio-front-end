@@ -60,6 +60,8 @@ export interface AttachedUser {
   user_id: string;
   email: string;
   display_name: string | null;
+  /** Phone-only sign-in rollout: null until the user sets one. */
+  phone: string | null;
   is_primary: boolean;
   attached_at: string;
   /** Per-company role; only "admin" can see/manage the company's billing. */

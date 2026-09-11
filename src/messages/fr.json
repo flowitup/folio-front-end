@@ -2231,16 +2231,9 @@
     }
   },
   "help": {
-    "title": "Comment fonctionne Folio",
-    "subtitle": "Tous les processus, étape par étape.",
-    "back": "Tous les sujets",
-    "steps": "Étapes",
-    "whoCanDoIt": "Qui peut le faire",
-    "gotchas": "Bon à savoir",
+    "loading": "Chargement du guide…",
     "aria": {
-      "open": "Ouvrir le guide des processus",
-      "close": "Fermer le guide"
-    },
-    "loading": "Chargement du guide…"
+      "open": "Ouvrir le guide des processus"
+    }
   }
 }

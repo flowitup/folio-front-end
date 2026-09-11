@@ -17,10 +17,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { loadHelpCatalogue, type HelpCatalogue } from "@/content/help";
+import {
+  loadHelpGuide,
+  resolveHelpLocale,
+  HELP_LOCALES,
+  HELP_LOCALE_NAMES,
+  type HelpGuide,
+} from "@/content/help";
 import { visibleHelpTopics } from "@/content/help/visibility";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
+import type { Locale } from "@/i18n/config";
 
 export function HelpSheet() {
   const t = useTranslations("help");
@@ -28,36 +35,48 @@ export function HelpSheet() {
   const { user } = useAuth();
   const { selectedProject } = useProject();
   const [isOpen, setIsOpen] = useState(false);
-  const [catalogue, setCatalogue] = useState<HelpCatalogue>([]);
+  const [guide, setGuide] = useState<HelpGuide | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const backRef = useRef<HTMLButtonElement>(null);
   const returnToId = useRef<string | null>(null);
 
-  // The catalogue is a separate chunk per locale, fetched the first time the panel is opened so
-  // the prose stays out of the app shell every route loads.
+  // The guide can be read in a language of its own: someone whose app is in Vietnamese may still
+  // want the French wording their colleagues use. Defaults to the app's language and changes
+  // nothing outside this panel.
+  const appLocale = resolveHelpLocale(locale);
+  const [guideLocale, setGuideLocale] = useState<Locale>(appLocale);
+  const [lastAppLocale, setLastAppLocale] = useState<Locale>(appLocale);
+  if (lastAppLocale !== appLocale) {
+    setLastAppLocale(appLocale);
+    setGuideLocale(appLocale);
+  }
+
+  // One chunk per language, fetched the first time it is needed, so no guide prose sits in the
+  // app shell every route loads.
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
-    void loadHelpCatalogue(locale).then((loaded) => {
-      if (!cancelled) setCatalogue(loaded);
+    void loadHelpGuide(guideLocale).then((loaded) => {
+      if (!cancelled) setGuide(loaded);
     });
     return () => {
       cancelled = true;
     };
-  }, [isOpen, locale]);
+  }, [isOpen, guideLocale]);
 
   // The guide lists what this reader's navigation lists: a topic whose area the sidebar hides
   // would otherwise walk them through a screen they cannot open.
   const topics = useMemo(
     () =>
-      visibleHelpTopics(catalogue, {
+      visibleHelpTopics(guide?.catalogue ?? [], {
         permissions: user?.permissions,
         companies: user?.companies,
         projectPermissions: selectedProject?.my_permissions,
       }),
-    [catalogue, user?.permissions, user?.companies, selectedProject?.my_permissions]
+    [guide, user?.permissions, user?.companies, selectedProject?.my_permissions]
   );
 
+  const chrome = guide?.chrome ?? null;
   const selected = topics.find((topic) => topic.id === selectedId) ?? null;
 
   // Reset on the way in, not on the way out: the panel stays mounted through its close
@@ -96,14 +115,14 @@ export function HelpSheet() {
       <SheetContent
         side="right"
         className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
-        closeLabel={t("aria.close")}
+        closeLabel={chrome?.close}
         data-testid="help-sheet"
       >
         <SheetHeader
           className="shrink-0 gap-1.5 border-b px-4 py-3 pr-12"
           style={{ borderColor: "var(--border)" }}
         >
-          {selected ? (
+          {selected && chrome ? (
             <>
               <button
                 ref={backRef}
@@ -113,24 +132,34 @@ export function HelpSheet() {
                 onClick={handleBack}
               >
                 <ArrowLeft size={14} />
-                {t("back")}
+                {chrome.back}
               </button>
               <SheetTitle className="text-base">{selected.title}</SheetTitle>
               <SheetDescription>{selected.purpose}</SheetDescription>
             </>
           ) : (
             <>
-              <SheetTitle className="text-base">{t("title")}</SheetTitle>
-              <SheetDescription>{t("subtitle")}</SheetDescription>
+              <SheetTitle className="text-base">
+                {chrome?.title ?? t("loading")}
+              </SheetTitle>
+              <SheetDescription>{chrome?.subtitle ?? ""}</SheetDescription>
             </>
           )}
+          <LanguagePicker value={guideLocale} onChange={setGuideLocale} />
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {selected ? (
+          {!chrome ? (
+            <p
+              className="px-4 py-4 text-sm"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              {t("loading")}
+            </p>
+          ) : selected ? (
             <article className="flex flex-col gap-5 px-4 py-4">
               <section className="flex flex-col gap-2">
-                <SectionLabel>{t("steps")}</SectionLabel>
+                <SectionLabel>{chrome.steps}</SectionLabel>
                 <ol className="flex flex-col gap-2">
                   {selected.steps.map((step, index) => (
                     <li
@@ -150,7 +179,7 @@ export function HelpSheet() {
               </section>
 
               <section className="flex flex-col gap-1.5">
-                <SectionLabel>{t("whoCanDoIt")}</SectionLabel>
+                <SectionLabel>{chrome.whoCanDoIt}</SectionLabel>
                 <p className="text-sm leading-relaxed" style={{ color: "var(--foreground)" }}>
                   {selected.whoCanDoIt}
                 </p>
@@ -158,7 +187,7 @@ export function HelpSheet() {
 
               {selected.gotchas && selected.gotchas.length > 0 && (
                 <section className="flex flex-col gap-1.5">
-                  <SectionLabel>{t("gotchas")}</SectionLabel>
+                  <SectionLabel>{chrome.gotchas}</SectionLabel>
                   <ul className="flex flex-col gap-1.5">
                     {selected.gotchas.map((gotcha, index) => (
                       <li
@@ -176,13 +205,6 @@ export function HelpSheet() {
                 </section>
               )}
             </article>
-          ) : catalogue.length === 0 ? (
-            <p
-              className="px-4 py-4 text-sm"
-              style={{ color: "var(--muted-foreground)" }}
-            >
-              {t("loading")}
-            </p>
           ) : (
             <ul className="flex flex-col py-1">
               {topics.map((topic) => (
@@ -220,6 +242,47 @@ export function HelpSheet() {
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+/** Reads the guide in a language of the reader's choosing, leaving the app's untouched. */
+function LanguagePicker({
+  value,
+  onChange,
+}: {
+  value: Locale;
+  onChange: (locale: Locale) => void;
+}) {
+  return (
+    <div className="mt-1 flex gap-1.5" data-testid="help-language">
+      {HELP_LOCALES.map((code) => {
+        const active = code === value;
+        return (
+          <button
+            key={code}
+            type="button"
+            data-testid={`help-language-${code}`}
+            aria-pressed={active}
+            onClick={() => onChange(code)}
+            className="rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors"
+            style={
+              active
+                ? {
+                    borderColor: "var(--foreground)",
+                    background: "var(--foreground)",
+                    color: "var(--background)",
+                  }
+                : {
+                    borderColor: "var(--border)",
+                    color: "var(--muted-foreground)",
+                  }
+            }
+          >
+            {HELP_LOCALE_NAMES[code]}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

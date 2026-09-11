@@ -2231,16 +2231,9 @@
     }
   },
   "help": {
-    "title": "How Folio works",
-    "subtitle": "Every workflow, step by step.",
-    "back": "All topics",
-    "steps": "Steps",
-    "whoCanDoIt": "Who can do this",
-    "gotchas": "Good to know",
+    "loading": "Loading the guide…",
     "aria": {
-      "open": "Open the workflow guide",
-      "close": "Close the guide"
-    },
-    "loading": "Loading the guide…"
+      "open": "Open the workflow guide"
+    }
   }
 }

@@ -1,4 +1,4 @@
-import type { HelpCatalogue } from "./types";
+import type { HelpCatalogue, HelpChrome } from "./types";
 
 /**
  * The English workflow guide for the web app. Every step names a control that actually exists in
@@ -405,3 +405,14 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Everyone. The channels you see follow your company access and the projects you are on. Chat can be switched off for a server, in which case it says so.",
   },
 ];
+
+/** The panel's own labels in this language. */
+export const helpChromeEn: HelpChrome = {
+  title: "How Folio works",
+  subtitle: "Every workflow, step by step.",
+  back: "All topics",
+  steps: "Steps",
+  whoCanDoIt: "Who can do this",
+  gotchas: "Good to know",
+  close: "Close the guide",
+};

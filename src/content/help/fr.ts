@@ -1,4 +1,4 @@
-import type { HelpCatalogue } from "./types";
+import type { HelpCatalogue, HelpChrome } from "./types";
 
 /**
  * Le guide des processus de l'application web, en français — la langue de production de Folio.
@@ -407,3 +407,14 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Tout le monde. Les canaux que vous voyez suivent votre accès à l'entreprise et les projets sur lesquels vous êtes. La discussion peut être désactivée sur un serveur, auquel cas elle vous le dit.",
   },
 ];
+
+/** The panel's own labels in this language. */
+export const helpChromeFr: HelpChrome = {
+  title: "Comment fonctionne Folio",
+  subtitle: "Tous les processus, étape par étape.",
+  back: "Tous les sujets",
+  steps: "Étapes",
+  whoCanDoIt: "Qui peut le faire",
+  gotchas: "Bon à savoir",
+  close: "Fermer le guide",
+};

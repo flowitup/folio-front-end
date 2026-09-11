@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { FolioLogo } from "@/components/folio-logo";
-import type { LoginMode } from "@/lib/auth/types";
-import { LoginForm } from "./LoginForm";
+import { PhoneLoginForm } from "./PhoneLoginForm";
 import { usePhoneLoginFlow } from "./use-phone-login-flow";
 
 /**
@@ -21,19 +19,12 @@ const ON_INK = {
   rule: "#3d372f",
 } as const;
 
-interface LoginStageProps {
-  loginMode: LoginMode;
-}
-
-export function LoginStage({ loginMode }: LoginStageProps) {
+export function LoginStage() {
   const t = useTranslations("auth");
   const flow = usePhoneLoginFlow();
-  // "both" opens on the phone form; the toggle inside the card swaps to email
-  // and back. The copy column follows it, so the view is owned here.
-  const [view, setView] = useState<"phone" | "email">(loginMode === "email" ? "email" : "phone");
-
-  const onPhoneFlow = view === "phone";
-  const isCodeStep = onPhoneFlow && flow.step === "code";
+  // Phone + SMS code is the only sign-in, so the copy column follows the flow's
+  // own step rather than a chosen view.
+  const isCodeStep = flow.step === "code";
 
   return (
     <div
@@ -117,15 +108,12 @@ export function LoginStage({ loginMode }: LoginStageProps) {
                 {t("changeNumber")}
               </button>
             </>
-          ) : onPhoneFlow ? (
-            t("heroSubtitlePhone")
           ) : (
-            t("heroSubtitle")
+            t("heroSubtitlePhone")
           )}
         </p>
 
-        {onPhoneFlow && (
-          <ol
+        <ol
             className="flex max-w-[380px] flex-wrap gap-x-6 gap-y-2 pt-5 text-[12px]"
             style={{ borderTop: `1px solid ${ON_INK.rule}`, color: ON_INK.creamMuted }}
           >
@@ -146,8 +134,7 @@ export function LoginStage({ loginMode }: LoginStageProps) {
                 </li>
               );
             })}
-          </ol>
-        )}
+        </ol>
       </div>
 
       {/* Paper card */}
@@ -160,7 +147,7 @@ export function LoginStage({ loginMode }: LoginStageProps) {
           boxShadow: "0 24px 60px -30px rgba(0,0,0,0.6)",
         }}
       >
-        <LoginForm loginMode={loginMode} flow={flow} view={view} onViewChange={setView} />
+        <PhoneLoginForm flow={flow} />
       </div>
     </div>
   );

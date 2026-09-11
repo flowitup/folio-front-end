@@ -25,7 +25,8 @@
 
 import { test, expect } from "@playwright/test";
 import { loginAsAdmin } from "./helpers/login-as-admin-helper";
-import { OTP_TEST_CODE, SEED_PHONES } from "./helpers/seed-data";
+import { enterCode, nationalNumber } from "./helpers/auth-helper";
+import { SEED_PHONES } from "./helpers/seed-data";
 
 const NON_ADMIN_EMAIL = process.env.NON_ADMIN_EMAIL || "member@example.com";
 /** A seeded non-admin's sign-in number (seed_users.py TEST_PHONES: user.eve). */
@@ -124,11 +125,10 @@ test.describe("Admin bulk-add flow", () => {
   }) => {
     // Attempt sign-in as a non-admin user (phone + SMS code, the only way in).
     await page.goto("/en/login");
-    await page.fill("#phone", NON_ADMIN_PHONE);
-    await page.getByRole("button", { name: /send code/i }).click();
-    await page.waitForSelector("#code", { timeout: 15_000 });
-    await page.fill("#code", OTP_TEST_CODE);
-    await page.getByRole("button", { name: /^sign in$/i }).click();
+    await page.fill("#phone", nationalNumber(NON_ADMIN_PHONE));
+    await page.getByTestId("login-send-code").click();
+    // The code row submits itself once the sixth digit lands.
+    await enterCode(page);
 
     // Wait for sign-in to complete (success or failure)
     await page.waitForLoadState("networkidle");

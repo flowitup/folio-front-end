@@ -1,9 +1,13 @@
 /**
- * Regression test: login-screen dead-button cleanup.
+ * Regression test: no email/password credential UI on the sign-in screen.
  *
- * Asserts the "Forgot?" anchor (preventDefault → no reset BE) and the
- * "Continue with Google" button (no OAuth flow) are gone, so they can't
- * regress as silently-dead UI.
+ * Email and password sign-in was removed entirely — the backend has no
+ * /auth/login endpoint any more. This guards the UI half: the sign-in screen
+ * must never render an email field, a password field, or a toggle offering to
+ * sign in with email, whatever the backend replies.
+ *
+ * It also keeps the older dead-trigger guard (a "Forgot?" anchor and a
+ * "Continue with Google" button that never did anything) from regressing.
  */
 
 import { describe, it, expect, vi } from "vitest";
@@ -19,25 +23,37 @@ vi.mock("next-intl", () => ({
 
 vi.mock("@/context/AuthContext", () => ({
   useAuth: () => ({
-    login: vi.fn(),
     loginWithPhone: vi.fn(),
     isLoading: false,
   }),
 }));
 
-describe("Login screen — dead triggers removed", () => {
+describe("Login screen — email credentials removed", () => {
+  it("renders no email input", () => {
+    const { container } = render(<LoginStage />);
+    expect(container.querySelector('input[type="email"]')).toBeNull();
+    expect(container.querySelector("#email")).toBeNull();
+  });
+
+  it("renders no password input", () => {
+    const { container } = render(<LoginStage />);
+    expect(container.querySelector('input[type="password"]')).toBeNull();
+    expect(container.querySelector("#password")).toBeNull();
+  });
+
+  it("offers no way to switch to email sign-in", () => {
+    render(<LoginStage />);
+    expect(screen.queryByTestId("login-use-email")).toBeNull();
+    expect(screen.queryByText(/useEmailInstead/i)).toBeNull();
+  });
+
   it("does not render Forgot password link", () => {
-    render(<LoginStage loginMode="email" />);
+    render(<LoginStage />);
     expect(screen.queryByText("forgot")).toBeNull();
   });
 
   it("does not render Continue with Google button", () => {
-    render(<LoginStage loginMode="email" />);
+    render(<LoginStage />);
     expect(screen.queryByRole("button", { name: /continueWithGoogle/i })).toBeNull();
-  });
-
-  it("still renders the real Sign in submit button", () => {
-    render(<LoginStage loginMode="email" />);
-    expect(screen.getByRole("button", { name: /signIn/i })).toBeInTheDocument();
   });
 });

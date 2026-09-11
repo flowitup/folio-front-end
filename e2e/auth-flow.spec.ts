@@ -27,7 +27,7 @@
  */
 
 import { test, expect, Page } from "@playwright/test";
-import { loginAsAdmin } from "./helpers/auth-helper";
+import { loginAsAdmin, enterCode, nationalNumber } from "./helpers/auth-helper";
 import { ADMIN } from "./helpers/seed-data";
 
 const RUN = Boolean(process.env.TEST_E2E_AUTH);
@@ -48,12 +48,11 @@ test.describe("Auth flow", () => {
     await page.goto("/en/login");
 
     await page.waitForSelector("#phone", { timeout: 10_000 });
-    await page.fill("#phone", ADMIN.phone);
-    await page.getByRole("button", { name: /send code/i }).click();
+    await page.fill("#phone", nationalNumber(ADMIN.phone));
+    await page.getByTestId("login-send-code").click();
 
-    await page.waitForSelector("#code", { timeout: 15_000 });
-    await page.fill("#code", "000000");
-    await page.getByRole("button", { name: /^sign in$/i }).click();
+    // The row submits itself on the sixth digit — no click needed.
+    await enterCode(page, "000000");
 
     await expect(
       page.getByText(/wrong or expired code/i)

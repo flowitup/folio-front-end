@@ -14,10 +14,10 @@ export interface User {
   /** Phone-only sign-in rollout: null/undefined until the user sets one. */
   phone?: string | null;
   /**
-   * Companies the user is attached to (company-as-tenant model). Empty on the
-   * POST /auth/login response (backend limitation — that endpoint does not
-   * populate it); always populated on GET /auth/me. Defensive default to []
-   * at every read site since older/legacy responses may omit it entirely.
+   * Companies the user is attached to (company-as-tenant model). Not populated
+   * on the sign-in response (the OTP verify endpoint does not carry it); always
+   * populated on GET /auth/me. Defensive default to [] at every read site since
+   * older/legacy responses may omit it entirely.
    */
   companies?: UserCompanySummary[];
 }
@@ -28,12 +28,7 @@ export interface AuthSession {
   expiresAt: number;
 }
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
+export interface AuthTokenResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
@@ -69,11 +64,3 @@ export interface RequestInviteCodePayload {
   phone: string;
 }
 
-/** Which sign-in method(s) this deployment offers, per `GET /auth/config`. */
-export type LoginMode = "email" | "phone" | "both";
-
-export interface AuthConfig {
-  login_mode: LoginMode;
-  session: "persistent" | "expiring";
-  signup: boolean;
-}

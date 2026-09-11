@@ -3,77 +3,19 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { env } from "@/lib/config/env";
-import type {
-  LoginCredentials,
-  LoginResponse,
-  User,
-  AcceptInvitePayload,
-  RequestInviteCodePayload,
-} from "./types";
+import type { User, AcceptInvitePayload, RequestInviteCodePayload } from "./types";
 import { acceptInvite, requestInviteCode } from "@/lib/api/invitations";
 import { setForwardedCookies } from "./forward-cookies";
 import { getCurrentUser } from "./session";
 
 /**
- * Login server action.
- * Calls backend API and sets cookies.
- */
-export async function login(
-  credentials: LoginCredentials
-): Promise<{ success: boolean; error?: string; user?: User; accessToken?: string }> {
-  try {
-    const response = await fetch(`${env.apiBaseUrl}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(credentials),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      let errorMsg = "Invalid credentials";
-      try { errorMsg = JSON.parse(body)?.message || errorMsg; } catch {}
-      return {
-        success: false,
-        error: errorMsg,
-      };
-    }
-
-    const data: LoginResponse = await response.json();
-
-    // Forward cookies from backend response
-    await setForwardedCookies(response.headers.getSetCookie());
-
-    return {
-      success: true,
-      user: data.user,
-      accessToken: data.access_token,
-    };
-  } catch (error) {
-    // Log only the message; the full error object can carry the
-    // outbound request body (credentials) on fetch failures and stack
-    // lines we'd rather not stream into container logs.
-    console.error(
-      "Login error:",
-      error instanceof Error ? error.message : "unknown"
-    );
-    return {
-      success: false,
-      error: "An unexpected error occurred",
-    };
-  }
-}
-
-/**
  * Fetch the canonical current-user record via `GET /auth/me`.
  *
- * `POST /auth/login` does not reliably populate `user.companies` (backend
- * limitation — see `types.ts`), so callers that need an up-to-date company
- * list right after login (or after any action that can change company
- * membership) must re-fetch through this action rather than trust the
- * login response's embedded user. Relies on the cookies already set by
- * `login()` in the same request/response cycle.
+ * The sign-in response does not carry `user.companies` (see `types.ts`), so
+ * callers that need an up-to-date company list right after sign-in (or after
+ * any action that can change company membership) must re-fetch through this
+ * action rather than trust the embedded user. Relies on the cookies already
+ * forwarded by `verifyOtpAction` in the same request/response cycle.
  */
 export async function getCurrentUserAction(): Promise<User | null> {
   return getCurrentUser();

@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, type ReactNode } from "react";
+import { type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import { CodeBoxes, CODE_LENGTH } from "./CodeBoxes";
@@ -8,12 +8,10 @@ import type { PhoneLoginFlow } from "./use-phone-login-flow";
 
 interface PhoneLoginFormProps {
   flow: PhoneLoginFlow;
-  /** Rendered under the phone step — used in "both" mode to offer email sign-in. */
-  useEmailInsteadSlot?: ReactNode;
 }
 
 /** Contents of the paper card: step badge, title, the step's field, the action. */
-export function PhoneLoginForm({ flow, useEmailInsteadSlot }: PhoneLoginFormProps) {
+export function PhoneLoginForm({ flow }: PhoneLoginFormProps) {
   const t = useTranslations("auth");
   const isCodeStep = flow.step === "code";
 
@@ -111,7 +109,7 @@ export function PhoneLoginForm({ flow, useEmailInsteadSlot }: PhoneLoginFormProp
         </div>
       ) : (
         <div className="text-center text-[12px]" style={{ color: "var(--muted)" }}>
-          {useEmailInsteadSlot ?? t("contactAdmin")}
+          {t("contactAdmin")}
         </div>
       )}
     </form>

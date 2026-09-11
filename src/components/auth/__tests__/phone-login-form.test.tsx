@@ -97,7 +97,7 @@ describe("Phone sign-in", () => {
   it("normalises the typed number and moves to the code step", async () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     // Typed as the French write it; the +33 the field states replaces the 0.
     await sendCodeTo(user, "0612345678");
@@ -107,14 +107,14 @@ describe("Phone sign-in", () => {
   });
 
   it("states the dial code the number is read with", () => {
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     expect(screen.getByTestId("login-country")).toHaveTextContent("FR");
     expect(screen.getByTestId("login-country")).toHaveTextContent("+33");
   });
 
   it("tells the user up front that only French numbers work", () => {
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     expect(
       screen.getByText("French numbers only — without the leading 0. A 6-digit code by SMS.")
@@ -123,7 +123,7 @@ describe("Phone sign-in", () => {
 
   it("refuses a number from another country without asking for a code", async () => {
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     await user.type(screen.getByLabelText("Phone number"), "+84912345678");
 
@@ -135,7 +135,7 @@ describe("Phone sign-in", () => {
 
   it("refuses a number that is too short to be French", async () => {
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     await user.type(screen.getByLabelText("Phone number"), "0612");
 
@@ -146,7 +146,7 @@ describe("Phone sign-in", () => {
   it("shows the throttled error and stays on the phone step", async () => {
     mockRequestOtpAction.mockResolvedValue({ success: false, error: "throttled" });
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     await user.type(screen.getByLabelText("Phone number"), "0612345678");
     await user.click(screen.getByTestId("login-send-code"));
@@ -165,7 +165,7 @@ describe("Phone sign-in", () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     mockLoginWithPhone.mockResolvedValue({ success: true });
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     await sendCodeTo(user, "0612345678");
     await typeCode(user, "123456");
@@ -180,7 +180,7 @@ describe("Phone sign-in", () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     mockLoginWithPhone.mockResolvedValue({ success: true });
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     await sendCodeTo(user, "0612345678");
     await user.click(screen.getByTestId("login-code-0"));
@@ -195,7 +195,7 @@ describe("Phone sign-in", () => {
   it("accepts the very number the field's own placeholder shows", async () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     // Regression: the field states `FR +33` and offers a national example, so
     // typing exactly that must reach the backend rather than leaving the button
@@ -209,7 +209,7 @@ describe("Phone sign-in", () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     mockLoginWithPhone.mockResolvedValue({ success: false, error: "invalid_code" });
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     await sendCodeTo(user, "0612345678");
     await typeCode(user, "000000");
@@ -229,7 +229,7 @@ describe("Phone sign-in", () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     mockLoginWithPhone.mockResolvedValue({ success: false, error: "invalid_code" });
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     await sendCodeTo(user, "0612345678");
     await typeCode(user, "000000");
@@ -249,7 +249,7 @@ describe("Phone sign-in", () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     mockLoginWithPhone.mockResolvedValue({ success: false, error: "invalid_code" });
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     await sendCodeTo(user, "0612345678");
     await typeCode(user, "000000");
@@ -264,7 +264,7 @@ describe("Phone sign-in", () => {
   it("gates a second request behind the resend countdown", async () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     await sendCodeTo(user, "0612345678");
 
@@ -277,7 +277,7 @@ describe("Phone sign-in", () => {
   it('"Change number" returns to the phone step, keeping the number', async () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     const user = userEvent.setup();
-    render(<LoginStage loginMode="phone" />);
+    render(<LoginStage />);
 
     await sendCodeTo(user, "0612345678");
     await user.click(screen.getByTestId("login-change-number"));

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
-import { getAuthConfig } from "@/lib/api/auth-config";
 import { LoginStage } from "@/components/auth/LoginStage";
 
 export default async function LoginPage() {
@@ -12,7 +11,5 @@ export default async function LoginPage() {
     redirect(`/${locale}/dashboard`);
   }
 
-  const config = await getAuthConfig();
-
-  return <LoginStage loginMode={config.login_mode} />;
+  return <LoginStage />;
 }

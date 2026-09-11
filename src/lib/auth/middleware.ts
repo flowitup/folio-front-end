@@ -9,14 +9,11 @@
  */
 
 // Routes that do NOT require authentication. Matched by prefix on the
-// locale-stripped pathname. Any new public flow (e.g. /forgot-password)
-// must be added here explicitly.
+// locale-stripped pathname. Any new public flow must be added here explicitly.
 export const PUBLIC_PATH_PREFIXES = [
   "/login",
   "/signup",
   "/accept-invite",
-  "/forgot-password",
-  "/reset-password",
   "/unauthorized",
 ] as const;
 

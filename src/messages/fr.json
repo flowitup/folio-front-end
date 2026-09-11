@@ -28,7 +28,6 @@
     "signInPrompt": "Connectez-vous à votre compte pour continuer",
     "contactAdmin": "Contactez votre administrateur si vous avez besoin d'un accès.",
     "heroTitle": "Reprenez le chantier.",
-    "heroSubtitle": "Connectez-vous pour reprendre vos projets.",
     "phoneLabel": "Numéro de téléphone",
     "phonePlaceholder": "6 12 34 56 78",
     "phoneHint": "Numéros français uniquement — sans le 0 initial. Code à 6 chiffres par SMS.",

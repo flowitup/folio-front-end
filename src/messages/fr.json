@@ -313,9 +313,6 @@
     "project": "Projet",
     "about": "À propos",
     "version": "Version",
-    "myCompanies": {
-      "title": "Mes sociétés"
-    },
     "companies": {
       "backToSettings": "Retour aux paramètres"
     },
@@ -379,7 +376,7 @@
     "paidByCompany": "Payé par l'entreprise",
     "personalPayment": "Paiement personnel",
     "companyLabel": "Société",
-    "noCompanies": "Vous n’êtes rattaché à aucune société. Ajoutez-en une depuis « Mes sociétés » pour gérer ses moyens de paiement.",
+    "noCompanies": "Vous n’êtes rattaché à aucune société. Ajoutez-en une depuis « Entreprise » pour gérer ses moyens de paiement.",
     "loadError": "Impossible de charger les moyens de paiement. Veuillez réessayer.",
     "noMethodsReadOnly": "Aucun moyen de paiement n’a encore été configuré.",
     "readOnlyNote": "Comment les factures peuvent être payées pour cette société. Seul un administrateur peut ajouter, renommer ou supprimer un moyen."
@@ -1673,8 +1670,6 @@
       "tooltip": "Visible uniquement par les administrateurs"
     },
     "my": {
-      "title": "Mes sociétés",
-      "description": "Sociétés auxquelles vous êtes rattaché. Les champs sensibles sont masqués.",
       "addCta": "Ajouter une société",
       "empty": {
         "title": "Aucune société rattachée",
@@ -2183,7 +2178,9 @@
     }
   },
   "companySettings": {
-    "notAdmin": "Vous n'êtes administrateur d'aucune entreprise.",
+    "description": "Les sociétés auxquelles vous êtes rattaché, et les outils de celles que vous administrez.",
+    "loadError": "Impossible de charger vos sociétés. Veuillez réessayer.",
+    "retry": "Réessayer",
     "companyPicker": {
       "label": "Entreprise"
     },

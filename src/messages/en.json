@@ -313,9 +313,6 @@
     "project": "Project",
     "about": "About",
     "version": "Version",
-    "myCompanies": {
-      "title": "My companies"
-    },
     "companies": {
       "backToSettings": "Back to Settings"
     },
@@ -379,7 +376,7 @@
     "paidByCompany": "Paid by the company",
     "personalPayment": "Personal payment",
     "companyLabel": "Company",
-    "noCompanies": "You are not attached to any company yet. Add one from “My companies” to manage its payment methods.",
+    "noCompanies": "You are not attached to any company yet. Add one from “Company” to manage its payment methods.",
     "loadError": "Could not load payment methods. Please try again.",
     "noMethodsReadOnly": "No payment methods have been set up yet.",
     "readOnlyNote": "How invoices can be paid for this company. Only an administrator can add, rename or remove a method."
@@ -1673,8 +1670,6 @@
       "tooltip": "Visible to admins only"
     },
     "my": {
-      "title": "My Companies",
-      "description": "Companies you are attached to. Sensitive fields are masked.",
       "addCta": "Add company",
       "empty": {
         "title": "No companies attached yet",
@@ -2183,7 +2178,9 @@
     }
   },
   "companySettings": {
-    "notAdmin": "You are not an admin of any company.",
+    "description": "The companies you are attached to, and the tools for the ones you administer.",
+    "loadError": "Could not load your companies. Please try again.",
+    "retry": "Retry",
     "companyPicker": {
       "label": "Company"
     },

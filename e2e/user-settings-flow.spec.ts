@@ -4,14 +4,16 @@
  * Scenario:
  *   1. Log in as admin → /en/settings
  *   2. Assert the default Profile tab renders (email field visible)
- *   3. Click through the visible tabs (Profile, My companies, Notifications,
+ *   3. Click through the visible tabs (Profile, Company, Notifications,
  *      About) asserting each section renders
  *   4. Edit the Profile email field and assert the input accepts the change
  *
  * Scope note:
  *   Company CRUD is covered by companies-flow.spec.ts — this spec only touches
- *   the "My companies" tab to confirm the section renders; it does NOT create,
- *   edit, or delete a company.
+ *   the "Company" tab to confirm the section renders; it does NOT create,
+ *   edit, or delete a company. That tab absorbed the former "My companies"
+ *   tab: one surface now carries the caller's attachments and, for a company
+ *   admin, that company's join code / members / directory.
  *
  * IMPORTANT — Profile tab has no Save/toast in this build:
  *   The Profile section (settings-client.tsx) renders two UNCONTROLLED inputs
@@ -56,7 +58,7 @@ test.describe("User settings tab-navigation + profile flow", () => {
 
     // ── 3. Click through visible tabs ─────────────────────────────────────────
     // Tabs are <button> elements in the settings nav. Labels come from i18n
-    // (settings.<key>): "Profile", "My companies", "Notifications", "About".
+    // (settings.<key>): "Profile", "Company", "Notifications", "About".
     // ("Users & Roles" is admin-only and "Team"/"Billing" are coming-soon
     // placeholders — we cover the four called out in the task.)
 
@@ -67,12 +69,17 @@ test.describe("User settings tab-navigation + profile flow", () => {
       has: page.getByRole("button", { name: "Profile", exact: true }),
     });
 
-    // My companies — section renders (CRUD itself is covered by companies-flow).
-    // settings.myCompanies.title = "My companies".
-    await tabNav.getByRole("button", { name: "My companies", exact: true }).click();
-    // MyCompaniesSection heading repeats the tab label.
+    // Company — section renders (CRUD itself is covered by companies-flow).
+    // settings.company.title = "Company".
+    await tabNav.getByRole("button", { name: "Company", exact: true }).click();
+    // CompanySettingsSection heading repeats the tab label.
     await expect(
-      page.getByRole("heading", { name: "My companies" })
+      page.getByRole("heading", { name: "Company", exact: true })
+    ).toBeVisible({ timeout: 8_000 });
+    // The attachment half is what every role sees — the admin's own company
+    // card, carrying the detach action that used to live under "My companies".
+    await expect(
+      page.getByRole("button", { name: "Detach" }).first()
     ).toBeVisible({ timeout: 8_000 });
 
     // Notifications — coming-soon placeholder. settings.notifications =

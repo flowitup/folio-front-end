@@ -4,7 +4,7 @@
  * NoAttachedCompaniesCallout — empty-state card shown when a user has no company attached.
  *
  * Displayed in place of the billing document form when attachedCompanies.length === 0.
- * CTA links to /settings#my-companies so the user can attach or create a company.
+ * CTA links to /settings#company so the user can attach or create a company.
  */
 
 import { Link } from "@/i18n/navigation";
@@ -25,7 +25,7 @@ export function NoAttachedCompaniesCallout() {
           {t("noCompaniesCalloutBody")}
         </p>
         <Link
-          href="/settings#my-companies"
+          href="/settings#company"
           className="rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors"
           style={{
             background: "var(--paper-2)",

@@ -1,7 +1,7 @@
 "use server";
 
 import { env } from "@/lib/config/env";
-import type { LoginResponse, User } from "./types";
+import type { AuthTokenResponse, User } from "./types";
 import { setForwardedCookies } from "./forward-cookies";
 import { normalizeFrenchPhone } from "./phone-number";
 
@@ -103,7 +103,7 @@ export async function verifyOtpAction(phone: string, code: string): Promise<Veri
       return { success: false, error: "unknown" };
     }
 
-    const data: LoginResponse = await response.json();
+    const data: AuthTokenResponse = await response.json();
 
     // Forward cookies from backend response — same access/refresh/csrf
     // cookie set as password login, since the client's post-login flow

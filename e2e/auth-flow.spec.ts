@@ -1,30 +1,33 @@
 /**
  * E2E: Authentication happy-path + error flow.
  *
+ * Sign-in is phone + SMS code; email and password are gone, and the backend
+ * has no /auth/login route at all.
+ *
  * Scenarios:
- *   1. Bad credentials → inline "Invalid credentials" error, URL stays on /login.
- *   2. Valid admin login → lands on /dashboard (or /projects).
+ *   1. Wrong code → inline error, URL stays on /login.
+ *   2. Valid admin sign-in → lands on /dashboard (or /projects).
  *   3. Logout → user menu (avatar) → "Sign out" → redirect back to /en/login;
  *      visiting a protected route then bounces to login.
+ *   4. No email or password field is reachable on the sign-in screen.
  *
  * Selectors confirmed from source:
- *   - #email / #password inputs + getByRole("button", { name: "Sign in" })
- *       → src/components/auth/LoginForm.tsx:55,73,88-101
- *   - Bad-cred error text "Invalid credentials" (auth.errorInvalid)
- *       → src/messages/en.json:36 (rendered LoginForm.tsx:47)
+ *   - #phone / #code inputs → src/components/auth/PhoneLoginForm.tsx
+ *   - Wrong-code error (auth.errorInvalidCode) → src/messages/en.json
  *   - User menu trigger = avatar button title={user.email}; "Sign out" item
- *       (common.signOut) → src/components/layout/Topbar.tsx:241-262, en.json:5
- *   - logout server action redirect("/login") → src/lib/auth/actions.ts:111
+ *       (common.signOut) → src/components/layout/Topbar.tsx
+ *   - logout server action redirect("/login") → src/lib/auth/actions.ts
  *
- * CI skip: requires a running backend (Docker stack) with seeded data.
- * Skipped unless TEST_E2E_AUTH=1.
+ * CI skip: requires a running backend (Docker stack) with seeded data, running
+ * with FLASK_ENV=development and OTP_TEST_CODE set so the code step can be
+ * completed without a real SMS. Skipped unless TEST_E2E_AUTH=1.
  *
  * Run locally:
  *   TEST_E2E_AUTH=1 npx playwright test e2e/auth-flow.spec.ts
  */
 
 import { test, expect, Page } from "@playwright/test";
-import { loginAsAdmin } from "./helpers/auth-helper";
+import { loginAsAdmin, enterCode, nationalNumber } from "./helpers/auth-helper";
 import { ADMIN } from "./helpers/seed-data";
 
 const RUN = Boolean(process.env.TEST_E2E_AUTH);
@@ -32,27 +35,34 @@ const RUN = Boolean(process.env.TEST_E2E_AUTH);
 test.describe("Auth flow", () => {
   test.skip(!RUN, "Skipped in CI: set TEST_E2E_AUTH=1 to run locally");
 
-  test("login with bad credentials shows error", async ({ page }: { page: Page }) => {
+  test("sign-in offers no email or password field", async ({ page }: { page: Page }) => {
     await page.goto("/en/login");
 
-    await page.waitForSelector("#email", { timeout: 10_000 });
-    await page.fill("#email", ADMIN.email);
-    await page.fill("#password", "definitely-wrong-password");
+    await page.waitForSelector("#phone", { timeout: 10_000 });
+    await expect(page.locator('input[type="password"]')).toHaveCount(0);
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
+    await expect(page.getByTestId("login-use-email")).toHaveCount(0);
+  });
 
-    await page.getByRole("button", { name: "Sign in" }).click();
+  test("wrong code shows an error and stays on login", async ({ page }: { page: Page }) => {
+    await page.goto("/en/login");
 
-    // Inline error block renders the backend message ("Invalid email or
-    // password") or, if absent, the i18n fallback auth.errorInvalid
-    // ("Invalid credentials"). Match either — both mean auth was rejected.
+    await page.waitForSelector("#phone", { timeout: 10_000 });
+    await page.fill("#phone", nationalNumber(ADMIN.phone));
+    await page.getByTestId("login-send-code").click();
+
+    // The row submits itself on the sixth digit — no click needed.
+    await enterCode(page, "000000");
+
     await expect(
-      page.getByText(/invalid email or password|invalid credentials/i)
+      page.getByText(/wrong or expired code/i)
     ).toBeVisible({ timeout: 10_000 });
 
     // Still on the login route — no redirect occurred.
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("login succeeds and lands on app", async ({ page }: { page: Page }) => {
+  test("phone sign-in succeeds and lands on app", async ({ page }: { page: Page }) => {
     await loginAsAdmin(page);
     await expect(page).toHaveURL(/\/(en|fr|vi)\/(dashboard|projects)/, { timeout: 15_000 });
   });

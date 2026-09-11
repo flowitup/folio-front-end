@@ -1,5 +1,8 @@
 /**
- * Tests for AcceptInviteForm component
+ * AcceptInviteForm — accepting an invitation with a phone number and SMS code.
+ *
+ * The invitee no longer chooses a password: they confirm a French phone number
+ * with a texted code, and the account they get is one they can sign back into.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -8,43 +11,63 @@ import userEvent from "@testing-library/user-event";
 import { AcceptInviteForm } from "../accept-invite-form";
 import type { VerifyInviteResponse } from "@/lib/auth/types";
 
-// Mock acceptInviteAction server action
 vi.mock("@/lib/auth/actions", () => ({
   acceptInviteAction: vi.fn(),
+  requestInviteCodeAction: vi.fn(),
 }));
 
-// Mock next-intl
+const TRANSLATIONS: Record<string, string> = {
+  title: "You're invited to join {projectName}",
+  intro: "Confirm your phone number to join the project.",
+  subtitle: "{inviterName} invited you as {roleName}",
+  emailLabel: "Email",
+  nameLabel: "Your full name",
+  phoneLabel: "Phone number",
+  phonePlaceholder: "06 12 34 56 78",
+  phoneHint: "French numbers only, e.g. 06 12 34 56 78",
+  sendCode: "Send code",
+  sendingCode: "Sending code...",
+  codeSentTo: "Code sent to {phone}",
+  codeLabel: "Code",
+  codePlaceholder: "123456",
+  changeNumber: "Change number",
+  resendCode: "Resend code",
+  resendIn: "Resend in {seconds}s",
+  submit: "Create account",
+  submitting: "Creating account...",
+  backToLogin: "Go to login",
+  "errors.generic": "Something went wrong. Please try again.",
+  "errors.expired": "This invitation has expired.",
+  "errors.revoked": "This invitation was revoked.",
+  "errors.accepted": "This invitation was already used.",
+  "errors.notFound": "This invitation link is invalid.",
+  "errors.phoneRequired": "Please enter your phone number",
+  "errors.invalidPhone": "Enter a French phone number",
+  "errors.phoneRegistered": "This phone number already has an account. Sign in instead.",
+  "errors.codeRequired": "Please enter the 6-digit code",
+  "errors.invalidCode": "Wrong or expired code",
+  "errors.throttled": "Too many requests. Wait a minute and try again.",
+};
+
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string, _params?: Record<string, unknown>) => {
-    const translations: Record<string, string> = {
-      title: "You're invited to join {projectName}",
-      subtitle: "{inviterName} invited you as {roleName}",
-      emailLabel: "Email",
-      nameLabel: "Your full name",
-      passwordLabel: "Choose a password",
-      confirmLabel: "Confirm password",
-      submit: "Create account",
-      submitting: "Creating account...",
-      passwordHint: "8-128 characters",
-      passwordMismatch: "Passwords do not match",
-      backToLogin: "Go to login",
-      "errors.generic": "Something went wrong. Please try again.",
-      "errors.expired": "This invitation has expired.",
-      "errors.revoked": "This invitation was revoked.",
-      "errors.notFound": "This invitation link is invalid.",
-    };
-    return translations[key] ?? key;
+  useTranslations: () => (key: string, params?: Record<string, unknown>) => {
+    const template = TRANSLATIONS[key] ?? key;
+    if (!params) return template;
+    return Object.entries(params).reduce(
+      (acc, [k, v]) => acc.replace(`{${k}}`, String(v)),
+      template
+    );
   },
 }));
 
-// Mock window.location
 Object.defineProperty(window, "location", {
   value: { href: "" },
   writable: true,
 });
 
-const { acceptInviteAction } = await import("@/lib/auth/actions");
-const mockAcceptInviteAction = vi.mocked(acceptInviteAction);
+const { acceptInviteAction, requestInviteCodeAction } = await import("@/lib/auth/actions");
+const mockAccept = vi.mocked(acceptInviteAction);
+const mockRequestCode = vi.mocked(requestInviteCodeAction);
 
 const VERIFIED: VerifyInviteResponse = {
   email: "test@example.com",
@@ -55,9 +78,18 @@ const VERIFIED: VerifyInviteResponse = {
 };
 
 function renderForm(token = "tok123", locale = "en", verified = VERIFIED) {
-  return render(
-    <AcceptInviteForm token={token} locale={locale} verified={verified} />
-  );
+  return render(<AcceptInviteForm token={token} locale={locale} verified={verified} />);
+}
+
+/** Fill the details step and send the code, landing on the code step. */
+async function reachCodeStep(user: ReturnType<typeof userEvent.setup>) {
+  mockRequestCode.mockResolvedValue({ success: true });
+  await user.type(screen.getByLabelText("Your full name"), "Bob Builder");
+  await user.type(screen.getByLabelText("Phone number"), "0612345678");
+  await user.click(screen.getByRole("button", { name: /Send code/i }));
+  await waitFor(() => {
+    expect(screen.getByText("Code sent to +33612345678")).toBeInTheDocument();
+  });
 }
 
 describe("AcceptInviteForm", () => {
@@ -66,160 +98,118 @@ describe("AcceptInviteForm", () => {
     window.location.href = "";
   });
 
-  describe("Rendering", () => {
-    it("renders email banner from verified props", () => {
+  describe("details step", () => {
+    it("shows the invited email read-only and asks for name and phone", () => {
       renderForm();
-      // Email input is read-only, pre-filled
-      const emailInput = screen.getByDisplayValue("test@example.com");
-      expect(emailInput).toBeDefined();
-      expect(emailInput).toHaveAttribute("readOnly");
+      const email = screen.getByDisplayValue("test@example.com");
+      expect(email).toHaveAttribute("readOnly");
+      expect(screen.getByLabelText("Your full name")).toBeInTheDocument();
+      expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
     });
 
-    it("renders name and password inputs", () => {
-      renderForm();
-      expect(screen.getByLabelText(/your full name/i)).toBeDefined();
-      expect(screen.getByLabelText(/choose a password/i)).toBeDefined();
-      expect(screen.getByLabelText(/confirm password/i)).toBeDefined();
+    it("renders no password input", () => {
+      const { container } = renderForm();
+      expect(container.querySelector('input[type="password"]')).toBeNull();
     });
 
-    it("renders submit button enabled initially", () => {
+    it("refuses a non-French number before requesting a code", async () => {
+      const user = userEvent.setup();
       renderForm();
-      const btn = screen.getByRole("button", { name: /create account/i });
-      expect(btn).not.toBeDisabled();
+
+      await user.type(screen.getByLabelText("Your full name"), "Bob Builder");
+      await user.type(screen.getByLabelText("Phone number"), "+4915112345678");
+      await user.click(screen.getByRole("button", { name: /Send code/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Enter a French phone number")).toBeInTheDocument();
+      });
+      expect(mockRequestCode).not.toHaveBeenCalled();
     });
 
-    it("renders back-to-login link", () => {
+    it("sends the code in E.164 and moves to the code step", async () => {
+      const user = userEvent.setup();
       renderForm();
-      expect(screen.getByRole("link", { name: /go to login/i })).toBeDefined();
+      await reachCodeStep(user);
+      expect(mockRequestCode).toHaveBeenCalledWith("tok123", "+33612345678");
+    });
+
+    it("stays on the details step when the phone already has an account", async () => {
+      mockRequestCode.mockResolvedValue({ success: false, error: "phone_registered" });
+      const user = userEvent.setup();
+      renderForm();
+
+      await user.type(screen.getByLabelText("Your full name"), "Bob Builder");
+      await user.type(screen.getByLabelText("Phone number"), "0612345678");
+      await user.click(screen.getByRole("button", { name: /Send code/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("This phone number already has an account. Sign in instead.")
+        ).toBeInTheDocument();
+      });
+      expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
     });
   });
 
-  describe("Validation", () => {
-    it("shows error when name is empty and form is submitted", async () => {
+  describe("code step", () => {
+    it("accepts the invitation and lands on the dashboard", async () => {
       const user = userEvent.setup();
       renderForm();
+      await reachCodeStep(user);
 
-      // Fill valid password but no name
-      await user.type(screen.getByLabelText(/choose a password/i), "securePass1!");
-      await user.type(screen.getByLabelText(/confirm password/i), "securePass1!");
-      await user.click(screen.getByRole("button", { name: /create account/i }));
-
-      // Should show generic error (name validation fails first in the handler)
-      await waitFor(() => {
-        expect(screen.queryByText(/something went wrong/i)).toBeDefined();
-      });
-      expect(mockAcceptInviteAction).not.toHaveBeenCalled();
-    });
-
-    it("shows password mismatch error inline", async () => {
-      const user = userEvent.setup();
-      renderForm();
-
-      await user.type(screen.getByLabelText(/your full name/i), "Alice");
-      await user.type(screen.getByLabelText(/choose a password/i), "password123");
-      await user.type(screen.getByLabelText(/confirm password/i), "differentpass");
-      await user.click(screen.getByRole("button", { name: /create account/i }));
+      mockAccept.mockResolvedValue({ success: true });
+      await user.type(screen.getByLabelText("Code"), "123456");
+      await user.click(screen.getByRole("button", { name: /Create account/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/passwords do not match/i)).toBeDefined();
-      });
-      expect(mockAcceptInviteAction).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("Submission", () => {
-    it("calls acceptInviteAction with correct args on submit", async () => {
-      const user = userEvent.setup();
-      mockAcceptInviteAction.mockResolvedValueOnce({ success: true });
-      renderForm("mytoken", "en");
-
-      await user.type(screen.getByLabelText(/your full name/i), "Bob Builder");
-      await user.type(screen.getByLabelText(/choose a password/i), "pass1234!");
-      await user.type(screen.getByLabelText(/confirm password/i), "pass1234!");
-      await user.click(screen.getByRole("button", { name: /create account/i }));
-
-      await waitFor(() => {
-        expect(mockAcceptInviteAction).toHaveBeenCalledWith(
-          "mytoken",
+        expect(mockAccept).toHaveBeenCalledWith(
+          "tok123",
           "Bob Builder",
-          "pass1234!"
+          "+33612345678",
+          "123456"
         );
       });
+      await waitFor(() => expect(window.location.href).toBe("/en/dashboard"));
     });
 
-    it("redirects to dashboard on successful submission", async () => {
+    it("reports a wrong code and stays put", async () => {
       const user = userEvent.setup();
-      mockAcceptInviteAction.mockResolvedValueOnce({ success: true });
-      renderForm("tok123", "en");
-
-      await user.type(screen.getByLabelText(/your full name/i), "Bob Builder");
-      await user.type(screen.getByLabelText(/choose a password/i), "pass1234!");
-      await user.type(screen.getByLabelText(/confirm password/i), "pass1234!");
-      await user.click(screen.getByRole("button", { name: /create account/i }));
-
-      await waitFor(() => {
-        expect(window.location.href).toBe("/en/dashboard");
-      });
-    });
-
-    it("displays error message when action returns failure", async () => {
-      const user = userEvent.setup();
-      mockAcceptInviteAction.mockResolvedValueOnce({
-        success: false,
-        error: "This invitation has expired.",
-      });
       renderForm();
+      await reachCodeStep(user);
 
-      await user.type(screen.getByLabelText(/your full name/i), "Bob");
-      await user.type(screen.getByLabelText(/choose a password/i), "pass1234!");
-      await user.type(screen.getByLabelText(/confirm password/i), "pass1234!");
-      await user.click(screen.getByRole("button", { name: /create account/i }));
+      mockAccept.mockResolvedValue({ success: false, error: "invalid_code" });
+      await user.type(screen.getByLabelText("Code"), "000000");
+      await user.click(screen.getByRole("button", { name: /Create account/i }));
 
       await waitFor(() => {
-        expect(screen.getByText("This invitation has expired.")).toBeDefined();
+        expect(screen.getByText("Wrong or expired code")).toBeInTheDocument();
+      });
+      expect(window.location.href).toBe("");
+    });
+
+    it("reports an invitation that was already used", async () => {
+      const user = userEvent.setup();
+      renderForm();
+      await reachCodeStep(user);
+
+      mockAccept.mockResolvedValue({ success: false, error: "accepted" });
+      await user.type(screen.getByLabelText("Code"), "123456");
+      await user.click(screen.getByRole("button", { name: /Create account/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("This invitation was already used.")).toBeInTheDocument();
       });
     });
 
-    it("displays generic error when action throws", async () => {
+    it("goes back to the details step via Change number", async () => {
       const user = userEvent.setup();
-      mockAcceptInviteAction.mockRejectedValueOnce(new Error("Network failure"));
       renderForm();
+      await reachCodeStep(user);
 
-      await user.type(screen.getByLabelText(/your full name/i), "Bob");
-      await user.type(screen.getByLabelText(/choose a password/i), "pass1234!");
-      await user.type(screen.getByLabelText(/confirm password/i), "pass1234!");
-      await user.click(screen.getByRole("button", { name: /create account/i }));
+      await user.click(screen.getByRole("button", { name: /Change number/i }));
 
-      await waitFor(() => {
-        expect(screen.getByText(/something went wrong/i)).toBeDefined();
-      });
-    });
-
-    it("disables submit button while in flight", async () => {
-      const user = userEvent.setup();
-      // Create a controllable promise
-      let resolveAction!: (val: { success: boolean }) => void;
-      const pendingPromise = new Promise<{ success: boolean }>((res) => {
-        resolveAction = res;
-      });
-      mockAcceptInviteAction.mockReturnValueOnce(pendingPromise);
-      renderForm();
-
-      await user.type(screen.getByLabelText(/your full name/i), "Bob");
-      await user.type(screen.getByLabelText(/choose a password/i), "pass1234!");
-      await user.type(screen.getByLabelText(/confirm password/i), "pass1234!");
-
-      // Click submit without awaiting resolution
-      await user.click(screen.getByRole("button", { name: /create account/i }));
-
-      // Button should be disabled while in flight
-      await waitFor(() => {
-        const btn = screen.queryByRole("button", { name: /creating account/i });
-        if (btn) expect(btn).toBeDisabled();
-      });
-
-      // Clean up - resolve promise
-      resolveAction({ success: true });
+      expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
+      expect(screen.queryByLabelText("Code")).toBeNull();
     });
   });
 });

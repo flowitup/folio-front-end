@@ -43,7 +43,7 @@ export default async function globalSetup(): Promise<void> {
       env: {
         ...process.env,
         ADMIN_EMAIL: ADMIN.email,
-        ADMIN_PASSWORD: ADMIN.password,
+        ADMIN_PHONE: ADMIN.phone,
       },
     });
     console.log("[global-setup] Seed complete.");

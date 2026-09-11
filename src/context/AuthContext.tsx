@@ -9,18 +9,14 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import type { User, AuthState, LoginCredentials } from "@/lib/auth/types";
+import type { User, AuthState } from "@/lib/auth/types";
 import {
-  login as loginAction,
   logout as logoutAction,
   getCurrentUserAction,
 } from "@/lib/auth/actions";
 import { verifyOtpAction } from "@/lib/auth/otp-actions";
 
 interface AuthContextType extends AuthState {
-  login: (
-    credentials: LoginCredentials
-  ) => Promise<{ success: boolean; error?: string }>;
   loginWithPhone: (
     phone: string,
     code: string
@@ -54,18 +50,18 @@ export function AuthProvider({
 
   const isLoading = state.isLoading || isPending;
 
-  // Shared post-login handling for both email/password and phone/SMS-code
-  // sign-in, extracted so the two paths cannot drift out of sync — each
-  // must re-fetch the canonical user and navigate the exact same way.
+  // Post-sign-in handling for phone/SMS-code login: re-fetch the canonical
+  // user, then navigate. Kept separate from loginWithPhone so any future
+  // sign-in path lands the user the exact same way.
   const completeLogin = useCallback(
     async (loggedInUser: User) => {
-      // POST /auth/login does not reliably populate `user.companies`
-      // (see types.ts). Re-fetch via /auth/me (same cookies, already
-      // forwarded by loginAction) so gates that read companies right
-      // after login (onboarding, "New project", Settings › Company)
-      // see the real list instead of an empty one. Fall back to the
-      // login response's embedded user — merging in any `companies` it
-      // did carry — if the re-fetch itself fails.
+      // The sign-in response does not carry `user.companies` (see types.ts).
+      // Re-fetch via /auth/me (same cookies, already forwarded by
+      // verifyOtpAction) so gates that read companies right after sign-in
+      // (onboarding, "New project", Settings › Company) see the real list
+      // instead of an empty one. Fall back to the sign-in response's
+      // embedded user — merging in any `companies` it did carry — if the
+      // re-fetch itself fails.
       const freshUser = await getCurrentUserAction();
       const user = freshUser ?? {
         ...loggedInUser,
@@ -92,23 +88,6 @@ export function AuthProvider({
       router.push(`/${locale}/dashboard`);
     },
     [router, locale]
-  );
-
-  const login = useCallback(
-    async (credentials: LoginCredentials) => {
-      setState((prev) => ({ ...prev, isLoading: true }));
-
-      const result = await loginAction(credentials);
-
-      if (result.success && result.user) {
-        await completeLogin(result.user);
-        return { success: true };
-      }
-
-      setState((prev) => ({ ...prev, isLoading: false }));
-      return { success: false, error: result.error };
-    },
-    [completeLogin]
   );
 
   const loginWithPhone = useCallback(
@@ -147,7 +126,6 @@ export function AuthProvider({
       value={{
         ...state,
         isLoading,
-        login,
         loginWithPhone,
         logout,
       }}

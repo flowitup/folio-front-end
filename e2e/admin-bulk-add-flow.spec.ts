@@ -25,9 +25,12 @@
 
 import { test, expect } from "@playwright/test";
 import { loginAsAdmin } from "./helpers/login-as-admin-helper";
+import { enterCode, nationalNumber } from "./helpers/auth-helper";
+import { SEED_PHONES } from "./helpers/seed-data";
 
 const NON_ADMIN_EMAIL = process.env.NON_ADMIN_EMAIL || "member@example.com";
-const NON_ADMIN_PASSWORD = process.env.NON_ADMIN_PASSWORD || "password123";
+/** A seeded non-admin's sign-in number (seed_users.py TEST_PHONES: user.eve). */
+const NON_ADMIN_PHONE = process.env.NON_ADMIN_PHONE || SEED_PHONES.userEve;
 
 // Search term that matches at least one seeded non-admin user (3+ chars)
 const USER_SEARCH_QUERY = process.env.E2E_BULK_ADD_SEARCH || "member";
@@ -120,13 +123,14 @@ test.describe("Admin bulk-add flow", () => {
   test("negative: non-admin user visiting /en/settings#users is redirected to unauthorized or sees 403", async ({
     page,
   }) => {
-    // Attempt login as a non-admin user
+    // Attempt sign-in as a non-admin user (phone + SMS code, the only way in).
     await page.goto("/en/login");
-    await page.fill("#email", NON_ADMIN_EMAIL);
-    await page.fill("#password", NON_ADMIN_PASSWORD);
-    await page.getByRole("button", { name: /sign in/i }).click();
+    await page.fill("#phone", nationalNumber(NON_ADMIN_PHONE));
+    await page.getByTestId("login-send-code").click();
+    // The code row submits itself once the sixth digit lands.
+    await enterCode(page);
 
-    // Wait for login to complete (success or failure)
+    // Wait for sign-in to complete (success or failure)
     await page.waitForLoadState("networkidle");
 
     const isLoggedIn = !page.url().includes("/login");

@@ -6,7 +6,7 @@
  *   - Backend running on http://localhost:5000 with:
  *       EMAIL_PROVIDER=inmemory   (enables in-memory email capture)
  *       TESTING=True              (enables the test-only /__test__/last-email endpoint)
- *   - Seeded admin user (ADMIN_EMAIL / ADMIN_PASSWORD env vars, defaults: admin@example.com / password123)
+ *   - Seeded admin user (ADMIN_EMAIL / ADMIN_PHONE env vars, defaults: admin@example.com / +33612345678)
  *   - At least one project in the database
  *
  * NOTE on backend setup:
@@ -19,12 +19,19 @@
 
 import { test, expect, Browser } from "@playwright/test";
 import { loginAsAdmin } from "./helpers/login-as-admin-helper";
+import { OTP_TEST_CODE } from "./helpers/seed-data";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5000";
 const LAST_EMAIL_ENDPOINT = `${BACKEND_URL}/api/v1/__test__/last-email`;
 
 // Unique per-run email to avoid cross-test pollution
 const INVITE_EMAIL = `e2e-invite-${Date.now()}@example.com`;
+
+// Unique per-run phone too: `users.phone` is unique, so a fixed number would
+// make the second run fail with "phone already registered" rather than a real
+// defect. Keeps the last 4 digits of the timestamp inside a French mobile range.
+const INVITEE_PHONE =
+  process.env.E2E_INVITEE_PHONE || `+3360000${String(Date.now()).slice(-4)}`;
 
 /**
  * Dynamically discover the first project ID available to the logged-in admin.
@@ -159,10 +166,15 @@ test.describe("Invite-only signup flow", () => {
       await guestPage.goto(relativePath);
       await guestPage.waitForLoadState("networkidle");
 
-      // ---- Step 7: Fill name + password; submit ----
+      // ---- Step 7: name + phone → SMS code → create the account ----
+      // The invitee proves a phone number instead of choosing a password, so
+      // the account they end up with is one they can sign back into.
       await guestPage.getByLabel(/your full name/i).fill("E2E New User");
-      await guestPage.getByLabel(/choose a password/i).fill("E2ETestPass1!");
-      await guestPage.getByLabel(/confirm password/i).fill("E2ETestPass1!");
+      await guestPage.fill("#phone", INVITEE_PHONE);
+      await guestPage.getByRole("button", { name: /send code/i }).click();
+
+      await guestPage.waitForSelector("#code", { timeout: 15_000 });
+      await guestPage.fill("#code", OTP_TEST_CODE);
       await guestPage.getByRole("button", { name: /create account/i }).click();
 
       // ---- Step 8: Assert redirected to dashboard & user authenticated ----

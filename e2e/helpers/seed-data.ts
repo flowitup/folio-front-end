@@ -5,17 +5,32 @@
  * in one place.
  *
  * Source of truth: seed_auth.py, seed_users.py, seed_project.py,
- * seed_invoices.py — all idempotent, password is uniform across users.
+ * seed_invoices.py — all idempotent. Sign-in is phone + SMS code; every
+ * seeded user carries a French number (seed_users.py TEST_PHONES).
  */
 
-/** Canonical admin login (seed_auth.py `--with-admin`). */
+/** Canonical admin account (seed_auth.py `--with-admin`), signed in by phone. */
 export const ADMIN = {
   email: process.env.ADMIN_EMAIL || "admin@example.com",
-  password: process.env.ADMIN_PASSWORD || "password123",
+  phone: process.env.ADMIN_PHONE || "+33612345678",
 } as const;
 
-/** Every seeded user shares this password (seed_users.py). */
-export const SEED_PASSWORD = "password123";
+/**
+ * The backend's non-production OTP bypass (`OTP_TEST_CODE`), which lets the
+ * suite complete a real phone sign-in without reading an SMS. The backend
+ * refuses it unless FLASK_ENV is development/testing, so it cannot work
+ * against a production deployment.
+ */
+export const OTP_TEST_CODE = process.env.OTP_TEST_CODE || "424242";
+
+/** Sign-in numbers for the seeded users below (seed_users.py TEST_PHONES). */
+export const SEED_PHONES = {
+  superadmin: "+33600000001",
+  managerAlice: "+33600000003",
+  managerBob: "+33600000004",
+  userDave: "+33600000006",
+  userEve: "+33600000007",
+} as const;
 
 /** Selected seeded test users (seed_users.py + seed_memberships.py). */
 export const SEED_USERS = {

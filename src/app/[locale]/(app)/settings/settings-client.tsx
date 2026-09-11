@@ -6,13 +6,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { UsersSection } from "./users/users-section";
 import { InvoicePrefixSection } from "./invoice-prefix-section";
-import { MyCompaniesSection } from "@/components/companies/my-companies-section";
 import { AdminCompaniesSection } from "@/components/companies/admin-companies-section";
 import { CompanySettingsSection } from "@/components/companies/company-settings-section";
 import { PaymentMethodsSettingsSection } from "@/components/payment-methods/payment-methods-settings-section";
 import { NotificationPreferencesSection } from "@/components/notifications/notification-preferences-section";
 import { ProfileForm } from "@/components/settings/profile-form";
-import { isPlatformOps, isCompanyAdmin } from "@/lib/auth/permissions";
+import { isPlatformOps } from "@/lib/auth/permissions";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import pkg from "../../../../../package.json";
 
@@ -21,7 +20,6 @@ const BASE_SECTION_KEYS = [
   "team",
   "company",
   "billing",
-  "my-companies",
   "payment-methods",
   "notifications",
   "users",
@@ -43,6 +41,9 @@ const ALL_VALID_KEYS: readonly string[] = [...BASE_SECTION_KEYS, "project"];
 function initialActiveFromHash(): SectionKey {
   if (typeof window === "undefined") return "profile";
   const hash = window.location.hash.replace("#", "");
+  // "my-companies" was the attachments tab before it was folded into
+  // "company"; keep old links and bookmarks landing on the merged section.
+  if (hash === "my-companies") return "company";
   return ALL_VALID_KEYS.includes(hash) ? (hash as SectionKey) : "profile";
 }
 
@@ -54,18 +55,16 @@ export function SettingsClient({ projects }: Props) {
   const [active, setActive] = useState<SectionKey>(initialActiveFromHash);
 
   const isSuperadmin = isPlatformOps(user?.permissions);
-  const isAnyCompanyAdmin = isCompanyAdmin(user?.companies, null, user?.permissions);
 
   const sectionKeys: SectionKey[] = [
     "profile",
     ...(selectedProject ? ["project" as const] : []),
     "team",
-    // Company self-service (members, D8 grants, add-by-phone, import, join
-    // code, directory) — only rendered for a company admin; nothing here
-    // would do anything but 403 for a manager/member.
-    ...(isAnyCompanyAdmin ? (["company"] as const) : []),
+    // One Company tab for everyone: it carries the caller's own attachments
+    // (identity card, primary, detach, attach-by-token) and, for a company
+    // admin only, that company's self-service tools.
+    "company",
     "billing",
-    "my-companies",
     "payment-methods",
     "notifications",
     "users",
@@ -81,13 +80,11 @@ export function SettingsClient({ projects }: Props) {
             const label =
               key === "users"
                 ? t("users.title")
-                : key === "my-companies"
-                  ? t("myCompanies.title")
-                  : key === "payment-methods"
-                    ? t("paymentMethods")
-                    : key === "company"
-                      ? t("company.title")
-                      : t(key);
+                : key === "payment-methods"
+                  ? t("paymentMethods")
+                  : key === "company"
+                    ? t("company.title")
+                    : t(key);
             return (
               <button
                 key={key}
@@ -118,11 +115,9 @@ export function SettingsClient({ projects }: Props) {
           </section>
         )}
 
-        {active === "company" && isAnyCompanyAdmin && <CompanySettingsSection />}
-
-        {active === "my-companies" && (
+        {active === "company" && (
           <div className="space-y-5">
-            <MyCompaniesSection />
+            <CompanySettingsSection />
             {isSuperadmin && <AdminCompaniesSection />}
           </div>
         )}
@@ -158,7 +153,6 @@ export function SettingsClient({ projects }: Props) {
           active !== "project" &&
           active !== "company" &&
           active !== "users" &&
-          active !== "my-companies" &&
           active !== "payment-methods" &&
           active !== "notifications" &&
           active !== "about" && (

@@ -55,8 +55,8 @@ vi.mock("../users/users-section", () => ({
   UsersSection: () => <div data-testid="users-section" />,
 }));
 
-vi.mock("@/components/companies/my-companies-section", () => ({
-  MyCompaniesSection: () => <div data-testid="my-companies-section" />,
+vi.mock("@/components/companies/company-settings-section", () => ({
+  CompanySettingsSection: () => <div data-testid="company-settings-section" />,
 }));
 
 vi.mock("@/components/companies/admin-companies-section", () => ({

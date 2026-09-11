@@ -313,9 +313,6 @@
     "project": "Dự án",
     "about": "Giới thiệu",
     "version": "Phiên bản",
-    "myCompanies": {
-      "title": "Công ty của tôi"
-    },
     "companies": {
       "backToSettings": "Quay lại Cài đặt"
     },
@@ -379,7 +376,7 @@
     "paidByCompany": "Công ty thanh toán",
     "personalPayment": "Thanh toán cá nhân",
     "companyLabel": "Công ty",
-    "noCompanies": "Bạn chưa thuộc công ty nào. Thêm một công ty ở “Công ty của tôi” để quản lý phương thức thanh toán.",
+    "noCompanies": "Bạn chưa thuộc công ty nào. Thêm một công ty ở “Công ty” để quản lý phương thức thanh toán.",
     "loadError": "Không tải được phương thức thanh toán. Vui lòng thử lại.",
     "noMethodsReadOnly": "Chưa có phương thức thanh toán nào được thiết lập.",
     "readOnlyNote": "Cách hoá đơn được thanh toán cho công ty này. Chỉ quản trị viên mới có thể thêm, đổi tên hoặc xoá phương thức."
@@ -1673,8 +1670,6 @@
       "tooltip": "Chỉ quản trị viên mới nhìn thấy"
     },
     "my": {
-      "title": "Công ty của tôi",
-      "description": "Các công ty bạn đang liên kết. Các trường nhạy cảm được ẩn đi.",
       "addCta": "Thêm công ty",
       "empty": {
         "title": "Chưa liên kết công ty nào",
@@ -2183,7 +2178,9 @@
     }
   },
   "companySettings": {
-    "notAdmin": "Bạn không phải là quản trị viên của công ty nào.",
+    "description": "Các công ty bạn đang liên kết, cùng công cụ quản lý cho những công ty bạn làm quản trị viên.",
+    "loadError": "Không tải được danh sách công ty của bạn. Vui lòng thử lại.",
+    "retry": "Thử lại",
     "companyPicker": {
       "label": "Công ty"
     },

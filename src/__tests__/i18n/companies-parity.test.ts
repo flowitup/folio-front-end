@@ -133,25 +133,35 @@ describe("test_companies_i18n_parity", () => {
   }
 
   // -------------------------------------------------------------------------
-  // settings.myCompanies regression guard
-  // The "My companies" Settings tab label lives under settings.myCompanies.title;
-  // it was previously copy-pasted as English in fr/vi. This test catches that
+  // settings.company regression guard
+  // The Settings tab that carries the caller's companies is labelled from
+  // settings.company.title (it absorbed the old "My companies" tab); the label
+  // was previously copy-pasted as English in fr/vi. This test catches that
   // exact shape of regression (English-fallback string in a non-English locale).
   // -------------------------------------------------------------------------
 
-  it("settings.myCompanies.title is translated in fr (not English fallback)", () => {
-    const enVal = dig(en as Record<string, unknown>, "settings.myCompanies.title") as string;
-    const frVal = dig(fr as Record<string, unknown>, "settings.myCompanies.title") as string;
+  it("settings.company.title is translated in fr (not English fallback)", () => {
+    const enVal = dig(en as Record<string, unknown>, "settings.company.title") as string;
+    const frVal = dig(fr as Record<string, unknown>, "settings.company.title") as string;
     expect(typeof frVal).toBe("string");
     expect(frVal.length).toBeGreaterThan(0);
-    expect(frVal, "fr settings.myCompanies.title must not equal en value").not.toBe(enVal);
+    expect(frVal, "fr settings.company.title must not equal en value").not.toBe(enVal);
   });
 
-  it("settings.myCompanies.title is translated in vi (not English fallback)", () => {
-    const enVal = dig(en as Record<string, unknown>, "settings.myCompanies.title") as string;
-    const viVal = dig(vi as Record<string, unknown>, "settings.myCompanies.title") as string;
+  it("settings.company.title is translated in vi (not English fallback)", () => {
+    const enVal = dig(en as Record<string, unknown>, "settings.company.title") as string;
+    const viVal = dig(vi as Record<string, unknown>, "settings.company.title") as string;
     expect(typeof viVal).toBe("string");
     expect(viVal.length).toBeGreaterThan(0);
-    expect(viVal, "vi settings.myCompanies.title must not equal en value").not.toBe(enVal);
+    expect(viVal, "vi settings.company.title must not equal en value").not.toBe(enVal);
+  });
+
+  it("settings.myCompanies is gone (folded into settings.company)", () => {
+    for (const { name, messages } of LOCALES) {
+      expect(
+        dig(messages, "settings.myCompanies"),
+        `${name} still carries the retired settings.myCompanies namespace`
+      ).toBeUndefined();
+    }
   });
 });

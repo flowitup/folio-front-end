@@ -5,7 +5,7 @@
  *   test_no_companies_callout_renders_instead_of_form
  *
  * Verifies the callout renders i18n strings (not hardcoded English) and
- * links to /settings#my-companies.
+ * links to /settings#company.
  */
 
 import { describe, it, expect, vi } from "vitest";
@@ -63,10 +63,10 @@ describe("test_no_companies_callout_renders_instead_of_form", () => {
     expect((link as HTMLAnchorElement).href).toContain("/settings");
   });
 
-  it("links to /settings#my-companies", () => {
+  it("links to /settings#company", () => {
     render(<NoAttachedCompaniesCallout />);
     const link = screen.getByRole("link") as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe("/settings#my-companies");
+    expect(link.getAttribute("href")).toBe("/settings#company");
   });
 
   it("does NOT render a form or any input", () => {

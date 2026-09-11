@@ -3,8 +3,8 @@
  *
  * Flow:
  *   1. Log in as admin → Settings → All companies → New company → fill + save → manage
- *   2. Admin: Invites tab → Generate invite → copy token
- *   3. Log in as user2 → Settings → Add company → paste token → success
+ *   2. Admin: Company code tab → Create code → copy code
+ *   3. Log in as user2 → Settings → Add company → type code → success
  *   4. user2: Open /billing/devis/new → picker shows the new company → fill + save → success
  *   5. Verify doc PDF downloads with correct issuer info
  *
@@ -27,10 +27,10 @@ import { loginAsAdmin } from "./helpers/login-as-admin-helper";
 const RUN_COMPANIES_E2E = Boolean(process.env.TEST_E2E_COMPANIES);
 
 // ---------------------------------------------------------------------------
-// Shared state across steps (token captured from admin session)
+// Shared state across steps (join code captured from admin session)
 // ---------------------------------------------------------------------------
 
-let capturedToken = "";
+let capturedCode = "";
 
 // ---------------------------------------------------------------------------
 // Step 1: Admin creates a new company
@@ -65,10 +65,10 @@ test.describe("Companies happy-path flow", () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Step 2: Admin generates invite token
+  // Step 2: Admin mints the company join code
   // ---------------------------------------------------------------------------
 
-  test("02 — admin manages company and generates invite token", async ({
+  test("02 — admin manages company and creates a join code", async ({
     page,
   }: {
     page: Page;
@@ -80,25 +80,25 @@ test.describe("Companies happy-path flow", () => {
     await page.waitForSelector("#admin-companies", { timeout: 10_000 });
     await page.click("[title='Manage']", { timeout: 5_000 });
 
-    // Switch to Invites tab
-    await page.waitForSelector("button:has-text('Invites')", { timeout: 5_000 });
-    await page.click("button:has-text('Invites')");
+    // Switch to Company code tab
+    await page.waitForSelector("button:has-text('Company code')", { timeout: 5_000 });
+    await page.click("button:has-text('Company code')");
 
-    // Generate invite
-    await page.click("button:has-text('Generate')");
+    // Create the join code
+    await page.click("button:has-text('Create code')");
 
-    // Token dialog appears — capture the token text
-    await page.waitForSelector("[role='dialog']", { timeout: 5_000 });
-    const tokenEl = await page.locator("[class*='font-mono']").first();
-    capturedToken = (await tokenEl.textContent()) ?? "";
-    expect(capturedToken.length).toBeGreaterThan(10);
+    // Code renders inline on the card (no dialog) — capture it
+    const codeEl = page.getByTestId("company-join-code-value");
+    await codeEl.waitFor({ timeout: 5_000 });
+    capturedCode = (await codeEl.textContent()) ?? "";
+    expect(capturedCode.length).toBeGreaterThan(6);
   });
 
   // ---------------------------------------------------------------------------
-  // Step 3: user2 redeems the invite token
+  // Step 3: user2 joins the company with its code
   // ---------------------------------------------------------------------------
 
-  test("03 — user2 adds company via invite token", async ({ page }: { page: Page }) => {
+  test("03 — user2 adds company via join code", async ({ page }: { page: Page }) => {
     // Log in as user2 (adjust credentials for local seeded stack)
     await page.goto("/en/login");
     await page.fill("input[type='email']", "user2@example.com");
@@ -108,12 +108,12 @@ test.describe("Companies happy-path flow", () => {
 
     await page.goto("/en/settings");
 
-    // Open "Add company" dialog (RedeemInviteTokenDialog)
+    // Open "Add company" dialog (JoinCompanyDialog)
     await page.waitForSelector("button:has-text('Add company')", { timeout: 10_000 });
     await page.click("button:has-text('Add company')");
 
     await page.waitForSelector("[role='dialog']", { timeout: 5_000 });
-    await page.fill("input#invite-token", capturedToken);
+    await page.fill("input#company-code", capturedCode);
     await page.click("button:has-text('Attach')");
 
     // Success toast + dialog closes

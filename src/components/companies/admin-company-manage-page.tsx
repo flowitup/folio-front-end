@@ -3,23 +3,22 @@
 /**
  * AdminCompanyManagePage — full admin management UI for a single company.
  *
- * Four tabs (manual implementation — no Tabs primitive in this project):
- *   1. Edit   — update all company fields
- *   2. Invites — generate / revoke invite token; shows TokenGeneratedDialog one-shot,
- *               plus the reusable company join code card (mobile onboarding)
- *   3. Users  — AttachedUsersTable with Boot action
- *   4. Delete — destructive AlertDialog
+ * Five tabs (manual implementation — no Tabs primitive in this project):
+ *   1. Edit     — update all company fields
+ *   2. Code     — the reusable company join code (mobile onboarding); the
+ *                 only mechanism left to bring someone into the company
+ *   3. Users    — AttachedUsersTable with Boot action
+ *   4. Payments — PaymentMethodsSection
+ *   5. Delete   — destructive AlertDialog
  *
  * Submit guards: every async handler uses useRef.
- * Regenerate flow: if generateInviteToken returns active_token_exists (409),
- *   automatically retries with regenerate=true — matches spec.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Loader2, Save, Zap, Trash2, RefreshCw, X } from "lucide-react";
+import { Loader2, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,17 +33,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { TokenGeneratedDialog } from "@/components/companies/token-generated-dialog";
 import { AttachedUsersTable } from "@/components/companies/attached-users-table";
 import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-card";
 import {
   updateCompanyAction,
   deleteCompanyAction,
-  generateInviteTokenAction,
-  revokeInviteTokenAction,
   fetchAttachedUsersAction,
 } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
-import type { Company, CompanyInviteTokenGenerated, AttachedUser } from "@/types/companies";
+import type { Company, AttachedUser } from "@/types/companies";
 import type { UpdateCompanyPayload } from "@/lib/api/companies/companies";
 import { PaymentMethodsSection } from "@/app/[locale]/(app)/settings/companies/[id]/_components/payment-methods-section";
 import { listPaymentMethodsAction } from "@/app/[locale]/(app)/settings/companies/[id]/_actions/payment-methods-actions";
@@ -54,7 +50,7 @@ import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 // Tab type
 // ---------------------------------------------------------------------------
 
-type ManageTab = "edit" | "invites" | "users" | "payments" | "delete";
+type ManageTab = "edit" | "code" | "users" | "payments" | "delete";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -118,17 +114,6 @@ export function AdminCompanyManagePage({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const savingRef = useRef(false);
-
-  // ---- Invite tab state ----
-  const [generatedToken, setGeneratedToken] = useState<CompanyInviteTokenGenerated | null>(null);
-  const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
-  const generatingRef = useRef(false);
-  const [isRevoking, setIsRevoking] = useState(false);
-  const revokingRef = useRef(false);
-  const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false);
-  const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
 
   // ---- Users tab state ----
   const [users, setUsers] = useState<AttachedUser[]>(initialUsers);
@@ -199,56 +184,6 @@ export function AdminCompanyManagePage({
   }
 
   // ---------------------------------------------------------------------------
-  // Invite tab handlers
-  // ---------------------------------------------------------------------------
-
-  async function doGenerate(regenerate: boolean) {
-    if (generatingRef.current) return;
-    generatingRef.current = true;
-    setIsGenerating(true);
-    try {
-      const result = await generateInviteTokenAction(company.id, { regenerate, role: inviteRole });
-      if (!result.ok) {
-        if (result.error.code === "active_token_exists" && !regenerate) {
-          // Prompt admin to confirm regeneration
-          setRegenConfirmOpen(true);
-          return;
-        }
-        toast.error(result.error.message);
-        return;
-      }
-      // Show token once
-      setGeneratedToken(result.data);
-      setTokenDialogOpen(true);
-    } catch {
-      toast.error(t("form.errors.generic"));
-    } finally {
-      setIsGenerating(false);
-      generatingRef.current = false;
-    }
-  }
-
-  async function handleRevoke() {
-    if (revokingRef.current) return;
-    revokingRef.current = true;
-    setIsRevoking(true);
-    try {
-      const result = await revokeInviteTokenAction(company.id);
-      if (!result.ok) {
-        toast.error(result.error.message);
-        return;
-      }
-      setRevokeConfirmOpen(false);
-      toast.success(t("admin.manage.invites.revokedToast"));
-    } catch {
-      toast.error(t("form.errors.generic"));
-    } finally {
-      setIsRevoking(false);
-      revokingRef.current = false;
-    }
-  }
-
-  // ---------------------------------------------------------------------------
   // Users tab handlers
   // ---------------------------------------------------------------------------
 
@@ -296,7 +231,7 @@ export function AdminCompanyManagePage({
 
   const TABS: { key: ManageTab; label: string }[] = [
     { key: "edit", label: t("admin.manage.tabs.edit") },
-    { key: "invites", label: t("admin.manage.tabs.invites") },
+    { key: "code", label: t("admin.manage.tabs.code") },
     { key: "users", label: t("admin.manage.tabs.users") },
     { key: "payments", label: t("admin.manage.tabs.payments") },
     { key: "delete", label: t("admin.manage.tabs.delete") },
@@ -441,137 +376,10 @@ export function AdminCompanyManagePage({
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* Tab: Invites */}
+      {/* Tab: Code — the reusable company join code (only attach mechanism) */}
       {/* ------------------------------------------------------------------ */}
-      {activeTab === "invites" && (
-        <div className="space-y-6">
-          <div className="folio-card p-5 space-y-4">
-            <div>
-              <h4 className="font-medium text-[15px]">
-                {t("admin.manage.invites.title")}
-              </h4>
-              <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
-                {t("admin.manage.invites.description")}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="invite-role"
-                className="text-[12px] font-medium"
-                style={{ color: "var(--muted)" }}
-              >
-                {t("admin.manage.invites.roleLabel")}
-              </label>
-              <select
-                id="invite-role"
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value as "admin" | "member")}
-                disabled={isGenerating || isRevoking}
-                className="h-9 w-fit rounded-md border px-2 text-[13px]"
-                style={{ borderColor: "var(--border)", background: "var(--paper)" }}
-              >
-                <option value="member">{t("admin.manage.invites.roleMemberOption")}</option>
-                <option value="admin">{t("admin.manage.invites.roleAdminOption")}</option>
-              </select>
-            </div>
-
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                onClick={() => void doGenerate(false)}
-                disabled={isGenerating || isRevoking}
-              >
-                {isGenerating ? (
-                  <Loader2 size={14} className="mr-2 animate-spin" />
-                ) : (
-                  <Zap size={14} className="mr-2" />
-                )}
-                {t("admin.manage.invites.generate")}
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={() => setRevokeConfirmOpen(true)}
-                disabled={isRevoking || isGenerating}
-                className="text-destructive border-destructive/30 hover:border-destructive/50 hover:text-destructive"
-              >
-                {isRevoking ? (
-                  <Loader2 size={14} className="mr-2 animate-spin" />
-                ) : (
-                  <X size={14} className="mr-2" />
-                )}
-                {t("admin.manage.invites.revoke")}
-              </Button>
-            </div>
-
-            <p className="text-[12px]" style={{ color: "var(--muted)" }}>
-              {t("admin.manage.invites.policyNote")}
-            </p>
-          </div>
-
-          {/* Reusable company code typed by members on the mobile app */}
-          <CompanyJoinCodeCard companyId={company.id} initialCode={company.join_code ?? null} />
-
-          {/* Token generated dialog */}
-          <TokenGeneratedDialog
-            open={tokenDialogOpen}
-            onOpenChange={(open) => {
-              setTokenDialogOpen(open);
-              if (!open) setGeneratedToken(null); // discard plaintext on close
-            }}
-            tokenData={generatedToken}
-          />
-
-          {/* Revoke confirm */}
-          <AlertDialog open={revokeConfirmOpen} onOpenChange={setRevokeConfirmOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t("admin.manage.invites.revoke")}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("admin.manage.invites.revokeConfirm")}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={isRevoking}>
-                  {t("form.actions.cancel")}
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleRevoke}
-                  disabled={isRevoking}
-                  className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
-                >
-                  {isRevoking && <Loader2 size={12} className="mr-1.5 animate-spin" />}
-                  {t("admin.manage.invites.revoke")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          {/* Regenerate confirm (active token exists) */}
-          <AlertDialog open={regenConfirmOpen} onOpenChange={setRegenConfirmOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t("admin.manage.invites.regenerate")}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("admin.manage.invites.regenerateConfirm")}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{t("form.actions.cancel")}</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    setRegenConfirmOpen(false);
-                    void doGenerate(true);
-                  }}
-                  className="bg-[var(--warning)] hover:bg-[var(--warning)]/90"
-                >
-                  <RefreshCw size={12} className="mr-1.5" />
-                  {t("admin.manage.invites.regenerate")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+      {activeTab === "code" && (
+        <CompanyJoinCodeCard companyId={company.id} initialCode={company.join_code ?? null} />
       )}
 
       {/* ------------------------------------------------------------------ */}

@@ -1625,22 +1625,22 @@
       "addCta": "Ajouter une société",
       "empty": {
         "title": "Aucune société rattachée",
-        "cta": "Utilisez un jeton d'invitation de votre administrateur pour rattacher votre première société."
+        "cta": "Utilisez un code société de votre administrateur pour rattacher votre première société."
       },
       "card": {
         "primaryBadge": "Principale",
         "setPrimary": "Définir comme principale",
         "detach": "Détacher",
-        "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un nouveau jeton d'invitation pour vous rattacher."
+        "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un code société de votre administrateur pour vous rattacher."
       }
     },
     "invite": {
       "dialogTitle": "Rattacher une société",
-      "inputLabel": "Jeton d'invitation ou code société",
-      "inputPlaceholder": "Collez le jeton ou saisissez le code société à 8 caractères…",
+      "inputLabel": "Code société",
+      "inputPlaceholder": "Saisissez le code société à 8 caractères…",
       "attachCta": "Rattacher",
       "successToast": "Société rattachée avec succès.",
-      "tokenInvalidError": "Le jeton d'invitation est invalide, expiré ou déjà utilisé."
+      "tokenInvalidError": "Ce code société est invalide ou a été révoqué."
     },
     "admin": {
       "title": "Toutes les sociétés",
@@ -1659,7 +1659,7 @@
         "title": "Gérer",
         "tabs": {
           "edit": "Modifier",
-          "invites": "Jetons d'invitation",
+          "code": "Code société",
           "users": "Utilisateurs rattachés",
           "delete": "Supprimer",
           "payments": "Moyens de paiement"
@@ -1667,20 +1667,6 @@
         "edit": {
           "save": "Enregistrer les modifications",
           "savedToast": "Société enregistrée."
-        },
-        "invites": {
-          "title": "Jeton d'invitation",
-          "description": "Générez un jeton à usage unique valable 7 jours. Partagez-le avec l'utilisateur qui doit rattacher cette société.",
-          "generate": "Générer une invitation",
-          "regenerate": "Régénérer le jeton",
-          "regenerateConfirm": "Un jeton d'invitation actif existe déjà. Le régénérer l'invalidera. Continuer ?",
-          "revoke": "Révoquer le jeton actif",
-          "revokeConfirm": "Cela invalidera immédiatement le jeton actuel. Tout utilisateur ne l'ayant pas encore utilisé devra en obtenir un nouveau.",
-          "revokedToast": "Jeton d'invitation révoqué.",
-          "policyNote": "Les jetons sont à usage unique et expirent après 7 jours. Un seul jeton actif par société.",
-          "roleLabel": "Rôle",
-          "roleAdminOption": "Admin (gère la facturation)",
-          "roleMemberOption": "Membre"
         },
         "attached": {
           "nameEmail": "Nom / E-mail",
@@ -1784,15 +1770,6 @@
         "generic": "Une erreur inattendue s'est produite. Veuillez réessayer."
       }
     },
-    "tokenGenerated": {
-      "dialogTitle": "Jeton d'invitation généré",
-      "expiresLine": "Expire le : {expiresAt}",
-      "copyCta": "Copier le jeton",
-      "copiedToast": "Jeton copié dans le presse-papiers.",
-      "copyFailedToast": "Impossible de copier dans le presse-papiers.",
-      "oneShotWarning": "Enregistrez ce jeton maintenant — il ne sera plus visible après la fermeture de cette fenêtre.",
-      "autoCloseCountdown": "Fermeture automatique dans {seconds}s"
-    },
     "picker": {
       "label": "Émis par",
       "placeholder": "Sélectionner une société",
@@ -1805,9 +1782,7 @@
     "errors": {
       "forbiddenAdminRequired": "Accès administrateur requis.",
       "companyAlreadyAttached": "Vous êtes déjà rattaché·e à cette société.",
-      "activeTokenExists": "Un jeton d'invitation actif existe déjà. Utilisez regenerate=true pour le remplacer.",
       "conflict": "Un conflit est survenu.",
-      "tokenInvalid": "Ce lien d'invitation n'est plus valable. Demandez à un administrateur d'en générer un nouveau.",
       "validation": "Erreur de validation.",
       "unauthorized": "Session expirée. Veuillez vous reconnecter.",
       "notFound": "La ressource demandée est introuvable.",

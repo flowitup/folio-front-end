@@ -1,12 +1,13 @@
 "use client";
 
 /**
- * RedeemInviteTokenDialog — lets a user paste an invite token (or type a reusable
- * 8-character company code) to attach a company.
+ * JoinCompanyDialog — lets a user type a reusable 8-character company code
+ * to attach a company.
  *
  * Success: toast + close dialog + calls onAttached() so parent can refresh list.
- * All failure cases (410, expired, wrong, already-redeemed) surface a single
- * uniform toast: "Invite token is invalid, expired, or already used."
+ * A wrong or revoked code (404), plus the local too-short/too-long validation
+ * guard, surface a single uniform toast: "This company code is invalid or has
+ * been revoked."
  *
  * Submit guard: useRef prevents double-submit even if the user clicks fast.
  */
@@ -26,76 +27,64 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import {
-  joinCompanyByCodeAction,
-  redeemInviteTokenAction,
-} from "@/app/[locale]/(app)/settings/_actions/companies-actions";
-import { looksLikeJoinCode } from "@/lib/companies/join-code";
+import { joinCompanyByCodeAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 
-interface RedeemInviteTokenDialogProps {
+interface JoinCompanyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Called after a successful redemption or join; the parent reloads its list. */
+  /** Called after a successful join; the parent reloads its list. */
   onAttached: () => void;
 }
 
-export function RedeemInviteTokenDialog({
+export function JoinCompanyDialog({
   open,
   onOpenChange,
   onAttached,
-}: RedeemInviteTokenDialogProps) {
+}: JoinCompanyDialogProps) {
   const t = useTranslations("companies");
 
-  const [token, setToken] = useState("");
+  const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submittingRef = useRef(false);
 
   function handleOpenChange(next: boolean) {
     if (isSubmitting) return;
-    if (!next) setToken("");
+    if (!next) setCode("");
     onOpenChange(next);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = token.trim();
+    const trimmed = code.trim();
     if (!trimmed || submittingRef.current) return;
 
     submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
-      // An 8-character value is a company join code; anything longer is an invite token.
-      const result = looksLikeJoinCode(trimmed)
-        ? await joinCompanyByCodeAction(trimmed)
-        : await redeemInviteTokenAction(trimmed);
+      const result = await joinCompanyByCodeAction(trimmed);
 
       if (!result.ok) {
-        // Error surfacing policy (chosen behavior, reviewed 2026-05-07):
-        // The 410-family codes (token_invalid, not_found, validation) all map to
-        // a single uniform user-facing message per spec — these represent "bad token"
-        // scenarios and exposing the distinction to the end-user adds no value.
-        // Other codes (rate_limited, unauthorized, generic) surface their distinct
-        // messages: "rate_limited" gives actionable wait-and-retry guidance;
-        // "unauthorized" indicates a session expiry the user must resolve;
-        // "generic" is already a generic fallback message safe to show.
-        // This keeps UX clean for the common path while preserving actionability
-        // for recoverable non-token errors.
-        const isTokenError =
-          result.error.code === "token_invalid" ||
-          result.error.code === "not_found" ||
-          result.error.code === "validation";
+        // Error surfacing policy (chosen behavior, reviewed 2026-05-07,
+        // preserved when the dialog dropped token-based redemption):
+        // "not_found" (unknown/revoked code) and "validation" (local
+        // length guard) both represent "the code you typed doesn't work"
+        // and map to a single uniform user-facing message — exposing the
+        // distinction adds no value. Other codes (company_already_attached,
+        // rate_limited, unauthorized, generic) surface their distinct
+        // messages: each is actionable on its own (join elsewhere, wait and
+        // retry, log in again, generic fallback).
+        const isCodeInvalid =
+          result.error.code === "not_found" || result.error.code === "validation";
 
         toast.error(
-          isTokenError
-            ? t("invite.tokenInvalidError")
-            : result.error.message
+          isCodeInvalid ? t("invite.tokenInvalidError") : result.error.message
         );
         return;
       }
 
       toast.success(t("invite.successToast"));
-      setToken("");
+      setCode("");
       onOpenChange(false);
       onAttached();
     } catch {
@@ -115,12 +104,12 @@ export function RedeemInviteTokenDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="invite-token">{t("invite.inputLabel")}</Label>
+            <Label htmlFor="company-code">{t("invite.inputLabel")}</Label>
             <Input
-              id="invite-token"
+              id="company-code"
               type="text"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
               placeholder={t("invite.inputPlaceholder")}
               disabled={isSubmitting}
               autoFocus
@@ -134,7 +123,7 @@ export function RedeemInviteTokenDialog({
                 {t("form.actions.cancel")}
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={!token.trim() || isSubmitting}>
+            <Button type="submit" disabled={!code.trim() || isSubmitting}>
               {isSubmitting && (
                 <Loader2 size={14} className="mr-2 animate-spin" />
               )}

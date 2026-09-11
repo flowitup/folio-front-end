@@ -92,9 +92,7 @@ describe("test_companies_i18n_parity", () => {
     const requiredKeys = [
       "forbiddenAdminRequired",
       "companyAlreadyAttached",
-      "activeTokenExists",
       "conflict",
-      "tokenInvalid",
       "validation",
       "unauthorized",
       "notFound",

@@ -17,11 +17,3 @@ export function formatJoinCode(code: string): string {
     ? `${normalized.slice(0, 4)}-${normalized.slice(4)}`
     : normalized;
 }
-
-/**
- * Whether an "attach a company" input is a join code rather than an invite token.
- * Invite tokens are long random strings, so an 8-character alphanumeric value is a code.
- */
-export function looksLikeJoinCode(raw: string): boolean {
-  return /^[A-Z0-9]{8}$/.test(normalizeJoinCode(raw));
-}

@@ -5,7 +5,7 @@
  *
  * Folds together what used to be two separate settings tabs:
  *  - "My companies": the caller's attachments — identity card with masked
- *    SIRET / TVA / IBAN / BIC, primary toggle, detach, attach-by-invite-token;
+ *    SIRET / TVA / IBAN / BIC, primary toggle, detach, attach-by-code;
  *  - "Company": the company-admin self-service tools — join code, members
  *    (roles, D8 grants, add-by-phone, import) and directory.
  *
@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MyCompanyCard } from "@/components/companies/my-company-card";
-import { RedeemInviteTokenDialog } from "@/components/companies/redeem-invite-token-dialog";
+import { JoinCompanyDialog } from "@/components/companies/join-company-dialog";
 // Reuses the existing ops join-code card (create/renew/revoke/copy) — same
 // component the platform-ops company-manage page mounts, just handed this
 // caller's own company id instead of an arbitrary one.
@@ -79,7 +79,7 @@ export function CompanySettingsSection() {
       } else {
         // Keep whatever list we already had — but remember the failure, so a
         // first load that errors shows "could not load" instead of claiming
-        // the caller belongs to no company and pushing an invite-token CTA.
+        // the caller belongs to no company and pushing a join-code CTA.
         setLoadFailed(true);
       }
     } finally {
@@ -233,7 +233,7 @@ export function CompanySettingsSection() {
         </>
       )}
 
-      <RedeemInviteTokenDialog
+      <JoinCompanyDialog
         open={redeemOpen}
         onOpenChange={setRedeemOpen}
         onAttached={() => void load()}

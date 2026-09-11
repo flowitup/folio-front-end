@@ -11,8 +11,8 @@
  *     npx playwright test e2e/billing-project-release-funds-flow.spec.ts
  *
  * Prerequisite handled in beforeAll: billing-create requires the caller to be
- * attached to a company. We ensure one via the API (create → invite-token →
- * attach-by-token) if the admin has none yet.
+ * attached to a company. We ensure one via the API (create → join-code →
+ * join) if the admin has none yet.
  */
 
 import { test, expect, request as pwRequest, type APIRequestContext } from "@playwright/test";
@@ -60,13 +60,13 @@ test.describe("Billing ↔ project release-funds flow", () => {
           data: { legal_name: "E2E Release-Funds Co SAS", address: "1 Rue de Test, 75001 Paris" },
         })
       ).json();
-      const tok = await (
-        await ctx.post(`${API}/companies/${co.id}/invite-tokens?regenerate=true`, {
-          headers,
-          data: { role: "admin" },
-        })
+      const joinCode = await (
+        await ctx.post(`${API}/companies/${co.id}/join-code`, { headers })
       ).json();
-      await ctx.post(`${API}/companies/attach-by-token`, { headers, data: { token: tok.token } });
+      await ctx.post(`${API}/companies/join`, {
+        headers,
+        data: { code: joinCode.join_code },
+      });
     }
     await ctx.dispose();
   });

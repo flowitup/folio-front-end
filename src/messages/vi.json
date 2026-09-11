@@ -235,19 +235,8 @@
     }
   },
   "settings": {
-    "title": "Cài đặt",
-    "description": "Tùy chỉnh Folio theo phong cách của bạn.",
     "profile": "Hồ sơ",
-    "team": "Đội",
-    "billing": "Thanh toán",
     "notifications": "Thông báo",
-    "preferences": "Tùy chọn",
-    "profileDesc": "Quản lý thông tin cá nhân",
-    "notificationsDesc": "Kiểm soát cách bạn nhận thông báo",
-    "organization": "Tổ chức",
-    "organizationDesc": "Quản lý cài đặt cấp tổ chức",
-    "comingSoon": "sẽ sớm có",
-    "ownerLine": "Chủ · {project}",
     "email": "Email",
     "phone": "Điện thoại",
     "displayName": "Tên hiển thị",
@@ -258,9 +247,6 @@
     "errorInvalidPhone": "Số điện thoại không hợp lệ",
     "errorPhoneTaken": "Số điện thoại này đã được dùng cho một tài khoản khác",
     "errorSaveFailed": "Không thể lưu hồ sơ của bạn. Vui lòng thử lại.",
-    "language": "Ngôn ngữ",
-    "languageDesc": "Ngôn ngữ giao diện Folio. Lưu giữ qua các phiên.",
-    "currentlySetTo": "Hiện đang dùng {lang}.",
     "users": {
       "title": "Người dùng & vai trò",
       "description": "Gán vai trò cho người dùng hiện có trên một hoặc nhiều dự án.",
@@ -310,8 +296,6 @@
       }
     },
     "project": "Dự án",
-    "about": "Giới thiệu",
-    "version": "Phiên bản",
     "companies": {
       "backToSettings": "Quay lại Cài đặt"
     },

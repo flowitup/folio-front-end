@@ -235,19 +235,8 @@
     }
   },
   "settings": {
-    "title": "Paramètres",
-    "description": "Adaptez Folio à votre image.",
     "profile": "Profil",
-    "team": "Équipe",
-    "billing": "Facturation",
     "notifications": "Notifications",
-    "preferences": "Préférences",
-    "profileDesc": "Gérez vos informations personnelles",
-    "notificationsDesc": "Contrôlez la réception des notifications",
-    "organization": "Organisation",
-    "organizationDesc": "Gérez les paramètres de l'organisation",
-    "comingSoon": "sera bientôt disponible",
-    "ownerLine": "Propriétaire · {project}",
     "email": "E-mail",
     "phone": "Téléphone",
     "displayName": "Nom affiché",
@@ -258,9 +247,6 @@
     "errorInvalidPhone": "Numéro de téléphone invalide",
     "errorPhoneTaken": "Ce numéro de téléphone est déjà utilisé par un autre compte",
     "errorSaveFailed": "Impossible d'enregistrer votre profil. Veuillez réessayer.",
-    "language": "Langue",
-    "languageDesc": "Langue de l'interface Folio. Conservée entre les sessions.",
-    "currentlySetTo": "Actuellement défini sur {lang}.",
     "users": {
       "title": "Utilisateurs et rôles",
       "description": "Attribuer des rôles aux utilisateurs existants sur un ou plusieurs projets.",
@@ -310,8 +296,6 @@
       }
     },
     "project": "Projet",
-    "about": "À propos",
-    "version": "Version",
     "companies": {
       "backToSettings": "Retour aux paramètres"
     },

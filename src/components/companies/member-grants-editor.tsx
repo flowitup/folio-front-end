@@ -120,6 +120,12 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
     return LABELED_PERMISSIONS.has(permission) ? t(`permission.${key}`) : permission;
   }
 
+  // The chip truncates, so the full text has to stay reachable on hover.
+  function chipTitle(row: MemberGrantRow): string {
+    const effect = row.effect === "deny" ? t("effectDeny") : t("effectGrant");
+    return `${effect}: ${permissionLabel(row.permission)} · ${projectName(row.project_id)}`;
+  }
+
   async function handleAdd() {
     if (!newPermission || isMutating) return;
     setIsMutating(true);
@@ -155,7 +161,9 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t("dialogTitle", { name: target.display_name ?? target.email })}</DialogTitle>
+          {/* pr-6 keeps a long name off the dialog's absolutely-positioned
+              close button, which the header reserves no room for. */}
+          <DialogTitle className="pr-6">{t("dialogTitle", { name: target.display_name ?? target.email })}</DialogTitle>
           <DialogDescription>{t("dialogDescription")}</DialogDescription>
         </DialogHeader>
 
@@ -164,7 +172,7 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
             <Loader2 size={18} className="animate-spin" style={{ color: "var(--muted)" }} />
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             {/* Existing rows as removable chips */}
             <div className="flex flex-wrap gap-2">
               {grants.length === 0 && (
@@ -175,20 +183,22 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
               {grants.map((row) => (
                 <span
                   key={`${row.permission}-${row.project_id ?? "company"}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px]"
+                  className="inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px]"
                   style={{
                     borderColor: row.effect === "deny" ? "var(--negative)" : "var(--line)",
                     color: row.effect === "deny" ? "var(--negative)" : "var(--ink)",
                   }}
                 >
-                  {row.effect === "deny" ? t("effectDeny") : t("effectGrant")}: {permissionLabel(row.permission)}
-                  <span style={{ color: "var(--muted)" }}>· {projectName(row.project_id)}</span>
+                  <span className="min-w-0 truncate" title={chipTitle(row)}>
+                    {row.effect === "deny" ? t("effectDeny") : t("effectGrant")}: {permissionLabel(row.permission)}
+                    <span style={{ color: "var(--muted)" }}> · {projectName(row.project_id)}</span>
+                  </span>
                   <button
                     type="button"
                     onClick={() => handleRemove(row)}
                     disabled={isMutating}
                     aria-label={t("remove")}
-                    className="ml-0.5"
+                    className="ml-0.5 shrink-0"
                   >
                     <X size={12} />
                   </button>
@@ -196,10 +206,15 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
               ))}
             </div>
 
-            {/* Add a new grant/deny */}
-            <div className="grid grid-cols-1 gap-2 rounded-lg border p-3 sm:grid-cols-[1fr_auto_1fr_auto]" style={{ borderColor: "var(--line)" }}>
+            {/* Add a new grant/deny. Two rows: three whitespace-nowrap
+                selects plus the button do not fit across a max-w-lg dialog,
+                and an overflowing child stretches the dialog's grid track so
+                the header text spills outside the card too. Every trigger is
+                w-full inside a minmax(0,…) track so long labels truncate
+                instead of widening the row. */}
+            <div className="space-y-2 rounded-lg border p-3" style={{ borderColor: "var(--line)" }}>
               <Select value={newPermission} onValueChange={setNewPermission} disabled={isMutating || customisable.length === 0}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder={t("permissionPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -210,32 +225,34 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={newEffect} onValueChange={(v) => setNewEffect(v as GrantEffect)} disabled={isMutating}>
-                <SelectTrigger className="w-[110px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="grant">{t("effectGrant")}</SelectItem>
-                  <SelectItem value="deny">{t("effectDeny")}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={newScope} onValueChange={setNewScope} disabled={isMutating}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={COMPANY_WIDE}>{t("scopeCompanyWide")}</SelectItem>
-                  {projects.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {projectDisplayName(p)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button size="sm" onClick={handleAdd} disabled={isMutating || !newPermission} className="gap-1">
-                {isMutating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
-                {t("add")}
-              </Button>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[7.5rem_minmax(0,1fr)_auto]">
+                <Select value={newEffect} onValueChange={(v) => setNewEffect(v as GrantEffect)} disabled={isMutating}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="grant">{t("effectGrant")}</SelectItem>
+                    <SelectItem value="deny">{t("effectDeny")}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={newScope} onValueChange={setNewScope} disabled={isMutating}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={COMPANY_WIDE}>{t("scopeCompanyWide")}</SelectItem>
+                    {projects.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {projectDisplayName(p)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAdd} disabled={isMutating || !newPermission} className="w-full gap-1 sm:w-auto">
+                  {isMutating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+                  {t("add")}
+                </Button>
+              </div>
             </div>
           </div>
         )}

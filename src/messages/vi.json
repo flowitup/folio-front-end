@@ -1625,22 +1625,22 @@
       "addCta": "Thêm công ty",
       "empty": {
         "title": "Chưa liên kết công ty nào",
-        "cta": "Dùng mã mời từ quản trị viên để liên kết công ty đầu tiên của bạn."
+        "cta": "Dùng mã công ty từ quản trị viên để liên kết công ty đầu tiên của bạn."
       },
       "card": {
         "primaryBadge": "Chính",
         "setPrimary": "Đặt làm chính",
         "detach": "Hủy liên kết",
-        "detachConfirm": "Xóa bạn khỏi \"{name}\"? Bạn sẽ mất quyền truy cập và cần mã mời mới để liên kết lại."
+        "detachConfirm": "Xóa bạn khỏi \"{name}\"? Bạn sẽ mất quyền truy cập và cần mã công ty từ quản trị viên để liên kết lại."
       }
     },
     "invite": {
       "dialogTitle": "Liên kết công ty",
-      "inputLabel": "Mã mời hoặc mã công ty",
-      "inputPlaceholder": "Dán mã mời hoặc nhập mã công ty 8 ký tự…",
+      "inputLabel": "Mã công ty",
+      "inputPlaceholder": "Nhập mã công ty 8 ký tự…",
       "attachCta": "Liên kết",
       "successToast": "Đã liên kết công ty thành công.",
-      "tokenInvalidError": "Mã mời không hợp lệ, đã hết hạn hoặc đã được sử dụng."
+      "tokenInvalidError": "Mã công ty không hợp lệ hoặc đã bị thu hồi."
     },
     "admin": {
       "title": "Tất cả công ty",
@@ -1659,7 +1659,7 @@
         "title": "Quản lý",
         "tabs": {
           "edit": "Chỉnh sửa",
-          "invites": "Mã mời",
+          "code": "Mã công ty",
           "users": "Người dùng liên kết",
           "delete": "Xóa",
           "payments": "Phương thức thanh toán"
@@ -1667,20 +1667,6 @@
         "edit": {
           "save": "Lưu thay đổi",
           "savedToast": "Đã lưu công ty."
-        },
-        "invites": {
-          "title": "Mã mời",
-          "description": "Tạo mã dùng một lần có hiệu lực 7 ngày. Chia sẻ với người dùng cần liên kết công ty này.",
-          "generate": "Tạo mã mời",
-          "regenerate": "Tạo lại mã mời",
-          "regenerateConfirm": "Đã có mã mời đang hoạt động. Tạo lại sẽ vô hiệu hóa mã cũ. Tiếp tục?",
-          "revoke": "Thu hồi mã đang hoạt động",
-          "revokeConfirm": "Thao tác này sẽ vô hiệu hóa ngay mã hiện tại. Người dùng chưa dùng mã sẽ cần mã mới.",
-          "revokedToast": "Đã thu hồi mã mời.",
-          "policyNote": "Mã dùng một lần và hết hạn sau 7 ngày. Mỗi công ty chỉ có một mã đang hoạt động.",
-          "roleLabel": "Vai trò",
-          "roleAdminOption": "Quản trị (quản lý hóa đơn)",
-          "roleMemberOption": "Thành viên"
         },
         "attached": {
           "nameEmail": "Tên / Email",
@@ -1784,15 +1770,6 @@
         "generic": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
       }
     },
-    "tokenGenerated": {
-      "dialogTitle": "Đã tạo mã mời",
-      "expiresLine": "Hết hạn: {expiresAt}",
-      "copyCta": "Sao chép mã",
-      "copiedToast": "Đã sao chép mã vào bộ nhớ tạm.",
-      "copyFailedToast": "Không thể sao chép vào bộ nhớ tạm.",
-      "oneShotWarning": "Hãy lưu mã này ngay — bạn sẽ không thấy lại sau khi đóng hộp thoại này.",
-      "autoCloseCountdown": "Tự động đóng sau {seconds}s"
-    },
     "picker": {
       "label": "Phát hành từ",
       "placeholder": "Chọn công ty",
@@ -1805,9 +1782,7 @@
     "errors": {
       "forbiddenAdminRequired": "Yêu cầu quyền quản trị viên.",
       "companyAlreadyAttached": "Bạn đã được liên kết với công ty này.",
-      "activeTokenExists": "Đã có mã mời đang hoạt động. Dùng regenerate=true để thay thế.",
       "conflict": "Đã xảy ra xung đột.",
-      "tokenInvalid": "Liên kết mời này không còn hợp lệ. Yêu cầu quản trị viên tạo liên kết mới.",
       "validation": "Lỗi xác thực dữ liệu.",
       "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
       "notFound": "Không tìm thấy tài nguyên yêu cầu.",

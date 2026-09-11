@@ -44,17 +44,6 @@ export interface MyCompany extends Company {
   role: CompanyRole;
 }
 
-/**
- * Response from POST /companies/<id>/invite-tokens.
- * The plaintext `token` is exposed ONLY at generation time — surface it once
- * via a dialog and do NOT log or store it.
- */
-export interface CompanyInviteTokenGenerated {
-  token: string;
-  token_id: string;
-  expires_at: string;
-}
-
 /** User attached to a company (returned by GET /companies/<id>/attached-users). */
 export interface AttachedUser {
   user_id: string;

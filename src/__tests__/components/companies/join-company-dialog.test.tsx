@@ -1,15 +1,15 @@
 /**
- * redeem-invite-token-dialog.test.tsx
+ * join-company-dialog.test.tsx
  *
  * Required regression test:
- *   test_redeem_invite_token_uniform_error_on_410
+ *   test_join_company_uniform_error_on_invalid_code
  *
- * Also covers: success path, already-attached (409).
+ * Also covers: success path, already-attached (409), submit guard.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import { RedeemInviteTokenDialog } from "@/components/companies/redeem-invite-token-dialog";
+import { JoinCompanyDialog } from "@/components/companies/join-company-dialog";
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -38,18 +38,13 @@ vi.mock("sonner", () => ({
 vi.mock(
   "@/app/[locale]/(app)/settings/_actions/companies-actions",
   () => ({
-    redeemInviteTokenAction: vi.fn(),
     joinCompanyByCodeAction: vi.fn(),
   })
 );
 
-import {
-  joinCompanyByCodeAction,
-  redeemInviteTokenAction,
-} from "@/app/[locale]/(app)/settings/_actions/companies-actions";
+import { joinCompanyByCodeAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import { toast } from "sonner";
 
-const mockRedeem = vi.mocked(redeemInviteTokenAction);
 const mockJoin = vi.mocked(joinCompanyByCodeAction);
 const mockToast = toast as unknown as {
   success: ReturnType<typeof vi.fn>;
@@ -81,7 +76,7 @@ const ATTACHED_COMPANY = {
 
 function renderDialog(onAttached = vi.fn(), onOpenChange = vi.fn()) {
   return render(
-    <RedeemInviteTokenDialog
+    <JoinCompanyDialog
       open={true}
       onOpenChange={onOpenChange}
       onAttached={onAttached}
@@ -90,20 +85,20 @@ function renderDialog(onAttached = vi.fn(), onOpenChange = vi.fn()) {
 }
 
 // ---------------------------------------------------------------------------
-// test_redeem_invite_token_uniform_error_on_410
+// test_join_company_uniform_error_on_invalid_code
 // ---------------------------------------------------------------------------
 
-describe("test_redeem_invite_token_uniform_error_on_410", () => {
+describe("test_join_company_uniform_error_on_invalid_code", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("token_invalid code → shows tokenInvalidError toast", async () => {
-    mockRedeem.mockResolvedValueOnce({
+  it("not_found code → shows uniform invalid-code toast", async () => {
+    mockJoin.mockResolvedValueOnce({
       ok: false,
-      error: { code: "token_invalid", message: "raw backend msg" },
+      error: { code: "not_found", message: "raw backend msg" },
     });
 
     renderDialog();
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "bad-token-xyz" } });
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "AAAA2222" } });
 
     await act(async () => {
       fireEvent.submit(screen.getByRole("textbox").closest("form")!);
@@ -114,38 +109,19 @@ describe("test_redeem_invite_token_uniform_error_on_410", () => {
       // must NOT surface the raw backend message — must be the i18n key text
       const [msg] = mockToast.error.mock.calls[0] as [string];
       expect(msg).not.toBe("raw backend msg");
-      // The translated message contains "invalid" or "expired"
-      expect(msg.toLowerCase()).toMatch(/invalid|expired|used/);
+      // The translated message describes an invalid or revoked code
+      expect(msg.toLowerCase()).toMatch(/invalid|revoked/);
     });
   });
 
-  it("not_found code → same uniform toast (not raw message)", async () => {
-    mockRedeem.mockResolvedValueOnce({
-      ok: false,
-      error: { code: "not_found", message: "Not found" },
-    });
-
-    renderDialog();
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "missing" } });
-
-    await act(async () => {
-      fireEvent.submit(screen.getByRole("textbox").closest("form")!);
-    });
-
-    await waitFor(() => {
-      const [msg] = mockToast.error.mock.calls[0] as [string];
-      expect(msg.toLowerCase()).toMatch(/invalid|expired|used/);
-    });
-  });
-
-  it("validation code → same uniform toast", async () => {
-    mockRedeem.mockResolvedValueOnce({
+  it("validation code (local length guard) → same uniform toast", async () => {
+    mockJoin.mockResolvedValueOnce({
       ok: false,
       error: { code: "validation", message: "Validation error" },
     });
 
     renderDialog();
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "bad" } });
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "AB" } });
 
     await act(async () => {
       fireEvent.submit(screen.getByRole("textbox").closest("form")!);
@@ -153,15 +129,15 @@ describe("test_redeem_invite_token_uniform_error_on_410", () => {
 
     await waitFor(() => {
       const [msg] = mockToast.error.mock.calls[0] as [string];
-      expect(msg.toLowerCase()).toMatch(/invalid|expired|used/);
+      expect(msg.toLowerCase()).toMatch(/invalid|revoked/);
     });
   });
 
   it("thrown exception → uniform toast (not rethrown)", async () => {
-    mockRedeem.mockRejectedValueOnce(new Error("Network failure"));
+    mockJoin.mockRejectedValueOnce(new Error("Network failure"));
 
     renderDialog();
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "tok" } });
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "AAAA2222" } });
 
     await act(async () => {
       fireEvent.submit(screen.getByRole("textbox").closest("form")!);
@@ -177,32 +153,31 @@ describe("test_redeem_invite_token_uniform_error_on_410", () => {
 // Success path
 // ---------------------------------------------------------------------------
 
-describe("RedeemInviteTokenDialog — success path", () => {
+describe("JoinCompanyDialog — success path", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("calls onAttached and closes dialog on success", async () => {
-    mockRedeem.mockResolvedValueOnce({ ok: true, data: ATTACHED_COMPANY });
+  it("routes the trimmed input to joinCompanyByCodeAction and calls onAttached", async () => {
+    mockJoin.mockResolvedValueOnce({ ok: true, data: ATTACHED_COMPANY });
     const onAttached = vi.fn();
     const onOpenChange = vi.fn();
 
     render(
-      <RedeemInviteTokenDialog
+      <JoinCompanyDialog
         open={true}
         onOpenChange={onOpenChange}
         onAttached={onAttached}
       />
     );
 
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "valid-token" } });
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: " uynv-lygl " } });
 
     await act(async () => {
       fireEvent.submit(screen.getByRole("textbox").closest("form")!);
     });
 
     await waitFor(() => {
-      expect(mockRedeem).toHaveBeenCalledWith("valid-token");
+      expect(mockJoin).toHaveBeenCalledWith("uynv-lygl");
       expect(onAttached).toHaveBeenCalledOnce();
-      expect(mockJoin).not.toHaveBeenCalled();
       expect(mockToast.success).toHaveBeenCalledOnce();
     });
   });
@@ -212,17 +187,17 @@ describe("RedeemInviteTokenDialog — success path", () => {
 // Already-attached (409 company_already_attached — surfaces raw message)
 // ---------------------------------------------------------------------------
 
-describe("RedeemInviteTokenDialog — already-attached error", () => {
+describe("JoinCompanyDialog — already-attached error", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("non-token error code → surfaces result.error.message directly", async () => {
-    mockRedeem.mockResolvedValueOnce({
+  it("non-invalid-code error → surfaces result.error.message directly", async () => {
+    mockJoin.mockResolvedValueOnce({
       ok: false,
       error: { code: "company_already_attached", message: "Already a member." },
     });
 
     renderDialog();
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "tok" } });
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "AAAA2222" } });
 
     await act(async () => {
       fireEvent.submit(screen.getByRole("textbox").closest("form")!);
@@ -236,21 +211,22 @@ describe("RedeemInviteTokenDialog — already-attached error", () => {
 
 // ---------------------------------------------------------------------------
 // H-3 chosen behavior: rate_limited / unauthorized surface distinct messages
-// (policy: only 410-family codes get the uniform toast; others are actionable)
+// (policy: only "code doesn't work" codes get the uniform toast; others are
+// actionable — preserved from the pre-code-only dialog)
 // ---------------------------------------------------------------------------
 
-describe("RedeemInviteTokenDialog — H-3 non-uniform error codes", () => {
+describe("JoinCompanyDialog — non-uniform error codes", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("rate_limited code → surfaces rate_limited message (not uniform toast)", async () => {
     const msg = "Too many requests. Please wait and try again.";
-    mockRedeem.mockResolvedValueOnce({
+    mockJoin.mockResolvedValueOnce({
       ok: false,
       error: { code: "rate_limited", message: msg },
     });
 
     renderDialog();
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "tok" } });
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "AAAA2222" } });
 
     await act(async () => {
       fireEvent.submit(screen.getByRole("textbox").closest("form")!);
@@ -263,13 +239,13 @@ describe("RedeemInviteTokenDialog — H-3 non-uniform error codes", () => {
 
   it("unauthorized code → surfaces session-expired message (not uniform toast)", async () => {
     const msg = "Session expired. Please log in again.";
-    mockRedeem.mockResolvedValueOnce({
+    mockJoin.mockResolvedValueOnce({
       ok: false,
       error: { code: "unauthorized", message: msg },
     });
 
     renderDialog();
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "tok" } });
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "AAAA2222" } });
 
     await act(async () => {
       fireEvent.submit(screen.getByRole("textbox").closest("form")!);
@@ -285,63 +261,17 @@ describe("RedeemInviteTokenDialog — H-3 non-uniform error codes", () => {
 // Submit button disabled when input empty
 // ---------------------------------------------------------------------------
 
-describe("RedeemInviteTokenDialog — submit guard", () => {
-  it("Attach button is disabled when token input is empty", () => {
+describe("JoinCompanyDialog — submit guard", () => {
+  it("Attach button is disabled when code input is empty", () => {
     renderDialog();
     const submitBtn = screen.getByRole("button", { name: /attach/i });
     expect((submitBtn as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("Attach button is enabled when token has non-whitespace content", () => {
-    renderDialog();
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "tok" } });
-    const submitBtn = screen.getByRole("button", { name: /attach/i });
-    expect((submitBtn as HTMLButtonElement).disabled).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Company join code (8 characters) goes through joinCompanyByCodeAction
-// ---------------------------------------------------------------------------
-
-describe("RedeemInviteTokenDialog — company code path", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("routes an 8-character code (dash + lowercase tolerated) to joinCompanyByCodeAction", async () => {
-    mockJoin.mockResolvedValueOnce({ ok: true, data: ATTACHED_COMPANY });
-    const onAttached = vi.fn();
-
-    renderDialog(onAttached);
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: " uynv-lygl " } });
-
-    await act(async () => {
-      fireEvent.submit(screen.getByRole("textbox").closest("form")!);
-    });
-
-    await waitFor(() => {
-      expect(mockJoin).toHaveBeenCalledWith("uynv-lygl");
-      expect(mockRedeem).not.toHaveBeenCalled();
-      expect(onAttached).toHaveBeenCalledOnce();
-      expect(mockToast.success).toHaveBeenCalledOnce();
-    });
-  });
-
-  it("unknown code (not_found) → uniform invalid toast", async () => {
-    mockJoin.mockResolvedValueOnce({
-      ok: false,
-      error: { code: "not_found", message: "Unknown or revoked company code" },
-    });
-
+  it("Attach button is enabled when code has non-whitespace content", () => {
     renderDialog();
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "AAAA2222" } });
-
-    await act(async () => {
-      fireEvent.submit(screen.getByRole("textbox").closest("form")!);
-    });
-
-    await waitFor(() => {
-      const [msg] = mockToast.error.mock.calls[0] as [string];
-      expect(msg.toLowerCase()).toMatch(/invalid|expired|used/);
-    });
+    const submitBtn = screen.getByRole("button", { name: /attach/i });
+    expect((submitBtn as HTMLButtonElement).disabled).toBe(false);
   });
 });

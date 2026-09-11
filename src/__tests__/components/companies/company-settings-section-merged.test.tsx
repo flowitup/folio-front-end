@@ -131,8 +131,8 @@ vi.mock("@/components/companies/company-directory-table", () => ({
   ),
 }));
 
-vi.mock("@/components/companies/redeem-invite-token-dialog", () => ({
-  RedeemInviteTokenDialog: () => <div data-testid="redeem-dialog" />,
+vi.mock("@/components/companies/join-company-dialog", () => ({
+  JoinCompanyDialog: () => <div data-testid="join-company-dialog" />,
 }));
 
 import { CompanySettingsSection } from "@/components/companies/company-settings-section";

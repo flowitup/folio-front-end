@@ -7,14 +7,8 @@
  * union: { ok: true, data } | { ok: false, error: { code, message } }.
  *
  * Special-case error codes surfaced to callers:
- * - 'token_invalid'               — expired / already-redeemed / wrong token (uniform 410)
  * - 'company_already_attached'    — user already belongs to this company (409)
  * - 'forbidden_admin_required'    — admin-only endpoint called by non-admin (403)
- * - 'active_token_exists'         — POST invite-tokens without regenerate=true (409)
- *
- * IMPORTANT: generateInviteTokenAction returns { ok: true, data } where
- * data.token is the plaintext invite token, exposed exactly once.
- * The caller MUST display it immediately and MUST NOT log or store it.
  */
 
 import { getTranslations } from "next-intl/server";
@@ -28,11 +22,6 @@ import {
   detachCompany,
 } from "@/lib/api/companies/companies";
 import {
-  generateInviteToken,
-  revokeInviteToken,
-  redeemInviteToken,
-} from "@/lib/api/companies/invite-tokens";
-import {
   fetchAttachedUsers,
   bootAttachedUser,
   setMemberRole,
@@ -44,7 +33,7 @@ import {
 } from "@/lib/api/companies/join-code";
 import { normalizeJoinCode } from "@/lib/companies/join-code";
 import { getSession } from "@/lib/auth/session";
-import type { Company, MyCompany, CompanyInviteTokenGenerated, AttachedUser, CompanyRole } from "@/types/companies";
+import type { Company, MyCompany, AttachedUser, CompanyRole } from "@/types/companies";
 import type { CreateCompanyPayload, UpdateCompanyPayload } from "@/lib/api/companies/companies";
 
 // ---------------------------------------------------------------------------
@@ -120,15 +109,7 @@ async function classifyBackendError(
     if (reason === "company_already_attached") {
       return { code: "company_already_attached", message: t("companyAlreadyAttached") };
     }
-    if (reason === "active_token_exists") {
-      return { code: "active_token_exists", message: t("activeTokenExists") };
-    }
     return { code: "conflict", message: t("conflict") };
-  }
-
-  // 410 — token invalid (expired, already redeemed, or wrong) — uniform message
-  if (status === 410) {
-    return { code: "token_invalid", message: t("tokenInvalid") };
   }
 
   if (status === 400 || status === 422) {
@@ -235,53 +216,6 @@ export async function detachCompanyAction(id: string): Promise<ActionResult<void
   try {
     await detachCompany(id);
     return { ok: true, data: undefined };
-  } catch (err) {
-    return { ok: false, error: await classifyBackendError(err) };
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Invite token actions
-// ---------------------------------------------------------------------------
-
-/**
- * Generate (or regenerate) an invite token.
- * CALLER RESPONSIBILITY: surface data.token once via a dialog — do NOT log it.
- */
-export async function generateInviteTokenAction(
-  companyId: string,
-  opts?: { regenerate?: boolean; role?: "admin" | "member" }
-): Promise<ActionResult<CompanyInviteTokenGenerated>> {
-  const auth = await requireSession();
-  if (!auth.ok) return auth;
-  if (!isUuid(companyId)) return invalid();
-  try {
-    const data = await generateInviteToken(companyId, opts);
-    return { ok: true, data };
-  } catch (err) {
-    return { ok: false, error: await classifyBackendError(err) };
-  }
-}
-
-export async function revokeInviteTokenAction(companyId: string): Promise<ActionResult<void>> {
-  const auth = await requireSession();
-  if (!auth.ok) return auth;
-  if (!isUuid(companyId)) return invalid();
-  try {
-    await revokeInviteToken(companyId);
-    return { ok: true, data: undefined };
-  } catch (err) {
-    return { ok: false, error: await classifyBackendError(err) };
-  }
-}
-
-export async function redeemInviteTokenAction(token: string): Promise<ActionResult<MyCompany>> {
-  const auth = await requireSession();
-  if (!auth.ok) return auth;
-  if (!token || typeof token !== "string" || token.length > 512) return invalid();
-  try {
-    const data = await redeemInviteToken(token);
-    return { ok: true, data };
   } catch (err) {
     return { ok: false, error: await classifyBackendError(err) };
   }

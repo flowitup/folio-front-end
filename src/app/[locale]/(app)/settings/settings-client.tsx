@@ -82,7 +82,7 @@ export function SettingsClient({ projects }: Props) {
     "profile",
     ...(selectedProject ? ["project" as const] : []),
     // One Company tab for everyone: it carries the caller's own attachments
-    // (identity card, primary, detach, attach-by-token) and, for a company
+    // (identity card, primary, detach, attach-by-code) and, for a company
     // admin only, that company's self-service tools.
     "company",
     "payment-methods",

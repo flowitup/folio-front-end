@@ -1625,22 +1625,22 @@
       "addCta": "Add company",
       "empty": {
         "title": "No companies attached yet",
-        "cta": "Use an invite token from your admin to attach your first company."
+        "cta": "Use a company code from your admin to attach your first company."
       },
       "card": {
         "primaryBadge": "Primary",
         "setPrimary": "Set as primary",
         "detach": "Detach",
-        "detachConfirm": "Remove yourself from \"{name}\"? You will lose access and will need a new invite token to re-attach."
+        "detachConfirm": "Remove yourself from \"{name}\"? You will lose access and will need a company code from your admin to re-attach."
       }
     },
     "invite": {
       "dialogTitle": "Attach a company",
-      "inputLabel": "Invite token or company code",
-      "inputPlaceholder": "Paste the token or type the 8-character company code…",
+      "inputLabel": "Company code",
+      "inputPlaceholder": "Type the 8-character company code…",
       "attachCta": "Attach",
       "successToast": "Company attached successfully.",
-      "tokenInvalidError": "Invite token is invalid, expired, or already used."
+      "tokenInvalidError": "This company code is invalid or has been revoked."
     },
     "admin": {
       "title": "All Companies",
@@ -1659,7 +1659,7 @@
         "title": "Manage",
         "tabs": {
           "edit": "Edit",
-          "invites": "Invite tokens",
+          "code": "Company code",
           "users": "Attached users",
           "delete": "Delete",
           "payments": "Payment methods"
@@ -1667,20 +1667,6 @@
         "edit": {
           "save": "Save changes",
           "savedToast": "Company saved."
-        },
-        "invites": {
-          "title": "Invite token",
-          "description": "Generate a single-use token valid for 7 days. Share it with the user who should attach this company.",
-          "generate": "Generate invite",
-          "regenerate": "Regenerate token",
-          "regenerateConfirm": "An active invite token already exists. Regenerating will invalidate it. Continue?",
-          "revoke": "Revoke active token",
-          "revokeConfirm": "This will immediately invalidate the current token. Any user who has not yet redeemed it will need a new one.",
-          "revokedToast": "Invite token revoked.",
-          "policyNote": "Tokens are single-use and expire after 7 days. Only one active token per company.",
-          "roleLabel": "Role",
-          "roleAdminOption": "Admin (can manage billing)",
-          "roleMemberOption": "Member"
         },
         "attached": {
           "nameEmail": "Name / Email",
@@ -1784,15 +1770,6 @@
         "generic": "An unexpected error occurred. Please try again."
       }
     },
-    "tokenGenerated": {
-      "dialogTitle": "Invite token generated",
-      "expiresLine": "Expires: {expiresAt}",
-      "copyCta": "Copy token",
-      "copiedToast": "Token copied to clipboard.",
-      "copyFailedToast": "Could not copy to clipboard.",
-      "oneShotWarning": "Save this token now — you will not see it again after closing this dialog.",
-      "autoCloseCountdown": "Auto-closes in {seconds}s"
-    },
     "picker": {
       "label": "Issued from",
       "placeholder": "Select a company",
@@ -1805,9 +1782,7 @@
     "errors": {
       "forbiddenAdminRequired": "Admin access is required.",
       "companyAlreadyAttached": "You are already attached to this company.",
-      "activeTokenExists": "An active invite token already exists. Use regenerate=true to replace it.",
       "conflict": "A conflict occurred.",
-      "tokenInvalid": "This invite link is no longer valid. Ask an admin to generate a new one.",
       "validation": "Validation error.",
       "unauthorized": "Session expired. Please log in again.",
       "notFound": "The requested resource was not found.",

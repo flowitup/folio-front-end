@@ -4,7 +4,7 @@
  *
  * A join code is a reusable 8-character code (superadmin-managed) that any signed-in
  * user can type to join the company as a member; it stays valid until revoked or
- * renewed. It complements the single-use invite tokens in invite-tokens.ts.
+ * renewed. It is the only mechanism for attaching a person to a company.
  */
 
 import "server-only";

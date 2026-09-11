@@ -14,7 +14,7 @@
  * fireEvent.click for buttons. Heavy async tests use { timeout: 15000 }.
  *
  * Sonner mock uses the `as unknown as` cast pattern from bulk-add-form.test.tsx.
- * next-intl resolves real en.json keys via the redeem-invite-token-dialog pattern.
+ * next-intl resolves real en.json keys via the join-company-dialog pattern.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";

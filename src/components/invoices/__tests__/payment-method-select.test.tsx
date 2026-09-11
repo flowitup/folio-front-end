@@ -15,7 +15,7 @@
  * in waitFor. Heavy tests carry { timeout: 15000 }.
  *
  * Sonner and next-intl mocks mirror bulk-add-form.test.tsx and
- * redeem-invite-token-dialog.test.tsx patterns.
+ * join-company-dialog.test.tsx patterns.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";

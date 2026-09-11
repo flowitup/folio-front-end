@@ -2229,5 +2229,18 @@
       "unsupportedType": "Seules les photos JPEG, PNG et WebP sont acceptées.",
       "forbidden": "Vous n'êtes pas membre de ce canal."
     }
+  },
+  "help": {
+    "title": "Comment fonctionne Folio",
+    "subtitle": "Tous les processus, étape par étape.",
+    "back": "Tous les sujets",
+    "steps": "Étapes",
+    "whoCanDoIt": "Qui peut le faire",
+    "gotchas": "Bon à savoir",
+    "aria": {
+      "open": "Ouvrir le guide des processus",
+      "close": "Fermer le guide"
+    },
+    "loading": "Chargement du guide…"
   }
 }

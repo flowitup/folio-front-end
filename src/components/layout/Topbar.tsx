@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { Sun, Moon, Plus, LogOut, ChevronDown, Check } from "lucide-react";
+import { HelpSheet } from "@/components/help/help-sheet";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
@@ -239,6 +240,7 @@ export function Topbar() {
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-1 lg:gap-2">
+        <HelpSheet />
         <NotificationsBell />
         <button
           type="button"

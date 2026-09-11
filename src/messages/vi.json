@@ -2229,5 +2229,18 @@
       "unsupportedType": "Chỉ hỗ trợ ảnh JPEG, PNG và WebP.",
       "forbidden": "Bạn không phải thành viên của kênh này."
     }
+  },
+  "help": {
+    "title": "Folio hoạt động thế nào",
+    "subtitle": "Mọi quy trình, từng bước một.",
+    "back": "Tất cả chủ đề",
+    "steps": "Các bước",
+    "whoCanDoIt": "Ai có thể làm",
+    "gotchas": "Cần lưu ý",
+    "aria": {
+      "open": "Mở hướng dẫn quy trình",
+      "close": "Đóng hướng dẫn"
+    },
+    "loading": "Đang tải hướng dẫn…"
   }
 }

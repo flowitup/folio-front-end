@@ -13,7 +13,10 @@ import { NotificationPreferencesSection } from "@/components/notifications/notif
 import { ProfileForm } from "@/components/settings/profile-form";
 import { isPlatformOps } from "@/lib/auth/permissions";
 import type { ProjectSummary } from "@/lib/api/projects-server";
-import pkg from "../../../../../package.json";
+
+// Inlined by next.config.ts at build time. Importing package.json here
+// instead would ship the whole dependency manifest to the browser.
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION;
 
 /**
  * Every entry here renders a working surface. "Team" and "Billing" used to sit
@@ -70,6 +73,11 @@ export function SettingsClient({ projects }: Props) {
     initialActiveFromHash(isSuperadmin)
   );
 
+  // A #project deep link from someone with no project selected has nothing to
+  // render, and the placeholder card that used to cover that case is gone.
+  const resolved: SectionKey =
+    active === "project" && !selectedProject ? "profile" : active;
+
   const sectionKeys: SectionKey[] = [
     "profile",
     ...(selectedProject ? ["project" as const] : []),
@@ -104,7 +112,7 @@ export function SettingsClient({ projects }: Props) {
                 type="button"
                 onClick={() => setActive(key)}
                 className={`flex-shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors lg:w-full lg:rounded-lg lg:border-transparent lg:text-left ${
-                  active === key
+                  resolved === key
                     ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] lg:border-transparent lg:bg-[var(--paper-2)] lg:text-[var(--ink)]"
                     : "border-[var(--line)] text-[var(--muted)] hover:text-[var(--ink)] lg:border-transparent"
                 }`}
@@ -118,38 +126,40 @@ export function SettingsClient({ projects }: Props) {
 
       {/* Content */}
       <div className="col-span-12 space-y-5 lg:col-span-9">
-        {active === "profile" && <ProfileForm />}
+        {resolved === "profile" && <ProfileForm />}
 
-        {active === "project" && selectedProject && <InvoicePrefixSection />}
+        {resolved === "project" && <InvoicePrefixSection />}
 
-        {active === "company" && (
+        {resolved === "company" && (
           <div className="space-y-5">
             <CompanySettingsSection />
             {isSuperadmin && <AdminCompaniesSection />}
           </div>
         )}
 
-        {active === "payment-methods" && (
+        {resolved === "payment-methods" && (
           <section className="folio-card p-7">
             <PaymentMethodsSettingsSection />
           </section>
         )}
 
-        {active === "notifications" && (
+        {resolved === "notifications" && (
           <section className="folio-card p-7">
             <NotificationPreferencesSection />
           </section>
         )}
 
-        {active === "users" && (
+        {resolved === "users" && isSuperadmin && (
           <section className="folio-card p-7">
             <UsersSection projects={projects} />
           </section>
         )}
 
-        <p className="pt-1 text-[11px]" style={{ color: "var(--muted)" }}>
-          Folio v{pkg.version}
-        </p>
+        {APP_VERSION && (
+          <p className="pt-1 text-[11px]" style={{ color: "var(--muted)" }}>
+            Folio v{APP_VERSION}
+          </p>
+        )}
       </div>
     </div>
   );

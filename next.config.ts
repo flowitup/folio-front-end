@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import pkg from "./package.json";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
@@ -125,6 +126,13 @@ const analysisReportHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // The app version, read here at build time and inlined as a bare string.
+  // Importing package.json from a client component instead would ship the
+  // whole manifest — every dependency and its version range — into a public
+  // static chunk, which is a free CVE-matching list for anyone who fetches it.
+  env: {
+    NEXT_PUBLIC_APP_VERSION: pkg.version,
+  },
   // The login backdrop is the only image that goes through the optimizer.
   // AVIF is listed first because the board is flat illustration art, where it
   // lands well under the WebP of the same quality; Next negotiates per request

@@ -7,7 +7,7 @@
  * union: { ok: true, data } | { ok: false, error: { code, message } }.
  *
  * Special-case error codes:
- * - "company_profile_missing"      (HTTP 409) — redirect to /settings#company-profile
+ * - "company_profile_missing"      (HTTP 409) — redirect to /settings#company
  * - "company_no_longer_attached"   (HTTP 409) — user's company access revoked mid-flow;
  *                                               phase 08 resets the company picker on this code.
  *
@@ -99,7 +99,9 @@ function classifyBackendError(err: unknown): { code: string; message: string } {
   const reason = typeof body["reason"] === "string" ? body["reason"] : "";
   const bodyMsg = typeof body["message"] === "string" ? body["message"] : "";
 
-  // 409 with reason: "company_profile_missing" — caller should redirect to /settings#company-profile
+  // 409 with reason: "company_profile_missing" — caller should redirect to
+  // /settings#company, which is where the issuer details are edited now
+  // (#company-profile was the old standalone form and resolves nowhere).
   if (status === 409 && reason === "company_profile_missing") {
     return { code: "company_profile_missing", message: "Company profile is required before creating billing documents." };
   }

@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { clientIpHeader } from "@/lib/api/client-ip";
 import { env } from "@/lib/config/env";
 import type { User, AuthSession } from "./types";
 
@@ -42,6 +43,7 @@ export const getSession = cache(async (): Promise<AuthSession | null> => {
     const response = await fetch(`${env.apiBaseUrl}/auth/me`, {
       headers: {
         Cookie: `${ACCESS_TOKEN_COOKIE}=${token}`,
+        ...(await clientIpHeader()),
       },
       cache: "no-store",
     });

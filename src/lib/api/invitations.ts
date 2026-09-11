@@ -7,6 +7,7 @@
 
 import { env } from "@/lib/config/env";
 import { sessionAuthHeader } from "@/lib/api/auth-header";
+import { clientIpHeader } from "@/lib/api/client-ip";
 import type { User } from "@/lib/auth/types";
 import type {
   VerifyInviteResponse,
@@ -133,7 +134,7 @@ export async function verifyInvite(
       `${env.apiBaseUrl}/invitations/verify/${encodeURIComponent(token)}`,
       {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await clientIpHeader()) },
         cache: "no-store",
       }
     );
@@ -179,7 +180,7 @@ export async function acceptInvite(
   try {
     response = await fetch(`${env.apiBaseUrl}/invitations/accept`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await clientIpHeader()) },
       body: JSON.stringify(payload),
       cache: "no-store",
     });
@@ -224,7 +225,7 @@ export async function requestInviteCode(payload: RequestInviteCodePayload): Prom
   try {
     response = await fetch(`${env.apiBaseUrl}/invitations/accept/request-code`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await clientIpHeader()) },
       body: JSON.stringify(payload),
       cache: "no-store",
     });

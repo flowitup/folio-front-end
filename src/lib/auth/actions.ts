@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { env } from "@/lib/config/env";
+import { clientIpHeader } from "@/lib/api/client-ip";
 import type { User, AcceptInvitePayload, RequestInviteCodePayload } from "./types";
 import { acceptInvite, requestInviteCode } from "@/lib/api/invitations";
 import { setForwardedCookies } from "./forward-cookies";
@@ -32,7 +33,10 @@ export async function logout(): Promise<never> {
   try {
     await fetch(`${env.apiBaseUrl}/auth/logout`, {
       method: "POST",
-      headers: token ? { Cookie: `access_token_cookie=${token}` } : {},
+      headers: {
+        ...(token ? { Cookie: `access_token_cookie=${token}` } : {}),
+        ...(await clientIpHeader()),
+      },
     });
   } catch {
     // Continue even if backend call fails

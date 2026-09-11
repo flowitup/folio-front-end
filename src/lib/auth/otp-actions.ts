@@ -1,6 +1,7 @@
 "use server";
 
 import { env } from "@/lib/config/env";
+import { clientIpHeader } from "@/lib/api/client-ip";
 import type { AuthTokenResponse, User } from "./types";
 import { setForwardedCookies } from "./forward-cookies";
 import { normalizeFrenchPhone } from "./phone-number";
@@ -42,7 +43,7 @@ export async function requestOtpAction(phone: string): Promise<RequestOtpResult>
   try {
     const response = await fetch(`${env.apiBaseUrl}/auth/otp/request`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await clientIpHeader()) },
       body: JSON.stringify({ phone: frenchPhone }),
     });
 
@@ -90,7 +91,7 @@ export async function verifyOtpAction(phone: string, code: string): Promise<Veri
   try {
     const response = await fetch(`${env.apiBaseUrl}/auth/otp/verify`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await clientIpHeader()) },
       body: JSON.stringify({ phone: frenchPhone, code: trimmedCode }),
     });
 

@@ -28,7 +28,6 @@ import {
 } from "@/lib/api/member-grants";
 import {
   assignProjectMember,
-  unassignProjectMember,
   type ProjectAssignmentRole,
 } from "@/lib/api/assignments";
 
@@ -249,21 +248,6 @@ export async function assignProjectMemberAction(
   if (role !== "manager" && role !== "member") return invalid();
   try {
     await assignProjectMember(projectId, userId, role);
-    return { ok: true, data: undefined };
-  } catch (err) {
-    return { ok: false, error: await classifyError(err) };
-  }
-}
-
-export async function unassignProjectMemberAction(
-  projectId: string,
-  userId: string
-): Promise<ActionResult<void>> {
-  const auth = await requireSession();
-  if (!auth.ok) return auth;
-  if (!isUuid(projectId) || !isUuid(userId)) return invalid();
-  try {
-    await unassignProjectMember(projectId, userId);
     return { ok: true, data: undefined };
   } catch (err) {
     return { ok: false, error: await classifyError(err) };

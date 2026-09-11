@@ -16,8 +16,8 @@
  *   pattern in billing-flow.spec.ts, companies-flow.spec.ts, etc.
  *
  * Required env vars (when TEST_E2E_PAYMENT_METHODS=1):
- *   ADMIN_EMAIL        — seeded admin user (default: admin@example.com)
- *   ADMIN_PASSWORD     — (default: password123)
+ *   ADMIN_PHONE        — seeded admin user's sign-in number (default: +33612345678)
+ *   OTP_TEST_CODE      — the backend's non-production code bypass (default: 424242)
  *   E2E_COMPANY_ID     — UUID of a company the admin belongs to
  *   E2E_PROJECT_ID     — UUID of a project under that company with ≥1 invoice
  *   E2E_INVOICE_ID     — UUID of a specific invoice to use for selection test

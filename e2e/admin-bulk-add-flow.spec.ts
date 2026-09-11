@@ -6,8 +6,8 @@
  *   - Backend running on http://localhost:5000 with:
  *       EMAIL_PROVIDER=inmemory
  *       TESTING=True
- *   - Seeded admin user (ADMIN_EMAIL / ADMIN_PASSWORD env vars,
- *     defaults: admin@example.com / password123)
+ *   - Seeded admin user, signed in by phone + SMS code (ADMIN_PHONE env var,
+ *     default: +33612345678) with the backend's OTP_TEST_CODE set
  *   - At least one non-admin user and at least 2 projects in the database
  *   - The admin account must have the superadmin role (*:* permission)
  *

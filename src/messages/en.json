@@ -2315,5 +2315,18 @@
       "unsupportedType": "Only JPEG, PNG and WebP photos are supported.",
       "forbidden": "You are not a member of this channel."
     }
+  },
+  "help": {
+    "title": "How Folio works",
+    "subtitle": "Every workflow, step by step.",
+    "back": "All topics",
+    "steps": "Steps",
+    "whoCanDoIt": "Who can do this",
+    "gotchas": "Good to know",
+    "aria": {
+      "open": "Open the workflow guide",
+      "close": "Close the guide"
+    },
+    "loading": "Loading the guide…"
   }
 }

@@ -125,6 +125,19 @@ const analysisReportHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // The login backdrop is the only image that goes through the optimizer.
+  // AVIF is listed first because the board is flat illustration art, where it
+  // lands well under the WebP of the same quality; Next negotiates per request
+  // and walks down this list for browsers that do not accept AVIF.
+  images: {
+    formats: ["image/avif", "image/webp"],
+    // Next rejects any quality not listed here. 60 is what the login backdrop
+    // asks for — it sits under a 60-94% scrim, so it does not need the full
+    // default. 75 stays listed because that is the default an <Image> without
+    // an explicit `quality` requests, and dropping it would 400 the next one
+    // somebody adds.
+    qualities: [60, 75],
+  },
   turbopack: {
     root: __dirname,
   },

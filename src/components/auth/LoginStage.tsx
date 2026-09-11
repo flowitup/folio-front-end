@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { FolioLogo } from "@/components/folio-logo";
 import type { LoginMode } from "@/lib/auth/types";
@@ -42,14 +43,23 @@ export function LoginStage({ loginMode }: LoginStageProps) {
       {/* The board: a site photograph on raised ink, then the scrim that darkens
           it towards the copy column and lets it show through behind the card. */}
       <div className="absolute inset-0" style={{ background: "var(--ink-2)" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- decorative
-            full-bleed backdrop, sized by CSS; next/image would add a wrapper
-            and a layout pass for no benefit on a single static asset. */}
-        <img
+        {/* `fill` takes the image out of flow and pins it to this box, so the
+            scrim stacked over it still needs no layout pass — the reason the
+            bare <img> was here before. What it buys in exchange is the part a
+            plain tag cannot do: the optimizer negotiates AVIF/WebP and hands
+            each device a width off the srcset, instead of one desktop-sized
+            JPEG for everyone. `priority` preloads it, since the board is the
+            largest thing this page paints. */}
+        <Image
           src="/login-hero.jpg"
           alt=""
           aria-hidden="true"
-          className="h-full w-full object-cover"
+          fill
+          priority
+          fetchPriority="high"
+          quality={60}
+          sizes="100vw"
+          className="object-cover"
         />
       </div>
       <div

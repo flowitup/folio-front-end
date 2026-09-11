@@ -13,7 +13,8 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 
 import { HelpSheet } from "../help-sheet"
-import { helpCatalogueEn } from "@/content/help/en"
+import { helpCatalogueEn, helpChromeEn } from "@/content/help/en"
+import { helpCatalogueFr, helpChromeFr } from "@/content/help/fr"
 
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
@@ -82,7 +83,7 @@ describe("HelpSheet", () => {
       screen.queryByTestId(`help-topic-${firstTopic.id}`)
     ).not.toBeInTheDocument()
 
-    await user.click(screen.getByText("help.back"))
+    await user.click(screen.getByText(helpChromeEn.back))
 
     expect(screen.getByTestId(`help-topic-${firstTopic.id}`)).toBeInTheDocument()
     expect(screen.queryByText(firstTopic.steps[0])).not.toBeInTheDocument()
@@ -95,9 +96,9 @@ describe("HelpSheet", () => {
     await user.click(screen.getByLabelText("help.aria.open"))
     await user.click(await screen.findByTestId(`help-topic-${firstTopic.id}`))
 
-    expect(screen.getByText("help.back").closest("button")).toHaveFocus()
+    expect(screen.getByText(helpChromeEn.back).closest("button")).toHaveFocus()
 
-    await user.click(screen.getByText("help.back"))
+    await user.click(screen.getByText(helpChromeEn.back))
 
     expect(screen.getByTestId(`help-topic-${firstTopic.id}`)).toHaveFocus()
   })
@@ -107,7 +108,7 @@ describe("HelpSheet", () => {
     [
       "the close button",
       async (user: ReturnType<typeof userEvent.setup>) =>
-        user.click(screen.getByText("help.aria.close")),
+        user.click(screen.getByText(helpChromeEn.close)),
     ],
   ])("reopens on the index after being dismissed with %s", async (_name, dismiss) => {
     const user = userEvent.setup()
@@ -139,5 +140,51 @@ describe("HelpSheet", () => {
     ).not.toBeInTheDocument()
     // What they can reach is still there.
     expect(screen.getByTestId("help-topic-planning")).toBeInTheDocument()
+  })
+
+  it("reads the guide in another language without touching the app's", async () => {
+    const user = userEvent.setup()
+    render(<HelpSheet />)
+
+    await user.click(screen.getByLabelText("help.aria.open"))
+    await screen.findByTestId(`help-topic-${firstTopic.id}`)
+    // Starts in the app's language.
+    expect(screen.getByText(helpChromeEn.subtitle)).toBeInTheDocument()
+
+    await user.click(screen.getByTestId("help-language-fr"))
+
+    // Panel labels and topic titles both follow the choice.
+    expect(await screen.findByText(helpChromeFr.subtitle)).toBeInTheDocument()
+    expect(screen.getByText(helpCatalogueFr[0].title)).toBeInTheDocument()
+    expect(screen.queryByText(helpCatalogueEn[0].title)).not.toBeInTheDocument()
+    // The trigger belongs to the app shell and keeps the app's language.
+    expect(screen.getByLabelText("help.aria.open")).toBeInTheDocument()
+  })
+
+  it("keeps you on the same topic when the guide language changes", async () => {
+    const user = userEvent.setup()
+    render(<HelpSheet />)
+
+    await user.click(screen.getByLabelText("help.aria.open"))
+    await user.click(await screen.findByTestId("help-topic-planning"))
+
+    const english = helpCatalogueEn.find((topic) => topic.id === "planning")!
+    expect(screen.getByText(english.steps[0])).toBeInTheDocument()
+
+    await user.click(screen.getByTestId("help-language-fr"))
+
+    const french = helpCatalogueFr.find((topic) => topic.id === "planning")!
+    expect(await screen.findByText(french.steps[0])).toBeInTheDocument()
+  })
+
+  it("marks the active language for assistive technology", async () => {
+    const user = userEvent.setup()
+    render(<HelpSheet />)
+
+    await user.click(screen.getByLabelText("help.aria.open"))
+    await screen.findByTestId(`help-topic-${firstTopic.id}`)
+
+    expect(screen.getByTestId("help-language-en")).toHaveAttribute("aria-pressed", "true")
+    expect(screen.getByTestId("help-language-fr")).toHaveAttribute("aria-pressed", "false")
   })
 })

@@ -1,4 +1,4 @@
-import type { HelpCatalogue } from "./types";
+import type { HelpCatalogue, HelpChrome } from "./types";
 
 /**
  * Hướng dẫn quy trình tiếng Việt cho ứng dụng web. Bản dịch bám sát `en.ts`: cùng các chủ đề,
@@ -403,3 +403,14 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Tất cả mọi người. Các kênh bạn thấy đi theo quyền truy cập công ty và những công trình bạn tham gia. Trò chuyện có thể bị tắt trên một máy chủ, khi đó ứng dụng sẽ báo cho bạn.",
   },
 ];
+
+/** The panel's own labels in this language. */
+export const helpChromeVi: HelpChrome = {
+  title: "Folio hoạt động thế nào",
+  subtitle: "Mọi quy trình, từng bước một.",
+  back: "Tất cả chủ đề",
+  steps: "Các bước",
+  whoCanDoIt: "Ai có thể làm",
+  gotchas: "Cần lưu ý",
+  close: "Đóng hướng dẫn",
+};

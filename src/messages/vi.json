@@ -2231,16 +2231,9 @@
     }
   },
   "help": {
-    "title": "Folio hoạt động thế nào",
-    "subtitle": "Mọi quy trình, từng bước một.",
-    "back": "Tất cả chủ đề",
-    "steps": "Các bước",
-    "whoCanDoIt": "Ai có thể làm",
-    "gotchas": "Cần lưu ý",
+    "loading": "Đang tải hướng dẫn…",
     "aria": {
-      "open": "Mở hướng dẫn quy trình",
-      "close": "Đóng hướng dẫn"
-    },
-    "loading": "Đang tải hướng dẫn…"
+      "open": "Mở hướng dẫn quy trình"
+    }
   }
 }

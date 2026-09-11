@@ -6,9 +6,9 @@
 
 import { describe, expect, it } from "vitest"
 
-import { helpCatalogueEn } from "../en"
-import { helpCatalogueFr } from "../fr"
-import { helpCatalogueVi } from "../vi"
+import { helpCatalogueEn, helpChromeEn } from "../en"
+import { helpCatalogueFr, helpChromeFr } from "../fr"
+import { helpCatalogueVi, helpChromeVi } from "../vi"
 import type { HelpCatalogue } from "../types"
 
 const TRANSLATIONS: [string, HelpCatalogue][] = [
@@ -75,6 +75,19 @@ describe("help catalogue", () => {
       expect(copied).toEqual([])
     }
   )
+
+  // The panel's own labels moved out of the message files so the reader can pick the guide's
+  // language on its own; the message-parity suite no longer covers them.
+  it.each([
+    ["fr", helpChromeFr],
+    ["vi", helpChromeVi],
+  ])("%s labels the panel with the same keys as en, none blank or copied", (_locale, chrome) => {
+    expect(Object.keys(chrome).sort()).toEqual(Object.keys(helpChromeEn).sort())
+    for (const [key, value] of Object.entries(chrome)) {
+      expect(value.trim(), key).not.toBe("")
+      expect(value, key).not.toBe(helpChromeEn[key as keyof typeof helpChromeEn])
+    }
+  })
 
   it.each(ALL)("%s leaves no text blank", (_locale, catalogue) => {
     for (const topic of catalogue) {

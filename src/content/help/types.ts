@@ -18,3 +18,18 @@ export type HelpTopic = {
 }
 
 export type HelpCatalogue = HelpTopic[]
+
+/**
+ * The panel's own labels. They live here rather than in the message files because the reader can
+ * choose the guide's language independently of the app's, and a French guide under English
+ * headings reads worse than either. They ride in the same per-locale chunk as the catalogue.
+ */
+export type HelpChrome = {
+  title: string
+  subtitle: string
+  back: string
+  steps: string
+  whoCanDoIt: string
+  gotchas: string
+  close: string
+}

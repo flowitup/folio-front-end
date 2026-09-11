@@ -8,7 +8,7 @@
  * content waits for it rather than reading synchronously.
  */
 
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 
@@ -20,9 +20,31 @@ vi.mock("next-intl", () => ({
   useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
 }))
 
+// The panel narrows the catalogue to what this reader's navigation shows, so it reads the same
+// two contexts the sidebar does. Default here is the widest reader; one test narrows it.
+let mockCompanyRole = "admin"
+let mockProjectPermissions: string[] = ["project:update"]
+
+vi.mock("@/context/AuthContext", () => ({
+  useAuth: () => ({
+    user: { permissions: [], companies: [{ id: "c1", role: mockCompanyRole }] },
+  }),
+}))
+
+vi.mock("@/context/ProjectContext", () => ({
+  useProject: () => ({
+    selectedProject: { id: "p1", my_permissions: mockProjectPermissions },
+  }),
+}))
+
 const [firstTopic] = helpCatalogueEn
 
 describe("HelpSheet", () => {
+  beforeEach(() => {
+    mockCompanyRole = "admin"
+    mockProjectPermissions = ["project:update"]
+  })
+
   it("labels the trigger for assistive technology", () => {
     render(<HelpSheet />)
     expect(screen.getByLabelText("help.aria.open")).toBeInTheDocument()
@@ -99,5 +121,23 @@ describe("HelpSheet", () => {
     expect(
       await screen.findByTestId(`help-topic-${firstTopic.id}`)
     ).toBeInTheDocument()
+  })
+
+  it("leaves out the topics this reader's navigation hides", async () => {
+    mockCompanyRole = "member"
+    mockProjectPermissions = ["project:read"]
+    const user = userEvent.setup()
+    render(<HelpSheet />)
+
+    await user.click(screen.getByLabelText("help.aria.open"))
+    await screen.findByTestId("help-topic-getting-started")
+
+    // Documents needs project:update; billing is company-admin only.
+    expect(screen.queryByTestId("help-topic-documents")).not.toBeInTheDocument()
+    expect(
+      screen.queryByTestId("help-topic-billing-devis")
+    ).not.toBeInTheDocument()
+    // What they can reach is still there.
+    expect(screen.getByTestId("help-topic-planning")).toBeInTheDocument()
   })
 })

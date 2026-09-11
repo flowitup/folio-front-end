@@ -3,8 +3,14 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { env } from "@/lib/config/env";
-import type { LoginCredentials, LoginResponse, User, AcceptInvitePayload } from "./types";
-import { acceptInvite } from "@/lib/api/invitations";
+import type {
+  LoginCredentials,
+  LoginResponse,
+  User,
+  AcceptInvitePayload,
+  RequestInviteCodePayload,
+} from "./types";
+import { acceptInvite, requestInviteCode } from "@/lib/api/invitations";
 import { setForwardedCookies } from "./forward-cookies";
 import { getCurrentUser } from "./session";
 
@@ -104,34 +110,119 @@ export async function logout(): Promise<never> {
  * Calls backend, forwards Set-Cookie headers, returns the created user.
  * Caller performs client-side redirect after success.
  */
-export async function acceptInviteAction(
+/** Error kinds the invitation forms map to a translated message. */
+export type InviteFlowError =
+  | "invalid_phone"
+  | "phone_registered"
+  | "invalid_code"
+  | "throttled"
+  | "not_found"
+  | "expired"
+  | "revoked"
+  | "accepted"
+  | "unknown";
+
+/**
+ * Map a thrown invitations-API error onto a discriminator the form can translate.
+ *
+ * The backend sends `reason` on 409/410 (see the invitations routes), which is
+ * what separates "this phone already has an account" from "this invitation
+ * expired" — both of which the user can actually act on, differently.
+ */
+function classifyInviteError(error: unknown): InviteFlowError {
+  const err = error as { status?: number; reason?: string } | null;
+  const reason = err?.reason;
+  if (reason === "phone_registered") return "phone_registered";
+  if (reason === "expired" || reason === "revoked" || reason === "accepted") return reason;
+  switch (err?.status) {
+    case 400:
+      return "invalid_phone";
+    case 401:
+      return "invalid_code";
+    case 404:
+      return "not_found";
+    case 429:
+      return "throttled";
+    default:
+      return "unknown";
+  }
+}
+
+/**
+ * Text a sign-in code to the phone number an invitee is claiming.
+ *
+ * The invitation token is the authorisation here — the invitee has no session
+ * yet — so this stays a public call, rate-limited server-side.
+ */
+export async function requestInviteCodeAction(
   token: string,
-  name: string,
-  password: string
-): Promise<{ success: boolean; error?: string; user?: User }> {
-  // Server-side input validation (don't trust client)
+  phone: string
+): Promise<{ success: boolean; error?: InviteFlowError }> {
   if (!token || typeof token !== "string" || token.trim().length === 0) {
-    return { success: false, error: "Invalid invitation token" };
+    return { success: false, error: "not_found" };
   }
-  if (!name || typeof name !== "string" || name.trim().length < 1 || name.trim().length > 100) {
-    return { success: false, error: "Name must be between 1 and 100 characters" };
-  }
-  if (!password || typeof password !== "string" || password.length < 8 || password.length > 128) {
-    return { success: false, error: "Password must be between 8 and 128 characters" };
+  if (!phone || typeof phone !== "string") {
+    return { success: false, error: "invalid_phone" };
   }
 
   try {
-    const payload: AcceptInvitePayload = { token, name: name.trim(), password };
+    const payload: RequestInviteCodePayload = { token, phone };
+    await requestInviteCode(payload);
+    return { success: true };
+  } catch (error) {
+    console.error(
+      "Request invite code error:",
+      error instanceof Error ? error.message : "unknown"
+    );
+    return { success: false, error: classifyInviteError(error) };
+  }
+}
+
+/**
+ * Accept an invitation with a verified phone number.
+ *
+ * The invitee proves the phone by SMS code rather than choosing a password —
+ * phone + code is the only way into Folio, so the account they end up with must
+ * be one they can actually sign back into.
+ */
+export async function acceptInviteAction(
+  token: string,
+  name: string,
+  phone: string,
+  code: string
+): Promise<{ success: boolean; error?: InviteFlowError; user?: User }> {
+  // Server-side input validation (don't trust client)
+  if (!token || typeof token !== "string" || token.trim().length === 0) {
+    return { success: false, error: "not_found" };
+  }
+  if (!name || typeof name !== "string" || name.trim().length < 1 || name.trim().length > 100) {
+    return { success: false, error: "unknown" };
+  }
+  if (!phone || typeof phone !== "string") {
+    return { success: false, error: "invalid_phone" };
+  }
+  if (!/^\d{6}$/.test(code?.trim() ?? "")) {
+    return { success: false, error: "invalid_code" };
+  }
+
+  try {
+    const payload: AcceptInvitePayload = {
+      token,
+      name: name.trim(),
+      phone,
+      code: code.trim(),
+    };
     const { user, setCookieHeaders } = await acceptInvite(payload);
 
     await setForwardedCookies(setCookieHeaders);
 
     return { success: true, user };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "An unexpected error occurred";
-    console.error("Accept invite error:", message);
-    return { success: false, error: message };
+    console.error(
+      "Accept invite error:",
+      error instanceof Error ? error.message : "unknown"
+    );
+    return { success: false, error: classifyInviteError(error) };
   }
 }
 

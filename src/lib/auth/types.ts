@@ -58,7 +58,15 @@ export interface VerifyInviteResponse {
 export interface AcceptInvitePayload {
   token: string;
   name: string;
-  password: string;
+  /** E.164 French number the invitee is claiming as their sign-in identity. */
+  phone: string;
+  /** 6-digit SMS code texted to `phone` by POST /invitations/accept/request-code. */
+  code: string;
+}
+
+export interface RequestInviteCodePayload {
+  token: string;
+  phone: string;
 }
 
 /** Which sign-in method(s) this deployment offers, per `GET /auth/config`. */

@@ -8,7 +8,11 @@
 import { env } from "@/lib/config/env";
 import { sessionAuthHeader } from "@/lib/api/auth-header";
 import type { User } from "@/lib/auth/types";
-import type { VerifyInviteResponse, AcceptInvitePayload } from "@/lib/auth/types";
+import type {
+  VerifyInviteResponse,
+  AcceptInvitePayload,
+  RequestInviteCodePayload,
+} from "@/lib/auth/types";
 
 // ---- Admin invitation types ----
 
@@ -185,15 +189,19 @@ export async function acceptInvite(
 
   if (!response.ok) {
     let message = `Failed to accept invitation (HTTP ${response.status})`;
+    let reason: string | undefined;
     try {
       const body = await response.json();
       if (body?.message) message = body.message;
       else if (body?.error) message = body.error;
+      // 409/410 carry a `reason` discriminator the UI maps to a specific message.
+      if (typeof body?.reason === "string") reason = body.reason;
     } catch {
       // ignore parse error
     }
-    const err = new Error(message) as Error & { status: number };
+    const err = new Error(message) as Error & { status: number; reason?: string };
     err.status = response.status;
+    err.reason = reason;
     throw err;
   }
 
@@ -201,4 +209,43 @@ export async function acceptInvite(
   const setCookieHeaders = response.headers.getSetCookie?.() ?? [];
 
   return { user, setCookieHeaders };
+}
+
+/**
+ * Ask the backend to text a sign-in code to the phone an invitee is claiming
+ * (`POST /invitations/accept/request-code`).
+ *
+ * Public: the invitation token, not a session, is the authorisation. Throws on
+ * any non-2xx, carrying `status` and the backend's `reason` discriminator so the
+ * form can tell "already registered" apart from "expired invitation".
+ */
+export async function requestInviteCode(payload: RequestInviteCodePayload): Promise<void> {
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiBaseUrl}/invitations/accept/request-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new Error(`Network error requesting invitation code: ${String(err)}`);
+  }
+
+  if (!response.ok) {
+    let message = `Failed to request invitation code (HTTP ${response.status})`;
+    let reason: string | undefined;
+    try {
+      const body = await response.json();
+      if (body?.message) message = body.message;
+      else if (body?.error) message = body.error;
+      if (typeof body?.reason === "string") reason = body.reason;
+    } catch {
+      // ignore parse error
+    }
+    const err = new Error(message) as Error & { status: number; reason?: string };
+    err.status = response.status;
+    err.reason = reason;
+    throw err;
+  }
 }

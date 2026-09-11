@@ -8,7 +8,7 @@
  * Also pins:
  * - dashboard has NO topbar action button (overview is read-only)
  * - the dead Search button is gone
- * - the theme button toggles light <-> dark via ThemeContext
+ * - the theme toggle is gone (Folio ships a single cream/ink theme)
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -47,16 +47,6 @@ vi.mock("@/components/notifications/notifications-bell", () => ({
 
 vi.mock("@/components/language-switcher", () => ({
   LanguageSwitcher: () => <div data-testid="language-switcher" />,
-}));
-
-const mockSetTheme = vi.fn();
-let mockResolvedTheme: "light" | "dark" = "light";
-vi.mock("@/context/ThemeContext", () => ({
-  useTheme: () => ({
-    theme: mockResolvedTheme,
-    resolvedTheme: mockResolvedTheme,
-    setTheme: mockSetTheme,
-  }),
 }));
 
 const mockUseAuth = vi.fn();
@@ -105,15 +95,13 @@ function setup(opts: {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockResolvedTheme = "light";
 });
 
 describe("Topbar action button wiring", () => {
   it("dashboard: action button is NOT rendered (overview is read-only)", () => {
     setup({ pathname: "/en/dashboard" });
     render(<Topbar />);
-    // No action button should be visible — only theme + bell + avatar.
-    // The theme button is identified by aria-label topbar.theme.
+    // No action button should be visible — only help + bell + avatar.
     const actionLabel = screen.queryByText("topbar.newEntry");
     expect(actionLabel).toBeNull();
   });
@@ -199,22 +187,10 @@ describe("Topbar dead-button removal", () => {
     expect(screen.queryByLabelText("topbar.search")).toBeNull();
   });
 
-  it("theme button toggles to dark when current is light", async () => {
-    mockResolvedTheme = "light";
+  it("theme toggle is removed entirely", () => {
     setup({ pathname: "/en/dashboard" });
-    const user = userEvent.setup();
     render(<Topbar />);
-    await user.click(screen.getByLabelText("topbar.theme"));
-    expect(mockSetTheme).toHaveBeenCalledWith("dark");
-  });
-
-  it("theme button toggles to light when current is dark", async () => {
-    mockResolvedTheme = "dark";
-    setup({ pathname: "/en/dashboard" });
-    const user = userEvent.setup();
-    render(<Topbar />);
-    await user.click(screen.getByLabelText("topbar.theme"));
-    expect(mockSetTheme).toHaveBeenCalledWith("light");
+    expect(screen.queryByLabelText("topbar.theme")).toBeNull();
   });
 
   it("renders the dedicated top-right language switcher control", () => {

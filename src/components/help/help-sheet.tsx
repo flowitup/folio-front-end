@@ -6,7 +6,7 @@
  * steps in place, so the reader never navigates away from the screen they had the question about.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ChevronRight, CircleHelp } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -18,12 +18,17 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { loadHelpCatalogue, type HelpCatalogue } from "@/content/help";
+import { visibleHelpTopics } from "@/content/help/visibility";
+import { useAuth } from "@/context/AuthContext";
+import { useProject } from "@/context/ProjectContext";
 
 export function HelpSheet() {
   const t = useTranslations("help");
   const locale = useLocale();
+  const { user } = useAuth();
+  const { selectedProject } = useProject();
   const [isOpen, setIsOpen] = useState(false);
-  const [topics, setTopics] = useState<HelpCatalogue>([]);
+  const [catalogue, setCatalogue] = useState<HelpCatalogue>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const backRef = useRef<HTMLButtonElement>(null);
   const returnToId = useRef<string | null>(null);
@@ -33,13 +38,25 @@ export function HelpSheet() {
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
-    void loadHelpCatalogue(locale).then((catalogue) => {
-      if (!cancelled) setTopics(catalogue);
+    void loadHelpCatalogue(locale).then((loaded) => {
+      if (!cancelled) setCatalogue(loaded);
     });
     return () => {
       cancelled = true;
     };
   }, [isOpen, locale]);
+
+  // The guide lists what this reader's navigation lists: a topic whose area the sidebar hides
+  // would otherwise walk them through a screen they cannot open.
+  const topics = useMemo(
+    () =>
+      visibleHelpTopics(catalogue, {
+        permissions: user?.permissions,
+        companies: user?.companies,
+        projectPermissions: selectedProject?.my_permissions,
+      }),
+    [catalogue, user?.permissions, user?.companies, selectedProject?.my_permissions]
+  );
 
   const selected = topics.find((topic) => topic.id === selectedId) ?? null;
 
@@ -159,7 +176,7 @@ export function HelpSheet() {
                 </section>
               )}
             </article>
-          ) : topics.length === 0 ? (
+          ) : catalogue.length === 0 ? (
             <p
               className="px-4 py-4 text-sm"
               style={{ color: "var(--muted-foreground)" }}

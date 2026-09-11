@@ -1,32 +1,36 @@
 /**
- * PhoneLoginForm — phone + SMS-code sign-in flow.
+ * Phone + SMS-code sign-in, mounted through LoginStage because the flow it
+ * drives is shared by the copy column and the paper card.
  *
- * Covers: send-code step calling requestOtpAction and moving to the code
- * step with the number shown in E.164, non-French numbers refused before any
- * request, throttled request errors staying on step 1, code submission calling
- * loginWithPhone, invalid-code errors staying on step 2, and "Change number"
- * returning to step 1.
+ * Covers: normalising the typed number into E.164, refusing a number from
+ * another country before a code is ever requested, request errors staying on
+ * step 1, the six boxes auto-submitting on the sixth digit, a rejected code
+ * keeping the digits, the resend countdown gating a second request, and
+ * "Change number" returning to step 1.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { PhoneLoginForm } from "../PhoneLoginForm";
+import { LoginStage } from "../LoginStage";
 
 const TRANSLATIONS: Record<string, string> = {
   phoneLabel: "Phone number",
-  phonePlaceholder: "06 12 34 56 78",
-  phoneHint: "French numbers only, e.g. 06 12 34 56 78",
+  phonePlaceholder: "6 12 34 56 78",
+  phoneHint: "French numbers only — without the leading 0. A 6-digit code by SMS.",
   sendCode: "Send code",
   sendingCode: "Sending code...",
-  codeSentTo: "Code sent to {phone}",
-  codeLabel: "Code",
-  codePlaceholder: "123456",
+  codeSentTo: "Code sent to <mono>{phone}</mono>.",
+  codeLabel: "SMS code",
+  codeDigit: "Digit {position} of {total}",
+  codeExpires: "Expires in {minutes} minutes",
   verifyCode: "Sign in",
   verifyingCode: "Signing in...",
+  verified: "Verified",
   resendCode: "Resend code",
-  resendIn: "Resend in {seconds}s",
+  resendIn: "Resend in {seconds} s",
   changeNumber: "Change number",
+  stepBadge: "Step {current} / {total}",
   errorPhoneRequired: "Please enter your phone number",
   errorInvalidPhone: "Enter a French phone number",
   errorCodeRequired: "Please enter the 6-digit code",
@@ -36,14 +40,24 @@ const TRANSLATIONS: Record<string, string> = {
   errorPhoneLoginUnavailable: "Phone sign-in is not available on this server.",
 };
 
+function fill(key: string, params?: Record<string, unknown>): string {
+  const template = TRANSLATIONS[key] ?? key;
+  if (!params) return template;
+  return Object.entries(params).reduce(
+    (acc, [name, value]) => acc.replace(`{${name}}`, String(value)),
+    template
+  );
+}
+
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string, params?: Record<string, unknown>) => {
-    const template = TRANSLATIONS[key] ?? key;
-    if (!params) return template;
-    return Object.entries(params).reduce(
-      (acc, [k, v]) => acc.replace(`{${k}}`, String(v)),
-      template
-    );
+  useTranslations: () => {
+    const translate = (key: string, params?: Record<string, unknown>) => fill(key, params);
+    // `t.rich` renders tag markers as components; the plain text it wraps is
+    // what the assertions need, so the mock just strips the markers.
+    return Object.assign(translate, {
+      rich: (key: string, params?: Record<string, unknown>) =>
+        fill(key, params).replace(/<\/?[a-z]+>/g, ""),
+    });
   },
 }));
 
@@ -55,122 +69,220 @@ vi.mock("@/lib/auth/otp-actions", () => ({
 const mockLoginWithPhone = vi.fn();
 vi.mock("@/context/AuthContext", () => ({
   useAuth: () => ({
+    login: vi.fn(),
     loginWithPhone: (...args: unknown[]) => mockLoginWithPhone(...args),
     isLoading: false,
   }),
 }));
 
-describe("PhoneLoginForm", () => {
+/** Types `digits` across the six boxes the way a person does, one per box. */
+async function typeCode(user: ReturnType<typeof userEvent.setup>, digits: string) {
+  for (const [index, digit] of [...digits].entries()) {
+    await user.type(screen.getByTestId(`login-code-${index}`), digit);
+  }
+}
+
+async function sendCodeTo(user: ReturnType<typeof userEvent.setup>, national: string) {
+  await user.type(screen.getByLabelText("Phone number"), national);
+  await user.click(screen.getByTestId("login-send-code"));
+  await waitFor(() => expect(screen.getByTestId("login-code-0")).toBeInTheDocument());
+}
+
+describe("Phone sign-in", () => {
   beforeEach(() => {
     mockRequestOtpAction.mockReset();
     mockLoginWithPhone.mockReset();
   });
 
-  it("sends the code and moves to the code step showing the number", async () => {
+  it("normalises the typed number and moves to the code step", async () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     const user = userEvent.setup();
-    render(<PhoneLoginForm />);
+    render(<LoginStage loginMode="phone" />);
 
-    await user.type(screen.getByLabelText("Phone number"), "0612345678");
-    await user.click(screen.getByRole("button", { name: /Send code/i }));
+    // Typed as the French write it; the +33 the field states replaces the 0.
+    await sendCodeTo(user, "0612345678");
 
-    await waitFor(() => {
-      expect(mockRequestOtpAction).toHaveBeenCalledWith("+33612345678");
-    });
-    expect(screen.getByText("Code sent to +33612345678")).toBeInTheDocument();
-    expect(screen.getByLabelText("Code")).toBeInTheDocument();
+    expect(mockRequestOtpAction).toHaveBeenCalledWith("+33612345678");
+    expect(screen.getByText("Code sent to +33612345678.")).toBeInTheDocument();
   });
 
-  it("refuses a non-French number without asking for a code", async () => {
-    const user = userEvent.setup();
-    render(<PhoneLoginForm />);
+  it("states the dial code the number is read with", () => {
+    render(<LoginStage loginMode="phone" />);
 
-    await user.type(screen.getByLabelText("Phone number"), "+84912345678");
-    await user.click(screen.getByRole("button", { name: /Send code/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText("Enter a French phone number")).toBeInTheDocument();
-    });
-    expect(mockRequestOtpAction).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Code")).toBeNull();
+    expect(screen.getByTestId("login-country")).toHaveTextContent("FR");
+    expect(screen.getByTestId("login-country")).toHaveTextContent("+33");
   });
 
   it("tells the user up front that only French numbers work", () => {
-    render(<PhoneLoginForm />);
+    render(<LoginStage loginMode="phone" />);
 
     expect(
-      screen.getByText("French numbers only, e.g. 06 12 34 56 78")
+      screen.getByText("French numbers only — without the leading 0. A 6-digit code by SMS.")
     ).toBeInTheDocument();
+  });
+
+  it("refuses a number from another country without asking for a code", async () => {
+    const user = userEvent.setup();
+    render(<LoginStage loginMode="phone" />);
+
+    await user.type(screen.getByLabelText("Phone number"), "+84912345678");
+
+    // Nothing to send: the button never enables for a non-French number.
+    expect(screen.getByTestId("login-send-code")).toBeDisabled();
+    expect(mockRequestOtpAction).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("login-code-0")).toBeNull();
+  });
+
+  it("refuses a number that is too short to be French", async () => {
+    const user = userEvent.setup();
+    render(<LoginStage loginMode="phone" />);
+
+    await user.type(screen.getByLabelText("Phone number"), "0612");
+
+    expect(screen.getByTestId("login-send-code")).toBeDisabled();
+    expect(mockRequestOtpAction).not.toHaveBeenCalled();
   });
 
   it("shows the throttled error and stays on the phone step", async () => {
     mockRequestOtpAction.mockResolvedValue({ success: false, error: "throttled" });
     const user = userEvent.setup();
-    render(<PhoneLoginForm />);
+    render(<LoginStage loginMode="phone" />);
 
     await user.type(screen.getByLabelText("Phone number"), "0612345678");
-    await user.click(screen.getByRole("button", { name: /Send code/i }));
+    await user.click(screen.getByTestId("login-send-code"));
 
     await waitFor(() => {
       expect(
         screen.getByText("Too many requests. Wait a minute and try again.")
       ).toBeInTheDocument();
     });
-    // Still on step 1 — phone input is present, code input is not.
+    // Still on step 1 — phone input is present, the code boxes are not.
     expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Code")).toBeNull();
+    expect(screen.queryByTestId("login-code-0")).toBeNull();
   });
 
-  it("submits a 6-digit code via loginWithPhone(phone, code)", async () => {
+  it("signs in on its own once the sixth digit is typed", async () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     mockLoginWithPhone.mockResolvedValue({ success: true });
     const user = userEvent.setup();
-    render(<PhoneLoginForm />);
+    render(<LoginStage loginMode="phone" />);
 
-    await user.type(screen.getByLabelText("Phone number"), "0612345678");
-    await user.click(screen.getByRole("button", { name: /Send code/i }));
-    await waitFor(() => expect(screen.getByLabelText("Code")).toBeInTheDocument());
-
-    await user.type(screen.getByLabelText("Code"), "123456");
-    await user.click(screen.getByRole("button", { name: /Sign in/i }));
+    await sendCodeTo(user, "0612345678");
+    await typeCode(user, "123456");
 
     await waitFor(() => {
       expect(mockLoginWithPhone).toHaveBeenCalledWith("+33612345678", "123456");
     });
+    expect(await screen.findByTestId("login-verified")).toBeInTheDocument();
   });
 
-  it("shows an invalid-code error and stays on the code step", async () => {
+  it("spreads a pasted code across the boxes", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    mockLoginWithPhone.mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+    render(<LoginStage loginMode="phone" />);
+
+    await sendCodeTo(user, "0612345678");
+    await user.click(screen.getByTestId("login-code-0"));
+    await user.paste("482917");
+
+    await waitFor(() => {
+      expect(mockLoginWithPhone).toHaveBeenCalledWith("+33612345678", "482917");
+    });
+    expect(screen.getByTestId("login-code-5")).toHaveValue("7");
+  });
+
+  it("accepts the very number the field's own placeholder shows", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    const user = userEvent.setup();
+    render(<LoginStage loginMode="phone" />);
+
+    // Regression: the field states `FR +33` and offers a national example, so
+    // typing exactly that must reach the backend rather than leaving the button
+    // disabled with nothing explaining why.
+    await sendCodeTo(user, TRANSLATIONS.phonePlaceholder);
+
+    expect(mockRequestOtpAction).toHaveBeenCalledWith("+33612345678");
+  });
+
+  it("does not resubmit while the rejected digits are unchanged", async () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     mockLoginWithPhone.mockResolvedValue({ success: false, error: "invalid_code" });
     const user = userEvent.setup();
-    render(<PhoneLoginForm />);
+    render(<LoginStage loginMode="phone" />);
 
-    await user.type(screen.getByLabelText("Phone number"), "0612345678");
-    await user.click(screen.getByRole("button", { name: /Send code/i }));
-    await waitFor(() => expect(screen.getByLabelText("Code")).toBeInTheDocument());
+    await sendCodeTo(user, "0612345678");
+    await typeCode(user, "000000");
+    await waitFor(() => expect(mockLoginWithPhone).toHaveBeenCalledTimes(1));
 
-    await user.type(screen.getByLabelText("Code"), "000000");
-    await user.click(screen.getByRole("button", { name: /Sign in/i }));
+    // Retyping over the full row must not spend another of the five attempts
+    // per keystroke: the user corrects the code, then submits once.
+    await user.type(screen.getByTestId("login-code-0"), "4");
+    expect(mockLoginWithPhone).toHaveBeenCalledTimes(1);
+
+    // The identical rejected code, on the other hand, is refused outright.
+    await user.click(screen.getByTestId("login-code-0"));
+    expect(screen.getByTestId("login-verify")).toBeDisabled();
+  });
+
+  it("clears the row when a new code is sent", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    mockLoginWithPhone.mockResolvedValue({ success: false, error: "invalid_code" });
+    const user = userEvent.setup();
+    render(<LoginStage loginMode="phone" />);
+
+    await sendCodeTo(user, "0612345678");
+    await typeCode(user, "000000");
+    await waitFor(() => expect(screen.getByText("Wrong or expired code")).toBeInTheDocument());
+
+    // Back to step 1 and on to a different number, which the countdown does not
+    // gate: the code that arrives is new, so the old digits must be gone.
+    await user.click(screen.getByTestId("login-change-number"));
+    await user.clear(screen.getByLabelText("Phone number"));
+    await sendCodeTo(user, "0612345679");
+
+    expect(screen.getByTestId("login-code-0")).toHaveValue("");
+    expect(screen.getByTestId("login-verify")).toBeDisabled();
+  });
+
+  it("keeps the digits when the code is rejected", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    mockLoginWithPhone.mockResolvedValue({ success: false, error: "invalid_code" });
+    const user = userEvent.setup();
+    render(<LoginStage loginMode="phone" />);
+
+    await sendCodeTo(user, "0612345678");
+    await typeCode(user, "000000");
 
     await waitFor(() => {
       expect(screen.getByText("Wrong or expired code")).toBeInTheDocument();
     });
-    expect(screen.getByLabelText("Code")).toBeInTheDocument();
+    expect(screen.getByTestId("login-code-0")).toHaveValue("0");
+    expect(screen.getByTestId("login-code-5")).toHaveValue("0");
   });
 
-  it('"Change number" returns to the phone step', async () => {
+  it("gates a second request behind the resend countdown", async () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     const user = userEvent.setup();
-    render(<PhoneLoginForm />);
+    render(<LoginStage loginMode="phone" />);
 
-    await user.type(screen.getByLabelText("Phone number"), "0612345678");
-    await user.click(screen.getByRole("button", { name: /Send code/i }));
-    await waitFor(() => expect(screen.getByLabelText("Code")).toBeInTheDocument());
+    await sendCodeTo(user, "0612345678");
 
-    await user.click(screen.getByRole("button", { name: /Change number/i }));
+    const resend = screen.getByTestId("login-resend");
+    expect(resend).toBeDisabled();
+    expect(resend).toHaveTextContent("Resend in 60 s");
+    expect(mockRequestOtpAction).toHaveBeenCalledTimes(1);
+  });
 
-    expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Code")).toBeNull();
+  it('"Change number" returns to the phone step, keeping the number', async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    const user = userEvent.setup();
+    render(<LoginStage loginMode="phone" />);
+
+    await sendCodeTo(user, "0612345678");
+    await user.click(screen.getByTestId("login-change-number"));
+
+    expect(screen.getByLabelText("Phone number")).toHaveValue("0612345678");
+    expect(screen.queryByTestId("login-code-0")).toBeNull();
   });
 });

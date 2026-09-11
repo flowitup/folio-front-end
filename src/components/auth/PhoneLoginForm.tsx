@@ -1,262 +1,193 @@
 "use client";
 
-import { useState, useEffect, type FormEvent, type ReactNode } from "react";
+import { type FormEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { requestOtpAction, type RequestOtpError } from "@/lib/auth/otp-actions";
-import { normalizeFrenchPhone } from "@/lib/auth/phone-number";
-
-// Matches the backend's resend-throttle window (`resend_after_seconds`) so
-// the client-side countdown never lets the user tap "Resend" before the
-// server would accept another request anyway.
-const RESEND_COOLDOWN_SECONDS = 60;
+import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { CodeBoxes, CODE_LENGTH } from "./CodeBoxes";
+import type { PhoneLoginFlow } from "./use-phone-login-flow";
 
 interface PhoneLoginFormProps {
-  /** Rendered under the phone-entry step only — used by LoginForm in "both"
-   * mode to offer "Sign in with email instead". */
+  flow: PhoneLoginFlow;
+  /** Rendered under the phone step — used in "both" mode to offer email sign-in. */
   useEmailInsteadSlot?: ReactNode;
 }
 
-function requestErrorMessageKey(error: RequestOtpError): string {
-  switch (error) {
-    case "invalid_phone":
-      return "errorInvalidPhone";
-    case "throttled":
-      return "errorThrottled";
-    case "sms_failed":
-      return "errorSmsFailed";
-    case "unavailable":
-    case "unknown":
-    default:
-      return "errorPhoneLoginUnavailable";
-  }
-}
-
-export function PhoneLoginForm({ useEmailInsteadSlot }: PhoneLoginFormProps) {
-  const { loginWithPhone, isLoading } = useAuth();
+/** Contents of the paper card: step badge, title, the step's field, the action. */
+export function PhoneLoginForm({ flow, useEmailInsteadSlot }: PhoneLoginFormProps) {
   const t = useTranslations("auth");
+  const isCodeStep = flow.step === "code";
 
-  const [step, setStep] = useState<"phone" | "code">("phone");
-  const [phone, setPhone] = useState("");
-  // E.164 form of the number the code was sent to — what the code step shows and verifies.
-  const [normalizedPhone, setNormalizedPhone] = useState("");
-  const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  // requestOtpAction is a plain server action, not wired into AuthContext,
-  // so it needs its own pending flag distinct from useAuth().isLoading
-  // (which only tracks login / loginWithPhone).
-  const [isSendingCode, setIsSendingCode] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-
-  // Countdown ticker for the "Resend in {n}s" button label.
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const timer = setInterval(() => {
-      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [cooldown]);
-
-  const sendCode = async (phoneNumber: string): Promise<boolean> => {
-    setIsSendingCode(true);
-    const result = await requestOtpAction(phoneNumber);
-    setIsSendingCode(false);
-    if (!result.success) {
-      setError(t(requestErrorMessageKey(result.error)));
-      return false;
-    }
-    setCooldown(RESEND_COOLDOWN_SECONDS);
-    return true;
-  };
-
-  const handlePhoneSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const trimmed = phone.trim();
-    if (!trimmed) {
-      setError(t("errorPhoneRequired"));
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (isCodeStep) {
+      await flow.verify();
       return;
     }
-    // Sign-in codes go out through a French gateway: refuse anything else here,
-    // before the request, so the user sees why instead of a generic failure.
-    const french = normalizeFrenchPhone(trimmed);
-    if (!french) {
-      setError(t("errorInvalidPhone"));
-      return;
-    }
-    const ok = await sendCode(french);
-    if (ok) {
-      setNormalizedPhone(french);
-      setStep("code");
-    }
+    await flow.sendCode();
   };
-
-  const handleResend = async () => {
-    setError(null);
-    await sendCode(normalizedPhone);
-  };
-
-  const handleChangeNumber = () => {
-    setStep("phone");
-    setNormalizedPhone("");
-    setCode("");
-    setError(null);
-    setCooldown(0);
-  };
-
-  const handleCodeSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const trimmedCode = code.trim();
-    if (!/^\d{6}$/.test(trimmedCode)) {
-      setError(t("errorCodeRequired"));
-      return;
-    }
-
-    const result = await loginWithPhone(normalizedPhone, trimmedCode);
-    if (!result.success) {
-      const key =
-        result.error === "invalid_code"
-          ? "errorInvalidCode"
-          : result.error === "throttled"
-            ? "errorThrottled"
-            : "errorPhoneLoginUnavailable";
-      setError(t(key));
-    }
-  };
-
-  const errorBanner = error ? (
-    <div
-      className="flex items-start gap-2 rounded-[10px] p-3 text-[12.5px]"
-      style={{
-        background: "var(--negative-tint)",
-        color: "#8a3924",
-        border: "1px solid #e6c0ad",
-      }}
-    >
-      <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-      <span>{error}</span>
-    </div>
-  ) : null;
-
-  if (step === "phone") {
-    return (
-      <form className="space-y-4" onSubmit={handlePhoneSubmit}>
-        {errorBanner}
-
-        <div>
-          <label htmlFor="phone" className="label-cap">
-            {t("phoneLabel")}
-          </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            inputMode="tel"
-            required
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            disabled={isSendingCode}
-            placeholder={t("phonePlaceholder")}
-            className="folio-input mt-1"
-          />
-          <p className="mt-1 text-[12px]" style={{ color: "var(--muted)" }}>
-            {t("phoneHint")}
-          </p>
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSendingCode}
-          className="btn btn-primary w-full"
-          style={{ padding: "12px 16px", fontSize: 14 }}
-        >
-          {isSendingCode ? (
-            <>
-              <Loader2 size={14} className="animate-spin" />
-              {t("sendingCode")}
-            </>
-          ) : (
-            <>
-              {t("sendCode")} <ArrowRight size={14} />
-            </>
-          )}
-        </button>
-
-        {useEmailInsteadSlot && <div className="text-center">{useEmailInsteadSlot}</div>}
-      </form>
-    );
-  }
 
   return (
-    <form className="space-y-4" onSubmit={handleCodeSubmit}>
-      {errorBanner}
-
-      <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-        {t("codeSentTo", { phone: normalizedPhone })}
-      </p>
-
-      <div>
-        <label htmlFor="code" className="label-cap">
-          {t("codeLabel")}
-        </label>
-        <input
-          id="code"
-          name="code"
-          type="text"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={6}
-          pattern="[0-9]*"
-          required
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-          disabled={isLoading}
-          placeholder={t("codePlaceholder")}
-          className="folio-input mt-1"
-        />
+    <form className="flex flex-col gap-[18px]" onSubmit={handleSubmit}>
+      <div className="flex items-center gap-2">
+        <span className="stamp accent">
+          {t("stepBadge", { current: isCodeStep ? 2 : 1, total: 2 })}
+        </span>
+        {flow.verified && (
+          <span className="stamp positive" data-testid="login-verified">
+            {t("verified")}
+          </span>
+        )}
       </div>
+
+      <h2 className="font-display text-[26px] font-medium leading-[1.1]" style={{ color: "var(--ink)" }}>
+        {isCodeStep ? t("codeCardTitle") : t("phoneCardTitle")}
+      </h2>
+
+      {flow.errorKey && (
+        <div
+          data-testid="login-error"
+          role="alert"
+          className="flex items-start gap-2 rounded-[10px] p-3 text-[12.5px]"
+          style={{
+            background: "var(--negative-tint)",
+            color: "#8a3924",
+            border: "1px solid #e6c0ad",
+          }}
+        >
+          <AlertCircle size={14} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
+          <span>{t(flow.errorKey)}</span>
+        </div>
+      )}
+
+      {isCodeStep ? <CodeStepFields flow={flow} /> : <PhoneStepFields flow={flow} />}
 
       <button
         type="submit"
-        disabled={isLoading}
+        data-testid={isCodeStep ? "login-verify" : "login-send-code"}
+        disabled={isCodeStep ? !flow.canVerify : !flow.canSend}
         className="btn btn-primary w-full"
-        style={{ padding: "12px 16px", fontSize: 14 }}
+        style={{ padding: "13px 16px", fontSize: 14 }}
       >
-        {isLoading ? (
+        {isCodeStep ? (
+          flow.isVerifying ? (
+            <>
+              <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+              {t("verifyingCode")}
+            </>
+          ) : (
+            <>
+              {t("verifyCode")} <ArrowRight size={14} aria-hidden="true" />
+            </>
+          )
+        ) : flow.isSendingCode ? (
           <>
-            <Loader2 size={14} className="animate-spin" />
-            {t("verifyingCode")}
+            <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+            {t("sendingCode")}
           </>
         ) : (
           <>
-            {t("verifyCode")} <ArrowRight size={14} />
+            {t("sendCode")} <ArrowRight size={14} aria-hidden="true" />
           </>
         )}
       </button>
 
-      <div className="flex items-center justify-between text-[13px]">
-        <button
-          type="button"
-          onClick={handleChangeNumber}
-          disabled={isLoading}
-          className="underline"
-          style={{ color: "var(--muted)" }}
-        >
-          {t("changeNumber")}
-        </button>
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={isLoading || isSendingCode || cooldown > 0}
-          className="underline"
-          style={{ color: "var(--muted)" }}
-        >
-          {cooldown > 0 ? t("resendIn", { seconds: cooldown }) : t("resendCode")}
-        </button>
-      </div>
+      {isCodeStep ? (
+        <div className="flex items-center justify-between text-[12.5px]">
+          <button
+            type="button"
+            data-testid="login-resend"
+            onClick={() => void flow.sendCode()}
+            disabled={flow.cooldown > 0 || flow.isSendingCode}
+            className="underline disabled:no-underline"
+            style={{ color: flow.cooldown > 0 ? "var(--muted-2)" : "var(--ink)" }}
+          >
+            {flow.cooldown > 0
+              ? t("resendIn", { seconds: flow.cooldown })
+              : t("resendCode")}
+          </button>
+          <span style={{ color: "var(--muted)" }}>
+            {t("codeExpires", { minutes: flow.expiresInMinutes })}
+          </span>
+        </div>
+      ) : (
+        <div className="text-center text-[12px]" style={{ color: "var(--muted)" }}>
+          {useEmailInsteadSlot ?? t("contactAdmin")}
+        </div>
+      )}
     </form>
+  );
+}
+
+function PhoneStepFields({ flow }: { flow: PhoneLoginFlow }) {
+  const t = useTranslations("auth");
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor="phone" className="label-cap">
+        {t("phoneLabel")}
+      </label>
+      {/* One control, two segments: sign-in codes only ever leave through a
+          French gateway, so the dial code is stated rather than chosen. The
+          border belongs to the wrapper, not to either segment. */}
+      <div
+        className="flex focus-within:border-[color:var(--ink)] focus-within:shadow-[var(--shadow-focus)]"
+        style={{
+          background: "var(--card-paper)",
+          border: "1px solid var(--line-2)",
+          borderRadius: 10,
+        }}
+      >
+        <span
+          data-testid="login-country"
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-l-[9px] pl-3 pr-2.5 text-[13px] font-medium"
+          style={{
+            background: "var(--paper-2)",
+            borderRight: "1px solid var(--line-2)",
+            color: "var(--ink-2)",
+          }}
+        >
+          FR
+          <span className="num text-[12.5px]" style={{ color: "var(--muted)" }}>
+            +33
+          </span>
+        </span>
+        <input
+          id="phone"
+          name="phone"
+          data-testid="login-phone"
+          type="tel"
+          autoComplete="tel-national"
+          inputMode="tel"
+          required
+          autoFocus
+          value={flow.nationalNumber}
+          onChange={(event) => flow.setNationalNumber(event.target.value)}
+          disabled={flow.isSendingCode}
+          placeholder={t("phonePlaceholder")}
+          className="num min-w-0 flex-1 bg-transparent px-3 py-[11px] text-[14px] outline-none"
+          style={{ color: "var(--ink)" }}
+        />
+      </div>
+      <p className="mt-0.5 text-[12px]" style={{ color: "var(--muted)" }}>
+        {t("phoneHint")}
+      </p>
+    </div>
+  );
+}
+
+function CodeStepFields({ flow }: { flow: PhoneLoginFlow }) {
+  const t = useTranslations("auth");
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="label-cap">{t("codeLabel")}</span>
+      <CodeBoxes
+        value={flow.code}
+        onChange={flow.setCode}
+        onComplete={(code) => void flow.verify(code)}
+        state={flow.verified ? "verified" : flow.errorKey ? "error" : "idle"}
+        disabled={flow.isVerifying || flow.verified}
+        label={t("codeLabel")}
+        positionLabel={(position) => t("codeDigit", { position, total: CODE_LENGTH })}
+      />
+    </div>
   );
 }

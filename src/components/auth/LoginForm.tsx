@@ -6,27 +6,27 @@ import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import type { LoginMode } from "@/lib/auth/types";
 import { PhoneLoginForm } from "./PhoneLoginForm";
+import type { PhoneLoginFlow } from "./use-phone-login-flow";
 
 interface LoginFormProps {
-  callbackUrl?: string;
   loginMode: LoginMode;
+  flow: PhoneLoginFlow;
+  /** Which form is on screen. Owned by LoginStage, whose copy column follows it. */
+  view: "phone" | "email";
+  onViewChange: (view: "phone" | "email") => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future callbackUrl redirect
-export function LoginForm({ callbackUrl = "/dashboard", loginMode }: LoginFormProps) {
-  // "both" opens on the phone form first; the toggle below swaps to email
-  // and back. Local to this component (not persisted) since it is only a
-  // display preference for the current visit.
-  const [showEmailForm, setShowEmailForm] = useState(loginMode === "email");
-
+/** Picks the form this deployment offers, and in "both" mode the one in view. */
+export function LoginForm({ loginMode, flow, view, onViewChange }: LoginFormProps) {
   if (loginMode === "phone") {
-    return <PhoneLoginForm />;
+    return <PhoneLoginForm flow={flow} />;
   }
 
-  if (loginMode === "both" && !showEmailForm) {
+  if (loginMode === "both" && view === "phone") {
     return (
       <PhoneLoginForm
-        useEmailInsteadSlot={<UseEmailInsteadToggle onClick={() => setShowEmailForm(true)} />}
+        flow={flow}
+        useEmailInsteadSlot={<UseEmailInsteadToggle onClick={() => onViewChange("email")} />}
       />
     );
   }
@@ -35,7 +35,7 @@ export function LoginForm({ callbackUrl = "/dashboard", loginMode }: LoginFormPr
     <EmailLoginForm
       usePhoneInsteadSlot={
         loginMode === "both" ? (
-          <UsePhoneInsteadToggle onClick={() => setShowEmailForm(false)} />
+          <UsePhoneInsteadToggle onClick={() => onViewChange("phone")} />
         ) : undefined
       }
     />
@@ -100,6 +100,14 @@ function EmailLoginForm({ usePhoneInsteadSlot }: EmailLoginFormProps) {
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
+      <span className="stamp accent">{t("welcomeBack")}</span>
+      <h2
+        className="font-display text-[26px] font-medium leading-[1.1]"
+        style={{ color: "var(--ink)" }}
+      >
+        {t("signIn")}
+      </h2>
+
       {error && (
         <div
           className="flex items-start gap-2 rounded-[10px] p-3 text-[12.5px]"

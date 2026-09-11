@@ -129,7 +129,7 @@ function PhoneStepFields({ flow }: { flow: PhoneLoginFlow }) {
           French gateway, so the dial code is stated rather than chosen. The
           border belongs to the wrapper, not to either segment. */}
       <div
-        className="flex"
+        className="flex focus-within:border-[color:var(--ink)] focus-within:shadow-[var(--shadow-focus)]"
         style={{
           background: "var(--card-paper)",
           border: "1px solid var(--line-2)",

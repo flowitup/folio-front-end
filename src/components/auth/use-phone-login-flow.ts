@@ -72,6 +72,10 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [verified, setVerified] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  // The code the backend has already rejected. Re-sending it would spend another
+  // of the five attempts for nothing, so the form waits for a changed digit —
+  // state, not a ref, because the submit button's own state depends on it.
+  const [lastSubmitted, setLastSubmitted] = useState<string | null>(null);
   // The backend decides the code's lifetime (OTP_TTL_SECONDS) and reports it on
   // every request, so the card quotes what was actually sent rather than a
   // number that silently drifts from the server's.
@@ -90,7 +94,11 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
   // The backend throttles per number, so the countdown only gates asking again
   // for the SAME number: edit the number and "Send code" is live immediately.
   const canSend = phone !== null && !isSendingCode && (cooldown === 0 || phone !== sentTo);
-  const canVerify = new RegExp(`^\\d{${CODE_LENGTH}}$`).test(code) && !isLoading && !verified;
+  const canVerify =
+    new RegExp(`^\\d{${CODE_LENGTH}}$`).test(code) &&
+    !isLoading &&
+    !verified &&
+    code !== lastSubmitted;
 
   const sendCode = useCallback(async () => {
     const target = normalizeFrenchPhone(nationalNumber);
@@ -106,6 +114,9 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
       setErrorKey(requestErrorKey(result.error));
       return;
     }
+    // A new code invalidates whatever is still in the boxes.
+    setCode("");
+    setLastSubmitted(null);
     setSentTo(target);
     setExpiresInMinutes(Math.max(1, Math.round(result.expiresIn / 60)));
     setCooldown(RESEND_COOLDOWN_SECONDS);
@@ -124,6 +135,8 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
         setErrorKey("errorCodeRequired");
         return;
       }
+      if (submitted === lastSubmitted) return;
+      setLastSubmitted(submitted);
       setErrorKey(null);
       const result = await loginWithPhone(sentTo, submitted);
       if (result.success) {
@@ -140,7 +153,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
             : "errorPhoneLoginUnavailable"
       );
     },
-    [code, isLoading, loginWithPhone, sentTo, verified]
+    [code, isLoading, lastSubmitted, loginWithPhone, sentTo, verified]
   );
 
   const changeNumber = useCallback(() => {
@@ -148,6 +161,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     // to, and coming back to edit it does not make the server accept a resend.
     setStep("phone");
     setCode("");
+    setLastSubmitted(null);
     setErrorKey(null);
     setVerified(false);
   }, []);

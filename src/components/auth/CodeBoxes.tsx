@@ -9,7 +9,8 @@ type CodeBoxesState = "idle" | "error" | "verified";
 interface CodeBoxesProps {
   value: string;
   onChange: (value: string) => void;
-  /** Called once, on the edit that completes all six digits — drives auto-submit. */
+  /** Called on the edit that *completes* the row — drives auto-submit. Retyping
+   * over an already-full row does not re-fire it. */
   onComplete?: (value: string) => void;
   state?: CodeBoxesState;
   disabled?: boolean;
@@ -19,14 +20,14 @@ interface CodeBoxesProps {
 }
 
 /**
- * Only error and success repaint the border; the idle border and the focus
- * ring both come from `.folio-input`, so a focused box always reads as focused
- * even while the row is showing an error.
+ * Error and success repaint the border through a class rather than an inline
+ * style, so `.folio-input:focus` still wins over it: the box the caret is in has
+ * to read as focused even while the row is showing an error.
  */
-function borderColorFor(state: CodeBoxesState): string | undefined {
-  if (state === "error") return "var(--negative)";
-  if (state === "verified") return "var(--positive)";
-  return undefined;
+function borderClassFor(state: CodeBoxesState): string {
+  if (state === "error") return "border-[color:var(--negative)]";
+  if (state === "verified") return "border-[color:var(--positive)]";
+  return "";
 }
 
 /**
@@ -60,9 +61,13 @@ export function CodeBoxes({
   };
 
   const commit = (next: string) => {
+    // A rejected code keeps its digits, so the row is still full while the user
+    // retypes over it. Only the edit that *fills* the row may submit, or every
+    // keystroke would spend one of the backend's five attempts.
+    const wasComplete = typed.current.length === CODE_LENGTH;
     typed.current = next;
     onChange(next);
-    if (next.length === CODE_LENGTH) onComplete?.(next);
+    if (!wasComplete && next.length === CODE_LENGTH) onComplete?.(next);
   };
 
   /** Write `text`'s digits from `start`, clamped so the code never gets a hole. */
@@ -129,11 +134,9 @@ export function CodeBoxes({
           onKeyDown={handleKeyDown(index)}
           onPaste={handlePaste(index)}
           onFocus={(event) => event.target.select()}
-          className="folio-input num h-14 min-w-0 flex-1 p-0 text-center text-[22px] font-medium disabled:opacity-60"
-          style={{
-            borderColor: borderColorFor(state),
-            opacity: state === "verified" ? 0.7 : undefined,
-          }}
+          autoFocus={index === 0}
+          className={`folio-input num h-14 min-w-0 flex-1 p-0 text-center text-[22px] font-medium disabled:opacity-60 ${borderClassFor(state)}`}
+          style={{ opacity: state === "verified" ? 0.7 : undefined }}
         />
       ))}
     </div>

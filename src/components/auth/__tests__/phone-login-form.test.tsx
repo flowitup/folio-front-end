@@ -192,6 +192,59 @@ describe("Phone sign-in", () => {
     expect(screen.getByTestId("login-code-5")).toHaveValue("7");
   });
 
+  it("accepts the very number the field's own placeholder shows", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    const user = userEvent.setup();
+    render(<LoginStage loginMode="phone" />);
+
+    // Regression: the field states `FR +33` and offers a national example, so
+    // typing exactly that must reach the backend rather than leaving the button
+    // disabled with nothing explaining why.
+    await sendCodeTo(user, TRANSLATIONS.phonePlaceholder);
+
+    expect(mockRequestOtpAction).toHaveBeenCalledWith("+33612345678");
+  });
+
+  it("does not resubmit while the rejected digits are unchanged", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    mockLoginWithPhone.mockResolvedValue({ success: false, error: "invalid_code" });
+    const user = userEvent.setup();
+    render(<LoginStage loginMode="phone" />);
+
+    await sendCodeTo(user, "0612345678");
+    await typeCode(user, "000000");
+    await waitFor(() => expect(mockLoginWithPhone).toHaveBeenCalledTimes(1));
+
+    // Retyping over the full row must not spend another of the five attempts
+    // per keystroke: the user corrects the code, then submits once.
+    await user.type(screen.getByTestId("login-code-0"), "4");
+    expect(mockLoginWithPhone).toHaveBeenCalledTimes(1);
+
+    // The identical rejected code, on the other hand, is refused outright.
+    await user.click(screen.getByTestId("login-code-0"));
+    expect(screen.getByTestId("login-verify")).toBeDisabled();
+  });
+
+  it("clears the row when a new code is sent", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    mockLoginWithPhone.mockResolvedValue({ success: false, error: "invalid_code" });
+    const user = userEvent.setup();
+    render(<LoginStage loginMode="phone" />);
+
+    await sendCodeTo(user, "0612345678");
+    await typeCode(user, "000000");
+    await waitFor(() => expect(screen.getByText("Wrong or expired code")).toBeInTheDocument());
+
+    // Back to step 1 and on to a different number, which the countdown does not
+    // gate: the code that arrives is new, so the old digits must be gone.
+    await user.click(screen.getByTestId("login-change-number"));
+    await user.clear(screen.getByLabelText("Phone number"));
+    await sendCodeTo(user, "0612345679");
+
+    expect(screen.getByTestId("login-code-0")).toHaveValue("");
+    expect(screen.getByTestId("login-verify")).toBeDisabled();
+  });
+
   it("keeps the digits when the code is rejected", async () => {
     mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
     mockLoginWithPhone.mockResolvedValue({ success: false, error: "invalid_code" });

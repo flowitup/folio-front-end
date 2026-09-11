@@ -8,6 +8,10 @@ describe("normalizeFrenchPhone", () => {
     ["+33 6 12 34 56 78", "+33612345678"],
     ["0033612345678", "+33612345678"],
     ["01 42 34 56 78", "+33142345678"],
+    // The login field states `FR +33` beside the number and invites the national
+    // form without its trunk 0, so that form has to normalise too.
+    ["6 12 34 56 78", "+33612345678"],
+    ["612345678", "+33612345678"],
   ])("normalises the French number %s", (raw, expected) => {
     expect(normalizeFrenchPhone(raw)).toBe(expected);
   });
@@ -21,7 +25,7 @@ describe("normalizeFrenchPhone", () => {
     expect(normalizeFrenchPhone(raw)).toBeNull();
   });
 
-  it.each(["", "   ", "abc", "12345", "+0123456789", "612345678"])(
+  it.each(["", "   ", "abc", "12345", "+0123456789", "61234567", "6123456789"])(
     "rejects %s",
     (raw) => {
       expect(normalizeFrenchPhone(raw)).toBeNull();

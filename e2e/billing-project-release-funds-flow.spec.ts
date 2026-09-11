@@ -17,7 +17,8 @@
 
 import { test, expect, request as pwRequest, type APIRequestContext } from "@playwright/test";
 import { loginAsAdmin } from "./helpers/login-as-admin-helper";
-import { ADMIN, SEED_PROJECTS } from "./helpers/seed-data";
+import { apiSignIn } from "./helpers/auth-helper";
+import { SEED_PROJECTS } from "./helpers/seed-data";
 
 const RUN = Boolean(process.env.TEST_E2E_BILLING_PROJECT);
 const API = process.env.E2E_API_BASE || "http://localhost:5000/api/v1";
@@ -25,10 +26,7 @@ const API = process.env.E2E_API_BASE || "http://localhost:5000/api/v1";
 let downtownProjectId = "";
 
 async function adminToken(ctx: APIRequestContext): Promise<string> {
-  const res = await ctx.post(`${API}/auth/login`, {
-    data: { email: ADMIN.email, password: ADMIN.password },
-  });
-  return (await res.json()).access_token as string;
+  return apiSignIn(ctx);
 }
 
 test.describe("Billing ↔ project release-funds flow", () => {

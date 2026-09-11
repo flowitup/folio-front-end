@@ -3,7 +3,6 @@
  *
  * Asserts that en.json, fr.json, and vi.json have identical key trees under:
  *   - billing.*
- *   - settings.companyProfile.*
  *   - sidebar.billing.*
  *   - companies.*
  *
@@ -51,7 +50,6 @@ function dig(obj: Record<string, unknown>, path: string): unknown {
 
 const NAMESPACES = [
   "billing",
-  "settings.companyProfile",
   "sidebar.billing",
   "companies",
 ] as const;

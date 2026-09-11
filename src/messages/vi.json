@@ -235,19 +235,8 @@
     }
   },
   "settings": {
-    "title": "Cài đặt",
-    "description": "Tùy chỉnh Folio theo phong cách của bạn.",
     "profile": "Hồ sơ",
-    "team": "Đội",
-    "billing": "Thanh toán",
     "notifications": "Thông báo",
-    "preferences": "Tùy chọn",
-    "profileDesc": "Quản lý thông tin cá nhân",
-    "notificationsDesc": "Kiểm soát cách bạn nhận thông báo",
-    "organization": "Tổ chức",
-    "organizationDesc": "Quản lý cài đặt cấp tổ chức",
-    "comingSoon": "sẽ sớm có",
-    "ownerLine": "Chủ · {project}",
     "email": "Email",
     "phone": "Điện thoại",
     "displayName": "Tên hiển thị",
@@ -258,60 +247,11 @@
     "errorInvalidPhone": "Số điện thoại không hợp lệ",
     "errorPhoneTaken": "Số điện thoại này đã được dùng cho một tài khoản khác",
     "errorSaveFailed": "Không thể lưu hồ sơ của bạn. Vui lòng thử lại.",
-    "language": "Ngôn ngữ",
-    "languageDesc": "Ngôn ngữ giao diện Folio. Lưu giữ qua các phiên.",
-    "currentlySetTo": "Hiện đang dùng {lang}.",
     "users": {
       "title": "Người dùng & vai trò",
-      "description": "Gán vai trò cho người dùng hiện có trên một hoặc nhiều dự án.",
       "permissionDenied": "Bạn không có quyền thay đổi vai trò của người dùng."
     },
-    "companyProfile": {
-      "title": "Hồ sơ công ty",
-      "description": "Thông tin công ty phát hành in trên mỗi devis và facture.",
-      "explainer": "Dùng làm thông tin phát hành trên mỗi báo giá & hóa đơn. Lưu tại thời điểm tạo tài liệu.",
-      "fields": {
-        "legalName": "Tên pháp lý",
-        "legalNamePlaceholder": "vd. Maison Lavandou SAS",
-        "address": "Địa chỉ",
-        "addressPlaceholder": "Đường, thành phố, mã bưu chính, quốc gia",
-        "siret": "SIRET",
-        "siretPlaceholder": "vd. 12345678900012",
-        "tvaNumber": "Số TVA",
-        "tvaNumberPlaceholder": "vd. FR12345678901",
-        "iban": "IBAN",
-        "ibanPlaceholder": "vd. FR76 3000 6000 0112 3456 7890 189",
-        "bic": "BIC / SWIFT",
-        "bicPlaceholder": "vd. BNPAFRPPXXX",
-        "logoUrl": "URL logo",
-        "logoUrlPlaceholder": "https://example.com/logo.png",
-        "logoUrlHint": "URL hình ảnh công khai. Hiển thị trong tiêu đề PDF.",
-        "defaultPaymentTerms": "Điều khoản thanh toán mặc định",
-        "defaultPaymentTermsPlaceholder": "vd. Thanh toán trong 30 ngày kể từ ngày xuất hóa đơn. Chuyển khoản.",
-        "defaultPaymentTermsHint": "Điền sẵn cho hóa đơn mới. Có thể chỉnh sửa từng tài liệu.",
-        "prefixOverride": "Tiền tố số tài liệu",
-        "prefixOverridePlaceholder": "vd. FLW (tối đa 8 ký tự)",
-        "prefixOverrideHint": "Tùy chọn. Chỉ dùng chữ hoa ASCII và chữ số (A-Z, 0-9). Tối đa 8 ký tự. Ví dụ: \"FLW\" → FLW-DEV-2026-001."
-      },
-      "actions": {
-        "save": "Lưu",
-        "saving": "Đang lưu…"
-      },
-      "errors": {
-        "legalNameRequired": "Tên pháp lý là bắt buộc.",
-        "legalNameTooLong": "Tên pháp lý không được vượt quá 255 ký tự.",
-        "addressRequired": "Địa chỉ là bắt buộc.",
-        "prefixTooLong": "Tiền tố không được vượt quá 8 ký tự.",
-        "prefixInvalidChars": "Tiền tố chỉ được chứa chữ hoa ASCII và chữ số (A-Z, 0-9).",
-        "generic": "Đã xảy ra lỗi không mong đợi. Vui lòng thử lại."
-      },
-      "toast": {
-        "saved": "Đã lưu hồ sơ công ty."
-      }
-    },
     "project": "Dự án",
-    "about": "Giới thiệu",
-    "version": "Phiên bản",
     "companies": {
       "backToSettings": "Quay lại Cài đặt"
     },
@@ -2203,7 +2143,6 @@
       "addByPhone": "Thêm bằng số điện thoại",
       "empty": "Chưa có thành viên nào.",
       "col": {
-        "nameEmail": "Tên / Email",
         "namePhone": "Tên / Số điện thoại",
         "role": "Vai trò"
       },

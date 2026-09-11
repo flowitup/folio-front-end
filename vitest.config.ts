@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import pkg from './package.json'
 
 export default defineConfig({
   plugins: [react()],
@@ -9,6 +10,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/__tests__/vitest.setup.ts'],
     exclude: ['node_modules', 'dist', '.next', 'e2e/**'],
+    // Mirrors the build-time inlining in next.config.ts so components that
+    // render the app version behave the same under test.
+    env: { NEXT_PUBLIC_APP_VERSION: pkg.version },
   },
   resolve: {
     alias: {

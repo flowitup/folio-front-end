@@ -57,8 +57,15 @@ A public landing page for people clicking an invitation email. The page handles 
 - An agenda view groups notes by **Today / Tomorrow / This week / Later / Done**, with inline editing on each row.
 
 ### Settings
-- **Profile** and **Notification preferences** placeholders (coming soon).
-- **Users & Roles** tab (administrators only) — bulk-assign roles to existing users across one or more projects in three steps.
+Every tab here opens something real — there are no "coming soon" placeholders.
+- **Profile** — display name and phone, saved to your account. Email is shown read-only; only an administrator can change it.
+- **Project** — the invoice-number prefix for the project you have selected. Only appears once a project is selected.
+- **Company** — the companies you are attached to, with the identity card, primary/detach controls and attach-by-code. If you administer the selected company you also get its join code, members and directory.
+- **Payment methods** — the payment methods invoices can be paid by, per company. Read-only unless you administer that company.
+- **Notifications** — which kinds of notification reach you.
+- **Users & Roles** — bulk-assign roles to existing users across one or more projects. Platform operators only; nobody else is offered the tab.
+
+The app version sits in a footer under the content, visible from every tab.
 
 ### Permissions
 Every page respects the role you have on a given project. If you reach a page you aren't allowed to see, Folio takes you to a clean 403 page with a "Go to Dashboard" button — no broken UI, no leaked data.

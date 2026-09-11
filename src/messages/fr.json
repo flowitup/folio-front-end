@@ -235,19 +235,8 @@
     }
   },
   "settings": {
-    "title": "Paramètres",
-    "description": "Adaptez Folio à votre image.",
     "profile": "Profil",
-    "team": "Équipe",
-    "billing": "Facturation",
     "notifications": "Notifications",
-    "preferences": "Préférences",
-    "profileDesc": "Gérez vos informations personnelles",
-    "notificationsDesc": "Contrôlez la réception des notifications",
-    "organization": "Organisation",
-    "organizationDesc": "Gérez les paramètres de l'organisation",
-    "comingSoon": "sera bientôt disponible",
-    "ownerLine": "Propriétaire · {project}",
     "email": "E-mail",
     "phone": "Téléphone",
     "displayName": "Nom affiché",
@@ -258,60 +247,11 @@
     "errorInvalidPhone": "Numéro de téléphone invalide",
     "errorPhoneTaken": "Ce numéro de téléphone est déjà utilisé par un autre compte",
     "errorSaveFailed": "Impossible d'enregistrer votre profil. Veuillez réessayer.",
-    "language": "Langue",
-    "languageDesc": "Langue de l'interface Folio. Conservée entre les sessions.",
-    "currentlySetTo": "Actuellement défini sur {lang}.",
     "users": {
       "title": "Utilisateurs et rôles",
-      "description": "Attribuer des rôles aux utilisateurs existants sur un ou plusieurs projets.",
       "permissionDenied": "Vous n'avez pas l'autorisation de modifier les rôles des utilisateurs."
     },
-    "companyProfile": {
-      "title": "Profil de l'entreprise",
-      "description": "Informations de l'émetteur imprimées sur chaque devis et facture.",
-      "explainer": "Utilisé comme info émetteur sur chaque devis & facture. Instantané à la création du document.",
-      "fields": {
-        "legalName": "Raison sociale",
-        "legalNamePlaceholder": "ex. Maison Lavandou SAS",
-        "address": "Adresse",
-        "addressPlaceholder": "Rue, ville, code postal, pays",
-        "siret": "SIRET",
-        "siretPlaceholder": "ex. 12345678900012",
-        "tvaNumber": "Numéro de TVA",
-        "tvaNumberPlaceholder": "ex. FR12345678901",
-        "iban": "IBAN",
-        "ibanPlaceholder": "ex. FR76 3000 6000 0112 3456 7890 189",
-        "bic": "BIC / SWIFT",
-        "bicPlaceholder": "ex. BNPAFRPPXXX",
-        "logoUrl": "URL du logo",
-        "logoUrlPlaceholder": "https://example.com/logo.png",
-        "logoUrlHint": "URL d'image accessible publiquement. Affichée dans l'en-tête PDF.",
-        "defaultPaymentTerms": "Conditions de paiement par défaut",
-        "defaultPaymentTermsPlaceholder": "ex. Paiement à 30 jours. Virement bancaire.",
-        "defaultPaymentTermsHint": "Pré-rempli sur les nouvelles factures. Modifiable par document.",
-        "prefixOverride": "Préfixe du numéro de document",
-        "prefixOverridePlaceholder": "ex. FLW (8 car. max)",
-        "prefixOverrideHint": "Optionnel. Lettres ASCII majuscules et chiffres uniquement (A-Z, 0-9). Max 8 caractères. Exemple : « FLW » → FLW-DEV-2026-001."
-      },
-      "actions": {
-        "save": "Enregistrer",
-        "saving": "Enregistrement…"
-      },
-      "errors": {
-        "legalNameRequired": "La raison sociale est obligatoire.",
-        "legalNameTooLong": "La raison sociale doit comporter 255 caractères au maximum.",
-        "addressRequired": "L'adresse est obligatoire.",
-        "prefixTooLong": "Le préfixe doit comporter 8 caractères au maximum.",
-        "prefixInvalidChars": "Le préfixe ne doit contenir que des lettres ASCII majuscules et des chiffres (A-Z, 0-9).",
-        "generic": "Une erreur inattendue s'est produite. Veuillez réessayer."
-      },
-      "toast": {
-        "saved": "Profil de l'entreprise enregistré."
-      }
-    },
     "project": "Projet",
-    "about": "À propos",
-    "version": "Version",
     "companies": {
       "backToSettings": "Retour aux paramètres"
     },
@@ -2203,7 +2143,6 @@
       "addByPhone": "Ajouter par téléphone",
       "empty": "Aucun membre pour l'instant.",
       "col": {
-        "nameEmail": "Nom / E-mail",
         "namePhone": "Nom / Téléphone",
         "role": "Rôle"
       },

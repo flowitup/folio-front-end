@@ -13,17 +13,25 @@ import { NotificationPreferencesSection } from "@/components/notifications/notif
 import { ProfileForm } from "@/components/settings/profile-form";
 import { isPlatformOps } from "@/lib/auth/permissions";
 import type { ProjectSummary } from "@/lib/api/projects-server";
-import pkg from "../../../../../package.json";
 
+// Inlined by next.config.ts at build time. Importing package.json here
+// instead would ship the whole dependency manifest to the browser.
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION;
+
+/**
+ * Every entry here renders a working surface. "Team" and "Billing" used to sit
+ * in this list as permanent "coming soon" cards — Team never had a backing
+ * feature and Billing already owns a top-level nav entry — so both are gone,
+ * and with them the placeholder branch they were the only reason for. "About"
+ * held a single line (the app version), which now sits in the page footer
+ * instead of behind a tab of its own.
+ */
 const BASE_SECTION_KEYS = [
   "profile",
-  "team",
   "company",
-  "billing",
   "payment-methods",
   "notifications",
   "users",
-  "about",
 ] as const;
 type SectionKey = (typeof BASE_SECTION_KEYS)[number] | "project";
 
@@ -31,19 +39,23 @@ interface Props {
   projects: ProjectSummary[];
 }
 
+const ALL_VALID_KEYS: readonly string[] = [...BASE_SECTION_KEYS, "project"];
+
 /**
  * Derive the initial active tab from the URL hash (if valid).
  * Using a lazy initializer avoids the cascading setState-in-effect pattern.
- * Falls back to "profile" when no hash or hash doesn't match a known section.
+ * Falls back to "profile" when no hash or hash doesn't match a known section —
+ * which is also what retired hashes (#team, #billing, #about) now do.
  */
-const ALL_VALID_KEYS: readonly string[] = [...BASE_SECTION_KEYS, "project"];
-
-function initialActiveFromHash(): SectionKey {
+function initialActiveFromHash(isOps: boolean): SectionKey {
   if (typeof window === "undefined") return "profile";
   const hash = window.location.hash.replace("#", "");
   // "my-companies" was the attachments tab before it was folded into
   // "company"; keep old links and bookmarks landing on the merged section.
   if (hash === "my-companies") return "company";
+  // "users" is platform-ops only. For anyone else the nav no longer offers it,
+  // so a stale #users link lands on Profile rather than on an orphan tab.
+  if (hash === "users" && !isOps) return "profile";
   return ALL_VALID_KEYS.includes(hash) ? (hash as SectionKey) : "profile";
 }
 
@@ -51,24 +63,33 @@ export function SettingsClient({ projects }: Props) {
   const t = useTranslations("settings");
   const { user } = useAuth();
   const { selectedProject } = useProject();
-  // Lazy initializer reads window.location.hash once at mount — no effect needed.
-  const [active, setActive] = useState<SectionKey>(initialActiveFromHash);
 
+  // The session user is server-seeded into AuthProvider, so this is settled on
+  // the first render — the Users tab never flickers in and out.
   const isSuperadmin = isPlatformOps(user?.permissions);
+
+  // Lazy initializer reads window.location.hash once at mount — no effect needed.
+  const [active, setActive] = useState<SectionKey>(() =>
+    initialActiveFromHash(isSuperadmin)
+  );
+
+  // A #project deep link from someone with no project selected has nothing to
+  // render, and the placeholder card that used to cover that case is gone.
+  const resolved: SectionKey =
+    active === "project" && !selectedProject ? "profile" : active;
 
   const sectionKeys: SectionKey[] = [
     "profile",
     ...(selectedProject ? ["project" as const] : []),
-    "team",
     // One Company tab for everyone: it carries the caller's own attachments
     // (identity card, primary, detach, attach-by-token) and, for a company
     // admin only, that company's self-service tools.
     "company",
-    "billing",
     "payment-methods",
     "notifications",
-    "users",
-    "about",
+    // Platform ops only: for everyone else this tab's entire content was a
+    // permission-denied panel, so it is no longer offered at all.
+    ...(isSuperadmin ? ["users" as const] : []),
   ];
 
   return (
@@ -91,7 +112,7 @@ export function SettingsClient({ projects }: Props) {
                 type="button"
                 onClick={() => setActive(key)}
                 className={`flex-shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors lg:w-full lg:rounded-lg lg:border-transparent lg:text-left ${
-                  active === key
+                  resolved === key
                     ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] lg:border-transparent lg:bg-[var(--paper-2)] lg:text-[var(--ink)]"
                     : "border-[var(--line)] text-[var(--muted)] hover:text-[var(--ink)] lg:border-transparent"
                 }`}
@@ -105,64 +126,40 @@ export function SettingsClient({ projects }: Props) {
 
       {/* Content */}
       <div className="col-span-12 space-y-5 lg:col-span-9">
-        {active === "profile" && <ProfileForm />}
+        {resolved === "profile" && <ProfileForm />}
 
-        {active === "project" && selectedProject && <InvoicePrefixSection />}
+        {resolved === "project" && <InvoicePrefixSection />}
 
-        {active === "users" && (
-          <section className="folio-card p-7">
-            <UsersSection projects={projects} />
-          </section>
-        )}
-
-        {active === "company" && (
+        {resolved === "company" && (
           <div className="space-y-5">
             <CompanySettingsSection />
             {isSuperadmin && <AdminCompaniesSection />}
           </div>
         )}
 
-        {active === "payment-methods" && (
+        {resolved === "payment-methods" && (
           <section className="folio-card p-7">
             <PaymentMethodsSettingsSection />
           </section>
         )}
 
-        {active === "notifications" && (
+        {resolved === "notifications" && (
           <section className="folio-card p-7">
             <NotificationPreferencesSection />
           </section>
         )}
 
-        {active === "about" && (
+        {resolved === "users" && isSuperadmin && (
           <section className="folio-card p-7">
-            <h3 className="font-display text-[22px] font-medium tracking-tight">
-              {t("about")}
-            </h3>
-            <div className="ink-divider my-5" />
-            <dl className="grid grid-cols-[auto_1fr] items-center gap-x-6 gap-y-2 text-[13px]">
-              <dt className="label-cap" style={{ color: "var(--muted)" }}>
-                {t("version")}
-              </dt>
-              <dd className="num">v{pkg.version}</dd>
-            </dl>
+            <UsersSection projects={projects} />
           </section>
         )}
 
-        {active !== "profile" &&
-          active !== "project" &&
-          active !== "company" &&
-          active !== "users" &&
-          active !== "payment-methods" &&
-          active !== "notifications" &&
-          active !== "about" && (
-            <section className="folio-card p-12 text-center">
-              <p className="font-display text-[20px] font-medium tracking-tight">{t(active)}</p>
-              <p className="mt-2 text-[13px]" style={{ color: "var(--muted)" }}>
-                {t("comingSoon")}
-              </p>
-            </section>
-          )}
+        {APP_VERSION && (
+          <p className="pt-1 text-[11px]" style={{ color: "var(--muted)" }}>
+            Folio v{APP_VERSION}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -55,4 +55,18 @@ export interface AttachedUser {
   attached_at: string;
   /** Per-company role; only "admin" can see/manage the company's billing. */
   role: CompanyRole;
+  /**
+   * Companies this user is attached to, scoped to the ones the CALLER
+   * administers (never a cross-tenant leak of a company the caller cannot
+   * see). Optional — callers of the platform-ops attached-users list that
+   * predate this field never set it; treat a missing value as `[]`.
+   */
+  companies?: { id: string; legal_name: string }[];
+  /**
+   * This company's projects the user is assigned to. Authoritative for every
+   * attached account: the directory only carries assignments for people who
+   * also hold a `company_persons` profile, which pre-directory accounts do
+   * not. Optional — treat a missing value as `[]`.
+   */
+  assigned_project_ids?: string[];
 }

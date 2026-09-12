@@ -66,6 +66,30 @@ export async function fetchAttachedUsers(companyId: string): Promise<AttachedUse
 }
 
 /**
+ * Attach an existing user account to a company as "member". Idempotent —
+ * calling it again for someone already attached succeeds without changes.
+ * POST /api/v1/companies/<companyId>/access/<userId>
+ * Requires admin role on the path company (*:*).
+ */
+export async function attachUserToCompany(companyId: string, userId: string): Promise<void> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${baseUrl()}/companies/${encodeURIComponent(companyId)}/access/${encodeURIComponent(userId)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error attaching user to company: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to attach user to company");
+}
+
+/**
  * Remove (boot) a specific user from a company.
  * DELETE /api/v1/companies/<companyId>/access/<userId>
  * Requires admin role (*:*).

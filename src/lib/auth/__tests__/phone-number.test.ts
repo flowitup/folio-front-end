@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeFrenchPhone } from "../phone-number";
+import { normalizeFrenchPhone, formatFrenchPhone } from "../phone-number";
 
 describe("normalizeFrenchPhone", () => {
   it.each([
@@ -31,4 +31,30 @@ describe("normalizeFrenchPhone", () => {
       expect(normalizeFrenchPhone(raw)).toBeNull();
     },
   );
+});
+
+describe("formatFrenchPhone", () => {
+  it.each([
+    ["+33640838057", "+336 40 83 80 57"],
+    ["+33612345678", "+336 12 34 56 78"],
+    ["+33142345678", "+331 42 34 56 78"],
+  ])("formats the French E.164 number %s as %s", (raw, expected) => {
+    expect(formatFrenchPhone(raw)).toBe(expected);
+  });
+
+  it.each([
+    // Not French E.164 at all.
+    "+84912345678",
+    "0612345678",
+    "not-a-phone",
+    "",
+    // Already formatted — a second pass must be a no-op, not a mis-parse.
+    "+336 40 83 80 57",
+    // Wrong digit count for the E.164 shape (8, not 9, digits after +33).
+    "+3361234567",
+    // Leading 0 after +33 is not a valid French national number.
+    "+330612345678",
+  ])("returns %s unchanged when it is not a French E.164 number", (raw) => {
+    expect(formatFrenchPhone(raw)).toBe(raw);
+  });
 });

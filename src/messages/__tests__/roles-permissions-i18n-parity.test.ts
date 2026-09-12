@@ -55,7 +55,6 @@ describe("i18n whole-file parity (en/fr/vi)", () => {
     "companySettings.grants.dialogTitle",
     "companySettings.addByPhone.dialogTitle",
     "companySettings.import.dialogTitle",
-    "companySettings.directory.title",
     "members.assign.button",
     "labor.roster.title",
     "notifications.companyEvents.title",
@@ -77,4 +76,15 @@ describe("i18n whole-file parity (en/fr/vi)", () => {
       expect(missing, `Missing in ${locale.name}`).toEqual([]);
     });
   }
+
+  // The standalone Directory table was folded into the Members table (its
+  // Phone/Company/Projects columns), so its i18n block is retired.
+  it("companySettings.directory is gone (folded into companySettings.members)", () => {
+    for (const locale of LOCALES) {
+      expect(
+        dig(locale.messages, "companySettings.directory"),
+        `${locale.name} still carries the retired companySettings.directory namespace`
+      ).toBeUndefined();
+    }
+  });
 });

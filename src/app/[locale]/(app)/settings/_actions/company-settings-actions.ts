@@ -28,8 +28,10 @@ import {
 } from "@/lib/api/member-grants";
 import {
   assignProjectMember,
+  unassignProjectMember,
   type ProjectAssignmentRole,
 } from "@/lib/api/assignments";
+import { attachUserToCompany } from "@/lib/api/companies/attached-users";
 
 export type ActionResult<T> =
   | { ok: true; data: T }
@@ -248,6 +250,47 @@ export async function assignProjectMemberAction(
   if (role !== "manager" && role !== "member") return invalid();
   try {
     await assignProjectMember(projectId, userId, role);
+    return { ok: true, data: undefined };
+  } catch (err) {
+    return { ok: false, error: await classifyError(err) };
+  }
+}
+
+export async function unassignProjectMemberAction(
+  projectId: string,
+  userId: string
+): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(projectId) || !isUuid(userId)) return invalid();
+  try {
+    await unassignProjectMember(projectId, userId);
+    return { ok: true, data: undefined };
+  } catch (err) {
+    return { ok: false, error: await classifyError(err) };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Company attach (multi-company members table)
+// ---------------------------------------------------------------------------
+
+/**
+ * Attach an existing user account to a company as "member". Idempotent on
+ * the backend — ticking a company the user already belongs to succeeds
+ * without changes. Unattaching is destructive and reuses the existing
+ * `bootAttachedUserAction` (companies-actions.ts) behind a confirm dialog,
+ * not a new action here.
+ */
+export async function attachUserToCompanyAction(
+  companyId: string,
+  userId: string
+): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId) || !isUuid(userId)) return invalid();
+  try {
+    await attachUserToCompany(companyId, userId);
     return { ok: true, data: undefined };
   } catch (err) {
     return { ok: false, error: await classifyError(err) };

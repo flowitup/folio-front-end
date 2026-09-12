@@ -405,10 +405,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [gate]
+    # always(), not success(), for the same reason test and build use it: on a
+    # push `version-bump` is skipped, and success() weighs the whole ancestry —
+    # it finds that skip and skips this job too, however green `gate` is. That
+    # is what made #302 itself merge without tagging, releasing or dispatching a
+    # deploy. `gate` already fails the run when a check did not succeed, so
+    # reading its result here is the whole condition.
     if: >-
-      success()
+      always()
       && github.event_name == 'push'
       && github.ref == 'refs/heads/master'
+      && needs.gate.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

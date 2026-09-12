@@ -5,7 +5,6 @@ import { getMessages, getLocale } from "next-intl/server";
 import "../globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthErrorBoundary } from "@/context/AuthErrorBoundary";
-import { ThemeProvider } from "@/context/ThemeContext";
 import { getCurrentUser } from "@/lib/auth/session";
 import { Toaster } from "@/components/ui/sonner";
 import { AgentationWrapper } from "@/components/dev/agentation-wrapper";
@@ -51,11 +50,9 @@ export default async function LocaleLayout({
     >
       <body className="antialiased">
         <NextIntlClientProvider messages={messages}>
-          <ThemeProvider>
-            <AuthErrorBoundary>
-              <AuthProvider initialUser={user}>{children}</AuthProvider>
-            </AuthErrorBoundary>
-          </ThemeProvider>
+          <AuthErrorBoundary>
+            <AuthProvider initialUser={user}>{children}</AuthProvider>
+          </AuthErrorBoundary>
         </NextIntlClientProvider>
         <AgentationWrapper />
         <Toaster />

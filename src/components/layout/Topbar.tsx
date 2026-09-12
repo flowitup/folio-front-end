@@ -2,14 +2,13 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { Sun, Moon, Plus, LogOut, ChevronDown, Check } from "lucide-react";
+import { Plus, LogOut, ChevronDown, Check } from "lucide-react";
 import { HelpSheet } from "@/components/help/help-sheet";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
-import { useTheme } from "@/context/ThemeContext";
 import { can, canCreateProject } from "@/lib/auth/permissions";
 import { type Locale } from "@/i18n/config";
 import {
@@ -85,7 +84,6 @@ export function Topbar() {
   const tTopbar = useTranslations();
   const { user, logout, isLoading } = useAuth();
   const { projects, selectedProjectId, selectedProject, selectProject } = useProject();
-  const { resolvedTheme, setTheme } = useTheme();
   const tProjects = useTranslations("projects");
 
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
@@ -157,8 +155,6 @@ export function Topbar() {
       router.push(`/${locale}/projects/${selectedProject.id}/invoices/new`);
     }
   };
-
-  const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
 
   return (
     <header className="flex items-start justify-between gap-4 px-4 pb-3 pt-4 lg:gap-6 lg:px-8 lg:pb-4 lg:pt-6">
@@ -242,15 +238,6 @@ export function Topbar() {
       <div className="flex flex-shrink-0 items-center gap-1 lg:gap-2">
         <HelpSheet />
         <NotificationsBell />
-        <button
-          type="button"
-          className="btn btn-quiet"
-          aria-label={tTopbar("topbar.theme")}
-          onClick={toggleTheme}
-        >
-          {resolvedTheme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
-        </button>
-
         <LanguageSwitcher />
 
         <div className="mx-1 hidden h-6 w-px lg:block" style={{ background: "var(--line-2)" }} />

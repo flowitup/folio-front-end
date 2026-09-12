@@ -11,10 +11,9 @@ A clean, modern workspace inspired by fintech dashboards — but built for the r
 ### Sign in & languages
 - Secure email + password sign-in. Sessions persist in a secure cookie, so you don't have to log back in on every visit.
 - Available in **English, French and Vietnamese**, switchable from the top bar at any time.
-- **Light, Dark and System** theme modes. The app remembers your preference.
 
 ### Dashboard
-The home page after sign-in. KPI cards for active projects, pending tasks and team members, plus a recent-activity panel. The top bar carries your project selector, language switcher, theme toggle, notifications bell and user menu.
+The home page after sign-in. KPI cards for active projects, pending tasks and team members, plus a recent-activity panel. The top bar carries your project selector, language switcher, notifications bell and user menu.
 
 ### Projects
 - A grid of project cards — name, address, member count, an action menu, and a "Selected" badge on whichever project you are currently working in.

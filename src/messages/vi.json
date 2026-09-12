@@ -254,7 +254,6 @@
     "companies": {
       "backToSettings": "Quay lại Cài đặt"
     },
-    "paymentMethods": "Phương thức thanh toán",
     "company": {
       "title": "Công ty"
     },
@@ -313,11 +312,7 @@
     },
     "paidByCompany": "Công ty thanh toán",
     "personalPayment": "Thanh toán cá nhân",
-    "companyLabel": "Công ty",
-    "noCompanies": "Bạn chưa thuộc công ty nào. Thêm một công ty ở “Công ty” để quản lý phương thức thanh toán.",
-    "loadError": "Không tải được phương thức thanh toán. Vui lòng thử lại.",
-    "noMethodsReadOnly": "Chưa có phương thức thanh toán nào được thiết lập.",
-    "readOnlyNote": "Cách hoá đơn được thanh toán cho công ty này. Chỉ quản trị viên mới có thể thêm, đổi tên hoặc xoá phương thức."
+    "loadError": "Không tải được phương thức thanh toán. Vui lòng thử lại."
   },
   "errors": {
     "unauthorized": "Không được phép",

@@ -342,9 +342,10 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Trong bảng thành viên, đổi vai trò của một người, hoặc mở “Quyền tuỳ chỉnh” để cấp hay từ chối một quyền cụ thể, cho toàn công ty hoặc chỉ trên một dự án.",
       "Dùng “Thêm bằng số điện thoại” để thêm người theo số, hoặc “Nhập từ công ty khác” để mang người từ một công ty khác bạn quản trị sang.",
       "Danh bạ liệt kê mọi người liên kết với công ty, kèm số điện thoại, đã đăng nhập lần nào chưa, và những dự án họ được giao.",
+      "Ở “Phương thức thanh toán”, thêm, đổi tên hoặc xóa những cách hóa đơn của công ty đó được thanh toán. Phương thức có sẵn đổi tên được nhưng không xóa được.",
     ],
     whoCanDoIt:
-      "Ai cũng xem được các công ty mình thuộc về và liên kết thêm công ty. Mã công ty, bảng thành viên và danh bạ chỉ dành cho quản trị viên của công ty đang chọn.",
+      "Ai cũng xem được các công ty mình thuộc về và liên kết thêm công ty. Mã công ty, bảng thành viên, danh bạ và phương thức thanh toán chỉ dành cho quản trị viên của công ty đang chọn.",
     gotchas: [
       "Có hai cách thêm người và chúng không thay thế cho nhau: mã mời dùng một lần, có hiệu lực bảy ngày, và mã công ty dùng lại được mà mọi người nhập trong app điện thoại.",
     ],
@@ -353,17 +354,16 @@ export const helpCatalogueVi: HelpCatalogue = [
     id: "settings",
     title: "Hồ sơ và tùy chọn của bạn",
     purpose:
-      "Thông tin của chính bạn, cách đánh số hóa đơn của dự án đang chọn, các phương thức thanh toán của công ty, và những thông báo nào được gửi tới điện thoại của bạn.",
+      "Thông tin của chính bạn, cách đánh số hóa đơn của dự án đang chọn, và những thông báo nào được gửi tới điện thoại của bạn.",
     steps: [
       "Mở “Cài đặt”; danh sách bên trái dùng để chọn mục.",
       "Ở “Hồ sơ”, sửa tên hiển thị và số điện thoại rồi lưu. Email chỉ để xem — chỉ quản trị viên mới đổi được.",
       "Ở “Dự án”, đặt tiền tố số hóa đơn cho dự án đang chọn, tối đa tám chữ cái hoặc chữ số, và xem dòng ví dụ trước khi lưu.",
-      "Ở “Phương thức thanh toán”, chọn công ty nếu bạn thuộc nhiều công ty, rồi thêm, đổi tên hoặc xóa những cách hóa đơn của công ty đó được thanh toán.",
       "Ở “Thông báo”, dùng công tắc chính và các công tắc theo nhóm: “Trò chuyện nhóm”, “Chấm công”, “Công việc”, “Nhóm & quyền truy cập” và “Tiền”.",
       "“Giới thiệu” cho biết bạn đang chạy phiên bản Folio nào.",
     ],
     whoCanDoIt:
-      "Ai cũng vào được hồ sơ của mình, tiền tố của dự án và lựa chọn thông báo. Thay đổi phương thức thanh toán cần quyền quản trị công ty; không có quyền thì mục đó chỉ để xem.",
+      "Ai cũng vào được hồ sơ của mình, tiền tố của dự án và lựa chọn thông báo. Phương thức thanh toán đã chuyển sang “Công ty”, nơi chỉ quản trị viên của công ty đang chọn mới thấy.",
     gotchas: [
       "Hai mục “Đội” và “Thanh toán” bên trong Cài đặt mới chỉ là chỗ giữ sẵn. Khu vực báo giá và hóa đơn thật nằm ở nhóm “Báo giá & Hóa đơn” trên thanh bên.",
       "Các công tắc thông báo điều khiển thông báo đẩy gửi tới app Folio trên điện thoại, không phải cái chuông trong cửa sổ này.",

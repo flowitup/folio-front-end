@@ -4,10 +4,7 @@
  * PaymentMethodRow — single row in the payment methods list.
  *
  * Supports inline label editing, isCompanyPayment/isPersonalPayment toggles
- * (for all methods) and delete action (disabled for built-ins). When
- * `readOnly` is set the row renders labels + badges only — used by the
- * settings section for viewers who lack the admin permission the backend
- * requires for every mutation. The two
+ * (for all methods) and delete action (disabled for built-ins). The two
  * toggles are mutually exclusive (radio-like): checking one clears the other
  * locally, and save always sends both flags so the effective state on the
  * server is explicit. The delete confirmation dialog is managed by the
@@ -37,8 +34,6 @@ interface PaymentMethodRowProps {
     isPersonalPayment: boolean
   ) => Promise<void>;
   onDeleteRequest: (method: PaymentMethod) => void;
-  /** Hide every mutation control — viewer cannot edit this company's methods. */
-  readOnly?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -50,7 +45,6 @@ export function PaymentMethodRow({
   isMutating,
   onRenameRequest,
   onDeleteRequest,
-  readOnly = false,
 }: PaymentMethodRowProps) {
   const t = useTranslations("paymentMethods");
   const tBuiltins = useTranslations("paymentMethods.builtins");
@@ -194,8 +188,6 @@ export function PaymentMethodRow({
         )}
       </div>
 
-      {/* Actions — omitted entirely for read-only viewers */}
-      {!readOnly && (
       <div className="flex items-center gap-1 shrink-0">
         {isEditing ? (
           <>
@@ -254,7 +246,6 @@ export function PaymentMethodRow({
           </>
         )}
       </div>
-      )}
     </li>
   );
 }

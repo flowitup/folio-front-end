@@ -3,8 +3,7 @@
 /**
  * BillingTemplatesCompanyScope — company picker wrapper for the templates
  * list (roles-permissions-redesign: templates are company-scoped, GET
- * /billing-document-templates?company_id=). Mirrors
- * PaymentMethodsSettingsSection's pattern: default to the primary admin
+ * /billing-document-templates?company_id=): default to the primary admin
  * company, show a picker only when the caller admins more than one, refetch
  * and remount BillingTemplatesList (keyed by company id) on switch.
  */

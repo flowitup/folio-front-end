@@ -344,9 +344,10 @@ export const helpCatalogueEn: HelpCatalogue = [
       "In the members table, change someone's role, or open “Custom permissions” to grant or deny one specific permission, company-wide or on a single project.",
       "Use “Add by phone” to add someone by number, or “Import from company” to bring people across from another company you administer.",
       "The directory lists everyone linked to the company with their phone, whether they have signed in yet, and the projects they are assigned to.",
+      "Under “Payment methods”, add, rename or delete the ways that company's invoices get paid. Built-in methods can be renamed but not removed.",
     ],
     whoCanDoIt:
-      "Anyone can see the companies they belong to and attach another. The join code, the members table and the directory are for administrators of the selected company.",
+      "Anyone can see the companies they belong to and attach another. The join code, the members table, the directory and the payment methods are for administrators of the selected company.",
     gotchas: [
       "There are two different ways to add a person and they are not interchangeable: a single-use invite token valid seven days, and the reusable company code people type in the mobile app.",
     ],
@@ -355,17 +356,16 @@ export const helpCatalogueEn: HelpCatalogue = [
     id: "settings",
     title: "Your profile and preferences",
     purpose:
-      "Your own details, the current project's invoice numbering, the company's payment methods, and which notifications reach your phone.",
+      "Your own details, the current project's invoice numbering, and which notifications reach your phone.",
     steps: [
       "Open Settings; the list down the left selects the section.",
       "On “Profile”, edit your display name and phone and save. Your email is read-only — only an administrator can change it.",
       "On “Project”, set the invoice number prefix for the selected project, up to eight letters or digits, and watch the preview line before saving.",
-      "On “Payment methods”, pick the company if you belong to several, then add, rename or delete the ways its invoices get paid.",
       "On “Notifications”, use the master switch and the per-category switches: team chat, attendance, tasks, team and access, and money.",
       "“About” shows which version of Folio you are running.",
     ],
     whoCanDoIt:
-      "Everyone reaches their own profile, the project prefix and their notification choices. Changing payment methods needs company administration; without it the section is read-only.",
+      "Everyone reaches their own profile, the project prefix and their notification choices. Payment methods moved to “Company”, where they are offered to administrators of the selected company.",
     gotchas: [
       "The “Team” and “Billing” entries inside Settings are placeholders. The real billing area is the Billing group in the sidebar.",
       "The notification switches govern the pushes that reach the Folio mobile app, not the bell in this window.",

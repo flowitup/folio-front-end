@@ -2220,7 +2220,10 @@
       "tooLarge": "Ảnh quá lớn (tối đa 10 MB).",
       "unsupportedType": "Chỉ hỗ trợ ảnh JPEG, PNG và WebP.",
       "forbidden": "Bạn không phải thành viên của kênh này."
-    }
+    },
+    "voiceNote": "Tin nhắn thoại",
+    "voiceLoading": "Đang tải bản ghi…",
+    "voiceLoadFailed": "Không tải được tin nhắn thoại này."
   },
   "help": {
     "loading": "Đang tải hướng dẫn…",

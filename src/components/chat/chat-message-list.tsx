@@ -7,7 +7,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import type { ChatMember, ChatMessage } from "@/lib/api/chat-client";
+import { isVoiceNote, type ChatMember, type ChatMessage } from "@/lib/api/chat-client";
 import {
   dayDividerLabel,
   groupMessagesByDay,
@@ -16,6 +16,7 @@ import {
 } from "@/lib/chat/group-messages-by-day";
 import { ChatAvatar } from "@/components/chat/chat-avatar";
 import { ChatAttachmentImage } from "@/components/chat/chat-attachment-image";
+import { ChatAttachmentAudio } from "@/components/chat/chat-attachment-audio";
 
 function SeenBy({ members, mine }: { members: ChatMember[]; mine: boolean }) {
   const t = useTranslations("chat");
@@ -86,7 +87,11 @@ function MessageRow({
           </div>
         ) : null}
         {message.attachment ? (
-          <ChatAttachmentImage messageId={message.id} attachment={message.attachment} />
+          isVoiceNote(message.attachment.content_type) ? (
+            <ChatAttachmentAudio messageId={message.id} attachment={message.attachment} />
+          ) : (
+            <ChatAttachmentImage messageId={message.id} attachment={message.attachment} />
+          )
         ) : null}
         <span className="px-1 text-[10px]" style={{ color: "var(--muted-2)" }}>
           {timeOf(message.created_at)}

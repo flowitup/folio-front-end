@@ -2220,7 +2220,10 @@
       "tooLarge": "Photo is too large (10 MB max).",
       "unsupportedType": "Only JPEG, PNG and WebP photos are supported.",
       "forbidden": "You are not a member of this channel."
-    }
+    },
+    "voiceNote": "Voice message",
+    "voiceLoading": "Loading the recording…",
+    "voiceLoadFailed": "This voice message could not be loaded."
   },
   "help": {
     "loading": "Loading the guide…",

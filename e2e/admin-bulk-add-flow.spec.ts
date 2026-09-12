@@ -42,7 +42,7 @@ const USER_SEARCH_QUERY = process.env.E2E_BULK_ADD_SEARCH || "member";
 test.describe("Admin bulk-add flow", () => {
   // ---- Happy path ----------------------------------------------------------
 
-  test("happy path: admin searches for user, selects projects, picks role, submits — sees success toast", async ({
+  test("happy path: admin searches for user, selects projects, submits — sees success toast", async ({
     page,
   }) => {
     // ---- Step 1: Login as admin ----
@@ -100,19 +100,12 @@ test.describe("Admin bulk-add flow", () => {
     await checkboxes.nth(0).check();
     await checkboxes.nth(1).check();
 
-    // ---- Step 6: Pick a role from the select ----
-    const roleSelect = page.getByRole("combobox");
-    await roleSelect.click();
-    const firstRoleOption = page.getByRole("option").first();
-    await expect(firstRoleOption).toBeVisible({ timeout: 5000 });
-    await firstRoleOption.click();
-
-    // ---- Step 7: Submit ----
+    // ---- Step 6: Submit ----
     const submitBtn = page.getByRole("button", { name: /add to selected/i });
     await expect(submitBtn).toBeEnabled({ timeout: 3000 });
     await submitBtn.click();
 
-    // ---- Step 8: Assert success toast ----
+    // ---- Step 7: Assert success toast ----
     // The toast contains "Added user to" for the added results
     const successToast = page.getByText(/Added user to/i);
     await expect(successToast).toBeVisible({ timeout: 10000 });

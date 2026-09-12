@@ -7,6 +7,13 @@
 #                  This keeps the manifest roughly right; it does not decide the release.
 #
 # Push to master (a squash-merged PR):
+#   The whole suite runs again on the merge commit, then release. Re-running it is
+#   not redundant: a pull request is tested against its own base, so a rule added by
+#   one PR can be broken by another that merged in parallel and never ran it. That
+#   happened — #297 added a settings-nav rule, #298 shipped a tab that broke it, and
+#   master stayed red and shipping because `test` was skipped here and `release`
+#   waited for nothing. Release now needs `build`, so a red master does not deploy.
+#
 #   release → computes the next version from the TAG LIST, tags the merge commit,
 #             publishes a GitHub Release and dispatches the deploy to flowitup/folio.
 #             Reading the version from package.json instead used to let two pull
@@ -248,6 +255,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [lint, type-check]
+    # `version-bump` is skipped on a push, and a skip propagates down the whole
+    # `needs` chain: lint and type-check survive it with always(), but their own
+    # success was not enough to start this job, so the suite never ran on master.
+    # Gate on the parents' results instead of the implicit success().
+    if: >-
+      always()
+      && needs.lint.result == 'success'
+      && needs.type-check.result == 'success'
     steps:
       - uses: actions/checkout@v6
         with:
@@ -275,6 +290,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [test]
+    if: always() && needs.test.result == 'success'
     steps:
       - uses: actions/checkout@v6
         with:
@@ -342,7 +358,15 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # Without this the job had no `needs` at all: it tagged, published and
+    # dispatched the production deploy in the same second the checks started,
+    # finishing before either of them. A red master shipped anyway.
+    needs: [build]
+    if: >-
+      always()
+      && github.event_name == 'push'
+      && github.ref == 'refs/heads/master'
+      && needs.build.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

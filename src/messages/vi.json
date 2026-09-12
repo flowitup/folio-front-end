@@ -277,6 +277,41 @@
         "billing": "Tiền",
         "billingDesc": "Hoàn tiền chi phí của bạn, thay đổi trạng thái báo giá và hóa đơn"
       }
+    },
+    "apiKeys": {
+      "title": "Khóa API",
+      "intro": "Tạo khóa API cá nhân để gọi API của Folio từ script và các công cụ tự động hóa khác.",
+      "namePlaceholder": "Tên khóa (vd: \"Pipeline CI\")",
+      "createCta": "Tạo khóa",
+      "creating": "Đang tạo…",
+      "createdTitle": "Khóa API mới của bạn",
+      "createdWarning": "Hãy sao chép khóa này ngay — vì lý do bảo mật, bạn sẽ không thể xem lại khóa này.",
+      "copy": "Sao chép",
+      "copied": "Đã sao chép",
+      "copyFailed": "Không thể sao chép vào clipboard. Vui lòng sao chép thủ công.",
+      "dismiss": "Đóng",
+      "listEmpty": "Bạn chưa tạo khóa API nào.",
+      "created": "Tạo ngày {date}",
+      "lastUsed": "Dùng lần cuối ngày {date}",
+      "neverUsed": "Chưa từng sử dụng",
+      "revoke": "Thu hồi",
+      "revokeConfirmTitle": "Thu hồi khóa API",
+      "revokeConfirmBody": "Thu hồi \"{name}\"? Mọi tự động hóa dùng khóa này sẽ ngừng hoạt động ngay lập tức. Không thể hoàn tác.",
+      "revokeConfirmCta": "Thu hồi khóa",
+      "cancel": "Hủy",
+      "usageHintTitle": "Cách dùng khóa của bạn",
+      "usageHintBody": "Gửi khóa dưới dạng bearer token trong tiêu đề Authorization của mỗi yêu cầu từ script hoặc công cụ tự động hóa của bạn.",
+      "toasts": {
+        "created": "Đã tạo khóa API",
+        "revoked": "Đã thu hồi khóa API"
+      },
+      "errors": {
+        "invalid_name": "Vui lòng nhập tên cho khóa này.",
+        "limit_reached": "Bạn đã đạt số lượng khóa API tối đa. Hãy thu hồi một khóa trước khi tạo thêm.",
+        "not_found": "Khóa API này không còn tồn tại.",
+        "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+        "unknown": "Đã xảy ra lỗi. Vui lòng thử lại."
+      }
     }
   },
   "paymentMethods": {

@@ -277,6 +277,42 @@
         "billing": "Argent",
         "billingDesc": "Remboursements de vos dépenses, changements de statut des devis et factures"
       }
+    },
+    "apiKeys": {
+      "title": "Clés API",
+      "intro": "Générez des clés API personnelles pour appeler l'API Folio depuis des scripts et d'autres automatisations.",
+      "namePlaceholder": "Nom de la clé (ex. « Pipeline CI »)",
+      "createCta": "Créer une clé",
+      "creating": "Création…",
+      "createdTitle": "Votre nouvelle clé API",
+      "createdWarning": "Copiez cette clé maintenant — pour des raisons de sécurité, nous ne pourrons plus vous la montrer.",
+      "copy": "Copier",
+      "copied": "Copié",
+      "copyFailed": "Impossible de copier dans le presse-papiers. Copiez-la manuellement.",
+      "dismiss": "Fermer",
+      "listEmpty": "Vous n'avez encore créé aucune clé API.",
+      "created": "Créée le {date}",
+      "lastUsed": "Dernière utilisation le {date}",
+      "neverUsed": "Jamais utilisée",
+      "revoke": "Révoquer",
+      "revokeConfirmTitle": "Révoquer la clé API",
+      "revokeConfirmBody": "Révoquer « {name} » ? Toute automatisation qui l'utilise cessera de fonctionner immédiatement. Cette action est irréversible.",
+      "revokeConfirmCta": "Révoquer la clé",
+      "cancel": "Annuler",
+      "usageHintTitle": "Utiliser votre clé",
+      "usageHintBody": "Envoyez-la comme jeton porteur dans l'en-tête Authorization de chaque requête envoyée par votre script ou automatisation.",
+      "toasts": {
+        "created": "Clé API créée",
+        "revoked": "Clé API révoquée"
+      },
+      "errors": {
+        "invalid_name": "Veuillez saisir un nom pour cette clé.",
+        "limit_reached": "Vous avez atteint le nombre maximal de clés API. Révoquez-en une avant d'en créer une autre.",
+        "not_found": "Cette clé API n'existe plus.",
+        "unauthorized": "Votre session a expiré. Veuillez vous reconnecter.",
+        "rate_limited": "Trop de tentatives. Patientez un instant, puis réessayez.",
+        "unknown": "Une erreur est survenue. Veuillez réessayer."
+      }
     }
   },
   "paymentMethods": {

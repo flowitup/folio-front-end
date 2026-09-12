@@ -9,6 +9,7 @@ import { InvoicePrefixSection } from "./invoice-prefix-section";
 import { AdminCompaniesSection } from "@/components/companies/admin-companies-section";
 import { CompanySettingsSection } from "@/components/companies/company-settings-section";
 import { NotificationPreferencesSection } from "@/components/notifications/notification-preferences-section";
+import { ApiKeysSection } from "@/components/settings/api-keys-section";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { isPlatformOps } from "@/lib/auth/permissions";
 import type { ProjectSummary } from "@/lib/api/projects-server";
@@ -29,6 +30,7 @@ const BASE_SECTION_KEYS = [
   "profile",
   "company",
   "notifications",
+  "apiKeys",
   "users",
 ] as const;
 type SectionKey = (typeof BASE_SECTION_KEYS)[number] | "project";
@@ -85,6 +87,9 @@ export function SettingsClient({ projects }: Props) {
     // admin only, that company's self-service tools.
     "company",
     "notifications",
+    // Personal automation tokens — no permission gate, every signed-in user
+    // manages their own keys.
+    "apiKeys",
     // Platform ops only: for everyone else this tab's entire content was a
     // permission-denied panel, so it is no longer offered at all.
     ...(isSuperadmin ? ["users" as const] : []),
@@ -101,7 +106,9 @@ export function SettingsClient({ projects }: Props) {
                 ? t("users.title")
                 : key === "company"
                   ? t("company.title")
-                  : t(key);
+                  : key === "apiKeys"
+                    ? t("apiKeys.title")
+                    : t(key);
             return (
               <button
                 key={key}
@@ -136,6 +143,12 @@ export function SettingsClient({ projects }: Props) {
         {resolved === "notifications" && (
           <section className="folio-card p-7">
             <NotificationPreferencesSection />
+          </section>
+        )}
+
+        {resolved === "apiKeys" && (
+          <section className="folio-card p-7">
+            <ApiKeysSection />
           </section>
         )}
 

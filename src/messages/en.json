@@ -277,6 +277,42 @@
         "billing": "Money",
         "billingDesc": "Refunds on your expenses, quote and invoice status changes"
       }
+    },
+    "apiKeys": {
+      "title": "API Keys",
+      "intro": "Generate personal API keys to call the Folio API from scripts and other automations.",
+      "namePlaceholder": "Key name (e.g. \"CI pipeline\")",
+      "createCta": "Create key",
+      "creating": "Creating…",
+      "createdTitle": "Your new API key",
+      "createdWarning": "Copy this key now — for security, we can't show it to you again.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Couldn't copy to clipboard. Please copy it manually.",
+      "dismiss": "Dismiss",
+      "listEmpty": "You haven't created any API keys yet.",
+      "created": "Created {date}",
+      "lastUsed": "Last used {date}",
+      "neverUsed": "Never used",
+      "revoke": "Revoke",
+      "revokeConfirmTitle": "Revoke API key",
+      "revokeConfirmBody": "Revoke \"{name}\"? Any automation using it will stop working immediately. This cannot be undone.",
+      "revokeConfirmCta": "Revoke key",
+      "cancel": "Cancel",
+      "usageHintTitle": "Using your key",
+      "usageHintBody": "Send it as a bearer token in the Authorization header of every request from your script or automation.",
+      "toasts": {
+        "created": "API key created",
+        "revoked": "API key revoked"
+      },
+      "errors": {
+        "invalid_name": "Please enter a name for this key.",
+        "limit_reached": "You've reached the maximum number of API keys. Revoke one before creating another.",
+        "not_found": "This API key no longer exists.",
+        "unauthorized": "Your session has expired. Please sign in again.",
+        "rate_limited": "Too many attempts. Please wait a moment and try again.",
+        "unknown": "Something went wrong. Please try again."
+      }
     }
   },
   "paymentMethods": {

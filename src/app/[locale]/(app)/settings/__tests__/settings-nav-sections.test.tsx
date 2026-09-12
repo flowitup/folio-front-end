@@ -133,7 +133,7 @@ describe("Settings nav", () => {
   it("offers only working sections to an ordinary user", () => {
     renderWith();
 
-    expect(navNames()).toEqual(["Profile", "Company", "Notifications"]);
+    expect(navNames()).toEqual(["Profile", "Company", "Notifications", "API Keys"]);
   });
 
   it("does not offer the retired Team, Billing, About or Preferences entries", () => {
@@ -156,6 +156,12 @@ describe("Settings nav", () => {
     expect(navButton("Users & Roles")).toBeNull();
   });
 
+  it("offers API Keys to a non-platform-ops user", () => {
+    renderWith();
+
+    expect(navButton("API Keys")).not.toBeNull();
+  });
+
   it("offers Users to platform ops", () => {
     state.permissions = ["*:*"];
     renderWith();
@@ -171,9 +177,9 @@ describe("Settings nav", () => {
   });
 
   it.each([
-    ["fr", ["Profil", "Entreprise", "Notifications"],
+    ["fr", ["Profil", "Entreprise", "Notifications", "Clés API"],
       ["Équipe", "Facturation", "À propos", "Préférences", "Moyens de paiement"]],
-    ["vi", ["Hồ sơ", "Công ty", "Thông báo"],
+    ["vi", ["Hồ sơ", "Công ty", "Thông báo", "Khóa API"],
       ["Đội", "Thanh toán", "Giới thiệu", "Tùy chọn", "Phương thức thanh toán"]],
   ] as const)(
     "offers exactly the working sections in %s, and none of the retired ones",

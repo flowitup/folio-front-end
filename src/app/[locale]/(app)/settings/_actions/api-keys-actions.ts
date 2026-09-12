@@ -15,6 +15,7 @@ export type ApiKeyError =
   | "invalid_name"
   | "limit_reached"
   | "not_found"
+  | "rate_limited"
   | "unknown";
 
 export type ListApiKeysResult =
@@ -41,6 +42,10 @@ function classify(err: unknown): ApiKeyError {
       return "limit_reached";
     case 404:
       return "not_found";
+    case 429:
+      // Creating keys is rate-limited server-side; without this the user is
+      // told "something went wrong" for a condition that simply needs a wait.
+      return "rate_limited";
     default:
       return "unknown";
   }

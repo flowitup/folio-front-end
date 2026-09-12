@@ -310,6 +310,7 @@
         "limit_reached": "You've reached the maximum number of API keys. Revoke one before creating another.",
         "not_found": "This API key no longer exists.",
         "unauthorized": "Your session has expired. Please sign in again.",
+        "rate_limited": "Too many attempts. Please wait a moment and try again.",
         "unknown": "Something went wrong. Please try again."
       }
     }

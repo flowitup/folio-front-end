@@ -42,6 +42,10 @@ export function CreatedTokenPanel({ apiKey, onDismiss }: CreatedTokenPanelProps)
       className="mb-5 rounded-md border-2 px-4 py-3.5 space-y-2.5"
       style={{ borderColor: "var(--accent)", background: "var(--paper)" }}
       data-testid="api-key-created-panel"
+      // The secret appears once and never again, so a screen-reader user must
+      // be told it is here rather than having to hunt for it.
+      role="status"
+      aria-live="polite"
     >
       <p className="text-[14px] font-medium">{t("createdTitle")}</p>
       <p className="font-mono break-all text-[13px]" data-testid="api-key-token">

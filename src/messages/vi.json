@@ -310,6 +310,7 @@
         "limit_reached": "Bạn đã đạt số lượng khóa API tối đa. Hãy thu hồi một khóa trước khi tạo thêm.",
         "not_found": "Khóa API này không còn tồn tại.",
         "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+        "rate_limited": "Quá nhiều lần thử. Vui lòng đợi một lát rồi thử lại.",
         "unknown": "Đã xảy ra lỗi. Vui lòng thử lại."
       }
     }

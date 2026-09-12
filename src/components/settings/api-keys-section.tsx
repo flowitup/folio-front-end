@@ -114,6 +114,14 @@ export function ApiKeysSection() {
       const result = await deleteApiKeyAction(revokingKey.id);
       if (!result.ok) {
         toast.error(t(`errors.${result.error}`));
+        // The dialog must close even on failure, or the error toast surfaces
+        // behind a confirm still asking the same question. A 404 means the key
+        // is already gone server-side, so drop the stale row too rather than
+        // keep offering an action that can never succeed.
+        if (result.error === "not_found") {
+          setApiKeys((prev) => prev.filter((k) => k.id !== revokingKey.id));
+        }
+        setRevokingKey(null);
         return;
       }
       setApiKeys((prev) => prev.filter((k) => k.id !== revokingKey.id));

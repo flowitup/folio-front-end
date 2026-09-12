@@ -310,6 +310,7 @@
         "limit_reached": "Vous avez atteint le nombre maximal de clés API. Révoquez-en une avant d'en créer une autre.",
         "not_found": "Cette clé API n'existe plus.",
         "unauthorized": "Votre session a expiré. Veuillez vous reconnecter.",
+        "rate_limited": "Trop de tentatives. Patientez un instant, puis réessayez.",
         "unknown": "Une erreur est survenue. Veuillez réessayer."
       }
     }

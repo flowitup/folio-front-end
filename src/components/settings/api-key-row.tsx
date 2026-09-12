@@ -8,12 +8,12 @@
  * section; this component only requests it via onRevokeRequest.
  */
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import type { ApiKey } from "@/lib/api/api-keys";
 
-function formatKeyDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
+function formatKeyDate(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -27,6 +27,7 @@ interface ApiKeyRowProps {
 
 export function ApiKeyRow({ apiKey, onRevokeRequest }: ApiKeyRowProps) {
   const t = useTranslations("settings.apiKeys");
+  const locale = useLocale();
 
   return (
     <li className="flex items-center gap-3 py-3">
@@ -38,11 +39,11 @@ export function ApiKeyRow({ apiKey, onRevokeRequest }: ApiKeyRowProps) {
         >
           <span className="font-mono">{apiKey.prefix}…</span>
           <span aria-hidden>·</span>
-          <span>{t("created", { date: formatKeyDate(apiKey.createdAt) })}</span>
+          <span>{t("created", { date: formatKeyDate(apiKey.createdAt, locale) })}</span>
           <span aria-hidden>·</span>
           <span>
             {apiKey.lastUsedAt
-              ? t("lastUsed", { date: formatKeyDate(apiKey.lastUsedAt) })
+              ? t("lastUsed", { date: formatKeyDate(apiKey.lastUsedAt, locale) })
               : t("neverUsed")}
           </span>
         </div>

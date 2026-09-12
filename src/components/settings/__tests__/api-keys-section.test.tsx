@@ -16,6 +16,7 @@ import type { ApiKey, CreatedApiKey } from "@/lib/api/api-keys";
 // ---------------------------------------------------------------------------
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "en",
   useTranslations: (_ns: string) => (key: string) => {
     const map: Record<string, string> = {
       title: "API Keys",

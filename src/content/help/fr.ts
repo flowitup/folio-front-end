@@ -364,12 +364,12 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Dans “Profil”, modifiez votre nom affiché et votre téléphone, puis enregistrez. Votre e-mail est en lecture seule — seul un administrateur peut le changer.",
       "Dans “Projet”, fixez le préfixe de numéro de facture du projet sélectionné, jusqu'à huit lettres ou chiffres, et regardez la ligne d'aperçu avant d'enregistrer.",
       "Dans “Notifications”, utilisez l'interrupteur général et les interrupteurs par catégorie : “Discussion d'équipe”, “Présences”, “Tâches”, “Équipe et accès” et “Argent”.",
-      "“À propos” indique la version de Folio que vous utilisez.",
+      "La version de Folio que vous utilisez est indiquée en bas de la page, sous la section ouverte.",
     ],
     whoCanDoIt:
       "Chacun accède à son profil, au préfixe du projet et à ses choix de notification. Les moyens de paiement ont rejoint “Entreprise”, où ils sont proposés aux administrateurs de la société sélectionnée.",
     gotchas: [
-      "Les entrées “Équipe” et “Facturation” des paramètres sont des emplacements réservés. La vraie facturation est le groupe “Facturation” du menu latéral.",
+      "Les paramètres n'ont pas de section de facturation. Les devis, les factures et les modèles sont tous dans le groupe “Facturation” du menu latéral.",
       "Les interrupteurs de notification commandent les notifications push qui arrivent dans l'application mobile Folio, pas la cloche de cette fenêtre.",
     ],
   },

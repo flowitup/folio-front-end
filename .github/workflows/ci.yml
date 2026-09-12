@@ -397,16 +397,21 @@ jobs:
   # landed, in parallel with the checks, so master tagged, published a release
   # and dispatched the production deploy to flowitup/folio whether or not the
   # tests passed — and while they were skipped, nothing ever said no. The `if`
-  # job: no tag, no release, no deploy. success() below says that out loud
-  # rather than leaning on the implicit rule, because what it guards is a
-  # production deploy.
+  # job: no tag, no release, no deploy.
+  #
+  # It has to be always() + an explicit result check, the same shape as test and
+  # build above. success() reads the WHOLE ancestry, not just `needs`, so it
+  # found the skipped version-bump at the root and skipped this job on a push to
+  # master — the exact transitive rule this workflow exists to work around. That
+  # cost the release of 6628313: checks green, gate green, no tag and no deploy.
   release:
     name: Release
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [gate]
     if: >-
-      success()
+      always()
+      && needs.gate.result == 'success'
       && github.event_name == 'push'
       && github.ref == 'refs/heads/master'
     steps:

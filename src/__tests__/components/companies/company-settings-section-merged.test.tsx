@@ -4,8 +4,8 @@
  * Pins the merge of the old "My companies" tab into "Company": one section now
  * carries both the caller's attachment (identity card) and — only when the
  * caller admins the SELECTED company — the admin tools (join code, the
- * members table). A manager or member must see their company without any of
- * the admin surface, which would only 403 for them.
+ * members table, payment methods). A manager or member must see their company
+ * without any of the admin surface, which would only 403 for them.
  *
  * The picker is the one interaction the merge introduces, so switching it is
  * covered here: it must re-gate the admin half AND remount the admin children,
@@ -125,6 +125,13 @@ vi.mock("@/components/companies/company-members-table", () => ({
   },
 }));
 
+vi.mock("@/components/companies/company-payment-methods-card", () => ({
+  CompanyPaymentMethodsCard: ({ companyId }: { companyId: string }) => (
+    <div data-testid="payment-methods-card" data-company={companyId} />
+  ),
+}));
+
+
 vi.mock("@/components/companies/join-company-dialog", () => ({
   JoinCompanyDialog: () => <div data-testid="join-company-dialog" />,
 }));
@@ -194,6 +201,7 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     // Admin half.
     expect(screen.getByTestId("join-code-card")).toBeDefined();
     expect(screen.getByTestId("members-table")).toBeDefined();
+    expect(screen.getByTestId("payment-methods-card")).toBeDefined();
   });
 
   it("hides the admin tools when the caller is only a member of the company", async () => {
@@ -207,6 +215,7 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     // Admin half must not: those endpoints would 403 for a member.
     expect(screen.queryByTestId("join-code-card")).toBeNull();
     expect(screen.queryByTestId("members-table")).toBeNull();
+    expect(screen.queryByTestId("payment-methods-card")).toBeNull();
   });
 
   it("hides the admin tools for a manager too", async () => {
@@ -215,6 +224,7 @@ describe("CompanySettingsSection (merged Company tab)", () => {
 
     expect(await screen.findByText("Maison Lavandou")).toBeDefined();
     expect(screen.queryByTestId("members-table")).toBeNull();
+    expect(screen.queryByTestId("payment-methods-card")).toBeNull();
   });
 
   it("renders no picker for a single company, and one for several", async () => {

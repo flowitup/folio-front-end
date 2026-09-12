@@ -8,7 +8,6 @@ import { UsersSection } from "./users/users-section";
 import { InvoicePrefixSection } from "./invoice-prefix-section";
 import { AdminCompaniesSection } from "@/components/companies/admin-companies-section";
 import { CompanySettingsSection } from "@/components/companies/company-settings-section";
-import { PaymentMethodsSettingsSection } from "@/components/payment-methods/payment-methods-settings-section";
 import { NotificationPreferencesSection } from "@/components/notifications/notification-preferences-section";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { isPlatformOps } from "@/lib/auth/permissions";
@@ -29,7 +28,6 @@ const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION;
 const BASE_SECTION_KEYS = [
   "profile",
   "company",
-  "payment-methods",
   "notifications",
   "users",
 ] as const;
@@ -51,8 +49,9 @@ function initialActiveFromHash(isOps: boolean): SectionKey {
   if (typeof window === "undefined") return "profile";
   const hash = window.location.hash.replace("#", "");
   // "my-companies" was the attachments tab before it was folded into
-  // "company"; keep old links and bookmarks landing on the merged section.
-  if (hash === "my-companies") return "company";
+  // "company", and "payment-methods" was a tab of its own before the same
+  // merge; keep old links and bookmarks landing on the merged section.
+  if (hash === "my-companies" || hash === "payment-methods") return "company";
   // "users" is platform-ops only. For anyone else the nav no longer offers it,
   // so a stale #users link lands on Profile rather than on an orphan tab.
   if (hash === "users" && !isOps) return "profile";
@@ -85,7 +84,6 @@ export function SettingsClient({ projects }: Props) {
     // (identity card, primary, detach, attach-by-code) and, for a company
     // admin only, that company's self-service tools.
     "company",
-    "payment-methods",
     "notifications",
     // Platform ops only: for everyone else this tab's entire content was a
     // permission-denied panel, so it is no longer offered at all.
@@ -101,11 +99,9 @@ export function SettingsClient({ projects }: Props) {
             const label =
               key === "users"
                 ? t("users.title")
-                : key === "payment-methods"
-                  ? t("paymentMethods")
-                  : key === "company"
-                    ? t("company.title")
-                    : t(key);
+                : key === "company"
+                  ? t("company.title")
+                  : t(key);
             return (
               <button
                 key={key}
@@ -135,12 +131,6 @@ export function SettingsClient({ projects }: Props) {
             <CompanySettingsSection />
             {isSuperadmin && <AdminCompaniesSection />}
           </div>
-        )}
-
-        {resolved === "payment-methods" && (
-          <section className="folio-card p-7">
-            <PaymentMethodsSettingsSection />
-          </section>
         )}
 
         {resolved === "notifications" && (

@@ -6,9 +6,9 @@
  * Folds together what used to be two separate settings tabs:
  *  - "My companies": the caller's attachments — identity card with masked
  *    SIRET / TVA / IBAN / BIC, primary toggle, detach, attach-by-code;
- *  - "Company": the company-admin self-service tools — join code and the
- *    members table (roles, phone, company/project assignment, D8 grants,
- *    add-by-phone, import).
+ *  - "Company": the company-admin self-service tools — join code, the members
+ *    table (roles, phone, company/project assignment, D8 grants, add-by-phone,
+ *    import) and the company's payment methods.
  *
  * One picker at the top governs both halves, so a caller who admins the single
  * company they belong to — the common case — sees that company described once
@@ -39,6 +39,7 @@ import { JoinCompanyDialog } from "@/components/companies/join-company-dialog";
 // caller's own company id instead of an arbitrary one.
 import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-card";
 import { CompanyMembersTable } from "@/components/companies/company-members-table";
+import { CompanyPaymentMethodsCard } from "@/components/companies/company-payment-methods-card";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { CompanyRole, MyCompany } from "@/types/companies";
 
@@ -222,6 +223,14 @@ export function CompanySettingsSection() {
                 adminOfMultiple={adminCompanies.length > 1}
                 sourceCompanies={adminCompanies.filter((c) => c.id !== selectedCompany.id)}
                 onMutated={bumpRefresh}
+              />
+
+              {/* Payment methods are company-scoped and admin-gated exactly
+                  like the cards above, so they live here rather than behind a
+                  settings tab of their own. */}
+              <CompanyPaymentMethodsCard
+                key={`payment-methods-${selectedCompany.id}`}
+                companyId={selectedCompany.id}
               />
             </>
           )}

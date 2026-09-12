@@ -11,7 +11,10 @@
  *    project-scoped invoice-prefix section, offered only with a project
  *    selected;
  *  - "Users" is platform-ops only: for anyone else its whole content was a
- *    permission-denied panel.
+ *    permission-denied panel;
+ *  - "Payment methods" was a company-scoped, company-admin-gated surface with
+ *    a company picker of its own — exactly what the Company tab already is —
+ *    so it moved in there as one more admin card.
  *
  * This test pins all of that, the hash fallbacks, and the removal of the
  * matching i18n keys, so a paste-back cannot quietly resurrect dead UI.
@@ -112,7 +115,14 @@ const activeNavName = () =>
     ?.textContent?.trim();
 
 /** Keys that existed only to label an entry the nav no longer offers. */
-const RETIRED_KEYS = ["team", "billing", "about", "version", "comingSoon"];
+const RETIRED_KEYS = [
+  "team",
+  "billing",
+  "about",
+  "version",
+  "comingSoon",
+  "paymentMethods",
+];
 
 beforeEach(() => {
   state.permissions = [];
@@ -123,18 +133,13 @@ describe("Settings nav", () => {
   it("offers only working sections to an ordinary user", () => {
     renderWith();
 
-    expect(navNames()).toEqual([
-      "Profile",
-      "Company",
-      "Payment methods",
-      "Notifications",
-    ]);
+    expect(navNames()).toEqual(["Profile", "Company", "Notifications"]);
   });
 
   it("does not offer the retired Team, Billing, About or Preferences entries", () => {
     renderWith();
 
-    for (const name of ["Team", "Billing", "About", "Preferences"]) {
+    for (const name of ["Team", "Billing", "About", "Preferences", "Payment methods"]) {
       expect(navButton(name)).toBeNull();
     }
   });
@@ -166,10 +171,10 @@ describe("Settings nav", () => {
   });
 
   it.each([
-    ["fr", ["Profil", "Entreprise", "Moyens de paiement", "Notifications"],
-      ["Équipe", "Facturation", "À propos", "Préférences"]],
-    ["vi", ["Hồ sơ", "Công ty", "Phương thức thanh toán", "Thông báo"],
-      ["Đội", "Thanh toán", "Giới thiệu", "Tùy chọn"]],
+    ["fr", ["Profil", "Entreprise", "Notifications"],
+      ["Équipe", "Facturation", "À propos", "Préférences", "Moyens de paiement"]],
+    ["vi", ["Hồ sơ", "Công ty", "Thông báo"],
+      ["Đội", "Thanh toán", "Giới thiệu", "Tùy chọn", "Phương thức thanh toán"]],
   ] as const)(
     "offers exactly the working sections in %s, and none of the retired ones",
     (locale, expected, retired) => {
@@ -208,10 +213,13 @@ describe("Settings nav", () => {
       }
     );
 
-    it("keeps #my-companies landing on the merged Company section", () => {
-      renderAtHash("#my-companies");
-      expect(activeNavName()).toBe("Company");
-    });
+    it.each(["#my-companies", "#payment-methods"])(
+      "keeps %s landing on the merged Company section",
+      (hash) => {
+        renderAtHash(hash);
+        expect(activeNavName()).toBe("Company");
+      }
+    );
 
     it("sends #users to Profile for a non-platform-ops caller", () => {
       renderAtHash("#users");

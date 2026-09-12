@@ -365,11 +365,12 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Dans “Projet”, fixez le préfixe de numéro de facture du projet sélectionné, jusqu'à huit lettres ou chiffres, et regardez la ligne d'aperçu avant d'enregistrer.",
       "Dans “Entreprise”, gérez les sociétés auxquelles vous êtes rattaché : la fiche d'identité de chacune, celle qui est principale, le détachement, et le rattachement d'une autre par code. Si vous administrez celle qui est sélectionnée, s'y ajoutent son code société, ses membres et ses moyens de paiement.",
       "Dans “Notifications”, utilisez l'interrupteur général et les interrupteurs par catégorie : “Discussion d'équipe”, “Présences”, “Tâches”, “Équipe et accès” et “Argent”.",
-      "Dans “Utilisateurs et rôles”, les opérateurs de la plateforme rattachent un compte existant à des projets : cherchez la personne, cochez les projets, puis validez. Aucun rôle ne se règle ici — ils viennent du rôle dans la société et des permissions accordées projet par projet, sous “Entreprise”.",
+      "Dans “Clés API”, nommez une clé et créez-la pour appeler l'API Folio depuis vos propres scripts : copiez-la tout de suite, car elle ne sera plus jamais affichée. Révoquer une clé arrête immédiatement et définitivement toute automatisation qui l'utilise.",
+      "Dans “Utilisateurs et rôles”, que seule l'assistance Folio peut ouvrir, rattachez un compte existant à des projets : cherchez la personne, cochez les projets, puis validez. Les rôles ne se règlent pas ici — ils viennent du rôle dans la société et des permissions accordées projet par projet, sous “Entreprise”.",
       "La version de Folio que vous utilisez est indiquée en bas de la page, sous la section ouverte.",
     ],
     whoCanDoIt:
-      "Chacun accède à son profil, au préfixe du projet et à ses choix de notification. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code société, membres, moyens de paiement — aux seuls administrateurs de la société sélectionnée. “Utilisateurs et rôles” n'est proposé qu'aux opérateurs de la plateforme.",
+      "Chacun accède à son profil, au préfixe du projet, à ses choix de notification et à ses propres clés API. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code société, membres, moyens de paiement — aux seuls administrateurs de la société sélectionnée. “Utilisateurs et rôles” est réservé à l'assistance Folio.",
     gotchas: [
       "Les paramètres n'ont pas de section de facturation. Les devis, les factures et les modèles sont tous dans le groupe “Facturation” du menu latéral.",
       "Les interrupteurs de notification commandent les notifications push qui arrivent dans l'application mobile Folio, pas la cloche de cette fenêtre.",

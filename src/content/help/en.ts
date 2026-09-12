@@ -363,11 +363,12 @@ export const helpCatalogueEn: HelpCatalogue = [
       "On “Project”, set the invoice number prefix for the selected project, up to eight letters or digits, and watch the preview line before saving.",
       "On “Company”, manage the companies you belong to: the identity card of each, which one is primary, detaching, and attaching another with a code. Administering the selected one adds its join code, its members and its payment methods.",
       "On “Notifications”, use the master switch and the per-category switches: team chat, attendance, tasks, team and access, and money.",
-      "On “Users & Roles”, platform operators attach an existing account to projects: find the person, tick the projects, and submit. No role is set here — those come from the company role and the per-project grants under “Company”.",
+      "On “API Keys”, name a key and create it to call the Folio API from your own scripts: copy it straight away, because it is never shown again. Revoking one stops every automation using it, immediately and for good.",
+      "On “Users & Roles”, which only Folio's support team can open, attach an existing account to projects: find the person, tick the projects, and submit. Roles are not set here — they come from the company role and the per-project grants under “Company”.",
       "The Folio version you are running is printed at the foot of the page, under whichever section is open.",
     ],
     whoCanDoIt:
-      "Everyone reaches their own profile, the project prefix and their notification choices. “Company” shows anyone their own attachments, and its admin tools — join code, members, payment methods — only to an administrator of the selected company. “Users & Roles” is offered to platform operators alone.",
+      "Everyone reaches their own profile, the project prefix, their notification choices and their own API keys. “Company” shows anyone their own attachments, and its admin tools — join code, members, payment methods — only to an administrator of the selected company. “Users & Roles” is reserved for Folio's support team.",
     gotchas: [
       "Settings has no billing section of its own. Quotes, invoices and templates all live in the Billing group in the sidebar.",
       "The notification switches govern the pushes that reach the Folio mobile app, not the bell in this window.",

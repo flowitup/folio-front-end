@@ -2118,14 +2118,25 @@
       "addByPhone": "Thêm bằng số điện thoại",
       "empty": "Chưa có thành viên nào.",
       "col": {
-        "namePhone": "Tên / Số điện thoại",
-        "role": "Vai trò"
+        "name": "Tên",
+        "phone": "Số điện thoại",
+        "role": "Vai trò",
+        "company": "Công ty",
+        "projects": "Dự án"
       },
       "roleAdmin": "Quản trị viên",
       "roleManager": "Quản lý",
       "roleMember": "Thành viên",
       "customPermissions": "Quyền tuỳ chỉnh",
-      "roleUpdatedToast": "Đã cập nhật vai trò."
+      "roleUpdatedToast": "Đã cập nhật vai trò.",
+      "pendingBadge": "Đang chờ",
+      "companyPickerPlaceholder": "Thêm công ty",
+      "companyPickerEmpty": "Không có công ty nào khác bạn quản trị",
+      "projectsPickerPlaceholder": "Gán dự án",
+      "projectsPickerEmpty": "Công ty này chưa có dự án nào",
+      "cancel": "Huỷ",
+      "bootAction": "Xoá khỏi công ty",
+      "bootConfirmDescription": "Xoá {member} khỏi {company}? Thao tác này sẽ ngay lập tức huỷ các dự án được giao và hồ sơ danh bạ của họ ở đó, đồng thời làm mới mã tham gia của công ty."
     },
     "addByPhone": {
       "dialogTitle": "Thêm thành viên bằng số điện thoại",
@@ -2172,19 +2183,6 @@
         "project_view_pay": "Xem lương",
         "project_view_budget": "Xem ngân sách & vốn giải ngân"
       }
-    },
-    "directory": {
-      "title": "Danh bạ",
-      "description": "Tất cả những người liên kết với công ty của bạn, dù đã có tài khoản hay chưa.",
-      "empty": "Chưa có ai trong danh bạ.",
-      "col": {
-        "name": "Tên",
-        "phone": "Số điện thoại",
-        "status": "Trạng thái",
-        "assignedProjects": "Dự án được giao"
-      },
-      "pending": "Đang chờ",
-      "linked": "Đã liên kết"
     },
     "errors": {
       "unauthorized": "Bạn cần đăng nhập.",

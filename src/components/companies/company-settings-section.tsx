@@ -6,8 +6,9 @@
  * Folds together what used to be two separate settings tabs:
  *  - "My companies": the caller's attachments — identity card with masked
  *    SIRET / TVA / IBAN / BIC, primary toggle, detach, attach-by-code;
- *  - "Company": the company-admin self-service tools — join code, members
- *    (roles, D8 grants, add-by-phone, import) and directory.
+ *  - "Company": the company-admin self-service tools — join code and the
+ *    members table (roles, phone, company/project assignment, D8 grants,
+ *    add-by-phone, import).
  *
  * One picker at the top governs both halves, so a caller who admins the single
  * company they belong to — the common case — sees that company described once
@@ -38,7 +39,6 @@ import { JoinCompanyDialog } from "@/components/companies/join-company-dialog";
 // caller's own company id instead of an arbitrary one.
 import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-card";
 import { CompanyMembersTable } from "@/components/companies/company-members-table";
-import { CompanyDirectoryTable } from "@/components/companies/company-directory-table";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { CompanyRole, MyCompany } from "@/types/companies";
 
@@ -222,11 +222,6 @@ export function CompanySettingsSection() {
                 adminOfMultiple={adminCompanies.length > 1}
                 sourceCompanies={adminCompanies.filter((c) => c.id !== selectedCompany.id)}
                 onMutated={bumpRefresh}
-              />
-
-              <CompanyDirectoryTable
-                key={`directory-${selectedCompany.id}-${refreshToken}`}
-                companyId={selectedCompany.id}
               />
             </>
           )}

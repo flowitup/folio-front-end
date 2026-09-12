@@ -2118,14 +2118,25 @@
       "addByPhone": "Ajouter par téléphone",
       "empty": "Aucun membre pour l'instant.",
       "col": {
-        "namePhone": "Nom / Téléphone",
-        "role": "Rôle"
+        "name": "Nom",
+        "phone": "Téléphone",
+        "role": "Rôle",
+        "company": "Entreprise",
+        "projects": "Projets"
       },
       "roleAdmin": "Admin",
       "roleManager": "Manager",
       "roleMember": "Membre",
       "customPermissions": "Permissions personnalisées",
-      "roleUpdatedToast": "Rôle mis à jour."
+      "roleUpdatedToast": "Rôle mis à jour.",
+      "pendingBadge": "En attente",
+      "companyPickerPlaceholder": "Ajouter une entreprise",
+      "companyPickerEmpty": "Aucune autre entreprise que vous administrez",
+      "projectsPickerPlaceholder": "Assigner un projet",
+      "projectsPickerEmpty": "Aucun projet dans cette entreprise pour l'instant",
+      "cancel": "Annuler",
+      "bootAction": "Retirer de l'entreprise",
+      "bootConfirmDescription": "Retirer {member} de {company} ? Cela supprime immédiatement ses affectations de projet et son profil d'annuaire là-bas, et renouvelle le code d'adhésion de l'entreprise."
     },
     "addByPhone": {
       "dialogTitle": "Ajouter un membre par téléphone",
@@ -2172,19 +2183,6 @@
         "project_view_pay": "Voir la paie",
         "project_view_budget": "Voir le budget et les fonds débloqués"
       }
-    },
-    "directory": {
-      "title": "Annuaire",
-      "description": "Toutes les personnes liées à votre entreprise, avec ou sans compte.",
-      "empty": "Personne dans l'annuaire pour l'instant.",
-      "col": {
-        "name": "Nom",
-        "phone": "Téléphone",
-        "status": "Statut",
-        "assignedProjects": "Projets assignés"
-      },
-      "pending": "En attente",
-      "linked": "Lié"
     },
     "errors": {
       "unauthorized": "Vous devez être connecté.",

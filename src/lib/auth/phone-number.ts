@@ -23,3 +23,18 @@ export function normalizeFrenchPhone(raw: string): string | null {
   else return null;
   return FRENCH_E164.test(candidate) ? candidate : null;
 }
+
+/**
+ * Display form of a French E.164 number: `+336 40 83 80 57` — `+33`, the
+ * leading national digit attached to it, then the remaining 8 digits as four
+ * pairs. Anything that isn't exactly `+33` + 9 digits (starting 1-9) is
+ * returned unchanged, so a value that has already been formatted, or one
+ * from another country, passes through untouched.
+ */
+export function formatFrenchPhone(value: string): string {
+  if (!FRENCH_E164.test(value)) return value;
+  const nationalDigits = value.slice(3); // 9 digits after "+33"
+  const leadingDigit = nationalDigits.slice(0, 1);
+  const pairs = nationalDigits.slice(1).match(/\d{2}/g) ?? [];
+  return `+33${leadingDigit} ${pairs.join(" ")}`;
+}

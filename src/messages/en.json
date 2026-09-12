@@ -2118,14 +2118,25 @@
       "addByPhone": "Add by phone",
       "empty": "No members yet.",
       "col": {
-        "namePhone": "Name / Phone",
-        "role": "Role"
+        "name": "Name",
+        "phone": "Phone",
+        "role": "Role",
+        "company": "Company",
+        "projects": "Projects"
       },
       "roleAdmin": "Admin",
       "roleManager": "Manager",
       "roleMember": "Member",
       "customPermissions": "Custom permissions",
-      "roleUpdatedToast": "Role updated."
+      "roleUpdatedToast": "Role updated.",
+      "pendingBadge": "Pending",
+      "companyPickerPlaceholder": "Add company",
+      "companyPickerEmpty": "No other companies you administer",
+      "projectsPickerPlaceholder": "Assign project",
+      "projectsPickerEmpty": "No projects in this company yet",
+      "cancel": "Cancel",
+      "bootAction": "Remove from company",
+      "bootConfirmDescription": "Remove {member} from {company}? This immediately drops their project assignments and directory profile there, and rotates the company's join code."
     },
     "addByPhone": {
       "dialogTitle": "Add member by phone",
@@ -2172,19 +2183,6 @@
         "project_view_pay": "View pay",
         "project_view_budget": "View budget & released funds"
       }
-    },
-    "directory": {
-      "title": "Directory",
-      "description": "Everyone linked to your company, whether or not they have an account yet.",
-      "empty": "No one in the directory yet.",
-      "col": {
-        "name": "Name",
-        "phone": "Phone",
-        "status": "Status",
-        "assignedProjects": "Assigned projects"
-      },
-      "pending": "Pending",
-      "linked": "Linked"
     },
     "errors": {
       "unauthorized": "You need to be signed in.",

@@ -1,42 +1,58 @@
 "use client";
 
 /**
- * CompanyMembersTable — Settings › Company members list for a company admin.
+ * CompanyMembersTable — Settings › Company's single people table.
  *
- * Role select (admin/manager/member) calls the shared setMemberRoleAction
- * (companies-actions.ts, already company-role-aware). "Quyền tuỳ chỉnh"
- * (custom permissions) opens the D8 grants editor for manager/member rows —
- * admins are never customisable (matrix.py: CUSTOMISABLE_PERMISSIONS applies
- * to manager/member only).
+ * Merges two backend sources (see `mergeMemberRows`): attached-users (role,
+ * identity, the companies the caller admins that this person also belongs
+ * to) and the company directory (name, phone, pending state, assigned
+ * projects). Columns: Name, Phone, Role, Company, Projects, actions —
+ * rendered per row by `CompanyMemberRow`.
+ *
+ * Company and Projects are multi-selects (MemberPickerDropdown):
+ *  - Ticking a company attaches the user there (attachUserToCompanyAction).
+ *    Unticking is destructive — it drops that company's project
+ *    assignments, deactivates the directory profile and rotates the join
+ *    code — so it goes through `CompanyMemberBootConfirmDialog` before
+ *    calling the existing bootAttachedUserAction.
+ *  - Ticking/unticking a project assigns/unassigns the user as "member"
+ *    only (D3): this table never changes a project role, and never demotes
+ *    or promotes anyone — the Role column is the only path to manager.
+ *
+ * Pending rows (no user account yet) get disabled Role/Company/Projects —
+ * project and company assignment both key on user_id, so neither is
+ * possible until the person signs up.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Loader2, Phone, Users as UsersIcon, SlidersHorizontal } from "lucide-react";
+import { Loader2, Phone, Users as UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   fetchAttachedUsersAction,
   setMemberRoleAction,
+  bootAttachedUserAction,
+  fetchMyCompaniesAction,
 } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
+import {
+  fetchCompanyDirectoryAction,
+  assignProjectMemberAction,
+  unassignProjectMemberAction,
+  attachUserToCompanyAction,
+} from "@/app/[locale]/(app)/settings/_actions/company-settings-actions";
 import { AddMemberByPhoneDialog } from "@/components/companies/add-member-by-phone-dialog";
 import { ImportMembersDialog } from "@/components/companies/import-members-dialog";
 import { MemberGrantsEditor } from "@/components/companies/member-grants-editor";
+import { CompanyMemberRow } from "@/components/companies/company-member-row";
+import {
+  CompanyMemberBootConfirmDialog,
+  type CompanyMemberBootTarget,
+} from "@/components/companies/company-member-boot-confirm-dialog";
+import type { MemberPickerOption } from "@/components/companies/member-picker-dropdown";
+import { useProject } from "@/context/ProjectContext";
+import { mergeMemberRows, type MemberRow } from "@/lib/companies/merge-member-rows";
 import type { AttachedUser, CompanyRole, MyCompany } from "@/types/companies";
 
 interface Props {
@@ -46,17 +62,22 @@ interface Props {
   onMutated: () => void;
 }
 
-const ROLES: CompanyRole[] = ["admin", "manager", "member"];
-
 export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanies, onMutated }: Props) {
   const t = useTranslations("companySettings.members");
+  const { projects: allProjects } = useProject();
 
-  const [users, setUsers] = useState<AttachedUser[]>([]);
+  const [rows, setRows] = useState<MemberRow[]>([]);
+  const [adminCompanies, setAdminCompanies] = useState<MyCompany[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingRoleUserId, setPendingRoleUserId] = useState<string | null>(null);
+  const [pendingCompanyUserId, setPendingCompanyUserId] = useState<string | null>(null);
+  const [pendingProjectUserId, setPendingProjectUserId] = useState<string | null>(null);
   const [addByPhoneOpen, setAddByPhoneOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [grantsTarget, setGrantsTarget] = useState<AttachedUser | null>(null);
+  const [bootTarget, setBootTarget] = useState<CompanyMemberBootTarget | null>(null);
+  const [isBooting, setIsBooting] = useState(false);
+  const bootingRef = useRef(false);
 
   const fetchingRef = useRef(false);
 
@@ -65,13 +86,32 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
     fetchingRef.current = true;
     setIsLoading(true);
     try {
-      const result = await fetchAttachedUsersAction(companyId);
-      if (result.ok) {
-        setUsers(result.data);
-      } else {
+      const [usersResult, directoryResult, companiesResult] = await Promise.all([
+        fetchAttachedUsersAction(companyId),
+        fetchCompanyDirectoryAction(companyId),
+        fetchMyCompaniesAction(),
+      ]);
+
+      if (!usersResult.ok) {
         // Surface the failure — an empty table otherwise reads as "no
         // members", not "couldn't load members".
-        toast.error(result.error.message);
+        toast.error(usersResult.error.message);
+        setRows([]);
+      } else {
+        if (!directoryResult.ok) {
+          // Directory couldn't load — still show attached members using
+          // their own fields (same defensive branch mergeMemberRows takes
+          // for a legacy account with no directory profile); phone / project
+          // data just won't be available until the retry succeeds.
+          toast.error(directoryResult.error.message);
+        }
+        setRows(mergeMemberRows(usersResult.data, directoryResult.ok ? directoryResult.data : []));
+      }
+
+      if (companiesResult.ok) {
+        setAdminCompanies(companiesResult.data.filter((c) => c.role === "admin"));
+      } else {
+        toast.error(companiesResult.error.message);
       }
     } finally {
       setIsLoading(false);
@@ -82,6 +122,21 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
   useEffect(() => {
     void load();
   }, [load]);
+
+  // This company's projects — Projects column options. D3: every attached
+  // member is assignable, always as "member"; Role is the only path to manager.
+  const projectOptions: MemberPickerOption[] = useMemo(
+    () =>
+      allProjects
+        .filter((p) => p.company_id === companyId)
+        .map((p) => ({ id: p.id, label: p.name })),
+    [allProjects, companyId]
+  );
+  // D4: only companies the caller administers — never a cross-tenant leak.
+  const companyOptions: MemberPickerOption[] = useMemo(
+    () => adminCompanies.map((c) => ({ id: c.id, label: c.legal_name })),
+    [adminCompanies]
+  );
 
   async function handleRoleChange(userId: string, role: CompanyRole) {
     setPendingRoleUserId(userId);
@@ -101,8 +156,60 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
     }
   }
 
-  function roleLabel(role: CompanyRole): string {
-    return role === "admin" ? t("roleAdmin") : role === "manager" ? t("roleManager") : t("roleMember");
+  async function handleCompanyToggle(row: MemberRow, option: MemberPickerOption, checked: boolean) {
+    if (!row.userId) return;
+    if (!checked) {
+      // Destructive (drops project assignments, deactivates the directory
+      // profile, rotates the join code) — confirm before booting.
+      setBootTarget({ userId: row.userId, memberName: row.name, companyId: option.id, companyName: option.label });
+      return;
+    }
+    setPendingCompanyUserId(row.userId);
+    try {
+      const result = await attachUserToCompanyAction(option.id, row.userId);
+      if (!result.ok) {
+        toast.error(result.error.message);
+        return;
+      }
+      onMutated();
+    } finally {
+      setPendingCompanyUserId(null);
+    }
+  }
+
+  async function handleConfirmBoot() {
+    if (!bootTarget || bootingRef.current) return;
+    bootingRef.current = true;
+    setIsBooting(true);
+    try {
+      const result = await bootAttachedUserAction(bootTarget.companyId, bootTarget.userId);
+      if (!result.ok) {
+        toast.error(result.error.message);
+        return;
+      }
+      setBootTarget(null);
+      onMutated();
+    } finally {
+      setIsBooting(false);
+      bootingRef.current = false;
+    }
+  }
+
+  async function handleProjectToggle(row: MemberRow, option: MemberPickerOption, checked: boolean) {
+    if (!row.userId) return;
+    setPendingProjectUserId(row.userId);
+    try {
+      const result = checked
+        ? await assignProjectMemberAction(option.id, row.userId, "member")
+        : await unassignProjectMemberAction(option.id, row.userId);
+      if (!result.ok) {
+        toast.error(result.error.message);
+        return;
+      }
+      onMutated();
+    } finally {
+      setPendingProjectUserId(null);
+    }
   }
 
   return (
@@ -134,7 +241,7 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
         <div className="flex items-center justify-center py-10">
           <Loader2 size={20} className="animate-spin" style={{ color: "var(--muted)" }} />
         </div>
-      ) : users.length === 0 ? (
+      ) : rows.length === 0 ? (
         <p className="py-10 text-center text-[13px]" style={{ color: "var(--muted)" }}>
           {t("empty")}
         </p>
@@ -143,55 +250,29 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("col.namePhone")}</TableHead>
+                <TableHead>{t("col.name")}</TableHead>
+                <TableHead>{t("col.phone")}</TableHead>
                 <TableHead>{t("col.role")}</TableHead>
+                <TableHead>{t("col.company")}</TableHead>
+                <TableHead>{t("col.projects")}</TableHead>
                 <TableHead className="w-[100px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.user_id}>
-                  <TableCell>
-                    <div className="text-[13px] font-medium">{u.display_name ?? u.phone ?? u.email}</div>
-                    {/* Phone-only sign-in is rolling out: show the phone when
-                        set, otherwise an em dash so an admin can spot at a
-                        glance who still needs to add one. */}
-                    <div className="text-[12px]" style={{ color: "var(--muted)" }}>
-                      {u.phone ?? "—"}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={u.role}
-                      onValueChange={(next) => handleRoleChange(u.user_id, next as CompanyRole)}
-                      disabled={pendingRoleUserId === u.user_id}
-                    >
-                      <SelectTrigger className="h-8 w-[130px] text-[12px]">
-                        <SelectValue>{roleLabel(u.role)}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ROLES.map((role) => (
-                          <SelectItem key={role} value={role} className="text-[12px]">
-                            {roleLabel(role)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    {u.role !== "admin" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-[12px]"
-                        onClick={() => setGrantsTarget(u)}
-                      >
-                        <SlidersHorizontal size={12} className="mr-1" />
-                        {t("customPermissions")}
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
+              {rows.map((row) => (
+                <CompanyMemberRow
+                  key={row.key}
+                  row={row}
+                  companyOptions={companyOptions}
+                  projectOptions={projectOptions}
+                  isRoleMutating={pendingRoleUserId === row.userId}
+                  isCompanyMutating={pendingCompanyUserId === row.userId}
+                  isProjectMutating={pendingProjectUserId === row.userId}
+                  onRoleChange={handleRoleChange}
+                  onCompanyToggle={handleCompanyToggle}
+                  onProjectToggle={handleProjectToggle}
+                  onOpenGrants={setGrantsTarget}
+                />
               ))}
             </TableBody>
           </Table>
@@ -227,6 +308,13 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
           target={grantsTarget}
         />
       )}
+
+      <CompanyMemberBootConfirmDialog
+        target={bootTarget}
+        isBooting={isBooting}
+        onOpenChange={(open) => !open && setBootTarget(null)}
+        onConfirm={handleConfirmBoot}
+      />
     </section>
   );
 }

@@ -472,8 +472,16 @@ describe("InvoiceForm — refund link selector", () => {
     await user.type(descInputs[0], "Credit note");
 
     // Wait for selector and pick the M&S invoice
-    const selector = await screen.findByTestId("refunds-invoice-select");
-    await user.selectOptions(selector as HTMLSelectElement, "ms-1");
+    const selector = (await screen.findByTestId(
+      "refunds-invoice-select"
+    )) as HTMLSelectElement;
+    // The selector exists before its options do — they arrive from an async
+    // fetch. Awaiting the element alone races that fetch, so wait for the
+    // option itself before picking it.
+    await waitFor(() => {
+      expect(selector.querySelector('option[value="ms-1"]')).not.toBeNull();
+    });
+    await user.selectOptions(selector, "ms-1");
 
     const submitBtn = screen.getByRole("button", { name: /save/i });
     await user.click(submitBtn);

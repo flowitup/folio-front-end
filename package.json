@@ -1,6 +1,6 @@
 {
   "name": "construction-front-end",
-  "version": "0.1.255",
+  "version": "0.1.257",
   "private": true,
   "scripts": {
     "dev": "next dev",

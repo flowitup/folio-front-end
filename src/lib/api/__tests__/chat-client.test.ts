@@ -18,9 +18,11 @@ import {
   ChatApiError,
   fetchChatAttachmentBlob,
   fetchChatFeatures,
+  isVoiceNote,
   listChatChannels,
   listChatMessages,
   markChatChannelRead,
+  playableAttachmentType,
   sendChatMessage,
 } from "@/lib/api/chat-client";
 
@@ -102,7 +104,7 @@ describe("chat-client", () => {
     expect(mockRefresh).toHaveBeenCalledTimes(1);
   });
 
-  it("builds attachment blobs only with allowlisted image types", async () => {
+  it("builds attachment blobs only with allowlisted types", async () => {
     const urls: string[] = [];
     vi.stubGlobal("URL", {
       ...URL,
@@ -118,6 +120,32 @@ describe("chat-client", () => {
     await fetchChatAttachmentBlob("m1");
     await fetchChatAttachmentBlob("m2");
     expect(urls).toEqual(["image/png", "application/octet-stream"]);
+  });
+
+  it("hands a voice note to the browser under the container name it can decode", () => {
+    // A recorder labels the same AAC/m4a file differently per platform, and `audio/mpeg` is
+    // plainly wrong: passed on as served it sends the decoder hunting for an MP3 frame header.
+    for (const served of [
+      "audio/aac",
+      "audio/m4a",
+      "audio/x-m4a",
+      "audio/mp4",
+      "audio/mp4a-latm",
+      "audio/mpeg",
+    ])
+      expect(playableAttachmentType(served)).toBe("audio/mp4");
+  });
+
+  it("keeps images as served and makes everything else an inert download", () => {
+    expect(playableAttachmentType("image/png")).toBe("image/png");
+    expect(playableAttachmentType("image/webp")).toBe("image/webp");
+    for (const served of ["text/html", "application/pdf", "video/mp4", ""])
+      expect(playableAttachmentType(served)).toBe("application/octet-stream");
+  });
+
+  it("recognises a voice note whatever case the recorder used", () => {
+    expect(isVoiceNote("AUDIO/X-M4A")).toBe(true);
+    expect(isVoiceNote("image/jpeg")).toBe(false);
   });
 
   it("throws a ChatApiError carrying status and body on failure", async () => {

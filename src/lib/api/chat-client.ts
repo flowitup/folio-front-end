@@ -71,8 +71,41 @@ export interface ChatMessagePage {
   members: ChatMember[];
 }
 
-/** Image types the backend accepts (`ALLOWED_ATTACHMENT_TYPES`). */
+/** Image types the web composer may upload (`ALLOWED_IMAGE_TYPES` on the backend). */
 export const CHAT_ATTACHMENT_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+/**
+ * Voice-note types the backend stores (`ALLOWED_AUDIO_TYPES`). A recording arrives from the
+ * mobile app under whichever name that device gave the same AAC/m4a file — iOS says
+ * `audio/x-m4a`, Android says `audio/mpeg` — so the whole family has to be understood here.
+ * The web composer does not offer them; this list is only for playing back what it receives.
+ */
+export const CHAT_AUDIO_TYPES = [
+  "audio/aac",
+  "audio/m4a",
+  "audio/x-m4a",
+  "audio/mp4",
+  "audio/mp4a-latm",
+  "audio/mpeg",
+] as const;
+
+/** Whether an attachment is a voice note rather than a picture. */
+export function isVoiceNote(contentType: string): boolean {
+  return (CHAT_AUDIO_TYPES as readonly string[]).includes(contentType.toLowerCase());
+}
+
+/**
+ * The type a downloaded attachment may be handed to the browser as. Anything outside the two
+ * allowlists becomes an inert download, so a stored attachment can never render as a document.
+ *
+ * The AAC/m4a container is passed on as `audio/mp4`, the name media elements actually know: a
+ * recorder may label the very same file `audio/x-m4a` or `audio/mpeg`, and the second is simply
+ * wrong — handed over as served it sends the decoder looking for an MP3 frame header.
+ */
+export function playableAttachmentType(served: string): string {
+  if ((CHAT_ATTACHMENT_TYPES as readonly string[]).includes(served)) return served;
+  if (isVoiceNote(served)) return "audio/mp4";
+  return "application/octet-stream";
+}
 /** Backend `MAX_ATTACHMENT_BYTES`. */
 export const CHAT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 /** Newest messages loaded per thread (backend caps at 200). */
@@ -201,12 +234,10 @@ export async function fetchChatAttachmentBlob(
     { method: "GET" },
     signal
   );
-  // Rebuild the blob with an allowlisted image type: a blob: URL runs same-origin, so a
-  // stored attachment ever served as text/html must never render as a document.
+  // Rebuild the blob with an allowlisted type: a blob: URL runs same-origin, so a stored
+  // attachment ever served as text/html must never render as a document.
   const served = res.headers.get("content-type")?.split(";")[0].trim() ?? "";
-  const type = (CHAT_ATTACHMENT_TYPES as readonly string[]).includes(served)
-    ? served
-    : "application/octet-stream";
+  const type = playableAttachmentType(served);
   const blob = new Blob([await res.arrayBuffer()], { type });
   const objectUrl = URL.createObjectURL(blob);
   return { objectUrl, revoke: () => URL.revokeObjectURL(objectUrl) };

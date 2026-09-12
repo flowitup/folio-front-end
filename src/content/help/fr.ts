@@ -346,9 +346,10 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Dans le tableau des membres, changez le rôle de quelqu'un, ou ouvrez “Permissions personnalisées” pour accorder ou refuser une permission précise, sur toute l'entreprise ou sur un seul projet.",
       "Utilisez “Ajouter par téléphone” pour ajouter quelqu'un par son numéro, ou “Importer depuis une entreprise” pour reprendre des personnes d'une autre société que vous administrez.",
       "L'annuaire liste toutes les personnes liées à l'entreprise, avec leur téléphone, le fait qu'elles se soient déjà connectées ou non, et les projets qui leur sont assignés.",
+      "Sous “Moyens de paiement”, ajoutez, renommez ou supprimez les façons dont les factures de cette société peuvent être payées. Les moyens intégrés se renomment mais ne se suppriment pas.",
     ],
     whoCanDoIt:
-      "Chacun voit les sociétés auxquelles il est rattaché et peut en rattacher une autre. Le code société, le tableau des membres et l'annuaire sont réservés aux administrateurs de la société sélectionnée.",
+      "Chacun voit les sociétés auxquelles il est rattaché et peut en rattacher une autre. Le code société, le tableau des membres, l'annuaire et les moyens de paiement sont réservés aux administrateurs de la société sélectionnée.",
     gotchas: [
       "Il y a deux façons différentes d'ajouter une personne, et elles ne sont pas interchangeables : un jeton d'invitation à usage unique valable sept jours, et le code société réutilisable que l'on saisit dans l'application mobile.",
     ],
@@ -357,17 +358,16 @@ export const helpCatalogueFr: HelpCatalogue = [
     id: "settings",
     title: "Votre profil et vos préférences",
     purpose:
-      "Vos informations personnelles, la numérotation des factures du projet en cours, les moyens de paiement de l'entreprise, et les notifications qui arrivent sur votre téléphone.",
+      "Vos informations personnelles, la numérotation des factures du projet en cours, et les notifications qui arrivent sur votre téléphone.",
     steps: [
       "Ouvrez “Paramètres” ; la liste à gauche sélectionne la section.",
       "Dans “Profil”, modifiez votre nom affiché et votre téléphone, puis enregistrez. Votre e-mail est en lecture seule — seul un administrateur peut le changer.",
       "Dans “Projet”, fixez le préfixe de numéro de facture du projet sélectionné, jusqu'à huit lettres ou chiffres, et regardez la ligne d'aperçu avant d'enregistrer.",
-      "Dans “Moyens de paiement”, choisissez la société si vous en avez plusieurs, puis ajoutez, renommez ou supprimez les façons dont ses factures peuvent être payées.",
       "Dans “Notifications”, utilisez l'interrupteur général et les interrupteurs par catégorie : “Discussion d'équipe”, “Présences”, “Tâches”, “Équipe et accès” et “Argent”.",
       "“À propos” indique la version de Folio que vous utilisez.",
     ],
     whoCanDoIt:
-      "Chacun accède à son profil, au préfixe du projet et à ses choix de notification. Modifier les moyens de paiement demande d'être administrateur de l'entreprise ; sans cela, la section est en lecture seule.",
+      "Chacun accède à son profil, au préfixe du projet et à ses choix de notification. Les moyens de paiement ont rejoint “Entreprise”, où ils sont proposés aux administrateurs de la société sélectionnée.",
     gotchas: [
       "Les entrées “Équipe” et “Facturation” des paramètres sont des emplacements réservés. La vraie facturation est le groupe “Facturation” du menu latéral.",
       "Les interrupteurs de notification commandent les notifications push qui arrivent dans l'application mobile Folio, pas la cloche de cette fenêtre.",

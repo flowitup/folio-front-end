@@ -300,6 +300,26 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     });
   });
 
+  it("repoints the payment-methods card on an admin-to-admin switch", async () => {
+    resolveWith([
+      makeCompany({ id: "c1", legal_name: "Maison Lavandou", is_primary: true, role: "admin" }),
+      makeCompany({ id: "c2", legal_name: "Atelier Sud", is_primary: false, role: "admin" }),
+    ]);
+    render(<CompanySettingsSection />);
+
+    const card = await screen.findByTestId("payment-methods-card");
+    expect(card.getAttribute("data-company")).toBe("c1");
+
+    fireEvent.change(screen.getByLabelText("Company picker"), { target: { value: "c2" } });
+
+    // The card is keyed by company id on purpose: PaymentMethodsSection seeds
+    // its list from `initial` once, so without the remount a switch would leave
+    // the previous company's methods on screen under the new company's name.
+    await waitFor(() => {
+      expect(screen.getByTestId("payment-methods-card").getAttribute("data-company")).toBe("c2");
+    });
+  });
+
   it("offers 'import from company' only the other companies the caller admins", async () => {
     resolveWith([
       makeCompany({ id: "c1", legal_name: "Maison Lavandou", is_primary: true, role: "admin" }),

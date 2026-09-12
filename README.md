@@ -59,8 +59,7 @@ A public landing page for people clicking an invitation email. The page handles 
 Every tab here opens something real — there are no "coming soon" placeholders.
 - **Profile** — display name and phone, saved to your account. Email is shown read-only; only an administrator can change it.
 - **Project** — the invoice-number prefix for the project you have selected. Only appears once a project is selected.
-- **Company** — the companies you are attached to, with the identity card, primary/detach controls and attach-by-code. If you administer the selected company you also get its join code, members and directory.
-- **Payment methods** — the payment methods invoices can be paid by, per company. Read-only unless you administer that company.
+- **Company** — the companies you are attached to, with the identity card, primary/detach controls and attach-by-code. If you administer the selected company you also get its join code, members, directory and payment methods.
 - **Notifications** — which kinds of notification reach you.
 - **Users & Roles** — bulk-assign roles to existing users across one or more projects. Platform operators only; nobody else is offered the tab.
 

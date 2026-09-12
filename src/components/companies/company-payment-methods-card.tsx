@@ -14,8 +14,14 @@
  * succeed. That is why there is no read-only variant: a caller who may not
  * mutate never reaches this card.
  *
- * PaymentMethodsSection seeds its local state from `initial`, so the parent
- * keys this card by company id to force a remount when the selection changes.
+ * PaymentMethodsSection seeds its local state from `initial` once and never
+ * re-reads it, so the parent keys this card by company id: a company switch
+ * remounts both, and this card always starts from no result. Reusing it in
+ * place across company switches is NOT supported — going A → B → A would
+ * re-show A's first result (still tagged "A") while the third fetch is in
+ * flight, and the section would then ignore the fresher list. The fetch is
+ * still keyed on `companyId` so a dropped key degrades to a refetch rather
+ * than to another company's data.
  */
 
 import { useEffect, useState } from "react";
@@ -64,8 +70,8 @@ export function CompanyPaymentMethodsCard({ companyId }: CompanyPaymentMethodsCa
     return <PaymentMethodsSection initial={current.methods} companyId={companyId} />;
   }
 
-  // Loading and error keep the same Card chrome as the loaded section, so the
-  // stack of company cards does not reflow once the fetch settles.
+  // Loading and error keep the loaded section's frame and title, so the card
+  // holds its place in the stack instead of appearing once the fetch lands.
   return (
     <Card>
       <CardHeader>

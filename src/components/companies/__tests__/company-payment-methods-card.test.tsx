@@ -69,12 +69,18 @@ describe("CompanyPaymentMethodsCard", () => {
     ).toBeDefined();
   });
 
-  it("keeps the section title while the fetch is in flight", () => {
+  it("holds the frame, without the section's controls, while the fetch is in flight", () => {
     listPaymentMethodsAction.mockReturnValue(new Promise(() => {}));
     renderCard();
 
+    // Title and frame are up so the card keeps its place in the stack...
     expect(screen.getByText(enMessages.paymentMethods.title)).toBeDefined();
+    // ...but nothing the loaded section owns has rendered yet.
     expect(screen.queryByText("Wise")).toBeNull();
+    expect(screen.queryByPlaceholderText(/e\.g\./i)).toBeNull();
+    expect(
+      screen.queryByText(enMessages.paymentMethods.description)
+    ).toBeNull();
   });
 
   it("shows the load error instead of an empty list when the fetch fails", async () => {
@@ -87,16 +93,19 @@ describe("CompanyPaymentMethodsCard", () => {
     expect(screen.queryByText(enMessages.paymentMethods.noMethods)).toBeNull();
   });
 
-  it("refetches when the company it was handed changes", async () => {
-    const { rerender } = renderCard(COMPANY_A);
+  /**
+   * The parent remounts this card per company (keyed by company id), so a
+   * fresh mount is the only path the app takes. Pinned here because the card
+   * cannot reconcile a company switch in place — see the header comment — and
+   * the parent-side key that makes that true is pinned in
+   * company-settings-section-merged.test.tsx.
+   */
+  it("fetches for whichever company a fresh mount is handed", async () => {
+    const first = renderCard(COMPANY_A);
     await waitFor(() => expect(listPaymentMethodsAction).toHaveBeenCalledWith(COMPANY_A));
+    first.unmount();
 
-    rerender(
-      <NextIntlClientProvider locale="en" messages={enMessages}>
-        <CompanyPaymentMethodsCard companyId={COMPANY_B} />
-      </NextIntlClientProvider>
-    );
-
+    renderCard(COMPANY_B);
     await waitFor(() => expect(listPaymentMethodsAction).toHaveBeenCalledWith(COMPANY_B));
   });
 });

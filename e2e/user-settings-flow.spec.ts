@@ -6,7 +6,7 @@
  *   2. Assert the default Profile tab renders, with the admin's address in a
  *      read-only email field
  *   3. Click through every tab an ordinary caller is offered — Profile,
- *      Company, Payment methods, Notifications — asserting each renders
+ *      Company, Notifications — asserting each renders
  *   4. Assert the app-version footer, which replaced the former "About" tab
  *   5. Type into the display-name field and assert it takes the edit
  *
@@ -14,7 +14,8 @@
  *   - Company CRUD is covered by companies-flow.spec.ts. This spec only opens
  *     the "Company" tab to confirm the section renders; it does not create,
  *     edit, or delete a company. That tab carries the caller's attachments
- *     and, for a company admin, the join code / members / directory.
+ *     and, for a company admin, the join code / members / directory /
+ *     payment methods.
  *   - "Users & Roles" is platform-ops only and the admin persona is not ops,
  *     so it is asserted ABSENT here rather than clicked.
  *   - Nothing is submitted. The profile form has a real Save button wired to
@@ -80,14 +81,6 @@ test.describe("User settings tab-navigation + profile flow", () => {
     // card, carrying the detach action.
     await expect(
       page.getByRole("button", { name: "Detach" }).first()
-    ).toBeVisible({ timeout: 8_000 });
-
-    // Payment methods — company-scoped inventory for the caller's company.
-    await tabNav
-      .getByRole("button", { name: "Payment methods", exact: true })
-      .click();
-    await expect(
-      page.getByRole("heading", { name: "Payment methods", exact: true })
     ).toBeVisible({ timeout: 8_000 });
 
     // Notifications — per-kind preferences, not a placeholder.

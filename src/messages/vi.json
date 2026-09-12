@@ -949,17 +949,14 @@
       "userSearch": {
         "label": "Tìm người dùng",
         "placeholder": "Nhập ít nhất 3 ký tự của email hoặc tên",
-        "minChars": "Nhập ít nhất 3 ký tự để tìm kiếm",
         "empty": "Không tìm thấy người dùng phù hợp",
         "searching": "Đang tìm…",
-        "selected": "Đã chọn: {email}",
-        "clear": "Xoá"
+        "selected": "Đã chọn: {email}"
       },
       "projects": {
         "label": "Dự án",
         "placeholder": "Lọc dự án...",
         "empty": "Không có dự án nào",
-        "selectedCount": "Đã chọn {count}",
         "maxReached": "Tối đa 50 dự án mỗi lần"
       },
       "submit": "Thêm vào các dự án đã chọn",
@@ -968,6 +965,7 @@
         "userRequired": "Hãy chọn một người dùng trước",
         "projectsRequired": "Chọn ít nhất một dự án",
         "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+        "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
         "forbidden": "Bạn không có quyền thực hiện thao tác này",
         "userNotFound": "Không tìm thấy người dùng",
         "tooMany": "Quá nhiều dự án (tối đa 50 mỗi lần)",

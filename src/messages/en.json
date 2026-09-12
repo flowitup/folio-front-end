@@ -949,17 +949,14 @@
       "userSearch": {
         "label": "Search for a user",
         "placeholder": "Type at least 3 characters of an email or name",
-        "minChars": "Type at least 3 characters to search",
         "empty": "No users match your search",
         "searching": "Searching…",
-        "selected": "Selected: {email}",
-        "clear": "Clear"
+        "selected": "Selected: {email}"
       },
       "projects": {
         "label": "Projects",
         "placeholder": "Filter projects...",
         "empty": "No projects available",
-        "selectedCount": "{count} selected",
         "maxReached": "Up to 50 projects per request"
       },
       "submit": "Add to selected projects",
@@ -968,6 +965,7 @@
         "userRequired": "Select a user first",
         "projectsRequired": "Select at least one project",
         "generic": "Something went wrong. Please try again.",
+        "unauthorized": "Your session has expired. Please sign in again.",
         "forbidden": "You don't have permission to perform this action",
         "userNotFound": "User not found",
         "tooMany": "Too many projects (max 50 per request)",

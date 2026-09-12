@@ -6,9 +6,15 @@
 #                  version:none opts out) and pushes the commit back to the PR branch.
 #                  This keeps the manifest roughly right; it does not decide the release.
 #
+# Every run:
+#   gate    → fails unless lint, type-check, test and build each finished with
+#             success. A skipped job does not fail a run on its own, so without
+#             this a check that quietly stopped running still showed green.
+#
 # Push to master (a squash-merged PR):
-#   release → computes the next version from the TAG LIST, tags the merge commit,
-#             publishes a GitHub Release and dispatches the deploy to flowitup/folio.
+#   release → gated on `gate`. Computes the next version from the TAG LIST,
+#             tags the merge commit, publishes a GitHub Release and dispatches
+#             the deploy to flowitup/folio.
 #             Reading the version from package.json instead used to let two pull
 #             requests open at once claim the same number: the second to merge hit an
 #             existing tag and was silently skipped — no release, no deploy — while the
@@ -243,11 +249,20 @@ jobs:
         run: npm run type-check
 
   # Job 4: Test (depends on lint + type-check)
+  #
+  # The condition is explicit for the same reason lint's is. version-bump is
+  # skipped on a push to master; lint and type-check opt back in with always(),
+  # but an implicit success() here looks at the whole ancestry, finds that
+  # skipped job and skips this one too. Judge the direct dependencies instead.
   test:
     name: Test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [lint, type-check]
+    if: >-
+      always()
+      && needs.lint.result == 'success'
+      && needs['type-check'].result == 'success'
     steps:
       - uses: actions/checkout@v6
         with:
@@ -275,6 +290,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [test]
+    if: always() && needs.test.result == 'success'
     steps:
       - uses: actions/checkout@v6
         with:
@@ -337,12 +353,62 @@ jobs:
             -f description="build (forwarded from ${EVENT_SHA:0:7})" \
             -f context="build"
 
-  # Job 6: Create release (only on push to main)
+  # Job 6: Gate — the single job that says whether the checks actually passed.
+  #
+  # A skipped job does not fail its run, so when test and build silently
+  # vanished from master pushes the run still reported success and a broken
+  # master went unnoticed. This job treats anything other than success —
+  # skipped included — as a failure, so the run goes red whenever a check did
+  # not really run. Release hangs off it, which is what keeps an untested
+  # commit from tagging and dispatching a deploy.
+  gate:
+    name: Checks passed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [lint, type-check, test, build]
+    if: always()
+    steps:
+      - name: Require every check to have succeeded
+        run: |
+          failed=0
+          while IFS='=' read -r name result; do
+            [ -n "$name" ] || continue
+            echo "$name: $result"
+            if [ "$result" != "success" ]; then
+              echo "::error::$name did not succeed (result: $result)"
+              failed=1
+            fi
+          done <<EOF
+          Lint=${{ needs.lint.result }}
+          Type Check=${{ needs['type-check'].result }}
+          Test=${{ needs.test.result }}
+          Build=${{ needs.build.result }}
+          EOF
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::A check did not run to success — refusing to report this run as green."
+            exit 1
+          fi
+          echo "All checks succeeded."
+
+  # Job 7: Create release (only on push to main)
+  #
+  # needs: [gate] is load-bearing. Without it this job ran the moment the push
+  # landed, in parallel with the checks, so master tagged, published a release
+  # and dispatched the production deploy to flowitup/folio whether or not the
+  # tests passed — and while they were skipped, nothing ever said no. The `if`
+  # job: no tag, no release, no deploy. success() below says that out loud
+  # rather than leaning on the implicit rule, because what it guards is a
+  # production deploy.
   release:
     name: Release
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [gate]
+    if: >-
+      success()
+      && github.event_name == 'push'
+      && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

@@ -945,44 +945,35 @@
   "admin": {
     "bulkAdd": {
       "title": "Thêm người dùng vào nhiều dự án",
-      "subtitle": "Tìm một người dùng hiện có, chọn các dự án và gán một vai trò cho tất cả.",
+      "subtitle": "Tìm một người dùng hiện có và chọn các dự án để thêm họ vào — quyền hạn đến từ vai trò công ty của họ, không phải từ biểu mẫu này.",
       "userSearch": {
         "label": "Tìm người dùng",
         "placeholder": "Nhập ít nhất 3 ký tự của email hoặc tên",
-        "minChars": "Nhập ít nhất 3 ký tự để tìm kiếm",
         "empty": "Không tìm thấy người dùng phù hợp",
         "searching": "Đang tìm…",
-        "selected": "Đã chọn: {email}",
-        "clear": "Xoá"
+        "selected": "Đã chọn: {email}"
       },
       "projects": {
         "label": "Dự án",
         "placeholder": "Lọc dự án...",
         "empty": "Không có dự án nào",
-        "selectedCount": "Đã chọn {count}",
         "maxReached": "Tối đa 50 dự án mỗi lần"
-      },
-      "role": {
-        "label": "Vai trò",
-        "placeholder": "Chọn vai trò"
       },
       "submit": "Thêm vào các dự án đã chọn",
       "submitting": "Đang thêm...",
       "errors": {
         "userRequired": "Hãy chọn một người dùng trước",
         "projectsRequired": "Chọn ít nhất một dự án",
-        "roleRequired": "Chọn một vai trò",
         "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+        "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
         "forbidden": "Bạn không có quyền thực hiện thao tác này",
         "userNotFound": "Không tìm thấy người dùng",
-        "roleNotFound": "Không tìm thấy vai trò",
         "tooMany": "Quá nhiều dự án (tối đa 50 mỗi lần)",
         "rateLimited": "Quá nhiều thao tác hàng loạt. Hãy thử lại sau một giờ."
       },
       "toast": {
         "added": "Đã thêm người dùng vào {count} dự án",
         "alreadyMember": "{count} dự án đã bỏ qua — người dùng đã là thành viên",
-        "differentRole": "{count} dự án đã bỏ qua — người dùng đang có vai trò khác",
         "notFound": "{count} dự án không tồn tại"
       }
     }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,99 +83,115 @@ export function BulkAddForm({ projects }: BulkAddFormProps) {
   const atCap = projectIds.length >= MAX_PROJECTS;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      {/* User search */}
-      <UserSearch
-        onSelect={(u) => {
-          setSelectedUser(u);
-          setError(null);
-        }}
-      />
-      {selectedUser && (
-        <p className="text-sm -mt-2" style={{ color: "var(--muted-foreground)" }}>
-          {t("userSearch.selected", { email: selectedUser.email })}
-        </p>
-      )}
+    <div data-testid="bulk-add-form">
+      <div className="flex items-center gap-3">
+        <UserPlus size={18} style={{ color: "var(--accent)" }} />
+        <div>
+          <h3 className="font-display text-[22px] font-medium tracking-tight">
+            {t("title")}
+          </h3>
+          <p className="mt-0.5 text-[13px]" style={{ color: "var(--muted)" }}>
+            {t("subtitle")}
+          </p>
+        </div>
+      </div>
 
-      {/* Project multi-select */}
-      <div className="space-y-1.5">
-        <Label aria-required="true">
-          {t("projects.label")}{" "}
-          <span
-            className="ml-1 text-xs font-normal"
-            style={{ color: "var(--muted-foreground)" }}
-          >
-            ({projectIds.length}/{MAX_PROJECTS})
-          </span>
-        </Label>
+      <div className="ink-divider my-5" />
 
-        {/* Client-side filter */}
-        <Input
-          type="text"
-          placeholder={t("projects.placeholder")}
-          value={projectFilter}
-          onChange={(e) => setProjectFilter(e.target.value)}
-          disabled={isSubmitting}
-          className="mb-1"
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+        {/* User search */}
+        <UserSearch
+          onSelect={(u) => {
+            setSelectedUser(u);
+            setError(null);
+          }}
         />
-
-        {atCap && (
-          <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-            {t("projects.maxReached")}
+        {selectedUser && (
+          <p className="text-sm -mt-2" style={{ color: "var(--muted-foreground)" }}>
+            {t("userSearch.selected", { email: selectedUser.email })}
           </p>
         )}
 
-        <Card className="overflow-auto max-h-56 p-3 space-y-1">
-          {filteredProjects.length === 0 ? (
-            <p
-              className="text-sm"
+        {/* Project multi-select */}
+        <div className="space-y-1.5">
+          <Label aria-required="true">
+            {t("projects.label")}{" "}
+            <span
+              className="ml-1 text-xs font-normal"
               style={{ color: "var(--muted-foreground)" }}
             >
-              {t("projects.empty")}
+              ({projectIds.length}/{MAX_PROJECTS})
+            </span>
+          </Label>
+
+          {/* Client-side filter */}
+          <Input
+            type="text"
+            placeholder={t("projects.placeholder")}
+            value={projectFilter}
+            onChange={(e) => setProjectFilter(e.target.value)}
+            disabled={isSubmitting}
+            className="mb-1"
+          />
+
+          {atCap && (
+            <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+              {t("projects.maxReached")}
             </p>
-          ) : (
-            filteredProjects.map((project) => {
-              const checked = projectIds.includes(project.id);
-              const disabled = isSubmitting || (!checked && atCap);
-              return (
-                <label
-                  key={project.id}
-                  className="flex items-center gap-2 text-sm cursor-pointer select-none"
-                  style={disabled && !checked ? { opacity: 0.5 } : undefined}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    disabled={disabled}
-                    onChange={() => toggleProject(project.id)}
-                    className="h-4 w-4 rounded border accent-primary"
-                    aria-label={projectDisplayName(project)}
-                  />
-                  {projectDisplayName(project)}
-                </label>
-              );
-            })
           )}
-        </Card>
-      </div>
 
-      {/* Error banner */}
-      {error && (
-        <p
-          className="text-sm font-medium"
-          style={{ color: "var(--destructive)" }}
-          role="alert"
+          <Card className="overflow-auto max-h-56 p-3 space-y-1">
+            {filteredProjects.length === 0 ? (
+              <p
+                className="text-sm"
+                style={{ color: "var(--muted-foreground)" }}
+              >
+                {t("projects.empty")}
+              </p>
+            ) : (
+              filteredProjects.map((project) => {
+                const checked = projectIds.includes(project.id);
+                const disabled = isSubmitting || (!checked && atCap);
+                return (
+                  <label
+                    key={project.id}
+                    className="flex items-center gap-2 text-sm cursor-pointer select-none"
+                    style={disabled && !checked ? { opacity: 0.5 } : undefined}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={() => toggleProject(project.id)}
+                      className="h-4 w-4 rounded border accent-primary"
+                      aria-label={projectDisplayName(project)}
+                    />
+                    {projectDisplayName(project)}
+                  </label>
+                );
+              })
+            )}
+          </Card>
+        </div>
+
+        {/* Error banner */}
+        {error && (
+          <p
+            className="text-sm font-medium"
+            style={{ color: "var(--destructive)" }}
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
+
+        <Button
+          type="submit"
+          disabled={isSubmitting || !selectedUser || projectIds.length < 1}
         >
-          {error}
-        </p>
-      )}
-
-      <Button
-        type="submit"
-        disabled={isSubmitting || !selectedUser || projectIds.length < 1}
-      >
-        {isSubmitting ? t("submitting") : t("submit")}
-      </Button>
-    </form>
+          {isSubmitting ? t("submitting") : t("submit")}
+        </Button>
+      </form>
+    </div>
   );
 }

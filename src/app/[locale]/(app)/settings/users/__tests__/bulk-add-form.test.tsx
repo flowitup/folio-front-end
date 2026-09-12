@@ -2,7 +2,7 @@
  * Tests for BulkAddForm component
  *
  * Covers:
- * - Initial rendering (form fields visible, submit disabled)
+ * - Initial rendering (heading, form fields visible, submit disabled)
  * - Submit disabled until a user and ≥1 project are chosen
  * - Calls bulkAddMembershipsAction with correct args on submit
  * - Renders proper toast on mixed-result response (success/info/warning/error)
@@ -94,6 +94,13 @@ describe("BulkAddForm", () => {
   });
 
   describe("Rendering", () => {
+    it("renders the section heading and intro above the form", () => {
+      renderForm();
+      // Mocked useTranslations returns "<namespace>.<key>".
+      expect(screen.getByRole("heading", { name: "admin.bulkAdd.title" })).toBeDefined();
+      expect(screen.getByText("admin.bulkAdd.subtitle")).toBeDefined();
+    });
+
     it("renders with empty initial state: user search, project list, submit button visible", () => {
       renderForm();
       // User search input

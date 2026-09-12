@@ -363,11 +363,13 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Ouvrez “Paramètres” ; la liste à gauche sélectionne la section.",
       "Dans “Profil”, modifiez votre nom affiché et votre téléphone, puis enregistrez. Votre e-mail est en lecture seule — seul un administrateur peut le changer.",
       "Dans “Projet”, fixez le préfixe de numéro de facture du projet sélectionné, jusqu'à huit lettres ou chiffres, et regardez la ligne d'aperçu avant d'enregistrer.",
+      "Dans “Entreprise”, gérez les sociétés auxquelles vous êtes rattaché : la fiche d'identité de chacune, celle qui est principale, le détachement, et le rattachement d'une autre par code. Si vous administrez celle qui est sélectionnée, s'y ajoutent son code société, ses membres et ses moyens de paiement.",
       "Dans “Notifications”, utilisez l'interrupteur général et les interrupteurs par catégorie : “Discussion d'équipe”, “Présences”, “Tâches”, “Équipe et accès” et “Argent”.",
+      "Dans “Utilisateurs et rôles”, les opérateurs de la plateforme rattachent un compte existant à des projets : cherchez la personne, cochez les projets, puis validez. Aucun rôle ne se règle ici — ils viennent du rôle dans la société et des permissions accordées projet par projet, sous “Entreprise”.",
       "La version de Folio que vous utilisez est indiquée en bas de la page, sous la section ouverte.",
     ],
     whoCanDoIt:
-      "Chacun accède à son profil, au préfixe du projet et à ses choix de notification. Les moyens de paiement ont rejoint “Entreprise”, où ils sont proposés aux administrateurs de la société sélectionnée.",
+      "Chacun accède à son profil, au préfixe du projet et à ses choix de notification. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code société, membres, moyens de paiement — aux seuls administrateurs de la société sélectionnée. “Utilisateurs et rôles” n'est proposé qu'aux opérateurs de la plateforme.",
     gotchas: [
       "Les paramètres n'ont pas de section de facturation. Les devis, les factures et les modèles sont tous dans le groupe “Facturation” du menu latéral.",
       "Les interrupteurs de notification commandent les notifications push qui arrivent dans l'application mobile Folio, pas la cloche de cette fenêtre.",

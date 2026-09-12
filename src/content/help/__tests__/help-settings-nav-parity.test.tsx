@@ -5,10 +5,19 @@
  * "Team"/"Billing" placeholder gotcha outlived both entries. The catalogue parity test only counts
  * steps per locale, so it cannot see prose that contradicts the UI.
  *
- * This pins the walkthrough to what SettingsClient actually renders. A quoted name that opens a
- * step or a gotcha is a claim about a settings section, so it has to be one the nav still offers.
+ * This pins the walkthrough to what SettingsClient actually renders, in both directions. A quoted
+ * name that opens a step or a gotcha is a claim about a settings section, so it has to be one the
+ * nav still offers; and every section the nav offers has to be named by one of those lines. The
+ * first direction catches a step that outlives its tab, the second a tab that ships without one —
+ * which is what left Company and Users & Roles undocumented.
+ *
  * Names quoted later in the sentence are left alone — those are notification categories and the
  * sidebar's own billing group, neither of which is a settings tab.
+ *
+ * The nav is read at its widest, so "Users & Roles" has to be documented even though only platform
+ * ops can open it. That is deliberate: `visibility.ts` gates whole topics, and this one is
+ * reachable by everyone, so hiding it would take the profile and notification steps away from the
+ * readers who need them most. The step names its own audience instead.
  */
 
 import { describe, it, expect, vi } from "vitest"
@@ -151,9 +160,17 @@ describe("settings help topic vs the settings nav", () => {
     }
   )
 
+  it.each(LOCALES)("%s documents every section the nav offers", (locale) => {
+    const walked = walkedSections(locale)
+
+    for (const label of navLabels(locale)) {
+      expect(walked, `${locale}: the nav offers "${label}"`).toContain(label)
+    }
+  })
+
   it("walks through the same sections in every locale", () => {
-    // Guards the rule above against going quietly vacuous: if the quoting convention changes in
-    // one locale and the scan stops matching there, the counts stop agreeing.
+    // The two rules above already pin each locale's set of names to the nav's. This adds the
+    // count, so a locale that opens two different steps with the same section name stands out.
     const counts = LOCALES.map((locale) => walkedSections(locale).length)
     expect(new Set(counts).size, `per-locale counts: ${counts.join(", ")}`).toBe(
       1

@@ -360,12 +360,12 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Ở “Hồ sơ”, sửa tên hiển thị và số điện thoại rồi lưu. Email chỉ để xem — chỉ quản trị viên mới đổi được.",
       "Ở “Dự án”, đặt tiền tố số hóa đơn cho dự án đang chọn, tối đa tám chữ cái hoặc chữ số, và xem dòng ví dụ trước khi lưu.",
       "Ở “Thông báo”, dùng công tắc chính và các công tắc theo nhóm: “Trò chuyện nhóm”, “Chấm công”, “Công việc”, “Nhóm & quyền truy cập” và “Tiền”.",
-      "“Giới thiệu” cho biết bạn đang chạy phiên bản Folio nào.",
+      "Phiên bản Folio bạn đang chạy được ghi ở cuối trang, bên dưới mục đang mở.",
     ],
     whoCanDoIt:
       "Ai cũng vào được hồ sơ của mình, tiền tố của dự án và lựa chọn thông báo. Phương thức thanh toán đã chuyển sang “Công ty”, nơi chỉ quản trị viên của công ty đang chọn mới thấy.",
     gotchas: [
-      "Hai mục “Đội” và “Thanh toán” bên trong Cài đặt mới chỉ là chỗ giữ sẵn. Khu vực báo giá và hóa đơn thật nằm ở nhóm “Báo giá & Hóa đơn” trên thanh bên.",
+      "Cài đặt không có mục báo giá hay hóa đơn nào. Báo giá, hóa đơn và mẫu đều nằm ở nhóm “Báo giá & Hóa đơn” trên thanh bên.",
       "Các công tắc thông báo điều khiển thông báo đẩy gửi tới app Folio trên điện thoại, không phải cái chuông trong cửa sổ này.",
     ],
   },

@@ -362,12 +362,12 @@ export const helpCatalogueEn: HelpCatalogue = [
       "On “Profile”, edit your display name and phone and save. Your email is read-only — only an administrator can change it.",
       "On “Project”, set the invoice number prefix for the selected project, up to eight letters or digits, and watch the preview line before saving.",
       "On “Notifications”, use the master switch and the per-category switches: team chat, attendance, tasks, team and access, and money.",
-      "“About” shows which version of Folio you are running.",
+      "The Folio version you are running is printed at the foot of the page, under whichever section is open.",
     ],
     whoCanDoIt:
       "Everyone reaches their own profile, the project prefix and their notification choices. Payment methods moved to “Company”, where they are offered to administrators of the selected company.",
     gotchas: [
-      "The “Team” and “Billing” entries inside Settings are placeholders. The real billing area is the Billing group in the sidebar.",
+      "Settings has no billing section of its own. Quotes, invoices and templates all live in the Billing group in the sidebar.",
       "The notification switches govern the pushes that reach the Folio mobile app, not the bell in this window.",
     ],
   },

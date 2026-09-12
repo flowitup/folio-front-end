@@ -138,6 +138,25 @@ function emptyMetaResponse(invoices: ReturnType<typeof makeInvoice>[] = []) {
   };
 }
 
+/**
+ * Resolve the applied-to picker once its option list has arrived.
+ *
+ * The picker renders as soon as "avoir" is selected, but its options come from
+ * an async fetch: while that is in flight the select is disabled and holds only
+ * the "— none —" entry. Awaiting the element alone therefore races the fetch —
+ * on a slow runner, selecting or asserting on an option right afterwards hits
+ * the still-empty select. Wait for the option the test actually needs instead.
+ */
+async function findAppliedToPickerWith(optionValue: string) {
+  const picker = (await screen.findByTestId(
+    "applied-to-invoice-select"
+  )) as HTMLSelectElement;
+  await waitFor(() => {
+    expect(picker.querySelector(`option[value="${optionValue}"]`)).not.toBeNull();
+  });
+  return picker;
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("InvoiceForm — settled via / applied-to-invoice picker visibility", () => {
@@ -177,9 +196,9 @@ describe("InvoiceForm — settled via / applied-to-invoice picker visibility", (
     const settledVia = await screen.findByTestId("settled-via-select");
     fireEvent.change(settledVia, { target: { value: "avoir" } });
 
-    const picker = await screen.findByTestId("applied-to-invoice-select");
-    await userEvent.selectOptions(picker as HTMLSelectElement, "ms-1");
-    expect((picker as HTMLSelectElement).value).toBe("ms-1");
+    const picker = await findAppliedToPickerWith("ms-1");
+    await userEvent.selectOptions(picker, "ms-1");
+    expect(picker.value).toBe("ms-1");
 
     fireEvent.change(settledVia, { target: { value: "cash" } });
     await waitFor(() => {
@@ -188,8 +207,10 @@ describe("InvoiceForm — settled via / applied-to-invoice picker visibility", (
 
     // Re-opening avoir starts from an empty selection again (state was cleared).
     fireEvent.change(settledVia, { target: { value: "avoir" } });
-    const reopenedPicker = await screen.findByTestId("applied-to-invoice-select");
-    expect((reopenedPicker as HTMLSelectElement).value).toBe("");
+    // Wait for the options to come back: an empty value on a picker that has
+    // not loaded yet would say nothing about the selection being cleared.
+    const reopenedPicker = await findAppliedToPickerWith("ms-1");
+    expect(reopenedPicker.value).toBe("");
   });
 
   it("lists non-return/released_funds invoices in the applied-to picker", async () => {
@@ -234,8 +255,8 @@ describe("InvoiceForm — applied-to method-alignment hint", () => {
     const settledVia = await screen.findByTestId("settled-via-select");
     fireEvent.change(settledVia, { target: { value: "avoir" } });
 
-    const picker = await screen.findByTestId("applied-to-invoice-select");
-    await user.selectOptions(picker as HTMLSelectElement, "ms-1");
+    const picker = await findAppliedToPickerWith("ms-1");
+    await user.selectOptions(picker, "ms-1");
 
     const hint = await screen.findByTestId("applied-to-method-hint");
     expect(hint.textContent).toContain("The return's payment method will follow the selected invoice's method.");
@@ -251,8 +272,8 @@ describe("InvoiceForm — applied-to method-alignment hint", () => {
     const settledVia = await screen.findByTestId("settled-via-select");
     fireEvent.change(settledVia, { target: { value: "avoir" } });
 
-    const picker = await screen.findByTestId("applied-to-invoice-select");
-    await user.selectOptions(picker as HTMLSelectElement, "ms-1");
+    const picker = await findAppliedToPickerWith("ms-1");
+    await user.selectOptions(picker, "ms-1");
 
     const hint = await screen.findByTestId("applied-to-method-hint");
     expect(hint.textContent).toContain("CB - TRUNG");
@@ -265,7 +286,9 @@ describe("InvoiceForm — applied-to method-alignment hint", () => {
 
     const settledVia = await screen.findByTestId("settled-via-select");
     fireEvent.change(settledVia, { target: { value: "avoir" } });
-    await screen.findByTestId("applied-to-invoice-select");
+    // Wait for the options to land — "no hint" only means something once the
+    // picker is loaded and still has nothing selected.
+    await findAppliedToPickerWith("ms-1");
 
     expect(screen.queryByTestId("applied-to-method-hint")).toBeNull();
   });
@@ -293,8 +316,8 @@ describe("InvoiceForm — submitted payload", () => {
 
     const settledVia = await screen.findByTestId("settled-via-select");
     fireEvent.change(settledVia, { target: { value: "avoir" } });
-    const picker = await screen.findByTestId("applied-to-invoice-select");
-    await user.selectOptions(picker as HTMLSelectElement, "ms-1");
+    const picker = await findAppliedToPickerWith("ms-1");
+    await user.selectOptions(picker, "ms-1");
 
     const submitBtn = screen.getByRole("button", { name: /save/i });
     await user.click(submitBtn);
@@ -430,8 +453,8 @@ describe("InvoiceForm — cap error (AppliedExceedsTarget)", () => {
 
     const settledVia = await screen.findByTestId("settled-via-select");
     fireEvent.change(settledVia, { target: { value: "avoir" } });
-    const picker = await screen.findByTestId("applied-to-invoice-select");
-    await user.selectOptions(picker as HTMLSelectElement, "ms-1");
+    const picker = await findAppliedToPickerWith("ms-1");
+    await user.selectOptions(picker, "ms-1");
 
     const submitBtn = screen.getByRole("button", { name: /save/i });
     await user.click(submitBtn);

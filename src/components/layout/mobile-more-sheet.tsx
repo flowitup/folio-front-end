@@ -5,7 +5,6 @@ import { Link } from "@/i18n/navigation";
 import { usePathname } from "next/navigation";
 import {
   HardHat,
-  Users,
   StickyNote,
   Files,
   FileText,
@@ -45,7 +44,6 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
   const projectItems = selectedProjectId
     ? [
         { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
-        { key: "members", href: `/projects/${selectedProjectId}/members`, icon: Users },
         { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
         ...(canSeeDocuments
           ? [{ key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files }]

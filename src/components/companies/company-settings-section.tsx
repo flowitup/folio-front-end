@@ -6,9 +6,9 @@
  * Folds together what used to be two separate settings tabs:
  *  - "My companies": the caller's attachments — identity card with masked
  *    SIRET / TVA / IBAN / BIC, primary toggle, detach, attach-by-code;
- *  - "Company": the company-admin self-service tools — join code, the members
- *    table (roles, phone, company/project assignment, D8 grants, add-by-phone,
- *    import) and the company's payment methods.
+ *  - "Company": the company-admin self-service tools — the members table
+ *    (roles, phone, company/project assignment, D8 grants, add-by-phone,
+ *    import), the join code and the company's payment methods.
  *
  * One picker at the top governs both halves, so a caller who admins the single
  * company they belong to — the common case — sees that company described once
@@ -201,28 +201,37 @@ export function CompanySettingsSection() {
 
       {selectedCompany && (
         <>
+          {/* Members lead the page. Who belongs to the company, what role they
+              hold and which projects they reach is the thing an admin comes
+              here to change; the identity card, the join code and the payment
+              methods below are set once and then left alone. It is also the
+              only members surface left — the project sidebar no longer carries
+              one.
+
+              Every admin-gated child is keyed on the company id: they all hold
+              fetched or seeded state (the join code above all, which is a
+              credential), so switching companies must remount them rather than
+              leave one company's data labelled with another's. */}
+          {isAdminOfSelected && (
+            <CompanyMembersTable
+              key={`members-${selectedCompany.id}-${refreshToken}`}
+              companyId={selectedCompany.id}
+              adminOfMultiple={adminCompanies.length > 1}
+              sourceCompanies={adminCompanies.filter((c) => c.id !== selectedCompany.id)}
+              onMutated={bumpRefresh}
+            />
+          )}
+
           {/* Attachment half — visible whatever the caller's role is. */}
           <MyCompanyCard company={selectedCompany} onMutated={load} />
 
-          {/* Admin half — company-admin self-service for the selected company.
-              Every child is keyed on the company id: they all hold fetched or
-              seeded state (the join code above all, which is a credential), so
-              switching companies must remount them rather than leave one
-              company's data labelled with another's. */}
+          {/* Admin half — company-admin self-service for the selected company. */}
           {isAdminOfSelected && (
             <>
               <CompanyJoinCodeCard
                 key={`join-code-${selectedCompany.id}`}
                 companyId={selectedCompany.id}
                 initialCode={selectedCompany.join_code ?? null}
-              />
-
-              <CompanyMembersTable
-                key={`members-${selectedCompany.id}-${refreshToken}`}
-                companyId={selectedCompany.id}
-                adminOfMultiple={adminCompanies.length > 1}
-                sourceCompanies={adminCompanies.filter((c) => c.id !== selectedCompany.id)}
-                onMutated={bumpRefresh}
               />
 
               {/* Payment methods are company-scoped and admin-gated exactly

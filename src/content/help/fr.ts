@@ -33,7 +33,7 @@ export const helpCatalogueFr: HelpCatalogue = [
     steps: [
       "Choisissez le chantier actif dans le sélecteur de projet, en haut du menu latéral. Sur écran étroit, il se trouve dans la barre du haut.",
       "Le premier groupe du menu latéral vaut pour toute l'application : “Aperçu”, “Projets” et “Bibliothèque”.",
-      "Une fois un projet sélectionné, le menu latéral déploie ses sections : “Planification”, “Main-d'œuvre”, “Dépenses”, “Chiffrage”, “Membres”, “Notes”, “Documents” et “Analyses”.",
+      "Une fois un projet sélectionné, le menu latéral déploie ses sections : “Planification”, “Main-d'œuvre”, “Dépenses”, “Chiffrage”, “Notes”, “Documents” et “Analyses”.",
       "Les administrateurs d'entreprise voient en plus un groupe “Facturation” : “Devis”, “Factures”, “Modèles” et “Remboursables”.",
       "La barre du haut porte l'action principale de la page, le point d'aide, la cloche, le bouton de thème clair ou sombre, le choix de la langue et le menu de votre compte.",
     ],
@@ -159,24 +159,6 @@ export const helpCatalogueFr: HelpCatalogue = [
     gotchas: [
       "Les magasins n'ont qu'un nom : rien ne permet d'enregistrer ou de modifier l'adresse ou le site web d'un magasin, ni d'en supprimer un.",
       "Les prix sont comparés par magasin : choisissez toujours le même magasin, sinon la comparaison se casse sans rien dire.",
-    ],
-  },
-  {
-    id: "members",
-    title: "Qui travaille sur ce projet",
-    purpose:
-      "Qui est sur ce chantier et comment il y est arrivé : assignez des personnes déjà dans l'entreprise, invitez-en de nouvelles par e-mail, et retirez-les.",
-    steps: [
-      "Cliquez sur “Assigner un membre”, cherchez dans l'annuaire de l'entreprise par nom ou par téléphone, choisissez le rôle, et assignez.",
-      "Cliquez sur “Inviter un membre” pour envoyer une invitation par e-mail. Un compte Folio existant est ajouté immédiatement ; sinon, la personne reçoit un lien valable sept jours.",
-      "Lisez le tableau des membres : nom, e-mail et date d'arrivée.",
-      "Utilisez “Modifier” sur une ligne pour corriger un nom affiché ou un e-mail, ou “Retirer” pour sortir quelqu'un du projet.",
-      "Sous “Invitations en attente”, voyez qui n'a pas encore accepté et révoquez une invitation si nécessaire.",
-    ],
-    whoCanDoIt:
-      "Assigner demande le droit “Modifier le projet”, inviter et révoquer demandent le droit “Inviter des membres”, et modifier ou retirer demande le droit “Gérer les membres”. Seul un administrateur d'entreprise peut attribuer le rôle “Manager” ; un manager ne peut assigner que “Membre”.",
-    gotchas: [
-      "Le rôle sur le projet ne se modifie pas depuis “Modifier le membre” — les rôles s'attribuent et se changent par “Assigner un membre”.",
     ],
   },
   {
@@ -338,12 +320,13 @@ export const helpCatalogueFr: HelpCatalogue = [
     purpose:
       "Les sociétés auxquelles vous êtes rattaché et, pour celles que vous administrez, le code société, les rôles des membres, les permissions accordées et l'annuaire des personnes.",
     steps: [
-      "Ouvrez “Paramètres” → “Entreprise”.",
+      "Ouvrez “Paramètres” → “Entreprise”. Le tableau des membres ouvre la page ; la fiche de la société, son code et ses moyens de paiement suivent en dessous.",
       "Cliquez sur “Ajouter une société” et collez un jeton d'invitation ou saisissez un code société pour vous rattacher à une autre.",
       "Si vous appartenez à plusieurs sociétés, passez de l'une à l'autre avec le sélecteur d'entreprise ; une pastille indique votre rôle dans chacune.",
       "Utilisez “Définir comme principale” pour choisir votre société par défaut, ou “Détacher” pour en sortir.",
       "En tant qu'administrateur, gérez le code société : créez-le, renouvelez-le, révoquez-le, ou copiez-le pour le partager. C'est ce code que l'on saisit dans l'application mobile pour rejoindre l'entreprise comme membre.",
       "Dans le tableau des membres, changez le rôle de quelqu'un, ou ouvrez “Permissions personnalisées” pour accorder ou refuser une permission précise, sur toute l'entreprise ou sur un seul projet.",
+      "La colonne “Projets” de ce même tableau sert à placer quelqu'un sur un chantier : cochez un projet pour l'y assigner, décochez-le pour l'en retirer.",
       "Utilisez “Ajouter par téléphone” pour ajouter quelqu'un par son numéro, ou “Importer depuis une entreprise” pour reprendre des personnes d'une autre société que vous administrez.",
       "L'annuaire liste toutes les personnes liées à l'entreprise, avec leur téléphone, le fait qu'elles se soient déjà connectées ou non, et les projets qui leur sont assignés.",
       "Sous “Moyens de paiement”, ajoutez, renommez ou supprimez les façons dont les factures de cette société peuvent être payées. Les moyens intégrés se renomment mais ne se suppriment pas.",

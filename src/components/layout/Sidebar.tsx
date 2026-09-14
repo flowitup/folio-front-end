@@ -15,7 +15,6 @@ import {
   Thermometer,
   Check,
   Plus,
-  Users,
   StickyNote,
   Files,
   Library,
@@ -84,7 +83,6 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
           { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
           { key: "invoices", href: `/projects/${selectedProjectId}/invoices`, icon: Receipt },
           { key: "chiffrage", href: `/projects/${selectedProjectId}/chiffrage`, icon: Calculator },
-          { key: "members", href: `/projects/${selectedProjectId}/members`, icon: Users },
           { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
           ...(canSeeDocuments
             ? [{ key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files }]

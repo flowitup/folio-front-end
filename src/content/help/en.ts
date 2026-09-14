@@ -31,7 +31,7 @@ export const helpCatalogueEn: HelpCatalogue = [
     steps: [
       "Pick the active site from the project switcher at the top of the sidebar. On a narrow screen it sits in the top bar instead.",
       "The sidebar's first group is app-wide: Overview, Projects and Library.",
-      "Once a project is selected the sidebar grows its sections: Planning, Labor, Expense, Cost planning, Members, Notes, Documents and Analyses.",
+      "Once a project is selected the sidebar grows its sections: Planning, Labor, Expense, Cost planning, Notes, Documents and Analyses.",
       "Company administrators also see a Billing group: Quotes, Invoices, Templates and Refundable.",
       "The top bar carries the page's main action, the help mark, the bell, the light and dark switch, the language picker and your account menu.",
     ],
@@ -157,24 +157,6 @@ export const helpCatalogueEn: HelpCatalogue = [
     gotchas: [
       "Shops are name-only: there is no way to record or edit a shop's address or website, and none to delete one.",
       "Prices are compared by shop, so pick the same shop each time or the comparison quietly breaks.",
-    ],
-  },
-  {
-    id: "members",
-    title: "Who works on this project",
-    purpose:
-      "Who is on this site and how they got here: assign people already in the company, invite new ones by email, and remove them.",
-    steps: [
-      "Click “Assign member”, search the company directory by name or phone, choose the role, and assign.",
-      "Click “Invite member” to send an email invitation. An existing Folio account is added straight away; anyone else gets a link valid for seven days.",
-      "Read the members table: name, email and when they joined.",
-      "Use a row's “Edit” to correct a display name or email, or “Remove” to take someone off the project.",
-      "Under “Pending invitations”, see who has not accepted yet and revoke an invitation if you need to.",
-    ],
-    whoCanDoIt:
-      "Assigning needs project-editing rights, inviting and revoking need invitation rights, and editing or removing needs user-management rights. Only a company administrator can hand out the manager role; a manager can only assign “Member”.",
-    gotchas: [
-      "The project role is not editable from “Edit member” — roles are granted and changed through “Assign member”.",
     ],
   },
   {
@@ -336,12 +318,13 @@ export const helpCatalogueEn: HelpCatalogue = [
     purpose:
       "The companies you belong to, and — for the ones you administer — the join code, the member roles, the permission grants and the people directory.",
     steps: [
-      "Open Settings → Company.",
+      "Open Settings → Company. The members table leads the page; the company's own card, its code and its payment methods follow underneath.",
       "Click “Add company” and paste an invite token or a company code to attach yourself to another one.",
       "If you belong to several, switch between them with the company picker; a chip shows your role in each.",
       "Use “Set as primary” to choose your default company, or “Detach” to leave one.",
       "As an administrator, manage the company code: create it, issue a new one, revoke it, or copy it to share. People type that code in the mobile app to join as members.",
       "In the members table, change someone's role, or open “Custom permissions” to grant or deny one specific permission, company-wide or on a single project.",
+      "The “Projects” column in that same table is how someone is put on a site: tick a project to assign them to it, untick it to take them off.",
       "Use “Add by phone” to add someone by number, or “Import from company” to bring people across from another company you administer.",
       "The directory lists everyone linked to the company with their phone, whether they have signed in yet, and the projects they are assigned to.",
       "Under “Payment methods”, add, rename or delete the ways that company's invoices get paid. Built-in methods can be renamed but not removed.",

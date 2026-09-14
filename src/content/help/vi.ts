@@ -31,7 +31,7 @@ export const helpCatalogueVi: HelpCatalogue = [
     steps: [
       "Chọn công trình đang làm ở bộ chọn dự án trên đầu thanh bên. Trên màn hình hẹp, bộ chọn nằm ở thanh trên cùng.",
       "Nhóm đầu tiên của thanh bên dùng chung cho cả ứng dụng: “Tổng quan”, “Dự án” và “Thư viện”.",
-      "Khi đã chọn một dự án, thanh bên hiện thêm các mục: “Kế hoạch”, “Nhân công”, “Chi phí”, “Hoạch toán”, “Thành viên”, “Ghi chú”, “Tài liệu” và “Phân tích”.",
+      "Khi đã chọn một dự án, thanh bên hiện thêm các mục: “Kế hoạch”, “Nhân công”, “Chi phí”, “Hoạch toán”, “Ghi chú”, “Tài liệu” và “Phân tích”.",
       "Quản trị viên công ty còn thấy nhóm “Báo giá & Hóa đơn”: “Báo giá”, “Hóa đơn”, “Mẫu tài liệu” và “Hoàn tiền”.",
       "Thanh trên cùng chứa thao tác chính của trang, dấu trợ giúp, chuông thông báo, nút chuyển sáng tối, bộ chọn ngôn ngữ và menu tài khoản của bạn.",
     ],
@@ -155,24 +155,6 @@ export const helpCatalogueVi: HelpCatalogue = [
     gotchas: [
       "Cửa hàng chỉ có mỗi cái tên: không có chỗ nào ghi hay sửa địa chỉ và trang web của cửa hàng, cũng không xóa được cửa hàng.",
       "Giá được so sánh theo cửa hàng, nên lần nào cũng phải chọn đúng cửa hàng, nếu không phần so sánh sẽ âm thầm sai lệch.",
-    ],
-  },
-  {
-    id: "members",
-    title: "Ai làm trong dự án này",
-    purpose:
-      "Ai đang ở trong công trình này và họ vào bằng đường nào: gán những người đã có trong công ty, mời người mới qua email, và xóa họ khỏi dự án.",
-    steps: [
-      "Bấm “Thêm thành viên vào dự án”, tìm trong danh bạ công ty theo tên hoặc số điện thoại, chọn vai trò, rồi thêm.",
-      "Bấm “Mời thành viên” để gửi lời mời qua email. Người đã có tài khoản Folio được thêm thẳng vào; người chưa có sẽ nhận một đường dẫn có hiệu lực bảy ngày.",
-      "Đọc bảng thành viên: tên, email và ngày tham gia.",
-      "Dùng “Sửa” ở mỗi dòng để chỉnh tên hiển thị hoặc email, hoặc “Xóa” để bỏ ai đó khỏi dự án.",
-      "Trong “Lời mời đang chờ”, xem ai chưa chấp nhận và thu hồi lời mời khi cần.",
-    ],
-    whoCanDoIt:
-      "Thêm thành viên vào dự án cần quyền chỉnh sửa dự án, mời và thu hồi cần quyền mời, còn sửa hoặc xóa cần quyền quản lý thành viên. Chỉ quản trị viên công ty mới trao được vai trò “Quản lý”; quản lý chỉ gán được vai trò “Thành viên”.",
-    gotchas: [
-      "Không đổi được vai trò dự án từ “Chỉnh sửa thành viên” — vai trò được trao và thay đổi qua “Thêm thành viên vào dự án”.",
     ],
   },
   {
@@ -334,12 +316,13 @@ export const helpCatalogueVi: HelpCatalogue = [
     purpose:
       "Những công ty bạn thuộc về, và — với công ty bạn quản trị — mã tham gia, vai trò của thành viên, các quyền được cấp riêng và danh bạ nhân sự.",
     steps: [
-      "Mở “Cài đặt” → “Công ty”.",
+      "Mở “Cài đặt” → “Công ty”. Bảng thành viên nằm đầu trang; thông tin công ty, mã công ty và phương thức thanh toán nằm bên dưới.",
       "Bấm “Thêm công ty” rồi dán mã mời hoặc nhập mã công ty để liên kết mình với một công ty khác.",
       "Nếu bạn thuộc nhiều công ty, chuyển qua lại bằng bộ chọn công ty; một nhãn nhỏ cho biết vai trò của bạn ở từng nơi.",
       "Dùng “Đặt làm chính” để chọn công ty mặc định, hoặc “Hủy liên kết” để rời khỏi một công ty.",
       "Là quản trị viên, hãy quản lý mã công ty: tạo mã, tạo mã mới, thu hồi, hoặc sao chép để chia sẻ. Mọi người nhập mã đó trong app Folio trên điện thoại để tham gia với vai trò thành viên.",
       "Trong bảng thành viên, đổi vai trò của một người, hoặc mở “Quyền tuỳ chỉnh” để cấp hay từ chối một quyền cụ thể, cho toàn công ty hoặc chỉ trên một dự án.",
+      "Cột “Dự án” ngay trong bảng đó là chỗ đưa một người vào công trình: tích vào một dự án để giao, bỏ tích để rút họ ra.",
       "Dùng “Thêm bằng số điện thoại” để thêm người theo số, hoặc “Nhập từ công ty khác” để mang người từ một công ty khác bạn quản trị sang.",
       "Danh bạ liệt kê mọi người liên kết với công ty, kèm số điện thoại, đã đăng nhập lần nào chưa, và những dự án họ được giao.",
       "Ở “Phương thức thanh toán”, thêm, đổi tên hoặc xóa những cách hóa đơn của công ty đó được thanh toán. Phương thức có sẵn đổi tên được nhưng không xóa được.",

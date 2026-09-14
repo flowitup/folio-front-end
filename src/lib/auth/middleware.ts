@@ -15,6 +15,7 @@ export const PUBLIC_PATH_PREFIXES = [
   "/signup",
   "/accept-invite",
   "/unauthorized",
+  "/legal",
 ] as const;
 
 // Routes that should redirect to dashboard if already authenticated.

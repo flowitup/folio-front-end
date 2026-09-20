@@ -18,6 +18,7 @@ import {
   StickyNote,
   Files,
   Library,
+  Wrench,
   FileSearch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -77,6 +78,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
     { key: "dashboard", href: "/dashboard", icon: Home },
     { key: "projects", href: "/projects", icon: FolderOpen },
     { key: "bibliotheque", href: "/bibliotheque", icon: Library },
+    { key: "inventory", href: "/inventory", icon: Wrench },
     ...(selectedProjectId
       ? [
           { key: "planning", href: `/projects/${selectedProjectId}/planning`, icon: KanbanSquare },

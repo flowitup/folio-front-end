@@ -244,6 +244,25 @@ export const helpCatalogueVi: HelpCatalogue = [
     ],
   },
   {
+    id: "inventory",
+    title: "Kho thiết bị",
+    purpose:
+      "Toàn bộ máy móc, dụng cụ của công ty — máy khoan, máy vặn vít, thang — kèm số lượng, tình trạng còn dùng được hay đã hỏng, và đang ở đâu: một kho có địa chỉ, hoặc một công trường.",
+    steps: [
+      "Mở “Kho thiết bị” ở thanh bên. Các ô phía trên đếm tổng số cái, số dùng được, số hỏng, số ở kho và số ở công trường.",
+      "Bấm “Kho hàng” để thêm những nơi công ty cất đồ, mỗi kho có tên và địa chỉ; kho vẫn còn đồ thì không xóa được.",
+      "Bấm “Thêm thiết bị”: tên — bắt buộc — loại, số lượng, dùng được hay hỏng, rồi vị trí: một kho hoặc một công trường của bạn. Mã / số sê-ri và ghi chú là tùy chọn.",
+      "Danh sách được gom theo vị trí, kho xếp trước. Dùng ô tìm kiếm và các bộ chọn vị trí, tình trạng, kho để lọc.",
+      "Bấm biểu tượng bút chì trên một dòng để sửa bất cứ gì — đánh dấu hỏng sau khi đồ bị hư, chuyển từ kho ra công trường, chỉnh lại số lượng — và biểu tượng thùng rác để xóa.",
+    ],
+    whoCanDoIt:
+      "Ai liên kết với một công ty cũng đọc được. Các nút thêm, sửa và xóa luôn hiện, nhưng máy chủ sẽ từ chối thay đổi nếu bạn không có quyền quản lý kho thiết bị, và nó báo cho bạn biết.",
+    gotchas: [
+      "Một dòng là một lô đồ giống nhau, cùng một chỗ và cùng một tình trạng: ba máy khoan dùng được ở kho và một máy khoan hỏng ở công trường là hai dòng.",
+      "Kho thiết bị thuộc về một công ty — công ty chính của bạn — và không có bộ chọn công ty.",
+    ],
+  },
+  {
     id: "billing-devis",
     title: "Báo giá",
     purpose:

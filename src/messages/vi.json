@@ -10,6 +10,7 @@
     "dashboard": "Tổng quan",
     "projects": "Dự án",
     "bibliotheque": "Thư viện",
+    "inventory": "Kho thiết bị",
     "labor": "Nhân công",
     "invoices": "Chi phí",
     "planning": "Kế hoạch",
@@ -1911,6 +1912,115 @@
     "deleteWarning": "Thao tác này sẽ xóa vĩnh viễn \"{name}\" và {count, plural, =0 {0 bản ghi mua hàng} other {# bản ghi mua hàng}}.",
     "deleteConfirmLabel": "Nhập tên sản phẩm để xác nhận"
   },
+  "inventory": {
+    "title": "Kho thiết bị",
+    "subtitle": "Máy móc, dụng cụ của công ty: số lượng bao nhiêu, còn dùng được hay đã hỏng, và đang ở đâu.",
+    "noCompany": "Bạn chưa thuộc công ty nào.",
+    "addItem": "Thêm thiết bị",
+    "createTitle": "Thêm thiết bị",
+    "editTitle": "Sửa thiết bị",
+    "searchPlaceholder": "Tìm máy, dụng cụ, mã số…",
+    "empty": "Chưa có thiết bị nào. Thêm máy hoặc dụng cụ đầu tiên của bạn.",
+    "noResults": "Không có gì khớp với bộ lọc này.",
+    "retry": "Thử lại",
+    "unknownLocation": "Không rõ vị trí",
+    "uncategorized": "Chưa phân loại",
+    "units": "{count, plural, other {# cái}}",
+    "deleteConfirm": "Xóa “{name}”?",
+    "deleteHint": "Dòng này sẽ biến mất khỏi kho. Không thể hoàn tác.",
+    "summary": {
+      "total": "Tổng"
+    },
+    "condition": {
+      "working": "Dùng được",
+      "damaged": "Hỏng"
+    },
+    "location": {
+      "warehouse": "Ở kho",
+      "site": "Ở công trường"
+    },
+    "filters": {
+      "everywhere": "Mọi nơi",
+      "anyCondition": "Mọi tình trạng",
+      "allWarehouses": "Tất cả các kho"
+    },
+    "categories": {
+      "power_tool": "Máy cầm tay (khoan, vặn vít…)",
+      "hand_tool": "Dụng cụ tay",
+      "measuring": "Đo đạc",
+      "access": "Thang & giàn giáo",
+      "safety": "Bảo hộ lao động",
+      "machine": "Máy móc",
+      "other": "Khác"
+    },
+    "fields": {
+      "name": "Tên",
+      "namePlaceholder": "vd. Máy khoan Bosch, máy vặn vít Makita",
+      "category": "Loại",
+      "quantity": "Số lượng",
+      "condition": "Tình trạng",
+      "location": "Đồ đang ở đâu?",
+      "warehouse": "Kho",
+      "warehousePlaceholder": "Chọn kho",
+      "site": "Công trường",
+      "sitePlaceholder": "Chọn công trường",
+      "reference": "Mã / số sê-ri",
+      "referenceHint": "Không bắt buộc — số sê-ri hoặc mã đánh dấu riêng",
+      "description": "Ghi chú"
+    },
+    "validation": {
+      "nameRequired": "Hãy đặt tên cho thiết bị.",
+      "quantityInvalid": "Số lượng phải là số nguyên, từ 0 trở lên.",
+      "warehouseRequired": "Hãy chọn một kho.",
+      "siteRequired": "Hãy chọn một công trường.",
+      "noWarehouseYet": "Chưa có kho nào — thêm kho từ mục “Kho hàng”, hoặc để đồ ở công trường."
+    },
+    "actions": {
+      "save": "Lưu",
+      "create": "Thêm vào kho",
+      "cancel": "Hủy",
+      "delete": "Xóa",
+      "edit": "Sửa",
+      "rowActions": "Thao tác"
+    },
+    "toast": {
+      "created": "Đã thêm thiết bị.",
+      "updated": "Đã cập nhật thiết bị.",
+      "deleted": "Đã xóa thiết bị.",
+      "createError": "Không thêm được thiết bị.",
+      "updateError": "Không cập nhật được thiết bị.",
+      "deleteError": "Không xóa được thiết bị.",
+      "forbidden": "Bạn không có quyền quản lý kho thiết bị."
+    },
+    "warehouses": {
+      "title": "Kho hàng",
+      "add": "Thêm kho",
+      "createTitle": "Kho mới",
+      "editTitle": "Sửa kho",
+      "edit": "Sửa kho",
+      "delete": "Xóa kho",
+      "empty": "Chưa có kho nào. Thêm nơi công ty cất giữ máy móc, dụng cụ.",
+      "noAddress": "Chưa có địa chỉ",
+      "deleteBlocked": "Kho này vẫn còn {count, plural, other {# cái}}. Hãy chuyển hoặc xóa chúng trước.",
+      "fields": {
+        "name": "Tên kho",
+        "namePlaceholder": "vd. Kho chính",
+        "address": "Địa chỉ",
+        "addressPlaceholder": "Số nhà, đường, quận / thành phố"
+      },
+      "validation": {
+        "nameRequired": "Hãy đặt tên cho kho."
+      },
+      "toast": {
+        "created": "Đã thêm kho.",
+        "updated": "Đã cập nhật kho.",
+        "deleted": "Đã xóa kho.",
+        "createError": "Không thêm được kho.",
+        "updateError": "Không cập nhật được kho.",
+        "deleteError": "Không xóa được kho."
+      }
+    }
+  },
   "photos": {
     "title": "Phương tiện",
     "subtitle": "Ảnh và video tiến độ thi công của dự án.",
@@ -2200,6 +2310,7 @@
         "project_manage_invoices": "Quản lý hoá đơn",
         "project_log_own_attendance": "Chấm công cho bản thân",
         "bibliotheque_manage": "Quản lý thư viện",
+        "inventory_manage": "Quản lý kho thiết bị",
         "project_view_pay": "Xem lương",
         "project_view_budget": "Xem ngân sách & vốn giải ngân"
       }

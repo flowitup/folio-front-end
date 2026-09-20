@@ -248,6 +248,25 @@ export const helpCatalogueFr: HelpCatalogue = [
     ],
   },
   {
+    id: "inventory",
+    title: "L'inventaire du matériel",
+    purpose:
+      "Tous les outils et machines de l'entreprise — perceuses, visseuses, échelles — avec leur nombre, leur état et leur emplacement : un dépôt avec son adresse, ou un chantier.",
+    steps: [
+      "Ouvrez « Inventaire » dans la barre latérale. Les tuiles en haut comptent les unités au total, en état, hors service, en dépôt et sur chantier.",
+      "Cliquez sur « Dépôts » pour ajouter les endroits où l'entreprise range ses outils, chacun avec un nom et une adresse ; un dépôt qui contient encore des unités ne peut pas être supprimé.",
+      "Cliquez sur « Ajouter du matériel » : nom — obligatoire — catégorie, quantité, en état ou hors service, puis l'emplacement : un dépôt ou l'un de vos chantiers. Une référence ou un numéro de série et des notes sont facultatifs.",
+      "La liste est groupée par emplacement, dépôts en premier. Utilisez le champ de recherche et les sélecteurs d'emplacement, d'état et de dépôt pour la filtrer.",
+      "Le crayon d'une ligne permet de tout modifier — la passer hors service après une casse, la déplacer du dépôt vers un chantier, corriger la quantité — et la corbeille de la retirer.",
+    ],
+    whoCanDoIt:
+      "Toute personne rattachée à une entreprise peut le consulter. Les boutons d'ajout, de modification et de suppression sont toujours affichés, mais le serveur refuse les changements si vous n'avez pas la permission « Gérer l'inventaire », et il vous le dit.",
+    gotchas: [
+      "Une ligne est un lot d'objets identiques, au même endroit et dans le même état : trois perceuses en état au dépôt et une perceuse cassée sur un chantier font deux lignes.",
+      "L'inventaire appartient à une seule entreprise — votre entreprise principale — et il n'y a pas de sélecteur d'entreprise.",
+    ],
+  },
+  {
     id: "billing-devis",
     title: "Les devis",
     purpose:

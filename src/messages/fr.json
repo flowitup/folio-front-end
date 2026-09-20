@@ -10,6 +10,7 @@
     "dashboard": "Aperçu",
     "projects": "Projets",
     "bibliotheque": "Bibliothèque",
+    "inventory": "Inventaire",
     "labor": "Main-d'œuvre",
     "invoices": "Dépenses",
     "planning": "Planification",
@@ -1911,6 +1912,115 @@
     "deleteWarning": "Cela supprime définitivement « {name} » et {count, plural, =0 {0 enregistrement d'achat} one {# enregistrement d'achat} other {# enregistrements d'achat}}.",
     "deleteConfirmLabel": "Saisissez le nom du produit pour confirmer"
   },
+  "inventory": {
+    "title": "Inventaire du matériel",
+    "subtitle": "Les outils et machines de l'entreprise : combien, en état ou hors service, et où ils se trouvent.",
+    "noCompany": "Vous n'êtes rattaché à aucune entreprise pour l'instant.",
+    "addItem": "Ajouter du matériel",
+    "createTitle": "Ajouter du matériel",
+    "editTitle": "Modifier le matériel",
+    "searchPlaceholder": "Chercher un outil, une référence…",
+    "empty": "Aucun matériel pour l'instant. Ajoutez votre premier outil ou machine.",
+    "noResults": "Rien ne correspond à ces filtres.",
+    "retry": "Réessayer",
+    "unknownLocation": "Emplacement inconnu",
+    "uncategorized": "Sans catégorie",
+    "units": "{count, plural, one {# unité} other {# unités}}",
+    "deleteConfirm": "Supprimer « {name} » ?",
+    "deleteHint": "La ligne disparaît de l'inventaire. Cette action est irréversible.",
+    "summary": {
+      "total": "Total"
+    },
+    "condition": {
+      "working": "En état",
+      "damaged": "Hors service"
+    },
+    "location": {
+      "warehouse": "Dépôt",
+      "site": "Sur chantier"
+    },
+    "filters": {
+      "everywhere": "Partout",
+      "anyCondition": "Tout état",
+      "allWarehouses": "Tous les dépôts"
+    },
+    "categories": {
+      "power_tool": "Outillage électroportatif",
+      "hand_tool": "Outillage à main",
+      "measuring": "Mesure",
+      "access": "Échelles & échafaudages",
+      "safety": "Sécurité / EPI",
+      "machine": "Machines",
+      "other": "Autre"
+    },
+    "fields": {
+      "name": "Nom",
+      "namePlaceholder": "ex. Perceuse Bosch, visseuse Makita",
+      "category": "Catégorie",
+      "quantity": "Quantité",
+      "condition": "État",
+      "location": "Où se trouve-t-il ?",
+      "warehouse": "Dépôt",
+      "warehousePlaceholder": "Choisir un dépôt",
+      "site": "Chantier",
+      "sitePlaceholder": "Choisir un chantier",
+      "reference": "Référence / numéro de série",
+      "referenceHint": "Facultatif — un numéro de série ou votre propre marquage",
+      "description": "Notes"
+    },
+    "validation": {
+      "nameRequired": "Donnez un nom au matériel.",
+      "quantityInvalid": "La quantité doit être un nombre entier, 0 ou plus.",
+      "warehouseRequired": "Choisissez un dépôt.",
+      "siteRequired": "Choisissez un chantier.",
+      "noWarehouseYet": "Aucun dépôt pour l'instant — ajoutez-en un depuis « Dépôts », ou laissez le matériel sur un chantier."
+    },
+    "actions": {
+      "save": "Enregistrer",
+      "create": "Ajouter à l'inventaire",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "rowActions": "Actions"
+    },
+    "toast": {
+      "created": "Matériel ajouté.",
+      "updated": "Matériel mis à jour.",
+      "deleted": "Matériel retiré.",
+      "createError": "Impossible d'ajouter le matériel.",
+      "updateError": "Impossible de mettre à jour le matériel.",
+      "deleteError": "Impossible de retirer le matériel.",
+      "forbidden": "Vous n'avez pas la permission de gérer l'inventaire."
+    },
+    "warehouses": {
+      "title": "Dépôts",
+      "add": "Ajouter un dépôt",
+      "createTitle": "Nouveau dépôt",
+      "editTitle": "Modifier le dépôt",
+      "edit": "Modifier le dépôt",
+      "delete": "Supprimer le dépôt",
+      "empty": "Aucun dépôt pour l'instant. Ajoutez l'endroit où l'entreprise range ses outils.",
+      "noAddress": "Sans adresse",
+      "deleteBlocked": "Ce dépôt contient encore {count, plural, one {# unité} other {# unités}}. Déplacez-les ou retirez-les d'abord.",
+      "fields": {
+        "name": "Nom",
+        "namePlaceholder": "ex. Dépôt principal",
+        "address": "Adresse",
+        "addressPlaceholder": "Rue, ville"
+      },
+      "validation": {
+        "nameRequired": "Donnez un nom au dépôt."
+      },
+      "toast": {
+        "created": "Dépôt ajouté.",
+        "updated": "Dépôt mis à jour.",
+        "deleted": "Dépôt supprimé.",
+        "createError": "Impossible d'ajouter le dépôt.",
+        "updateError": "Impossible de mettre à jour le dépôt.",
+        "deleteError": "Impossible de supprimer le dépôt."
+      }
+    }
+  },
   "photos": {
     "title": "Médias",
     "subtitle": "Photos et vidéos de l'avancement du chantier pour ce projet.",
@@ -2200,6 +2310,7 @@
         "project_manage_invoices": "Gérer les factures",
         "project_log_own_attendance": "Pointer ses propres présences",
         "bibliotheque_manage": "Gérer la bibliothèque",
+        "inventory_manage": "Gérer l'inventaire",
         "project_view_pay": "Voir la paie",
         "project_view_budget": "Voir le budget et les fonds débloqués"
       }

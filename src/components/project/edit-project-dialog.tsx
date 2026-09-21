@@ -26,6 +26,17 @@ interface EditProjectDialogProps {
   onUpdated?: (project: Project) => void | Promise<void>;
 }
 
+/**
+ * The name field only holds a label the user chose: a project that is labelled
+ * by its address (the backend's fallback for a blank name, cut to the 255-char
+ * name column) opens with an empty name field, and stays address-labelled when
+ * saved blank.
+ */
+function customLabel(project: Project): string {
+  const addressLabel = (project.address ?? "").slice(0, 255);
+  return addressLabel && project.name === addressLabel ? "" : project.name;
+}
+
 export function EditProjectDialog({
   project,
   open,
@@ -50,7 +61,7 @@ export function EditProjectDialog({
   useEffect(() => {
     if (open && project) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setName(project.name);
+      setName(customLabel(project));
       setAddress(project.address ?? "");
       setBudget(project.budget != null ? String(project.budget) : "");
       setBudgetSource(project.budget_source ?? "");
@@ -77,8 +88,8 @@ export function EditProjectDialog({
     const trimmedBudgetStr = budget.trim();
     const trimmedBudgetSource = budgetSource.trim();
 
-    if (!trimmedName) {
-      setError(t("editProjectNameRequired"));
+    if (!trimmedAddress) {
+      setError(t("editProjectAddressRequired"));
       return;
     }
 
@@ -97,9 +108,10 @@ export function EditProjectDialog({
 
     const budgetSourceValue = trimmedBudgetSource || null;
 
+    // A blank name tells the backend to label the project by its address.
     const payload = {
       name: trimmedName,
-      address: trimmedAddress || null,
+      address: trimmedAddress,
       ...(canViewBudget ? { budget: budgetValue, budget_source: budgetSourceValue } : {}),
     };
 
@@ -110,8 +122,8 @@ export function EditProjectDialog({
       !canViewBudget ||
       (payload.budget === existingBudget && payload.budget_source === existingBudgetSource);
     if (
-      payload.name === project.name &&
-      payload.address === project.address &&
+      payload.name === customLabel(project) &&
+      payload.address === (project.address ?? "") &&
       budgetUnchanged
     ) {
       onOpenChange(false);
@@ -141,13 +153,13 @@ export function EditProjectDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="edit-project-name">{t("projectName")}</Label>
+            <Label htmlFor="edit-project-address">{t("projectAddress")}</Label>
             <Input
-              id="edit-project-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("projectNamePlaceholder")}
-              maxLength={255}
+              id="edit-project-address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder={t("projectAddressPlaceholder")}
+              maxLength={500}
               autoFocus
               required
               disabled={isSubmitting}
@@ -155,15 +167,13 @@ export function EditProjectDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-project-address">
-              {t("projectAddressOptional")}
-            </Label>
+            <Label htmlFor="edit-project-name">{t("projectNameOptional")}</Label>
             <Input
-              id="edit-project-address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder={t("projectAddressPlaceholder")}
-              maxLength={500}
+              id="edit-project-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t("projectNamePlaceholder")}
+              maxLength={255}
               disabled={isSubmitting}
             />
           </div>
@@ -209,7 +219,7 @@ export function EditProjectDialog({
             >
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={isSubmitting || !name.trim()}>
+            <Button type="submit" disabled={isSubmitting || !address.trim()}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />

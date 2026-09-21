@@ -52,7 +52,7 @@ describe("projects API wrappers", () => {
       expect(result).toEqual(mockProject);
     });
 
-    it("sends null address when address is null", async () => {
+    it("sends the address alongside the name", async () => {
       const mockProject = {
         id: "p-1",
         name: "Project",
@@ -64,7 +64,7 @@ describe("projects API wrappers", () => {
 
       mockApi.put.mockResolvedValueOnce(mockProject);
 
-      const payload = { name: "Project", address: null };
+      const payload = { name: "Project", address: "1 Rue Test" };
       await updateProject("p-1", payload);
 
       expect(mockApi.put).toHaveBeenCalledWith("/projects/p-1", payload);
@@ -90,7 +90,7 @@ describe("projects API wrappers", () => {
     it("rejects when api.put rejects", async () => {
       mockApi.put.mockRejectedValueOnce(new Error("API error"));
 
-      await expect(updateProject("p-1", { name: "X", address: null })).rejects.toThrow("API error");
+      await expect(updateProject("p-1", { name: "X", address: "1 Rue Test" })).rejects.toThrow("API error");
     });
   });
 

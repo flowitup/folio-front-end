@@ -91,6 +91,18 @@ describe("ChatPanel", () => {
     expect(screen.getByTestId("chat-channel-project:p1")).toHaveAttribute("aria-selected", "true");
   });
 
+  it("labels an assistant channel with the Assistant kind", async () => {
+    setChat({
+      channels: [
+        ...channels,
+        { key: "assistant:me", kind: "assistant", id: "me", name: "Assistant", member_count: 1, unread_count: 0, last_message_at: null },
+      ],
+    });
+    render(<ChatPanel layout="split" />);
+    await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
+    expect(screen.getByTestId("chat-channel-assistant:me")).toHaveTextContent("chat.kind.assistant");
+  });
+
   it("honours a deep-linked channel and switches channels on click", async () => {
     setChat();
     render(<ChatPanel initialChannelKey="company:c1" layout="split" />);

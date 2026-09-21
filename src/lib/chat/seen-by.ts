@@ -16,7 +16,8 @@ export interface SeenMember {
 interface SeenMessage {
   id: string;
   created_at: string;
-  sender_id: string;
+  /** `null` for an assistant message; never equals a real member id, so it never hides a seen mark. */
+  sender_id: string | null;
 }
 
 /** Message id → members whose read marker lands on that message (order = members order). */

@@ -19,9 +19,9 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => {
     const t: Record<string, string> = {
       createProjectTitle: "Create new project",
-      projectName: "Project name",
-      projectNamePlaceholder: "e.g. Riverside Tower",
-      projectAddressOptional: "Address (optional)",
+      projectNameOptional: "Project name (optional)",
+      projectNamePlaceholder: "Defaults to the address",
+      projectAddress: "Address",
       projectAddressPlaceholder: "e.g. 12 Rue des Martyrs, Paris",
       budgetLabel: "Budget (€)",
       budgetSourceLabelOptional: "Funding source (optional)",
@@ -31,7 +31,7 @@ vi.mock("next-intl", () => ({
       creating: "Creating...",
       cancel: "Cancel",
       createProjectError: "Failed to create project. Please try again.",
-      createProjectNameRequired: "Project name is required",
+      createProjectAddressRequired: "Address is required",
       createProjectCompanyLabel: "Company",
       createProjectCompanyPlaceholder: "Choose a company",
       createProjectCompanyRequired: "Choose which company this project belongs to",
@@ -103,13 +103,14 @@ describe("CreateProjectDialog — company scoping (M1)", () => {
 
     expect(screen.queryByLabelText("Company")).not.toBeInTheDocument();
 
-    await user.type(screen.getByLabelText("Project name"), "Riverside Tower");
+    await user.type(screen.getByLabelText("Address"), "12 Rue des Martyrs");
+    await user.type(screen.getByLabelText("Project name (optional)"), "Riverside Tower");
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     await waitFor(() => {
       expect(mockCreateProject).toHaveBeenCalledWith({
+        address: "12 Rue des Martyrs",
         name: "Riverside Tower",
-        address: null,
       });
     });
   });
@@ -126,13 +127,14 @@ describe("CreateProjectDialog — company scoping (M1)", () => {
     expect(screen.getByLabelText("Company")).toHaveValue("c1");
 
     await user.selectOptions(screen.getByLabelText("Company"), "c2");
-    await user.type(screen.getByLabelText("Project name"), "Riverside Tower");
+    await user.type(screen.getByLabelText("Address"), "12 Rue des Martyrs");
+    await user.type(screen.getByLabelText("Project name (optional)"), "Riverside Tower");
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     await waitFor(() => {
       expect(mockCreateProject).toHaveBeenCalledWith({
+        address: "12 Rue des Martyrs",
         name: "Riverside Tower",
-        address: null,
         company_id: "c2",
       });
     });

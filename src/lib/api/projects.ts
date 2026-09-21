@@ -7,8 +7,10 @@ export async function fetchProjects(): Promise<Project[]> {
 }
 
 export interface CreateProjectPayload {
-  name: string;
-  address?: string | null;
+  /** Site address — mandatory, it identifies the project. */
+  address: string;
+  /** Optional label; omitted, the backend labels the project by its address. */
+  name?: string;
   /** Budget amount in EUR (≥ 0). Omit to leave unset. */
   budget?: number;
   /** Funding source description (≤ 120 chars). Omit to leave unset. */
@@ -22,8 +24,10 @@ export async function createProject(payload: CreateProjectPayload): Promise<Proj
 }
 
 export interface UpdateProjectPayload {
+  /** Send "" to label the project by its address again. */
   name?: string;
-  address?: string | null;
+  /** Cannot be blanked — the backend rejects an empty address. */
+  address?: string;
   invoice_prefix?: string | null;
   /** Budget amount in EUR (≥ 0). Send null to clear. Omit to leave unchanged. */
   budget?: number | null;

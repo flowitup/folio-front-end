@@ -27,9 +27,9 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => {
     const t: Record<string, string> = {
       editProjectTitle: "Edit project",
-      projectName: "Project name",
-      projectNamePlaceholder: "e.g. Riverside Tower",
-      projectAddressOptional: "Address (optional)",
+      projectNameOptional: "Project name (optional)",
+      projectNamePlaceholder: "Defaults to the address",
+      projectAddress: "Address",
       projectAddressPlaceholder: "e.g. 12 Rue des Martyrs, Paris",
       budgetLabel: "Budget (€)",
       budgetSourceLabelOptional: "Funding source (optional)",
@@ -39,7 +39,7 @@ vi.mock("next-intl", () => ({
       save: "Save",
       saving: "Saving...",
       editProjectError: "Failed to update project. Please try again.",
-      editProjectNameRequired: "Project name is required",
+      editProjectAddressRequired: "Address is required",
     };
     return t[key] ?? key;
   },
@@ -78,8 +78,8 @@ describe("EditProjectDialog", () => {
       <EditProjectDialog project={FAKE_PROJECT} open={true} onOpenChange={vi.fn()} />
     );
 
-    const nameInput = screen.getByLabelText("Project name") as HTMLInputElement;
-    const addressInput = screen.getByLabelText("Address (optional)") as HTMLInputElement;
+    const nameInput = screen.getByLabelText("Project name (optional)") as HTMLInputElement;
+    const addressInput = screen.getByLabelText("Address") as HTMLInputElement;
 
     expect(nameInput.value).toBe("Acme");
     expect(addressInput.value).toBe("12 rue X");
@@ -112,7 +112,7 @@ describe("EditProjectDialog", () => {
       />
     );
 
-    const nameInput = screen.getByLabelText("Project name");
+    const nameInput = screen.getByLabelText("Project name (optional)");
     await user.clear(nameInput);
     await user.type(nameInput, "New Name");
 
@@ -161,7 +161,8 @@ describe("EditProjectDialog", () => {
     expect(onUpdated).not.toHaveBeenCalled();
   });
 
-  it("empty name shows error and does not call API", async () => {
+  it("blank name is saved as an empty label so the backend relabels by address", async () => {
+    mockUpdateProject.mockResolvedValueOnce({ ...FAKE_PROJECT, name: "12 rue X" });
     const user = userEvent.setup();
     const onOpenChange = vi.fn();
 
@@ -173,18 +174,65 @@ describe("EditProjectDialog", () => {
       />
     );
 
-    const nameInput = screen.getByLabelText("Project name");
-    await user.clear(nameInput);
+    await user.clear(screen.getByLabelText("Project name (optional)"));
 
     const saveButton = screen.getByRole("button", { name: "Save" });
-    // Save button should be disabled when name is empty
-    expect(saveButton).toBeDisabled();
+    expect(saveButton).toBeEnabled();
+    await user.click(saveButton);
 
-    // The error shouldn't show just from clearing the field
-    expect(screen.queryByText("Project name is required")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockUpdateProject).toHaveBeenCalledWith("p-1", {
+        name: "",
+        address: "12 rue X",
+        budget: null,
+        budget_source: null,
+      });
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
 
-    // Even with button disabled, verify API wasn't called
+  it("an address-labelled project opens with an empty name field and saving it unchanged is a no-op", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+
+    render(
+      <EditProjectDialog
+        project={{ ...FAKE_PROJECT, name: "12 rue X" }}
+        open={true}
+        onOpenChange={onOpenChange}
+      />
+    );
+
+    const nameInput = screen.getByLabelText("Project name (optional)") as HTMLInputElement;
+    expect(nameInput.value).toBe("");
+    expect((screen.getByLabelText("Address") as HTMLInputElement).value).toBe("12 rue X");
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
     expect(mockUpdateProject).not.toHaveBeenCalled();
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("empty address disables Save and does not call API", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+
+    render(
+      <EditProjectDialog
+        project={FAKE_PROJECT}
+        open={true}
+        onOpenChange={onOpenChange}
+      />
+    );
+
+    const addressInput = screen.getByLabelText("Address");
+    expect(addressInput).toBeRequired();
+    await user.clear(addressInput);
+
+    const saveButton = screen.getByRole("button", { name: "Save" });
+    expect(saveButton).toBeDisabled();
+    expect(mockUpdateProject).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 
   it("cancel button closes without API call", async () => {
@@ -219,7 +267,7 @@ describe("EditProjectDialog", () => {
       />
     );
 
-    const nameInput = screen.getByLabelText("Project name");
+    const nameInput = screen.getByLabelText("Project name (optional)");
     await user.clear(nameInput);
     await user.type(nameInput, "Error Test");
     await user.click(screen.getByRole("button", { name: "Save" }));
@@ -251,7 +299,7 @@ describe("EditProjectDialog", () => {
       />
     );
 
-    const addressInput = screen.getByLabelText("Address (optional)");
+    const addressInput = screen.getByLabelText("Address");
     await user.clear(addressInput);
     await user.type(addressInput, "New Address");
 
@@ -267,39 +315,6 @@ describe("EditProjectDialog", () => {
     });
 
     expect(onUpdated).toHaveBeenCalled();
-    expect(onOpenChange).toHaveBeenCalledWith(false);
-  });
-
-  it("clears address when field is blanked", async () => {
-    mockUpdateProject.mockResolvedValueOnce({
-      ...FAKE_PROJECT,
-      address: null,
-    });
-
-    const user = userEvent.setup();
-    const onOpenChange = vi.fn();
-
-    render(
-      <EditProjectDialog
-        project={FAKE_PROJECT}
-        open={true}
-        onOpenChange={onOpenChange}
-      />
-    );
-
-    const addressInput = screen.getByLabelText("Address (optional)");
-    await user.clear(addressInput);
-    await user.click(screen.getByRole("button", { name: "Save" }));
-
-    await waitFor(() => {
-      expect(mockUpdateProject).toHaveBeenCalledWith("p-1", {
-        name: "Acme",
-        address: null,
-        budget: null,
-        budget_source: null,
-      });
-    });
-
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
@@ -416,7 +431,7 @@ describe("EditProjectDialog", () => {
       <EditProjectDialog project={FAKE_PROJECT} open={true} onOpenChange={vi.fn()} />
     );
 
-    const nameInput = screen.getByLabelText("Project name") as HTMLInputElement;
+    const nameInput = screen.getByLabelText("Project name (optional)") as HTMLInputElement;
     const saveButton = screen.getByRole("button", { name: /Save|Saving/ });
 
     await user.clear(nameInput);

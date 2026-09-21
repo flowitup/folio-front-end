@@ -73,11 +73,14 @@ export function CreateProjectDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setError(t("createProjectNameRequired"));
+    const trimmedAddress = address.trim();
+    if (!trimmedAddress) {
+      setError(t("createProjectAddressRequired"));
       return;
     }
+    // The name is an optional label: left blank, the backend labels the
+    // project by its address, so it is only sent when the user typed one.
+    const trimmedName = name.trim();
 
     const budgetNum = budget.trim() ? parseFloat(budget.trim()) : undefined;
     if (budgetNum !== undefined && (isNaN(budgetNum) || budgetNum < 0)) {
@@ -94,8 +97,8 @@ export function CreateProjectDialog({
     setError(null);
     try {
       const project = await createProject({
-        name: trimmed,
-        address: address.trim() ? address.trim() : null,
+        address: trimmedAddress,
+        ...(trimmedName && { name: trimmedName }),
         ...(budgetNum !== undefined && { budget: budgetNum }),
         ...(budgetSource.trim() && { budget_source: budgetSource.trim() }),
         // Single-company admins never set companyId (no picker rendered) —
@@ -121,15 +124,27 @@ export function CreateProjectDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="create-project-name">{t("projectName")}</Label>
+            <Label htmlFor="create-project-address">{t("projectAddress")}</Label>
+            <Input
+              id="create-project-address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder={t("projectAddressPlaceholder")}
+              maxLength={500}
+              autoFocus
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="create-project-name">{t("projectNameOptional")}</Label>
             <Input
               id="create-project-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t("projectNamePlaceholder")}
               maxLength={255}
-              autoFocus
-              required
               disabled={isSubmitting}
             />
           </div>
@@ -151,20 +166,6 @@ export function CreateProjectDialog({
               </Select>
             </div>
           )}
-
-          <div className="space-y-2">
-            <Label htmlFor="create-project-address">
-              {t("projectAddressOptional")}
-            </Label>
-            <Input
-              id="create-project-address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder={t("projectAddressPlaceholder")}
-              maxLength={500}
-              disabled={isSubmitting}
-            />
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="create-project-budget">{t("budgetLabel")}</Label>
@@ -203,7 +204,7 @@ export function CreateProjectDialog({
             >
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={isSubmitting || !name.trim()}>
+            <Button type="submit" disabled={isSubmitting || !address.trim()}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />

@@ -49,7 +49,7 @@ vi.mock("next-intl", () => {
     }
     return val;
   };
-  return { useTranslations: (ns: string) => makeT(ns) };
+  return { useTranslations: (ns: string) => makeT(ns), useLocale: () => "en" };
 });
 
 vi.mock("sonner", () => ({

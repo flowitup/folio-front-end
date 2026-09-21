@@ -2325,7 +2325,8 @@
       "generic": "Something went wrong. Please try again.",
       "multipleCandidates": "Several people match this phone number.",
       "phoneAlreadyInCompany": "This phone number is already in your company."
-    }
+    },
+    "assistantAuditLink": "Assistant audit"
   },
   "chat": {
     "title": "Team chat",
@@ -2338,7 +2339,7 @@
     "kind": {
       "company": "Company",
       "project": "Project",
-      "assistant": "Assistant"
+      "admin": "Admin"
     },
     "membersCount": "{count, plural, one {# member} other {# members}}",
     "placeholder": "Message…",
@@ -2368,5 +2369,37 @@
     "aria": {
       "open": "Open the workflow guide"
     }
+  },
+  "assistantAudit": {
+    "title": "Assistant audit",
+    "description": "Every @folio mention the assistant answered in this company, newest first.",
+    "columns": {
+      "date": "Date",
+      "channel": "Channel",
+      "user": "User",
+      "intent": "Intent",
+      "feature": "Feature",
+      "outcome": "Outcome",
+      "refusedReason": "Refused reason",
+      "cost": "Cost"
+    },
+    "filters": {
+      "from": "From",
+      "to": "To",
+      "company": "Company",
+      "user": "User",
+      "userAll": "All users",
+      "userIdLabel": "User ID",
+      "userIdPlaceholder": "Paste a user ID",
+      "apply": "Apply"
+    },
+    "empty": "No assistant activity in this period.",
+    "loadError": "Could not load the assistant audit log.",
+    "outcomes": {
+      "answered": "Answered",
+      "refused": "Refused",
+      "error": "Error"
+    },
+    "noCost": "—"
   }
 }

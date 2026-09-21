@@ -14,6 +14,7 @@ import {
   showsSender,
   timeOf,
 } from "@/lib/chat/group-messages-by-day";
+import { highlightMention } from "@/lib/chat/highlight-mention";
 import { ChatAvatar } from "@/components/chat/chat-avatar";
 import { ChatAttachmentImage } from "@/components/chat/chat-attachment-image";
 import { ChatAttachmentAudio } from "@/components/chat/chat-attachment-audio";
@@ -83,7 +84,7 @@ function MessageRow({
               borderRadius: mine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
             }}
           >
-            {message.body}
+            {message.sender_type === "assistant" ? message.body : highlightMention(message.body)}
           </div>
         ) : null}
         {message.attachment ? (

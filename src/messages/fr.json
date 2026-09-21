@@ -2325,7 +2325,8 @@
       "generic": "Une erreur est survenue. Veuillez réessayer.",
       "multipleCandidates": "Plusieurs personnes correspondent à ce numéro.",
       "phoneAlreadyInCompany": "Ce numéro de téléphone est déjà dans votre entreprise."
-    }
+    },
+    "assistantAuditLink": "Audit de l'assistant"
   },
   "chat": {
     "title": "Discussion d'équipe",
@@ -2338,7 +2339,7 @@
     "kind": {
       "company": "Société",
       "project": "Chantier",
-      "assistant": "Assistant"
+      "admin": "Administration"
     },
     "membersCount": "{count, plural, one {# membre} other {# membres}}",
     "placeholder": "Message…",
@@ -2368,5 +2369,37 @@
     "aria": {
       "open": "Ouvrir le guide des processus"
     }
+  },
+  "assistantAudit": {
+    "title": "Audit de l'assistant",
+    "description": "Chaque mention @folio à laquelle l'assistant a répondu dans cette société, du plus récent au plus ancien.",
+    "columns": {
+      "date": "Date",
+      "channel": "Canal",
+      "user": "Utilisateur",
+      "intent": "Intention",
+      "feature": "Fonctionnalité",
+      "outcome": "Résultat",
+      "refusedReason": "Motif de refus",
+      "cost": "Coût"
+    },
+    "filters": {
+      "from": "Du",
+      "to": "Au",
+      "company": "Société",
+      "user": "Utilisateur",
+      "userAll": "Tous les utilisateurs",
+      "userIdLabel": "ID utilisateur",
+      "userIdPlaceholder": "Coller un ID utilisateur",
+      "apply": "Appliquer"
+    },
+    "empty": "Aucune activité de l'assistant sur cette période.",
+    "loadError": "Impossible de charger le journal d'audit de l'assistant.",
+    "outcomes": {
+      "answered": "Répondu",
+      "refused": "Refusé",
+      "error": "Erreur"
+    },
+    "noCost": "—"
   }
 }

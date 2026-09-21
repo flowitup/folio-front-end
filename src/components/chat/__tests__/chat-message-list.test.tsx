@@ -39,6 +39,19 @@ describe("ChatMessageList day dividers", () => {
   });
 });
 
+describe("ChatMessageList assistant sender", () => {
+  it("renders an assistant message (null sender_id) without crashing and shows its name", () => {
+    const assistantMsg = {
+      ...msg("a", new Date().toISOString()),
+      sender_id: null,
+      sender_name: "Assistant",
+    };
+    render(<ChatMessageList messages={[assistantMsg]} />);
+    expect(screen.getByTestId("chat-message-incoming")).toHaveTextContent("Assistant");
+    expect(screen.getByTestId("chat-message-incoming")).toHaveTextContent(`body-${assistantMsg.id}`);
+  });
+});
+
 describe("ChatMessageList attachments", () => {
   const withAttachment = (content_type: string) => ({
     ...msg("a", new Date().toISOString()),

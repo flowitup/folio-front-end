@@ -2337,7 +2337,8 @@
     "channels": "Channels",
     "kind": {
       "company": "Company",
-      "project": "Project"
+      "project": "Project",
+      "assistant": "Assistant"
     },
     "membersCount": "{count, plural, one {# member} other {# members}}",
     "placeholder": "Message…",

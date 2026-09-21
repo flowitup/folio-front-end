@@ -28,10 +28,10 @@ export interface ChatFeatures {
   chat: boolean;
 }
 
-export type ChatChannelKind = "company" | "project";
+export type ChatChannelKind = "company" | "project" | "assistant";
 
 export interface ChatChannel {
-  /** `company:<uuid>` or `project:<uuid>`. */
+  /** `company:<uuid>`, `project:<uuid>` or `assistant:<uuid>`. */
   key: string;
   kind: ChatChannelKind;
   id: string;
@@ -51,8 +51,15 @@ export interface ChatAttachment {
 export interface ChatMessage {
   id: string;
   channel_key: string;
-  sender_id: string;
+  /** `null` for an assistant reply (the assistant channel's single non-member sender). */
+  sender_id: string | null;
   sender_name: string;
+  /** Present once the backend ships assistant messages; absent means "user" for older data. */
+  sender_type?: "user" | "assistant" | "system";
+  /** Web only renders `text`; other kinds still show `body`/`attachment` as a plain fallback. */
+  content_type?: "text" | "photo" | "card" | "choice" | "job_status";
+  payload?: Record<string, unknown> | null;
+  reply_to_id?: string | null;
   body: string | null;
   attachment: ChatAttachment | null;
   created_at: string;

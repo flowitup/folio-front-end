@@ -55,8 +55,12 @@ export function timeOf(iso: string): string {
   return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
 }
 
-/** Whether a message shows the sender header (first of a run from one sender, never mine). */
-export function showsSender<T extends { sender_id: string; mine: boolean }>(
+/**
+ * Whether a message shows the sender header (first of a run from one sender, never mine).
+ * A `null` sender_id (assistant messages) groups with other `null`-sender messages, same as
+ * any other shared id.
+ */
+export function showsSender<T extends { sender_id: string | null; mine: boolean }>(
   messages: T[],
   index: number
 ): boolean {

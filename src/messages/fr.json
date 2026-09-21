@@ -2337,7 +2337,8 @@
     "channels": "Canaux",
     "kind": {
       "company": "Société",
-      "project": "Chantier"
+      "project": "Chantier",
+      "assistant": "Assistant"
     },
     "membersCount": "{count, plural, one {# membre} other {# membres}}",
     "placeholder": "Message…",

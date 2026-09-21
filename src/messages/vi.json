@@ -2337,7 +2337,8 @@
     "channels": "Kênh",
     "kind": {
       "company": "Công ty",
-      "project": "Công trình"
+      "project": "Công trình",
+      "assistant": "Trợ lý"
     },
     "membersCount": "{count, plural, other {# thành viên}}",
     "placeholder": "Nhắn tin…",

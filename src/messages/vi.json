@@ -2325,7 +2325,8 @@
       "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
       "multipleCandidates": "Có nhiều người khớp với số điện thoại này.",
       "phoneAlreadyInCompany": "Số điện thoại này đã có trong công ty của bạn."
-    }
+    },
+    "assistantAuditLink": "Nhật ký trợ lý"
   },
   "chat": {
     "title": "Trò chuyện nhóm",
@@ -2338,7 +2339,7 @@
     "kind": {
       "company": "Công ty",
       "project": "Công trình",
-      "assistant": "Trợ lý"
+      "admin": "Quản trị"
     },
     "membersCount": "{count, plural, other {# thành viên}}",
     "placeholder": "Nhắn tin…",
@@ -2368,5 +2369,37 @@
     "aria": {
       "open": "Mở hướng dẫn quy trình"
     }
+  },
+  "assistantAudit": {
+    "title": "Nhật ký kiểm tra trợ lý",
+    "description": "Mọi lượt nhắc @folio mà trợ lý đã trả lời trong công ty này, mới nhất trước.",
+    "columns": {
+      "date": "Thời gian",
+      "channel": "Kênh",
+      "user": "Người dùng",
+      "intent": "Ý định",
+      "feature": "Tính năng",
+      "outcome": "Kết quả",
+      "refusedReason": "Lý do từ chối",
+      "cost": "Chi phí"
+    },
+    "filters": {
+      "from": "Từ ngày",
+      "to": "Đến ngày",
+      "company": "Công ty",
+      "user": "Người dùng",
+      "userAll": "Tất cả người dùng",
+      "userIdLabel": "Mã người dùng",
+      "userIdPlaceholder": "Dán mã người dùng",
+      "apply": "Áp dụng"
+    },
+    "empty": "Không có hoạt động của trợ lý trong khoảng thời gian này.",
+    "loadError": "Không thể tải nhật ký kiểm tra trợ lý.",
+    "outcomes": {
+      "answered": "Đã trả lời",
+      "refused": "Từ chối",
+      "error": "Lỗi"
+    },
+    "noCost": "—"
   }
 }

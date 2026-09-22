@@ -28,10 +28,10 @@ export interface ChatFeatures {
   chat: boolean;
 }
 
-export type ChatChannelKind = "company" | "project" | "assistant";
+export type ChatChannelKind = "company" | "project" | "admin";
 
 export interface ChatChannel {
-  /** `company:<uuid>`, `project:<uuid>` or `assistant:<uuid>`. */
+  /** `company:<uuid>`, `project:<uuid>` or `admin:<company_uuid>` (company admins only). */
   key: string;
   kind: ChatChannelKind;
   id: string;
@@ -51,7 +51,7 @@ export interface ChatAttachment {
 export interface ChatMessage {
   id: string;
   channel_key: string;
-  /** `null` for an assistant reply (the assistant channel's single non-member sender). */
+  /** `null` for an assistant reply (the assistant is not a channel member). */
   sender_id: string | null;
   sender_name: string;
   /** Present once the backend ships assistant messages; absent means "user" for older data. */
@@ -60,6 +60,13 @@ export interface ChatMessage {
   content_type?: "text" | "photo" | "card" | "choice" | "job_status";
   payload?: Record<string, unknown> | null;
   reply_to_id?: string | null;
+  /**
+   * Whether this message addressed the assistant (`@folio` in the body, or a reply to one of
+   * its messages) — the trigger the backend dispatches on. Absent on older data; treat as
+   * `false` (the web never reads this to change layout today, only to keep the wire type
+   * accurate for the audit page and future mobile-parity work).
+   */
+  mentions_assistant?: boolean;
   body: string | null;
   attachment: ChatAttachment | null;
   created_at: string;

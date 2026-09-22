@@ -22,7 +22,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Building2, Loader2, Plus, RefreshCw, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,6 +54,7 @@ export function CompanySettingsSection() {
   const t = useTranslations("companySettings");
   const tc = useTranslations("companies");
   const tSettings = useTranslations("settings");
+  const locale = useLocale();
 
   const [companies, setCompanies] = useState<MyCompany[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -241,6 +242,19 @@ export function CompanySettingsSection() {
                 key={`payment-methods-${selectedCompany.id}`}
                 companyId={selectedCompany.id}
               />
+
+              {/* Supervision page for the assistant's `@folio` mentions in this
+                  company's chat channels — same admin gate as the cards above,
+                  re-checked server-side by the page itself. */}
+              <section className="folio-card p-7">
+                <a
+                  href={`/${locale}/company/assistant-audit?company_id=${selectedCompany.id}`}
+                  className="text-[13px] font-medium hover:underline"
+                  style={{ color: "var(--ink)" }}
+                >
+                  {t("assistantAuditLink")} →
+                </a>
+              </section>
             </>
           )}
         </>

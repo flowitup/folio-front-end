@@ -194,9 +194,13 @@ describe("InvoicesPage — service_month column", () => {
     const tabBtn = screen.getByRole("button", { name: /invoices\.types\.labor/i });
     fireEvent.click(tabBtn);
 
+    // The single worker group auto-expands, so its history header repeats the
+    // month — assert on the group's last-payment chip itself.
     await waitFor(() => {
       const desktop = screen.getByTestId("invoices-table-desktop");
-      expect(within(desktop).queryByText("June 2026")).not.toBeNull();
+      expect(
+        within(desktop).getByTestId("labor-by-worker-last-payment-desktop-unassigned").textContent
+      ).toBe("June 2026");
     });
   });
 

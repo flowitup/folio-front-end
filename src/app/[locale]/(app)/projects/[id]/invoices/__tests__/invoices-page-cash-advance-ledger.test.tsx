@@ -165,11 +165,12 @@ describe("InvoicesPage — cash advances listed under Others", () => {
     expect(screen.getAllByText("OTH-0001").length).toBeGreaterThan(0);
   });
 
-  it("never sends a server type filter, so the summary sees every row", async () => {
+  it("fetches the unfiltered list once and switches tabs without refetching", async () => {
     await openTab("invoices.types.others");
-    await waitFor(() => expect(mockFetchInvoicesWithMeta).toHaveBeenCalledTimes(2));
-    for (const call of mockFetchInvoicesWithMeta.mock.calls) {
-      expect(call).toEqual(["proj-ca-1"]);
-    }
+    await waitFor(() => expect(screen.getAllByText("ADV-0001").length).toBeGreaterThan(0));
+    fireEvent.click(screen.getByRole("button", { name: "invoices.types.released_funds" }));
+    await waitFor(() => expect(screen.queryAllByText("ADV-0001")).toHaveLength(0));
+    expect(mockFetchInvoicesWithMeta).toHaveBeenCalledTimes(1);
+    expect(mockFetchInvoicesWithMeta).toHaveBeenCalledWith("proj-ca-1");
   });
 });

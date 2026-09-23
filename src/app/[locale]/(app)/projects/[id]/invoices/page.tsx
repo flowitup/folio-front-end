@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -143,7 +143,18 @@ export default function InvoicesPage() {
   // Collapsed month sections on the "all" tab (keys "YYYY-MM"). Default empty
   // = every month expanded; collapsing is opt-in, session-only state.
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [summary, setSummary] = useState<{
+    invoices: Invoice[];
+    meta: ExpenseSummaryMeta;
+  } | null>(null);
+  // The table's rows are derived from the one unfiltered list, so switching tabs
+  // never refetches and a slow response can never land under the wrong tab. Tabs
+  // filter by ledger category: a cash advance is stored as released_funds but
+  // listed under "Others".
+  const invoices = useMemo(() => {
+    const all = summary?.invoices ?? [];
+    return activeTab === "all" ? all : all.filter((inv) => ledgerTypeOf(inv) === activeTab);
+  }, [summary, activeTab]);
 
   const toggleMonth = (monthKey: string) => {
     const isCollapsing = !collapsedMonths.has(monthKey);
@@ -162,10 +173,6 @@ export default function InvoicesPage() {
       if (selected && monthKeyForInvoice(selected) === monthKey) closeInvoice();
     }
   };
-  const [summary, setSummary] = useState<{
-    invoices: Invoice[];
-    meta: ExpenseSummaryMeta;
-  } | null>(null);
   const [companyName, setCompanyName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -175,15 +182,9 @@ export default function InvoicesPage() {
     setError(null);
     try {
       // One UNFILTERED fetch serves both the project-level purses summary and
-      // the table. Tabs filter client-side by ledger category, because a cash
-      // advance is stored as released_funds but listed under "Others" — a
-      // server `?type=` filter would put it in the wrong tab.
+      // the table (see `invoices` above) — a server `?type=` filter would put a
+      // cash advance under the wrong tab.
       const sum = await fetchInvoicesWithMeta(projectId);
-      setInvoices(
-        activeTab === "all"
-          ? sum.invoices
-          : sum.invoices.filter((inv) => ledgerTypeOf(inv) === activeTab)
-      );
       setCompanyName(sum.company_name ?? null);
       setSummary({
         invoices: sum.invoices,
@@ -201,7 +202,7 @@ export default function InvoicesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, activeTab]);
+  }, [projectId]);
 
   useEffect(() => {
     loadInvoices();

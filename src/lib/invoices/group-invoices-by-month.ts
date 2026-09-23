@@ -23,6 +23,17 @@ export const GROUP_ORDER: InvoiceType[] = [
 ];
 
 /**
+ * The ledger category a row is listed under. A company cash advance is stored
+ * as a `released_funds` row (so the backend keeps it out of the release totals
+ * and the purses/dashboard can show it), but it is not a draw from the bank —
+ * the ledger files it under "Others". Display only: money math keeps using the
+ * stored `type`.
+ */
+export function ledgerTypeOf(inv: Invoice): InvoiceType {
+  return inv.type === "released_funds" && inv.is_cash_advance ? "others" : inv.type;
+}
+
+/**
  * Whether a row's `total_amount` belongs in a "money spent" figure: the three
  * expense types plus `return` (negative, nets spend back down). Excludes
  * `released_funds` — that is capital coming INTO the project, and counting one
@@ -88,7 +99,7 @@ export function groupInvoicesByMonth(invoices: Invoice[]): InvoiceMonthGroup[] {
       ),
       categories: GROUP_ORDER.map((type) => {
         const items = monthInvoices
-          .filter((inv) => inv.type === type)
+          .filter((inv) => ledgerTypeOf(inv) === type)
           .sort(
             (a, b) =>
               b.issue_date.localeCompare(a.issue_date) ||

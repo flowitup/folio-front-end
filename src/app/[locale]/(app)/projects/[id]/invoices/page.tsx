@@ -29,7 +29,11 @@ import {
   REFUND_STATUS_I18N,
   refundStatusI18nKey,
 } from "@/lib/invoices/refundable-status-display";
-import { groupInvoicesByMonth, monthKeyForInvoice } from "@/lib/invoices/group-invoices-by-month";
+import {
+  groupInvoicesByMonth,
+  ledgerTypeOf,
+  monthKeyForInvoice,
+} from "@/lib/invoices/group-invoices-by-month";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 
 type TabType = "all" | InvoiceType;
@@ -170,17 +174,17 @@ export default function InvoicesPage() {
     setIsLoading(true);
     setError(null);
     try {
-      // The purses summary is project-level, so it always reads an UNFILTERED
-      // list; when the table itself is unfiltered a single request serves both.
-      const isUnfiltered = activeTab === "all";
-      const filteredPromise = fetchInvoicesWithMeta(
-        projectId,
-        activeTab !== "all" ? activeTab : undefined
+      // One UNFILTERED fetch serves both the project-level purses summary and
+      // the table. Tabs filter client-side by ledger category, because a cash
+      // advance is stored as released_funds but listed under "Others" — a
+      // server `?type=` filter would put it in the wrong tab.
+      const sum = await fetchInvoicesWithMeta(projectId);
+      setInvoices(
+        activeTab === "all"
+          ? sum.invoices
+          : sum.invoices.filter((inv) => ledgerTypeOf(inv) === activeTab)
       );
-      const summaryPromise = isUnfiltered ? filteredPromise : fetchInvoicesWithMeta(projectId);
-      const [res, sum] = await Promise.all([filteredPromise, summaryPromise]);
-      setInvoices(res.invoices);
-      setCompanyName(res.company_name ?? null);
+      setCompanyName(sum.company_name ?? null);
       setSummary({
         invoices: sum.invoices,
         meta: {

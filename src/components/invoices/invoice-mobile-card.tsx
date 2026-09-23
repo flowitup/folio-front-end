@@ -11,6 +11,7 @@ import {
 import { formatDate, formatMonthYear } from "@/lib/utils/formatters";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import { highlightRowTint } from "@/lib/invoices/highlight-colors";
+import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
@@ -73,8 +74,8 @@ export function InvoiceMobileCard({
             </span>
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            <span className={TYPE_STAMP_CLASS[invoice.type]}>
-              {t(`types.${invoice.type}`)}
+            <span className={TYPE_STAMP_CLASS[ledgerTypeOf(invoice)]}>
+              {t(`types.${ledgerTypeOf(invoice)}`)}
             </span>
             {invoice.type === "return" && invoice.settled_via === "avoir" && (
               <span className="stamp accent" data-testid="avoir-badge">

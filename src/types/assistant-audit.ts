@@ -11,11 +11,15 @@ export interface AssistantAuditEntry {
   created_at: string;
   /** `company:<uuid>`, `project:<uuid>` or `admin:<company_uuid>`. */
   channel_key: string;
-  user_id: string;
+  /** `null` when the sender could not be resolved to a user (backend schema: `Optional`). */
+  user_id: string | null;
   user_name: string;
-  intent: string;
-  feature: string;
-  outcome: string;
+  /** `null` when the assistant did not classify an intent (backend schema: `Optional`). */
+  intent: string | null;
+  /** `null` when the assistant did not resolve a feature (backend schema: `Optional`). */
+  feature: string | null;
+  /** `null` when the row predates the outcome column (backend schema: `Optional`). */
+  outcome: string | null;
   refused_reason: string | null;
   cost_usd: number | null;
   trace_id: string | null;
@@ -27,9 +31,13 @@ export interface AssistantAuditListResult {
 
 export interface ListAssistantAuditParams {
   companyId: string;
-  /** Inclusive, `YYYY-MM-DD`. */
+  /**
+   * ISO 8601 datetime with a UTC offset (inclusive lower bound), not a date-only string —
+   * the backend compares `created_at` against exact instants, so a Paris calendar date must
+   * already be converted to its Paris-midnight instant before reaching this wrapper.
+   */
   from: string;
-  /** Inclusive, `YYYY-MM-DD`. */
+  /** ISO 8601 datetime with a UTC offset (inclusive upper bound), same caveat as `from`. */
   to: string;
   userId?: string;
   /** Backend default/cap: 200. */

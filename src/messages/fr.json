@@ -2342,6 +2342,7 @@
       "admin": "Administration"
     },
     "membersCount": "{count, plural, one {# membre} other {# membres}}",
+    "adminSubtitle": "Confidentiel — réservé aux administrateurs de la société",
     "placeholder": "Message…",
     "send": "Envoyer",
     "attachImage": "Ajouter une photo",
@@ -2362,7 +2363,14 @@
     },
     "voiceNote": "Message vocal",
     "voiceLoading": "Chargement de l'enregistrement…",
-    "voiceLoadFailed": "Ce message vocal n'a pas pu être chargé."
+    "voiceLoadFailed": "Ce message vocal n'a pas pu être chargé.",
+    "assistant": {
+      "answered": "Répondu",
+      "actionFailed": "L'action n'a pas pu être envoyée.",
+      "actionNotAddressed": "Ce choix ne vous était pas destiné.",
+      "actionAlreadyAnswered": "Ce choix a déjà reçu une réponse.",
+      "actionQueueUnavailable": "Folio est occupé pour le moment. Réessayez dans un instant."
+    }
   },
   "help": {
     "loading": "Chargement du guide…",
@@ -2394,6 +2402,7 @@
       "apply": "Appliquer"
     },
     "empty": "Aucune activité de l'assistant sur cette période.",
+    "limitNotice": "Affichage des {limit} dernières lignes — réduisez la période.",
     "loadError": "Impossible de charger le journal d'audit de l'assistant.",
     "outcomes": {
       "answered": "Répondu",

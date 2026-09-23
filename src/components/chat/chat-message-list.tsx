@@ -15,9 +15,26 @@ import {
   timeOf,
 } from "@/lib/chat/group-messages-by-day";
 import { highlightMention } from "@/lib/chat/highlight-mention";
+import { parseChoicePayload, type AssistantChoiceOption } from "@/lib/chat/assistant-choice";
 import { ChatAvatar } from "@/components/chat/chat-avatar";
 import { ChatAttachmentImage } from "@/components/chat/chat-attachment-image";
 import { ChatAttachmentAudio } from "@/components/chat/chat-attachment-audio";
+import { ChatAssistantChoice } from "@/components/chat/chat-assistant-choice";
+
+/**
+ * A `job_status` message's `body` is fixed at the text from when the job was queued
+ * (`update_job_status` only ever updates `payload`, never `body`) — so a web reader stuck
+ * on "searching…" forever never learns a fetch failed. `payload.text` always carries
+ * the current state text; fall back to `body` for any other content type or a malformed
+ * payload.
+ */
+function displayBody(message: ChatMessage): string | null {
+  if (message.content_type === "job_status") {
+    const text = message.payload?.text;
+    if (typeof text === "string") return text;
+  }
+  return message.body;
+}
 
 function SeenBy({ members, mine }: { members: ChatMember[]; mine: boolean }) {
   const t = useTranslations("chat");
@@ -50,12 +67,37 @@ function MessageRow({
   message,
   showSender,
   seenBy,
+  currentUserId,
+  assistantEnabled,
+  pendingMessageId,
+  onSelectChoiceOption,
 }: {
   message: ChatMessage;
   showSender: boolean;
   seenBy: ChatMember[] | undefined;
+  /** Current signed-in user, to tell an addressed choice apart from everyone else's. */
+  currentUserId?: string | null;
+  /** Off (or still unknown): choice options render as read-only text instead of buttons,
+   * since the backend would 404 `FeatureDisabled` on a tap. */
+  assistantEnabled?: boolean;
+  /** Id of the choice message currently being answered, if any — its buttons stay
+   * disabled until the request settles (no double submit). */
+  pendingMessageId?: string | null;
+  onSelectChoiceOption?: (message: ChatMessage, option: AssistantChoiceOption) => void;
 }) {
   const mine = message.mine;
+  const body = displayBody(message);
+  const choicePayload =
+    message.sender_type === "assistant" && message.content_type === "choice"
+      ? parseChoicePayload(message.payload)
+      : null;
+  const canAnswerChoice =
+    choicePayload !== null &&
+    assistantEnabled === true &&
+    choicePayload.answered === null &&
+    choicePayload.addressedTo !== null &&
+    currentUserId != null &&
+    choicePayload.addressedTo === currentUserId;
   return (
     <div
       className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}
@@ -74,7 +116,17 @@ function MessageRow({
             {message.sender_name}
           </span>
         ) : null}
-        {message.body ? (
+        {choicePayload ? (
+          <ChatAssistantChoice
+            prompt={choicePayload.prompt}
+            options={choicePayload.options}
+            answered={choicePayload.answered}
+            answeredPayload={choicePayload.answeredPayload}
+            canAnswer={canAnswerChoice}
+            pending={pendingMessageId === message.id}
+            onSelect={(option) => onSelectChoiceOption?.(message, option)}
+          />
+        ) : body ? (
           <div
             className="whitespace-pre-wrap break-words px-3 py-[9px] text-[14px] leading-5"
             style={{
@@ -84,7 +136,7 @@ function MessageRow({
               borderRadius: mine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
             }}
           >
-            {message.sender_type === "assistant" ? message.body : highlightMention(message.body)}
+            {message.sender_type === "assistant" ? body : highlightMention(body)}
           </div>
         ) : null}
         {message.attachment ? (
@@ -106,9 +158,20 @@ function MessageRow({
 export function ChatMessageList({
   messages,
   seen,
+  currentUserId,
+  assistantEnabled,
+  pendingMessageId,
+  onSelectChoiceOption,
 }: {
   messages: ChatMessage[];
   seen?: Map<string, ChatMember[]>;
+  /** Current signed-in user, to tell an addressed choice apart from everyone else's. */
+  currentUserId?: string | null;
+  /** Off (or still unknown): choice options render as read-only text instead of buttons. */
+  assistantEnabled?: boolean;
+  /** Id of the choice message currently being answered, if any. */
+  pendingMessageId?: string | null;
+  onSelectChoiceOption?: (message: ChatMessage, option: AssistantChoiceOption) => void;
 }) {
   const t = useTranslations("chat");
   const groups = groupMessagesByDay(messages);
@@ -133,6 +196,10 @@ export function ChatMessageList({
                 message={message}
                 showSender={showsSender(group.messages, index)}
                 seenBy={seen?.get(message.id)}
+                currentUserId={currentUserId}
+                assistantEnabled={assistantEnabled}
+                pendingMessageId={pendingMessageId}
+                onSelectChoiceOption={onSelectChoiceOption}
               />
             ))}
           </div>

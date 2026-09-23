@@ -183,4 +183,114 @@ describe("AssistantAuditPage — company admin", () => {
       screen.getByPlaceholderText("assistantAudit.filters.userIdPlaceholder")
     ).toBeInTheDocument();
   });
+
+  it("renders '—' for a null intent, feature and outcome instead of an empty cell or Badge", async () => {
+    vi.mocked(fetchMyCompanies).mockResolvedValue([adminCompany]);
+    vi.mocked(listAssistantAudit).mockResolvedValue({
+      items: [
+        {
+          id: "row-3",
+          created_at: "2026-09-21T10:30:00Z",
+          channel_key: `company:${COMPANY_ID}`,
+          user_id: null,
+          user_name: "?",
+          intent: null,
+          feature: null,
+          outcome: null,
+          refused_reason: null,
+          cost_usd: null,
+          trace_id: null,
+        },
+      ],
+    });
+
+    render(await renderPage());
+
+    // cost and refused reason already fall back to "—" for null; intent, feature and
+    // outcome (which used to render blank) must join them.
+    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("AssistantAuditPage — Paris day bounds sent to the backend", () => {
+  it("sends the from/to filter as Paris-midnight-bounded ISO instants, not the raw calendar dates", async () => {
+    vi.mocked(fetchMyCompanies).mockResolvedValue([adminCompany]);
+    vi.mocked(listAssistantAudit).mockResolvedValue({ items: [] });
+
+    render(await renderPage({ from: "2026-09-20", to: "2026-09-23" }));
+
+    expect(listAssistantAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: "2026-09-19T22:00:00.000+00:00",
+        to: "2026-09-23T21:59:59.999+00:00",
+      })
+    );
+  });
+
+  it("the default range's `to` bound covers everything up to now, including today's activity", async () => {
+    vi.useFakeTimers();
+    // 2026-09-23T13:00:00+02:00 Paris (CEST) = 11:00 UTC — mid-afternoon, well inside "today".
+    vi.setSystemTime(new Date("2026-09-23T11:00:00.000Z"));
+    try {
+      vi.mocked(fetchMyCompanies).mockResolvedValue([adminCompany]);
+      vi.mocked(listAssistantAudit).mockResolvedValue({ items: [] });
+
+      render(await renderPage());
+
+      const sentTo = vi.mocked(listAssistantAudit).mock.calls[0][0].to;
+      expect(new Date(sentTo).getTime()).toBeGreaterThan(Date.now());
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("AssistantAuditPage — 200-row cap notice", () => {
+  it("shows the limit notice when the result hits the 200-row cap", async () => {
+    vi.mocked(fetchMyCompanies).mockResolvedValue([adminCompany]);
+    vi.mocked(listAssistantAudit).mockResolvedValue({
+      items: Array.from({ length: 200 }, (_, i) => ({
+        id: `row-${i}`,
+        created_at: "2026-09-21T10:30:00Z",
+        channel_key: `company:${COMPANY_ID}`,
+        user_id: "u-1",
+        user_name: "Minh",
+        intent: "ask_material_status",
+        feature: "material_lookup",
+        outcome: "answered",
+        refused_reason: null,
+        cost_usd: 0.001,
+        trace_id: null,
+      })),
+    });
+
+    render(await renderPage());
+
+    expect(screen.getByTestId("assistant-audit-limit-notice")).toBeInTheDocument();
+  });
+
+  it("does not show the limit notice under the cap", async () => {
+    vi.mocked(fetchMyCompanies).mockResolvedValue([adminCompany]);
+    vi.mocked(listAssistantAudit).mockResolvedValue({
+      items: [
+        {
+          id: "row-1",
+          created_at: "2026-09-21T10:30:00Z",
+          channel_key: `company:${COMPANY_ID}`,
+          user_id: "u-1",
+          user_name: "Minh",
+          intent: "ask_material_status",
+          feature: "material_lookup",
+          outcome: "answered",
+          refused_reason: null,
+          cost_usd: 0.001,
+          trace_id: null,
+        },
+      ],
+    });
+
+    render(await renderPage());
+
+    expect(screen.queryByTestId("assistant-audit-limit-notice")).toBeNull();
+  });
 });

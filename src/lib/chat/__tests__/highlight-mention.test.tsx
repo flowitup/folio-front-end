@@ -29,4 +29,24 @@ describe("highlightMention", () => {
     expect(container.querySelector("mark")).toBeNull();
     expect(container.textContent).toBe("no trigger here");
   });
+
+  it("does not highlight an email-like token that merely contains @folio", () => {
+    const { container } = render(<>{highlightMention("reach us at contact@folio.fr")}</>);
+    expect(container.querySelector("mark")).toBeNull();
+    expect(container.textContent).toBe("reach us at contact@folio.fr");
+  });
+
+  it("does not highlight @folio as a prefix of a longer word", () => {
+    const { container } = render(<>{highlightMention("cc @folios for context")}</>);
+    expect(container.querySelector("mark")).toBeNull();
+    expect(container.textContent).toBe("cc @folios for context");
+  });
+
+  it("still highlights a real mention next to a look-alike token", () => {
+    const { container } = render(<>{highlightMention("ask @folio, not contact@folio.fr")}</>);
+    const marks = container.querySelectorAll("mark");
+    expect(marks).toHaveLength(1);
+    expect(marks[0].textContent).toBe("@folio");
+    expect(container.textContent).toBe("ask @folio, not contact@folio.fr");
+  });
 });

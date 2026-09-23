@@ -24,6 +24,7 @@ import {
   markChatChannelRead,
   playableAttachmentType,
   sendChatMessage,
+  submitAssistantAction,
 } from "@/lib/api/chat-client";
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -48,12 +49,55 @@ afterEach(() => {
 
 describe("chat-client", () => {
   it("reads the feature flag with cookie credentials", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse({ chat: true }));
-    await expect(fetchChatFeatures()).resolves.toEqual({ chat: true });
+    fetchMock.mockResolvedValueOnce(jsonResponse({ chat: true, assistant: true }));
+    await expect(fetchChatFeatures()).resolves.toEqual({ chat: true, assistant: true });
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("http://api.test/api/v1/features");
     expect(init?.credentials).toBe("include");
     expect(init?.method).toBe("GET");
+  });
+
+  it("posts a tapped choice option with the exact body the backend expects", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ accepted: true }, 202));
+    await expect(
+      submitAssistantAction({
+        action: "confirm_bulk_attendance",
+        payload: { project_id: "p1", worker_ids: ["w1"], date: "2026-09-23" },
+        reply_to_id: "m1",
+      })
+    ).resolves.toEqual({ accepted: true });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://api.test/api/v1/assistant/actions");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(
+      JSON.stringify({
+        action: "confirm_bulk_attendance",
+        payload: { project_id: "p1", worker_ids: ["w1"], date: "2026-09-23" },
+        reply_to_id: "m1",
+      })
+    );
+    const headers = init?.headers as Record<string, string>;
+    expect(headers["Content-Type"]).toBe("application/json");
+    expect(headers["X-CSRF-TOKEN"]).toBe("csrf-123");
+    expect(init?.credentials).toBe("include");
+  });
+
+  it("surfaces the assistant action's distinct error statuses via ChatApiError", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: "NotAddressed" }, 403));
+    mockRefresh.mockResolvedValue(false);
+    await expect(
+      submitAssistantAction({ action: "a", reply_to_id: "m1" })
+    ).rejects.toMatchObject({ name: "ChatApiError", status: 403, body: { error: "NotAddressed" } });
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: "AlreadyAnswered" }, 409));
+    await expect(
+      submitAssistantAction({ action: "a", reply_to_id: "m1" })
+    ).rejects.toMatchObject({ status: 409 });
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: "AssistantUnavailable" }, 503));
+    await expect(
+      submitAssistantAction({ action: "a", reply_to_id: "m1" })
+    ).rejects.toMatchObject({ status: 503 });
   });
 
   it("unwraps channel items and encodes the channel key in message URLs", async () => {
@@ -92,6 +136,33 @@ describe("chat-client", () => {
     const headers = init?.headers as Record<string, string>;
     expect(headers["Content-Type"]).toBeUndefined();
     expect(headers["X-CSRF-TOKEN"]).toBe("csrf-123");
+  });
+
+  it("sends the reader's locale as `lang` on a JSON message", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: "m3" }, 201));
+    await sendChatMessage("company:1", { body: "salut", lang: "fr" });
+    const init = fetchMock.mock.calls[0][1];
+    expect(init?.body).toBe(JSON.stringify({ body: "salut", lang: "fr" }));
+  });
+
+  it("sends the reader's locale as a `lang` form field on a multipart message", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: "m4" }, 201));
+    const file = new File(["png-bytes"], "site.png", { type: "image/png" });
+    await sendChatMessage("project:9", { body: "look", file, lang: "vi" });
+    const form = fetchMock.mock.calls[0][1]?.body as FormData;
+    expect(form.get("lang")).toBe("vi");
+  });
+
+  it("omits `lang` from both shapes when not given, as before", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: "m5" }, 201));
+    await sendChatMessage("company:1", { body: "hello" });
+    expect(fetchMock.mock.calls[0][1]?.body).toBe(JSON.stringify({ body: "hello" }));
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: "m6" }, 201));
+    const file = new File(["png-bytes"], "site.png", { type: "image/png" });
+    await sendChatMessage("project:9", { body: "look", file });
+    const form = fetchMock.mock.calls[1][1]?.body as FormData;
+    expect(form.get("lang")).toBeNull();
   });
 
   it("retries once after a 401 when the refresh succeeds", async () => {

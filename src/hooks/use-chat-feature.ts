@@ -1,30 +1,29 @@
 "use client";
 
 /**
- * useChatFeature — whether this deployment enables team chat (`GET /features`).
- * Fetched once per browser session (module cache shared by every consumer); `null`
- * while unknown so callers hide chat until the backend confirms it.
+ * useChatFeature / useAssistantFeature — deployment feature flags from `GET /features`
+ * (`{ chat, assistant }`). Fetched once per browser session (module cache shared by every
+ * consumer, both flags come off the same response); `null` while unknown so callers hide
+ * chat/assistant UI until the backend confirms it.
  */
 
 import { useEffect, useState } from "react";
-import { fetchChatFeatures } from "@/lib/api/chat-client";
+import { fetchChatFeatures, type ChatFeatures } from "@/lib/api/chat-client";
 
-let cached: Promise<boolean> | null = null;
+let cached: Promise<ChatFeatures> | null = null;
 
-function loadChatFeature(): Promise<boolean> {
+function loadFeatures(): Promise<ChatFeatures> {
   if (!cached) {
-    cached = fetchChatFeatures()
-      .then((features) => features.chat === true)
-      .catch(() => {
-        // Let the next mount retry instead of pinning "off" for the whole session.
-        cached = null;
-        return false;
-      });
+    cached = fetchChatFeatures().catch(() => {
+      // Let the next mount retry instead of pinning "off" for the whole session.
+      cached = null;
+      return { chat: false, assistant: false };
+    });
   }
   return cached;
 }
 
-/** Test hook: forget the cached flag. */
+/** Test hook: forget the cached flags. */
 export function resetChatFeatureCache(): void {
   cached = null;
 }
@@ -33,8 +32,26 @@ export function useChatFeature(): boolean | null {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   useEffect(() => {
     let cancelled = false;
-    void loadChatFeature().then((value) => {
-      if (!cancelled) setEnabled(value);
+    void loadFeatures().then((features) => {
+      if (!cancelled) setEnabled(features.chat === true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return enabled;
+}
+
+/** `true` once the backend has confirmed the assistant feature; `false` while unknown or
+ * off. Gates the web choice-message buttons — with this off (or unknown), the backend would
+ * answer a tapped option with 404 `FeatureDisabled`, so the buttons stay hidden instead of
+ * dead-ending there. */
+export function useAssistantFeature(): boolean | null {
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void loadFeatures().then((features) => {
+      if (!cancelled) setEnabled(features.assistant === true);
     });
     return () => {
       cancelled = true;

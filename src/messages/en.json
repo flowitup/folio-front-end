@@ -2342,6 +2342,7 @@
       "admin": "Admin"
     },
     "membersCount": "{count, plural, one {# member} other {# members}}",
+    "adminSubtitle": "Confidential — company admins only",
     "placeholder": "Message…",
     "send": "Send",
     "attachImage": "Add a photo",
@@ -2362,7 +2363,14 @@
     },
     "voiceNote": "Voice message",
     "voiceLoading": "Loading the recording…",
-    "voiceLoadFailed": "This voice message could not be loaded."
+    "voiceLoadFailed": "This voice message could not be loaded.",
+    "assistant": {
+      "answered": "Answered",
+      "actionFailed": "The action could not be sent.",
+      "actionNotAddressed": "This choice was not addressed to you.",
+      "actionAlreadyAnswered": "This choice has already been answered.",
+      "actionQueueUnavailable": "Folio is busy right now. Try again in a moment."
+    }
   },
   "help": {
     "loading": "Loading the guide…",
@@ -2394,6 +2402,7 @@
       "apply": "Apply"
     },
     "empty": "No assistant activity in this period.",
+    "limitNotice": "Showing the latest {limit} — narrow the date range.",
     "loadError": "Could not load the assistant audit log.",
     "outcomes": {
       "answered": "Answered",

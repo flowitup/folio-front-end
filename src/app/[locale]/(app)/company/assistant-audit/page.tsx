@@ -44,15 +44,79 @@ const OUTCOME_VARIANT: Record<string, "default" | "outline" | "destructive"> = {
   refused: "outline",
   error: "destructive",
 };
+/** Backend cap on `GET /assistant/audit`'s `limit` (also this page's own request size). */
+const AUDIT_LIMIT = 200;
 
 function parisDateString(d: Date): string {
-  // en-CA formats as YYYY-MM-DD, exactly the wire/query shape the backend expects.
+  // en-CA formats as YYYY-MM-DD, exactly the wire/query shape the date inputs expect.
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: PARIS_TZ,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(d);
+}
+
+/** The Europe/Paris UTC offset, in minutes, in effect at `instant`. */
+function parisOffsetMinutes(instant: Date): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: PARIS_TZ,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(instant);
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? "0");
+  const asUtc = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"), get("second"));
+  return Math.round((asUtc - instant.getTime()) / 60_000);
+}
+
+/**
+ * The UTC instant of `dateStr` (`YYYY-MM-DD`) at 00:00 Paris wall-clock time.
+ *
+ * Two passes because the offset near the actual target instant can differ from the offset
+ * at the naive UTC-as-if-Paris guess by exactly the DST jump (the transition itself always
+ * lands after local midnight in the EU, so this always converges on the second pass).
+ */
+function parisMidnightUtc(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const naiveUtc = Date.UTC(year, month - 1, day, 0, 0, 0);
+  const firstOffset = parisOffsetMinutes(new Date(naiveUtc));
+  const firstEstimate = naiveUtc - firstOffset * 60_000;
+  const secondOffset = parisOffsetMinutes(new Date(firstEstimate));
+  return new Date(naiveUtc - secondOffset * 60_000);
+}
+
+/** `dateStr` (`YYYY-MM-DD`) plus one calendar day, as the same `YYYY-MM-DD` shape. */
+function nextDateString(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day + 1)).toISOString().slice(0, 10);
+}
+
+/** ISO 8601 with an explicit numeric offset (`+00:00`) rather than the `Z` shorthand. */
+function isoWithOffset(d: Date): string {
+  return d.toISOString().replace("Z", "+00:00");
+}
+
+/**
+ * Converts the page's Paris-calendar-day `from`/`to` filter into the exact instants the
+ * backend must filter on: `created_at >= from` and `created_at <= to` compare instants,
+ * not calendar dates, so a date-only `to` reads as UTC midnight — 1 to 2 hours before the
+ * Paris day actually ends, silently hiding the tail of "today" (and every other day) from
+ * an admin reading this page during business hours. `to` becomes the instant just before the
+ * next Paris day starts, so it is exclusive of the next day while still reading as an
+ * inclusive bound on the requested day.
+ */
+function parisDayRangeToIso(from: string, to: string): { from: string; to: string } {
+  const fromInstant = parisMidnightUtc(from);
+  const toExclusive = parisMidnightUtc(nextDateString(to));
+  return {
+    from: isoWithOffset(fromInstant),
+    to: isoWithOffset(new Date(toExclusive.getTime() - 1)),
+  };
 }
 
 function formatAuditTimestamp(iso: string, locale: string): string {
@@ -138,15 +202,20 @@ export default async function AssistantAuditPage({ params, searchParams }: Props
     );
   }
 
+  // `from`/`to` above are Paris calendar dates (the date inputs' own shape); the backend
+  // filters on exact instants, so they are converted to Paris-midnight-bounded ISO instants
+  // right before the request, never stored or round-tripped in that shape.
+  const { from: fromIso, to: toIso } = parisDayRangeToIso(from, to);
+
   let entries: AssistantAuditEntry[] = [];
   let loadError = false;
   try {
     const result = await listAssistantAudit({
       companyId: selectedCompany.id,
-      from,
-      to,
+      from: fromIso,
+      to: toIso,
       userId,
-      limit: 200,
+      limit: AUDIT_LIMIT,
     });
     entries = result.items;
   } catch (err) {
@@ -156,6 +225,9 @@ export default async function AssistantAuditPage({ params, searchParams }: Props
     );
     loadError = true;
   }
+  // The backend has no cursor yet, so a full result at the cap means older rows in this
+  // range were silently dropped rather than actually absent.
+  const truncated = !loadError && entries.length === AUDIT_LIMIT;
 
   const t = await getTranslations({ locale, namespace: "assistantAudit" });
   const tChat = await getTranslations({ locale, namespace: "chat" });
@@ -254,6 +326,16 @@ export default async function AssistantAuditPage({ params, searchParams }: Props
         </Button>
       </form>
 
+      {truncated ? (
+        <p
+          className="mb-3 text-[13px]"
+          style={{ color: "var(--muted)" }}
+          data-testid="assistant-audit-limit-notice"
+        >
+          {t("limitNotice", { limit: AUDIT_LIMIT })}
+        </p>
+      ) : null}
+
       <div className="folio-card overflow-hidden">
         {loadError ? (
           <p className="p-8 text-center text-[13px]" style={{ color: "var(--muted)" }}>
@@ -281,10 +363,13 @@ export default async function AssistantAuditPage({ params, searchParams }: Props
               {entries.map((entry) => {
                 const { kind, id } = parseChannelKey(entry.channel_key);
                 const kindLabel = KNOWN_CHANNEL_KINDS.has(kind) ? tChat(`kind.${kind}`) : kind;
-                const outcomeLabel = KNOWN_OUTCOMES.has(entry.outcome)
-                  ? t(`outcomes.${entry.outcome}`)
-                  : entry.outcome;
-                const outcomeVariant = OUTCOME_VARIANT[entry.outcome] ?? "outline";
+                const outcomeLabel =
+                  entry.outcome === null
+                    ? "—"
+                    : KNOWN_OUTCOMES.has(entry.outcome)
+                      ? t(`outcomes.${entry.outcome}`)
+                      : entry.outcome;
+                const outcomeVariant = entry.outcome === null ? "outline" : (OUTCOME_VARIANT[entry.outcome] ?? "outline");
                 return (
                   <TableRow key={entry.id}>
                     <TableCell className="whitespace-nowrap text-[12px]">
@@ -302,10 +387,10 @@ export default async function AssistantAuditPage({ params, searchParams }: Props
                     </TableCell>
                     <TableCell className="text-[13px]">{entry.user_name}</TableCell>
                     <TableCell className="text-[12px]" style={{ fontFamily: "monospace" }}>
-                      {entry.intent}
+                      {entry.intent ?? "—"}
                     </TableCell>
                     <TableCell className="text-[12px]" style={{ fontFamily: "monospace" }}>
-                      {entry.feature}
+                      {entry.feature ?? "—"}
                     </TableCell>
                     <TableCell>
                       <Badge variant={outcomeVariant}>{outcomeLabel}</Badge>

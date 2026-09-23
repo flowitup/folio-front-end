@@ -183,11 +183,14 @@ describe("cash advances in the ledger", () => {
     const byType = Object.fromEntries(month.categories.map((c) => [c.type, c]));
     expect(byType.released_funds.items.map((i) => i.id)).toEqual(["rel"]);
     expect(byType.others.items.map((i) => i.id).sort()).toEqual(["adv", "oth"]);
-    expect(byType.others.subtotal).toBe(540);
+    // Listed under others, but not counted in its subtotal (it is not spend).
+    expect(byType.others.subtotal).toBe(40);
   });
 
-  it("keeps the advance out of the month's spend subtotal", () => {
+  it("keeps the advance out of the month's spend subtotal, so categories add up to it", () => {
     const [month] = groupInvoicesByMonth([advance, release, other]);
     expect(month.expenseSubtotal).toBe(40);
+    const spendCategories = month.categories.filter((c) => c.type !== "released_funds");
+    expect(spendCategories.reduce((sum, c) => sum + c.subtotal, 0)).toBe(month.expenseSubtotal);
   });
 });

@@ -45,7 +45,10 @@ function countsTowardSpend(type: InvoiceType): boolean {
 
 export interface MonthCategoryGroup {
   type: InvoiceType;
-  /** Net Σ total_amount of this type in the month — negative for return-heavy groups. */
+  /**
+   * Net Σ total_amount of this type in the month — negative for return-heavy groups.
+   * Cash advances are listed in "others" but left out of this sum (they are not spend).
+   */
   subtotal: number;
   /** Invoices of this type in the month, issue_date desc (invoice_number desc tiebreak). */
   items: Invoice[];
@@ -107,7 +110,9 @@ export function groupInvoicesByMonth(invoices: Invoice[]): InvoiceMonthGroup[] {
           );
         return {
           type,
-          subtotal: items.reduce((sum, inv) => sum + inv.total_amount, 0),
+          // A cash advance is listed under "others" but is not spend, so it stays
+          // out of the subtotal — the month's categories add up to its spend.
+          subtotal: items.reduce((sum, inv) => (inv.is_cash_advance ? sum : sum + inv.total_amount), 0),
           items,
         };
       }).filter((c) => c.items.length > 0),

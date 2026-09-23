@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { fetchInvoice } from "@/lib/api/invoice-api";
 import { formatDate, formatMonthYear } from "@/lib/utils/formatters";
 import type { Invoice, InvoiceType } from "@/types/invoice";
+import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
 
 const TYPE_LABEL: Record<InvoiceType, string> = {
   released_funds: "Released Funds",
@@ -97,7 +98,12 @@ export default function InvoicePrintPage() {
             </tr>
             <tr>
               <td>Type</td>
-              <td>{TYPE_LABEL[invoice.type]}</td>
+              {/* Same label as the xlsx/pdf export: a cash advance is listed under
+                  Others and flagged so it is not read as an expense. */}
+              <td>
+                {TYPE_LABEL[ledgerTypeOf(invoice)]}
+                {invoice.is_cash_advance ? " (cash advance)" : ""}
+              </td>
             </tr>
             <tr>
               <td>Issue Date</td>

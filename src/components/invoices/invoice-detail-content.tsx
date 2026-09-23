@@ -22,6 +22,7 @@ import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-t
 import { InvoiceHighlightPicker } from "@/components/invoices/invoice-highlight-picker";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
+import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
 
 const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp",
@@ -155,9 +156,18 @@ export function InvoiceDetailContent({
           <h2 className="text-lg font-semibold tracking-tight font-mono">
             {invoice.invoice_number}
           </h2>
-          <span className={TYPE_BADGE_CLASS[invoice.type]}>
-            {t(`types.${invoice.type}`)}
+          <span className={TYPE_BADGE_CLASS[ledgerTypeOf(invoice)]}>
+            {t(`types.${ledgerTypeOf(invoice)}`)}
           </span>
+          {invoice.type === "released_funds" && invoice.is_cash_advance && (
+            <span
+              className="stamp accent"
+              title={t("cashAdvance.hint")}
+              data-testid="cash-advance-badge-detail"
+            >
+              {t("cashAdvance.badge")}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5">

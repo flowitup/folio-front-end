@@ -10,6 +10,7 @@ import { describe, it, expect } from "vitest";
 import {
   monthKeyForInvoice,
   groupInvoicesByMonth,
+  ledgerTypeOf,
   GROUP_ORDER,
 } from "../group-invoices-by-month";
 import type { Invoice } from "@/types/invoice";
@@ -158,5 +159,38 @@ describe("groupInvoicesByMonth", () => {
 
   it("returns an empty list for no invoices", () => {
     expect(groupInvoicesByMonth([])).toEqual([]);
+  });
+});
+
+describe("cash advances in the ledger", () => {
+  const advance = makeInvoice({
+    id: "adv",
+    type: "released_funds",
+    is_cash_advance: true,
+    total_amount: 500,
+  });
+  const release = makeInvoice({ id: "rel", type: "released_funds", total_amount: 10000 });
+  const other = makeInvoice({ id: "oth", type: "others", total_amount: 40 });
+
+  it("files a cash-advance release under others, plain releases stay put", () => {
+    expect(ledgerTypeOf(advance)).toBe("others");
+    expect(ledgerTypeOf(release)).toBe("released_funds");
+    expect(ledgerTypeOf(other)).toBe("others");
+  });
+
+  it("groups the advance in the month's others category, not released funds", () => {
+    const [month] = groupInvoicesByMonth([advance, release, other]);
+    const byType = Object.fromEntries(month.categories.map((c) => [c.type, c]));
+    expect(byType.released_funds.items.map((i) => i.id)).toEqual(["rel"]);
+    expect(byType.others.items.map((i) => i.id).sort()).toEqual(["adv", "oth"]);
+    // Listed under others, but not counted in its subtotal (it is not spend).
+    expect(byType.others.subtotal).toBe(40);
+  });
+
+  it("keeps the advance out of the month's spend subtotal, so categories add up to it", () => {
+    const [month] = groupInvoicesByMonth([advance, release, other]);
+    expect(month.expenseSubtotal).toBe(40);
+    const spendCategories = month.categories.filter((c) => c.type !== "released_funds");
+    expect(spendCategories.reduce((sum, c) => sum + c.subtotal, 0)).toBe(month.expenseSubtotal);
   });
 });

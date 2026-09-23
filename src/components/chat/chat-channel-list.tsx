@@ -5,6 +5,7 @@
  * horizontal chip row, the way the phone app draws it.
  */
 
+import { Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ChatChannel } from "@/lib/api/chat-client";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,11 @@ export function ChatChannelChips({ channels, selectedKey, onSelect }: Props) {
     >
       {channels.map((channel) => {
         const active = channel.key === selectedKey;
+        // The admin channel carries confidential finance/payroll traffic and the backend
+        // gives it the company's plain legal name, indistinguishable from the company
+        // channel's own chip — so it is relabelled here instead, the same way the
+        // phone app's channel chips do.
+        const isAdmin = channel.kind === "admin";
         return (
           <button
             key={channel.key}
@@ -80,7 +86,10 @@ export function ChatChannelChips({ channels, selectedKey, onSelect }: Props) {
               borderColor: active ? "var(--ink)" : "var(--line)",
             }}
           >
-            <span className="max-w-[160px] truncate">{channel.name}</span>
+            {isAdmin ? (
+              <Lock size={12} aria-hidden="true" data-testid={`chat-chip-${channel.key}-lock`} />
+            ) : null}
+            <span className="max-w-[160px] truncate">{isAdmin ? t("kind.admin") : channel.name}</span>
             {channel.unread_count > 0 && !active ? (
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--accent)" }} />
             ) : null}

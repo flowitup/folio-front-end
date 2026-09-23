@@ -12,19 +12,23 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useChat } from "@/context/ChatContext";
 import { useProject } from "@/context/ProjectContext";
+import { useAssistantFeature } from "@/hooks/use-chat-feature";
 import { useVisiblePoll } from "@/hooks/use-visible-poll";
 import {
   ChatApiError,
   listChatMessages,
   markChatChannelRead,
   sendChatMessage,
+  submitAssistantAction,
+  type ChatMessage,
   type ChatMessagePage,
 } from "@/lib/api/chat-client";
+import type { AssistantChoiceOption } from "@/lib/chat/assistant-choice";
 import { seenByMessage } from "@/lib/chat/seen-by";
 import { ChatChannelChips, ChatChannelList } from "@/components/chat/chat-channel-list";
 import { ChatComposer, type ComposerRejection } from "@/components/chat/chat-composer";
@@ -42,6 +46,17 @@ function sendErrorKey(error: unknown): string {
   return "errors.sendFailed";
 }
 
+/** Distinct copy per status the backend answers `POST /assistant/actions` with; anything
+ * else (network error, 404 `FeatureDisabled`, 422, 500) falls back to a generic failure. */
+function assistantActionErrorKey(error: unknown): string {
+  if (error instanceof ChatApiError) {
+    if (error.status === 403) return "assistant.actionNotAddressed";
+    if (error.status === 409) return "assistant.actionAlreadyAnswered";
+    if (error.status === 503) return "assistant.actionQueueUnavailable";
+  }
+  return "assistant.actionFailed";
+}
+
 export type ChatPanelLayout = "split" | "stack";
 
 export function ChatPanel({
@@ -52,9 +67,11 @@ export function ChatPanel({
   layout?: ChatPanelLayout;
 }) {
   const t = useTranslations("chat");
+  const locale = useLocale();
   const { user } = useAuth();
   const { selectedProjectId } = useProject();
   const { enabled, channels, channelsLoaded, channelsError, refreshChannels } = useChat();
+  const assistantEnabled = useAssistantFeature();
 
   const [selected, setSelected] = useState<string | null>(initialChannelKey ?? null);
   const channelKey = useMemo(() => {
@@ -74,6 +91,14 @@ export function ChatPanel({
   const [page, setPage] = useState<ChatMessagePage | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [sending, setSending] = useState(false);
+  const [pendingMessageId, setPendingMessageId] = useState<string | null>(null);
+  // Guards a double click synchronously: two clicks fired in the same tick both see the
+  // state above still unset (React batches the setState below), so only a plain mutable
+  // ref catches the second one before it ever calls the endpoint.
+  const pendingActionRef = useRef<string | null>(null);
+  // Channel shown right now, read after an await to tell whether the user switched away.
+  const channelKeyRef = useRef(channelKey);
+  channelKeyRef.current = channelKey;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Nothing polls unless the backend confirmed the feature, even if stale channels linger.
@@ -146,7 +171,9 @@ export function ChatPanel({
       if (!channelKey) return false;
       setSending(true);
       try {
-        await sendChatMessage(channelKey, input);
+        // Sent on every message, not just when the assistant is addressed: the
+        // backend only knows to prefer it over its own body-text language sniff.
+        await sendChatMessage(channelKey, { ...input, lang: locale });
         await Promise.all([refreshMessages(), refreshChannels()]);
         return true;
       } catch (error) {
@@ -156,12 +183,64 @@ export function ChatPanel({
         setSending(false);
       }
     },
-    [channelKey, refreshMessages, refreshChannels, t]
+    [channelKey, locale, refreshMessages, refreshChannels, t]
   );
 
   const handleReject = useCallback(
     (reason: ComposerRejection) => toast.error(t(`errors.${reason}`)),
     [t]
+  );
+
+  // Tapping a choice option: optimistic "answered" on the message, then the real request.
+  // A 409 (already answered) and a 503 (could not enqueue — the server already reset the
+  // choice to unanswered on its side) both need the same recovery as any other failure: the
+  // optimistic snapshot is discarded and the thread refetched, so the server's own state
+  // wins over the local guess either way.
+  const handleSelectChoiceOption = useCallback(
+    async (message: ChatMessage, option: AssistantChoiceOption) => {
+      if (!channelKey || pendingActionRef.current) return;
+      const tappedChannelKey = channelKey;
+      pendingActionRef.current = message.id;
+      setPendingMessageId(message.id);
+      let previous: ChatMessagePage | null = null;
+      setPage((current) => {
+        previous = current;
+        return (
+          current && {
+            ...current,
+            items: current.items.map((item) =>
+              item.id === message.id
+                ? {
+                    ...item,
+                    payload: {
+                      ...(item.payload ?? {}),
+                      answered: option.action,
+                      answered_payload: option.payload,
+                    },
+                  }
+                : item
+            ),
+          }
+        );
+      });
+      try {
+        await submitAssistantAction({
+          action: option.action,
+          payload: option.payload,
+          reply_to_id: message.id,
+        });
+        await refreshMessages();
+      } catch (error) {
+        // Restoring the snapshot after a channel switch would show the old thread's messages.
+        if (channelKeyRef.current === tappedChannelKey) setPage(previous);
+        await refreshMessages();
+        toast.error(t(assistantActionErrorKey(error)));
+      } finally {
+        pendingActionRef.current = null;
+        setPendingMessageId(null);
+      }
+    },
+    [channelKey, refreshMessages, t]
   );
 
   // ---- Empty / loading states ----
@@ -231,7 +310,16 @@ export function ChatPanel({
                 {t("empty")}
               </div>
             ) : null}
-            {items.length > 0 ? <ChatMessageList messages={items} seen={seen} /> : null}
+            {items.length > 0 ? (
+              <ChatMessageList
+                messages={items}
+                seen={seen}
+                currentUserId={user?.id}
+                assistantEnabled={assistantEnabled === true}
+                pendingMessageId={pendingMessageId}
+                onSelectChoiceOption={handleSelectChoiceOption}
+              />
+            ) : null}
           </div>
         </div>
 

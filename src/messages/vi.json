@@ -2342,6 +2342,7 @@
       "admin": "Quản trị"
     },
     "membersCount": "{count, plural, other {# thành viên}}",
+    "adminSubtitle": "Bảo mật — chỉ dành cho quản trị viên công ty",
     "placeholder": "Nhắn tin…",
     "send": "Gửi",
     "attachImage": "Thêm ảnh",
@@ -2362,7 +2363,14 @@
     },
     "voiceNote": "Tin nhắn thoại",
     "voiceLoading": "Đang tải bản ghi…",
-    "voiceLoadFailed": "Không tải được tin nhắn thoại này."
+    "voiceLoadFailed": "Không tải được tin nhắn thoại này.",
+    "assistant": {
+      "answered": "Đã trả lời",
+      "actionFailed": "Không thể gửi hành động này.",
+      "actionNotAddressed": "Lựa chọn này không dành cho bạn.",
+      "actionAlreadyAnswered": "Lựa chọn này đã được trả lời.",
+      "actionQueueUnavailable": "Folio đang bận. Vui lòng thử lại sau."
+    }
   },
   "help": {
     "loading": "Đang tải hướng dẫn…",
@@ -2394,6 +2402,7 @@
       "apply": "Áp dụng"
     },
     "empty": "Không có hoạt động của trợ lý trong khoảng thời gian này.",
+    "limitNotice": "Đang hiển thị {limit} dòng gần nhất — hãy thu hẹp khoảng thời gian.",
     "loadError": "Không thể tải nhật ký kiểm tra trợ lý.",
     "outcomes": {
       "answered": "Đã trả lời",

@@ -562,7 +562,8 @@
       "paidByPersonal": "personnel",
       "sumOfTypes": "Total",
       "sharedScaleTo": "échelle commune jusqu'à {amount}",
-      "cashAdvance": "dont {amount} d'avance en espèces"
+      "cash": "Espèces",
+      "cashAdvance": "dont {amount} en espèces"
     },
     "byWorker": {
       "totalPaid": "Total payé",

@@ -278,8 +278,8 @@ describe("buildPurseViews", () => {
       personalSpentTotal: 20,
     });
     expect(purses).toEqual([
-      { key: "company", released: 700, spent: 10, count: 1 },
-      { key: "personal", released: 300, spent: 20, count: 1 },
+      { key: "company", released: 700, spent: 10, count: 1, cashAdvanced: 0 },
+      { key: "personal", released: 300, spent: 20, count: 1, cashAdvanced: 0 },
     ]);
   });
 
@@ -305,7 +305,14 @@ describe("buildPurseViews", () => {
       companyCashAdvancedTotal: 3000,
     });
     expect(purses[0].spent).toBe(3100);
-    expect(purses[1]).toEqual({ key: "personal", released: 250, spent: 40, count: 0 });
+    expect(purses[0].cashAdvanced).toBe(3000);
+    expect(purses[1]).toEqual({
+      key: "personal",
+      released: 250,
+      spent: 40,
+      count: 0,
+      cashAdvanced: 0,
+    });
   });
 });
 

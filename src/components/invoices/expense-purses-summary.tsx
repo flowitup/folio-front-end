@@ -261,6 +261,8 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   ) => {
     const left = released - spent;
     const pct = released > 0 ? Math.min(100, (spent / released) * 100) : 0;
+    // Bar scale for the breakdown rows: the purse's expenses plus the cash handed out.
+    const barScale = breakdown.spent + cashAdvancedPart;
     return (
       <div
         className="folio-card flex flex-col gap-3.5 p-5"
@@ -312,10 +314,9 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
             const row = breakdown.types[type];
             // Clamp to [0, 100]: refund netting can push a small category
             // negative (over-refunded), which must not render a negative bar.
+            // The cash row below shares the scale, so bars stay comparable.
             const width =
-              breakdown.spent > 0
-                ? Math.min(100, Math.max(0, (row.total / breakdown.spent) * 100))
-                : 0;
+              barScale > 0 ? Math.min(100, Math.max(0, (row.total / barScale) * 100)) : 0;
             return (
               <div key={type} className="flex items-center gap-2.5">
                 <span
@@ -343,6 +344,32 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
               </div>
             );
           })}
+          {cashAdvancedPart > 0 && (
+            <div className="flex items-center gap-2.5" data-testid={`purse-cash-row-${purseKey}`}>
+              <span
+                className="w-24 flex-none truncate text-[11.5px]"
+                style={{ color: "var(--muted)" }}
+              >
+                {t("summary.cash")}
+              </span>
+              <span
+                className="block h-[7px] flex-1 overflow-hidden rounded-full"
+                style={{ background: "var(--paper-2)" }}
+              >
+                <span
+                  className="block h-full rounded-full"
+                  data-tip={`${title} · ${t("summary.cash")}|${formatEURWhole(cashAdvancedPart)}|${t("cashAdvance.label")}`}
+                  style={{
+                    width: `${Math.min(100, (cashAdvancedPart / barScale) * 100)}%`,
+                    background: "var(--accent)",
+                  }}
+                />
+              </span>
+              <span className="num w-[72px] flex-none text-right text-[11.5px]">
+                {formatEURWhole(cashAdvancedPart)}
+              </span>
+            </div>
+          )}
           {breakdown.returnsCount > 0 && (
             <div
               className="flex items-center justify-between text-[11.5px]"

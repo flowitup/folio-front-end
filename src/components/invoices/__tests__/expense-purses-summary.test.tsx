@@ -641,6 +641,19 @@ describe("ExpensePursesSummary — company cash advance", () => {
     expect(nums.some((txt) => /40[^\d]*047/.test(txt))).toBe(true);
   });
 
+  it("adds a Cash row to the company purse breakdown with the advanced amount", () => {
+    render(<ExpensePursesSummary invoices={[]} meta={meta} />);
+    const row = screen.getByTestId("purse-cash-row-company");
+    expect(row.textContent).toContain("invoices.summary.cash");
+    expect(row.textContent).toMatch(/3[^\d]*000/);
+    expect(screen.queryByTestId("purse-cash-row-personal")).toBeNull();
+  });
+
+  it("has no Cash row when nothing was advanced", () => {
+    render(<ExpensePursesSummary invoices={[]} meta={{ ...meta, companyCashAdvancedTotal: 0 }} />);
+    expect(screen.queryByTestId("purse-cash-row-company")).toBeNull();
+  });
+
   it("never touches the personal purse", () => {
     render(<ExpensePursesSummary invoices={[]} meta={meta} />);
     expect(screen.queryByTestId("purse-cash-advance-personal")).toBeNull();

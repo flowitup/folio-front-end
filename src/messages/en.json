@@ -562,7 +562,8 @@
       "paidByPersonal": "personal",
       "sumOfTypes": "Total",
       "sharedScaleTo": "shared scale to {amount}",
-      "cashAdvance": "incl. {amount} cash advance"
+      "cash": "Cash",
+      "cashAdvance": "incl. {amount} cash"
     },
     "byWorker": {
       "totalPaid": "Total paid",

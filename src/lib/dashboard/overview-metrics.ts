@@ -267,6 +267,8 @@ export interface MoneyPurseView {
   released: number;
   spent: number;
   count: number;
+  /** Part of `spent` that is cash handed to people (company purse only; 0 otherwise). */
+  cashAdvanced: number;
 }
 
 interface InvoiceMetaLike {
@@ -299,12 +301,14 @@ export function buildPurseViews(invoices: Invoice[], meta: InvoiceMetaLike): Mon
       released: releasedCompany,
       spent: meta.companySpentTotal + (meta.companyCashAdvancedTotal ?? 0),
       count: companyCount,
+      cashAdvanced: meta.companyCashAdvancedTotal ?? 0,
     },
     {
       key: "personal",
       released: releasedPersonal,
       spent: meta.personalSpentTotal ?? 0,
       count: personalCount,
+      cashAdvanced: 0,
     },
   ];
 }

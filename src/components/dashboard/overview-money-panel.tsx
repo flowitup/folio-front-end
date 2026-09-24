@@ -147,6 +147,15 @@ export function OverviewMoneyPanel({
             {" · "}
             {tInvoices("summary.spent")} <span className="num">{fig(formatEURWhole(purse.spent))}</span>
           </div>
+          {purse.cashAdvanced > 0 && (
+            <div
+              className="mt-0.5 text-[11px]"
+              style={{ color: "var(--accent)" }}
+              data-testid={`overview-purse-cash-${purse.key}`}
+            >
+              {tInvoices("summary.cashAdvance", { amount: fig(formatEURWhole(purse.cashAdvanced)) })}
+            </div>
+          )}
         </div>
       </div>
     );

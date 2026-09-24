@@ -562,7 +562,8 @@
       "paidByPersonal": "cá nhân",
       "sumOfTypes": "Tổng",
       "sharedScaleTo": "thang chung đến {amount}",
-      "cashAdvance": "gồm {amount} tiền mặt tạm ứng"
+      "cash": "Tiền mặt",
+      "cashAdvance": "gồm {amount} tiền mặt"
     },
     "byWorker": {
       "totalPaid": "Tổng đã trả",

@@ -117,6 +117,46 @@ describe("DashboardPage — no project selected", () => {
   });
 });
 
+describe("DashboardPage — company purse cash", () => {
+  const project: Partial<Project> = { id: "p-1", name: "Villa", budget: 4000 };
+
+  beforeEach(() => {
+    mockUseProject.mockReturnValue({ selectedProject: project });
+    mockFetchTasks.mockResolvedValue([]);
+  });
+
+  it("says how much of the company purse spend is cash handed out", async () => {
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [],
+      funds_released_total: 5000,
+      funds_released_company_total: 5000,
+      funds_released_personal_total: 0,
+      company_spent_total: 500,
+      personal_spent_total: 0,
+      company_cash_advanced_total: 3000,
+      company_name: "Acme Co",
+    });
+    renderDashboard();
+    const line = await screen.findByTestId("overview-purse-cash-company");
+    const norm = (s: string | null) => (s ?? "").replace(/\s/g, " ");
+    await waitFor(() => expect(norm(line.textContent)).toBe(norm(`incl. ${eur(3000)} cash`)));
+    expect(screen.queryByTestId("overview-purse-cash-personal")).toBeNull();
+  });
+
+  it("shows no cash line when nothing was advanced", async () => {
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [],
+      funds_released_total: 5000,
+      company_spent_total: 500,
+      personal_spent_total: 0,
+      company_name: "Acme Co",
+    });
+    renderDashboard();
+    await screen.findByTestId("overview-money-panel");
+    expect(screen.queryByTestId("overview-purse-cash-company")).toBeNull();
+  });
+});
+
 describe("DashboardPage — money panel figures", () => {
   const project: Partial<Project> = { id: "p-1", name: "Villa", budget: 4000 };
 

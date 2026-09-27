@@ -1915,7 +1915,8 @@
       "admin": "Admin",
       "manager": "Manager",
       "member": "Member"
-    }
+    },
+    "expired": "Expired"
   },
   "companies": {
     "masking": {

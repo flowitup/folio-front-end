@@ -41,15 +41,14 @@ interface MembersTableProps {
   currentUserId: string;
 }
 
-function expiresInDays(expiresAt: string): number | null {
-  try {
-    const diff = Math.ceil(
-      (new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    );
-    return diff > 0 ? diff : null;
-  } catch {
-    return null;
-  }
+/** Days left on an invitation, "expired" once past, null when unreadable.
+ * The API still lists an invitation nobody opened as pending after it
+ * expired, so the past case must read "Expired", not a bare "—". */
+function expiresInDays(expiresAt: string): number | "expired" | null {
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (Number.isNaN(ms)) return null;
+  if (ms <= 0) return "expired";
+  return Math.ceil(ms / (1000 * 60 * 60 * 24));
 }
 
 function memberInitials(member: ProjectMember): string {
@@ -363,7 +362,7 @@ export function MembersTable({
                         style={{ borderColor: "var(--line)", color: "var(--muted)" }}
                       >
                         <span className="num">
-                          {days === null ? "—" : t("expiresIn", { days })}
+                          {days === null ? "—" : days === "expired" ? t("expired") : t("expiresIn", { days })}
                         </span>
                         <span>{invite.invited_by_name ?? "—"}</span>
                       </div>
@@ -394,7 +393,8 @@ export function MembersTable({
                       <TableCell className="num" style={{ color: "var(--muted)" }}>
                         {(() => {
                           const days = expiresInDays(invite.expires_at);
-                          return days === null ? "—" : t("expiresIn", { days });
+                          if (days === null) return "—";
+                        return days === "expired" ? t("expired") : t("expiresIn", { days });
                         })()}
                       </TableCell>
                       <TableCell style={{ color: "var(--muted)" }}>

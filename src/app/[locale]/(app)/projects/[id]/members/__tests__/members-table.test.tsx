@@ -123,4 +123,31 @@ describe("MembersTable", () => {
     expect(screen.queryByText(en.members.tab.pending)).toBeNull();
     expect(screen.queryByText(en.members.empty.pending)).toBeNull();
   });
+
+  it("marks an invitation past its expiry as expired", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <MembersTable
+          projectId="p1"
+          companyId="c1"
+          members={[]}
+          invites={[
+            {
+              id: "i1",
+              email: "late@example.com",
+              expires_at: "2020-01-01T00:00:00Z",
+              invited_by_name: "Ann",
+            } as never,
+          ]}
+          canInvite
+          canManageMembers={false}
+          canAssignMembers={false}
+          callerIsCompanyAdmin={false}
+          canEditIdentity={false}
+          currentUserId="me"
+        />
+      </NextIntlClientProvider>
+    );
+    expect(screen.getAllByText(en.members.expired).length).toBeGreaterThan(0);
+  });
 });

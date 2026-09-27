@@ -36,10 +36,13 @@ vi.mock("@/context/ProjectContext", () => ({
   useProject: () => mockUseProject(),
 }));
 
+// The caller holds project:view_budget and the labor/invoice rights — these
+// specs are not about the financing gate, so they render the full money
+// surface. The member specs below swap in a member's permissions.
+const MANAGER_PERMS = ["project:view_budget", "project:manage_labor", "project:manage_invoices"];
+let mockPermissions = MANAGER_PERMS;
 vi.mock("@/context/AuthContext", () => ({
-  // The caller holds project:view_budget — these specs are not about the
-  // financing gate, so they render the full money surface.
-  useAuth: () => ({ user: { permissions: ["project:view_budget"] } }),
+  useAuth: () => ({ user: { permissions: mockPermissions } }),
 }));
 
 function mkInvoice(partial: Partial<Invoice> & Pick<Invoice, "type" | "issue_date" | "total_amount">): Invoice {
@@ -96,6 +99,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2026, 6, 15, 12, 0, 0)); // Wed 2026-07-15
   vi.clearAllMocks();
+  mockPermissions = MANAGER_PERMS;
   mockFetchInvoicesWithMeta.mockResolvedValue({ invoices: [], funds_released_total: 0, company_spent_total: 0, personal_spent_total: 0, company_name: null });
   mockFetchTasks.mockResolvedValue([]);
 });
@@ -379,5 +383,28 @@ describe("DashboardPage — load failures", () => {
     expect(await screen.findByText(enMessages.dashboard.loadError)).toBeInTheDocument();
     const moneyPanel = within(screen.getByTestId("overview-money-panel"));
     await waitFor(() => expect(headline(moneyPanel)?.replace(/[\u202f\u00a0]/g, " ")).toBe(eur(9500)));
+  });
+});
+
+describe("DashboardPage — member without project money rights", () => {
+  it("does not present the member's own pay as the project's spending", async () => {
+    mockPermissions = ["project:read"];
+    mockUseProject.mockReturnValue({
+      selectedProject: { id: "p-1", name: "Villa", my_permissions: ["project:read"] },
+    });
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [mkInvoice({ type: "labor", issue_date: "2026-07-05", total_amount: 450 })],
+      funds_released_total: 0,
+      company_spent_total: 0,
+      personal_spent_total: 0,
+      company_name: null,
+    });
+    renderDashboard();
+
+    const note = await screen.findByTestId("overview-member-finances");
+    expect(note).toHaveTextContent(enMessages.dashboard.memberFinances.title);
+    expect(within(note).getByRole("link")).toHaveAttribute("href", "/en/projects/p-1/labor");
+    expect(screen.queryByTestId("overview-money-panel")).toBeNull();
+    expect(screen.queryByTestId("overview-type-minis")).toBeNull();
   });
 });

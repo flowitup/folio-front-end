@@ -28,6 +28,8 @@ import { OverviewTypeMinis } from "@/components/dashboard/overview-type-minis";
 import { OverviewAgenda } from "@/components/dashboard/overview-agenda";
 import { OverviewWeatherCard } from "@/components/dashboard/overview-weather-card";
 import { BankReleaseChart } from "@/components/project/bank-release-chart";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/auth/permissions";
 
@@ -186,10 +188,21 @@ export default function DashboardPage() {
   // draw-down chart and the budget-relative parts of the money panel are hidden
   // rather than drawn against zeros.
   const canViewBudget = can("project:view_budget", user?.permissions, selectedProject?.my_permissions);
+  // A member without labor, pay or invoice rights gets only their own labor
+  // payments from the API, with the project totals zeroed. Drawn under
+  // "Spent" / "Spent this month" / "Monthly spend by type" those read as the
+  // project's spending, so a member sees a pointer to their own pay instead
+  // (the labor page draws the same line).
+  const seesProjectMoney =
+    can("project:manage_labor", user?.permissions, selectedProject?.my_permissions) ||
+    can("project:view_pay", user?.permissions, selectedProject?.my_permissions) ||
+    can("project:manage_invoices", user?.permissions, selectedProject?.my_permissions);
+  const showMemberNote = Boolean(projectId) && !seesProjectMoney;
 
   const viewExpenseHref = projectId ? `/${locale}/projects/${projectId}/invoices` : null;
   const planningHref = projectId ? `/${locale}/projects/${projectId}/planning` : null;
   const projectSettingsHref = projectId ? `/${locale}/projects/${projectId}/settings` : null;
+  const laborHref = projectId ? `/${locale}/projects/${projectId}/labor` : null;
 
   return (
     <div className="fade-up space-y-5 px-4 pb-12 lg:px-8">
@@ -199,17 +212,19 @@ export default function DashboardPage() {
         </Alert>
       )}
 
-      <OverviewMoneyPanel
-        spentTotal={spentTotal}
-        budgetMetrics={budgetMetrics}
-        monthlySeries={monthlySeries}
-        monthDelta={monthDelta}
-        pendingRefunds={pendingRefunds}
-        bankOutstanding={bankOutstanding}
-        purses={purses}
-        loading={showLoading}
-        canViewBudget={canViewBudget}
-      />
+      {!showMemberNote && (
+        <OverviewMoneyPanel
+          spentTotal={spentTotal}
+          budgetMetrics={budgetMetrics}
+          monthlySeries={monthlySeries}
+          monthDelta={monthDelta}
+          pendingRefunds={pendingRefunds}
+          bankOutstanding={bankOutstanding}
+          purses={purses}
+          loading={showLoading}
+          canViewBudget={canViewBudget}
+        />
+      )}
 
       {canViewBudget && (
         <BankReleaseChart
@@ -223,11 +238,27 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="min-w-0">
-          <OverviewTypeMinis
-            buckets={moneyUnavailable ? EMPTY_TYPE_BUCKETS : typeBuckets}
-            viewExpenseHref={viewExpenseHref}
-            unavailable={moneyUnavailable}
-          />
+          {showMemberNote ? (
+            <div className="folio-card p-6" data-testid="overview-member-finances">
+              <h2 className="font-display text-[18px] font-semibold tracking-tight">
+                {t("memberFinances.title")}
+              </h2>
+              <p className="mt-1.5 text-[13px]" style={{ color: "var(--muted)" }}>
+                {t("memberFinances.body")}
+              </p>
+              {laborHref && (
+                <Link href={laborHref} className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-medium">
+                  {t("memberFinances.link")} <ArrowRight size={12} />
+                </Link>
+              )}
+            </div>
+          ) : (
+            <OverviewTypeMinis
+              buckets={moneyUnavailable ? EMPTY_TYPE_BUCKETS : typeBuckets}
+              viewExpenseHref={viewExpenseHref}
+              unavailable={moneyUnavailable}
+            />
+          )}
         </div>
         <div className="flex min-w-0 flex-col gap-5">
           <OverviewAgenda groups={agendaGroups} planningHref={planningHref} />

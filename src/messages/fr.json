@@ -112,6 +112,11 @@
       "today": "Aujourd'hui",
       "thisWeek": "Cette semaine",
       "empty": "Rien à l'agenda cette semaine."
+    },
+    "memberFinances": {
+      "title": "Les finances du projet sont visibles par les responsables",
+      "body": "Vos journées et votre paie sont sur la page Main-d’œuvre.",
+      "link": "Ouvrir Main-d’œuvre"
     }
   },
   "projects": {

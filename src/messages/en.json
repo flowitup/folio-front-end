@@ -112,6 +112,11 @@
       "today": "Today",
       "thisWeek": "This week",
       "empty": "Nothing on the agenda this week."
+    },
+    "memberFinances": {
+      "title": "Project finances are visible to managers",
+      "body": "Your own days and pay are on the Labor page.",
+      "link": "Open Labor"
     }
   },
   "projects": {

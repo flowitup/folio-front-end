@@ -112,6 +112,11 @@
       "today": "Hôm nay",
       "thisWeek": "Tuần này",
       "empty": "Không có việc gì trong tuần này."
+    },
+    "memberFinances": {
+      "title": "Tài chính dự án chỉ quản lý mới xem được",
+      "body": "Ngày công và tiền công của bạn nằm ở trang Nhân công.",
+      "link": "Mở trang Nhân công"
     }
   },
   "projects": {

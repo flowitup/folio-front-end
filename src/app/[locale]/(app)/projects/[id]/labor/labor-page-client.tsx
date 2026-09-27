@@ -48,7 +48,8 @@ import {
 } from "@/lib/api/labor";
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { fetchProjectById } from "@/lib/api/projects";
-import { fetchLaborRolesAction } from "./actions";
+import { fetchLaborRolesAction } from "@/components/labor/labor-role-actions";
+import { upsertLaborRole } from "@/components/labor/labor-role-helpers";
 import { DayRoster } from "@/components/labor/day-roster";
 
 type TabType = "workers" | "attendance" | "summary" | "payments" | "roster";
@@ -109,9 +110,9 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // no view_pay): they were explicitly granted invoice rights and still need
   // the Payments tab, even without labor visibility.
   const isMemberPersona = !canManageLabor && !canViewPay && !canManageInvoices;
-  // Renaming / deleting a labor role is a company-level write (admin or
-  // manager of the company whose roles `/labor/roles` lists — the primary
-  // one), not a project permission.
+  // Creating, renaming or deleting a labor role is a company-level write
+  // (admin or manager of the company whose roles `/labor/roles` lists — the
+  // primary one), not a project permission.
   const canEditLaborRoles = canManageLaborRoles(user?.permissions, user?.companies);
 
   // State. `activeTab` is seeded with a placeholder and corrected by the
@@ -522,16 +523,26 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // resolving my_permissions (see the H1 comments above).
   const showContent = !isLoading && !isProjectContextLoading;
 
-  // Workers carry their role's name and color, so a rename or delete in the
-  // role picker reloads them — a deleted role is cleared from its workers by
-  // the backend, and the list must stop showing it.
-  const handleRoleUpdated = (role: LaborRole) => {
-    setRoles((prev) => prev.map((r) => (r.id === role.id ? role : r)));
+  // Workers carry their role's name and color (the summary reads them from
+  // the workers list), and so do attendance entries (`role_color` on each
+  // card), so a rename or delete in the role picker reloads both — a deleted
+  // role is cleared from its workers by the backend, and nothing may keep
+  // showing it. Entries only reload when their tab is open: opening it later
+  // fetches them anyway.
+  const reloadRoleHolders = () => {
     void loadWorkers();
+    if (activeTab === "attendance") void loadEntries();
+  };
+  const handleRoleCreated = (role: LaborRole) => {
+    setRoles((prev) => upsertLaborRole(prev, role));
+  };
+  const handleRoleUpdated = (role: LaborRole) => {
+    setRoles((prev) => upsertLaborRole(prev, role));
+    reloadRoleHolders();
   };
   const handleRoleDeleted = (roleId: string) => {
     setRoles((prev) => prev.filter((r) => r.id !== roleId));
-    void loadWorkers();
+    reloadRoleHolders();
   };
 
   return (
@@ -719,7 +730,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         onSave={handleCreateWorker}
         roles={roles}
         palette={palette}
-        onRoleCreated={(role) => setRoles((prev) => [...prev, role])}
+        onRoleCreated={handleRoleCreated}
         canManageRoles={canEditLaborRoles}
         onRoleUpdated={handleRoleUpdated}
         onRoleDeleted={handleRoleDeleted}
@@ -732,7 +743,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         editWorker={editWorker}
         roles={roles}
         palette={palette}
-        onRoleCreated={(role) => setRoles((prev) => [...prev, role])}
+        onRoleCreated={handleRoleCreated}
         canManageRoles={canEditLaborRoles}
         onRoleUpdated={handleRoleUpdated}
         onRoleDeleted={handleRoleDeleted}

@@ -699,7 +699,7 @@
       "deleteRole": "Xóa vai trò",
       "roleName": "Tên vai trò",
       "roleColor": "Màu sắc",
-      "confirmDelete": "Xóa vai trò này? Các thợ được gán sẽ mất vai trò.",
+      "confirmDelete": "Các thợ được gán sẽ mất vai trò.",
       "duplicateName": "Vai trò với tên này đã tồn tại.",
       "created": "Đã tạo vai trò.",
       "updated": "Đã cập nhật vai trò.",
@@ -728,7 +728,7 @@
       "manageDescription": "Các vai trò gán cho công nhân trên các công trình của công ty này. Tên hoặc màu mới sẽ hiện ở mọi công nhân có vai trò đó; xóa một vai trò sẽ gỡ vai trò đó khỏi họ.",
       "errors": {
         "forbidden": "Chỉ quản trị viên hoặc quản lý của công ty mới đổi được vai trò nhân công.",
-        "notFound": "Vai trò này không còn tồn tại. Tải lại trang để xem danh sách mới nhất.",
+        "notFound": "Vai trò này không còn tồn tại nên đã được gỡ khỏi danh sách.",
         "rateLimited": "Quá nhiều thay đổi liên tiếp. Đợi một phút rồi thử lại.",
         "invalid": "Kiểm tra lại tên và màu của vai trò rồi thử lại."
       }

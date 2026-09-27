@@ -2,9 +2,10 @@
  * Settings › Company → Labor roles card.
  *
  * Everything is scoped to the company handed in (list and create carry its
- * id); rename and delete work in place; delete asks first and keeps its
- * dialog up with the reason when the backend refuses; a failed load says so
- * and can be retried instead of reading as "no roles".
+ * id); rename and delete work in place and keep the list in name order;
+ * delete asks first and keeps its dialog up with the reason when the backend
+ * refuses; a role deleted elsewhere is dropped; a failed load says so and can
+ * be retried instead of reading as "no roles".
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -20,7 +21,7 @@ const actions = vi.hoisted(() => ({
   updateLaborRoleAction: vi.fn(),
   deleteLaborRoleAction: vi.fn(),
 }));
-vi.mock("@/app/[locale]/(app)/projects/[id]/labor/actions", () => actions);
+vi.mock("@/components/labor/labor-role-actions", () => actions);
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
@@ -57,6 +58,16 @@ function renderCard() {
 }
 
 const named = (template: string, name: string) => template.replace("{name}", name);
+
+const custom = (id: string, name: string): LaborRole => ({ ...CUSTOM, id, name });
+
+/** Role names in the order the card lists them. */
+async function listedNames() {
+  const list = await screen.findByRole("list", { name: m.manageTitle });
+  return within(list)
+    .getAllByRole("listitem")
+    .map((li) => li.textContent);
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -190,5 +201,70 @@ describe("CompanyLaborRolesCard", () => {
     expect((await within(dialog).findByRole("alert")).textContent).toBe(m.errors.forbidden);
     expect(screen.getByRole("alertdialog")).toBeDefined();
     expect(screen.getByText("Electrician")).toBeDefined();
+  });
+
+  it("keeps the list in name order after a create and a rename", async () => {
+    actions.fetchLaborRolesAction.mockResolvedValue(
+      listed([custom("r-a", "Carpenter"), custom("r-b", "Mason")])
+    );
+    actions.createLaborRoleAction.mockResolvedValue({
+      success: true,
+      role: custom("r-c", "Electrician"),
+    });
+    actions.updateLaborRoleAction.mockResolvedValue({
+      success: true,
+      role: custom("r-a", "Tiler"),
+    });
+    renderCard();
+    await screen.findByText("Carpenter");
+
+    fireEvent.click(screen.getByRole("button", { name: m.createRole }));
+    fireEvent.change(screen.getByLabelText(m.roleName), { target: { value: "Electrician" } });
+    fireEvent.click(screen.getByRole("button", { name: m.create }));
+    await screen.findByText("Electrician");
+    expect(await listedNames()).toEqual(["Carpenter", "Electrician", "Mason"]);
+
+    fireEvent.click(screen.getByRole("button", { name: named(m.editNamed, "Carpenter") }));
+    fireEvent.change(screen.getByLabelText(m.roleName), { target: { value: "Tiler" } });
+    fireEvent.click(screen.getByRole("button", { name: m.save }));
+    await screen.findByText("Tiler");
+    expect(await listedNames()).toEqual(["Electrician", "Mason", "Tiler"]);
+  });
+
+  it("drops a role someone else already deleted when saving it", async () => {
+    actions.updateLaborRoleAction.mockResolvedValue({
+      success: false,
+      error: "notFound",
+      message: "Labor role r-custom not found",
+    });
+    renderCard();
+    await screen.findByText("Electrician");
+
+    fireEvent.click(screen.getByRole("button", { name: named(m.editNamed, "Electrician") }));
+    fireEvent.change(screen.getByLabelText(m.roleName), { target: { value: "Plumber" } });
+    fireEvent.click(screen.getByRole("button", { name: m.save }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(m.errors.notFound));
+    expect(screen.queryByLabelText(m.roleName)).toBeNull();
+    expect(screen.queryByText("Electrician")).toBeNull();
+    expect(screen.getByText(m.defaults.masterCraftsman)).toBeDefined();
+  });
+
+  it("drops a role someone else already deleted when deleting it", async () => {
+    actions.deleteLaborRoleAction.mockResolvedValue({
+      success: false,
+      error: "notFound",
+      message: "Labor role r-custom not found",
+    });
+    renderCard();
+    await screen.findByText("Electrician");
+
+    fireEvent.click(screen.getByRole("button", { name: named(m.deleteNamed, "Electrician") }));
+    const dialog = await screen.findByRole("alertdialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: m.deleteRole }));
+
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    expect(screen.queryByText("Electrician")).toBeNull();
+    expect(toast.error).toHaveBeenCalledWith(m.errors.notFound);
   });
 });

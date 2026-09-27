@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RoleColorPicker } from "@/app/[locale]/(app)/projects/[id]/labor/components/role-color-picker";
+import { RoleColorPicker } from "./role-color-picker";
 
 const DEFAULT_COLOR = "#7C3AED";
 
@@ -49,7 +49,12 @@ export function LaborRoleForm({
 }: LaborRoleFormProps) {
   const t = useTranslations("labor.role");
   const nameId = React.useId();
-  const startColor = initialColor ?? palette[0] ?? DEFAULT_COLOR;
+  const base = palette.length > 0 ? palette : [DEFAULT_COLOR];
+  const requested = initialColor ?? base[0];
+  // Hex case is not significant: a role saved as "#e11d48" (the API, the
+  // mobile app or the plugin may send lowercase) is the "#E11D48" swatch.
+  const startColor =
+    base.find((c) => c.toLowerCase() === requested.toLowerCase()) ?? requested;
   const [name, setName] = React.useState(initialName);
   const [color, setColor] = React.useState(startColor);
   const [nameError, setNameError] = React.useState<string | null>(null);
@@ -57,12 +62,7 @@ export function LaborRoleForm({
   // A role may carry a color that is not (or no longer) in the suggested
   // palette; keep it selectable so opening the editor does not silently
   // swap it for the first swatch.
-  const colors = React.useMemo(() => {
-    const base = palette.length > 0 ? palette : [DEFAULT_COLOR];
-    return base.some((c) => c.toLowerCase() === startColor.toLowerCase())
-      ? base
-      : [...base, startColor];
-  }, [palette, startColor]);
+  const colors = base.includes(startColor) ? base : [...base, startColor];
 
   function submit() {
     if (submitting) return;

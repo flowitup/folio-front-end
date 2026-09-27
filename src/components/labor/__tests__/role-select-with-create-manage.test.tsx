@@ -1,14 +1,18 @@
 /**
- * RoleSelectWithCreate — rename, recolor and delete from the role picker.
+ * RoleSelectWithCreate — create, rename, recolor and delete from the role
+ * picker.
  *
- * The edit control only shows for a company admin or manager (`canManage`);
- * a color-only change on a seeded role must not rename it to the viewer's
- * translated label; delete asks first, clears the selection when the selected
- * role goes, and a refusal is shown in the backend's words.
+ * The create option and the edit control only show for a company admin or
+ * manager (`canManage`); the pencil works from the keyboard without selecting
+ * a role; a color-only change on a seeded role must not rename it to the
+ * viewer's translated label; delete asks first, cancelling keeps what was
+ * typed, clears the selection when the selected role goes, and a refusal is
+ * shown in the backend's words; a role deleted elsewhere is dropped.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import enMessages from "@/messages/en.json";
 import { RoleSelectWithCreate } from "../role-select-with-create";
@@ -19,7 +23,7 @@ const actions = vi.hoisted(() => ({
   updateLaborRoleAction: vi.fn(),
   deleteLaborRoleAction: vi.fn(),
 }));
-vi.mock("../../actions", () => actions);
+vi.mock("../labor-role-actions", () => actions);
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
@@ -68,6 +72,12 @@ function renderPicker(props: Partial<React.ComponentProps<typeof RoleSelectWithC
 const editButton = (label: string) =>
   screen.getByRole("button", { name: m.editNamed.replace("{name}", label) });
 
+const trashButton = (label: string) =>
+  screen.getByRole("button", { name: m.deleteNamed.replace("{name}", label) });
+
+/** The cmdk option currently highlighted (the one Enter on the list would pick). */
+const highlighted = () => document.querySelector('[cmdk-item][data-selected="true"]');
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -80,6 +90,47 @@ describe("RoleSelectWithCreate — manage roles", () => {
     expect(
       screen.queryByRole("button", { name: m.editNamed.replace("{name}", "Electrician") })
     ).toBeNull();
+  });
+
+  it("offers Create only to someone who may manage roles", () => {
+    renderPicker({ canManage: false });
+    fireEvent.change(screen.getByPlaceholderText(m.searchRoles), {
+      target: { value: "Plumber" },
+    });
+
+    expect(screen.queryByText(m.createNamed.replace("{name}", "Plumber"))).toBeNull();
+  });
+
+  it("offers Create to a company admin or manager", () => {
+    renderPicker();
+    fireEvent.change(screen.getByPlaceholderText(m.searchRoles), {
+      target: { value: "Plumber" },
+    });
+
+    expect(screen.getByText(m.createNamed.replace("{name}", "Plumber"))).toBeDefined();
+  });
+
+  it("opens the editor on Enter from the pencil, without selecting a role", async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderPicker({ value: "r-custom" });
+
+    editButton("Electrician").focus();
+    await user.keyboard("{Enter}");
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect((screen.getByLabelText(m.roleName) as HTMLInputElement).value).toBe("Electrician");
+  });
+
+  it("keeps arrow keys on the pencil from moving the list highlight", async () => {
+    const user = userEvent.setup();
+    renderPicker();
+    const before = highlighted();
+    expect(before?.textContent).toBe(m.noRole);
+
+    editButton("Electrician").focus();
+    await user.keyboard("{ArrowDown}");
+
+    expect(highlighted()).toBe(before);
   });
 
   it("renames a role and hands the saved role back", async () => {
@@ -149,6 +200,42 @@ describe("RoleSelectWithCreate — manage roles", () => {
 
     fireEvent.click(screen.getByRole("button", { name: m.cancel }));
     expect(actions.deleteLaborRoleAction).not.toHaveBeenCalled();
+  });
+
+  it("returns to the edit form with what was typed when the delete is cancelled", () => {
+    renderPicker();
+
+    fireEvent.click(editButton("Electrician"));
+    fireEvent.change(screen.getByLabelText(m.roleName), { target: { value: "Sparky" } });
+    fireEvent.click(screen.getByRole("button", { name: "#10B981" }));
+    fireEvent.click(trashButton("Electrician"));
+    fireEvent.click(screen.getByRole("button", { name: m.cancel }));
+
+    expect((screen.getByLabelText(m.roleName) as HTMLInputElement).value).toBe("Sparky");
+    expect(screen.getByRole("button", { name: "#10B981" }).getAttribute("aria-pressed")).toBe(
+      "true"
+    );
+    expect(document.activeElement).toBe(trashButton("Electrician"));
+    expect(actions.deleteLaborRoleAction).not.toHaveBeenCalled();
+  });
+
+  it("drops a role someone else already deleted when saving it", async () => {
+    actions.updateLaborRoleAction.mockResolvedValue({
+      success: false,
+      error: "notFound",
+      message: "Labor role r-custom not found",
+    });
+    const { onChange, onRoleDeleted, onRoleUpdated } = renderPicker({ value: "r-custom" });
+
+    fireEvent.click(editButton("Electrician"));
+    fireEvent.change(screen.getByLabelText(m.roleName), { target: { value: "Plumber" } });
+    fireEvent.click(screen.getByRole("button", { name: m.save }));
+
+    await waitFor(() => expect(onRoleDeleted).toHaveBeenCalledWith("r-custom"));
+    expect(onChange).toHaveBeenCalledWith(null);
+    expect(onRoleUpdated).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith(m.errors.notFound);
+    expect(screen.queryByLabelText(m.roleName)).toBeNull();
   });
 
   it("deletes the selected role and clears the selection", async () => {

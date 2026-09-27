@@ -21,7 +21,7 @@ import type {
   UpdateWorkerPayload,
 } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
-import { RoleSelectWithCreate } from "@/app/[locale]/(app)/projects/[id]/labor/components/role-select-with-create";
+import { RoleSelectWithCreate } from "./role-select-with-create";
 
 interface AddWorkerDialogProps {
   open: boolean;

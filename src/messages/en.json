@@ -699,7 +699,7 @@
       "deleteRole": "Delete role",
       "roleName": "Role name",
       "roleColor": "Color",
-      "confirmDelete": "Delete this role? Workers assigned to it will lose their role.",
+      "confirmDelete": "Workers assigned to it will lose their role.",
       "duplicateName": "A role with this name already exists.",
       "created": "Role created.",
       "updated": "Role updated.",
@@ -728,7 +728,7 @@
       "manageDescription": "The roles you give workers on this company's projects. A new name or color shows on every worker who has the role; deleting a role clears it from them.",
       "errors": {
         "forbidden": "Only an admin or a manager of the company can change its labor roles.",
-        "notFound": "This role no longer exists. Reload the page to see the current list.",
+        "notFound": "This role no longer exists, so it was removed from the list.",
         "rateLimited": "Too many changes in a row. Wait a minute, then try again.",
         "invalid": "Check the role name and color, then try again."
       }

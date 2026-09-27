@@ -70,3 +70,17 @@ export function buildLaborRoleUpdate(
   }
   return payload.name === undefined && payload.color === undefined ? null : payload;
 }
+
+/**
+ * Roles in the order `GET /labor/roles` returns them (by stored name), so a
+ * list edited in place reads the same as it will after a reload.
+ */
+export function sortLaborRoles(roles: LaborRole[]): LaborRole[] {
+  return [...roles].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** `roles` with `role` added, or replacing the entry that has its id, in list order. */
+export function upsertLaborRole(roles: LaborRole[], role: LaborRole): LaborRole[] {
+  const others = roles.filter((r) => r.id !== role.id);
+  return sortLaborRoles([...others, role]);
+}

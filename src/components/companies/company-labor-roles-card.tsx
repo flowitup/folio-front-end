@@ -14,7 +14,8 @@
  * not their primary one.
  *
  * Deleting a role never fails because workers still hold it: the database
- * clears their role instead. The confirmation says so.
+ * clears their role instead. The confirmation says so. A role someone else
+ * already deleted (404 on edit or delete) is dropped from the list.
  *
  * The parent keys this card by company id, so a company switch remounts it
  * and no role list is ever shown under another company's name.
@@ -48,6 +49,7 @@ import { LaborRoleForm } from "@/components/labor/labor-role-form";
 import {
   buildLaborRoleUpdate,
   laborRoleErrorMessage,
+  upsertLaborRole,
 } from "@/components/labor/labor-role-helpers";
 import {
   createLaborRoleAction,
@@ -55,7 +57,7 @@ import {
   fetchLaborRolesAction,
   updateLaborRoleAction,
   type RoleListActionResult,
-} from "@/app/[locale]/(app)/projects/[id]/labor/actions";
+} from "@/components/labor/labor-role-actions";
 import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
 import type { LaborRole } from "@/types/labor-role";
 
@@ -90,6 +92,7 @@ export function CompanyLaborRolesCard({ companyId }: CompanyLaborRolesCardProps)
   const [deleting, setDeleting] = useState<LaborRole | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const deletingRef = useRef(false);
 
   const roleName = useCallback(
     (role: LaborRole) => {
@@ -123,6 +126,12 @@ export function CompanyLaborRolesCard({ companyId }: CompanyLaborRolesCardProps)
     setState((prev) => (prev.status === "ready" ? { ...prev, roles: update(prev.roles) } : prev));
   }
 
+  /** The role is gone on the server (404): drop its row and say so. */
+  function dropMissingRole(roleId: string) {
+    replaceRoles((roles) => roles.filter((r) => r.id !== roleId));
+    toast.error(t("errors.notFound"));
+  }
+
   /** One write at a time: a double click must not create the role twice. */
   async function runSave(work: () => Promise<void>) {
     if (savingRef.current) return;
@@ -145,7 +154,7 @@ export function CompanyLaborRolesCard({ companyId }: CompanyLaborRolesCardProps)
           setFormError(laborRoleErrorMessage(t, result, "create"));
           return;
         }
-        replaceRoles((roles) => [...roles, result.role]);
+        replaceRoles((roles) => upsertLaborRole(roles, result.role));
         setEditing(null);
         toast.success(t("created"));
       } catch {
@@ -164,10 +173,15 @@ export function CompanyLaborRolesCard({ companyId }: CompanyLaborRolesCardProps)
       try {
         const result = await updateLaborRoleAction(role.id, payload);
         if (!result.success) {
+          if (result.error === "notFound") {
+            setEditing(null);
+            dropMissingRole(role.id);
+            return;
+          }
           setFormError(laborRoleErrorMessage(t, result, "update"));
           return;
         }
-        replaceRoles((roles) => roles.map((r) => (r.id === result.role.id ? result.role : r)));
+        replaceRoles((roles) => upsertLaborRole(roles, result.role));
         setEditing(null);
         toast.success(t("updated"));
       } catch {
@@ -182,13 +196,21 @@ export function CompanyLaborRolesCard({ companyId }: CompanyLaborRolesCardProps)
   }
 
   async function handleDeleteConfirm() {
-    if (!deleting || isDeleting) return;
+    // The ref, not `isDeleting`: a second click can land before the re-render.
+    if (!deleting || deletingRef.current) return;
     const role = deleting;
+    deletingRef.current = true;
     setIsDeleting(true);
     setDeleteError(null);
     try {
       const result = await deleteLaborRoleAction(role.id);
       if (!result.success) {
+        if (result.error === "notFound") {
+          if (editing === role.id) setEditing(null);
+          setDeleting(null);
+          dropMissingRole(role.id);
+          return;
+        }
         // Keep the dialog open: the reason belongs next to the button that
         // failed, not in a toast that vanishes.
         setDeleteError(laborRoleErrorMessage(t, result, "delete"));
@@ -201,6 +223,7 @@ export function CompanyLaborRolesCard({ companyId }: CompanyLaborRolesCardProps)
     } catch {
       setDeleteError(t("deleteFailed"));
     } finally {
+      deletingRef.current = false;
       setIsDeleting(false);
     }
   }

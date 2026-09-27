@@ -76,6 +76,14 @@ describe("labor.role i18n parity", () => {
     }
   });
 
+  it("does not ask the delete question twice (the title asks, the body explains)", () => {
+    for (const locale of Object.keys(LOCALES) as (keyof typeof LOCALES)[]) {
+      const map = entries(locale);
+      expect(map.get("confirmDeleteTitle"), `${locale}: confirmDeleteTitle`).toMatch(/\?\s*$/);
+      expect(map.get("confirmDelete"), `${locale}: confirmDelete`).not.toMatch(/\?/);
+    }
+  });
+
   it("keeps the {name} placeholder in every locale", () => {
     for (const locale of Object.keys(LOCALES) as (keyof typeof LOCALES)[]) {
       const map = entries(locale);

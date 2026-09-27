@@ -26,7 +26,7 @@ import {
   createLaborRoleAction,
   deleteLaborRoleAction,
   updateLaborRoleAction,
-} from "../actions";
+} from "./labor-role-actions";
 import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
 import type { LaborRole } from "@/types/labor-role";
 
@@ -37,9 +37,10 @@ interface RoleSelectWithCreateProps {
   onChange: (roleId: string | null) => void;
   onRoleCreated: (role: LaborRole) => void;
   /**
-   * Whether the caller may rename / recolor / delete roles (company admin or
-   * manager — see `canManageLaborRoles`). Without it the rows carry no edit
-   * control, since the backend would only answer 403.
+   * Whether the caller may create, rename, recolor or delete roles (company
+   * admin or manager — see `canManageLaborRoles`). Without it the picker only
+   * selects: no "Create" option and no edit control, since the backend would
+   * answer every one of those writes with 403.
    */
   canManage?: boolean;
   onRoleUpdated?: (role: LaborRole) => void;
@@ -47,37 +48,41 @@ interface RoleSelectWithCreateProps {
 }
 
 /**
- * What the panel under the list is showing: nothing, the create form, the
- * edit form for one role, or the delete confirmation for that role.
+ * What the panel under the list is showing: nothing, the create form, or the
+ * edit form for one role — with, while `confirmingDelete`, the delete
+ * confirmation in its place. The form stays mounted (hidden) behind the
+ * confirmation, so Cancel returns to it with whatever was already typed.
  */
 type Panel =
   | { kind: "none" }
   | { kind: "create"; seedName: string }
-  | { kind: "edit"; role: LaborRole }
-  | { kind: "confirmDelete"; role: LaborRole };
+  | { kind: "edit"; role: LaborRole; confirmingDelete: boolean };
 
 /**
- * The panels sit inside cmdk's <Command>, whose root handles Enter and the
- * arrow keys as list navigation — Enter would select the highlighted role
- * instead of pressing the focused Save / Cancel / Delete button. Keep those
- * keys inside the panel; Escape still bubbles so the popover can close.
+ * The panels and the pencil buttons sit inside cmdk's <Command>, whose root
+ * handles Enter and the arrow keys as list navigation: it cancels Enter's
+ * default and selects the highlighted role (by default "No role") instead of
+ * pressing the focused button. Keep those keys on the focused control; Escape
+ * still bubbles so the popover can close.
  */
 function keepKeysInPanel(e: React.KeyboardEvent) {
   if (e.key !== "Escape") e.stopPropagation();
 }
 
 /**
- * RoleSelectWithCreate — Popover+Command picker for labor roles with
- * inline create, and — for a company admin or manager — inline rename,
- * recolor and delete. Follows the same pattern as PersonTypeahead.
+ * RoleSelectWithCreate — Popover+Command picker for labor roles; for a
+ * company admin or manager (`canManage`) also inline create, rename, recolor
+ * and delete. Follows the same pattern as PersonTypeahead.
  *
  * - "No role" option at the top clears the selection.
  * - Existing roles shown with a colored dot and name; with `canManage`, a
  *   pencil beside each one opens the edit form (name, color, delete).
- * - When the search term is non-empty and has no exact match, a
- *   "Create role..." option appears at the bottom.
+ * - With `canManage`, when the search term is non-empty and has no exact
+ *   match, a "Create role..." option appears at the bottom.
  * - Delete asks for confirmation inside the popover first. The backend then
  *   clears the role from every worker who had it, so the parent reloads them.
+ * - A role someone else already deleted (404) is dropped from the list the
+ *   same way, instead of leaving a row that can no longer be saved.
  */
 export function RoleSelectWithCreate({
   roles,
@@ -100,6 +105,10 @@ export function RoleSelectWithCreate({
   // that disables the buttons, and must not send the request twice.
   const busyRef = React.useRef(false);
   const [panelError, setPanelError] = React.useState<string | null>(null);
+  // Cancel on the delete confirmation hands focus back to the trash button
+  // that opened it (the confirmation's own buttons disappear).
+  const trashRef = React.useRef<HTMLButtonElement>(null);
+  const refocusTrashRef = React.useRef(false);
 
   const selectedRole = value ? roles.find((r) => r.id === value) : null;
   const roleName = React.useCallback(
@@ -123,11 +132,37 @@ export function RoleSelectWithCreate({
     trimmed.length > 0 &&
     roles.some((r) => roleName(r).trim().toLowerCase() === trimmed.toLowerCase());
 
-  const showCreateOption = trimmed.length > 0 && !exactMatch && panel.kind === "none";
+  const showCreateOption =
+    canManage && trimmed.length > 0 && !exactMatch && panel.kind === "none";
 
   function showPanel(next: Panel) {
     setPanelError(null);
     setPanel(next);
+  }
+
+  React.useEffect(() => {
+    if (!refocusTrashRef.current) return;
+    if (panel.kind === "edit" && !panel.confirmingDelete) {
+      refocusTrashRef.current = false;
+      trashRef.current?.focus();
+    }
+  }, [panel]);
+
+  function cancelDelete(role: LaborRole) {
+    refocusTrashRef.current = true;
+    showPanel({ kind: "edit", role, confirmingDelete: false });
+  }
+
+  /**
+   * The role was deleted elsewhere (the backend answered 404): drop it here
+   * too, as a delete would, and say so. The panel closes, so the message goes
+   * to a toast rather than under a form that is no longer shown.
+   */
+  function dropMissingRole(role: LaborRole) {
+    if (value === role.id) onChange(null);
+    onRoleDeleted?.(role.id);
+    toast.error(t("errors.notFound"));
+    setPanel({ kind: "none" });
   }
 
   function handleOpenChange(next: boolean) {
@@ -187,6 +222,10 @@ export function RoleSelectWithCreate({
     void runRequest("updateFailed", async () => {
       const result = await updateLaborRoleAction(role.id, payload);
       if (!result.success) {
+        if (result.error === "notFound") {
+          dropMissingRole(role);
+          return;
+        }
         setPanelError(laborRoleErrorMessage(t, result, "update"));
         return;
       }
@@ -200,6 +239,10 @@ export function RoleSelectWithCreate({
     void runRequest("deleteFailed", async () => {
       const result = await deleteLaborRoleAction(role.id);
       if (!result.success) {
+        if (result.error === "notFound") {
+          dropMissingRole(role);
+          return;
+        }
         setPanelError(laborRoleErrorMessage(t, result, "delete"));
         return;
       }
@@ -294,7 +337,8 @@ export function RoleSelectWithCreate({
                         <span className="truncate">{roleName(role)}</span>
                       </CommandItem>
                       {/* Outside the option on purpose: a button nested in a
-                          cmdk item would also select the role. */}
+                          cmdk item would also select the role. Its keys stay
+                          off cmdk's root too, or Enter would pick "No role". */}
                       {canManage && (
                         <Button
                           type="button"
@@ -304,7 +348,8 @@ export function RoleSelectWithCreate({
                           aria-label={t("editNamed", { name: roleName(role) })}
                           title={t("editRole")}
                           disabled={busy}
-                          onClick={() => showPanel({ kind: "edit", role })}
+                          onKeyDown={keepKeysInPanel}
+                          onClick={() => showPanel({ kind: "edit", role, confirmingDelete: false })}
                         >
                           <Pencil />
                         </Button>
@@ -347,9 +392,14 @@ export function RoleSelectWithCreate({
             </div>
           )}
 
-          {/* Inline edit form — rename / recolor, with delete behind a confirm */}
+          {/* Inline edit form — rename / recolor, with delete behind a confirm.
+              Hidden, not unmounted, while the confirmation shows. */}
           {panel.kind === "edit" && (
-            <div className="border-t p-3" onKeyDown={keepKeysInPanel}>
+            <div
+              className="border-t p-3"
+              hidden={panel.confirmingDelete}
+              onKeyDown={keepKeysInPanel}
+            >
               <p className="mb-2 text-xs font-medium">{t("editRole")}</p>
               <LaborRoleForm
                 key={`edit-${panel.role.id}`}
@@ -358,11 +408,12 @@ export function RoleSelectWithCreate({
                 initialColor={panel.role.color}
                 submitLabel={t("save")}
                 submitting={busy}
-                error={panelError}
+                error={panel.confirmingDelete ? null : panelError}
                 onSubmit={(values) => handleUpdate(panel.role, values)}
                 onCancel={() => showPanel({ kind: "none" })}
                 extraAction={
                   <Button
+                    ref={trashRef}
                     type="button"
                     size="sm"
                     variant="ghost"
@@ -370,7 +421,9 @@ export function RoleSelectWithCreate({
                     aria-label={t("deleteNamed", { name: roleName(panel.role) })}
                     title={t("deleteRole")}
                     disabled={busy}
-                    onClick={() => showPanel({ kind: "confirmDelete", role: panel.role })}
+                    onClick={() =>
+                      showPanel({ kind: "edit", role: panel.role, confirmingDelete: true })
+                    }
                   >
                     <Trash2 />
                   </Button>
@@ -379,7 +432,7 @@ export function RoleSelectWithCreate({
             </div>
           )}
 
-          {panel.kind === "confirmDelete" && (
+          {panel.kind === "edit" && panel.confirmingDelete && (
             <div className="border-t p-3 space-y-3" onKeyDown={keepKeysInPanel}>
               <div className="space-y-1">
                 <p className="text-sm font-medium">
@@ -412,7 +465,7 @@ export function RoleSelectWithCreate({
                   variant="outline"
                   disabled={busy}
                   autoFocus
-                  onClick={() => showPanel({ kind: "edit", role: panel.role })}
+                  onClick={() => cancelDelete(panel.role)}
                 >
                   {t("cancel")}
                 </Button>

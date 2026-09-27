@@ -13,7 +13,6 @@ const api = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/api/labor-roles", () => api);
-vi.mock("@/lib/api/roster", () => ({ fetchDayRoster: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
 import {
@@ -21,7 +20,7 @@ import {
   deleteLaborRoleAction,
   fetchLaborRolesAction,
   updateLaborRoleAction,
-} from "../actions";
+} from "../labor-role-actions";
 
 /** The error shape `buildHttpError` throws. */
 function httpError(status: number, body: { error?: string; message?: string } | null) {

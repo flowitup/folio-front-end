@@ -1,11 +1,16 @@
 /**
- * Labor-role editor helpers: what a failed mutation says, and which fields an
- * edit actually sends.
+ * Labor-role editor helpers: what a failed mutation says, which fields an
+ * edit actually sends, and the order an edited list keeps.
  */
 
 import { describe, it, expect } from "vitest";
 import enMessages from "@/messages/en.json";
-import { buildLaborRoleUpdate, laborRoleErrorMessage } from "../labor-role-helpers";
+import {
+  buildLaborRoleUpdate,
+  laborRoleErrorMessage,
+  sortLaborRoles,
+  upsertLaborRole,
+} from "../labor-role-helpers";
 import type { LaborRole } from "@/types/labor-role";
 
 const role = enMessages.labor.role;
@@ -79,5 +84,39 @@ describe("buildLaborRoleUpdate", () => {
     expect(
       buildLaborRoleUpdate(SEEDED, "Master craftsman", { name: "Master craftsman", color: "#E11D48" })
     ).toBeNull();
+  });
+});
+
+describe("sortLaborRoles / upsertLaborRole", () => {
+  const named = (id: string, name: string): LaborRole => ({
+    id,
+    name,
+    color: "#0EA5E9",
+    created_at: "2026-01-01T00:00:00Z",
+    slug: null,
+  });
+  const names = (roles: LaborRole[]) => roles.map((r) => r.name);
+
+  it("orders roles by stored name, as the list endpoint does", () => {
+    expect(names(sortLaborRoles([named("a", "Mason"), named("b", "Carpenter")]))).toEqual([
+      "Carpenter",
+      "Mason",
+    ]);
+  });
+
+  it("slots a new role into name order", () => {
+    const roles = [named("a", "Carpenter"), named("b", "Mason")];
+    expect(names(upsertLaborRole(roles, named("c", "Electrician")))).toEqual([
+      "Carpenter",
+      "Electrician",
+      "Mason",
+    ]);
+  });
+
+  it("replaces a renamed role and moves it to its new place", () => {
+    const roles = [named("a", "Carpenter"), named("b", "Mason")];
+    const result = upsertLaborRole(roles, named("a", "Tiler"));
+    expect(names(result)).toEqual(["Mason", "Tiler"]);
+    expect(result.map((r) => r.id)).toEqual(["b", "a"]);
   });
 });

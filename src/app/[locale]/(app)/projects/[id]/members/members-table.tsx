@@ -14,6 +14,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { InviteMemberDialog } from "./invite-member-dialog";
 import { EditMemberDialog } from "./edit-member-dialog";
 import { AssignMemberDialog } from "@/components/projects/assign-member-dialog";
@@ -91,10 +100,13 @@ export function MembersTable({
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<ProjectMember | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  // Awaiting the user's confirmation in the in-app dialog (the browser's
+  // confirm() was unstyled and labelled in the browser's language).
+  const [pendingRemove, setPendingRemove] = useState<ProjectMember | null>(null);
+  const [pendingRevoke, setPendingRevoke] = useState<string | null>(null);
 
 
   const handleRevoke = async (invitationId: string) => {
-    if (!confirm(t("revokeConfirm"))) return;
     setRevokingId(invitationId);
     try {
       const result = await revokeInviteAction(invitationId, projectId);
@@ -112,9 +124,6 @@ export function MembersTable({
   };
 
   const handleRemove = async (member: ProjectMember) => {
-    if (!confirm(t("edit.removeConfirm", { name: memberName(member) }))) {
-      return;
-    }
     setRemovingId(member.user_id);
     try {
       const result = await removeMemberAction(projectId, member.user_id);
@@ -229,7 +238,7 @@ export function MembersTable({
                           removingId === member.user_id ||
                           member.user_id === currentUserId
                         }
-                        onClick={() => handleRemove(member)}
+                        onClick={() => setPendingRemove(member)}
                       >
                         {t("edit.remove")}
                       </Button>
@@ -304,7 +313,7 @@ export function MembersTable({
                               removingId === member.user_id ||
                               member.user_id === currentUserId
                             }
-                            onClick={() => handleRemove(member)}
+                            onClick={() => setPendingRemove(member)}
                           >
                             {t("edit.remove")}
                           </Button>
@@ -351,7 +360,7 @@ export function MembersTable({
                             className="h-9"
                             style={{ color: "var(--negative)" }}
                             disabled={revokingId === invite.id}
-                            onClick={() => handleRevoke(invite.id)}
+                            onClick={() => setPendingRevoke(invite.id)}
                           >
                             {t("revoke")}
                           </Button>
@@ -408,7 +417,7 @@ export function MembersTable({
                             className="h-7 px-2 text-[12px]"
                             style={{ color: "var(--negative)" }}
                             disabled={revokingId === invite.id}
-                            onClick={() => handleRevoke(invite.id)}
+                            onClick={() => setPendingRevoke(invite.id)}
                           >
                             {t("revoke")}
                           </Button>
@@ -423,6 +432,46 @@ export function MembersTable({
           )}
         </section>
       )}
+
+      <AlertDialog open={pendingRemove !== null} onOpenChange={(open) => !open && setPendingRemove(null)}>
+        <AlertDialogContent aria-describedby={undefined}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingRemove ? t("edit.removeConfirm", { name: memberName(pendingRemove) }) : ""}
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("invite.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingRemove) void handleRemove(pendingRemove);
+                setPendingRemove(null);
+              }}
+            >
+              {t("edit.remove")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={pendingRevoke !== null} onOpenChange={(open) => !open && setPendingRevoke(null)}>
+        <AlertDialogContent aria-describedby={undefined}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("revokeConfirm")}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("invite.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingRevoke) void handleRevoke(pendingRevoke);
+                setPendingRevoke(null);
+              }}
+            >
+              {t("revoke")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {canInvite && (
         <InviteMemberDialog

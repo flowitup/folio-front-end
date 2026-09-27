@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
@@ -59,7 +59,6 @@ describe("MembersTable", () => {
   });
 
   it("names a failed removal as a removal and keeps a 403 distinct", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     const dave = {
       user_id: "u2",
       email: "dave@example.com",
@@ -70,6 +69,7 @@ describe("MembersTable", () => {
     mockRemove.mockResolvedValueOnce({ ok: false, status: 500 });
     const { unmount } = renderTable([dave]);
     await userEvent.click(screen.getAllByRole("button", { name: en.members.edit.remove })[0]);
+    await userEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: en.members.edit.remove }));
     await waitFor(() =>
       expect(mockToastError).toHaveBeenCalledWith(en.members.edit.toast.removeFailed)
     );
@@ -78,6 +78,7 @@ describe("MembersTable", () => {
     mockRemove.mockResolvedValueOnce({ ok: false, status: 403 });
     renderTable([dave]);
     await userEvent.click(screen.getAllByRole("button", { name: en.members.edit.remove })[0]);
+    await userEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: en.members.edit.remove }));
     await waitFor(() =>
       expect(mockToastError).toHaveBeenCalledWith(en.members.edit.toast.forbidden)
     );
@@ -157,5 +158,18 @@ describe("MembersTable", () => {
     expect(header.className).toContain("flex-wrap");
     expect((header.lastElementChild as HTMLElement).className).toContain("flex-wrap");
     expect(header.parentElement!.className).toContain("px-4");
+  });
+
+  it("asks in an in-app dialog, not the browser's confirm(), before removing", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm");
+    mockRemove.mockClear();
+    mockRemove.mockResolvedValue({ ok: true });
+    renderTable([{ user_id: "u2", email: "dave@example.com", display_name: "Dave", joined_at: "2026-09-01T00:00:00Z" }]);
+    await userEvent.click(screen.getAllByRole("button", { name: en.members.edit.remove })[0]);
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent("Remove Dave from this project?");
+    await userEvent.click(within(dialog).getByRole("button", { name: en.members.invite.cancel }));
+    expect(mockRemove).not.toHaveBeenCalled();
+    expect(confirmSpy).not.toHaveBeenCalled();
   });
 });

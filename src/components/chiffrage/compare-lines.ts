@@ -9,7 +9,7 @@
  * many things differ before anyone expands it.
  */
 
-import { formatDelta } from "@/components/chiffrage/format";
+import { formatDelta, toCents } from "@/components/chiffrage/format";
 import {
   diffQuoteNotes,
   type NoteSegment,
@@ -65,9 +65,12 @@ export function lineVerdict(
   qb: ChiffrageQuote | null,
 ): LineVerdict {
   if (!qa || !qb) return { kind: "unpriced" };
-  const gap = qb.unit_price_ht - qa.unit_price_ht;
+  // Prices are compared as shown, to the cent: a sub-cent difference is a tie.
+  const a = toCents(qa.unit_price_ht);
+  const b = toCents(qb.unit_price_ht);
+  const gap = toCents(b - a);
   if (gap === 0) return { kind: "tie" };
-  const cheapest = Math.min(qa.unit_price_ht, qb.unit_price_ht);
+  const cheapest = Math.min(a, b);
   return {
     kind: "gap",
     gap,

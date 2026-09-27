@@ -101,6 +101,29 @@ describe("QuoteComparisonTable", () => {
     expect(within(rows[1]).getByText("+15 %")).toBeInTheDocument();
   });
 
+  it("shows a 4-decimal price to the cent and treats prices that read the same as equal", () => {
+    const a = quote({ id: "a", unit_price_ht: 12.3456 });
+    const b = quote({ id: "b", supplier_name: "Point P", unit_price_ht: 12.3499 });
+
+    render(
+      <QuoteComparisonTable
+        article={article([a, b])}
+        stores={[]}
+        canManage
+        busyQuoteId={null}
+        onSelect={noop}
+        onEdit={noop}
+        onDelete={noop}
+      />
+    );
+
+    const rows = screen.getAllByTestId("quote-row");
+    expect(rows[0].textContent).toMatch(/12,35\s€/);
+    expect(rows[0].textContent).not.toMatch(/12,3456/);
+    // Neither shows a "+0 %" premium over the other.
+    expect(screen.queryByText("+0 %")).toBeNull();
+  });
+
   it("distinguishes a deliberate pick from the automatic fallback", () => {
     const cheap = quote({ id: "cheap", unit_price_ht: 10.75 });
     const retained = quote({ id: "retained", supplier_name: "Rexel", unit_price_ht: 11.9, is_selected: true });

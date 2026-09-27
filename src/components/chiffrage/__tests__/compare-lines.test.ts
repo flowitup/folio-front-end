@@ -83,6 +83,13 @@ describe("lineVerdict", () => {
     });
   });
 
+  it("compares 4-decimal prices as shown, to the cent", () => {
+    // 12.3456 and 12.3499 both read 12,35 €.
+    expect(lineVerdict(quote("qa", "A", 12.3456), quote("qb", "B", 12.3499))).toEqual({ kind: "tie" });
+    const v = lineVerdict(quote("qa", "A", 10.004), quote("qb", "B", 10.1149));
+    expect(v).toMatchObject({ kind: "gap", gap: 0.11, cheaper: "a" });
+  });
+
   it("calls equal prices a tie and a missing side unpriced", () => {
     expect(lineVerdict(quote("qa", "A", 289), quote("qb", "B", 289))).toEqual({ kind: "tie" });
     expect(lineVerdict(quote("qa", "A", 289), null)).toEqual({ kind: "unpriced" });

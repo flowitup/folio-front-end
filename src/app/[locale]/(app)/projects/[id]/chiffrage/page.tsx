@@ -47,16 +47,17 @@ export default async function ChiffragePage({ params }: PageProps) {
     redirect(`/${locale}/projects`);
   }
 
-  let loadFailed = false;
-  const [tree, units] = await Promise.all([
-    getChiffrage(projectId).catch(() => {
-      // Shown as an error with a retry — never as an empty budget, which
-      // reads as if the sections had been lost.
-      loadFailed = true;
-      return EMPTY_TREE(projectId);
-    }),
+  const [treeResult, units] = await Promise.all([
+    getChiffrage(projectId).then(
+      (data) => ({ ok: true as const, data }),
+      () => ({ ok: false as const })
+    ),
     listUnits(projectId).catch((): ChiffrageUnit[] => []),
   ]);
+  // A failed load is shown as an error with a retry — never as an empty
+  // budget, which reads as if the sections had been lost.
+  const loadFailed = !treeResult.ok;
+  const tree = treeResult.ok ? treeResult.data : EMPTY_TREE(projectId);
 
   // Only a loaded project's effective permissions can grant writes; the
   // company-wide JWT claim alone does not reach this project.

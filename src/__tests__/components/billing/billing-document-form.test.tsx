@@ -644,3 +644,29 @@ describe("BillingDocumentForm — line payload", () => {
     expect(Object.keys(mockCreate.mock.calls[0][0].items[0]).sort()).toEqual(ITEM_KEYS);
   });
 });
+
+describe("BillingDocumentForm — copy of an existing document", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("issues the copy today instead of reusing the source's dates", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 8, 27, 10, 0, 0));
+    try {
+      render(
+        <BillingDocumentForm
+          mode="create"
+          kind="devis"
+          attachedCompanies={ATTACHED_COMPANIES}
+          initialFromSource={makeDoc({
+            issue_date: "Sat, 01 Aug 2026 00:00:00 GMT",
+            validity_until: "Mon, 31 Aug 2026 00:00:00 GMT",
+          })}
+        />
+      );
+      expect((screen.getByLabelText(/issue date/i) as HTMLInputElement).value).toBe("2026-09-27");
+      expect((screen.getByLabelText(/valid until/i) as HTMLInputElement).value).toBe("2026-10-27");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

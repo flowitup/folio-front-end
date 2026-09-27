@@ -171,15 +171,17 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     !!(seed?.recipient_email || seed?.recipient_siret)
   );
 
+  // Only an edited document keeps its dates; a copy is issued today.
   // The API may send dates as RFC 1123 strings; date inputs and the request
   // schemas both need YYYY-MM-DD.
-  const seedIssueDate = toIsoDate(seed?.issue_date) ?? todayIso();
+  const dateSeed = props.mode === "edit" ? props.document : null;
+  const seedIssueDate = toIsoDate(dateSeed?.issue_date) ?? todayIso();
   const [issueDate, setIssueDate] = useState(seedIssueDate);
   const [validityUntil, setValidityUntil] = useState(
-    toIsoDate(seed?.validity_until) ?? plus30Days(seedIssueDate)
+    toIsoDate(dateSeed?.validity_until) ?? plus30Days(seedIssueDate)
   );
   const [paymentDueDate, setPaymentDueDate] = useState(
-    toIsoDate(seed?.payment_due_date) ?? plus30Days(seedIssueDate)
+    toIsoDate(dateSeed?.payment_due_date) ?? plus30Days(seedIssueDate)
   );
   const [paymentTerms, setPaymentTerms] = useState(seed?.payment_terms ?? "");
 

@@ -134,7 +134,7 @@ const DOC = {
 } as unknown as BillingDocument;
 
 function renderWith(overrides: Partial<BillingDocument>) {
-  render(<BillingDocumentForm mode="edit" kind="devis" document={{ ...DOC, ...overrides }} />);
+  render(<BillingDocumentForm mode="edit" kind="devis" document={{ ...DOC, ...overrides }} attachedCompanies={[]} />);
   fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 }
 

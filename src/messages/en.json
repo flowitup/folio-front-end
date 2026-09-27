@@ -1280,7 +1280,9 @@
         "cloneSelected": "Clone selected",
         "createFromTemplate": "Create from template",
         "sendStatus": "Mark as Sent",
-        "edit": "Edit"
+        "edit": "Edit",
+        "previewPdf": "Preview PDF",
+        "openActions": "Open actions"
       },
       "errors": {
         "recipientRequired": "Recipient name is required.",
@@ -1310,7 +1312,9 @@
       "issuer": {
         "issuedFrom": "Issued from",
         "locked": "locked"
-      }
+      },
+      "deleteConfirmTitle": "Delete document?",
+      "deleteConfirmDescription": "Delete {number}? This cannot be undone."
     },
     "editPage": {
       "loadFailed": "Failed to load document. Please refresh or try again later."

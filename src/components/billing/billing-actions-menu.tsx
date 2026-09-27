@@ -5,6 +5,7 @@
  *
  * Items:
  *   - Edit → navigate to /billing/{segment}/{id} (segment = "devis" or "factures")
+ *   - Preview PDF → open the rendered PDF in a dialog
  *   - Download PDF → fetch PDF blob then trigger browser download
  *   - Convert to Facture → only rendered for devis with status=accepted
  *   - Delete → confirm then call server action
@@ -17,6 +18,7 @@ import {
   MoreHorizontal,
   Pencil,
   Download,
+  Eye,
   FileSpreadsheet,
   ArrowRightLeft,
   Trash2,
@@ -47,6 +49,7 @@ import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 import type { BillingDocument } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
 
 interface BillingActionsMenuProps {
   document: BillingDocument;
@@ -58,8 +61,10 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
   const locale = useLocale();
   const tActions = useTranslations("billing.form.actions");
   const tErrors = useTranslations("billing.form.errors");
+  const tForm = useTranslations("billing.form");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [isXlsxLoading, setIsXlsxLoading] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
@@ -145,7 +150,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
         toast.error(result.error.message);
         return;
       }
-      toast.success("Devis converted to facture successfully.");
+      toast.success(tForm("toast.devisConverted"));
       // Navigate to the new facture
       router.push(`/${locale}/billing/factures`);
       onMutated();
@@ -166,7 +171,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
         toast.error(result.error.message);
         return;
       }
-      toast.success("Document deleted.");
+      toast.success(tForm("toast.documentDeleted"));
       onMutated();
     } finally {
       deletingRef.current = false;
@@ -189,13 +194,17 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
             ) : (
               <MoreHorizontal size={13} />
             )}
-            <span className="sr-only">Open actions</span>
+            <span className="sr-only">{tActions("openActions")}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => router.push(editPath)}>
             <Pencil size={13} className="mr-2" />
             {tActions("edit") ?? "Edit"}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setPreviewOpen(true)}>
+            <Eye size={13} className="mr-2" />
+            {tActions("previewPdf")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleDownloadPdf} disabled={isPdfLoading}>
             <Download size={13} className="mr-2" />
@@ -231,11 +240,9 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete document?</AlertDialogTitle>
+            <AlertDialogTitle>{tForm("deleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete{" "}
-              <strong>{document.document_number}</strong>. This action cannot be
-              undone.
+              {tForm("deleteConfirmDescription", { number: document.document_number })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -249,6 +256,11 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BillingPdfPreviewDialog
+        document={previewOpen ? document : null}
+        onClose={() => setPreviewOpen(false)}
+      />
     </>
   );
 }

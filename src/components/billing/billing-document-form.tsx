@@ -23,7 +23,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, Loader2, Download, FileSpreadsheet, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Eye, FileSpreadsheet, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +62,7 @@ import type { MyCompany } from "@/types/companies";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -188,6 +189,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [isXlsxLoading, setIsXlsxLoading] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -446,6 +448,10 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
                   {tForm("actions.convertToFacture")}
                 </Button>
               )}
+              <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
+                <Eye size={13} className="mr-2" />
+                {tForm("actions.previewPdf")}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -775,6 +781,10 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         open={fromTemplateOpen}
         onOpenChange={setFromTemplateOpen}
         kind={kind}
+      />
+      <BillingPdfPreviewDialog
+        document={previewOpen ? liveDoc : null}
+        onClose={() => setPreviewOpen(false)}
       />
     </div>
   );

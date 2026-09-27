@@ -1280,7 +1280,9 @@
         "cloneSelected": "Nhân bản đã chọn",
         "createFromTemplate": "Tạo từ mẫu",
         "sendStatus": "Đánh dấu đã gửi",
-        "edit": "Chỉnh sửa"
+        "edit": "Chỉnh sửa",
+        "previewPdf": "Xem trước PDF",
+        "openActions": "Mở thao tác"
       },
       "errors": {
         "recipientRequired": "Tên khách hàng là bắt buộc.",
@@ -1310,7 +1312,9 @@
       "issuer": {
         "issuedFrom": "Phát hành từ",
         "locked": "đã khóa"
-      }
+      },
+      "deleteConfirmTitle": "Xóa tài liệu?",
+      "deleteConfirmDescription": "Xóa {number}? Không thể hoàn tác."
     },
     "editPage": {
       "loadFailed": "Không thể tải tài liệu. Vui lòng tải lại trang hoặc thử lại sau."

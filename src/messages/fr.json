@@ -1280,7 +1280,9 @@
         "cloneSelected": "Dupliquer le sélectionné",
         "createFromTemplate": "Créer depuis un modèle",
         "sendStatus": "Marquer comme envoyé",
-        "edit": "Modifier"
+        "edit": "Modifier",
+        "previewPdf": "Aperçu PDF",
+        "openActions": "Ouvrir les actions"
       },
       "errors": {
         "recipientRequired": "Le nom du destinataire est obligatoire.",
@@ -1310,7 +1312,9 @@
       "issuer": {
         "issuedFrom": "Émis par",
         "locked": "verrouillé"
-      }
+      },
+      "deleteConfirmTitle": "Supprimer le document ?",
+      "deleteConfirmDescription": "Supprimer {number} ? Cette action est irréversible."
     },
     "editPage": {
       "loadFailed": "Impossible de charger le document. Veuillez actualiser ou réessayer plus tard."

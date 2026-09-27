@@ -2809,5 +2809,24 @@
       "error": "Lỗi"
     },
     "noCost": "—"
+  },
+  "personsMerge": {
+    "title": "Gộp người",
+    "intro": "Gộp hai hồ sơ Người cùng chỉ một người. Mọi phân công công nhân của nguồn chuyển sang đích, rồi hồ sơ nguồn bị xóa.",
+    "source": "Nguồn",
+    "sourceHint": "(bị xóa)",
+    "sourcePlaceholder": "Chọn bản trùng cần xóa…",
+    "target": "Đích",
+    "targetHint": "(giữ lại)",
+    "targetPlaceholder": "Chọn hồ sơ cần giữ…",
+    "sameRow": "Nguồn và đích phải là hai hồ sơ khác nhau.",
+    "clear": "Xóa lựa chọn",
+    "merge": "Gộp",
+    "cancel": "Hủy",
+    "confirmTitle": "Gộp những người này?",
+    "confirmBody": "Mọi công nhân gắn với {source} chuyển sang {target}, và {source} bị xóa vĩnh viễn. Không thể hoàn tác.",
+    "merged": "Đã gộp “{source}” vào “{target}”.",
+    "mergedDetail": "Đã chuyển {n} công nhân. Đã xóa nguồn.",
+    "failed": "Gộp thất bại. Vui lòng thử lại."
   }
 }

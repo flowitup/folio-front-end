@@ -2809,5 +2809,24 @@
       "error": "Erreur"
     },
     "noCost": "—"
+  },
+  "personsMerge": {
+    "title": "Fusionner des personnes",
+    "intro": "Regroupez deux fiches Personne qui désignent la même personne. Toutes les affectations d'ouvrier de la source passent à la cible, puis la fiche source est supprimée.",
+    "source": "Source",
+    "sourceHint": "(supprimée)",
+    "sourcePlaceholder": "Choisissez le doublon à supprimer…",
+    "target": "Cible",
+    "targetHint": "(conservée)",
+    "targetPlaceholder": "Choisissez la fiche à garder…",
+    "sameRow": "La source et la cible doivent être deux fiches différentes.",
+    "clear": "Effacer",
+    "merge": "Fusionner",
+    "cancel": "Annuler",
+    "confirmTitle": "Fusionner ces personnes ?",
+    "confirmBody": "Tous les ouvriers liés à {source} passent à {target}, et {source} est supprimé définitivement. Cette action est irréversible.",
+    "merged": "« {source} » fusionné dans « {target} ».",
+    "mergedDetail": "{n, plural, one {# ouvrier réaffecté} other {# ouvriers réaffectés}}. Source supprimée.",
+    "failed": "La fusion a échoué. Veuillez réessayer."
   }
 }

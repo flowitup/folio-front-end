@@ -49,7 +49,13 @@ export interface PersonTypeaheadProps {
   debounceMs?: number;
   /** Result page size (max 100 per backend cap). Default 20. */
   limit?: number;
+  /** Offer "Create …" for an unmatched name. Off where a new Person makes no
+   * sense (the merge tool picks existing rows only). Default true. */
+  allowCreate?: boolean;
 }
+
+/** The API refuses searches shorter than this (400). */
+const MIN_QUERY_LENGTH = 2;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -63,6 +69,7 @@ export function PersonTypeahead({
   className,
   debounceMs = 200,
   limit = 20,
+  allowCreate = true,
 }: PersonTypeaheadProps) {
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
@@ -78,6 +85,12 @@ export function PersonTypeahead({
   React.useEffect(() => {
     if (!open) return;
     const seq = ++requestSeqRef.current;
+    if (query.trim().length < MIN_QUERY_LENGTH) {
+      // Too short for the API: nothing to ask it.
+      setResults([]);
+      setLoading(false);
+      return;
+    }
     const handle = window.setTimeout(async () => {
       setLoading(true);
       try {
@@ -101,7 +114,7 @@ export function PersonTypeahead({
   const exactMatch =
     trimmed.length > 0 &&
     results.some((p) => p.name.trim().toLowerCase() === trimmed.toLowerCase());
-  const showCreate = trimmed.length > 0 && !exactMatch && !creating;
+  const showCreate = allowCreate && trimmed.length > 0 && !exactMatch && !creating;
 
   async function handleSelect(person: PersonSummary) {
     onChange(person);

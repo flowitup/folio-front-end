@@ -30,9 +30,19 @@ interface Props {
   /** Units per warehouse id, from the current inventory. */
   unitsByWarehouse: Map<string, number>;
   onChanged: () => void | Promise<void>;
+  /** False for a viewer without inventory:manage: the list only, no create/edit/delete. */
+  canManage?: boolean;
 }
 
-export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, unitsByWarehouse, onChanged }: Props) {
+export function WarehousesDialog({
+  open,
+  onOpenChange,
+  companyId,
+  warehouses,
+  unitsByWarehouse,
+  onChanged,
+  canManage = true,
+}: Props) {
   const t = useTranslations("inventory.warehouses");
   const tInv = useTranslations("inventory");
 
@@ -47,7 +57,7 @@ export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, un
   useEffect(() => {
     if (!open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFormOpen(warehouses.length === 0);
+    setFormOpen(canManage && warehouses.length === 0);
     setEditing(null);
     setName("");
     setAddress("");
@@ -169,7 +179,7 @@ export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, un
                   <span className="num shrink-0 text-[12px]" style={{ color: "var(--muted)" }}>
                     {tInv("units", { count: held })}
                   </span>
-                  {confirming ? (
+                  {!canManage ? null : confirming ? (
                     <div className="flex shrink-0 items-center gap-1">
                       <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(null)} disabled={busy === w.id}>
                         {tInv("actions.cancel")}
@@ -208,7 +218,7 @@ export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, un
           </ul>
         )}
 
-        {formOpen ? (
+        {!canManage ? null : formOpen ? (
           <form onSubmit={submit} className="space-y-3 pt-1">
             <div className="label-cap">{editing ? t("editTitle") : t("createTitle")}</div>
             <div className="space-y-2">

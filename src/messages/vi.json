@@ -1647,7 +1647,8 @@
       "errorNetwork": "Lỗi mạng — vui lòng thử lại",
       "errorRateLimited": "Tải lên quá nhiều — vui lòng chậm lại",
       "errorForbidden": "Không được phép",
-      "errorServer": "Tải lên thất bại"
+      "errorServer": "Tải lên thất bại",
+      "errorEmpty": "Tệp này trống"
     },
     "list": {
       "empty": "Chưa có tài liệu. Kéo file vào khu vực tải lên để bắt đầu.",

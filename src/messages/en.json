@@ -1647,7 +1647,8 @@
       "errorNetwork": "Network error — try again",
       "errorRateLimited": "Too many uploads — slow down",
       "errorForbidden": "Not allowed",
-      "errorServer": "Upload failed"
+      "errorServer": "Upload failed",
+      "errorEmpty": "This file is empty"
     },
     "list": {
       "empty": "No documents yet. Drag files into the upload area to start.",

@@ -39,6 +39,7 @@ const ALLOWED_EXTENSIONS = [
 
 type UploadErrorKind =
   | "oversize"
+  | "empty"
   | "unsupported"
   | "network"
   | "rateLimited"
@@ -65,6 +66,16 @@ function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** The `error` code of a JSON error body, e.g. "EMPTY_FILE". */
+function responseErrorCode(text: string): string | undefined {
+  try {
+    const body = JSON.parse(text) as { error?: unknown };
+    return typeof body.error === "string" ? body.error : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function getExtension(filename: string): string {
@@ -178,6 +189,9 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
         } else if (xhr.status === 403) {
           updateJob(jobId, { status: "failed", error: { kind: "forbidden" } });
           resolve();
+        } else if (xhr.status === 400 && responseErrorCode(xhr.responseText) === "EMPTY_FILE") {
+          updateJob(jobId, { status: "failed", error: { kind: "empty" } });
+          resolve();
         } else {
           updateJob(jobId, {
             status: "failed",
@@ -271,6 +285,18 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
         continue;
       }
 
+      // Client-side validation: an empty file is refused by the backend
+      if (file.size === 0) {
+        newJobs[jobId] = {
+          id: jobId,
+          file,
+          status: "failed",
+          progress: 0,
+          error: { kind: "empty" },
+        };
+        continue;
+      }
+
       // Client-side validation: size
       if (file.size > MAX_SIZE_BYTES) {
         newJobs[jobId] = {
@@ -314,6 +340,8 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
     switch (kind) {
       case "oversize":
         return t("errorOversize");
+      case "empty":
+        return t("errorEmpty");
       case "unsupported":
         return t("errorUnsupported");
       case "network":

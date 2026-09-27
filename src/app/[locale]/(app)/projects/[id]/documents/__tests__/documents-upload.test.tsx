@@ -18,6 +18,7 @@ vi.mock("next-intl", () => {
       done: "Done",
       failed: "Failed",
       errorOversize: "File too large (max 150 MB)",
+      errorEmpty: "This file is empty",
       errorUnsupported: "File type not supported",
       errorNetwork: "Network error",
       errorRateLimited: "Rate limited, try again later",
@@ -232,6 +233,22 @@ describe("DocumentsUpload", () => {
 
       expect(xhrQueue.length).toBe(0);
       expect(screen.getByText("File type not supported")).toBeDefined();
+    });
+  });
+
+  describe("empty files", () => {
+    it("rejects a 0-byte file client-side with its own message", async () => {
+      const xhrQueue = installXhrQueue();
+      const { container } = render(<DocumentsUpload projectId="proj-1" onUploaded={vi.fn()} />);
+      const emptyFile = new File([], "blank.pdf", { type: "application/pdf" });
+
+      await act(async () => {
+        dropFile(container, emptyFile);
+        await flushMicrotasks();
+      });
+
+      expect(xhrQueue.length).toBe(0);
+      expect(screen.getByText("This file is empty")).toBeDefined();
     });
   });
 

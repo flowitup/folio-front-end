@@ -1647,7 +1647,8 @@
       "errorNetwork": "Erreur réseau — réessayez",
       "errorRateLimited": "Trop d'envois — ralentissez",
       "errorForbidden": "Action non autorisée",
-      "errorServer": "Échec de l'envoi"
+      "errorServer": "Échec de l'envoi",
+      "errorEmpty": "Ce fichier est vide"
     },
     "list": {
       "empty": "Aucun document pour l'instant. Glissez des fichiers dans la zone de dépôt pour commencer.",

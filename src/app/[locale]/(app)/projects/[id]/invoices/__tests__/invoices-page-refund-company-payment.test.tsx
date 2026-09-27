@@ -145,14 +145,13 @@ function setupAuthMock(canManage: boolean) {
   const perms = canManage
     ? ["project:manage_invoices", "project:view_budget"]
     : ["project:view_budget"];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockUseAuth.mockReturnValue({
     user: {
       permissions: perms,
       // The transfer is a company-admin action.
       companies: canManage ? [{ id: "co-1", name: "Co", role: "admin" }] : [],
     },
-  } as any);
+  } as never);
 }
 
 function setupFetchMock(
@@ -480,13 +479,12 @@ describe("InvoicesPage — transfer to company payment action", () => {
 
   it("does NOT show transfer button to a manager who is not a company admin", async () => {
     setupAuthMock(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockUseAuth.mockReturnValue({
+      mockUseAuth.mockReturnValue({
       user: {
         permissions: ["project:manage_invoices", "project:view_budget"],
         companies: [{ id: "co-1", name: "Co", role: "manager" }],
       },
-    } as any);
+    } as never);
     setupFetchMock([makeInvoice({ type: "materials_services", refundable_status: null })]);
     render(<InvoicesPage />);
 

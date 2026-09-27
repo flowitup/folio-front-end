@@ -3,7 +3,7 @@
  * quantities and rates in the app language.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { InvoiceDetailContent } from "../invoice-detail-content";
 import type { Invoice } from "@/types/invoice";
@@ -78,18 +78,6 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
   };
 }
 
-function renderDetail(invoice: Invoice, canManage = true, canTransferToCompany = canManage) {
-  return render(
-    <InvoiceDetailContent
-      invoice={invoice}
-      canManage={canManage}
-      canTransferToCompany={canTransferToCompany}
-      onUpdated={vi.fn()}
-      onDeleted={vi.fn()}
-      printUrl="/en/projects/proj-1/invoices/inv-dc-1/print"
-    />,
-  );
-}
 
 
 describe("InvoiceDetailContent — HT / VAT totals", () => {

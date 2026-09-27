@@ -20,6 +20,14 @@ vi.mock("next-intl", () => ({
   useLocale: () => "en",
 }));
 
+const mockSelectProject = vi.fn();
+vi.mock("@/context/ProjectContext", () => ({
+  useProject: () => ({
+    projects: [{ id: "proj-1", name: "Villa Ngoc", address: null }],
+    selectProject: mockSelectProject,
+  }),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));

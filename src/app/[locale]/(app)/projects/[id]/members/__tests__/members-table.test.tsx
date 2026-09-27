@@ -18,7 +18,7 @@ vi.mock("@/components/projects/assign-member-dialog", () => ({ AssignMemberDialo
 
 import { MembersTable } from "../members-table";
 
-function renderTable(members: ProjectMember[]) {
+function renderTable(members: ProjectMember[], canEditIdentity = false) {
   return render(
     <NextIntlClientProvider locale="en" messages={en}>
       <MembersTable
@@ -30,7 +30,7 @@ function renderTable(members: ProjectMember[]) {
         canManageMembers
         canAssignMembers
         callerIsCompanyAdmin
-        canEditIdentity={false}
+        canEditIdentity={canEditIdentity}
         currentUserId="me"
       />
     </NextIntlClientProvider>
@@ -81,5 +81,15 @@ describe("MembersTable", () => {
     await waitFor(() =>
       expect(mockToastError).toHaveBeenCalledWith(en.members.edit.toast.forbidden)
     );
+  });
+
+  it("offers Edit only to callers who may change a member's name and email", () => {
+    const dave = { user_id: "u2", email: "dave@example.com", display_name: "Dave", joined_at: "2026-09-01T00:00:00Z" };
+    const { unmount } = renderTable([dave]);
+    expect(screen.queryByRole("button", { name: en.members.edit.button })).toBeNull();
+    expect(screen.getAllByRole("button", { name: en.members.edit.remove }).length).toBeGreaterThan(0);
+    unmount();
+    renderTable([dave], true);
+    expect(screen.getAllByRole("button", { name: en.members.edit.button }).length).toBeGreaterThan(0);
   });
 });

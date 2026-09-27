@@ -1880,7 +1880,7 @@
       "remove": "Xóa",
       "removeConfirm": "Xóa {name} khỏi dự án này?",
       "dialogTitle": "Chỉnh sửa thành viên",
-      "dialogDescription": "Cập nhật vai trò của thành viên này. Thay đổi vai trò có hiệu lực ngay lập tức.",
+      "dialogDescription": "Cập nhật tên hiển thị và email của thành viên này.",
       "nameLabel": "Tên hiển thị",
       "emailLabel": "Email",
       "emailHint": "Email là danh tính đăng nhập. Thay đổi nó sẽ thay đổi cách người dùng này đăng nhập.",

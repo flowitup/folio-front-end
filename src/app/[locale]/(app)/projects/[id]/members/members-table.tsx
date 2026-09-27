@@ -206,14 +206,16 @@ export function MembersTable({
                   </div>
                   {canManageMembers && (
                     <div className="mt-2.5 flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 flex-1"
-                        onClick={() => setEditing(member)}
-                      >
-                        {t("edit.button")}
-                      </Button>
+                      {canEditIdentity && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 flex-1"
+                          onClick={() => setEditing(member)}
+                        >
+                          {t("edit.button")}
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -275,14 +277,16 @@ export function MembersTable({
                     {canManageMembers && (
                       <TableCell style={{ textAlign: "right" }}>
                         <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-[12px]"
-                            onClick={() => setEditing(member)}
-                          >
-                            {t("edit.button")}
-                          </Button>
+                          {canEditIdentity && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-[12px]"
+                              onClick={() => setEditing(member)}
+                            >
+                              {t("edit.button")}
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -427,7 +431,9 @@ export function MembersTable({
         />
       )}
 
-      {canManageMembers && (
+      {/* The dialog edits identity only (name, email) — nothing else to offer
+          a caller who may not change it. */}
+      {canManageMembers && canEditIdentity && (
         <EditMemberDialog
           open={editing !== null}
           onOpenChange={(open) => !open && setEditing(null)}

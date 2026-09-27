@@ -1880,7 +1880,7 @@
       "remove": "Retirer",
       "removeConfirm": "Retirer {name} de ce projet ?",
       "dialogTitle": "Modifier le membre",
-      "dialogDescription": "Mettez à jour le rôle de ce membre. Les changements de rôle prennent effet immédiatement.",
+      "dialogDescription": "Mettez à jour le nom affiché et l'e-mail de ce membre.",
       "nameLabel": "Nom affiché",
       "emailLabel": "E-mail",
       "emailHint": "L'e-mail est l'identifiant de connexion. Le modifier change la façon dont cet utilisateur se connecte.",

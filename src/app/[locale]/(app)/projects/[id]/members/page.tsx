@@ -47,9 +47,9 @@ export default async function MembersPage({ params }: PageProps) {
   // caller's per-company role, not a project permission.
   const callerIsCompanyAdmin = isCompanyAdmin(session.user.companies, project?.company_id ?? null, perms);
   // Editing identity (email / display name) is a GLOBAL concern (it changes how
-  // the user signs in everywhere), so it stays gated on the caller's global
-  // role only — never the per-project membership role.
-  const canEditIdentity = perms.includes("user:update") || isPlatformOps(perms);
+  // the user signs in everywhere): the backend lets platform ops only, and no
+  // role carries a "user:update" permission.
+  const canEditIdentity = isPlatformOps(perms);
 
   return (
     <MembersTable

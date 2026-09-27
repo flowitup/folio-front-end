@@ -1880,7 +1880,7 @@
       "remove": "Remove",
       "removeConfirm": "Remove {name} from this project?",
       "dialogTitle": "Edit member",
-      "dialogDescription": "Update this member's role. Role changes take effect immediately.",
+      "dialogDescription": "Update this member's display name and email.",
       "nameLabel": "Display name",
       "emailLabel": "Email",
       "emailHint": "Email is the login identity. Changing it updates how this user signs in.",

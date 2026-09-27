@@ -63,6 +63,7 @@ import type { MyCompany } from "@/types/companies";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { toIsoDate } from "@/lib/billing/document-payload";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
 
 // ---------------------------------------------------------------------------
@@ -94,13 +95,18 @@ export type BillingDocumentFormProps =
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Today's date in the viewer's timezone, as YYYY-MM-DD. */
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
 }
 
-function plus30Days(from?: string): string {
-  const base = from ? new Date(from) : new Date();
-  base.setDate(base.getDate() + 30);
+/** The YYYY-MM-DD date 30 days after `from` (itself YYYY-MM-DD). */
+function plus30Days(from: string): string {
+  const base = new Date(`${from}T00:00:00Z`);
+  base.setUTCDate(base.getUTCDate() + 30);
   return base.toISOString().slice(0, 10);
 }
 
@@ -165,13 +171,15 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     !!(seed?.recipient_email || seed?.recipient_siret)
   );
 
-  const today = todayIso();
-  const [issueDate, setIssueDate] = useState(seed?.issue_date ?? today);
+  // The API may send dates as RFC 1123 strings; date inputs and the request
+  // schemas both need YYYY-MM-DD.
+  const seedIssueDate = toIsoDate(seed?.issue_date) ?? todayIso();
+  const [issueDate, setIssueDate] = useState(seedIssueDate);
   const [validityUntil, setValidityUntil] = useState(
-    seed?.validity_until ?? plus30Days(seed?.issue_date)
+    toIsoDate(seed?.validity_until) ?? plus30Days(seedIssueDate)
   );
   const [paymentDueDate, setPaymentDueDate] = useState(
-    seed?.payment_due_date ?? plus30Days(seed?.issue_date)
+    toIsoDate(seed?.payment_due_date) ?? plus30Days(seedIssueDate)
   );
   const [paymentTerms, setPaymentTerms] = useState(seed?.payment_terms ?? "");
 
@@ -253,9 +261,9 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         recipient_address: recipientAddress.trim() || null,
         recipient_email: recipientEmail.trim() || null,
         recipient_siret: recipientSiret.trim() || null,
-        issue_date: issueDate,
-        validity_until: kind === "devis" ? validityUntil : null,
-        payment_due_date: kind === "facture" ? paymentDueDate : null,
+        issue_date: issueDate || null,
+        validity_until: kind === "devis" ? validityUntil || null : null,
+        payment_due_date: kind === "facture" ? paymentDueDate || null : null,
         payment_terms: kind === "facture" ? (paymentTerms.trim() || null) : null,
         items,
         notes: notes.trim() || null,

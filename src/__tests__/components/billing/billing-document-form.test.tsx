@@ -512,3 +512,49 @@ describe("BillingDocumentForm — create mode picker", () => {
     expect(screen.queryByRole("button", { name: /from existing/i })).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Dates as the API sends them (RFC 1123, e.g. "Sun, 27 Sep 2026 00:00:00 GMT")
+// ---------------------------------------------------------------------------
+
+describe("BillingDocumentForm — API date formats", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const rfcDevis = () =>
+    makeDoc({
+      issue_date: "Sun, 27 Sep 2026 00:00:00 GMT",
+      validity_until: "Tue, 27 Oct 2026 00:00:00 GMT",
+    });
+
+  it("shows the stored dates in the date inputs", () => {
+    render(<BillingDocumentForm mode="edit" kind="devis" document={rfcDevis()} attachedCompanies={ATTACHED_COMPANIES} />);
+    expect((screen.getByLabelText(/issue date/i) as HTMLInputElement).value).toBe("2026-09-27");
+    expect((screen.getByLabelText(/valid until/i) as HTMLInputElement).value).toBe("2026-10-27");
+  });
+
+  it("shows the stored payment due date of a facture", () => {
+    const facture = makeDoc({
+      kind: "facture",
+      issue_date: "Sun, 27 Sep 2026 00:00:00 GMT",
+      validity_until: null,
+      payment_due_date: "Tue, 27 Oct 2026 00:00:00 GMT",
+    });
+    render(<BillingDocumentForm mode="edit" kind="facture" document={facture} attachedCompanies={ATTACHED_COMPANIES} />);
+    expect((screen.getByLabelText(/payment due/i) as HTMLInputElement).value).toBe("2026-10-27");
+  });
+
+  it("saves the dates as YYYY-MM-DD", async () => {
+    mockUpdate.mockResolvedValueOnce({ ok: true, data: makeDoc() });
+    render(<BillingDocumentForm mode="edit" kind="devis" document={rfcDevis()} attachedCompanies={ATTACHED_COMPANIES} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    });
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledOnce());
+    const payload = mockUpdate.mock.calls[0][1];
+    expect(payload.issue_date).toBe("2026-09-27");
+    expect(payload.validity_until).toBe("2026-10-27");
+    expect(payload.payment_due_date).toBeNull();
+  });
+});

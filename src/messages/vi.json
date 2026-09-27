@@ -1379,7 +1379,8 @@
         "sendStatus": "Đánh dấu đã gửi",
         "edit": "Chỉnh sửa",
         "previewPdf": "Xem trước PDF",
-        "openMenu": "Mở thao tác"
+        "openMenu": "Mở thao tác",
+        "openFacture": "Mở hóa đơn"
       },
       "errors": {
         "recipientRequired": "Tên khách hàng là bắt buộc.",

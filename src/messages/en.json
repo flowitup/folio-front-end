@@ -1379,7 +1379,8 @@
         "sendStatus": "Mark as Sent",
         "edit": "Edit",
         "previewPdf": "Preview PDF",
-        "openMenu": "Open actions"
+        "openMenu": "Open actions",
+        "openFacture": "Open invoice"
       },
       "errors": {
         "recipientRequired": "Recipient name is required.",

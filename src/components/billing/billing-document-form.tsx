@@ -425,8 +425,9 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   // Render helpers
   // ---------------------------------------------------------------------------
 
+  const convertedFactureId = isEdit ? (liveDoc?.converted_to_facture_id ?? null) : null;
   const showConvertButton =
-    isEdit && liveDoc?.kind === "devis" && liveDoc.status === "accepted";
+    isEdit && liveDoc?.kind === "devis" && liveDoc.status === "accepted" && !convertedFactureId;
 
   const kindLabel = tBilling(`${kind}.list.title`);
   const newLabel = tBilling(`${kind}.list.new`);
@@ -459,6 +460,16 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
               onStatusChanged={setLiveDoc}
             />
             <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
+              {convertedFactureId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push(`/${locale}/billing/factures/${convertedFactureId}`)}
+                >
+                  <ArrowRightLeft size={13} className="mr-2" />
+                  {tForm("actions.openFacture")}
+                </Button>
+              )}
               {showConvertButton && (
                 <Button
                   variant="outline"

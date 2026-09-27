@@ -1379,7 +1379,8 @@
         "sendStatus": "Marquer comme envoyé",
         "edit": "Modifier",
         "previewPdf": "Aperçu PDF",
-        "openMenu": "Ouvrir les actions"
+        "openMenu": "Ouvrir les actions",
+        "openFacture": "Ouvrir la facture"
       },
       "errors": {
         "recipientRequired": "Le nom du destinataire est obligatoire.",

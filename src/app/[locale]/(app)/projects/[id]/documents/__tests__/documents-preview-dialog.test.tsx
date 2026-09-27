@@ -29,13 +29,16 @@ vi.mock("@/lib/api/project-document-blob", () => ({
 vi.mock("../pdf-canvas-viewer", () => ({
   PdfCanvasViewer: ({
     src,
+    data,
     onLoadError,
   }: {
     src: string;
+    data?: ArrayBuffer;
     onLoadError?: (message: string) => void;
   }) => (
     <div>
       <span data-testid="pdfjs-src">{src}</span>
+      {data && <span data-testid="pdfjs-bytes">{data.byteLength}</span>}
       <button type="button" onClick={() => onLoadError?.("404")}>
         simulate-load-error
       </button>
@@ -78,6 +81,7 @@ describe("DocumentsPreviewDialog presigned fallback", () => {
       filename: "plan.pdf",
     });
     vi.mocked(fetchProjectDocumentBlob).mockResolvedValue({
+      blob: new Blob(["%PDF-1.4"], { type: "application/pdf" }),
       objectUrl: "blob:fake",
       contentType: "application/pdf",
       revoke: vi.fn(),
@@ -120,5 +124,41 @@ describe("DocumentsPreviewDialog presigned fallback", () => {
 
     await screen.findByTestId("pdfjs-src");
     expect(fetchProjectDocumentBlob).not.toHaveBeenCalled();
+  });
+
+  it("renders streamed bytes with PDF.js when presigned URLs are unavailable", async () => {
+    vi.mocked(fetchDocumentPreviewUrl).mockResolvedValue(null);
+    vi.mocked(fetchProjectDocumentBlob).mockResolvedValue({
+      blob: new Blob(["%PDF-1.4"], { type: "application/pdf" }),
+      objectUrl: "blob:fake",
+      contentType: "application/pdf",
+      revoke: vi.fn(),
+    });
+
+    const { container } = render(
+      <DocumentsPreviewDialog doc={doc} projectId="proj-1" onClose={vi.fn()} />,
+    );
+
+    // The bytes go to PDF.js; no <embed> that depends on a browser PDF plugin
+    expect(await screen.findByTestId("pdfjs-bytes")).toHaveTextContent("8");
+    expect(document.querySelector("embed")).toBeNull();
+    expect(container.querySelector("embed")).toBeNull();
+  });
+
+  it("offers the download when PDF.js cannot read the streamed bytes", async () => {
+    vi.mocked(fetchDocumentPreviewUrl).mockResolvedValue(null);
+    vi.mocked(fetchProjectDocumentBlob).mockResolvedValue({
+      blob: new Blob(["not a pdf"], { type: "application/pdf" }),
+      objectUrl: "blob:fake",
+      contentType: "application/pdf",
+      revoke: vi.fn(),
+    });
+
+    render(
+      <DocumentsPreviewDialog doc={doc} projectId="proj-1" onClose={vi.fn()} />,
+    );
+
+    (await screen.findByText("simulate-load-error")).click();
+    expect(await screen.findByText("error")).toBeInTheDocument();
   });
 });

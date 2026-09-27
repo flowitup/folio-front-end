@@ -38,8 +38,12 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
 
   // Presigned URL for direct S3 download (PDF.js path)
   const [presignedUrl, setPresignedUrl] = useState<string | null>(null);
-  // Fallback blob URL (legacy path for images and when presigned unavailable)
+  // Fallback blob URL (images, and PDFs when presigned is unavailable)
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  // PDF bytes streamed through the API, rendered by PDF.js rather than the
+  // browser's own PDF plugin — mobile browsers and webviews have none and
+  // showed a blank pane.
+  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
   const [_contentType, setContentType] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +65,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
     }
     setPresignedUrl(null);
     setBlobUrl(null);
+    setPdfData(null);
     setContentType(null);
     setError(null);
     setBounds(null);
@@ -96,6 +101,11 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
           return;
         }
         revokeRef.current = b.revoke;
+        if (currentDoc.kind === "pdf") {
+          const bytes = await b.blob.arrayBuffer();
+          if (controller.signal.aborted) return;
+          setPdfData(bytes);
+        }
         setBlobUrl(b.objectUrl);
         setContentType(b.contentType);
       } catch (err: unknown) {
@@ -145,7 +155,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
   }
 
   const showPdfJs = presignedUrl && doc?.kind === "pdf";
-  const showPdfEmbed = !presignedUrl && blobUrl && doc?.kind === "pdf";
+  const showPdfData = !presignedUrl && pdfData && doc?.kind === "pdf";
   const showImage = (blobUrl || presignedUrl) && doc?.kind === "image";
 
   const resizeStyle: CSSProperties | undefined = bounds
@@ -200,12 +210,13 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
             />
           )}
 
-          {/* Legacy embed fallback — when presigned URLs unavailable */}
-          {!loading && !error && showPdfEmbed && (
-            <embed
-              src={`${blobUrl}#toolbar=0`}
-              type="application/pdf"
-              className="h-full w-full rounded"
+          {/* Bytes streamed through the API — when presigned URLs are unavailable */}
+          {!loading && !error && showPdfData && (
+            <PdfCanvasViewer
+              src=""
+              data={pdfData}
+              label={doc?.filename}
+              onLoadError={setError}
             />
           )}
 
@@ -218,7 +229,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
             />
           )}
 
-          {!loading && !error && !showPdfJs && !showPdfEmbed && !showImage && doc !== null && (
+          {!loading && !error && !showPdfJs && !showPdfData && !showImage && doc !== null && (
             <div className="flex flex-col items-center justify-center gap-4 h-full text-center">
               <p className="text-sm text-muted-foreground">
                 {t("fallback")}

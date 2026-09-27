@@ -1836,15 +1836,16 @@
     "assign": {
       "button": "Thêm thành viên vào dự án",
       "dialogTitle": "Thêm thành viên vào dự án",
-      "dialogDescription": "Thêm một thành viên hiện có của công ty vào dự án này với vai trò quản lý hoặc thành viên.",
+      "dialogDescription": "Cho một thành viên hiện có của công ty quyền truy cập dự án này.",
       "personLabel": "Người",
       "personPlaceholder": "Tìm theo tên hoặc số điện thoại…",
       "personEmpty": "Không tìm thấy người phù hợp",
-      "roleLabel": "Vai trò",
+      "roleLabel": "Vai trò trong công ty",
       "roleMember": "Thành viên",
       "roleManager": "Quản lý",
       "submit": "Thêm vào dự án",
-      "successToast": "Đã thêm thành viên vào dự án."
+      "successToast": "Đã thêm thành viên vào dự án.",
+      "roleHint": "Đây là vai trò của người này trong toàn công ty, không chỉ trong dự án này. Quản lý áp dụng cho mọi dự án họ được giao; Thành viên không bao giờ hạ vai trò họ đang có. Thay đổi vai trò trong Cài đặt › Công ty."
     }
   },
   "companies": {

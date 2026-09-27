@@ -166,7 +166,7 @@ export function AssignMemberDialog({
               {t("assign.roleLabel")}
             </label>
             <Select value={role} onValueChange={(v) => setRole(v as ProjectAssignmentRole)} disabled={isSubmitting}>
-              <SelectTrigger id="assign-member-role">
+              <SelectTrigger id="assign-member-role" aria-describedby="assign-member-role-hint">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -176,6 +176,12 @@ export function AssignMemberDialog({
                 )}
               </SelectContent>
             </Select>
+            {/* The backend applies this as the person's COMPANY role (it
+                promotes, never demotes), so say so rather than imply a
+                project-only role. */}
+            <p id="assign-member-role-hint" className="text-[12px]" style={{ color: "var(--muted)" }}>
+              {t("assign.roleHint")}
+            </p>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-2">

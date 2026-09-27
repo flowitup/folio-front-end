@@ -1836,15 +1836,16 @@
     "assign": {
       "button": "Assigner un membre",
       "dialogTitle": "Assigner un membre",
-      "dialogDescription": "Assignez un membre existant de l'entreprise à ce projet en tant que manager ou membre.",
+      "dialogDescription": "Donnez à un membre existant de l’entreprise l’accès à ce projet.",
       "personLabel": "Personne",
       "personPlaceholder": "Rechercher par nom ou téléphone…",
       "personEmpty": "Aucune personne correspondante",
-      "roleLabel": "Rôle",
+      "roleLabel": "Rôle dans l’entreprise",
       "roleMember": "Membre",
       "roleManager": "Manager",
       "submit": "Assigner",
-      "successToast": "Membre assigné."
+      "successToast": "Membre assigné.",
+      "roleHint": "Il s’agit du rôle de la personne dans toute l’entreprise, pas seulement dans ce projet. Manager s’applique à tous les projets qui lui sont assignés ; Membre ne réduit jamais un rôle déjà attribué. Modifiez les rôles dans Paramètres › Entreprise."
     }
   },
   "companies": {

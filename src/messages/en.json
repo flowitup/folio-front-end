@@ -1836,15 +1836,16 @@
     "assign": {
       "button": "Assign member",
       "dialogTitle": "Assign a member",
-      "dialogDescription": "Assign an existing company member to this project as manager or member.",
+      "dialogDescription": "Give an existing company member access to this project.",
       "personLabel": "Person",
       "personPlaceholder": "Search by name or phone…",
       "personEmpty": "No matching person",
-      "roleLabel": "Role",
+      "roleLabel": "Company role",
       "roleMember": "Member",
       "roleManager": "Manager",
       "submit": "Assign",
-      "successToast": "Member assigned."
+      "successToast": "Member assigned.",
+      "roleHint": "This is the person’s role in the whole company, not only in this project. Manager applies to every project they are assigned to; Member never lowers a role they already have. Change company roles in Settings › Company."
     }
   },
   "companies": {

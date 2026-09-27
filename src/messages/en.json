@@ -161,7 +161,6 @@
     "cancel": "Cancel",
     "remove": "Remove",
     "allProjects": "All projects",
-    "active": "Active",
     "searchProjects": "Search projects",
     "projectStamp": "Project",
     "progress": "Progress",
@@ -241,7 +240,8 @@
       "title": "Waiting to be assigned",
       "description": "Your company admin hasn't added you to a construction site yet."
     },
-    "settingsReadOnly": "Only admins and managers of this project can change its settings."
+    "settingsReadOnly": "Only admins and managers of this project can change its settings.",
+    "teamSize": "{n, plural, one {# member} other {# members}}"
   },
   "settings": {
     "profile": "Profile",

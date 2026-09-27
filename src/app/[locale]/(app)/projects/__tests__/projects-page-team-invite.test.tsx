@@ -129,3 +129,14 @@ describe("ProjectsPage team panel — roles", () => {
     expect(screen.queryByText(enMessages.members.roles.member)).toBeNull();
   });
 });
+
+describe("ProjectsPage card labels", () => {
+  it("shows no no-op Active tab, no English phase and a padded index", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });
+    renderPage();
+    expect(screen.queryByRole("button", { name: /Active/ })).toBeNull();
+    expect(screen.queryByText("Planning")).toBeNull();
+    expect(screen.getByText("01")).toBeInTheDocument();
+    expect(screen.getByTestId("project-team-size")).toHaveTextContent("1 member");
+  });
+});

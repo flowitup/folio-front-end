@@ -63,7 +63,6 @@ function coverFor(id: string): string {
   return COVER_GRADIENTS[h % COVER_GRADIENTS.length];
 }
 
-type FilterTab = "all" | "active";
 
 export default function ProjectsPage() {
   const t = useTranslations("projects");
@@ -75,7 +74,6 @@ export default function ProjectsPage() {
   const { projects, isLoading, error, selectedProjectId, selectProject, refetch } =
     useProject();
   const { user } = useAuth();
-  const [filterTab, setFilterTab] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   // Which card has its personal-spend breakdown open. Collapsed by default so the
@@ -198,27 +196,14 @@ export default function ProjectsPage() {
     router.push(`/${locale}/projects/${projectId}/photos`);
   };
 
-  const counts = {
-    all: projects.length,
-    active: projects.length,
-  };
-
   return (
     <div className="fade-up px-4 pb-12 lg:px-8">
       {/* Filter row */}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="seg">
-          {(["all", "active"] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setFilterTab(tab)}
-              className={filterTab === tab ? "on" : ""}
-            >
-              {tab === "all" ? t("allProjects") : t("active")} ·{" "}
-              <span className="num">{counts[tab]}</span>
-            </button>
-          ))}
+        {/* No project status exists yet, so there is nothing to filter by:
+            an "Active" tab listed the same projects as "All". */}
+        <div className="text-[12.5px] font-medium" style={{ color: "var(--ink-2)" }} data-testid="projects-count">
+          {t("allProjects")} · <span className="num">{projects.length}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -260,7 +245,6 @@ export default function ProjectsPage() {
             const users = projectUsers[project.id] || [];
             const isLoadingThisProject = loadingUsers === project.id;
             const cover = (project as { cover?: string }).cover ?? coverFor(project.id);
-            const phase = (project as { phase?: string }).phase ?? "Planning";
             const {
               creditTotal,
               spentByCredits,
@@ -287,7 +271,6 @@ export default function ProjectsPage() {
             const isBreakdownOpen = openBreakdownId === project.id;
             const isSelected = selectedProjectId === project.id;
             const userCount = project.user_count ?? 0;
-            const visibleAvatars = Math.min(userCount, 4);
 
             return (
               <article
@@ -325,9 +308,8 @@ export default function ProjectsPage() {
                     </div>
                     <div className="absolute bottom-4 left-4 right-4 text-white">
                       <div className="num mb-1 text-[10px] uppercase tracking-[0.2em] opacity-80">
-                        0{idx + 1}
+                        {String(idx + 1).padStart(2, "0")}
                       </div>
-                      <div className="font-display text-[22px] leading-tight">{phase}</div>
                     </div>
                   </button>
 
@@ -500,38 +482,12 @@ export default function ProjectsPage() {
                       {/* Team */}
                       <div>
                         <div className="label-cap">{t("team")}</div>
-                        <div className="mt-1 flex -space-x-1.5">
-                          {Array.from({ length: visibleAvatars }).map((_, i) => (
-                            <div
-                              key={i}
-                              className="avatar"
-                              style={{
-                                background: AVATAR_TONES[i % AVATAR_TONES.length],
-                                width: 24,
-                                height: 24,
-                                fontSize: 10,
-                                border: "2px solid white",
-                              }}
-                            >
-                              ·
-                            </div>
-                          ))}
-                          {userCount > 4 && (
-                            <div
-                              className="avatar"
-                              style={{
-                                background: "var(--paper-2)",
-                                color: "var(--ink-2)",
-                                width: 24,
-                                height: 24,
-                                fontSize: 10,
-                                border: "2px solid white",
-                              }}
-                            >
-                              +{userCount - 4}
-                            </div>
-                          )}
-                          {userCount === 0 && (
+                        {/* The list carries a head count, not the people: say how
+                            many rather than draw blank avatars. */}
+                        <div className="mt-1 text-[12.5px]" data-testid="project-team-size">
+                          {userCount > 0 ? (
+                            <span className="num">{t("teamSize", { n: userCount })}</span>
+                          ) : (
                             <span className="text-[11px]" style={{ color: "var(--muted)" }}>
                               {t("noneTeam")}
                             </span>

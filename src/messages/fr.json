@@ -161,7 +161,6 @@
     "cancel": "Annuler",
     "remove": "Retirer",
     "allProjects": "Tous les projets",
-    "active": "Actifs",
     "searchProjects": "Rechercher un projet",
     "projectStamp": "Projet",
     "progress": "Avancement",
@@ -241,7 +240,8 @@
       "title": "En attente d'affectation",
       "description": "L'administrateur de votre entreprise ne vous a pas encore ajouté à un chantier."
     },
-    "settingsReadOnly": "Seuls les administrateurs et managers de ce projet peuvent modifier ses paramètres."
+    "settingsReadOnly": "Seuls les administrateurs et managers de ce projet peuvent modifier ses paramètres.",
+    "teamSize": "{n, plural, one {# membre} other {# membres}}"
   },
   "settings": {
     "profile": "Profil",

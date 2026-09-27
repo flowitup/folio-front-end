@@ -160,6 +160,14 @@ describe("Topbar action button wiring", () => {
     },
   );
 
+  it("keeps the page title on one line on phones instead of wrapping it", () => {
+    setup({ pathname: "/en/projects/p-1/labor", selectedProjectId: "p-1" });
+    render(<Topbar />);
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1.className).toContain("truncate");
+    expect(h1).toHaveAttribute("title", h1.textContent ?? "");
+  });
+
   it("planning: action targets the URL project even when no project is selected", async () => {
     setup({ pathname: "/en/projects/p-1/planning" });
     const user = userEvent.setup();

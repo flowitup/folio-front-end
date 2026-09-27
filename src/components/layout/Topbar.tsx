@@ -190,7 +190,11 @@ export function Topbar() {
               )}
               <span style={{ color: "var(--ink-2)" }}>{title}</span>
             </div>
-            <h1 className="font-display text-2xl font-medium leading-[1.05] tracking-tight lg:text-[34px]">
+            {/* One line on phones: a wrapped "Main-/d'œuvre" pushed the page down. */}
+            <h1
+              className="font-display truncate text-xl font-medium leading-[1.05] tracking-tight sm:text-2xl lg:text-[34px]"
+              title={title}
+            >
               {title}
             </h1>
             {subtitle && (

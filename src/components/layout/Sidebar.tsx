@@ -20,6 +20,7 @@ import {
   Library,
   Wrench,
   FileSearch,
+  ReceiptEuro,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -84,6 +85,17 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
           { key: "planning", href: `/projects/${selectedProjectId}/planning`, icon: KanbanSquare },
           { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
           { key: "invoices", href: `/projects/${selectedProjectId}/invoices`, icon: Receipt },
+          // The project's quotes & invoices link into /billing, so the entry
+          // follows the same company-admin gate as the Billing group below.
+          ...(canViewBilling
+            ? [
+                {
+                  key: "quotesInvoices",
+                  href: `/projects/${selectedProjectId}/billing`,
+                  icon: ReceiptEuro,
+                },
+              ]
+            : []),
           { key: "chiffrage", href: `/projects/${selectedProjectId}/chiffrage`, icon: Calculator },
           { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
           ...(canSeeDocuments

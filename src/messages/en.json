@@ -13,6 +13,7 @@
     "inventory": "Inventory",
     "labor": "Labor",
     "invoices": "Expense",
+    "quotesInvoices": "Quotes & invoices",
     "planning": "Planning",
     "notes": "Notes",
     "documents": "Documents",
@@ -1552,6 +1553,27 @@
         "not_found": "Company not found",
         "generic": "Unexpected error, try again"
       }
+    },
+    "project": {
+      "title": "Quotes & invoices",
+      "subtitle": "Every quote and invoice linked to this project.",
+      "loading": "Loading quotes and invoices…",
+      "columns": {
+        "kind": "Type"
+      },
+      "kind": {
+        "devis": "Quote",
+        "facture": "Invoice"
+      },
+      "empty": {
+        "title": "No quotes or invoices yet",
+        "description": "Choose this project in the “Project” field of a quote or invoice to see it here."
+      },
+      "errors": {
+        "load": "Couldn't load the quotes and invoices for this project.",
+        "forbidden": "You don't have access to this project's quotes and invoices."
+      },
+      "retry": "Try again"
     }
   },
   "documents": {

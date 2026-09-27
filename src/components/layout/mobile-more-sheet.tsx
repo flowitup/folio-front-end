@@ -11,13 +11,14 @@ import {
   FileCheck,
   FileSearch,
   LayoutTemplate,
+  ReceiptEuro,
   Settings,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
-import { can } from "@/lib/auth/permissions";
+import { can, isCompanyAdmin } from "@/lib/auth/permissions";
 
 interface MobileMoreSheetProps {
   open: boolean;
@@ -38,12 +39,24 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
     user?.permissions,
     selectedProject?.my_permissions
   );
+  // Client-side twin of hasBillingAccess() (the desktop sidebar's gate): the
+  // project's quotes & invoices open /billing pages, which are company-admin only.
+  const canViewBilling = isCompanyAdmin(user?.companies, null, user?.permissions);
   const pathWithoutLocale =
     pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
   const projectItems = selectedProjectId
     ? [
         { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
+        ...(canViewBilling
+          ? [
+              {
+                key: "quotesInvoices",
+                href: `/projects/${selectedProjectId}/billing`,
+                icon: ReceiptEuro,
+              },
+            ]
+          : []),
         { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
         ...(canSeeDocuments
           ? [{ key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files }]

@@ -100,15 +100,31 @@ describe("mergeMemberRows", () => {
     });
   });
 
-  it("still surfaces a directory entry whose linked_user_id points at no current attachment (stale link), instead of silently dropping it", () => {
+  it("leaves out a removed member's deactivated profile instead of showing it as Pending", () => {
     const rows = mergeMemberRows(
-      [], // nobody currently attached
-      [makeDirectoryEntry({ linked_user_id: "ghost-user", pending: false })]
+      [], // the removed user is no longer attached
+      [makeDirectoryEntry({ linked_user_id: "booted-user", is_active: false, pending: false })]
     );
 
-    expect(rows).toHaveLength(1);
-    expect(rows[0].pending).toBe(true);
-    expect(rows[0].userId).toBeNull();
+    expect(rows).toEqual([]);
+  });
+
+  it("leaves out a linked profile with no attachment: it has an account, so it is not pending", () => {
+    const rows = mergeMemberRows([], [makeDirectoryEntry({ linked_user_id: "ghost-user" })]);
+
+    expect(rows).toEqual([]);
+  });
+
+  it("leaves out never-invited labor workers and inactive pending profiles", () => {
+    const rows = mergeMemberRows(
+      [],
+      [
+        makeDirectoryEntry({ person_id: "worker", linked_user_id: null, pending: false }),
+        makeDirectoryEntry({ person_id: "gone", linked_user_id: null, pending: true, is_active: false }),
+      ]
+    );
+
+    expect(rows).toEqual([]);
   });
 
   it("defaults an attached user's companies to [] when the field is absent (older callers of the endpoint)", () => {
@@ -123,7 +139,12 @@ describe("mergeMemberRows", () => {
       [makeAttachedUser({ user_id: "user-1" })],
       [
         makeDirectoryEntry({ person_id: "person-1", linked_user_id: "user-1" }),
-        makeDirectoryEntry({ person_id: "person-2", linked_user_id: null, name: "Pending Person" }),
+        makeDirectoryEntry({
+          person_id: "person-2",
+          linked_user_id: null,
+          pending: true,
+          name: "Pending Person",
+        }),
       ]
     );
 

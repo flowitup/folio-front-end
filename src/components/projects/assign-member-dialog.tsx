@@ -94,11 +94,12 @@ export function AssignMemberDialog({
     if (!canAssignManager && role === "manager") setRole("member");
   }, [canAssignManager, role]);
 
-  // Only linked (has a user account), not-already-assigned persons are
-  // assignable — a pending phone-only profile has no user_id to assign.
+  // Only active, linked (has a user account), not-already-assigned persons
+  // are assignable — a pending phone-only profile has no user_id to assign,
+  // and a deactivated profile belongs to someone removed from the company.
   const excludeSet = useMemo(() => new Set(excludeUserIds), [excludeUserIds]);
   const options: ComboboxOption[] = entries
-    .filter((e) => e.linked_user_id && !excludeSet.has(e.linked_user_id))
+    .filter((e) => e.is_active && e.linked_user_id && !excludeSet.has(e.linked_user_id))
     .map((e) => ({ value: e.linked_user_id as string, label: `${e.name} · ${e.phone}` }));
 
   function reset() {

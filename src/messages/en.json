@@ -2392,6 +2392,7 @@
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "That image is over 10 MB.",
     "imageUploadFailed": "The photo could not be uploaded.",
+    "actionFailed": "Something went wrong. Please try again.",
     "includingTax": "including tax",
     "newArticle": "New item",
     "newPoste": "New section",

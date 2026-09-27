@@ -48,7 +48,11 @@ import {
   uploadProductImageAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import { LIBRARY_CATEGORY_SLUGS, localizeCategory } from "@/lib/bibliotheque/categories";
-import { imageUrlErrorKey, isHttpsUrl } from "@/lib/bibliotheque/image-url";
+import {
+  MAX_PRODUCT_IMAGE_BYTES,
+  imageUrlErrorKey,
+  isHttpsUrl,
+} from "@/lib/bibliotheque/image-url";
 import { ProductImage } from "@/components/bibliotheque/product-image";
 import type { LibraryProduct, UpdateProductPayload } from "@/lib/api/bibliotheque";
 
@@ -150,6 +154,11 @@ export function ProductEditDialog({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
+    if (file && file.size > MAX_PRODUCT_IMAGE_BYTES) {
+      toast.error(t("imageUrl.errors.tooLarge"));
+      e.target.value = "";
+      return;
+    }
     if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
     setImageFile(file);
     setImagePreviewUrl(file ? URL.createObjectURL(file) : null);
@@ -262,7 +271,10 @@ export function ProductEditDialog({
     if (hasImageChange && imageFile) {
       const fd = new FormData();
       fd.append("image", imageFile);
-      const imgResult = await uploadProductImageAction(updated.id, fd, { force: true });
+      // A rejected call must not leave the dialog stuck on its spinner.
+      const imgResult = await uploadProductImageAction(updated.id, fd, { force: true }).catch(
+        () => ({ ok: false as const }),
+      );
       if (!imgResult.ok) {
         toast.warning(t("toast.imageUploadWarning"));
       } else {

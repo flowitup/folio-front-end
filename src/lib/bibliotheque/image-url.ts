@@ -7,6 +7,9 @@
  * the key of a translated message under `bibliotheque.imageUrl.errors`.
  */
 
+/** Largest product image the API stores; bigger files are refused when picked. */
+export const MAX_PRODUCT_IMAGE_BYTES = 10 * 1024 * 1024;
+
 export type ImageUrlErrorKey =
   | "invalid"
   | "blocked"

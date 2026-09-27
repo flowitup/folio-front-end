@@ -2392,6 +2392,7 @@
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "Cette image dépasse 10 Mo.",
     "imageUploadFailed": "La photo n'a pas pu être envoyée.",
+    "actionFailed": "Une erreur est survenue. Veuillez réessayer.",
     "includingTax": "TTC",
     "newArticle": "Nouvel article",
     "newPoste": "Nouveau poste",

@@ -2392,6 +2392,7 @@
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "Ảnh vượt quá 10 MB.",
     "imageUploadFailed": "Không tải được ảnh lên.",
+    "actionFailed": "Đã xảy ra lỗi. Vui lòng thử lại.",
     "includingTax": "đã gồm thuế",
     "newArticle": "Vật tư mới",
     "newPoste": "Hạng mục mới",

@@ -149,6 +149,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Product and chiffrage images (10 MB max, like the API) and HTML analyses
+  // are uploaded through server actions, whose request body Next caps at 1 MB
+  // by default, and every request is buffered through src/proxy.ts, which caps
+  // at 10 MB. 11 MB fits the largest allowed file plus multipart overhead.
+  experimental: {
+    serverActions: { bodySizeLimit: "11mb" },
+    proxyClientMaxBodySize: "11mb",
+  },
   async headers() {
     return [
       {

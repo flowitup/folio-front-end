@@ -33,6 +33,7 @@ vi.mock("@/components/ui/dialog", () => ({
   DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+import { toast } from "sonner";
 import { ArticleImageDialog } from "../article-image-dialog";
 import type { ChiffrageArticle } from "@/lib/api/chiffrage";
 
@@ -81,6 +82,33 @@ describe("ArticleImageDialog — supplier link", () => {
     await waitFor(() => expect(onFromUrl).toHaveBeenCalled());
     await waitFor(() => expect(input).not.toBeDisabled());
     expect(input.value).toBe(LINK);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("ArticleImageDialog — photo upload", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("reports a rejected upload and releases the dialog instead of hanging", async () => {
+    const onUpload = vi.fn().mockRejectedValue(new Error("Body exceeded 1 MB limit"));
+    const onOpenChange = vi.fn();
+    render(
+      <ArticleImageDialog
+        open
+        article={article}
+        onOpenChange={onOpenChange}
+        onUpload={onUpload}
+        onFromUrl={vi.fn()}
+        onRemove={vi.fn()}
+      />
+    );
+
+    const fileInput = screen.getByLabelText("Upload a photo") as HTMLInputElement;
+    const photo = new File([new Uint8Array(2 * 1024 * 1024)], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(fileInput, { target: { files: [photo] } });
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("The photo could not be uploaded."));
+    expect(fileInput).not.toBeDisabled();
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 });

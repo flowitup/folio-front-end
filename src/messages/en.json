@@ -705,7 +705,14 @@
       "defaults": {
         "masterCraftsman": "Master craftsman",
         "assistant": "Assistant"
-      }
+      },
+      "searchRoles": "Search roles…",
+      "noMatchingRoles": "No matching roles",
+      "noRolesYet": "No roles yet",
+      "createNamed": "Create \"{name}\"",
+      "createFailed": "Failed to create role",
+      "create": "Create",
+      "cancel": "Cancel"
     },
     "shift": {
       "none": "(none)"

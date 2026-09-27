@@ -705,7 +705,14 @@
       "defaults": {
         "masterCraftsman": "Thợ chính",
         "assistant": "Thợ phụ"
-      }
+      },
+      "searchRoles": "Tìm vai trò…",
+      "noMatchingRoles": "Không có vai trò phù hợp",
+      "noRolesYet": "Chưa có vai trò nào",
+      "createNamed": "Tạo \"{name}\"",
+      "createFailed": "Không tạo được vai trò",
+      "create": "Tạo",
+      "cancel": "Hủy"
     },
     "shift": {
       "none": "(không có ca)"

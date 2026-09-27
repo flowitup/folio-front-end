@@ -705,7 +705,14 @@
       "defaults": {
         "masterCraftsman": "Ouvrier principal",
         "assistant": "Ouvrier auxiliaire"
-      }
+      },
+      "searchRoles": "Rechercher un rôle…",
+      "noMatchingRoles": "Aucun rôle correspondant",
+      "noRolesYet": "Aucun rôle pour l'instant",
+      "createNamed": "Créer « {name} »",
+      "createFailed": "Échec de la création du rôle",
+      "create": "Créer",
+      "cancel": "Annuler"
     },
     "shift": {
       "none": "(aucun)"

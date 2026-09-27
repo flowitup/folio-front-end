@@ -49,6 +49,7 @@ export function RoleSelectWithCreate({
   onRoleCreated,
 }: RoleSelectWithCreateProps) {
   const tRole = useTranslations("labor.role.defaults");
+  const t = useTranslations("labor.role");
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
@@ -117,7 +118,7 @@ export function RoleSelectWithCreate({
         color: createColor,
       });
       if (!result.success) {
-        setCreateError(result.error === "duplicate" ? "Name already exists" : "Failed to create role");
+        setCreateError(result.error === "duplicate" ? t("duplicateName") : t("createFailed"));
         return;
       }
       onRoleCreated(result.role);
@@ -126,7 +127,7 @@ export function RoleSelectWithCreate({
       setQuery("");
       setShowCreateForm(false);
     } catch {
-      setCreateError("Failed to create role");
+      setCreateError(t("createFailed"));
     } finally {
       setCreating(false);
     }
@@ -156,7 +157,7 @@ export function RoleSelectWithCreate({
               />
             )}
             <span className={cn("truncate", !displayLabel && "text-muted-foreground")}>
-              {displayLabel || "Select role"}
+              {displayLabel || t("selectRole")}
             </span>
           </span>
           <ChevronsUpDown className="h-3 w-3 shrink-0 opacity-40" />
@@ -171,7 +172,7 @@ export function RoleSelectWithCreate({
       >
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder="Search roles…"
+            placeholder={t("searchRoles")}
             value={query}
             onValueChange={(v) => {
               setQuery(v);
@@ -181,7 +182,7 @@ export function RoleSelectWithCreate({
           <CommandList id={listId}>
             {filteredRoles.length === 0 && !showCreateOption && !showCreateForm && (
               <CommandEmpty>
-                {trimmed ? "No matching roles" : "No roles yet"}
+                {trimmed ? t("noMatchingRoles") : t("noRolesYet")}
               </CommandEmpty>
             )}
 
@@ -193,7 +194,7 @@ export function RoleSelectWithCreate({
                 className="flex items-center gap-2 text-muted-foreground"
               >
                 <span className="inline-block h-3 w-3 shrink-0 rounded-full border border-muted-foreground/40" aria-hidden="true" />
-                No role
+                {t("noRole")}
               </CommandItem>
             </CommandGroup>
 
@@ -229,7 +230,7 @@ export function RoleSelectWithCreate({
                     className="text-primary flex items-center gap-2"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    Create &quot;{trimmed}&quot;
+                    {t("createNamed", { name: trimmed })}
                   </CommandItem>
                 </CommandGroup>
               </>
@@ -240,11 +241,11 @@ export function RoleSelectWithCreate({
           {showCreateForm && (
             <div className="border-t p-3 space-y-3">
               <div className="space-y-1">
-                <Label className="text-xs">Role name</Label>
+                <Label className="text-xs">{t("roleName")}</Label>
                 <Input
                   value={createName}
                   onChange={(e) => setCreateName(e.target.value)}
-                  placeholder="Role name"
+                  placeholder={t("roleName")}
                   className="h-8 text-sm"
                   autoFocus
                   onKeyDown={(e) => {
@@ -256,7 +257,7 @@ export function RoleSelectWithCreate({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Color</Label>
+                <Label className="text-xs">{t("roleColor")}</Label>
                 <RoleColorPicker
                   palette={palette.length > 0 ? palette : ["#7C3AED"]}
                   value={createColor}
@@ -275,7 +276,7 @@ export function RoleSelectWithCreate({
                   className="flex-1"
                 >
                   {creating && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                  Create
+                  {t("create")}
                 </Button>
                 <Button
                   type="button"
@@ -284,7 +285,7 @@ export function RoleSelectWithCreate({
                   onClick={() => setShowCreateForm(false)}
                   disabled={creating}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </div>
             </div>

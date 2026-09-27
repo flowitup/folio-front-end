@@ -19,7 +19,7 @@ import { updateProfileAction } from "@/app/[locale]/(app)/settings/_actions/prof
 export function ProfileForm() {
   const t = useTranslations("settings");
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const [displayName, setDisplayName] = useState(user?.display_name ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
@@ -55,6 +55,8 @@ export function ProfileForm() {
       // Keep the form in sync with what the backend actually saved.
       setDisplayName(result.user.display_name ?? "");
       setPhone(result.user.phone ?? "");
+      // The header, avatar and top bar read the context user.
+      updateUser({ display_name: result.user.display_name, phone: result.user.phone });
       toast.success(t("profileSaved"));
       // Server components (topbar, other settings sections) read the user
       // from the session cookie — refresh so they pick up the new values.

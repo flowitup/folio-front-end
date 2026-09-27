@@ -23,6 +23,10 @@ interface AuthContextType extends AuthState {
     code: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  /** Merge saved profile fields into the signed-in user, so the header and
+   * avatar follow a profile save without a full reload (the provider is
+   * seeded once; router.refresh() does not re-seed it). */
+  updateUser: (patch: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -124,6 +128,10 @@ export function AuthProvider({
     });
   }, []);
 
+  const updateUser = useCallback((patch: Partial<User>) => {
+    setState((prev) => (prev.user ? { ...prev, user: { ...prev.user, ...patch } } : prev));
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -131,6 +139,7 @@ export function AuthProvider({
         isLoading,
         loginWithPhone,
         logout,
+        updateUser,
       }}
     >
       {children}

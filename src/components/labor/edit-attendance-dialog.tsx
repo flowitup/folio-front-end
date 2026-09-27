@@ -104,10 +104,7 @@ export function EditAttendanceDialog({
 
     if (!entry) return;
     if (isOutOfRange) {
-      setError(
-        t("errors.supplementOutOfRange") ||
-          "Supplement hours must be between 0 and 12",
-      );
+      setError(t("errors.supplementOutOfRange"));
       return;
     }
     if (isEmptyRow || isOverrideWithoutShift) return;
@@ -124,7 +121,7 @@ export function EditAttendanceDialog({
       });
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update");
+      setError(err instanceof Error ? err.message : t("errors.updateFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -134,7 +131,7 @@ export function EditAttendanceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("editEntry.title") || "Edit attendance"}</DialogTitle>
+          <DialogTitle>{t("editEntry.title")}</DialogTitle>
         </DialogHeader>
 
         {entry && (
@@ -168,7 +165,7 @@ export function EditAttendanceDialog({
 
             <div className="space-y-2">
               <Label htmlFor="supplement-hours">
-                {t("supplement.fieldLabel") || "Supplement hours"}
+                {t("supplement.fieldLabel")}
               </Label>
               <Input
                 id="supplement-hours"
@@ -183,8 +180,7 @@ export function EditAttendanceDialog({
                 }
               />
               <p className="text-muted-foreground text-xs">
-                {t("supplement.fieldHelp") ||
-                  "Banked hours (not priced today, max 12)"}
+                {t("supplement.fieldHelp")}
               </p>
             </div>
 
@@ -197,7 +193,7 @@ export function EditAttendanceDialog({
                 min="0"
                 value={amountOverride}
                 onChange={(e) => setAmountOverride(e.target.value)}
-                placeholder="Leave empty for default rate"
+                placeholder={t("overridePlaceholder")}
               />
             </div>
 

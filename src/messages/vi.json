@@ -728,7 +728,8 @@
       "standaloneShiftLabel": "(chỉ giờ phụ)"
     },
     "errors": {
-      "supplementOutOfRange": "Giờ phụ phải từ 0 đến 12."
+      "supplementOutOfRange": "Giờ phụ phải từ 0 đến 12.",
+      "updateFailed": "Không cập nhật được chấm công."
     },
     "logDayDialog": {
       "title": "Chấm công ngày",
@@ -913,7 +914,8 @@
         "hours": "Số giờ",
         "dayType": "Loại ngày công"
       }
-    }
+    },
+    "overridePlaceholder": "Để trống để dùng mức giá mặc định"
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

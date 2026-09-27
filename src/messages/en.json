@@ -728,7 +728,8 @@
       "standaloneShiftLabel": "(supplement only)"
     },
     "errors": {
-      "supplementOutOfRange": "Supplement hours must be between 0 and 12."
+      "supplementOutOfRange": "Supplement hours must be between 0 and 12.",
+      "updateFailed": "Failed to update attendance."
     },
     "logDayDialog": {
       "title": "Log day",
@@ -913,7 +914,8 @@
         "hours": "Hours",
         "dayType": "Day type"
       }
-    }
+    },
+    "overridePlaceholder": "Leave empty for default rate"
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

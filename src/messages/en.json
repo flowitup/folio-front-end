@@ -362,7 +362,8 @@
     },
     "paidByCompany": "Paid by the company",
     "personalPayment": "Personal payment",
-    "loadError": "Could not load payment methods. Please try again."
+    "loadError": "Could not load payment methods. Please try again.",
+    "saveEditAria": "Save changes"
   },
   "errors": {
     "unauthorized": "Unauthorized",

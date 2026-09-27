@@ -198,7 +198,7 @@ export function PaymentMethodRow({
               className="h-7 w-7"
               onClick={() => void handleSave()}
               disabled={isSaving || !editValue.trim()}
-              aria-label={t("deleteConfirmCta")}
+              aria-label={t("saveEditAria")}
             >
               {isSaving ? (
                 <Loader2 size={13} className="animate-spin" />

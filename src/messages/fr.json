@@ -362,7 +362,8 @@
     },
     "paidByCompany": "Payé par l'entreprise",
     "personalPayment": "Paiement personnel",
-    "loadError": "Impossible de charger les moyens de paiement. Veuillez réessayer."
+    "loadError": "Impossible de charger les moyens de paiement. Veuillez réessayer.",
+    "saveEditAria": "Enregistrer les modifications"
   },
   "errors": {
     "unauthorized": "Non autorisé",

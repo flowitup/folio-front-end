@@ -362,7 +362,8 @@
     },
     "paidByCompany": "Công ty thanh toán",
     "personalPayment": "Thanh toán cá nhân",
-    "loadError": "Không tải được phương thức thanh toán. Vui lòng thử lại."
+    "loadError": "Không tải được phương thức thanh toán. Vui lòng thử lại.",
+    "saveEditAria": "Lưu thay đổi"
   },
   "errors": {
     "unauthorized": "Không được phép",

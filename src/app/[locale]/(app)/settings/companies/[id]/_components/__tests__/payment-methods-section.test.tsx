@@ -43,6 +43,7 @@ vi.mock("next-intl", () => {
       deleteConfirmCta: "Remove",
       cancel: "Cancel",
       cancelEditAria: "Cancel edit",
+        saveEditAria: "Save changes",
       editLabelAria: 'Edit "{name}"',
       deleteLabelAria: 'Delete "{name}"',
       "errors.duplicate_label": "A payment method with this name already exists.",

@@ -65,6 +65,6 @@ describe("InvoicePrintPage", () => {
     fetchInvoice.mockRejectedValueOnce(new Error("boom"));
     renderFr();
 
-    expect(await screen.findByText(frMessages.invoices.print.loadFailed)).toBeDefined();
+    expect(await screen.findByText(frMessages.invoices.loadFailed)).toBeDefined();
   });
 });

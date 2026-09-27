@@ -578,9 +578,9 @@
     },
     "print": {
       "heading": "Facture",
-      "loading": "Chargement…",
-      "loadFailed": "Échec du chargement de la facture."
-    }
+      "loading": "Chargement…"
+    },
+    "loadFailed": "Échec du chargement de la facture."
   },
   "planning": {
     "title": "Planification",

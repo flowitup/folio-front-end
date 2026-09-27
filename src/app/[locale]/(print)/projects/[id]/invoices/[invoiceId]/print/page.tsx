@@ -28,7 +28,7 @@ export default function InvoicePrintPage() {
 
   if (error) {
     return (
-      <div style={{ padding: "2rem", color: "red" }}>{t("print.loadFailed")}</div>
+      <div style={{ padding: "2rem", color: "red" }}>{t("loadFailed")}</div>
     );
   }
 

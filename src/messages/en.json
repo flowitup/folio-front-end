@@ -578,9 +578,9 @@
     },
     "print": {
       "heading": "Invoice",
-      "loading": "Loading…",
-      "loadFailed": "Failed to load invoice."
-    }
+      "loading": "Loading…"
+    },
+    "loadFailed": "Failed to load invoice."
   },
   "planning": {
     "title": "Planning",

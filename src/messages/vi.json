@@ -578,9 +578,9 @@
     },
     "print": {
       "heading": "Hóa đơn",
-      "loading": "Đang tải…",
-      "loadFailed": "Không tải được hóa đơn."
-    }
+      "loading": "Đang tải…"
+    },
+    "loadFailed": "Không tải được hóa đơn."
   },
   "planning": {
     "title": "Kế hoạch",

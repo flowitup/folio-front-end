@@ -133,8 +133,6 @@ describe("ExpensePursesSummary — refund netting", () => {
       />
     );
     // Headline = 10 000 + 5 000 − 1 000 = 14 000 (net), not 15 000 (gross).
-    // Scoped to the headline element: the monthly timeline stays gross by
-    // design, so 15 000 legitimately appears elsewhere on the card.
     const headline = screen.getByText("invoices.summary.totalExpenses")
       .nextElementSibling as HTMLElement;
     expect(headline.textContent).toMatch(/14[^\d]*000/);
@@ -145,13 +143,14 @@ describe("ExpensePursesSummary — refund netting", () => {
     render(
       <ExpensePursesSummary
         invoices={[
-          makeInvoice({ id: "exp-lab", type: "labor", total_amount: 2000 }),
-          makeInvoice({ id: "exp-mat", total_amount: 3000 }),
+          makeInvoice({ id: "exp-lab", type: "labor", total_amount: 2000, paid_by_company: true }),
+          makeInvoice({ id: "exp-mat", total_amount: 3000, paid_by_company: true }),
           makeInvoice({
             id: "ref-lab",
             type: "return",
             total_amount: -500,
             refunds_invoice_id: "exp-lab",
+            paid_by_company: true,
           }),
         ]}
         meta={ZERO_META}
@@ -421,7 +420,7 @@ describe("ExpensePursesSummary — avoir returns (per-purse rows, strip split, o
   // (settled_via='avoir', no applied_to_invoice_id yet), the company return is
   // a plain cash return.
   const invoices: Invoice[] = [
-    makeInvoice({ id: "exp-company", total_amount: 10000 }),
+    makeInvoice({ id: "exp-company", total_amount: 10000, paid_by_company: true }),
     makeInvoice({ id: "exp-personal", total_amount: 8000, paid_by_personal: true }),
     makeInvoice({
       id: "ref-company",
@@ -429,6 +428,7 @@ describe("ExpensePursesSummary — avoir returns (per-purse rows, strip split, o
       total_amount: -1500,
       refunds_invoice_id: "exp-company",
       settled_via: "cash",
+      paid_by_company: true,
     }),
     makeInvoice({
       id: "ref-personal",
@@ -553,7 +553,7 @@ describe("ExpensePursesSummary — type-first breakdown wiring", () => {
   // Same shape as the avoir fixture above: company M&S 10 000 − 1 500 return,
   // personal M&S 8 000 − 2 000 return → 8 500 / 6 000 net, 14 500 combined.
   const invoices: Invoice[] = [
-    makeInvoice({ id: "exp-company", total_amount: 10000 }),
+    makeInvoice({ id: "exp-company", total_amount: 10000, paid_by_company: true }),
     makeInvoice({ id: "exp-personal", total_amount: 8000, paid_by_personal: true }),
     makeInvoice({
       id: "ref-company",
@@ -561,6 +561,7 @@ describe("ExpensePursesSummary — type-first breakdown wiring", () => {
       total_amount: -1500,
       refunds_invoice_id: "exp-company",
       settled_via: "cash",
+      paid_by_company: true,
     }),
     makeInvoice({
       id: "ref-personal",
@@ -685,3 +686,47 @@ describe("ExpensePursesSummary — company cash advance", () => {
   });
 });
 
+
+describe("ExpensePursesSummary — purse rows follow the backend's purse rule", () => {
+  // Company-method 600, no-method 80, unflagged-method 30, method-less return -10.
+  const invoices: Invoice[] = [
+    makeInvoice({ id: "co", type: "labor", total_amount: 600, paid_by_company: true }),
+    makeInvoice({ id: "none", total_amount: 80 }),
+    makeInvoice({ id: "unflagged", type: "others", total_amount: 30, payment_method_id: "pm-x" }),
+    makeInvoice({ id: "ret", type: "return", total_amount: -10 }),
+  ];
+  const META = { ...ZERO_META, fundsReleasedTotal: 5000, fundsReleasedCompanyTotal: 5000, companySpentTotal: 600 };
+
+  it("keeps expenses with no or an unflagged method out of the company rows", () => {
+    render(<ExpensePursesSummary invoices={invoices} meta={META} />);
+    const companyCard = screen
+      .getByText("invoices.summary.companyPurse")
+      .closest(".folio-card") as HTMLElement;
+    // Company rows now add up to its Spent (600): no 80/30/-10 in them.
+    const amounts = Array.from(companyCard.querySelectorAll<HTMLElement>(".num.w-\\[72px\\]")).map(
+      (el) => Number(el.textContent!.replace(/[^\d-]/g, ""))
+    );
+    expect(amounts.reduce((a, b) => a + b, 0)).toBe(600);
+    expect(screen.getByTestId("purse-unassigned-spend").textContent).toContain('"n":2');
+  });
+
+  it("still counts them in Total expenses", () => {
+    render(<ExpensePursesSummary invoices={invoices} meta={META} />);
+    const headline = screen.getByText("invoices.summary.totalExpenses").nextElementSibling as HTMLElement;
+    expect(headline.textContent!.replace(/[^\d]/g, "")).toBe("700"); // 600 + 80 + 30 − 10
+  });
+
+  it("nets returns out of the month figures", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "a", total_amount: 1000, paid_by_company: true, issue_date: "2026-06-03" }),
+          makeInvoice({ id: "r", type: "return", total_amount: -200, paid_by_company: true, issue_date: "2026-06-20" }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const bar = screen.getByTestId("monthly-spend-bars").querySelector("[data-tip]") as HTMLElement;
+    expect(bar.dataset.tip).toMatch(/\|800\s*€|\|800/);
+  });
+});

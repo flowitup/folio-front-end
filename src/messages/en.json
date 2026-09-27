@@ -578,7 +578,9 @@
       "sumOfTypes": "Total",
       "sharedScaleTo": "shared scale to {amount}",
       "cash": "Cash",
-      "cashAdvance": "incl. {amount} cash"
+      "cashAdvance": "incl. {amount} cash",
+      "noPurse": "No purse",
+      "noPurseSpend": "{n, plural, one {# expense} other {# expenses}} in neither purse (no company or personal payment method) · {amount}"
     },
     "byWorker": {
       "totalPaid": "Total paid",

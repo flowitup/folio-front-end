@@ -578,7 +578,9 @@
       "sumOfTypes": "Total",
       "sharedScaleTo": "échelle commune jusqu'à {amount}",
       "cash": "Espèces",
-      "cashAdvance": "dont {amount} en espèces"
+      "cashAdvance": "dont {amount} en espèces",
+      "noPurse": "Aucune caisse",
+      "noPurseSpend": "{n, plural, one {# dépense} other {# dépenses}} dans aucune caisse (sans moyen de paiement entreprise ou personnel) · {amount}"
     },
     "byWorker": {
       "totalPaid": "Total payé",

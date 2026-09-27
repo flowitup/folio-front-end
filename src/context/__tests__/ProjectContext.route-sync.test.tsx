@@ -13,8 +13,10 @@ const mockProjects = [
 ]
 
 const mockFetchProjects = vi.fn()
+const mockFetchProjectById = vi.fn()
 vi.mock('@/lib/api/projects', () => ({
   fetchProjects: () => mockFetchProjects(),
+  fetchProjectById: (id: string) => mockFetchProjectById(id),
 }))
 
 let mockPathname = '/en/dashboard'
@@ -25,9 +27,10 @@ vi.mock('next/navigation', () => ({
 import { ProjectProvider, projectIdFromPath, useProject } from '../ProjectContext'
 
 function Consumer() {
-  const { selectedProjectId, selectedProject, isLoading } = useProject()
+  const { projects, selectedProjectId, selectedProject, isLoading } = useProject()
   return (
     <div>
+      <span data-testid="count">{projects.length}</span>
       <span data-testid="loading">{isLoading ? 'loading' : 'loaded'}</span>
       <span data-testid="selected">{selectedProjectId ?? 'none'}</span>
       <span data-testid="selected-name">{selectedProject?.name ?? 'none'}</span>
@@ -40,6 +43,7 @@ describe('ProjectContext route sync', () => {
     localStorage.clear()
     localStorage.setItem('selectedProjectId', 'aaa')
     mockFetchProjects.mockResolvedValue(mockProjects)
+    mockFetchProjectById.mockRejectedValue(new Error('403'))
   })
 
   afterEach(() => {
@@ -82,8 +86,39 @@ describe('ProjectContext route sync', () => {
     )
 
     await waitFor(() => expect(screen.getByTestId('loading')).toHaveTextContent('loaded'))
+    await waitFor(() => expect(mockFetchProjectById).toHaveBeenCalledWith('zzz'))
     expect(screen.getByTestId('selected')).toHaveTextContent('aaa')
     expect(localStorage.getItem('selectedProjectId')).toBe('aaa')
+  })
+
+  it('loads the URL project on its own when the project list fails, in a fresh browser', async () => {
+    localStorage.clear()
+    mockPathname = '/fr/projects/bbb/labor'
+    mockFetchProjects.mockRejectedValue(new Error('list unavailable'))
+    mockFetchProjectById.mockResolvedValue(mockProjects[1])
+    render(
+      <ProjectProvider>
+        <Consumer />
+      </ProjectProvider>
+    )
+
+    await waitFor(() => expect(screen.getByTestId('selected')).toHaveTextContent('bbb'))
+    expect(screen.getByTestId('selected-name')).toHaveTextContent('Project B')
+    expect(screen.getByTestId('count')).toHaveTextContent('1')
+  })
+
+  it('selects the URL project on first load in a fresh browser', async () => {
+    localStorage.clear()
+    mockPathname = '/fr/projects/bbb/documents'
+    render(
+      <ProjectProvider>
+        <Consumer />
+      </ProjectProvider>
+    )
+
+    await waitFor(() => expect(screen.getByTestId('loading')).toHaveTextContent('loaded'))
+    expect(screen.getByTestId('selected')).toHaveTextContent('bbb')
+    await waitFor(() => expect(localStorage.getItem('selectedProjectId')).toBe('bbb'))
   })
 })
 

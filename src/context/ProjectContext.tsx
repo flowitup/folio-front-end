@@ -10,7 +10,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import type { Project } from "@/types/project";
-import { fetchProjects } from "@/lib/api/projects";
+import { fetchProjectById, fetchProjects } from "@/lib/api/projects";
 
 const STORAGE_KEY = "selectedProjectId";
 
@@ -118,6 +118,24 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   useEffect(() => {
     if (routeProjectKnown) setSelectedProjectId(routeProjectId);
   }, [routeProjectKnown, routeProjectId]);
+
+  // The URL project is missing from the loaded list (the list failed to load,
+  // or it came back without it): fetch that one project so the switcher and
+  // the project nav still show the project being viewed. A project the user
+  // cannot open is refused by the API and simply stays out.
+  useEffect(() => {
+    if (!isHydrated || isLoading || !routeProjectId || routeProjectKnown) return;
+    let cancelled = false;
+    fetchProjectById(routeProjectId)
+      .then((project) => {
+        if (cancelled || project.id !== routeProjectId) return;
+        setProjects((prev) => (prev.some((p) => p.id === project.id) ? prev : [...prev, project]));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isHydrated, isLoading, routeProjectId, routeProjectKnown]);
 
   const selectedProject =
     projects.find((p) => p.id === effectiveProjectId) ?? null;

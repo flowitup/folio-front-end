@@ -119,6 +119,8 @@ type Props = {
   sort: SortColumn;
   order: "asc" | "desc";
   availableTags: string[];
+  /** A kind/tag/uploader filter is active: an empty list means "no match", not "no documents yet". */
+  filtered?: boolean;
   onSortChange: (sort: SortColumn) => void;
   onPreview: (doc: ProjectDocument) => void;
   onRename: (doc: ProjectDocument) => void;
@@ -136,6 +138,7 @@ export function DocumentsList({
   sort,
   order,
   availableTags,
+  filtered = false,
   onSortChange,
   onPreview,
   onRename,
@@ -169,7 +172,7 @@ export function DocumentsList({
   if (documents.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
-        <p className="text-sm text-muted-foreground">{t("empty")}</p>
+        <p className="text-sm text-muted-foreground">{filtered ? t("emptyFiltered") : t("empty")}</p>
       </div>
     );
   }

@@ -1498,6 +1498,7 @@
     },
     "list": {
       "empty": "No documents yet. Drag files into the upload area to start.",
+      "emptyFiltered": "No documents match these filters.",
       "formerMember": "(former member)",
       "columns": {
         "file": "File",
@@ -1536,6 +1537,7 @@
       "tags": "Tags",
       "clearTags": "Clear tags",
       "anyUploader": "Anyone",
+      "uploader": "Uploaded by",
       "reset": "Reset"
     },
     "preview": {
@@ -1557,7 +1559,8 @@
     },
     "toast": {
       "uploadSuccess": "{filename} uploaded",
-      "listLoadError": "Failed to load documents"
+      "listLoadError": "Failed to load documents",
+      "uploadersLoadError": "Couldn't load the list of uploaders"
     },
     "pagination": {
       "prev": "Prev",

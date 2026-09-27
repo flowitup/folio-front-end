@@ -50,6 +50,16 @@ export type ListProjectDocumentsResult = {
   per_page: number;
 };
 
+/**
+ * Someone who has at least one live document in the project. Read from the
+ * documents, not from the project assignments, so it also covers a former
+ * member and a company admin/manager who was never assigned.
+ */
+export type DocumentUploader = {
+  user_id: string;
+  display_name: string; // the account's display name, or its e-mail when it has none
+};
+
 // ---- Error helper ----
 
 /**
@@ -257,3 +267,34 @@ export async function listDocumentTags(
   return data.tags;
 }
 
+
+/**
+ * List the distinct uploaders of a project's documents — the uploader filter's options.
+ */
+export async function listDocumentUploaders(
+  projectId: string
+): Promise<DocumentUploader[]> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents/uploaders`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          ...authHeaders,
+        },
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error listing uploaders: ${String(err)}`);
+  }
+  if (!response.ok) {
+    throw await buildHttpError(response, "Failed to list uploaders");
+  }
+  const data = (await response.json()) as { items?: DocumentUploader[] };
+  return data.items ?? [];
+}

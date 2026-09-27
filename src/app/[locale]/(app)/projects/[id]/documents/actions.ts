@@ -8,8 +8,10 @@ import {
   renameProjectDocument,
   updateDocumentTags,
   listDocumentTags,
+  listDocumentUploaders,
 } from "@/lib/api/project-documents";
 import type {
+  DocumentUploader,
   ProjectDocument,
   ListProjectDocumentsParams,
   ListProjectDocumentsResult,
@@ -160,6 +162,24 @@ export async function listDocumentTagsAction(
 
   try {
     const data = await listDocumentTags(projectId);
+    return { ok: true, data };
+  } catch (err: unknown) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+/**
+ * List the distinct uploaders of a project's documents (the uploader filter's options).
+ */
+export async function listDocumentUploadersAction(
+  projectId: string
+): Promise<ActionResult<DocumentUploader[]>> {
+  if (!projectId || !isUuid(projectId)) {
+    return { ok: false, error: "validation", message: "Invalid project id" };
+  }
+
+  try {
+    const data = await listDocumentUploaders(projectId);
     return { ok: true, data };
   } catch (err: unknown) {
     return { ok: false, error: classifyBackendError(err) };

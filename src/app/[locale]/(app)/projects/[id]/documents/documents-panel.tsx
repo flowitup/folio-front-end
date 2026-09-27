@@ -5,7 +5,7 @@
  * Manages: document list state, sort/filter/page, optimistic upload, delete flow.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { DocumentsList } from "./documents-list";
@@ -14,9 +14,21 @@ import { DocumentsUpload } from "./documents-upload";
 import { DocumentsPreviewDialog } from "./documents-preview-dialog";
 import { DocumentsRenameDialog } from "./documents-rename-dialog";
 import { DocumentsDeleteDialog } from "./documents-delete-dialog";
-import { listDocumentsAction, deleteDocumentAction, renameDocumentAction, updateDocumentTagsAction, listDocumentTagsAction } from "./actions";
+import {
+  listDocumentsAction,
+  deleteDocumentAction,
+  renameDocumentAction,
+  updateDocumentTagsAction,
+  listDocumentTagsAction,
+  listDocumentUploadersAction,
+} from "./actions";
 import { Button } from "@/components/ui/button";
-import type { ProjectDocument, ProjectDocumentKind } from "@/lib/api/project-documents";
+import { cn } from "@/lib/utils";
+import type {
+  DocumentUploader,
+  ProjectDocument,
+  ProjectDocumentKind,
+} from "@/lib/api/project-documents";
 
 // ---- Types ----
 
@@ -33,6 +45,8 @@ type Props = {
   initialDocuments: ProjectDocument[];
   initialTotal: number;
   initialTags: string[];
+  /** null when the server could not read the uploaders; the panel then retries once. */
+  initialUploaders: DocumentUploader[] | null;
   members: Member[];
   currentUserId: string;
   isAdminOrOwner: boolean;
@@ -45,6 +59,7 @@ export function DocumentsPanel({
   initialDocuments,
   initialTotal,
   initialTags,
+  initialUploaders,
   members,
   currentUserId,
   isAdminOrOwner,
@@ -64,6 +79,37 @@ export function DocumentsPanel({
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>(initialTags);
   const [uploaderId, setUploaderId] = useState<string | null>(null);
+  const [uploaders, setUploaders] = useState<DocumentUploader[]>(initialUploaders ?? []);
+
+  const hasFilters =
+    kinds.length > 0 || selectedTags.length > 0 || uploaderId !== null;
+
+  // The request the list should currently reflect; it differs from the last
+  // loaded one while a sort/filter/page change is in flight. The initial
+  // server-rendered page used these same defaults.
+  const queryKey = JSON.stringify({
+    sort,
+    order,
+    kinds,
+    tags: selectedTags,
+    uploaderId,
+    page,
+  });
+  const [loadedKey, setLoadedKey] = useState(queryKey);
+  const loading = loadedKey !== queryKey;
+
+  // Uploader names: assigned members first, then anyone else the backend lists
+  // as an uploader (a former member, a company admin who was never assigned).
+  // Only someone unknown to both still reads "(former member)".
+  const people = useMemo(() => {
+    const memberIds = new Set(members.map((m) => m.id));
+    return [
+      ...members,
+      ...uploaders
+        .filter((u) => !memberIds.has(u.user_id))
+        .map((u) => ({ id: u.user_id, firstName: u.display_name })),
+    ];
+  }, [members, uploaders]);
 
   // ---- Dialog state ----
   const [previewDoc, setPreviewDoc] = useState<ProjectDocument | null>(null);
@@ -75,6 +121,7 @@ export function DocumentsPanel({
 
   useEffect(() => {
     let cancelled = false;
+    const requestKey = queryKey;
 
     async function refresh() {
       const result = await listDocumentsAction(projectId, {
@@ -95,6 +142,7 @@ export function DocumentsPanel({
       } else {
         toast.error(t("toast.listLoadError"));
       }
+      setLoadedKey(requestKey);
     }
 
     void refresh();
@@ -105,15 +153,55 @@ export function DocumentsPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sort, order, kinds, selectedTags, uploaderId, page, projectId]);
 
+  // ---- Uploaders (filter options + names) ----
+
+  const refreshUploaders = useCallback(
+    async (reportError = false) => {
+      const result = await listDocumentUploadersAction(projectId);
+      if (result.ok) {
+        setUploaders(result.data);
+        // Someone leaves the list the moment their last document here is
+        // deleted. Still filtering on them could only show an empty list with
+        // no matching option left in the select, so it goes back to "Anyone".
+        setUploaderId((current) =>
+          current !== null && !result.data.some((u) => u.user_id === current)
+            ? null
+            : current
+        );
+      } else if (reportError) {
+        toast.error(t("toast.uploadersLoadError"));
+      }
+    },
+    [projectId, t]
+  );
+
+  // The server could not read the uploaders: try once more from the client.
+  useEffect(() => {
+    if (initialUploaders === null) void refreshUploaders(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ---- Handlers ----
 
   const handleUploaded = useCallback(
     (doc: ProjectDocument) => {
-      setList((prev) => [doc, ...prev]);
-      setTotal((prev) => prev + 1);
+      // Only show the new file where the active filters would list it: a
+      // fresh upload has no tags yet, and it belongs to its own uploader.
+      const matchesFilters =
+        (kinds.length === 0 || kinds.includes(doc.kind)) &&
+        selectedTags.length === 0 &&
+        (uploaderId === null || doc.uploader_id === uploaderId);
+      if (matchesFilters) {
+        setList((prev) => [doc, ...prev]);
+        setTotal((prev) => prev + 1);
+      }
       toast.success(t("toast.uploadSuccess", { filename: doc.filename }));
+      // A first upload makes its author a filterable uploader.
+      if (!uploaders.some((u) => u.user_id === doc.uploader_id)) {
+        void refreshUploaders();
+      }
     },
-    [t]
+    [t, kinds, selectedTags, uploaderId, uploaders, refreshUploaders]
   );
 
   const handleSortChange = useCallback(
@@ -192,6 +280,8 @@ export function DocumentsPanel({
         setTotal((prev) => Math.max(0, prev - 1));
         toast.success(t("delete.success"));
         setDeleteDoc(null);
+        // It may have been its uploader's last document here.
+        void refreshUploaders();
       } else if (result.error === "forbidden") {
         toast.error(t("delete.errorForbidden"));
         setDeleteDoc(null);
@@ -202,7 +292,7 @@ export function DocumentsPanel({
     } finally {
       setDeleting(false);
     }
-  }, [deleteDoc, projectId, t]);
+  }, [deleteDoc, projectId, t, refreshUploaders]);
 
   // ---- Pagination ----
 
@@ -219,25 +309,32 @@ export function DocumentsPanel({
         selectedTags={selectedTags}
         availableTags={availableTags}
         uploaderId={uploaderId}
-        members={members}
+        uploaders={uploaders}
         onChange={handleFiltersChange}
       />
 
-      <DocumentsList
-        documents={list}
-        projectId={projectId}
-        currentUserId={currentUserId}
-        isAdminOrOwner={isAdminOrOwner}
-        members={members}
-        sort={sort}
-        order={order}
-        availableTags={availableTags}
-        onSortChange={handleSortChange}
-        onPreview={setPreviewDoc}
-        onRename={setRenameDoc}
-        onDelete={setDeleteDoc}
-        onTagsUpdate={handleTagsUpdate}
-      />
+      <div
+        aria-busy={loading}
+        data-testid="documents-list-region"
+        className={cn("transition-opacity", loading && "opacity-60")}
+      >
+        <DocumentsList
+          documents={list}
+          projectId={projectId}
+          currentUserId={currentUserId}
+          isAdminOrOwner={isAdminOrOwner}
+          members={people}
+          sort={sort}
+          order={order}
+          availableTags={availableTags}
+          filtered={hasFilters}
+          onSortChange={handleSortChange}
+          onPreview={setPreviewDoc}
+          onRename={setRenameDoc}
+          onDelete={setDeleteDoc}
+          onTagsUpdate={handleTagsUpdate}
+        />
+      </div>
 
       {/* Pagination controls */}
       {totalPages > 1 && (

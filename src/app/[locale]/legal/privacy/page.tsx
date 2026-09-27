@@ -1,11 +1,31 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Folio · Politique de confidentialité",
-};
+/** The French text for French readers; English for everyone else (no Vietnamese version yet). */
+function isFrench(locale: string): boolean {
+  return locale === "fr";
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return { title: isFrench(locale) ? "Folio · Politique de confidentialité" : "Folio · Privacy policy" };
+}
 
 const SUPPORT_EMAIL = "mt.bui.fr@gmail.com";
-const UPDATED = "14 septembre 2026";
+/** Date of the last change to the text (YYYY-MM-DD), shown in each language. */
+const UPDATED = "2026-09-14";
+
+function updatedLabel(locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${UPDATED}T12:00:00Z`));
+}
 
 /**
  * Privacy policy for the Folio apps (web, iOS, Android). Plain static content:
@@ -18,14 +38,14 @@ export default async function PrivacyPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return locale === "en" ? <English /> : <French />;
+  return isFrench(locale) ? <French /> : <English />;
 }
 
 function French() {
   return (
     <>
       <h1>Politique de confidentialité</h1>
-      <p>Dernière mise à jour : {UPDATED}</p>
+      <p>Dernière mise à jour : {updatedLabel("fr")}</p>
       <p>
         Folio est une application de suivi de chantier (factures, documents,
         photos, main-d&apos;œuvre, chiffrage) éditée par Flowitup. Cette page
@@ -106,7 +126,7 @@ function English() {
   return (
     <>
       <h1>Privacy Policy</h1>
-      <p>Last updated: {UPDATED}</p>
+      <p>Last updated: {updatedLabel("en")}</p>
       <p>
         Folio is a construction-site tracking app (invoices, documents, photos,
         labor, cost planning) published by Flowitup. This page describes the

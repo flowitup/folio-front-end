@@ -1108,7 +1108,9 @@
           "deleteConfirmDescription": "Supprimer « {name} » ? Cette action est irréversible.",
           "deleteConfirm": "Supprimer",
           "deleteCancel": "Annuler"
-        }
+        },
+        "emptyGroup": "Aucun modèle dans ce groupe pour l'instant.",
+        "deleteFailed": "Échec de la suppression du modèle. Veuillez réessayer."
       },
       "form": {
         "titleCreate": "Nouveau modèle",
@@ -1139,6 +1141,11 @@
           "duplicateName": "Un modèle portant ce nom existe déjà pour ce type.",
           "saveFailed": "Échec de l'enregistrement du modèle. Veuillez réessayer.",
           "deleteFailed": "Échec de la suppression du modèle. Veuillez réessayer."
+        },
+        "toast": {
+          "saved": "Modèle enregistré.",
+          "created": "Modèle créé.",
+          "deleted": "Modèle supprimé."
         }
       },
       "companyLabel": "Entreprise"
@@ -1282,7 +1289,7 @@
         "sendStatus": "Marquer comme envoyé",
         "edit": "Modifier",
         "previewPdf": "Aperçu PDF",
-        "openActions": "Ouvrir les actions"
+        "openMenu": "Ouvrir les actions"
       },
       "errors": {
         "recipientRequired": "Le nom du destinataire est obligatoire.",
@@ -1298,7 +1305,11 @@
         "convertFailed": "Échec de la conversion du devis en facture.",
         "alreadyConverted": "Ce devis a déjà été converti en facture.",
         "invalidTransition": "Cette transition de statut n'est pas autorisée. Le document a peut-être été modifié dans une autre session.",
-        "companyRequired": "Veuillez sélectionner une entreprise pour émettre ce document."
+        "companyRequired": "Veuillez sélectionner une entreprise pour émettre ce document.",
+        "statusUpdateFailed": "Échec de la mise à jour du statut. Veuillez réessayer.",
+        "createFromTemplateFailed": "Échec de la création du document à partir du modèle.",
+        "templatesLoadFailed": "Échec du chargement des modèles.",
+        "documentsLoadFailed": "Échec du chargement des documents existants."
       },
       "toast": {
         "documentSaved": "Document enregistré.",
@@ -1307,14 +1318,27 @@
         "pdfDownloaded": "PDF téléchargé.",
         "xlsxDownloaded": "XLSX téléchargé.",
         "devisConverted": "Devis converti en facture.",
-        "companyNoLongerAttached": "Votre accès à cette société a été révoqué. Veuillez en sélectionner une autre."
+        "companyNoLongerAttached": "Votre accès à cette société a été révoqué. Veuillez en sélectionner une autre.",
+        "statusUpdated": "Statut mis à jour : {status}.",
+        "createdFromTemplate": "Document créé à partir du modèle."
       },
       "issuer": {
         "issuedFrom": "Émis par",
         "locked": "verrouillé"
       },
-      "deleteConfirmTitle": "Supprimer le document ?",
-      "deleteConfirmDescription": "Supprimer {number} ? Cette action est irréversible."
+      "deleteDialog": {
+        "title": "Supprimer le document ?",
+        "description": "<strong>{number}</strong> sera supprimé définitivement. Cette action est irréversible."
+      },
+      "applyTemplate": {
+        "title": "Appliquer un modèle",
+        "description": "Choisissez un modèle enregistré. Les lignes, notes et conditions seront copiées. Saisissez les informations du destinataire ci-dessous avant de créer."
+      },
+      "fromExisting": {
+        "description": "Sélectionnez un document comme point de départ de votre nouveau <strong>{kind}</strong>. Les lignes, le destinataire, les notes et les conditions seront copiés ; les dates et le numéro seront réinitialisés.",
+        "createAs": "Créer en tant que :",
+        "crossKindWarning": "Changer de type réinitialise le cycle de vie du document. Le {kind} cloné démarrera en <strong>{draft}</strong>."
+      }
     },
     "editPage": {
       "loadFailed": "Impossible de charger le document. Veuillez actualiser ou réessayer plus tard."

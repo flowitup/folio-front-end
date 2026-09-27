@@ -79,6 +79,9 @@ export function ApplyTemplateDialog({
   const locale = useLocale();
   const tRecipient = useTranslations("billing.form.recipient");
   const tActions = useTranslations("billing.form.actions");
+  const tErrors = useTranslations("billing.form.errors");
+  const tToast = useTranslations("billing.form.toast");
+  const tApply = useTranslations("billing.form.applyTemplate");
 
   const [templates, setTemplates] = useState<BillingDocumentTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -116,7 +119,7 @@ export function ApplyTemplateDialog({
       }
       setTemplates(result.data);
     } catch {
-      setLoadError("Failed to load templates.");
+      setLoadError(tErrors("templatesLoadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +136,7 @@ export function ApplyTemplateDialog({
 
     // Client-side validation
     if (!recipient.recipient_name.trim()) {
-      setNameError("Recipient name is required.");
+      setNameError(tErrors("recipientRequired"));
       return;
     }
 
@@ -150,11 +153,11 @@ export function ApplyTemplateDialog({
         toast.error(result.error.message);
         return;
       }
-      toast.success("Document created from template.");
+      toast.success(tToast("createdFromTemplate"));
       onOpenChange(false);
       router.push(`/${locale}/billing/${kindToSegment(kind)}/${result.data.id}`);
     } catch {
-      toast.error("Failed to create document from template.");
+      toast.error(tErrors("createFromTemplateFailed"));
     } finally {
       setIsSubmitting(false);
       submittingRef.current = false;
@@ -167,11 +170,8 @@ export function ApplyTemplateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Apply a template</DialogTitle>
-          <DialogDescription>
-            Choose a saved template. Items, notes and terms will be copied.
-            Enter the recipient details below before creating.
-          </DialogDescription>
+          <DialogTitle>{tApply("title")}</DialogTitle>
+          <DialogDescription>{tApply("description")}</DialogDescription>
         </DialogHeader>
 
         {/* Template list */}

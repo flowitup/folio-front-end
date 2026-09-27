@@ -1108,7 +1108,9 @@
           "deleteConfirmDescription": "Xóa \"{name}\"? Không thể hoàn tác.",
           "deleteConfirm": "Xóa",
           "deleteCancel": "Hủy"
-        }
+        },
+        "emptyGroup": "Chưa có mẫu nào trong nhóm này.",
+        "deleteFailed": "Không xóa được mẫu. Vui lòng thử lại."
       },
       "form": {
         "titleCreate": "Mẫu mới",
@@ -1139,6 +1141,11 @@
           "duplicateName": "Đã có mẫu trùng tên cho loại này.",
           "saveFailed": "Lưu mẫu thất bại. Vui lòng thử lại.",
           "deleteFailed": "Xóa mẫu thất bại. Vui lòng thử lại."
+        },
+        "toast": {
+          "saved": "Đã lưu mẫu.",
+          "created": "Đã tạo mẫu.",
+          "deleted": "Đã xóa mẫu."
         }
       },
       "companyLabel": "Công ty"
@@ -1282,7 +1289,7 @@
         "sendStatus": "Đánh dấu đã gửi",
         "edit": "Chỉnh sửa",
         "previewPdf": "Xem trước PDF",
-        "openActions": "Mở thao tác"
+        "openMenu": "Mở thao tác"
       },
       "errors": {
         "recipientRequired": "Tên khách hàng là bắt buộc.",
@@ -1298,7 +1305,11 @@
         "convertFailed": "Chuyển đổi báo giá sang hóa đơn thất bại.",
         "alreadyConverted": "Báo giá này đã được chuyển thành hóa đơn.",
         "invalidTransition": "Chuyển đổi trạng thái này không được phép. Tài liệu có thể đã được cập nhật bởi phiên khác.",
-        "companyRequired": "Vui lòng chọn một công ty để phát hành tài liệu này."
+        "companyRequired": "Vui lòng chọn một công ty để phát hành tài liệu này.",
+        "statusUpdateFailed": "Không cập nhật được trạng thái. Vui lòng thử lại.",
+        "createFromTemplateFailed": "Không tạo được tài liệu từ mẫu.",
+        "templatesLoadFailed": "Không tải được danh sách mẫu.",
+        "documentsLoadFailed": "Không tải được các tài liệu hiện có."
       },
       "toast": {
         "documentSaved": "Đã lưu tài liệu.",
@@ -1307,14 +1318,27 @@
         "pdfDownloaded": "Đã tải PDF.",
         "xlsxDownloaded": "Đã tải XLSX.",
         "devisConverted": "Đã chuyển báo giá thành hóa đơn.",
-        "companyNoLongerAttached": "Quyền truy cập vào công ty này đã bị thu hồi. Vui lòng chọn công ty khác."
+        "companyNoLongerAttached": "Quyền truy cập vào công ty này đã bị thu hồi. Vui lòng chọn công ty khác.",
+        "statusUpdated": "Đã cập nhật trạng thái: {status}.",
+        "createdFromTemplate": "Đã tạo tài liệu từ mẫu."
       },
       "issuer": {
         "issuedFrom": "Phát hành từ",
         "locked": "đã khóa"
       },
-      "deleteConfirmTitle": "Xóa tài liệu?",
-      "deleteConfirmDescription": "Xóa {number}? Không thể hoàn tác."
+      "deleteDialog": {
+        "title": "Xóa tài liệu?",
+        "description": "<strong>{number}</strong> sẽ bị xóa vĩnh viễn. Không thể hoàn tác thao tác này."
+      },
+      "applyTemplate": {
+        "title": "Áp dụng mẫu",
+        "description": "Chọn một mẫu đã lưu. Các dòng, ghi chú và điều khoản sẽ được sao chép. Nhập thông tin người nhận bên dưới trước khi tạo."
+      },
+      "fromExisting": {
+        "description": "Chọn một tài liệu làm điểm bắt đầu cho <strong>{kind}</strong> mới. Các dòng, người nhận, ghi chú và điều khoản sẽ được sao chép; ngày và số sẽ được đặt lại.",
+        "createAs": "Tạo dưới dạng:",
+        "crossKindWarning": "Đổi loại sẽ đặt lại vòng đời tài liệu. {kind} được sao chép sẽ bắt đầu ở trạng thái <strong>{draft}</strong>."
+      }
     },
     "editPage": {
       "loadFailed": "Không thể tải tài liệu. Vui lòng tải lại trang hoặc thử lại sau."

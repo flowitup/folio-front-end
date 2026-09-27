@@ -62,7 +62,8 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
   const locale = useLocale();
   const tActions = useTranslations("billing.form.actions");
   const tErrors = useTranslations("billing.form.errors");
-  const tForm = useTranslations("billing.form");
+  const tToast = useTranslations("billing.form.toast");
+  const tDeleteDialog = useTranslations("billing.form.deleteDialog");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -143,7 +144,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
         toast.error(result.error.message);
         return;
       }
-      toast.success(tForm("toast.devisConverted"));
+      toast.success(tToast("devisConverted"));
       // Navigate to the new facture
       router.push(`/${locale}/billing/factures`);
       onMutated();
@@ -164,7 +165,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
         toast.error(result.error.message);
         return;
       }
-      toast.success(tForm("toast.documentDeleted"));
+      toast.success(tToast("documentDeleted"));
       onMutated();
     } finally {
       deletingRef.current = false;
@@ -187,13 +188,13 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
             ) : (
               <MoreHorizontal size={13} />
             )}
-            <span className="sr-only">{tActions("openActions")}</span>
+            <span className="sr-only">{tActions("openMenu")}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => router.push(editPath)}>
             <Pencil size={13} className="mr-2" />
-            {tActions("edit") ?? "Edit"}
+            {tActions("edit")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setPreviewOpen(true)}>
             <Eye size={13} className="mr-2" />
@@ -233,9 +234,12 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{tForm("deleteConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogTitle>{tDeleteDialog("title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {tForm("deleteConfirmDescription", { number: document.document_number })}
+              {tDeleteDialog.rich("description", {
+                number: document.document_number,
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

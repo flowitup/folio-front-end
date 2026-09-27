@@ -94,6 +94,7 @@ export function BillingStatusMenu({
   const tFactureTrans = useTranslations("billing.facture.transitions");
   const tActions = useTranslations("billing.form.actions");
   const tErrors = useTranslations("billing.form.errors");
+  const tToast = useTranslations("billing.form.toast");
 
   const [isUpdating, setIsUpdating] = useState(false);
   // Double-submit guard: synchronous check before React commit
@@ -139,10 +140,10 @@ export function BillingStatusMenu({
         }
         return;
       }
-      toast.success(`Status updated to ${statusLabel(to)}.`);
+      toast.success(tToast("statusUpdated", { status: statusLabel(to) }));
       onStatusChanged(result.data);
     } catch {
-      toast.error("Failed to update status. Please try again.");
+      toast.error(tErrors("statusUpdateFailed"));
     } finally {
       setIsUpdating(false);
       updatingRef.current = false;

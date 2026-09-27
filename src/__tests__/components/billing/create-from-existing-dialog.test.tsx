@@ -35,7 +35,22 @@ vi.mock("next-intl", () => {
       return undefined;
     }, obj) as string ?? path;
   }
-  const makeT = (ns: string) => (key: string) => resolve(en, `${ns}.${key}`);
+  const makeT = (ns: string) => {
+    const t = (key: string, params?: Record<string, unknown>) => {
+      let val = resolve(en, `${ns}.${key}`);
+      if (typeof val !== "string") return key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          if (typeof v !== "function") val = val.replace(`{${k}}`, String(v));
+        });
+      }
+      return val;
+    };
+    // Rich messages render as plain text here: tags are stripped, values interpolated.
+    t.rich = (key: string, params?: Record<string, unknown>) =>
+      t(key, params).replace(/<\/?\w+>/g, "");
+    return t;
+  };
   return {
     useLocale: () => "en",
     useTranslations: (ns: string) => makeT(ns),
@@ -183,7 +198,7 @@ describe("test_create_from_existing_dialog_lists_recent_docs_and_navigates", () 
     mockAction.mockResolvedValue({ ok: false, error: { code: "generic", message: "Server error" } });
     renderDialog("devis");
     await waitFor(() => {
-      expect(screen.getByText(/billing api may not be available/i)).toBeDefined();
+      expect(screen.getByText(/failed to load existing documents/i)).toBeDefined();
     });
   });
 
@@ -262,5 +277,17 @@ describe("CreateFromExistingDialog — cross-kind toggle", () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+});
+
+describe("create-from-existing dialog copy comes from the locale messages", () => {
+  it("labels the target kinds and describes the clone without hardcoded English", async () => {
+    mockAction.mockResolvedValue({ ok: true, data: { items: [], total: 0 } });
+    renderDialog("devis");
+    await waitFor(() => {
+      expect(screen.getByText(/create as:/i)).toBeDefined();
+    });
+    // The kind appears in the description by its translated label ("Quote"), not the raw enum value.
+    expect(screen.getByText(/starting point for your new/i).textContent).toContain("Quote");
   });
 });

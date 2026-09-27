@@ -1108,7 +1108,9 @@
           "deleteConfirmDescription": "Delete \"{name}\"? This cannot be undone.",
           "deleteConfirm": "Delete",
           "deleteCancel": "Cancel"
-        }
+        },
+        "emptyGroup": "No templates in this group yet.",
+        "deleteFailed": "Failed to delete template. Please try again."
       },
       "form": {
         "titleCreate": "New template",
@@ -1139,6 +1141,11 @@
           "duplicateName": "A template with this name already exists for this kind.",
           "saveFailed": "Failed to save template. Please try again.",
           "deleteFailed": "Failed to delete template. Please try again."
+        },
+        "toast": {
+          "saved": "Template saved.",
+          "created": "Template created.",
+          "deleted": "Template deleted."
         }
       },
       "companyLabel": "Company"
@@ -1282,7 +1289,7 @@
         "sendStatus": "Mark as Sent",
         "edit": "Edit",
         "previewPdf": "Preview PDF",
-        "openActions": "Open actions"
+        "openMenu": "Open actions"
       },
       "errors": {
         "recipientRequired": "Recipient name is required.",
@@ -1298,7 +1305,11 @@
         "convertFailed": "Failed to convert quote to invoice.",
         "alreadyConverted": "This quote has already been converted to an invoice.",
         "invalidTransition": "This status transition is not allowed. The document may have been updated by another session.",
-        "companyRequired": "Please select a company to issue this document from."
+        "companyRequired": "Please select a company to issue this document from.",
+        "statusUpdateFailed": "Failed to update status. Please try again.",
+        "createFromTemplateFailed": "Failed to create document from template.",
+        "templatesLoadFailed": "Failed to load templates.",
+        "documentsLoadFailed": "Failed to load existing documents."
       },
       "toast": {
         "documentSaved": "Document saved.",
@@ -1307,14 +1318,27 @@
         "pdfDownloaded": "PDF downloaded.",
         "xlsxDownloaded": "XLSX downloaded.",
         "devisConverted": "Quote converted to invoice.",
-        "companyNoLongerAttached": "Your access to this company has been revoked. Please select another company."
+        "companyNoLongerAttached": "Your access to this company has been revoked. Please select another company.",
+        "statusUpdated": "Status updated to {status}.",
+        "createdFromTemplate": "Document created from template."
       },
       "issuer": {
         "issuedFrom": "Issued from",
         "locked": "locked"
       },
-      "deleteConfirmTitle": "Delete document?",
-      "deleteConfirmDescription": "Delete {number}? This cannot be undone."
+      "deleteDialog": {
+        "title": "Delete document?",
+        "description": "This will permanently delete <strong>{number}</strong>. This action cannot be undone."
+      },
+      "applyTemplate": {
+        "title": "Apply a template",
+        "description": "Choose a saved template. Items, notes and terms will be copied. Enter the recipient details below before creating."
+      },
+      "fromExisting": {
+        "description": "Select a document to use as the starting point for your new <strong>{kind}</strong>. Items, recipient, notes and terms will be copied; dates and number will be reset.",
+        "createAs": "Create as:",
+        "crossKindWarning": "Switching kinds resets the document lifecycle. The cloned {kind} will start as <strong>{draft}</strong>."
+      }
     },
     "editPage": {
       "loadFailed": "Failed to load document. Please refresh or try again later."

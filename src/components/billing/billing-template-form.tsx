@@ -90,6 +90,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
   const router = useRouter();
   const locale = useLocale();
   const tForm = useTranslations("billing.templates.form");
+  const tToast = useTranslations("billing.templates.form.toast");
   const isEdit = props.mode === "edit";
   const template = isEdit ? props.template : null;
 
@@ -174,7 +175,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
           }
           return;
         }
-        toast.success("Template saved.");
+        toast.success(tToast("saved"));
         router.push(listPath);
       } else {
         const result = await createBillingTemplateAction({
@@ -190,7 +191,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
           }
           return;
         }
-        toast.success("Template created.");
+        toast.success(tToast("created"));
         router.push(listPath);
       }
     } catch {
@@ -211,7 +212,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         toast.error(tForm("errors.deleteFailed"));
         return;
       }
-      toast.success("Template deleted.");
+      toast.success(tToast("deleted"));
       router.push(listPath);
     } finally {
       submittingRef.current = false;

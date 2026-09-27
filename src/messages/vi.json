@@ -575,6 +575,11 @@
       "label": "Tạm ứng tiền mặt của công ty",
       "hint": "Tiền công ty giao (vd. tiền mặt để trả nhân công). Không tính vào vốn giải ngân — hiển thị là đã chi trong túi tiền công ty. Ghi các khoản trả bằng tiền này theo phương thức tiền mặt của bạn, không dùng phương thức công ty, để tránh tính hai lần.",
       "badge": "Tạm ứng"
+    },
+    "print": {
+      "heading": "Hóa đơn",
+      "loading": "Đang tải…",
+      "loadFailed": "Không tải được hóa đơn."
     }
   },
   "planning": {

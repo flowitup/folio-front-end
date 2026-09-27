@@ -575,6 +575,11 @@
       "label": "Avance en espèces de l'entreprise",
       "hint": "Argent remis par l'entreprise (ex. espèces pour payer la main-d'œuvre). Non compté dans les fonds débloqués — affiché comme dépensé dans la bourse entreprise. Enregistrez ce que vous payez avec ces espèces sous votre propre moyen de paiement, pas celui de l'entreprise, pour ne pas compter deux fois.",
       "badge": "Avance espèces"
+    },
+    "print": {
+      "heading": "Facture",
+      "loading": "Chargement…",
+      "loadFailed": "Échec du chargement de la facture."
     }
   },
   "planning": {

@@ -90,10 +90,21 @@ describe("listAnalysesAction", () => {
   });
 
   describe("error mapping", () => {
-    it("400 → invalidFile", async () => {
-      mockListAnalyses.mockRejectedValueOnce(httpError(400));
+    it("400 InvalidFile → invalidFile", async () => {
+      mockListAnalyses.mockRejectedValueOnce(httpError(400, { error: "InvalidFile" }));
       const result = await listAnalysesAction(PROJECT_ID);
       expect(result).toEqual({ ok: false, error: "invalidFile" });
+    });
+
+    it.each([
+      ["Analysis source_url must start with http:// or https://.", "invalidSourceUrl"],
+      ["An analysis may have at most 20 tags.", "tooManyTags"],
+      ["Each tag must be 100 characters or fewer.", "tagTooLong"],
+      ["Something else.", "validation"],
+    ])("400 BadRequest %s → %s, not a file error", async (message, expected) => {
+      mockListAnalyses.mockRejectedValueOnce(httpError(400, { error: "BadRequest", message }));
+      const result = await listAnalysesAction(PROJECT_ID);
+      expect(result).toEqual({ ok: false, error: expected });
     });
 
     it("403 → forbidden", async () => {
@@ -247,7 +258,7 @@ describe("uploadAnalysisAction", () => {
     });
 
     it("400 → invalidFile (distinct from 413)", async () => {
-      mockCreateAnalysis.mockRejectedValueOnce(httpError(400));
+      mockCreateAnalysis.mockRejectedValueOnce(httpError(400, { error: "InvalidFile" }));
 
       const formData = new FormData();
       formData.append("file", new File([new Uint8Array(100)], "test.html"));

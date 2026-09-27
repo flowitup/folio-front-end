@@ -1862,7 +1862,10 @@
       "forbidden": "Only the uploader, the project owner, or an admin can do this",
       "notFound": "Analysis not found",
       "rateLimited": "Too many requests — slow down",
-      "generic": "Something went wrong — try again"
+      "generic": "Something went wrong — try again",
+      "invalidSourceUrl": "The source link must start with http:// or https://",
+      "tooManyTags": "An analysis can have at most 20 tags",
+      "tagTooLong": "A tag can be at most 100 characters long"
     },
     "toast": {
       "listLoadError": "Failed to load analyses"

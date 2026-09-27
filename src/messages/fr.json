@@ -1862,7 +1862,10 @@
       "forbidden": "Seuls la personne ayant téléversé le rapport, le propriétaire du projet ou un administrateur peuvent effectuer cette action",
       "notFound": "Analyse introuvable",
       "rateLimited": "Trop de requêtes — ralentissez",
-      "generic": "Une erreur est survenue — réessayez"
+      "generic": "Une erreur est survenue — réessayez",
+      "invalidSourceUrl": "Le lien source doit commencer par http:// ou https://",
+      "tooManyTags": "Une analyse peut avoir au plus 20 étiquettes",
+      "tagTooLong": "Une étiquette ne peut pas dépasser 100 caractères"
     },
     "toast": {
       "listLoadError": "Échec du chargement des analyses"

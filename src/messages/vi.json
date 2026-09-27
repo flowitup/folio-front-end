@@ -1862,7 +1862,10 @@
       "forbidden": "Chỉ người tải lên, chủ sở hữu dự án hoặc quản trị viên mới có thể thực hiện việc này",
       "notFound": "Không tìm thấy phân tích",
       "rateLimited": "Quá nhiều yêu cầu — vui lòng chậm lại",
-      "generic": "Đã xảy ra lỗi — vui lòng thử lại"
+      "generic": "Đã xảy ra lỗi — vui lòng thử lại",
+      "invalidSourceUrl": "Liên kết nguồn phải bắt đầu bằng http:// hoặc https://",
+      "tooManyTags": "Mỗi phân tích chỉ có tối đa 20 nhãn",
+      "tagTooLong": "Mỗi nhãn chỉ dài tối đa 100 ký tự"
     },
     "toast": {
       "listLoadError": "Không tải được danh sách phân tích"

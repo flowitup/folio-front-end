@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PdfCanvasViewer } from "@/app/[locale]/(app)/projects/[id]/documents/pdf-canvas-viewer";
 import { env } from "@/lib/config/env";
+import { fetchWithRefresh } from "@/lib/api/refresh";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 
@@ -49,9 +50,9 @@ export function BillingPdfPreviewDialog({ document, onClose }: BillingPdfPreview
     const controller = new AbortController();
     (async () => {
       try {
-        const response = await fetch(
+        const response = await fetchWithRefresh(
           `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/pdf`,
-          { method: "GET", credentials: "include", signal: controller.signal },
+          { method: "GET", signal: controller.signal },
         );
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const filename = parseFilenameFromContentDisposition(

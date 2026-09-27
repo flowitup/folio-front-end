@@ -208,4 +208,21 @@ describe("AnalysisUpload", () => {
     expect(screen.getByLabelText("Source URL")).toBeDefined();
     expect(screen.getByLabelText("Tags")).toBeDefined();
   });
+
+  it("toasts an error when the upload action itself is rejected", async () => {
+    const { toast } = await import("sonner");
+    _uploadResult = new Error("Body exceeded 1 MB limit");
+    const user = userEvent.setup();
+    render(<AnalysisUpload projectId={PROJECT_ID} onUploaded={vi.fn()} />);
+    await user.click(screen.getByText("Upload analysis"));
+
+    const file = new File(["<html></html>"], "report.html", { type: "text/html" });
+    await user.upload(screen.getByLabelText("HTML report") as HTMLInputElement, file);
+    await user.type(screen.getByLabelText("Title"), "Report");
+    await user.click(screen.getByText("Upload"));
+
+    await waitFor(() =>
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("Something went wrong — try again")
+    );
+  });
 });

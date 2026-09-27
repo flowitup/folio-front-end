@@ -117,7 +117,7 @@ export function ProductCard({
               {t("purchasedTimes", { count: product.purchase_count })}
             </span>
             {lastPurchased && (
-              <span className="ml-1">· {lastPurchased}</span>
+              <span>{" · "}{lastPurchased}</span>
             )}
           </div>
 

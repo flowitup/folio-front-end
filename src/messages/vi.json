@@ -2185,7 +2185,7 @@
       "plomberie": "Ống nước",
       "quincaillerie": "Kim khí & phụ kiện",
       "droguerie": "Hóa phẩm gia dụng",
-      "autre": "Khác / Chưa phân loại"
+      "autre": "Khác"
     },
     "addProduct": "Thêm sản phẩm",
     "createTitle": "Thêm sản phẩm",
@@ -2312,7 +2312,8 @@
       "imageAlreadySet": "Sản phẩm này đã có ảnh.",
       "imageLinkRefused": "Liên kết ảnh này không được chấp nhận. Hãy dùng liên kết https trỏ trực tiếp tới ảnh.",
       "imageLinkNotImage": "Liên kết không phải là ảnh JPG, PNG hoặc WebP."
-    }
+    },
+    "selectSupplier": "Chọn nhà cung cấp"
   },
   "inventory": {
     "title": "Kho thiết bị",

@@ -2185,7 +2185,7 @@
       "plomberie": "Plumbing",
       "quincaillerie": "Hardware",
       "droguerie": "Household & cleaning",
-      "autre": "Other / Uncategorized"
+      "autre": "Other"
     },
     "addProduct": "Add product",
     "createTitle": "Add product",
@@ -2312,7 +2312,8 @@
       "imageAlreadySet": "This product already has an image.",
       "imageLinkRefused": "This image link is not accepted. Use an https link to the image itself.",
       "imageLinkNotImage": "The link is not a JPG, PNG or WebP image."
-    }
+    },
+    "selectSupplier": "Select a supplier"
   },
   "inventory": {
     "title": "Equipment inventory",

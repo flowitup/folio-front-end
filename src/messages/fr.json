@@ -2185,7 +2185,7 @@
       "plomberie": "Plomberie",
       "quincaillerie": "Quincaillerie",
       "droguerie": "Droguerie",
-      "autre": "Autre / Non classé"
+      "autre": "Autre"
     },
     "addProduct": "Ajouter un produit",
     "createTitle": "Ajouter un produit",
@@ -2312,7 +2312,8 @@
       "imageAlreadySet": "Ce produit a déjà une image.",
       "imageLinkRefused": "Ce lien d'image n'est pas accepté. Utilisez un lien https vers l'image elle-même.",
       "imageLinkNotImage": "Le lien ne pointe pas vers une image JPG, PNG ou WebP."
-    }
+    },
+    "selectSupplier": "Choisir un fournisseur"
   },
   "inventory": {
     "title": "Inventaire du matériel",

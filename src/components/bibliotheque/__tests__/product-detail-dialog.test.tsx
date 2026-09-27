@@ -14,7 +14,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProductDetailDialog } from "../product-detail-dialog";
 import type { ProductDetailResult, LibraryProduct, LibraryPurchase, Supplier } from "@/lib/api/bibliotheque";
@@ -429,6 +429,25 @@ describe("ProductDetailDialog", () => {
       const table = screen.getByRole("table");
       expect(table).toBeInTheDocument();
     });
+  });
+
+  it("shows purchase quantities as numbers, not the API's 4-decimal strings", async () => {
+    mockGetProduct.mockResolvedValueOnce({
+      ok: true,
+      data: makeDetailResult({
+        purchases: [
+          { purchased_at: "2024-05-15T10:00:00Z", source_document_ref: "INV-001", quantity: "1.0000" },
+          { purchased_at: "2024-05-10T10:00:00Z", source_document_ref: "INV-002", quantity: "2.5000" },
+        ],
+      }),
+    });
+
+    render(<ProductDetailDialog productId="prod-1" suppliersById={{ "sup-1": makeSupplier() }} onClose={vi.fn()} />);
+
+    await waitFor(() => expect(screen.getByRole("table")).toBeInTheDocument());
+    const table = screen.getByRole("table");
+    expect(table.textContent).not.toContain("1.0000");
+    expect(within(table).getByText("2.5")).toBeInTheDocument();
   });
 
   it("sorts purchase history by purchased_at DESC", async () => {

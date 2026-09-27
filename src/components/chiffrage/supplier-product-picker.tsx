@@ -16,6 +16,7 @@ import { Loader2, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { money } from "@/components/chiffrage/format";
 import {
   listProductsAction,
   listSuppliersAction,
@@ -140,7 +141,8 @@ export function SupplierProductPicker({ companyId, onPick }: Props) {
                     productId: p.id,
                     productName: p.name,
                     productUrl: p.product_url,
-                    suggestedPrice: p.last_unit_price,
+                    // "2.9", not the API's "2.9000", in the price field.
+                    suggestedPrice: p.last_unit_price ? String(Number(p.last_unit_price)) : p.last_unit_price,
                   })
                 }
               >
@@ -148,7 +150,7 @@ export function SupplierProductPicker({ companyId, onPick }: Props) {
                   <span className="block truncate text-sm">{p.name}</span>
                   <span className="block truncate text-xs text-muted-foreground">
                     {p.supplier_reference}
-                    {p.last_unit_price ? ` · ${p.last_unit_price} €` : ""}
+                    {p.last_unit_price ? ` · ${money(Number(p.last_unit_price))}` : ""}
                   </span>
                 </span>
               </Button>

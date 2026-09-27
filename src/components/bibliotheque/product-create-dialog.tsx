@@ -289,7 +289,7 @@ export function ProductCreateDialog({
                 disabled={isSubmitting}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("allSuppliers")} />
+                  <SelectValue placeholder={t("selectSupplier")} />
                 </SelectTrigger>
                 <SelectContent>
                   {suppliers.map((s) => (

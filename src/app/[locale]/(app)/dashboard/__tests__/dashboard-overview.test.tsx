@@ -429,3 +429,29 @@ describe("DashboardPage — project with no budget", () => {
     expect(moneyPanel.queryByText(eur(-750))).toBeNull();
   });
 });
+
+describe("DashboardPage — remaining matches the Projects page", () => {
+  it("subtracts only the spend drawn on the credit", async () => {
+    mockUseProject.mockReturnValue({
+      selectedProject: { id: "p-1", name: "Villa", budget: 10000, spent_by_credits: 1000 },
+    });
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [
+        mkInvoice({ type: "materials_services", issue_date: "2026-07-05", total_amount: 1000 }),
+        mkInvoice({ type: "materials_services", issue_date: "2026-07-06", total_amount: 2500, paid_by_personal: true }),
+      ],
+      funds_released_total: 4000,
+      company_spent_total: 1000,
+      personal_spent_total: 2500,
+      company_name: null,
+    });
+    renderDashboard();
+
+    const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
+    const norm = (v: string | null | undefined) => (v ?? "").replace(/[\u202f\u00a0]/g, " ");
+    await waitFor(() =>
+      expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(9000))
+    );
+    expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toBe(`10% of credit drawn · ${eur(1000)}`);
+  });
+});

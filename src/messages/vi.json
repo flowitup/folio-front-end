@@ -97,7 +97,8 @@
     "money": {
       "spentThisMonth": "Đã chi tháng này",
       "pctSpent": "{pct}% đã chi · {spent}",
-      "purseSpent": "đã chi"
+      "purseSpent": "đã chi",
+      "pctCreditDrawn": "Đã dùng {pct}% tín dụng · {spent}"
     },
     "spendByType": {
       "title": "Chi tiêu hàng tháng theo loại",

@@ -167,8 +167,14 @@ export default function DashboardPage() {
     [monthlySeries]
   );
   const budgetMetrics = useMemo(
-    () => computeBudgetMetrics(selectedProject?.budget, spentTotal, activeMeta.fundsReleasedTotal),
-    [selectedProject?.budget, spentTotal, activeMeta.fundsReleasedTotal]
+    () =>
+      computeBudgetMetrics(
+        selectedProject?.budget,
+        spentTotal,
+        activeMeta.fundsReleasedTotal,
+        selectedProject?.spent_by_credits
+      ),
+    [selectedProject?.budget, spentTotal, activeMeta.fundsReleasedTotal, selectedProject?.spent_by_credits]
   );
   const pendingRefunds = useMemo(() => computePendingRefunds(activeInvoices), [activeInvoices]);
   const bankOutstanding = useMemo(() => computeBankOutstanding(activeInvoices), [activeInvoices]);

@@ -97,7 +97,8 @@
     "money": {
       "spentThisMonth": "Dépensé ce mois-ci",
       "pctSpent": "{pct}% dépensé · {spent}",
-      "purseSpent": "dépensé"
+      "purseSpent": "dépensé",
+      "pctCreditDrawn": "{pct}% du crédit utilisé · {spent}"
     },
     "spendByType": {
       "title": "Dépenses mensuelles par type",

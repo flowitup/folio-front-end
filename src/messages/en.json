@@ -97,7 +97,8 @@
     "money": {
       "spentThisMonth": "Spent this month",
       "pctSpent": "{pct}% spent · {spent}",
-      "purseSpent": "spent"
+      "purseSpent": "spent",
+      "pctCreditDrawn": "{pct}% of credit drawn · {spent}"
     },
     "spendByType": {
       "title": "Monthly spend by type",

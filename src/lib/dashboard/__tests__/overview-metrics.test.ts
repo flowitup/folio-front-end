@@ -191,6 +191,17 @@ describe("computeBudgetMetrics", () => {
     expect(m.denominator).toBe(900);
   });
 
+  it("measures a set credit against the spend drawn on it, like the Projects page", () => {
+    // 10 000 credit; 3 500 spent in all, of which 1 000 paid from the credit.
+    const m = computeBudgetMetrics(10000, 3500, 4000, 1000);
+    expect(m).toMatchObject({ spent: 1000, left: 9000, pct: 10 });
+  });
+
+  it("measures released funds against every expense when no credit is set", () => {
+    const m = computeBudgetMetrics(null, 3500, 4000, 1000);
+    expect(m).toMatchObject({ spent: 3500, left: 500 });
+  });
+
   it("has no baseline when there is neither a credit nor released funds", () => {
     expect(computeBudgetMetrics(null, 750, 0).hasBaseline).toBe(false);
     expect(computeBudgetMetrics(null, 750, 900).hasBaseline).toBe(true);

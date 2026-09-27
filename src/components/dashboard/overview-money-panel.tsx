@@ -307,7 +307,10 @@ export function OverviewMoneyPanel({
               <span className="num">
                 {loading
                   ? PLACEHOLDER
-                  : t("money.pctSpent", { pct: budgetMetrics.pct, spent: formatEURWhole(spentTotal) })}
+                  : t(budgetMetrics.usesBudget ? "money.pctCreditDrawn" : "money.pctSpent", {
+                      pct: budgetMetrics.pct,
+                      spent: formatEURWhole(budgetMetrics.spent),
+                    })}
               </span>
             </span>
             <span>{fig(formatEURWhole(budgetMetrics.denominator))}</span>

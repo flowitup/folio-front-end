@@ -134,7 +134,10 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     if (isProjectContextLoading) return;
     if (reconciledMemberPersonaRef.current === isMemberPersona) return;
     reconciledMemberPersonaRef.current = isMemberPersona;
-    setActiveTab(isMemberPersona ? "roster" : "summary");
+    // A member only has the roster. Anyone else keeps a tab already chosen
+    // (a ?tab= deep link consumed while the projects were still loading) and
+    // only leaves the member-only roster.
+    setActiveTab((prev) => (isMemberPersona ? "roster" : prev === "roster" ? "summary" : prev));
   }, [isProjectContextLoading, isMemberPersona]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -399,25 +402,31 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   useEffect(() => {
     const requested = searchParams.get("tab");
     if (requested !== "workers" && requested !== "attendance" && requested !== "payments") return;
-    setActiveTab(requested);
+    // A member only has the roster; while the projects load the persona is
+    // unknown, and the persona effect sends a member back to the roster.
+    if (isProjectContextLoading || !isMemberPersona) setActiveTab(requested);
     const params = new URLSearchParams(searchParams.toString());
     params.delete("tab");
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [searchParams, router, pathname]);
+  }, [searchParams, router, pathname, isProjectContextLoading, isMemberPersona]);
 
   // Topbar "+ Log day" hands off via ?logDay=1 — jump to the attendance tab
   // and open the bulk-log dialog. Strip the param after consuming.
   useEffect(() => {
     if (searchParams.get("logDay") !== "1") return;
-    setActiveTab("attendance");
-    setLogDayDate(undefined);
-    setShowLogDay(true);
+    // Wait for the projects: only a labor manager may log days.
+    if (isProjectContextLoading) return;
+    if (canManageLabor) {
+      setActiveTab("attendance");
+      setLogDayDate(undefined);
+      setShowLogDay(true);
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.delete("logDay");
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [searchParams, router, pathname]);
+  }, [searchParams, router, pathname, isProjectContextLoading, canManageLabor]);
 
   // Handlers
   const handleCreateWorker = async (payload: CreateWorkerPayload | UpdateWorkerPayload) => {
@@ -661,7 +670,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         />
       )}
 
-      {showContent && activeTab === "attendance" && (
+      {showContent && !isMemberPersona && activeTab === "attendance" && (
         <div
           className={
             attendanceView === "calendar"
@@ -786,7 +795,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         </div>
       )}
 
-      {showContent && activeTab === "summary" && (
+      {showContent && !isMemberPersona && activeTab === "summary" && (
         <LaborSummary
           projectId={projectId}
           summary={summary}
@@ -800,7 +809,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         />
       )}
 
-      {showContent && activeTab === "payments" && (
+      {showContent && !isMemberPersona && activeTab === "payments" && (
         <LaborPaymentsTab
           projectId={projectId}
           canManage={canManageInvoices}

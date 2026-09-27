@@ -501,7 +501,9 @@
       "failedToLoad": "Échec du chargement des moyens de paiement",
       "failedToLoadRetry": "Échec du chargement. Réessayez en rouvrant.",
       "noMethodsFound": "Aucun moyen trouvé.",
-      "failedToCreate": "Échec de la création du moyen de paiement"
+      "failedToCreate": "Échec de la création du moyen de paiement",
+      "duplicateLabel": "Un moyen de paiement portant ce nom existe déjà.",
+      "createForbidden": "Seul un administrateur de l'entreprise peut ajouter des moyens de paiement."
     },
     "refundHint": "Utilisez un prix unitaire négatif pour une ligne d'avoir et positif pour une charge ; le total est le net.",
     "refundsInvoiceLabel": "Avoir sur facture (Matériaux & Services)",

@@ -6,7 +6,7 @@
  * Behaviour:
  *  - Lazy-fetches the list on first open (not on mount) to avoid eager fetches.
  *  - Refetches on every open so the list stays fresh after Settings edits.
- *  - If `allowCreate` is true (default), a "+ Add …" footer item lets the user
+ *  - If `allowCreate` is true (default: company admins), a "+ Add …" footer item lets the user
  *    POST a new method inline, then auto-selects the new entry.
  *  - Selecting the "(None)" sentinel clears the value (calls onChange(null)).
  */
@@ -31,6 +31,8 @@ import {
   createPaymentMethodAction,
 } from "@/app/[locale]/(app)/settings/companies/[id]/_actions/payment-methods-actions";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { useOptionalAuth } from "@/context/AuthContext";
+import { isCompanyAdmin } from "@/lib/auth/permissions";
 import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 
 // ---------------------------------------------------------------------------
@@ -41,7 +43,11 @@ export interface PaymentMethodSelectProps {
   companyId: string;
   value: string | null;
   onChange: (id: string | null) => void;
-  /** Show the "+ Add new" inline-create affordance. Defaults to true. */
+  /**
+   * Show the "+ Add new" inline-create affordance. Defaults to whether the
+   * signed-in user is an admin of `companyId` — the only role the API lets
+   * create payment methods.
+   */
   allowCreate?: boolean;
   disabled?: boolean;
   className?: string;
@@ -66,13 +72,16 @@ export function PaymentMethodSelect({
   companyId,
   value,
   onChange,
-  allowCreate = true,
+  allowCreate: allowCreateProp,
   disabled = false,
   className,
   fallbackSelectedLabel,
 }: PaymentMethodSelectProps) {
   const t = useTranslations("invoices.paymentMethod");
   const tBuiltins = useTranslations("paymentMethods.builtins");
+  const user = useOptionalAuth()?.user;
+  const allowCreate =
+    allowCreateProp ?? isCompanyAdmin(user?.companies, companyId, user?.permissions);
 
   const [open, setOpen] = React.useState(false);
   const [methods, setMethods] = React.useState<PaymentMethod[]>([]);
@@ -143,11 +152,15 @@ export function PaymentMethodSelect({
           toast.success(created.label);
         }
       } else {
-        const msg =
-          result.error.code === "duplicate_label"
-            ? t("failedToLoad")
-            : result.error.message;
-        toast.error(msg);
+        // Never the action's English message: map its code to our own text.
+        const code = result.error.code;
+        toast.error(
+          code === "duplicate_label"
+            ? t("duplicateLabel")
+            : code === "forbidden"
+              ? t("createForbidden")
+              : t("failedToCreate")
+        );
       }
     } catch {
       toast.error(t("failedToCreate"));

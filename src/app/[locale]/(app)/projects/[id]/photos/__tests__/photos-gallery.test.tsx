@@ -179,6 +179,21 @@ describe("PhotosGallery — date groups", () => {
     expect(screen.getByText("formatted:2024-06-15")).toBeDefined();
   });
 
+  it("files a photo taken just after midnight in Paris under the Paris day", () => {
+    // 22:30 UTC on the 26th is 00:30 on the 27th in Paris.
+    render(
+      <PhotosGallery
+        projectId={PROJECT_ID}
+        initialPhotos={[makePhoto("a", "2026-09-26T22:30:00Z")]}
+        initialTotal={1}
+        canEdit={false}
+      />
+    );
+
+    expect(screen.getByText("formatted:2026-09-27")).toBeDefined();
+    expect(screen.queryByText("formatted:2026-09-26")).toBeNull();
+  });
+
   it("groups photos with the same date into one section", async () => {
     const photos = [
       makePhoto("a", "2024-06-15T08:00:00Z"),

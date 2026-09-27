@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchProjectPhotoBlob } from "@/lib/api/project-photo-blob";
 import { updatePhotoAction, deletePhotoAction } from "./actions";
 import type { ProjectPhoto } from "@/lib/api/project-photos";
 import { isVideo } from "@/lib/media/is-video";
+import { dayKeyToUtcNoon, parisDayKey } from "@/lib/utils/paris-day";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+function photoDayKey(photo: ProjectPhoto): string {
+  return photo.capturedAt ? parisDayKey(photo.capturedAt) : "";
+}
 
 interface Props {
   projectId: string;
@@ -56,6 +61,7 @@ export function PhotoLightbox({
   onUpdated,
 }: Props) {
   const t = useTranslations("photos");
+  const format = useFormatter();
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const revokeRef = useRef<(() => void) | null>(null);
@@ -134,9 +140,8 @@ export function PhotoLightbox({
   function startEditing() {
     if (!photo) return;
     setCaptionDraft(photo.caption ?? "");
-    // Convert ISO datetime to YYYY-MM-DD for the date input
-    const dateOnly = photo.capturedAt ? photo.capturedAt.slice(0, 10) : "";
-    setCapturedAtDraft(dateOnly);
+    // The Paris day of the timestamp, as the gallery groups it
+    setCapturedAtDraft(photoDayKey(photo));
     setEditing(true);
   }
 
@@ -147,7 +152,12 @@ export function PhotoLightbox({
       // An emptied caption is sent as "" — the API reads null as "field
       // omitted" and would keep the old caption.
       caption: captionDraft.trim(),
-      capturedAt: capturedAtDraft || undefined,
+      // Only a changed day is sent: re-sending the pre-filled day would
+      // replace the capture time with midnight.
+      capturedAt:
+        capturedAtDraft && capturedAtDraft !== photoDayKey(photo)
+          ? capturedAtDraft
+          : undefined,
     });
     setSaving(false);
     if (result.ok) {
@@ -189,11 +199,13 @@ export function PhotoLightbox({
   const open = photo !== null;
 
   // Format date for display
+  // Format date for display: the app's language, the gallery's (Paris) day
   const displayDate = photo?.capturedAt
-    ? new Date(photo.capturedAt).toLocaleDateString(undefined, {
+    ? format.dateTime(dayKeyToUtcNoon(photoDayKey(photo)), {
         year: "numeric",
         month: "long",
         day: "numeric",
+        timeZone: "UTC",
       })
     : null;
 

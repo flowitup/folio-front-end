@@ -352,6 +352,19 @@ export async function deleteRoom(projectId: string, roomId: string): Promise<voi
   );
 }
 
+/** Move a room between two neighbours; every poste groups its items in this order. */
+export async function reorderRoom(
+  projectId: string,
+  roomId: string,
+  payload: ReorderPayload
+): Promise<ChiffrageRoom> {
+  return request<ChiffrageRoom>(
+    `${base(projectId)}/rooms/${roomId}/reorder`,
+    { method: "POST", body: payload },
+    "Failed to reorder the room"
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Stores — the shops the project buys from, declared once
 // ---------------------------------------------------------------------------

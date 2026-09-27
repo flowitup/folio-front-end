@@ -2536,7 +2536,18 @@
     "loadFailedTitle": "The cost planning could not be loaded",
     "loadFailedHint": "Nothing was lost. Check your connection and try again.",
     "retry": "Try again",
-    "emptyHintReadOnly": "No section has been planned for this project yet."
+    "emptyHintReadOnly": "No section has been planned for this project yet.",
+    "errors": {
+      "forbidden": "You do not have permission to modify this chiffrage.",
+      "notFound": "This item no longer exists.",
+      "nameTaken": "That name is already taken.",
+      "imageTooLarge": "Image too large (max 10 MB).",
+      "imageUnsupported": "Unsupported image type (use JPG, PNG or WebP).",
+      "imageLink": "The image could not be fetched from this link. Use an https link to the image itself.",
+      "invalidInput": "Some values are not valid. Check the fields and try again.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "generic": "Something went wrong. Please try again."
+    }
   },
   "onboarding": {
     "title": "Welcome to Folio",

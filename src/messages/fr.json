@@ -2536,7 +2536,18 @@
     "loadFailedTitle": "Le chiffrage n'a pas pu être chargé",
     "loadFailedHint": "Rien n'a été perdu. Vérifiez votre connexion et réessayez.",
     "retry": "Réessayer",
-    "emptyHintReadOnly": "Aucune section n'a encore été prévue pour ce projet."
+    "emptyHintReadOnly": "Aucune section n'a encore été prévue pour ce projet.",
+    "errors": {
+      "forbidden": "Vous n'avez pas l'autorisation de modifier ce chiffrage.",
+      "notFound": "Cet élément n'existe plus.",
+      "nameTaken": "Ce nom est déjà utilisé.",
+      "imageTooLarge": "Image trop volumineuse (10 Mo max).",
+      "imageUnsupported": "Type d'image non pris en charge (JPG, PNG ou WebP).",
+      "imageLink": "L'image n'a pas pu être récupérée depuis ce lien. Utilisez un lien https vers l'image elle-même.",
+      "invalidInput": "Certaines valeurs ne sont pas valides. Vérifiez les champs et réessayez.",
+      "rateLimited": "Trop de requêtes. Patientez un instant puis réessayez.",
+      "generic": "Une erreur s'est produite. Veuillez réessayer."
+    }
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",

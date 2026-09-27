@@ -33,16 +33,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { deleteBillingDocumentAction, convertDevisToFactureAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import { env } from "@/lib/config/env";
@@ -51,6 +41,7 @@ import { fetchWithRefresh } from "@/lib/api/refresh";
 import type { BillingDocument } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
+import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
 
 interface BillingActionsMenuProps {
   document: BillingDocument;
@@ -63,7 +54,6 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
   const tActions = useTranslations("billing.form.actions");
   const tErrors = useTranslations("billing.form.errors");
   const tToast = useTranslations("billing.form.toast");
-  const tDeleteDialog = useTranslations("billing.form.deleteDialog");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -231,28 +221,12 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{tDeleteDialog("title")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {tDeleteDialog.rich("description", {
-                number: document.document_number,
-                strong: (chunks) => <strong>{chunks}</strong>,
-              })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tActions("cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
-            >
-              {tActions("delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <BillingDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        documentNumber={document.document_number}
+        onConfirm={handleDelete}
+      />
 
       <BillingPdfPreviewDialog
         document={previewOpen ? document : null}

@@ -430,13 +430,36 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
     });
   });
 
-  it("calls deleteBillingDocumentAction and redirects on delete", async () => {
+  it("asks for confirmation and does not delete when cancelled", async () => {
+    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+    });
+
+    const dialog = screen.getByRole("alertdialog");
+    expect(within(dialog).getByText(/DEV-2026-001/)).toBeDefined();
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole("button", { name: /cancel/i }));
+    });
+
+    expect(mockDelete).not.toHaveBeenCalled();
+    expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+
+  it("calls deleteBillingDocumentAction and redirects once delete is confirmed", async () => {
     mockDelete.mockResolvedValueOnce({ ok: true, data: undefined });
 
     render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+    });
+    expect(mockDelete).not.toHaveBeenCalled();
+
+    const dialog = screen.getByRole("alertdialog");
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole("button", { name: /delete/i }));
     });
 
     await waitFor(() => {
@@ -510,5 +533,187 @@ describe("BillingDocumentForm — create mode picker", () => {
       />
     );
     expect(screen.queryByRole("button", { name: /from existing/i })).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Dates as the API sends them (RFC 1123, e.g. "Sun, 27 Sep 2026 00:00:00 GMT")
+// ---------------------------------------------------------------------------
+
+describe("BillingDocumentForm — API date formats", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const rfcDevis = () =>
+    makeDoc({
+      issue_date: "Sun, 27 Sep 2026 00:00:00 GMT",
+      validity_until: "Tue, 27 Oct 2026 00:00:00 GMT",
+    });
+
+  it("shows the stored dates in the date inputs", () => {
+    render(<BillingDocumentForm mode="edit" kind="devis" document={rfcDevis()} attachedCompanies={ATTACHED_COMPANIES} />);
+    expect((screen.getByLabelText(/issue date/i) as HTMLInputElement).value).toBe("2026-09-27");
+    expect((screen.getByLabelText(/valid until/i) as HTMLInputElement).value).toBe("2026-10-27");
+  });
+
+  it("shows the stored payment due date of a facture", () => {
+    const facture = makeDoc({
+      kind: "facture",
+      issue_date: "Sun, 27 Sep 2026 00:00:00 GMT",
+      validity_until: null,
+      payment_due_date: "Tue, 27 Oct 2026 00:00:00 GMT",
+    });
+    render(<BillingDocumentForm mode="edit" kind="facture" document={facture} attachedCompanies={ATTACHED_COMPANIES} />);
+    expect((screen.getByLabelText(/payment due/i) as HTMLInputElement).value).toBe("2026-10-27");
+  });
+
+  it("saves the dates as YYYY-MM-DD", async () => {
+    mockUpdate.mockResolvedValueOnce({ ok: true, data: makeDoc() });
+    render(<BillingDocumentForm mode="edit" kind="devis" document={rfcDevis()} attachedCompanies={ATTACHED_COMPANIES} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    });
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledOnce());
+    const payload = mockUpdate.mock.calls[0][1];
+    expect(payload.issue_date).toBe("2026-09-27");
+    expect(payload.validity_until).toBe("2026-10-27");
+    expect(payload.payment_due_date).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Lines read from the API carry computed totals the request schemas reject
+// ---------------------------------------------------------------------------
+
+const API_ITEM = {
+  ...SAMPLE_ITEM,
+  category: null,
+  total_ht: "300.000",
+  total_tva: "60.000",
+  total_ttc: "360.000",
+} as BillingDocumentItem;
+
+const ITEM_KEYS = ["category", "description", "quantity", "unit_price", "vat_rate"];
+
+describe("BillingDocumentForm — line payload", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRouterPush.mockReset();
+  });
+
+  it("saves an existing document without the computed line totals", async () => {
+    mockUpdate.mockResolvedValueOnce({ ok: true, data: makeDoc() });
+    render(
+      <BillingDocumentForm mode="edit" kind="devis" document={makeDoc({ items: [API_ITEM] })} attachedCompanies={ATTACHED_COMPANIES} />
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    });
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledOnce());
+    const payload = mockUpdate.mock.calls[0][1];
+    expect(Object.keys(payload.items![0]).sort()).toEqual(ITEM_KEYS);
+  });
+
+  it("creates from a copied document without the computed line totals", async () => {
+    mockCreate.mockResolvedValueOnce({ ok: true, data: makeDoc({ id: "doc-new" }) });
+    render(
+      <BillingDocumentForm
+        mode="create"
+        kind="devis"
+        attachedCompanies={ATTACHED_COMPANIES}
+        initialFromSource={makeDoc({ items: [API_ITEM] })}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^create$/i }));
+    });
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledOnce());
+    expect(Object.keys(mockCreate.mock.calls[0][0].items[0]).sort()).toEqual(ITEM_KEYS);
+  });
+
+  it("creates from a template without the computed line totals", async () => {
+    mockCreate.mockResolvedValueOnce({ ok: true, data: makeDoc({ id: "doc-new" }) });
+    render(
+      <BillingDocumentForm
+        mode="create"
+        kind="devis"
+        attachedCompanies={ATTACHED_COMPANIES}
+        initialFromTemplate={{
+          id: "tpl-1",
+          user_id: "user-1",
+          kind: "devis",
+          name: "Template",
+          notes: null,
+          terms: null,
+          default_vat_rate: "20",
+          items: [API_ITEM],
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-01T00:00:00Z",
+        }}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/name \*/i), { target: { value: "Client" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^create$/i }));
+    });
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledOnce());
+    expect(Object.keys(mockCreate.mock.calls[0][0].items[0]).sort()).toEqual(ITEM_KEYS);
+  });
+});
+
+describe("BillingDocumentForm — copy of an existing document", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("issues the copy today instead of reusing the source's dates", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 8, 27, 10, 0, 0));
+    try {
+      render(
+        <BillingDocumentForm
+          mode="create"
+          kind="devis"
+          attachedCompanies={ATTACHED_COMPANIES}
+          initialFromSource={makeDoc({
+            issue_date: "Sat, 01 Aug 2026 00:00:00 GMT",
+            validity_until: "Mon, 31 Aug 2026 00:00:00 GMT",
+          })}
+        />
+      );
+      expect((screen.getByLabelText(/issue date/i) as HTMLInputElement).value).toBe("2026-09-27");
+      expect((screen.getByLabelText(/valid until/i) as HTMLInputElement).value).toBe("2026-10-27");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("BillingDocumentForm — choosing a source on the new-document page", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("fills the form when the page re-renders with a source document", () => {
+    const { rerender } = render(
+      <BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />
+    );
+    expect((screen.getByLabelText(/name \*/i) as HTMLInputElement).value).toBe("");
+
+    rerender(
+      <BillingDocumentForm
+        mode="create"
+        kind="devis"
+        attachedCompanies={ATTACHED_COMPANIES}
+        initialFromSource={makeDoc({ recipient_name: "Source Client", notes: "Source notes" })}
+      />
+    );
+
+    expect((screen.getByLabelText(/name \*/i) as HTMLInputElement).value).toBe("Source Client");
+    expect(screen.getByDisplayValue("Source notes")).toBeDefined();
+    expect(screen.getAllByText("Consulting").length).toBeGreaterThan(0);
   });
 });

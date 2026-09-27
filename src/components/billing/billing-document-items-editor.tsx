@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { BillingTotalsCard, computeTotals } from "@/components/billing/billing-totals-card";
+import { BillingTotalsCard, computeTotals, lineTotalHt } from "@/components/billing/billing-totals-card";
 import { getActivitySuggestionsAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import type { BillingDocumentItem } from "@/types/billing";
 import type { ActivitySuggestion, ActivityCategory } from "@/lib/api/billing/documents";
@@ -47,11 +47,9 @@ function emptyItem(): BillingDocumentItem {
 }
 
 function lineHt(item: BillingDocumentItem): string {
-  const qty = Number(item.quantity);
-  const up = Number(item.unit_price);
-  if (!Number.isFinite(qty) || !Number.isFinite(up)) return "—";
-  const ht = Math.round((qty * up + Number.EPSILON) * 100) / 100;
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(ht);
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(
+    lineTotalHt(item)
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -347,7 +345,6 @@ function ItemRow({
             value={item.category ?? ""}
             onChange={(v) => onUpdate({ category: v || null })}
             options={categoryOptions}
-            onQueryChange={() => {/* categories already loaded on mount */}}
             placeholder={t("categoryPlaceholder")}
             emptyText={t("categoryNoMatches")}
             allowFreeText
@@ -532,7 +529,6 @@ function MobileItemCard({
             value={item.category ?? ""}
             onChange={(v) => onUpdate({ category: v || null })}
             options={categoryOptions}
-            onQueryChange={() => {/* categories already loaded on mount */}}
             placeholder={t("categoryPlaceholder")}
             emptyText={t("categoryNoMatches")}
             allowFreeText

@@ -347,9 +347,10 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Use “Add by phone” to add someone by number, or “Import from company” to bring people across from another company you administer.",
       "The directory lists everyone linked to the company with their phone, whether they have signed in yet, and the projects they are assigned to.",
       "Under “Payment methods”, add, rename or delete the ways that company's invoices get paid. Built-in methods can be renamed but not removed.",
+      "Under “Labor roles”, create, rename, recolor or delete the roles workers carry on that company's projects. Deleting a role clears it from the workers who had it. The pencil beside a role in the worker dialog's role picker does the same from the labor page.",
     ],
     whoCanDoIt:
-      "Anyone can see the companies they belong to and attach another. The join code, the members table, the directory and the payment methods are for administrators of the selected company.",
+      "Anyone can see the companies they belong to and attach another. The join code, the members table, the directory and the payment methods are for administrators of the selected company; labor roles are for its administrators and managers.",
     gotchas: [
       "There are two different ways to add a person and they are not interchangeable: a single-use invite token valid seven days, and the reusable company code people type in the mobile app.",
     ],

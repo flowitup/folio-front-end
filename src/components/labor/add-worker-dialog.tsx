@@ -31,6 +31,10 @@ interface AddWorkerDialogProps {
   roles?: LaborRole[];
   palette?: string[];
   onRoleCreated?: (role: LaborRole) => void;
+  /** Company admin or manager: the role picker offers rename / recolor / delete. */
+  canManageRoles?: boolean;
+  onRoleUpdated?: (role: LaborRole) => void;
+  onRoleDeleted?: (roleId: string) => void;
 }
 
 /**
@@ -53,6 +57,9 @@ export function AddWorkerDialog({
   roles = [],
   palette = [],
   onRoleCreated,
+  canManageRoles = false,
+  onRoleUpdated,
+  onRoleDeleted,
 }: AddWorkerDialogProps) {
   const t = useTranslations("labor");
 
@@ -211,6 +218,9 @@ export function AddWorkerDialog({
                 onRoleCreated={(role) => {
                   onRoleCreated?.(role);
                 }}
+                canManage={canManageRoles}
+                onRoleUpdated={onRoleUpdated}
+                onRoleDeleted={onRoleDeleted}
               />
             </div>
           )}

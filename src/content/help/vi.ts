@@ -345,9 +345,10 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Dùng “Thêm bằng số điện thoại” để thêm người theo số, hoặc “Nhập từ công ty khác” để mang người từ một công ty khác bạn quản trị sang.",
       "Danh bạ liệt kê mọi người liên kết với công ty, kèm số điện thoại, đã đăng nhập lần nào chưa, và những dự án họ được giao.",
       "Ở “Phương thức thanh toán”, thêm, đổi tên hoặc xóa những cách hóa đơn của công ty đó được thanh toán. Phương thức có sẵn đổi tên được nhưng không xóa được.",
+      "Ở “Vai trò nhân công”, tạo, đổi tên, đổi màu hoặc xóa các vai trò gán cho công nhân trên công trình của công ty đó. Xóa một vai trò sẽ gỡ vai trò đó khỏi những công nhân đang có. Biểu tượng bút chì cạnh một vai trò, trong bộ chọn vai trò của hộp thoại công nhân, cũng làm được việc này ngay từ trang nhân công.",
     ],
     whoCanDoIt:
-      "Ai cũng xem được các công ty mình thuộc về và liên kết thêm công ty. Mã công ty, bảng thành viên, danh bạ và phương thức thanh toán chỉ dành cho quản trị viên của công ty đang chọn.",
+      "Ai cũng xem được các công ty mình thuộc về và liên kết thêm công ty. Mã công ty, bảng thành viên, danh bạ và phương thức thanh toán chỉ dành cho quản trị viên của công ty đang chọn; vai trò nhân công dành cho quản trị viên và quản lý của công ty đó.",
     gotchas: [
       "Có hai cách thêm người và chúng không thay thế cho nhau: mã mời dùng một lần, có hiệu lực bảy ngày, và mã công ty dùng lại được mà mọi người nhập trong app điện thoại.",
     ],

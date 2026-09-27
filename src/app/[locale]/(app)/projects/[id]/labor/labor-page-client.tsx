@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
-import { can } from "@/lib/auth/permissions";
+import { can, canManageLaborRoles } from "@/lib/auth/permissions";
 import { Plus, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -109,6 +109,10 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // no view_pay): they were explicitly granted invoice rights and still need
   // the Payments tab, even without labor visibility.
   const isMemberPersona = !canManageLabor && !canViewPay && !canManageInvoices;
+  // Renaming / deleting a labor role is a company-level write (admin or
+  // manager of the company whose roles `/labor/roles` lists — the primary
+  // one), not a project permission.
+  const canEditLaborRoles = canManageLaborRoles(user?.permissions, user?.companies);
 
   // State. `activeTab` is seeded with a placeholder and corrected by the
   // persona effect below the FIRST time ProjectContext resolves — never
@@ -518,6 +522,18 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // resolving my_permissions (see the H1 comments above).
   const showContent = !isLoading && !isProjectContextLoading;
 
+  // Workers carry their role's name and color, so a rename or delete in the
+  // role picker reloads them — a deleted role is cleared from its workers by
+  // the backend, and the list must stop showing it.
+  const handleRoleUpdated = (role: LaborRole) => {
+    setRoles((prev) => prev.map((r) => (r.id === role.id ? role : r)));
+    void loadWorkers();
+  };
+  const handleRoleDeleted = (roleId: string) => {
+    setRoles((prev) => prev.filter((r) => r.id !== roleId));
+    void loadWorkers();
+  };
+
   return (
     <div className="fade-up flex min-h-full flex-col gap-4 px-4 pb-12 lg:gap-6 lg:px-8">
       {/* Segmented tabs — member persona (D3) gets the single roster tab, no
@@ -704,6 +720,9 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         roles={roles}
         palette={palette}
         onRoleCreated={(role) => setRoles((prev) => [...prev, role])}
+        canManageRoles={canEditLaborRoles}
+        onRoleUpdated={handleRoleUpdated}
+        onRoleDeleted={handleRoleDeleted}
       />
 
       <AddWorkerDialog
@@ -714,6 +733,9 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         roles={roles}
         palette={palette}
         onRoleCreated={(role) => setRoles((prev) => [...prev, role])}
+        canManageRoles={canEditLaborRoles}
+        onRoleUpdated={handleRoleUpdated}
+        onRoleDeleted={handleRoleDeleted}
       />
 
       <LogDayDialog

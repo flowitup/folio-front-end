@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { ChevronsUpDown, Loader2, Plus } from "lucide-react";
+import { ChevronsUpDown, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,10 +17,16 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RoleColorPicker } from "./role-color-picker";
-import { createLaborRoleAction } from "../actions";
+import { LaborRoleForm } from "@/components/labor/labor-role-form";
+import {
+  buildLaborRoleUpdate,
+  laborRoleErrorMessage,
+} from "@/components/labor/labor-role-helpers";
+import {
+  createLaborRoleAction,
+  deleteLaborRoleAction,
+  updateLaborRoleAction,
+} from "../actions";
 import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
 import type { LaborRole } from "@/types/labor-role";
 
@@ -29,17 +36,48 @@ interface RoleSelectWithCreateProps {
   value: string | null;
   onChange: (roleId: string | null) => void;
   onRoleCreated: (role: LaborRole) => void;
+  /**
+   * Whether the caller may rename / recolor / delete roles (company admin or
+   * manager — see `canManageLaborRoles`). Without it the rows carry no edit
+   * control, since the backend would only answer 403.
+   */
+  canManage?: boolean;
+  onRoleUpdated?: (role: LaborRole) => void;
+  onRoleDeleted?: (roleId: string) => void;
+}
+
+/**
+ * What the panel under the list is showing: nothing, the create form, the
+ * edit form for one role, or the delete confirmation for that role.
+ */
+type Panel =
+  | { kind: "none" }
+  | { kind: "create"; seedName: string }
+  | { kind: "edit"; role: LaborRole }
+  | { kind: "confirmDelete"; role: LaborRole };
+
+/**
+ * The panels sit inside cmdk's <Command>, whose root handles Enter and the
+ * arrow keys as list navigation — Enter would select the highlighted role
+ * instead of pressing the focused Save / Cancel / Delete button. Keep those
+ * keys inside the panel; Escape still bubbles so the popover can close.
+ */
+function keepKeysInPanel(e: React.KeyboardEvent) {
+  if (e.key !== "Escape") e.stopPropagation();
 }
 
 /**
  * RoleSelectWithCreate — Popover+Command picker for labor roles with
- * inline create capability. Follows the same pattern as PersonTypeahead.
+ * inline create, and — for a company admin or manager — inline rename,
+ * recolor and delete. Follows the same pattern as PersonTypeahead.
  *
  * - "No role" option at the top clears the selection.
- * - Existing roles shown with a colored dot and name.
+ * - Existing roles shown with a colored dot and name; with `canManage`, a
+ *   pencil beside each one opens the edit form (name, color, delete).
  * - When the search term is non-empty and has no exact match, a
  *   "Create role..." option appears at the bottom.
- * - Clicking "Create role..." reveals an inline form (name + color picker).
+ * - Delete asks for confirmation inside the popover first. The backend then
+ *   clears the role from every worker who had it, so the parent reloads them.
  */
 export function RoleSelectWithCreate({
   roles,
@@ -47,17 +85,21 @@ export function RoleSelectWithCreate({
   value,
   onChange,
   onRoleCreated,
+  canManage = false,
+  onRoleUpdated,
+  onRoleDeleted,
 }: RoleSelectWithCreateProps) {
   const tRole = useTranslations("labor.role.defaults");
   const t = useTranslations("labor.role");
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
-  const [showCreateForm, setShowCreateForm] = React.useState(false);
-  const [createName, setCreateName] = React.useState("");
-  const [createColor, setCreateColor] = React.useState(palette[0] ?? "#7C3AED");
-  const [creating, setCreating] = React.useState(false);
-  const [createError, setCreateError] = React.useState<string | null>(null);
+  const [panel, setPanel] = React.useState<Panel>({ kind: "none" });
+  const [busy, setBusy] = React.useState(false);
+  // Synchronous twin of `busy`: a double Enter lands before the re-render
+  // that disables the buttons, and must not send the request twice.
+  const busyRef = React.useRef(false);
+  const [panelError, setPanelError] = React.useState<string | null>(null);
 
   const selectedRole = value ? roles.find((r) => r.id === value) : null;
   const roleName = React.useCallback(
@@ -81,17 +123,21 @@ export function RoleSelectWithCreate({
     trimmed.length > 0 &&
     roles.some((r) => roleName(r).trim().toLowerCase() === trimmed.toLowerCase());
 
-  const showCreateOption = trimmed.length > 0 && !exactMatch && !showCreateForm;
+  const showCreateOption = trimmed.length > 0 && !exactMatch && panel.kind === "none";
+
+  function showPanel(next: Panel) {
+    setPanelError(null);
+    setPanel(next);
+  }
 
   function handleOpenChange(next: boolean) {
+    // Never drop a request in flight: its result still has to land.
+    if (!next && busy) return;
     setOpen(next);
     if (!next) {
-      // Reset create form state on close.
+      // Reset create/edit state on close.
       setQuery("");
-      setShowCreateForm(false);
-      setCreateName("");
-      setCreateColor(palette[0] ?? "#7C3AED");
-      setCreateError(null);
+      showPanel({ kind: "none" });
     }
   }
 
@@ -101,36 +147,67 @@ export function RoleSelectWithCreate({
     setQuery("");
   }
 
-  function handleShowCreate() {
-    setCreateName(trimmed);
-    setCreateColor(palette[0] ?? "#7C3AED");
-    setCreateError(null);
-    setShowCreateForm(true);
+  /** Run one request at a time; `failedKey` is shown if it throws. */
+  async function runRequest(failedKey: string, work: () => Promise<void>) {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    setPanelError(null);
+    try {
+      await work();
+    } catch {
+      setPanelError(t(failedKey));
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
   }
 
-  async function handleCreate() {
-    if (!createName.trim()) return;
-    setCreating(true);
-    setCreateError(null);
-    try {
-      const result = await createLaborRoleAction({
-        name: createName.trim(),
-        color: createColor,
-      });
+  function handleCreate(values: { name: string; color: string }) {
+    void runRequest("createFailed", async () => {
+      const result = await createLaborRoleAction(values);
       if (!result.success) {
-        setCreateError(result.error === "duplicate" ? t("duplicateName") : t("createFailed"));
+        setPanelError(laborRoleErrorMessage(t, result, "create"));
         return;
       }
       onRoleCreated(result.role);
       onChange(result.role.id);
       setOpen(false);
       setQuery("");
-      setShowCreateForm(false);
-    } catch {
-      setCreateError(t("createFailed"));
-    } finally {
-      setCreating(false);
+      setPanel({ kind: "none" });
+    });
+  }
+
+  function handleUpdate(role: LaborRole, values: { name: string; color: string }) {
+    const payload = buildLaborRoleUpdate(role, roleName(role), values);
+    if (!payload) {
+      showPanel({ kind: "none" });
+      return;
     }
+    void runRequest("updateFailed", async () => {
+      const result = await updateLaborRoleAction(role.id, payload);
+      if (!result.success) {
+        setPanelError(laborRoleErrorMessage(t, result, "update"));
+        return;
+      }
+      onRoleUpdated?.(result.role);
+      toast.success(t("updated"));
+      setPanel({ kind: "none" });
+    });
+  }
+
+  function handleDelete(role: LaborRole) {
+    void runRequest("deleteFailed", async () => {
+      const result = await deleteLaborRoleAction(role.id);
+      if (!result.success) {
+        setPanelError(laborRoleErrorMessage(t, result, "delete"));
+        return;
+      }
+      if (value === role.id) onChange(null);
+      onRoleDeleted?.(role.id);
+      toast.success(t("deleted"));
+      setPanel({ kind: "none" });
+    });
   }
 
   const displayLabel = selectedRole ? roleName(selectedRole) : "";
@@ -176,11 +253,11 @@ export function RoleSelectWithCreate({
             value={query}
             onValueChange={(v) => {
               setQuery(v);
-              if (showCreateForm) setShowCreateForm(false);
+              if (panel.kind !== "none" && !busy) showPanel({ kind: "none" });
             }}
           />
           <CommandList id={listId}>
-            {filteredRoles.length === 0 && !showCreateOption && !showCreateForm && (
+            {filteredRoles.length === 0 && !showCreateOption && panel.kind === "none" && (
               <CommandEmpty>
                 {trimmed ? t("noMatchingRoles") : t("noRolesYet")}
               </CommandEmpty>
@@ -203,19 +280,36 @@ export function RoleSelectWithCreate({
                 <CommandSeparator />
                 <CommandGroup>
                   {filteredRoles.map((role) => (
-                    <CommandItem
-                      key={role.id}
-                      value={role.id}
-                      onSelect={() => handleSelect(role.id)}
-                      className="flex items-center gap-2"
-                    >
-                      <span
-                        className="inline-block h-3 w-3 shrink-0 rounded-full"
-                        style={{ backgroundColor: role.color }}
-                        aria-hidden="true"
-                      />
-                      <span className="truncate">{roleName(role)}</span>
-                    </CommandItem>
+                    <div key={role.id} className="flex items-center gap-1">
+                      <CommandItem
+                        value={role.id}
+                        onSelect={() => handleSelect(role.id)}
+                        className="flex min-w-0 flex-1 items-center gap-2"
+                      >
+                        <span
+                          className="inline-block h-3 w-3 shrink-0 rounded-full"
+                          style={{ backgroundColor: role.color }}
+                          aria-hidden="true"
+                        />
+                        <span className="truncate">{roleName(role)}</span>
+                      </CommandItem>
+                      {/* Outside the option on purpose: a button nested in a
+                          cmdk item would also select the role. */}
+                      {canManage && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          className="mr-1 shrink-0 text-muted-foreground"
+                          aria-label={t("editNamed", { name: roleName(role) })}
+                          title={t("editRole")}
+                          disabled={busy}
+                          onClick={() => showPanel({ kind: "edit", role })}
+                        >
+                          <Pencil />
+                        </Button>
+                      )}
+                    </div>
                   ))}
                 </CommandGroup>
               </>
@@ -226,7 +320,7 @@ export function RoleSelectWithCreate({
                 <CommandSeparator />
                 <CommandGroup>
                   <CommandItem
-                    onSelect={handleShowCreate}
+                    onSelect={() => showPanel({ kind: "create", seedName: trimmed })}
                     className="text-primary flex items-center gap-2"
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -238,52 +332,87 @@ export function RoleSelectWithCreate({
           </CommandList>
 
           {/* Inline create form — shown below the list */}
-          {showCreateForm && (
-            <div className="border-t p-3 space-y-3">
+          {panel.kind === "create" && (
+            <div className="border-t p-3" onKeyDown={keepKeysInPanel}>
+              <LaborRoleForm
+                key="create"
+                palette={palette}
+                initialName={panel.seedName}
+                submitLabel={t("create")}
+                submitting={busy}
+                error={panelError}
+                onSubmit={handleCreate}
+                onCancel={() => showPanel({ kind: "none" })}
+              />
+            </div>
+          )}
+
+          {/* Inline edit form — rename / recolor, with delete behind a confirm */}
+          {panel.kind === "edit" && (
+            <div className="border-t p-3" onKeyDown={keepKeysInPanel}>
+              <p className="mb-2 text-xs font-medium">{t("editRole")}</p>
+              <LaborRoleForm
+                key={`edit-${panel.role.id}`}
+                palette={palette}
+                initialName={roleName(panel.role)}
+                initialColor={panel.role.color}
+                submitLabel={t("save")}
+                submitting={busy}
+                error={panelError}
+                onSubmit={(values) => handleUpdate(panel.role, values)}
+                onCancel={() => showPanel({ kind: "none" })}
+                extraAction={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
+                    aria-label={t("deleteNamed", { name: roleName(panel.role) })}
+                    title={t("deleteRole")}
+                    disabled={busy}
+                    onClick={() => showPanel({ kind: "confirmDelete", role: panel.role })}
+                  >
+                    <Trash2 />
+                  </Button>
+                }
+              />
+            </div>
+          )}
+
+          {panel.kind === "confirmDelete" && (
+            <div className="border-t p-3 space-y-3" onKeyDown={keepKeysInPanel}>
               <div className="space-y-1">
-                <Label className="text-xs">{t("roleName")}</Label>
-                <Input
-                  value={createName}
-                  onChange={(e) => setCreateName(e.target.value)}
-                  placeholder={t("roleName")}
-                  className="h-8 text-sm"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleCreate();
-                    }
-                  }}
-                />
+                <p className="text-sm font-medium">
+                  {t("confirmDeleteTitle", { name: roleName(panel.role) })}
+                </p>
+                <p className="text-muted-foreground text-xs">{t("confirmDelete")}</p>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs">{t("roleColor")}</Label>
-                <RoleColorPicker
-                  palette={palette.length > 0 ? palette : ["#7C3AED"]}
-                  value={createColor}
-                  onChange={setCreateColor}
-                />
-              </div>
-              {createError && (
-                <p className="text-destructive text-xs">{createError}</p>
+              {panelError && (
+                <p role="alert" className="text-destructive text-xs">
+                  {panelError}
+                </p>
               )}
               <div className="flex gap-2">
                 <Button
                   type="button"
                   size="sm"
-                  onClick={handleCreate}
-                  disabled={creating || !createName.trim()}
+                  variant="destructive"
                   className="flex-1"
+                  disabled={busy}
+                  onClick={() => handleDelete(panel.role)}
                 >
-                  {creating && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                  {t("create")}
+                  {busy && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                  {t("deleteRole")}
                 </Button>
+                {/* Focus lands on the safe choice: the trash button that
+                    opened this panel is gone, and Enter must not delete. */}
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={() => setShowCreateForm(false)}
-                  disabled={creating}
+                  disabled={busy}
+                  autoFocus
+                  onClick={() => showPanel({ kind: "edit", role: panel.role })}
                 >
                   {t("cancel")}
                 </Button>

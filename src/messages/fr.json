@@ -1400,7 +1400,15 @@
         "statusUpdateFailed": "Échec de la mise à jour du statut. Veuillez réessayer.",
         "createFromTemplateFailed": "Échec de la création du document à partir du modèle.",
         "templatesLoadFailed": "Échec du chargement des modèles.",
-        "documentsLoadFailed": "Échec du chargement des documents existants."
+        "documentsLoadFailed": "Échec du chargement des documents existants.",
+        "recipientEmailInvalid": "Saisissez une adresse e-mail valide pour le destinataire.",
+        "itemQuantityTooLarge": "La quantité d'une ligne ne peut pas dépasser {max}.",
+        "itemUnitPriceTooLarge": "Le prix unitaire d'une ligne ne peut pas dépasser {max}.",
+        "itemVatRateInvalid": "Chaque ligne doit avoir un taux de TVA.",
+        "itemVatRateTooLarge": "Le taux de TVA d'une ligne ne peut pas dépasser 100 %.",
+        "invalidInput": "Certains champs sont invalides. Vérifiez les dates, l'e-mail et les montants des lignes.",
+        "forbidden": "Vous n'avez pas l'autorisation d'effectuer cette action.",
+        "companyProfileMissing": "Complétez le profil de l'entreprise avant de créer des documents de facturation."
       },
       "toast": {
         "documentSaved": "Document enregistré.",

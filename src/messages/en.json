@@ -1400,7 +1400,15 @@
         "statusUpdateFailed": "Failed to update status. Please try again.",
         "createFromTemplateFailed": "Failed to create document from template.",
         "templatesLoadFailed": "Failed to load templates.",
-        "documentsLoadFailed": "Failed to load existing documents."
+        "documentsLoadFailed": "Failed to load existing documents.",
+        "recipientEmailInvalid": "Enter a valid recipient email address.",
+        "itemQuantityTooLarge": "Item quantity cannot exceed {max}.",
+        "itemUnitPriceTooLarge": "Item unit price cannot exceed {max}.",
+        "itemVatRateInvalid": "Every item needs a VAT rate.",
+        "itemVatRateTooLarge": "Item VAT rate cannot exceed 100%.",
+        "invalidInput": "Some fields are invalid. Check the dates, email and line amounts.",
+        "forbidden": "You do not have permission to perform this action.",
+        "companyProfileMissing": "Complete the company profile before creating billing documents."
       },
       "toast": {
         "documentSaved": "Document saved.",

@@ -1400,7 +1400,15 @@
         "statusUpdateFailed": "Không cập nhật được trạng thái. Vui lòng thử lại.",
         "createFromTemplateFailed": "Không tạo được tài liệu từ mẫu.",
         "templatesLoadFailed": "Không tải được danh sách mẫu.",
-        "documentsLoadFailed": "Không tải được các tài liệu hiện có."
+        "documentsLoadFailed": "Không tải được các tài liệu hiện có.",
+        "recipientEmailInvalid": "Nhập địa chỉ email người nhận hợp lệ.",
+        "itemQuantityTooLarge": "Số lượng của một dòng không được vượt quá {max}.",
+        "itemUnitPriceTooLarge": "Đơn giá của một dòng không được vượt quá {max}.",
+        "itemVatRateInvalid": "Mỗi dòng cần có thuế suất VAT.",
+        "itemVatRateTooLarge": "Thuế suất VAT của một dòng không được vượt quá 100%.",
+        "invalidInput": "Một số trường không hợp lệ. Hãy kiểm tra ngày, email và số tiền của các dòng.",
+        "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+        "companyProfileMissing": "Hãy hoàn thiện hồ sơ công ty trước khi tạo chứng từ thanh toán."
       },
       "toast": {
         "documentSaved": "Đã lưu tài liệu.",

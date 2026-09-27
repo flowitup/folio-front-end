@@ -20,6 +20,7 @@
  * State: plain useState (no react-hook-form). Server is source of truth.
  */
 
+import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE, MAX_VAT_RATE } from "@/lib/numeric-bounds";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -66,6 +67,9 @@ import { kindToSegment } from "@/lib/billing/url-helpers";
 import { toIsoDate, toItemPayload } from "@/lib/billing/document-payload";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
 import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
+
+// Loose shape check; the API does the strict one.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -239,13 +243,34 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     if (!isEdit && !selectedCompanyId) return tForm("errors.companyRequired");
     if (!recipientName.trim()) return tForm("errors.recipientRequired");
     if (items.length === 0) return tForm("errors.atLeastOneItem");
+    if (recipientEmail.trim() && !EMAIL_RE.test(recipientEmail.trim())) {
+      return tForm("errors.recipientEmailInvalid");
+    }
     for (const item of items) {
       if (!item.description.trim()) return tForm("errors.itemDescriptionRequired");
       if (Number(item.quantity) <= 0) return tForm("errors.itemQuantityPositive");
+      if (Number(item.quantity) > MAX_LINE_QUANTITY) {
+        return tForm("errors.itemQuantityTooLarge", { max: MAX_LINE_QUANTITY });
+      }
       if (Number(item.unit_price) < 0) return tForm("errors.itemUnitPricePositive");
-      if (Number(item.vat_rate) < 0) return tForm("errors.itemVatRatePositive");
+      if (Number(item.unit_price) > MAX_LINE_UNIT_PRICE) {
+        return tForm("errors.itemUnitPriceTooLarge", { max: MAX_LINE_UNIT_PRICE });
+      }
+      const vat = String(item.vat_rate ?? "").trim();
+      if (vat === "" || !Number.isFinite(Number(vat))) return tForm("errors.itemVatRateInvalid");
+      if (Number(vat) < 0) return tForm("errors.itemVatRatePositive");
+      if (Number(vat) > MAX_VAT_RATE) return tForm("errors.itemVatRateTooLarge");
     }
     return null;
+  }
+
+  /** Translated message for a failed save — never the API's raw (English,
+   * field-path) validation text. */
+  function saveErrorMessage(error: { code: string }): string {
+    if (error.code === "validation") return tForm("errors.invalidInput");
+    if (error.code === "forbidden") return tForm("errors.forbidden");
+    if (error.code === "company_profile_missing") return tForm("errors.companyProfileMissing");
+    return tForm("errors.saveFailed");
   }
 
   // ---------------------------------------------------------------------------
@@ -297,7 +322,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
 
       if (isEdit && liveDoc) {
         const result = await updateBillingDocumentAction(liveDoc.id, payload);
-        if (!result.ok) { setFormError(result.error.message); return; }
+        if (!result.ok) { setFormError(saveErrorMessage(result.error)); return; }
         toast.success(tForm("toast.documentSaved"));
         setLiveDoc(result.data);
       } else {
@@ -312,7 +337,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
             await handleCompanyNoLongerAttached();
             return;
           }
-          setFormError(result.error.message);
+          setFormError(saveErrorMessage(result.error));
           return;
         }
         toast.success(tForm("toast.documentCreated"));

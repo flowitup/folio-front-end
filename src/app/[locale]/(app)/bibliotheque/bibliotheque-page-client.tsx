@@ -38,9 +38,9 @@ import {
   listCategoriesAction,
   listProductsAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
+import { LIBRARY_PAGE_SIZE } from "@/lib/bibliotheque/page-size";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 
-const PAGE_SIZE = 24; // 12 rows of 2 / 8 of 3 / ~5 of 5 — fits every breakpoint
 const MAX_COMPARE = 4; // side-by-side columns that fit the compare dialog
 
 interface Props {
@@ -221,7 +221,7 @@ export function BibliothequePageClient({ companyId }: Props) {
 
   const selectedProducts = Array.from(selected.values());
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / LIBRARY_PAGE_SIZE);
 
   return (
     <div className="fade-up px-4 pb-12 lg:px-8">

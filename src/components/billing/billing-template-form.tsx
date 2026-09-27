@@ -48,6 +48,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { BillingDocumentItemsEditor } from "@/components/billing/billing-document-items-editor";
+import { toItemPayload } from "@/lib/billing/document-payload";
 import {
   createBillingTemplateAction,
   updateBillingTemplateAction,
@@ -159,7 +160,8 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
     try {
       const payload = {
         name: name.trim(),
-        items,
+        // Lines read from the API carry read-only totals the schema rejects.
+        items: items.map(toItemPayload),
         notes: notes.trim() || null,
         terms: terms.trim() || null,
         default_vat_rate: effectiveVatRate || null,

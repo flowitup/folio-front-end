@@ -558,3 +558,89 @@ describe("BillingDocumentForm — API date formats", () => {
     expect(payload.payment_due_date).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Lines read from the API carry computed totals the request schemas reject
+// ---------------------------------------------------------------------------
+
+const API_ITEM = {
+  ...SAMPLE_ITEM,
+  category: null,
+  total_ht: "300.000",
+  total_tva: "60.000",
+  total_ttc: "360.000",
+} as BillingDocumentItem;
+
+const ITEM_KEYS = ["category", "description", "quantity", "unit_price", "vat_rate"];
+
+describe("BillingDocumentForm — line payload", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRouterPush.mockReset();
+  });
+
+  it("saves an existing document without the computed line totals", async () => {
+    mockUpdate.mockResolvedValueOnce({ ok: true, data: makeDoc() });
+    render(
+      <BillingDocumentForm mode="edit" kind="devis" document={makeDoc({ items: [API_ITEM] })} attachedCompanies={ATTACHED_COMPANIES} />
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    });
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledOnce());
+    const payload = mockUpdate.mock.calls[0][1];
+    expect(Object.keys(payload.items![0]).sort()).toEqual(ITEM_KEYS);
+  });
+
+  it("creates from a copied document without the computed line totals", async () => {
+    mockCreate.mockResolvedValueOnce({ ok: true, data: makeDoc({ id: "doc-new" }) });
+    render(
+      <BillingDocumentForm
+        mode="create"
+        kind="devis"
+        attachedCompanies={ATTACHED_COMPANIES}
+        initialFromSource={makeDoc({ items: [API_ITEM] })}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^create$/i }));
+    });
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledOnce());
+    expect(Object.keys(mockCreate.mock.calls[0][0].items[0]).sort()).toEqual(ITEM_KEYS);
+  });
+
+  it("creates from a template without the computed line totals", async () => {
+    mockCreate.mockResolvedValueOnce({ ok: true, data: makeDoc({ id: "doc-new" }) });
+    render(
+      <BillingDocumentForm
+        mode="create"
+        kind="devis"
+        attachedCompanies={ATTACHED_COMPANIES}
+        initialFromTemplate={{
+          id: "tpl-1",
+          user_id: "user-1",
+          kind: "devis",
+          name: "Template",
+          notes: null,
+          terms: null,
+          default_vat_rate: "20",
+          items: [API_ITEM],
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-01T00:00:00Z",
+        }}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/name \*/i), { target: { value: "Client" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^create$/i }));
+    });
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledOnce());
+    expect(Object.keys(mockCreate.mock.calls[0][0].items[0]).sort()).toEqual(ITEM_KEYS);
+  });
+});

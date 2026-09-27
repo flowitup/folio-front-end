@@ -1,3 +1,5 @@
+import type { BillingDocumentItem } from "@/types/billing";
+
 /**
  * Helpers that turn billing data read from the API back into the shape the
  * create / update endpoints accept.
@@ -25,4 +27,16 @@ export function toIsoDate(value: string | null | undefined): string | null {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed.toISOString().slice(0, 10);
+}
+
+/** Keep only the line fields the create / update / template schemas accept. */
+export function toItemPayload(item: BillingDocumentItem): BillingDocumentItem {
+  const category = item.category?.trim();
+  return {
+    description: item.description,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    vat_rate: item.vat_rate,
+    category: category ? category : null,
+  };
 }

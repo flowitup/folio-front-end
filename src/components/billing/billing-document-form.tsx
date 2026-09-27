@@ -63,7 +63,7 @@ import type { MyCompany } from "@/types/companies";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
-import { toIsoDate } from "@/lib/billing/document-payload";
+import { toIsoDate, toItemPayload } from "@/lib/billing/document-payload";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
 
 // ---------------------------------------------------------------------------
@@ -265,7 +265,8 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         validity_until: kind === "devis" ? validityUntil || null : null,
         payment_due_date: kind === "facture" ? paymentDueDate || null : null,
         payment_terms: kind === "facture" ? (paymentTerms.trim() || null) : null,
-        items,
+        // Lines seeded from the API carry read-only totals the schema rejects.
+        items: items.map(toItemPayload),
         notes: notes.trim() || null,
         terms: terms.trim() || null,
         signature_block_text: signatureBlock.trim() || null,

@@ -14,6 +14,7 @@
 import { useEffect, useState } from "react";
 import { Package } from "lucide-react";
 import { env } from "@/lib/config/env";
+import { fetchWithRefresh } from "@/lib/api/refresh";
 
 interface ProductImageProps {
   /** Product id — used to fetch /bibliotheque/products/<id>/image. */
@@ -33,9 +34,7 @@ export function ProductImage({ productId, hasImage, alt, className = "" }: Produ
     let revoked = false;
     let objectUrl: string | null = null;
 
-    fetch(`${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}/image`, {
-      credentials: "include",
-    })
+    fetchWithRefresh(`${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}/image`)
       .then((res) => {
         if (!res.ok) throw new Error(`image ${res.status}`);
         return res.blob();

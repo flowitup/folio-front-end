@@ -1,6 +1,7 @@
 import { api, ApiError, getCsrfHeader } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
+import { fetchWithRefresh } from "@/lib/api/refresh";
 import type {
   Invoice,
   CreateInvoicePayload,
@@ -130,9 +131,7 @@ export const renameAttachment = (attachmentId: string, filename: string): Promis
  * Fetch attachment as a raw Blob.
  */
 export const fetchAttachmentBlob = async (attachmentId: string): Promise<Blob> => {
-  const response = await fetch(`${env.apiBaseUrl}/attachments/${attachmentId}/download`, {
-    credentials: "include",
-  });
+  const response = await fetchWithRefresh(`${env.apiBaseUrl}/attachments/${attachmentId}/download`);
   if (!response.ok) {
     throw new ApiError(`Download failed: ${response.status}`, response.status);
   }
@@ -173,9 +172,7 @@ export async function fetchInvoiceExport(
   if (typeFilter) params.set("type", typeFilter);
 
   const url = `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/invoices-export?${params.toString()}`;
-  const res = await fetch(url, {
-    credentials: "include",
-  });
+  const res = await fetchWithRefresh(url);
 
   if (!res.ok) {
     let body: unknown;

@@ -52,6 +52,7 @@ import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/c
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
+import { fetchWithRefresh } from "@/lib/api/refresh";
 import type {
   BillingDocument,
   BillingDocumentKind,
@@ -318,11 +319,8 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
-      const response = await fetch(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/pdf`,
-        {
-          credentials: "include",
-        }
+      const response = await fetchWithRefresh(
+        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/pdf`
       );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const cd = response.headers.get("Content-Disposition");
@@ -344,11 +342,8 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     xlsxLoadingRef.current = true;
     setIsXlsxLoading(true);
     try {
-      const response = await fetch(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/xlsx`,
-        {
-          credentials: "include",
-        }
+      const response = await fetchWithRefresh(
+        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/xlsx`
       );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const cd = response.headers.get("Content-Disposition");

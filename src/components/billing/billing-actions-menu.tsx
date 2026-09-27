@@ -47,6 +47,7 @@ import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { deleteBillingDocumentAction, convertDevisToFactureAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
+import { fetchWithRefresh } from "@/lib/api/refresh";
 import type { BillingDocument } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
@@ -85,12 +86,8 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
     pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
-      const response = await fetch(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/pdf`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
+      const response = await fetchWithRefresh(
+        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/pdf`
       );
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -115,12 +112,8 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
     xlsxLoadingRef.current = true;
     setIsXlsxLoading(true);
     try {
-      const response = await fetch(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/xlsx`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
+      const response = await fetchWithRefresh(
+        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/xlsx`
       );
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);

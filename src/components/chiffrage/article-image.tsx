@@ -17,6 +17,7 @@ import { useTranslations } from "next-intl";
 import { ImageIcon } from "lucide-react";
 
 import { env } from "@/lib/config/env";
+import { fetchWithRefresh } from "@/lib/api/refresh";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ChiffrageImageRef } from "@/lib/api/chiffrage";
 
@@ -47,7 +48,7 @@ export function ArticleImage({ projectId, imageRef, alt, version = 0 }: Props) {
     let cancelled = false;
     let objectUrl: string | null = null;
 
-    fetch(endpointFor(projectId, imageRef), { credentials: "include" })
+    fetchWithRefresh(endpointFor(projectId, imageRef))
       .then((res) => {
         if (!res.ok) throw new Error(`image ${res.status}`);
         return res.blob();

@@ -32,6 +32,7 @@ import type {
 import { api, ApiError } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
+import { fetchWithRefresh } from "@/lib/api/refresh";
 
 // Build URL with optional query params
 function buildUrl(basePath: string, params?: Record<string, string | undefined>): string {
@@ -314,9 +315,7 @@ async function fetchExportFile(
   format: LaborExportFormat,
 ): Promise<{ blob: Blob; filename: string }> {
   assertValidExportArgs(range, format);
-  const response = await fetch(url, {
-    credentials: 'include',
-  });
+  const response = await fetchWithRefresh(url);
 
   if (!response.ok) {
     let body: unknown;

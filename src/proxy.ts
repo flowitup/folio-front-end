@@ -53,10 +53,11 @@ export async function proxy(request: NextRequest) {
   const localeMatch = pathname.match(new RegExp(`^/(${locales.join("|")})(?=/|$)`));
   const locale = localeMatch ? localeMatch[1] : defaultLocale;
 
-  // Redirect authenticated users away from auth pages
-  if (isAuthenticated && isAuthRoute(pathnameWithoutLocale)) {
-    return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
-  }
+  // Auth pages (/login) are never redirected from here. An unexpired token
+  // may still be refused by the API (account deleted, token revoked, secret
+  // rotated); bouncing it to /dashboard looped with the app layout sending it
+  // back to /login. The login page redirects a signed-in user itself, after
+  // the API has accepted the session.
 
   // Default-deny: every route requires auth unless it's on the public
   // denylist (login, accept-invite, etc). Adding a new authenticated

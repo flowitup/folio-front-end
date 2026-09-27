@@ -1,7 +1,8 @@
 /**
  * The proxy renews an expired access token with the refresh cookie before it
- * treats anyone as signed out:
- * - a 30-minute access token must not end a 7-day session on the next page load.
+ * treats anyone as signed out, and never bounces /login on a cookie alone:
+ * - a 30-minute access token must not end a 7-day session on the next page load;
+ * - an unexpired token the API refuses must not loop /login <-> /dashboard.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -150,5 +151,11 @@ describe("proxy session handling", () => {
     );
     expect(fetchMock).not.toHaveBeenCalled();
     expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("never redirects /login on an unexpired cookie the API may refuse", async () => {
+    const res = await proxy(request("/en/login", { access_token_cookie: jwt(600) }));
+    expect(res.headers.get("location")).toBeNull();
+    expect(res.status).toBe(200);
   });
 });

@@ -240,7 +240,8 @@
     "waitingForAssignment": {
       "title": "En attente d'affectation",
       "description": "L'administrateur de votre entreprise ne vous a pas encore ajouté à un chantier."
-    }
+    },
+    "settingsReadOnly": "Seuls les administrateurs et managers de ce projet peuvent modifier ses paramètres."
   },
   "settings": {
     "profile": "Profil",

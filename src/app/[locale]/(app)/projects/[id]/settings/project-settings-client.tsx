@@ -25,6 +25,9 @@ export function ProjectSettingsClient({ project }: Props) {
   // The bank credit IS the project budget: the card reads `project.budget` and
   // charts the releases drawn against it, so it belongs to the financing side.
   const canViewBudget = can("project:view_budget", user?.permissions, project.my_permissions);
+  // PUT /projects/<id> needs project:update; without it the form is read-only
+  // rather than a Save that fails with "please try again".
+  const canEdit = can("project:update", user?.permissions, project.my_permissions);
   const [prefix, setPrefix] = useState(project.invoice_prefix ?? "");
   const [saving, setSaving] = useState(false);
   const currentYear = new Date().getFullYear();
@@ -80,6 +83,8 @@ export function ProjectSettingsClient({ project }: Props) {
               onChange={(e) => handlePrefixChange(e.target.value)}
               placeholder={t("invoicePrefixPlaceholder")}
               maxLength={8}
+              readOnly={!canEdit}
+              disabled={!canEdit}
             />
             <p
               className="mt-2 text-[12px]"
@@ -112,16 +117,22 @@ export function ProjectSettingsClient({ project }: Props) {
           </div>
 
           {/* Save button */}
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={handleSave}
-              disabled={!isDirty || saving}
-              size="sm"
-            >
-              {saving && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-              {saving ? t("saving") : t("save")}
-            </Button>
-          </div>
+          {canEdit ? (
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={handleSave}
+                disabled={!isDirty || saving}
+                size="sm"
+              >
+                {saving && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                {saving ? t("saving") : t("save")}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-[12px]" style={{ color: "var(--muted)" }} data-testid="settings-read-only">
+              {t("settingsReadOnly")}
+            </p>
+          )}
         </div>
       </div>
     </div>

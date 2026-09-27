@@ -102,4 +102,25 @@ describe("MembersTable", () => {
     expect(screen.getAllByText(en.members.roles.admin).length).toBeGreaterThan(0);
     expect(screen.getAllByText(en.members.roles.manager).length).toBeGreaterThan(0);
   });
+
+  it("shows no invitations section to a read-only member", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <MembersTable
+          projectId="p1"
+          companyId="c1"
+          members={[]}
+          invites={[]}
+          canInvite={false}
+          canManageMembers={false}
+          canAssignMembers={false}
+          callerIsCompanyAdmin={false}
+          canEditIdentity={false}
+          currentUserId="me"
+        />
+      </NextIntlClientProvider>
+    );
+    expect(screen.queryByText(en.members.tab.pending)).toBeNull();
+    expect(screen.queryByText(en.members.empty.pending)).toBeNull();
+  });
 });

@@ -321,105 +321,108 @@ export function MembersTable({
         )}
       </section>
 
-      {/* Pending invitations table (outsiders — no role picker, always "member") */}
-      <section>
-        <div className="label-cap mb-3">{t("tab.pending")}</div>
-        {invites.length === 0 ? (
-          <div
-            className="folio-card flex items-center justify-center py-10 text-[13px]"
-            style={{ color: "var(--muted)" }}
-          >
-            {t("empty.pending")}
-          </div>
-        ) : (
-          <>
-            {/* Mobile cards (< lg) */}
-            <div className="flex flex-col gap-2 lg:hidden" data-testid="invites-mobile">
-              {invites.map((invite) => {
-                const days = expiresInDays(invite.expires_at);
-                return (
-                  <div key={invite.id} className="folio-card p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate font-medium">{invite.email}</div>
-                      </div>
-                      {canInvite && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9"
-                          style={{ color: "var(--negative)" }}
-                          disabled={revokingId === invite.id}
-                          onClick={() => handleRevoke(invite.id)}
-                        >
-                          {t("revoke")}
-                        </Button>
-                      )}
-                    </div>
-                    <div
-                      className="mt-3 flex items-center justify-between border-t pt-2.5 text-[12px]"
-                      style={{ borderColor: "var(--line)", color: "var(--muted)" }}
-                    >
-                      <span className="num">
-                        {days === null ? "—" : t("expiresIn", { days })}
-                      </span>
-                      <span>{invite.invited_by_name ?? "—"}</span>
-                    </div>
-                  </div>
-                );
-              })}
+      {/* Pending invitations table (outsiders — no role picker, always "member").
+          Only for callers who may invite: nobody else can read them. */}
+      {canInvite && (
+        <section>
+          <div className="label-cap mb-3">{t("tab.pending")}</div>
+          {invites.length === 0 ? (
+            <div
+              className="folio-card flex items-center justify-center py-10 text-[13px]"
+              style={{ color: "var(--muted)" }}
+            >
+              {t("empty.pending")}
             </div>
+          ) : (
+            <>
+              {/* Mobile cards (< lg) */}
+              <div className="flex flex-col gap-2 lg:hidden" data-testid="invites-mobile">
+                {invites.map((invite) => {
+                  const days = expiresInDays(invite.expires_at);
+                  return (
+                    <div key={invite.id} className="folio-card p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-medium">{invite.email}</div>
+                        </div>
+                        {canInvite && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9"
+                            style={{ color: "var(--negative)" }}
+                            disabled={revokingId === invite.id}
+                            onClick={() => handleRevoke(invite.id)}
+                          >
+                            {t("revoke")}
+                          </Button>
+                        )}
+                      </div>
+                      <div
+                        className="mt-3 flex items-center justify-between border-t pt-2.5 text-[12px]"
+                        style={{ borderColor: "var(--line)", color: "var(--muted)" }}
+                      >
+                        <span className="num">
+                          {days === null ? "—" : t("expiresIn", { days })}
+                        </span>
+                        <span>{invite.invited_by_name ?? "—"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-            {/* Desktop table (>= lg) */}
-            <div className="folio-card overflow-hidden hidden lg:block" data-testid="invites-desktop">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("col.email")}</TableHead>
-                  <TableHead>{t("col.expires")}</TableHead>
-                  <TableHead>{t("col.invitedBy")}</TableHead>
-                  {canInvite && (
-                    <TableHead style={{ textAlign: "right" }}>
-                      {t("col.actions")}
-                    </TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invites.map((invite) => (
-                  <TableRow key={invite.id}>
-                    <TableCell>{invite.email}</TableCell>
-                    <TableCell className="num" style={{ color: "var(--muted)" }}>
-                      {(() => {
-                        const days = expiresInDays(invite.expires_at);
-                        return days === null ? "—" : t("expiresIn", { days });
-                      })()}
-                    </TableCell>
-                    <TableCell style={{ color: "var(--muted)" }}>
-                      {invite.invited_by_name ?? "—"}
-                    </TableCell>
+              {/* Desktop table (>= lg) */}
+              <div className="folio-card overflow-hidden hidden lg:block" data-testid="invites-desktop">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("col.email")}</TableHead>
+                    <TableHead>{t("col.expires")}</TableHead>
+                    <TableHead>{t("col.invitedBy")}</TableHead>
                     {canInvite && (
-                      <TableCell style={{ textAlign: "right" }}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-[12px]"
-                          style={{ color: "var(--negative)" }}
-                          disabled={revokingId === invite.id}
-                          onClick={() => handleRevoke(invite.id)}
-                        >
-                          {t("revoke")}
-                        </Button>
-                      </TableCell>
+                      <TableHead style={{ textAlign: "right" }}>
+                        {t("col.actions")}
+                      </TableHead>
                     )}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            </div>
-          </>
-        )}
-      </section>
+                </TableHeader>
+                <TableBody>
+                  {invites.map((invite) => (
+                    <TableRow key={invite.id}>
+                      <TableCell>{invite.email}</TableCell>
+                      <TableCell className="num" style={{ color: "var(--muted)" }}>
+                        {(() => {
+                          const days = expiresInDays(invite.expires_at);
+                          return days === null ? "—" : t("expiresIn", { days });
+                        })()}
+                      </TableCell>
+                      <TableCell style={{ color: "var(--muted)" }}>
+                        {invite.invited_by_name ?? "—"}
+                      </TableCell>
+                      {canInvite && (
+                        <TableCell style={{ textAlign: "right" }}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-[12px]"
+                            style={{ color: "var(--negative)" }}
+                            disabled={revokingId === invite.id}
+                            onClick={() => handleRevoke(invite.id)}
+                          >
+                            {t("revoke")}
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              </div>
+            </>
+          )}
+        </section>
+      )}
 
       {canInvite && (
         <InviteMemberDialog

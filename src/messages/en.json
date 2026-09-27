@@ -240,7 +240,8 @@
     "waitingForAssignment": {
       "title": "Waiting to be assigned",
       "description": "Your company admin hasn't added you to a construction site yet."
-    }
+    },
+    "settingsReadOnly": "Only admins and managers of this project can change its settings."
   },
   "settings": {
     "profile": "Profile",

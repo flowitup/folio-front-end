@@ -2339,7 +2339,8 @@
       "forbidden": "Bạn không có quyền thực hiện thao tác này",
       "invalidImage": "Ảnh không hợp lệ — tệp không thể được xử lý"
     },
-    "loadMore": "Tải thêm"
+    "loadMore": "Tải thêm",
+    "saved": "Đã lưu thay đổi"
   },
   "chiffrage": {
     "actions": "Thao tác",

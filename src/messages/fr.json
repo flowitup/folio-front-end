@@ -2339,7 +2339,8 @@
       "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
       "invalidImage": "Image invalide — le fichier n'a pas pu être traité"
     },
-    "loadMore": "Charger plus"
+    "loadMore": "Charger plus",
+    "saved": "Modifications enregistrées"
   },
   "chiffrage": {
     "actions": "Actions",

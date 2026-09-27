@@ -335,6 +335,7 @@ export function DocumentsList({
                             }
                           }}
                           placeholder={tTags("placeholder")}
+                          maxLength={100}
                           list={`tags-datalist-${doc.id}`}
                           className="h-6 w-20 rounded border bg-transparent px-1.5 text-xs outline-none focus:ring-1 focus:ring-primary"
                           autoFocus

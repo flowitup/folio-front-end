@@ -1683,7 +1683,10 @@
       "add": "Thêm nhãn",
       "remove": "Xoá nhãn",
       "placeholder": "Nhãn mới…",
-      "done": "Xong"
+      "done": "Xong",
+      "errorTooMany": "Mỗi tài liệu chỉ có tối đa {max} nhãn",
+      "errorTooLong": "Mỗi nhãn chỉ dài tối đa {max} ký tự",
+      "errorSave": "Không thể cập nhật nhãn"
     },
     "filter": {
       "all": "Tất cả",

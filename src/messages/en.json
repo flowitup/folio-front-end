@@ -1683,7 +1683,10 @@
       "add": "Add tag",
       "remove": "Remove tag",
       "placeholder": "New tag…",
-      "done": "Done"
+      "done": "Done",
+      "errorTooMany": "A document can have at most {max} tags",
+      "errorTooLong": "A tag can be at most {max} characters long",
+      "errorSave": "Couldn't update the tags"
     },
     "filter": {
       "all": "All",

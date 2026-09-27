@@ -229,3 +229,45 @@ describe("DocumentsPanel — rename errors", () => {
     expect(screen.getByTestId("rename-dialog")).toBeInTheDocument();
   });
 });
+
+describe("DocumentsPanel — tag errors", () => {
+  beforeEach(() => {
+    vi.mocked(listDocumentsAction).mockResolvedValue({
+      ok: true,
+      data: { items: [makeDoc(1)], total: 1, page: 1, per_page: 25 },
+    });
+  });
+
+  it("says a tag is too long instead of 'Failed to load documents'", async () => {
+    vi.mocked(updateDocumentTagsAction).mockResolvedValue({
+      ok: false,
+      error: "validation",
+      code: "TAG_TOO_LONG",
+    });
+    renderPanel([makeDoc(1)]);
+
+    await lastListProps!.onTagsUpdate(makeDoc(1).id, ["short"]);
+
+    expect(toast.error).toHaveBeenCalledWith("documents.tags.errorTooLong");
+    expect(toast.error).not.toHaveBeenCalledWith("documents.toast.listLoadError");
+  });
+
+  it("refuses a 21st tag without calling the backend", async () => {
+    renderPanel([makeDoc(1)]);
+    const tags = Array.from({ length: 21 }, (_, i) => `t${i}`);
+
+    await lastListProps!.onTagsUpdate(makeDoc(1).id, tags);
+
+    expect(updateDocumentTagsAction).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith("documents.tags.errorTooMany");
+  });
+
+  it("falls back to a tag-specific save error", async () => {
+    vi.mocked(updateDocumentTagsAction).mockResolvedValue({ ok: false, error: "generic" });
+    renderPanel([makeDoc(1)]);
+
+    await lastListProps!.onTagsUpdate(makeDoc(1).id, ["a"]);
+
+    expect(toast.error).toHaveBeenCalledWith("documents.tags.errorSave");
+  });
+});

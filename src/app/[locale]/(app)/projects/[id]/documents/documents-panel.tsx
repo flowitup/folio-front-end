@@ -36,6 +36,10 @@ type SortColumn = "name" | "size" | "created_at" | "uploader";
 
 const TEXT_COLUMNS: SortColumn[] = ["name", "uploader"];
 
+// The backend's limits on a document's tags.
+const MAX_TAGS = 20;
+const MAX_TAG_LENGTH = 100;
+
 type Member = {
   id: string;
   firstName?: string;
@@ -247,12 +251,24 @@ export function DocumentsPanel({
 
   const handleTagsUpdate = useCallback(
     async (docId: string, tags: string[]) => {
+      if (tags.length > MAX_TAGS) {
+        toast.error(t("tags.errorTooMany", { max: MAX_TAGS }));
+        return;
+      }
+      if (tags.some((tag) => tag.length > MAX_TAG_LENGTH)) {
+        toast.error(t("tags.errorTooLong", { max: MAX_TAG_LENGTH }));
+        return;
+      }
       const result = await updateDocumentTagsAction(projectId, docId, tags);
       if (result.ok) {
         setList((prev) => prev.map((d) => (d.id === docId ? result.data : d)));
         void refreshAvailableTags();
+      } else if (result.code === "TOO_MANY_TAGS") {
+        toast.error(t("tags.errorTooMany", { max: MAX_TAGS }));
+      } else if (result.code === "TAG_TOO_LONG") {
+        toast.error(t("tags.errorTooLong", { max: MAX_TAG_LENGTH }));
       } else {
-        toast.error(t("toast.listLoadError"));
+        toast.error(t("tags.errorSave"));
       }
     },
     [projectId, t, refreshAvailableTags]

@@ -1683,7 +1683,10 @@
       "add": "Ajouter une étiquette",
       "remove": "Supprimer l'étiquette",
       "placeholder": "Nouvelle…",
-      "done": "Terminé"
+      "done": "Terminé",
+      "errorTooMany": "Un document peut avoir au plus {max} étiquettes",
+      "errorTooLong": "Une étiquette ne peut pas dépasser {max} caractères",
+      "errorSave": "Impossible de mettre à jour les étiquettes"
     },
     "filter": {
       "all": "Tous",

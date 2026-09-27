@@ -609,7 +609,8 @@
     "errorPaymentMethodInactive": "Ce moyen de paiement a été désactivé. Choisissez-en un autre.",
     "workerInactive": "{name} (inactif)",
     "errorQuantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
-    "errorUnitPriceTooLarge": "Le prix unitaire ne peut pas dépasser {max, number}."
+    "errorUnitPriceTooLarge": "Le prix unitaire ne peut pas dépasser {max, number}.",
+    "errorIssueDateRequired": "Indiquez la date d'émission"
   },
   "planning": {
     "title": "Planification",

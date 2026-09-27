@@ -609,7 +609,8 @@
     "errorPaymentMethodInactive": "This payment method has been deactivated. Choose another one.",
     "workerInactive": "{name} (inactive)",
     "errorQuantityTooLarge": "Quantity cannot exceed {max, number}.",
-    "errorUnitPriceTooLarge": "Unit price cannot exceed {max, number}."
+    "errorUnitPriceTooLarge": "Unit price cannot exceed {max, number}.",
+    "errorIssueDateRequired": "Enter the issue date"
   },
   "planning": {
     "title": "Planning",

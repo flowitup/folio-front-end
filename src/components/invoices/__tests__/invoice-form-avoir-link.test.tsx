@@ -384,6 +384,7 @@ describe("InvoiceForm — submitted payload", () => {
         onSubmit={onSubmit}
         initialValues={{
           type: "return",
+          issue_date: "2026-01-01",
           recipient_name: "Supplier",
           items: [{ description: "Credit note", quantity: 1, unit_price: -300, vat_rate: 0 }],
           settled_via: "avoir",

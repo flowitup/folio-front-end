@@ -207,7 +207,12 @@ describe("InvoiceForm — labor worker picker", () => {
     render(
       <InvoiceForm
         onSubmit={mockOnSubmit}
-        initialValues={{ type: "labor", recipient_name: "Old Worker Co", service_month: null }}
+        initialValues={{
+          type: "labor",
+          issue_date: "2026-01-01",
+          recipient_name: "Old Worker Co",
+          service_month: null,
+        }}
         projectId="proj-1"
         editingInvoiceId="inv-legacy"
       />

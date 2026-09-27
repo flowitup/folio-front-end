@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
 import { LaborWorkerSelect } from "@/components/invoices/labor-worker-select";
+import { parisDayKey } from "@/lib/utils/paris-day";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import type { CreateInvoicePayload, Invoice, InvoiceType, SettledVia } from "@/types/invoice";
 import { formatEUR } from "@/lib/utils/formatters";
@@ -95,7 +96,10 @@ export function InvoiceForm({
   // normally auto-generated from company payments, and an accidental manual
   // one silently inflates the funds-released total.
   const [type, setType] = useState<InvoiceType>(initialValues?.type ?? "materials_services");
-  const [issueDate, setIssueDate] = useState(initialValues?.issue_date ?? "");
+  // A new expense is issued today (the Paris day) unless the user says otherwise.
+  const [issueDate, setIssueDate] = useState(
+    initialValues?.issue_date ?? (editingInvoiceId ? "" : parisDayKey())
+  );
   const [recipientName, setRecipientName] = useState(initialValues?.recipient_name ?? "");
   const [recipientAddress, setRecipientAddress] = useState(
     initialValues?.recipient_address ?? ""
@@ -266,6 +270,7 @@ export function InvoiceForm({
     // worker to snapshot from, so the free-text input reappears (see JSX
     // below) and recipient_name is required there too — the backend rejects
     // an empty recipient_name regardless of type.
+    if (!issueDate) return t("errorIssueDateRequired");
     if (recipientNameRequired && !recipientName.trim()) return t("errorRecipientRequired");
     // service_month is required for NEW labor invoices only — editing a
     // legacy row that predates this field must not be blocked by it.
@@ -396,9 +401,14 @@ export function InvoiceForm({
 
             {/* Issue Date */}
             <div>
-              <label className="block text-xs font-medium mb-1">{t("issueDate")}</label>
+              <label htmlFor="invoice-issue-date" className="block text-xs font-medium mb-1">
+                {t("issueDate")}
+                <span className="text-destructive"> *</span>
+              </label>
               <input
+                id="invoice-issue-date"
                 type="date"
+                aria-required="true"
                 value={issueDate}
                 onChange={(e) => setIssueDate(e.target.value)}
                 className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"

@@ -2808,7 +2808,8 @@
       "refused": "Refusé",
       "error": "Erreur"
     },
-    "noCost": "—"
+    "noCost": "—",
+    "disabled": "L'assistant n'est pas activé : il n'y a rien à consulter."
   },
   "personsMerge": {
     "title": "Fusionner des personnes",

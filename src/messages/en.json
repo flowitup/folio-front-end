@@ -2808,7 +2808,8 @@
       "refused": "Refused",
       "error": "Error"
     },
-    "noCost": "—"
+    "noCost": "—",
+    "disabled": "The assistant is not enabled, so there is nothing to review."
   },
   "personsMerge": {
     "title": "Merge persons",

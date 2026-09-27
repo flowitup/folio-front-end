@@ -2808,7 +2808,8 @@
       "refused": "Từ chối",
       "error": "Lỗi"
     },
-    "noCost": "—"
+    "noCost": "—",
+    "disabled": "Trợ lý chưa được bật nên không có gì để xem."
   },
   "personsMerge": {
     "title": "Gộp người",

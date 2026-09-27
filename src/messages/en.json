@@ -804,7 +804,8 @@
       "workerNameRequired": "Worker name is required.",
       "dailyRatePositive": "Daily rate must be greater than 0.",
       "reactivateWorkerFailed": "Failed to reactivate the worker",
-      "amountTooLarge": "The amount cannot exceed {max, number}."
+      "amountTooLarge": "The amount cannot exceed {max, number}.",
+      "overrideNegative": "The amount cannot be negative."
     },
     "logDayDialog": {
       "title": "Log day",

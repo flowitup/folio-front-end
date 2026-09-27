@@ -171,10 +171,19 @@ export function EditAttendanceDialog({
                 onChange={(e) =>
                   setSupplementHours(parseInt(e.target.value, 10) || 0)
                 }
+                aria-invalid={isOutOfRange || undefined}
+                aria-describedby={isOutOfRange ? "supplement-hours-error" : undefined}
               />
-              <p className="text-muted-foreground text-xs">
-                {t("supplement.fieldHelp")}
-              </p>
+              {/* Save is disabled while out of range: say why, right here. */}
+              {isOutOfRange ? (
+                <p id="supplement-hours-error" role="alert" className="text-destructive text-xs">
+                  {t("errors.supplementOutOfRange")}
+                </p>
+              ) : (
+                <p className="text-muted-foreground text-xs">
+                  {t("supplement.fieldHelp")}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

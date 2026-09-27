@@ -804,7 +804,8 @@
       "workerNameRequired": "Bắt buộc nhập tên thợ.",
       "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0.",
       "reactivateWorkerFailed": "Không thể kích hoạt lại công nhân",
-      "amountTooLarge": "Số tiền không được vượt quá {max, number}."
+      "amountTooLarge": "Số tiền không được vượt quá {max, number}.",
+      "overrideNegative": "Số tiền không được âm."
     },
     "logDayDialog": {
       "title": "Chấm công ngày",

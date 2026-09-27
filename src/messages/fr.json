@@ -804,7 +804,8 @@
       "workerNameRequired": "Le nom de l'ouvrier est obligatoire.",
       "dailyRatePositive": "Le tarif journalier doit être supérieur à 0.",
       "reactivateWorkerFailed": "Impossible de réactiver l'ouvrier",
-      "amountTooLarge": "Le montant ne peut pas dépasser {max, number}."
+      "amountTooLarge": "Le montant ne peut pas dépasser {max, number}.",
+      "overrideNegative": "Le montant ne peut pas être négatif."
     },
     "logDayDialog": {
       "title": "Pointer la journée",

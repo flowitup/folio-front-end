@@ -335,7 +335,9 @@ export function LogDayDialog({
           return;
         }
       }
-      setError(err instanceof Error ? err.message : t("saveFailed"));
+      // Never the raw "HTTP 400: BAD REQUEST": the fields are checked before
+      // sending, so what is left is a server-side refusal or a network error.
+      setError(t("saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -346,6 +348,23 @@ export function LogDayDialog({
     const payload = buildBulkPayload(tileStates);
     if (!payload.length) {
       setError(t("selectAtLeastOne"));
+      return;
+    }
+    // The API's limits, checked here so the user gets a translated message.
+    const toSave = Object.values(tileStates).filter((s) => s.checked && !s.locked);
+    if (
+      toSave.some(
+        (s) =>
+          !Number.isInteger(s.supplement_hours ?? 0) ||
+          (s.supplement_hours ?? 0) < 0 ||
+          (s.supplement_hours ?? 0) > 12
+      )
+    ) {
+      setError(tLabor("errors.supplementOutOfRange"));
+      return;
+    }
+    if (payload.some((e) => e.amount_override != null && e.amount_override < 0)) {
+      setError(tLabor("errors.overrideNegative"));
       return;
     }
     if (payload.some((e) => (e.amount_override ?? 0) > MAX_DAILY_AMOUNT)) {

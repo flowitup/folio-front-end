@@ -8,28 +8,16 @@ import {
   isAuthRoute,
   isProtectedRoute,
 } from "@/lib/auth/middleware";
-
-/**
- * Decode JWT and check if expired (without verification).
- * Returns true if token exists and is not expired.
- */
-function isTokenValid(token: string | undefined): boolean {
-  if (!token) return false;
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return false;
-    const payload = JSON.parse(atob(parts[1]));
-    if (!payload.exp) return true; // No expiry = assume valid
-    return payload.exp * 1000 > Date.now();
-  } catch {
-    return false;
-  }
-}
+import {
+  applySessionCookies,
+  isTokenValid,
+  refreshSession,
+} from "@/lib/auth/proxy-session";
 
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware(routing);
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for static files and API routes
@@ -50,8 +38,15 @@ export function proxy(request: NextRequest) {
   const pathnameWithoutLocale =
     pathname.replace(new RegExp(`^/(${locales.join("|")})(?=/|$)`), "") || "/";
 
-  // Check for access token cookie and validate expiry
-  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  // Check for access token cookie and validate expiry. An expired or missing
+  // access token is renewed with the refresh cookie before anything decides
+  // the user is signed out: the refresh token outlives it by days.
+  let accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const needsSession =
+    isProtectedRoute(pathnameWithoutLocale) || isAuthRoute(pathnameWithoutLocale);
+  const refreshed =
+    needsSession && !isTokenValid(accessToken) ? await refreshSession(request) : [];
+  accessToken = refreshed.find((c) => c.name === ACCESS_TOKEN_COOKIE)?.value ?? accessToken;
   const isAuthenticated = isTokenValid(accessToken);
 
   // Get the current locale from pathname or default
@@ -72,6 +67,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  applySessionCookies(request, response, refreshed);
   return response;
 }
 

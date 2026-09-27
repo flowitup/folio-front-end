@@ -991,7 +991,8 @@
       "phoneRegistered": "Ce numéro est déjà associé à un compte. Connectez-vous.",
       "codeRequired": "Saisissez le code à 6 chiffres",
       "invalidCode": "Code incorrect ou expiré",
-      "throttled": "Trop de demandes. Attendez une minute et réessayez."
+      "throttled": "Trop de demandes. Attendez une minute et réessayez.",
+      "title": "Invitation indisponible"
     },
     "loggedInOther": {
       "title": "Vous êtes connecté sous un autre compte",

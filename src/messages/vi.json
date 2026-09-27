@@ -991,7 +991,8 @@
       "phoneRegistered": "Số điện thoại này đã có tài khoản. Vui lòng đăng nhập.",
       "codeRequired": "Vui lòng nhập mã gồm 6 chữ số",
       "invalidCode": "Mã không đúng hoặc đã hết hạn",
-      "throttled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại."
+      "throttled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại.",
+      "title": "Lời mời không còn hiệu lực"
     },
     "loggedInOther": {
       "title": "Bạn đang đăng nhập bằng tài khoản khác",

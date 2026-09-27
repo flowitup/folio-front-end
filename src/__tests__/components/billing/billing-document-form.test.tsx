@@ -675,6 +675,37 @@ describe("BillingDocumentForm — line payload", () => {
   });
 });
 
+describe("BillingDocumentForm — started from a template", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("gives a line added to the new document the template's default VAT rate", () => {
+    render(
+      <BillingDocumentForm
+        mode="create"
+        kind="facture"
+        attachedCompanies={ATTACHED_COMPANIES}
+        initialFromTemplate={{
+          id: "tpl-10",
+          user_id: "user-1",
+          kind: "facture",
+          name: "Renovation",
+          notes: null,
+          terms: null,
+          default_vat_rate: "10.00",
+          items: [],
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-01T00:00:00Z",
+        }}
+      />
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: /add line/i })[0]);
+
+    expect(screen.getAllByText(/^10\s?%$/).length).toBeGreaterThan(0);
+    expect(screen.queryAllByText(/^20\s?%$/)).toHaveLength(0);
+  });
+});
+
 describe("BillingDocumentForm — copy of an existing document", () => {
   beforeEach(() => vi.clearAllMocks());
 

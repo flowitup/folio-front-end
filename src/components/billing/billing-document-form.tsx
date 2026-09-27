@@ -39,7 +39,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BillingStatusMenu } from "@/components/billing/billing-status-menu";
-import { BillingDocumentItemsEditor } from "@/components/billing/billing-document-items-editor";
+import {
+  BillingDocumentItemsEditor,
+  normalizeVatRate,
+} from "@/components/billing/billing-document-items-editor";
 import { CreateFromExistingDialog } from "@/components/billing/create-from-existing-dialog";
 import { ApplyTemplateDialog } from "@/components/billing/apply-template-dialog";
 import { CompanyPickerSelect } from "@/components/billing/company-picker-select";
@@ -210,6 +213,10 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const [items, setItems] = useState<BillingDocumentItem[]>(
     seed?.items ?? templateSeed?.items ?? []
   );
+  // A line added to a document started from a template takes the template's default VAT rate.
+  const templateVatRate = templateSeed?.default_vat_rate
+    ? normalizeVatRate(templateSeed.default_vat_rate)
+    : undefined;
   const [notes, setNotes] = useState(seed?.notes ?? templateSeed?.notes ?? "");
   const [terms, setTerms] = useState(seed?.terms ?? templateSeed?.terms ?? "");
   const [signatureBlock, setSignatureBlock] = useState(seed?.signature_block_text ?? "");
@@ -753,7 +760,11 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
           {tForm("items.section")}
         </p>
-        <BillingDocumentItemsEditor items={items} onChange={setItems} />
+        <BillingDocumentItemsEditor
+          items={items}
+          onChange={setItems}
+          defaultVatRate={templateVatRate}
+        />
       </div>
 
       {/* 7. Notes / Terms / Signature */}

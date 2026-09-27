@@ -56,7 +56,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
           role="img"
           aria-label={t(`priority.${task.priority}`)}
         />
-        <p className="text-[13.5px] font-medium leading-snug">{task.title}</p>
+        <p className="min-w-0 text-[13.5px] font-medium leading-snug [overflow-wrap:anywhere]">{task.title}</p>
       </div>
 
       {task.labels.length > 0 && (
@@ -64,7 +64,8 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
           {task.labels.map((label) => (
             <span
               key={label}
-              className="rounded px-1.5 py-0.5 text-[10px] font-medium"
+              title={label}
+              className="max-w-full truncate rounded px-1.5 py-0.5 text-[10px] font-medium"
               style={{
                 background: "var(--paper-2)",
                 color: "var(--ink-2)",

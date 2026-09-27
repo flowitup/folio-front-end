@@ -65,3 +65,23 @@ describe("planning labels", () => {
     expect(flat).not.toMatch(/\btask\b/i);
   });
 });
+
+describe("task card with long text", () => {
+  it("keeps a long label and title inside the card", () => {
+    const long = "x".repeat(300);
+    wrap(
+      <KanbanColumn
+        status="todo"
+        title="À faire"
+        tasks={[mkTask({ title: long, labels: [long] })]}
+        onTaskClick={vi.fn()}
+      />,
+      frMessages,
+      "fr"
+    );
+    const label = screen.getByTitle(long);
+    expect(label.className).toMatch(/max-w-full/);
+    expect(label.className).toMatch(/truncate/);
+    expect(screen.getByText(long, { selector: "p" }).className).toMatch(/overflow-wrap:anywhere/);
+  });
+});

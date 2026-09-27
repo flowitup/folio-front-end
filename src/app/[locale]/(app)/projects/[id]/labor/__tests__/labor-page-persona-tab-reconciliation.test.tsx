@@ -93,6 +93,7 @@ vi.mock("@/lib/api/projects", () => ({
 
 vi.mock("../actions", () => ({
   fetchLaborRolesAction: vi.fn().mockResolvedValue({ success: true, data: { roles: [], palette: [] } }),
+  fetchAttendanceChangeRequestsAction: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }));
 
 vi.mock("@/components/labor/worker-list", () => ({ WorkerList: () => <div data-testid="worker-list" /> }));

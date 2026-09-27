@@ -23,6 +23,8 @@ import { LaborPaymentsTab } from "@/components/labor/labor-payments-tab";
 
 import { ActivityDialog } from "@/components/labor/activity-dialog";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
+import { ChangeRequestsPanel, RefuseChangeDialog } from "@/components/labor/change-requests-panel";
+import type { ChangeRequestActions } from "@/components/labor/labor-entry-card";
 
 import type { Worker, LaborEntry, LaborActivity, LaborDayDescription, LaborSummaryResponse, LaborMonthlySummaryResponse, LaborPaymentsSummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
@@ -49,6 +51,7 @@ import {
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { fetchProjectById } from "@/lib/api/projects";
 import { fetchLaborRolesAction } from "./actions";
+import { useAttendanceChangeRequests } from "./use-attendance-change-requests";
 import { DayRoster } from "@/components/labor/day-roster";
 
 type TabType = "workers" | "attendance" | "summary" | "payments" | "roster";
@@ -349,6 +352,34 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     if (activeTab === "summary") loadSummary();
   }, [activeTab, loadSummary]);
 
+  // Worker change requests on validated days (proposed from the mobile app).
+  // Managers only — the same permission the backend checks on the decide routes.
+  const changeRequests = useAttendanceChangeRequests({
+    projectId,
+    enabled: canManageLabor && !isProjectContextLoading,
+    entries,
+    onDecided: loadEntries,
+  });
+  const reloadChangeRequests = changeRequests.reload;
+  const changeRequestActions = useMemo<ChangeRequestActions | undefined>(
+    () =>
+      canManageLabor
+        ? {
+            onApprove: changeRequests.approve,
+            onRefuse: changeRequests.requestRefuse,
+            busyIds: changeRequests.settlingIds,
+          }
+        : undefined,
+    [canManageLabor, changeRequests.approve, changeRequests.requestRefuse, changeRequests.settlingIds],
+  );
+  const changeRequestCount = changeRequests.requests.length;
+
+  // The list also loads with the page (for the tab count); refresh it whenever
+  // the attendance tab is opened so a request sent meanwhile shows up.
+  useEffect(() => {
+    if (activeTab === "attendance") void reloadChangeRequests();
+  }, [activeTab, reloadChangeRequests]);
+
   // Deep links (the bell's "attendance to validate" rows) pick a tab via ?tab=.
   // An effect, not a state initializer: the manager may already be on this page
   // when the URL changes, and Next does not remount the client page then.
@@ -427,7 +458,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const handleDeleteEntry = async (entry: LaborEntry) => {
     try {
       await deleteAttendance(projectId, entry.id);
-      await loadEntries();
+      // A deleted day takes its open change request with it.
+      await Promise.all([loadEntries(), reloadChangeRequests()]);
     } catch {
       setError(t("errors.deleteEntryFailed"));
     }
@@ -533,6 +565,16 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
                 className={activeTab === tab ? "on" : ""}
               >
                 {tab === "payments" ? t("payments.tab") : t(tab)}
+                {tab === "attendance" && changeRequestCount > 0 && (
+                  <span
+                    className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold leading-none text-white"
+                    title={t("changeRequest.tabCount", { count: changeRequestCount })}
+                    data-testid="attendance-change-count"
+                  >
+                    <span aria-hidden="true">{changeRequestCount}</span>
+                    <span className="sr-only">{t("changeRequest.tabCount", { count: changeRequestCount })}</span>
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -624,6 +666,17 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               </div>
             );
           })()}
+          {canManageLabor && (
+            <ChangeRequestsPanel
+              requests={changeRequests.requests}
+              isLoading={changeRequests.isLoading}
+              loadFailed={changeRequests.loadFailed}
+              settlingIds={changeRequests.settlingIds}
+              onApprove={changeRequests.approve}
+              onRefuse={changeRequests.requestRefuse}
+              onRetry={() => void reloadChangeRequests()}
+            />
+          )}
           {attendanceView === "calendar" ? (
             <AttendanceCalendar
               entries={entries}
@@ -639,6 +692,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               onDelete={handleDeleteEntry}
               onValidate={canManageLabor ? handleValidateEntry : undefined}
               onReject={canManageLabor ? handleRejectEntry : undefined}
+              changeRequestActions={changeRequestActions}
               onLogDay={canManageLabor ? handleOpenLogDay : undefined}
               onEditEntry={canManageLabor ? setEditEntry : undefined}
               workerMap={workerMap}
@@ -662,6 +716,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               onDelete={handleDeleteEntry}
               onValidate={canManageLabor ? handleValidateEntry : undefined}
               onReject={canManageLabor ? handleRejectEntry : undefined}
+              changeRequestActions={changeRequestActions}
               onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
               onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
@@ -736,6 +791,16 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         }}
         entry={editEntry}
         onSave={handleUpdateAttendance}
+      />
+
+      <RefuseChangeDialog
+        request={changeRequests.refusing}
+        busy={
+          changeRequests.refusing !== null &&
+          changeRequests.settlingIds.has(changeRequests.refusing.entry_id)
+        }
+        onConfirm={() => void changeRequests.confirmRefuse()}
+        onCancel={changeRequests.cancelRefuse}
       />
 
       <ActivityDialog

@@ -46,6 +46,8 @@ vi.mock("sonner", () => ({
 vi.mock("@/lib/api/labor", () => ({
   validateAttendance: vi.fn(),
   rejectAttendance: vi.fn(),
+  approveAttendanceChange: vi.fn(),
+  rejectAttendanceChange: vi.fn(),
 }));
 
 vi.mock("../actions", () => ({
@@ -56,9 +58,12 @@ vi.mock("../actions", () => ({
 // ---- Imports after mocks ----
 
 const { fetchNotificationsFeedAction, dismissNotificationAction } = await import("../actions");
-const { validateAttendance, rejectAttendance } = await import("@/lib/api/labor");
+const { validateAttendance, rejectAttendance, approveAttendanceChange, rejectAttendanceChange } =
+  await import("@/lib/api/labor");
 const mockValidate = vi.mocked(validateAttendance);
 const mockReject = vi.mocked(rejectAttendance);
+const mockApproveChange = vi.mocked(approveAttendanceChange);
+const mockRejectChange = vi.mocked(rejectAttendanceChange);
 const mockFetch = vi.mocked(fetchNotificationsFeedAction);
 const mockDismiss = vi.mocked(dismissNotificationAction);
 
@@ -237,6 +242,72 @@ describe("NotificationsBell — validate / reject attendance", () => {
 
     expect(mockReject).toHaveBeenCalledWith("p1", "e1");
     expect(screen.queryByText("Tho")).toBeNull();
+  });
+});
+
+const CHANGE = {
+  ...PENDING,
+  kind: "attendance_change" as const,
+  entry_id: "e2",
+  proposed_shift_type: "half" as const,
+  proposed_supplement_hours: 0,
+  proposed_note: null,
+};
+
+describe("NotificationsBell — worker change requests", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  async function openBellWithChange() {
+    mockFetch.mockResolvedValue({ items: [], attendance: [CHANGE] });
+    render(<NotificationsBell />);
+    await flushTick();
+    expect(screen.getByText("1")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "notifications.aria.bell" }));
+    await flushTick();
+  }
+
+  it("apply goes through the change route, not the day validation", async () => {
+    mockApproveChange.mockResolvedValue(undefined);
+    await openBellWithChange();
+    fireEvent.click(screen.getByLabelText("notifications.attendance.applyChange"));
+    await flushTick();
+
+    expect(mockApproveChange).toHaveBeenCalledWith("p1", "e2");
+    expect(mockValidate).not.toHaveBeenCalled();
+    expect(screen.queryByText("Tho")).toBeNull();
+    expect(toast.success).toHaveBeenCalledWith("notifications.attendance.changeApplied");
+  });
+
+  it("refuse (after confirmation) drops the request without deleting the day", async () => {
+    mockRejectChange.mockResolvedValue(undefined);
+    await openBellWithChange();
+    fireEvent.click(screen.getByLabelText("notifications.attendance.refuseChange"));
+    fireEvent.click(screen.getByText("notifications.attendance.confirmReject"));
+    await flushTick();
+
+    expect(mockRejectChange).toHaveBeenCalledWith("p1", "e2");
+    expect(mockReject).not.toHaveBeenCalled();
+    expect(toast.success).toHaveBeenCalledWith("notifications.attendance.changeRefused");
+  });
+
+  it("a failed apply restores the row and toasts the change error", async () => {
+    mockApproveChange.mockRejectedValue(new Error("boom"));
+    await openBellWithChange();
+    fireEvent.click(screen.getByLabelText("notifications.attendance.applyChange"));
+    await flushTick();
+
+    expect(screen.getByText("Tho")).toBeDefined();
+    expect(toast.error).toHaveBeenCalledWith("notifications.errors.applyChangeFailed");
   });
 });
 

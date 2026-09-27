@@ -1,9 +1,11 @@
 "use client";
 
 /**
- * AttendancePendingRow — one worker-submitted day awaiting validation, inside the bell.
- * Main area navigates to the project's attendance tab; Validate applies at once,
- * Reject asks for an inline confirmation first (the row is deleted server-side).
+ * AttendancePendingRow — one attendance item awaiting the manager, inside the bell:
+ * a worker-submitted day to validate, or a worker's change request on a validated
+ * day (shown as "current → requested"). Main area navigates to the project's
+ * attendance tab; Validate / Apply acts at once, Reject / Refuse asks for an
+ * inline confirmation first.
  */
 
 import { useState } from "react";
@@ -11,6 +13,7 @@ import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import type { AttendancePending } from "@/lib/api/notifications";
+import { changeRequestFromFeedItem, describeChangeRequest } from "@/lib/labor/change-requests";
 
 interface AttendancePendingRowProps {
   item: AttendancePending;
@@ -40,6 +43,10 @@ export function AttendancePendingRow({
   const router = useRouter();
   const locale = useLocale();
   const [confirmingReject, setConfirmingReject] = useState(false);
+  const isChange = item.kind === "attendance_change";
+  const change = isChange ? describeChangeRequest(tLabor, changeRequestFromFeedItem(item)) : null;
+  const validateLabel = isChange ? t("attendance.applyChange") : t("attendance.validate");
+  const rejectLabel = isChange ? t("attendance.refuseChange") : t("attendance.reject");
 
   const shift =
     item.shift_type === "full"
@@ -76,10 +83,33 @@ export function AttendancePendingRow({
             {item.project_name}
           </span>
         </p>
-        <p className="truncate text-xs" style={{ color: "var(--muted-foreground)" }}>
-          {details}
-          {item.note ? ` — ${item.note}` : ""}
-        </p>
+        {change ? (
+          <>
+            <p className="truncate text-xs" style={{ color: "var(--muted-foreground)" }}>
+              {formatDay(item.date, locale)}
+              {" · "}
+              <span className="font-medium text-amber-700 dark:text-amber-300">
+                {t("attendance.changeTitle")}
+              </span>
+            </p>
+            <p
+              className="truncate text-xs"
+              style={{ color: "var(--muted-foreground)" }}
+              data-testid="attendance-change-line"
+            >
+              {change.current}
+              {" → "}
+              <span className="font-medium" style={{ color: "var(--foreground)" }}>
+                {change.proposed}
+              </span>
+            </p>
+          </>
+        ) : (
+          <p className="truncate text-xs" style={{ color: "var(--muted-foreground)" }}>
+            {details}
+            {item.note ? ` — ${item.note}` : ""}
+          </p>
+        )}
       </button>
 
       {confirmingReject ? (
@@ -112,8 +142,8 @@ export function AttendancePendingRow({
             type="button"
             disabled={busy}
             onClick={() => onValidate?.(item)}
-            aria-label={t("attendance.validate")}
-            title={t("attendance.validate")}
+            aria-label={validateLabel}
+            title={validateLabel}
             className="rounded p-1 hover:bg-accent transition-colors disabled:opacity-50"
           >
             <Check className="h-4 w-4" style={{ color: "var(--primary)" }} />
@@ -122,8 +152,8 @@ export function AttendancePendingRow({
             type="button"
             disabled={busy}
             onClick={() => setConfirmingReject(true)}
-            aria-label={t("attendance.reject")}
-            title={t("attendance.reject")}
+            aria-label={rejectLabel}
+            title={rejectLabel}
             className="rounded p-1 hover:bg-destructive/10 transition-colors"
           >
             <X className="h-4 w-4" style={{ color: "var(--muted-foreground)" }} />

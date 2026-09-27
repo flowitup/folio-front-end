@@ -1994,7 +1994,8 @@
         "logoUrlInvalidScheme": "L'URL du logo doit utiliser http ou https.",
         "logoUrlInvalidUrl": "L'URL du logo n'est pas valide.",
         "generic": "Une erreur inattendue s'est produite. Veuillez réessayer."
-      }
+      },
+      "maskedFieldHint": "Enregistré et masqué. Saisissez une nouvelle valeur pour le remplacer ; laissez vide pour le conserver."
     },
     "picker": {
       "label": "Émis par",
@@ -2526,6 +2527,10 @@
     "retry": "Réessayer",
     "companyPicker": {
       "label": "Entreprise"
+    },
+    "profile": {
+      "title": "Profil de l'entreprise",
+      "description": "Raison sociale, adresse, identifiants et coordonnées bancaires imprimés sur vos devis et factures."
     },
     "members": {
       "title": "Membres",

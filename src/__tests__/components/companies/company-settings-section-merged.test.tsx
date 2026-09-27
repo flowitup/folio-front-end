@@ -418,3 +418,24 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     expect(screen.queryByText(/Could not load your companies/i)).toBeNull();
   });
 });
+
+describe("CompanySettingsSection — company profile", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("lets a company admin edit their own company profile", async () => {
+    resolveWith([makeCompany({ role: "admin" })]);
+    render(<CompanySettingsSection />);
+
+    expect(await screen.findByTestId("company-profile-card")).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Company profile" })).toBeDefined();
+    expect(screen.getByLabelText("IBAN")).toBeDefined();
+  });
+
+  it("does not offer the profile form to a manager or member", async () => {
+    resolveWith([makeCompany({ role: "manager" })]);
+    render(<CompanySettingsSection />);
+
+    expect(await screen.findByRole("heading", { name: "Company" })).toBeDefined();
+    expect(screen.queryByTestId("company-profile-card")).toBeNull();
+  });
+});

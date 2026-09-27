@@ -43,6 +43,7 @@ import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-ca
 import { CompanyMembersTable } from "@/components/companies/company-members-table";
 import { CompanyPaymentMethodsCard } from "@/components/companies/company-payment-methods-card";
 import { CompanyLaborRolesCard } from "@/components/companies/company-labor-roles-card";
+import { CompanyProfileForm } from "@/components/companies/company-profile-form";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { CompanyRole, MyCompany } from "@/types/companies";
 
@@ -235,6 +236,23 @@ export function CompanySettingsSection() {
           {/* Admin half — company-admin self-service for the selected company. */}
           {isAdminOfSelected && (
             <>
+              {/* The company's identity as it prints on quotes and invoices.
+                  Keyed on updated_at too so a save reseeds it from the
+                  refetched company. */}
+              <section className="folio-card p-7" data-testid="company-profile-card">
+                <h3 className="font-display text-[18px] font-medium tracking-tight">
+                  {t("profile.title")}
+                </h3>
+                <p className="mt-0.5 mb-5 text-[13px]" style={{ color: "var(--muted)" }}>
+                  {t("profile.description")}
+                </p>
+                <CompanyProfileForm
+                  key={`profile-${selectedCompany.id}-${selectedCompany.updated_at}`}
+                  company={selectedCompany}
+                  onSaved={() => void load()}
+                />
+              </section>
+
               <CompanyJoinCodeCard
                 key={`join-code-${selectedCompany.id}`}
                 companyId={selectedCompany.id}

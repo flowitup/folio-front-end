@@ -1994,7 +1994,8 @@
         "logoUrlInvalidScheme": "URL logo phải sử dụng http hoặc https.",
         "logoUrlInvalidUrl": "URL logo không hợp lệ.",
         "generic": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
-      }
+      },
+      "maskedFieldHint": "Đã lưu và được ẩn. Nhập giá trị mới để thay thế; để trống để giữ nguyên."
     },
     "picker": {
       "label": "Phát hành từ",
@@ -2526,6 +2527,10 @@
     "retry": "Thử lại",
     "companyPicker": {
       "label": "Công ty"
+    },
+    "profile": {
+      "title": "Hồ sơ công ty",
+      "description": "Tên pháp lý, địa chỉ, mã định danh và thông tin ngân hàng in trên báo giá và hóa đơn của bạn."
     },
     "members": {
       "title": "Thành viên",

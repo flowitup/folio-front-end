@@ -54,6 +54,12 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
   // Same delegated hover tooltip the Expense summary uses on its month bars.
   const monthYearFmt = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" });
   const { onMouseMove, onMouseLeave, overlay } = useDataTip();
+  // Axis ticks sit 34 units apart: vi's short month ("Tháng 4") is too wide,
+  // so each locale picks a compact tick ("T4" in vi).
+  const monthTick = (key: string) => {
+    const d = monthKeyToDate(key);
+    return t("spendByType.monthTick", { m: d.getMonth() + 1, short: monthFmt.format(d) });
+  };
 
   const sharedMax = sharedMonthlyMax(buckets);
   // Whole-euro type totals that add up to the whole-euro 6-month total.
@@ -147,7 +153,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                 ))}
                 {bucket.monthly.map((p, i) => (
                   <text key={`${p.key}-lbl`} x={midX(i)} y={114} textAnchor="middle" fontSize={10} fill="var(--muted-2)">
-                    {monthFmt.format(monthKeyToDate(p.key))}
+                    {monthTick(p.key)}
                   </text>
                 ))}
                 <polyline

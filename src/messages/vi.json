@@ -104,7 +104,8 @@
       "rangeShared": "{from} – {to} · cùng thang đo",
       "viewExpense": "Chi phí",
       "currentHighlighted": "Tháng hiện tại được làm nổi bật · đường xu hướng chồng lên",
-      "sixMonthSpend": "Chi tiêu 6 tháng"
+      "sixMonthSpend": "Chi tiêu 6 tháng",
+      "monthTick": "T{m}"
     },
     "agenda": {
       "title": "Tuần này",

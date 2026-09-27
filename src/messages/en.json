@@ -104,7 +104,8 @@
       "rangeShared": "{from} – {to} · shared scale",
       "viewExpense": "Expense",
       "currentHighlighted": "Current month highlighted · trend line overlaid",
-      "sixMonthSpend": "6-month spend"
+      "sixMonthSpend": "6-month spend",
+      "monthTick": "{short}"
     },
     "agenda": {
       "title": "This week",

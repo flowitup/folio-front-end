@@ -65,6 +65,7 @@ import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { toIsoDate, toItemPayload } from "@/lib/billing/document-payload";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
+import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -219,6 +220,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [isXlsxLoading, setIsXlsxLoading] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -787,7 +789,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
             type="button"
             variant="outline"
             className="ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={handleDelete}
+            onClick={() => setDeleteOpen(true)}
             disabled={isSubmitting}
           >
             {tForm("actions.delete")}
@@ -806,6 +808,14 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         onOpenChange={setFromTemplateOpen}
         kind={kind}
       />
+      {liveDoc && (
+        <BillingDeleteDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          documentNumber={liveDoc.document_number}
+          onConfirm={handleDelete}
+        />
+      )}
       <BillingPdfPreviewDialog
         document={previewOpen ? liveDoc : null}
         onClose={() => setPreviewOpen(false)}

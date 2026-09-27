@@ -430,13 +430,36 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
     });
   });
 
-  it("calls deleteBillingDocumentAction and redirects on delete", async () => {
+  it("asks for confirmation and does not delete when cancelled", async () => {
+    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+    });
+
+    const dialog = screen.getByRole("alertdialog");
+    expect(within(dialog).getByText(/DEV-2026-001/)).toBeDefined();
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole("button", { name: /cancel/i }));
+    });
+
+    expect(mockDelete).not.toHaveBeenCalled();
+    expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+
+  it("calls deleteBillingDocumentAction and redirects once delete is confirmed", async () => {
     mockDelete.mockResolvedValueOnce({ ok: true, data: undefined });
 
     render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+    });
+    expect(mockDelete).not.toHaveBeenCalled();
+
+    const dialog = screen.getByRole("alertdialog");
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole("button", { name: /delete/i }));
     });
 
     await waitFor(() => {

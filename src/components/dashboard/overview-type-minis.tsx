@@ -211,6 +211,28 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                   ) : null
                 )}
               </svg>
+              {/* The chart is aria-hidden and its figures live in hover tips:
+                  screen readers get the same months as a table. */}
+              {!unavailable && (
+                <table className="sr-only">
+                  <caption>{tInvoices(`types.${bucket.type}`)}</caption>
+                  <tbody>
+                    {bucket.monthly.map((p) => (
+                      <tr key={p.key}>
+                        <th scope="row">{monthYearFmt.format(monthKeyToDate(p.key))}</th>
+                        <td>{formatEURWhole(p.total)}</td>
+                        <td>
+                          {tInvoices("invoiceCount", { n: p.count })}
+                          {p.creditCount > 0 &&
+                            ` · ${tInvoices("summary.returnsReceived", { n: p.creditCount })} ${formatEURWhole(
+                              p.credited
+                            )}`}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           );
         })}

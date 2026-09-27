@@ -56,3 +56,15 @@ describe("OverviewTypeMinis totals", () => {
     expect(screen.queryByText(/1 501/)).toBeNull();
   });
 });
+
+describe("OverviewTypeMinis screen-reader table", () => {
+  it("lists each month's amount, count and returns next to the hidden chart", () => {
+    const b = buckets([750, 0, 0]);
+    b[0].monthly[5] = { key: "2026-09", total: -50, count: 0, credited: -50, creditCount: 1 };
+    renderMinis("en", b);
+    const table = screen.getAllByRole("table")[0];
+    expect(table).toHaveTextContent("Sep 2026");
+    expect(table.textContent?.replace(/[\u202f\u00a0]/g, " ")).toContain("-50 €");
+    expect(table).toHaveTextContent(/return/i);
+  });
+});

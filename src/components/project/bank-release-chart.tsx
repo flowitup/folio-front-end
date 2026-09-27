@@ -152,6 +152,9 @@ export function BankReleaseChart({
                     data-tip={`${draw.number} · ${formatDate(draw.date)}|${formatEURWhole(
                       draw.amount
                     )}`}
+                    // The tip is hover-only; screen readers read each draw.
+                    role="img"
+                    aria-label={`${draw.number} · ${formatDate(draw.date)} · ${formatEURWhole(draw.amount)}`}
                     // Each segment gives back its 2px flex gap so the hatched
                     // tail keeps its exact remaining share — otherwise the
                     // shrinkable tail absorbs all N gaps and vanishes while

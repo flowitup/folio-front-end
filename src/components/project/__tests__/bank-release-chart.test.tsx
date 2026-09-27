@@ -97,6 +97,18 @@ describe("BankReleaseChart", () => {
     expect(screen.getByText("projects.bankRelease.segmentHint")).toBeInTheDocument();
   });
 
+  it("names every draw segment for screen readers", () => {
+    render(
+      <BankReleaseChart
+        credit={200000}
+        releasedTotal={75000}
+        invoices={[makeRelease({ total_amount: 75000, invoice_number: "FR-1", issue_date: "2026-06-03" })]}
+      />
+    );
+    const seg = screen.getByRole("img", { name: /FR-1 · 03\/06\/2026 · 75/ });
+    expect(seg).toBeInTheDocument();
+  });
+
   it("carries largest and last draw in the stats footer", () => {
     render(
       <BankReleaseChart

@@ -117,7 +117,9 @@ export function OverviewMoneyPanel({
 
   const sparkMax = Math.max(...monthlySeries.map((p) => p.total), 1);
   const sparkX = (i: number) => 4 + i * 30;
-  const sparkY = (v: number) => 38 - (v / sparkMax) * 30;
+  // A net-negative month (returns above purchases) sits on the baseline, as
+  // the bar charts floor it; unfloored it would be drawn far below the chart.
+  const sparkY = (v: number) => 38 - (Math.max(0, v) / sparkMax) * 30;
   const sparkPts = monthlySeries.map((p, i) => ({ x: sparkX(i), y: sparkY(p.total) }));
   const lastIdx = sparkPts.length - 1;
   const sparkArea =

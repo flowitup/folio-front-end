@@ -31,7 +31,7 @@
     "heroTitle": "Reprenez le chantier.",
     "phoneLabel": "Numéro de téléphone",
     "phonePlaceholder": "6 12 34 56 78",
-    "phoneHint": "Numéros français uniquement — sans le 0 initial. Code à 6 chiffres par SMS.",
+    "phoneHint": "Numéros français uniquement, avec ou sans le 0 initial. Code à 6 chiffres par SMS.",
     "sendCode": "Envoyer le code",
     "sendingCode": "Envoi du code...",
     "codeSentTo": "Code à 6 chiffres envoyé au <mono>{phone}</mono>.",

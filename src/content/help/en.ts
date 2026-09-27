@@ -19,7 +19,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "If you were invited by email instead, the link in that message attaches you directly.",
     ],
     gotchas: [
-      "Only French numbers are accepted, and without the leading zero.",
+      "Only French numbers are accepted, written 06 12 34 56 78, 6 12 34 56 78 or +33 6 12 34 56 78.",
     ],
     whoCanDoIt: "Anyone with a phone number that has been added to a company.",
   },
@@ -33,7 +33,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "The sidebar's first group is app-wide: Overview, Projects and Library.",
       "Once a project is selected the sidebar grows its sections: Planning, Labor, Expense, Cost planning, Notes, Documents and Analyses.",
       "Company administrators also see a Billing group: Quotes, Invoices, Templates and Refundable.",
-      "The top bar carries the page's main action, the help mark, the bell, the light and dark switch, the language picker and your account menu.",
+      "The top bar carries the page's main action, the help mark, the bell, the language picker and your account menu.",
     ],
     whoCanDoIt:
       "Everyone sees the app-wide group. Documents only appears if you may open it, and Billing only for company administrators.",

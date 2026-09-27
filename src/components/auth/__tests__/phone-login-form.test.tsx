@@ -17,7 +17,7 @@ import { LoginStage } from "../LoginStage";
 const TRANSLATIONS: Record<string, string> = {
   phoneLabel: "Phone number",
   phonePlaceholder: "6 12 34 56 78",
-  phoneHint: "French numbers only — without the leading 0. A 6-digit code by SMS.",
+  phoneHint: "French numbers only, with or without the leading 0. A 6-digit code by SMS.",
   sendCode: "Send code",
   sendingCode: "Sending code...",
   codeSentTo: "Code sent to <mono>{phone}</mono>.",
@@ -119,7 +119,7 @@ describe("Phone sign-in", () => {
     render(<LoginStage />);
 
     expect(
-      screen.getByText("French numbers only — without the leading 0. A 6-digit code by SMS.")
+      screen.getByText("French numbers only, with or without the leading 0. A 6-digit code by SMS.")
     ).toBeInTheDocument();
   });
 

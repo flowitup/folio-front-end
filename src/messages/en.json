@@ -31,7 +31,7 @@
     "heroTitle": "Step back onto the site.",
     "phoneLabel": "Phone number",
     "phonePlaceholder": "6 12 34 56 78",
-    "phoneHint": "French numbers only — without the leading 0. A 6-digit code by SMS.",
+    "phoneHint": "French numbers only, with or without the leading 0. A 6-digit code by SMS.",
     "sendCode": "Send code",
     "sendingCode": "Sending code...",
     "codeSentTo": "6-digit code sent to <mono>{phone}</mono>.",

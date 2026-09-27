@@ -31,7 +31,7 @@
     "heroTitle": "Trở lại với công trình.",
     "phoneLabel": "Số điện thoại",
     "phonePlaceholder": "6 12 34 56 78",
-    "phoneHint": "Chỉ nhận số Pháp — bỏ số 0 đầu. Mã 6 số gửi qua SMS.",
+    "phoneHint": "Chỉ nhận số Pháp, có hoặc không có số 0 đầu. Mã 6 số gửi qua SMS.",
     "sendCode": "Gửi mã",
     "sendingCode": "Đang gửi mã...",
     "codeSentTo": "Mã 6 số đã gửi tới <mono>{phone}</mono>.",

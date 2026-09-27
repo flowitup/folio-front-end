@@ -25,14 +25,16 @@ const ANALYSIS_ID = "analysis-456";
 
 describe("AnalysisViewer", () => {
   describe("Security: iframe sandbox configuration", () => {
-    it("SECURITY REGRESSION: iframe sandbox attribute equals exactly 'allow-scripts'", () => {
+    it("SECURITY REGRESSION: iframe sandbox is exactly scripts + popups that escape the sandbox", () => {
       const { container } = render(
         <AnalysisViewer projectId={PROJECT_ID} analysisId={ANALYSIS_ID} title="Report" />
       );
 
       const iframe = container.querySelector("iframe") as HTMLIFrameElement;
       expect(iframe).toBeDefined();
-      expect(iframe.getAttribute("sandbox")).toBe("allow-scripts");
+      expect(iframe.getAttribute("sandbox")).toBe(
+        "allow-scripts allow-popups allow-popups-to-escape-sandbox"
+      );
     });
 
     it("SECURITY REGRESSION: iframe sandbox does NOT contain 'allow-same-origin'", () => {
@@ -48,7 +50,7 @@ describe("AnalysisViewer", () => {
       expect(sandboxAttr).not.toContain("allow-same-origin");
     });
 
-    it("SECURITY REGRESSION: iframe sandbox contains only 'allow-scripts', nothing else", () => {
+    it("SECURITY REGRESSION: iframe sandbox never grants same-origin or top navigation", () => {
       const { container } = render(
         <AnalysisViewer projectId={PROJECT_ID} analysisId={ANALYSIS_ID} title="Report" />
       );
@@ -56,9 +58,12 @@ describe("AnalysisViewer", () => {
       const iframe = container.querySelector("iframe") as HTMLIFrameElement;
       expect(iframe).toBeDefined();
 
-      // The sandbox attribute should contain exactly "allow-scripts"
-      const sandboxAttr = iframe.getAttribute("sandbox");
-      expect(sandboxAttr).toBe("allow-scripts");
+      // Links in a report may open new tabs (allow-popups); nothing else is granted.
+      const tokens = (iframe.getAttribute("sandbox") ?? "").split(/\s+/);
+      expect(tokens).toContain("allow-scripts");
+      expect(tokens).toContain("allow-popups");
+      expect(tokens).not.toContain("allow-same-origin");
+      expect(tokens.some((t) => t.startsWith("allow-top-navigation"))).toBe(false);
     });
 
     it("COMMENT: Adding 'allow-same-origin' would turn stored reports into stored XSS", () => {

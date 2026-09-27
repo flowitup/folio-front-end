@@ -165,8 +165,7 @@ export function PhotoLightbox({
       setEditing(false);
       toast.success(t("saved"));
     } else {
-      const key = result.error as keyof typeof errorKeys;
-      toast.error(t(`errors.${errorKeys[key] ?? "server"}`));
+      toast.error(t(`errors.${errorKeys[result.error] ?? "updateFailed"}`));
     }
   }
 
@@ -179,21 +178,20 @@ export function PhotoLightbox({
       setDeleteOpen(false);
       onDeleted(photo.id);
       onClose();
+      toast.success(t("deleted"));
     } else {
-      const key = result.error as keyof typeof errorKeys;
-      toast.error(t(`errors.${errorKeys[key] ?? "server"}`));
+      toast.error(t(`errors.${errorKeys[result.error] ?? "deleteFailed"}`));
     }
   }
 
-  // Map action error codes to i18n keys
+  // Map edit/delete action error codes to i18n keys; anything else falls
+  // back to the action's own message (never the upload one).
   const errorKeys: Record<string, string> = {
     forbidden: "forbidden",
     rateLimited: "rateLimited",
     network: "network",
-    server: "server",
-    oversize: "oversize",
-    unsupported: "unsupported",
-    invalidImage: "invalidImage",
+    notFound: "notFound",
+    validation: "validation",
   };
 
   const open = photo !== null;
@@ -282,7 +280,7 @@ export function PhotoLightbox({
                     onClick={onClose}
                     className="ml-auto"
                   >
-                    {t("cancel")}
+                    {t("close")}
                   </Button>
                 </div>
               </>

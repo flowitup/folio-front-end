@@ -2407,10 +2407,16 @@
       "rateLimited": "Tải lên quá nhiều — vui lòng chờ một lúc",
       "server": "Tải lên thất bại — vui lòng thử lại",
       "forbidden": "Bạn không có quyền thực hiện thao tác này",
-      "invalidImage": "Ảnh không hợp lệ — tệp không thể được xử lý"
+      "invalidImage": "Ảnh không hợp lệ — tệp không thể được xử lý",
+      "updateFailed": "Không thể lưu thay đổi — vui lòng thử lại",
+      "deleteFailed": "Không thể xóa ảnh — vui lòng thử lại",
+      "notFound": "Ảnh này không còn tồn tại",
+      "validation": "Hãy kiểm tra chú thích và ngày, rồi thử lại"
     },
     "loadMore": "Tải thêm",
-    "saved": "Đã lưu thay đổi"
+    "saved": "Đã lưu thay đổi",
+    "deleted": "Đã xóa ảnh",
+    "close": "Đóng"
   },
   "chiffrage": {
     "actions": "Thao tác",

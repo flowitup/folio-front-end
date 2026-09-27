@@ -2407,10 +2407,16 @@
       "rateLimited": "Too many uploads — please slow down",
       "server": "Upload failed — please try again",
       "forbidden": "You do not have permission to perform this action",
-      "invalidImage": "Invalid image — the file could not be processed"
+      "invalidImage": "Invalid image — the file could not be processed",
+      "updateFailed": "Couldn't save the changes — please try again",
+      "deleteFailed": "Couldn't delete the photo — please try again",
+      "notFound": "This photo no longer exists",
+      "validation": "Check the caption and date, then try again"
     },
     "loadMore": "Load more",
-    "saved": "Changes saved"
+    "saved": "Changes saved",
+    "deleted": "Photo deleted",
+    "close": "Close"
   },
   "chiffrage": {
     "actions": "Actions",

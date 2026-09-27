@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { updatePhotoAction } from "../actions";
+import { updatePhotoAction, deletePhotoAction } from "../actions";
+import { toast } from "sonner";
 import { PhotoLightbox } from "../photo-lightbox";
 import type { ProjectPhoto } from "@/lib/api/project-photos";
 
@@ -79,5 +80,44 @@ describe("PhotoLightbox caption edit", () => {
     expect(screen.getByText("27 September 2026")).toBeInTheDocument();
     fireEvent.click(await screen.findByRole("button", { name: /photos\.edit/ }));
     expect(screen.getByDisplayValue("2026-09-27")).toBeInTheDocument();
+  });
+
+  it("reports a failed save as a save error, not an upload error", async () => {
+    vi.mocked(updatePhotoAction).mockReset();
+    vi.mocked(updatePhotoAction).mockResolvedValue({ ok: false, error: "server" } as never);
+    render(
+      <PhotoLightbox
+        projectId="11111111-1111-4111-8111-111111111111"
+        photo={photo}
+        canEdit
+        onClose={vi.fn()}
+        onDeleted={vi.fn()}
+        onUpdated={vi.fn()}
+      />,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: /photos\.edit/ }));
+    fireEvent.click(screen.getByRole("button", { name: /photos\.save/ }));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("photos.errors.updateFailed"));
+  });
+
+  it("confirms a delete and labels the view-mode button Close", async () => {
+    vi.mocked(deletePhotoAction).mockResolvedValue({ ok: true } as never);
+    const onDeleted = vi.fn();
+    render(
+      <PhotoLightbox
+        projectId="11111111-1111-4111-8111-111111111111"
+        photo={photo}
+        canEdit
+        onClose={vi.fn()}
+        onDeleted={onDeleted}
+        onUpdated={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "photos.close" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "photos.delete" }));
+    const buttons = await screen.findAllByRole("button", { name: "photos.delete" });
+    fireEvent.click(buttons[buttons.length - 1]);
+    await waitFor(() => expect(onDeleted).toHaveBeenCalled());
+    expect(toast.success).toHaveBeenCalledWith("photos.deleted");
   });
 });

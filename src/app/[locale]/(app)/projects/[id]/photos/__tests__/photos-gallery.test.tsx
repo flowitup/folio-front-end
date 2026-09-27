@@ -357,7 +357,7 @@ describe("PhotosGallery — lightbox opens on thumb click", () => {
     // PhotoLightbox dialog should be open — confirmed by the cancel/close button appearing
     await waitFor(() => {
       // The lightbox renders a "cancel" button (ghost variant) in display mode
-      expect(screen.getByText("photos.cancel")).toBeDefined();
+      expect(screen.getByText("photos.close")).toBeDefined();
     });
   });
 
@@ -454,7 +454,7 @@ describe("PhotosGallery — lightbox write controls follow canEdit", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("photos.cancel")).toBeDefined();
+      expect(screen.getByText("photos.close")).toBeDefined();
     });
   }
 

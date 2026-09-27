@@ -2407,10 +2407,16 @@
       "rateLimited": "Trop d'envois — veuillez ralentir",
       "server": "Échec du téléversement — veuillez réessayer",
       "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
-      "invalidImage": "Image invalide — le fichier n'a pas pu être traité"
+      "invalidImage": "Image invalide — le fichier n'a pas pu être traité",
+      "updateFailed": "Impossible d'enregistrer les modifications — veuillez réessayer",
+      "deleteFailed": "Impossible de supprimer la photo — veuillez réessayer",
+      "notFound": "Cette photo n'existe plus",
+      "validation": "Vérifiez la légende et la date, puis réessayez"
     },
     "loadMore": "Charger plus",
-    "saved": "Modifications enregistrées"
+    "saved": "Modifications enregistrées",
+    "deleted": "Photo supprimée",
+    "close": "Fermer"
   },
   "chiffrage": {
     "actions": "Actions",

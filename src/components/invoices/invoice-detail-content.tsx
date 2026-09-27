@@ -150,10 +150,12 @@ export function InvoiceDetailContent({
 
   return (
     <div className="space-y-3">
-      {/* Action bar */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold tracking-tight font-mono">
+      {/* Action bar — wraps on phones: the row sits inside overflow-hidden
+          wrappers (expand animation, mobile card), so anything that overflowed
+          was clipped and Edit/Delete became unreachable. */}
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <h2 className="text-lg font-semibold tracking-tight font-mono whitespace-nowrap">
             {invoice.invoice_number}
           </h2>
           <span className={TYPE_BADGE_CLASS[ledgerTypeOf(invoice)]}>
@@ -170,10 +172,15 @@ export function InvoiceDetailContent({
           )}
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <Button variant="outline" size="sm" onClick={() => window.open(printUrl, "_blank")}>
-            <Printer className="h-4 w-4 mr-1" />
-            {t("printPdf")}
+        <div className="flex flex-wrap items-center gap-1.5" data-testid="invoice-detail-actions">
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={t("printPdf")}
+            onClick={() => window.open(printUrl, "_blank")}
+          >
+            <Printer className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">{t("printPdf")}</span>
           </Button>
           {canManage &&
             !isEditing &&
@@ -196,6 +203,7 @@ export function InvoiceDetailContent({
                 variant="ghost"
                 size="sm"
                 className="text-muted-foreground hover:text-destructive"
+                aria-label={t("delete")}
                 onClick={handleDelete}
               >
                 <Trash2 className="h-4 w-4" />

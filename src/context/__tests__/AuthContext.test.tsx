@@ -87,6 +87,26 @@ describe("AuthContext.loginWithPhone", () => {
     expect(mockPush).toHaveBeenCalledWith("/en/dashboard");
   });
 
+  it("returns to the callbackUrl deep link after sign-in", async () => {
+    window.history.replaceState(null, "", "/en/login?callbackUrl=%2Fen%2Fprojects%2Fp1%2Fplanning");
+    mockVerifyOtpAction.mockResolvedValue({
+      success: true,
+      user: { id: "u1", email: "admin2@example.com", permissions: [] },
+    });
+    mockGetCurrentUserAction.mockResolvedValue(null);
+
+    render(
+      <AuthProvider>
+        <LoginProbe />
+      </AuthProvider>
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "sign in with phone" }));
+
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/en/projects/p1/planning"));
+    window.history.replaceState(null, "", "/");
+  });
+
   it("falls back to the sign-in response user if the /auth/me refetch fails", async () => {
     mockVerifyOtpAction.mockResolvedValue({
       success: true,

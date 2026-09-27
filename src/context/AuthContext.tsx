@@ -15,6 +15,7 @@ import {
   getCurrentUserAction,
 } from "@/lib/auth/actions";
 import { verifyOtpAction } from "@/lib/auth/otp-actions";
+import { postLoginPath } from "@/lib/auth/callback-url";
 
 interface AuthContextType extends AuthState {
   loginWithPhone: (
@@ -85,7 +86,9 @@ export function AuthProvider({
       // starts from /login, under the same not-yet-visited route), so
       // push() alone already fetches every layout server-side fresh,
       // including the session-reading root layout.
-      router.push(`/${locale}/dashboard`);
+      // Return to the page the proxy sent the visitor away from, if any.
+      const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+      router.push(postLoginPath(callbackUrl, locale));
     },
     [router, locale]
   );

@@ -64,7 +64,7 @@ export async function proxy(request: NextRequest) {
   // route no longer requires touching this file.
   if (!isAuthenticated && isProtectedRoute(pathnameWithoutLocale)) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    loginUrl.searchParams.set("callbackUrl", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
   }
 

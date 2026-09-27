@@ -326,6 +326,7 @@ export default function InvoicesPage() {
         open={exportOpen}
         onOpenChange={setExportOpen}
         initialType={activeTab}
+        canViewBudget={canViewBudget}
       />
 
       {error && (

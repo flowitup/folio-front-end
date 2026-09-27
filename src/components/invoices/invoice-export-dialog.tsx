@@ -31,6 +31,11 @@ interface InvoiceExportDialogProps {
   onOpenChange: (open: boolean) => void;
   /** Optional initial type filter (carries through from the active list tab). */
   initialType?: InvoiceType | "all";
+  /**
+   * The caller may see released funds (project:view_budget). Without it the
+   * API strips them from the file, so the type is not offered.
+   */
+  canViewBudget?: boolean;
 }
 
 function computeMonthSpan(from: string, to: string): number {
@@ -45,13 +50,16 @@ export function InvoiceExportDialog({
   open,
   onOpenChange,
   initialType = "all",
+  canViewBudget = true,
 }: InvoiceExportDialogProps) {
+  // A released-funds filter the caller cannot export falls back to all types.
+  const startType = !canViewBudget && initialType === "released_funds" ? "all" : initialType;
   const t = useTranslations("invoices.export");
   const locale = useLocale();
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [format, setFormat] = useState<InvoiceExportFormat>("xlsx");
-  const [typeValue, setTypeValue] = useState<InvoiceType | "all">(initialType);
+  const [typeValue, setTypeValue] = useState<InvoiceType | "all">(startType);
   const [submitting, setSubmitting] = useState(false);
 
   const monthSpan = useMemo(() => computeMonthSpan(from, to), [from, to]);
@@ -70,7 +78,7 @@ export function InvoiceExportDialog({
     setFrom("");
     setTo("");
     setFormat("xlsx");
-    setTypeValue(initialType);
+    setTypeValue(startType);
     onOpenChange(false);
   };
 
@@ -156,7 +164,9 @@ export function InvoiceExportDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("typeAll")}</SelectItem>
-                <SelectItem value="released_funds">{t("typeReleasedFunds")}</SelectItem>
+                {canViewBudget && (
+                  <SelectItem value="released_funds">{t("typeReleasedFunds")}</SelectItem>
+                )}
                 <SelectItem value="labor">{t("typeLabor")}</SelectItem>
                 <SelectItem value="materials_services">{t("typeMaterialsServices")}</SelectItem>
                 <SelectItem value="others">{t("typeOthers")}</SelectItem>

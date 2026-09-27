@@ -634,3 +634,28 @@ describe("InvoiceExportDialog — cancel behavior", () => {
     expect(fetchInvoiceExport).not.toHaveBeenCalled();
   });
 });
+
+describe("InvoiceExportDialog — released funds need the budget view", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("exports every type instead of an always-empty released-funds file for a manager", async () => {
+    vi.mocked(fetchInvoiceExport).mockResolvedValue({ blob: new Blob(["x"]), filename: "f.xlsx" });
+    render(
+      <InvoiceExportDialog
+        {...DEFAULT_PROPS}
+        initialType="released_funds"
+        canViewBudget={false}
+      />
+    );
+
+    fireEvent.change(document.getElementById("invoice-export-from")!, { target: { value: "2026-01" } });
+    fireEvent.change(document.getElementById("invoice-export-to")!, { target: { value: "2026-03" } });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(() => expect(fetchInvoiceExport).toHaveBeenCalled());
+    expect(vi.mocked(fetchInvoiceExport).mock.calls[0][3]).toBeUndefined();
+    expect(screen.queryByText("typeReleasedFunds")).toBeNull();
+  });
+});

@@ -22,7 +22,9 @@
     "projectSettings": "Cài đặt",
     "settings": "Cài đặt",
     "more": "Thêm",
-    "chiffrage": "Hoạch toán"
+    "chiffrage": "Hoạch toán",
+    "close": "Đóng",
+    "homeLink": "Folio — trang chủ"
   },
   "auth": {
     "welcomeBack": "Chào mừng trở lại",
@@ -2313,7 +2315,8 @@
       "imageLinkRefused": "Liên kết ảnh này không được chấp nhận. Hãy dùng liên kết https trỏ trực tiếp tới ảnh.",
       "imageLinkNotImage": "Liên kết không phải là ảnh JPG, PNG hoặc WebP."
     },
-    "selectSupplier": "Chọn nhà cung cấp"
+    "selectSupplier": "Chọn nhà cung cấp",
+    "imagePreviewAlt": "Xem trước ảnh đã chọn"
   },
   "inventory": {
     "title": "Kho thiết bị",

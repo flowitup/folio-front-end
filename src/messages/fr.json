@@ -22,7 +22,9 @@
     "projectSettings": "Paramètres",
     "settings": "Paramètres",
     "more": "Plus",
-    "chiffrage": "Chiffrage"
+    "chiffrage": "Chiffrage",
+    "close": "Fermer",
+    "homeLink": "Folio — accueil"
   },
   "auth": {
     "welcomeBack": "Bienvenue",
@@ -2313,7 +2315,8 @@
       "imageLinkRefused": "Ce lien d'image n'est pas accepté. Utilisez un lien https vers l'image elle-même.",
       "imageLinkNotImage": "Le lien ne pointe pas vers une image JPG, PNG ou WebP."
     },
-    "selectSupplier": "Choisir un fournisseur"
+    "selectSupplier": "Choisir un fournisseur",
+    "imagePreviewAlt": "Aperçu de l'image choisie"
   },
   "inventory": {
     "title": "Inventaire du matériel",

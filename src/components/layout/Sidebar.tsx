@@ -139,7 +139,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
           which the edge rejects (503 on Sec-Purpose: prefetch bursts). */}
       <Link prefetch={false}
         href="/dashboard"
-        aria-label="Folio — home"
+        aria-label={t("homeLink")}
         className="flex items-center gap-3 px-5 py-5"
       >
         <FolioLogo />

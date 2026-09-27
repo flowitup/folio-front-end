@@ -22,7 +22,9 @@
     "projectSettings": "Settings",
     "settings": "Settings",
     "more": "More",
-    "chiffrage": "Cost planning"
+    "chiffrage": "Cost planning",
+    "close": "Close",
+    "homeLink": "Folio — home"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -2313,7 +2315,8 @@
       "imageLinkRefused": "This image link is not accepted. Use an https link to the image itself.",
       "imageLinkNotImage": "The link is not a JPG, PNG or WebP image."
     },
-    "selectSupplier": "Select a supplier"
+    "selectSupplier": "Select a supplier",
+    "imagePreviewAlt": "Preview of the chosen image"
   },
   "inventory": {
     "title": "Equipment inventory",

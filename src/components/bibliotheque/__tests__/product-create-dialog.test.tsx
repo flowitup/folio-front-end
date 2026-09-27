@@ -674,9 +674,9 @@ describe("ProductCreateDialog — image from a supplier link", () => {
     fireEvent.change(screen.getByLabelText(/^image$/i), {
       target: { files: [file] },
     });
-    expect(screen.getByAltText("Preview")).toBeInTheDocument();
+    expect(screen.getByAltText("Preview of the chosen image")).toBeInTheDocument();
     typeLink(LINK);
-    expect(screen.queryByAltText("Preview")).not.toBeInTheDocument();
+    expect(screen.queryByAltText("Preview of the chosen image")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /add product/i }));
 
     await waitFor(() => {

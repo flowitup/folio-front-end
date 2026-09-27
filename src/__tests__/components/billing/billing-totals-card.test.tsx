@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { BillingTotalsCard, computeTotals } from "@/components/billing/billing-totals-card";
+import { BillingTotalsCard, computeTotals, lineTotalHt } from "@/components/billing/billing-totals-card";
 import type { BillingDocumentItem } from "@/types/billing";
 
 // next-intl mock — returns English values so assertions on "Total HT" / "TVA X%" still pass.
@@ -193,5 +193,53 @@ describe("BillingTotalsCard", () => {
     expect(screen.getByText("Total TTC")).toBeDefined();
     // No TVA lines for empty items
     expect(screen.queryByText(/TVA \d/)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Rounding: per line, half-up to the cent, exact decimal arithmetic
+// ---------------------------------------------------------------------------
+
+describe("computeTotals — rounding", () => {
+  const line = (quantity: string, unit_price: string, vat_rate: string): BillingDocumentItem => ({
+    description: "x",
+    quantity,
+    unit_price,
+    vat_rate,
+  });
+
+  it("rounds a half cent up where float math rounds it down", () => {
+    // 2.5 × 19.99 = 49.975 exactly; in float it is 49.97499…
+    expect(lineTotalHt(line("2.5", "19.99", "20"))).toBe(49.98);
+    const result = computeTotals([line("2.5", "19.99", "20")]);
+    expect(result.totalHt).toBe(49.98);
+    expect(result.totalTva).toBe(10);
+    expect(result.totalTtc).toBe(59.98);
+  });
+
+  it("adds up the rounded line amounts so lines and totals agree", () => {
+    const result = computeTotals([
+      line("1", "0.125", "20"),
+      line("1", "0.125", "20"),
+      line("1", "62.625", "0"),
+    ]);
+    // Lines 0.13 + 0.13 + 62.63; TVA 0.03 + 0.03
+    expect(result.totalHt).toBe(62.89);
+    expect(result.totalTva).toBe(0.06);
+    expect(result.totalTtc).toBe(62.95);
+  });
+
+  it("rounds 1.005 up to 1.01", () => {
+    expect(lineTotalHt(line("1", "1.005", "20"))).toBe(1.01);
+  });
+
+  it("groups 20 and 20.00 as the same VAT rate", () => {
+    const result = computeTotals([line("1", "100", "20.00"), line("1", "50", "20")]);
+    expect(result.vatLines).toHaveLength(1);
+    expect(result.vatLines[0]).toEqual({ rate: "20", baseHt: 150, tvaAmount: 30 });
+  });
+
+  it("reads a number input's exponent notation", () => {
+    expect(lineTotalHt(line("1e2", "1.5", "20"))).toBe(150);
   });
 });

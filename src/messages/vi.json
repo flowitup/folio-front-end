@@ -13,6 +13,7 @@
     "inventory": "Kho thiết bị",
     "labor": "Nhân công",
     "invoices": "Chi phí",
+    "quotesInvoices": "Báo giá & hóa đơn",
     "planning": "Kế hoạch",
     "notes": "Ghi chú",
     "documents": "Tài liệu",
@@ -1428,6 +1429,27 @@
         "bothShare": "{percent}% cả hai",
         "bankShare": "{percent}% ngân hàng"
       }
+    },
+    "project": {
+      "title": "Báo giá & hóa đơn",
+      "subtitle": "Tất cả báo giá và hóa đơn gắn với công trình này.",
+      "loading": "Đang tải báo giá và hóa đơn…",
+      "columns": {
+        "kind": "Loại"
+      },
+      "kind": {
+        "devis": "Báo giá",
+        "facture": "Hóa đơn"
+      },
+      "empty": {
+        "title": "Chưa có báo giá hay hóa đơn nào",
+        "description": "Chọn công trình này ở trường “Công trình” của báo giá hoặc hóa đơn để xem tại đây."
+      },
+      "errors": {
+        "load": "Không thể tải báo giá và hóa đơn của công trình này.",
+        "forbidden": "Bạn không có quyền xem báo giá và hóa đơn của công trình này."
+      },
+      "retry": "Thử lại"
     }
   },
   "documents": {

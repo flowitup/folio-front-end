@@ -162,3 +162,19 @@ export interface UpdateBillingTemplatePayload {
   default_vat_rate?: string | null;
 }
 
+
+/**
+ * One row of GET /projects/<project_id>/billing-documents — every quote and
+ * invoice linked to a project, whoever issued it. Unlike BillingDocument, the
+ * totals arrive as JSON numbers (the backend summary casts them to float).
+ */
+export interface ProjectBillingDocumentSummary {
+  id: string;
+  kind: BillingDocumentKind;
+  document_number: string;
+  status: BillingDocumentStatus;
+  issue_date: string; // ISO date (YYYY-MM-DD)
+  recipient_name: string;
+  total_ht: number;
+  total_ttc: number;
+}

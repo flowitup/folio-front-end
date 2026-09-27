@@ -21,7 +21,7 @@ import {
 
 // Page meta keys reference message keys in `topbar.*` (title/subtitle) and
 // `projects/planning/labor/invoices.newProject|newTask|logDay|newInvoice` for actions.
-type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents" | "analyses";
+type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents" | "analyses" | "billing";
 
 const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; actionKey?: string }> = {
   dashboard: {
@@ -73,6 +73,12 @@ const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; acti
     titleKey: "analyses.title",
     subtitleKey: "analyses.subtitle",
     // No topbar action — Upload analysis lives inline in the analyses panel.
+  },
+  billing: {
+    // /projects/[id]/billing — the project's quotes & invoices, read-only;
+    // new documents are created from the Billing section.
+    titleKey: "billing.project.title",
+    subtitleKey: "billing.project.subtitle",
   },
 };
 

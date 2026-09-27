@@ -13,6 +13,7 @@
     "inventory": "Inventaire",
     "labor": "Main-d'œuvre",
     "invoices": "Dépenses",
+    "quotesInvoices": "Devis & factures",
     "planning": "Planification",
     "notes": "Notes",
     "documents": "Documents",
@@ -1428,6 +1429,27 @@
         "bothShare": "{percent}% les deux",
         "bankShare": "{percent}% banque"
       }
+    },
+    "project": {
+      "title": "Devis & factures",
+      "subtitle": "Tous les devis et factures rattachés à ce chantier.",
+      "loading": "Chargement des devis et factures…",
+      "columns": {
+        "kind": "Type"
+      },
+      "kind": {
+        "devis": "Devis",
+        "facture": "Facture"
+      },
+      "empty": {
+        "title": "Aucun devis ni facture pour l'instant",
+        "description": "Choisissez ce chantier dans le champ « Chantier » d'un devis ou d'une facture pour le retrouver ici."
+      },
+      "errors": {
+        "load": "Impossible de charger les devis et factures de ce chantier.",
+        "forbidden": "Vous n'avez pas accès aux devis et factures de ce chantier."
+      },
+      "retry": "Réessayer"
     }
   },
   "documents": {

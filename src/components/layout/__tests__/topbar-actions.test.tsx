@@ -217,6 +217,16 @@ describe("Topbar title suppression on self-headed routes", () => {
     expect(screen.queryByText("topbar.overviewTitle")).toBeNull();
   });
 
+  it("project quotes & invoices route renders its own title and no action button", () => {
+    setup({ pathname: "/en/projects/p-1/billing", selectedProjectId: "p-1" });
+    render(<Topbar />);
+    expect(
+      screen.getByRole("heading", { level: 1, name: "billing.project.title" }),
+    ).toBeTruthy();
+    expect(screen.getByText("billing.project.subtitle")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /invoices.newInvoice/ })).toBeNull();
+  });
+
   it("unknown nested settings route does not fall back to the overview title", () => {
     setup({ pathname: "/en/settings/companies/abc" });
     render(<Topbar />);

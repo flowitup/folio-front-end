@@ -150,4 +150,12 @@ describe("MembersTable", () => {
     );
     expect(screen.getAllByText(en.members.expired).length).toBeGreaterThan(0);
   });
+
+  it("lets the header and its buttons wrap on narrow screens", () => {
+    renderTable([]);
+    const header = screen.getByTestId("members-header");
+    expect(header.className).toContain("flex-wrap");
+    expect((header.lastElementChild as HTMLElement).className).toContain("flex-wrap");
+    expect(header.parentElement!.className).toContain("px-4");
+  });
 });

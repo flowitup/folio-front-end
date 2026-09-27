@@ -134,11 +134,11 @@ export function MembersTable({
   };
 
   return (
-    <div className="fade-up space-y-8 px-8 pb-12">
-      {/* Page header */}
-      <div className="flex items-center justify-between pt-2">
+    <div className="fade-up space-y-8 px-4 pb-12 lg:px-8">
+      {/* Page header — wraps on phones, where fr/vi button labels are long. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2" data-testid="members-header">
         <h1 className="font-display text-[22px] font-semibold">{t("title")}</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {canAssignMembers && companyId && (
             <Button
               size="sm"

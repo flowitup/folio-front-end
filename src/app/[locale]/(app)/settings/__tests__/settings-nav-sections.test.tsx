@@ -21,7 +21,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, act } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
+import { hydrateRoot } from "react-dom/client";
 import { NextIntlClientProvider } from "next-intl";
 import enMessages from "@/messages/en.json";
 import frMessages from "@/messages/fr.json";
@@ -242,6 +244,42 @@ describe("Settings nav", () => {
       renderAtHash("#project");
       expect(activeNavName()).toBe("Profile");
       expect(screen.queryByTestId("invoice-prefix-section")).toBeNull();
+    });
+
+    it("renders the same tab as the server HTML, then the hash's tab", () => {
+      window.location.hash = "#company";
+      const container = document.createElement("div");
+      container.innerHTML = renderToString(
+        <NextIntlClientProvider locale="en" messages={enMessages}>
+          <SettingsClient projects={[]} />
+        </NextIntlClientProvider>
+      );
+      document.body.appendChild(container);
+      // The server has no hash: it must render Profile, like the first client pass.
+      expect(activeNavName()).toBe("Profile");
+      const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+      act(() => {
+        hydrateRoot(
+          container,
+          <NextIntlClientProvider locale="en" messages={enMessages}>
+            <SettingsClient projects={[]} />
+          </NextIntlClientProvider>
+        );
+      });
+      expect(errors.mock.calls.flat().join(" ")).not.toMatch(/hydrat/i);
+      expect(activeNavName()).toBe("Company");
+      errors.mockRestore();
+      container.remove();
+    });
+
+    it("writes the picked tab to the hash so a reload keeps it", async () => {
+      renderWith();
+      const nav = screen.getByRole("navigation");
+      act(() => {
+        within(nav).getByRole("button", { name: "Company" }).click();
+      });
+      expect(window.location.hash).toBe("#company");
+      expect(activeNavName()).toBe("Company");
     });
   });
 

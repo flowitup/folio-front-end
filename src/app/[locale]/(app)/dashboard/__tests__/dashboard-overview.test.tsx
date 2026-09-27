@@ -41,8 +41,9 @@ vi.mock("@/context/ProjectContext", () => ({
 // surface. The member specs below swap in a member's permissions.
 const MANAGER_PERMS = ["project:view_budget", "project:manage_labor", "project:manage_invoices"];
 let mockPermissions = MANAGER_PERMS;
+let mockUser: { permissions: string[]; companies?: unknown[] } | null = null;
 vi.mock("@/context/AuthContext", () => ({
-  useAuth: () => ({ user: { permissions: mockPermissions } }),
+  useAuth: () => ({ user: mockUser ?? { permissions: mockPermissions } }),
 }));
 
 function mkInvoice(partial: Partial<Invoice> & Pick<Invoice, "type" | "issue_date" | "total_amount">): Invoice {
@@ -100,6 +101,7 @@ beforeEach(() => {
   vi.setSystemTime(new Date(2026, 6, 15, 12, 0, 0)); // Wed 2026-07-15
   vi.clearAllMocks();
   mockPermissions = MANAGER_PERMS;
+  mockUser = null;
   mockFetchInvoicesWithMeta.mockResolvedValue({ invoices: [], funds_released_total: 0, company_spent_total: 0, personal_spent_total: 0, company_name: null });
   mockFetchTasks.mockResolvedValue([]);
 });
@@ -109,15 +111,37 @@ afterEach(() => {
 });
 
 describe("DashboardPage — no project selected", () => {
-  it("renders a safe empty state without fetching", () => {
-    mockUseProject.mockReturnValue({ selectedProject: null });
+  it("offers to create a project instead of a dashboard of zeros", () => {
+    mockUseProject.mockReturnValue({ selectedProject: null, isLoading: false });
+    mockUser = { permissions: ["project:create"], companies: [{ id: "c-1", role: "admin" }] };
     renderDashboard();
 
     expect(mockFetchInvoicesWithMeta).not.toHaveBeenCalled();
     expect(mockFetchTasks).not.toHaveBeenCalled();
-    // Zero-budget/zero-spend headline still renders.
-    expect(screen.getAllByText(eur(0)).length).toBeGreaterThan(0);
-    expect(screen.getByText("Nothing on the agenda this week.")).toBeInTheDocument();
+    expect(screen.getByTestId("overview-no-project")).toHaveTextContent(enMessages.projects.noProjectsYet);
+    expect(screen.getByRole("link", { name: enMessages.projects.createFirst })).toHaveAttribute(
+      "href",
+      "/en/projects?new=1"
+    );
+    expect(screen.queryByTestId("overview-money-panel")).toBeNull();
+    expect(screen.queryByText("Nothing on the agenda this week.")).toBeNull();
+  });
+
+  it("tells a member without projects to wait for an assignment", () => {
+    mockUseProject.mockReturnValue({ selectedProject: null, isLoading: false });
+    mockUser = { permissions: [], companies: [{ id: "c-1", role: "member" }] };
+    renderDashboard();
+
+    expect(screen.getByTestId("overview-no-project")).toHaveTextContent(
+      enMessages.projects.waitingForAssignment.title
+    );
+    expect(screen.queryByRole("link")).toBeNull();
+  });
+
+  it("shows nothing final while the projects are still loading", () => {
+    mockUseProject.mockReturnValue({ selectedProject: null, isLoading: true });
+    renderDashboard();
+    expect(screen.queryByTestId("overview-no-project")).toBeNull();
   });
 });
 

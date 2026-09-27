@@ -38,7 +38,7 @@ vi.mock("@/components/persons/person-typeahead", () => ({
 }));
 
 vi.mock(
-  "@/app/[locale]/(app)/projects/[id]/labor/components/role-select-with-create",
+  "@/components/labor/role-select-with-create",
   () => ({
     RoleSelectWithCreate: () => null,
   }),

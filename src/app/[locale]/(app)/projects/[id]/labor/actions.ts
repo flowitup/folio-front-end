@@ -1,20 +1,14 @@
 "use server";
 
+// Labor-role actions (list / create / rename / delete) are company-level and
+// shared with Settings, so they live in @/components/labor/labor-role-actions.
+
 import { redirect } from "next/navigation";
-import {
-  fetchLaborRoles,
-  createLaborRole,
-} from "@/lib/api/labor-roles";
 import { fetchDayRoster } from "@/lib/api/roster";
 import type { RosterResponse } from "@/lib/api/roster";
 import { listDueNotifications } from "@/lib/api/notifications";
 import { changeRequestFromFeedItem } from "@/lib/labor/change-requests";
 import type { AttendanceChangeRequest } from "@/types/labor";
-import type {
-  LaborRole,
-  LaborRoleListResponse,
-  CreateLaborRolePayload,
-} from "@/types/labor-role";
 
 // ---- Error classification ----
 
@@ -32,54 +26,6 @@ function classifyBackendError(err: unknown): string {
   if (status === 409) return "duplicate";
   if (status === 429) return "rateLimited";
   return "generic";
-}
-
-// ---- Result types ----
-
-export type RoleActionResult =
-  | { success: true; role: LaborRole }
-  | { success: false; error: string };
-
-export type RoleListActionResult =
-  | { success: true; data: LaborRoleListResponse }
-  | { success: false; error: string };
-
-// ---- Actions ----
-
-/**
- * Fetch all labor roles and the default color palette.
- */
-export async function fetchLaborRolesAction(): Promise<RoleListActionResult> {
-  try {
-    const data = await fetchLaborRoles();
-    return { success: true, data };
-  } catch (err: unknown) {
-    return { success: false, error: classifyBackendError(err) };
-  }
-}
-
-/**
- * Create a new labor role.
- */
-export async function createLaborRoleAction(
-  payload: CreateLaborRolePayload,
-): Promise<RoleActionResult> {
-  if (!payload.name || payload.name.trim().length === 0) {
-    return { success: false, error: "validation" };
-  }
-  if (!payload.color || payload.color.trim().length === 0) {
-    return { success: false, error: "validation" };
-  }
-
-  try {
-    const role = await createLaborRole({
-      name: payload.name.trim(),
-      color: payload.color.trim(),
-    });
-    return { success: true, role };
-  } catch (err: unknown) {
-    return { success: false, error: classifyBackendError(err) };
-  }
 }
 
 // ---- Day roster (member-safe: name, presence, hours, day type — never pay) ----

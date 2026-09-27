@@ -18,6 +18,12 @@
  *      the DB regardless of company or the viewer's locale.
  *   3. The legacy fixed-UUID map (pre-Phase-2 unbackfilled rows).
  *   4. null — caller falls back to the role's own (unlocalized) name field.
+ *
+ * A seeded role can be renamed (Settings › Company › Labor roles, or the role
+ * picker). The rename keeps its slug and id, so whichever of 1–3 matched, a
+ * stored name that is no longer the seed name means the company chose its own
+ * — that name is shown, not the locale's default label. A role with no name
+ * at hand (a worker row without `role_name`) still resolves.
  */
 
 /** Seed name (as stored, always Vietnamese) → stable slug. Mirrors DEFAULT_ROLES in seed_default_labor_roles.py. */
@@ -32,11 +38,20 @@ const SLUG_TO_I18N_KEY: Record<string, string> = {
   tho_phu: "assistant",
 };
 
+/** i18n key → the seed name it labels, for spotting a renamed seed role. */
+const I18N_KEY_TO_SEED_NAME: Record<string, string> = Object.fromEntries(
+  Object.entries(SEED_ROLE_NAME_TO_SLUG).map(([name, slug]) => [SLUG_TO_I18N_KEY[slug], name]),
+);
+
+/** Vietnamese names can arrive composed or decomposed; compare them composed. */
+const normalizeName = (name: string): string => name.normalize("NFC").trim();
+
 /**
  * Legacy fallback: the two default roles were seeded once, globally, with
  * these fixed UUIDs before the Phase 2 per-company backfill. Any row that
  * predates the backfill (or a company created before the fix landed) may
- * still carry one of these ids without a resolvable slug/name match.
+ * still carry one of these ids without a slug — and a worker row may carry
+ * the id without the role's name.
  */
 export const DEFAULT_ROLE_I18N_KEYS: Record<string, string> = {
   "b08f0bdb-9e78-40ca-aca9-96016de45c7c": "masterCraftsman",
@@ -54,8 +69,13 @@ export interface ResolvableRole {
  * role, or null when the role is user-created (display its literal name).
  */
 export function resolveDefaultRoleI18nKey(role: ResolvableRole): string | null {
-  const slug = role.slug ?? (role.name ? SEED_ROLE_NAME_TO_SLUG[role.name] : undefined);
-  if (slug && SLUG_TO_I18N_KEY[slug]) return SLUG_TO_I18N_KEY[slug];
-  if (role.id && DEFAULT_ROLE_I18N_KEYS[role.id]) return DEFAULT_ROLE_I18N_KEYS[role.id];
-  return null;
+  const slug =
+    role.slug ?? (role.name ? SEED_ROLE_NAME_TO_SLUG[normalizeName(role.name)] : undefined);
+  const key =
+    (slug ? SLUG_TO_I18N_KEY[slug] : undefined) ??
+    (role.id ? DEFAULT_ROLE_I18N_KEYS[role.id] : undefined);
+  if (!key) return null;
+  const renamed =
+    !!role.name && normalizeName(role.name) !== normalizeName(I18N_KEY_TO_SEED_NAME[key]);
+  return renamed ? null : key;
 }

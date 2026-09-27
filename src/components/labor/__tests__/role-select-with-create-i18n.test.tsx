@@ -9,7 +9,7 @@ import { NextIntlClientProvider } from "next-intl";
 import frMessages from "@/messages/fr.json";
 import { RoleSelectWithCreate } from "../role-select-with-create";
 
-vi.mock("../../actions", () => ({ createLaborRoleAction: vi.fn() }));
+vi.mock("../labor-role-actions", () => ({ createLaborRoleAction: vi.fn() }));
 
 describe("RoleSelectWithCreate", () => {
   it("renders the trigger, search and empty states in French", () => {

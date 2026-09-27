@@ -349,9 +349,10 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Utilisez “Ajouter par téléphone” pour ajouter quelqu'un par son numéro, ou “Importer depuis une entreprise” pour reprendre des personnes d'une autre société que vous administrez.",
       "L'annuaire liste toutes les personnes liées à l'entreprise, avec leur téléphone, le fait qu'elles se soient déjà connectées ou non, et les projets qui leur sont assignés.",
       "Sous “Moyens de paiement”, ajoutez, renommez ou supprimez les façons dont les factures de cette société peuvent être payées. Les moyens intégrés se renomment mais ne se suppriment pas.",
+      "Sous “Rôles main-d'œuvre”, créez, renommez, recolorez ou supprimez les rôles attribués aux ouvriers sur les chantiers de cette société. Supprimer un rôle le retire des ouvriers qui l'avaient. Le crayon à côté d'un rôle, dans le sélecteur de rôle de la fiche ouvrier, fait la même chose depuis la page main-d'œuvre.",
     ],
     whoCanDoIt:
-      "Chacun voit les sociétés auxquelles il est rattaché et peut en rattacher une autre. Le code société, le tableau des membres, l'annuaire et les moyens de paiement sont réservés aux administrateurs de la société sélectionnée.",
+      "Chacun voit les sociétés auxquelles il est rattaché et peut en rattacher une autre. Le code société, le tableau des membres, l'annuaire et les moyens de paiement sont réservés aux administrateurs de la société sélectionnée ; les rôles main-d'œuvre, à ses administrateurs et managers.",
     gotchas: [
       "Il y a deux façons différentes d'ajouter une personne, et elles ne sont pas interchangeables : un jeton d'invitation à usage unique valable sept jours, et le code société réutilisable que l'on saisit dans l'application mobile.",
     ],

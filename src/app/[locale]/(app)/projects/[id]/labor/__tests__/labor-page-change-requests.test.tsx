@@ -97,8 +97,10 @@ vi.mock("@/lib/api/projects", () => ({
   fetchProjectById: vi.fn().mockResolvedValue({ company_id: null }),
 }));
 
-vi.mock("../actions", () => ({
+vi.mock("@/components/labor/labor-role-actions", () => ({
   fetchLaborRolesAction: vi.fn().mockResolvedValue({ success: true, data: { roles: [], palette: [] } }),
+}));
+vi.mock("../actions", () => ({
   fetchAttendanceChangeRequestsAction: vi.fn(),
 }));
 

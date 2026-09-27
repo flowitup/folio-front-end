@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
-import { can } from "@/lib/auth/permissions";
+import { can, canManageLaborRoles } from "@/lib/auth/permissions";
 import { Plus, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,8 @@ import {
 } from "@/lib/api/labor";
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { fetchProjectById } from "@/lib/api/projects";
-import { fetchLaborRolesAction } from "./actions";
+import { fetchLaborRolesAction } from "@/components/labor/labor-role-actions";
+import { upsertLaborRole } from "@/components/labor/labor-role-helpers";
 import { useAttendanceChangeRequests } from "./use-attendance-change-requests";
 import { DayRoster } from "@/components/labor/day-roster";
 
@@ -112,6 +113,10 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // no view_pay): they were explicitly granted invoice rights and still need
   // the Payments tab, even without labor visibility.
   const isMemberPersona = !canManageLabor && !canViewPay && !canManageInvoices;
+  // Creating, renaming or deleting a labor role is a company-level write
+  // (admin or manager of the company whose roles `/labor/roles` lists — the
+  // primary one), not a project permission.
+  const canEditLaborRoles = canManageLaborRoles(user?.permissions, user?.companies);
 
   // State. `activeTab` is seeded with a placeholder and corrected by the
   // persona effect below the FIRST time ProjectContext resolves — never
@@ -550,6 +555,28 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // resolving my_permissions (see the H1 comments above).
   const showContent = !isLoading && !isProjectContextLoading;
 
+  // Workers carry their role's name and color (the summary reads them from
+  // the workers list), and so do attendance entries (`role_color` on each
+  // card), so a rename or delete in the role picker reloads both — a deleted
+  // role is cleared from its workers by the backend, and nothing may keep
+  // showing it. Entries only reload when their tab is open: opening it later
+  // fetches them anyway.
+  const reloadRoleHolders = () => {
+    void loadWorkers();
+    if (activeTab === "attendance") void loadEntries();
+  };
+  const handleRoleCreated = (role: LaborRole) => {
+    setRoles((prev) => upsertLaborRole(prev, role));
+  };
+  const handleRoleUpdated = (role: LaborRole) => {
+    setRoles((prev) => upsertLaborRole(prev, role));
+    reloadRoleHolders();
+  };
+  const handleRoleDeleted = (roleId: string) => {
+    setRoles((prev) => prev.filter((r) => r.id !== roleId));
+    reloadRoleHolders();
+  };
+
   return (
     <div className="fade-up flex min-h-full flex-col gap-4 px-4 pb-12 lg:gap-6 lg:px-8">
       {/* Segmented tabs — member persona (D3) gets the single roster tab, no
@@ -758,7 +785,10 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         onSave={handleCreateWorker}
         roles={roles}
         palette={palette}
-        onRoleCreated={(role) => setRoles((prev) => [...prev, role])}
+        onRoleCreated={handleRoleCreated}
+        canManageRoles={canEditLaborRoles}
+        onRoleUpdated={handleRoleUpdated}
+        onRoleDeleted={handleRoleDeleted}
       />
 
       <AddWorkerDialog
@@ -768,7 +798,10 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         editWorker={editWorker}
         roles={roles}
         palette={palette}
-        onRoleCreated={(role) => setRoles((prev) => [...prev, role])}
+        onRoleCreated={handleRoleCreated}
+        canManageRoles={canEditLaborRoles}
+        onRoleUpdated={handleRoleUpdated}
+        onRoleDeleted={handleRoleDeleted}
       />
 
       <LogDayDialog

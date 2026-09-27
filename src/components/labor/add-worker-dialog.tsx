@@ -21,7 +21,7 @@ import type {
   UpdateWorkerPayload,
 } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
-import { RoleSelectWithCreate } from "@/app/[locale]/(app)/projects/[id]/labor/components/role-select-with-create";
+import { RoleSelectWithCreate } from "./role-select-with-create";
 
 interface AddWorkerDialogProps {
   open: boolean;
@@ -31,6 +31,10 @@ interface AddWorkerDialogProps {
   roles?: LaborRole[];
   palette?: string[];
   onRoleCreated?: (role: LaborRole) => void;
+  /** Company admin or manager: the role picker offers rename / recolor / delete. */
+  canManageRoles?: boolean;
+  onRoleUpdated?: (role: LaborRole) => void;
+  onRoleDeleted?: (roleId: string) => void;
 }
 
 /**
@@ -53,6 +57,9 @@ export function AddWorkerDialog({
   roles = [],
   palette = [],
   onRoleCreated,
+  canManageRoles = false,
+  onRoleUpdated,
+  onRoleDeleted,
 }: AddWorkerDialogProps) {
   const t = useTranslations("labor");
 
@@ -211,6 +218,9 @@ export function AddWorkerDialog({
                 onRoleCreated={(role) => {
                   onRoleCreated?.(role);
                 }}
+                canManage={canManageRoles}
+                onRoleUpdated={onRoleUpdated}
+                onRoleDeleted={onRoleDeleted}
               />
             </div>
           )}

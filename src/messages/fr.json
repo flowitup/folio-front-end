@@ -699,7 +699,7 @@
       "deleteRole": "Supprimer le rôle",
       "roleName": "Nom du rôle",
       "roleColor": "Couleur",
-      "confirmDelete": "Supprimer ce rôle ? Les ouvriers assignés perdront leur rôle.",
+      "confirmDelete": "Les ouvriers assignés perdront leur rôle.",
       "duplicateName": "Un rôle avec ce nom existe déjà.",
       "created": "Rôle créé.",
       "updated": "Rôle modifié.",
@@ -714,7 +714,24 @@
       "createNamed": "Créer « {name} »",
       "createFailed": "Échec de la création du rôle",
       "create": "Créer",
-      "cancel": "Annuler"
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "nameRequired": "Saisissez un nom de rôle.",
+      "editNamed": "Modifier {name}",
+      "deleteNamed": "Supprimer {name}",
+      "confirmDeleteTitle": "Supprimer « {name} » ?",
+      "updateFailed": "Échec de la modification du rôle",
+      "deleteFailed": "Échec de la suppression du rôle",
+      "loadFailed": "Impossible de charger les rôles main-d'œuvre.",
+      "retry": "Réessayer",
+      "manageTitle": "Rôles main-d'œuvre",
+      "manageDescription": "Les rôles attribués aux ouvriers sur les chantiers de cette entreprise. Un nouveau nom ou une nouvelle couleur s'affiche chez chaque ouvrier qui a ce rôle ; supprimer un rôle le retire de ces ouvriers.",
+      "errors": {
+        "forbidden": "Seul un admin ou un manager de l'entreprise peut modifier ses rôles main-d'œuvre.",
+        "notFound": "Ce rôle n'existe plus ; il a été retiré de la liste.",
+        "rateLimited": "Trop de modifications d'affilée. Patientez une minute, puis réessayez.",
+        "invalid": "Vérifiez le nom et la couleur du rôle, puis réessayez."
+      }
     },
     "shift": {
       "none": "(aucun)"

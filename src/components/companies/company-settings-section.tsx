@@ -17,8 +17,10 @@
  * The admin half renders only when the caller's role in the SELECTED company is
  * "admin"; nothing behind it would do anything but 403 for a manager or member,
  * and every mutation still goes through the company-scoped
- * `require_company_role("admin")` backend gate. `admin-companies-section.tsx`
- * stays separate: it is platform-ops only and manages ANY company.
+ * `require_company_role("admin")` backend gate. The labor-roles card is the
+ * one exception: the backend lets a manager edit labor roles too, so it shows
+ * for an admin or a manager. `admin-companies-section.tsx` stays separate: it
+ * is platform-ops only and manages ANY company.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -40,6 +42,7 @@ import { JoinCompanyDialog } from "@/components/companies/join-company-dialog";
 import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-card";
 import { CompanyMembersTable } from "@/components/companies/company-members-table";
 import { CompanyPaymentMethodsCard } from "@/components/companies/company-payment-methods-card";
+import { CompanyLaborRolesCard } from "@/components/companies/company-labor-roles-card";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { CompanyRole, MyCompany } from "@/types/companies";
 
@@ -116,6 +119,9 @@ export function CompanySettingsSection() {
 
   const selectedCompany = companies.find((c) => c.id === selectedId) ?? companies[0];
   const isAdminOfSelected = selectedCompany?.role === "admin";
+  // Labor roles are writable by a company manager as well as an admin.
+  const canManageLaborRolesOfSelected =
+    selectedCompany?.role === "admin" || selectedCompany?.role === "manager";
 
   return (
     <div className="space-y-5">
@@ -256,6 +262,15 @@ export function CompanySettingsSection() {
                 </a>
               </section>
             </>
+          )}
+
+          {/* Labor roles — the roles workers carry on this company's projects.
+              Keyed like the admin cards: it holds the fetched list. */}
+          {canManageLaborRolesOfSelected && (
+            <CompanyLaborRolesCard
+              key={`labor-roles-${selectedCompany.id}`}
+              companyId={selectedCompany.id}
+            />
           )}
         </>
       )}

@@ -105,3 +105,25 @@ export function canCreateProject(
 ): boolean {
   return isCompanyAdmin(companies, null, permissions);
 }
+
+/**
+ * Labor-role write gate (create / rename / recolor / delete). The backend
+ * accepts platform ops OR an admin or MANAGER of the company that owns the
+ * roles — broader than `isCompanyAdmin`, since crews are run by managers.
+ *
+ * Pass `companyId` when the roles shown belong to a specific company (e.g.
+ * Settings › Company); omit it for surfaces that list the caller's PRIMARY
+ * company's roles, which is what `/labor/roles` answers without a
+ * `company_id` (e.g. the role picker on the labor page).
+ */
+export function canManageLaborRoles(
+  permissions: string[] | undefined | null,
+  companies: UserCompanySummary[] | undefined | null,
+  companyId?: string | null
+): boolean {
+  if (isPlatformOps(permissions)) return true;
+  const company = (companies ?? []).find((c) =>
+    companyId ? c.id === companyId : c.is_primary
+  );
+  return company?.role === "admin" || company?.role === "manager";
+}

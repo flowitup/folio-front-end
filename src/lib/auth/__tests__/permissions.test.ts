@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { can, isPlatformOps, isCompanyAdmin, canCreateProject } from "../permissions";
+import {
+  can,
+  isPlatformOps,
+  isCompanyAdmin,
+  canCreateProject,
+  canManageLaborRoles,
+} from "../permissions";
 import type { UserCompanySummary } from "../permissions";
 
 describe("can", () => {
@@ -88,5 +94,44 @@ describe("canCreateProject", () => {
 
   it("false with nothing at all", () => {
     expect(canCreateProject(undefined, undefined)).toBe(false);
+  });
+});
+
+describe("canManageLaborRoles", () => {
+  const primaryManager: UserCompanySummary = {
+    id: "c1",
+    legal_name: "Alpha",
+    role: "manager",
+    is_primary: true,
+  };
+  const otherAdmin: UserCompanySummary = {
+    id: "c2",
+    legal_name: "Beta",
+    role: "admin",
+    is_primary: false,
+  };
+  const primaryMember: UserCompanySummary = { ...primaryManager, role: "member" };
+
+  it("lets a manager of the primary company manage its roles — not only admins", () => {
+    expect(canManageLaborRoles([], [primaryManager])).toBe(true);
+  });
+
+  it("refuses a plain member of the primary company", () => {
+    expect(canManageLaborRoles([], [primaryMember, otherAdmin])).toBe(false);
+  });
+
+  it("checks the named company when one is given", () => {
+    expect(canManageLaborRoles([], [primaryMember, otherAdmin], "c2")).toBe(true);
+    expect(canManageLaborRoles([], [primaryMember, otherAdmin], "c1")).toBe(false);
+    expect(canManageLaborRoles([], [primaryMember], "unknown")).toBe(false);
+  });
+
+  it("lets platform ops through whatever the companies say", () => {
+    expect(canManageLaborRoles(["*:*"], [])).toBe(true);
+  });
+
+  it("refuses when there is no primary company to scope to", () => {
+    expect(canManageLaborRoles([], [otherAdmin])).toBe(false);
+    expect(canManageLaborRoles(undefined, undefined)).toBe(false);
   });
 });

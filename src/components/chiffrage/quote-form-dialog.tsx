@@ -34,8 +34,11 @@ export interface QuoteFormValues {
   supplier_name: string | null;
   supplier_id: string | null;
   library_product_id: string | null;
-  unit_price_ht: string;
-  tva_rate: string;
+  /** Omitted on an edit that left price, HT/TTC tab and TVA untouched: the
+   * form shows the price rounded to cents, and re-sending that would
+   * overwrite the stored 4-decimal value (e.g. 9.9917 → 9.99). */
+  unit_price_ht?: string;
+  tva_rate?: string;
   product_url: string | null;
   note: string | null;
 }
@@ -119,6 +122,11 @@ export function QuoteFormDialog({
       return;
     }
     setError(null);
+    const priceUnchanged =
+      quote !== null &&
+      mode === "ht" &&
+      price === String(quote.unit_price_ht) &&
+      tva === String(quote.tva_rate);
     onSubmit({
       store_id: storeId,
       // A readable snapshot of the shop, kept so deleting the shop later never
@@ -126,8 +134,7 @@ export function QuoteFormDialog({
       supplier_name: stores.find((s) => s.id === storeId)?.name ?? null,
       supplier_id: supplierId,
       library_product_id: productId,
-      unit_price_ht: htValue.toFixed(4),
-      tva_rate: tva,
+      ...(priceUnchanged ? {} : { unit_price_ht: htValue.toFixed(4), tva_rate: tva }),
       product_url: url.trim() || null,
       note: note.trim() || null,
     });

@@ -15,6 +15,11 @@ vi.mock("@/lib/api/auth-header", () => ({
   sessionAuthHeader: () => mockAuthHeader(),
 }));
 
+const mockSetForwardedCookies = vi.fn();
+vi.mock("@/lib/auth/forward-cookies", () => ({
+  setForwardedCookies: (headers: string[]) => mockSetForwardedCookies(headers),
+}));
+
 const { requestPhoneChangeCodeAction, confirmPhoneChangeAction } = await import("../profile-actions");
 
 const fetchMock = vi.fn();
@@ -95,6 +100,28 @@ describe("confirmPhoneChangeAction", () => {
     expect(JSON.parse(init.body)).toEqual({ phone: "+33698765432", code: "123456" });
   });
 
+  it("replaces the session cookies with the fresh tokens and keeps the tokens from the browser", async () => {
+    const user = { id: "u1", email: "a@b.c", phone: "+33698765432", permissions: [] };
+    const headers = new Headers({ "Content-Type": "application/json" });
+    headers.append("Set-Cookie", "access_token_cookie=new-access; HttpOnly; Path=/");
+    headers.append("Set-Cookie", "refresh_token_cookie=new-refresh; HttpOnly; Path=/");
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ ...user, access_token: "new-access", refresh_token: "new-refresh" }), {
+        status: 200,
+        headers,
+      })
+    );
+
+    await expect(confirmPhoneChangeAction("0698765432", "123456")).resolves.toEqual({
+      success: true,
+      user,
+    });
+    expect(mockSetForwardedCookies).toHaveBeenCalledWith([
+      "access_token_cookie=new-access; HttpOnly; Path=/",
+      "refresh_token_cookie=new-refresh; HttpOnly; Path=/",
+    ]);
+  });
+
   it("refuses a malformed code without calling the backend", async () => {
     await expect(confirmPhoneChangeAction("0698765432", "12")).resolves.toEqual({
       success: false,
@@ -112,9 +139,11 @@ describe("confirmPhoneChangeAction", () => {
     [500, {}, "unknown"],
   ])("maps %i %j to %s", async (status, body, error) => {
     respond(status, body);
+    mockSetForwardedCookies.mockClear();
     await expect(confirmPhoneChangeAction("0698765432", "123456")).resolves.toEqual({
       success: false,
       error,
     });
+    expect(mockSetForwardedCookies).not.toHaveBeenCalled();
   });
 });

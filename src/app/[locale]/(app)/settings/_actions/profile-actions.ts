@@ -14,6 +14,7 @@ import { env } from "@/lib/config/env";
 import { sessionAuthHeader } from "@/lib/api/auth-header";
 import type { User } from "@/lib/auth/types";
 import { normalizeFrenchPhone } from "@/lib/auth/phone-number";
+import { setForwardedCookies } from "@/lib/auth/forward-cookies";
 
 export interface UpdateProfilePayload {
   display_name?: string | null;
@@ -76,7 +77,9 @@ export async function updateProfileAction(
 // Verified phone-number change — the phone is the sign-in identity, so a new
 // number is only saved once the code texted to it comes back.
 //   POST /auth/me/phone/request-code {phone}        → 202 {expires_in}
-//   POST /auth/me/phone/confirm      {phone, code}  → 200 User
+//   POST /auth/me/phone/confirm      {phone, code}  → 200 User + fresh tokens
+// A confirmed change signs the account out of every other device and revokes
+// the tokens this session used, so the fresh pair must replace the cookies.
 // ---------------------------------------------------------------------------
 
 export type RequestPhoneChangeError =
@@ -152,7 +155,16 @@ export async function confirmPhoneChangeAction(
 
   const response = await postPhoneChange("confirm", { phone: frenchPhone, code: trimmedCode });
   if (!response) return { success: false, error: "unknown" };
-  if (response.ok) return { success: true, user: (await response.json()) as User };
+  if (response.ok) {
+    // The session's old tokens are revoked: store the new ones (HttpOnly
+    // cookies, as at sign-in) and keep them out of what reaches the browser.
+    await setForwardedCookies(response.headers.getSetCookie());
+    const { access_token: _access, refresh_token: _refresh, ...user } = (await response.json()) as User & {
+      access_token?: string;
+      refresh_token?: string;
+    };
+    return { success: true, user };
+  }
   if (response.status === 400) {
     // A wrong or expired code is a 400 `InvalidCode` (the caller is signed in, so not a 401).
     const data = (await response.json().catch(() => null)) as { error?: string } | null;

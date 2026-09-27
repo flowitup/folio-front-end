@@ -343,7 +343,7 @@
       "confirm": "Xác nhận",
       "confirming": "Đang xác nhận…",
       "otherNumber": "Dùng số khác",
-      "success": "Đã đổi số điện thoại. Từ nay hãy đăng nhập bằng số mới.",
+      "success": "Đã đổi số điện thoại. Các thiết bị khác của bạn đã bị đăng xuất; từ nay hãy đăng nhập bằng số mới.",
       "errorInvalidPhone": "Hãy nhập số điện thoại Pháp hợp lệ.",
       "errorSameNumber": "Đây đã là số điện thoại của bạn.",
       "errorPhoneTaken": "Số điện thoại này đã được dùng cho một tài khoản khác.",

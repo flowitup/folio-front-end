@@ -185,7 +185,7 @@ describe("ProfileForm — change number", () => {
     await waitFor(() => {
       expect(mockConfirm).toHaveBeenCalledWith("+33698765432", "123456");
       expect(toast.success).toHaveBeenCalledWith(
-        "Phone number changed. Sign in with your new number from now on."
+        "Phone number changed. Your other devices have been signed out; sign in with your new number from now on."
       );
       expect(mockRefresh).toHaveBeenCalledOnce();
       expect(screen.getByLabelText("Phone")).toHaveValue("+336 98 76 54 32");

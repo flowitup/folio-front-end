@@ -343,7 +343,7 @@
       "confirm": "Confirmer",
       "confirming": "Confirmation…",
       "otherNumber": "Utiliser un autre numéro",
-      "success": "Numéro de téléphone modifié. Connectez-vous désormais avec votre nouveau numéro.",
+      "success": "Numéro de téléphone modifié. Vos autres appareils ont été déconnectés ; connectez-vous désormais avec votre nouveau numéro.",
       "errorInvalidPhone": "Saisissez un numéro de téléphone français valide.",
       "errorSameNumber": "C'est déjà votre numéro de téléphone.",
       "errorPhoneTaken": "Ce numéro de téléphone est déjà utilisé par un autre compte.",

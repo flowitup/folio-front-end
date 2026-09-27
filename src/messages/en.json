@@ -343,7 +343,7 @@
       "confirm": "Confirm",
       "confirming": "Confirming…",
       "otherNumber": "Use another number",
-      "success": "Phone number changed. Sign in with your new number from now on.",
+      "success": "Phone number changed. Your other devices have been signed out; sign in with your new number from now on.",
       "errorInvalidPhone": "Enter a valid French phone number.",
       "errorSameNumber": "This is already your phone number.",
       "errorPhoneTaken": "This phone number is already used by another account.",

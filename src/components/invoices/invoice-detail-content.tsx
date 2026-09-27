@@ -36,6 +36,11 @@ interface InvoiceDetailContentProps {
   invoice: Invoice;
   canManage: boolean;
   /**
+   * Offer "Transfer to company payment". The backend allows it to company
+   * admins of the project's company only, so a manager must not see it.
+   */
+  canTransferToCompany?: boolean;
+  /**
    * UUID of the company that owns this project.
    * Forwarded to InvoiceForm for payment method selection.
    * When null, the payment method field is hidden in edit mode.
@@ -67,6 +72,7 @@ interface InvoiceDetailContentProps {
 export function InvoiceDetailContent({
   invoice,
   canManage,
+  canTransferToCompany = false,
   companyId,
   companyName,
   onUpdated,
@@ -182,7 +188,7 @@ export function InvoiceDetailContent({
             <Printer className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">{t("printPdf")}</span>
           </Button>
-          {canManage &&
+          {canTransferToCompany &&
             !isEditing &&
             invoice.type === "materials_services" &&
             invoice.refundable_status == null &&

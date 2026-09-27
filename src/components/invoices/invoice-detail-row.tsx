@@ -12,6 +12,8 @@ interface InvoiceDetailRowProps {
   projectId: string;
   invoiceId: string;
   canManage: boolean;
+  /** Offer "Transfer to company payment" (company admins of the project's company). */
+  canTransferToCompany?: boolean;
   /** Number of columns in the parent table — used for `colSpan` on the wrapper td. */
   colSpan: number;
   /** id used by the parent row's `aria-controls` to link disclosure trigger ↔ region. */
@@ -38,6 +40,7 @@ export function InvoiceDetailRow({
   projectId,
   invoiceId,
   canManage,
+  canTransferToCompany = false,
   colSpan,
   regionId,
   onMutated,
@@ -98,6 +101,7 @@ export function InvoiceDetailRow({
             <InvoiceDetailContent
               invoice={invoice}
               canManage={canManage}
+              canTransferToCompany={canTransferToCompany}
               companyId={companyId}
               companyName={companyName}
               onUpdated={(u) => { setInvoice(u); onMutated?.(); }}

@@ -1701,7 +1701,8 @@
       "close": "Đóng",
       "download": "Tải xuống",
       "error": "Xem trước thất bại — hãy tải xuống để xem file",
-      "loading": "Đang tải xem trước…"
+      "loading": "Đang tải xem trước…",
+      "downloadError": "Tải xuống thất bại — tệp có thể đã bị xoá"
     },
     "delete": {
       "title": "Xoá tài liệu?",
@@ -1711,7 +1712,8 @@
       "confirming": "Đang xoá…",
       "success": "Đã xoá tài liệu",
       "errorForbidden": "Chỉ người tải lên hoặc quản trị viên dự án mới có thể xoá tài liệu này",
-      "errorServer": "Xoá thất bại"
+      "errorServer": "Xoá thất bại",
+      "errorNotFound": "Tài liệu này không còn tồn tại"
     },
     "toast": {
       "uploadSuccess": "Đã tải lên {filename}",

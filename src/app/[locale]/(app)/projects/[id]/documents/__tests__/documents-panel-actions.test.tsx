@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import type { ProjectDocument } from "@/lib/api/project-documents";
 
 vi.mock("sonner", () => ({
@@ -60,7 +60,11 @@ vi.mock("../documents-list", () => ({
   },
 }));
 
-type FiltersStubProps = { selectedTags: string[]; availableTags: string[] };
+type FiltersStubProps = {
+  selectedTags: string[];
+  availableTags: string[];
+  onChange: (next: { kinds: never[]; tags: string[]; uploaderId: string | null }) => void;
+};
 let lastFiltersProps: FiltersStubProps | null = null;
 vi.mock("../documents-filters", () => ({
   DocumentsFilters: (props: FiltersStubProps) => {
@@ -269,5 +273,45 @@ describe("DocumentsPanel — tag errors", () => {
     await lastListProps!.onTagsUpdate(makeDoc(1).id, ["a"]);
 
     expect(toast.error).toHaveBeenCalledWith("documents.tags.errorSave");
+  });
+});
+
+describe("DocumentsPanel — deleting keeps tags and stale rows honest", () => {
+  it("refreshes the tag chips and drops a selected tag nothing carries any more", async () => {
+    const tagged = makeDoc(1, ["structure"]);
+    vi.mocked(listDocumentsAction).mockResolvedValue({
+      ok: true,
+      data: { items: [tagged], total: 1, page: 1, per_page: 25 },
+    });
+    renderPanel([tagged], 1, ["structure"]);
+    // Filter on the tag the document carries.
+    act(() => lastFiltersProps!.onChange({ kinds: [], tags: ["structure"], uploaderId: null }));
+    await waitFor(() => expect(lastFiltersProps!.selectedTags).toEqual(["structure"]));
+    vi.mocked(listDocumentTagsAction).mockResolvedValue({ ok: true, data: [] });
+
+    fireEvent.click(screen.getByRole("button", { name: "delete doc-1.pdf" }));
+    fireEvent.click(screen.getByRole("button", { name: "confirm delete" }));
+
+    await waitFor(() => expect(listDocumentTagsAction).toHaveBeenCalledWith(PROJECT_ID));
+    await waitFor(() => expect(lastFiltersProps!.availableTags).toEqual([]));
+    expect(lastFiltersProps!.selectedTags).toEqual([]);
+  });
+
+  it("removes a row that was already deleted elsewhere and says so", async () => {
+    vi.mocked(listDocumentsAction).mockResolvedValue({
+      ok: true,
+      data: { items: [makeDoc(1)], total: 1, page: 1, per_page: 25 },
+    });
+    vi.mocked(deleteDocumentAction).mockResolvedValue({ ok: false, error: "notFound" });
+    renderPanel([makeDoc(1)]);
+
+    fireEvent.click(screen.getByRole("button", { name: "delete doc-1.pdf" }));
+    fireEvent.click(screen.getByRole("button", { name: "confirm delete" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("documents.delete.errorNotFound")
+    );
+    expect(toast.error).not.toHaveBeenCalledWith("documents.delete.errorServer");
+    expect(screen.queryByRole("button", { name: "confirm delete" })).toBeNull();
   });
 });

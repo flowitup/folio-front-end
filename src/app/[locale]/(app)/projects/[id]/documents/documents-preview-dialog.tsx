@@ -2,6 +2,7 @@
 
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Download, Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -148,7 +149,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
     try {
       await downloadProjectDocument(projectId, doc.id, doc.filename);
     } catch {
-      // Download errors are silent — the file dialog simply won't appear
+      toast.error(t("downloadError"));
     } finally {
       setDownloading(false);
     }

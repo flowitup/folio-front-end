@@ -1701,7 +1701,8 @@
       "close": "Close",
       "download": "Download",
       "error": "Preview failed — download to view the file",
-      "loading": "Loading preview…"
+      "loading": "Loading preview…",
+      "downloadError": "Download failed — the file may have been deleted"
     },
     "delete": {
       "title": "Delete document?",
@@ -1711,7 +1712,8 @@
       "confirming": "Deleting…",
       "success": "Document deleted",
       "errorForbidden": "Only the uploader or a project admin can delete this document",
-      "errorServer": "Failed to delete"
+      "errorServer": "Failed to delete",
+      "errorNotFound": "This document no longer exists"
     },
     "toast": {
       "uploadSuccess": "{filename} uploaded",

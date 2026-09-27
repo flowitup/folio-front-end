@@ -1701,7 +1701,8 @@
       "close": "Fermer",
       "download": "Télécharger",
       "error": "Aperçu impossible — téléchargez pour afficher le fichier",
-      "loading": "Chargement de l’aperçu…"
+      "loading": "Chargement de l’aperçu…",
+      "downloadError": "Échec du téléchargement — le fichier a peut-être été supprimé"
     },
     "delete": {
       "title": "Supprimer le document ?",
@@ -1711,7 +1712,8 @@
       "confirming": "Suppression…",
       "success": "Document supprimé",
       "errorForbidden": "Seul l'auteur du dépôt ou un administrateur du projet peut supprimer ce document",
-      "errorServer": "Échec de la suppression"
+      "errorServer": "Échec de la suppression",
+      "errorNotFound": "Ce document n'existe plus"
     },
     "toast": {
       "uploadSuccess": "{filename} envoyé",

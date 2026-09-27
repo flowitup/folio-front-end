@@ -246,7 +246,15 @@ export function DocumentsPanel({
 
   const refreshAvailableTags = useCallback(async () => {
     const result = await listDocumentTagsAction(projectId);
-    if (result.ok) setAvailableTags(result.data);
+    if (!result.ok) return;
+    setAvailableTags(result.data);
+    // A tag no document carries any more can only filter down to nothing,
+    // with no chip left to clear it: drop it from the filter.
+    setSelectedTags((current) =>
+      current.every((tag) => result.data.includes(tag))
+        ? current
+        : current.filter((tag) => result.data.includes(tag))
+    );
   }, [projectId]);
 
   const handleTagsUpdate = useCallback(
@@ -307,11 +315,16 @@ export function DocumentsPanel({
     try {
       const result = await deleteDocumentAction(projectId, deleteDoc.id);
 
-      if (result.ok) {
+      // Already deleted elsewhere (stale row): the outcome is the same.
+      const gone = !result.ok && result.error === "notFound";
+      if (result.ok || gone) {
         setList((prev) => prev.filter((d) => d.id !== deleteDoc.id));
         setTotal((prev) => Math.max(0, prev - 1));
-        toast.success(t("delete.success"));
+        if (gone) toast.error(t("delete.errorNotFound"));
+        else toast.success(t("delete.success"));
         setDeleteDoc(null);
+        // Its tags may have been the last of their kind.
+        void refreshAvailableTags();
         // Re-read the page: the next page's first row moves up, and a page
         // left empty steps back instead of showing the "no documents" state.
         setReloadCount((n) => n + 1);
@@ -327,7 +340,7 @@ export function DocumentsPanel({
     } finally {
       setDeleting(false);
     }
-  }, [deleteDoc, projectId, t, refreshUploaders]);
+  }, [deleteDoc, projectId, t, refreshUploaders, refreshAvailableTags]);
 
   // ---- Pagination ----
 

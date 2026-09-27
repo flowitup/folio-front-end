@@ -38,6 +38,7 @@ const TRANSLATIONS: Record<string, string> = {
   submitting: "Creating account...",
   backToLogin: "Go to login",
   "errors.generic": "Something went wrong. Please try again.",
+  "errors.nameRequired": "Please enter your name",
   "errors.expired": "This invitation has expired.",
   "errors.revoked": "This invitation was revoked.",
   "errors.accepted": "This invitation was already used.",
@@ -221,5 +222,26 @@ describe("AcceptInviteForm", () => {
       expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
       expect(screen.queryByLabelText("Code")).toBeNull();
     });
+
+    it("returns to the code already sent when the same number is sent again", async () => {
+      const user = userEvent.setup();
+      renderForm();
+      await reachCodeStep(user);
+      await user.click(screen.getByRole("button", { name: /Change number/i }));
+      await user.click(screen.getByRole("button", { name: /Send code/i }));
+
+      expect(await screen.findByText("Code sent to +33612345678")).toBeInTheDocument();
+      expect(mockRequestCode).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("asks for a name when only spaces were typed", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await user.type(screen.getByLabelText("Your full name"), "   ");
+    await user.type(screen.getByLabelText("Phone number"), "0612345678");
+    await user.click(screen.getByRole("button", { name: /Send code/i }));
+    expect(await screen.findByText("Please enter your name")).toBeInTheDocument();
+    expect(mockRequestCode).not.toHaveBeenCalled();
   });
 });

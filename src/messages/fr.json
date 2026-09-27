@@ -1054,7 +1054,8 @@
       "codeRequired": "Saisissez le code à 6 chiffres",
       "invalidCode": "Code incorrect ou expiré",
       "throttled": "Trop de demandes. Attendez une minute et réessayez.",
-      "title": "Invitation indisponible"
+      "title": "Invitation indisponible",
+      "nameRequired": "Saisissez votre nom"
     },
     "loggedInOther": {
       "title": "Vous êtes connecté sous un autre compte",

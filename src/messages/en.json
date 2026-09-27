@@ -1054,7 +1054,8 @@
       "codeRequired": "Please enter the 6-digit code",
       "invalidCode": "Wrong or expired code",
       "throttled": "Too many requests. Wait a minute and try again.",
-      "title": "Invitation unavailable"
+      "title": "Invitation unavailable",
+      "nameRequired": "Please enter your name"
     },
     "loggedInOther": {
       "title": "You're signed in as someone else",

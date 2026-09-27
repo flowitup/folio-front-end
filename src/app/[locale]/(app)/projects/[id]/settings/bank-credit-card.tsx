@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { formatEURWhole } from "@/lib/utils/formatters";
 import { updateBankCredit } from "./actions";
 import type { Project } from "@/types/project";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 
 /**
  * Project settings card for the bank credit (crédit immobilier): the initial
@@ -24,9 +25,10 @@ interface Props {
   project: Project;
 }
 
-// Amount input accepts digits with an optional decimal part, "." or "," as
-// separator — the server action normalizes before sending.
-const AMOUNT_RE = /^\d*([.,]\d{0,2})?$/;
+// Amount input accepts digits, digit-grouping spaces/dots/commas and an
+// optional decimal part — parseMoneyInput reads it ("12 500,75") and the
+// server action re-parses it the same way before sending.
+const AMOUNT_RE = /^[\d\s\u00a0\u202f.,]*$/;
 
 export function BankCreditCard({ project }: Props) {
   const t = useTranslations("projects");
@@ -38,8 +40,8 @@ export function BankCreditCard({ project }: Props) {
 
   const initialAmount = project.budget != null ? String(project.budget) : "";
   const isDirty = amount !== initialAmount || source !== (project.budget_source ?? "");
-  const parsed = amount.trim() === "" ? null : Number(amount.replace(",", "."));
-  const preview = parsed != null && Number.isFinite(parsed) ? formatEURWhole(parsed) : null;
+  const parsed = parseMoneyInput(amount);
+  const preview = parsed != null ? formatEURWhole(parsed) : null;
 
   const handleAmountChange = (value: string) => {
     if (AMOUNT_RE.test(value)) setAmount(value);

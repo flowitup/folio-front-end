@@ -45,9 +45,9 @@ interface AddWorkerDialogProps {
  * PersonTypeahead, then attaches a daily_rate. The Worker is linked to
  * the Person's id; name/phone derive from the Person selection.
  *
- * Edit flow: name/phone/role. The name is the shared Person's name (what
- * every screen shows); saving it renames that person in every project and
- * company that uses them.
+ * Edit flow: name/phone/role. The name and phone are the shared Person's
+ * (what every screen shows); saving them changes that person in every
+ * project and company that uses them.
  */
 export function AddWorkerDialog({
   open,
@@ -84,7 +84,7 @@ export function AddWorkerDialog({
   useEffect(() => {
     if (open && editWorker) {
       setName(editWorker.person_name ?? editWorker.name);
-      setPhone(editWorker.phone || "");
+      setPhone(editWorker.person_phone ?? editWorker.phone ?? "");
       // daily_rate is intentionally not hydrated in edit mode:
       // rate changes are handled exclusively via the AdjustRateDialog.
       setRoleId(editWorker.role_id ?? null);

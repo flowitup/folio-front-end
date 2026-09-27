@@ -21,6 +21,7 @@ import { revokeInviteAction, removeMemberAction } from "./actions";
 import type { ProjectMember } from "@/lib/api/members";
 import type { PendingInvitation } from "@/lib/api/invitations";
 import { formatDate } from "@/lib/utils/formatters";
+import { realEmail, userContact } from "@/lib/auth/user-display";
 
 interface MembersTableProps {
   projectId: string;
@@ -52,12 +53,24 @@ function expiresInDays(expiresAt: string): number | null {
 }
 
 function memberInitials(member: ProjectMember): string {
-  const name = member.display_name ?? member.email;
+  const name = member.display_name?.trim() || realEmail(member);
+  if (!name) return "·";
   return name
     .split(/\s+/)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+/**
+ * Name shown for a member. Phone-only accounts have a synthetic address, so
+ * without a display name their phone stands in, never that address.
+ */
+function memberName(member: ProjectMember): string {
+  const name = member.display_name?.trim();
+  if (name) return name;
+  const email = realEmail(member);
+  return email ? email.split("@")[0] : userContact(member);
 }
 
 export function MembersTable({
@@ -96,7 +109,7 @@ export function MembersTable({
   };
 
   const handleRemove = async (member: ProjectMember) => {
-    if (!confirm(t("edit.removeConfirm", { name: member.display_name ?? member.email }))) {
+    if (!confirm(t("edit.removeConfirm", { name: memberName(member) }))) {
       return;
     }
     setRemovingId(member.user_id);
@@ -167,10 +180,10 @@ export function MembersTable({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">
-                        {member.display_name ?? member.email.split("@")[0]}
+                        {memberName(member)}
                       </div>
                       <div className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
-                        {member.email}
+                        {userContact(member)}
                       </div>
                     </div>
                   </div>
@@ -242,10 +255,10 @@ export function MembersTable({
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {member.display_name ?? member.email.split("@")[0]}
+                      {memberName(member)}
                     </TableCell>
                     <TableCell style={{ color: "var(--muted)" }}>
-                      {member.email}
+                      {userContact(member) || "—"}
                     </TableCell>
                     <TableCell className="num" style={{ color: "var(--muted)" }}>
                       {formatDate(member.joined_at)}

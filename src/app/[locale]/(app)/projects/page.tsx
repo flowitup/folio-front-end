@@ -45,6 +45,7 @@ import { EditProjectDialog } from "@/components/project/edit-project-dialog";
 import { DeleteProjectDialog } from "@/components/project/delete-project-dialog";
 import type { Project, ProjectUser } from "@/types/project";
 import { fmtEUR, computeBudgetMeta, personalSpendRows } from "@/lib/projects/budget-display";
+import { userContact, userInitial } from "@/lib/auth/user-display";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -586,11 +587,11 @@ export default function ProjectsPage() {
                               className="avatar"
                               style={{ background: AVATAR_TONES[i % AVATAR_TONES.length] }}
                             >
-                              {member.email.charAt(0).toUpperCase()}
+                              {userInitial(member)}
                             </div>
                             <div className="min-w-0">
                               <div className="truncate text-[13px] font-medium">
-                                {member.email}
+                                {userContact(member)}
                               </div>
                               <div className="text-[11px]" style={{ color: "var(--muted)" }}>
                                 {t("memberRole")}
@@ -603,7 +604,7 @@ export default function ProjectsPage() {
                                   setRemoveMember({
                                     projectId: project.id,
                                     userId: member.id,
-                                    email: member.email,
+                                    email: userContact(member),
                                   })
                                 }
                                 className="btn btn-quiet shrink-0"

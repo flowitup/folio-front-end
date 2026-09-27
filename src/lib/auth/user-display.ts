@@ -11,6 +11,8 @@
 import { formatFrenchPhone } from "./phone-number";
 
 const PLACEHOLDER_EMAIL = /@no-email\.folio\.flowitup\.com$/i;
+/** The backend builds the address as `phone-<E.164 digits>@…`. */
+const PLACEHOLDER_PHONE = /^phone-(\d{6,15})@/i;
 
 type UserLike = {
   display_name?: string | null;
@@ -23,6 +25,12 @@ export function isPlaceholderEmail(email: string | null | undefined): boolean {
   return !!email && PLACEHOLDER_EMAIL.test(email.trim());
 }
 
+function phoneFromPlaceholder(email: string | null | undefined): string {
+  if (!isPlaceholderEmail(email)) return "";
+  const match = PLACEHOLDER_PHONE.exec(email!.trim());
+  return match ? `+${match[1]}` : "";
+}
+
 /** The user's real e-mail, or "" for a phone-only account. */
 export function realEmail(user: UserLike | null | undefined): string {
   const email = user?.email?.trim() ?? "";
@@ -33,7 +41,9 @@ export function realEmail(user: UserLike | null | undefined): string {
 export function userContact(user: UserLike | null | undefined): string {
   const email = realEmail(user);
   if (email) return email;
-  const phone = user?.phone?.trim();
+  // Payloads that carry no phone (project members) still hold it in the
+  // synthetic address.
+  const phone = user?.phone?.trim() || phoneFromPlaceholder(user?.email);
   return phone ? formatFrenchPhone(phone) : "";
 }
 

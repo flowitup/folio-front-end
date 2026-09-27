@@ -25,6 +25,12 @@ describe("user display helpers", () => {
     expect(userDisplayName({ ...phoneOnly, display_name: "  " })).toBe("+336 99 27 10 01");
   });
 
+  it("reads the phone out of the synthetic address when the payload has none", () => {
+    expect(userContact({ email: "phone-33600000097@no-email.folio.flowitup.com" })).toBe(
+      "+336 00 00 00 97"
+    );
+  });
+
   it("prefers the name, then a real e-mail", () => {
     expect(userDisplayName({ ...phoneOnly, display_name: "Paul" })).toBe("Paul");
     expect(userInitial({ ...phoneOnly, display_name: "paul" })).toBe("P");

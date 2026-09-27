@@ -56,6 +56,9 @@ export interface PersonTypeaheadProps {
 // Component
 // ---------------------------------------------------------------------------
 
+/** Shortest search the persons API accepts (anti-enumeration). */
+const MIN_QUERY_LENGTH = 2;
+
 export function PersonTypeahead({
   value,
   onChange,
@@ -69,8 +72,8 @@ export function PersonTypeahead({
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
-  const [results, setResults] = React.useState<PersonSummary[]>([]);
-  const [loading, setLoading] = React.useState(false);
+  const [fetchedResults, setResults] = React.useState<PersonSummary[]>([]);
+  const [fetching, setLoading] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
 
   // Debounced server search. We track the latest request ID to discard
@@ -80,10 +83,13 @@ export function PersonTypeahead({
   React.useEffect(() => {
     if (!open) return;
     const seq = ++requestSeqRef.current;
+    const q = query.trim();
+    // The API refuses a search shorter than MIN_QUERY_LENGTH (400): don't ask.
+    if (q.length < MIN_QUERY_LENGTH) return;
     const handle = window.setTimeout(async () => {
       setLoading(true);
       try {
-        const rows = await fetchPersons({ q: query, limit });
+        const rows = await fetchPersons({ q, limit });
         if (seq === requestSeqRef.current) {
           setResults(rows);
         }
@@ -100,6 +106,10 @@ export function PersonTypeahead({
   // Show "Create new" only when (a) there's a trimmed query, and (b) no
   // existing person has that exact normalized name.
   const trimmed = query.trim();
+  // Below the minimum the last search's rows are stale: show none.
+  const searchable = trimmed.length >= MIN_QUERY_LENGTH;
+  const results = searchable ? fetchedResults : [];
+  const loading = searchable && fetching;
   const exactMatch =
     trimmed.length > 0 &&
     results.some((p) => p.name.trim().toLowerCase() === trimmed.toLowerCase());
@@ -179,7 +189,7 @@ export function PersonTypeahead({
           <CommandList id={listId}>
             {results.length === 0 && !showCreate && !loading && (
               <CommandEmpty>
-                {trimmed ? t("noMatches") : t("typeToSearch")}
+                {searchable ? t("noMatches") : t("typeToSearch")}
               </CommandEmpty>
             )}
             {results.length > 0 && (

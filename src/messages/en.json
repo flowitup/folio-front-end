@@ -503,7 +503,8 @@
       "noMethodsFound": "No methods found.",
       "failedToCreate": "Failed to create payment method",
       "duplicateLabel": "A payment method with this name already exists.",
-      "createForbidden": "Only a company admin can add payment methods."
+      "createForbidden": "Only a company admin can add payment methods.",
+      "inactiveLabel": "{label} (inactive)"
     },
     "refundHint": "Use a negative unit price for a credit/return line and a positive one for a charge; the total is the net.",
     "refundsInvoiceLabel": "Returns invoice (Materials & Services)",
@@ -596,7 +597,8 @@
     },
     "loadFailed": "Failed to load invoice.",
     "loadListFailed": "Failed to load invoices.",
-    "deleteInvoiceFailed": "Failed to delete invoice."
+    "deleteInvoiceFailed": "Failed to delete invoice.",
+    "errorPaymentMethodInactive": "This payment method has been deactivated. Choose another one."
   },
   "planning": {
     "title": "Planning",

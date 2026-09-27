@@ -94,13 +94,15 @@ export function PaymentMethodSelect({
     if (!value) return null;
     const raw = methods.find((m) => m.id === value)?.label ?? null;
     if (raw) return localizeMethodLabel(raw, tBuiltins);
-    // Methods list hasn't been fetched yet (lazy-loads on first open) — show the
-    // caller-provided snapshot instead of falling through to the placeholder.
-    if (loadState === "idle" && fallbackSelectedLabel) {
-      return localizeMethodLabel(fallbackSelectedLabel, tBuiltins);
+    // Methods list hasn't been fetched yet (lazy-loads on first open), or the
+    // value is a method deactivated since (the list holds active ones only) —
+    // show the caller-provided snapshot instead of the placeholder.
+    if (fallbackSelectedLabel && loadState !== "loading") {
+      const label = localizeMethodLabel(fallbackSelectedLabel, tBuiltins);
+      return loadState === "idle" ? label : t("inactiveLabel", { label });
     }
     return null;
-  }, [value, methods, tBuiltins, loadState, fallbackSelectedLabel]);
+  }, [value, methods, tBuiltins, loadState, fallbackSelectedLabel, t]);
 
   // -------------------------------------------------------------------------
   // Fetch on open

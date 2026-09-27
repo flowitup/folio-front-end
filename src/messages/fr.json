@@ -503,7 +503,8 @@
       "noMethodsFound": "Aucun moyen trouvé.",
       "failedToCreate": "Échec de la création du moyen de paiement",
       "duplicateLabel": "Un moyen de paiement portant ce nom existe déjà.",
-      "createForbidden": "Seul un administrateur de l'entreprise peut ajouter des moyens de paiement."
+      "createForbidden": "Seul un administrateur de l'entreprise peut ajouter des moyens de paiement.",
+      "inactiveLabel": "{label} (inactif)"
     },
     "refundHint": "Utilisez un prix unitaire négatif pour une ligne d'avoir et positif pour une charge ; le total est le net.",
     "refundsInvoiceLabel": "Avoir sur facture (Matériaux & Services)",
@@ -596,7 +597,8 @@
     },
     "loadFailed": "Échec du chargement de la facture.",
     "loadListFailed": "Échec du chargement des dépenses.",
-    "deleteInvoiceFailed": "Échec de la suppression de la dépense."
+    "deleteInvoiceFailed": "Échec de la suppression de la dépense.",
+    "errorPaymentMethodInactive": "Ce moyen de paiement a été désactivé. Choisissez-en un autre."
   },
   "planning": {
     "title": "Planification",

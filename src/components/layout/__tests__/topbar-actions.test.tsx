@@ -150,6 +150,16 @@ describe("Topbar action button wiring", () => {
     expect(mockPush).toHaveBeenCalledWith("/en/projects/p-1/invoices/new");
   });
 
+  it.each(["/en/projects/p-1/invoices/new", "/en/projects/p-1/invoices/inv-1"])(
+    "invoices: no dead 'New expense' action or duplicate title on %s, which has its own header",
+    (pathname) => {
+      setup({ pathname, selectedProjectId: "p-1" });
+      render(<Topbar />);
+      expect(screen.queryByRole("button", { name: /invoices.newInvoice/ })).toBeNull();
+      expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    },
+  );
+
   it("planning: action targets the URL project even when no project is selected", async () => {
     setup({ pathname: "/en/projects/p-1/planning" });
     const user = userEvent.setup();

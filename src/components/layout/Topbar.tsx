@@ -104,7 +104,9 @@ export function Topbar() {
   else if (pathWithoutLocale === "/projects") pageKey = "projects";
   else if (pathWithoutLocale === "/settings") pageKey = "settings";
   else {
-    const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)/);
+    // Only the section root (/projects/<id>/invoices), not its sub-pages
+    // (/invoices/new, /invoices/<id>), which render their own header.
+    const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)\/?$/);
     if (projectMatch && (projectMatch[1] in TOPBAR_KEYS)) {
       pageKey = projectMatch[1] as PageKey;
     }

@@ -1278,7 +1278,8 @@
           "description": "Créez votre premier devis pour commencer.",
           "cta": "Créer votre premier devis"
         },
-        "importTitle": "Importer des devis"
+        "importTitle": "Importer des devis",
+        "heading": "Devis"
       },
       "status": {
         "draft": "Brouillon",
@@ -1298,14 +1299,15 @@
     },
     "facture": {
       "list": {
-        "title": "Factures",
+        "title": "Facture",
         "new": "Nouvelle facture",
         "empty": {
           "title": "Aucune facture pour le moment",
           "description": "Créez votre première facture pour commencer.",
           "cta": "Créer votre première facture"
         },
-        "importTitle": "Importer des factures"
+        "importTitle": "Importer des factures",
+        "heading": "Factures"
       },
       "status": {
         "draft": "Brouillon",
@@ -1336,7 +1338,9 @@
         "actions": "Actions"
       },
       "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer.",
-      "searchLoadedOnly": "La recherche porte sur les {loaded} documents les plus récents sur {total}. Chargez-en plus pour chercher parmi les plus anciens."
+      "loadFailed": "Impossible de charger les documents.",
+      "retry": "Réessayer",
+      "noFilterResults": "Aucun document avec ce statut."
     },
     "form": {
       "modes": {

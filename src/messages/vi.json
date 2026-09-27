@@ -1278,7 +1278,8 @@
           "description": "Tạo báo giá đầu tiên để bắt đầu.",
           "cta": "Tạo báo giá đầu tiên"
         },
-        "importTitle": "Nhập báo giá"
+        "importTitle": "Nhập báo giá",
+        "heading": "Báo giá"
       },
       "status": {
         "draft": "Nháp",
@@ -1305,7 +1306,8 @@
           "description": "Tạo hóa đơn đầu tiên để bắt đầu.",
           "cta": "Tạo hóa đơn đầu tiên"
         },
-        "importTitle": "Nhập hóa đơn"
+        "importTitle": "Nhập hóa đơn",
+        "heading": "Hóa đơn"
       },
       "status": {
         "draft": "Nháp",
@@ -1336,7 +1338,9 @@
         "actions": "Thao tác"
       },
       "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại.",
-      "searchLoadedOnly": "Tìm kiếm chỉ trong {loaded} tài liệu gần nhất trên tổng số {total}. Tải thêm để tìm các tài liệu cũ hơn."
+      "loadFailed": "Không thể tải danh sách tài liệu.",
+      "retry": "Thử lại",
+      "noFilterResults": "Không có tài liệu nào ở trạng thái này."
     },
     "form": {
       "modes": {

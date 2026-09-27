@@ -10,15 +10,17 @@
  *
  * Features:
  *   - Status filter Select (kind-aware values)
- *   - Search input (debounced 300ms, client-side filter on current page)
- *   - Table: Number / Date / Recipient / Status badge / Total TTC / Actions menu
+ *   - Search input (debounced 300ms, sent to the API as ?q= so every
+ *     document is searched, not only the loaded ones)
+ *   - Table: Number / Date / Recipient / Status badge / Total TTC / Actions menu;
+ *     a row opens its document
  *   - Load-more pagination (25 per page) via router.push ?page= round-trip
  *   - Empty state with "Create your first {kind}" CTA
  *   - Import of historical documents (CSV / JSON) for the companies the caller
  *     may issue from; hidden when there is none
  */
 
-import { useState, useMemo, useCallback, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Plus, Loader2, FileText, Upload } from "lucide-react";
@@ -39,26 +41,13 @@ import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from
 import type { MyCompany } from "@/types/companies";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { formatDate } from "@/lib/utils/formatters";
+import { parsePage, parseQuery, parseStatus, statusesFor } from "./billing-list-params";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const DEVIS_STATUSES: BillingDocumentStatus[] = [
-  "draft",
-  "sent",
-  "accepted",
-  "rejected",
-  "expired",
-];
-
-const FACTURE_STATUSES: BillingDocumentStatus[] = [
-  "draft",
-  "sent",
-  "paid",
-  "overdue",
-  "cancelled",
-];
+const SEARCH_DEBOUNCE_MS = 300;
 
 // STATUS_LABEL removed — status labels now come from i18n via t(`${kind}.status.${s}`).
 
@@ -85,6 +74,8 @@ interface BillingDocumentListProps {
   initialTotal: number;
   /** Companies the caller may issue documents for; the import action needs one. */
   issuerCompanies?: MyCompany[];
+  /** The server could not load the list: show an error, not "no documents yet". */
+  loadError?: boolean;
 }
 
 export function BillingDocumentList({
@@ -92,6 +83,7 @@ export function BillingDocumentList({
   initialDocuments,
   initialTotal,
   issuerCompanies = [],
+  loadError: listLoadError = false,
 }: BillingDocumentListProps) {
   const t = useTranslations("billing");
   const router = useRouter();
@@ -102,18 +94,26 @@ export function BillingDocumentList({
   // Status filter — read directly from ?status= per render (H-2: no local useState).
   // handleStatusChange calls router.push which triggers a server re-render with
   // new searchParams, keeping URL as the single source of truth for the filter.
-  const statusFilter = (searchParams.get("status") as BillingDocumentStatus | null) ?? "all";
+  // An unknown ?status= is ignored (the server page does the same).
+  const statusFilter = parseStatus(kind, searchParams.get("status")) ?? "all";
 
-  // Search — client-side filter on current page
-  const [searchRaw, setSearchRaw] = useState(searchParams.get("q") ?? "");
-  const [search, setSearch] = useState(searchRaw);
+  // Search — applied by the API through ?q=, so older documents are found too.
+  const search = parseQuery(searchParams.get("q"));
+  const [searchRaw, setSearchRaw] = useState(search);
 
-  // Debounce search
-  const [, startTransition] = useTransition();
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchRaw(value);
-    startTransition(() => setSearch(value));
-  }, []);
+  // Debounce: push the typed text to the URL once typing pauses.
+  useEffect(() => {
+    const next = parseQuery(searchRaw);
+    if (next === search) return;
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next) params.set("q", next);
+      else params.delete("q");
+      params.delete("page"); // a new search starts from the first page
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchRaw, search, searchParams, pathname, router]);
 
   // Load-more state — navigation-based; server page re-renders with new props.
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -121,21 +121,27 @@ export function BillingDocumentList({
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // Current page — driven from ?page= param
-  const currentPage = Math.max(1, Number(searchParams.get("page") ?? "1"));
+  const currentPage = parsePage(searchParams.get("page"));
   // hasMore: server accumulates pages (limit = PAGE_SIZE * page), so once
   // initialDocuments.length equals initialTotal we've loaded everything.
   const hasMore = initialDocuments.length < initialTotal;
 
-  // Client-side filter (search over current loaded page — initialDocuments from server)
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return initialDocuments;
-    return initialDocuments.filter(
-      (d) =>
-        d.document_number.toLowerCase().includes(q) ||
-        d.recipient_name.toLowerCase().includes(q)
-    );
-  }, [initialDocuments, search]);
+  const filtered = initialDocuments;
+
+  const documentPath = (doc: BillingDocument) =>
+    `/${locale}/billing/${kindToSegment(kind)}/${doc.id}`;
+
+  // A row opens its document; the actions cell stops the click itself.
+  const rowLinkProps = (doc: BillingDocument) => ({
+    role: "link" as const,
+    tabIndex: 0,
+    "aria-label": doc.document_number,
+    className: "cursor-pointer",
+    onClick: () => router.push(documentPath(doc)),
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && e.target === e.currentTarget) router.push(documentPath(doc));
+    },
+  });
 
   // ---------------------------------------------------------------------------
   // Handlers
@@ -182,7 +188,7 @@ export function BillingDocumentList({
 
   const newPath = `/${locale}/billing/${kindToSegment(kind)}/new`;
 
-  const statusOptions = kind === "devis" ? DEVIS_STATUSES : FACTURE_STATUSES;
+  const statusOptions = statusesFor(kind);
   const canImport = issuerCompanies.length > 0;
 
   const headerActions = (
@@ -218,13 +224,14 @@ export function BillingDocumentList({
 
   // Both views return [page, importDialog] so the dialog keeps its state (and
   // its summary) when a first import turns the empty state into the list.
-  if (initialTotal === 0 && statusFilter === "all" && !search.trim()) {
+  const narrowed = statusFilter !== "all" || search !== "" || searchParams.has("project_id");
+  if (!listLoadError && initialTotal === 0 && !narrowed) {
     return (
       <>
         <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h1 className="font-display text-xl font-medium">
-              {t(`${kind}.list.title`)}
+              {t(`${kind}.list.heading`)}
             </h1>
             {headerActions}
           </div>
@@ -264,7 +271,7 @@ export function BillingDocumentList({
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-xl font-medium">
-            {t(`${kind}.list.title`)}
+            {t(`${kind}.list.heading`)}
           </h1>
           {headerActions}
         </div>
@@ -274,7 +281,8 @@ export function BillingDocumentList({
           <Input
             placeholder={t("list.searchPlaceholder")}
             value={searchRaw}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(e) => setSearchRaw(e.target.value)}
+            maxLength={100}
             className="sm:w-64"
           />
           <Select value={statusFilter} onValueChange={handleStatusChange}>
@@ -298,20 +306,28 @@ export function BillingDocumentList({
           </Alert>
         )}
 
-        {/* Mobile card list */}
-        {filtered.length === 0 ? (
+        {listLoadError ? (
+          <Alert variant="destructive">
+            <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+              <span>{t("list.loadFailed")}</span>
+              <Button variant="outline" size="sm" onClick={() => router.refresh()}>
+                {t("list.retry")}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : filtered.length === 0 ? (
           <div
             className="folio-card flex items-center justify-center py-12 text-[13px]"
             style={{ color: "var(--muted)" }}
           >
-            {t("list.noResults")}
+            {search ? t("list.noResults") : t("list.noFilterResults")}
           </div>
         ) : (
           <>
             {/* Mobile cards — hidden on desktop */}
             <div className="space-y-2 lg:hidden">
               {filtered.map((doc) => (
-                <div key={doc.id} className="folio-card p-4">
+                <div key={doc.id} {...rowLinkProps(doc)} className="folio-card cursor-pointer p-4">
                   {/* Row 1: document number + status badge */}
                   <div className="flex items-center justify-between gap-2">
                     <span className="num text-[12.5px] font-medium">
@@ -364,7 +380,7 @@ export function BillingDocumentList({
                   </thead>
                   <tbody>
                     {filtered.map((doc) => (
-                      <tr key={doc.id}>
+                      <tr key={doc.id} {...rowLinkProps(doc)}>
                         <td className="num text-[12.5px] font-medium">
                           {doc.document_number}
                         </td>
@@ -399,16 +415,8 @@ export function BillingDocumentList({
           </>
         )}
 
-        {/* Search only covers the loaded documents: say so, and keep Load
-            more reachable even when nothing loaded matches. */}
-        {hasMore && search.trim() !== "" && (
-          <p className="text-center text-[12.5px]" style={{ color: "var(--muted)" }}>
-            {t("list.searchLoadedOnly", { loaded: initialDocuments.length, total: initialTotal })}
-          </p>
-        )}
-
         {/* Pagination — load more */}
-        {hasMore && (
+        {hasMore && !listLoadError && (
           <div className="flex justify-center">
             <Button
               variant="outline"

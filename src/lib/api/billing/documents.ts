@@ -54,6 +54,8 @@ export interface BillingDocumentFilter {
   kind: BillingDocumentKind;
   status?: BillingDocumentStatus;
   project_id?: string;
+  /** Case-insensitive substring of the document number or recipient name. */
+  q?: string;
   limit?: number;
   offset?: number;
 }
@@ -73,6 +75,7 @@ export async function fetchBillingDocuments(
   const params = new URLSearchParams({ kind: filter.kind });
   if (filter.status) params.set("status", filter.status);
   if (filter.project_id) params.set("project_id", filter.project_id);
+  if (filter.q) params.set("q", filter.q);
   if (filter.limit !== undefined) params.set("limit", String(filter.limit));
   if (filter.offset !== undefined) params.set("offset", String(filter.offset));
 

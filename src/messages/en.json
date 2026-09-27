@@ -1278,7 +1278,8 @@
           "description": "Create your first quote to get started.",
           "cta": "Create your first quote"
         },
-        "importTitle": "Import quotes"
+        "importTitle": "Import quotes",
+        "heading": "Quotes"
       },
       "status": {
         "draft": "Draft",
@@ -1305,7 +1306,8 @@
           "description": "Create your first invoice to get started.",
           "cta": "Create your first invoice"
         },
-        "importTitle": "Import invoices"
+        "importTitle": "Import invoices",
+        "heading": "Invoices"
       },
       "status": {
         "draft": "Draft",
@@ -1336,7 +1338,9 @@
         "actions": "Actions"
       },
       "loadMoreFailed": "Failed to load more documents. Please try again.",
-      "searchLoadedOnly": "Search covers the {loaded} most recent of {total} documents. Load more to search older ones."
+      "loadFailed": "The documents couldn't be loaded.",
+      "retry": "Try again",
+      "noFilterResults": "No documents with this status."
     },
     "form": {
       "modes": {

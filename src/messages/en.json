@@ -1302,7 +1302,8 @@
         "totalTtc": "Total TTC",
         "actions": "Actions"
       },
-      "loadMoreFailed": "Failed to load more documents. Please try again."
+      "loadMoreFailed": "Failed to load more documents. Please try again.",
+      "searchLoadedOnly": "Search covers the {loaded} most recent of {total} documents. Load more to search older ones."
     },
     "form": {
       "modes": {

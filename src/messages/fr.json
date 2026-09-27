@@ -1302,7 +1302,8 @@
         "totalTtc": "Total TTC",
         "actions": "Actions"
       },
-      "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer."
+      "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer.",
+      "searchLoadedOnly": "La recherche porte sur les {loaded} documents les plus récents sur {total}. Chargez-en plus pour chercher parmi les plus anciens."
     },
     "form": {
       "modes": {

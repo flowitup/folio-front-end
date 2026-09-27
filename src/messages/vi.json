@@ -1302,7 +1302,8 @@
         "totalTtc": "Tổng (gồm VAT)",
         "actions": "Thao tác"
       },
-      "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại."
+      "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại.",
+      "searchLoadedOnly": "Tìm kiếm chỉ trong {loaded} tài liệu gần nhất trên tổng số {total}. Tải thêm để tìm các tài liệu cũ hơn."
     },
     "form": {
       "modes": {

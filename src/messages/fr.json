@@ -678,7 +678,8 @@
       "over": "La tâche {title} est au-dessus de {target}.",
       "dropped": "Tâche {title} déposée dans {target}.",
       "cancelled": "Déplacement de la tâche {title} annulé."
-    }
+    },
+    "taskUnavailable": "Cette tâche n'existe pas ou vous n'y avez pas accès."
   },
   "labor": {
     "title": "Main-d'œuvre",

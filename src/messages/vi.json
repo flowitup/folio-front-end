@@ -678,7 +678,8 @@
       "over": "Công việc {title} đang ở trên {target}.",
       "dropped": "Đã thả công việc {title} vào {target}.",
       "cancelled": "Đã hủy di chuyển công việc {title}."
-    }
+    },
+    "taskUnavailable": "Công việc này không tồn tại hoặc bạn không có quyền truy cập."
   },
   "labor": {
     "title": "Nhân công",

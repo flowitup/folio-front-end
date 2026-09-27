@@ -678,7 +678,8 @@
       "over": "Task {title} is over {target}.",
       "dropped": "Task {title} was dropped in {target}.",
       "cancelled": "Moving task {title} was cancelled."
-    }
+    },
+    "taskUnavailable": "This task doesn't exist or you don't have access to it."
   },
   "labor": {
     "title": "Labor",

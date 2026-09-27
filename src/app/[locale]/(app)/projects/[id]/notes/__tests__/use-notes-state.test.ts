@@ -162,3 +162,40 @@ describe("useNotesState — handleDelete", () => {
     expect(vi.mocked(flushPendingDeletes)).toHaveBeenCalled();
   });
 });
+
+describe("useNotesState — handleSave", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("keeps the editor open (with the user's text) when the save fails", async () => {
+    const note = makeNote();
+    mockUpdate.mockResolvedValue({ success: false, error: "validation" });
+    const { result } = renderHook(() => useNotesState(PROJECT_ID, [note]));
+    act(() => result.current.setEditingId(NOTE_ID));
+
+    await act(async () => {
+      await result.current.handleSave(NOTE_ID, {
+        title: "Edited",
+        description: "x".repeat(2100),
+        category: "general",
+      });
+    });
+
+    expect(result.current.editingId).toBe(NOTE_ID);
+    expect(result.current.notes[0].title).toBe("A note");
+    expect(mockToastError).toHaveBeenCalledWith("errors.validation");
+  });
+
+  it("closes the editor once the save succeeds", async () => {
+    const note = makeNote();
+    mockUpdate.mockResolvedValue({ success: true, note: { ...note, title: "Edited" } });
+    const { result } = renderHook(() => useNotesState(PROJECT_ID, [note]));
+    act(() => result.current.setEditingId(NOTE_ID));
+
+    await act(async () => {
+      await result.current.handleSave(NOTE_ID, { title: "Edited", description: null, category: "general" });
+    });
+
+    expect(result.current.editingId).toBeNull();
+    expect(result.current.notes[0].title).toBe("Edited");
+  });
+});

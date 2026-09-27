@@ -65,11 +65,19 @@ function sendNoteDeleteNow(projectId: string, noteId: string): void {
   }
 }
 
+const KNOWN_ERRORS = new Set(["validation", "forbidden", "notFound", "rateLimited"]);
+
+/** `notes.errors.*` key for a failed save: the reason when known. */
+function saveErrorKey(code: string): string {
+  return KNOWN_ERRORS.has(code) ? `errors.${code}` : "errors.saveFailed";
+}
+
 export interface UseNotesStateReturn {
   notes: Note[];
   editingId: string | null;
   setEditingId: (id: string | null) => void;
-  handleAdd: (payload: QuickAddPayload) => Promise<void>;
+  /** Resolves true once the note is saved, false when the save failed. */
+  handleAdd: (payload: QuickAddPayload) => Promise<boolean>;
   handleSave: (noteId: string, payload: NoteSavePayload) => Promise<void>;
   handleDelete: (noteId: string) => void;
   handleToggleDone: (noteId: string) => Promise<void>;
@@ -96,10 +104,11 @@ export function useNotesState(
       const result = await createNoteAction(projectId, payload);
       if (result.success) {
         setNotes((prev) => prev.map((n) => (n.id === tempId ? result.note : n)));
-      } else {
-        setNotes((prev) => prev.filter((n) => n.id !== tempId));
-        toast.error(t("errors.saveFailed"));
+        return true;
       }
+      setNotes((prev) => prev.filter((n) => n.id !== tempId));
+      toast.error(t(saveErrorKey(result.error) as Parameters<typeof t>[0]));
+      return false;
     },
     [projectId, t]
   );
@@ -110,15 +119,17 @@ export function useNotesState(
       setNotes((prev) =>
         prev.map((n) => (n.id === noteId ? { ...n, ...payload } : n))
       );
-      setEditingId(null);
 
+      // The editor stays open until the server answers: closing it first
+      // unmounted it, and a failed save then reopened it with the old text,
+      // throwing away what the user had typed.
       const result = await updateNoteAction(projectId, noteId, payload);
       if (result.success) {
         setNotes((prev) => prev.map((n) => (n.id === noteId ? result.note : n)));
+        setEditingId((current) => (current === noteId ? null : current));
       } else {
         setNotes(snapshot);
-        setEditingId(noteId);
-        toast.error(t("errors.saveFailed"));
+        toast.error(t(saveErrorKey(result.error) as Parameters<typeof t>[0]));
       }
     },
     [notes, projectId, t]

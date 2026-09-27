@@ -600,9 +600,11 @@ export default function ProjectsPage() {
                               <div className="truncate text-[13px] font-medium">
                                 {userContact(member)}
                               </div>
-                              <div className="text-[11px]" style={{ color: "var(--muted)" }}>
-                                {t("memberRole")}
-                              </div>
+                              {member.role_name && (
+                                <div className="text-[11px]" style={{ color: "var(--muted)" }}>
+                                  {tMembers(`roles.${member.role_name}`)}
+                                </div>
+                              )}
                             </div>
                             {canManageThisProjectUsers && (
                               <button

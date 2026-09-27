@@ -194,6 +194,11 @@ export function MembersTable({
                       <div className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
                         {userContact(member)}
                       </div>
+                      {member.role_name && (
+                        <div className="text-[12px]" style={{ color: "var(--muted)" }}>
+                          {t(`roles.${member.role_name}`)}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div
@@ -243,6 +248,7 @@ export function MembersTable({
                   <TableHead style={{ width: 40 }} />
                   <TableHead>{t("col.name")}</TableHead>
                   <TableHead>{t("col.email")}</TableHead>
+                  <TableHead>{t("col.role")}</TableHead>
                   <TableHead>{t("col.joined")}</TableHead>
                   {canManageMembers && (
                     <TableHead style={{ textAlign: "right" }}>
@@ -270,6 +276,9 @@ export function MembersTable({
                     </TableCell>
                     <TableCell style={{ color: "var(--muted)" }}>
                       {userContact(member) || "—"}
+                    </TableCell>
+                    <TableCell style={{ color: "var(--muted)" }}>
+                      {member.role_name ? t(`roles.${member.role_name}`) : "—"}
                     </TableCell>
                     <TableCell className="num" style={{ color: "var(--muted)" }}>
                       {formatDate(member.joined_at)}

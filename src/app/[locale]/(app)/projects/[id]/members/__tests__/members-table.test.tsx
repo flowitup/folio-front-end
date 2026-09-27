@@ -92,4 +92,14 @@ describe("MembersTable", () => {
     renderTable([dave], true);
     expect(screen.getAllByRole("button", { name: en.members.edit.button }).length).toBeGreaterThan(0);
   });
+
+  it("shows each member's company role", () => {
+    renderTable([
+      { user_id: "u1", email: "a@example.com", display_name: "Ann", role_name: "admin", joined_at: "2026-09-01T00:00:00Z" },
+      { user_id: "u2", email: "m@example.com", display_name: "Max", role_name: "manager", joined_at: "2026-09-01T00:00:00Z" },
+    ]);
+    expect(screen.getByRole("columnheader", { name: en.members.col.role })).toBeInTheDocument();
+    expect(screen.getAllByText(en.members.roles.admin).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(en.members.roles.manager).length).toBeGreaterThan(0);
+  });
 });

@@ -210,7 +210,6 @@
     "photos": "Phương tiện",
     "invite": "Mời",
     "noneTeam": "không có",
-    "memberRole": "Thành viên",
     "save": "Lưu",
     "saving": "Đang lưu...",
     "delete": "Xóa",
@@ -1910,6 +1909,11 @@
       "submit": "Thêm vào dự án",
       "successToast": "Đã thêm thành viên vào dự án.",
       "roleHint": "Đây là vai trò của người này trong toàn công ty, không chỉ trong dự án này. Quản lý áp dụng cho mọi dự án họ được giao; Thành viên không bao giờ hạ vai trò họ đang có. Thay đổi vai trò trong Cài đặt › Công ty."
+    },
+    "roles": {
+      "admin": "Quản trị viên",
+      "manager": "Quản lý",
+      "member": "Thành viên"
     }
   },
   "companies": {

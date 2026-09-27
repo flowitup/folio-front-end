@@ -210,7 +210,6 @@
     "photos": "Media",
     "invite": "Invite",
     "noneTeam": "none",
-    "memberRole": "Member",
     "save": "Save",
     "saving": "Saving...",
     "delete": "Delete",
@@ -1910,6 +1909,11 @@
       "submit": "Assign",
       "successToast": "Member assigned.",
       "roleHint": "This is the person’s role in the whole company, not only in this project. Manager applies to every project they are assigned to; Member never lowers a role they already have. Change company roles in Settings › Company."
+    },
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "member": "Member"
     }
   },
   "companies": {

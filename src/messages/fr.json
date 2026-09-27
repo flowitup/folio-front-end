@@ -210,7 +210,6 @@
     "photos": "Médias",
     "invite": "Inviter",
     "noneTeam": "aucun",
-    "memberRole": "Membre",
     "save": "Enregistrer",
     "saving": "Enregistrement...",
     "delete": "Supprimer",
@@ -1910,6 +1909,11 @@
       "submit": "Assigner",
       "successToast": "Membre assigné.",
       "roleHint": "Il s’agit du rôle de la personne dans toute l’entreprise, pas seulement dans ce projet. Manager s’applique à tous les projets qui lui sont assignés ; Membre ne réduit jamais un rôle déjà attribué. Modifiez les rôles dans Paramètres › Entreprise."
+    },
+    "roles": {
+      "admin": "Administrateur",
+      "manager": "Manager",
+      "member": "Membre"
     }
   },
   "companies": {

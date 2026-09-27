@@ -10,6 +10,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import enMessages from "@/messages/en.json";
 import type { Project } from "@/types/project";
+import { fetchProjectUsers } from "@/lib/api/projects";
 
 const push = vi.fn();
 const selectProject = vi.fn();
@@ -106,5 +107,25 @@ describe("ProjectsPage team panel — Invite", () => {
     await openTeam();
 
     expect(screen.queryByRole("button", { name: enMessages.projects.invite })).toBeNull();
+  });
+});
+
+describe("ProjectsPage team panel — roles", () => {
+  it("labels each person with their company role, not 'Member' for everyone", async () => {
+    vi.mocked(fetchProjectUsers).mockResolvedValueOnce({
+      users: [
+        { id: "u-a", email: "admin@example.com", display_name: "Ann", role_name: "admin" },
+        { id: "u-m", email: "alice@example.com", display_name: "Alice", role_name: "manager" },
+        { id: "u-x", email: "gone@example.com", display_name: null, role_name: null },
+      ],
+      total: 3,
+    });
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });
+    renderPage();
+    await openTeam();
+
+    expect(await screen.findByText(enMessages.members.roles.admin)).toBeInTheDocument();
+    expect(screen.getByText(enMessages.members.roles.manager)).toBeInTheDocument();
+    expect(screen.queryByText(enMessages.members.roles.member)).toBeNull();
   });
 });

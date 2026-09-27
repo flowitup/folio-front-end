@@ -2862,5 +2862,24 @@
       "error": "Error"
     },
     "noCost": "—"
+  },
+  "personsMerge": {
+    "title": "Merge persons",
+    "description": "Consolidate two person rows that represent the same human. All of the source's worker assignments move to the target, and the source row is deleted. Use it when two people were created for the same person.",
+    "source": "Source",
+    "sourceHint": "(deleted)",
+    "target": "Target",
+    "targetHint": "(kept)",
+    "sourcePlaceholder": "Pick the duplicate to remove…",
+    "targetPlaceholder": "Pick the row to keep…",
+    "sameRow": "Source and target must be different rows.",
+    "clear": "Clear",
+    "merge": "Merge",
+    "cancel": "Cancel",
+    "confirmTitle": "Merge persons?",
+    "confirmBody": "All worker rows pointing at <strong>{source}</strong> will be reassigned to <strong>{target}</strong>, and the source row will be permanently deleted. This cannot be undone.",
+    "success": "Merged “{source}” into “{target}”.",
+    "successDetail": "{count, plural, one {# worker} other {# workers}} reassigned. Source deleted.",
+    "failed": "Merge failed"
   }
 }

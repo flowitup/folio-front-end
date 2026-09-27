@@ -201,7 +201,9 @@
       "openSettings": "Ouvrir les paramètres du projet",
       "noReleases": "Aucun fonds débloqué pour l'instant",
       "settingsCardTitle": "Crédit bancaire (crédit immobilier)",
-      "settingsCardHint": "Montant initial accordé par la banque. Les déblocages de fonds en sont déduits."
+      "settingsCardHint": "Montant initial accordé par la banque. Les déblocages de fonds en sont déduits.",
+      "headlineMetaOver": "au-delà des <c>{credit}</c> de crédit · <p>{pct}</p> débloqués",
+      "drawsMetaSingle": "{count, plural, one {# déblocage} other {# déblocages}} · {month}"
     },
     "team": "Équipe",
     "openDashboard": "Ouvrir le tableau de bord",

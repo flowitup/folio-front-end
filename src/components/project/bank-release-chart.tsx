@@ -77,6 +77,10 @@ export function BankReleaseChart({
     segmentDenominator > 0 ? (amount / segmentDenominator) * 100 : 0;
 
   const overDrawn = metrics.remaining < 0;
+  // "Sep 2026 → Sep 2026" reads as a range; one month shows once.
+  const firstMonth = series.draws.length > 0 ? monthYear.format(monthDate(series.draws[0].date)) : "";
+  const lastMonth =
+    series.draws.length > 0 ? monthYear.format(monthDate(series.draws[series.draws.length - 1].date)) : "";
 
   return (
     <div
@@ -89,11 +93,9 @@ export function BankReleaseChart({
         <span className="text-[12.5px] font-semibold">{t("title")}</span>
         {!loading && series.draws.length > 0 ? (
           <span className="text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("drawsMeta", {
-              count: series.draws.length,
-              first: monthYear.format(monthDate(series.draws[0].date)),
-              last: monthYear.format(monthDate(series.draws[series.draws.length - 1].date)),
-            })}
+            {firstMonth === lastMonth
+              ? t("drawsMetaSingle", { count: series.draws.length, month: firstMonth })
+              : t("drawsMeta", { count: series.draws.length, first: firstMonth, last: lastMonth })}
           </span>
         ) : null}
       </div>
@@ -117,7 +119,9 @@ export function BankReleaseChart({
               {fig(formatEURWhole(Math.abs(metrics.remaining)))}
             </span>
             <span className="text-[13px]" style={{ color: "var(--muted)" }}>
-              {t.rich("headlineMeta", {
+              {/* Over-drawn, the figure is the overrun: "remaining of" would
+                  contradict the "Over-drawn by" label above it. */}
+              {t.rich(overDrawn && !loading ? "headlineMetaOver" : "headlineMeta", {
                 credit: fig(formatEURWhole(metrics.credit)),
                 pct: fig(pctFmt.format(metrics.pct / 100)),
                 c: (chunks) => (

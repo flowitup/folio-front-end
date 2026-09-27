@@ -155,6 +155,11 @@ describe("BankReleaseChart", () => {
       />
     );
     expect(screen.getByText("projects.bankRelease.overDrawn")).toBeInTheDocument();
+    // The meta must not say "remaining of" under "Over-drawn by".
+    expect(screen.getByText("projects.bankRelease.headlineMetaOver")).toBeInTheDocument();
+    expect(screen.queryByText("projects.bankRelease.headlineMeta")).not.toBeInTheDocument();
+    // A single month of draws is not written as a range.
+    expect(screen.getByText(/projects\.bankRelease\.drawsMetaSingle/)).toBeInTheDocument();
     const remaining = screen.getByTestId("bank-release-remaining").textContent ?? "";
     expect(remaining.replace(/\s/g, "")).toBe("30000€");
     // Segment widths clamp to the pill; no hatched remaining tail.

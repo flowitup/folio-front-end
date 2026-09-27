@@ -201,7 +201,9 @@
       "openSettings": "Open project settings",
       "noReleases": "No funds released yet",
       "settingsCardTitle": "Bank credit (mortgage loan)",
-      "settingsCardHint": "Initial amount granted by the bank. Funds releases are deducted from it."
+      "settingsCardHint": "Initial amount granted by the bank. Funds releases are deducted from it.",
+      "headlineMetaOver": "over the <c>{credit}</c> credit · <p>{pct}</p> released",
+      "drawsMetaSingle": "{count, plural, one {# draw} other {# draws}} · {month}"
     },
     "team": "Team",
     "openDashboard": "Open dashboard",

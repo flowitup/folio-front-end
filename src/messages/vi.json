@@ -201,7 +201,9 @@
       "openSettings": "Mở cài đặt dự án",
       "noReleases": "Chưa có khoản giải ngân nào",
       "settingsCardTitle": "Tín dụng ngân hàng (vay mua nhà)",
-      "settingsCardHint": "Số tiền ban đầu ngân hàng cấp. Các khoản giải ngân sẽ được trừ vào số này."
+      "settingsCardHint": "Số tiền ban đầu ngân hàng cấp. Các khoản giải ngân sẽ được trừ vào số này.",
+      "headlineMetaOver": "vượt hạn mức <c>{credit}</c> tín dụng · đã giải ngân <p>{pct}</p>",
+      "drawsMetaSingle": "{count, plural, other {# lần giải ngân}} · {month}"
     },
     "team": "Đội",
     "openDashboard": "Mở tổng quan",

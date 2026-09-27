@@ -116,3 +116,38 @@ describe("InvoiceDetailContent — HT / VAT totals", () => {
     expect(text).toMatch(/20\s%/);
   });
 });
+
+describe("InvoiceDetailContent — how an avoir was settled", () => {
+  function renderReturn(overrides: Partial<Invoice>) {
+    render(
+      <InvoiceDetailContent
+        invoice={makeInvoice({ type: "return", total_amount: -43.1, ...overrides })}
+        canManage={false}
+        onUpdated={vi.fn()}
+        onDeleted={vi.fn()}
+        printUrl="/fr/projects/proj-1/invoices/inv-dc-1/print"
+      />,
+    );
+    return screen.getByTestId("invoice-settlement");
+  }
+
+  it("shows the invoice an applied avoir paid for", () => {
+    const block = renderReturn({
+      settled_via: "avoir",
+      applied_to_invoice_id: "inv-9",
+      applied_to_invoice_number: "INV-2026-0009",
+    });
+    expect(block).toHaveTextContent("invoices.settledVia.avoir");
+    expect(block).toHaveTextContent("INV-2026-0009");
+    expect(block).not.toHaveTextContent("invoices.settledVia.outstanding");
+  });
+
+  it("flags an avoir not applied yet", () => {
+    const block = renderReturn({ settled_via: "avoir", applied_to_invoice_id: null });
+    expect(block).toHaveTextContent("invoices.settledVia.outstanding");
+  });
+
+  it("shows a cash refund", () => {
+    expect(renderReturn({ settled_via: "cash" })).toHaveTextContent("invoices.settledVia.cash");
+  });
+});

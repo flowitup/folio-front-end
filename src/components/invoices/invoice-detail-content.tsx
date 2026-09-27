@@ -372,6 +372,27 @@ export function InvoiceDetailContent({
                   </dd>
                 </div>
               )}
+              {invoice.type === "return" && invoice.settled_via && (
+                <div className="mt-2 border-t pt-2" data-testid="invoice-settlement">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {t("settledVia.label")}
+                  </dt>
+                  <dd className="mt-0.5 text-sm">
+                    {t(`settledVia.${invoice.settled_via}`)}
+                    {invoice.settled_via === "avoir" && !invoice.applied_to_invoice_id && (
+                      <span className="stamp warning ml-2">{t("settledVia.outstanding")}</span>
+                    )}
+                  </dd>
+                  {invoice.settled_via === "avoir" && invoice.applied_to_invoice_number && (
+                    <>
+                      <dt className="mt-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        {t("appliedToInvoiceLabel")}
+                      </dt>
+                      <dd className="mt-0.5 text-sm">{invoice.applied_to_invoice_number}</dd>
+                    </>
+                  )}
+                </div>
+              )}
               {invoice.type === "labor" && invoice.service_month && (
                 <div className="mt-2 border-t pt-2">
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">

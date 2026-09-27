@@ -120,6 +120,23 @@ export default function InvoicePrintPage() {
                 <td style={{ whiteSpace: "pre-line" }}>{invoice.recipient_address}</td>
               </tr>
             )}
+            {invoice.type === "return" && invoice.settled_via && (
+              <tr>
+                <td>{t("settledVia.label")}</td>
+                <td>
+                  {t(`settledVia.${invoice.settled_via}`)}
+                  {invoice.settled_via === "avoir" && !invoice.applied_to_invoice_id
+                    ? ` (${t("settledVia.outstanding")})`
+                    : ""}
+                </td>
+              </tr>
+            )}
+            {invoice.type === "return" && invoice.applied_to_invoice_number && (
+              <tr>
+                <td>{t("appliedToInvoiceLabel")}</td>
+                <td>{invoice.applied_to_invoice_number}</td>
+              </tr>
+            )}
           </tbody>
         </table>
 

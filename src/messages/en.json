@@ -2649,7 +2649,8 @@
     "errorImageLink": "The image could not be fetched from this link. Use an https link to the image itself.",
     "errorInvalidInput": "Some values are not valid. Check the fields and try again.",
     "errorRateLimited": "Too many requests. Wait a moment and try again.",
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "dragOtherRoom": "Use Edit to move an item to another room"
   },
   "onboarding": {
     "title": "Welcome to Folio",

@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from "vitest";
 
-import { neighboursAfterMove, planMove } from "../reorder";
+import { neighboursAfterMove, planMove, planArticleDrop } from "../reorder";
 
 const ROOMS = [
   { id: "a", name: "Salon" },
@@ -70,5 +70,40 @@ describe("neighboursAfterMove", () => {
       after_id: "b",
     });
     expect(neighboursAfterMove(ROOMS, "b", "b")).toBeNull();
+  });
+});
+
+describe("planArticleDrop", () => {
+  // Section order interleaves rooms: switch(kitchen,1000) led(bath,2000) sink(kitchen,3000) tap(bath,4000)
+  const items = [
+    { id: "switch", room_id: "kitchen", position: 1000 },
+    { id: "led", room_id: "bath", position: 2000 },
+    { id: "sink", room_id: "kitchen", position: 3000 },
+    { id: "tap", room_id: "bath", position: 4000 },
+  ];
+
+  it("refuses a drop on another room's item", () => {
+    expect(planArticleDrop(items, "led", "switch")).toEqual({ kind: "otherRoom" });
+  });
+
+  it("moves within the room using the room's own neighbours", () => {
+    // Drag "sink" onto "switch": sink goes first in the kitchen.
+    const drop = planArticleDrop(items, "sink", "switch");
+    expect(drop).toEqual({
+      kind: "move",
+      move: { before_id: null, after_id: "switch" },
+      optimisticPosition: 999,
+    });
+  });
+
+  it("places the item between its new neighbours optimistically", () => {
+    const three = [...items, { id: "hood", room_id: "kitchen", position: 5000 }];
+    // Drag "hood" onto "sink": kitchen becomes switch, hood, sink.
+    const drop = planArticleDrop(three, "hood", "sink");
+    expect(drop).toEqual({
+      kind: "move",
+      move: { before_id: "switch", after_id: "sink" },
+      optimisticPosition: 2000,
+    });
   });
 });

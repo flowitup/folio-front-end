@@ -2649,7 +2649,8 @@
     "errorImageLink": "L'image n'a pas pu être récupérée depuis ce lien. Utilisez un lien https vers l'image elle-même.",
     "errorInvalidInput": "Certaines valeurs ne sont pas valides. Vérifiez les champs et réessayez.",
     "errorRateLimited": "Trop de requêtes. Patientez un instant puis réessayez.",
-    "errorGeneric": "Une erreur s'est produite. Veuillez réessayer."
+    "errorGeneric": "Une erreur s'est produite. Veuillez réessayer.",
+    "dragOtherRoom": "Utilisez Modifier pour déplacer un article vers une autre pièce"
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",

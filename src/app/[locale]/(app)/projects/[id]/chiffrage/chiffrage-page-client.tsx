@@ -46,7 +46,7 @@ import { RoomsDialog } from "@/components/chiffrage/rooms-dialog";
 import { SortableItem } from "@/components/chiffrage/sortable-item";
 import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
 import { StoresDialog } from "@/components/chiffrage/stores-dialog";
-import { neighboursAfterMove, planMove } from "@/components/chiffrage/reorder";
+import { neighboursAfterMove, planArticleDrop, planMove } from "@/components/chiffrage/reorder";
 import {
   QuoteFormDialog,
   type QuoteFormValues,
@@ -317,26 +317,29 @@ export function ChiffragePageClient({
   ) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const move = neighboursAfterMove(
-      poste.articles,
-      String(active.id),
-      String(over.id),
-    );
-    if (!move) return;
+    const drop = planArticleDrop(poste.articles, String(active.id), String(over.id));
+    if (!drop) return;
+    if (drop.kind === "otherRoom") {
+      toast.info(t("dragOtherRoom"));
+      return;
+    }
+    const { move, optimisticPosition } = drop;
+    const movingId = String(active.id);
     const previous = tree;
     setTree((prev) => ({
       ...prev,
-      postes: prev.postes.map((p) => {
-        if (p.id !== poste.id) return p;
-        const from = p.articles.findIndex((a) => a.id === active.id);
-        const to = p.articles.findIndex((a) => a.id === over.id);
-        const articles = [...p.articles];
-        const [moved] = articles.splice(from, 1);
-        articles.splice(to, 0, moved);
-        return { ...p, articles };
-      }),
+      postes: prev.postes.map((p) =>
+        p.id !== poste.id
+          ? p
+          : {
+              ...p,
+              articles: p.articles.map((a) =>
+                a.id === movingId ? { ...a, position: optimisticPosition } : a,
+              ),
+            },
+      ),
     }));
-    const res = await reorderArticleAction(projectId, String(active.id), move);
+    const res = await reorderArticleAction(projectId, movingId, move);
     if (!res.ok) {
       setTree(previous);
       toast.error(res.error);

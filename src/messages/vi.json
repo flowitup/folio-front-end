@@ -2649,7 +2649,8 @@
     "errorImageLink": "Không thể tải ảnh từ liên kết này. Hãy dùng liên kết https trỏ trực tiếp tới ảnh.",
     "errorInvalidInput": "Một số giá trị không hợp lệ. Hãy kiểm tra các trường và thử lại.",
     "errorRateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
-    "errorGeneric": "Đã xảy ra lỗi. Vui lòng thử lại."
+    "errorGeneric": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "dragOtherRoom": "Dùng Sửa để chuyển một mục sang phòng khác"
   },
   "onboarding": {
     "title": "Chào mừng đến với Folio",

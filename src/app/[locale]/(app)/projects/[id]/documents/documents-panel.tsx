@@ -71,6 +71,9 @@ export function DocumentsPanel({
   const [total, setTotal] = useState(initialTotal);
   const [page, setPage] = useState(1);
   const perPage = 25;
+  // Bumped to re-read the current page after a delete, so the rows of the
+  // next page move up and an emptied last page steps back.
+  const [reloadCount, setReloadCount] = useState(0);
 
   // ---- Sort/filter state ----
   const [sort, setSort] = useState<SortColumn>("created_at");
@@ -94,6 +97,7 @@ export function DocumentsPanel({
     tags: selectedTags,
     uploaderId,
     page,
+    reloadCount,
   });
   const [loadedKey, setLoadedKey] = useState(queryKey);
   const loading = loadedKey !== queryKey;
@@ -137,6 +141,12 @@ export function DocumentsPanel({
       if (cancelled) return;
 
       if (result.ok) {
+        // The page emptied under us (its last document was deleted): step
+        // back to the new last page, which this effect then loads.
+        if (result.data.items.length === 0 && page > 1 && result.data.total > 0) {
+          setPage(Math.max(1, Math.ceil(result.data.total / perPage)));
+          return;
+        }
         setList(result.data.items);
         setTotal(result.data.total);
       } else {
@@ -151,7 +161,7 @@ export function DocumentsPanel({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sort, order, kinds, selectedTags, uploaderId, page, projectId]);
+  }, [sort, order, kinds, selectedTags, uploaderId, page, projectId, reloadCount]);
 
   // ---- Uploaders (filter options + names) ----
 
@@ -280,6 +290,9 @@ export function DocumentsPanel({
         setTotal((prev) => Math.max(0, prev - 1));
         toast.success(t("delete.success"));
         setDeleteDoc(null);
+        // Re-read the page: the next page's first row moves up, and a page
+        // left empty steps back instead of showing the "no documents" state.
+        setReloadCount((n) => n + 1);
         // It may have been its uploader's last document here.
         void refreshUploaders();
       } else if (result.error === "forbidden") {
@@ -337,7 +350,7 @@ export function DocumentsPanel({
       </div>
 
       {/* Pagination controls */}
-      {totalPages > 1 && (
+      {(totalPages > 1 || page > 1) && (
         <div className="flex items-center justify-center gap-3">
           <Button
             variant="outline"

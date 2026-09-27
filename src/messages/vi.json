@@ -2528,7 +2528,7 @@
     "fetch": "Lấy về",
     "grandTotal": "Tổng cộng",
     "imageFromUrl": "Từ link nhà cung cấp",
-    "imageFromUrlNote": "Chỉ chấp nhận trang của các nhà cung cấp.",
+    "imageFromUrlNote": "Chỉ chấp nhận liên kết ảnh từ các trang nhà cung cấp được hỗ trợ: Leroy Merlin, Castorama, Brico Dépôt, Point P, Cedeo, Brossette, Rexel, Saint-Gobain.",
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "Ảnh vượt quá 10 MB.",
     "imageUploadFailed": "Không tải được ảnh lên.",
@@ -2653,7 +2653,12 @@
     "errorInvalidInput": "Một số giá trị không hợp lệ. Hãy kiểm tra các trường và thử lại.",
     "errorRateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
     "errorGeneric": "Đã xảy ra lỗi. Vui lòng thử lại.",
-    "dragOtherRoom": "Dùng Sửa để chuyển một mục sang phòng khác"
+    "dragOtherRoom": "Dùng Sửa để chuyển một mục sang phòng khác",
+    "unitSac": "bao",
+    "unitBoite": "hộp",
+    "unitRouleau": "cuộn",
+    "unitLot": "lô",
+    "unitForfait": "trọn gói"
   },
   "onboarding": {
     "title": "Chào mừng đến với Folio",

@@ -2528,7 +2528,7 @@
     "fetch": "Récupérer",
     "grandTotal": "Total général",
     "imageFromUrl": "Depuis un lien fournisseur",
-    "imageFromUrlNote": "Seuls les sites des fournisseurs sont acceptés.",
+    "imageFromUrlNote": "Seuls les liens d'images des sites fournisseurs pris en charge sont acceptés : Leroy Merlin, Castorama, Brico Dépôt, Point P, Cedeo, Brossette, Rexel, Saint-Gobain.",
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "Cette image dépasse 10 Mo.",
     "imageUploadFailed": "La photo n'a pas pu être envoyée.",
@@ -2653,7 +2653,12 @@
     "errorInvalidInput": "Certaines valeurs ne sont pas valides. Vérifiez les champs et réessayez.",
     "errorRateLimited": "Trop de requêtes. Patientez un instant puis réessayez.",
     "errorGeneric": "Une erreur s'est produite. Veuillez réessayer.",
-    "dragOtherRoom": "Utilisez Modifier pour déplacer un article vers une autre pièce"
+    "dragOtherRoom": "Utilisez Modifier pour déplacer un article vers une autre pièce",
+    "unitSac": "sac",
+    "unitBoite": "boîte",
+    "unitRouleau": "rouleau",
+    "unitLot": "lot",
+    "unitForfait": "forfait"
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",

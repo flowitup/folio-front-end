@@ -159,3 +159,16 @@ describe("formatGapPercent", () => {
     expect(plain(formatGapPercent(-14.5 / 298))).toBe("-4,9 %");
   });
 });
+
+describe("unitLabel", () => {
+  it("translates the French word units and leaves symbols as typed", async () => {
+    const { unitLabel } = await import("../format");
+    const en: Record<string, string> = { unitSac: "bag", unitBoite: "box", unitForfait: "lump sum" };
+    const t = (k: string) => en[k] ?? k;
+    expect(unitLabel("sac", t)).toBe("bag");
+    expect(unitLabel("boîte", t)).toBe("box");
+    expect(unitLabel("forfait", t)).toBe("lump sum");
+    expect(unitLabel("m²", t)).toBe("m²");
+    expect(unitLabel("palette", t)).toBe("palette");
+  });
+});

@@ -12,6 +12,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { unitLabel } from "@/components/chiffrage/format";
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -76,7 +77,7 @@ export function UnitSelect({ value, units, onChange, onCreateUnit }: Props) {
               className="h-7"
               onClick={() => pick(u.symbol)}
             >
-              {u.symbol}
+              {unitLabel(u.symbol, t)}
               {u.symbol === value ? <Check className="ml-1 h-3 w-3" /> : null}
             </Button>
           ))}
@@ -98,7 +99,7 @@ export function UnitSelect({ value, units, onChange, onCreateUnit }: Props) {
           )}
           data-testid="unit-select-trigger"
         >
-          {value ?? t("selectUnit")}
+          {value ? unitLabel(value, t) : t("selectUnit")}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

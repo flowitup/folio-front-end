@@ -2528,7 +2528,7 @@
     "fetch": "Fetch",
     "grandTotal": "Grand total",
     "imageFromUrl": "From a supplier link",
-    "imageFromUrlNote": "Only the fournisseurs' own sites are accepted.",
+    "imageFromUrlNote": "Only image links from supported supplier sites are accepted: Leroy Merlin, Castorama, Brico Dépôt, Point P, Cedeo, Brossette, Rexel, Saint-Gobain.",
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "That image is over 10 MB.",
     "imageUploadFailed": "The photo could not be uploaded.",
@@ -2644,7 +2644,7 @@
     "emptyHintReadOnly": "No section has been planned for this project yet.",
     "quantityTooLarge": "The quantity cannot exceed {max, number}.",
     "priceTooLarge": "The unit price (excl. tax) cannot exceed {max, number}.",
-    "errorForbidden": "You do not have permission to modify this chiffrage.",
+    "errorForbidden": "You do not have permission to modify this cost plan.",
     "errorNotFound": "This item no longer exists.",
     "errorNameTaken": "That name is already taken.",
     "errorImageTooLarge": "Image too large (max 10 MB).",
@@ -2653,7 +2653,12 @@
     "errorInvalidInput": "Some values are not valid. Check the fields and try again.",
     "errorRateLimited": "Too many requests. Wait a moment and try again.",
     "errorGeneric": "Something went wrong. Please try again.",
-    "dragOtherRoom": "Use Edit to move an item to another room"
+    "dragOtherRoom": "Use Edit to move an item to another room",
+    "unitSac": "bag",
+    "unitBoite": "box",
+    "unitRouleau": "roll",
+    "unitLot": "lot",
+    "unitForfait": "lump sum"
   },
   "onboarding": {
     "title": "Welcome to Folio",

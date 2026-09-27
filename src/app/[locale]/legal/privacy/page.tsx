@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Folio · Politique de confidentialité",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: locale === "en" ? "Folio · Privacy Policy" : "Folio · Politique de confidentialité",
+  };
+}
 
 const SUPPORT_EMAIL = "mt.bui.fr@gmail.com";
 const UPDATED = "14 septembre 2026";
@@ -18,7 +25,14 @@ export default async function PrivacyPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return locale === "en" ? <English /> : <French />;
+  if (locale === "en") return <English />;
+  // No Vietnamese version of the policy: vi reads the French one, marked as
+  // French so the page no longer claims lang="vi" for French text.
+  return (
+    <div lang="fr" className="space-y-4">
+      <French />
+    </div>
+  );
 }
 
 function French() {

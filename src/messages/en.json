@@ -53,13 +53,14 @@
     "codeCardTitle": "Enter the SMS code",
     "codeTitle": "Check your messages.",
     "heroSubtitlePhone": "Sign in with your phone number. One SMS code, no password.",
-    "codeExpires": "Expires in {minutes} minutes",
+    "codeExpires": "{minutes, plural, one {Expires in # minute} other {Expires in # minutes}}",
     "codeDigit": "Digit {position} of {total}",
     "stepEnterPhone": "Your number",
     "stepEnterCode": "The 6-digit code",
     "stepEnterSite": "On site",
     "verified": "Verified",
-    "codeAlreadySent": "A code was already sent to this number — enter it, or get a new one in {seconds} s."
+    "codeAlreadySent": "A code was already sent to this number — enter it, or get a new one in {seconds} s.",
+    "codeExpired": "Code expired — ask for a new one"
   },
   "topbar": {
     "viewNotifications": "View notifications",

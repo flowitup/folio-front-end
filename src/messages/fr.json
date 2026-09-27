@@ -53,13 +53,14 @@
     "codeCardTitle": "Saisir le code SMS",
     "codeTitle": "Vérifiez vos messages.",
     "heroSubtitlePhone": "Connectez-vous avec votre numéro. Un code SMS, sans mot de passe.",
-    "codeExpires": "Expire dans {minutes} minutes",
+    "codeExpires": "{minutes, plural, one {Expire dans # minute} other {Expire dans # minutes}}",
     "codeDigit": "Chiffre {position} sur {total}",
     "stepEnterPhone": "Le numéro",
     "stepEnterCode": "Le code à 6 chiffres",
     "stepEnterSite": "Sur le chantier",
     "verified": "Vérifié",
-    "codeAlreadySent": "Un code a déjà été envoyé à ce numéro : saisissez-le, ou demandez-en un nouveau dans {seconds} s."
+    "codeAlreadySent": "Un code a déjà été envoyé à ce numéro : saisissez-le, ou demandez-en un nouveau dans {seconds} s.",
+    "codeExpired": "Code expiré — demandez-en un nouveau"
   },
   "topbar": {
     "viewNotifications": "Voir les notifications",

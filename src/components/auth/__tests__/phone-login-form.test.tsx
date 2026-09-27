@@ -24,6 +24,7 @@ const TRANSLATIONS: Record<string, string> = {
   codeLabel: "SMS code",
   codeDigit: "Digit {position} of {total}",
   codeExpires: "Expires in {minutes} minutes",
+  codeExpired: "Code expired — ask for a new one",
   verifyCode: "Sign in",
   verifyingCode: "Signing in...",
   verified: "Verified",
@@ -307,5 +308,20 @@ describe("Phone sign-in", () => {
 
     expect(screen.getByTestId("login-code-0")).toBeInTheDocument();
     expect(mockRequestOtpAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("says the code has expired once its lifetime runs out, and stops submitting it", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 1 });
+    const user = userEvent.setup();
+    render(<LoginStage />);
+
+    await sendCodeTo(user, "0612345678");
+    expect(screen.getByTestId("login-code-expiry")).toHaveTextContent("Expires in 1 minutes");
+
+    await waitFor(() => expect(screen.getByTestId("login-code-expiry")).toHaveTextContent("Code expired"), {
+      timeout: 3000,
+    });
+    await typeCode(user, "123456");
+    expect(mockLoginWithPhone).not.toHaveBeenCalled();
   });
 });

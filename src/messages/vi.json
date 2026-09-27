@@ -59,7 +59,8 @@
     "stepEnterCode": "Nhập mã 6 số",
     "stepEnterSite": "Vào công trình",
     "verified": "Đã xác minh",
-    "codeAlreadySent": "Mã đã được gửi đến số này — hãy nhập mã đó, hoặc nhận mã mới sau {seconds} giây."
+    "codeAlreadySent": "Mã đã được gửi đến số này — hãy nhập mã đó, hoặc nhận mã mới sau {seconds} giây.",
+    "codeExpired": "Mã đã hết hạn — hãy nhận mã mới"
   },
   "topbar": {
     "viewNotifications": "Xem thông báo",

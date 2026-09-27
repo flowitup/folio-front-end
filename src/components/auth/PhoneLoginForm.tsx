@@ -104,8 +104,11 @@ export function PhoneLoginForm({ flow }: PhoneLoginFormProps) {
               ? t("resendIn", { seconds: flow.cooldown })
               : t("resendCode")}
           </button>
-          <span style={{ color: "var(--muted)" }}>
-            {t("codeExpires", { minutes: flow.expiresInMinutes })}
+          <span
+            data-testid="login-code-expiry"
+            style={{ color: flow.codeExpired ? "var(--negative)" : "var(--muted)" }}
+          >
+            {flow.codeExpired ? t("codeExpired") : t("codeExpires", { minutes: flow.expiresInMinutes })}
           </span>
         </div>
       ) : (

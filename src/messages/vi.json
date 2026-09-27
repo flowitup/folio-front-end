@@ -2421,7 +2421,8 @@
         "updateError": "Không cập nhật được kho.",
         "deleteError": "Không xóa được kho."
       }
-    }
+    },
+    "otherSite": "Công trình bạn không được phân công"
   },
   "photos": {
     "title": "Phương tiện",

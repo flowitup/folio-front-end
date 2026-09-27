@@ -33,7 +33,9 @@ export function InventoryGroups({ groups, onEdit, onDelete }: Props) {
             <div className="mb-2 flex items-center gap-2">
               <Icon size={14} style={{ color: "var(--muted)" }} />
               <div className="min-w-0 flex-1">
-                <div className="label-cap">{group.title ?? t("unknownLocation")}</div>
+                <div className="label-cap">
+                  {group.title ?? (group.otherSite ? t("otherSite") : t("unknownLocation"))}
+                </div>
                 {group.subtitle && (
                   <div className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
                     {group.subtitle}

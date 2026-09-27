@@ -2421,7 +2421,8 @@
         "updateError": "Failed to update the warehouse.",
         "deleteError": "Failed to delete the warehouse."
       }
-    }
+    },
+    "otherSite": "A site you are not assigned to"
   },
   "photos": {
     "title": "Media",

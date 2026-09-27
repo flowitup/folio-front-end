@@ -2421,7 +2421,8 @@
         "updateError": "Impossible de mettre à jour le dépôt.",
         "deleteError": "Impossible de supprimer le dépôt."
       }
-    }
+    },
+    "otherSite": "Un chantier auquel vous n'êtes pas affecté"
   },
   "photos": {
     "title": "Médias",

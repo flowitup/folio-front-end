@@ -65,10 +65,20 @@ describe("groupInventoryByLocation", () => {
       warehouses: [WAREHOUSE],
       sites: [{ id: "p1", name: "Villa Thảo Điền", address: "Quận 2" }],
     });
-    expect(groups.map((g) => g.key)).toEqual(["warehouse:w1", "site:p1", "unknown:site"]);
+    expect(groups.map((g) => g.key)).toEqual(["warehouse:w1", "site:p1", "other:site"]);
     expect(groups[0]).toMatchObject({ title: "Kho Bình Thạnh", subtitle: "12 Nguyễn Hữu Cảnh", quantity: 4 });
     expect(groups[1]).toMatchObject({ title: "Villa Thảo Điền", subtitle: "Quận 2", quantity: 2 });
-    expect(groups[2]).toMatchObject({ title: null, quantity: 1 });
+    // A project outside the viewer's list is a site they are not assigned to, not an unknown place.
+    expect(groups[2]).toMatchObject({ title: null, otherSite: true, quantity: 1 });
+  });
+
+  it("keeps 'unknown' for a site row with no project at all", () => {
+    const groups = groupInventoryByLocation(
+      [item({ id: "x", location_type: "site", warehouse_id: null, project_id: null })],
+      { warehouses: [], sites: [] }
+    );
+    expect(groups.map((g) => g.key)).toEqual(["unknown:site"]);
+    expect(groups[0].otherSite).toBe(false);
   });
 });
 

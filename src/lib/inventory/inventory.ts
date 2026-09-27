@@ -75,12 +75,14 @@ export interface SiteRef {
 }
 
 export interface InventoryLocationGroup {
-  /** `warehouse:<id>`, `site:<id>` or `unknown:<kind>` for a dangling reference. */
+  /** `warehouse:<id>`, `site:<id>`, `other:site` or `unknown:<kind>` for a dangling reference. */
   key: string;
   kind: "warehouse" | "site";
   /** Null when the row points at a warehouse or project the client no longer knows. */
   title: string | null;
   subtitle: string | null;
+  /** A project the viewer is not assigned to (key `other:site`): its name is not known here. */
+  otherSite: boolean;
   items: InventoryItem[];
   quantity: number;
 }
@@ -105,7 +107,9 @@ export function groupInventoryByLocation(
       subtitle = warehouse?.address ?? null;
     } else {
       const site = item.project_id ? sites.get(item.project_id) : undefined;
-      key = site ? `site:${site.id}` : "unknown:site";
+      // A project the viewer is not assigned to is not in their project list,
+      // so its name is unknown here — but it is not an unknown place.
+      key = site ? `site:${site.id}` : item.project_id ? "other:site" : "unknown:site";
       title = site?.name ?? null;
       subtitle = site?.address ?? null;
     }
@@ -114,6 +118,7 @@ export function groupInventoryByLocation(
       kind: item.location_type,
       title,
       subtitle,
+      otherSite: key === "other:site",
       items: [],
       quantity: 0,
     };

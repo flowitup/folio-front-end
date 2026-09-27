@@ -51,11 +51,18 @@ const STATUS_I18N_KEY: Record<RefundableStatus, string> = {
 interface RefundableExpenseRowActionsProps {
   expense: RefundableExpense;
   onReload: () => void;
+  /**
+   * Which half to render: the status stamp, the change-status menu, or both
+   * side by side (default). The desktop table puts each half under its own
+   * column header.
+   */
+  part?: "all" | "status" | "menu";
 }
 
 export function RefundableExpenseRowActions({
   expense,
   onReload,
+  part = "all",
 }: RefundableExpenseRowActionsProps) {
   const t = useTranslations("billing.refundable");
   const [loading, setLoading] = useState(false);
@@ -93,9 +100,12 @@ export function RefundableExpenseRowActions({
     ? t(STATUS_I18N_KEY[currentStatus])
     : "—";
 
+  const stamp = <span className={stampClass}>{statusLabel}</span>;
+  if (part === "status") return stamp;
+
   return (
     <div className="flex items-center gap-2">
-      <span className={stampClass}>{statusLabel}</span>
+      {part === "all" && stamp}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

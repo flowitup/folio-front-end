@@ -20,7 +20,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { isToday } from "@/lib/utils/calendar-month";
 import { getFrenchHolidayKey } from "@/lib/utils/french-holidays";
-import { personColor, workerColor } from "@/lib/utils/person-color";
+import { personColor, personInitials, workerColor } from "@/lib/utils/person-color";
 import { formatEUR } from "@/lib/api/labor";
 import { hasChangeRequest, type LaborEntry, type LaborActivity, type Worker, type ShiftType } from "@/types/labor";
 
@@ -121,6 +121,12 @@ export function CalendarCell({
     );
   }
 
+  const compactEUR = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "EUR",
+    notation: "compact",
+    maximumSignificantDigits: 3,
+  });
   const today = isToday(date);
   const sunday = date.getDay() === 0;
   const empty = entries.length === 0 && activities.length === 0;
@@ -136,8 +142,10 @@ export function CalendarCell({
       type="button"
       onClick={() => onClick?.(date)}
       className={cn(
-        "min-h-20 rounded-md border p-2 text-left transition",
-        "flex flex-col gap-1.5",
+        // min-w-0 + overflow-hidden: at 375 px a cell is ~45 px wide and
+        // must not push the month grid (and the page) wider than the screen.
+        "min-h-20 min-w-0 overflow-hidden rounded-md border p-1 text-left transition sm:p-2",
+        "flex flex-col gap-1 sm:gap-1.5",
         "hover:border-primary/60 hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring",
         holidayName ? "bg-accent" : sunday ? "bg-muted/40" : "bg-card",
         today ? "border-primary ring-1 ring-primary/40" : "border-border",
@@ -153,7 +161,7 @@ export function CalendarCell({
         (changeLabel ? ` — ${changeLabel}` : "")
       }
     >
-      <div className="flex items-baseline justify-between gap-1">
+      <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-1">
         <span
           className={cn(
             "text-sm font-medium",
@@ -174,9 +182,15 @@ export function CalendarCell({
             </span>
           )}
           {dayTotal > 0 && (
-            <span className="text-muted-foreground text-xs tabular-nums">
-              {formatEUR(dayTotal)}
-            </span>
+            <>
+              {/* Phones: "1,2 k€" fits a cell; "1 170,00 €" was cut. */}
+              <span className="text-muted-foreground truncate text-[10px] tabular-nums sm:hidden">
+                {compactEUR.format(dayTotal)}
+              </span>
+              <span className="text-muted-foreground hidden text-xs tabular-nums sm:inline">
+                {formatEUR(dayTotal)}
+              </span>
+            </>
           )}
         </div>
       </div>
@@ -213,7 +227,9 @@ export function CalendarCell({
                   : { backgroundColor: c.chipColor, maxWidth: "100%" }
               }
             >
-              {c.name}
+              {/* Phones show initials: a name cut to 5 letters helps nobody. */}
+              <span className="sm:hidden">{personInitials(c.name)}</span>
+              <span className="hidden truncate sm:inline">{c.name}</span>
               {c.shiftType === "half" && (
                 <span className="opacity-80" aria-label={t("shiftHalf")}>½</span>
               )}

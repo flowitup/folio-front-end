@@ -473,7 +473,12 @@ export function LaborSummary({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="ledger">
+              {/* Phones drop the crew avatars (3rd column) and the cost bar
+                  (5th) so TOTAL and PAID fit without a sideways scroll. */}
+              <table
+                className="ledger [&_tr>*:nth-child(3)]:hidden [&_tr>*:nth-child(5)]:hidden sm:[&_tr>*:nth-child(3)]:table-cell sm:[&_tr>*:nth-child(5)]:table-cell"
+                data-testid="labor-monthly-table"
+              >
                 <thead>
                   <tr>
                     <th style={{ width: 32 }} />
@@ -791,12 +796,7 @@ export function LaborSummary({
               </thead>
               <tbody>
                 {summary.rows.map((row) => {
-                  const initials = row.worker_name
-                    .split(" ")
-                    .map((p) => p.charAt(0))
-                    .slice(0, 2)
-                    .join("")
-                    .toUpperCase();
+                  const initials = personInitials(row.worker_name);
                   // Role comes from the workers list (summary rows carry
                   // only id + name). Default seed roles resolve through
                   // the locale map, custom roles display their DB name.

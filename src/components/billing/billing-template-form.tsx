@@ -308,7 +308,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
                 value={customVatRate}
                 onChange={(e) => setCustomVatRate(e.target.value)}
                 className="w-28"
-                placeholder="e.g. 8.5"
+                placeholder={tForm("vatCustomPlaceholder")}
               />
               <span className="text-sm" style={{ color: "var(--muted)" }}>%</span>
               <button
@@ -317,7 +317,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
                 style={{ color: "var(--muted)" }}
                 onClick={() => { setIsCustomVat(false); setDefaultVatRate("20"); }}
               >
-                ↩ Use preset
+                ↩ {tForm("vatUsePreset")}
               </button>
             </div>
           ) : (
@@ -411,7 +411,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
               <AlertDialogHeader>
                 <AlertDialogTitle>{tForm("titleEdit")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Delete &ldquo;{template!.name}&rdquo;? This cannot be undone.
+                  {tForm("deleteConfirm", { name: template!.name })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

@@ -213,7 +213,7 @@ export function CreateFromExistingDialog({
             <div className="flex flex-col items-center justify-center gap-2 py-12">
               <FileText size={20} style={{ color: "var(--muted)" }} />
               <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-                No existing documents found.
+                {tFromExisting("empty")}
               </p>
             </div>
           ) : (
@@ -255,7 +255,7 @@ export function CreateFromExistingDialog({
                         className="text-[11px] uppercase tracking-wide"
                         style={{ color: "var(--muted)" }}
                       >
-                        {doc.kind}
+                        {doc.kind === "devis" ? tKind("kindDevis") : tKind("kindFacture")}
                       </span>
                     </div>
                   </div>

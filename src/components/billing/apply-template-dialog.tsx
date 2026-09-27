@@ -82,6 +82,7 @@ export function ApplyTemplateDialog({
   const tErrors = useTranslations("billing.form.errors");
   const tToast = useTranslations("billing.form.toast");
   const tApply = useTranslations("billing.form.applyTemplate");
+  const tKind = useTranslations("billing.templates.form");
 
   const [templates, setTemplates] = useState<BillingDocumentTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -198,7 +199,9 @@ export function ApplyTemplateDialog({
             <div className="flex flex-col items-center justify-center gap-2 py-10">
               <FileText size={20} style={{ color: "var(--muted)" }} />
               <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-                No {kind} templates saved yet.
+                {tApply("empty", {
+                  kind: kind === "devis" ? tKind("kindDevis") : tKind("kindFacture"),
+                })}
               </p>
             </div>
           ) : (

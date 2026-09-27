@@ -661,6 +661,7 @@ interface VatRateCellProps {
 }
 
 function VatRateCell({ value, onChange }: VatRateCellProps) {
+  const t = useTranslations("billing.form.items");
   // isCustom: value not in presets, OR empty string (user just triggered custom mode)
   const isCustom = !PRESET_VAT_RATES.includes(value);
 
@@ -709,7 +710,7 @@ function VatRateCell({ value, onChange }: VatRateCellProps) {
             {r}%
           </SelectItem>
         ))}
-        <SelectItem value="__custom__">Custom…</SelectItem>
+        <SelectItem value="__custom__">{t("vatCustom")}</SelectItem>
       </SelectContent>
     </Select>
   );

@@ -1265,7 +1265,10 @@
           "saved": "Template saved.",
           "created": "Template created.",
           "deleted": "Template deleted."
-        }
+        },
+        "vatCustomPlaceholder": "e.g. 8.5",
+        "vatUsePreset": "Use preset",
+        "deleteConfirm": "Delete “{name}”? This cannot be undone."
       },
       "companyLabel": "Company"
     },
@@ -1367,7 +1370,7 @@
         "validityUntil": "Valid until",
         "paymentDue": "Payment due",
         "paymentTerms": "Payment terms",
-        "paymentTermsPlaceholder": "e.g. Net 30, virement bancaire",
+        "paymentTermsPlaceholder": "e.g. Net 30, bank transfer",
         "project": "Project (optional)",
         "projectNone": "No project"
       },
@@ -1386,7 +1389,9 @@
         "categoryPlaceholder": "e.g. Toiture, Plomberie",
         "descriptionSuggestionsHeading": "From your past invoices",
         "noSuggestions": "No matches — your text will be used",
-        "categoryNoMatches": "No categories yet — your text will be used"
+        "categoryNoMatches": "No categories yet — your text will be used",
+        "vatCustom": "Custom…",
+        "vatUsePreset": "Use a preset rate"
       },
       "totals": {
         "ht": "Total HT",
@@ -1468,12 +1473,14 @@
       },
       "applyTemplate": {
         "title": "Apply a template",
-        "description": "Choose a saved template. Items, notes and terms will be copied. Enter the recipient details below before creating."
+        "description": "Choose a saved template. Items, notes and terms will be copied. Enter the recipient details below before creating.",
+        "empty": "No {kind} templates saved yet."
       },
       "fromExisting": {
         "description": "Select a document to use as the starting point for your new <strong>{kind}</strong>. Items, recipient, notes and terms will be copied; dates and number will be reset.",
         "createAs": "Create as:",
-        "crossKindWarning": "Switching kinds resets the document lifecycle. The cloned {kind} will start as <strong>{draft}</strong>."
+        "crossKindWarning": "Switching kinds resets the document lifecycle. The cloned {kind} will start as <strong>{draft}</strong>.",
+        "empty": "No existing documents found."
       }
     },
     "editPage": {

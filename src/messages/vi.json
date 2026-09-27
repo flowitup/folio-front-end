@@ -1265,7 +1265,10 @@
           "saved": "Đã lưu mẫu.",
           "created": "Đã tạo mẫu.",
           "deleted": "Đã xóa mẫu."
-        }
+        },
+        "vatCustomPlaceholder": "vd. 8.5",
+        "vatUsePreset": "Dùng thuế suất có sẵn",
+        "deleteConfirm": "Xóa “{name}”? Không thể hoàn tác."
       },
       "companyLabel": "Công ty"
     },
@@ -1386,7 +1389,9 @@
         "categoryPlaceholder": "ví dụ Toiture, Plomberie",
         "descriptionSuggestionsHeading": "Từ các hóa đơn trước",
         "noSuggestions": "Không có gợi ý — văn bản của bạn sẽ được dùng",
-        "categoryNoMatches": "Chưa có mục nào — văn bản của bạn sẽ được dùng"
+        "categoryNoMatches": "Chưa có mục nào — văn bản của bạn sẽ được dùng",
+        "vatCustom": "Tùy chỉnh…",
+        "vatUsePreset": "Dùng thuế suất có sẵn"
       },
       "totals": {
         "ht": "Tổng (chưa VAT)",
@@ -1468,12 +1473,14 @@
       },
       "applyTemplate": {
         "title": "Áp dụng mẫu",
-        "description": "Chọn một mẫu đã lưu. Các dòng, ghi chú và điều khoản sẽ được sao chép. Nhập thông tin người nhận bên dưới trước khi tạo."
+        "description": "Chọn một mẫu đã lưu. Các dòng, ghi chú và điều khoản sẽ được sao chép. Nhập thông tin người nhận bên dưới trước khi tạo.",
+        "empty": "Chưa có mẫu {kind} nào được lưu."
       },
       "fromExisting": {
         "description": "Chọn một tài liệu làm điểm bắt đầu cho <strong>{kind}</strong> mới. Các dòng, người nhận, ghi chú và điều khoản sẽ được sao chép; ngày và số sẽ được đặt lại.",
         "createAs": "Tạo dưới dạng:",
-        "crossKindWarning": "Đổi loại sẽ đặt lại vòng đời tài liệu. {kind} được sao chép sẽ bắt đầu ở trạng thái <strong>{draft}</strong>."
+        "crossKindWarning": "Đổi loại sẽ đặt lại vòng đời tài liệu. {kind} được sao chép sẽ bắt đầu ở trạng thái <strong>{draft}</strong>.",
+        "empty": "Không tìm thấy tài liệu nào."
       }
     },
     "editPage": {

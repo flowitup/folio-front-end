@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UnitSelect } from "@/components/chiffrage/unit-select";
 import { RoomSelect } from "@/components/chiffrage/room-select";
 import type { ChiffrageArticle, ChiffrageRoom, ChiffrageUnit } from "@/lib/api/chiffrage";
+import { MAX_ARTICLE_QUANTITY } from "@/lib/numeric-bounds";
 
 interface Props {
   open: boolean;
@@ -56,8 +57,9 @@ export function ArticleFormDialog({
   const [note, setNote] = useState(article?.note ?? "");
   const [roomId, setRoomId] = useState<string | null>(article?.room_id ?? null);
 
+  const qtyTooLarge = Number(qty) > MAX_ARTICLE_QUANTITY;
   const qtyValid =
-    qty.trim() !== "" && Number(qty) >= 0 && !Number.isNaN(Number(qty));
+    qty.trim() !== "" && Number(qty) >= 0 && !Number.isNaN(Number(qty)) && !qtyTooLarge;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,11 +111,18 @@ export function ArticleFormDialog({
                   id="article-qty"
                   type="number"
                   min="0"
+                  max={MAX_ARTICLE_QUANTITY}
                   step="0.001"
                   inputMode="decimal"
                   value={qty}
                   onChange={(e) => setQty(e.target.value)}
+                  aria-invalid={qtyTooLarge || undefined}
                 />
+                {qtyTooLarge ? (
+                  <p className="text-xs text-destructive" role="alert">
+                    {t("quantityTooLarge", { max: MAX_ARTICLE_QUANTITY })}
+                  </p>
+                ) : null}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="article-unit">{t("unit")}</Label>

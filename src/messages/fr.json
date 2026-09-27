@@ -599,7 +599,9 @@
     "loadListFailed": "Échec du chargement des dépenses.",
     "deleteInvoiceFailed": "Échec de la suppression de la dépense.",
     "errorPaymentMethodInactive": "Ce moyen de paiement a été désactivé. Choisissez-en un autre.",
-    "workerInactive": "{name} (inactif)"
+    "workerInactive": "{name} (inactif)",
+    "errorQuantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
+    "errorUnitPriceTooLarge": "Le prix unitaire ne peut pas dépasser {max, number}."
   },
   "planning": {
     "title": "Planification",
@@ -776,7 +778,8 @@
       "saveWorkerFailed": "Échec de l'enregistrement de l'ouvrier.",
       "workerNameRequired": "Le nom de l'ouvrier est obligatoire.",
       "dailyRatePositive": "Le tarif journalier doit être supérieur à 0.",
-      "reactivateWorkerFailed": "Impossible de réactiver l'ouvrier"
+      "reactivateWorkerFailed": "Impossible de réactiver l'ouvrier",
+      "amountTooLarge": "Le montant ne peut pas dépasser {max, number}."
     },
     "logDayDialog": {
       "title": "Pointer la journée",
@@ -2562,7 +2565,9 @@
       "invalidInput": "Certaines valeurs ne sont pas valides. Vérifiez les champs et réessayez.",
       "rateLimited": "Trop de requêtes. Patientez un instant puis réessayez.",
       "generic": "Une erreur s'est produite. Veuillez réessayer."
-    }
+    },
+    "quantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
+    "priceTooLarge": "Le prix unitaire HT ne peut pas dépasser {max, number}."
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",

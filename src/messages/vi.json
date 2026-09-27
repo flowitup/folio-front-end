@@ -599,7 +599,9 @@
     "loadListFailed": "Không tải được danh sách chi phí.",
     "deleteInvoiceFailed": "Không xóa được chi phí.",
     "errorPaymentMethodInactive": "Phương thức thanh toán này đã bị vô hiệu hóa. Hãy chọn phương thức khác.",
-    "workerInactive": "{name} (không hoạt động)"
+    "workerInactive": "{name} (không hoạt động)",
+    "errorQuantityTooLarge": "Số lượng không được vượt quá {max, number}.",
+    "errorUnitPriceTooLarge": "Đơn giá không được vượt quá {max, number}."
   },
   "planning": {
     "title": "Kế hoạch",
@@ -776,7 +778,8 @@
       "saveWorkerFailed": "Không lưu được thợ.",
       "workerNameRequired": "Bắt buộc nhập tên thợ.",
       "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0.",
-      "reactivateWorkerFailed": "Không thể kích hoạt lại công nhân"
+      "reactivateWorkerFailed": "Không thể kích hoạt lại công nhân",
+      "amountTooLarge": "Số tiền không được vượt quá {max, number}."
     },
     "logDayDialog": {
       "title": "Chấm công ngày",
@@ -2562,7 +2565,9 @@
       "invalidInput": "Một số giá trị không hợp lệ. Hãy kiểm tra các trường và thử lại.",
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
       "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
-    }
+    },
+    "quantityTooLarge": "Số lượng không được vượt quá {max, number}.",
+    "priceTooLarge": "Đơn giá (chưa thuế) không được vượt quá {max, number}."
   },
   "onboarding": {
     "title": "Chào mừng đến với Folio",

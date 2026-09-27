@@ -23,6 +23,7 @@ import {
   deleteWorkerRateChange,
   formatEUR,
 } from "@/lib/api/labor";
+import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 
 interface AdjustRateDialogProps {
   projectId: string;
@@ -121,6 +122,10 @@ export function AdjustRateDialog({
       setError(t("rateChange.errorRatePositive"));
       return;
     }
+    if (rate > MAX_DAILY_AMOUNT) {
+      setError(t("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
+      return;
+    }
     if (!worker) return;
 
     setIsSaving(true);
@@ -203,6 +208,7 @@ export function AdjustRateDialog({
               type="number"
               step="0.01"
               min="0"
+              max={MAX_DAILY_AMOUNT}
               value={newRate}
               onChange={(e) => setNewRate(e.target.value)}
               placeholder="0.00"

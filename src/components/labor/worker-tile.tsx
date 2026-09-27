@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { personColor, personInitials } from "@/lib/utils/person-color";
 import type { ConflictGroup, ShiftType, Worker } from "@/types/labor";
+import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 
 interface WorkerTileProps {
   worker: Worker;
@@ -196,6 +197,7 @@ export function WorkerTile({
                 type="number"
                 step="0.01"
                 min="0"
+                max={MAX_DAILY_AMOUNT}
                 value={amountOverride ?? ""}
                 onChange={(e) => {
                   const v = e.target.value;

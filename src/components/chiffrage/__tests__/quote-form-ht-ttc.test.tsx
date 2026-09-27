@@ -258,3 +258,12 @@ describe("QuoteFormDialog edit keeps the stored price", () => {
     expect(onSubmit.mock.calls[0][0].unit_price_ht).toBe("10.5000");
   });
 });
+
+describe("QuoteFormDialog price cap", () => {
+  it("refuses an HT unit price above the API's cap", async () => {
+    const { onSubmit, user } = await fill("100000000", "ht");
+    await user.click(screen.getByRole("button", { name: "create" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText("priceTooLarge")).toBeDefined();
+  });
+});

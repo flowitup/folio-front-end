@@ -26,6 +26,7 @@ import { htToTtc, money, ttcToHt } from "@/components/chiffrage/format";
 import { StoreSelect } from "@/components/chiffrage/store-select";
 import { SupplierProductPicker } from "@/components/chiffrage/supplier-product-picker";
 import type { ChiffrageQuote, ChiffrageStore } from "@/lib/api/chiffrage";
+import { MAX_QUOTE_UNIT_PRICE } from "@/lib/numeric-bounds";
 
 const TVA_PRESETS = ["20", "10", "5.5"];
 
@@ -115,6 +116,10 @@ export function QuoteFormDialog({
     }
     if (!tvaValid) {
       setError(t("tvaInvalid"));
+      return;
+    }
+    if (htValue > MAX_QUOTE_UNIT_PRICE) {
+      setError(t("priceTooLarge", { max: MAX_QUOTE_UNIT_PRICE }));
       return;
     }
     if (!storeValid) {

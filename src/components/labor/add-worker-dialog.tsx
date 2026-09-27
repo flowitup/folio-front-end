@@ -22,6 +22,7 @@ import type {
 } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
 import { RoleSelectWithCreate } from "./role-select-with-create";
+import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 
 interface AddWorkerDialogProps {
   open: boolean;
@@ -138,6 +139,10 @@ export function AddWorkerDialog({
       setError(t("errors.dailyRatePositive"));
       return;
     }
+    if (rate > MAX_DAILY_AMOUNT) {
+      setError(t("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
+      return;
+    }
     if (!selectedPerson) {
       setError(t("errors.workerNameRequired"));
       return;
@@ -234,6 +239,7 @@ export function AddWorkerDialog({
                 type="number"
                 step="0.01"
                 min="0"
+                max={MAX_DAILY_AMOUNT}
                 value={dailyRate}
                 onChange={(e) => setDailyRate(e.target.value)}
                 placeholder="100.00"

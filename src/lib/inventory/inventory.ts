@@ -6,6 +6,7 @@
  */
 
 import type { InventoryItem, Warehouse } from "@/lib/api/inventory";
+import { MAX_INT_QUANTITY } from "@/lib/numeric-bounds";
 
 /** Canonical category slugs in display order — mirrors the backend vocabulary. */
 export const INVENTORY_CATEGORY_SLUGS = [
@@ -141,5 +142,6 @@ export function parseQuantity(text: string): number | null {
   const trimmed = text.trim();
   if (!/^\d+$/.test(trimmed)) return null;
   const value = Number(trimmed);
-  return Number.isSafeInteger(value) ? value : null;
+  // The API stores counts in an INTEGER column.
+  return Number.isSafeInteger(value) && value <= MAX_INT_QUANTITY ? value : null;
 }

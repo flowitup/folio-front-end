@@ -38,6 +38,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatWeekdayDate } from "@/lib/utils/formatters";
 import type { LaborEntry, ShiftType, UpdateAttendancePayload } from "@/types/labor";
+import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 
 // Radix Select forbids value=""; sentinel maps to null shift_type.
 const SHIFT_NONE = "__none__";
@@ -96,6 +97,10 @@ export function EditAttendanceDialog({
       return;
     }
     if (isEmptyRow || isOverrideWithoutShift) return;
+    if (amountOverride !== "" && parseFloat(amountOverride) > MAX_DAILY_AMOUNT) {
+      setError(t("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -179,6 +184,7 @@ export function EditAttendanceDialog({
                 type="number"
                 step="0.01"
                 min="0"
+                max={MAX_DAILY_AMOUNT}
                 value={amountOverride}
                 onChange={(e) => setAmountOverride(e.target.value)}
                 placeholder={t("overridePlaceholder")}

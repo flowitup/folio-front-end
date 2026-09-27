@@ -64,6 +64,7 @@ import type {
   ShiftType,
   Worker,
 } from "@/types/labor";
+import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 
 function todayKey(): string {
   const d = new Date();
@@ -342,8 +343,13 @@ export function LogDayDialog({
 
   async function handleSave() {
     setError(null);
-    if (!buildBulkPayload(tileStates).length) {
+    const payload = buildBulkPayload(tileStates);
+    if (!payload.length) {
       setError(t("selectAtLeastOne"));
+      return;
+    }
+    if (payload.some((e) => (e.amount_override ?? 0) > MAX_DAILY_AMOUNT)) {
+      setError(tLabor("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
       return;
     }
     const inSelection = conflictsForSelection();

@@ -11,6 +11,7 @@ import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import type { CreateInvoicePayload, Invoice, InvoiceType, SettledVia } from "@/types/invoice";
 import { formatEUR } from "@/lib/utils/formatters";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
 
 interface LineItem {
   description: string;
@@ -275,7 +276,13 @@ export function InvoiceForm({
     for (const item of items) {
       if (!item.description.trim()) return t("errorDescriptionRequired");
       if (item.quantity <= 0) return t("errorQuantityPositive");
+      if (item.quantity > MAX_LINE_QUANTITY) {
+        return t("errorQuantityTooLarge", { max: MAX_LINE_QUANTITY });
+      }
       // No unit_price >= 0 check here — sign is user-controlled for mixed-sign types
+      if (Math.abs(item.unit_price) > MAX_LINE_UNIT_PRICE) {
+        return t("errorUnitPriceTooLarge", { max: MAX_LINE_UNIT_PRICE });
+      }
     }
     return null;
   };
@@ -690,6 +697,7 @@ export function InvoiceForm({
                       <input
                         type="number"
                         min="0.01"
+                        max={MAX_LINE_QUANTITY}
                         step="0.01"
                         value={item.quantity}
                         onChange={(e) =>
@@ -703,6 +711,7 @@ export function InvoiceForm({
                       <input
                         type="number"
                         {...(allowNegativePrice ? {} : { min: "0" })}
+                        max={MAX_LINE_UNIT_PRICE}
                         step="0.01"
                         value={item.unit_price}
                         onChange={(e) =>
@@ -772,6 +781,7 @@ export function InvoiceForm({
                         <input
                           type="number"
                           min="0.01"
+                          max={MAX_LINE_QUANTITY}
                           step="0.01"
                           value={item.quantity}
                           onChange={(e) =>
@@ -786,6 +796,7 @@ export function InvoiceForm({
                         <input
                           type="number"
                           {...(allowNegativePrice ? {} : { min: "0" })}
+                          max={MAX_LINE_UNIT_PRICE}
                           step="0.01"
                           value={item.unit_price}
                           onChange={(e) =>

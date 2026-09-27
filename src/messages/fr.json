@@ -1728,7 +1728,9 @@
       "saving": "Enregistrement…",
       "success": "Document renommé",
       "errorForbidden": "Seul l'importateur ou un administrateur du projet peut renommer ce document",
-      "errorServer": "Échec du renommage"
+      "errorServer": "Échec du renommage",
+      "errorExtension": "L'extension doit rester {extension}",
+      "errorInvalid": "Ce nom ne peut pas être utilisé. Vérifiez-le et réessayez."
     },
     "restricted": {
       "title": "Les documents ne sont pas accessibles avec votre rôle",

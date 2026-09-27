@@ -206,3 +206,26 @@ describe("DocumentsPanel — sorting", () => {
     await waitFor(() => expect(list).toHaveAttribute("data-sort", "size:desc"));
   });
 });
+
+describe("DocumentsPanel — rename errors", () => {
+  it("keeps the rename dialog open and explains a refused name", async () => {
+    vi.mocked(listDocumentsAction).mockResolvedValue({
+      ok: true,
+      data: { items: [makeDoc(1)], total: 1, page: 1, per_page: 25 },
+    });
+    vi.mocked(renameDocumentAction).mockResolvedValue({
+      ok: false,
+      error: "validation",
+      code: "INVALID_FILENAME",
+    });
+    renderPanel([makeDoc(1)]);
+
+    fireEvent.click(screen.getByRole("button", { name: "rename doc-1.pdf" }));
+    fireEvent.click(screen.getByRole("button", { name: "confirm rename" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("documents.rename.errorInvalid")
+    );
+    expect(screen.getByTestId("rename-dialog")).toBeInTheDocument();
+  });
+});

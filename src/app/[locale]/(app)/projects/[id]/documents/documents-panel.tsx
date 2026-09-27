@@ -273,6 +273,9 @@ export function DocumentsPanel({
       } else if (result.error === "forbidden") {
         toast.error(t("rename.errorForbidden"));
         setRenameDoc(null);
+      } else if (result.error === "validation") {
+        // Keep the dialog open with what was typed so it can be corrected.
+        toast.error(t("rename.errorInvalid"));
       } else {
         toast.error(t("rename.errorServer"));
         setRenameDoc(null);

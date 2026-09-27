@@ -1728,7 +1728,9 @@
       "saving": "Saving…",
       "success": "Document renamed",
       "errorForbidden": "Only the uploader or a project admin can rename this document",
-      "errorServer": "Failed to rename"
+      "errorServer": "Failed to rename",
+      "errorExtension": "The extension must remain {extension}",
+      "errorInvalid": "This name can't be used. Check it and try again."
     },
     "restricted": {
       "title": "Documents are not available for your role",

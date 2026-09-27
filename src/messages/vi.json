@@ -1728,7 +1728,9 @@
       "saving": "Đang lưu…",
       "success": "Đã đổi tên tài liệu",
       "errorForbidden": "Chỉ người tải lên hoặc quản trị viên dự án mới có thể đổi tên tài liệu này",
-      "errorServer": "Đổi tên thất bại"
+      "errorServer": "Đổi tên thất bại",
+      "errorExtension": "Phần mở rộng phải giữ nguyên là {extension}",
+      "errorInvalid": "Không thể dùng tên này. Hãy kiểm tra và thử lại."
     },
     "restricted": {
       "title": "Vai trò của bạn không truy cập được tài liệu",

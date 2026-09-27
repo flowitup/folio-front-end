@@ -15,6 +15,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { ProjectDocument } from "@/lib/api/project-documents";
 
+/** The extension the backend compares, like Python's os.path.splitext (a leading dot is not one). */
+export function fileExtension(name: string): string {
+  const i = name.lastIndexOf(".");
+  return i > 0 ? name.slice(i).toLowerCase() : "";
+}
+
 type Props = {
   doc: ProjectDocument | null;
   onCancel: () => void;
@@ -30,13 +36,15 @@ export function DocumentsRenameDialog({ doc, onCancel, onConfirm }: Props) {
     if (doc) setValue(doc.filename);
   }, [doc]);
 
-  const extension = doc ? doc.filename.slice(doc.filename.lastIndexOf(".")) : "";
+  const extension = doc ? fileExtension(doc.filename) : "";
   const unchanged = value.trim() === doc?.filename;
   const empty = !value.trim();
+  // The backend refuses a new extension; say so before the user saves.
+  const extensionChanged = !empty && fileExtension(value.trim()) !== extension;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (empty || unchanged || loading) return;
+    if (empty || unchanged || extensionChanged || loading) return;
     setLoading(true);
     try {
       await onConfirm(value.trim());
@@ -63,13 +71,20 @@ export function DocumentsRenameDialog({ doc, onCancel, onConfirm }: Props) {
               onChange={(e) => setValue(e.target.value)}
               disabled={loading}
               autoFocus
+              aria-invalid={extensionChanged || undefined}
+              aria-describedby={extensionChanged ? "rename-extension-error" : undefined}
             />
+            {extensionChanged && (
+              <p id="rename-extension-error" role="alert" className="mt-2 text-sm text-destructive">
+                {t("errorExtension", { extension })}
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={loading || empty || unchanged}>
+            <Button type="submit" disabled={loading || empty || unchanged || extensionChanged}>
               {loading ? t("saving") : t("save")}
             </Button>
           </DialogFooter>

@@ -631,6 +631,15 @@
       "medium": "Medium",
       "high": "High",
       "urgent": "Urgent"
+    },
+    "saved": "Task saved",
+    "errors": {
+      "forbidden": "You don’t have permission to do that on this project.",
+      "notFound": "This task no longer exists.",
+      "invalid": "Some details were not accepted. Check the title (255 characters at most) and try again.",
+      "create": "Could not create the task. Please try again.",
+      "save": "Could not save the task. Please try again.",
+      "delete": "Could not delete the task. Please try again."
     }
   },
   "labor": {

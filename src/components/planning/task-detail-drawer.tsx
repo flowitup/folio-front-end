@@ -6,7 +6,9 @@ import { useTranslations } from "next-intl";
 import { X, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskForm } from "@/components/planning/task-form";
+import { toast } from "sonner";
 import { fetchTask, updateTask, deleteTask } from "@/lib/api/task-api";
+import { taskErrorKey } from "@/lib/planning/task-error";
 import type { Task, UpdateTaskPayload } from "@/types/task";
 
 interface TaskDetailDrawerProps {
@@ -16,6 +18,9 @@ interface TaskDetailDrawerProps {
   seed?: Task | null;
   onClose: () => void;
   onMutated?: () => void;
+  /** Whether the caller may delete tasks here (the backend requires project
+      write access); hides the trash button otherwise. */
+  canDelete?: boolean;
 }
 
 const noopSubscribe = () => () => {};
@@ -29,7 +34,13 @@ const noopSubscribe = () => () => {};
  * the containing block of fixed children, so on phones the drawer started
  * under the topbar, kept a gutter and was overlapped by the bottom nav.
  */
-export function TaskDetailDrawer({ taskId, seed, onClose, onMutated }: TaskDetailDrawerProps) {
+export function TaskDetailDrawer({
+  taskId,
+  seed,
+  onClose,
+  onMutated,
+  canDelete = false,
+}: TaskDetailDrawerProps) {
   const t = useTranslations("planning");
   const [task, setTask] = useState<Task | null>(seed ?? null);
   const [loading, setLoading] = useState(false);
@@ -76,6 +87,10 @@ export function TaskDetailDrawer({ taskId, seed, onClose, onMutated }: TaskDetai
       const updated = await updateTask(task.id, payload);
       setTask(updated);
       onMutated?.();
+      toast.success(t("saved"));
+    } catch (err) {
+      // The form keeps the user's edits; say why the save failed.
+      toast.error(t(`errors.${taskErrorKey(err, "save")}`));
     } finally {
       setSaving(false);
     }
@@ -84,7 +99,12 @@ export function TaskDetailDrawer({ taskId, seed, onClose, onMutated }: TaskDetai
   const handleDelete = async () => {
     if (!task) return;
     if (!confirm(t("deleteConfirm"))) return;
-    await deleteTask(task.id);
+    try {
+      await deleteTask(task.id);
+    } catch (err) {
+      toast.error(t(`errors.${taskErrorKey(err, "delete")}`));
+      return;
+    }
     onMutated?.();
     onClose();
   };
@@ -111,11 +131,12 @@ export function TaskDetailDrawer({ taskId, seed, onClose, onMutated }: TaskDetai
             {task?.title ?? t("taskDetail")}
           </h2>
           <div className="flex items-center gap-1">
-            {task && (
+            {task && canDelete && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleDelete}
+                aria-label={t("delete")}
                 className="text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />

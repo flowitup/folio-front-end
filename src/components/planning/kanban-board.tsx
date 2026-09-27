@@ -26,6 +26,9 @@ import { fetchTasks, moveTask } from "@/lib/api/task-api";
 import { weekOffsetFromParam } from "@/lib/planning/week";
 import { pointerFirstCollision } from "@/lib/planning/collision";
 import { BOARD_COLUMNS } from "@/types/task";
+import { useAuth } from "@/context/AuthContext";
+import { useProject } from "@/context/ProjectContext";
+import { can } from "@/lib/auth/permissions";
 import type { Task, TaskStatus } from "@/types/task";
 
 type PlanningView = "board" | "week";
@@ -61,6 +64,15 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const [error, setError] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [createState, setCreateState] = useState<CreateState | null>(null);
+
+  // Deleting a task needs project write access (members may edit, not delete).
+  const { user } = useAuth();
+  const { selectedProject } = useProject();
+  const canDeleteTasks = can(
+    "project:update",
+    user?.permissions,
+    selectedProject?.id === projectId ? selectedProject.my_permissions : undefined
+  );
 
   const sensors = useSensors(
     // Slight activation distance prevents click-without-drag from being treated
@@ -303,6 +315,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
         seed={tasks.find((t) => t.id === selectedTaskId) ?? null}
         onClose={() => setSelected(null)}
         onMutated={silentReload}
+        canDelete={canDeleteTasks}
       />
 
       {/* Create dialog — shared by both views */}

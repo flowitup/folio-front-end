@@ -631,6 +631,15 @@
       "medium": "Vừa",
       "high": "Cao",
       "urgent": "Khẩn cấp"
+    },
+    "saved": "Đã lưu công việc",
+    "errors": {
+      "forbidden": "Bạn không có quyền thực hiện thao tác này trong dự án.",
+      "notFound": "Công việc này không còn tồn tại.",
+      "invalid": "Một số thông tin không được chấp nhận. Kiểm tra tiêu đề (tối đa 255 ký tự) rồi thử lại.",
+      "create": "Không thể tạo công việc. Vui lòng thử lại.",
+      "save": "Không thể lưu công việc. Vui lòng thử lại.",
+      "delete": "Không thể xóa công việc. Vui lòng thử lại."
     }
   },
   "labor": {

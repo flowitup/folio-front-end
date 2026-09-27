@@ -631,6 +631,15 @@
       "medium": "Moyenne",
       "high": "Haute",
       "urgent": "Urgente"
+    },
+    "saved": "Tâche enregistrée",
+    "errors": {
+      "forbidden": "Vous n’avez pas l’autorisation de faire cela sur ce projet.",
+      "notFound": "Cette tâche n’existe plus.",
+      "invalid": "Certaines informations n’ont pas été acceptées. Vérifiez le titre (255 caractères maximum) et réessayez.",
+      "create": "Impossible de créer la tâche. Veuillez réessayer.",
+      "save": "Impossible d’enregistrer la tâche. Veuillez réessayer.",
+      "delete": "Impossible de supprimer la tâche. Veuillez réessayer."
     }
   },
   "labor": {

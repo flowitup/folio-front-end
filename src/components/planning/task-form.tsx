@@ -77,6 +77,7 @@ export function TaskForm({ initial, defaultDueDate, isSaving, onSubmit, onCancel
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t("titlePlaceholder")}
+          maxLength={255}
         />
       </div>
 

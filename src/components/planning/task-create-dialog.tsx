@@ -9,7 +9,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { TaskForm } from "@/components/planning/task-form";
+import { toast } from "sonner";
 import { createTask } from "@/lib/api/task-api";
+import { taskErrorKey } from "@/lib/planning/task-error";
 import type { CreateTaskPayload, TaskStatus } from "@/types/task";
 
 interface TaskCreateDialogProps {
@@ -45,6 +47,9 @@ export function TaskCreateDialog({
       await createTask(projectId, { ...payload, status: defaultStatus });
       onCreated();
       onOpenChange(false);
+    } catch (err) {
+      // Keep the dialog open with what was typed, and say why.
+      toast.error(t(`errors.${taskErrorKey(err, "create")}`));
     } finally {
       setSaving(false);
     }

@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/lib/api/http";
+import { deleteTask, updateTask } from "@/lib/api/task-api";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import type { Task } from "@/types/task";
@@ -10,6 +13,9 @@ vi.mock("@/lib/api/task-api", () => ({
   deleteTask: vi.fn(),
   moveTask: vi.fn(),
 }));
+
+const { mockToast } = vi.hoisted(() => ({ mockToast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: mockToast }));
 
 import { TaskDetailDrawer } from "../task-detail-drawer";
 
@@ -62,5 +68,27 @@ describe("TaskDetailDrawer", () => {
     event.preventDefault();
     window.dispatchEvent(event);
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("hides Delete from a caller who may not delete tasks", () => {
+    renderDrawer();
+    expect(screen.queryByRole("button", { name: en.planning.delete })).toBeNull();
+  });
+
+  it("keeps the drawer open and says why when a delete is refused", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.mocked(deleteTask).mockRejectedValue(new ApiError("HTTP 403", 403));
+    const onClose = renderDrawer(vi.fn(), { canDelete: true });
+    await userEvent.click(screen.getByRole("button", { name: en.planning.delete }));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(en.planning.errors.forbidden));
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("reports a failed save instead of swallowing it", async () => {
+    vi.mocked(updateTask).mockRejectedValue(new ApiError("HTTP 500", 500));
+    renderDrawer();
+    await userEvent.click(screen.getByRole("button", { name: en.planning.save }));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(en.planning.errors.save));
+    expect(screen.getByLabelText(en.planning.titleLabel)).toHaveValue("Pour slab");
   });
 });

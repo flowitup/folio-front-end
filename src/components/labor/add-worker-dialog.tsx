@@ -119,7 +119,8 @@ export function AddWorkerDialog({
       try {
         await onSave({
           name: name.trim(),
-          phone: phone.trim() || undefined,
+          // "" clears the phone (the API reads an absent field as unchanged).
+          phone: phone.trim(),
           role_id: roleId,
         });
         handleClose();

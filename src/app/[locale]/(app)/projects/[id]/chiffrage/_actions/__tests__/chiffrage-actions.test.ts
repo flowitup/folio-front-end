@@ -28,6 +28,9 @@ const api = {
   updateQuote: vi.fn(),
   deleteQuote: vi.fn(),
   selectQuote: vi.fn(),
+  reorderRoom: vi.fn(),
+  updateStore: vi.fn(),
+  deleteStore: vi.fn(),
 };
 vi.mock("@/lib/api/chiffrage", () => api);
 
@@ -36,7 +39,10 @@ const {
   createArticleAction,
   createUnitAction,
   reorderArticleAction,
+  reorderRoomAction,
   selectQuoteAction,
+  updateStoreAction,
+  deleteStoreAction,
 } = await import("../chiffrage-actions");
 
 const PROJECT = "proj-1";
@@ -98,5 +104,42 @@ describe("chiffrage actions", () => {
   it("never throws, so an optimistic reorder can always revert", async () => {
     api.reorderArticle.mockRejectedValue(new Error("network down"));
     await expect(reorderArticleAction(PROJECT, "a1", {})).resolves.toMatchObject({ ok: false });
+  });
+});
+
+describe("room and shop actions", () => {
+  it("forwards a room's new neighbours to the reorder endpoint", async () => {
+    api.reorderRoom.mockResolvedValue({ id: "r2", name: "Cuisine", position: 500 });
+    const res = await reorderRoomAction(PROJECT, "r2", { before_id: null, after_id: "r1" });
+
+    expect(api.reorderRoom).toHaveBeenCalledWith(PROJECT, "r2", { before_id: null, after_id: "r1" });
+    expect(res).toEqual({ ok: true, data: { id: "r2", name: "Cuisine", position: 500 } });
+  });
+
+  it("never throws on a failed room move, so the page can put the order back", async () => {
+    api.reorderRoom.mockRejectedValue(Object.assign(new Error("boom"), { status: 404, body: null }));
+    const res = await reorderRoomAction(PROJECT, "r2", { before_id: "r1", after_id: null });
+    expect(res).toEqual({ ok: false, error: "This item no longer exists." });
+  });
+
+  it("sends a shop's cleared address as null so the backend clears it", async () => {
+    api.updateStore.mockResolvedValue({ id: "s1" });
+    await updateStoreAction(PROJECT, "s1", { name: "Point P", address: null, website_url: null });
+    expect(api.updateStore).toHaveBeenCalledWith(PROJECT, "s1", {
+      name: "Point P",
+      address: null,
+      website_url: null,
+    });
+  });
+
+  it("surfaces the backend's reason when a shop cannot be deleted", async () => {
+    api.deleteStore.mockRejectedValue(
+      Object.assign(new Error("Failed to delete store (HTTP 403)"), {
+        status: 403,
+        body: null,
+      })
+    );
+    const res = await deleteStoreAction(PROJECT, "s1");
+    expect(res).toEqual({ ok: false, error: "You do not have permission to modify this chiffrage." });
   });
 });

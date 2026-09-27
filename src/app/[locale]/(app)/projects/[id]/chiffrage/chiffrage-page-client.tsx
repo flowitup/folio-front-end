@@ -7,6 +7,10 @@
  * Server truth is authoritative for every total. Reordering applies an
  * optimistic local swap for responsiveness, then re-fetches; on failure the
  * previous order is restored rather than left silently diverged from the DB.
+ *
+ * Rooms and shops are project-level lists managed from their own dialogs:
+ * every poste groups its items by the room order, and every price points at
+ * one of the shops.
  */
 
 import { useCallback, useMemo, useState } from "react";
@@ -24,14 +28,12 @@ import {
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Plus } from "lucide-react";
+import { DoorOpen, Plus, Store } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { ArticleRow, DragHandle } from "@/components/chiffrage/article-row";
+import { ArticleRow } from "@/components/chiffrage/article-row";
 import { ArticleFormDialog } from "@/components/chiffrage/article-form-dialog";
 import { ChiffrageTotals } from "@/components/chiffrage/chiffrage-totals";
 import { PosteCard } from "@/components/chiffrage/poste-card";
@@ -39,6 +41,11 @@ import { RoomHeading } from "@/components/chiffrage/room-heading";
 import { ArticleImageDialog } from "@/components/chiffrage/article-image-dialog";
 import { SectionCompareDialog } from "@/components/chiffrage/section-compare-dialog";
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
+import { RoomsDialog } from "@/components/chiffrage/rooms-dialog";
+import { SortableItem } from "@/components/chiffrage/sortable-item";
+import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
+import { StoresDialog } from "@/components/chiffrage/stores-dialog";
+import { neighboursAfterMove, planMove } from "@/components/chiffrage/reorder";
 import {
   QuoteFormDialog,
   type QuoteFormValues,
@@ -53,14 +60,18 @@ import {
   createUnitAction,
   deleteArticleAction,
   deletePosteAction,
+  deleteRoomAction,
   deleteStoreAction,
   deleteQuoteAction,
   getChiffrageAction,
   reorderArticleAction,
   reorderPosteAction,
+  reorderRoomAction,
   selectQuoteAction,
   updateArticleAction,
   updatePosteAction,
+  updateRoomAction,
+  updateStoreAction,
   setArticleImageFromUrlAction,
   uploadArticleImageAction,
   updateQuoteAction,
@@ -82,54 +93,6 @@ interface Props {
   companyId: string | null;
   initialTree: ChiffrageTree;
   initialUnits: ChiffrageUnit[];
-}
-
-/** Neighbours of the slot an item was dropped into, in the post-move list. */
-function neighboursAfterMove<T extends { id: string }>(
-  items: T[],
-  activeId: string,
-  overId: string,
-): { before_id: string | null; after_id: string | null } | null {
-  const from = items.findIndex((i) => i.id === activeId);
-  const to = items.findIndex((i) => i.id === overId);
-  if (from === -1 || to === -1 || from === to) return null;
-  const reordered = [...items];
-  const [moved] = reordered.splice(from, 1);
-  reordered.splice(to, 0, moved);
-  const idx = reordered.findIndex((i) => i.id === activeId);
-  return {
-    before_id: idx > 0 ? reordered[idx - 1].id : null,
-    after_id: idx < reordered.length - 1 ? reordered[idx + 1].id : null,
-  };
-}
-
-function SortableItem({
-  id,
-  children,
-}: {
-  id: string;
-  children: (handle: React.ReactNode) => React.ReactNode;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
-  return (
-    <div
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.6 : 1,
-      }}
-    >
-      {children(<DragHandle {...attributes} {...listeners} />)}
-    </div>
-  );
 }
 
 export function ChiffragePageClient({
@@ -177,6 +140,12 @@ export function ChiffragePageClient({
     articleId: string | null;
     quote: ChiffrageQuote | null;
   }>({ open: false, articleId: null, quote: null });
+  const [roomsOpen, setRoomsOpen] = useState(false);
+  const [storesOpen, setStoresOpen] = useState(false);
+  const [storeForm, setStoreForm] = useState<{
+    open: boolean;
+    store: ChiffrageStore | null;
+  }>({ open: false, store: null });
 
   // dnd-kit's distance constraint is what keeps a click on a row button from
   // being swallowed as the start of a drag.
@@ -281,6 +250,26 @@ export function ChiffragePageClient({
     return res.data;
   };
 
+  /**
+   * Move a room into the slot another one holds. Optimistic, so the room
+   * headings of every poste follow at once; on failure only the room order is
+   * put back, leaving anything else that changed meanwhile alone.
+   */
+  const reorderRoom = async (roomId: string, overId: string) => {
+    const plan = planMove(tree.rooms, roomId, overId);
+    if (!plan) return true;
+    const previous = tree.rooms;
+    setTree((prev) => ({ ...prev, rooms: plan.items }));
+    const res = await reorderRoomAction(projectId, roomId, plan.move);
+    if (!res.ok) {
+      setTree((prev) => ({ ...prev, rooms: previous }));
+      toast.error(res.error);
+      return false;
+    }
+    await refresh();
+    return true;
+  };
+
   const onDragEndPostes = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -353,13 +342,31 @@ export function ChiffragePageClient({
           <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         {canManage ? (
-          <Button
-            type="button"
-            onClick={() => setPosteDialog({ open: true, poste: null })}
-          >
-            <Plus className="mr-1 h-4 w-4" />
-            {t("newPoste")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRoomsOpen(true)}
+            >
+              <DoorOpen className="mr-1 h-4 w-4" />
+              {t("rooms")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStoresOpen(true)}
+            >
+              <Store className="mr-1 h-4 w-4" />
+              {t("stores")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setPosteDialog({ open: true, poste: null })}
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              {t("newPoste")}
+            </Button>
+          </div>
         ) : null}
       </div>
 
@@ -534,6 +541,52 @@ export function ChiffragePageClient({
           onOpenChange={(open) =>
             setCompareDialog((prev) => ({ ...prev, open }))
           }
+        />
+      ) : null}
+
+      {roomsOpen ? (
+        <RoomsDialog
+          open
+          rooms={tree.rooms}
+          onOpenChange={setRoomsOpen}
+          onCreate={async (name) => (await addRoom(name)) !== null}
+          onRename={(room, name) =>
+            mutate(() => updateRoomAction(projectId, room.id, name))
+          }
+          onDelete={(room) =>
+            mutate(() => deleteRoomAction(projectId, room.id))
+          }
+          onReorder={reorderRoom}
+        />
+      ) : null}
+
+      {storesOpen ? (
+        <StoresDialog
+          open
+          stores={tree.stores}
+          onOpenChange={setStoresOpen}
+          onAdd={() => setStoreForm({ open: true, store: null })}
+          onEdit={(store) => setStoreForm({ open: true, store })}
+          onDelete={(store) =>
+            mutate(() => deleteStoreAction(projectId, store.id))
+          }
+        />
+      ) : null}
+
+      {storeForm.open ? (
+        <StoreFormDialog
+          open
+          store={storeForm.store}
+          submitting={submitting}
+          onOpenChange={(open) => setStoreForm((s) => ({ ...s, open }))}
+          onSubmit={async (values) => {
+            const ok = await mutate(() =>
+              storeForm.store
+                ? updateStoreAction(projectId, storeForm.store.id, values)
+                : createStoreAction(projectId, values),
+            );
+            if (ok) setStoreForm({ open: false, store: null });
+          }}
         />
       ) : null}
 

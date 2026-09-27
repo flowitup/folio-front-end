@@ -28,6 +28,7 @@ import {
   listUnits,
   reorderArticle,
   reorderPoste,
+  reorderRoom,
   selectQuote,
   setArticleImageFromUrl,
   uploadArticleImage,
@@ -146,6 +147,14 @@ export async function updateRoomAction(
 
 export async function deleteRoomAction(projectId: string, roomId: string): Promise<Result<void>> {
   return run(projectId, () => deleteRoom(projectId, roomId));
+}
+
+export async function reorderRoomAction(
+  projectId: string,
+  roomId: string,
+  payload: ReorderPayload
+): Promise<Result<ChiffrageRoom>> {
+  return run(projectId, () => reorderRoom(projectId, roomId, payload));
 }
 
 // --- article image ---------------------------------------------------------

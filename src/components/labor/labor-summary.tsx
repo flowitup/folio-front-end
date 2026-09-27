@@ -18,6 +18,7 @@ import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
 import { findMonthBucket } from "@/components/labor/labor-payments-tab-state";
 import { PaidSplitCaption } from "@/components/labor/paid-split-caption";
+import { monthSettlement } from "@/lib/labor/month-settlement";
 
 interface LaborSummaryProps {
   projectId: string;
@@ -519,13 +520,15 @@ export function LaborSummary({
                     // total this table displays; 1-cent epsilon absorbs rounding.
                     const now = new Date();
                     const isPastMonth = row.year < now.getFullYear() || (row.year === now.getFullYear() && row.month < now.getMonth() + 1);
-                    const monthShortfall = row.total_cost - monthPaid;
+                    // Settled worker by worker: one worker's overpayment must
+                    // not hide another's debt (so both stamps can show).
+                    const { shortfall: monthShortfall, overpay: monthOverpay } =
+                      monthSettlement(row.workers, bucket);
                     const showUnpaidWarning = isPastMonth && monthShortfall > 0.01;
-                    // Warn on ANY month whose recorded payments exceed its
-                    // charges — unlike the unpaid case, overpaying is
+                    // Warn on ANY month where a worker was paid more than
+                    // their charges — unlike the unpaid case, overpaying is
                     // anomalous even mid-month, so the current month is not
                     // excluded. Same 1-cent epsilon as the shortfall check.
-                    const monthOverpay = monthPaid - row.total_cost;
                     const showOverpaidWarning = monthOverpay > 0.01;
                     const rows: React.ReactNode[] = [
                       <tr

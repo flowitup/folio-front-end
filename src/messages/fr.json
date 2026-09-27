@@ -1129,11 +1129,6 @@
     },
     "markDone": "Marquer comme terminé",
     "markOpen": "Rouvrir",
-    "addedLabel": "Ajouté",
-    "relative": {
-      "today": "Aujourd'hui",
-      "yesterday": "Hier"
-    },
     "actions": {
       "save": "Enregistrer",
       "cancel": "Annuler",
@@ -1160,7 +1155,10 @@
       "notFound": "Cette note n'existe plus.",
       "rateLimited": "Trop de requêtes. Réessayez dans un moment.",
       "generic": "Une erreur est survenue. Réessayez."
-    }
+    },
+    "addedOn": "Ajoutée le {date}",
+    "addedToday": "Ajoutée aujourd'hui",
+    "addedYesterday": "Ajoutée hier"
   },
   "notifications": {
     "aria": {

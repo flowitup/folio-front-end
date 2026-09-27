@@ -1129,11 +1129,6 @@
     },
     "markDone": "Đánh dấu hoàn thành",
     "markOpen": "Mở lại",
-    "addedLabel": "Đã thêm",
-    "relative": {
-      "today": "Hôm nay",
-      "yesterday": "Hôm qua"
-    },
     "actions": {
       "save": "Lưu",
       "cancel": "Hủy",
@@ -1160,7 +1155,10 @@
       "notFound": "Ghi chú này không còn tồn tại.",
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
       "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
-    }
+    },
+    "addedOn": "Đã thêm ngày {date}",
+    "addedToday": "Đã thêm hôm nay",
+    "addedYesterday": "Đã thêm hôm qua"
   },
   "notifications": {
     "aria": {

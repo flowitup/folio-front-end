@@ -1129,11 +1129,6 @@
     },
     "markDone": "Mark as done",
     "markOpen": "Reopen",
-    "addedLabel": "Added",
-    "relative": {
-      "today": "Today",
-      "yesterday": "Yesterday"
-    },
     "actions": {
       "save": "Save",
       "cancel": "Cancel",
@@ -1160,7 +1155,10 @@
       "notFound": "This note doesn’t exist anymore.",
       "rateLimited": "Too many requests. Try again in a moment.",
       "generic": "Something went wrong. Try again."
-    }
+    },
+    "addedOn": "Added {date}",
+    "addedToday": "Added today",
+    "addedYesterday": "Added yesterday"
   },
   "notifications": {
     "aria": {

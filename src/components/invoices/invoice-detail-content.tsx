@@ -18,6 +18,7 @@ import {
   refundStatusI18nKey,
 } from "@/lib/invoices/refundable-status-display";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
+import { formatQuantity, formatVatRate, invoiceTotals } from "@/lib/invoices/invoice-totals";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import { InvoiceHighlightPicker } from "@/components/invoices/invoice-highlight-picker";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
@@ -397,14 +398,8 @@ export function InvoiceDetailContent({
               {(() => {
                 // Show VAT column only when at least one item carries a non-zero rate.
                 const hasVat = invoice.items.some((it) => (it.vat_rate ?? 0) > 0);
-                const totalHt = invoice.items.reduce(
-                  (s, it) => s + it.quantity * it.unit_price,
-                  0
-                );
-                const totalVat = invoice.items.reduce(
-                  (s, it) => s + it.quantity * it.unit_price * ((it.vat_rate ?? 0) / 100),
-                  0
-                );
+                // Exact HT (half-up to the cent) and VAT = TTC − HT, as the API rounds.
+                const { totalHt, totalVat } = invoiceTotals(invoice.items, invoice.total_amount);
 
                 return (
                   <>
@@ -424,9 +419,9 @@ export function InvoiceDetailContent({
                               className="num text-[12px]"
                               style={{ color: "var(--muted)" }}
                             >
-                              {item.quantity} × {formatEUR(item.unit_price)}
+                              {formatQuantity(item.quantity, locale)} × {formatEUR(item.unit_price)}
                               {hasVat && (item.vat_rate ?? 0) > 0 && (
-                                <span className="ml-1">({(item.vat_rate ?? 0)}%)</span>
+                                <span className="ml-1">({formatVatRate(item.vat_rate ?? 0, locale)})</span>
                               )}
                             </span>
                             <span className="num text-[13px] font-medium">
@@ -506,11 +501,11 @@ export function InvoiceDetailContent({
                           {invoice.items.map((item, i) => (
                             <tr key={i} className="border-b last:border-0">
                               <td className="px-3 py-1.5">{item.description}</td>
-                              <td className="px-3 py-1.5 text-right">{item.quantity}</td>
+                              <td className="px-3 py-1.5 text-right">{formatQuantity(item.quantity, locale)}</td>
                               <td className="px-3 py-1.5 text-right">{formatEUR(item.unit_price)}</td>
                               {hasVat && (
                                 <td className="px-3 py-1.5 text-right">
-                                  {(item.vat_rate ?? 0) > 0 ? `${item.vat_rate}%` : "—"}
+                                  {(item.vat_rate ?? 0) > 0 ? formatVatRate(item.vat_rate ?? 0, locale) : "—"}
                                 </td>
                               )}
                               <td className="px-3 py-1.5 text-right font-medium">

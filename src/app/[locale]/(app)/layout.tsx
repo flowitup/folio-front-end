@@ -21,12 +21,11 @@ export default async function AppLayout({
   if (!session) {
     // Stale cookie cleanup is deliberately NOT done here: Next.js 16 forbids
     // cookies().delete/set in Server Components (only Server Actions and
-    // Route Handlers may mutate cookies). The /login page is outside this
-    // (app) route group, so there's no redirect loop — the stale cookie just
-    // gets overwritten on the next successful login (BE sets a fresh
-    // access_token_cookie in its login response). If we ever need explicit
-    // server-side cookie clearing we can add a Route Handler the layout
-    // redirects through.
+    // Route Handlers may mutate cookies). There's no redirect loop: the proxy
+    // never sends /login back here on a cookie alone, and the login page only
+    // redirects once the API accepts the session. The stale cookie just gets
+    // overwritten on the next successful login. An expired access token has
+    // already been renewed by the proxy from the refresh cookie by now.
     redirect(`/${locale}/login`);
   }
 

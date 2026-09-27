@@ -34,9 +34,18 @@ export function OverviewAgenda({ groups, planningHref, loading = false }: Overvi
   const t = useTranslations("dashboard");
   const locale = useLocale();
   const dueFmt = new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short" });
+  // An overdue date from another year needs its year to be unambiguous.
+  const dueFmtYear = new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const thisYear = new Date().getFullYear();
 
   const row = (task: Task, isOverdue: boolean) => {
-    const meta = task.due_date ? dueFmt.format(parseDateOnly(task.due_date)) : "";
+    const due = task.due_date ? parseDateOnly(task.due_date) : null;
+    const meta = due ? (due.getFullYear() === thisYear ? dueFmt : dueFmtYear).format(due) : "";
     const content = (
       <div className="flex items-center gap-2.5 py-[7px]">
         <span
@@ -54,7 +63,11 @@ export function OverviewAgenda({ groups, planningHref, loading = false }: Overvi
       </div>
     );
     return planningHref ? (
-      <Link key={task.id} href={planningHref} className="block hover:opacity-80">
+      <Link
+        key={task.id}
+        href={`${planningHref}?task=${encodeURIComponent(task.id)}`}
+        className="block hover:opacity-80"
+      >
         {content}
       </Link>
     ) : (

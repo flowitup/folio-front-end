@@ -282,6 +282,21 @@ describe("DashboardPage — money panel figures", () => {
 describe("DashboardPage — agenda grouping", () => {
   const project: Partial<Project> = { id: "p-1", name: "Villa" };
 
+  it("opens the clicked task and dates an overdue task from another year with its year", async () => {
+    mockUseProject.mockReturnValue({ selectedProject: project });
+    mockFetchTasks.mockResolvedValue([
+      mkTask({ id: "old-1", title: "Last year thing", due_date: "2025-01-07" }),
+      mkTask({ id: "now-1", title: "Friday thing", due_date: "2026-07-17" }),
+    ]);
+    renderDashboard();
+
+    const oldRow = (await screen.findByText("Last year thing")).closest("a")!;
+    expect(oldRow).toHaveAttribute("href", "/en/projects/p-1/planning?task=old-1");
+    expect(oldRow).toHaveTextContent("2025");
+    const nowRow = screen.getByText("Friday thing").closest("a")!;
+    expect(nowRow).not.toHaveTextContent("2026");
+  });
+
   it("groups non-done tasks into Overdue / Today / This week and excludes done/undated tasks", async () => {
     mockUseProject.mockReturnValue({ selectedProject: project });
     mockFetchTasks.mockResolvedValue([

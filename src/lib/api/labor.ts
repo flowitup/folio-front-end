@@ -46,9 +46,22 @@ function buildUrl(basePath: string, params?: Record<string, string | undefined>)
 }
 
 // Worker API
-export async function fetchWorkers(projectId: string): Promise<Worker[]> {
-  const data = await api.get<WorkerListResponse>(`/projects/${projectId}/workers`);
+/**
+ * A project's workers: the active ones, or with `includeInactive` the
+ * deactivated ones too (they can still be owed pay, be exported, be linked
+ * to a payment or be reactivated).
+ */
+export async function fetchWorkers(
+  projectId: string,
+  options?: { includeInactive?: boolean }
+): Promise<Worker[]> {
+  const query = options?.includeInactive ? "?include_inactive=true" : "";
+  const data = await api.get<WorkerListResponse>(`/projects/${projectId}/workers${query}`);
   return data.workers;
+}
+
+export async function reactivateWorker(projectId: string, workerId: string): Promise<Worker> {
+  return updateWorker(projectId, workerId, { is_active: true });
 }
 
 export async function createWorker(projectId: string, payload: CreateWorkerPayload): Promise<Worker> {

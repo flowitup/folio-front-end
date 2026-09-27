@@ -100,15 +100,16 @@ describe("WorkerList — Download button visibility", () => {
     expect(downloadBtns).toHaveLength(1);
   });
 
-  it("renders no Download button for a single inactive worker", () => {
+  // A deactivated worker can still be owed pay, so their export stays available.
+  it("renders a Download button for a single inactive worker", () => {
     const workers = [makeWorker({ id: "w1", name: "Bob", is_active: false })];
     renderList(workers);
 
     const downloadBtns = screen.queryAllByRole("button", { name: "exportWorker" });
-    expect(downloadBtns).toHaveLength(0);
+    expect(downloadBtns).toHaveLength(1);
   });
 
-  it("renders Download button for each active worker and none for inactive", () => {
+  it("renders a Download button for every worker, active or not", () => {
     const workers = [
       makeWorker({ id: "w1", name: "Alice", is_active: true }),
       makeWorker({ id: "w2", name: "Bob", is_active: false }),
@@ -117,19 +118,7 @@ describe("WorkerList — Download button visibility", () => {
     renderList(workers);
 
     const downloadBtns = screen.getAllByRole("button", { name: "exportWorker" });
-    // Only 2 active workers → 2 Download buttons
-    expect(downloadBtns).toHaveLength(2);
-  });
-
-  it("renders no Download buttons when all workers are inactive", () => {
-    const workers = [
-      makeWorker({ id: "w1", name: "Alice", is_active: false }),
-      makeWorker({ id: "w2", name: "Bob", is_active: false }),
-    ];
-    renderList(workers);
-
-    const downloadBtns = screen.queryAllByRole("button", { name: "exportWorker" });
-    expect(downloadBtns).toHaveLength(0);
+    expect(downloadBtns).toHaveLength(3);
   });
 
   it("renders no Download buttons when worker list is empty", () => {
@@ -208,25 +197,30 @@ describe("WorkerList — clicking Download opens dialog with correct worker", ()
 
 // ── Dialog does not appear for inactive workers ───────────────────────────────
 
-describe("WorkerList — inactive workers have no Download affordance", () => {
+describe("WorkerList — inactive workers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("active worker row has Download button; inactive row does not", () => {
-    const workers = [
-      makeWorker({ id: "w1", name: "Alice", is_active: true }),
-      makeWorker({ id: "w2", name: "Bob", is_active: false }),
-    ];
-    renderList(workers);
-
-    // Exactly one Download button — belongs to the active worker
-    const downloadBtns = screen.getAllByRole("button", { name: "exportWorker" });
-    expect(downloadBtns).toHaveLength(1);
-
-    // Both worker names are still rendered (the badge, name span, etc.)
-    expect(screen.getByText("Alice")).toBeDefined();
-    expect(screen.getByText("Bob")).toBeDefined();
+  it("offers export and Reactivate, never edit or deactivate", () => {
+    const onReactivate = vi.fn();
+    const inactive = makeWorker({ id: "w2", name: "Bob", is_active: false });
+    render(
+      <WorkerList
+        workers={[inactive]}
+        canManage
+        projectId="p1"
+        onAdd={vi.fn()}
+        onEdit={vi.fn()}
+        onDeactivate={vi.fn()}
+        onReactivate={onReactivate}
+      />
+    );
+    expect(screen.getByRole("button", { name: "exportWorker" })).toBeDefined();
+    expect(screen.queryByRole("button", { name: "editWorker" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "deactivateWorker" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "reactivateWorker" }));
+    expect(onReactivate).toHaveBeenCalledWith(inactive);
   });
 });
 

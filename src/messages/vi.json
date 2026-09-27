@@ -598,7 +598,8 @@
     "loadFailed": "Không tải được hóa đơn.",
     "loadListFailed": "Không tải được danh sách chi phí.",
     "deleteInvoiceFailed": "Không xóa được chi phí.",
-    "errorPaymentMethodInactive": "Phương thức thanh toán này đã bị vô hiệu hóa. Hãy chọn phương thức khác."
+    "errorPaymentMethodInactive": "Phương thức thanh toán này đã bị vô hiệu hóa. Hãy chọn phương thức khác.",
+    "workerInactive": "{name} (không hoạt động)"
   },
   "planning": {
     "title": "Kế hoạch",
@@ -774,7 +775,8 @@
       "deleteEntryFailed": "Không xóa được chấm công.",
       "saveWorkerFailed": "Không lưu được thợ.",
       "workerNameRequired": "Bắt buộc nhập tên thợ.",
-      "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0."
+      "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0.",
+      "reactivateWorkerFailed": "Không thể kích hoạt lại công nhân"
     },
     "logDayDialog": {
       "title": "Chấm công ngày",
@@ -987,7 +989,9 @@
       "refreshing": "Đang làm mới các yêu cầu sửa"
     },
     "entryDeleted": "Đã xóa mục chấm công",
-    "workerDeactivated": "Đã vô hiệu hóa {name}"
+    "workerDeactivated": "Đã vô hiệu hóa {name}",
+    "reactivateWorker": "Kích hoạt lại",
+    "workerReactivated": "Đã kích hoạt lại {name}"
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

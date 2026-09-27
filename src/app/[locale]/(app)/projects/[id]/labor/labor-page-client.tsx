@@ -34,6 +34,7 @@ import {
   createWorker,
   updateWorker,
   deleteWorker,
+  reactivateWorker,
   fetchLaborEntries,
   updateAttendance,
   deleteAttendance,
@@ -168,6 +169,9 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const [roles, setRoles] = useState<LaborRole[]>([]);
   const [palette, setPalette] = useState<string[]>([]);
 
+  // Only active workers can be logged for a day.
+  const activeWorkers = useMemo(() => workers.filter((w) => w.is_active), [workers]);
+
   // Worker lookup map for role-aware chip colors in calendar cells.
   const workerMap = useMemo(
     () => Object.fromEntries(workers.map((w) => [w.id, w])),
@@ -229,7 +233,9 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // Load workers
   const loadWorkers = useCallback(async () => {
     try {
-      const data = await fetchWorkers(projectId);
+      // Deactivated workers too: the Workers tab offers Reactivate, and a
+      // deactivated worker can still be owed pay (Summary, Payments, export).
+      const data = await fetchWorkers(projectId, { includeInactive: true });
       setWorkers(data);
     } catch {
       setError(t("errors.loadWorkersFailed"));
@@ -445,6 +451,16 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     }
   };
 
+  const handleReactivateWorker = async (worker: Worker) => {
+    try {
+      await reactivateWorker(projectId, worker.id);
+      toast.success(t("workerReactivated", { name: worker.person_name ?? worker.name }));
+      await loadWorkers();
+    } catch {
+      toast.error(t("errors.reactivateWorkerFailed"));
+    }
+  };
+
   const handleUpdateAttendance = async (payload: UpdateAttendancePayload) => {
     if (!editEntry) return;
     try {
@@ -640,6 +656,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
           onAdd={() => setShowAddWorker(true)}
           onEdit={(worker) => setEditWorker(worker)}
           onDeactivate={handleDeactivateWorker}
+          onReactivate={handleReactivateWorker}
           onWorkerRateChanged={loadWorkers}
         />
       )}
@@ -827,7 +844,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
           if (!open) setLogDayDate(undefined);
         }}
         projectId={projectId}
-        workers={workers}
+        workers={activeWorkers}
         entries={entries}
         initialDate={logDayDate}
         onSaved={loadEntries}

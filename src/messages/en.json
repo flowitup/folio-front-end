@@ -598,7 +598,8 @@
     "loadFailed": "Failed to load invoice.",
     "loadListFailed": "Failed to load invoices.",
     "deleteInvoiceFailed": "Failed to delete invoice.",
-    "errorPaymentMethodInactive": "This payment method has been deactivated. Choose another one."
+    "errorPaymentMethodInactive": "This payment method has been deactivated. Choose another one.",
+    "workerInactive": "{name} (inactive)"
   },
   "planning": {
     "title": "Planning",
@@ -774,7 +775,8 @@
       "deleteEntryFailed": "Failed to delete entry.",
       "saveWorkerFailed": "Failed to save worker.",
       "workerNameRequired": "Worker name is required.",
-      "dailyRatePositive": "Daily rate must be greater than 0."
+      "dailyRatePositive": "Daily rate must be greater than 0.",
+      "reactivateWorkerFailed": "Failed to reactivate the worker"
     },
     "logDayDialog": {
       "title": "Log day",
@@ -987,7 +989,9 @@
       "refreshing": "Refreshing change requests"
     },
     "entryDeleted": "Entry deleted",
-    "workerDeactivated": "{name} deactivated"
+    "workerDeactivated": "{name} deactivated",
+    "reactivateWorker": "Reactivate",
+    "workerReactivated": "{name} reactivated"
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

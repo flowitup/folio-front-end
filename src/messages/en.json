@@ -2702,5 +2702,15 @@
       "error": "Error"
     },
     "noCost": "—"
+  },
+  "notFoundPage": {
+    "title": "Page not found",
+    "body": "This page does not exist or you no longer have access to it.",
+    "backToDashboard": "Back to dashboard"
+  },
+  "authErrorBoundary": {
+    "title": "Something went wrong",
+    "body": "Please try refreshing the page or signing in again.",
+    "goToLogin": "Go to sign-in"
   }
 }

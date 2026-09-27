@@ -2702,5 +2702,15 @@
       "error": "Lỗi"
     },
     "noCost": "—"
+  },
+  "notFoundPage": {
+    "title": "Không tìm thấy trang",
+    "body": "Trang này không tồn tại hoặc bạn không còn quyền truy cập.",
+    "backToDashboard": "Quay lại bảng điều khiển"
+  },
+  "authErrorBoundary": {
+    "title": "Đã có lỗi xảy ra",
+    "body": "Vui lòng tải lại trang hoặc đăng nhập lại.",
+    "goToLogin": "Đi đến đăng nhập"
   }
 }

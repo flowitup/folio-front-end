@@ -2702,5 +2702,15 @@
       "error": "Erreur"
     },
     "noCost": "—"
+  },
+  "notFoundPage": {
+    "title": "Page introuvable",
+    "body": "Cette page n’existe pas ou vous n’y avez plus accès.",
+    "backToDashboard": "Retour au tableau de bord"
+  },
+  "authErrorBoundary": {
+    "title": "Une erreur s’est produite",
+    "body": "Actualisez la page ou reconnectez-vous.",
+    "goToLogin": "Aller à la connexion"
   }
 }

@@ -140,3 +140,14 @@ describe("ProjectsPage card labels", () => {
     expect(screen.getByTestId("project-team-size")).toHaveTextContent("1 member");
   });
 });
+
+describe("ProjectsPage card layout", () => {
+  it("keeps an unbroken title inside the card", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });
+    renderPage();
+    const title = screen.getByTestId("project-card-title");
+    expect(title.className).toContain("[overflow-wrap:anywhere]");
+    const grid = title.closest("article")!.firstElementChild as HTMLElement;
+    expect(grid.className).toContain("minmax(0,");
+  });
+});

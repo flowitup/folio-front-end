@@ -282,8 +282,8 @@ export default function ProjectsPage() {
                 <div
                   className={`grid grid-cols-1 ${
                     isFeatured
-                      ? "sm:grid-cols-[1.2fr_2fr]"
-                      : "sm:grid-cols-[1fr_1.4fr]"
+                      ? "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]"
+                      : "sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]"
                   }`}
                 >
                   {/* Cover */}
@@ -314,10 +314,15 @@ export default function ProjectsPage() {
                   </button>
 
                   {/* Body */}
-                  <div className="flex flex-col p-6">
+                  {/* minmax(0,…) tracks + overflow-wrap: an unbroken address as
+                      the title used to widen the body and squeeze the cover to 0. */}
+                  <div className="flex min-w-0 flex-col p-6">
                     <div className="mb-3 flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="font-display text-[26px] font-medium leading-tight tracking-tight">
+                      <div className="min-w-0 flex-1">
+                        <h3
+                          className="font-display text-[26px] font-medium leading-tight tracking-tight [overflow-wrap:anywhere]"
+                          data-testid="project-card-title"
+                        >
                           {projectDisplayName(project)}
                         </h3>
                       </div>

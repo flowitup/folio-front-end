@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { realEmail, userDisplayName, userInitial } from "@/lib/auth/user-display";
 import { updateProfileAction } from "@/app/[locale]/(app)/settings/_actions/profile-actions";
 
 export function ProfileForm() {
@@ -24,7 +25,8 @@ export function ProfileForm() {
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [isSaving, setIsSaving] = useState(false);
 
-  const initials = (user?.display_name ?? user?.email)?.charAt(0).toUpperCase() ?? "·";
+  const initials = userInitial(user);
+  const email = realEmail(user);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,7 +73,7 @@ export function ProfileForm() {
         </div>
         <div>
           <h2 className="font-display text-[22px] font-medium tracking-tight">
-            {user?.display_name ?? user?.email}
+            {userDisplayName(user)}
           </h2>
         </div>
       </div>
@@ -107,21 +109,24 @@ export function ProfileForm() {
             disabled={isSaving}
           />
         </div>
-        <div className="md:col-span-2">
-          <label htmlFor="profile-email" className="label-cap">
-            {t("email")}
-          </label>
-          <input
-            id="profile-email"
-            className="folio-input mt-1.5"
-            type="email"
-            value={user?.email ?? ""}
-            readOnly
-          />
-          <p className="mt-1 text-[12px]" style={{ color: "var(--muted)" }}>
-            {t("emailReadOnlyHint")}
-          </p>
-        </div>
+        {/* Phone-only accounts carry a synthetic address, not an e-mail. */}
+        {email && (
+          <div className="md:col-span-2">
+            <label htmlFor="profile-email" className="label-cap">
+              {t("email")}
+            </label>
+            <input
+              id="profile-email"
+              className="folio-input mt-1.5"
+              type="email"
+              value={email}
+              readOnly
+            />
+            <p className="mt-1 text-[12px]" style={{ color: "var(--muted)" }}>
+              {t("emailReadOnlyHint")}
+            </p>
+          </div>
+        )}
         <div className="md:col-span-2">
           <button type="submit" className="btn btn-primary" disabled={isSaving}>
             {isSaving ? (

@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { userContact, userDisplayName, userInitial } from "@/lib/auth/user-display";
 
 // Page meta keys reference message keys in `topbar.*` (title/subtitle) and
 // `projects/planning/labor/invoices.newProject|newTask|logDay|newInvoice` for actions.
@@ -138,7 +139,7 @@ export function Topbar() {
   const actionLabel = cfg?.actionKey && canShowAction ? tTopbar(cfg.actionKey) : null;
 
   const projectName = pageProject ? projectDisplayName(pageProject) : undefined;
-  const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
+  const initials = userInitial(user);
 
   const handleSwitchProject = (projectId: string) => {
     selectProject(projectId);
@@ -273,7 +274,7 @@ export function Topbar() {
               <button
                 type="button"
                 className="avatar ml-1"
-                title={user.email}
+                title={userDisplayName(user)}
                 style={{ background: "var(--accent)", color: "white", cursor: "pointer" }}
               >
                 {initials}
@@ -281,7 +282,7 @@ export function Topbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5 text-[12px]" style={{ color: "var(--muted)" }}>
-                {user.email}
+                {userContact(user) || userDisplayName(user)}
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem

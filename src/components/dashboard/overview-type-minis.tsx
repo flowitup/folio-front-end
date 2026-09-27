@@ -7,6 +7,7 @@ import { formatEURWhole } from "@/lib/utils/formatters";
 import { useDataTip } from "@/components/invoices/data-tip";
 import {
   monthKeyToDate,
+  roundPartsToTotal,
   sharedMonthlyMax,
   type ExpenseType,
   type TypeMonthlyBucket,
@@ -54,7 +55,9 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
   const { onMouseMove, onMouseLeave, overlay } = useDataTip();
 
   const sharedMax = sharedMonthlyMax(buckets);
-  const sixMonthTotal = buckets.reduce((s, b) => s + b.total, 0);
+  // Whole-euro type totals that add up to the whole-euro 6-month total.
+  const shownTotals = roundPartsToTotal(buckets.map((b) => b.total));
+  const sixMonthTotal = shownTotals.reduce((s, v) => s + v, 0);
   const first = buckets[0]?.monthly[0];
   const last = buckets[0]?.monthly[buckets[0].monthly.length - 1];
 
@@ -89,7 +92,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
       </div>
 
       <div className="grid flex-1 grid-cols-1 content-center gap-6 sm:grid-cols-3">
-        {buckets.map((bucket) => {
+        {buckets.map((bucket, bucketIdx) => {
           const lastIdx = bucket.monthly.length - 1;
           const heights = bucket.monthly.map((p) => Math.max((p.total / sharedMax) * PLOT_H, 2));
           const barX = (i: number) => 8 + i * 34;
@@ -106,7 +109,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                 <span className="text-[12.5px] font-semibold">{tInvoices(`types.${bucket.type}`)}</span>
               </div>
               <div className="num my-1.5 text-[18px] font-medium" style={{ letterSpacing: "-.02em" }}>
-                {unavailable ? "—" : formatEURWhole(bucket.total)}
+                {unavailable ? "—" : formatEURWhole(shownTotals[bucketIdx])}
               </div>
               <div className="mb-2 text-[11px]" style={{ color: "var(--muted)" }}>
                 {unavailable ? "\u00a0" : tInvoices("invoiceCount", { n: bucket.count })}

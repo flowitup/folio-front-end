@@ -13,6 +13,7 @@ import {
   buildTypeMonthlyBuckets,
   sharedMonthlyMax,
   buildReturnCredits,
+  roundPartsToTotal,
 } from "@/lib/dashboard/overview-metrics";
 
 let seq = 0;
@@ -500,5 +501,20 @@ describe("money sums snap to cents", () => {
     expect(buildTypeMonthlyBuckets(invoices, 6, ref).find((b) => b.type === "others")!.total).toBe(3368.5);
     expect(computePendingRefunds(invoices).total).toBe(3368.5);
     expect(computeBankOutstanding(invoices).total).toBe(3368.5);
+  });
+});
+
+describe("roundPartsToTotal", () => {
+  it("rounds parts so they add up to the rounded total", () => {
+    // Rounded separately: 1 501 + 450 + 100 = 2 051, but the total is 2 050.
+    const parts = roundPartsToTotal([1500.5, 449.6, 99.9]);
+    expect(parts.reduce((s, v) => s + v, 0)).toBe(2050);
+    expect(parts).toEqual([1500, 450, 100]);
+  });
+
+  it("keeps exact whole parts untouched and handles negatives", () => {
+    expect(roundPartsToTotal([100, 200])).toEqual([100, 200]);
+    const parts = roundPartsToTotal([-1000, 300.4, 50.7]);
+    expect(parts.reduce((s, v) => s + v, 0)).toBe(Math.round(-1000 + 300.4 + 50.7));
   });
 });

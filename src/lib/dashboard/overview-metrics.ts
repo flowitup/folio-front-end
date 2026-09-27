@@ -67,6 +67,27 @@ export function roundCents(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/**
+ * Round each part to whole euros so the rounded parts add up to the rounded
+ * sum (largest-remainder method). Rounding every figure on its own shows
+ * "1 501 € + 450 € + 100 €" beside a "2 050 €" total.
+ */
+export function roundPartsToTotal(parts: number[]): number[] {
+  const total = Math.round(roundCents(parts.reduce((s, p) => s + p, 0)));
+  const floors = parts.map((p) => Math.floor(roundCents(p)));
+  let spare = total - floors.reduce((s, f) => s + f, 0);
+  const byRemainder = parts
+    .map((p, i) => ({ i, rem: roundCents(p) - floors[i] }))
+    .sort((a, b) => b.rem - a.rem || a.i - b.i);
+  const out = [...floors];
+  for (const { i } of byRemainder) {
+    if (spare <= 0) break;
+    out[i] += 1;
+    spare -= 1;
+  }
+  return out;
+}
+
 function monthKeyOf(inv: Invoice): string {
   return (inv.service_month ?? inv.issue_date).slice(0, 7);
 }

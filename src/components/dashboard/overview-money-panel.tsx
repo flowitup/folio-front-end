@@ -110,6 +110,10 @@ export function OverviewMoneyPanel({
   const locale = useLocale();
   const monthFmt = new Intl.DateTimeFormat(locale, { month: "short" });
   const fig = (value: string) => (loading ? PLACEHOLDER : value);
+  // Remaining is shown as whole euros beside the whole-euro spent and credit
+  // figures, so derive it from those: 5 000 € − 3 369 € reads 1 631 €, not a
+  // separately rounded 1 632 €.
+  const shownLeft = Math.round(budgetMetrics.denominator) - Math.round(budgetMetrics.spent);
 
   const sparkMax = Math.max(...monthlySeries.map((p) => p.total), 1);
   const sparkX = (i: number) => 4 + i * 30;
@@ -198,7 +202,7 @@ export function OverviewMoneyPanel({
                   !loading && showRemaining && budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined,
               }}
             >
-              {fig(formatEURWhole(showRemaining ? budgetMetrics.left : spentTotal))}
+              {fig(formatEURWhole(showRemaining ? shownLeft : spentTotal))}
             </div>
           </div>
           <div className="flex items-end gap-6" style={{ borderLeft: "1px solid rgba(245,241,234,0.14)", paddingLeft: 32 }}>

@@ -454,6 +454,28 @@ describe("DashboardPage — remaining matches the Projects page", () => {
     );
     expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toBe(`10% of credit drawn · ${eur(1000)}`);
   });
+
+  it("shows a whole-euro remaining that adds up with the whole-euro spent and credit", async () => {
+    mockUseProject.mockReturnValue({
+      selectedProject: { id: "p-1", name: "Villa", budget: 5000, spent_by_credits: 3368.5 },
+    });
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [mkInvoice({ type: "others", issue_date: "2026-07-05", total_amount: 3368.5 })],
+      funds_released_total: 5000,
+      company_spent_total: 3368.5,
+      personal_spent_total: 0,
+      company_name: null,
+    });
+    renderDashboard();
+
+    const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
+    const norm = (v: string | null | undefined) => (v ?? "").replace(/[\u202f\u00a0]/g, " ");
+    // 5 000 € − 3 369 € = 1 631 €, not a separately rounded 1 632 €.
+    await waitFor(() =>
+      expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(1631))
+    );
+    expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toContain(eur(3369));
+  });
 });
 
 describe("DashboardPage — expenses in neither purse", () => {

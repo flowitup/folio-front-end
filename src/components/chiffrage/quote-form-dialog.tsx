@@ -57,6 +57,25 @@ interface Props {
   onCreateStore: (name: string) => Promise<ChiffrageStore | null>;
 }
 
+/**
+ * The product link as stored: null when empty, "https://" added to a link
+ * typed without a scheme ("www.castorama.fr/…"), undefined when it is not an
+ * http(s) address at all.
+ */
+export function normalizeProductUrl(raw: string): string | null | undefined {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const parsed = new URL(withScheme);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return undefined;
+    if (!parsed.hostname.includes(".")) return undefined;
+    return withScheme;
+  } catch {
+    return undefined;
+  }
+}
+
 export function QuoteFormDialog({
   open,
   quote,
@@ -122,6 +141,11 @@ export function QuoteFormDialog({
       setError(t("priceTooLarge", { max: MAX_QUOTE_UNIT_PRICE }));
       return;
     }
+    const productUrl = normalizeProductUrl(url);
+    if (productUrl === undefined) {
+      setError(t("productUrlInvalid"));
+      return;
+    }
     if (!storeValid) {
       setError(t("storeRequired"));
       return;
@@ -140,7 +164,7 @@ export function QuoteFormDialog({
       supplier_id: supplierId,
       library_product_id: productId,
       ...(priceUnchanged ? {} : { unit_price_ht: htValue.toFixed(4), tva_rate: tva }),
-      product_url: url.trim() || null,
+      product_url: productUrl,
       note: note.trim() || null,
     });
   };
@@ -297,7 +321,10 @@ export function QuoteFormDialog({
               <Label htmlFor="quote-url">{t("productUrlOptional")}</Label>
               <Input
                 id="quote-url"
-                type="url"
+                // Text, not type="url": the browser would refuse "www.castorama.fr/…"
+                // with a tooltip in its own language; the form checks it below.
+                type="text"
+                inputMode="url"
                 value={url}
                 maxLength={500}
                 placeholder="https://"

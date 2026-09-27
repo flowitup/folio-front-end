@@ -2658,7 +2658,8 @@
     "unitBoite": "box",
     "unitRouleau": "roll",
     "unitLot": "lot",
-    "unitForfait": "lump sum"
+    "unitForfait": "lump sum",
+    "productUrlInvalid": "Enter a web address, e.g. www.castorama.fr/…"
   },
   "onboarding": {
     "title": "Welcome to Folio",

@@ -2658,7 +2658,8 @@
     "unitBoite": "hộp",
     "unitRouleau": "cuộn",
     "unitLot": "lô",
-    "unitForfait": "trọn gói"
+    "unitForfait": "trọn gói",
+    "productUrlInvalid": "Nhập một địa chỉ web, vd. www.castorama.fr/…"
   },
   "onboarding": {
     "title": "Chào mừng đến với Folio",

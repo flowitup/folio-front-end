@@ -221,3 +221,28 @@ describe("QuoteComparisonTable", () => {
     expect(screen.queryByTestId("quote-note-diff-legend")).toBeNull();
   });
 });
+
+describe("QuoteComparisonTable on a phone", () => {
+  // jsdom has no layout, so pin the two class facts that keep the 640px table
+  // inside its scroller: no absolutely positioned (sr-only) header cell, and a
+  // positioned scroll wrapper.
+  it("keeps the wide table inside its own scroller", () => {
+    render(
+      <QuoteComparisonTable
+        article={article([quote()])}
+        stores={[]}
+        canManage
+        busyQuoteId={null}
+        onSelect={noop}
+        onEdit={noop}
+        onDelete={noop}
+      />
+    );
+    const table = screen.getByTestId("quote-comparison-table");
+    expect(table.parentElement!.className).toMatch(/\brelative\b/);
+    for (const th of table.querySelectorAll("th")) {
+      expect(th.className).not.toMatch(/\bsr-only\b/);
+    }
+    expect(screen.getByText("actions").className).toContain("sr-only");
+  });
+});

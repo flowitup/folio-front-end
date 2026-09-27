@@ -72,7 +72,9 @@ export function QuoteComparisonTable({
   const showLegend = hasNoteDifferences(noteDiff);
 
   return (
-    <div className="overflow-x-auto">
+    // `relative` keeps any absolutely positioned descendant inside the
+    // scroller, so the wide table scrolls here instead of widening the page.
+    <div className="relative overflow-x-auto">
       <table
         className="w-full min-w-[640px] text-sm"
         data-testid="quote-comparison-table"
@@ -88,8 +90,10 @@ export function QuoteComparisonTable({
               {t("unitPriceTtc")}
             </th>
             <th className="px-4 py-2 text-right font-medium">{t("delta")}</th>
-            <th className="px-4 py-2 text-right font-medium sr-only">
-              {t("actions")}
+            {/* sr-only on the cell itself made it position:absolute and
+                pushed the page 64px wider on phones; hide only the label. */}
+            <th className="px-4 py-2 text-right font-medium">
+              <span className="sr-only">{t("actions")}</span>
             </th>
           </tr>
         </thead>

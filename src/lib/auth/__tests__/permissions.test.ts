@@ -29,6 +29,22 @@ describe("can", () => {
     expect(can("project:manage_labor", ["project:read"], ["project:read"])).toBe(false);
   });
 
+  it("honours a per-project deny the company-wide JWT list still advertises", () => {
+    const managerJwt = ["project:read", "project:update", "project:manage_users", "project:invite"];
+    const deniedHere = ["project:read", "project:manage_labor"];
+    expect(can("project:update", managerJwt, deniedHere)).toBe(false);
+    expect(can("project:invite", managerJwt, deniedHere)).toBe(false);
+  });
+
+  it("falls back to the global list while the project set is not resolved", () => {
+    expect(can("project:update", ["project:update"], undefined)).toBe(true);
+    expect(can("project:update", ["project:update"], [])).toBe(true);
+  });
+
+  it("keeps platform ops allowed on any project", () => {
+    expect(can("project:update", ["*:*"], ["project:read"])).toBe(true);
+  });
+
   it("denies safely with no perms at all", () => {
     expect(can("project:manage_labor", undefined, null)).toBe(false);
   });

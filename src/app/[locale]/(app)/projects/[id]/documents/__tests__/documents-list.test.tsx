@@ -7,7 +7,7 @@
  * - Preview button only shown for pdf/image kinds
  * - Download button triggers blob-fetch helper (not a bare anchor href)
  * - Sort header click triggers onSortChange callback with column name
- * - Empty state when documents array is empty
+ * - Empty state when documents array is empty (and a "no match" one when filtered)
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -31,6 +31,7 @@ vi.mock("next-intl", () => {
   const translations: Record<string, Record<string, string>> = {
     "documents.list": {
       empty: "No documents yet",
+      emptyFiltered: "No documents match these filters",
       "columns.file": "File",
       "columns.type": "Type",
       "columns.size": "Size",
@@ -126,6 +127,12 @@ describe("DocumentsList", () => {
     it("displays empty message when no documents", () => {
       render(<DocumentsList {...defaultProps} documents={[]} />);
       expect(screen.getByText("No documents yet")).toBeDefined();
+    });
+
+    it("says nothing matches, not that the project is empty, when a filter is active", () => {
+      render(<DocumentsList {...defaultProps} documents={[]} filtered />);
+      expect(screen.getByText("No documents match these filters")).toBeDefined();
+      expect(screen.queryByText("No documents yet")).toBeNull();
     });
   });
 

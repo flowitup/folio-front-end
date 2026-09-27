@@ -6,6 +6,7 @@
  * - Input validation (UUID checks)
  * - Error mapping: 400, 403, 404, 429, 500
  * - Happy path for listDocumentsAction and deleteDocumentAction
+ * - listDocumentUploadersAction (the uploader filter's options)
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -15,6 +16,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/lib/api/project-documents", () => ({
   listProjectDocuments: vi.fn(),
   deleteProjectDocument: vi.fn(),
+  listDocumentUploaders: vi.fn(),
 }));
 
 // next/navigation is used by classifyBackendError (redirect on 401)
@@ -27,14 +29,16 @@ vi.mock("next/navigation", () => ({
 
 // ---- Imports after mocks ----
 
-const { listDocumentsAction, deleteDocumentAction } = await import("../actions");
-const { listProjectDocuments, deleteProjectDocument } = await import(
+const { listDocumentsAction, deleteDocumentAction, listDocumentUploadersAction } =
+  await import("../actions");
+const { listProjectDocuments, deleteProjectDocument, listDocumentUploaders } = await import(
   "@/lib/api/project-documents"
 );
 import type { ProjectDocumentKind } from "@/lib/api/project-documents";
 
 const mockListDocuments = vi.mocked(listProjectDocuments);
 const mockDeleteDocument = vi.mocked(deleteProjectDocument);
+const mockListUploaders = vi.mocked(listDocumentUploaders);
 
 // ---- Helpers ----
 
@@ -146,6 +150,53 @@ describe("listDocumentsAction — happy path", () => {
 
     expect(mockListDocuments).toHaveBeenCalledWith(PROJECT_ID, params);
     expect(result).toEqual({ ok: true, data: mockData });
+  });
+
+  it("forwards the uploader filter", async () => {
+    mockListDocuments.mockResolvedValueOnce({ items: [], total: 0, page: 1, per_page: 25 });
+
+    await listDocumentsAction(PROJECT_ID, { uploaderId: "33333333-3333-3333-3333-333333333333" });
+
+    expect(mockListDocuments).toHaveBeenCalledWith(PROJECT_ID, {
+      uploaderId: "33333333-3333-3333-3333-333333333333",
+    });
+  });
+});
+
+// ---- listDocumentUploadersAction ----
+
+describe("listDocumentUploadersAction", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("rejects a non-UUID projectId without calling the API", async () => {
+    const result = await listDocumentUploadersAction(BAD_ID);
+    expect(result).toEqual({ ok: false, error: "validation", message: "Invalid project id" });
+    expect(mockListUploaders).not.toHaveBeenCalled();
+  });
+
+  it("returns the uploaders the backend lists", async () => {
+    const uploaders = [
+      { user_id: "33333333-3333-3333-3333-333333333333", display_name: "Alice" },
+      { user_id: "44444444-4444-4444-4444-444444444444", display_name: "bob@example.com" },
+    ];
+    mockListUploaders.mockResolvedValueOnce(uploaders);
+
+    const result = await listDocumentUploadersAction(PROJECT_ID);
+
+    expect(mockListUploaders).toHaveBeenCalledWith(PROJECT_ID);
+    expect(result).toEqual({ ok: true, data: uploaders });
+  });
+
+  it("403 → forbidden", async () => {
+    mockListUploaders.mockRejectedValueOnce(httpError(403));
+    const result = await listDocumentUploadersAction(PROJECT_ID);
+    expect(result).toEqual({ ok: false, error: "forbidden" });
+  });
+
+  it("500 → generic", async () => {
+    mockListUploaders.mockRejectedValueOnce(httpError(500));
+    const result = await listDocumentUploadersAction(PROJECT_ID);
+    expect(result).toEqual({ ok: false, error: "generic" });
   });
 });
 

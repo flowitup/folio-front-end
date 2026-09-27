@@ -1450,6 +1450,7 @@
     },
     "list": {
       "empty": "Chưa có tài liệu. Kéo file vào khu vực tải lên để bắt đầu.",
+      "emptyFiltered": "Không có tài liệu nào khớp với bộ lọc.",
       "formerMember": "(thành viên cũ)",
       "columns": {
         "file": "File",
@@ -1488,6 +1489,7 @@
       "tags": "Nhãn",
       "clearTags": "Xoá nhãn lọc",
       "anyUploader": "Bất kỳ ai",
+      "uploader": "Người tải lên",
       "reset": "Đặt lại"
     },
     "preview": {
@@ -1509,7 +1511,8 @@
     },
     "toast": {
       "uploadSuccess": "Đã tải lên {filename}",
-      "listLoadError": "Không thể tải danh sách tài liệu"
+      "listLoadError": "Không thể tải danh sách tài liệu",
+      "uploadersLoadError": "Không thể tải danh sách người tải lên"
     },
     "pagination": {
       "prev": "Trước",

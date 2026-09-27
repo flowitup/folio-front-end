@@ -9,23 +9,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import type { ProjectDocumentKind } from "@/lib/api/project-documents";
+import type { DocumentUploader, ProjectDocumentKind } from "@/lib/api/project-documents";
 
 // ---- Types ----
-
-type Member = {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-};
 
 type Props = {
   kinds: ProjectDocumentKind[];
   selectedTags: string[];
   availableTags: string[];
   uploaderId: string | null;
-  members: Member[];
+  /** Who actually has documents here (from the backend), not the project assignments. */
+  uploaders: DocumentUploader[];
   onChange: (next: { kinds: ProjectDocumentKind[]; tags: string[]; uploaderId: string | null }) => void;
 };
 
@@ -41,16 +35,9 @@ const ALL_KINDS: ProjectDocumentKind[] = [
   "other",
 ];
 
-// ---- Helpers ----
-
-function memberDisplayName(m: Member): string {
-  const full = [m.firstName, m.lastName].filter(Boolean).join(" ").trim();
-  return full || m.email || m.id;
-}
-
 // ---- Component ----
 
-export function DocumentsFilters({ kinds, selectedTags, availableTags, uploaderId, members, onChange }: Props) {
+export function DocumentsFilters({ kinds, selectedTags, availableTags, uploaderId, uploaders, onChange }: Props) {
   const t = useTranslations("documents.filter");
   const tKinds = useTranslations("documents.kinds");
 
@@ -133,14 +120,14 @@ export function DocumentsFilters({ kinds, selectedTags, availableTags, uploaderI
           value={uploaderId ?? "__anyone__"}
           onValueChange={handleUploaderChange}
         >
-          <SelectTrigger size="sm" className="w-auto min-w-[140px]">
+          <SelectTrigger size="sm" className="w-auto min-w-[140px]" aria-label={t("uploader")}>
             <SelectValue placeholder={t("anyUploader")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="__anyone__">{t("anyUploader")}</SelectItem>
-            {members.map((m) => (
-              <SelectItem key={m.id} value={m.id}>
-                {memberDisplayName(m)}
+            {uploaders.map((u) => (
+              <SelectItem key={u.user_id} value={u.user_id}>
+                {u.display_name}
               </SelectItem>
             ))}
           </SelectContent>

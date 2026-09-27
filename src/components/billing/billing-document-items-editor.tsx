@@ -82,6 +82,43 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 }
 
 // ---------------------------------------------------------------------------
+// Suggestion requests — one per (category, query), shared by every line and by
+// the desktop row and mobile card of the same line, which are both mounted.
+// ---------------------------------------------------------------------------
+
+type SuggestionResult = Awaited<ReturnType<typeof getActivitySuggestionsAction>>;
+
+const inFlightSuggestions = new WeakMap<
+  Map<string, ActivitySuggestion[]>,
+  Map<string, Promise<SuggestionResult>>
+>();
+
+function requestSuggestions(
+  cache: Map<string, ActivitySuggestion[]> | null,
+  cacheKey: string,
+  category: string,
+  q: string
+): Promise<SuggestionResult> {
+  const call = () =>
+    getActivitySuggestionsAction({
+      category: category || undefined,
+      q: q || undefined,
+      limit: 20,
+    });
+  if (!cache) return call();
+  let pending = inFlightSuggestions.get(cache);
+  if (!pending) {
+    pending = new Map();
+    inFlightSuggestions.set(cache, pending);
+  }
+  const existing = pending.get(cacheKey);
+  if (existing) return existing;
+  const request = call().finally(() => pending!.delete(cacheKey));
+  pending.set(cacheKey, request);
+  return request;
+}
+
+// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
@@ -307,11 +344,7 @@ function ItemRow({
     }
     if (mountedRef.current) setDescLoading(true);
     try {
-      const result = await getActivitySuggestionsAction({
-        category: category || undefined,
-        q: q || undefined,
-        limit: 20,
-      });
+      const result = await requestSuggestions(cache, cacheKey, category, q);
       if (!mountedRef.current) return;
       if (result.ok) {
         cache?.set(cacheKey, result.data.suggestions);
@@ -324,7 +357,14 @@ function ItemRow({
     }
   }, [suggestionCache]);
 
+  // A saved line's own description needs no suggestions until it is edited:
+  // opening a document must not cost one request per line.
+  const savedQueryRef = useRef({ q: item.description, category: item.category ?? "" });
   useEffect(() => {
+    const saved = savedQueryRef.current;
+    if (saved.q !== "" && debouncedDescQuery === saved.q && debouncedCategory === saved.category) {
+      return;
+    }
     fetchSuggestions(debouncedDescQuery, debouncedCategory);
   }, [debouncedDescQuery, debouncedCategory, fetchSuggestions]);
 
@@ -496,11 +536,7 @@ function MobileItemCard({
     }
     if (mountedRef.current) setDescLoading(true);
     try {
-      const result = await getActivitySuggestionsAction({
-        category: category || undefined,
-        q: q || undefined,
-        limit: 20,
-      });
+      const result = await requestSuggestions(cache, cacheKey, category, q);
       if (!mountedRef.current) return;
       if (result.ok) {
         cache?.set(cacheKey, result.data.suggestions);
@@ -513,7 +549,14 @@ function MobileItemCard({
     }
   }, [suggestionCache]);
 
+  // A saved line's own description needs no suggestions until it is edited:
+  // opening a document must not cost one request per line.
+  const savedQueryRef = useRef({ q: item.description, category: item.category ?? "" });
   useEffect(() => {
+    const saved = savedQueryRef.current;
+    if (saved.q !== "" && debouncedDescQuery === saved.q && debouncedCategory === saved.category) {
+      return;
+    }
     fetchSuggestions(debouncedDescQuery, debouncedCategory);
   }, [debouncedDescQuery, debouncedCategory, fetchSuggestions]);
 

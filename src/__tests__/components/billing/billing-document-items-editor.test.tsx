@@ -259,3 +259,57 @@ describe("BillingDocumentItemsEditor — custom VAT rate", () => {
     expect(onChange.mock.calls[0][0][0].vat_rate).toBe("10");
   });
 });
+
+describe("BillingDocumentItemsEditor — suggestion requests", () => {
+  it("opens a document with saved lines without one suggestion request per line", async () => {
+    const { getActivitySuggestionsAction } = await import(
+      "@/app/[locale]/(app)/billing/_actions/billing-actions"
+    );
+    vi.mocked(getActivitySuggestionsAction).mockClear();
+    vi.useFakeTimers();
+    try {
+      render(
+        <BillingDocumentItemsEditor
+          items={[
+            makeItem({ description: "Pose carrelage" }),
+            makeItem({ description: "Peinture" }),
+            makeItem({ description: "Plomberie" }),
+          ]}
+          onChange={vi.fn()}
+        />
+      );
+      await act(async () => {
+        vi.advanceTimersByTime(500);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+
+    // Only the editor-wide category load; no per-line (let alone per-layout) calls.
+    const lineCalls = vi
+      .mocked(getActivitySuggestionsAction)
+      .mock.calls.filter(([args]) => (args as { limit?: number }).limit === 20);
+    expect(lineCalls).toHaveLength(0);
+  });
+
+  it("shares one request between the desktop row and the mobile card of a new line", async () => {
+    const { getActivitySuggestionsAction } = await import(
+      "@/app/[locale]/(app)/billing/_actions/billing-actions"
+    );
+    vi.mocked(getActivitySuggestionsAction).mockClear();
+    vi.useFakeTimers();
+    try {
+      render(<BillingDocumentItemsEditor items={[makeItem({ description: "" })]} onChange={vi.fn()} />);
+      await act(async () => {
+        vi.advanceTimersByTime(500);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+
+    const lineCalls = vi
+      .mocked(getActivitySuggestionsAction)
+      .mock.calls.filter(([args]) => (args as { limit?: number }).limit === 20);
+    expect(lineCalls).toHaveLength(1);
+  });
+});

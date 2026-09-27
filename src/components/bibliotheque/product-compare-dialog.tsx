@@ -153,6 +153,7 @@ export function ProductCompareDialog({
                         <ProductImage
                           productId={p.id}
                           hasImage={p.has_image}
+                          version={p.updated_at}
                           alt={p.name}
                           className="aspect-square w-20 rounded-md"
                         />

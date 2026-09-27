@@ -9,6 +9,11 @@
  * placeholder while loading, when the product has no image, or on error.
  * Fixed aspect ratio prevents layout jitter. The object URL is revoked on
  * unmount / product change.
+ *
+ * The API lets the browser cache the bytes for 5 minutes under the same URL,
+ * so after an image is replaced the caller passes a new `version` (the
+ * product's updated_at, which every image write bumps): it goes into the query
+ * string, forcing a fresh download instead of the cached old picture.
  */
 
 import { useEffect, useState } from "react";
@@ -23,9 +28,17 @@ interface ProductImageProps {
   hasImage: boolean;
   alt: string;
   className?: string;
+  /** Changes whenever the stored image may have changed — busts the HTTP cache. */
+  version?: string;
 }
 
-export function ProductImage({ productId, hasImage, alt, className = "" }: ProductImageProps) {
+export function ProductImage({
+  productId,
+  hasImage,
+  alt,
+  className = "",
+  version,
+}: ProductImageProps) {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -34,7 +47,10 @@ export function ProductImage({ productId, hasImage, alt, className = "" }: Produ
     let revoked = false;
     let objectUrl: string | null = null;
 
-    fetchWithRefresh(`${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}/image`)
+    const query = version ? `?v=${encodeURIComponent(version)}` : "";
+    fetchWithRefresh(
+      `${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}/image${query}`
+    )
       .then((res) => {
         if (!res.ok) throw new Error(`image ${res.status}`);
         return res.blob();
@@ -42,6 +58,7 @@ export function ProductImage({ productId, hasImage, alt, className = "" }: Produ
       .then((blob) => {
         if (revoked) return;
         objectUrl = URL.createObjectURL(blob);
+        setFailed(false);
         setBlobUrl(objectUrl);
       })
       .catch(() => {
@@ -52,7 +69,7 @@ export function ProductImage({ productId, hasImage, alt, className = "" }: Produ
       revoked = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [productId, hasImage]);
+  }, [productId, hasImage, version]);
 
   const showPlaceholder = !hasImage || failed || !blobUrl;
 

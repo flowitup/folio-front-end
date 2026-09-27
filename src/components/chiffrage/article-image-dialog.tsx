@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ImageUrlField } from "@/components/ui/image-url-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ChiffrageArticle } from "@/lib/api/chiffrage";
@@ -94,37 +95,25 @@ export function ArticleImageDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="article-image-url">{t("imageFromUrl")}</Label>
-            <div className="flex gap-2">
-              <Input
-                id="article-image-url"
-                type="url"
-                inputMode="url"
-                value={url}
-                placeholder={t("imageFromUrlPlaceholder")}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-              <Button
-                type="button"
-                disabled={busy || !url.trim()}
-                onClick={async () => {
-                  setBusy(true);
-                  const ok = await onFromUrl(url.trim());
-                  setBusy(false);
-                  if (ok) {
-                    setUrl("");
-                    onOpenChange(false);
-                  }
-                }}
-              >
-                {t("fetch")}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t("imageFromUrlNote")}
-            </p>
-          </div>
+          <ImageUrlField
+            id="article-image-url"
+            label={t("imageFromUrl")}
+            value={url}
+            onChange={setUrl}
+            placeholder={t("imageFromUrlPlaceholder")}
+            note={t("imageFromUrlNote")}
+            disabled={busy}
+            fetchLabel={t("fetch")}
+            onFetch={async () => {
+              setBusy(true);
+              const ok = await onFromUrl(url.trim());
+              setBusy(false);
+              if (ok) {
+                setUrl("");
+                onOpenChange(false);
+              }
+            }}
+          />
         </div>
 
         <DialogFooter className="sm:justify-between">

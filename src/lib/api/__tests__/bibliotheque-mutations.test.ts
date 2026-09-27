@@ -25,6 +25,7 @@ import {
   updateProduct,
   deleteProduct,
   uploadProductImage,
+  setProductImageFromUrl,
   type LibraryProduct,
 } from "../bibliotheque";
 
@@ -361,5 +362,69 @@ describe("uploadProductImage", () => {
       expect(e.status).toBe(413);
       expect(e.body?.error).toBe("TOO_LARGE");
     }
+  });
+});
+
+describe("setProductImageFromUrl", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const LINK = "https://media.adeo.com/marketplace/photo.jpg";
+
+  it("POSTs the link as JSON to /bibliotheque/products/<id>/image-from-url", async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce(makeJsonResponse({ image_storage_key: "key-abc" }));
+
+    const result = await setProductImageFromUrl("prod-1", LINK);
+
+    expect(result).toEqual({ image_storage_key: "key-abc" });
+    const [url, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`${BASE}/bibliotheque/products/prod-1/image-from-url`);
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body as string)).toEqual({ url: LINK });
+    expect(init.headers).toHaveProperty("Content-Type", "application/json");
+    expect(init.headers).toHaveProperty("Authorization", "Bearer test-token");
+  });
+
+  it("adds ?force=true when opts.force is set", async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce(makeJsonResponse({ image_storage_key: "key-abc" }));
+
+    await setProductImageFromUrl("prod-1", LINK, { force: true });
+
+    const [url] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string];
+    expect(url).toBe(`${BASE}/bibliotheque/products/prod-1/image-from-url?force=true`);
+  });
+
+  it("encodes productId in URL", async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce(makeJsonResponse({ image_storage_key: "k" }));
+
+    await setProductImageFromUrl("prod/1", LINK);
+
+    const [url] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string];
+    expect(url).toContain("prod%2F1");
+  });
+
+  it("throws with status and BE error code when the link is refused", async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce(makeErrorResponse(422, { error: "SsrfBlocked" }));
+
+    type HttpError = Error & { status?: number; body?: { error?: string } | null };
+    let err: HttpError | undefined;
+    try {
+      await setProductImageFromUrl("prod-1", "https://evil.example.com/x.jpg");
+    } catch (e) {
+      err = e as HttpError;
+    }
+
+    if (!err) throw new Error("expected setProductImageFromUrl to throw");
+
+    expect(err.message).toBe("Failed to fetch product image from URL (HTTP 422)");
+    expect(err.status).toBe(422);
+    expect(err.body?.error).toBe("SsrfBlocked");
+  });
+
+  it("throws on network error", async () => {
+    global.fetch = vi.fn().mockRejectedValueOnce(new Error("Network down"));
+
+    await expect(setProductImageFromUrl("prod-1", LINK)).rejects.toThrow(
+      "Network error fetching product image from URL"
+    );
   });
 });

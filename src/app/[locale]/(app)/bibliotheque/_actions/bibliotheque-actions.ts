@@ -16,6 +16,7 @@ import {
   updateProduct,
   deleteProduct,
   uploadProductImage,
+  setProductImageFromUrl,
   type ProductListResult,
   type ProductDetailResult,
   type Supplier,
@@ -143,6 +144,34 @@ export async function uploadProductImageAction(
     if (httpErr.status === 415) return { ok: false, error: "Unsupported image type (use JPG/PNG/WebP).", code };
     if (httpErr.status === 413) return { ok: false, error: "Image too large (max 10 MB).", code };
     if (httpErr.status === 409) return { ok: false, error: "Image already set.", code };
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error", code };
+  }
+}
+
+/**
+ * Ask the server to fetch a product image from a supplier link.
+ * `code` carries the BE error code (SsrfBlocked, ValidationError,
+ * UnsupportedMediaType, FileTooLarge, Forbidden, ...) so the UI can show a
+ * translated reason; `error` is the English fallback like its neighbours.
+ */
+export async function setProductImageFromUrlAction(
+  productId: string,
+  url: string,
+  opts?: { force?: boolean }
+): Promise<
+  { ok: true; data: { image_storage_key: string } } | { ok: false; error: string; code?: string }
+> {
+  try {
+    const data = await setProductImageFromUrl(productId, url, opts);
+    return { ok: true, data };
+  } catch (err) {
+    const httpErr = err as Error & { status?: number; body?: { error?: string } | null };
+    const code = httpErr.body?.error;
+    if (httpErr.status === 422) return { ok: false, error: "This image link is not accepted.", code };
+    if (httpErr.status === 415) return { ok: false, error: "The link is not a JPG/PNG/WebP image.", code };
+    if (httpErr.status === 413) return { ok: false, error: "Image too large (max 10 MB).", code };
+    if (httpErr.status === 403) return { ok: false, error: "You don't have permission to manage the library.", code };
+    if (httpErr.status === 404) return { ok: false, error: "Not found.", code };
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error", code };
   }
 }

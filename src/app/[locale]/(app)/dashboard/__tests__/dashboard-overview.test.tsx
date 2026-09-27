@@ -249,11 +249,13 @@ describe("DashboardPage — money panel figures", () => {
     renderDashboard();
     const typeMinis = within(await screen.findByTestId("overview-type-minis"));
 
-    // Labor total (6-mo window) = 500, Materials & Services = 400.
-    expect(await typeMinis.findByText(eur(500))).toBeInTheDocument();
-    expect(typeMinis.getByText(eur(400))).toBeInTheDocument();
-    expect(typeMinis.getByText("Labor")).toBeInTheDocument();
-    expect(typeMinis.getByText("Materials & Services")).toBeInTheDocument();
+    // Labor total (6-mo window) = 500, Materials & Services = 400. The
+    // screen-reader tables repeat the figures, so look at the visible text.
+    const visible = { ignore: "script, style, table, table *" };
+    expect(await typeMinis.findByText(eur(500), visible)).toBeInTheDocument();
+    expect(typeMinis.getByText(eur(400), visible)).toBeInTheDocument();
+    expect(typeMinis.getByText("Labor", visible)).toBeInTheDocument();
+    expect(typeMinis.getByText("Materials & Services", visible)).toBeInTheDocument();
   });
 
   it("attaches a month|amount|count hover tooltip payload to every chart column", async () => {

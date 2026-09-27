@@ -64,7 +64,8 @@ export async function proxy(request: NextRequest) {
   // route no longer requires touching this file.
   if (!isAuthenticated && isProtectedRoute(pathnameWithoutLocale)) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    // Keep the query (e.g. ?invoice=<id>) so the deep link reopens after login.
+    loginUrl.searchParams.set("callbackUrl", pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 

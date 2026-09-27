@@ -1015,7 +1015,8 @@
       "phoneRegistered": "This phone number already has an account. Sign in instead.",
       "codeRequired": "Please enter the 6-digit code",
       "invalidCode": "Wrong or expired code",
-      "throttled": "Too many requests. Wait a minute and try again."
+      "throttled": "Too many requests. Wait a minute and try again.",
+      "title": "Invitation unavailable"
     },
     "loggedInOther": {
       "title": "You're signed in as someone else",

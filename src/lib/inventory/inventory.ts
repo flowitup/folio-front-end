@@ -142,6 +142,19 @@ export function unitsByWarehouse(items: readonly InventoryItem[]): Map<string, n
   return map;
 }
 
+/**
+ * Equipment rows per warehouse id. The API refuses to delete a warehouse that
+ * still has rows — even rows with 0 units — so this, not the unit count,
+ * decides whether a warehouse can go.
+ */
+export function rowsByWarehouse(items: readonly InventoryItem[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const item of items)
+    if (item.location_type === "warehouse" && item.warehouse_id)
+      map.set(item.warehouse_id, (map.get(item.warehouse_id) ?? 0) + 1);
+  return map;
+}
+
 /** Whole non-negative number or null: a typo must never land as 0 units. */
 export function parseQuantity(text: string): number | null {
   const trimmed = text.trim();

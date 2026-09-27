@@ -2403,7 +2403,7 @@
       "delete": "Xóa kho",
       "empty": "Chưa có kho nào. Thêm nơi công ty cất giữ máy móc, dụng cụ.",
       "noAddress": "Chưa có địa chỉ",
-      "deleteBlocked": "Kho này vẫn còn {count, plural, other {# cái}}. Hãy chuyển hoặc xóa chúng trước.",
+      "deleteBlocked": "Kho này vẫn còn {count, plural, other {# mục thiết bị}}. Hãy chuyển hoặc xóa chúng trước.",
       "fields": {
         "name": "Tên kho",
         "namePlaceholder": "vd. Kho chính",
@@ -2411,7 +2411,8 @@
         "addressPlaceholder": "Số nhà, đường, quận / thành phố"
       },
       "validation": {
-        "nameRequired": "Hãy đặt tên cho kho."
+        "nameRequired": "Hãy đặt tên cho kho.",
+        "nameTaken": "Đã có kho mang tên này."
       },
       "toast": {
         "created": "Đã thêm kho.",

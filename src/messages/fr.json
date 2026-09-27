@@ -2403,7 +2403,7 @@
       "delete": "Supprimer le dépôt",
       "empty": "Aucun dépôt pour l'instant. Ajoutez l'endroit où l'entreprise range ses outils.",
       "noAddress": "Sans adresse",
-      "deleteBlocked": "Ce dépôt contient encore {count, plural, one {# unité} other {# unités}}. Déplacez-les ou retirez-les d'abord.",
+      "deleteBlocked": "Ce dépôt contient encore {count, plural, one {# équipement} other {# équipements}}. Déplacez-les ou retirez-les d'abord.",
       "fields": {
         "name": "Nom",
         "namePlaceholder": "ex. Dépôt principal",
@@ -2411,7 +2411,8 @@
         "addressPlaceholder": "Rue, ville"
       },
       "validation": {
-        "nameRequired": "Donnez un nom au dépôt."
+        "nameRequired": "Donnez un nom au dépôt.",
+        "nameTaken": "Un dépôt porte déjà ce nom."
       },
       "toast": {
         "created": "Dépôt ajouté.",

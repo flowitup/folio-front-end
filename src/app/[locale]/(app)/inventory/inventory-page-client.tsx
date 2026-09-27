@@ -23,6 +23,7 @@ import {
   groupInventoryByLocation,
   summarizeInventory,
   unitsByWarehouse,
+  rowsByWarehouse,
   type SiteRef,
 } from "@/lib/inventory/inventory";
 import {
@@ -116,6 +117,7 @@ export function InventoryPageClient({ companyId }: Props) {
 
   const summary = useMemo(() => summarizeInventory(items), [items]);
   const units = useMemo(() => unitsByWarehouse(items), [items]);
+  const rows = useMemo(() => rowsByWarehouse(items), [items]);
 
   const filtered = useMemo(() => {
     const needle = debouncedQ.toLowerCase();
@@ -259,6 +261,7 @@ export function InventoryPageClient({ companyId }: Props) {
         companyId={companyId}
         warehouses={warehouses}
         unitsByWarehouse={units}
+        rowsByWarehouse={rows}
         onChanged={reload}
       />
     </div>

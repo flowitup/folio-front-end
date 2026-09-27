@@ -2403,7 +2403,7 @@
       "delete": "Delete warehouse",
       "empty": "No warehouse yet. Add the place where the company keeps its tools.",
       "noAddress": "No address",
-      "deleteBlocked": "This warehouse still holds {count, plural, one {# unit} other {# units}}. Move or remove them first.",
+      "deleteBlocked": "This warehouse still lists {count, plural, one {# piece of equipment} other {# pieces of equipment}}. Move or remove them first.",
       "fields": {
         "name": "Name",
         "namePlaceholder": "e.g. Main warehouse",
@@ -2411,7 +2411,8 @@
         "addressPlaceholder": "Street, city"
       },
       "validation": {
-        "nameRequired": "Give the warehouse a name."
+        "nameRequired": "Give the warehouse a name.",
+        "nameTaken": "A warehouse already has this name."
       },
       "toast": {
         "created": "Warehouse added.",

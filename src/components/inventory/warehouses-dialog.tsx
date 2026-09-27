@@ -29,6 +29,8 @@ interface Props {
   warehouses: Warehouse[];
   /** Units per warehouse id, from the current inventory. */
   unitsByWarehouse: Map<string, number>;
+  /** Equipment rows per warehouse id: any row, even of 0 units, blocks a delete. */
+  rowsByWarehouse: Map<string, number>;
   onChanged: () => void | Promise<void>;
   /** False for a viewer without inventory:manage: the list only, no create/edit/delete. */
   canManage?: boolean;
@@ -40,6 +42,7 @@ export function WarehousesDialog({
   companyId,
   warehouses,
   unitsByWarehouse,
+  rowsByWarehouse,
   onChanged,
   canManage = true,
 }: Props) {
@@ -85,6 +88,11 @@ export function WarehousesDialog({
     e.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) return setError(t("validation.nameRequired"));
+    // Two warehouses with the same name cannot be told apart in the pickers.
+    const folded = trimmedName.toLocaleLowerCase();
+    if (warehouses.some((w) => w.id !== editing?.id && w.name.trim().toLocaleLowerCase() === folded)) {
+      return setError(t("validation.nameTaken"));
+    }
     const trimmedAddress = address.trim() || null;
     setBusy("form");
     setError(null);
@@ -131,7 +139,7 @@ export function WarehousesDialog({
         result.code === "Forbidden"
           ? tInv("toast.forbidden")
           : result.code === "Conflict"
-            ? t("deleteBlocked", { count: unitsByWarehouse.get(w.id) ?? 0 })
+            ? t("deleteBlocked", { count: rowsByWarehouse.get(w.id) ?? 0 })
             : t("toast.deleteError")
       );
       setBusy(null);
@@ -161,6 +169,7 @@ export function WarehousesDialog({
           <ul className="folio-card divide-y p-0" style={{ borderColor: "var(--line)" }}>
             {warehouses.map((w) => {
               const held = unitsByWarehouse.get(w.id) ?? 0;
+              const rows = rowsByWarehouse.get(w.id) ?? 0;
               const confirming = confirmDelete?.id === w.id;
               return (
                 <li key={w.id} className="flex items-center gap-3 px-3 py-2.5" data-testid={`warehouse-${w.id}`}>
@@ -204,7 +213,7 @@ export function WarehousesDialog({
                         size="icon"
                         aria-label={t("delete")}
                         onClick={() => {
-                          setError(held > 0 ? t("deleteBlocked", { count: held }) : null);
+                          setError(rows > 0 ? t("deleteBlocked", { count: rows }) : null);
                           setConfirmDelete(w);
                         }}
                       >

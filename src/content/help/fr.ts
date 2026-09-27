@@ -364,7 +364,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Vos informations personnelles, la numérotation des factures du projet en cours, et les notifications qui arrivent sur votre téléphone.",
     steps: [
       "Ouvrez “Paramètres” ; la liste à gauche sélectionne la section.",
-      "Dans “Profil”, modifiez votre nom affiché et votre téléphone, puis enregistrez. Votre e-mail est en lecture seule — seul un administrateur peut le changer.",
+      "Dans “Profil”, modifiez votre nom affiché, puis enregistrez. Pour vous connecter avec un autre numéro, utilisez “Changer de numéro” : saisissez le nouveau numéro, puis le code reçu par SMS. Votre e-mail est en lecture seule — seul un administrateur peut le changer.",
       "Dans “Projet”, fixez le préfixe de numéro de facture du projet sélectionné, jusqu'à huit lettres ou chiffres, et regardez la ligne d'aperçu avant d'enregistrer.",
       "Dans “Entreprise”, gérez les sociétés auxquelles vous êtes rattaché : la fiche d'identité de chacune, celle qui est principale, le détachement, et le rattachement d'une autre par code. Si vous administrez celle qui est sélectionnée, s'y ajoutent son code société, ses membres et ses moyens de paiement.",
       "Dans “Notifications”, utilisez l'interrupteur général et les interrupteurs par catégorie : “Discussion d'équipe”, “Présences”, “Tâches”, “Équipe et accès” et “Argent”.",

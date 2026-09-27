@@ -17,6 +17,8 @@ interface CodeBoxesProps {
   /** Labels the group for screen readers; each box announces its position. */
   label: string;
   positionLabel: (position: number) => string;
+  /** Each box gets `${testIdPrefix}-${index}`. */
+  testIdPrefix?: string;
 }
 
 /**
@@ -44,6 +46,7 @@ export function CodeBoxes({
   disabled,
   label,
   positionLabel,
+  testIdPrefix = "login-code",
 }: CodeBoxesProps) {
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
   const digits = value.padEnd(CODE_LENGTH, " ").slice(0, CODE_LENGTH).split("");
@@ -120,7 +123,7 @@ export function CodeBoxes({
           ref={(element) => {
             boxes.current[index] = element;
           }}
-          data-testid={`login-code-${index}`}
+          data-testid={`${testIdPrefix}-${index}`}
           aria-label={positionLabel(index + 1)}
           type="text"
           inputMode="numeric"

@@ -314,6 +314,25 @@
         "rate_limited": "Trop de tentatives. Patientez un instant, puis réessayez.",
         "unknown": "Une erreur est survenue. Veuillez réessayer."
       }
+    },
+    "changePhone": {
+      "action": "Changer de numéro",
+      "title": "Changer de numéro de téléphone",
+      "readOnlyHint": "Vous vous connectez avec ce numéro. Pour en utiliser un autre, changez-le avec un code envoyé au nouveau numéro.",
+      "phoneStep": "Saisissez votre nouveau numéro. Nous y enverrons un code à 6 chiffres par SMS ; votre numéro actuel reste actif jusqu'à la confirmation.",
+      "codeStep": "Saisissez le code envoyé au {phone}.",
+      "newNumber": "Nouveau numéro de téléphone",
+      "confirm": "Confirmer",
+      "confirming": "Confirmation…",
+      "otherNumber": "Utiliser un autre numéro",
+      "success": "Numéro de téléphone modifié. Connectez-vous désormais avec votre nouveau numéro.",
+      "errorInvalidPhone": "Saisissez un numéro de téléphone français valide.",
+      "errorSameNumber": "C'est déjà votre numéro de téléphone.",
+      "errorPhoneTaken": "Ce numéro de téléphone est déjà utilisé par un autre compte.",
+      "errorThrottled": "Trop de demandes. Attendez une minute et réessayez.",
+      "errorSmsFailed": "Le SMS n'a pas pu être envoyé. Réessayez plus tard.",
+      "errorInvalidCode": "Code incorrect ou expiré",
+      "errorFailed": "Impossible de changer votre numéro de téléphone. Veuillez réessayer."
     }
   },
   "paymentMethods": {

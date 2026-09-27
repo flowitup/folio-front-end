@@ -360,7 +360,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Thông tin của chính bạn, cách đánh số hóa đơn của dự án đang chọn, và những thông báo nào được gửi tới điện thoại của bạn.",
     steps: [
       "Mở “Cài đặt”; danh sách bên trái dùng để chọn mục.",
-      "Ở “Hồ sơ”, sửa tên hiển thị và số điện thoại rồi lưu. Email chỉ để xem — chỉ quản trị viên mới đổi được.",
+      "Ở “Hồ sơ”, sửa tên hiển thị rồi lưu. Để đăng nhập bằng số điện thoại khác, dùng “Đổi số điện thoại”: nhập số mới, rồi nhập mã SMS gửi tới số đó. Email chỉ để xem — chỉ quản trị viên mới đổi được.",
       "Ở “Dự án”, đặt tiền tố số hóa đơn cho dự án đang chọn, tối đa tám chữ cái hoặc chữ số, và xem dòng ví dụ trước khi lưu.",
       "Ở “Công ty”, quản lý những công ty bạn thuộc về: thẻ thông tin của từng công ty, công ty nào là chính, hủy liên kết, và liên kết thêm một công ty bằng mã. Nếu bạn quản trị công ty đang chọn, chỗ này có thêm mã tham gia, bảng thành viên và phương thức thanh toán của công ty đó.",
       "Ở “Thông báo”, dùng công tắc chính và các công tắc theo nhóm: “Trò chuyện nhóm”, “Chấm công”, “Công việc”, “Nhóm & quyền truy cập” và “Tiền”.",

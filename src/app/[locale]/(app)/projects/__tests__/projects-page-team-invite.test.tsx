@@ -151,3 +151,20 @@ describe("ProjectsPage card layout", () => {
     expect(grid.className).toContain("minmax(0,");
   });
 });
+
+describe("ProjectsPage money columns", () => {
+  it("hides the spend columns the API zeroes for a read-only member", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });
+    renderPage();
+    expect(screen.queryByText(enMessages.projects.spentByCredits)).toBeNull();
+    expect(screen.queryByText(enMessages.projects.spentPersonal)).toBeNull();
+    expect(screen.queryByTestId("project-money-grid")).toBeNull();
+  });
+
+  it("shows them to someone with labor rights", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read", "project:manage_labor"], companies: [] } });
+    renderPage();
+    expect(screen.getByText(enMessages.projects.spentByCredits)).toBeInTheDocument();
+    expect(screen.getByText(enMessages.projects.spentPersonal)).toBeInTheDocument();
+  });
+});

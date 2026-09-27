@@ -265,6 +265,12 @@ export default function ProjectsPage() {
               user?.permissions,
               project.my_permissions
             );
+            // The backend zeroes spend for anyone without labor or pay rights
+            // (_spend_visible); shown, those zeros read as "nothing spent".
+            const canViewSpend =
+              can("project:manage_labor", user?.permissions, project.my_permissions) ||
+              can("project:view_pay", user?.permissions, project.my_permissions);
+            const moneyColumns = (canViewBudget ? 2 : 0) + (canViewSpend ? 2 : 0);
             const breakdownRows = personalSpendRows(project.personal_by_type);
             const laborUnpaid = project.labor_unpaid ?? 0;
             const hasBreakdown = breakdownRows.length > 0 || laborUnpaid > 0;
@@ -381,76 +387,83 @@ export default function ProjectsPage() {
                     <div className="hairline mt-auto border-t pt-4">
                       {/* Credit total / Spent by credit / Spent personal / Remaining.
                           Two columns on narrow screens so the figures stay readable. */}
-                      <div
-                        className={`mb-3 grid grid-cols-2 gap-4 ${
-                          canViewBudget ? "sm:grid-cols-4" : "sm:grid-cols-2"
-                        }`}
-                      >
-                        {canViewBudget && (
-                          <div>
-                            {/* min-h reserves two label lines so a label that wraps in one
-                                locale (fr "Dépensé sur crédit") does not push its figure
-                                out of line with the other three. */}
-                            <div className="label-cap min-h-[3em]">{t("creditTotal")}</div>
-                            <div className="font-display num mt-0.5 text-[15px]">
-                              {creditTotal ? fmtEUR(creditTotal) : "—"}
+                      {moneyColumns > 0 && (
+                        <div
+                          className={`mb-3 grid grid-cols-2 gap-4 ${
+                            moneyColumns === 4 ? "sm:grid-cols-4" : "sm:grid-cols-2"
+                          }`}
+                          data-testid="project-money-grid"
+                        >
+                          {canViewBudget && (
+                            <div>
+                              {/* min-h reserves two label lines so a label that wraps in one
+                                  locale (fr "Dépensé sur crédit") does not push its figure
+                                  out of line with the other three. */}
+                              <div className="label-cap min-h-[3em]">{t("creditTotal")}</div>
+                              <div className="font-display num mt-0.5 text-[15px]">
+                                {creditTotal ? fmtEUR(creditTotal) : "—"}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        <div>
-                          <div className="label-cap min-h-[3em]">{t("spentByCredits")}</div>
-                          <div className="font-display num mt-0.5 text-[15px]">
-                            {spentByCredits ? fmtEUR(spentByCredits) : "—"}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="label-cap min-h-[3em]">{t("spentPersonal")}</div>
-                          {hasBreakdown ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setOpenBreakdownId(isBreakdownOpen ? null : project.id)
-                              }
-                              aria-expanded={isBreakdownOpen}
-                              aria-controls={`breakdown-${project.id}`}
-                              className="font-display num mt-0.5 flex items-center gap-1 text-[15px] hover:underline"
-                            >
-                              {spentPersonal ? fmtEUR(spentPersonal) : "—"}
-                              <ChevronDown
-                                size={13}
-                                style={{
-                                  color: "var(--muted)",
-                                  transform: isBreakdownOpen ? "rotate(180deg)" : undefined,
-                                }}
-                              />
-                            </button>
-                          ) : (
-                            <div className="font-display num mt-0.5 text-[15px]">
-                              {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                          )}
+                          {canViewSpend && (
+                            <>
+                              <div>
+                                <div className="label-cap min-h-[3em]">{t("spentByCredits")}</div>
+                                <div className="font-display num mt-0.5 text-[15px]">
+                                  {spentByCredits ? fmtEUR(spentByCredits) : "—"}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="label-cap min-h-[3em]">{t("spentPersonal")}</div>
+                                {hasBreakdown ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setOpenBreakdownId(isBreakdownOpen ? null : project.id)
+                                    }
+                                    aria-expanded={isBreakdownOpen}
+                                    aria-controls={`breakdown-${project.id}`}
+                                    className="font-display num mt-0.5 flex items-center gap-1 text-[15px] hover:underline"
+                                  >
+                                    {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                                    <ChevronDown
+                                      size={13}
+                                      style={{
+                                        color: "var(--muted)",
+                                        transform: isBreakdownOpen ? "rotate(180deg)" : undefined,
+                                      }}
+                                    />
+                                  </button>
+                                ) : (
+                                  <div className="font-display num mt-0.5 text-[15px]">
+                                    {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
+                          {canViewBudget && (
+                            <div>
+                              <div className="label-cap min-h-[3em]">{t("remaining")}</div>
+                              <div
+                                className="font-display num mt-0.5 text-[15px]"
+                                style={isOverBudget ? { color: "var(--negative)" } : undefined}
+                              >
+                                {creditTotal
+                                  ? isOverBudget
+                                    ? `${t("overBudget")} ${fmtEUR(Math.abs(remaining))}`
+                                    : fmtEUR(remaining)
+                                  : "—"}
+                              </div>
                             </div>
                           )}
                         </div>
-                        {canViewBudget && (
-                          <div>
-                            <div className="label-cap min-h-[3em]">{t("remaining")}</div>
-                            <div
-                              className="font-display num mt-0.5 text-[15px]"
-                              style={isOverBudget ? { color: "var(--negative)" } : undefined}
-                            >
-                              {creditTotal
-                                ? isOverBudget
-                                  ? `${t("overBudget")} ${fmtEUR(Math.abs(remaining))}`
-                                  : fmtEUR(remaining)
-                                : "—"}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      )}
 
                       {/* Personal spend breakdown — collapsed by default. Unpaid labor is
                           separated by a rule because it is owed, not spent, and is deliberately
                           NOT part of the personal total above. */}
-                      {hasBreakdown && isBreakdownOpen && (
+                      {canViewSpend && hasBreakdown && isBreakdownOpen && (
                         <div
                           id={`breakdown-${project.id}`}
                           className="hairline mb-3 rounded-md border p-3"

@@ -53,6 +53,13 @@ describe("planning week math", () => {
     expect(formatWeekRange(new Date(2026, 5, 1), "en-US")).not.toMatch(/day:/);
   });
 
+  it("formatWeekRange puts the day before the month in French and Vietnamese", () => {
+    expect(formatWeekRange(new Date(2026, 8, 21), "fr")).toMatch(/^21\s?–\s?27 sept\. 2026$/);
+    expect(formatWeekRange(new Date(2026, 8, 28), "fr")).toMatch(/^28 sept\. – 4 oct\. 2026$/);
+    expect(formatWeekRange(new Date(2026, 8, 21), "vi")).toMatch(/^21\s?–\s?27 thg 9, 2026$/);
+    expect(formatWeekRange(new Date(2026, 8, 28), "vi")).not.toMatch(/^Tháng/);
+  });
+
   it("weekOffsetFromParam parses safely", () => {
     expect(weekOffsetFromParam(null)).toBe(0);
     expect(weekOffsetFromParam("")).toBe(0);

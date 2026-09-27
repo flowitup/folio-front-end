@@ -41,26 +41,16 @@ export function weekDays(weekStart: Date): Date[] {
 }
 
 /**
- * Human week-range label, e.g. `Jun 1 – 7, 2026` (same month) or
- * `May 25 – Jun 7, 2026` (cross-month). Year shown once; month repeats only
- * when the week spans two months.
- *
- * Built manually rather than via a single `Intl` call with a partial option
- * set — `Intl.DateTimeFormat(locale, { day, year })` (month omitted) yields
- * garbled output like `2026 (day: 7)` in some engines/locales. We only lean on
- * `Intl` for the localized month name, which is well-defined.
+ * Human week-range label in the locale's own order: `Jun 1 – 7, 2026` (en),
+ * `1–7 juin 2026` (fr), `1 – 7 thg 6, 2026` (vi). The shared month and year
+ * are collapsed by `Intl.DateTimeFormat#formatRange`; giving it day, month and
+ * year avoids the partial-option garbling (`2026 (day: 7)`) some engines
+ * produce. Thin/narrow spaces are normalised to plain ones.
  */
 export function formatWeekRange(weekStart: Date, locale: string): string {
   const end = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6);
-  const monthFmt = new Intl.DateTimeFormat(locale, { month: "short" });
-  const startMonth = monthFmt.format(weekStart);
-  const sameMonth =
-    weekStart.getMonth() === end.getMonth() && weekStart.getFullYear() === end.getFullYear();
-  const year = end.getFullYear();
-  if (sameMonth) {
-    return `${startMonth} ${weekStart.getDate()} – ${end.getDate()}, ${year}`;
-  }
-  return `${startMonth} ${weekStart.getDate()} – ${monthFmt.format(end)} ${end.getDate()}, ${year}`;
+  const fmt = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" });
+  return fmt.formatRange(weekStart, end).replace(/[\u2009\u202f]/g, " ");
 }
 
 /** Safe parse of a `?week=` query param into an integer offset (default 0). */

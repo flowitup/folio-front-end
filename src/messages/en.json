@@ -241,7 +241,9 @@
       "description": "Your company admin hasn't added you to a construction site yet."
     },
     "settingsReadOnly": "Only admins and managers of this project can change its settings.",
-    "teamSize": "{n, plural, one {# member} other {# members}}"
+    "teamSize": "{n, plural, one {# member} other {# members}}",
+    "projectCreated": "Project created",
+    "projectDeleted": "Project deleted"
   },
   "settings": {
     "profile": "Profile",

@@ -241,7 +241,9 @@
       "description": "Quản trị viên công ty sẽ thêm bạn vào một công trình khi sẵn sàng."
     },
     "settingsReadOnly": "Chỉ quản trị viên và quản lý của dự án này mới có thể thay đổi cài đặt.",
-    "teamSize": "{n, plural, other {# thành viên}}"
+    "teamSize": "{n, plural, other {# thành viên}}",
+    "projectCreated": "Đã tạo dự án",
+    "projectDeleted": "Đã xóa dự án"
   },
   "settings": {
     "profile": "Hồ sơ",

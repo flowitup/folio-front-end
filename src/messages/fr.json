@@ -241,7 +241,9 @@
       "description": "L'administrateur de votre entreprise ne vous a pas encore ajouté à un chantier."
     },
     "settingsReadOnly": "Seuls les administrateurs et managers de ce projet peuvent modifier ses paramètres.",
-    "teamSize": "{n, plural, one {# membre} other {# membres}}"
+    "teamSize": "{n, plural, one {# membre} other {# membres}}",
+    "projectCreated": "Projet créé",
+    "projectDeleted": "Projet supprimé"
   },
   "settings": {
     "profile": "Profil",

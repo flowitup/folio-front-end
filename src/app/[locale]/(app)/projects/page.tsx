@@ -114,6 +114,16 @@ export default function ProjectsPage() {
   const handleProjectCreated = async (project: Project) => {
     await refetch();
     selectProject(project.id);
+    toast.success(t("projectCreated"));
+    // The new project lands at the end of a possibly long list: bring it in view.
+    requestAnimationFrame(() =>
+      document.getElementById(`project-${project.id}`)?.scrollIntoView?.({ behavior: "smooth", block: "center" })
+    );
+  };
+
+  const handleProjectDeleted = async () => {
+    await refetch();
+    toast.success(t("projectDeleted"));
   };
 
   const canManageUsers = (project: Project) =>
@@ -281,6 +291,7 @@ export default function ProjectsPage() {
             return (
               <article
                 key={project.id}
+                id={`project-${project.id}`}
                 className={`folio-card overflow-hidden ${
                   isFeatured ? "col-span-12" : "col-span-12 md:col-span-6"
                 }`}
@@ -675,7 +686,7 @@ export default function ProjectsPage() {
         onOpenChange={(o) => !o && setDeleteProjectState(null)}
         // ProjectContext.loadProjects auto-clears selectedProjectId when the
         // previously-selected id is no longer in the list, so we just refetch.
-        onDeleted={refetch}
+        onDeleted={handleProjectDeleted}
       />
 
       <AlertDialog open={!!removeMember} onOpenChange={(open) => !open && setRemoveMember(null)}>

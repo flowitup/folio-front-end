@@ -243,7 +243,8 @@
     "settingsReadOnly": "Seuls les administrateurs et managers de ce projet peuvent modifier ses paramètres.",
     "teamSize": "{n, plural, one {# membre} other {# membres}}",
     "projectCreated": "Projet créé",
-    "projectDeleted": "Projet supprimé"
+    "projectDeleted": "Projet supprimé",
+    "settingsForbidden": "Vous n'avez pas le droit de modifier les paramètres de ce projet."
   },
   "settings": {
     "profile": "Profil",

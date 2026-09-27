@@ -371,7 +371,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "The Folio version you are running is printed at the foot of the page, under whichever section is open.",
     ],
     whoCanDoIt:
-      "Everyone reaches their own profile, the project prefix, their notification choices and their own API keys. “Company” shows anyone their own attachments, and its admin tools — join code, members, payment methods — only to an administrator of the selected company. “Users & Roles” is reserved for Folio's support team.",
+      "Everyone reaches their own profile, their notification choices and their own API keys. “Company” shows anyone their own attachments, and its admin tools — join code, members, payment methods — only to an administrator of the selected company. “Users & Roles” is reserved for Folio's support team.",
     gotchas: [
       "Settings has no billing section of its own. Quotes, invoices and templates all live in the Billing group in the sidebar.",
       "The notification switches govern the pushes that reach the Folio mobile app, not the bell in this window.",

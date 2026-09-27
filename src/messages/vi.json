@@ -243,7 +243,8 @@
     "settingsReadOnly": "Chỉ quản trị viên và quản lý của dự án này mới có thể thay đổi cài đặt.",
     "teamSize": "{n, plural, other {# thành viên}}",
     "projectCreated": "Đã tạo dự án",
-    "projectDeleted": "Đã xóa dự án"
+    "projectDeleted": "Đã xóa dự án",
+    "settingsForbidden": "Bạn không có quyền thay đổi cài đặt của dự án này."
   },
   "settings": {
     "profile": "Hồ sơ",

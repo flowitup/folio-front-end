@@ -369,7 +369,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Phiên bản Folio bạn đang chạy được ghi ở cuối trang, bên dưới mục đang mở.",
     ],
     whoCanDoIt:
-      "Ai cũng vào được hồ sơ của mình, tiền tố của dự án, lựa chọn thông báo và khóa API của riêng mình. “Công ty” cho ai cũng thấy liên kết công ty của chính mình, còn công cụ quản trị — mã tham gia, bảng thành viên, phương thức thanh toán — chỉ dành cho quản trị viên của công ty đang chọn. “Người dùng & vai trò” chỉ dành cho bộ phận hỗ trợ Folio.",
+      "Ai cũng vào được hồ sơ của mình, lựa chọn thông báo và khóa API của riêng mình. “Công ty” cho ai cũng thấy liên kết công ty của chính mình, còn công cụ quản trị — mã tham gia, bảng thành viên, phương thức thanh toán — chỉ dành cho quản trị viên của công ty đang chọn. “Người dùng & vai trò” chỉ dành cho bộ phận hỗ trợ Folio.",
     gotchas: [
       "Cài đặt không có mục báo giá hay hóa đơn nào. Báo giá, hóa đơn và mẫu đều nằm ở nhóm “Báo giá & Hóa đơn” trên thanh bên.",
       "Các công tắc thông báo điều khiển thông báo đẩy gửi tới app Folio trên điện thoại, không phải cái chuông trong cửa sổ này.",

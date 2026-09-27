@@ -373,7 +373,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "La version de Folio que vous utilisez est indiquée en bas de la page, sous la section ouverte.",
     ],
     whoCanDoIt:
-      "Chacun accède à son profil, au préfixe du projet, à ses choix de notification et à ses propres clés API. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code société, membres, moyens de paiement — aux seuls administrateurs de la société sélectionnée. “Utilisateurs et rôles” est réservé à l'assistance Folio.",
+      "Chacun accède à son profil, à ses choix de notification et à ses propres clés API. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code société, membres, moyens de paiement — aux seuls administrateurs de la société sélectionnée. “Utilisateurs et rôles” est réservé à l'assistance Folio.",
     gotchas: [
       "Les paramètres n'ont pas de section de facturation. Les devis, les factures et les modèles sont tous dans le groupe “Facturation” du menu latéral.",
       "Les interrupteurs de notification commandent les notifications push qui arrivent dans l'application mobile Folio, pas la cloche de cette fenêtre.",

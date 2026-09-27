@@ -11,7 +11,7 @@ import { CompanySettingsSection } from "@/components/companies/company-settings-
 import { NotificationPreferencesSection } from "@/components/notifications/notification-preferences-section";
 import { ApiKeysSection } from "@/components/settings/api-keys-section";
 import { ProfileForm } from "@/components/settings/profile-form";
-import { isPlatformOps } from "@/lib/auth/permissions";
+import { can, isPlatformOps } from "@/lib/auth/permissions";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 
 // Inlined by next.config.ts at build time. Importing package.json here
@@ -90,14 +90,20 @@ export function SettingsClient({ projects }: Props) {
   const hash = useSyncExternalStore(subscribeHash, readHash, serverHash);
   const active = sectionFromHash(hash, isSuperadmin);
 
-  // A #project deep link from someone with no project selected has nothing to
-  // render, and the placeholder card that used to cover that case is gone.
+  // The Project tab edits the invoice prefix (PUT /projects/<id>, which needs
+  // project:update): a member was offered a form whose Save always failed.
+  const canEditProject =
+    selectedProject !== null &&
+    can("project:update", user?.permissions, selectedProject.my_permissions);
+
+  // A #project deep link from someone with no project selected, or who may not
+  // edit it, has nothing to render.
   const resolved: SectionKey =
-    active === "project" && !selectedProject ? "profile" : active;
+    active === "project" && !canEditProject ? "profile" : active;
 
   const sectionKeys: SectionKey[] = [
     "profile",
-    ...(selectedProject ? ["project" as const] : []),
+    ...(canEditProject ? ["project" as const] : []),
     // One Company tab for everyone: it carries the caller's own attachments
     // (identity card, primary, detach, attach-by-code) and, for a company
     // admin only, that company's self-service tools.

@@ -35,7 +35,7 @@ import { SettingsClient } from "../settings-client";
 // over it without hitting the temporal dead zone.
 const state = vi.hoisted(() => ({
   permissions: [] as string[],
-  selectedProject: null as { id: string; name: string } | null,
+  selectedProject: null as { id: string; name: string; my_permissions?: string[] } | null,
 }));
 
 vi.mock("@/context/AuthContext", () => ({
@@ -171,11 +171,21 @@ describe("Settings nav", () => {
     expect(navButton("Users & Roles")).not.toBeNull();
   });
 
-  it("offers Project once a project is selected", () => {
-    state.selectedProject = { id: "p1", name: "Maison Lavandou" };
+  it("offers Project once a project the caller may edit is selected", () => {
+    state.selectedProject = { id: "p1", name: "Maison Lavandou", my_permissions: ["project:read", "project:update"] };
     renderWith();
 
     expect(navButton("Project")).not.toBeNull();
+  });
+
+  it("does not offer Project to a member who may not edit it, even from #project", () => {
+    state.selectedProject = { id: "p1", name: "Maison Lavandou", my_permissions: ["project:read"] };
+    window.location.hash = "#project";
+    renderWith();
+
+    expect(navButton("Project")).toBeNull();
+    expect(activeNavName()).toBe("Profile");
+    window.location.hash = "";
   });
 
   it.each([

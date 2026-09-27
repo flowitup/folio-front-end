@@ -15,6 +15,7 @@
 
 import * as React from "react";
 import { ChevronsUpDown, Loader2, UserPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -54,28 +55,29 @@ export interface PersonTypeaheadProps {
   allowCreate?: boolean;
 }
 
-/** The API refuses searches shorter than this (400). */
-const MIN_QUERY_LENGTH = 2;
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
+/** Shortest search the persons API accepts (anti-enumeration). */
+const MIN_QUERY_LENGTH = 2;
+
 export function PersonTypeahead({
   value,
   onChange,
-  placeholder = "Search workers…",
+  placeholder,
   disabled = false,
   className,
   debounceMs = 200,
   limit = 20,
   allowCreate = true,
 }: PersonTypeaheadProps) {
+  const t = useTranslations("labor.typeahead");
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
-  const [results, setResults] = React.useState<PersonSummary[]>([]);
-  const [loading, setLoading] = React.useState(false);
+  const [fetchedResults, setResults] = React.useState<PersonSummary[]>([]);
+  const [fetching, setLoading] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
 
   // Debounced server search. We track the latest request ID to discard
@@ -85,16 +87,13 @@ export function PersonTypeahead({
   React.useEffect(() => {
     if (!open) return;
     const seq = ++requestSeqRef.current;
-    if (query.trim().length < MIN_QUERY_LENGTH) {
-      // Too short for the API: nothing to ask it.
-      setResults([]);
-      setLoading(false);
-      return;
-    }
+    const q = query.trim();
+    // The API refuses a search shorter than MIN_QUERY_LENGTH (400): don't ask.
+    if (q.length < MIN_QUERY_LENGTH) return;
     const handle = window.setTimeout(async () => {
       setLoading(true);
       try {
-        const rows = await fetchPersons({ q: query, limit });
+        const rows = await fetchPersons({ q, limit });
         if (seq === requestSeqRef.current) {
           setResults(rows);
         }
@@ -111,6 +110,10 @@ export function PersonTypeahead({
   // Show "Create new" only when (a) there's a trimmed query, and (b) no
   // existing person has that exact normalized name.
   const trimmed = query.trim();
+  // Below the minimum the last search's rows are stale: show none.
+  const searchable = trimmed.length >= MIN_QUERY_LENGTH;
+  const results = searchable ? fetchedResults : [];
+  const loading = searchable && fetching;
   const exactMatch =
     trimmed.length > 0 &&
     results.some((p) => p.name.trim().toLowerCase() === trimmed.toLowerCase());
@@ -182,7 +185,7 @@ export function PersonTypeahead({
       >
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder={placeholder}
+            placeholder={placeholder ?? t("placeholder")}
             value={query}
             onValueChange={setQuery}
             data-testid="person-typeahead-input"
@@ -190,11 +193,11 @@ export function PersonTypeahead({
           <CommandList id={listId}>
             {results.length === 0 && !showCreate && !loading && (
               <CommandEmpty>
-                {trimmed ? "No matches" : "Type to search"}
+                {searchable ? t("noMatches") : t("typeToSearch")}
               </CommandEmpty>
             )}
             {results.length > 0 && (
-              <CommandGroup heading="Existing">
+              <CommandGroup heading={t("existing")}>
                 {results.map((person) => (
                   <CommandItem
                     key={person.id}
@@ -225,7 +228,7 @@ export function PersonTypeahead({
                     ) : (
                       <UserPlus className="h-3.5 w-3.5" />
                     )}
-                    Create &quot;{trimmed}&quot;
+                    {t("create", { name: trimmed })}
                   </CommandItem>
                 </CommandGroup>
               </>

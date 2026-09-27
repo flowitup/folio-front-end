@@ -21,6 +21,7 @@ import {
   deltaVsCheapest,
   formatDelta,
   money,
+  toCents,
 } from "@/components/chiffrage/format";
 import {
   NOTE_DIFF_MARK_CLASS,
@@ -67,7 +68,8 @@ export function QuoteComparisonTable({
     );
   }
 
-  const cheapest = Math.min(...article.quotes.map((q) => q.unit_price_ht));
+  // Compared as shown (to the cent), not at the stored 4 decimals.
+  const cheapest = Math.min(...article.quotes.map((q) => toCents(q.unit_price_ht)));
   const noteDiff = diffQuoteNotes(article.quotes.map((q) => q.note));
   const showLegend = hasNoteDifferences(noteDiff);
 
@@ -100,8 +102,9 @@ export function QuoteComparisonTable({
         <tbody>
           {article.quotes.map((q, i) => {
             const isEffective = q.id === article.effective_quote_id;
-            const isCheapest = q.unit_price_ht === cheapest;
-            const delta = deltaVsCheapest(q.unit_price_ht, cheapest);
+            const shown = toCents(q.unit_price_ht);
+            const isCheapest = shown === cheapest;
+            const delta = deltaVsCheapest(shown, cheapest);
             return (
               <tr
                 key={q.id}

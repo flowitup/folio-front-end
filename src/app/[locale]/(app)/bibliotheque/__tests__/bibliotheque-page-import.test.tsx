@@ -58,4 +58,20 @@ describe("BibliothequePageClient import action", () => {
 
     expect(screen.queryByRole("button", { name: "Import" })).toBeNull();
   });
+
+  it("offers no Add product to a member who may not manage the library", async () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"] } });
+    renderPage();
+    await waitFor(() => expect(screen.getByText(enMessages.bibliotheque.noResults)).toBeDefined());
+
+    expect(screen.queryByRole("button", { name: enMessages.bibliotheque.addProduct })).toBeNull();
+  });
+
+  it("offers Add product to a library manager", async () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["bibliotheque:manage"] } });
+    renderPage();
+    await waitFor(() => expect(screen.getByText(enMessages.bibliotheque.noResults)).toBeDefined());
+
+    expect(screen.getByRole("button", { name: enMessages.bibliotheque.addProduct })).toBeDefined();
+  });
 });

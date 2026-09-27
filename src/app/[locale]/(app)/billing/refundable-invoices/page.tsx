@@ -23,8 +23,40 @@ import { formatDate, formatEUR } from "@/lib/utils/formatters";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import type { RefundableExpense, RefundableSummary } from "@/types/invoice";
 
+/** Who refunded the expense, plus the FR number of a bank refund's funds release. */
+function RefundSourceCell({
+  expense,
+  fundsReleaseLabel,
+}: {
+  expense: RefundableExpense;
+  fundsReleaseLabel: (number: string) => string;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <RefundSourceIndicator
+        refundable_status={expense.refundable_status}
+        has_bank_refund={expense.has_bank_refund}
+        refunded_by={expense.refunded_by}
+      />
+      {/* FR number of the funds release auto-created for a bank refund.
+          Self-hides when no release is linked. */}
+      {expense.funds_release_number && (
+        <span
+          className="font-mono text-xs text-muted-foreground"
+          title={fundsReleaseLabel(expense.funds_release_number)}
+          aria-label={fundsReleaseLabel(expense.funds_release_number)}
+          data-testid="funds-release-number"
+        >
+          {expense.funds_release_number}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export default function RefundableInvoicesPage() {
   const t = useTranslations("billing.refundable");
+  const fundsReleaseLabel = (number: string) => t("fundsReleaseLabel", { number });
 
   const [items, setItems] = useState<RefundableExpense[]>([]);
   const [total, setTotal] = useState<number>(0);
@@ -81,7 +113,35 @@ export default function RefundableInvoicesPage() {
       ) : items.length === 0 ? (
         <div className="text-sm text-muted-foreground">{t("empty")}</div>
       ) : (
-        <div className="overflow-x-auto">
+        <div>
+          {/* Phones: one card per expense, its status menu next to it. */}
+          <div className="space-y-2 lg:hidden" data-testid="refundable-cards">
+            {items.map((expense) => (
+              <div key={expense.id} className="folio-card space-y-1.5 p-4 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate font-medium">{expense.project_name}</span>
+                  <span className="shrink-0 whitespace-nowrap font-mono text-xs">
+                    {expense.invoice_number}
+                  </span>
+                </div>
+                <div className="truncate">{expense.recipient_name}</div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="tabular-nums text-muted-foreground">
+                    {formatDate(expense.issue_date)}
+                  </span>
+                  <span className="tabular-nums font-medium">{formatEUR(expense.total_amount)}</span>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <span className="inline-flex items-center gap-2">
+                    <RefundSourceCell expense={expense} fundsReleaseLabel={fundsReleaseLabel} />
+                    <RefundableExpenseAttachmentsCell attachments={expense.attachments} />
+                  </span>
+                  <RefundableExpenseRowActions expense={expense} onReload={load} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto lg:block" data-testid="refundable-table">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
@@ -93,14 +153,16 @@ export default function RefundableInvoicesPage() {
                 <th className="pb-2 pr-4 font-medium">{t("columns.invoice")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("columns.refundedBy")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("columns.status")}</th>
-                <th className="pb-2 font-medium">{t("columns.actions")}</th>
+                <th className="pb-2 text-right font-medium">{t("columns.actions")}</th>
               </tr>
             </thead>
             <tbody>
               {items.map((expense) => (
                 <tr key={expense.id} className="border-b last:border-0">
                   <td className="py-3 pr-4">{expense.project_name}</td>
-                  <td className="py-3 pr-4 font-mono text-xs">{expense.invoice_number}</td>
+                  <td className="whitespace-nowrap py-3 pr-4 font-mono text-xs">
+                    {expense.invoice_number}
+                  </td>
                   <td className="py-3 pr-4">{expense.recipient_name}</td>
                   <td className="py-3 pr-4 tabular-nums">{formatDate(expense.issue_date)}</td>
                   <td className="py-3 pr-4 text-right tabular-nums">
@@ -110,40 +172,19 @@ export default function RefundableInvoicesPage() {
                     <RefundableExpenseAttachmentsCell attachments={expense.attachments} />
                   </td>
                   <td className="py-3 pr-4">
-                    <span className="inline-flex items-center gap-1.5">
-                      <RefundSourceIndicator
-                        refundable_status={expense.refundable_status}
-                        has_bank_refund={expense.has_bank_refund}
-                        refunded_by={expense.refunded_by}
-                      />
-                      {/* FR number of the funds release auto-created for a bank
-                          refund. Self-hides when no release is linked. */}
-                      {expense.funds_release_number && (
-                        <span
-                          className="font-mono text-xs text-muted-foreground"
-                          title={t("fundsReleaseLabel", {
-                            number: expense.funds_release_number,
-                          })}
-                          aria-label={t("fundsReleaseLabel", {
-                            number: expense.funds_release_number,
-                          })}
-                          data-testid="funds-release-number"
-                        >
-                          {expense.funds_release_number}
-                        </span>
-                      )}
-                    </span>
+                    <RefundSourceCell expense={expense} fundsReleaseLabel={fundsReleaseLabel} />
                   </td>
-                  <td className="py-3 pr-4" colSpan={2}>
-                    <RefundableExpenseRowActions
-                      expense={expense}
-                      onReload={load}
-                    />
+                  <td className="py-3 pr-4">
+                    <RefundableExpenseRowActions expense={expense} onReload={load} part="status" />
+                  </td>
+                  <td className="py-3 text-right">
+                    <RefundableExpenseRowActions expense={expense} onReload={load} part="menu" />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
           {items.length < total && (
             <p className="mt-2 text-xs text-muted-foreground">
               {t("truncatedNotice", { count: items.length, total })}

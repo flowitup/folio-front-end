@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useState, useRef } from "react";
 import {
@@ -31,15 +31,10 @@ import type { ProjectDocument, ProjectDocumentKind } from "@/lib/api/project-doc
 import { downloadProjectDocument } from "@/lib/api/project-document-blob";
 import { formatDate } from "@/lib/utils/formatters";
 import { DocumentMobileCard } from "./document-mobile-card";
+import { formatBytes } from "./format-bytes";
 
 // ---- Helpers ----
 
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-}
 
 type Member = {
   id: string;
@@ -101,6 +96,9 @@ function SortHeader({ column, label, activeSort, activeOrder, onSortChange }: So
         ) : (
           <ChevronDown className="size-3.5" />
         )
+      ) : column === "name" || column === "uploader" ? (
+        // The first click on a text column sorts A→Z.
+        <ChevronUp className="size-3.5 opacity-30" />
       ) : (
         <ChevronDown className="size-3.5 opacity-30" />
       )}
@@ -146,6 +144,7 @@ export function DocumentsList({
   onTagsUpdate,
 }: Props) {
   const t = useTranslations("documents.list");
+  const locale = useLocale();
   const tKinds = useTranslations("documents.kinds");
   const tTags = useTranslations("documents.tags");
   const [editingTagsDocId, setEditingTagsDocId] = useState<string | null>(null);
@@ -187,7 +186,7 @@ export function DocumentsList({
             doc={doc}
             uploaderName={resolveUploaderName(doc.uploader_id)}
             formattedDate={formatDate(doc.uploaded_at)}
-            formattedSize={formatBytes(doc.size_bytes)}
+            formattedSize={formatBytes(doc.size_bytes, locale)}
             kindLabel={tKinds(doc.kind)}
             editingTagsDocId={editingTagsDocId}
             tagInput={tagInput}
@@ -332,6 +331,7 @@ export function DocumentsList({
                             }
                           }}
                           placeholder={tTags("placeholder")}
+                          maxLength={100}
                           list={`tags-datalist-${doc.id}`}
                           className="h-6 w-20 rounded border bg-transparent px-1.5 text-xs outline-none focus:ring-1 focus:ring-primary"
                           autoFocus
@@ -384,7 +384,7 @@ export function DocumentsList({
 
                 {/* Size */}
                 <TableCell className="text-sm text-muted-foreground">
-                  {formatBytes(doc.size_bytes)}
+                  {formatBytes(doc.size_bytes, locale)}
                 </TableCell>
 
                 {/* Uploaded by */}

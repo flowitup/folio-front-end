@@ -10,11 +10,39 @@
  * different timezone), producing a React #418 hydration mismatch right
  * around midnight. Computing it once here and passing it as a prop makes
  * the server-rendered HTML and the hydrated client agree by construction.
+ *
+ * Access gate, as on the other project tabs: someone who cannot see the
+ * project (the project fetch fails) goes back to the projects list instead
+ * of a manager shell full of "Failed to load" and 0,00 € figures.
  */
 
+import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
+import { getSession } from "@/lib/auth/session";
+import { getProjectById } from "@/lib/api/projects-server";
+import { isPlatformOps } from "@/lib/auth/permissions";
+import { parisDayKey } from "@/lib/utils/paris-day";
 import { LaborPageClient } from "./labor-page-client";
 
-export default function LaborPage() {
-  const initialDate = new Date().toISOString().slice(0, 10);
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function LaborPage({ params }: PageProps) {
+  const { id: projectId } = await params;
+  const locale = await getLocale();
+
+  const session = await getSession();
+  if (!session) {
+    redirect(`/${locale}/login`);
+  }
+
+  const project = await getProjectById(projectId).catch(() => null);
+  if (!project && !isPlatformOps(session.user.permissions)) {
+    redirect(`/${locale}/projects`);
+  }
+
+  // Today in Paris: the UTC day is still yesterday between 00:00 and 02:00.
+  const initialDate = parisDayKey();
   return <LaborPageClient initialDate={initialDate} />;
 }

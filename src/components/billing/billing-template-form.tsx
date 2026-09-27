@@ -47,7 +47,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { BillingDocumentItemsEditor } from "@/components/billing/billing-document-items-editor";
+import {
+  BillingDocumentItemsEditor,
+  PRESET_VAT_RATES,
+  isPresetVatRate,
+  normalizeVatRate,
+} from "@/components/billing/billing-document-items-editor";
 import { toItemPayload } from "@/lib/billing/document-payload";
 import {
   createBillingTemplateAction,
@@ -64,7 +69,6 @@ import type {
 // Constants
 // ---------------------------------------------------------------------------
 
-const PRESET_VAT_RATES = ["20", "10", "5.5", "0"];
 const TEMPLATES_PATH = "/billing/templates";
 
 // ---------------------------------------------------------------------------
@@ -106,16 +110,16 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
     ? undefined
     : (props as { mode: "create"; initialCompanyId?: string }).initialCompanyId;
   const [name, setName] = useState(template?.name ?? "");
-  const [defaultVatRate, setDefaultVatRate] = useState<string>(
-    template?.default_vat_rate ?? "20"
-  );
+  // The API returns the rate as "10.00": normalise it so a preset stays a preset.
+  const savedVatRate = template?.default_vat_rate
+    ? normalizeVatRate(template.default_vat_rate)
+    : null;
+  const [defaultVatRate, setDefaultVatRate] = useState<string>(savedVatRate ?? "20");
   const [customVatRate, setCustomVatRate] = useState<string>(
-    template?.default_vat_rate && !PRESET_VAT_RATES.includes(template.default_vat_rate)
-      ? template.default_vat_rate
-      : ""
+    savedVatRate && !isPresetVatRate(savedVatRate) ? savedVatRate : ""
   );
   const [isCustomVat, setIsCustomVat] = useState(
-    !!(template?.default_vat_rate && !PRESET_VAT_RATES.includes(template.default_vat_rate))
+    !!(savedVatRate && !isPresetVatRate(savedVatRate))
   );
   const [notes, setNotes] = useState(template?.notes ?? "");
   const [terms, setTerms] = useState(template?.terms ?? "");
@@ -308,7 +312,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
                 value={customVatRate}
                 onChange={(e) => setCustomVatRate(e.target.value)}
                 className="w-28"
-                placeholder="e.g. 8.5"
+                placeholder={tForm("vatCustomPlaceholder")}
               />
               <span className="text-sm" style={{ color: "var(--muted)" }}>%</span>
               <button
@@ -317,7 +321,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
                 style={{ color: "var(--muted)" }}
                 onClick={() => { setIsCustomVat(false); setDefaultVatRate("20"); }}
               >
-                ↩ Use preset
+                ↩ {tForm("vatUsePreset")}
               </button>
             </div>
           ) : (
@@ -341,7 +345,12 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
           {tForm("items")}
         </p>
-        <BillingDocumentItemsEditor items={items} onChange={setItems} showTotals={false} />
+        <BillingDocumentItemsEditor
+          items={items}
+          onChange={setItems}
+          showTotals={false}
+          defaultVatRate={effectiveVatRate || undefined}
+        />
       </div>
 
       {/* 4. Notes & Terms */}
@@ -392,7 +401,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         </Button>
         <Button type="button" onClick={handleSave} disabled={isSubmitting}>
           {isSubmitting ? <Loader2 size={13} className="mr-2 animate-spin" /> : null}
-          {isEdit ? tForm("actions.save") : tForm("titleCreate")}
+          {isEdit ? tForm("actions.save") : tForm("actions.create")}
         </Button>
 
         {isEdit && (
@@ -411,7 +420,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
               <AlertDialogHeader>
                 <AlertDialogTitle>{tForm("titleEdit")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Delete &ldquo;{template!.name}&rdquo;? This cannot be undone.
+                  {tForm("deleteConfirm", { name: template!.name })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

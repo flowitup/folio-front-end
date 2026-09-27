@@ -54,7 +54,12 @@ export function AnalysisViewer({ projectId, analysisId, title }: Props) {
         // docstring on the backend GET /projects/<id>/analyses/<id>/content
         // route and the CSP on the same-origin proxy route. Do not change one
         // without re-reviewing the others.
-        sandbox="allow-scripts"
+        //
+        // `allow-popups` + `allow-popups-to-escape-sandbox` let a report's
+        // links (target=_blank) open in a new tab as ordinary pages; they give
+        // the report itself no access to Folio. Never add `allow-same-origin`
+        // or `allow-top-navigation`.
+        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
         referrerPolicy="no-referrer"
         title={title}
         className="h-full w-full rounded-md border bg-white"

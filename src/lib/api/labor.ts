@@ -360,14 +360,24 @@ async function fetchExportFile(
   return { blob, filename };
 }
 
+/** Languages the labor export renders labels and month names in. */
+const EXPORT_LOCALES: readonly string[] = ['en', 'fr', 'vi'];
+
+function exportQuery(range: LaborExportRange, format: LaborExportFormat, locale?: string): string {
+  const lang = locale && EXPORT_LOCALES.includes(locale) ? `&locale=${locale}` : '';
+  return `?from=${range.from}&to=${range.to}&format=${format}${lang}`;
+}
+
 export async function fetchLaborExport(
   projectId: string,
   range: LaborExportRange,
   format: LaborExportFormat,
+  /** UI language of the file (en / fr / vi); the API uses English without it. */
+  locale?: string,
 ): Promise<{ blob: Blob; filename: string }> {
   const url =
     `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/labor-export` +
-    `?from=${range.from}&to=${range.to}&format=${format}`;
+    exportQuery(range, format, locale);
   return fetchExportFile(url, range, format);
 }
 
@@ -376,10 +386,12 @@ export async function fetchWorkerLaborExport(
   workerId: string,
   range: LaborExportRange,
   format: LaborExportFormat,
+  /** UI language of the file (en / fr / vi); the API uses English without it. */
+  locale?: string,
 ): Promise<{ blob: Blob; filename: string }> {
   const url =
     `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}` +
     `/workers/${encodeURIComponent(workerId)}/labor-export` +
-    `?from=${range.from}&to=${range.to}&format=${format}`;
+    exportQuery(range, format, locale);
   return fetchExportFile(url, range, format);
 }

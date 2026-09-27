@@ -7,6 +7,7 @@
  * - Transfer action shown when paid_by_company absent
  * - Transfer action hidden for non-M&S type
  * - Transfer action hidden when canManage=false
+ * - Transfer action hidden from a manager who is not a company admin
  *
  * Fetch-path integration tests (InvoiceDetailRow):
  * - fetchInvoice returning paid_by_company=true → transfer action absent
@@ -91,11 +92,12 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
   };
 }
 
-function renderDetail(invoice: Invoice, canManage = true) {
+function renderDetail(invoice: Invoice, canManage = true, canTransferToCompany = canManage) {
   return render(
     <InvoiceDetailContent
       invoice={invoice}
       canManage={canManage}
+      canTransferToCompany={canTransferToCompany}
       onUpdated={vi.fn()}
       onDeleted={vi.fn()}
       printUrl="/en/projects/proj-1/invoices/inv-dc-1/print"
@@ -153,6 +155,19 @@ describe("InvoiceDetailContent — transfer action visibility with paid_by_compa
   });
 });
 
+describe("InvoiceDetailContent — transfer action for managers", () => {
+  it("hides the transfer from a manager who may manage expenses but is not a company admin", () => {
+    renderDetail(
+      makeInvoice({ type: "materials_services", refundable_status: null, paid_by_company: false }),
+      true,
+      false,
+    );
+    expect(
+      screen.queryByRole("button", { name: "invoices.refund.action.transfer" }),
+    ).toBeNull();
+  });
+});
+
 // ── Fetch-path integration tests (InvoiceDetailRow → fetchInvoice) ────────────
 
 describe("InvoiceDetailRow — transfer action gated via fetchInvoice response", () => {
@@ -170,6 +185,7 @@ describe("InvoiceDetailRow — transfer action gated via fetchInvoice response",
               projectId="proj-1"
               invoiceId="inv-dc-1"
               canManage={true}
+              canTransferToCompany={true}
               colSpan={5}
             />
           </tbody>
@@ -202,6 +218,7 @@ describe("InvoiceDetailRow — transfer action gated via fetchInvoice response",
               projectId="proj-1"
               invoiceId="inv-dc-1"
               canManage={true}
+              canTransferToCompany={true}
               colSpan={5}
             />
           </tbody>

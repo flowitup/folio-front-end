@@ -156,9 +156,11 @@ export function ExpenseTypeBreakdown({
     return Math.min(100, Math.max(MIN_SEGMENT_PCT, (amount / scale) * 100));
   };
 
+  // Three significant digits print every tick niceAxisMax can produce exactly
+  // (1.2K, 1.8K, 2.25K); whole thousands turned 1 800 and 2 400 into "2K" twice.
   const tickFmt = new Intl.NumberFormat(locale, {
     notation: "compact",
-    maximumFractionDigits: 0,
+    maximumSignificantDigits: 3,
   });
 
   // Hover tooltips are delegated — the parent summary owns the single

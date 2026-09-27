@@ -289,7 +289,7 @@ export function ProductCreateDialog({
                 disabled={isSubmitting}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("allSuppliers")} />
+                  <SelectValue placeholder={t("selectSupplier")} />
                 </SelectTrigger>
                 <SelectContent>
                   {suppliers.map((s) => (
@@ -435,7 +435,7 @@ export function ProductCreateDialog({
             {imagePreviewUrl && (
               <img
                 src={imagePreviewUrl}
-                alt="Preview"
+                alt={t("imagePreviewAlt")}
                 className="mt-2 h-32 w-auto rounded-md object-contain"
               />
             )}

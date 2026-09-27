@@ -66,3 +66,36 @@ describe("useLastLoggedDay", () => {
     expect(result.current.workers[0].shift_type).toBe("full");
   });
 });
+
+describe("useLastLoggedDay — relative to the picked date", () => {
+  const entry = (id: string, date: string, status?: "pending" | "validated") =>
+    ({
+      id,
+      worker_id: `w-${id}`,
+      worker_name: id,
+      date,
+      amount_override: null,
+      effective_cost: 100,
+      note: null,
+      shift_type: "full",
+      supplement_hours: 0,
+      created_at: `${date}T08:00:00Z`,
+      status,
+    }) as never;
+
+  it("takes the latest validated day before the picked date, not a later or pending one", () => {
+    const { result } = renderHook(() =>
+      useLastLoggedDay(
+        [
+          entry("a", "2026-09-10"),
+          entry("b", "2026-09-12", "validated"),
+          entry("c", "2026-09-14", "pending"),
+          entry("d", "2026-09-30"),
+        ],
+        "2026-09-15"
+      )
+    );
+    expect(result.current.date).toBe("2026-09-12");
+    expect(result.current.workers.map((w) => w.worker_id)).toEqual(["w-b"]);
+  });
+});

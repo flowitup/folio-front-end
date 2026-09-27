@@ -34,6 +34,12 @@ import type {
 
 type SortColumn = "name" | "size" | "created_at" | "uploader";
 
+const TEXT_COLUMNS: SortColumn[] = ["name", "uploader"];
+
+// The backend's limits on a document's tags.
+const MAX_TAGS = 20;
+const MAX_TAG_LENGTH = 100;
+
 type Member = {
   id: string;
   firstName?: string;
@@ -71,6 +77,9 @@ export function DocumentsPanel({
   const [total, setTotal] = useState(initialTotal);
   const [page, setPage] = useState(1);
   const perPage = 25;
+  // Bumped to re-read the current page after a delete, so the rows of the
+  // next page move up and an emptied last page steps back.
+  const [reloadCount, setReloadCount] = useState(0);
 
   // ---- Sort/filter state ----
   const [sort, setSort] = useState<SortColumn>("created_at");
@@ -94,6 +103,7 @@ export function DocumentsPanel({
     tags: selectedTags,
     uploaderId,
     page,
+    reloadCount,
   });
   const [loadedKey, setLoadedKey] = useState(queryKey);
   const loading = loadedKey !== queryKey;
@@ -137,6 +147,12 @@ export function DocumentsPanel({
       if (cancelled) return;
 
       if (result.ok) {
+        // The page emptied under us (its last document was deleted): step
+        // back to the new last page, which this effect then loads.
+        if (result.data.items.length === 0 && page > 1 && result.data.total > 0) {
+          setPage(Math.max(1, Math.ceil(result.data.total / perPage)));
+          return;
+        }
         setList(result.data.items);
         setTotal(result.data.total);
       } else {
@@ -151,7 +167,7 @@ export function DocumentsPanel({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sort, order, kinds, selectedTags, uploaderId, page, projectId]);
+  }, [sort, order, kinds, selectedTags, uploaderId, page, projectId, reloadCount]);
 
   // ---- Uploaders (filter options + names) ----
 
@@ -210,7 +226,8 @@ export function DocumentsPanel({
         setOrder((prev) => (prev === "asc" ? "desc" : "asc"));
       } else {
         setSort(col);
-        setOrder("desc");
+        // Names read A→Z first; dates and sizes newest/largest first.
+        setOrder(TEXT_COLUMNS.includes(col) ? "asc" : "desc");
       }
       setPage(1);
     },
@@ -229,17 +246,37 @@ export function DocumentsPanel({
 
   const refreshAvailableTags = useCallback(async () => {
     const result = await listDocumentTagsAction(projectId);
-    if (result.ok) setAvailableTags(result.data);
+    if (!result.ok) return;
+    setAvailableTags(result.data);
+    // A tag no document carries any more can only filter down to nothing,
+    // with no chip left to clear it: drop it from the filter.
+    setSelectedTags((current) =>
+      current.every((tag) => result.data.includes(tag))
+        ? current
+        : current.filter((tag) => result.data.includes(tag))
+    );
   }, [projectId]);
 
   const handleTagsUpdate = useCallback(
     async (docId: string, tags: string[]) => {
+      if (tags.length > MAX_TAGS) {
+        toast.error(t("tags.errorTooMany", { max: MAX_TAGS }));
+        return;
+      }
+      if (tags.some((tag) => tag.length > MAX_TAG_LENGTH)) {
+        toast.error(t("tags.errorTooLong", { max: MAX_TAG_LENGTH }));
+        return;
+      }
       const result = await updateDocumentTagsAction(projectId, docId, tags);
       if (result.ok) {
         setList((prev) => prev.map((d) => (d.id === docId ? result.data : d)));
         void refreshAvailableTags();
+      } else if (result.code === "TOO_MANY_TAGS") {
+        toast.error(t("tags.errorTooMany", { max: MAX_TAGS }));
+      } else if (result.code === "TAG_TOO_LONG") {
+        toast.error(t("tags.errorTooLong", { max: MAX_TAG_LENGTH }));
       } else {
-        toast.error(t("toast.listLoadError"));
+        toast.error(t("tags.errorSave"));
       }
     },
     [projectId, t, refreshAvailableTags]
@@ -260,6 +297,9 @@ export function DocumentsPanel({
       } else if (result.error === "forbidden") {
         toast.error(t("rename.errorForbidden"));
         setRenameDoc(null);
+      } else if (result.error === "validation") {
+        // Keep the dialog open with what was typed so it can be corrected.
+        toast.error(t("rename.errorInvalid"));
       } else {
         toast.error(t("rename.errorServer"));
         setRenameDoc(null);
@@ -275,11 +315,19 @@ export function DocumentsPanel({
     try {
       const result = await deleteDocumentAction(projectId, deleteDoc.id);
 
-      if (result.ok) {
+      // Already deleted elsewhere (stale row): the outcome is the same.
+      const gone = !result.ok && result.error === "notFound";
+      if (result.ok || gone) {
         setList((prev) => prev.filter((d) => d.id !== deleteDoc.id));
         setTotal((prev) => Math.max(0, prev - 1));
-        toast.success(t("delete.success"));
+        if (gone) toast.error(t("delete.errorNotFound"));
+        else toast.success(t("delete.success"));
         setDeleteDoc(null);
+        // Its tags may have been the last of their kind.
+        void refreshAvailableTags();
+        // Re-read the page: the next page's first row moves up, and a page
+        // left empty steps back instead of showing the "no documents" state.
+        setReloadCount((n) => n + 1);
         // It may have been its uploader's last document here.
         void refreshUploaders();
       } else if (result.error === "forbidden") {
@@ -292,7 +340,7 @@ export function DocumentsPanel({
     } finally {
       setDeleting(false);
     }
-  }, [deleteDoc, projectId, t, refreshUploaders]);
+  }, [deleteDoc, projectId, t, refreshUploaders, refreshAvailableTags]);
 
   // ---- Pagination ----
 
@@ -337,7 +385,7 @@ export function DocumentsPanel({
       </div>
 
       {/* Pagination controls */}
-      {totalPages > 1 && (
+      {(totalPages > 1 || page > 1) && (
         <div className="flex items-center justify-center gap-3">
           <Button
             variant="outline"

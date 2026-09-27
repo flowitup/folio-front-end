@@ -14,7 +14,7 @@
  *   - await waitFor for async action callbacks
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, act, within } from "@testing-library/react";
 import { BillingDocumentForm } from "@/components/billing/billing-document-form";
 import type { BillingDocument, BillingDocumentItem } from "@/types/billing";
@@ -722,5 +722,20 @@ describe("BillingDocumentForm — choosing a source on the new-document page", (
     expect((screen.getByLabelText(/name \*/i) as HTMLInputElement).value).toBe("Source Client");
     expect(screen.getByDisplayValue("Source notes")).toBeDefined();
     expect(screen.getAllByText("Consulting").length).toBeGreaterThan(0);
+  });
+});
+
+describe("BillingDocumentForm — default dates", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("defaults the issue date to today in Paris just after midnight, not the UTC day", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    // 22:30 UTC on the 26th is 00:30 on the 27th in Paris.
+    vi.setSystemTime(new Date("2026-09-26T22:30:00Z"));
+
+    render(<BillingDocumentForm mode="create" kind="facture" attachedCompanies={ATTACHED_COMPANIES} />);
+
+    expect((screen.getByLabelText(/issue date/i) as HTMLInputElement).value).toBe("2026-09-27");
+    expect((screen.getByLabelText(/payment due/i) as HTMLInputElement).value).toBe("2026-10-27");
   });
 });

@@ -83,6 +83,13 @@ describe("lineVerdict", () => {
     });
   });
 
+  it("compares 4-decimal prices as shown, to the cent", () => {
+    // 12.3456 and 12.3499 both read 12,35 €.
+    expect(lineVerdict(quote("qa", "A", 12.3456), quote("qb", "B", 12.3499))).toEqual({ kind: "tie" });
+    const v = lineVerdict(quote("qa", "A", 10.004), quote("qb", "B", 10.1149));
+    expect(v).toMatchObject({ kind: "gap", gap: 0.11, cheaper: "a" });
+  });
+
   it("calls equal prices a tie and a missing side unpriced", () => {
     expect(lineVerdict(quote("qa", "A", 289), quote("qb", "B", 289))).toEqual({ kind: "tie" });
     expect(lineVerdict(quote("qa", "A", 289), null)).toEqual({ kind: "unpriced" });
@@ -150,5 +157,31 @@ describe("formatGapPercent", () => {
     const plain = (s: string) => s.replace(/[\u202f\u00a0]/g, " ");
     expect(plain(formatGapPercent(145 / 1240))).toBe("+11,7 %");
     expect(plain(formatGapPercent(-14.5 / 298))).toBe("-4,9 %");
+  });
+});
+
+describe("unitLabel", () => {
+  it("translates the French word units and leaves symbols as typed", async () => {
+    const { unitLabel } = await import("../format");
+    const en: Record<string, string> = { unitSac: "bag", unitBoite: "box", unitForfait: "lump sum" };
+    const t = (k: string) => en[k] ?? k;
+    expect(unitLabel("sac", t)).toBe("bag");
+    expect(unitLabel("boîte", t)).toBe("box");
+    expect(unitLabel("forfait", t)).toBe("lump sum");
+    expect(unitLabel("m²", t)).toBe("m²");
+    expect(unitLabel("palette", t)).toBe("palette");
+  });
+});
+
+describe("hasComparablePrices", () => {
+  it("is false when every shop's basket is empty, true once one holds a price", async () => {
+    const { hasComparablePrices } = await import("../compare-lines");
+    expect(hasComparablePrices({ store_baskets: [] })).toBe(false);
+    expect(
+      hasComparablePrices({ store_baskets: [{ priced_article_count: 0 }, { priced_article_count: 0 }] })
+    ).toBe(false);
+    expect(
+      hasComparablePrices({ store_baskets: [{ priced_article_count: 0 }, { priced_article_count: 2 }] })
+    ).toBe(true);
   });
 });

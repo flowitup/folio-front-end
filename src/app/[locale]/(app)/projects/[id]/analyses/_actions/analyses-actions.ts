@@ -55,7 +55,17 @@ function classifyBackendError(err: unknown): string {
   const status = e.status;
 
   if (status === 413) return "tooLarge";
-  if (status === 400) return "invalidFile";
+  if (status === 400) {
+    // Only a file problem is a file error; a metadata refusal (BadRequest)
+    // is told apart from its message, also in the Edit dialog.
+    const code = e.body?.error;
+    if (code === "InvalidFile" || code === "MissingFile") return "invalidFile";
+    const message = e.body?.message ?? "";
+    if (/source_url/i.test(message)) return "invalidSourceUrl";
+    if (/at most \d+ tags/i.test(message)) return "tooManyTags";
+    if (/characters or fewer/i.test(message)) return "tagTooLong";
+    return "validation";
+  }
   if (status === 422) return "validation";
   if (status === 401) redirect("/login");
   if (status === 403) return "forbidden";

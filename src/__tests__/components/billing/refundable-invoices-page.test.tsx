@@ -20,7 +20,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // ---------------------------------------------------------------------------
@@ -122,6 +122,12 @@ function makeExpense(overrides: Partial<RefundableExpense> = {}): RefundableExpe
 // Tests
 // ---------------------------------------------------------------------------
 
+
+/** The desktop table; phones get the same rows again as cards. */
+function table() {
+  return within(screen.getByTestId("refundable-table"));
+}
+
 describe("RefundableInvoicesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -136,17 +142,17 @@ describe("RefundableInvoicesPage", () => {
 
     // Status label (from en.json: billing.refundable.status.refundPending)
     await waitFor(() => {
-      expect(screen.getByText("Tower Block")).toBeDefined();
+      expect(table().getByText("Tower Block")).toBeDefined();
     });
-    expect(screen.getByText("Refund pending")).toBeDefined();
-    expect(screen.getByText("INV-2026-001")).toBeDefined();
+    expect(table().getByText("Refund pending")).toBeDefined();
+    expect(table().getByText("INV-2026-001")).toBeDefined();
   });
 
   it("renders 'refundable' status stamp label", async () => {
     mockFetch.mockResolvedValue({ items: [makeExpense()], total: 1, summary: null });
     render(<RefundableInvoicesPage />);
     await waitFor(() => {
-      expect(screen.getByText("Refundable")).toBeDefined();
+      expect(table().getByText("Refundable")).toBeDefined();
     });
   });
 
@@ -158,7 +164,7 @@ describe("RefundableInvoicesPage", () => {
     });
     render(<RefundableInvoicesPage />);
     await waitFor(() => {
-      expect(screen.getByText("Refunded")).toBeDefined();
+      expect(table().getByText("Refunded")).toBeDefined();
     });
   });
 
@@ -169,12 +175,12 @@ describe("RefundableInvoicesPage", () => {
     mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
-    await waitFor(() => screen.getByText("Tower Block"));
+    await waitFor(() => table().getByText("Tower Block"));
 
     // Header column rendered
-    expect(screen.getByText("Invoice")).toBeDefined();
+    expect(table().getByText("Invoice")).toBeDefined();
     // Stubbed cell rendered with correct count
-    const cell = screen.getByTestId("attachments-cell");
+    const cell = table().getByTestId("attachments-cell");
     expect(cell.getAttribute("data-count")).toBe("1");
   });
 
@@ -194,16 +200,16 @@ describe("RefundableInvoicesPage", () => {
     });
   });
 
-  it("calls setRefundableStatus(id, null) when Remove is selected", async () => {
+  it("calls setRefundableStatus(id, null) when Remove is selected and confirmed", async () => {
     const user = userEvent.setup();
     const expense = makeExpense();
     mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
-    await waitFor(() => screen.getByText("Tower Block"));
+    await waitFor(() => table().getByText("Tower Block"));
 
     // Open the dropdown via userEvent (Radix requires pointer events)
-    const trigger = screen.getByRole("button", { name: /change status/i });
+    const trigger = table().getByRole("button", { name: /change status/i });
     await user.click(trigger);
 
     // Items render in a Radix portal — query document directly
@@ -216,6 +222,11 @@ describe("RefundableInvoicesPage", () => {
       (el) => /remove/i.test(el.textContent ?? "")
     )!;
     await user.click(removeItem);
+
+    // Nothing happens until the confirmation dialog is accepted.
+    expect(mockSet).not.toHaveBeenCalled();
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: /remove/i }));
 
     await waitFor(() => {
       expect(mockSet).toHaveBeenCalledWith("exp-1", null, undefined);
@@ -230,9 +241,9 @@ describe("RefundableInvoicesPage", () => {
     mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
-    await waitFor(() => screen.getByText("Tower Block"));
+    await waitFor(() => table().getByText("Tower Block"));
 
-    const trigger = screen.getByRole("button", { name: /change status/i });
+    const trigger = table().getByRole("button", { name: /change status/i });
     await user.click(trigger);
 
     await waitFor(() => {
@@ -256,9 +267,9 @@ describe("RefundableInvoicesPage", () => {
     mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
-    await waitFor(() => screen.getByText("Tower Block"));
+    await waitFor(() => table().getByText("Tower Block"));
 
-    const trigger = screen.getByRole("button", { name: /change status/i });
+    const trigger = table().getByRole("button", { name: /change status/i });
     await user.click(trigger);
 
     await waitFor(() => {
@@ -282,9 +293,9 @@ describe("RefundableInvoicesPage", () => {
     mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
-    await waitFor(() => screen.getByText("Tower Block"));
+    await waitFor(() => table().getByText("Tower Block"));
 
-    await user.click(screen.getByRole("button", { name: /change status/i }));
+    await user.click(table().getByRole("button", { name: /change status/i }));
     await waitFor(() => {
       if (document.querySelectorAll("[role='menuitem']").length === 0) {
         throw new Error("menu items not rendered");
@@ -307,9 +318,9 @@ describe("RefundableInvoicesPage", () => {
     mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
-    await waitFor(() => screen.getByText("Tower Block"));
+    await waitFor(() => table().getByText("Tower Block"));
 
-    await user.click(screen.getByRole("button", { name: /change status/i }));
+    await user.click(table().getByRole("button", { name: /change status/i }));
     await waitFor(() => {
       if (document.querySelectorAll("[role='menuitem']").length === 0) {
         throw new Error("menu items not rendered");
@@ -332,9 +343,9 @@ describe("RefundableInvoicesPage", () => {
     mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
-    await waitFor(() => screen.getByText("Tower Block"));
+    await waitFor(() => table().getByText("Tower Block"));
 
-    await user.click(screen.getByRole("button", { name: /change status/i }));
+    await user.click(table().getByRole("button", { name: /change status/i }));
     await waitFor(() => {
       if (document.querySelectorAll("[role='menuitem']").length === 0) {
         throw new Error("menu items not rendered");
@@ -357,9 +368,9 @@ describe("RefundableInvoicesPage", () => {
     mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
-    await waitFor(() => screen.getByText("Tower Block"));
+    await waitFor(() => table().getByText("Tower Block"));
 
-    await user.click(screen.getByRole("button", { name: /change status/i }));
+    await user.click(table().getByRole("button", { name: /change status/i }));
     await waitFor(() => {
       if (document.querySelectorAll("[role='menuitem']").length === 0) {
         throw new Error("menu items not rendered");
@@ -392,7 +403,7 @@ describe("RefundableInvoicesPage", () => {
 
     render(<RefundableInvoicesPage />);
     // Two rows with "Tower Block" — wait for the unique invoice number instead
-    await waitFor(() => screen.getByText("INV-002"));
+    await waitFor(() => table().getByText("INV-002"));
 
     // en.json: "Showing {count} of {total}" → "Showing 2 of 75"
     expect(screen.getByText("Showing 2 of 75")).toBeDefined();
@@ -403,7 +414,7 @@ describe("RefundableInvoicesPage", () => {
     mockFetch.mockResolvedValue({ items, total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
-    await waitFor(() => screen.getByText("Tower Block"));
+    await waitFor(() => table().getByText("Tower Block"));
 
     expect(screen.queryByText(/Showing \d+ of \d+/)).toBeNull();
   });
@@ -449,7 +460,7 @@ describe("RefundableInvoicesPage", () => {
     mockFetch.mockResolvedValue({ items: [makeExpense()], total: 1, summary: null });
 
     render(<RefundableInvoicesPage />);
-    await waitFor(() => screen.getByText("Tower Block"));
+    await waitFor(() => table().getByText("Tower Block"));
     expect(screen.queryByTestId("refundable-summary-cards")).toBeNull();
   });
 
@@ -463,9 +474,9 @@ describe("RefundableInvoicesPage", () => {
       mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
       render(<RefundableInvoicesPage />);
-      await waitFor(() => screen.getByText("Tower Block"));
+      await waitFor(() => table().getByText("Tower Block"));
 
-      const chip = screen.getByTestId("funds-release-number");
+      const chip = table().getByTestId("funds-release-number");
       expect(chip.textContent).toBe("FR-2026-0004");
       expect(chip.getAttribute("title")).toBe("Funds released: FR-2026-0004");
       // Non-interactive span: title alone is invisible to screen readers,
@@ -481,9 +492,9 @@ describe("RefundableInvoicesPage", () => {
       mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
       render(<RefundableInvoicesPage />);
-      await waitFor(() => screen.getByText("Tower Block"));
+      await waitFor(() => table().getByText("Tower Block"));
 
-      expect(screen.queryByTestId("funds-release-number")).toBeNull();
+      expect(table().queryByTestId("funds-release-number")).toBeNull();
     });
 
     it("renders nothing when funds_release_number is explicitly null", async () => {
@@ -495,9 +506,9 @@ describe("RefundableInvoicesPage", () => {
       mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
       render(<RefundableInvoicesPage />);
-      await waitFor(() => screen.getByText("Tower Block"));
+      await waitFor(() => table().getByText("Tower Block"));
 
-      expect(screen.queryByTestId("funds-release-number")).toBeNull();
+      expect(table().queryByTestId("funds-release-number")).toBeNull();
     });
 
     it("shows the bank source icon alongside the FR chip", async () => {
@@ -509,10 +520,36 @@ describe("RefundableInvoicesPage", () => {
       mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
 
       render(<RefundableInvoicesPage />);
-      await waitFor(() => screen.getByText("Tower Block"));
+      await waitFor(() => table().getByText("Tower Block"));
 
-      expect(screen.getByTestId("refund-source-bank")).toBeDefined();
-      expect(screen.getByTestId("funds-release-number")).toBeDefined();
+      expect(table().getByTestId("refund-source-bank")).toBeDefined();
+      expect(table().getByTestId("funds-release-number")).toBeDefined();
     });
   });
 });
+
+describe("RefundableInvoicesPage — layouts", () => {
+  it("lists each expense as a card on phones, with its status menu on the card", async () => {
+    mockFetch.mockResolvedValue({ items: [makeExpense()], total: 1, summary: null });
+    render(<RefundableInvoicesPage />);
+
+    const cards = await screen.findByTestId("refundable-cards");
+    expect(within(cards).getByText("Tower Block")).toBeInTheDocument();
+    expect(within(cards).getByRole("button", { name: /change status/i })).toBeInTheDocument();
+  });
+
+  it("puts the status and the menu under their own table headers", async () => {
+    mockFetch.mockResolvedValue({ items: [makeExpense()], total: 1, summary: null });
+    render(<RefundableInvoicesPage />);
+
+    await waitFor(() => table().getByText("Tower Block"));
+    const row = table().getByText("Tower Block").closest("tr")!;
+    const cells = row.querySelectorAll("td");
+    const headers = screen.getByTestId("refundable-table").querySelectorAll("th");
+    expect(cells).toHaveLength(headers.length);
+    const last = cells[cells.length - 1];
+    expect(within(last as HTMLElement).getByRole("button", { name: /change status/i })).toBeInTheDocument();
+    expect(last.querySelector(".stamp")).toBeNull();
+  });
+});
+

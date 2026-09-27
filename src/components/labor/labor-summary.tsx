@@ -2,6 +2,8 @@
 
 import { useMemo, useState, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { formatBonusDays, formatDays } from "@/components/labor/format-days";
+import { personInitials } from "@/lib/utils/person-color";
 import { Calendar, ChevronRight, ChevronDown, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
@@ -61,21 +63,6 @@ function formatMonthLabel(month: string, locale: string): string {
   return new Date(y, m - 1, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
 }
 
-/** Format bonus_days value: render integer without decimal, float with one decimal */
-function formatBonusDays(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
-
-/** Format a fractional priced-day count compactly: "5" for 5.0, "5.5"
- *  for 5.5, "5.25" for 5.25. Strips trailing zeros after the dot so a
- *  whole-day total doesn't show a redundant decimal. */
-function formatDays(value: number): string {
-  if (!Number.isFinite(value)) return "0";
-  if (Number.isInteger(value)) return String(value);
-  // Render with up to 2 fraction digits, then trim trailing zeros.
-  return value.toFixed(2).replace(/\.?0+$/, "");
-}
-
 // Folio warm worker-accent palette, lifted from the Labor Summary
 // design. Used to tint the per-worker avatar + the inline MiniBar so a
 // reader can scan "who carried the cost" without reading the numbers.
@@ -87,15 +74,6 @@ function workerColor(workerId: string): string {
     hash = (hash * 31 + workerId.charCodeAt(i)) >>> 0;
   }
   return WORKER_PALETTE[hash % WORKER_PALETTE.length];
-}
-
-function workerInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((p) => p.charAt(0).toUpperCase())
-    .slice(0, 2)
-    .join("");
 }
 
 /** Inline horizontal bar — used for "scan the rhythm" per-row cost bar. */
@@ -320,7 +298,7 @@ export function LaborSummary({
           <p className="text-[13px] font-medium">
             {t("supplement.banner", {
               banked: totalBankedHours,
-              bonusDays: formatBonusDays(totalBonusDays),
+              bonusDays: formatBonusDays(totalBonusDays, locale),
               bonusCost: formatEUR(totalBonusCost),
             })}
           </p>
@@ -343,7 +321,7 @@ export function LaborSummary({
         <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("workerDays")}</div>
           <div className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]">
-            {formatDays(totalDays)}
+            {formatDays(totalDays, locale)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("acrossWorkers", { n: workerCount })}
@@ -368,7 +346,7 @@ export function LaborSummary({
             {formatEUR(totalBonusCost)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("supplement.bonusDaysSubtitle", { days: formatBonusDays(totalBonusDays) })}
+            {t("supplement.bonusDaysSubtitle", { days: formatBonusDays(totalBonusDays, locale) })}
           </div>
         </div>
       </div>
@@ -495,7 +473,12 @@ export function LaborSummary({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="ledger">
+              {/* Phones drop the crew avatars (3rd column) and the cost bar
+                  (5th) so TOTAL and PAID fit without a sideways scroll. */}
+              <table
+                className="ledger [&_tr>*:nth-child(3)]:hidden [&_tr>*:nth-child(5)]:hidden sm:[&_tr>*:nth-child(3)]:table-cell sm:[&_tr>*:nth-child(5)]:table-cell"
+                data-testid="labor-monthly-table"
+              >
                 <thead>
                   <tr>
                     <th style={{ width: 32 }} />
@@ -594,7 +577,7 @@ export function LaborSummary({
                               <span
                                 key={w.worker_id}
                                 className="avatar"
-                                title={`${w.worker_name} · ${formatDays(w.days_worked)}d · ${formatEUR(w.total_cost)}`}
+                                title={`${w.worker_name} · ${formatDays(w.days_worked, locale)}d · ${formatEUR(w.total_cost)}`}
                                 style={{
                                   background: workerColor(w.worker_id),
                                   width: 22,
@@ -604,7 +587,7 @@ export function LaborSummary({
                                   border: "2px solid var(--card-paper)",
                                 }}
                               >
-                                {workerInitials(w.worker_name)}
+                                {personInitials(w.worker_name)}
                               </span>
                             ))}
                             <span
@@ -704,7 +687,7 @@ export function LaborSummary({
                                   className="avatar"
                                   style={{ background: color, width: 20, height: 20, fontSize: 9.5 }}
                                 >
-                                  {workerInitials(w.worker_name)}
+                                  {personInitials(w.worker_name)}
                                 </span>
                                 <div
                                   className="text-[12.5px]"
@@ -726,7 +709,7 @@ export function LaborSummary({
                               className="num text-[12.5px] tabular-nums"
                               style={{ textAlign: "right", border: "none", paddingTop: 6, paddingBottom: 6 }}
                             >
-                              {formatDays(w.days_worked)}
+                              {formatDays(w.days_worked, locale)}
                             </td>
                             <td style={{ border: "none", paddingTop: 6, paddingBottom: 6 }}>
                               <MiniBar
@@ -768,7 +751,7 @@ export function LaborSummary({
                       {t("workersBadge", { n: distinctWorkerCount })}
                     </td>
                     <td className="num font-medium" style={{ textAlign: "right" }}>
-                      {formatDays(totalDays)}
+                      {formatDays(totalDays, locale)}
                     </td>
                     <td />
                     <td
@@ -813,12 +796,7 @@ export function LaborSummary({
               </thead>
               <tbody>
                 {summary.rows.map((row) => {
-                  const initials = row.worker_name
-                    .split(" ")
-                    .map((p) => p.charAt(0))
-                    .slice(0, 2)
-                    .join("")
-                    .toUpperCase();
+                  const initials = personInitials(row.worker_name);
                   // Role comes from the workers list (summary rows carry
                   // only id + name). Default seed roles resolve through
                   // the locale map, custom roles display their DB name.
@@ -842,7 +820,7 @@ export function LaborSummary({
                       </td>
                       <td style={{ color: "var(--muted)" }}>{roleName ?? "—"}</td>
                       <td className="num" style={{ textAlign: "right" }}>
-                        {formatDays(row.days_worked)}
+                        {formatDays(row.days_worked, locale)}
                       </td>
                       <td className="num font-medium" style={{ textAlign: "right" }}>
                         {formatEUR(row.total_cost)}
@@ -892,7 +870,7 @@ export function LaborSummary({
                     {t("grandTotal")}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right" }}>
-                    {formatDays(summary.total_days)}
+                    {formatDays(summary.total_days, locale)}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {formatEUR(summary.total_cost)}

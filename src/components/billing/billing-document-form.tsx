@@ -64,6 +64,7 @@ import type { MyCompany } from "@/types/companies";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { addDaysToDayKey, parisDayKey } from "@/lib/utils/paris-day";
 import { toIsoDate, toItemPayload } from "@/lib/billing/document-payload";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
 import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
@@ -100,19 +101,17 @@ export type BillingDocumentFormProps =
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Today's date in the viewer's timezone, as YYYY-MM-DD. */
+/**
+ * Today as YYYY-MM-DD in Paris — the same on the server render and in the
+ * browser, and never yesterday between 00:00 and 02:00.
+ */
 function todayIso(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
+  return parisDayKey();
 }
 
 /** The YYYY-MM-DD date 30 days after `from` (itself YYYY-MM-DD). */
 function plus30Days(from: string): string {
-  const base = new Date(`${from}T00:00:00Z`);
-  base.setUTCDate(base.getUTCDate() + 30);
-  return base.toISOString().slice(0, 10);
+  return addDaysToDayKey(from, 30);
 }
 
 type CreateMode = "blank" | "from-existing" | "from-template";

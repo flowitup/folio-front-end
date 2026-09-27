@@ -224,6 +224,7 @@ describe("InvoiceDetailContent — transfer action in detail view", () => {
       <InvoiceDetailContent
         invoice={makeInvoice({ type: "materials_services", refundable_status: null })}
         canManage
+        canTransferToCompany
         onUpdated={vi.fn()}
         onDeleted={vi.fn()}
         onTransferred={vi.fn()}
@@ -261,6 +262,7 @@ describe("InvoiceDetailContent — transfer action in detail view", () => {
       <InvoiceDetailContent
         invoice={makeInvoice({ type: "materials_services", refundable_status: "refundable" })}
         canManage
+        canTransferToCompany
         onUpdated={vi.fn()}
         onDeleted={vi.fn()}
         printUrl="/print"
@@ -279,6 +281,7 @@ describe("InvoiceDetailContent — transfer action in detail view", () => {
       <InvoiceDetailContent
         invoice={makeInvoice({ type: "labor", refundable_status: null })}
         canManage
+        canTransferToCompany
         onUpdated={vi.fn()}
         onDeleted={vi.fn()}
         printUrl="/print"
@@ -300,6 +303,7 @@ describe("InvoiceDetailContent — transfer action in detail view", () => {
       <InvoiceDetailContent
         invoice={makeInvoice({ type: "materials_services", refundable_status: null })}
         canManage
+        canTransferToCompany
         onUpdated={vi.fn()}
         onDeleted={vi.fn()}
         onTransferred={onTransferred}

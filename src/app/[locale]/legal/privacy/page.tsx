@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 
+/** The French text for French readers; English for everyone else (no Vietnamese version yet). */
+function isFrench(locale: string): boolean {
+  return locale === "fr";
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -7,12 +12,22 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return {
-    title: locale === "en" ? "Folio · Privacy Policy" : "Folio · Politique de confidentialité",
+    title: isFrench(locale) ? "Folio · Politique de confidentialité" : "Folio · Privacy Policy",
   };
 }
 
 const SUPPORT_EMAIL = "mt.bui.fr@gmail.com";
-const UPDATED = "14 septembre 2026";
+/** Date of the last change to the text (YYYY-MM-DD), shown in each language. */
+const UPDATED = "2026-09-14";
+
+function updatedLabel(locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${UPDATED}T12:00:00Z`));
+}
 
 /**
  * Privacy policy for the Folio apps (web, iOS, Android). Plain static content:
@@ -25,12 +40,11 @@ export default async function PrivacyPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if (locale === "en") return <English />;
-  // No Vietnamese version of the policy: vi reads the French one, marked as
-  // French so the page no longer claims lang="vi" for French text.
+  if (isFrench(locale)) return <French />;
+  // No Vietnamese version: vi reads the English text, declared as English.
   return (
-    <div lang="fr" className="space-y-4">
-      <French />
+    <div lang="en" className="space-y-4">
+      <English />
     </div>
   );
 }
@@ -39,7 +53,7 @@ function French() {
   return (
     <>
       <h1>Politique de confidentialité</h1>
-      <p>Dernière mise à jour : {UPDATED}</p>
+      <p>Dernière mise à jour : {updatedLabel("fr")}</p>
       <p>
         Folio est une application de suivi de chantier (factures, documents,
         photos, main-d&apos;œuvre, chiffrage) éditée par Flowitup. Cette page
@@ -120,7 +134,7 @@ function English() {
   return (
     <>
       <h1>Privacy Policy</h1>
-      <p>Last updated: {UPDATED}</p>
+      <p>Last updated: {updatedLabel("en")}</p>
       <p>
         Folio is a construction-site tracking app (invoices, documents, photos,
         labor, cost planning) published by Flowitup. This page describes the

@@ -9,6 +9,7 @@
  */
 
 import { CalendarDays, List } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -20,16 +21,17 @@ interface ViewToggleProps {
 }
 
 export function ViewToggle({ value, onChange }: ViewToggleProps) {
+  const t = useTranslations("labor.view");
   return (
     <div
       role="tablist"
-      aria-label="Attendance view"
+      aria-label={t("ariaLabel")}
       className="bg-muted/60 inline-flex items-center gap-1 rounded-md p-0.5"
     >
       {(
         [
-          { id: "calendar" as const, label: "Calendar", Icon: CalendarDays },
-          { id: "list" as const, label: "List", Icon: List },
+          { id: "calendar" as const, label: t("calendar"), Icon: CalendarDays },
+          { id: "list" as const, label: t("list"), Icon: List },
         ]
       ).map(({ id, label, Icon }) => {
         const active = value === id;

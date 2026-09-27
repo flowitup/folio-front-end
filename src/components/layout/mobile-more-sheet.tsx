@@ -111,7 +111,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full"
             style={{ background: "var(--paper-2)" }}
-            aria-label="Close"
+            aria-label={t("close")}
           >
             <X size={16} />
           </button>

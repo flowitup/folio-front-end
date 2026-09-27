@@ -232,6 +232,24 @@ describe("LaborSummary — Paid column (all-history mode)", () => {
     expect(julyRow.textContent).toContain("€700.00");
   });
 
+  it("keeps every row at 7 cells so the phone layout can drop the crew and bar columns", () => {
+    render(
+      <LaborSummary
+        {...baseProps}
+        summary={null}
+        monthlySummary={monthlySummary}
+        month=""
+        paymentsSummary={paymentsSummary}
+      />,
+    );
+    const table = screen.getByTestId("labor-monthly-table");
+    expect(table.className).toContain("[&_tr>*:nth-child(3)]:hidden");
+    expect(table.className).toContain("[&_tr>*:nth-child(5)]:hidden");
+    for (const row of Array.from(table.querySelectorAll("tr"))) {
+      expect(row.children).toHaveLength(7);
+    }
+  });
+
   it("shows a '+ n unassigned' hint only when the month has unassigned payments", () => {
     render(
       <LaborSummary

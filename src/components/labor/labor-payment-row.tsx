@@ -13,6 +13,8 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { formatDays } from "@/components/labor/format-days";
+import { personInitials } from "@/lib/utils/person-color";
 import Link from "next/link";
 import { ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,21 +31,6 @@ const STATUS_STAMP_CLASS: Record<WorkerPaymentRow["status"], string> = {
   settled: "stamp positive",
   overpaid: "stamp accent",
 };
-
-function formatDays(value: number): string {
-  if (!Number.isFinite(value)) return "0";
-  if (Number.isInteger(value)) return String(value);
-  return value.toFixed(2).replace(/\.?0+$/, "");
-}
-
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((p) => p.charAt(0).toUpperCase())
-    .slice(0, 2)
-    .join("");
-}
 
 export interface LaborPaymentRowProps {
   row: WorkerPaymentRow;
@@ -150,7 +137,7 @@ export function LaborPaymentRow({
         }}
       />
       <span className="avatar" style={{ width: 26, height: 26, fontSize: 11 }}>
-        {initials(row.worker_name)}
+        {personInitials(row.worker_name)}
       </span>
       <span className="truncate">{row.worker_name}</span>
     </button>
@@ -168,7 +155,7 @@ export function LaborPaymentRow({
         <tr data-testid={`labor-payment-row-${testIdSuffix}`}>
           <td>{expandToggle}</td>
           <td className="num" style={{ textAlign: "right" }}>
-            {formatDays(row.days_worked)}
+            {formatDays(row.days_worked, locale)}
           </td>
           <td className="num" style={{ textAlign: "right" }}>
             {formatEUR(row.owed)}
@@ -204,7 +191,7 @@ export function LaborPaymentRow({
       <div className="grid grid-cols-3 gap-2 text-[12.5px]">
         <div>
           <div style={{ color: "var(--muted)" }}>{tLabor("daysWorked")}</div>
-          <div className="num font-medium">{formatDays(row.days_worked)}</div>
+          <div className="num font-medium">{formatDays(row.days_worked, locale)}</div>
         </div>
         <div>
           <div style={{ color: "var(--muted)" }}>{t("owed")}</div>

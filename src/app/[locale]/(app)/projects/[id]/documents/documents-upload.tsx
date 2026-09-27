@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Upload, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { env } from "@/lib/config/env";
 import { getCsrfToken } from "@/lib/api/http";
 import { refreshAccessTokenViaCookie } from "@/lib/api/refresh";
 import type { ProjectDocument } from "@/lib/api/project-documents";
+import { formatBytes } from "./format-bytes";
 import {
   requestPresignedUrl,
   putToPresignedUrl,
@@ -39,6 +40,7 @@ const ALLOWED_EXTENSIONS = [
 
 type UploadErrorKind =
   | "oversize"
+  | "empty"
   | "unsupported"
   | "network"
   | "rateLimited"
@@ -61,10 +63,15 @@ type Props = {
 
 // ---- Helpers ----
 
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+
+/** The `error` code of a JSON error body, e.g. "EMPTY_FILE". */
+function responseErrorCode(text: string): string | undefined {
+  try {
+    const body = JSON.parse(text) as { error?: unknown };
+    return typeof body.error === "string" ? body.error : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function getExtension(filename: string): string {
@@ -77,6 +84,7 @@ function getExtension(filename: string): string {
 
 export function DocumentsUpload({ projectId, onUploaded }: Props) {
   const t = useTranslations("documents.upload");
+  const locale = useLocale();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [jobs, setJobs] = useState<Record<string, UploadJob>>({});
@@ -178,6 +186,9 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
         } else if (xhr.status === 403) {
           updateJob(jobId, { status: "failed", error: { kind: "forbidden" } });
           resolve();
+        } else if (xhr.status === 400 && responseErrorCode(xhr.responseText) === "EMPTY_FILE") {
+          updateJob(jobId, { status: "failed", error: { kind: "empty" } });
+          resolve();
         } else {
           updateJob(jobId, {
             status: "failed",
@@ -271,6 +282,18 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
         continue;
       }
 
+      // Client-side validation: an empty file is refused by the backend
+      if (file.size === 0) {
+        newJobs[jobId] = {
+          id: jobId,
+          file,
+          status: "failed",
+          progress: 0,
+          error: { kind: "empty" },
+        };
+        continue;
+      }
+
       // Client-side validation: size
       if (file.size > MAX_SIZE_BYTES) {
         newJobs[jobId] = {
@@ -314,6 +337,8 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
     switch (kind) {
       case "oversize":
         return t("errorOversize");
+      case "empty":
+        return t("errorEmpty");
       case "unsupported":
         return t("errorUnsupported");
       case "network":
@@ -407,7 +432,7 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-sm font-medium">{job.file.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">
-                    {formatBytes(job.file.size)}
+                    {formatBytes(job.file.size, locale)}
                   </span>
                 </div>
 

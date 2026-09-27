@@ -22,7 +22,9 @@
     "projectSettings": "Paramètres",
     "settings": "Paramètres",
     "more": "Plus",
-    "chiffrage": "Chiffrage"
+    "chiffrage": "Chiffrage",
+    "close": "Fermer",
+    "homeLink": "Folio — accueil"
   },
   "auth": {
     "welcomeBack": "Bienvenue",
@@ -451,7 +453,6 @@
     "invalidFileType": "{name} : type de fichier non autorisé",
     "uploadFailed": "Échec du téléversement de {name}",
     "deleteFailed": "Échec de la suppression",
-    "renameFailed": "Échec du renommage de la pièce jointe",
     "rename": "Renommer",
     "attachmentDeleteConfirm": "Supprimer cette pièce jointe ? Cette action est irréversible.",
     "openAttachment": "Ouvrir",
@@ -461,7 +462,9 @@
       "label": "Nom du fichier",
       "cancel": "Annuler",
       "save": "Enregistrer",
-      "saving": "Enregistrement…"
+      "saving": "Enregistrement…",
+      "error": "Impossible de renommer la pièce jointe. Réessayez.",
+      "errorExtension": "L'extension doit rester {extension}"
     },
     "attachmentPreview": {
       "preview": "Aperçu",
@@ -507,7 +510,8 @@
       "summaryLine": "{count, plural, =1 {1 mois sélectionné} other {# mois sélectionnés}}",
       "errorRangeInvalid": "« De » doit être antérieur ou égal à « À »",
       "errorRangeTooLarge": "La période ne peut pas dépasser 24 mois",
-      "errorGeneric": "Échec de l'export des dépenses"
+      "errorGeneric": "Échec de l'export des dépenses",
+      "dialogDescription": "Choisissez une période, un type et un format de fichier."
     },
     "paymentMethod": {
       "label": "Moyen de paiement",
@@ -523,7 +527,7 @@
       "inactiveLabel": "{label} (inactif)"
     },
     "refundHint": "Utilisez un prix unitaire négatif pour une ligne d'avoir et positif pour une charge ; le total est le net.",
-    "refundsInvoiceLabel": "Avoir sur facture (Matériaux & Services)",
+    "refundsInvoiceLabel": "Avoir sur facture (Achats & prestations)",
     "refundsInvoiceNone": "— aucune —",
     "refundOf": "Avoir sur {number}",
     "appliedTo": "Imputé sur {number}",
@@ -619,7 +623,12 @@
     "errorPaymentMethodInactive": "Ce moyen de paiement a été désactivé. Choisissez-en un autre.",
     "workerInactive": "{name} (inactif)",
     "errorQuantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
-    "errorUnitPriceTooLarge": "Le prix unitaire ne peut pas dépasser {max, number}."
+    "errorUnitPriceTooLarge": "Le prix unitaire ne peut pas dépasser {max, number}.",
+    "errorIssueDateRequired": "Indiquez la date d'émission",
+    "bankRefundLine": "Remboursement banque — {number}",
+    "deleteExpense": "Supprimer la dépense {number}",
+    "removeLine": "Supprimer la ligne",
+    "backToExpenses": "Retour aux dépenses"
   },
   "planning": {
     "title": "Planification",
@@ -731,7 +740,7 @@
     "totalLaborCost": "Coût total main-d'œuvre",
     "workerDays": "Jours-ouvriers",
     "onSiteToday": "Sur site aujourd'hui",
-    "acrossWorkers": "sur {n} ouvriers",
+    "acrossWorkers": "sur {n, plural, one {# ouvrier} other {# ouvriers}}",
     "workersLogged": "ouvriers pointés",
     "monthlySummary": "Résumé mensuel · {month}",
     "summaryAllHistoryTitle": "Résumé · Tout l'historique",
@@ -745,7 +754,7 @@
     "summaryDrillDown": "Cliquer pour voir le détail par ouvrier",
     "summaryMonthPickerAll": "Tous les mois",
     "summaryUnassignedHint": "+ {n} non attribué(s)",
-    "workersBadge": "{n} ouvriers",
+    "workersBadge": "{n, plural, one {# ouvrier} other {# ouvriers}}",
     "role": {
       "label": "Rôle",
       "selectRole": "Sélectionner un rôle",
@@ -816,7 +825,8 @@
       "workerNameRequired": "Le nom de l'ouvrier est obligatoire.",
       "dailyRatePositive": "Le tarif journalier doit être supérieur à 0.",
       "reactivateWorkerFailed": "Impossible de réactiver l'ouvrier",
-      "amountTooLarge": "Le montant ne peut pas dépasser {max, number}."
+      "amountTooLarge": "Le montant ne peut pas dépasser {max, number}.",
+      "overrideNegative": "Le montant ne peut pas être négatif."
     },
     "logDayDialog": {
       "title": "Pointer la journée",
@@ -843,14 +853,15 @@
         "supplementLabel": "Supplément (h)",
         "noteLabel": "Note",
         "notePlaceholder": "Facultatif"
-      }
+      },
+      "noWorkers": "Aucun ouvrier."
     },
     "editEntry": {
       "title": "Modifier le pointage"
     },
     "conflict": {
       "modalTitle": "Conflit inter-chantiers",
-      "modalBody": "Les ouvriers suivants sont déjà pointés sur un autre chantier aujourd'hui. Continuer quand même ?",
+      "modalBody": "Les ouvriers suivants sont déjà pointés sur un autre chantier le {date}. Continuer quand même ?",
       "continueAnyway": "Continuer quand même",
       "cancel": "Annuler",
       "sameAsLastDaySkipped": "{n} ouvrier(s) ignoré(s) — déjà pointé(s) ailleurs"
@@ -1031,7 +1042,24 @@
     "entryDeleted": "Entrée supprimée",
     "workerDeactivated": "{name} désactivé(e)",
     "reactivateWorker": "Réactiver",
-    "workerReactivated": "{name} réactivé(e)"
+    "workerReactivated": "{name} réactivé(e)",
+    "view": {
+      "ariaLabel": "Affichage des présences",
+      "calendar": "Calendrier",
+      "list": "Liste"
+    },
+    "prevDay": "Jour précédent",
+    "nextDay": "Jour suivant",
+    "prevMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "close": "Fermer",
+    "typeahead": {
+      "placeholder": "Rechercher un ouvrier…",
+      "noMatches": "Aucun résultat",
+      "typeToSearch": "Tapez au moins 2 caractères pour rechercher",
+      "existing": "Existants",
+      "create": "Créer « {name} »"
+    }
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",
@@ -1274,7 +1302,8 @@
           "save": "Enregistrer",
           "saving": "Enregistrement…",
           "cancel": "Annuler",
-          "delete": "Supprimer le modèle"
+          "delete": "Supprimer le modèle",
+          "create": "Créer"
         },
         "errors": {
           "nameRequired": "Le nom du modèle est obligatoire.",
@@ -1288,7 +1317,10 @@
           "saved": "Modèle enregistré.",
           "created": "Modèle créé.",
           "deleted": "Modèle supprimé."
-        }
+        },
+        "vatCustomPlaceholder": "ex. 8,5",
+        "vatUsePreset": "Utiliser un taux prédéfini",
+        "deleteConfirm": "Supprimer « {name} » ? Cette action est irréversible."
       },
       "companyLabel": "Entreprise"
     },
@@ -1301,7 +1333,8 @@
           "description": "Créez votre premier devis pour commencer.",
           "cta": "Créer votre premier devis"
         },
-        "importTitle": "Importer des devis"
+        "importTitle": "Importer des devis",
+        "heading": "Devis"
       },
       "status": {
         "draft": "Brouillon",
@@ -1321,14 +1354,15 @@
     },
     "facture": {
       "list": {
-        "title": "Factures",
+        "title": "Facture",
         "new": "Nouvelle facture",
         "empty": {
           "title": "Aucune facture pour le moment",
           "description": "Créez votre première facture pour commencer.",
           "cta": "Créer votre première facture"
         },
-        "importTitle": "Importer des factures"
+        "importTitle": "Importer des factures",
+        "heading": "Factures"
       },
       "status": {
         "draft": "Brouillon",
@@ -1359,7 +1393,9 @@
         "actions": "Actions"
       },
       "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer.",
-      "searchLoadedOnly": "La recherche porte sur les {loaded} documents les plus récents sur {total}. Chargez-en plus pour chercher parmi les plus anciens."
+      "loadFailed": "Impossible de charger les documents.",
+      "retry": "Réessayer",
+      "noFilterResults": "Aucun document avec ce statut."
     },
     "form": {
       "modes": {
@@ -1405,7 +1441,9 @@
         "categoryPlaceholder": "ex. Toiture, Plomberie",
         "descriptionSuggestionsHeading": "Depuis vos factures précédentes",
         "noSuggestions": "Aucune correspondance — votre texte sera utilisé",
-        "categoryNoMatches": "Aucune section enregistrée — votre texte sera utilisé"
+        "categoryNoMatches": "Aucune section enregistrée — votre texte sera utilisé",
+        "vatCustom": "Personnalisé…",
+        "vatUsePreset": "Utiliser un taux prédéfini"
       },
       "totals": {
         "ht": "Total HT",
@@ -1487,12 +1525,14 @@
       },
       "applyTemplate": {
         "title": "Appliquer un modèle",
-        "description": "Choisissez un modèle enregistré. Les lignes, notes et conditions seront copiées. Saisissez les informations du destinataire ci-dessous avant de créer."
+        "description": "Choisissez un modèle enregistré. Les lignes, notes et conditions seront copiées. Saisissez les informations du destinataire ci-dessous avant de créer.",
+        "empty": "Aucun modèle de {kind} enregistré pour le moment."
       },
       "fromExisting": {
         "description": "Sélectionnez un document comme point de départ de votre nouveau <strong>{kind}</strong>. Les lignes, le destinataire, les notes et les conditions seront copiés ; les dates et le numéro seront réinitialisés.",
         "createAs": "Créer en tant que :",
-        "crossKindWarning": "Changer de type réinitialise le cycle de vie du document. Le {kind} cloné démarrera en <strong>{draft}</strong>."
+        "crossKindWarning": "Changer de type réinitialise le cycle de vie du document. Le {kind} cloné démarrera en <strong>{draft}</strong>.",
+        "empty": "Aucun document existant."
       }
     },
     "editPage": {
@@ -1556,7 +1596,14 @@
         "bothShare": "{percent}% les deux",
         "bankShare": "{percent}% banque"
       },
-      "companyPaidNotRefundable": "Payé avec un moyen de paiement de l'entreprise, il n'y a donc rien à rembourser : {numbers}"
+      "companyPaidNotRefundable": "Payé avec un moyen de paiement de l'entreprise, il n'y a donc rien à rembourser : {numbers}",
+      "removed": "Retirée des dépenses remboursables",
+      "removeConfirm": {
+        "title": "Retirer des dépenses remboursables ?",
+        "body": "{number} ne sera plus suivie pour remboursement et son statut de remboursement sera effacé.",
+        "fundsRelease": "Le déblocage de fonds lié {number} sera aussi supprimé, ce qui réduit le total débloqué du projet.",
+        "cancel": "Annuler"
+      }
     },
     "import": {
       "button": "Importer",
@@ -1670,7 +1717,8 @@
       "errorNetwork": "Erreur réseau — réessayez",
       "errorRateLimited": "Trop d'envois — ralentissez",
       "errorForbidden": "Action non autorisée",
-      "errorServer": "Échec de l'envoi"
+      "errorServer": "Échec de l'envoi",
+      "errorEmpty": "Ce fichier est vide"
     },
     "list": {
       "empty": "Aucun document pour l'instant. Glissez des fichiers dans la zone de dépôt pour commencer.",
@@ -1706,7 +1754,10 @@
       "add": "Ajouter une étiquette",
       "remove": "Supprimer l'étiquette",
       "placeholder": "Nouvelle…",
-      "done": "Terminé"
+      "done": "Terminé",
+      "errorTooMany": "Un document peut avoir au plus {max} étiquettes",
+      "errorTooLong": "Une étiquette ne peut pas dépasser {max} caractères",
+      "errorSave": "Impossible de mettre à jour les étiquettes"
     },
     "filter": {
       "all": "Tous",
@@ -1721,7 +1772,8 @@
       "close": "Fermer",
       "download": "Télécharger",
       "error": "Aperçu impossible — téléchargez pour afficher le fichier",
-      "loading": "Chargement de l’aperçu…"
+      "loading": "Chargement de l’aperçu…",
+      "downloadError": "Échec du téléchargement — le fichier a peut-être été supprimé"
     },
     "delete": {
       "title": "Supprimer le document ?",
@@ -1730,8 +1782,9 @@
       "confirm": "Supprimer",
       "confirming": "Suppression…",
       "success": "Document supprimé",
-      "errorForbidden": "Seul l'auteur du dépôt ou un administrateur du projet peut supprimer ce document",
-      "errorServer": "Échec de la suppression"
+      "errorForbidden": "Vous n'avez pas la permission de supprimer des documents dans ce projet",
+      "errorServer": "Échec de la suppression",
+      "errorNotFound": "Ce document n'existe plus"
     },
     "toast": {
       "uploadSuccess": "{filename} envoyé",
@@ -1750,8 +1803,10 @@
       "save": "Enregistrer",
       "saving": "Enregistrement…",
       "success": "Document renommé",
-      "errorForbidden": "Seul l'importateur ou un administrateur du projet peut renommer ce document",
-      "errorServer": "Échec du renommage"
+      "errorForbidden": "Vous n'avez pas la permission de renommer des documents dans ce projet",
+      "errorServer": "Échec du renommage",
+      "errorExtension": "L'extension doit rester {extension}",
+      "errorInvalid": "Ce nom ne peut pas être utilisé. Vérifiez-le et réessayez."
     },
     "restricted": {
       "title": "Les documents ne sont pas accessibles avec votre rôle",
@@ -1832,7 +1887,10 @@
       "forbidden": "Seuls la personne ayant téléversé le rapport, le propriétaire du projet ou un administrateur peuvent effectuer cette action",
       "notFound": "Analyse introuvable",
       "rateLimited": "Trop de requêtes — ralentissez",
-      "generic": "Une erreur est survenue — réessayez"
+      "generic": "Une erreur est survenue — réessayez",
+      "invalidSourceUrl": "Le lien source doit commencer par http:// ou https://",
+      "tooManyTags": "Une analyse peut avoir au plus 20 étiquettes",
+      "tagTooLong": "Une étiquette ne peut pas dépasser 100 caractères"
     },
     "toast": {
       "listLoadError": "Échec du chargement des analyses"
@@ -2159,7 +2217,7 @@
       "plomberie": "Plomberie",
       "quincaillerie": "Quincaillerie",
       "droguerie": "Droguerie",
-      "autre": "Autre / Non classé"
+      "autre": "Autre"
     },
     "addProduct": "Ajouter un produit",
     "createTitle": "Ajouter un produit",
@@ -2286,7 +2344,9 @@
       "imageAlreadySet": "Ce produit a déjà une image.",
       "imageLinkRefused": "Ce lien d'image n'est pas accepté. Utilisez un lien https vers l'image elle-même.",
       "imageLinkNotImage": "Le lien ne pointe pas vers une image JPG, PNG ou WebP."
-    }
+    },
+    "selectSupplier": "Choisir un fournisseur",
+    "imagePreviewAlt": "Aperçu de l'image choisie"
   },
   "inventory": {
     "title": "Inventaire du matériel",
@@ -2377,7 +2437,7 @@
       "delete": "Supprimer le dépôt",
       "empty": "Aucun dépôt pour l'instant. Ajoutez l'endroit où l'entreprise range ses outils.",
       "noAddress": "Sans adresse",
-      "deleteBlocked": "Ce dépôt contient encore {count, plural, one {# unité} other {# unités}}. Déplacez-les ou retirez-les d'abord.",
+      "deleteBlocked": "Ce dépôt contient encore {count, plural, one {# équipement} other {# équipements}}. Déplacez-les ou retirez-les d'abord.",
       "fields": {
         "name": "Nom",
         "namePlaceholder": "ex. Dépôt principal",
@@ -2385,7 +2445,8 @@
         "addressPlaceholder": "Rue, ville"
       },
       "validation": {
-        "nameRequired": "Donnez un nom au dépôt."
+        "nameRequired": "Donnez un nom au dépôt.",
+        "nameTaken": "Un dépôt porte déjà ce nom."
       },
       "toast": {
         "created": "Dépôt ajouté.",
@@ -2395,7 +2456,8 @@
         "updateError": "Impossible de mettre à jour le dépôt.",
         "deleteError": "Impossible de supprimer le dépôt."
       }
-    }
+    },
+    "otherSite": "Un chantier auquel vous n'êtes pas affecté"
   },
   "photos": {
     "title": "Médias",
@@ -2429,10 +2491,16 @@
       "rateLimited": "Trop d'envois — veuillez ralentir",
       "server": "Échec du téléversement — veuillez réessayer",
       "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
-      "invalidImage": "Image invalide — le fichier n'a pas pu être traité"
+      "invalidImage": "Image invalide — le fichier n'a pas pu être traité",
+      "updateFailed": "Impossible d'enregistrer les modifications — veuillez réessayer",
+      "deleteFailed": "Impossible de supprimer la photo — veuillez réessayer",
+      "notFound": "Cette photo n'existe plus",
+      "validation": "Vérifiez la légende et la date, puis réessayez"
     },
     "loadMore": "Charger plus",
-    "saved": "Modifications enregistrées"
+    "saved": "Modifications enregistrées",
+    "deleted": "Photo supprimée",
+    "close": "Fermer"
   },
   "chiffrage": {
     "actions": "Actions",
@@ -2493,7 +2561,7 @@
     "fetch": "Récupérer",
     "grandTotal": "Total général",
     "imageFromUrl": "Depuis un lien fournisseur",
-    "imageFromUrlNote": "Seuls les sites des fournisseurs sont acceptés.",
+    "imageFromUrlNote": "Seuls les liens d'images des sites fournisseurs pris en charge sont acceptés : Leroy Merlin, Castorama, Brico Dépôt, Point P, Cedeo, Brossette, Rexel, Saint-Gobain.",
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "Cette image dépasse 10 Mo.",
     "imageUploadFailed": "La photo n'a pas pu être envoyée.",
@@ -2617,7 +2685,14 @@
     "errorImageLink": "L'image n'a pas pu être récupérée depuis ce lien. Utilisez un lien https vers l'image elle-même.",
     "errorInvalidInput": "Certaines valeurs ne sont pas valides. Vérifiez les champs et réessayez.",
     "errorRateLimited": "Trop de requêtes. Patientez un instant puis réessayez.",
-    "errorGeneric": "Une erreur s'est produite. Veuillez réessayer."
+    "errorGeneric": "Une erreur s'est produite. Veuillez réessayer.",
+    "dragOtherRoom": "Utilisez Modifier pour déplacer un article vers une autre pièce",
+    "unitSac": "sac",
+    "unitBoite": "boîte",
+    "unitRouleau": "rouleau",
+    "unitLot": "lot",
+    "unitForfait": "forfait",
+    "productUrlInvalid": "Saisissez une adresse web, ex. www.castorama.fr/…"
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",

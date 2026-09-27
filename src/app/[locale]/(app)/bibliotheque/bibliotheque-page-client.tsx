@@ -53,7 +53,10 @@ export function BibliothequePageClient({ companyId }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const canImport = can("bibliotheque:manage", user?.permissions);
+  // Creating, editing, deleting and importing products all need
+  // bibliotheque:manage (the API answers 403 otherwise): a member browses only.
+  const canManage = can("bibliotheque:manage", user?.permissions);
+  const canImport = canManage;
 
   // Filters
   const [supplier, setSupplier] = useState("");
@@ -245,14 +248,16 @@ export function BibliothequePageClient({ companyId }: Props) {
               {t("import.button")}
             </Button>
           )}
-          <Button
-            size="sm"
-            className="gap-1.5"
-            onClick={() => setCreateOpen(true)}
-          >
-            <Plus className="h-4 w-4" />
-            {t("addProduct")}
-          </Button>
+          {canManage && (
+            <Button
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setCreateOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              {t("addProduct")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -340,15 +345,23 @@ export function BibliothequePageClient({ companyId }: Props) {
         productId={selectedProductId}
         suppliersById={suppliersById}
         onClose={closeProduct}
-        onEdit={(p) => {
-          // Close detail before opening edit to avoid two stacked modals
-          closeProduct();
-          setEditProduct(p);
-        }}
-        onDelete={(p) => {
-          closeProduct();
-          setDeleteProduct(p);
-        }}
+        onEdit={
+          canManage
+            ? (p) => {
+                // Close detail before opening edit to avoid two stacked modals
+                closeProduct();
+                setEditProduct(p);
+              }
+            : undefined
+        }
+        onDelete={
+          canManage
+            ? (p) => {
+                closeProduct();
+                setDeleteProduct(p);
+              }
+            : undefined
+        }
       />
 
       {/* Create product dialog */}

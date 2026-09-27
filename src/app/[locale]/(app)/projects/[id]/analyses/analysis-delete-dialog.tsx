@@ -50,7 +50,13 @@ export function AnalysisDeleteDialog({ projectId, analysis, onCancel, onDeleted 
   }
 
   return (
-    <AlertDialog open={analysis !== null}>
+    <AlertDialog
+      open={analysis !== null}
+      onOpenChange={(open) => {
+        // Escape closes the dialog, but not while the delete is in flight.
+        if (!open && !deleting) onCancel();
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("confirmTitle")}</AlertDialogTitle>

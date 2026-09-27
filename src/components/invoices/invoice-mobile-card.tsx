@@ -77,7 +77,10 @@ export function InvoiceMobileCard({
             <span className={TYPE_STAMP_CLASS[ledgerTypeOf(invoice)]}>
               {t(`types.${ledgerTypeOf(invoice)}`)}
             </span>
-            {invoice.type === "return" && invoice.settled_via === "avoir" && (
+            {/* Unapplied, the "outstanding avoir" stamp says it all: no second "Avoir". */}
+            {invoice.type === "return" &&
+              invoice.settled_via === "avoir" &&
+              invoice.applied_to_invoice_id && (
               <span className="stamp accent" data-testid="avoir-badge">
                 {t("settledVia.avoirBadge")}
               </span>

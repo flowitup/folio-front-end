@@ -147,6 +147,22 @@ describe("AddRefundableExpenseDialog", () => {
     expect(screen.getByText("BuildSupply Co")).toBeDefined();
   });
 
+  it("cuts a long project or recipient name instead of widening the table past the amount", async () => {
+    const long = "Rénovation complète ".repeat(30).trim();
+    mockFetchCandidates.mockResolvedValue({
+      items: [makeCandidate({ project_name: long, recipient_name: long })],
+      total: 1,
+    });
+
+    render(<AddRefundableExpenseDialog {...DEFAULT_PROPS} />);
+
+    const table = await screen.findByTestId("refundable-candidates");
+    expect(table.className).toContain("table-fixed");
+    const cells = screen.getAllByTitle(long);
+    expect(cells).toHaveLength(2);
+    for (const cell of cells) expect(cell.className).toContain("truncate");
+  });
+
   it("shows empty state when no candidates", async () => {
     mockFetchCandidates.mockResolvedValue({ items: [], total: 0 });
 

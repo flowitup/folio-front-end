@@ -18,6 +18,8 @@ import {
   refundStatusI18nKey,
 } from "@/lib/invoices/refundable-status-display";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
+import { formatQuantity, formatVatRate, invoiceTotals } from "@/lib/invoices/invoice-totals";
+import { invoiceItemLabel } from "@/lib/invoices/invoice-item-label";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import { InvoiceHighlightPicker } from "@/components/invoices/invoice-highlight-picker";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
@@ -35,6 +37,11 @@ const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
 interface InvoiceDetailContentProps {
   invoice: Invoice;
   canManage: boolean;
+  /**
+   * Offer "Transfer to company payment". The backend allows it to company
+   * admins of the project's company only, so a manager must not see it.
+   */
+  canTransferToCompany?: boolean;
   /**
    * UUID of the company that owns this project.
    * Forwarded to InvoiceForm for payment method selection.
@@ -67,6 +74,7 @@ interface InvoiceDetailContentProps {
 export function InvoiceDetailContent({
   invoice,
   canManage,
+  canTransferToCompany = false,
   companyId,
   companyName,
   onUpdated,
@@ -182,7 +190,7 @@ export function InvoiceDetailContent({
             <Printer className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">{t("printPdf")}</span>
           </Button>
-          {canManage &&
+          {canTransferToCompany &&
             !isEditing &&
             invoice.type === "materials_services" &&
             invoice.refundable_status == null &&
@@ -364,6 +372,27 @@ export function InvoiceDetailContent({
                   </dd>
                 </div>
               )}
+              {invoice.type === "return" && invoice.settled_via && (
+                <div className="mt-2 border-t pt-2" data-testid="invoice-settlement">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {t("settledVia.label")}
+                  </dt>
+                  <dd className="mt-0.5 text-sm">
+                    {t(`settledVia.${invoice.settled_via}`)}
+                    {invoice.settled_via === "avoir" && !invoice.applied_to_invoice_id && (
+                      <span className="stamp warning ml-2">{t("settledVia.outstanding")}</span>
+                    )}
+                  </dd>
+                  {invoice.settled_via === "avoir" && invoice.applied_to_invoice_number && (
+                    <>
+                      <dt className="mt-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        {t("appliedToInvoiceLabel")}
+                      </dt>
+                      <dd className="mt-0.5 text-sm">{invoice.applied_to_invoice_number}</dd>
+                    </>
+                  )}
+                </div>
+              )}
               {invoice.type === "labor" && invoice.service_month && (
                 <div className="mt-2 border-t pt-2">
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -391,14 +420,8 @@ export function InvoiceDetailContent({
               {(() => {
                 // Show VAT column only when at least one item carries a non-zero rate.
                 const hasVat = invoice.items.some((it) => (it.vat_rate ?? 0) > 0);
-                const totalHt = invoice.items.reduce(
-                  (s, it) => s + it.quantity * it.unit_price,
-                  0
-                );
-                const totalVat = invoice.items.reduce(
-                  (s, it) => s + it.quantity * it.unit_price * ((it.vat_rate ?? 0) / 100),
-                  0
-                );
+                // Exact HT (half-up to the cent) and VAT = TTC − HT, as the API rounds.
+                const { totalHt, totalVat } = invoiceTotals(invoice.items, invoice.total_amount);
 
                 return (
                   <>
@@ -411,16 +434,16 @@ export function InvoiceDetailContent({
                           style={{ borderColor: "var(--line)" }}
                         >
                           {/* Description full width */}
-                          <div className="text-[13px]">{item.description}</div>
+                          <div className="text-[13px]">{invoiceItemLabel(invoice, item.description, (number) => t("bankRefundLine", { number }))}</div>
                           {/* Qty × UnitPrice on left, Total on right */}
                           <div className="mt-1 flex items-center justify-between gap-2">
                             <span
                               className="num text-[12px]"
                               style={{ color: "var(--muted)" }}
                             >
-                              {item.quantity} × {formatEUR(item.unit_price)}
+                              {formatQuantity(item.quantity, locale)} × {formatEUR(item.unit_price)}
                               {hasVat && (item.vat_rate ?? 0) > 0 && (
-                                <span className="ml-1">({(item.vat_rate ?? 0)}%)</span>
+                                <span className="ml-1">({formatVatRate(item.vat_rate ?? 0, locale)})</span>
                               )}
                             </span>
                             <span className="num text-[13px] font-medium">
@@ -499,12 +522,12 @@ export function InvoiceDetailContent({
                         <tbody>
                           {invoice.items.map((item, i) => (
                             <tr key={i} className="border-b last:border-0">
-                              <td className="px-3 py-1.5">{item.description}</td>
-                              <td className="px-3 py-1.5 text-right">{item.quantity}</td>
+                              <td className="px-3 py-1.5">{invoiceItemLabel(invoice, item.description, (number) => t("bankRefundLine", { number }))}</td>
+                              <td className="px-3 py-1.5 text-right">{formatQuantity(item.quantity, locale)}</td>
                               <td className="px-3 py-1.5 text-right">{formatEUR(item.unit_price)}</td>
                               {hasVat && (
                                 <td className="px-3 py-1.5 text-right">
-                                  {(item.vat_rate ?? 0) > 0 ? `${item.vat_rate}%` : "—"}
+                                  {(item.vat_rate ?? 0) > 0 ? formatVatRate(item.vat_rate ?? 0, locale) : "—"}
                                 </td>
                               )}
                               <td className="px-3 py-1.5 text-right font-medium">

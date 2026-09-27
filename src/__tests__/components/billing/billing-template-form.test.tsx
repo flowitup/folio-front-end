@@ -92,3 +92,18 @@ describe("BillingTemplateForm — save payload", () => {
     ]);
   });
 });
+
+describe("BillingTemplateForm — default VAT rate", () => {
+  it("shows a saved '10.00' default as the 10% preset, not as a custom value", () => {
+    render(<BillingTemplateForm mode="edit" template={{ ...TEMPLATE, default_vat_rate: "10.00" }} />);
+
+    expect(screen.queryByPlaceholderText("e.g. 8.5")).toBeNull();
+  });
+
+  it("labels the create button Create", () => {
+    render(<BillingTemplateForm mode="create" />);
+
+    expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();
+  });
+});
+

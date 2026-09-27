@@ -15,7 +15,8 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatWeekdayDate } from "@/lib/utils/formatters";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +60,8 @@ function addDays(dateKey: string, delta: number): string {
 
 export function DayRoster({ projectId, initialDate }: Props) {
   const t = useTranslations("labor.roster");
+  const tLabor = useTranslations("labor");
+  const locale = useLocale();
   // Same shift labels used everywhere else labor entries show a day type
   // (worker-tile, labor-entry-card, edit-attendance-dialog) — lives at the
   // "labor" namespace root, not "labor.roster".
@@ -128,16 +131,25 @@ export function DayRoster({ projectId, initialDate }: Props) {
       <div className="mb-4 flex items-center justify-between gap-3">
         <h3 className="font-display text-[18px] font-medium tracking-tight">{t("title")}</h3>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => changeDate(addDays(date, -1))}>
-            <ChevronLeft size={14} />
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => changeDate(addDays(date, -1))}
+            aria-label={tLabor("prevDay")}
+          >
+            <ChevronLeft size={14} aria-hidden />
           </Button>
-          <span className="num min-w-[100px] text-center text-[13px]">{date}</span>
+          <span className="num min-w-[100px] text-center text-[13px]">
+            {formatWeekdayDate(date, locale)}
+          </span>
           <Button
             variant="outline"
             size="sm"
             className="h-8 w-8 p-0"
             disabled={isToday}
             onClick={() => changeDate(addDays(date, 1))}
+            aria-label={tLabor("nextDay")}
           >
             <ChevronRight size={14} />
           </Button>

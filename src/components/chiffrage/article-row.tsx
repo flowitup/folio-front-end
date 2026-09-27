@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArticleImage } from "@/components/chiffrage/article-image";
 import { Button } from "@/components/ui/button";
 import { QuoteComparisonTable } from "@/components/chiffrage/quote-comparison-table";
-import { money, quantity } from "@/components/chiffrage/format";
+import { money, quantity, unitLabel } from "@/components/chiffrage/format";
 import type {
   ChiffrageArticle,
   ChiffrageQuote,
@@ -108,7 +108,7 @@ export function ArticleRow({
             <span className="font-medium">{article.name}</span>
             <span className="text-sm text-muted-foreground">
               {quantity(article.quantity)}
-              {article.unit ? ` ${article.unit}` : ""}
+              {article.unit ? ` ${unitLabel(article.unit, t)}` : ""}
             </span>
             {unpriced ? <Badge variant="outline">{t("noPrice")}</Badge> : null}
             {article.effective_source === "cheapest" ? (

@@ -118,6 +118,7 @@ import {
   listDocumentsAction,
   deleteDocumentAction,
   listDocumentUploadersAction,
+  listDocumentTagsAction,
 } from "../actions";
 import { DocumentsPanel } from "../documents-panel";
 
@@ -189,6 +190,7 @@ beforeEach(() => {
   });
   vi.mocked(listDocumentUploadersAction).mockResolvedValue({ ok: true, data: UPLOADERS });
   vi.mocked(deleteDocumentAction).mockResolvedValue({ ok: true, data: null });
+  vi.mocked(listDocumentTagsAction).mockResolvedValue({ ok: true, data: [] });
 });
 
 // ---- Tests ----

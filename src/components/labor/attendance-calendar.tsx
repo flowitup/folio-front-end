@@ -161,7 +161,7 @@ export function AttendanceCalendar({
             variant="outline"
             size="icon"
             onClick={() => stepMonth(-1)}
-            aria-label="Previous month"
+            aria-label={t("prevMonth")}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -172,7 +172,7 @@ export function AttendanceCalendar({
             variant="outline"
             size="icon"
             onClick={() => stepMonth(1)}
-            aria-label="Next month"
+            aria-label={t("nextMonth")}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

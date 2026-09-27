@@ -12,7 +12,8 @@
  * Plan: 260512-2341-labor-calendar-and-bulk-log → phase-04 (4c).
  */
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { dayKeyToUtcNoon } from "@/lib/utils/paris-day";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
 import {
@@ -30,6 +31,8 @@ interface CrossProjectConflictModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   groups: ConflictGroup[];
+  /** YYYY-MM-DD being logged — the conflicts are on that day, not "today". */
+  date: string;
   isSaving?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
@@ -39,11 +42,13 @@ export function CrossProjectConflictModal({
   open,
   onOpenChange,
   groups,
+  date,
   isSaving = false,
   onCancel,
   onConfirm,
 }: CrossProjectConflictModalProps) {
   const t = useTranslations("labor.conflict");
+  const locale = useLocale();
   const tLabor = useTranslations("labor");
 
   const shiftLabel: Record<ShiftType, string> = {
@@ -60,7 +65,15 @@ export function CrossProjectConflictModal({
             <AlertTriangle className="text-[var(--warning)] h-5 w-5" />
             {t("modalTitle")}
           </DialogTitle>
-          <DialogDescription>{t("modalBody")}</DialogDescription>
+          <DialogDescription>
+            {t("modalBody", {
+              date: new Intl.DateTimeFormat(locale, {
+                day: "numeric",
+                month: "long",
+                timeZone: "UTC",
+              }).format(dayKeyToUtcNoon(date)),
+            })}
+          </DialogDescription>
         </DialogHeader>
 
         <ul className="space-y-3 max-h-[50vh] overflow-y-auto">

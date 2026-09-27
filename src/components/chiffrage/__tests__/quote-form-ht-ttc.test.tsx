@@ -267,3 +267,23 @@ describe("QuoteFormDialog price cap", () => {
     expect(screen.getByText("priceTooLarge")).toBeDefined();
   });
 });
+
+describe("QuoteFormDialog product link", () => {
+  it("accepts a link typed without https:// and stores it with the scheme", async () => {
+    const { onSubmit, user } = await fill("12.40", "ht");
+    await user.type(screen.getByLabelText("productUrlOptional"), "www.castorama.fr/switch");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit.mock.calls[0][0].product_url).toBe("https://www.castorama.fr/switch");
+  });
+
+  it("refuses something that is not a web address, with the form's own message", async () => {
+    const { onSubmit, user } = await fill("12.40", "ht");
+    await user.type(screen.getByLabelText("productUrlOptional"), "not a link");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText("productUrlInvalid")).toBeInTheDocument();
+  });
+});

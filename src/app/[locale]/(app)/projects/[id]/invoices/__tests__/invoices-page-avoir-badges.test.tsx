@@ -160,14 +160,25 @@ describe("InvoicesPage — desktop avoir markers", () => {
     setupAuthMock();
   });
 
-  it("shows the AVOIR badge for a settled_via='avoir' return", async () => {
-    setupFetchMock([makeReturnInvoice({ settled_via: "avoir" })]);
+  it("shows the AVOIR badge for an applied settled_via='avoir' return", async () => {
+    setupFetchMock([
+      makeReturnInvoice({ settled_via: "avoir", applied_to_invoice_id: "inv-9" }),
+    ]);
     render(<InvoicesPage />);
 
     await waitFor(() => {
       const desktop = screen.getByTestId("invoices-table-desktop");
       expect(within(desktop).queryByTestId("avoir-badge-desktop")).not.toBeNull();
     });
+  });
+
+  it("shows only the outstanding stamp, not a second 'Avoir', for an unapplied avoir", async () => {
+    setupFetchMock([makeReturnInvoice({ settled_via: "avoir", applied_to_invoice_id: null })]);
+    render(<InvoicesPage />);
+
+    await waitFor(() => screen.getByTestId("invoices-table-desktop"));
+    const desktop = screen.getByTestId("invoices-table-desktop");
+    expect(within(desktop).queryByTestId("avoir-badge-desktop")).toBeNull();
   });
 
   it("does NOT show the AVOIR badge for a cash-settled return", async () => {

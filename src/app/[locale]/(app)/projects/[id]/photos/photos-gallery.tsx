@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations, useFormatter } from "next-intl";
+import { dayKeyToUtcNoon, parisDayKey } from "@/lib/utils/paris-day";
 import { Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PhotoThumb } from "./photo-thumb";
@@ -84,7 +85,8 @@ export function PhotosGallery({
   const seen = new Map<string, DateGroup>();
 
   for (const photo of photos) {
-    const dateKey = photo.capturedAt ? photo.capturedAt.slice(0, 10) : "unknown";
+    // The Paris day, as the lightbox shows it (not the UTC day of the timestamp).
+    const dateKey = photo.capturedAt ? parisDayKey(photo.capturedAt) : "unknown";
     let group = seen.get(dateKey);
     if (!group) {
       let label: string;
@@ -92,10 +94,11 @@ export function PhotosGallery({
         label = "—";
       } else {
         try {
-          label = format.dateTime(new Date(dateKey), {
+          label = format.dateTime(dayKeyToUtcNoon(dateKey), {
             year: "numeric",
             month: "long",
             day: "numeric",
+            timeZone: "UTC",
           });
         } catch {
           label = dateKey;

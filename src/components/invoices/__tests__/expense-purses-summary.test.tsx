@@ -13,13 +13,15 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import type { Invoice } from "@/types/invoice";
 import { ExpensePursesSummary } from "../expense-purses-summary";
 
+let mockLocale = "en";
+
 vi.mock("next-intl", () => ({
   useTranslations: (namespace?: string) =>
     (key: string, params?: Record<string, unknown>) => {
       const full = namespace ? `${namespace}.${key}` : key;
       return params ? `${full}(${JSON.stringify(params)})` : full;
     },
-  useLocale: () => "en",
+  useLocale: () => mockLocale,
 }));
 
 function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
@@ -374,6 +376,24 @@ describe("ExpensePursesSummary — dark-card KPIs", () => {
     expect(
       screen.getByText(/vsMonth\(\{"delta":"-50%","month":"Jun"\}\)/)
     ).toBeDefined();
+  });
+
+  it("formats the delta the French way in French (\"-50 %\")", () => {
+    mockLocale = "fr";
+    try {
+      render(
+        <ExpensePursesSummary
+          invoices={[
+            makeInvoice({ id: "jun", issue_date: "2026-06-01", total_amount: 2000 }),
+            makeInvoice({ id: "jul", issue_date: "2026-07-01", total_amount: 1000 }),
+          ]}
+          meta={ZERO_META}
+        />
+      );
+      expect(screen.getByText(/vsMonth\(\{"delta":"-50\s%"/)).toBeDefined();
+    } finally {
+      mockLocale = "en";
+    }
   });
 
   it("buckets labor by service_month instead of issue_date", () => {

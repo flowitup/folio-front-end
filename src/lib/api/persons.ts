@@ -27,8 +27,8 @@ function buildQuery(params?: Record<string, string | number | undefined>): strin
 }
 
 /**
- * Typeahead search. Empty `q` returns the first `limit` persons alphabetically.
- * Server caps limit at 100; default 20.
+ * Typeahead search. The API requires `q` of at least 2 characters (it
+ * answers 400 otherwise). Server caps limit at 100; default 20.
  */
 export async function fetchPersons(
   params?: PersonSearchParams,

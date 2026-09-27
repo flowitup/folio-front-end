@@ -18,6 +18,33 @@ export function money(value: number): string {
   return EUR.format(value);
 }
 
+/**
+ * A quote's unit price as it is shown: to the cent. The API keeps up to 4
+ * decimals (a price typed TTC converts to a sub-cent HT); comparisons on
+ * screen use this so two prices that read the same are treated the same.
+ */
+export function toCents(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/**
+ * The preset units that are French words ("sac", "boîte"…) are stored as
+ * those symbols; they are shown in the app's language. Other symbols (m², kg,
+ * a project's own units) are shown as typed.
+ */
+const WORD_UNIT_KEYS: Record<string, string> = {
+  sac: "unitSac",
+  boîte: "unitBoite",
+  rouleau: "unitRouleau",
+  lot: "unitLot",
+  forfait: "unitForfait",
+};
+
+export function unitLabel(symbol: string, t: (key: string) => string): string {
+  const key = WORD_UNIT_KEYS[symbol];
+  return key ? t(key) : symbol;
+}
+
 /** Format a quantity, trimming trailing zeros: 12, 3.5, 0.75. */
 export function quantity(value: number): string {
   return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 3 }).format(value);

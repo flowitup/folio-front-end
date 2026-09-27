@@ -64,15 +64,17 @@ export default function NewInvoicePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => router.push(`/${locale}/projects/${projectId}/invoices`)}
+          aria-label={t("backToExpenses")}
+          title={t("backToExpenses")}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden />
         </Button>
         <h2 className="text-xl font-semibold tracking-tight">{t("newInvoice")}</h2>
         {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}

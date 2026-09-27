@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { fetchInvoice } from "@/lib/api/invoice-api";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
+import { formatQuantity, formatVatRate, invoiceTotals } from "@/lib/invoices/invoice-totals";
+import { invoiceItemLabel } from "@/lib/invoices/invoice-item-label";
 import type { Invoice } from "@/types/invoice";
 import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
 
@@ -118,6 +120,23 @@ export default function InvoicePrintPage() {
                 <td style={{ whiteSpace: "pre-line" }}>{invoice.recipient_address}</td>
               </tr>
             )}
+            {invoice.type === "return" && invoice.settled_via && (
+              <tr>
+                <td>{t("settledVia.label")}</td>
+                <td>
+                  {t(`settledVia.${invoice.settled_via}`)}
+                  {invoice.settled_via === "avoir" && !invoice.applied_to_invoice_id
+                    ? ` (${t("settledVia.outstanding")})`
+                    : ""}
+                </td>
+              </tr>
+            )}
+            {invoice.type === "return" && invoice.applied_to_invoice_number && (
+              <tr>
+                <td>{t("appliedToInvoiceLabel")}</td>
+                <td>{invoice.applied_to_invoice_number}</td>
+              </tr>
+            )}
           </tbody>
         </table>
 
@@ -125,14 +144,8 @@ export default function InvoicePrintPage() {
         {(() => {
           // Show VAT column only when at least one item carries a non-zero rate.
           const hasVat = invoice.items.some((it) => (it.vat_rate ?? 0) > 0);
-          const totalHt = invoice.items.reduce(
-            (s, it) => s + it.quantity * it.unit_price,
-            0
-          );
-          const totalVat = invoice.items.reduce(
-            (s, it) => s + it.quantity * it.unit_price * ((it.vat_rate ?? 0) / 100),
-            0
-          );
+          // Exact HT (half-up to the cent) and VAT = TTC − HT, as the API rounds.
+          const { totalHt, totalVat } = invoiceTotals(invoice.items, invoice.total_amount);
           const colCount = hasVat ? 5 : 4;
 
           return (
@@ -149,12 +162,12 @@ export default function InvoicePrintPage() {
               <tbody>
                 {invoice.items.map((item, i) => (
                   <tr key={i}>
-                    <td>{item.description}</td>
-                    <td className="right">{item.quantity}</td>
+                    <td>{invoiceItemLabel(invoice, item.description, (number) => t("bankRefundLine", { number }))}</td>
+                    <td className="right">{formatQuantity(item.quantity, locale)}</td>
                     <td className="right">{formatEUR(item.unit_price)}</td>
                     {hasVat && (
                       <td className="right">
-                        {(item.vat_rate ?? 0) > 0 ? `${item.vat_rate}%` : "—"}
+                        {(item.vat_rate ?? 0) > 0 ? formatVatRate(item.vat_rate ?? 0, locale) : "—"}
                       </td>
                     )}
                     <td className="right">{formatEUR(item.total)}</td>

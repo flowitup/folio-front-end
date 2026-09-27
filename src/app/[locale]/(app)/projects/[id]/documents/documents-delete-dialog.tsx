@@ -38,7 +38,13 @@ export function DocumentsDeleteDialog({ doc, onCancel, onConfirm }: Props) {
   }
 
   return (
-    <AlertDialog open={doc !== null}>
+    <AlertDialog
+      open={doc !== null}
+      onOpenChange={(open) => {
+        // Escape closes the dialog, but not while the delete is in flight.
+        if (!open && !loading) onCancel();
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("title")}</AlertDialogTitle>

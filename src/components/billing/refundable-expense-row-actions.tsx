@@ -21,6 +21,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { setRefundableStatus } from "@/lib/api/billing/refundable-invoices";
 import type { RefundableExpense, RefundableStatus, RefundedBy } from "@/types/invoice";
 
@@ -41,14 +51,22 @@ const STATUS_I18N_KEY: Record<RefundableStatus, string> = {
 interface RefundableExpenseRowActionsProps {
   expense: RefundableExpense;
   onReload: () => void;
+  /**
+   * Which half to render: the status stamp, the change-status menu, or both
+   * side by side (default). The desktop table puts each half under its own
+   * column header.
+   */
+  part?: "all" | "status" | "menu";
 }
 
 export function RefundableExpenseRowActions({
   expense,
   onReload,
+  part = "all",
 }: RefundableExpenseRowActionsProps) {
   const t = useTranslations("billing.refundable");
   const [loading, setLoading] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const currentStatus = expense.refundable_status;
 
@@ -56,6 +74,7 @@ export function RefundableExpenseRowActions({
     setLoading(true);
     try {
       await setRefundableStatus(expense.id, next, refundedBy);
+      if (next === null) toast.success(t("removed"));
       onReload();
     } catch {
       toast.error(t("updateError"));
@@ -81,9 +100,12 @@ export function RefundableExpenseRowActions({
     ? t(STATUS_I18N_KEY[currentStatus])
     : "—";
 
+  const stamp = <span className={stampClass}>{statusLabel}</span>;
+  if (part === "status") return stamp;
+
   return (
     <div className="flex items-center gap-2">
-      <span className={stampClass}>{statusLabel}</span>
+      {part === "all" && stamp}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -134,13 +156,41 @@ export function RefundableExpenseRowActions({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onSelect={() => handleSetStatus(null)}
+            // Removing clears the refund status and deletes a bank refund's
+            // funds release: confirm first.
+            onSelect={() => setConfirmRemove(true)}
             className="text-destructive focus:text-destructive"
           >
             {t("action.remove")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog open={confirmRemove} onOpenChange={setConfirmRemove}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("removeConfirm.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("removeConfirm.body", { number: expense.invoice_number })}
+              {expense.funds_release_number && (
+                <>
+                  {" "}
+                  {t("removeConfirm.fundsRelease", { number: expense.funds_release_number })}
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("removeConfirm.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleSetStatus(null)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("action.remove")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

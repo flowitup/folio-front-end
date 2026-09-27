@@ -1,32 +1,53 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+/** The persons API refuses searches under 2 characters: the typeahead must not send them. */
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { act, render, screen, fireEvent } from "@testing-library/react";
 
-const { mockFetch } = vi.hoisted(() => ({ mockFetch: vi.fn() }));
-vi.mock("@/lib/api/persons", () => ({ fetchPersons: mockFetch, createPerson: vi.fn() }));
+vi.mock("next-intl", () => ({
+  useTranslations: (ns: string) => (key: string) => `${ns}.${key}`,
+}));
+vi.mock("@/lib/api/persons", () => ({
+  fetchPersons: vi.fn().mockResolvedValue([]),
+  createPerson: vi.fn(),
+}));
 
+import { fetchPersons } from "@/lib/api/persons";
 import { PersonTypeahead } from "../person-typeahead";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockFetch.mockResolvedValue([]);
+  vi.useFakeTimers();
 });
+afterEach(() => vi.useRealTimers());
+
+async function type(value: string) {
+  fireEvent.change(screen.getByTestId("person-typeahead-input"), { target: { value } });
+  await act(async () => {
+    vi.advanceTimersByTime(300);
+  });
+}
 
 describe("PersonTypeahead", () => {
-  it("does not search with fewer than two characters (the API refuses them)", async () => {
-    render(<PersonTypeahead value={null} onChange={vi.fn()} debounceMs={0} />);
+  it("does not search on open or with one character, and asks for more", async () => {
+    render(<PersonTypeahead value={null} onChange={vi.fn()} />);
     fireEvent.click(screen.getByRole("combobox"));
-    fireEvent.change(await screen.findByTestId("person-typeahead-input"), { target: { value: "a" } });
-    await new Promise((r) => setTimeout(r, 20));
-    expect(mockFetch).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByTestId("person-typeahead-input"), { target: { value: "an" } });
-    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith({ q: "an", limit: 20 }));
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(fetchPersons).not.toHaveBeenCalled();
+    expect(screen.getByText("labor.typeahead.typeToSearch")).toBeInTheDocument();
+
+    await type("a");
+    expect(fetchPersons).not.toHaveBeenCalled();
+
+    await type(" ab ");
+    expect(fetchPersons).toHaveBeenCalledWith({ q: "ab", limit: 20 });
   });
 
   it("offers no Create entry when creating is not allowed", async () => {
-    render(<PersonTypeahead value={null} onChange={vi.fn()} debounceMs={0} allowCreate={false} />);
+    render(<PersonTypeahead value={null} onChange={vi.fn()} allowCreate={false} />);
     fireEvent.click(screen.getByRole("combobox"));
-    fireEvent.change(await screen.findByTestId("person-typeahead-input"), { target: { value: "Nobody" } });
-    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
-    expect(screen.queryByText(/Create/)).toBeNull();
+    await type("Nobody");
+    expect(fetchPersons).toHaveBeenCalled();
+    expect(screen.queryByText(/labor\.typeahead\.create/)).toBeNull();
   });
 });

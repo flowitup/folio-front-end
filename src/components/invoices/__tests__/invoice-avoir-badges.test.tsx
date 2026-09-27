@@ -91,10 +91,10 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
 describe("InvoiceMobileCard — avoir badges", () => {
   const formatAmount = (n: number) => `${n} €`;
 
-  it("shows the AVOIR badge when settled_via='avoir'", () => {
+  it("shows the AVOIR badge when an avoir was applied", () => {
     render(
       <InvoiceMobileCard
-        invoice={makeInvoice({ settled_via: "avoir" })}
+        invoice={makeInvoice({ settled_via: "avoir", applied_to_invoice_id: "inv-9" })}
         isOpen={false}
         onToggle={vi.fn()}
         formatAmount={formatAmount}

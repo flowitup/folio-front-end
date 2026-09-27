@@ -153,6 +153,8 @@ export const fetchAttachmentBlobUrl = async (attachmentId: string): Promise<stri
 
 const INVOICE_YEAR_MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 const VALID_INVOICE_EXPORT_FORMATS: readonly InvoiceExportFormat[] = ["xlsx", "pdf"];
+/** Languages the export endpoints render labels in. */
+const EXPORT_LOCALES: readonly string[] = ["en", "fr", "vi"];
 
 
 export async function fetchInvoiceExport(
@@ -160,6 +162,8 @@ export async function fetchInvoiceExport(
   range: InvoiceExportRange,
   format: InvoiceExportFormat,
   typeFilter?: InvoiceExportTypeFilter,
+  /** UI language of the file's labels (en / fr / vi); the API uses English without it. */
+  locale?: string,
 ): Promise<{ blob: Blob; filename: string }> {
   // Sync input guards — throw before any fetch
   if (!projectId) throw new Error("projectId is required");
@@ -170,6 +174,7 @@ export async function fetchInvoiceExport(
 
   const params = new URLSearchParams({ from: range.from, to: range.to, format });
   if (typeFilter) params.set("type", typeFilter);
+  if (locale && EXPORT_LOCALES.includes(locale)) params.set("locale", locale);
 
   const url = `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/invoices-export?${params.toString()}`;
   const res = await fetchWithRefresh(url);

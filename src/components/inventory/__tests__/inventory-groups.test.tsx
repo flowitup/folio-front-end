@@ -91,6 +91,11 @@ describe("InventoryGroups", () => {
     expect(within(screen.getByTestId("inventory-item-drill")).getAllByRole("cell")[0]).toHaveTextContent("3");
   });
 
+  it("shows no edit or delete control to a read-only viewer", () => {
+    render(<InventoryGroups groups={groups} />);
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+  });
+
   it("wires edit and delete to the row", async () => {
     const onEdit = vi.fn();
     const onDelete = vi.fn();

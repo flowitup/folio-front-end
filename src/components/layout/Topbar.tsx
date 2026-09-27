@@ -104,7 +104,9 @@ export function Topbar() {
   else if (pathWithoutLocale === "/projects") pageKey = "projects";
   else if (pathWithoutLocale === "/settings") pageKey = "settings";
   else {
-    const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)/);
+    // Only the section root (/projects/<id>/invoices), not its sub-pages
+    // (/invoices/new, /invoices/<id>), which render their own header.
+    const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)\/?$/);
     if (projectMatch && (projectMatch[1] in TOPBAR_KEYS)) {
       pageKey = projectMatch[1] as PageKey;
     }
@@ -188,9 +190,9 @@ export function Topbar() {
               )}
               <span style={{ color: "var(--ink-2)" }}>{title}</span>
             </div>
-            {/* A long word ("Planification") must not spill under the icons. */}
+            {/* One line, never spilling under the icons: a wrapped "Main-/d'œuvre" pushed the page down. */}
             <h1
-              className="truncate font-display text-2xl font-medium leading-[1.05] tracking-tight lg:text-[34px]"
+              className="font-display truncate text-xl font-medium leading-[1.05] tracking-tight sm:text-2xl lg:text-[34px]"
               title={title ?? undefined}
             >
               {title}

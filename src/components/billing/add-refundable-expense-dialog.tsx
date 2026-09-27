@@ -179,14 +179,16 @@ export function AddRefundableExpenseDialog({
                 {t("truncatedNotice", { count: candidates.length, total: candidateTotal })}
               </p>
             )}
-            <table className="w-full text-sm">
+            {/* Fixed layout: a long project or recipient name is cut, not
+                allowed to push the amount out of the dialog. */}
+            <table className="w-full table-fixed text-sm" data-testid="refundable-candidates">
               <thead className="sticky top-0 bg-background border-b">
                 <tr className="text-left text-muted-foreground">
                   <th className="p-2 w-8" />
                   <th className="p-2 font-medium">{t("columns.project")}</th>
-                  <th className="p-2 font-medium">{t("columns.invoiceNumber")}</th>
+                  <th className="p-2 font-medium w-28 sm:w-32">{t("columns.invoiceNumber")}</th>
                   <th className="p-2 font-medium">{t("columns.recipient")}</th>
-                  <th className="p-2 font-medium text-right">{t("columns.total")}</th>
+                  <th className="p-2 font-medium text-right w-24 sm:w-28">{t("columns.total")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -205,10 +207,16 @@ export function AddRefundableExpenseDialog({
                         aria-label={expense.invoice_number}
                       />
                     </td>
-                    <td className="p-2">{expense.project_name}</td>
-                    <td className="p-2 font-mono text-xs">{expense.invoice_number}</td>
-                    <td className="p-2">{expense.recipient_name}</td>
-                    <td className="p-2 text-right tabular-nums">
+                    <td className="p-2 truncate" title={expense.project_name}>
+                      {expense.project_name}
+                    </td>
+                    <td className="p-2 truncate font-mono text-xs" title={expense.invoice_number}>
+                      {expense.invoice_number}
+                    </td>
+                    <td className="p-2 truncate" title={expense.recipient_name}>
+                      {expense.recipient_name}
+                    </td>
+                    <td className="p-2 whitespace-nowrap text-right tabular-nums">
                       {formatEUR(expense.total_amount)}
                     </td>
                   </tr>

@@ -99,15 +99,13 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
     await reload();
   };
 
+  // A failure is thrown back to the rename dialog, which shows it in place:
+  // the card behind the dialog's overlay cannot be read.
   const handleRename = async (attachmentId: string, newFilename: string) => {
     setError(null);
-    try {
-      await renameAttachment(attachmentId, newFilename);
-      setRenameTarget(null);
-      await reload();
-    } catch {
-      setError(t("renameFailed"));
-    }
+    await renameAttachment(attachmentId, newFilename);
+    setRenameTarget(null);
+    await reload();
   };
 
   const handleDelete = async (attachmentId: string) => {

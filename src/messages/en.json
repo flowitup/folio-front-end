@@ -22,7 +22,9 @@
     "projectSettings": "Settings",
     "settings": "Settings",
     "more": "More",
-    "chiffrage": "Cost planning"
+    "chiffrage": "Cost planning",
+    "close": "Close",
+    "homeLink": "Folio — home"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -405,7 +407,7 @@
     "description": "Description",
     "quantity": "Qty",
     "unitPrice": "Unit price",
-    "vatRate": "TVA %",
+    "vatRate": "VAT %",
     "total": "Total",
     "notes": "Notes",
     "colTva": "VAT",
@@ -451,7 +453,6 @@
     "invalidFileType": "{name}: file type not allowed",
     "uploadFailed": "Failed to upload {name}",
     "deleteFailed": "Failed to delete attachment",
-    "renameFailed": "Failed to rename attachment",
     "rename": "Rename",
     "attachmentDeleteConfirm": "Delete this attachment? This cannot be undone.",
     "openAttachment": "Open",
@@ -461,7 +462,9 @@
       "label": "File name",
       "cancel": "Cancel",
       "save": "Save",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "error": "Couldn't rename the attachment. Try again.",
+      "errorExtension": "The extension must remain {extension}"
     },
     "attachmentPreview": {
       "preview": "Preview",
@@ -507,7 +510,8 @@
       "summaryLine": "{count, plural, =1 {1 month selected} other {# months selected}}",
       "errorRangeInvalid": "\"From\" must be before or equal to \"To\"",
       "errorRangeTooLarge": "Range cannot exceed 24 months",
-      "errorGeneric": "Failed to export expenses"
+      "errorGeneric": "Failed to export expenses",
+      "dialogDescription": "Choose a period, a type and a file format."
     },
     "paymentMethod": {
       "label": "Payment method",
@@ -619,7 +623,12 @@
     "errorPaymentMethodInactive": "This payment method has been deactivated. Choose another one.",
     "workerInactive": "{name} (inactive)",
     "errorQuantityTooLarge": "Quantity cannot exceed {max, number}.",
-    "errorUnitPriceTooLarge": "Unit price cannot exceed {max, number}."
+    "errorUnitPriceTooLarge": "Unit price cannot exceed {max, number}.",
+    "errorIssueDateRequired": "Enter the issue date",
+    "bankRefundLine": "Bank refund — {number}",
+    "deleteExpense": "Delete expense {number}",
+    "removeLine": "Remove line",
+    "backToExpenses": "Back to expenses"
   },
   "planning": {
     "title": "Planning",
@@ -731,7 +740,7 @@
     "totalLaborCost": "Total labor cost",
     "workerDays": "Worker-days",
     "onSiteToday": "On site today",
-    "acrossWorkers": "across {n} workers",
+    "acrossWorkers": "across {n, plural, one {# worker} other {# workers}}",
     "workersLogged": "workers logged",
     "monthlySummary": "Monthly summary · {month}",
     "summaryAllHistoryTitle": "Summary · All history",
@@ -745,7 +754,7 @@
     "summaryDrillDown": "Click to view per-worker breakdown",
     "summaryMonthPickerAll": "All months",
     "summaryUnassignedHint": "+ {n} unassigned",
-    "workersBadge": "{n} workers",
+    "workersBadge": "{n, plural, one {# worker} other {# workers}}",
     "role": {
       "label": "Role",
       "selectRole": "Select role",
@@ -816,7 +825,8 @@
       "workerNameRequired": "Worker name is required.",
       "dailyRatePositive": "Daily rate must be greater than 0.",
       "reactivateWorkerFailed": "Failed to reactivate the worker",
-      "amountTooLarge": "The amount cannot exceed {max, number}."
+      "amountTooLarge": "The amount cannot exceed {max, number}.",
+      "overrideNegative": "The amount cannot be negative."
     },
     "logDayDialog": {
       "title": "Log day",
@@ -843,14 +853,15 @@
         "supplementLabel": "Supplement (h)",
         "noteLabel": "Note",
         "notePlaceholder": "Optional"
-      }
+      },
+      "noWorkers": "No workers."
     },
     "editEntry": {
       "title": "Edit attendance"
     },
     "conflict": {
       "modalTitle": "Cross-project conflict",
-      "modalBody": "The following workers are already logged in another project today. Continue anyway?",
+      "modalBody": "The following workers are already logged on another project on {date}. Continue anyway?",
       "continueAnyway": "Continue anyway",
       "cancel": "Cancel",
       "sameAsLastDaySkipped": "{n} worker(s) skipped — already logged elsewhere"
@@ -1031,7 +1042,24 @@
     "entryDeleted": "Entry deleted",
     "workerDeactivated": "{name} deactivated",
     "reactivateWorker": "Reactivate",
-    "workerReactivated": "{name} reactivated"
+    "workerReactivated": "{name} reactivated",
+    "view": {
+      "ariaLabel": "Attendance view",
+      "calendar": "Calendar",
+      "list": "List"
+    },
+    "prevDay": "Previous day",
+    "nextDay": "Next day",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "close": "Close",
+    "typeahead": {
+      "placeholder": "Search workers…",
+      "noMatches": "No matches",
+      "typeToSearch": "Type at least 2 characters to search",
+      "existing": "Existing",
+      "create": "Create “{name}”"
+    }
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",
@@ -1274,7 +1302,8 @@
           "save": "Save",
           "saving": "Saving…",
           "cancel": "Cancel",
-          "delete": "Delete template"
+          "delete": "Delete template",
+          "create": "Create"
         },
         "errors": {
           "nameRequired": "Template name is required.",
@@ -1288,7 +1317,10 @@
           "saved": "Template saved.",
           "created": "Template created.",
           "deleted": "Template deleted."
-        }
+        },
+        "vatCustomPlaceholder": "e.g. 8.5",
+        "vatUsePreset": "Use preset",
+        "deleteConfirm": "Delete “{name}”? This cannot be undone."
       },
       "companyLabel": "Company"
     },
@@ -1301,7 +1333,8 @@
           "description": "Create your first quote to get started.",
           "cta": "Create your first quote"
         },
-        "importTitle": "Import quotes"
+        "importTitle": "Import quotes",
+        "heading": "Quotes"
       },
       "status": {
         "draft": "Draft",
@@ -1328,7 +1361,8 @@
           "description": "Create your first invoice to get started.",
           "cta": "Create your first invoice"
         },
-        "importTitle": "Import invoices"
+        "importTitle": "Import invoices",
+        "heading": "Invoices"
       },
       "status": {
         "draft": "Draft",
@@ -1359,7 +1393,9 @@
         "actions": "Actions"
       },
       "loadMoreFailed": "Failed to load more documents. Please try again.",
-      "searchLoadedOnly": "Search covers the {loaded} most recent of {total} documents. Load more to search older ones."
+      "loadFailed": "The documents couldn't be loaded.",
+      "retry": "Try again",
+      "noFilterResults": "No documents with this status."
     },
     "form": {
       "modes": {
@@ -1386,7 +1422,7 @@
         "validityUntil": "Valid until",
         "paymentDue": "Payment due",
         "paymentTerms": "Payment terms",
-        "paymentTermsPlaceholder": "e.g. Net 30, virement bancaire",
+        "paymentTermsPlaceholder": "e.g. Net 30, bank transfer",
         "project": "Project (optional)",
         "projectNone": "No project"
       },
@@ -1405,7 +1441,9 @@
         "categoryPlaceholder": "e.g. Toiture, Plomberie",
         "descriptionSuggestionsHeading": "From your past invoices",
         "noSuggestions": "No matches — your text will be used",
-        "categoryNoMatches": "No categories yet — your text will be used"
+        "categoryNoMatches": "No categories yet — your text will be used",
+        "vatCustom": "Custom…",
+        "vatUsePreset": "Use a preset rate"
       },
       "totals": {
         "ht": "Total HT",
@@ -1487,12 +1525,14 @@
       },
       "applyTemplate": {
         "title": "Apply a template",
-        "description": "Choose a saved template. Items, notes and terms will be copied. Enter the recipient details below before creating."
+        "description": "Choose a saved template. Items, notes and terms will be copied. Enter the recipient details below before creating.",
+        "empty": "No {kind} templates saved yet."
       },
       "fromExisting": {
         "description": "Select a document to use as the starting point for your new <strong>{kind}</strong>. Items, recipient, notes and terms will be copied; dates and number will be reset.",
         "createAs": "Create as:",
-        "crossKindWarning": "Switching kinds resets the document lifecycle. The cloned {kind} will start as <strong>{draft}</strong>."
+        "crossKindWarning": "Switching kinds resets the document lifecycle. The cloned {kind} will start as <strong>{draft}</strong>.",
+        "empty": "No existing documents found."
       }
     },
     "editPage": {
@@ -1556,7 +1596,14 @@
         "bothShare": "{percent}% both",
         "bankShare": "{percent}% bank"
       },
-      "companyPaidNotRefundable": "Paid with a company payment method, so there is nothing to refund: {numbers}"
+      "companyPaidNotRefundable": "Paid with a company payment method, so there is nothing to refund: {numbers}",
+      "removed": "Removed from refundable expenses",
+      "removeConfirm": {
+        "title": "Remove from refundable expenses?",
+        "body": "{number} will no longer be tracked for reimbursement and its refund status will be cleared.",
+        "fundsRelease": "The linked funds release {number} will also be deleted, which lowers the project's released total.",
+        "cancel": "Cancel"
+      }
     },
     "import": {
       "button": "Import",
@@ -1670,7 +1717,8 @@
       "errorNetwork": "Network error — try again",
       "errorRateLimited": "Too many uploads — slow down",
       "errorForbidden": "Not allowed",
-      "errorServer": "Upload failed"
+      "errorServer": "Upload failed",
+      "errorEmpty": "This file is empty"
     },
     "list": {
       "empty": "No documents yet. Drag files into the upload area to start.",
@@ -1706,7 +1754,10 @@
       "add": "Add tag",
       "remove": "Remove tag",
       "placeholder": "New tag…",
-      "done": "Done"
+      "done": "Done",
+      "errorTooMany": "A document can have at most {max} tags",
+      "errorTooLong": "A tag can be at most {max} characters long",
+      "errorSave": "Couldn't update the tags"
     },
     "filter": {
       "all": "All",
@@ -1721,7 +1772,8 @@
       "close": "Close",
       "download": "Download",
       "error": "Preview failed — download to view the file",
-      "loading": "Loading preview…"
+      "loading": "Loading preview…",
+      "downloadError": "Download failed — the file may have been deleted"
     },
     "delete": {
       "title": "Delete document?",
@@ -1730,8 +1782,9 @@
       "confirm": "Delete",
       "confirming": "Deleting…",
       "success": "Document deleted",
-      "errorForbidden": "Only the uploader or a project admin can delete this document",
-      "errorServer": "Failed to delete"
+      "errorForbidden": "You don't have permission to delete documents in this project",
+      "errorServer": "Failed to delete",
+      "errorNotFound": "This document no longer exists"
     },
     "toast": {
       "uploadSuccess": "{filename} uploaded",
@@ -1750,8 +1803,10 @@
       "save": "Save",
       "saving": "Saving…",
       "success": "Document renamed",
-      "errorForbidden": "Only the uploader or a project admin can rename this document",
-      "errorServer": "Failed to rename"
+      "errorForbidden": "You don't have permission to rename documents in this project",
+      "errorServer": "Failed to rename",
+      "errorExtension": "The extension must remain {extension}",
+      "errorInvalid": "This name can't be used. Check it and try again."
     },
     "restricted": {
       "title": "Documents are not available for your role",
@@ -1832,7 +1887,10 @@
       "forbidden": "Only the uploader, the project owner, or an admin can do this",
       "notFound": "Analysis not found",
       "rateLimited": "Too many requests — slow down",
-      "generic": "Something went wrong — try again"
+      "generic": "Something went wrong — try again",
+      "invalidSourceUrl": "The source link must start with http:// or https://",
+      "tooManyTags": "An analysis can have at most 20 tags",
+      "tagTooLong": "A tag can be at most 100 characters long"
     },
     "toast": {
       "listLoadError": "Failed to load analyses"
@@ -2159,7 +2217,7 @@
       "plomberie": "Plumbing",
       "quincaillerie": "Hardware",
       "droguerie": "Household & cleaning",
-      "autre": "Other / Uncategorized"
+      "autre": "Other"
     },
     "addProduct": "Add product",
     "createTitle": "Add product",
@@ -2286,7 +2344,9 @@
       "imageAlreadySet": "This product already has an image.",
       "imageLinkRefused": "This image link is not accepted. Use an https link to the image itself.",
       "imageLinkNotImage": "The link is not a JPG, PNG or WebP image."
-    }
+    },
+    "selectSupplier": "Select a supplier",
+    "imagePreviewAlt": "Preview of the chosen image"
   },
   "inventory": {
     "title": "Equipment inventory",
@@ -2377,7 +2437,7 @@
       "delete": "Delete warehouse",
       "empty": "No warehouse yet. Add the place where the company keeps its tools.",
       "noAddress": "No address",
-      "deleteBlocked": "This warehouse still holds {count, plural, one {# unit} other {# units}}. Move or remove them first.",
+      "deleteBlocked": "This warehouse still lists {count, plural, one {# piece of equipment} other {# pieces of equipment}}. Move or remove them first.",
       "fields": {
         "name": "Name",
         "namePlaceholder": "e.g. Main warehouse",
@@ -2385,7 +2445,8 @@
         "addressPlaceholder": "Street, city"
       },
       "validation": {
-        "nameRequired": "Give the warehouse a name."
+        "nameRequired": "Give the warehouse a name.",
+        "nameTaken": "A warehouse already has this name."
       },
       "toast": {
         "created": "Warehouse added.",
@@ -2395,7 +2456,8 @@
         "updateError": "Failed to update the warehouse.",
         "deleteError": "Failed to delete the warehouse."
       }
-    }
+    },
+    "otherSite": "A site you are not assigned to"
   },
   "photos": {
     "title": "Media",
@@ -2429,10 +2491,16 @@
       "rateLimited": "Too many uploads — please slow down",
       "server": "Upload failed — please try again",
       "forbidden": "You do not have permission to perform this action",
-      "invalidImage": "Invalid image — the file could not be processed"
+      "invalidImage": "Invalid image — the file could not be processed",
+      "updateFailed": "Couldn't save the changes — please try again",
+      "deleteFailed": "Couldn't delete the photo — please try again",
+      "notFound": "This photo no longer exists",
+      "validation": "Check the caption and date, then try again"
     },
     "loadMore": "Load more",
-    "saved": "Changes saved"
+    "saved": "Changes saved",
+    "deleted": "Photo deleted",
+    "close": "Close"
   },
   "chiffrage": {
     "actions": "Actions",
@@ -2493,7 +2561,7 @@
     "fetch": "Fetch",
     "grandTotal": "Grand total",
     "imageFromUrl": "From a supplier link",
-    "imageFromUrlNote": "Only the fournisseurs' own sites are accepted.",
+    "imageFromUrlNote": "Only image links from supported supplier sites are accepted: Leroy Merlin, Castorama, Brico Dépôt, Point P, Cedeo, Brossette, Rexel, Saint-Gobain.",
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "That image is over 10 MB.",
     "imageUploadFailed": "The photo could not be uploaded.",
@@ -2609,7 +2677,7 @@
     "emptyHintReadOnly": "No section has been planned for this project yet.",
     "quantityTooLarge": "The quantity cannot exceed {max, number}.",
     "priceTooLarge": "The unit price (excl. tax) cannot exceed {max, number}.",
-    "errorForbidden": "You do not have permission to modify this chiffrage.",
+    "errorForbidden": "You do not have permission to modify this cost plan.",
     "errorNotFound": "This item no longer exists.",
     "errorNameTaken": "That name is already taken.",
     "errorImageTooLarge": "Image too large (max 10 MB).",
@@ -2617,7 +2685,14 @@
     "errorImageLink": "The image could not be fetched from this link. Use an https link to the image itself.",
     "errorInvalidInput": "Some values are not valid. Check the fields and try again.",
     "errorRateLimited": "Too many requests. Wait a moment and try again.",
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "dragOtherRoom": "Use Edit to move an item to another room",
+    "unitSac": "bag",
+    "unitBoite": "box",
+    "unitRouleau": "roll",
+    "unitLot": "lot",
+    "unitForfait": "lump sum",
+    "productUrlInvalid": "Enter a web address, e.g. www.castorama.fr/…"
   },
   "onboarding": {
     "title": "Welcome to Folio",

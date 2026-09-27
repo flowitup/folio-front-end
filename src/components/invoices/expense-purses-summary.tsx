@@ -511,7 +511,12 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
                       <span style={{ opacity: 0.62 }}>
                         {" · "}
                         {t("summary.vsMonth", {
-                          delta: `${deltaPct > 0 ? "+" : ""}${deltaPct}%`,
+                          // Locale-aware: "+12 %" in French, "+12%" in English.
+                          delta: new Intl.NumberFormat(locale, {
+                            style: "percent",
+                            maximumFractionDigits: 0,
+                            signDisplay: "exceptZero",
+                          }).format(deltaPct / 100),
                           month: monthOnly.format(monthDate(prevMonth.key)),
                         })}
                       </span>

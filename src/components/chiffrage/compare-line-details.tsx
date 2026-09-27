@@ -9,7 +9,7 @@
 import { useTranslations } from "next-intl";
 
 import { formatGapPercent, type CompareLine } from "@/components/chiffrage/compare-lines";
-import { money, quantity } from "@/components/chiffrage/format";
+import { money, quantity, unitLabel } from "@/components/chiffrage/format";
 import { NoteDiffText } from "@/components/chiffrage/note-diff-text";
 import type { NoteSegment } from "@/components/chiffrage/quote-note-diff";
 import type { ChiffrageQuote } from "@/lib/api/chiffrage";
@@ -38,7 +38,7 @@ export function CompareLineDetails({ line, shopAName, shopBName }: Props) {
       cheaper,
       gap: money(gap),
       lineGap: money(gap * article.quantity),
-      qty: `${quantity(article.quantity)}${article.unit ? ` ${article.unit}` : ""}`,
+      qty: `${quantity(article.quantity)}${article.unit ? ` ${unitLabel(article.unit, t)}` : ""}`,
     };
     // No percentage when the cheaper price is 0 € — a ratio against zero
     // would read as "no difference".

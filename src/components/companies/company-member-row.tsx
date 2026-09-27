@@ -132,9 +132,13 @@ export function CompanyMemberRow({
             size="sm"
             className="h-7 px-2 text-[12px]"
             onClick={() => onOpenGrants(attachedUser)}
+            // Icon-only below xl: the full label pushed the column out of the
+            // settings card at 1366px, where it scrolled out of sight.
+            aria-label={t("customPermissions")}
+            title={t("customPermissions")}
           >
-            <SlidersHorizontal size={12} className="mr-1" />
-            {t("customPermissions")}
+            <SlidersHorizontal size={12} className="xl:mr-1" aria-hidden="true" />
+            <span className="hidden xl:inline">{t("customPermissions")}</span>
           </Button>
         )}
       </TableCell>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { formatEURWhole } from "@/lib/utils/formatters";
+import { formatPercent } from "@/lib/utils/format-percent";
 import {
   monthKeyToDate,
   type BudgetMetrics,
@@ -110,10 +111,16 @@ export function OverviewMoneyPanel({
   const locale = useLocale();
   const monthFmt = new Intl.DateTimeFormat(locale, { month: "short" });
   const fig = (value: string) => (loading ? PLACEHOLDER : value);
+  // Remaining is shown as whole euros beside the whole-euro spent and credit
+  // figures, so derive it from those: 5 000 € − 3 369 € reads 1 631 €, not a
+  // separately rounded 1 632 €.
+  const shownLeft = Math.round(budgetMetrics.denominator) - Math.round(budgetMetrics.spent);
 
   const sparkMax = Math.max(...monthlySeries.map((p) => p.total), 1);
   const sparkX = (i: number) => 4 + i * 30;
-  const sparkY = (v: number) => 38 - (v / sparkMax) * 30;
+  // A net-negative month (returns above purchases) sits on the baseline, as
+  // the bar charts floor it; unfloored it would be drawn far below the chart.
+  const sparkY = (v: number) => 38 - (Math.max(0, v) / sparkMax) * 30;
   const sparkPts = monthlySeries.map((p, i) => ({ x: sparkX(i), y: sparkY(p.total) }));
   const lastIdx = sparkPts.length - 1;
   const sparkArea =
@@ -144,7 +151,7 @@ export function OverviewMoneyPanel({
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-[12.5px] font-semibold">{title}</span>
             <span className="text-[10.5px] uppercase tracking-[0.05em]" style={{ opacity: 0.55 }}>
-              {stamp}
+              {loading ? PLACEHOLDER : stamp}
             </span>
           </div>
           <div
@@ -198,7 +205,7 @@ export function OverviewMoneyPanel({
                   !loading && showRemaining && budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined,
               }}
             >
-              {fig(formatEURWhole(showRemaining ? budgetMetrics.left : spentTotal))}
+              {fig(formatEURWhole(showRemaining ? shownLeft : spentTotal))}
             </div>
           </div>
           <div className="flex items-end gap-6" style={{ borderLeft: "1px solid rgba(245,241,234,0.14)", paddingLeft: 32 }}>
@@ -217,7 +224,7 @@ export function OverviewMoneyPanel({
                     {monthDelta.deltaPct !== null && monthDelta.previous && (
                       <span style={{ color: monthDelta.deltaPct < 0 ? POSITIVE_ON_DARK : undefined }}>
                         {tInvoices("summary.vsMonth", {
-                          delta: `${monthDelta.deltaPct > 0 ? "+" : ""}${monthDelta.deltaPct}%`,
+                          delta: formatPercent(locale, monthDelta.deltaPct, true),
                           month: monthFmt.format(monthKeyToDate(monthDelta.previous.key)),
                         })}
                         {" · "}
@@ -311,7 +318,7 @@ export function OverviewMoneyPanel({
                 {loading
                   ? PLACEHOLDER
                   : t(budgetMetrics.usesBudget ? "money.pctCreditDrawn" : "money.pctSpent", {
-                      pct: budgetMetrics.pct,
+                      pct: formatPercent(locale, budgetMetrics.pct),
                       spent: formatEURWhole(budgetMetrics.spent),
                     })}
               </span>

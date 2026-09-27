@@ -31,7 +31,7 @@
     "heroTitle": "Reprenez le chantier.",
     "phoneLabel": "Numéro de téléphone",
     "phonePlaceholder": "6 12 34 56 78",
-    "phoneHint": "Numéros français uniquement — sans le 0 initial. Code à 6 chiffres par SMS.",
+    "phoneHint": "Numéros français uniquement, avec ou sans le 0 initial. Code à 6 chiffres par SMS.",
     "sendCode": "Envoyer le code",
     "sendingCode": "Envoi du code...",
     "codeSentTo": "Code à 6 chiffres envoyé au <mono>{phone}</mono>.",
@@ -53,12 +53,14 @@
     "codeCardTitle": "Saisir le code SMS",
     "codeTitle": "Vérifiez vos messages.",
     "heroSubtitlePhone": "Connectez-vous avec votre numéro. Un code SMS, sans mot de passe.",
-    "codeExpires": "Expire dans {minutes} minutes",
+    "codeExpires": "{minutes, plural, one {Expire dans # minute} other {Expire dans # minutes}}",
     "codeDigit": "Chiffre {position} sur {total}",
     "stepEnterPhone": "Le numéro",
     "stepEnterCode": "Le code à 6 chiffres",
     "stepEnterSite": "Sur le chantier",
-    "verified": "Vérifié"
+    "verified": "Vérifié",
+    "codeAlreadySent": "Un code a déjà été envoyé à ce numéro : saisissez-le, ou demandez-en un nouveau dans {seconds} s.",
+    "codeExpired": "Code expiré — demandez-en un nouveau"
   },
   "topbar": {
     "viewNotifications": "Voir les notifications",
@@ -94,9 +96,9 @@
     "loadError": "Impossible de charger les données de l'aperçu",
     "money": {
       "spentThisMonth": "Dépensé ce mois-ci",
-      "pctSpent": "{pct}% dépensé · {spent}",
+      "pctSpent": "{pct} dépensé · {spent}",
       "purseSpent": "dépensé",
-      "pctCreditDrawn": "{pct}% du crédit utilisé · {spent}",
+      "pctCreditDrawn": "{pct} du crédit utilisé · {spent}",
       "unassigned": "{n, plural, =1 {1 dépense} other {# dépenses}} · {amount} sans moyen de paiement entreprise ou personnel — dans aucune bourse"
     },
     "spendByType": {
@@ -104,7 +106,8 @@
       "rangeShared": "{from} – {to} · échelle commune",
       "viewExpense": "Dépenses",
       "currentHighlighted": "Mois en cours en surbrillance · tendance superposée",
-      "sixMonthSpend": "Dépenses sur 6 mois"
+      "sixMonthSpend": "Dépenses sur 6 mois",
+      "monthTick": "{short}"
     },
     "agenda": {
       "title": "Cette semaine",
@@ -160,7 +163,6 @@
     "cancel": "Annuler",
     "remove": "Retirer",
     "allProjects": "Tous les projets",
-    "active": "Actifs",
     "searchProjects": "Rechercher un projet",
     "projectStamp": "Projet",
     "progress": "Avancement",
@@ -200,14 +202,15 @@
       "openSettings": "Ouvrir les paramètres du projet",
       "noReleases": "Aucun fonds débloqué pour l'instant",
       "settingsCardTitle": "Crédit bancaire (crédit immobilier)",
-      "settingsCardHint": "Montant initial accordé par la banque. Les déblocages de fonds en sont déduits."
+      "settingsCardHint": "Montant initial accordé par la banque. Les déblocages de fonds en sont déduits.",
+      "headlineMetaOver": "au-delà des <c>{credit}</c> de crédit · <p>{pct}</p> débloqués",
+      "drawsMetaSingle": "{count, plural, one {# déblocage} other {# déblocages}} · {month}"
     },
     "team": "Équipe",
     "openDashboard": "Ouvrir le tableau de bord",
     "photos": "Médias",
     "invite": "Inviter",
     "noneTeam": "aucun",
-    "memberRole": "Membre",
     "save": "Enregistrer",
     "saving": "Enregistrement...",
     "delete": "Supprimer",
@@ -238,7 +241,12 @@
     "waitingForAssignment": {
       "title": "En attente d'affectation",
       "description": "L'administrateur de votre entreprise ne vous a pas encore ajouté à un chantier."
-    }
+    },
+    "settingsReadOnly": "Seuls les administrateurs et managers de ce projet peuvent modifier ses paramètres.",
+    "teamSize": "{n, plural, one {# membre} other {# membres}}",
+    "projectCreated": "Projet créé",
+    "projectDeleted": "Projet supprimé",
+    "settingsForbidden": "Vous n'avez pas le droit de modifier les paramètres de ce projet."
   },
   "settings": {
     "profile": "Profil",
@@ -320,7 +328,8 @@
         "rate_limited": "Trop de tentatives. Patientez un instant, puis réessayez.",
         "unknown": "Une erreur est survenue. Veuillez réessayer."
       }
-    }
+    },
+    "errorInvalidProfile": "Vérifiez votre nom et votre téléphone : le nom peut compter jusqu'à 255 caractères."
   },
   "paymentMethods": {
     "title": "Moyens de paiement",
@@ -355,7 +364,8 @@
     },
     "paidByCompany": "Payé par l'entreprise",
     "personalPayment": "Paiement personnel",
-    "loadError": "Impossible de charger les moyens de paiement. Veuillez réessayer."
+    "loadError": "Impossible de charger les moyens de paiement. Veuillez réessayer.",
+    "saveEditAria": "Enregistrer les modifications"
   },
   "errors": {
     "unauthorized": "Non autorisé",
@@ -667,7 +677,16 @@
       "save": "Impossible d’enregistrer la tâche. Veuillez réessayer.",
       "delete": "Impossible de supprimer la tâche. Veuillez réessayer."
     },
-    "statusLabel": "Statut"
+    "statusLabel": "Statut",
+    "close": "Fermer",
+    "dnd": {
+      "instructions": "Pour saisir une tâche, appuyez sur Espace ou Entrée. Déplacez-la avec les flèches, appuyez de nouveau sur Espace ou Entrée pour la déposer, ou sur Échap pour annuler.",
+      "pickedUp": "Tâche {title} saisie.",
+      "over": "La tâche {title} est au-dessus de {target}.",
+      "dropped": "Tâche {title} déposée dans {target}.",
+      "cancelled": "Déplacement de la tâche {title} annulé."
+    },
+    "taskUnavailable": "Cette tâche n'existe pas ou vous n'y avez pas accès."
   },
   "labor": {
     "title": "Main-d'œuvre",
@@ -1035,7 +1054,8 @@
       "codeRequired": "Saisissez le code à 6 chiffres",
       "invalidCode": "Code incorrect ou expiré",
       "throttled": "Trop de demandes. Attendez une minute et réessayez.",
-      "title": "Invitation indisponible"
+      "title": "Invitation indisponible",
+      "nameRequired": "Saisissez votre nom"
     },
     "loggedInOther": {
       "title": "Vous êtes connecté sous un autre compte",
@@ -1053,7 +1073,12 @@
     "codePlaceholder": "123456",
     "changeNumber": "Changer de numéro",
     "resendCode": "Renvoyer le code",
-    "resendIn": "Renvoyer dans {seconds}s"
+    "resendIn": "Renvoyer dans {seconds}s",
+    "roles": {
+      "admin": "administrateur",
+      "manager": "manager",
+      "member": "membre"
+    }
   },
   "admin": {
     "bulkAdd": {
@@ -1126,11 +1151,6 @@
     },
     "markDone": "Marquer comme terminé",
     "markOpen": "Rouvrir",
-    "addedLabel": "Ajouté",
-    "relative": {
-      "today": "Aujourd'hui",
-      "yesterday": "Hier"
-    },
     "actions": {
       "save": "Enregistrer",
       "cancel": "Annuler",
@@ -1157,7 +1177,10 @@
       "notFound": "Cette note n'existe plus.",
       "rateLimited": "Trop de requêtes. Réessayez dans un moment.",
       "generic": "Une erreur est survenue. Réessayez."
-    }
+    },
+    "addedOn": "Ajoutée le {date}",
+    "addedToday": "Ajoutée aujourd'hui",
+    "addedYesterday": "Ajoutée hier"
   },
   "notifications": {
     "aria": {
@@ -1870,7 +1893,7 @@
       "remove": "Retirer",
       "removeConfirm": "Retirer {name} de ce projet ?",
       "dialogTitle": "Modifier le membre",
-      "dialogDescription": "Mettez à jour le rôle de ce membre. Les changements de rôle prennent effet immédiatement.",
+      "dialogDescription": "Mettez à jour le nom affiché et l'e-mail de ce membre.",
       "nameLabel": "Nom affiché",
       "emailLabel": "E-mail",
       "emailHint": "L'e-mail est l'identifiant de connexion. Le modifier change la façon dont cet utilisateur se connecte.",
@@ -1900,7 +1923,13 @@
       "submit": "Assigner",
       "successToast": "Membre assigné.",
       "roleHint": "Il s’agit du rôle de la personne dans toute l’entreprise, pas seulement dans ce projet. Manager s’applique à tous les projets qui lui sont assignés ; Membre ne réduit jamais un rôle déjà attribué. Modifiez les rôles dans Paramètres › Entreprise."
-    }
+    },
+    "roles": {
+      "admin": "Administrateur",
+      "manager": "Manager",
+      "member": "Membre"
+    },
+    "expired": "Expirée"
   },
   "companies": {
     "masking": {
@@ -2073,7 +2102,8 @@
       "unauthorized": "Session expirée. Veuillez vous reconnecter.",
       "notFound": "La ressource demandée est introuvable.",
       "rateLimited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
-      "generic": "Une erreur inattendue est survenue."
+      "generic": "Une erreur inattendue est survenue.",
+      "invalidJoinCode": "Code d'adhésion invalide ou révoqué."
     }
   },
   "bibliotheque": {
@@ -2669,7 +2699,8 @@
       "empty": "Aucun membre à importer.",
       "cancel": "Annuler",
       "submit": "{count, plural, =0 {Importer} one {Importer # membre} other {Importer # membres}}",
-      "importedToast": "{count, plural, =0 {Aucun membre importé} one {# membre importé} other {# membres importés}}"
+      "importedToast": "{count, plural, =0 {Aucun membre importé} one {# membre importé} other {# membres importés}}",
+      "alreadyMember": "Déjà membre"
     },
     "grants": {
       "dialogTitle": "Permissions personnalisées pour {name}",
@@ -2789,6 +2820,26 @@
       "refused": "Refusé",
       "error": "Erreur"
     },
-    "noCost": "—"
+    "noCost": "—",
+    "disabled": "L'assistant n'est pas activé : il n'y a rien à consulter."
+  },
+  "personsMerge": {
+    "title": "Fusionner des personnes",
+    "intro": "Regroupez deux fiches Personne qui désignent la même personne. Toutes les affectations d'ouvrier de la source passent à la cible, puis la fiche source est supprimée.",
+    "source": "Source",
+    "sourceHint": "(supprimée)",
+    "sourcePlaceholder": "Choisissez le doublon à supprimer…",
+    "target": "Cible",
+    "targetHint": "(conservée)",
+    "targetPlaceholder": "Choisissez la fiche à garder…",
+    "sameRow": "La source et la cible doivent être deux fiches différentes.",
+    "clear": "Effacer",
+    "merge": "Fusionner",
+    "cancel": "Annuler",
+    "confirmTitle": "Fusionner ces personnes ?",
+    "confirmBody": "Tous les ouvriers liés à {source} passent à {target}, et {source} est supprimé définitivement. Cette action est irréversible.",
+    "merged": "« {source} » fusionné dans « {target} ».",
+    "mergedDetail": "{n, plural, one {# ouvrier réaffecté} other {# ouvriers réaffectés}}. Source supprimée.",
+    "failed": "La fusion a échoué. Veuillez réessayer."
   }
 }

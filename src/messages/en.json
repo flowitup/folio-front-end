@@ -31,7 +31,7 @@
     "heroTitle": "Step back onto the site.",
     "phoneLabel": "Phone number",
     "phonePlaceholder": "6 12 34 56 78",
-    "phoneHint": "French numbers only — without the leading 0. A 6-digit code by SMS.",
+    "phoneHint": "French numbers only, with or without the leading 0. A 6-digit code by SMS.",
     "sendCode": "Send code",
     "sendingCode": "Sending code...",
     "codeSentTo": "6-digit code sent to <mono>{phone}</mono>.",
@@ -53,12 +53,14 @@
     "codeCardTitle": "Enter the SMS code",
     "codeTitle": "Check your messages.",
     "heroSubtitlePhone": "Sign in with your phone number. One SMS code, no password.",
-    "codeExpires": "Expires in {minutes} minutes",
+    "codeExpires": "{minutes, plural, one {Expires in # minute} other {Expires in # minutes}}",
     "codeDigit": "Digit {position} of {total}",
     "stepEnterPhone": "Your number",
     "stepEnterCode": "The 6-digit code",
     "stepEnterSite": "On site",
-    "verified": "Verified"
+    "verified": "Verified",
+    "codeAlreadySent": "A code was already sent to this number — enter it, or get a new one in {seconds} s.",
+    "codeExpired": "Code expired — ask for a new one"
   },
   "topbar": {
     "viewNotifications": "View notifications",
@@ -94,9 +96,9 @@
     "loadError": "Failed to load overview data",
     "money": {
       "spentThisMonth": "Spent this month",
-      "pctSpent": "{pct}% spent · {spent}",
+      "pctSpent": "{pct} spent · {spent}",
       "purseSpent": "spent",
-      "pctCreditDrawn": "{pct}% of credit drawn · {spent}",
+      "pctCreditDrawn": "{pct} of credit drawn · {spent}",
       "unassigned": "{n, plural, =1 {1 expense} other {# expenses}} · {amount} paid with no company or personal payment method — in neither purse"
     },
     "spendByType": {
@@ -104,7 +106,8 @@
       "rangeShared": "{from} – {to} · shared scale",
       "viewExpense": "Expense",
       "currentHighlighted": "Current month highlighted · trend line overlaid",
-      "sixMonthSpend": "6-month spend"
+      "sixMonthSpend": "6-month spend",
+      "monthTick": "{short}"
     },
     "agenda": {
       "title": "This week",
@@ -160,7 +163,6 @@
     "cancel": "Cancel",
     "remove": "Remove",
     "allProjects": "All projects",
-    "active": "Active",
     "searchProjects": "Search projects",
     "projectStamp": "Project",
     "progress": "Progress",
@@ -200,14 +202,15 @@
       "openSettings": "Open project settings",
       "noReleases": "No funds released yet",
       "settingsCardTitle": "Bank credit (mortgage loan)",
-      "settingsCardHint": "Initial amount granted by the bank. Funds releases are deducted from it."
+      "settingsCardHint": "Initial amount granted by the bank. Funds releases are deducted from it.",
+      "headlineMetaOver": "over the <c>{credit}</c> credit · <p>{pct}</p> released",
+      "drawsMetaSingle": "{count, plural, one {# draw} other {# draws}} · {month}"
     },
     "team": "Team",
     "openDashboard": "Open dashboard",
     "photos": "Media",
     "invite": "Invite",
     "noneTeam": "none",
-    "memberRole": "Member",
     "save": "Save",
     "saving": "Saving...",
     "delete": "Delete",
@@ -238,7 +241,12 @@
     "waitingForAssignment": {
       "title": "Waiting to be assigned",
       "description": "Your company admin hasn't added you to a construction site yet."
-    }
+    },
+    "settingsReadOnly": "Only admins and managers of this project can change its settings.",
+    "teamSize": "{n, plural, one {# member} other {# members}}",
+    "projectCreated": "Project created",
+    "projectDeleted": "Project deleted",
+    "settingsForbidden": "You don't have permission to change this project's settings."
   },
   "settings": {
     "profile": "Profile",
@@ -320,7 +328,8 @@
         "rate_limited": "Too many attempts. Please wait a moment and try again.",
         "unknown": "Something went wrong. Please try again."
       }
-    }
+    },
+    "errorInvalidProfile": "Check your name and phone: the name can be up to 255 characters."
   },
   "paymentMethods": {
     "title": "Payment methods",
@@ -355,7 +364,8 @@
     },
     "paidByCompany": "Paid by the company",
     "personalPayment": "Personal payment",
-    "loadError": "Could not load payment methods. Please try again."
+    "loadError": "Could not load payment methods. Please try again.",
+    "saveEditAria": "Save changes"
   },
   "errors": {
     "unauthorized": "Unauthorized",
@@ -667,7 +677,16 @@
       "save": "Could not save the task. Please try again.",
       "delete": "Could not delete the task. Please try again."
     },
-    "statusLabel": "Status"
+    "statusLabel": "Status",
+    "close": "Close",
+    "dnd": {
+      "instructions": "To pick up a task, press Space or Enter. Move it with the arrow keys, press Space or Enter again to drop it, or Escape to cancel.",
+      "pickedUp": "Picked up task {title}.",
+      "over": "Task {title} is over {target}.",
+      "dropped": "Task {title} was dropped in {target}.",
+      "cancelled": "Moving task {title} was cancelled."
+    },
+    "taskUnavailable": "This task doesn't exist or you don't have access to it."
   },
   "labor": {
     "title": "Labor",
@@ -1035,7 +1054,8 @@
       "codeRequired": "Please enter the 6-digit code",
       "invalidCode": "Wrong or expired code",
       "throttled": "Too many requests. Wait a minute and try again.",
-      "title": "Invitation unavailable"
+      "title": "Invitation unavailable",
+      "nameRequired": "Please enter your name"
     },
     "loggedInOther": {
       "title": "You're signed in as someone else",
@@ -1053,7 +1073,12 @@
     "codePlaceholder": "123456",
     "changeNumber": "Change number",
     "resendCode": "Resend code",
-    "resendIn": "Resend in {seconds}s"
+    "resendIn": "Resend in {seconds}s",
+    "roles": {
+      "admin": "admin",
+      "manager": "manager",
+      "member": "member"
+    }
   },
   "admin": {
     "bulkAdd": {
@@ -1126,11 +1151,6 @@
     },
     "markDone": "Mark as done",
     "markOpen": "Reopen",
-    "addedLabel": "Added",
-    "relative": {
-      "today": "Today",
-      "yesterday": "Yesterday"
-    },
     "actions": {
       "save": "Save",
       "cancel": "Cancel",
@@ -1157,7 +1177,10 @@
       "notFound": "This note doesn’t exist anymore.",
       "rateLimited": "Too many requests. Try again in a moment.",
       "generic": "Something went wrong. Try again."
-    }
+    },
+    "addedOn": "Added {date}",
+    "addedToday": "Added today",
+    "addedYesterday": "Added yesterday"
   },
   "notifications": {
     "aria": {
@@ -1870,7 +1893,7 @@
       "remove": "Remove",
       "removeConfirm": "Remove {name} from this project?",
       "dialogTitle": "Edit member",
-      "dialogDescription": "Update this member's role. Role changes take effect immediately.",
+      "dialogDescription": "Update this member's display name and email.",
       "nameLabel": "Display name",
       "emailLabel": "Email",
       "emailHint": "Email is the login identity. Changing it updates how this user signs in.",
@@ -1900,7 +1923,13 @@
       "submit": "Assign",
       "successToast": "Member assigned.",
       "roleHint": "This is the person’s role in the whole company, not only in this project. Manager applies to every project they are assigned to; Member never lowers a role they already have. Change company roles in Settings › Company."
-    }
+    },
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "member": "Member"
+    },
+    "expired": "Expired"
   },
   "companies": {
     "masking": {
@@ -2073,7 +2102,8 @@
       "unauthorized": "Session expired. Please log in again.",
       "notFound": "The requested resource was not found.",
       "rateLimited": "Too many requests. Please wait and try again.",
-      "generic": "An unexpected error occurred."
+      "generic": "An unexpected error occurred.",
+      "invalidJoinCode": "Invalid or revoked join code."
     }
   },
   "bibliotheque": {
@@ -2669,7 +2699,8 @@
       "empty": "No members to import.",
       "cancel": "Cancel",
       "submit": "{count, plural, =0 {Import} one {Import # member} other {Import # members}}",
-      "importedToast": "{count, plural, =0 {No members imported} one {# member imported} other {# members imported}}"
+      "importedToast": "{count, plural, =0 {No members imported} one {# member imported} other {# members imported}}",
+      "alreadyMember": "Already a member"
     },
     "grants": {
       "dialogTitle": "Custom permissions for {name}",
@@ -2789,6 +2820,26 @@
       "refused": "Refused",
       "error": "Error"
     },
-    "noCost": "—"
+    "noCost": "—",
+    "disabled": "The assistant is not enabled, so there is nothing to review."
+  },
+  "personsMerge": {
+    "title": "Merge persons",
+    "intro": "Consolidate two Person rows that represent the same person. All of the source's worker assignments move to the target, and the source row is deleted.",
+    "source": "Source",
+    "sourceHint": "(deleted)",
+    "sourcePlaceholder": "Pick the duplicate to remove…",
+    "target": "Target",
+    "targetHint": "(kept)",
+    "targetPlaceholder": "Pick the row to keep…",
+    "sameRow": "Source and target must be different rows.",
+    "clear": "Clear",
+    "merge": "Merge",
+    "cancel": "Cancel",
+    "confirmTitle": "Merge persons?",
+    "confirmBody": "Every worker pointing at {source} moves to {target}, and {source} is permanently deleted. This cannot be undone.",
+    "merged": "Merged “{source}” into “{target}”.",
+    "mergedDetail": "{n, plural, one {# worker} other {# workers}} reassigned. Source deleted.",
+    "failed": "The merge failed. Please try again."
   }
 }

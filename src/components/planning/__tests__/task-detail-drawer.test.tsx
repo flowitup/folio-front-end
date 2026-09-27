@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api/http";
-import { deleteTask, updateTask } from "@/lib/api/task-api";
+import { deleteTask, fetchTask, updateTask } from "@/lib/api/task-api";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import type { Task } from "@/types/task";
@@ -54,6 +54,15 @@ describe("TaskDetailDrawer", () => {
     const drawer = screen.getByRole("dialog");
     expect(screen.getByTestId("page-wrapper").contains(drawer)).toBe(false);
     expect(drawer.parentElement).toBe(document.body);
+  });
+
+  it("says a deep-linked task is unavailable instead of showing an empty drawer", async () => {
+    vi.mocked(fetchTask).mockRejectedValue(new ApiError("HTTP 404", 404));
+    const onClose = renderDrawer(vi.fn(), { seed: null, taskId: "gone" });
+    expect(await screen.findByText(en.planning.taskUnavailable)).toBeInTheDocument();
+    // The header X and the body button both close it; use the body one.
+    fireEvent.click(screen.getAllByRole("button", { name: en.planning.close }).at(-1)!);
+    expect(onClose).toHaveBeenCalled();
   });
 
   it("closes on a plain Escape", () => {

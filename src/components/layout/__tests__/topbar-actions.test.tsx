@@ -284,3 +284,13 @@ describe("Topbar mobile project switcher — full name visibility", () => {
     expect(screen.getByTitle(LONG_NAME).className).toContain("line-clamp-2");
   });
 });
+
+describe("Topbar title", () => {
+  it("truncates a long page title instead of letting it run under the icons", () => {
+    setup({ pathname: "/en/projects/p-1/planning", selectedProjectId: "p-1" });
+    render(<Topbar />);
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading.className).toContain("truncate");
+    expect(heading).toHaveAttribute("title", heading.textContent);
+  });
+});

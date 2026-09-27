@@ -4,9 +4,11 @@ import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { formatEURWhole } from "@/lib/utils/formatters";
+import { formatPercent } from "@/lib/utils/format-percent";
 import { useDataTip } from "@/components/invoices/data-tip";
 import {
   monthKeyToDate,
+  roundPartsToTotal,
   sharedMonthlyMax,
   type ExpenseType,
   type TypeMonthlyBucket,
@@ -52,9 +54,17 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
   // Same delegated hover tooltip the Expense summary uses on its month bars.
   const monthYearFmt = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" });
   const { onMouseMove, onMouseLeave, overlay } = useDataTip();
+  // Axis ticks sit 34 units apart: vi's short month ("Tháng 4") is too wide,
+  // so each locale picks a compact tick ("T4" in vi).
+  const monthTick = (key: string) => {
+    const d = monthKeyToDate(key);
+    return t("spendByType.monthTick", { m: d.getMonth() + 1, short: monthFmt.format(d) });
+  };
 
   const sharedMax = sharedMonthlyMax(buckets);
-  const sixMonthTotal = buckets.reduce((s, b) => s + b.total, 0);
+  // Whole-euro type totals that add up to the whole-euro 6-month total.
+  const shownTotals = roundPartsToTotal(buckets.map((b) => b.total));
+  const sixMonthTotal = shownTotals.reduce((s, v) => s + v, 0);
   const first = buckets[0]?.monthly[0];
   const last = buckets[0]?.monthly[buckets[0].monthly.length - 1];
 
@@ -89,7 +99,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
       </div>
 
       <div className="grid flex-1 grid-cols-1 content-center gap-6 sm:grid-cols-3">
-        {buckets.map((bucket) => {
+        {buckets.map((bucket, bucketIdx) => {
           const lastIdx = bucket.monthly.length - 1;
           const heights = bucket.monthly.map((p) => Math.max((p.total / sharedMax) * PLOT_H, 2));
           const barX = (i: number) => 8 + i * 34;
@@ -106,7 +116,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                 <span className="text-[12.5px] font-semibold">{tInvoices(`types.${bucket.type}`)}</span>
               </div>
               <div className="num my-1.5 text-[18px] font-medium" style={{ letterSpacing: "-.02em" }}>
-                {unavailable ? "—" : formatEURWhole(bucket.total)}
+                {unavailable ? "—" : formatEURWhole(shownTotals[bucketIdx])}
               </div>
               <div className="mb-2 text-[11px]" style={{ color: "var(--muted)" }}>
                 {unavailable ? "\u00a0" : tInvoices("invoiceCount", { n: bucket.count })}
@@ -117,8 +127,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                       className="num font-medium"
                       style={{ color: bucket.deltaPct > 0 ? "var(--negative)" : "var(--positive)" }}
                     >
-                      {bucket.deltaPct > 0 ? "+" : ""}
-                      {bucket.deltaPct}%
+                      {formatPercent(locale, bucket.deltaPct, true)}
                     </span>
                   </>
                 )}
@@ -144,7 +153,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                 ))}
                 {bucket.monthly.map((p, i) => (
                   <text key={`${p.key}-lbl`} x={midX(i)} y={114} textAnchor="middle" fontSize={10} fill="var(--muted-2)">
-                    {monthFmt.format(monthKeyToDate(p.key))}
+                    {monthTick(p.key)}
                   </text>
                 ))}
                 <polyline
@@ -202,6 +211,28 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                   ) : null
                 )}
               </svg>
+              {/* The chart is aria-hidden and its figures live in hover tips:
+                  screen readers get the same months as a table. */}
+              {!unavailable && (
+                <table className="sr-only">
+                  <caption>{tInvoices(`types.${bucket.type}`)}</caption>
+                  <tbody>
+                    {bucket.monthly.map((p) => (
+                      <tr key={p.key}>
+                        <th scope="row">{monthYearFmt.format(monthKeyToDate(p.key))}</th>
+                        <td>{formatEURWhole(p.total)}</td>
+                        <td>
+                          {tInvoices("invoiceCount", { n: p.count })}
+                          {p.creditCount > 0 &&
+                            ` · ${tInvoices("summary.returnsReceived", { n: p.creditCount })} ${formatEURWhole(
+                              p.credited
+                            )}`}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           );
         })}

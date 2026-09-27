@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { Loader2, Phone, Users as UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { projectDisplayName } from "@/lib/projects/project-display-name";
 import {
   fetchAttachedUsersAction,
   setMemberRoleAction,
@@ -129,7 +130,8 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
     () =>
       allProjects
         .filter((p) => p.company_id === companyId)
-        .map((p) => ({ id: p.id, label: p.name })),
+        // Same label as the rest of the app (address, else name).
+        .map((p) => ({ id: p.id, label: projectDisplayName(p) })),
     [allProjects, companyId]
   );
   // D4: only companies the caller administers — never a cross-tenant leak.

@@ -209,6 +209,8 @@ export default async function AssistantAuditPage({ params, searchParams }: Props
 
   let entries: AssistantAuditEntry[] = [];
   let loadError = false;
+  // The assistant is switched off: the API answers 404 FeatureDisabled.
+  let featureDisabled = false;
   try {
     const result = await listAssistantAudit({
       companyId: selectedCompany.id,
@@ -219,11 +221,16 @@ export default async function AssistantAuditPage({ params, searchParams }: Props
     });
     entries = result.items;
   } catch (err) {
-    console.error(
-      "[AssistantAuditPage] Failed to fetch assistant audit:",
-      err instanceof Error ? err.message : "unknown"
-    );
-    loadError = true;
+    const e = err as { status?: number; body?: { error?: unknown } | null };
+    if (e.status === 404 && e.body?.error === "FeatureDisabled") {
+      featureDisabled = true;
+    } else {
+      console.error(
+        "[AssistantAuditPage] Failed to fetch assistant audit:",
+        err instanceof Error ? err.message : "unknown"
+      );
+      loadError = true;
+    }
   }
   // The backend has no cursor yet, so a full result at the cap means older rows in this
   // range were silently dropped rather than actually absent.
@@ -231,6 +238,21 @@ export default async function AssistantAuditPage({ params, searchParams }: Props
 
   const t = await getTranslations({ locale, namespace: "assistantAudit" });
   const tChat = await getTranslations({ locale, namespace: "chat" });
+
+  if (featureDisabled) {
+    return (
+      <div className="fade-up px-4 pb-12 pt-6 lg:px-8">
+        <h1 className="font-display text-[28px] font-medium tracking-tight">{t("title")}</h1>
+        <p
+          className="folio-card mt-6 p-8 text-center text-[13px]"
+          style={{ color: "var(--muted)" }}
+          data-testid="assistant-audit-disabled"
+        >
+          {t("disabled")}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="fade-up px-4 pb-12 pt-6 lg:px-8">

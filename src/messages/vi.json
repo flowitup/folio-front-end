@@ -31,7 +31,7 @@
     "heroTitle": "Trở lại với công trình.",
     "phoneLabel": "Số điện thoại",
     "phonePlaceholder": "6 12 34 56 78",
-    "phoneHint": "Chỉ nhận số Pháp — bỏ số 0 đầu. Mã 6 số gửi qua SMS.",
+    "phoneHint": "Chỉ nhận số Pháp, có hoặc không có số 0 đầu. Mã 6 số gửi qua SMS.",
     "sendCode": "Gửi mã",
     "sendingCode": "Đang gửi mã...",
     "codeSentTo": "Mã 6 số đã gửi tới <mono>{phone}</mono>.",
@@ -58,7 +58,9 @@
     "stepEnterPhone": "Nhập số",
     "stepEnterCode": "Nhập mã 6 số",
     "stepEnterSite": "Vào công trình",
-    "verified": "Đã xác minh"
+    "verified": "Đã xác minh",
+    "codeAlreadySent": "Mã đã được gửi đến số này — hãy nhập mã đó, hoặc nhận mã mới sau {seconds} giây.",
+    "codeExpired": "Mã đã hết hạn — hãy nhận mã mới"
   },
   "topbar": {
     "viewNotifications": "Xem thông báo",
@@ -94,9 +96,9 @@
     "loadError": "Không thể tải dữ liệu tổng quan",
     "money": {
       "spentThisMonth": "Đã chi tháng này",
-      "pctSpent": "{pct}% đã chi · {spent}",
+      "pctSpent": "{pct} đã chi · {spent}",
       "purseSpent": "đã chi",
-      "pctCreditDrawn": "Đã dùng {pct}% tín dụng · {spent}",
+      "pctCreditDrawn": "Đã dùng {pct} tín dụng · {spent}",
       "unassigned": "{n} khoản chi · {amount} không có phương thức thanh toán công ty hoặc cá nhân — không thuộc ví nào"
     },
     "spendByType": {
@@ -104,7 +106,8 @@
       "rangeShared": "{from} – {to} · cùng thang đo",
       "viewExpense": "Chi phí",
       "currentHighlighted": "Tháng hiện tại được làm nổi bật · đường xu hướng chồng lên",
-      "sixMonthSpend": "Chi tiêu 6 tháng"
+      "sixMonthSpend": "Chi tiêu 6 tháng",
+      "monthTick": "T{m}"
     },
     "agenda": {
       "title": "Tuần này",
@@ -160,7 +163,6 @@
     "cancel": "Hủy",
     "remove": "Xóa",
     "allProjects": "Tất cả",
-    "active": "Đang chạy",
     "searchProjects": "Tìm dự án",
     "projectStamp": "Dự án",
     "progress": "Tiến độ",
@@ -200,14 +202,15 @@
       "openSettings": "Mở cài đặt dự án",
       "noReleases": "Chưa có khoản giải ngân nào",
       "settingsCardTitle": "Tín dụng ngân hàng (vay mua nhà)",
-      "settingsCardHint": "Số tiền ban đầu ngân hàng cấp. Các khoản giải ngân sẽ được trừ vào số này."
+      "settingsCardHint": "Số tiền ban đầu ngân hàng cấp. Các khoản giải ngân sẽ được trừ vào số này.",
+      "headlineMetaOver": "vượt hạn mức <c>{credit}</c> tín dụng · đã giải ngân <p>{pct}</p>",
+      "drawsMetaSingle": "{count, plural, other {# lần giải ngân}} · {month}"
     },
     "team": "Đội",
     "openDashboard": "Mở tổng quan",
     "photos": "Phương tiện",
     "invite": "Mời",
     "noneTeam": "không có",
-    "memberRole": "Thành viên",
     "save": "Lưu",
     "saving": "Đang lưu...",
     "delete": "Xóa",
@@ -238,7 +241,12 @@
     "waitingForAssignment": {
       "title": "Chờ quản lý thêm bạn vào công trình",
       "description": "Quản trị viên công ty sẽ thêm bạn vào một công trình khi sẵn sàng."
-    }
+    },
+    "settingsReadOnly": "Chỉ quản trị viên và quản lý của dự án này mới có thể thay đổi cài đặt.",
+    "teamSize": "{n, plural, other {# thành viên}}",
+    "projectCreated": "Đã tạo dự án",
+    "projectDeleted": "Đã xóa dự án",
+    "settingsForbidden": "Bạn không có quyền thay đổi cài đặt của dự án này."
   },
   "settings": {
     "profile": "Hồ sơ",
@@ -320,7 +328,8 @@
         "rate_limited": "Quá nhiều lần thử. Vui lòng đợi một lát rồi thử lại.",
         "unknown": "Đã xảy ra lỗi. Vui lòng thử lại."
       }
-    }
+    },
+    "errorInvalidProfile": "Kiểm tra tên và số điện thoại: tên tối đa 255 ký tự."
   },
   "paymentMethods": {
     "title": "Phương thức thanh toán",
@@ -355,7 +364,8 @@
     },
     "paidByCompany": "Công ty thanh toán",
     "personalPayment": "Thanh toán cá nhân",
-    "loadError": "Không tải được phương thức thanh toán. Vui lòng thử lại."
+    "loadError": "Không tải được phương thức thanh toán. Vui lòng thử lại.",
+    "saveEditAria": "Lưu thay đổi"
   },
   "errors": {
     "unauthorized": "Không được phép",
@@ -614,10 +624,10 @@
   "planning": {
     "title": "Kế hoạch",
     "subtitle": "Việc của đội — kéo thẻ trên bảng để di chuyển.",
-    "backlog": "Backlog",
-    "backlogEmpty": "Chưa có task trong backlog",
-    "newTask": "Tạo task",
-    "taskDetail": "Chi tiết task",
+    "backlog": "Việc tồn đọng",
+    "backlogEmpty": "Chưa có công việc tồn đọng",
+    "newTask": "Tạo công việc",
+    "taskDetail": "Chi tiết công việc",
     "titleLabel": "Tiêu đề",
     "titlePlaceholder": "Cần làm gì?",
     "descriptionLabel": "Mô tả",
@@ -630,10 +640,10 @@
     "saving": "Đang lưu...",
     "cancel": "Hủy",
     "delete": "Xóa",
-    "deleteConfirm": "Xóa task này? Không thể hoàn tác.",
-    "loadError": "Không thể tải task",
-    "taskCount": "{n, plural, =0 {không có task} other {# task}}",
-    "addTask": "Thêm task",
+    "deleteConfirm": "Xóa công việc này? Không thể hoàn tác.",
+    "loadError": "Không thể tải công việc",
+    "taskCount": "{n, plural, =0 {không có công việc} other {# công việc}}",
+    "addTask": "Thêm công việc",
     "view": {
       "board": "Bảng",
       "week": "Tuần"
@@ -667,7 +677,16 @@
       "save": "Không thể lưu công việc. Vui lòng thử lại.",
       "delete": "Không thể xóa công việc. Vui lòng thử lại."
     },
-    "statusLabel": "Trạng thái"
+    "statusLabel": "Trạng thái",
+    "close": "Đóng",
+    "dnd": {
+      "instructions": "Để nhấc một công việc, nhấn Space hoặc Enter. Di chuyển bằng các phím mũi tên, nhấn Space hoặc Enter lần nữa để thả, hoặc Escape để hủy.",
+      "pickedUp": "Đã nhấc công việc {title}.",
+      "over": "Công việc {title} đang ở trên {target}.",
+      "dropped": "Đã thả công việc {title} vào {target}.",
+      "cancelled": "Đã hủy di chuyển công việc {title}."
+    },
+    "taskUnavailable": "Công việc này không tồn tại hoặc bạn không có quyền truy cập."
   },
   "labor": {
     "title": "Nhân công",
@@ -1035,7 +1054,8 @@
       "codeRequired": "Vui lòng nhập mã gồm 6 chữ số",
       "invalidCode": "Mã không đúng hoặc đã hết hạn",
       "throttled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại.",
-      "title": "Lời mời không khả dụng"
+      "title": "Lời mời không khả dụng",
+      "nameRequired": "Vui lòng nhập tên của bạn"
     },
     "loggedInOther": {
       "title": "Bạn đang đăng nhập bằng tài khoản khác",
@@ -1053,7 +1073,12 @@
     "codePlaceholder": "123456",
     "changeNumber": "Đổi số",
     "resendCode": "Gửi lại mã",
-    "resendIn": "Gửi lại sau {seconds}s"
+    "resendIn": "Gửi lại sau {seconds}s",
+    "roles": {
+      "admin": "quản trị viên",
+      "manager": "quản lý",
+      "member": "thành viên"
+    }
   },
   "admin": {
     "bulkAdd": {
@@ -1126,11 +1151,6 @@
     },
     "markDone": "Đánh dấu hoàn thành",
     "markOpen": "Mở lại",
-    "addedLabel": "Đã thêm",
-    "relative": {
-      "today": "Hôm nay",
-      "yesterday": "Hôm qua"
-    },
     "actions": {
       "save": "Lưu",
       "cancel": "Hủy",
@@ -1157,7 +1177,10 @@
       "notFound": "Ghi chú này không còn tồn tại.",
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
       "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
-    }
+    },
+    "addedOn": "Đã thêm ngày {date}",
+    "addedToday": "Đã thêm hôm nay",
+    "addedYesterday": "Đã thêm hôm qua"
   },
   "notifications": {
     "aria": {
@@ -1870,7 +1893,7 @@
       "remove": "Xóa",
       "removeConfirm": "Xóa {name} khỏi dự án này?",
       "dialogTitle": "Chỉnh sửa thành viên",
-      "dialogDescription": "Cập nhật vai trò của thành viên này. Thay đổi vai trò có hiệu lực ngay lập tức.",
+      "dialogDescription": "Cập nhật tên hiển thị và email của thành viên này.",
       "nameLabel": "Tên hiển thị",
       "emailLabel": "Email",
       "emailHint": "Email là danh tính đăng nhập. Thay đổi nó sẽ thay đổi cách người dùng này đăng nhập.",
@@ -1900,7 +1923,13 @@
       "submit": "Thêm vào dự án",
       "successToast": "Đã thêm thành viên vào dự án.",
       "roleHint": "Đây là vai trò của người này trong toàn công ty, không chỉ trong dự án này. Quản lý áp dụng cho mọi dự án họ được giao; Thành viên không bao giờ hạ vai trò họ đang có. Thay đổi vai trò trong Cài đặt › Công ty."
-    }
+    },
+    "roles": {
+      "admin": "Quản trị viên",
+      "manager": "Quản lý",
+      "member": "Thành viên"
+    },
+    "expired": "Đã hết hạn"
   },
   "companies": {
     "masking": {
@@ -2073,7 +2102,8 @@
       "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
       "notFound": "Không tìm thấy tài nguyên yêu cầu.",
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
-      "generic": "Đã xảy ra lỗi không mong muốn."
+      "generic": "Đã xảy ra lỗi không mong muốn.",
+      "invalidJoinCode": "Mã tham gia không hợp lệ hoặc đã bị thu hồi."
     }
   },
   "bibliotheque": {
@@ -2669,7 +2699,8 @@
       "empty": "Không có thành viên để nhập.",
       "cancel": "Huỷ",
       "submit": "{count, plural, other {Nhập # thành viên}}",
-      "importedToast": "{count, plural, other {Đã nhập # thành viên}}"
+      "importedToast": "{count, plural, other {Đã nhập # thành viên}}",
+      "alreadyMember": "Đã là thành viên"
     },
     "grants": {
       "dialogTitle": "Quyền tuỳ chỉnh cho {name}",
@@ -2789,6 +2820,26 @@
       "refused": "Từ chối",
       "error": "Lỗi"
     },
-    "noCost": "—"
+    "noCost": "—",
+    "disabled": "Trợ lý chưa được bật nên không có gì để xem."
+  },
+  "personsMerge": {
+    "title": "Gộp người",
+    "intro": "Gộp hai hồ sơ Người cùng chỉ một người. Mọi phân công công nhân của nguồn chuyển sang đích, rồi hồ sơ nguồn bị xóa.",
+    "source": "Nguồn",
+    "sourceHint": "(bị xóa)",
+    "sourcePlaceholder": "Chọn bản trùng cần xóa…",
+    "target": "Đích",
+    "targetHint": "(giữ lại)",
+    "targetPlaceholder": "Chọn hồ sơ cần giữ…",
+    "sameRow": "Nguồn và đích phải là hai hồ sơ khác nhau.",
+    "clear": "Xóa lựa chọn",
+    "merge": "Gộp",
+    "cancel": "Hủy",
+    "confirmTitle": "Gộp những người này?",
+    "confirmBody": "Mọi công nhân gắn với {source} chuyển sang {target}, và {source} bị xóa vĩnh viễn. Không thể hoàn tác.",
+    "merged": "Đã gộp “{source}” vào “{target}”.",
+    "mergedDetail": "Đã chuyển {n} công nhân. Đã xóa nguồn.",
+    "failed": "Gộp thất bại. Vui lòng thử lại."
   }
 }

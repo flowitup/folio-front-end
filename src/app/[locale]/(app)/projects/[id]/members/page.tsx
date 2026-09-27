@@ -20,12 +20,13 @@ export default async function MembersPage({ params }: PageProps) {
     redirect(`/${locale}/login`);
   }
 
-  // Parallel fetch — if members/invites fail (e.g. 403), fallback to empty arrays
-  const [members, invites, project] = await Promise.all([
-    listMembers(projectId).catch(() => []),
-    listInvitations(projectId, "pending").catch(() => []),
-    getProjectById(projectId).catch(() => null),
-  ]);
+  // The project decides everything below: a foreign, unassigned or invalid id
+  // must not fall back to the caller's company-wide permissions and draw an
+  // empty page with live Invite and Assign buttons.
+  const project = await getProjectById(projectId).catch(() => null);
+  if (!project) {
+    redirect(`/${locale}/projects`);
+  }
 
   // Server-side permission check (authoritative). Invite + manage-members honor
   // the caller's EFFECTIVE per-project permissions (global role UNION the
@@ -34,7 +35,7 @@ export default async function MembersPage({ params }: PageProps) {
   // the backend). No owner_id bypass — the owner bypass was removed (D6):
   // the project creator is auto-assigned as manager and gets rights that way.
   const perms = session.user.permissions ?? [];
-  const projectPerms = project?.my_permissions;
+  const projectPerms = project.my_permissions;
   const canInvite = can("project:invite", perms, projectPerms);
   const canManageMembers = can("project:manage_users", perms, projectPerms);
   // The assign flow calls PUT /projects/<id>/assignments/<userId>, which the
@@ -45,16 +46,23 @@ export default async function MembersPage({ params }: PageProps) {
   // Manager is an admin-only role to hand out (assignments.ts: "admin may
   // assign any role; manager may only assign member") — derived from the
   // caller's per-company role, not a project permission.
-  const callerIsCompanyAdmin = isCompanyAdmin(session.user.companies, project?.company_id ?? null, perms);
+  const callerIsCompanyAdmin = isCompanyAdmin(session.user.companies, project.company_id ?? null, perms);
   // Editing identity (email / display name) is a GLOBAL concern (it changes how
-  // the user signs in everywhere), so it stays gated on the caller's global
-  // role only — never the per-project membership role.
-  const canEditIdentity = perms.includes("user:update") || isPlatformOps(perms);
+  // the user signs in everywhere): the backend lets platform ops only, and no
+  // role carries a "user:update" permission.
+  const canEditIdentity = isPlatformOps(perms);
+
+  // Pending invitations are for those who may invite (the API answers 403 to
+  // anyone else) — a read-only member gets no invitations section at all.
+  const [members, invites] = await Promise.all([
+    listMembers(projectId).catch(() => []),
+    canInvite ? listInvitations(projectId, "pending").catch(() => []) : Promise.resolve([]),
+  ]);
 
   return (
     <MembersTable
       projectId={projectId}
-      companyId={project?.company_id ?? null}
+      companyId={project.company_id ?? null}
       members={members}
       invites={invites}
       canInvite={canInvite}

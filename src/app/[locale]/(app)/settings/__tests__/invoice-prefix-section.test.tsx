@@ -9,9 +9,10 @@ import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 
-const { mockFetchProjectById, mockUpdate } = vi.hoisted(() => ({
+const { mockFetchProjectById, mockUpdate, mockToastError } = vi.hoisted(() => ({
   mockFetchProjectById: vi.fn(),
   mockUpdate: vi.fn(),
+  mockToastError: vi.fn(),
 }));
 
 vi.mock("@/context/ProjectContext", () => ({
@@ -22,7 +23,7 @@ vi.mock("@/context/ProjectContext", () => ({
 }));
 vi.mock("@/lib/api/projects", () => ({ fetchProjectById: mockFetchProjectById }));
 vi.mock("../_actions/invoice-prefix-actions", () => ({ updateInvoicePrefix: mockUpdate }));
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: mockToastError } }));
 
 import { InvoicePrefixSection } from "../invoice-prefix-section";
 
@@ -56,5 +57,15 @@ describe("InvoicePrefixSection", () => {
     expect(save).toBeEnabled();
     await userEvent.click(save);
     expect(mockUpdate).toHaveBeenCalledWith("p1", "");
+  });
+
+  it("says a refused save is a permission problem, not 'try again'", async () => {
+    mockUpdate.mockResolvedValue({ ok: false, error: "forbidden" });
+    renderSection();
+    const input = screen.getByLabelText(en.projects.invoicePrefix);
+    await waitFor(() => expect(input).toHaveValue("QAMGR"));
+    await userEvent.type(input, "X");
+    await userEvent.click(screen.getByRole("button", { name: en.projects.save }));
+    expect(mockToastError).toHaveBeenCalledWith(en.projects.settingsForbidden);
   });
 });

@@ -57,7 +57,8 @@ export function TaskCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      {/* The title says it all; no description (silences Radix's warning). */}
+      <DialogContent className="max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("newTask")}</DialogTitle>
         </DialogHeader>

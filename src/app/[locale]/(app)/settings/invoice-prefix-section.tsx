@@ -78,6 +78,8 @@ function InvoicePrefixForm({
       await refetch();
     } else if (result.error === "validation") {
       toast.error(t("invoicePrefixInvalid"));
+    } else if (result.error === "forbidden") {
+      toast.error(t("settingsForbidden"));
     } else {
       toast.error(t("settingsSaveError"));
     }

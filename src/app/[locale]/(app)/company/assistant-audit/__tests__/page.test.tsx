@@ -151,6 +151,18 @@ describe("AssistantAuditPage — company admin", () => {
     expect(screen.queryByText("assistantAudit.empty")).toBeNull();
   });
 
+  it("says the assistant is off instead of 'could not load' when the feature is disabled", async () => {
+    vi.mocked(fetchMyCompanies).mockResolvedValue([adminCompany]);
+    vi.mocked(listAssistantAudit).mockRejectedValue(
+      Object.assign(new Error("Failed (HTTP 404)"), { status: 404, body: { error: "FeatureDisabled" } })
+    );
+
+    render(await renderPage());
+
+    expect(screen.getByTestId("assistant-audit-disabled")).toHaveTextContent("assistantAudit.disabled");
+    expect(screen.queryByText("assistantAudit.loadError")).toBeNull();
+  });
+
   it("offers a user select from the attached-users wrapper when it loads", async () => {
     vi.mocked(fetchMyCompanies).mockResolvedValue([adminCompany]);
     vi.mocked(fetchAttachedUsers).mockResolvedValue([

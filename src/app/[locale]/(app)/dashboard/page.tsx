@@ -29,9 +29,9 @@ import { OverviewTypeMinis } from "@/components/dashboard/overview-type-minis";
 import { OverviewAgenda } from "@/components/dashboard/overview-agenda";
 import { BankReleaseChart } from "@/components/project/bank-release-chart";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Building2, Clock, Plus } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { can } from "@/lib/auth/permissions";
+import { can, canCreateProject } from "@/lib/auth/permissions";
 
 const MONTHS_BACK = 6;
 
@@ -69,10 +69,11 @@ const EMPTY_TYPE_BUCKETS: TypeMonthlyBucket[] = EXPENSE_TYPES.map((type) => ({
 }));
 
 export default function DashboardPage() {
-  const { selectedProject } = useProject();
+  const { selectedProject, isLoading: projectsLoading } = useProject();
   const { user } = useAuth();
   const locale = useLocale();
   const t = useTranslations("dashboard");
+  const tProjects = useTranslations("projects");
   const projectId = selectedProject?.id;
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -83,6 +84,7 @@ export default function DashboardPage() {
   // not leave the money panels computing "full budget left" from nothing.
   const [invoicesStatus, setInvoicesStatus] = useState<"loading" | "ok" | "error">("loading");
   const [tasksFailed, setTasksFailed] = useState(false);
+  const [tasksLoading, setTasksLoading] = useState(true);
 
   // Reference "now" for month labels / agenda-week math is resolved once on
   // mount instead of at render time: this component is SSR-prerendered, and
@@ -105,6 +107,7 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- resets loading/error state ahead of the fetches this effect kicks off for the (possibly new) projectId; the fetch is the "external system" being synchronized.
     setInvoicesStatus("loading");
     setTasksFailed(false);
+    setTasksLoading(true);
     fetchInvoicesWithMeta(projectId)
       .then((invoiceRes) => {
         if (cancelled) return;
@@ -128,12 +131,15 @@ export default function DashboardPage() {
       });
     fetchTasks(projectId)
       .then((taskRes) => {
-        if (!cancelled) setTasks(taskRes);
+        if (cancelled) return;
+        setTasks(taskRes);
+        setTasksLoading(false);
       })
       .catch(() => {
         if (cancelled) return;
         setTasks(EMPTY_TASKS);
         setTasksFailed(true);
+        setTasksLoading(false);
       });
     return () => {
       cancelled = true;
@@ -211,6 +217,40 @@ export default function DashboardPage() {
   const projectSettingsHref = projectId ? `/${locale}/projects/${projectId}/settings` : null;
   const laborHref = projectId ? `/${locale}/projects/${projectId}/labor` : null;
 
+  // No project at all: a money dashboard of zeros would read as real figures,
+  // so point to creating one (or, without that right, say one is coming).
+  if (!projectsLoading && !selectedProject) {
+    const canCreate = canCreateProject(user?.permissions, user?.companies);
+    return (
+      <div className="fade-up px-4 pb-12 lg:px-8">
+        <div
+          className="folio-card flex flex-col items-center justify-center py-16 text-center"
+          data-testid="overview-no-project"
+        >
+          <div className="mb-4 rounded-xl p-4" style={{ background: "var(--paper-2)" }}>
+            {canCreate ? (
+              <Building2 size={36} style={{ color: "var(--muted)" }} />
+            ) : (
+              <Clock size={36} style={{ color: "var(--muted)" }} />
+            )}
+          </div>
+          <h2 className="font-display text-[20px] font-medium tracking-tight">
+            {canCreate ? tProjects("noProjectsYet") : tProjects("waitingForAssignment.title")}
+          </h2>
+          <p className="mt-1 max-w-sm text-[13px]" style={{ color: "var(--muted)" }}>
+            {canCreate ? tProjects("getStarted") : tProjects("waitingForAssignment.description")}
+          </p>
+          {canCreate && (
+            <Link href={`/${locale}/projects?new=1`} className="btn btn-primary mt-4">
+              <Plus size={14} />
+              {tProjects("createFirst")}
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fade-up space-y-5 px-4 pb-12 lg:px-8">
       {error && (
@@ -270,7 +310,11 @@ export default function DashboardPage() {
           )}
         </div>
         <div className="flex min-w-0 flex-col gap-5">
-          <OverviewAgenda groups={agendaGroups} planningHref={planningHref} />
+          <OverviewAgenda
+            groups={agendaGroups}
+            planningHref={planningHref}
+            loading={Boolean(projectId) && tasksLoading}
+          />
         </div>
       </div>
     </div>

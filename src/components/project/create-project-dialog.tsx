@@ -118,7 +118,7 @@ export function CreateProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("createProjectTitle")}</DialogTitle>
         </DialogHeader>

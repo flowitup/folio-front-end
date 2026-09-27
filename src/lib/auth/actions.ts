@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { env } from "@/lib/config/env";
 import { clientIpHeader } from "@/lib/api/client-ip";
 import type { User, AcceptInvitePayload, RequestInviteCodePayload } from "./types";
@@ -63,7 +64,8 @@ export async function logout(): Promise<never> {
   cookieStore.delete("csrf_access_token");
   cookieStore.delete("csrf_refresh_token");
 
-  redirect("/login");
+  // Every route is locale-prefixed: land on /<locale>/login like the rest.
+  redirect(`/${await getLocale()}/login`);
 }
 
 /**

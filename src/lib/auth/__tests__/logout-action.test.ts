@@ -27,6 +27,8 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
+vi.mock("next-intl/server", () => ({ getLocale: async () => "fr" }));
+
 import { logout } from "@/lib/auth/actions";
 
 function jwt(expSecondsFromNow: number): string {
@@ -78,5 +80,11 @@ describe("logout", () => {
     const [, init] = fetchMock.mock.calls[0];
     expect(init.headers.Authorization).toBeUndefined();
     expect(JSON.parse(init.body)).toEqual({ refresh_token: "refresh-2" });
+  });
+});
+
+describe("logout redirect", () => {
+  it("lands on the locale-prefixed login page", async () => {
+    await expect(logout()).rejects.toMatchObject({ digest: "NEXT_REDIRECT;/fr/login" });
   });
 });

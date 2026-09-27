@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
@@ -18,7 +18,7 @@ vi.mock("@/components/projects/assign-member-dialog", () => ({ AssignMemberDialo
 
 import { MembersTable } from "../members-table";
 
-function renderTable(members: ProjectMember[]) {
+function renderTable(members: ProjectMember[], canEditIdentity = false) {
   return render(
     <NextIntlClientProvider locale="en" messages={en}>
       <MembersTable
@@ -30,7 +30,7 @@ function renderTable(members: ProjectMember[]) {
         canManageMembers
         canAssignMembers
         callerIsCompanyAdmin
-        canEditIdentity={false}
+        canEditIdentity={canEditIdentity}
         currentUserId="me"
       />
     </NextIntlClientProvider>
@@ -59,7 +59,6 @@ describe("MembersTable", () => {
   });
 
   it("names a failed removal as a removal and keeps a 403 distinct", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     const dave = {
       user_id: "u2",
       email: "dave@example.com",
@@ -70,6 +69,7 @@ describe("MembersTable", () => {
     mockRemove.mockResolvedValueOnce({ ok: false, status: 500 });
     const { unmount } = renderTable([dave]);
     await userEvent.click(screen.getAllByRole("button", { name: en.members.edit.remove })[0]);
+    await userEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: en.members.edit.remove }));
     await waitFor(() =>
       expect(mockToastError).toHaveBeenCalledWith(en.members.edit.toast.removeFailed)
     );
@@ -78,8 +78,98 @@ describe("MembersTable", () => {
     mockRemove.mockResolvedValueOnce({ ok: false, status: 403 });
     renderTable([dave]);
     await userEvent.click(screen.getAllByRole("button", { name: en.members.edit.remove })[0]);
+    await userEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: en.members.edit.remove }));
     await waitFor(() =>
       expect(mockToastError).toHaveBeenCalledWith(en.members.edit.toast.forbidden)
     );
+  });
+
+  it("offers Edit only to callers who may change a member's name and email", () => {
+    const dave = { user_id: "u2", email: "dave@example.com", display_name: "Dave", joined_at: "2026-09-01T00:00:00Z" };
+    const { unmount } = renderTable([dave]);
+    expect(screen.queryByRole("button", { name: en.members.edit.button })).toBeNull();
+    expect(screen.getAllByRole("button", { name: en.members.edit.remove }).length).toBeGreaterThan(0);
+    unmount();
+    renderTable([dave], true);
+    expect(screen.getAllByRole("button", { name: en.members.edit.button }).length).toBeGreaterThan(0);
+  });
+
+  it("shows each member's company role", () => {
+    renderTable([
+      { user_id: "u1", email: "a@example.com", display_name: "Ann", role_name: "admin", joined_at: "2026-09-01T00:00:00Z" },
+      { user_id: "u2", email: "m@example.com", display_name: "Max", role_name: "manager", joined_at: "2026-09-01T00:00:00Z" },
+    ]);
+    expect(screen.getByRole("columnheader", { name: en.members.col.role })).toBeInTheDocument();
+    expect(screen.getAllByText(en.members.roles.admin).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(en.members.roles.manager).length).toBeGreaterThan(0);
+  });
+
+  it("shows no invitations section to a read-only member", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <MembersTable
+          projectId="p1"
+          companyId="c1"
+          members={[]}
+          invites={[]}
+          canInvite={false}
+          canManageMembers={false}
+          canAssignMembers={false}
+          callerIsCompanyAdmin={false}
+          canEditIdentity={false}
+          currentUserId="me"
+        />
+      </NextIntlClientProvider>
+    );
+    expect(screen.queryByText(en.members.tab.pending)).toBeNull();
+    expect(screen.queryByText(en.members.empty.pending)).toBeNull();
+  });
+
+  it("marks an invitation past its expiry as expired", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <MembersTable
+          projectId="p1"
+          companyId="c1"
+          members={[]}
+          invites={[
+            {
+              id: "i1",
+              email: "late@example.com",
+              expires_at: "2020-01-01T00:00:00Z",
+              invited_by_name: "Ann",
+            } as never,
+          ]}
+          canInvite
+          canManageMembers={false}
+          canAssignMembers={false}
+          callerIsCompanyAdmin={false}
+          canEditIdentity={false}
+          currentUserId="me"
+        />
+      </NextIntlClientProvider>
+    );
+    expect(screen.getAllByText(en.members.expired).length).toBeGreaterThan(0);
+  });
+
+  it("lets the header and its buttons wrap on narrow screens", () => {
+    renderTable([]);
+    const header = screen.getByTestId("members-header");
+    expect(header.className).toContain("flex-wrap");
+    expect((header.lastElementChild as HTMLElement).className).toContain("flex-wrap");
+    expect(header.parentElement!.className).toContain("px-4");
+  });
+
+  it("asks in an in-app dialog, not the browser's confirm(), before removing", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm");
+    mockRemove.mockClear();
+    mockRemove.mockResolvedValue({ ok: true });
+    renderTable([{ user_id: "u2", email: "dave@example.com", display_name: "Dave", joined_at: "2026-09-01T00:00:00Z" }]);
+    await userEvent.click(screen.getAllByRole("button", { name: en.members.edit.remove })[0]);
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent("Remove Dave from this project?");
+    await userEvent.click(within(dialog).getByRole("button", { name: en.members.invite.cancel }));
+    expect(mockRemove).not.toHaveBeenCalled();
+    expect(confirmSpy).not.toHaveBeenCalled();
   });
 });

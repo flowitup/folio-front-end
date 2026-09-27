@@ -20,7 +20,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Si vous avez été invité par e-mail, le lien contenu dans le message vous rattache directement.",
     ],
     gotchas: [
-      "Seuls les numéros français sont acceptés, et sans le 0 initial.",
+      "Seuls les numéros français sont acceptés, écrits 06 12 34 56 78, 6 12 34 56 78 ou +33 6 12 34 56 78.",
     ],
     whoCanDoIt:
       "Toute personne dont le numéro de téléphone a été ajouté à une entreprise.",
@@ -35,7 +35,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Le premier groupe du menu latéral vaut pour toute l'application : “Aperçu”, “Projets” et “Bibliothèque”.",
       "Une fois un projet sélectionné, le menu latéral déploie ses sections : “Planification”, “Main-d'œuvre”, “Dépenses”, “Chiffrage”, “Notes”, “Documents” et “Analyses”.",
       "Les administrateurs d'entreprise voient en plus un groupe “Facturation” : “Devis”, “Factures”, “Modèles” et “Remboursables”.",
-      "La barre du haut porte l'action principale de la page, le point d'aide, la cloche, le bouton de thème clair ou sombre, le choix de la langue et le menu de votre compte.",
+      "La barre du haut porte l'action principale de la page, le point d'aide, la cloche, le choix de la langue et le menu de votre compte.",
     ],
     whoCanDoIt:
       "Tout le monde voit le groupe général. “Documents” n'apparaît que si vous avez le droit de l'ouvrir, et “Facturation” seulement pour les administrateurs d'entreprise.",
@@ -373,7 +373,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "La version de Folio que vous utilisez est indiquée en bas de la page, sous la section ouverte.",
     ],
     whoCanDoIt:
-      "Chacun accède à son profil, au préfixe du projet, à ses choix de notification et à ses propres clés API. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code société, membres, moyens de paiement — aux seuls administrateurs de la société sélectionnée. “Utilisateurs et rôles” est réservé à l'assistance Folio.",
+      "Chacun accède à son profil, à ses choix de notification et à ses propres clés API. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code société, membres, moyens de paiement — aux seuls administrateurs de la société sélectionnée. “Utilisateurs et rôles” est réservé à l'assistance Folio.",
     gotchas: [
       "Les paramètres n'ont pas de section de facturation. Les devis, les factures et les modèles sont tous dans le groupe “Facturation” du menu latéral.",
       "Les interrupteurs de notification commandent les notifications push qui arrivent dans l'application mobile Folio, pas la cloche de cette fenêtre.",

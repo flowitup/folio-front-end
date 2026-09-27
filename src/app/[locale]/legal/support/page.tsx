@@ -12,8 +12,9 @@ export default async function SupportPage({
 }) {
   const { locale } = await params;
   const fr = locale !== "en";
+  // No Vietnamese text: vi reads French, declared as French.
   return (
-    <>
+    <div lang={fr ? "fr" : "en"} className="space-y-4">
       <h1>{fr ? "Support Folio" : "Folio Support"}</h1>
       <p>
         {fr
@@ -33,6 +34,6 @@ export default async function SupportPage({
           {fr ? "Politique de confidentialité" : "Privacy policy"}
         </a>
       </p>
-    </>
+    </div>
   );
 }

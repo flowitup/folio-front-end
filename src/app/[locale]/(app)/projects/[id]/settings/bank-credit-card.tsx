@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { Landmark, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { formatEURWhole } from "@/lib/utils/formatters";
+import { formatEUR } from "@/lib/utils/formatters";
 import { updateBankCredit } from "./actions";
 import type { Project } from "@/types/project";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
@@ -37,11 +38,17 @@ export function BankCreditCard({ project }: Props) {
   );
   const [source, setSource] = useState(project.budget_source ?? "");
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
+  // The values the server holds now (the props only reflect page load).
+  const [saved, setSaved] = useState({
+    amount: project.budget != null ? String(project.budget) : "",
+    source: project.budget_source ?? "",
+  });
 
-  const initialAmount = project.budget != null ? String(project.budget) : "";
-  const isDirty = amount !== initialAmount || source !== (project.budget_source ?? "");
+  const isDirty = amount !== saved.amount || source !== saved.source;
   const parsed = parseMoneyInput(amount);
-  const preview = parsed != null ? formatEURWhole(parsed) : null;
+  // Cents shown: the preview confirms what was typed, "50 000,5" included.
+  const preview = parsed != null ? formatEUR(parsed) : null;
 
   const handleAmountChange = (value: string) => {
     if (AMOUNT_RE.test(value)) setAmount(value);
@@ -52,6 +59,8 @@ export function BankCreditCard({ project }: Props) {
     const result = await updateBankCredit(project.id, amount, source);
     setSaving(false);
     if (result.ok) {
+      setSaved({ amount, source });
+      router.refresh();
       toast.success(t("settingsSaved"));
     } else if (result.error === "validation") {
       toast.error(t("budgetInvalid"));

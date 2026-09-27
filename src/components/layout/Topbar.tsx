@@ -188,7 +188,11 @@ export function Topbar() {
               )}
               <span style={{ color: "var(--ink-2)" }}>{title}</span>
             </div>
-            <h1 className="font-display text-2xl font-medium leading-[1.05] tracking-tight lg:text-[34px]">
+            {/* A long word ("Planification") must not spill under the icons. */}
+            <h1
+              className="truncate font-display text-2xl font-medium leading-[1.05] tracking-tight lg:text-[34px]"
+              title={title ?? undefined}
+            >
               {title}
             </h1>
             {subtitle && (

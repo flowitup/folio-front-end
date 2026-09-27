@@ -138,6 +138,9 @@ vi.mock("@/components/companies/company-labor-roles-card", () => ({
 }));
 
 
+const feature = vi.hoisted(() => ({ assistant: false as boolean | null }));
+vi.mock("@/hooks/use-chat-feature", () => ({ useAssistantFeature: () => feature.assistant }));
+
 vi.mock("@/components/companies/join-company-dialog", () => ({
   JoinCompanyDialog: () => <div data-testid="join-company-dialog" />,
 }));
@@ -437,5 +440,20 @@ describe("CompanySettingsSection — company profile", () => {
 
     expect(await screen.findByRole("heading", { name: "Company" })).toBeDefined();
     expect(screen.queryByTestId("company-profile-card")).toBeNull();
+  });
+
+  it("links to the assistant audit only while the assistant is on", async () => {
+    resolveWith([makeCompany({ role: "admin" })]);
+    feature.assistant = false;
+    const { unmount } = render(<CompanySettingsSection />);
+    await screen.findByTestId("members-table");
+    expect(screen.queryByText(/Assistant audit|assistantAuditLink/)).toBeNull();
+    unmount();
+
+    feature.assistant = true;
+    render(<CompanySettingsSection />);
+    await screen.findByTestId("members-table");
+    expect(screen.getByRole("link", { name: /→/ }).getAttribute("href")).toContain("assistant-audit");
+    feature.assistant = false;
   });
 });

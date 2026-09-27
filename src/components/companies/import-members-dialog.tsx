@@ -33,6 +33,7 @@ import {
 } from "@/app/[locale]/(app)/settings/_actions/company-settings-actions";
 import type { CompanyDirectoryEntry } from "@/lib/api/companies-members";
 import type { MyCompany } from "@/types/companies";
+import { formatFrenchPhone } from "@/lib/auth/phone-number";
 
 interface Props {
   open: boolean;
@@ -49,6 +50,20 @@ export function ImportMembersDialog({ open, onOpenChange, companyId, sourceCompa
   const [isLoadingEntries, setIsLoadingEntries] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // People already in this company: the API "imports" them again and counts
+  // them, so they are marked and left unselectable instead.
+  const [existing, setExisting] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    void fetchCompanyDirectoryAction(companyId).then((result) => {
+      if (!cancelled && result.ok) setExisting(new Set(result.data.map((e) => e.person_id)));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, companyId]);
 
   const loadEntries = useCallback(async (id: string) => {
     if (!id) return;
@@ -141,11 +156,16 @@ export function ImportMembersDialog({ open, onOpenChange, companyId, sourceCompa
                     type="checkbox"
                     checked={selected.has(entry.person_id)}
                     onChange={() => toggle(entry.person_id)}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || existing.has(entry.person_id)}
                   />
                   <span className="min-w-0 flex-1 truncate">{entry.name}</span>
+                  {existing.has(entry.person_id) && (
+                    <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+                      {t("alreadyMember")}
+                    </span>
+                  )}
                   <span className="text-[12px]" style={{ color: "var(--muted)" }}>
-                    {entry.phone}
+                    {entry.phone ? formatFrenchPhone(entry.phone) : ""}
                   </span>
                 </label>
               ))}

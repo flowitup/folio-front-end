@@ -19,7 +19,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "If you were invited by email instead, the link in that message attaches you directly.",
     ],
     gotchas: [
-      "Only French numbers are accepted, and without the leading zero.",
+      "Only French numbers are accepted, written 06 12 34 56 78, 6 12 34 56 78 or +33 6 12 34 56 78.",
     ],
     whoCanDoIt: "Anyone with a phone number that has been added to a company.",
   },
@@ -33,7 +33,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "The sidebar's first group is app-wide: Overview, Projects and Library.",
       "Once a project is selected the sidebar grows its sections: Planning, Labor, Expense, Cost planning, Notes, Documents and Analyses.",
       "Company administrators also see a Billing group: Quotes, Invoices, Templates and Refundable.",
-      "The top bar carries the page's main action, the help mark, the bell, the light and dark switch, the language picker and your account menu.",
+      "The top bar carries the page's main action, the help mark, the bell, the language picker and your account menu.",
     ],
     whoCanDoIt:
       "Everyone sees the app-wide group. Documents only appears if you may open it, and Billing only for company administrators.",
@@ -371,7 +371,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "The Folio version you are running is printed at the foot of the page, under whichever section is open.",
     ],
     whoCanDoIt:
-      "Everyone reaches their own profile, the project prefix, their notification choices and their own API keys. “Company” shows anyone their own attachments, and its admin tools — join code, members, payment methods — only to an administrator of the selected company. “Users & Roles” is reserved for Folio's support team.",
+      "Everyone reaches their own profile, their notification choices and their own API keys. “Company” shows anyone their own attachments, and its admin tools — join code, members, payment methods — only to an administrator of the selected company. “Users & Roles” is reserved for Folio's support team.",
     gotchas: [
       "Settings has no billing section of its own. Quotes, invoices and templates all live in the Billing group in the sidebar.",
       "The notification switches govern the pushes that reach the Folio mobile app, not the bell in this window.",

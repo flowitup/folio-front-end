@@ -1,4 +1,4 @@
-import type { Project, ProjectListResponse, ProjectUsersResponse } from "@/types/project";
+import type { Project, ProjectListResponse, ProjectUser, ProjectUsersResponse } from "@/types/project";
 import { api } from "@/lib/api/http";
 
 export async function fetchProjects(): Promise<Project[]> {
@@ -50,8 +50,27 @@ export async function fetchProjectById(id: string): Promise<Project> {
   return api.get<Project>(`/projects/${id}`);
 }
 
+/** People on a project with their company role — read from /members, which
+ * (unlike /users) carries the role and display name the team panel shows. */
 export async function fetchProjectUsers(projectId: string): Promise<ProjectUsersResponse> {
-  return api.get<ProjectUsersResponse>(`/projects/${projectId}/users`);
+  const res = await api.get<{
+    members: {
+      user_id: string;
+      email: string;
+      display_name: string | null;
+      role_name: ProjectUser["role_name"];
+    }[];
+    total: number;
+  }>(`/projects/${projectId}/members`);
+  return {
+    users: res.members.map((m) => ({
+      id: m.user_id,
+      email: m.email,
+      display_name: m.display_name,
+      role_name: m.role_name,
+    })),
+    total: res.total,
+  };
 }
 
 // Member REMOVAL has a single path: removeMemberAction (server action, in

@@ -56,6 +56,8 @@ export function TaskDetailDrawer({
   const [task, setTask] = useState<Task | null>(seed ?? null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // The `?task=` id could not be loaded (deleted, another project's, no access).
+  const [loadFailed, setLoadFailed] = useState(false);
 
   // Fetch when opening (unless seed already supplied for the same id).
   useEffect(() => {
@@ -69,9 +71,14 @@ export function TaskDetailDrawer({
     }
     let cancelled = false;
     setLoading(true);
+    setLoadFailed(false);
     fetchTask(taskId)
       .then((t) => { if (!cancelled) setTask(t); })
-      .catch(() => { if (!cancelled) setTask(null); })
+      .catch(() => {
+        if (cancelled) return;
+        setTask(null);
+        setLoadFailed(true);
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [taskId, seed]);
@@ -170,7 +177,7 @@ export function TaskDetailDrawer({
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} aria-label={t("close")}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -181,6 +188,14 @@ export function TaskDetailDrawer({
           {loading && (
             <div className="flex justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          {!loading && !task && loadFailed && (
+            <div className="py-8 text-center" data-testid="task-unavailable">
+              <p className="text-sm text-muted-foreground">{t("taskUnavailable")}</p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={onClose}>
+                {t("close")}
+              </Button>
             </div>
           )}
           {!loading && task && (

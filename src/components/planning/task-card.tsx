@@ -3,6 +3,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Calendar, AlertCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { formatDate } from "@/lib/utils/formatters";
 import type { Task, TaskPriority } from "@/types/task";
 
@@ -19,6 +20,7 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onClick }: TaskCardProps) {
+  const t = useTranslations("planning");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: { type: "task", task },
@@ -50,9 +52,11 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
       <div className="mb-2 flex items-start gap-2">
         <span
           className={`dot ${PRIORITY_DOT_CLASS[task.priority]} mt-1.5 flex-shrink-0`}
-          title={task.priority}
+          title={t(`priority.${task.priority}`)}
+          role="img"
+          aria-label={t(`priority.${task.priority}`)}
         />
-        <p className="text-[13.5px] font-medium leading-snug">{task.title}</p>
+        <p className="min-w-0 text-[13.5px] font-medium leading-snug [overflow-wrap:anywhere]">{task.title}</p>
       </div>
 
       {task.labels.length > 0 && (
@@ -60,7 +64,8 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
           {task.labels.map((label) => (
             <span
               key={label}
-              className="rounded px-1.5 py-0.5 text-[10px] font-medium"
+              title={label}
+              className="max-w-full truncate rounded px-1.5 py-0.5 text-[10px] font-medium"
               style={{
                 background: "var(--paper-2)",
                 color: "var(--ink-2)",

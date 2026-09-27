@@ -19,7 +19,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Nếu bạn được mời qua email, đường dẫn trong thư đó liên kết thẳng bạn vào công ty.",
     ],
     gotchas: [
-      "Chỉ nhận số điện thoại Pháp, và bỏ số 0 đứng đầu.",
+      "Chỉ nhận số điện thoại Pháp, viết 06 12 34 56 78, 6 12 34 56 78 hoặc +33 6 12 34 56 78.",
     ],
     whoCanDoIt: "Bất kỳ ai có số điện thoại đã được thêm vào một công ty.",
   },
@@ -33,7 +33,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Nhóm đầu tiên của thanh bên dùng chung cho cả ứng dụng: “Tổng quan”, “Dự án” và “Thư viện”.",
       "Khi đã chọn một dự án, thanh bên hiện thêm các mục: “Kế hoạch”, “Nhân công”, “Chi phí”, “Hoạch toán”, “Ghi chú”, “Tài liệu” và “Phân tích”.",
       "Quản trị viên công ty còn thấy nhóm “Báo giá & Hóa đơn”: “Báo giá”, “Hóa đơn”, “Mẫu tài liệu” và “Hoàn tiền”.",
-      "Thanh trên cùng chứa thao tác chính của trang, dấu trợ giúp, chuông thông báo, nút chuyển sáng tối, bộ chọn ngôn ngữ và menu tài khoản của bạn.",
+      "Thanh trên cùng chứa thao tác chính của trang, dấu trợ giúp, chuông thông báo, bộ chọn ngôn ngữ và menu tài khoản của bạn.",
     ],
     whoCanDoIt:
       "Ai cũng thấy nhóm dùng chung. “Tài liệu” chỉ hiện nếu bạn được phép mở, còn nhóm “Báo giá & Hóa đơn” chỉ dành cho quản trị viên công ty.",
@@ -369,7 +369,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Phiên bản Folio bạn đang chạy được ghi ở cuối trang, bên dưới mục đang mở.",
     ],
     whoCanDoIt:
-      "Ai cũng vào được hồ sơ của mình, tiền tố của dự án, lựa chọn thông báo và khóa API của riêng mình. “Công ty” cho ai cũng thấy liên kết công ty của chính mình, còn công cụ quản trị — mã tham gia, bảng thành viên, phương thức thanh toán — chỉ dành cho quản trị viên của công ty đang chọn. “Người dùng & vai trò” chỉ dành cho bộ phận hỗ trợ Folio.",
+      "Ai cũng vào được hồ sơ của mình, lựa chọn thông báo và khóa API của riêng mình. “Công ty” cho ai cũng thấy liên kết công ty của chính mình, còn công cụ quản trị — mã tham gia, bảng thành viên, phương thức thanh toán — chỉ dành cho quản trị viên của công ty đang chọn. “Người dùng & vai trò” chỉ dành cho bộ phận hỗ trợ Folio.",
     gotchas: [
       "Cài đặt không có mục báo giá hay hóa đơn nào. Báo giá, hóa đơn và mẫu đều nằm ở nhóm “Báo giá & Hóa đơn” trên thanh bên.",
       "Các công tắc thông báo điều khiển thông báo đẩy gửi tới app Folio trên điện thoại, không phải cái chuông trong cửa sổ này.",

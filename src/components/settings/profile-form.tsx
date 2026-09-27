@@ -19,7 +19,7 @@ import { updateProfileAction } from "@/app/[locale]/(app)/settings/_actions/prof
 export function ProfileForm() {
   const t = useTranslations("settings");
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const [displayName, setDisplayName] = useState(user?.display_name ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
@@ -43,9 +43,11 @@ export function ProfileForm() {
         const key =
           result.error === "invalid_phone"
             ? "errorInvalidPhone"
-            : result.error === "phone_taken"
-              ? "errorPhoneTaken"
-              : "errorSaveFailed";
+            : result.error === "invalid_input"
+              ? "errorInvalidProfile"
+              : result.error === "phone_taken"
+                ? "errorPhoneTaken"
+                : "errorSaveFailed";
         toast.error(t(key));
         return;
       }
@@ -53,6 +55,8 @@ export function ProfileForm() {
       // Keep the form in sync with what the backend actually saved.
       setDisplayName(result.user.display_name ?? "");
       setPhone(result.user.phone ?? "");
+      // The header, avatar and top bar read the context user.
+      updateUser({ display_name: result.user.display_name, phone: result.user.phone });
       toast.success(t("profileSaved"));
       // Server components (topbar, other settings sections) read the user
       // from the session cookie — refresh so they pick up the new values.
@@ -92,6 +96,7 @@ export function ProfileForm() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             disabled={isSaving}
+            maxLength={255}
           />
         </div>
         <div>
@@ -107,6 +112,7 @@ export function ProfileForm() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             disabled={isSaving}
+            maxLength={32}
           />
         </div>
         {/* Phone-only accounts carry a synthetic address, not an e-mail. */}

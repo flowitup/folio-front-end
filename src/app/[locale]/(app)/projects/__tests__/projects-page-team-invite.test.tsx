@@ -10,6 +10,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import enMessages from "@/messages/en.json";
 import type { Project } from "@/types/project";
+import { fetchProjectUsers } from "@/lib/api/projects";
 
 const push = vi.fn();
 const selectProject = vi.fn();
@@ -106,5 +107,64 @@ describe("ProjectsPage team panel — Invite", () => {
     await openTeam();
 
     expect(screen.queryByRole("button", { name: enMessages.projects.invite })).toBeNull();
+  });
+});
+
+describe("ProjectsPage team panel — roles", () => {
+  it("labels each person with their company role, not 'Member' for everyone", async () => {
+    vi.mocked(fetchProjectUsers).mockResolvedValueOnce({
+      users: [
+        { id: "u-a", email: "admin@example.com", display_name: "Ann", role_name: "admin" },
+        { id: "u-m", email: "alice@example.com", display_name: "Alice", role_name: "manager" },
+        { id: "u-x", email: "gone@example.com", display_name: null, role_name: null },
+      ],
+      total: 3,
+    });
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });
+    renderPage();
+    await openTeam();
+
+    expect(await screen.findByText(enMessages.members.roles.admin)).toBeInTheDocument();
+    expect(screen.getByText(enMessages.members.roles.manager)).toBeInTheDocument();
+    expect(screen.queryByText(enMessages.members.roles.member)).toBeNull();
+  });
+});
+
+describe("ProjectsPage card labels", () => {
+  it("shows no no-op Active tab, no English phase and a padded index", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });
+    renderPage();
+    expect(screen.queryByRole("button", { name: /Active/ })).toBeNull();
+    expect(screen.queryByText("Planning")).toBeNull();
+    expect(screen.getByText("01")).toBeInTheDocument();
+    expect(screen.getByTestId("project-team-size")).toHaveTextContent("1 member");
+  });
+});
+
+describe("ProjectsPage card layout", () => {
+  it("keeps an unbroken title inside the card", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });
+    renderPage();
+    const title = screen.getByTestId("project-card-title");
+    expect(title.className).toContain("[overflow-wrap:anywhere]");
+    const grid = title.closest("article")!.firstElementChild as HTMLElement;
+    expect(grid.className).toContain("minmax(0,");
+  });
+});
+
+describe("ProjectsPage money columns", () => {
+  it("hides the spend columns the API zeroes for a read-only member", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });
+    renderPage();
+    expect(screen.queryByText(enMessages.projects.spentByCredits)).toBeNull();
+    expect(screen.queryByText(enMessages.projects.spentPersonal)).toBeNull();
+    expect(screen.queryByTestId("project-money-grid")).toBeNull();
+  });
+
+  it("shows them to someone with labor rights", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read", "project:manage_labor"], companies: [] } });
+    renderPage();
+    expect(screen.getByText(enMessages.projects.spentByCredits)).toBeInTheDocument();
+    expect(screen.getByText(enMessages.projects.spentPersonal)).toBeInTheDocument();
   });
 });

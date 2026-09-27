@@ -26,6 +26,7 @@ vi.mock("next-intl", () => ({
         personalPayment: "Personal payment",
         usedInInvoices: "{count} invoices",
         cancelEditAria: "Cancel edit",
+        saveEditAria: "Save changes",
         editLabelAria: 'Edit "{name}"',
         deleteLabelAria: 'Delete "{name}"',
         deleteConfirmCta: "Remove",
@@ -100,6 +101,13 @@ describe("PaymentMethodRow — paidByCompany badge", () => {
 });
 
 describe("PaymentMethodRow — edit mode shows paidByCompany checkbox", () => {
+  it("names the edit-mode confirm button as saving, not removing", async () => {
+    renderRow(makeMethod());
+    fireEvent.click(screen.getByRole("button", { name: /Edit "Wise"/i }));
+    expect(await screen.findByRole("button", { name: "Save changes" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove" })).toBeNull();
+  });
+
   it("checkbox is visible after clicking Edit", async () => {
     renderRow(makeMethod({ isCompanyPayment: false }));
 

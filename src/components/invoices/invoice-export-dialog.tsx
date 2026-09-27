@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -47,6 +47,7 @@ export function InvoiceExportDialog({
   initialType = "all",
 }: InvoiceExportDialogProps) {
   const t = useTranslations("invoices.export");
+  const locale = useLocale();
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [format, setFormat] = useState<InvoiceExportFormat>("xlsx");
@@ -84,6 +85,7 @@ export function InvoiceExportDialog({
         { from, to },
         format,
         typeFilter,
+        locale,
       );
       triggerBrowserDownload(blob, filename);
       toast.success(t("downloaded"), { id: toastId });

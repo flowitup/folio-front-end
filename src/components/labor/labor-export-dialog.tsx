@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -75,6 +75,7 @@ export function LaborExportDialog({
   initialFormat,
 }: LaborExportDialogProps) {
   const t = useTranslations("labor.export");
+  const locale = useLocale();
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [format, setFormat] = useState<LaborExportFormat>("xlsx");
@@ -136,6 +137,7 @@ export function LaborExportDialog({
           effectiveWorkerId,
           { from, to },
           format,
+          locale,
         ));
         triggerBrowserDownload(blob, filename);
         toast.success(t("workerToastSuccess"), { id: toastId });
@@ -144,6 +146,7 @@ export function LaborExportDialog({
           projectId,
           { from, to },
           format,
+          locale,
         ));
         triggerBrowserDownload(blob, filename);
         toast.success(t("downloaded"), { id: toastId });

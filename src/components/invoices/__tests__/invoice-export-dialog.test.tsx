@@ -15,6 +15,7 @@ import { InvoiceExportDialog } from "../invoice-export-dialog";
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "fr",
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
     if (params) {
       return Object.entries(params).reduce(
@@ -267,6 +268,7 @@ describe("InvoiceExportDialog — submit happy path", () => {
           { from: "2026-01", to: "2026-03" },
           "xlsx",
           undefined,
+          "fr",
         );
       },
       { timeout: 15000 },
@@ -305,6 +307,7 @@ describe("InvoiceExportDialog — submit happy path", () => {
           { from: "2026-01", to: "2026-02" },
           "xlsx",
           "labor",
+          "fr",
         );
       },
       { timeout: 15000 },
@@ -425,6 +428,7 @@ describe("InvoiceExportDialog — submit happy path", () => {
           { from: "2026-01", to: "2026-01" },
           "pdf",
           undefined,
+          "fr",
         );
       },
       { timeout: 15000 },

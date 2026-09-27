@@ -2532,7 +2532,11 @@
     "comparePartialFooter": "{priced, plural, one {# article} other {# articles}} sur {total} chiffrés — partiel",
     "compareExpandRow": "Afficher les notes de {name}",
     "compareShopsEyebrow": "Comparer les magasins",
-    "compareGapExplanationNoPct": "{dearer} coûte {gap} de plus par unité — {lineGap} sur cette ligne de {qty}. {cheaper} est moins cher."
+    "compareGapExplanationNoPct": "{dearer} coûte {gap} de plus par unité — {lineGap} sur cette ligne de {qty}. {cheaper} est moins cher.",
+    "loadFailedTitle": "Le chiffrage n'a pas pu être chargé",
+    "loadFailedHint": "Rien n'a été perdu. Vérifiez votre connexion et réessayez.",
+    "retry": "Réessayer",
+    "emptyHintReadOnly": "Aucune section n'a encore été prévue pour ce projet."
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",

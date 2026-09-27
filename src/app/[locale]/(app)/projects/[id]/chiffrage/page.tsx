@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 
 import { getSession } from "@/lib/auth/session";
-import { can } from "@/lib/auth/permissions";
+import { can, isPlatformOps } from "@/lib/auth/permissions";
 import { getChiffrage, listUnits, type ChiffrageTree, type ChiffrageUnit } from "@/lib/api/chiffrage";
 import { getProjectById } from "@/lib/api/projects-server";
 import { ChiffragePageClient } from "./chiffrage-page-client";
@@ -40,17 +40,29 @@ export default async function ChiffragePage({ params }: PageProps) {
     redirect(`/${locale}/login`);
   }
 
-  const [tree, units, project] = await Promise.all([
-    getChiffrage(projectId).catch(() => EMPTY_TREE(projectId)),
+  // Access gate, as on the other project tabs: the project fetch fails
+  // (403/404) for anyone who cannot see it.
+  const project = await getProjectById(projectId).catch(() => null);
+  if (!project && !isPlatformOps(session.user.permissions)) {
+    redirect(`/${locale}/projects`);
+  }
+
+  let loadFailed = false;
+  const [tree, units] = await Promise.all([
+    getChiffrage(projectId).catch(() => {
+      // Shown as an error with a retry — never as an empty budget, which
+      // reads as if the sections had been lost.
+      loadFailed = true;
+      return EMPTY_TREE(projectId);
+    }),
     listUnits(projectId).catch((): ChiffrageUnit[] => []),
-    getProjectById(projectId).catch(() => null),
   ]);
 
-  const canManage = can(
-    "project:manage_invoices",
-    session.user.permissions,
-    project?.my_permissions
-  );
+  // Only a loaded project's effective permissions can grant writes; the
+  // company-wide JWT claim alone does not reach this project.
+  const canManage = project
+    ? can("project:manage_invoices", session.user.permissions, project.my_permissions)
+    : false;
 
   return (
     <div className="px-6 py-6">
@@ -60,6 +72,7 @@ export default async function ChiffragePage({ params }: PageProps) {
         companyId={project?.company_id ?? null}
         initialTree={tree}
         initialUnits={units}
+        loadFailed={loadFailed}
       />
     </div>
   );

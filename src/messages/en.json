@@ -2532,7 +2532,11 @@
     "comparePartialFooter": "{priced} of {total} items priced — partial",
     "compareExpandRow": "Show notes for {name}",
     "compareShopsEyebrow": "Compare shops",
-    "compareGapExplanationNoPct": "{dearer} is {gap} more per unit — {lineGap} on this line of {qty}. {cheaper} is cheaper."
+    "compareGapExplanationNoPct": "{dearer} is {gap} more per unit — {lineGap} on this line of {qty}. {cheaper} is cheaper.",
+    "loadFailedTitle": "The cost planning could not be loaded",
+    "loadFailedHint": "Nothing was lost. Check your connection and try again.",
+    "retry": "Try again",
+    "emptyHintReadOnly": "No section has been planned for this project yet."
   },
   "onboarding": {
     "title": "Welcome to Folio",

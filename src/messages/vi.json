@@ -2532,7 +2532,11 @@
     "comparePartialFooter": "Đã báo giá {priced}/{total} mục — chưa đủ",
     "compareExpandRow": "Xem ghi chú của {name}",
     "compareShopsEyebrow": "So sánh cửa hàng",
-    "compareGapExplanationNoPct": "{dearer} đắt hơn {gap} mỗi đơn vị — {lineGap} cho dòng này với {qty}. {cheaper} rẻ hơn."
+    "compareGapExplanationNoPct": "{dearer} đắt hơn {gap} mỗi đơn vị — {lineGap} cho dòng này với {qty}. {cheaper} rẻ hơn.",
+    "loadFailedTitle": "Không thể tải bảng dự toán",
+    "loadFailedHint": "Không có dữ liệu nào bị mất. Hãy kiểm tra kết nối và thử lại.",
+    "retry": "Thử lại",
+    "emptyHintReadOnly": "Dự án này chưa có hạng mục nào được lập."
   },
   "onboarding": {
     "title": "Chào mừng đến với Folio",

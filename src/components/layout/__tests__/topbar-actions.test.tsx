@@ -55,7 +55,8 @@ vi.mock("@/context/AuthContext", () => ({
 }));
 
 const mockUseProject = vi.fn();
-vi.mock("@/context/ProjectContext", () => ({
+vi.mock("@/context/ProjectContext", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/context/ProjectContext")>()),
   useProject: () => mockUseProject(),
 }));
 
@@ -149,13 +150,30 @@ describe("Topbar action button wiring", () => {
     expect(mockPush).toHaveBeenCalledWith("/en/projects/p-1/invoices/new");
   });
 
-  it("planning/labor: clicking action does nothing when no project is selected", async () => {
+  it("planning: action targets the URL project even when no project is selected", async () => {
     setup({ pathname: "/en/projects/p-1/planning" });
     const user = userEvent.setup();
     render(<Topbar />);
     await user.click(screen.getByRole("button", { name: /planning.newTask/ }));
-    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockPush).toHaveBeenCalledWith("/en/projects/p-1/planning?new=1");
   });
+
+  it.each([
+    ["planning", /planning.newTask/, "/en/projects/p-url/planning?new=1"],
+    ["labor", /labor.logDay/, "/en/projects/p-url/labor?logDay=1"],
+    ["invoices", /invoices.newInvoice/, "/en/projects/p-url/invoices/new"],
+  ])(
+    "%s: action and breadcrumb follow the URL project, not a different stored one",
+    async (section, label, target) => {
+      setup({ pathname: `/en/projects/p-url/${section}`, selectedProjectId: "p-stored" });
+      const user = userEvent.setup();
+      render(<Topbar />);
+      // The stored project's name must not be shown as the page's project.
+      expect(screen.queryByTitle("Test")).toBeNull();
+      await user.click(screen.getByRole("button", { name: label }));
+      expect(mockPush).toHaveBeenCalledWith(target);
+    },
+  );
 
   it("invoices: action button is NOT rendered without project:manage_invoices (M9)", () => {
     setup({ pathname: "/en/projects/p-1/invoices", selectedProjectId: "p-1" });

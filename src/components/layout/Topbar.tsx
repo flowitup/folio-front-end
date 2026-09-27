@@ -7,7 +7,7 @@ import { HelpSheet } from "@/components/help/help-sheet";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
-import { useProject } from "@/context/ProjectContext";
+import { projectIdFromPath, useProject } from "@/context/ProjectContext";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { can, canCreateProject } from "@/lib/auth/permissions";
 import { type Locale } from "@/i18n/config";
@@ -109,6 +109,14 @@ export function Topbar() {
     }
   }
 
+  // The project the page shows. On a /projects/<id>/... route that is the URL's
+  // project, never a different stored selection, so the breadcrumb, the action
+  // gate and the action target can only ever name the project being viewed.
+  const routeProjectId = projectIdFromPath(pathWithoutLocale);
+  const pageProject =
+    routeProjectId && selectedProject?.id !== routeProjectId ? null : selectedProject;
+  const pageProjectId = routeProjectId ?? selectedProject?.id ?? null;
+
   const cfg = pageKey ? TOPBAR_KEYS[pageKey] : null;
   const title = cfg ? tTopbar(cfg.titleKey) : null;
   const subtitle = cfg ? tTopbar(cfg.subtitleKey) : null;
@@ -121,15 +129,15 @@ export function Topbar() {
     pageKey === "projects"
       ? canCreateProject(user?.permissions, user?.companies)
       : pageKey === "labor"
-        ? can("project:manage_labor", user?.permissions, selectedProject?.my_permissions)
+        ? can("project:manage_labor", user?.permissions, pageProject?.my_permissions)
         : pageKey === "invoices"
-          ? can("project:manage_invoices", user?.permissions, selectedProject?.my_permissions)
+          ? can("project:manage_invoices", user?.permissions, pageProject?.my_permissions)
           : pageKey === "planning"
-            ? can("project:update", user?.permissions, selectedProject?.my_permissions)
+            ? can("project:update", user?.permissions, pageProject?.my_permissions)
             : true;
   const actionLabel = cfg?.actionKey && canShowAction ? tTopbar(cfg.actionKey) : null;
 
-  const projectName = selectedProject ? projectDisplayName(selectedProject) : undefined;
+  const projectName = pageProject ? projectDisplayName(pageProject) : undefined;
   const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
 
   const handleSwitchProject = (projectId: string) => {
@@ -148,17 +156,17 @@ export function Topbar() {
       router.push(`/${locale}/projects?new=1`);
       return;
     }
-    if (!selectedProject) return;
+    if (!pageProjectId) return;
     if (pageKey === "planning") {
-      router.push(`/${locale}/projects/${selectedProject.id}/planning?new=1`);
+      router.push(`/${locale}/projects/${pageProjectId}/planning?new=1`);
       return;
     }
     if (pageKey === "labor") {
-      router.push(`/${locale}/projects/${selectedProject.id}/labor?logDay=1`);
+      router.push(`/${locale}/projects/${pageProjectId}/labor?logDay=1`);
       return;
     }
     if (pathWithoutLocale.endsWith("/invoices")) {
-      router.push(`/${locale}/projects/${selectedProject.id}/invoices/new`);
+      router.push(`/${locale}/projects/${pageProjectId}/invoices/new`);
     }
   };
 

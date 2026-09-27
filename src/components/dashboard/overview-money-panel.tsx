@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { formatEURWhole } from "@/lib/utils/formatters";
 import {
@@ -75,6 +76,8 @@ export interface OverviewMoneyPanelProps {
    * own — total spent, this month, the sparkline, outstanding refunds — stay.
    */
   canViewBudget?: boolean;
+  /** Where the credit is set — linked when the project has no budget. */
+  settingsHref?: string | null;
 }
 
 const PLACEHOLDER = "—";
@@ -92,10 +95,15 @@ export function OverviewMoneyPanel({
   purses,
   loading = false,
   canViewBudget = true,
+  settingsHref = null,
 }: OverviewMoneyPanelProps) {
   const t = useTranslations("dashboard");
   const tInvoices = useTranslations("invoices");
   const tProjects = useTranslations("projects");
+  const tBankRelease = useTranslations("projects.bankRelease");
+  // "Remaining to spend" and "% spent" need something to measure against: a
+  // project with no credit and no released funds shows what was spent.
+  const showRemaining = canViewBudget && budgetMetrics.hasBaseline;
   const locale = useLocale();
   const monthFmt = new Intl.DateTimeFormat(locale, { month: "short" });
   const fig = (value: string) => (loading ? PLACEHOLDER : value);
@@ -123,6 +131,9 @@ export function OverviewMoneyPanel({
     if (!purse) return null;
     const pct = purse.released > 0 ? (purse.spent / purse.released) * 100 : 0;
     const left = purse.released - purse.spent;
+    // Nothing released into this purse: "left" would just be minus what was
+    // spent, drawn as an overdraft. Show the spend instead.
+    const hasReleased = purse.released > 0;
     return (
       <div className="flex items-center gap-4">
         <PurseMiniDial percent={pct} color={dialColor} />
@@ -135,11 +146,14 @@ export function OverviewMoneyPanel({
           </div>
           <div
             className="num mt-1 text-[17px] font-medium"
-            style={{ letterSpacing: "-.02em", color: !loading && left < 0 ? NEGATIVE_ON_DARK : undefined }}
+            style={{
+              letterSpacing: "-.02em",
+              color: !loading && hasReleased && left < 0 ? NEGATIVE_ON_DARK : undefined,
+            }}
           >
-            {fig(formatEURWhole(left))}{" "}
+            {fig(formatEURWhole(hasReleased ? left : purse.spent))}{" "}
             <span className="font-sans text-[11px]" style={{ opacity: 0.6 }}>
-              {tInvoices("summary.left")}
+              {hasReleased ? tInvoices("summary.left") : t("money.purseSpent")}
             </span>
           </div>
           <div className="mt-0.5 text-[11px]" style={{ opacity: 0.62 }}>
@@ -171,17 +185,17 @@ export function OverviewMoneyPanel({
         <div className="flex flex-wrap items-start gap-9">
           <div>
             <div className="text-[10.5px] font-medium uppercase tracking-[0.1em]" style={{ opacity: 0.6 }}>
-              {canViewBudget ? tProjects("remainingToSpend") : tInvoices("summary.spent")}
+              {showRemaining ? tProjects("remainingToSpend") : tInvoices("summary.spent")}
             </div>
             <div
               className="num mt-2 text-[34px] font-medium leading-none"
               style={{
                 letterSpacing: "-.02em",
                 color:
-                  !loading && canViewBudget && budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined,
+                  !loading && showRemaining && budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined,
               }}
             >
-              {fig(formatEURWhole(canViewBudget ? budgetMetrics.left : spentTotal))}
+              {fig(formatEURWhole(showRemaining ? budgetMetrics.left : spentTotal))}
             </div>
           </div>
           <div className="flex items-end gap-6" style={{ borderLeft: "1px solid rgba(245,241,234,0.14)", paddingLeft: 32 }}>
@@ -265,7 +279,21 @@ export function OverviewMoneyPanel({
 
       {/* Credit progress + purse dials are measured against the project's
           financing, so both are budget-gated. */}
-      {canViewBudget && (
+      {canViewBudget && !loading && !budgetMetrics.hasBaseline && (
+        <div className="mt-[18px] text-[12px]" style={{ opacity: 0.75 }} data-testid="overview-no-budget">
+          {tBankRelease("noCredit")}
+          {settingsHref && (
+            <>
+              {" · "}
+              <Link href={settingsHref} className="font-medium underline underline-offset-2">
+                {tBankRelease("openSettings")}
+              </Link>
+            </>
+          )}
+        </div>
+      )}
+
+      {canViewBudget && (loading || budgetMetrics.hasBaseline) && (
         <div className="mt-[18px]">
           <div className="relative h-[10px] overflow-hidden rounded-full" style={{ background: TRACK_BG }}>
             <span

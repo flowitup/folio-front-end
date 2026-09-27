@@ -96,7 +96,8 @@
     "loadError": "Impossible de charger les données de l'aperçu",
     "money": {
       "spentThisMonth": "Dépensé ce mois-ci",
-      "pctSpent": "{pct}% dépensé · {spent}"
+      "pctSpent": "{pct}% dépensé · {spent}",
+      "purseSpent": "dépensé"
     },
     "spendByType": {
       "title": "Dépenses mensuelles par type",

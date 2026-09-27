@@ -201,6 +201,10 @@ export interface BudgetMetrics {
   pct: number;
   /** Same percent, clamped 0–100 for a progress-bar width. */
   pctClamped: number;
+  /** False when there is nothing to measure against (no credit set and no
+   * funds released): `left` and `pct` then mean nothing and must not be
+   * shown as "remaining" or "% spent". */
+  hasBaseline: boolean;
 }
 
 export function computeBudgetMetrics(
@@ -212,7 +216,14 @@ export function computeBudgetMetrics(
   const denominator = usesBudget ? budget : fundsReleasedTotal;
   const left = denominator - spentTotal;
   const pct = denominator > 0 ? Math.round((spentTotal / denominator) * 100) : 0;
-  return { denominator, usesBudget, left, pct, pctClamped: Math.min(Math.max(pct, 0), 100) };
+  return {
+    denominator,
+    usesBudget,
+    left,
+    pct,
+    pctClamped: Math.min(Math.max(pct, 0), 100),
+    hasBaseline: denominator > 0,
+  };
 }
 
 export interface PendingRefunds {

@@ -96,7 +96,8 @@
     "loadError": "Không thể tải dữ liệu tổng quan",
     "money": {
       "spentThisMonth": "Đã chi tháng này",
-      "pctSpent": "{pct}% đã chi · {spent}"
+      "pctSpent": "{pct}% đã chi · {spent}",
+      "purseSpent": "đã chi"
     },
     "spendByType": {
       "title": "Chi tiêu hàng tháng theo loại",

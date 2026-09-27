@@ -223,6 +223,7 @@ export default function DashboardPage() {
           purses={purses}
           loading={showLoading}
           canViewBudget={canViewBudget}
+          settingsHref={projectSettingsHref}
         />
       )}
 

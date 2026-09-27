@@ -96,7 +96,8 @@
     "loadError": "Failed to load overview data",
     "money": {
       "spentThisMonth": "Spent this month",
-      "pctSpent": "{pct}% spent · {spent}"
+      "pctSpent": "{pct}% spent · {spent}",
+      "purseSpent": "spent"
     },
     "spendByType": {
       "title": "Monthly spend by type",

@@ -191,6 +191,12 @@ describe("computeBudgetMetrics", () => {
     expect(m.denominator).toBe(900);
   });
 
+  it("has no baseline when there is neither a credit nor released funds", () => {
+    expect(computeBudgetMetrics(null, 750, 0).hasBaseline).toBe(false);
+    expect(computeBudgetMetrics(null, 750, 900).hasBaseline).toBe(true);
+    expect(computeBudgetMetrics(1000, 750, 0).hasBaseline).toBe(true);
+  });
+
   it("goes negative and clamps the bar width when over budget", () => {
     const m = computeBudgetMetrics(1000, 1250, 900);
     expect(m.left).toBe(-250);

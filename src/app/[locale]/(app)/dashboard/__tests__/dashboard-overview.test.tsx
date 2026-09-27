@@ -408,3 +408,24 @@ describe("DashboardPage — member without project money rights", () => {
     expect(screen.queryByTestId("overview-type-minis")).toBeNull();
   });
 });
+
+describe("DashboardPage — project with no budget", () => {
+  it("shows what was spent, not a negative 'remaining' and '0% spent'", async () => {
+    mockUseProject.mockReturnValue({ selectedProject: { id: "p-1", name: "Villa", budget: null } });
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [mkInvoice({ type: "labor", issue_date: "2026-07-05", total_amount: 750, paid_by_personal: false })],
+      funds_released_total: 0,
+      company_spent_total: 750,
+      personal_spent_total: 0,
+      company_name: null,
+    });
+    renderDashboard();
+
+    const noBudget = await screen.findByTestId("overview-no-budget");
+    expect(noBudget).toHaveTextContent(enMessages.projects.bankRelease.noCredit);
+    const moneyPanel = within(screen.getByTestId("overview-money-panel"));
+    expect(moneyPanel.queryByText("Remaining to spend")).toBeNull();
+    expect(moneyPanel.queryByText(/% spent/)).toBeNull();
+    expect(moneyPanel.queryByText(eur(-750))).toBeNull();
+  });
+});

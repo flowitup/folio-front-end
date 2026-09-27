@@ -1503,7 +1503,8 @@
         "companyShare": "{percent}% company",
         "bothShare": "{percent}% both",
         "bankShare": "{percent}% bank"
-      }
+      },
+      "companyPaidNotRefundable": "Paid with a company payment method, so there is nothing to refund: {numbers}"
     },
     "import": {
       "button": "Import",

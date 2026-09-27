@@ -1503,7 +1503,8 @@
         "companyShare": "{percent}% công ty",
         "bothShare": "{percent}% cả hai",
         "bankShare": "{percent}% ngân hàng"
-      }
+      },
+      "companyPaidNotRefundable": "Đã thanh toán bằng phương thức của công ty nên không có gì để hoàn trả: {numbers}"
     },
     "import": {
       "button": "Nhập",

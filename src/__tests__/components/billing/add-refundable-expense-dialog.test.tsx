@@ -371,4 +371,34 @@ describe("AddRefundableExpenseDialog", () => {
       expect(confirmBtn?.disabled).toBe(false);
     });
   });
+
+  it("company-paid expense: says why, drops it from the picker, no 'try again'", async () => {
+    const { ApiError } = await import("@/lib/api/http");
+    mockFetchCandidates.mockResolvedValue({
+      items: [makeCandidate({ id: "company-paid", invoice_number: "INV-CO" })],
+      total: 1,
+    });
+    mockSet.mockRejectedValue(
+      new ApiError("HTTP 400: Bad Request", 400, {
+        error: "ValidationError",
+        message: "Expense already paid by the company — refund tracking does not apply",
+      })
+    );
+
+    const onAdded = vi.fn();
+    render(<AddRefundableExpenseDialog open={true} onOpenChange={vi.fn()} onAdded={onAdded} />);
+    await waitFor(() => screen.getByText("INV-CO"));
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "INV-CO" }));
+    fireEvent.click(screen.getByText("Add selected"));
+
+    await waitFor(() => {
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith(
+        "Paid with a company payment method, so there is nothing to refund: INV-CO"
+      );
+    });
+    expect(vi.mocked(toast.error)).toHaveBeenCalledTimes(1);
+    expect(onAdded).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.queryByText("INV-CO")).toBeNull());
+  });
 });

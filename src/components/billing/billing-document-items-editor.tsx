@@ -347,7 +347,6 @@ function ItemRow({
             value={item.category ?? ""}
             onChange={(v) => onUpdate({ category: v || null })}
             options={categoryOptions}
-            onQueryChange={() => {/* categories already loaded on mount */}}
             placeholder={t("categoryPlaceholder")}
             emptyText={t("categoryNoMatches")}
             allowFreeText
@@ -532,7 +531,6 @@ function MobileItemCard({
             value={item.category ?? ""}
             onChange={(v) => onUpdate({ category: v || null })}
             options={categoryOptions}
-            onQueryChange={() => {/* categories already loaded on mount */}}
             placeholder={t("categoryPlaceholder")}
             emptyText={t("categoryNoMatches")}
             allowFreeText

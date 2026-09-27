@@ -69,10 +69,12 @@ export function CompanySettingsSection() {
 
   const fetchingRef = useRef(false);
 
-  const load = useCallback(async () => {
+  // `silent` refetches without the full-page spinner (which would unmount
+  // everything below), for refreshes after a mutation.
+  const load = useCallback(async (options?: { silent?: boolean }) => {
     if (fetchingRef.current) return;
     fetchingRef.current = true;
-    setIsLoading(true);
+    if (!options?.silent) setIsLoading(true);
     try {
       const result = await fetchMyCompaniesAction();
       if (result.ok) {
@@ -99,8 +101,13 @@ export function CompanySettingsSection() {
   }, [load]);
 
   // Bump after member-list-affecting mutations (role change, add, import,
-  // boot) so the members table and the directory both refetch.
-  const bumpRefresh = () => setRefreshToken((n) => n + 1);
+  // boot) so the members table and the directory both refetch. Removing a
+  // member also rotates the company's join code on the backend, so refetch
+  // the companies too: the join-code card must not keep showing a dead code.
+  const bumpRefresh = () => {
+    setRefreshToken((n) => n + 1);
+    void load({ silent: true });
+  };
 
   // "Import from company" only makes sense between companies the caller
   // administers, so the source list stays admin-scoped even though the picker
@@ -231,7 +238,7 @@ export function CompanySettingsSection() {
           )}
 
           {/* Attachment half — visible whatever the caller's role is. */}
-          <MyCompanyCard company={selectedCompany} onMutated={load} />
+          <MyCompanyCard company={selectedCompany} onMutated={() => void load()} />
 
           {/* Admin half — company-admin self-service for the selected company. */}
           {isAdminOfSelected && (
@@ -254,7 +261,7 @@ export function CompanySettingsSection() {
               </section>
 
               <CompanyJoinCodeCard
-                key={`join-code-${selectedCompany.id}`}
+                key={`join-code-${selectedCompany.id}-${selectedCompany.join_code ?? "none"}`}
                 companyId={selectedCompany.id}
                 initialCode={selectedCompany.join_code ?? null}
               />

@@ -326,7 +326,8 @@
         "rate_limited": "Trop de tentatives. Patientez un instant, puis réessayez.",
         "unknown": "Une erreur est survenue. Veuillez réessayer."
       }
-    }
+    },
+    "errorInvalidProfile": "Vérifiez votre nom et votre téléphone : le nom peut compter jusqu'à 255 caractères."
   },
   "paymentMethods": {
     "title": "Moyens de paiement",

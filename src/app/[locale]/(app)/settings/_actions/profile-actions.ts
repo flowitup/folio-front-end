@@ -21,7 +21,7 @@ export interface UpdateProfilePayload {
 
 export type UpdateProfileResult =
   | { success: true; user: User }
-  | { success: false; error: "invalid_phone" | "phone_taken" | "unknown" };
+  | { success: false; error: "invalid_phone" | "invalid_input" | "phone_taken" | "unknown" };
 
 export async function updateProfileAction(
   payload: UpdateProfilePayload
@@ -46,7 +46,19 @@ export async function updateProfileAction(
   }
 
   if (response.status === 400) {
-    return { success: false, error: "invalid_phone" };
+    // Three different 400s: a bad phone, a schema error (a name over 255
+    // characters, a phone over 32) and "no fields". Only the first is about
+    // the phone number.
+    const body = (await response.json().catch(() => null)) as
+      | { error?: string; message?: string }
+      | null;
+    if (body?.message === "Invalid phone number") {
+      return { success: false, error: "invalid_phone" };
+    }
+    if (body?.error === "ValidationError") {
+      return { success: false, error: "invalid_input" };
+    }
+    return { success: false, error: "unknown" };
   }
   if (response.status === 409) {
     return { success: false, error: "phone_taken" };

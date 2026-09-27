@@ -326,7 +326,8 @@
         "rate_limited": "Too many attempts. Please wait a moment and try again.",
         "unknown": "Something went wrong. Please try again."
       }
-    }
+    },
+    "errorInvalidProfile": "Check your name and phone: the name can be up to 255 characters."
   },
   "paymentMethods": {
     "title": "Payment methods",

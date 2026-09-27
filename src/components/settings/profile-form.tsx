@@ -43,9 +43,11 @@ export function ProfileForm() {
         const key =
           result.error === "invalid_phone"
             ? "errorInvalidPhone"
-            : result.error === "phone_taken"
-              ? "errorPhoneTaken"
-              : "errorSaveFailed";
+            : result.error === "invalid_input"
+              ? "errorInvalidProfile"
+              : result.error === "phone_taken"
+                ? "errorPhoneTaken"
+                : "errorSaveFailed";
         toast.error(t(key));
         return;
       }
@@ -92,6 +94,7 @@ export function ProfileForm() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             disabled={isSaving}
+            maxLength={255}
           />
         </div>
         <div>
@@ -107,6 +110,7 @@ export function ProfileForm() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             disabled={isSaving}
+            maxLength={32}
           />
         </div>
         {/* Phone-only accounts carry a synthetic address, not an e-mail. */}

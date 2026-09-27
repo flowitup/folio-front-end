@@ -326,7 +326,8 @@
         "rate_limited": "Quá nhiều lần thử. Vui lòng đợi một lát rồi thử lại.",
         "unknown": "Đã xảy ra lỗi. Vui lòng thử lại."
       }
-    }
+    },
+    "errorInvalidProfile": "Kiểm tra tên và số điện thoại: tên tối đa 255 ký tự."
   },
   "paymentMethods": {
     "title": "Phương thức thanh toán",

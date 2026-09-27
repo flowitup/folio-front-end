@@ -124,3 +124,32 @@ describe("LogDayDialog — limits and errors", () => {
     expect(screen.queryByText(/HTTP 400/)).toBeNull();
   });
 });
+
+describe("LogDayDialog — 'Log next day' toast action", () => {
+  it("asks the page to reopen the dialog on the next day", async () => {
+    const { toast } = await import("sonner");
+    vi.mocked(bulkLogAttendance).mockResolvedValue({ created: [{}], skipped_worker_ids: [] } as never);
+    const onLogNextDay = vi.fn();
+    render(
+      <LogDayDialog
+        open
+        onOpenChange={vi.fn()}
+        projectId="p-1"
+        workers={[WORKER]}
+        entries={[]}
+        initialDate="2026-09-20"
+        onLogNextDay={onLogNextDay}
+        onSaved={vi.fn()}
+      />
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "pick Alice" }));
+    save();
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalled());
+    const options = vi.mocked(toast.success).mock.calls[0][1] as unknown as {
+      action: { onClick: () => void };
+    };
+    options.action.onClick();
+    expect(onLogNextDay).toHaveBeenCalledWith("2026-09-21");
+  });
+});

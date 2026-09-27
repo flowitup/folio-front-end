@@ -856,6 +856,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         workers={activeWorkers}
         entries={entries}
         initialDate={logDayDate}
+        onLogNextDay={(next) => handleOpenLogDay(next)}
         onSaved={loadEntries}
       />
 

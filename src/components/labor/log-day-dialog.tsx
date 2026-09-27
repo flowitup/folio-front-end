@@ -82,6 +82,8 @@ interface LogDayDialogProps {
   entries: LaborEntry[];
   /** Optional initial date when opened (defaults to today). */
   initialDate?: string;
+  /** Reopen the dialog on this date — the success toast's "Log next day" action. */
+  onLogNextDay?: (date: string) => void;
   /** Re-fetch parent entries after a successful save. */
   onSaved: () => void;
 }
@@ -93,6 +95,7 @@ export function LogDayDialog({
   workers,
   entries,
   initialDate,
+  onLogNextDay,
   onSaved,
 }: LogDayDialogProps) {
   const t = useTranslations("labor.logDayDialog");
@@ -173,8 +176,8 @@ export function LogDayDialog({
     };
   }, [open, date, projectId]);
 
-  // When the dialog closes, reset transient state. Date sticks to the
-  // initialDate prop for the next open.
+  // When the dialog closes, reset transient state. Each open starts on the
+  // initialDate prop, or today.
   useEffect(() => {
     if (open) return;
     setSearch("");
@@ -182,7 +185,7 @@ export function LogDayDialog({
   }, [open]);
 
   useEffect(() => {
-    if (open && initialDate) setDate(initialDate);
+    if (open) setDate(initialDate || todayKey());
   }, [open, initialDate]);
 
   const recent = useMemo(
@@ -313,12 +316,14 @@ export function LogDayDialog({
         skipped > 0
           ? t("toastLoggedWithSkip", { n: created, skipped })
           : t("toastLogged", { n: created });
-      toast.success(msg, {
-        action: {
-          label: t("toastLogNextDay"),
-          onClick: () => setDate((d) => shiftDate(d, 1)),
-        },
-      });
+      // The dialog closes below; the action reopens it on the next day.
+      const nextDate = shiftDate(date, 1);
+      toast.success(
+        msg,
+        onLogNextDay
+          ? { action: { label: t("toastLogNextDay"), onClick: () => onLogNextDay(nextDate) } }
+          : undefined
+      );
       setShowConflictModal(false);
       onOpenChange(false);
     } catch (err) {

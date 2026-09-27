@@ -1251,7 +1251,8 @@
           "save": "Save",
           "saving": "Saving…",
           "cancel": "Cancel",
-          "delete": "Delete template"
+          "delete": "Delete template",
+          "create": "Create"
         },
         "errors": {
           "nameRequired": "Template name is required.",

@@ -1251,7 +1251,8 @@
           "save": "Lưu",
           "saving": "Đang lưu…",
           "cancel": "Hủy",
-          "delete": "Xóa mẫu"
+          "delete": "Xóa mẫu",
+          "create": "Tạo"
         },
         "errors": {
           "nameRequired": "Tên mẫu là bắt buộc.",

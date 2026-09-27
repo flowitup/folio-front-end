@@ -15,6 +15,7 @@ vi.mock("@/lib/api/bibliotheque", () => ({
   updateProduct: vi.fn(),
   deleteProduct: vi.fn(),
   uploadProductImage: vi.fn(),
+  setProductImageFromUrl: vi.fn(),
 }));
 
 // ---- Imports after mocks ----
@@ -24,6 +25,7 @@ import {
   updateProductAction,
   deleteProductAction,
   uploadProductImageAction,
+  setProductImageFromUrlAction,
 } from "../bibliotheque-actions";
 
 import {
@@ -31,12 +33,14 @@ import {
   updateProduct,
   deleteProduct,
   uploadProductImage,
+  setProductImageFromUrl,
 } from "@/lib/api/bibliotheque";
 
 const mockCreateProduct = vi.mocked(createProduct);
 const mockUpdateProduct = vi.mocked(updateProduct);
 const mockDeleteProduct = vi.mocked(deleteProduct);
 const mockUploadProductImage = vi.mocked(uploadProductImage);
+const mockSetProductImageFromUrl = vi.mocked(setProductImageFromUrl);
 
 // ---- Fixtures ----
 
@@ -282,5 +286,51 @@ describe("uploadProductImageAction", () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toBe("Image already set.");
+  });
+});
+
+describe("setProductImageFromUrlAction", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const LINK = "https://media.adeo.com/marketplace/photo.jpg";
+
+  it("returns ok:true and passes the link and force flag through", async () => {
+    mockSetProductImageFromUrl.mockResolvedValueOnce({ image_storage_key: "key-1" });
+
+    const result = await setProductImageFromUrlAction("prod-1", LINK, { force: true });
+
+    expect(result).toEqual({ ok: true, data: { image_storage_key: "key-1" } });
+    expect(mockSetProductImageFromUrl).toHaveBeenCalledWith("prod-1", LINK, { force: true });
+  });
+
+  it.each([
+    [422, "SsrfBlocked"],
+    [422, "ValidationError"],
+    [415, "UnsupportedMediaType"],
+    [413, "FileTooLarge"],
+    [403, "Forbidden"],
+    [500, "InternalError"],
+  ])("returns ok:false with the BE code on %i %s", async (status, code) => {
+    mockSetProductImageFromUrl.mockRejectedValueOnce(makeHttpError(status, code));
+
+    const result = await setProductImageFromUrlAction("prod-1", LINK);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe(code);
+      expect(result.error).toBeTruthy();
+    }
+  });
+
+  it("returns ok:false without a code on a network error", async () => {
+    mockSetProductImageFromUrl.mockRejectedValueOnce(new Error("Network error fetching product image from URL"));
+
+    const result = await setProductImageFromUrlAction("prod-1", LINK);
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Network error fetching product image from URL",
+      code: undefined,
+    });
   });
 });

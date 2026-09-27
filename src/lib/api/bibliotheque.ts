@@ -343,6 +343,42 @@ export async function uploadProductImage(
   return response.json() as Promise<{ image_storage_key: string }>;
 }
 
+/**
+ * Have the server fetch a product image from a supplier link and store it.
+ * POST /bibliotheque/products/<id>/image-from-url → { image_storage_key }.
+ *
+ * Supplier CDNs are hotlink-protected, so the browser cannot download these
+ * images itself. The BE only fetches HTTPS links on its supplier allowlist.
+ * Errors: 422 SsrfBlocked (host not accepted / not HTTPS), 422 ValidationError
+ * (malformed URL), 415 not a JPG/PNG/WebP, 413 over 10 MB, 500 when the
+ * supplier's server fails. Without opts.force the BE keeps an existing image
+ * and returns its key unchanged — pass force:true to replace it.
+ */
+export async function setProductImageFromUrl(
+  productId: string,
+  url: string,
+  opts?: { force?: boolean }
+): Promise<{ image_storage_key: string }> {
+  const authHeaders = await sessionAuthHeader();
+  const qs = opts?.force ? "?force=true" : "";
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}/image-from-url${qs}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ url }),
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error fetching product image from URL: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to fetch product image from URL");
+  return response.json() as Promise<{ image_storage_key: string }>;
+}
+
 // Product image bytes are streamed from GET /bibliotheque/products/<id>/image
 // and fetched client-side as a Blob by the ProductImage component (cookie auth),
 // mirroring invoice attachment previews. No server-side wrapper needed here.

@@ -8,6 +8,8 @@
  *   - When fetch returns !ok → renders Package placeholder
  *   - On unmount or productId change → revokes object URL
  *   - URL.createObjectURL and revokeObjectURL are called correctly
+ *   - version goes into the query string and a new version re-fetches
+ *     (the API lets the browser cache the bytes for 5 minutes per URL)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -296,6 +298,46 @@ describe("ProductImage", () => {
         RequestInit,
       ];
       expect(init.credentials).toBe("include");
+    });
+  });
+
+  it("adds the version to the query string", async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce(makeSuccessResponse(makeImageBlob()));
+
+    render(
+      <ProductImage
+        productId="prod-1"
+        hasImage={true}
+        version="2026-09-27T08:00:00+00:00"
+        alt="Test"
+      />
+    );
+
+    await waitFor(() => {
+      const [url] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string];
+      expect(url).toBe(
+        "http://localhost:3001/api/bibliotheque/products/prod-1/image?v=2026-09-27T08%3A00%3A00%2B00%3A00"
+      );
+    });
+  });
+
+  it("re-fetches the image when the version changes", async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce(makeSuccessResponse(makeImageBlob()))
+      .mockResolvedValueOnce(makeSuccessResponse(makeImageBlob()));
+
+    const { rerender } = render(
+      <ProductImage productId="prod-1" hasImage={true} version="v1" alt="Test" />
+    );
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+
+    rerender(<ProductImage productId="prod-1" hasImage={true} version="v2" alt="Test" />);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      const [url] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[1] as [string];
+      expect(url).toContain("/image?v=v2");
     });
   });
 

@@ -1944,6 +1944,23 @@
       "imageHint": "PNG / JPG / WebP, tối đa 10 MB",
       "replaceImage": "Thay hình ảnh"
     },
+    "imageUrl": {
+      "label": "Hoặc từ link nhà cung cấp",
+      "placeholder": "https://media.adeo.com/…",
+      "note": "Chỉ chấp nhận trang của các nhà cung cấp được hỗ trợ, ví dụ Leroy Merlin.",
+      "noteOnCreate": "Ảnh sẽ được tải về khi thêm sản phẩm. Chỉ chấp nhận trang của các nhà cung cấp được hỗ trợ, ví dụ Leroy Merlin.",
+      "fetch": "Tải ảnh",
+      "fetched": "Đã cập nhật hình ảnh.",
+      "saveWarning": "Sản phẩm đã được lưu, nhưng không thể tải hình ảnh từ link.",
+      "errors": {
+        "invalid": "Nhập link ảnh đầy đủ, bắt đầu bằng https://.",
+        "blocked": "Trang này không được chấp nhận. Hãy dùng link ảnh từ trang nhà cung cấp được hỗ trợ.",
+        "notImage": "Link này không trỏ đến ảnh JPG, PNG hoặc WebP.",
+        "tooLarge": "Ảnh này lớn hơn 10 MB.",
+        "forbidden": "Bạn không có quyền quản lý thư viện.",
+        "failed": "Không thể tải ảnh từ link này. Hãy kiểm tra lại và thử lần nữa."
+      }
+    },
     "uncategorizedOption": "Chưa phân loại",
     "validation": {
       "nameRequired": "Tên sản phẩm là bắt buộc.",

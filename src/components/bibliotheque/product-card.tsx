@@ -70,6 +70,7 @@ export function ProductCard({
       <ProductImage
         productId={product.id}
         hasImage={product.has_image}
+        version={product.updated_at}
         alt={product.name}
         className="w-full"
       />

@@ -1944,6 +1944,23 @@
       "imageHint": "PNG / JPG / WebP, max 10 MB",
       "replaceImage": "Replace image"
     },
+    "imageUrl": {
+      "label": "Or from a supplier link",
+      "placeholder": "https://media.adeo.com/…",
+      "note": "Only supported supplier sites are accepted, such as Leroy Merlin.",
+      "noteOnCreate": "The image is fetched when the product is added. Only supported supplier sites are accepted, such as Leroy Merlin.",
+      "fetch": "Fetch",
+      "fetched": "Image updated.",
+      "saveWarning": "Product saved, but the image could not be fetched from the link.",
+      "errors": {
+        "invalid": "Enter a full image link starting with https://.",
+        "blocked": "This site is not accepted. Use an image link from a supported supplier site.",
+        "notImage": "This link does not point to a JPG, PNG or WebP image.",
+        "tooLarge": "This image is larger than 10 MB.",
+        "forbidden": "You don't have permission to manage the library.",
+        "failed": "The image could not be downloaded from this link. Check it and try again."
+      }
+    },
     "uncategorizedOption": "Uncategorized",
     "validation": {
       "nameRequired": "Product name is required.",

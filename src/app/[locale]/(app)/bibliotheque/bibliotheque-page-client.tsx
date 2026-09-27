@@ -353,6 +353,7 @@ export function BibliothequePageClient({ companyId }: Props) {
           setEditProduct(null);
           reload();
         }}
+        onImageChanged={reload}
       />
 
       {/* Delete product dialog */}

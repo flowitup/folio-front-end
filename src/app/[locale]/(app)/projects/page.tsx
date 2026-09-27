@@ -102,13 +102,16 @@ export default function ProjectsPage() {
   const canDeleteProject = (project: Project) =>
     can("project:delete", user?.permissions, project.my_permissions);
 
-  // Open dialog when external triggers (Topbar/Sidebar) navigate with ?new=1.
+  const canCreate = canCreateProject(user?.permissions, user?.companies);
+
+  // Open dialog when external triggers (Topbar/Sidebar) navigate with ?new=1 —
+  // only for someone who may create a project (the API refuses anyone else).
+  // Waits for the user to load so an admin's rights are known first.
   useEffect(() => {
-    if (searchParams.get("new") === "1") {
-      setShowCreateDialog(true);
-      router.replace(pathname);
-    }
-  }, [searchParams, router, pathname]);
+    if (!user || searchParams.get("new") !== "1") return;
+    if (canCreate) setShowCreateDialog(true);
+    router.replace(pathname);
+  }, [user, canCreate, searchParams, router, pathname]);
 
   const handleProjectCreated = async (project: Project) => {
     await refetch();
@@ -124,7 +127,6 @@ export default function ProjectsPage() {
     can("project:invite", user?.permissions, project.my_permissions) ||
     can("project:update", user?.permissions, project.my_permissions);
 
-  const canCreate = canCreateProject(user?.permissions, user?.companies);
   const adminCompanies = (user?.companies ?? []).filter((c) => c.role === "admin");
 
   const filteredProjects = projects.filter((p) => {
@@ -680,7 +682,7 @@ export default function ProjectsPage() {
       )}
 
       <CreateProjectDialog
-        open={showCreateDialog}
+        open={showCreateDialog && canCreate}
         onOpenChange={setShowCreateDialog}
         onCreated={handleProjectCreated}
         adminCompanies={adminCompanies}

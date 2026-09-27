@@ -9,7 +9,8 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
@@ -77,7 +78,11 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const sensors = useSensors(
     // Slight activation distance prevents click-without-drag from being treated
     // as a drag — this lets `onClick` on the card still fire to open the drawer.
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    // Touch: a short press picks the card up, so a plain swipe still scrolls
+    // the board. (PointerSensor alone never activated on touch: the browser
+    // claimed the gesture for scrolling and cancelled the pointer.)
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor),
   );
 

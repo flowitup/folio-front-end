@@ -640,7 +640,8 @@
       "create": "Impossible de créer la tâche. Veuillez réessayer.",
       "save": "Impossible d’enregistrer la tâche. Veuillez réessayer.",
       "delete": "Impossible de supprimer la tâche. Veuillez réessayer."
-    }
+    },
+    "statusLabel": "Statut"
   },
   "labor": {
     "title": "Main-d'œuvre",

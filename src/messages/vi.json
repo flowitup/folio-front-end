@@ -640,7 +640,8 @@
       "create": "Không thể tạo công việc. Vui lòng thử lại.",
       "save": "Không thể lưu công việc. Vui lòng thử lại.",
       "delete": "Không thể xóa công việc. Vui lòng thử lại."
-    }
+    },
+    "statusLabel": "Trạng thái"
   },
   "labor": {
     "title": "Nhân công",

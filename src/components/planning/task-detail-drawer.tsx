@@ -7,9 +7,20 @@ import { X, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskForm } from "@/components/planning/task-form";
 import { toast } from "sonner";
-import { fetchTask, updateTask, deleteTask } from "@/lib/api/task-api";
+import { fetchTask, updateTask, deleteTask, moveTask } from "@/lib/api/task-api";
 import { taskErrorKey } from "@/lib/planning/task-error";
-import type { Task, UpdateTaskPayload } from "@/types/task";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { BOARD_COLUMNS } from "@/types/task";
+import type { Task, TaskStatus, UpdateTaskPayload } from "@/types/task";
+
+const STATUSES: TaskStatus[] = ["backlog", ...BOARD_COLUMNS];
 
 interface TaskDetailDrawerProps {
   /** Currently selected task id from `?task=<id>`; null when closed. */
@@ -96,6 +107,23 @@ export function TaskDetailDrawer({
     }
   };
 
+  // Moving a card between lanes is otherwise drag-only, which touch screens
+  // and keyboard-less users cannot always do. No neighbour ids: the backend
+  // appends the task to the end of the new lane.
+  const handleStatusChange = async (status: TaskStatus) => {
+    if (!task || status === task.status) return;
+    setSaving(true);
+    try {
+      const moved = await moveTask(task.id, { status });
+      setTask(moved);
+      onMutated?.();
+    } catch (err) {
+      toast.error(t(`errors.${taskErrorKey(err, "save")}`));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!task) return;
     if (!confirm(t("deleteConfirm"))) return;
@@ -153,6 +181,27 @@ export function TaskDetailDrawer({
           {loading && (
             <div className="flex justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          {!loading && task && (
+            <div className="mb-4 space-y-1.5">
+              <Label htmlFor="task-status">{t("statusLabel")}</Label>
+              <Select
+                value={task.status}
+                onValueChange={(v) => void handleStatusChange(v as TaskStatus)}
+                disabled={saving}
+              >
+                <SelectTrigger id="task-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status === "backlog" ? t("backlog") : t(`column.${status}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
           {!loading && task && (

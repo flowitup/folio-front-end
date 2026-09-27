@@ -54,3 +54,10 @@ describe("KanbanBoard — drag overlay placement", () => {
     expect(KANBAN_SRC).toContain("collisionDetection={pointerFirstCollision}");
   });
 });
+
+describe("KanbanBoard — touch drag", () => {
+  it("registers a touch sensor so cards can be dragged on touch screens", () => {
+    expect(KANBAN_SRC).toContain("useSensor(TouchSensor");
+    expect(KANBAN_SRC).not.toContain("useSensor(PointerSensor");
+  });
+});

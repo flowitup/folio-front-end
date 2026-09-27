@@ -640,7 +640,8 @@
       "create": "Could not create the task. Please try again.",
       "save": "Could not save the task. Please try again.",
       "delete": "Could not delete the task. Please try again."
-    }
+    },
+    "statusLabel": "Status"
   },
   "labor": {
     "title": "Labor",

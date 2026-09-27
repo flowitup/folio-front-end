@@ -64,6 +64,7 @@ vi.mock("next-intl", () => {
   };
 
   return {
+    useLocale: () => "en",
     useTranslations: (ns: string) => (key: string) => {
       return translations[ns]?.[key] ?? key;
     },

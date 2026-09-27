@@ -1635,15 +1635,15 @@
     "title": "Tài liệu",
     "subtitle": "Bản vẽ, hợp đồng, ảnh, hoá đơn — mọi thứ liên quan đến dự án.",
     "upload": {
-      "ctaPick": "Chọn file",
-      "dragHere": "Kéo file vào đây hoặc nhấn để chọn",
-      "supportedTypes": "PDF, PNG, JPG, WebP, DOCX, XLSX, DWG, TXT — tối đa 150 MB mỗi file",
+      "ctaPick": "Chọn tệp",
+      "dragHere": "Kéo tệp vào đây hoặc nhấn để chọn",
+      "supportedTypes": "PDF, PNG, JPG, WebP, DOCX, XLSX, DWG, TXT — tối đa 150 MB mỗi tệp",
       "queued": "Đang chờ",
       "uploading": "Đang tải lên",
       "done": "Đã tải lên",
       "failed": "Bỏ qua",
-      "errorOversize": "File quá lớn (tối đa 150 MB)",
-      "errorUnsupported": "Loại file không được hỗ trợ",
+      "errorOversize": "Tệp quá lớn (tối đa 150 MB)",
+      "errorUnsupported": "Loại tệp không được hỗ trợ",
       "errorNetwork": "Lỗi mạng — vui lòng thử lại",
       "errorRateLimited": "Tải lên quá nhiều — vui lòng chậm lại",
       "errorForbidden": "Không được phép",
@@ -1651,11 +1651,11 @@
       "errorEmpty": "Tệp này trống"
     },
     "list": {
-      "empty": "Chưa có tài liệu. Kéo file vào khu vực tải lên để bắt đầu.",
+      "empty": "Chưa có tài liệu. Kéo tệp vào khu vực tải lên để bắt đầu.",
       "emptyFiltered": "Không có tài liệu nào khớp với bộ lọc.",
       "formerMember": "(thành viên cũ)",
       "columns": {
-        "file": "File",
+        "file": "Tệp",
         "type": "Loại",
         "size": "Kích thước",
         "uploadedBy": "Người tải lên",
@@ -1698,10 +1698,10 @@
       "reset": "Đặt lại"
     },
     "preview": {
-      "fallback": "Không thể xem trước loại file này. Hãy tải xuống để xem.",
+      "fallback": "Không thể xem trước loại tệp này. Hãy tải xuống để xem.",
       "close": "Đóng",
       "download": "Tải xuống",
-      "error": "Xem trước thất bại — hãy tải xuống để xem file",
+      "error": "Xem trước thất bại — hãy tải xuống để xem tệp",
       "loading": "Đang tải xem trước…",
       "downloadError": "Tải xuống thất bại — tệp có thể đã bị xoá"
     },
@@ -1712,7 +1712,7 @@
       "confirm": "Xoá",
       "confirming": "Đang xoá…",
       "success": "Đã xoá tài liệu",
-      "errorForbidden": "Chỉ người tải lên hoặc quản trị viên dự án mới có thể xoá tài liệu này",
+      "errorForbidden": "Bạn không có quyền xoá tài liệu trong dự án này",
       "errorServer": "Xoá thất bại",
       "errorNotFound": "Tài liệu này không còn tồn tại"
     },
@@ -1733,7 +1733,7 @@
       "save": "Lưu",
       "saving": "Đang lưu…",
       "success": "Đã đổi tên tài liệu",
-      "errorForbidden": "Chỉ người tải lên hoặc quản trị viên dự án mới có thể đổi tên tài liệu này",
+      "errorForbidden": "Bạn không có quyền đổi tên tài liệu trong dự án này",
       "errorServer": "Đổi tên thất bại",
       "errorExtension": "Phần mở rộng phải giữ nguyên là {extension}",
       "errorInvalid": "Không thể dùng tên này. Hãy kiểm tra và thử lại."

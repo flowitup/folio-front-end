@@ -26,7 +26,10 @@ vi.mock("next-intl", () => {
       errorServer: "Server error",
     },
   };
-  return { useTranslations: (ns: string) => (key: string) => T[ns]?.[key] ?? key };
+  return {
+    useLocale: () => "en",
+    useTranslations: (ns: string) => (key: string) => T[ns]?.[key] ?? key,
+  };
 });
 
 vi.mock("@/lib/api/http", () => ({

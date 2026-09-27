@@ -1712,7 +1712,7 @@
       "confirm": "Delete",
       "confirming": "Deleting…",
       "success": "Document deleted",
-      "errorForbidden": "Only the uploader or a project admin can delete this document",
+      "errorForbidden": "You don't have permission to delete documents in this project",
       "errorServer": "Failed to delete",
       "errorNotFound": "This document no longer exists"
     },
@@ -1733,7 +1733,7 @@
       "save": "Save",
       "saving": "Saving…",
       "success": "Document renamed",
-      "errorForbidden": "Only the uploader or a project admin can rename this document",
+      "errorForbidden": "You don't have permission to rename documents in this project",
       "errorServer": "Failed to rename",
       "errorExtension": "The extension must remain {extension}",
       "errorInvalid": "This name can't be used. Check it and try again."

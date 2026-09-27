@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useState, useRef } from "react";
 import {
@@ -31,15 +31,10 @@ import type { ProjectDocument, ProjectDocumentKind } from "@/lib/api/project-doc
 import { downloadProjectDocument } from "@/lib/api/project-document-blob";
 import { formatDate } from "@/lib/utils/formatters";
 import { DocumentMobileCard } from "./document-mobile-card";
+import { formatBytes } from "./format-bytes";
 
 // ---- Helpers ----
 
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-}
 
 type Member = {
   id: string;
@@ -149,6 +144,7 @@ export function DocumentsList({
   onTagsUpdate,
 }: Props) {
   const t = useTranslations("documents.list");
+  const locale = useLocale();
   const tKinds = useTranslations("documents.kinds");
   const tTags = useTranslations("documents.tags");
   const [editingTagsDocId, setEditingTagsDocId] = useState<string | null>(null);
@@ -190,7 +186,7 @@ export function DocumentsList({
             doc={doc}
             uploaderName={resolveUploaderName(doc.uploader_id)}
             formattedDate={formatDate(doc.uploaded_at)}
-            formattedSize={formatBytes(doc.size_bytes)}
+            formattedSize={formatBytes(doc.size_bytes, locale)}
             kindLabel={tKinds(doc.kind)}
             editingTagsDocId={editingTagsDocId}
             tagInput={tagInput}
@@ -388,7 +384,7 @@ export function DocumentsList({
 
                 {/* Size */}
                 <TableCell className="text-sm text-muted-foreground">
-                  {formatBytes(doc.size_bytes)}
+                  {formatBytes(doc.size_bytes, locale)}
                 </TableCell>
 
                 {/* Uploaded by */}

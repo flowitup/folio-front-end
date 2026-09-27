@@ -1712,7 +1712,7 @@
       "confirm": "Supprimer",
       "confirming": "Suppression…",
       "success": "Document supprimé",
-      "errorForbidden": "Seul l'auteur du dépôt ou un administrateur du projet peut supprimer ce document",
+      "errorForbidden": "Vous n'avez pas la permission de supprimer des documents dans ce projet",
       "errorServer": "Échec de la suppression",
       "errorNotFound": "Ce document n'existe plus"
     },
@@ -1733,7 +1733,7 @@
       "save": "Enregistrer",
       "saving": "Enregistrement…",
       "success": "Document renommé",
-      "errorForbidden": "Seul l'importateur ou un administrateur du projet peut renommer ce document",
+      "errorForbidden": "Vous n'avez pas la permission de renommer des documents dans ce projet",
       "errorServer": "Échec du renommage",
       "errorExtension": "L'extension doit rester {extension}",
       "errorInvalid": "Ce nom ne peut pas être utilisé. Vérifiez-le et réessayez."

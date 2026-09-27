@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Upload, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { env } from "@/lib/config/env";
 import { getCsrfToken } from "@/lib/api/http";
 import { refreshAccessTokenViaCookie } from "@/lib/api/refresh";
 import type { ProjectDocument } from "@/lib/api/project-documents";
+import { formatBytes } from "./format-bytes";
 import {
   requestPresignedUrl,
   putToPresignedUrl,
@@ -62,11 +63,6 @@ type Props = {
 
 // ---- Helpers ----
 
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 /** The `error` code of a JSON error body, e.g. "EMPTY_FILE". */
 function responseErrorCode(text: string): string | undefined {
@@ -88,6 +84,7 @@ function getExtension(filename: string): string {
 
 export function DocumentsUpload({ projectId, onUploaded }: Props) {
   const t = useTranslations("documents.upload");
+  const locale = useLocale();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [jobs, setJobs] = useState<Record<string, UploadJob>>({});
@@ -435,7 +432,7 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-sm font-medium">{job.file.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">
-                    {formatBytes(job.file.size)}
+                    {formatBytes(job.file.size, locale)}
                   </span>
                 </div>
 

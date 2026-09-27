@@ -3,6 +3,7 @@
 import { useMemo, useState, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { formatBonusDays, formatDays } from "@/components/labor/format-days";
+import { personInitials } from "@/lib/utils/person-color";
 import { Calendar, ChevronRight, ChevronDown, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
@@ -73,15 +74,6 @@ function workerColor(workerId: string): string {
     hash = (hash * 31 + workerId.charCodeAt(i)) >>> 0;
   }
   return WORKER_PALETTE[hash % WORKER_PALETTE.length];
-}
-
-function workerInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((p) => p.charAt(0).toUpperCase())
-    .slice(0, 2)
-    .join("");
 }
 
 /** Inline horizontal bar — used for "scan the rhythm" per-row cost bar. */
@@ -590,7 +582,7 @@ export function LaborSummary({
                                   border: "2px solid var(--card-paper)",
                                 }}
                               >
-                                {workerInitials(w.worker_name)}
+                                {personInitials(w.worker_name)}
                               </span>
                             ))}
                             <span
@@ -690,7 +682,7 @@ export function LaborSummary({
                                   className="avatar"
                                   style={{ background: color, width: 20, height: 20, fontSize: 9.5 }}
                                 >
-                                  {workerInitials(w.worker_name)}
+                                  {personInitials(w.worker_name)}
                                 </span>
                                 <div
                                   className="text-[12.5px]"

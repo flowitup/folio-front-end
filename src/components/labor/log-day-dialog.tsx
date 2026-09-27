@@ -457,6 +457,7 @@ export function LogDayDialog({
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto pr-1">
+          {recentList.length > 0 && (
           <LogDayTileGrid
             heading={t("sectionRecent")}
             workers={recentList}
@@ -470,11 +471,15 @@ export function LogDayDialog({
             onSupplementHoursChange={setSupplementHours}
             onNoteChange={setNote}
           />
+          )}
           <LogDayTileGrid
             heading={t("sectionAll")}
             workers={rest}
             tileStates={tileStates}
             conflictsByPersonId={conflicts.byPersonId}
+            // "No workers." only when nothing is listed at all (e.g. the
+            // search matches nobody), not under a full Recent section.
+            showEmpty={recentList.length === 0}
             onToggle={toggleTile}
             onShiftChange={setShift}
             onToggleExpanded={toggleExpanded}
@@ -533,6 +538,7 @@ export function LogDayDialog({
           if (!o) setShowConflictModal(false);
         }}
         groups={pendingConflicts}
+        date={date}
         isSaving={isSaving}
         onCancel={() => setShowConflictModal(false)}
         onConfirm={() => doSave(true)}

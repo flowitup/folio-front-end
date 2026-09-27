@@ -832,14 +832,15 @@
         "supplementLabel": "Supplement (h)",
         "noteLabel": "Note",
         "notePlaceholder": "Optional"
-      }
+      },
+      "noWorkers": "No workers."
     },
     "editEntry": {
       "title": "Edit attendance"
     },
     "conflict": {
       "modalTitle": "Cross-project conflict",
-      "modalBody": "The following workers are already logged in another project today. Continue anyway?",
+      "modalBody": "The following workers are already logged on another project on {date}. Continue anyway?",
       "continueAnyway": "Continue anyway",
       "cancel": "Cancel",
       "sameAsLastDaySkipped": "{n} worker(s) skipped — already logged elsewhere"

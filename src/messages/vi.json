@@ -832,14 +832,15 @@
         "supplementLabel": "Giờ phụ (h)",
         "noteLabel": "Ghi chú",
         "notePlaceholder": "Tùy chọn"
-      }
+      },
+      "noWorkers": "Không có công nhân nào."
     },
     "editEntry": {
       "title": "Sửa chấm công"
     },
     "conflict": {
       "modalTitle": "Xung đột giữa các dự án",
-      "modalBody": "Các công nhân sau đã được chấm công ở dự án khác hôm nay. Vẫn tiếp tục?",
+      "modalBody": "Các công nhân sau đã được chấm công ở dự án khác vào ngày {date}. Vẫn tiếp tục?",
       "continueAnyway": "Vẫn tiếp tục",
       "cancel": "Hủy",
       "sameAsLastDaySkipped": "Bỏ qua {n} công nhân — đã chấm công ở nơi khác"

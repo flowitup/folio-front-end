@@ -14,6 +14,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { formatDays } from "@/components/labor/format-days";
+import { personInitials } from "@/lib/utils/person-color";
 import Link from "next/link";
 import { ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,15 +31,6 @@ const STATUS_STAMP_CLASS: Record<WorkerPaymentRow["status"], string> = {
   settled: "stamp positive",
   overpaid: "stamp accent",
 };
-
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((p) => p.charAt(0).toUpperCase())
-    .slice(0, 2)
-    .join("");
-}
 
 export interface LaborPaymentRowProps {
   row: WorkerPaymentRow;
@@ -145,7 +137,7 @@ export function LaborPaymentRow({
         }}
       />
       <span className="avatar" style={{ width: 26, height: 26, fontSize: 11 }}>
-        {initials(row.worker_name)}
+        {personInitials(row.worker_name)}
       </span>
       <span className="truncate">{row.worker_name}</span>
     </button>

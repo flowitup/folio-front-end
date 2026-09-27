@@ -26,3 +26,15 @@ describe("labor i18n", () => {
     expect(screen.getByRole("tab", { name: /Liste/ })).toBeInTheDocument();
   });
 });
+
+describe("worker tile section", () => {
+  it("says there are no workers in the app language", async () => {
+    const { WorkerTileSection } = await import("../worker-tile-section");
+    render(
+      <NextIntlClientProvider locale="fr" messages={fr}>
+        <WorkerTileSection heading="Tous">{[]}</WorkerTileSection>
+      </NextIntlClientProvider>
+    );
+    expect(screen.getByText("Aucun ouvrier.")).toBeInTheDocument();
+  });
+});

@@ -8,7 +8,9 @@ import { CrossProjectConflictModal } from "../cross-project-conflict-modal";
 import type { ConflictGroup } from "@/types/labor";
 
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
+  useLocale: () => "fr",
+  useTranslations: () => (key: string, params?: Record<string, unknown>) =>
+    params?.date ? `${key}(${String(params.date)})` : key,
 }));
 
 const groups: ConflictGroup[] = [
@@ -47,6 +49,7 @@ function renderModal(overrides = {}) {
       open
       onOpenChange={onOpenChange}
       groups={groups}
+      date="2026-09-20"
       onCancel={onCancel}
       onConfirm={onConfirm}
       {...overrides}
@@ -56,6 +59,12 @@ function renderModal(overrides = {}) {
 }
 
 describe("CrossProjectConflictModal", () => {
+  it("names the day being logged instead of saying 'today'", () => {
+    renderModal();
+    expect(screen.getByText("modalBody(20 septembre)")).toBeInTheDocument();
+  });
+
+
   it("lists every conflicting person", () => {
     renderModal();
     expect(screen.getByText("Hugo Martin")).toBeInTheDocument();

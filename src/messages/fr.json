@@ -832,14 +832,15 @@
         "supplementLabel": "Supplément (h)",
         "noteLabel": "Note",
         "notePlaceholder": "Facultatif"
-      }
+      },
+      "noWorkers": "Aucun ouvrier."
     },
     "editEntry": {
       "title": "Modifier le pointage"
     },
     "conflict": {
       "modalTitle": "Conflit inter-chantiers",
-      "modalBody": "Les ouvriers suivants sont déjà pointés sur un autre chantier aujourd'hui. Continuer quand même ?",
+      "modalBody": "Les ouvriers suivants sont déjà pointés sur un autre chantier le {date}. Continuer quand même ?",
       "continueAnyway": "Continuer quand même",
       "cancel": "Annuler",
       "sameAsLastDaySkipped": "{n} ouvrier(s) ignoré(s) — déjà pointé(s) ailleurs"

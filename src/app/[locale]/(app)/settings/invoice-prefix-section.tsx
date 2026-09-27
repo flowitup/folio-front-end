@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,19 +9,57 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useProject } from "@/context/ProjectContext";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
+import { fetchProjectById } from "@/lib/api/projects";
+import type { Project } from "@/types/project";
 import { updateInvoicePrefix } from "./_actions/invoice-prefix-actions";
 
 const PREFIX_RE = /^[A-Z0-9]{0,8}$/;
 
 export function InvoicePrefixSection() {
-  const t = useTranslations("projects");
   const { selectedProject, refetch } = useProject();
-  const [prefix, setPrefix] = useState(selectedProject?.invoice_prefix ?? "");
+  if (!selectedProject) return null;
+  // Keyed on the project so switching projects starts from that project's
+  // prefix instead of keeping the previous one's.
+  return (
+    <InvoicePrefixForm key={selectedProject.id} project={selectedProject} refetch={refetch} />
+  );
+}
+
+function InvoicePrefixForm({
+  project: selectedProject,
+  refetch,
+}: {
+  project: Project;
+  refetch: () => Promise<void> | void;
+}) {
+  const t = useTranslations("projects");
+  // The saved prefix. The project list the context holds does not carry
+  // invoice_prefix, so read it from the project itself.
+  const [savedPrefix, setSavedPrefix] = useState(selectedProject.invoice_prefix ?? "");
+  const [prefix, setPrefix] = useState(savedPrefix);
   const [saving, setSaving] = useState(false);
   const currentYear = new Date().getFullYear();
   const preview = prefix || "INV";
 
-  if (!selectedProject) return null;
+  useEffect(() => {
+    let cancelled = false;
+    fetchProjectById(selectedProject.id)
+      .then((project) => {
+        if (cancelled) return;
+        const saved = project.invoice_prefix ?? "";
+        setSavedPrefix(saved);
+        // Only replace what the field shows if the user has not typed yet.
+        setPrefix((current) =>
+          current === (selectedProject.invoice_prefix ?? "") ? saved : current
+        );
+      })
+      .catch(() => {
+        // Keep the list value; saving still works.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProject.id, selectedProject.invoice_prefix]);
 
   const handlePrefixChange = (value: string) => {
     const upper = value.toUpperCase();
@@ -35,6 +73,7 @@ export function InvoicePrefixSection() {
     const result = await updateInvoicePrefix(selectedProject.id, prefix);
     setSaving(false);
     if (result.ok) {
+      setSavedPrefix(prefix);
       toast.success(t("settingsSaved"));
       await refetch();
     } else if (result.error === "validation") {
@@ -44,7 +83,7 @@ export function InvoicePrefixSection() {
     }
   };
 
-  const isDirty = prefix !== (selectedProject.invoice_prefix ?? "");
+  const isDirty = prefix !== savedPrefix;
 
   return (
     <section className="folio-card p-7">

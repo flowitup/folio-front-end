@@ -29,7 +29,9 @@ export async function updateInvoicePrefix(
   const response = await fetch(`${env.apiBaseUrl}/projects/${projectId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", ...authHeaders },
-    body: JSON.stringify({ invoice_prefix: cleaned === "" ? null : cleaned }),
+    // "" clears the prefix (back to INV): the backend reads null as "leave
+    // unchanged", so sending null could never remove a saved prefix.
+    body: JSON.stringify({ invoice_prefix: cleaned }),
   });
 
   if (response.ok) return { ok: true };

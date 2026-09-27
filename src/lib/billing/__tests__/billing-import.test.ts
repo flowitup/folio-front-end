@@ -98,6 +98,48 @@ describe("parseBillingImportFile — CSV", () => {
     ]);
   });
 
+  it("accepts the status labels Folio shows in French and Vietnamese", () => {
+    const result = parseBillingImportFile(
+      csv(
+        "FAC-1;Payée;;Client;;Item;1;1;20;",
+        "FAC-2;ENVOYEE;;Client;;Item;1;1;20;",
+        "FAC-3;Đã hủy;;Client;;Item;1;1;20;",
+        "FAC-4;brouillon;;Client;;Item;1;1;20;",
+        "FAC-5;réglée;;Client;;Item;1;1;20;"
+      ),
+      "x.csv",
+      "facture",
+      "sent"
+    );
+    expect(result.ok && result.documents.map((d) => [d.document_number, d.status])).toEqual([
+      ["FAC-1", "paid"],
+      ["FAC-2", "sent"],
+      ["FAC-3", "cancelled"],
+      ["FAC-4", "draft"],
+    ]);
+    expect(result.ok && result.issues).toEqual([
+      { ref: { type: "number", value: "FAC-5" }, code: "invalidStatus", params: { value: "réglée" } },
+    ]);
+  });
+
+  it("lists a malformed recipient e-mail instead of letting the API refuse the document", () => {
+    const header = "document_number;recipient_name;recipient_email;description;quantity;unit_price;vat_rate";
+    const result = parseBillingImportFile(
+      [header, "FAC-1;Client;compta@client.fr;Item;1;1;20", "FAC-2;Client;compta client.fr;Item;1;1;20"].join("\n"),
+      "x.csv",
+      "facture",
+      "paid"
+    );
+    expect(result.ok && result.documents.map((d) => d.recipient_email)).toEqual(["compta@client.fr"]);
+    expect(result.ok && result.issues).toEqual([
+      {
+        ref: { type: "number", value: "FAC-2" },
+        code: "invalidEmail",
+        params: { value: "compta client.fr" },
+      },
+    ]);
+  });
+
   it("only offers draft and sent for quotes", () => {
     const result = parseBillingImportFile(
       csv("DEV-1;paid;;Client;;Item;1;1;20;", "DEV-2;;;Client;;Item;1;1;20;"),
@@ -109,6 +151,62 @@ describe("parseBillingImportFile — CSV", () => {
     expect(result.ok && result.documents.map((d) => [d.document_number, d.status])).toEqual([
       ["DEV-2", "sent"],
     ]);
+  });
+});
+
+describe("parseBillingImportFile — short dates", () => {
+  const rows = (...dates: string[]) =>
+    csv(...dates.map((date, i) => `FAC-${i + 1};paid;${date};Client;;Item;1;1;20;`));
+  const issueDates = (result: ReturnType<typeof parseBillingImportFile>) =>
+    result.ok ? result.documents.map((d) => d.issue_date) : null;
+
+  it("reads them day-first by default", () => {
+    expect(issueDates(parseBillingImportFile(rows("03/04/2025"), "x.csv", "facture", "paid"))).toEqual([
+      "2025-04-03",
+    ]);
+  });
+
+  it("refuses an ambiguous date when day-first is not assumed", () => {
+    const result = parseBillingImportFile(rows("03/04/2025", "2025-05-06"), "x.csv", "facture", "paid", {
+      assumeDayFirst: false,
+    });
+    expect(result.ok && result.documents.map((d) => d.document_number)).toEqual(["FAC-2"]);
+    expect(result.ok && result.issues).toEqual([
+      {
+        ref: { type: "number", value: "FAC-1" },
+        code: "ambiguousDate",
+        params: { field: "issue_date", value: "03/04/2025" },
+      },
+    ]);
+  });
+
+  it("follows the order another date of the file proves", () => {
+    const monthFirst = rows("03/04/2025", "04/25/2025");
+    for (const assumeDayFirst of [true, false]) {
+      expect(
+        issueDates(parseBillingImportFile(monthFirst, "x.csv", "facture", "paid", { assumeDayFirst }))
+      ).toEqual(["2025-03-04", "2025-04-25"]);
+    }
+    const dayFirst = rows("03/04/2025", "25/04/2025");
+    expect(
+      issueDates(
+        parseBillingImportFile(dayFirst, "x.csv", "facture", "paid", { assumeDayFirst: false })
+      )
+    ).toEqual(["2025-04-03", "2025-04-25"]);
+  });
+
+  it("refuses ambiguous dates in a file that mixes both orders", () => {
+    const result = parseBillingImportFile(
+      rows("25/04/2025", "04/25/2025", "03/04/2025"),
+      "x.csv",
+      "facture",
+      "paid"
+    );
+    expect(result.ok && result.documents.map((d) => d.issue_date)).toEqual([
+      "2025-04-25",
+      "2025-04-25",
+    ]);
+    expect(result.ok && result.issues[0]).toMatchObject({ code: "ambiguousDate" });
   });
 });
 
@@ -135,8 +233,8 @@ describe("parseBillingImportFile — JSON", () => {
           status: "paid",
           recipient_name: "Client",
           created_at: "2023-05-01T08:00:00Z",
-          project_id: "11111111-2222-3333-4444-555555555555",
           // Export-only fields (id, totals) are dropped: the endpoint rejects unknown keys.
+          // project_id too: the endpoint does not check access to the project.
           items: [{ description: "Work", quantity: "1", unit_price: "100", vat_rate: "20" }],
         },
       ]);
@@ -165,6 +263,24 @@ describe("parseBillingImportFile — JSON", () => {
       ok: false,
       error: "empty",
     });
+  });
+
+  it("sets aside a document too large for one request", () => {
+    const items = Array.from({ length: 200 }, () => ({
+      description: "x".repeat(5000),
+      quantity: 1,
+      unit_price: 1,
+      vat_rate: 20,
+    }));
+    const result = parseBillingImportFile(
+      JSON.stringify([{ ...doc, items }]),
+      "data.json",
+      "facture",
+      "paid"
+    );
+    expect(result.ok && result.issues).toEqual([
+      { ref: { type: "number", value: "FAC-9" }, code: "documentTooLarge" },
+    ]);
   });
 
   it("detects JSON content in a file without extension", () => {

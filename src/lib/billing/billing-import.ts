@@ -14,15 +14,26 @@
  *   - CSV (`,` `;` or tab separated): one row per line item; rows sharing a
  *     document_number form one document, whose other columns are read from
  *     the first row that fills them.
+ *
+ * project_id is never sent: the import endpoint does not check the caller's
+ * access to the project (creation does), so a file exported from another
+ * company could link documents to a project the caller cannot see, and an
+ * unknown id fails with a server error. Documents are linked to a project
+ * from their own page after the import.
  */
 
 import { parseCsv, toCsvCell } from "@/lib/import/csv";
 import {
   cleanText,
+  detectDateOrder,
+  isAmbiguousDate,
   isIsoDateTime,
+  isPlausibleEmail,
   normalizeDecimal,
   normalizeIsoDate,
+  type DateOrder,
 } from "@/lib/import/normalize";
+import { MAX_ACTION_PAYLOAD_BYTES, jsonByteLength } from "@/lib/import/payload-size";
 import type {
   BillingDocumentItem,
   BillingDocumentKind,
@@ -53,7 +64,31 @@ const MAX_NUMBER_LENGTH = 32;
 const MAX_ITEMS = 200;
 const MAX_QUANTITY = 9999999;
 const MAX_UNIT_PRICE = 999999999;
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Case, accents and spacing ignored when a status cell is matched. */
+function foldLabel(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Status cells: the API values, plus the labels Folio shows for them in
+ * French and Vietnamese, since a spreadsheet is usually filled in with those.
+ */
+const STATUS_BY_LABEL: ReadonlyMap<string, ImportBillingDocumentStatus> = new Map(
+  (
+    [
+      ["draft", ["draft", "brouillon", "nháp"]],
+      ["sent", ["sent", "envoyé", "envoyée", "đã gửi"]],
+      ["paid", ["paid", "payé", "payée", "đã thanh toán"]],
+      ["cancelled", ["cancelled", "canceled", "annulé", "annulée", "đã hủy"]],
+    ] as const
+  ).flatMap(([status, labels]) => labels.map((label) => [foldLabel(label), status] as const))
+);
 
 type TextField =
   | "recipient_name"
@@ -92,7 +127,6 @@ const DOCUMENT_COLUMNS = [
   "kind",
   "document_number",
   "status",
-  "project_id",
   "recipient_name",
   ...OPTIONAL_TEXT_FIELDS,
   ...DATE_FIELDS,
@@ -134,8 +168,10 @@ export type BillingImportIssueCode =
   | "invalidItemLine"
   | "invalidStatus"
   | "invalidDate"
+  | "ambiguousDate"
+  | "invalidEmail"
   | "wrongKind"
-  | "invalidProject";
+  | "documentTooLarge";
 
 export interface BillingImportIssue {
   ref: BillingImportRef;
@@ -274,10 +310,16 @@ function toItem(fields: Record<string, unknown>): BillingDocumentItem | null {
   };
 }
 
+interface ValidateContext {
+  kind: BillingDocumentKind;
+  defaultStatus: ImportBillingDocumentStatus;
+  /** How to read short dates such as 03/04/2025; null refuses the ambiguous ones. */
+  dateOrder: DateOrder | null;
+}
+
 function validate(
   raw: RawDocument,
-  kind: BillingDocumentKind,
-  defaultStatus: ImportBillingDocumentStatus
+  { kind, defaultStatus, dateOrder }: ValidateContext
 ): BillingImportDocument | BillingImportIssue {
   const f = raw.fields;
   const issue = (code: BillingImportIssueCode, params?: BillingImportIssue["params"]) => ({
@@ -305,25 +347,30 @@ function validate(
     const max = TEXT_LIMITS[field as TextField];
     if (value.length > max) return issue("tooLong", { field, max });
   }
+  if (texts.recipient_email && !isPlausibleEmail(texts.recipient_email)) {
+    return issue("invalidEmail", { value: texts.recipient_email });
+  }
 
-  const rawStatus = cleanText(f.status)?.toLowerCase();
-  const status = (rawStatus ?? defaultStatus) as ImportBillingDocumentStatus;
-  if (!IMPORT_STATUSES_BY_KIND[kind].includes(status)) {
+  const rawStatus = cleanText(f.status);
+  const status = rawStatus ? STATUS_BY_LABEL.get(foldLabel(rawStatus)) : defaultStatus;
+  if (!status || !IMPORT_STATUSES_BY_KIND[kind].includes(status)) {
     return issue("invalidStatus", { value: rawStatus ?? "" });
   }
 
   const dates: Partial<Record<(typeof DATE_FIELDS)[number], string>> = {};
   for (const field of DATE_FIELDS) {
-    if (cleanText(f[field]) === null) continue;
-    const iso = normalizeIsoDate(cleanText(f[field]));
-    if (!iso) return issue("invalidDate", { field });
+    const value = cleanText(f[field]);
+    if (value === null) continue;
+    const iso = normalizeIsoDate(value, dateOrder);
+    if (!iso) {
+      return dateOrder === null && isAmbiguousDate(value)
+        ? issue("ambiguousDate", { field, value })
+        : issue("invalidDate", { field });
+    }
     dates[field] = iso;
   }
   const createdAt = cleanText(f.created_at);
   if (createdAt && !isIsoDateTime(createdAt)) return issue("invalidDate", { field: "created_at" });
-
-  const projectId = cleanText(f.project_id);
-  if (projectId && !UUID_RE.test(projectId)) return issue("invalidProject");
 
   if (raw.items.length === 0) return issue("noItems");
   if (raw.items.length > MAX_ITEMS) return issue("tooManyItems", { max: MAX_ITEMS });
@@ -338,7 +385,7 @@ function validate(
     items.push(item);
   }
 
-  return {
+  const document: BillingImportDocument = {
     kind,
     document_number: number,
     status,
@@ -346,9 +393,11 @@ function validate(
     recipient_name: recipient,
     ...dates,
     ...(createdAt ? { created_at: createdAt } : {}),
-    ...(projectId ? { project_id: projectId } : {}),
     items,
   };
+  // Hundreds of long line items would not fit in one request.
+  if (jsonByteLength(document) > MAX_ACTION_PAYLOAD_BYTES) return issue("documentTooLarge");
+  return document;
 }
 
 function isIssue(value: BillingImportDocument | BillingImportIssue): value is BillingImportIssue {
@@ -366,11 +415,21 @@ function looksLikeJson(fileName: string, text: string): boolean {
   return /^[\s﻿]*[[{]/.test(text);
 }
 
+export interface BillingImportParseOptions {
+  /**
+   * Read a short date such as 03/04/2025 as day-first when no other date of
+   * the file settles the order (French and Vietnamese habit). When false,
+   * such dates are refused and the user asked for YYYY-MM-DD.
+   */
+  assumeDayFirst?: boolean;
+}
+
 export function parseBillingImportFile(
   text: string,
   fileName: string,
   kind: BillingDocumentKind,
-  defaultStatus: ImportBillingDocumentStatus
+  defaultStatus: ImportBillingDocumentStatus,
+  { assumeDayFirst = true }: BillingImportParseOptions = {}
 ): BillingImportParseResult {
   let raws: RawDocument[];
   const issues: BillingImportIssue[] = [];
@@ -386,9 +445,14 @@ export function parseBillingImportFile(
   }
   if (raws.length === 0 && issues.length === 0) return { ok: false, error: "empty" };
 
+  // The order is read from the whole file: one 25/03 settles every 03/04.
+  const detected = detectDateOrder(raws.flatMap((raw) => DATE_FIELDS.map((f) => raw.fields[f])));
+  const dateOrder =
+    detected === "mixed" ? null : (detected ?? (assumeDayFirst ? "dmy" : null));
+
   const documents: BillingImportDocument[] = [];
   for (const raw of raws) {
-    const result = validate(raw, kind, defaultStatus);
+    const result = validate(raw, { kind, defaultStatus, dateOrder });
     if (isIssue(result)) issues.push(result);
     else documents.push(result);
   }

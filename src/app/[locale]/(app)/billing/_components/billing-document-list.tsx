@@ -186,7 +186,7 @@ export function BillingDocumentList({
   const canImport = issuerCompanies.length > 0;
 
   const headerActions = (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {canImport && (
         <Button variant="outline" onClick={() => setImportOpen(true)}>
           <Upload size={14} className="mr-2" />
@@ -221,8 +221,8 @@ export function BillingDocumentList({
   if (initialTotal === 0 && statusFilter === "all" && !search.trim()) {
     return (
       <>
-        <div className="fade-up space-y-6 px-8 pb-12">
-          <div className="flex items-center justify-between">
+        <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h1 className="font-display text-xl font-medium">
               {t(`${kind}.list.title`)}
             </h1>
@@ -260,9 +260,9 @@ export function BillingDocumentList({
 
   return (
     <>
-      <div className="fade-up space-y-6 px-8 pb-12">
+      <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-xl font-medium">
             {t(`${kind}.list.title`)}
           </h1>

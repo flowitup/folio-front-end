@@ -7,11 +7,15 @@ import { describe, it, expect, vi } from "vitest";
 import { detectCsvDelimiter, parseCsv, toCsvCell } from "@/lib/import/csv";
 import {
   cleanText,
+  detectDateOrder,
+  isAmbiguousDate,
   isIsoDateTime,
+  isPlausibleEmail,
   normalizeDecimal,
   normalizeIsoDate,
 } from "@/lib/import/normalize";
-import { callWithRateLimitRetry } from "@/lib/import/rate-limit-retry";
+import { MAX_ACTION_PAYLOAD_BYTES, jsonByteLength } from "@/lib/import/payload-size";
+import { abortableSleep, callWithRateLimitRetry } from "@/lib/import/rate-limit-retry";
 import { readImportFileText } from "@/lib/import/read-text-file";
 
 describe("parseCsv", () => {
@@ -82,6 +86,35 @@ describe("normalizeIsoDate", () => {
     expect(normalizeIsoDate(20250314)).toBeNull();
   });
 
+  it("reads month-first dates when asked, and only unmistakable ones without an order", () => {
+    expect(normalizeIsoDate("03/14/2025", "mdy")).toBe("2025-03-14");
+    expect(normalizeIsoDate("03/04/2025", "mdy")).toBe("2025-03-04");
+    expect(normalizeIsoDate("14/03/2025", "mdy")).toBeNull();
+    expect(normalizeIsoDate("03/04/2025", null)).toBeNull();
+    expect(normalizeIsoDate("14/03/2025", null)).toBe("2025-03-14");
+    expect(normalizeIsoDate("03/14/2025", null)).toBe("2025-03-14");
+    expect(normalizeIsoDate("05/05/2025", null)).toBe("2025-05-05");
+    expect(isAmbiguousDate("03/04/2025")).toBe(true);
+    expect(isAmbiguousDate("05/05/2025")).toBe(false);
+    expect(isAmbiguousDate("14/03/2025")).toBe(false);
+    expect(isAmbiguousDate("2025-03-04")).toBe(false);
+  });
+
+  it("detects the order a file's short dates follow", () => {
+    expect(detectDateOrder(["03/04/2025", "25/04/2025", null])).toBe("dmy");
+    expect(detectDateOrder(["03/04/2025", "04/25/2025"])).toBe("mdy");
+    expect(detectDateOrder(["25/04/2025", "04/25/2025"])).toBe("mixed");
+    expect(detectDateOrder(["03/04/2025", "2025-12-31", undefined])).toBeNull();
+  });
+
+  it("flags e-mail cells the API would refuse", () => {
+    expect(isPlausibleEmail("contact@dupont-sarl.fr")).toBe(true);
+    expect(isPlausibleEmail("a.b+c@mail.example.co.uk")).toBe(true);
+    for (const bad of ["dupont", "dupont@", "dupont@local", "Jean <j@x.fr>", "a@b@c.fr", "x@.fr"]) {
+      expect(isPlausibleEmail(bad)).toBe(false);
+    }
+  });
+
   it("recognises API date-times and trims text", () => {
     expect(isIsoDateTime("2025-03-14T10:12:00+01:00")).toBe(true);
     expect(isIsoDateTime("2025-03-14")).toBe(true);
@@ -112,10 +145,10 @@ describe("callWithRateLimitRetry", () => {
     expect(result).toBe("ok");
     expect(call).toHaveBeenCalledTimes(3);
     expect(onPause).toHaveBeenCalledWith(5);
-    expect(sleep).toHaveBeenCalledWith(5000);
+    expect(sleep).toHaveBeenCalledWith(5000, undefined);
   });
 
-  it("gives up after the last retry and when stopped", async () => {
+  it("gives up after the last retry and when aborted during a pause", async () => {
     const call = vi.fn(() => Promise.resolve("limited"));
     expect(
       await callWithRateLimitRetry(call, (r) => r === "limited", { sleep, maxRetries: 2 })
@@ -123,11 +156,53 @@ describe("callWithRateLimitRetry", () => {
     expect(call).toHaveBeenCalledTimes(3);
 
     call.mockClear();
+    const controller = new AbortController();
+    const onResume = vi.fn();
     await callWithRateLimitRetry(call, (r) => r === "limited", {
-      sleep,
-      isStopped: () => true,
+      sleep: () => {
+        controller.abort();
+        return Promise.resolve();
+      },
+      signal: controller.signal,
+      onResume,
     });
     expect(call).toHaveBeenCalledTimes(1);
+    expect(onResume).not.toHaveBeenCalled();
+  });
+
+  it("lets a call that throws reach the caller", async () => {
+    const call = vi.fn(() => Promise.reject(new Error("Failed to fetch")));
+    await expect(callWithRateLimitRetry(call, () => false, { sleep })).rejects.toThrow(
+      "Failed to fetch"
+    );
+  });
+});
+
+describe("abortableSleep", () => {
+  it("ends as soon as the signal is aborted", async () => {
+    vi.useFakeTimers();
+    try {
+      const controller = new AbortController();
+      let done = false;
+      const pause = abortableSleep(20_000, controller.signal).then(() => {
+        done = true;
+      });
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(done).toBe(false);
+      controller.abort();
+      await pause;
+      expect(done).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("jsonByteLength", () => {
+  it("counts UTF-8 bytes, not characters", () => {
+    expect(jsonByteLength("é")).toBe(4); // two quotes + two bytes
+    expect(MAX_ACTION_PAYLOAD_BYTES).toBeLessThan(1024 * 1024);
   });
 });
 

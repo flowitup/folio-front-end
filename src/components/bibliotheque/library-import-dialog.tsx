@@ -4,11 +4,15 @@
  * LibraryImportDialog — add the lines of a supplier purchase export (JSON) to
  * the company library (POST /bibliotheque/import).
  *
- * Flow: pick the file → review (lines the API would refuse are listed and left
- * out) → send in requests of up to 1000 lines with a progress bar → summary
- * of products created / updated, purchases added, lines already imported and
- * lines that failed. The endpoint is idempotent per purchase line, so the
- * same file can be imported again safely.
+ * Flow: pick the file (and, for a user of several companies, the target
+ * company, the page's one by default) → review (lines the API would refuse
+ * are listed and left out) → send in requests of up to 1000 lines with a
+ * progress bar → summary of products created / updated, purchases added,
+ * lines already imported and lines that failed. The endpoint is idempotent
+ * per purchase line, so the same file can be imported again safely.
+ *
+ * Every run ends on the summary: a rate limit pauses and retries, Stop ends
+ * a pause at once, and a call that fails outright stops the run.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -24,6 +28,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   clipDetail,
@@ -42,6 +54,7 @@ import {
 } from "@/lib/bibliotheque/library-import";
 import { callWithRateLimitRetry } from "@/lib/import/rate-limit-retry";
 import { MAX_IMPORT_FILE_BYTES, readImportFileText } from "@/lib/import/read-text-file";
+import type { UserCompanySummary } from "@/lib/auth/permissions";
 
 /** Answers that would fail every remaining request the same way. */
 const FATAL_CODES = new Set<ImportPurchasesErrorCode>(["unauthorized", "forbidden", "rate_limited"]);
@@ -64,15 +77,19 @@ interface Outcome {
 export interface LibraryImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Company whose library the page shows; the default target. */
   companyId: string;
-  /** Called once a run added or changed something, to refresh the library. */
-  onImported: () => void;
+  /** Companies the user belongs to; a picker is shown when there are several. */
+  companies?: Pick<UserCompanySummary, "id" | "legal_name" | "is_primary">[];
+  /** Called once a run added or changed something, with the company imported into. */
+  onImported: (companyId: string) => void;
 }
 
 export function LibraryImportDialog({
   open,
   onOpenChange,
   companyId,
+  companies = [],
   onImported,
 }: LibraryImportDialogProps) {
   const t = useTranslations("bibliotheque");
@@ -85,11 +102,14 @@ export function LibraryImportDialog({
   const [pauseLeft, setPauseLeft] = useState<number | null>(null);
   const [stopping, setStopping] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
-  const stopRef = useRef(false);
+  const [targetId, setTargetId] = useState(companyId);
+  /** Set while a run is going; aborting it stops the run, even mid-pause. */
+  const runRef = useRef<AbortController | null>(null);
 
-  // Fresh dialog on every open.
+  // Fresh dialog on every open, aimed at the page's company.
   useEffect(() => {
     if (!open) return;
+    setTargetId(companyId);
     setFile(null);
     setFileError(null);
     setReading(false);
@@ -98,8 +118,10 @@ export function LibraryImportDialog({
     setPauseLeft(null);
     setStopping(false);
     setOutcome(null);
-    stopRef.current = false;
-  }, [open]);
+  }, [open, companyId]);
+
+  // Leaving the page mid-run stops sending.
+  useEffect(() => () => runRef.current?.abort(), []);
 
   // Rate-limit pause countdown.
   useEffect(() => {
@@ -156,10 +178,13 @@ export function LibraryImportDialog({
 
   async function handleImport() {
     if (!ready || ready.recordCount === 0) return;
-    stopRef.current = false;
+    const target = targetId;
+    const run = new AbortController();
+    runRef.current = run;
     setStopping(false);
     setRunning(true);
     setOutcome(null);
+    setPauseLeft(null);
     setProgress({ done: 0, total: ready.recordCount });
 
     const totals = { created: 0, updated: 0, purchasesAdded: 0, skipped: 0 };
@@ -167,61 +192,87 @@ export function LibraryImportDialog({
     let sent = 0;
     let stopReason: Outcome["stopReason"] = null;
 
-    for (const batch of ready.batches) {
-      if (stopRef.current) {
-        stopReason = "user";
-        break;
-      }
-      const result = await callWithRateLimitRetry(
-        () => importPurchasesAction(companyId, batch),
-        (r) => !r.ok && r.code === "rate_limited",
-        {
-          onPause: (seconds) => setPauseLeft(seconds),
-          isStopped: () => stopRef.current,
-        }
-      );
-      setPauseLeft(null);
-
-      if (!result.ok && result.code === "rate_limited" && stopRef.current) {
-        stopReason = "user";
-        break;
-      }
-      sent += batch.records.length;
-      if (result.ok) {
-        totals.created += result.data.created;
-        totals.updated += result.data.updated;
-        totals.purchasesAdded += result.data.purchases_added;
-        totals.skipped += result.data.skipped;
-      } else {
-        failed.push({
-          supplier: batch.supplier_name,
-          lines: batch.records.length,
-          code: result.code,
-          detail: result.error,
-        });
-        if (FATAL_CODES.has(result.code)) {
-          stopReason = result.code;
+    try {
+      for (const batch of ready.batches) {
+        if (run.signal.aborted) {
+          stopReason = "user";
           break;
         }
+        let result: Awaited<ReturnType<typeof importPurchasesAction>>;
+        try {
+          result = await callWithRateLimitRetry(
+            () => importPurchasesAction(target, batch),
+            (r) => !r.ok && r.code === "rate_limited",
+            {
+              onPause: (seconds) => setPauseLeft(seconds),
+              onResume: () => setPauseLeft(null),
+              signal: run.signal,
+            }
+          );
+        } catch (err) {
+          // The call itself failed, so whether these lines reached the server
+          // is unknown and the next calls would fail the same way.
+          sent += batch.records.length;
+          failed.push({
+            supplier: batch.supplier_name,
+            lines: batch.records.length,
+            code: "generic",
+            detail: err instanceof Error ? err.message : "",
+          });
+          stopReason = "generic";
+          break;
+        } finally {
+          setPauseLeft(null);
+        }
+
+        if (!result.ok && result.code === "rate_limited" && run.signal.aborted) {
+          stopReason = "user";
+          break;
+        }
+        sent += batch.records.length;
+        if (result.ok) {
+          totals.created += result.data.created;
+          totals.updated += result.data.updated;
+          totals.purchasesAdded += result.data.purchases_added;
+          totals.skipped += result.data.skipped;
+        } else {
+          failed.push({
+            supplier: batch.supplier_name,
+            lines: batch.records.length,
+            code: result.code,
+            detail: result.error,
+          });
+          if (FATAL_CODES.has(result.code)) {
+            stopReason = result.code;
+            break;
+          }
+        }
+        setProgress({ done: sent, total: ready.recordCount });
       }
-      setProgress({ done: sent, total: ready.recordCount });
+    } catch {
+      stopReason = "generic";
+    } finally {
+      runRef.current = null;
+      setOutcome({
+        ...totals,
+        failed,
+        notProcessed: ready.recordCount - sent,
+        stopReason,
+      });
+      setPauseLeft(null);
+      setRunning(false);
+      setStopping(false);
     }
 
-    setOutcome({
-      ...totals,
-      failed,
-      notProcessed: ready.recordCount - sent,
-      stopReason,
-    });
-    setRunning(false);
-    setStopping(false);
-
-    if (totals.created + totals.updated + totals.purchasesAdded > 0) {
+    if (totals.purchasesAdded > 0) {
       toast.success(t("import.toastDone", { count: totals.purchasesAdded }));
-      onImported();
+    } else if (totals.created + totals.updated > 0) {
+      // A re-import can enrich products without adding any purchase.
+      toast.success(t("import.toastUpdated", { count: totals.created + totals.updated }));
     } else if (failed.length > 0) {
       toast.error(t("import.toastFailed"));
     }
+    if (totals.created + totals.updated + totals.purchasesAdded > 0) onImported(target);
   }
 
   function handleChooseAnother() {
@@ -231,7 +282,7 @@ export function LibraryImportDialog({
   }
 
   function handleStop() {
-    stopRef.current = true;
+    runRef.current?.abort();
     setStopping(true);
   }
 
@@ -245,6 +296,10 @@ export function LibraryImportDialog({
   // Render
   // ---------------------------------------------------------------------------
 
+  // Primary company first, as in the other company pickers.
+  const companyOptions = [...companies].sort(
+    (a, b) => Number(b.is_primary) - Number(a.is_primary)
+  );
   const failedLines = outcome ? outcome.failed.reduce((n, f) => n + f.lines, 0) : 0;
   const canStart = !running && !reading && !!ready && ready.recordCount > 0;
   const lastFailure = outcome?.failed[outcome.failed.length - 1];
@@ -304,6 +359,24 @@ export function LibraryImportDialog({
           </div>
         ) : (
           <div className="space-y-4">
+            {companies.length > 1 && (
+              <div className="space-y-2">
+                <Label htmlFor="library-import-company">{t("import.company")}</Label>
+                <Select value={targetId} onValueChange={setTargetId} disabled={running}>
+                  <SelectTrigger id="library-import-company" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companyOptions.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.legal_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <ImportFileDropzone
               id="library-import-file"
               accept=".json,application/json"

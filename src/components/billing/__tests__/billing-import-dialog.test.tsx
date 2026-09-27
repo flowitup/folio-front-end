@@ -1,14 +1,17 @@
 /**
  * BillingImportDialog — file → review → import → summary.
  *
- * Covers: the review counts what will be sent and what is left out; each
- * document is sent once with the chosen company; a taken number counts as
- * skipped; an answer that would fail every remaining document stops the run;
- * the list is refreshed only when something was imported.
+ * Covers: the review counts what will be sent and what is left out (rows
+ * without a number apart from documents); each document is sent once with
+ * the chosen company; a taken number counts as skipped; an answer that would
+ * fail every remaining document stops the run; a server action that rejects
+ * still ends on a summary the user can close; a rate limit pauses with a
+ * countdown that Stop ends at once; the list is refreshed only when
+ * something was imported.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { act, render, screen, fireEvent } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import enMessages from "@/messages/en.json";
 import { BillingImportDialog } from "@/components/billing/billing-import-dialog";
@@ -52,19 +55,19 @@ function csvFile(...rows: string[]): File {
   return new File([[HEADER, ...rows].join("\n")], "history.csv", { type: "text/csv" });
 }
 
-function renderDialog(onImported = vi.fn()) {
+function renderDialog(onImported = vi.fn(), onOpenChange = vi.fn()) {
   render(
     <NextIntlClientProvider locale="en" messages={enMessages}>
       <BillingImportDialog
         kind="facture"
         open
-        onOpenChange={vi.fn()}
+        onOpenChange={onOpenChange}
         companies={[COMPANY]}
         onImported={onImported}
       />
     </NextIntlClientProvider>
   );
-  return { onImported };
+  return { onImported, onOpenChange };
 }
 
 function pickFile(file: File) {
@@ -72,6 +75,10 @@ function pickFile(file: File) {
     target: { files: [file] },
   });
 }
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -101,7 +108,7 @@ describe("BillingImportDialog", () => {
     );
 
     expect(await screen.findByText("2 documents ready to import")).toBeDefined();
-    expect(screen.getByText("1 document will be left out:")).toBeDefined();
+    expect(screen.getByText("1 document will be left out.")).toBeDefined();
     expect(screen.getByText("FAC-003 — Recipient name missing")).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: "Import 2 documents" }));
@@ -146,6 +153,96 @@ describe("BillingImportDialog", () => {
     expect(screen.getAllByText(/You are not allowed to import for this company/).length).toBeGreaterThan(0);
     expect(onImported).not.toHaveBeenCalled();
     expect(toast.error).toHaveBeenCalledWith("No document could be imported.");
+  });
+
+  it("counts rows without a number apart from the documents left out", async () => {
+    mockImport.mockResolvedValue({
+      ok: false,
+      error: { code: "validation", message: "items: bad" },
+    });
+    renderDialog();
+
+    pickFile(
+      csvFile(
+        "FAC-001;paid;Dupont;Pose;1;100;20",
+        ";paid;Dupont;Orphan row;1;1;20",
+        ";paid;Dupont;Orphan row;1;1;20",
+        "FAC-002;paid;;Sans client;1;10;20"
+      )
+    );
+
+    expect(
+      await screen.findByText(
+        "1 document will be left out. 2 rows have no document number and are ignored."
+      )
+    ).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "Import 1 document" }));
+
+    const summary = await screen.findByTestId("billing-import-summary");
+    // One refused by the server + one left out: documents, not rows.
+    expect(summary.textContent).toContain("Errors2");
+    expect(summary.textContent).toContain(
+      "2 rows have no document number and are ignored."
+    );
+  });
+
+  it("ends on a summary that can be closed when a server action call rejects", async () => {
+    mockImport
+      .mockResolvedValueOnce({ ok: true, data: { id: "doc-1" } as never })
+      .mockRejectedValueOnce(new Error("Failed to find Server Action"));
+    const { onImported, onOpenChange } = renderDialog();
+
+    pickFile(
+      csvFile(
+        "FAC-001;paid;A;X;1;1;20",
+        "FAC-002;paid;B;X;1;1;20",
+        "FAC-003;paid;C;X;1;1;20"
+      )
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Import 3 documents" }));
+
+    expect(await screen.findByText("Import stopped")).toBeDefined();
+    expect(mockImport).toHaveBeenCalledTimes(2);
+    const summary = screen.getByTestId("billing-import-summary");
+    expect(summary.textContent).toContain("Imported1");
+    expect(summary.textContent).toContain("Errors1");
+    expect(summary.textContent).toContain("FAC-002 — Unexpected error, try again");
+    expect(screen.getByText("1 document was not processed.")).toBeDefined();
+    expect(onImported).toHaveBeenCalledOnce();
+
+    // Both the corner button and the footer one close it: the run is over.
+    for (const close of screen.getAllByRole("button", { name: "Close" })) fireEvent.click(close);
+    expect(onOpenChange).toHaveBeenCalledTimes(2);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("pauses on a rate limit with a countdown, and Stop ends the pause at once", async () => {
+    mockImport.mockResolvedValue({
+      ok: false,
+      error: { code: "rate_limited", message: "Too many requests" },
+    });
+    renderDialog();
+
+    pickFile(csvFile("FAC-001;paid;A;X;1;1;20", "FAC-002;paid;B;X;1;1;20"));
+    const start = await screen.findByRole("button", { name: "Import 2 documents" });
+
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    fireEvent.click(start);
+
+    expect(
+      await screen.findByText("The server asked for a pause. Resuming in 20 s…")
+    ).toBeDefined();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(screen.getByText("The server asked for a pause. Resuming in 19 s…")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "Stop" }));
+
+    // No waiting for the 20 s pause to run out.
+    expect(await screen.findByText("Import stopped")).toBeDefined();
+    expect(mockImport).toHaveBeenCalledOnce();
+    expect(screen.getByText("2 documents were not processed.")).toBeDefined();
+    expect(screen.queryByText(/Resuming in/)).toBeNull();
   });
 
   it("explains an unusable file and keeps the import button disabled", async () => {

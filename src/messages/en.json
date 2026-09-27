@@ -1438,14 +1438,16 @@
         "facture": "Bring in invoices issued before Folio, with their original numbers. Numbers already in Folio are skipped."
       },
       "dropzone": "Choose a CSV or JSON file, or drop it here",
-      "csvHint": "CSV: one row per line item; rows with the same document_number make one document. Required columns: {columns}. Dates as YYYY-MM-DD or DD/MM/YYYY.",
+      "csvHint": "CSV: one row per line item; rows with the same document_number make one document. Required columns: {columns}. Dates as YYYY-MM-DD; DD/MM/YYYY or MM/DD/YYYY work when a date of the file shows the order (a day above 12), otherwise write YYYY-MM-DD.",
       "jsonHint": "JSON: a list of documents with the API field names, as the Folio plugin exports them.",
+      "projectHint": "Project links are not imported: link a document to its project from the document page afterwards.",
       "downloadTemplate": "Download the CSV template",
       "defaultStatus": "Status for rows without one",
       "statusHint": "The status column accepts: {statuses}.",
       "reading": "Reading the file…",
       "preview": "{count, plural, one {# document ready to import} other {# documents ready to import}}",
-      "previewRejected": "{count, plural, one {# document will be left out:} other {# documents will be left out:}}",
+      "previewRejected": "{count, plural, one {# document will be left out.} other {# documents will be left out.}}",
+      "rowsIgnored": "{count, plural, one {# row has no document number and is ignored.} other {# rows have no document number and are ignored.}}",
       "nothingToImport": "No document in this file can be imported.",
       "start": "{count, plural, =0 {Import} one {Import # document} other {Import # documents}}",
       "progress": "{done} of {total} documents",
@@ -1481,8 +1483,10 @@
         "invalidItemLine": "Line {line} needs a description, a quantity above 0, a unit price of 0 or more and a VAT rate from 0 to 100",
         "invalidStatus": "Status “{value}” is not accepted here",
         "invalidDate": "{field} is not a valid date",
+        "ambiguousDate": "{field} “{value}” could be day/month or month/day, write it as YYYY-MM-DD",
+        "invalidEmail": "“{value}” is not a valid email address",
         "wrongKind": "“{value}” document, not for this list",
-        "invalidProject": "project_id is not a valid identifier"
+        "documentTooLarge": "Too much text to send in one request, shorten the line item descriptions"
       },
       "fileErrors": {
         "unreadable": "This file could not be read. Use a CSV or JSON file as described below.",
@@ -1497,7 +1501,7 @@
         "company_no_longer_attached": "You are no longer attached to this company",
         "company_profile_missing": "The company profile is incomplete",
         "rate_limited": "The server is still busy, try again in a minute",
-        "not_found": "Company or project not found",
+        "not_found": "Company not found",
         "generic": "Unexpected error, try again"
       }
     }
@@ -2044,6 +2048,7 @@
       "title": "Import purchases",
       "description": "Add the lines of a supplier purchase export to the library. Lines already imported are skipped, so the same file can be imported again safely.",
       "dropzone": "Choose a JSON file, or drop it here",
+      "company": "Company",
       "formatHint": "Expected format: supplier_name, supplier_slug and records, each record with supplier_reference, product_name, quantity, unit_price, purchased_at, source_document_ref, source_document_type (ticket or commande) and line_index. A file may list several suppliers.",
       "reading": "Reading the file…",
       "preview": "{count, plural, one {# purchase line} other {# purchase lines}} from {suppliers}",
@@ -2067,6 +2072,7 @@
       "chooseAnother": "Import another file",
       "close": "Close",
       "toastDone": "{count, plural, one {# purchase added to the library} other {# purchases added to the library}}",
+      "toastUpdated": "{count, plural, one {# product updated in the library} other {# products updated in the library}}",
       "toastFailed": "No purchase line could be imported.",
       "issues": {
         "invalidSupplier": "{supplier}: supplier name or slug missing or too long ({count, plural, one {# line left out} other {# lines left out}})",

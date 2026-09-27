@@ -1,6 +1,7 @@
 /**
  * Library purchase import parsing: accepted shapes, lines set aside before
- * sending, and the split into requests of at most 1000 lines.
+ * sending, and the split into requests of at most 1000 lines that each fit
+ * in a server-action body.
  */
 
 import { describe, it, expect } from "vitest";
@@ -8,6 +9,7 @@ import {
   MAX_RECORDS_PER_REQUEST,
   parseLibraryImportFile,
 } from "@/lib/bibliotheque/library-import";
+import { MAX_ACTION_PAYLOAD_BYTES, jsonByteLength } from "@/lib/import/payload-size";
 
 function record(i: number, overrides: Record<string, unknown> = {}) {
   return {
@@ -74,6 +76,47 @@ describe("parseLibraryImportFile", () => {
     expect(result.ok && result.recordCount).toBe(2300);
   });
 
+  it("splits rich lines by size so no request goes over the server-action limit", () => {
+    // Longest values the API accepts, with accents: about 3 KB of JSON per line.
+    const rich = (i: number) =>
+      record(i, {
+        product_name: "Tuyau PER à sertir ".repeat(50).slice(0, 1000),
+        description: "Élément de plomberie, qualité supérieure. ".repeat(24).slice(0, 1000),
+        product_url: `https://www.example.fr/${"p".repeat(470)}/${i}`,
+        category: "Plomberie et sanitaire",
+        size: "Ø 16 mm × 50 m",
+      });
+    const records = Array.from({ length: 1000 }, (_, i) => rich(i));
+    const result = parseLibraryImportFile(JSON.stringify({ ...SUPPLIER, records }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(jsonByteLength(records)).toBeGreaterThan(2 * 1024 * 1024);
+    expect(result.batches.length).toBeGreaterThan(1);
+    for (const batch of result.batches) {
+      expect(jsonByteLength({ company_id: "c", ...batch })).toBeLessThanOrEqual(
+        MAX_ACTION_PAYLOAD_BYTES
+      );
+      expect(batch.supplier_slug).toBe("leroy-merlin");
+    }
+    // Every line is sent once, in file order.
+    expect(result.batches.flatMap((b) => b.records.map((r) => r.line_index))).toEqual(
+      records.map((r) => r.line_index)
+    );
+    expect(result.recordCount).toBe(1000);
+  });
+
+  it("names a supplier spread over several blocks once", () => {
+    const result = parseLibraryImportFile(
+      JSON.stringify([
+        { ...SUPPLIER, records: [record(0)] },
+        { ...SUPPLIER, records: [record(1)] },
+      ])
+    );
+    expect(result.ok && result.suppliers).toEqual(["Leroy Merlin"]);
+    expect(result.ok && result.batches).toHaveLength(2);
+  });
+
   it("sets aside lines the API would refuse so they do not sink the others", () => {
     const result = parseLibraryImportFile(
       JSON.stringify([
@@ -108,6 +151,14 @@ describe("parseLibraryImportFile", () => {
   it("tolerates curly quotes pasted through a mail client", () => {
     const text = JSON.stringify({ ...SUPPLIER, records: [record(0)] }).replace(/"/g, "“");
     expect(parseLibraryImportFile(text).ok).toBe(true);
+  });
+
+  it("keeps curly quotes and non-breaking spaces that belong to a value", () => {
+    const name = "Tube “PER”\u00A016\u00A0mm";
+    const result = parseLibraryImportFile(
+      JSON.stringify({ ...SUPPLIER, records: [record(0, { product_name: name })] })
+    );
+    expect(result.ok && result.batches[0].records[0].product_name).toBe(name);
   });
 
   it("rejects text that is not JSON and files with nothing in them", () => {

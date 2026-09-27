@@ -1440,12 +1440,14 @@
       "dropzone": "Choisissez un fichier CSV ou JSON, ou déposez-le ici",
       "csvHint": "CSV : une ligne par ligne de prestation ; les lignes qui partagent le même document_number forment un document. Colonnes obligatoires : {columns}. Dates au format AAAA-MM-JJ ou JJ/MM/AAAA.",
       "jsonHint": "JSON : une liste de documents avec les noms de champs de l'API, tels que les exporte le plugin Folio.",
+      "projectHint": "Les liens vers un projet ne sont pas importés : rattachez chaque document à son projet depuis sa page, après l'import.",
       "downloadTemplate": "Télécharger le modèle CSV",
       "defaultStatus": "Statut des lignes qui n'en indiquent pas",
       "statusHint": "La colonne status accepte : {statuses}.",
       "reading": "Lecture du fichier…",
       "preview": "{count, plural, one {# document prêt à importer} other {# documents prêts à importer}}",
-      "previewRejected": "{count, plural, one {# document sera écarté :} other {# documents seront écartés :}}",
+      "previewRejected": "{count, plural, one {# document sera écarté.} other {# documents seront écartés.}}",
+      "rowsIgnored": "{count, plural, one {# ligne sans numéro de document est ignorée.} other {# lignes sans numéro de document sont ignorées.}}",
       "nothingToImport": "Aucun document de ce fichier ne peut être importé.",
       "start": "{count, plural, =0 {Importer} one {Importer # document} other {Importer # documents}}",
       "progress": "{done} sur {total} documents",
@@ -1481,8 +1483,10 @@
         "invalidItemLine": "La ligne {line} doit avoir une description, une quantité supérieure à 0, un prix unitaire positif ou nul et un taux de TVA entre 0 et 100",
         "invalidStatus": "Statut « {value} » non accepté ici",
         "invalidDate": "{field} n'est pas une date valide",
+        "ambiguousDate": "{field} « {value} » peut se lire jour/mois ou mois/jour : écrivez la date au format AAAA-MM-JJ",
+        "invalidEmail": "« {value} » n'est pas une adresse e-mail valide",
         "wrongKind": "Document « {value} », pas pour cette liste",
-        "invalidProject": "project_id n'est pas un identifiant valide"
+        "documentTooLarge": "Trop de texte pour un seul envoi, raccourcissez les descriptions des lignes"
       },
       "fileErrors": {
         "unreadable": "Ce fichier n'a pas pu être lu. Utilisez un fichier CSV ou JSON comme décrit ci-dessous.",
@@ -1497,7 +1501,7 @@
         "company_no_longer_attached": "Vous n'êtes plus rattaché à cette société",
         "company_profile_missing": "Le profil de la société est incomplet",
         "rate_limited": "Le serveur est toujours occupé, réessayez dans une minute",
-        "not_found": "Société ou projet introuvable",
+        "not_found": "Société introuvable",
         "generic": "Erreur inattendue, réessayez"
       }
     }
@@ -2044,6 +2048,7 @@
       "title": "Importer des achats",
       "description": "Ajoutez à la bibliothèque les lignes d'un export d'achats fournisseur. Les lignes déjà importées sont ignorées : le même fichier peut être réimporté sans risque.",
       "dropzone": "Choisissez un fichier JSON, ou déposez-le ici",
+      "company": "Société",
       "formatHint": "Format attendu : supplier_name, supplier_slug et records, chaque ligne avec supplier_reference, product_name, quantity, unit_price, purchased_at, source_document_ref, source_document_type (ticket ou commande) et line_index. Un fichier peut contenir plusieurs fournisseurs.",
       "reading": "Lecture du fichier…",
       "preview": "{count, plural, one {# ligne d'achat} other {# lignes d'achat}} de {suppliers}",
@@ -2067,6 +2072,7 @@
       "chooseAnother": "Importer un autre fichier",
       "close": "Fermer",
       "toastDone": "{count, plural, one {# achat ajouté à la bibliothèque} other {# achats ajoutés à la bibliothèque}}",
+      "toastUpdated": "{count, plural, one {# produit mis à jour dans la bibliothèque} other {# produits mis à jour dans la bibliothèque}}",
       "toastFailed": "Aucune ligne d'achat n'a pu être importée.",
       "issues": {
         "invalidSupplier": "{supplier} : nom ou identifiant (slug) du fournisseur manquant ou trop long ({count, plural, one {# ligne écartée} other {# lignes écartées}})",

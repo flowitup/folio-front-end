@@ -226,7 +226,7 @@ export function BibliothequePageClient({ companyId }: Props) {
   return (
     <div className="fade-up px-4 pb-12 lg:px-8">
       {/* Header */}
-      <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-[28px] font-medium tracking-tight">{t("title")}</h1>
           <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
@@ -371,7 +371,10 @@ export function BibliothequePageClient({ companyId }: Props) {
           open={importOpen}
           onOpenChange={setImportOpen}
           companyId={companyId}
-          onImported={() => {
+          companies={user?.companies ?? []}
+          onImported={(importedInto) => {
+            // Another company's library is not the one on screen.
+            if (importedInto !== companyId) return;
             // New suppliers and categories may arrive with the imported lines.
             reloadMeta();
             reload();

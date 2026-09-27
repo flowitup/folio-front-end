@@ -9,7 +9,9 @@
  * The API validates a whole request at once, so one malformed line would
  * reject every other line sent with it. Lines the API would refuse are
  * therefore set aside here and reported, and the rest are split into requests
- * of at most 1000 lines (the API maximum).
+ * of at most 1000 lines (the API maximum) that also stay under the size a
+ * server action accepts (see payload-size.ts): a line with a long name,
+ * description and product URL weighs well over 1 KB.
  */
 
 import {
@@ -17,9 +19,13 @@ import {
   isIsoDateTime,
   normalizeDecimal,
 } from "@/lib/import/normalize";
+import { MAX_ACTION_PAYLOAD_BYTES, jsonByteLength } from "@/lib/import/payload-size";
 import type { ImportPurchaseRecord, ImportPurchasesPayload } from "@/lib/api/bibliotheque";
 
 export const MAX_RECORDS_PER_REQUEST = 1000;
+
+/** Room kept in each request for the company id and the JSON punctuation around the records. */
+const REQUEST_ENVELOPE_BYTES = 128;
 
 const OPTIONAL_LIMITS = { size: 200, category: 200, product_url: 500, description: 1000 } as const;
 
@@ -40,6 +46,7 @@ export type LibraryImportParseResult =
       ok: true;
       /** Requests to send, already split to the API maximum. */
       batches: ImportPurchasesPayload[];
+      /** Distinct supplier names, in file order. */
       suppliers: string[];
       /** Valid lines that will be sent. */
       recordCount: number;
@@ -56,12 +63,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /**
  * Curly quotes and non-breaking spaces slip in when the export is copied
  * through a mail client; they make an otherwise valid file unparseable.
+ * Only applied when the file does not parse as it is, because the same
+ * characters are legitimate inside values (a product named “PER”).
  */
 function normalizeJsonPunctuation(text: string): string {
   return text
-    .replace(/^﻿/, "")
-    .replace(/[“”„‟]/g, '"')
-    .replace(/[   ]/g, " ");
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+    .replace(/[\u00A0\u2007\u202F]/g, " ");
+}
+
+function parseJson(text: string): { ok: true; value: unknown } | { ok: false } {
+  const bare = text.replace(/^\uFEFF/, "");
+  for (const candidate of [bare, normalizeJsonPunctuation(bare)]) {
+    try {
+      return { ok: true, value: JSON.parse(candidate) };
+    } catch {
+      // Try the next reading.
+    }
+  }
+  return { ok: false };
 }
 
 function limited(value: unknown, max: number): string | null | false {
@@ -104,19 +124,38 @@ function toRecord(value: unknown): ImportPurchaseRecord | null {
   return record;
 }
 
-function chunk<T>(items: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
-  return out;
+/**
+ * Split one supplier's lines into requests of at most 1000 lines whose
+ * serialized size stays under the server-action budget.
+ */
+function splitIntoRequests(
+  supplier: Omit<ImportPurchasesPayload, "records">,
+  records: ImportPurchaseRecord[]
+): ImportPurchasesPayload[] {
+  const envelope = jsonByteLength(supplier) + REQUEST_ENVELOPE_BYTES;
+  const requests: ImportPurchasesPayload[] = [];
+  let current: ImportPurchaseRecord[] = [];
+  let bytes = envelope;
+  for (const record of records) {
+    const size = jsonByteLength(record) + 1; // + the separating comma
+    const full =
+      current.length >= MAX_RECORDS_PER_REQUEST || bytes + size > MAX_ACTION_PAYLOAD_BYTES;
+    if (current.length > 0 && full) {
+      requests.push({ ...supplier, records: current });
+      current = [];
+      bytes = envelope;
+    }
+    current.push(record);
+    bytes += size;
+  }
+  if (current.length > 0) requests.push({ ...supplier, records: current });
+  return requests;
 }
 
 export function parseLibraryImportFile(text: string): LibraryImportParseResult {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(normalizeJsonPunctuation(text));
-  } catch {
-    return { ok: false, error: "unreadable" };
-  }
+  const json = parseJson(text);
+  if (!json.ok) return { ok: false, error: "unreadable" };
+  const parsed = json.value;
   const blocks = Array.isArray(parsed) ? parsed : [parsed];
   if (blocks.length === 0) return { ok: false, error: "empty" };
   if (!blocks.every(isRecord)) return { ok: false, error: "unreadable" };
@@ -154,17 +193,15 @@ export function parseLibraryImportFile(text: string): LibraryImportParseResult {
     rejectedCount += rawRecords.length - records.length;
     if (records.length === 0) return;
 
-    suppliers.push(supplierName);
+    if (!suppliers.includes(supplierName)) suppliers.push(supplierName);
     recordCount += records.length;
-    for (const part of chunk(records, MAX_RECORDS_PER_REQUEST)) {
-      batches.push({
-        supplier_name: supplierName,
-        supplier_slug: supplierSlug,
-        ...(website ? { supplier_website_url: website } : {}),
-        ...(urlTemplate ? { supplier_product_url_template: urlTemplate } : {}),
-        records: part,
-      });
-    }
+    const supplier = {
+      supplier_name: supplierName,
+      supplier_slug: supplierSlug,
+      ...(website ? { supplier_website_url: website } : {}),
+      ...(urlTemplate ? { supplier_product_url_template: urlTemplate } : {}),
+    };
+    batches.push(...splitIntoRequests(supplier, records));
   });
 
   if (batches.length === 0 && issues.length === 0) return { ok: false, error: "empty" };

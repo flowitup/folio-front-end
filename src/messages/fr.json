@@ -2216,6 +2216,20 @@
         "rate_limited": "Le serveur est toujours occupé, réessayez dans une minute.",
         "generic": "Erreur inattendue, réessayez."
       }
+    },
+    "errors": {
+      "duplicate": "Un produit avec cette référence existe déjà.",
+      "forbidden": "Vous n'avez pas l'autorisation de gérer la bibliothèque.",
+      "notFound": "Introuvable.",
+      "rateLimited": "Trop de requêtes. Patientez un instant puis réessayez.",
+      "invalidInput": "Certains champs ne sont pas valides. Vérifiez les liens et les nombres.",
+      "generic": "Une erreur s'est produite. Veuillez réessayer.",
+      "noImageFile": "Aucun fichier image fourni.",
+      "imageUnsupported": "Type d'image non pris en charge (JPG, PNG ou WebP).",
+      "imageTooLarge": "Image trop volumineuse (10 Mo max).",
+      "imageAlreadySet": "Ce produit a déjà une image.",
+      "imageLinkRefused": "Ce lien d'image n'est pas accepté. Utilisez un lien https vers l'image elle-même.",
+      "imageLinkNotImage": "Le lien ne pointe pas vers une image JPG, PNG ou WebP."
     }
   },
   "inventory": {

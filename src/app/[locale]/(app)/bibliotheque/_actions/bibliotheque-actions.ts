@@ -27,6 +27,24 @@ import {
   type ImportPurchasesPayload,
   type ImportPurchasesResult,
 } from "@/lib/api/bibliotheque";
+import { getTranslations } from "next-intl/server";
+
+type HttpError = Error & { status?: number; body?: { error?: string } | null };
+
+/**
+ * A failed request as a message in the user's language — never the API
+ * wrapper's "Failed to get product (HTTP 403)" or the backend's English text.
+ */
+async function errorText(err: unknown): Promise<string> {
+  const t = await getTranslations("bibliotheque.errors");
+  const status = (err as HttpError | null)?.status;
+  if (status === 409) return t("duplicate");
+  if (status === 403) return t("forbidden");
+  if (status === 404) return t("notFound");
+  if (status === 429) return t("rateLimited");
+  if (status === 400 || status === 422) return t("invalidInput");
+  return t("generic");
+}
 
 // ---------------------------------------------------------------------------
 // Library actions
@@ -39,7 +57,7 @@ export async function listSuppliersAction(
     const data = await listSuppliers(companyId);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+    return { ok: false, error: await errorText(err) };
   }
 }
 
@@ -50,7 +68,7 @@ export async function listCategoriesAction(
     const data = await listCategories(companyId);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+    return { ok: false, error: await errorText(err) };
   }
 }
 
@@ -62,7 +80,7 @@ export async function listProductsAction(
     const data = await listProducts(companyId, filters);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+    return { ok: false, error: await errorText(err) };
   }
 }
 
@@ -73,7 +91,7 @@ export async function getProductAction(
     const data = await getProduct(productId);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+    return { ok: false, error: await errorText(err) };
   }
 }
 
@@ -81,15 +99,9 @@ export async function getProductAction(
 // Mutation actions
 // ---------------------------------------------------------------------------
 
-/** Classify a BE HTTP error into a friendly message + optional raw code. */
-function classifyBackendError(err: unknown): { error: string; code?: string } {
-  if (!(err instanceof Error)) return { error: "Unknown error" };
-  const httpErr = err as Error & { status?: number; body?: { error?: string } | null };
-  const code = httpErr.body?.error;
-  if (httpErr.status === 409) return { error: "A product with this reference already exists.", code };
-  if (httpErr.status === 403) return { error: "You don't have permission to manage the library.", code };
-  if (httpErr.status === 404) return { error: "Not found.", code };
-  return { error: err.message, code };
+/** Classify a BE HTTP error into a translated message + optional raw code. */
+async function classifyBackendError(err: unknown): Promise<{ error: string; code?: string }> {
+  return { error: await errorText(err), code: (err as HttpError | null)?.body?.error };
 }
 
 export async function createProductAction(
@@ -100,7 +112,7 @@ export async function createProductAction(
     const data = await createProduct(companyId, payload);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, ...classifyBackendError(err) };
+    return { ok: false, ...(await classifyBackendError(err)) };
   }
 }
 
@@ -112,7 +124,7 @@ export async function updateProductAction(
     const data = await updateProduct(productId, payload);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, ...classifyBackendError(err) };
+    return { ok: false, ...(await classifyBackendError(err)) };
   }
 }
 
@@ -123,7 +135,7 @@ export async function deleteProductAction(
     await deleteProduct(productId);
     return { ok: true };
   } catch (err) {
-    return { ok: false, ...classifyBackendError(err) };
+    return { ok: false, ...(await classifyBackendError(err)) };
   }
 }
 
@@ -137,17 +149,18 @@ export async function uploadProductImageAction(
   try {
     const file = formData.get("image");
     if (!(file instanceof File)) {
-      return { ok: false, error: "No image file provided." };
+      return { ok: false, error: (await getTranslations("bibliotheque.errors"))("noImageFile") };
     }
     const data = await uploadProductImage(productId, file, opts);
     return { ok: true, data };
   } catch (err) {
-    const httpErr = err as Error & { status?: number; body?: { error?: string } | null };
+    const httpErr = err as HttpError;
     const code = httpErr.body?.error;
-    if (httpErr.status === 415) return { ok: false, error: "Unsupported image type (use JPG/PNG/WebP).", code };
-    if (httpErr.status === 413) return { ok: false, error: "Image too large (max 10 MB).", code };
-    if (httpErr.status === 409) return { ok: false, error: "Image already set.", code };
-    return { ok: false, error: err instanceof Error ? err.message : "Unknown error", code };
+    const t = await getTranslations("bibliotheque.errors");
+    if (httpErr.status === 415) return { ok: false, error: t("imageUnsupported"), code };
+    if (httpErr.status === 413) return { ok: false, error: t("imageTooLarge"), code };
+    if (httpErr.status === 409) return { ok: false, error: t("imageAlreadySet"), code };
+    return { ok: false, error: await errorText(err), code };
   }
 }
 
@@ -155,7 +168,7 @@ export async function uploadProductImageAction(
  * Ask the server to fetch a product image from a supplier link.
  * `code` carries the BE error code (SsrfBlocked, ValidationError,
  * UnsupportedMediaType, FileTooLarge, Forbidden, ...) so the UI can show a
- * translated reason; `error` is the English fallback like its neighbours.
+ * reason of its own; `error` is already translated like its neighbours.
  */
 export async function setProductImageFromUrlAction(
   productId: string,
@@ -168,14 +181,13 @@ export async function setProductImageFromUrlAction(
     const data = await setProductImageFromUrl(productId, url, opts);
     return { ok: true, data };
   } catch (err) {
-    const httpErr = err as Error & { status?: number; body?: { error?: string } | null };
+    const httpErr = err as HttpError;
     const code = httpErr.body?.error;
-    if (httpErr.status === 422) return { ok: false, error: "This image link is not accepted.", code };
-    if (httpErr.status === 415) return { ok: false, error: "The link is not a JPG/PNG/WebP image.", code };
-    if (httpErr.status === 413) return { ok: false, error: "Image too large (max 10 MB).", code };
-    if (httpErr.status === 403) return { ok: false, error: "You don't have permission to manage the library.", code };
-    if (httpErr.status === 404) return { ok: false, error: "Not found.", code };
-    return { ok: false, error: err instanceof Error ? err.message : "Unknown error", code };
+    const t = await getTranslations("bibliotheque.errors");
+    if (httpErr.status === 400 || httpErr.status === 422) return { ok: false, error: t("imageLinkRefused"), code };
+    if (httpErr.status === 415) return { ok: false, error: t("imageLinkNotImage"), code };
+    if (httpErr.status === 413) return { ok: false, error: t("imageTooLarge"), code };
+    return { ok: false, error: await errorText(err), code };
   }
 }
 

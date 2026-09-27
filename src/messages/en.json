@@ -2216,6 +2216,20 @@
         "rate_limited": "The server is still busy, try again in a minute.",
         "generic": "Unexpected error, try again."
       }
+    },
+    "errors": {
+      "duplicate": "A product with this reference already exists.",
+      "forbidden": "You don't have permission to manage the library.",
+      "notFound": "Not found.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "invalidInput": "Some fields are not valid. Check the links and the numbers.",
+      "generic": "Something went wrong. Please try again.",
+      "noImageFile": "No image file provided.",
+      "imageUnsupported": "Unsupported image type (use JPG, PNG or WebP).",
+      "imageTooLarge": "Image too large (max 10 MB).",
+      "imageAlreadySet": "This product already has an image.",
+      "imageLinkRefused": "This image link is not accepted. Use an https link to the image itself.",
+      "imageLinkNotImage": "The link is not a JPG, PNG or WebP image."
     }
   },
   "inventory": {

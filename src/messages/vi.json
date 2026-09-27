@@ -2216,6 +2216,20 @@
         "rate_limited": "Máy chủ vẫn đang bận, hãy thử lại sau một phút.",
         "generic": "Lỗi không mong muốn, hãy thử lại."
       }
+    },
+    "errors": {
+      "duplicate": "Đã có sản phẩm với mã tham chiếu này.",
+      "forbidden": "Bạn không có quyền quản lý thư viện.",
+      "notFound": "Không tìm thấy.",
+      "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
+      "invalidInput": "Một số trường không hợp lệ. Hãy kiểm tra các liên kết và con số.",
+      "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+      "noImageFile": "Chưa chọn tệp ảnh.",
+      "imageUnsupported": "Định dạng ảnh không được hỗ trợ (dùng JPG, PNG hoặc WebP).",
+      "imageTooLarge": "Ảnh quá lớn (tối đa 10 MB).",
+      "imageAlreadySet": "Sản phẩm này đã có ảnh.",
+      "imageLinkRefused": "Liên kết ảnh này không được chấp nhận. Hãy dùng liên kết https trỏ trực tiếp tới ảnh.",
+      "imageLinkNotImage": "Liên kết không phải là ảnh JPG, PNG hoặc WebP."
     }
   },
   "inventory": {

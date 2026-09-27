@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { formatEURWhole } from "@/lib/utils/formatters";
+import { formatPercent } from "@/lib/utils/format-percent";
 import {
   monthKeyToDate,
   type BudgetMetrics,
@@ -223,7 +224,7 @@ export function OverviewMoneyPanel({
                     {monthDelta.deltaPct !== null && monthDelta.previous && (
                       <span style={{ color: monthDelta.deltaPct < 0 ? POSITIVE_ON_DARK : undefined }}>
                         {tInvoices("summary.vsMonth", {
-                          delta: `${monthDelta.deltaPct > 0 ? "+" : ""}${monthDelta.deltaPct}%`,
+                          delta: formatPercent(locale, monthDelta.deltaPct, true),
                           month: monthFmt.format(monthKeyToDate(monthDelta.previous.key)),
                         })}
                         {" · "}
@@ -317,7 +318,7 @@ export function OverviewMoneyPanel({
                 {loading
                   ? PLACEHOLDER
                   : t(budgetMetrics.usesBudget ? "money.pctCreditDrawn" : "money.pctSpent", {
-                      pct: budgetMetrics.pct,
+                      pct: formatPercent(locale, budgetMetrics.pct),
                       spent: formatEURWhole(budgetMetrics.spent),
                     })}
               </span>

@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { formatEURWhole } from "@/lib/utils/formatters";
+import { formatPercent } from "@/lib/utils/format-percent";
 import { useDataTip } from "@/components/invoices/data-tip";
 import {
   monthKeyToDate,
@@ -120,8 +121,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                       className="num font-medium"
                       style={{ color: bucket.deltaPct > 0 ? "var(--negative)" : "var(--positive)" }}
                     >
-                      {bucket.deltaPct > 0 ? "+" : ""}
-                      {bucket.deltaPct}%
+                      {formatPercent(locale, bucket.deltaPct, true)}
                     </span>
                   </>
                 )}

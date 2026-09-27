@@ -94,9 +94,9 @@
     "loadError": "Không thể tải dữ liệu tổng quan",
     "money": {
       "spentThisMonth": "Đã chi tháng này",
-      "pctSpent": "{pct}% đã chi · {spent}",
+      "pctSpent": "{pct} đã chi · {spent}",
       "purseSpent": "đã chi",
-      "pctCreditDrawn": "Đã dùng {pct}% tín dụng · {spent}",
+      "pctCreditDrawn": "Đã dùng {pct} tín dụng · {spent}",
       "unassigned": "{n} khoản chi · {amount} không có phương thức thanh toán công ty hoặc cá nhân — không thuộc ví nào"
     },
     "spendByType": {

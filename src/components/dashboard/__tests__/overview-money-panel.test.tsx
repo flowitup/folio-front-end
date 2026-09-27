@@ -50,3 +50,23 @@ describe("OverviewMoneyPanel sparkline", () => {
     });
   });
 });
+
+describe("OverviewMoneyPanel percent formatting", () => {
+  it("spaces the percent sign the French way, like the Bank credit card", () => {
+    const { container } = renderPanel([100, 200, 300, 400, 500, 1800], {
+      budgetMetrics: computeBudgetMetrics(null, 290, 1000),
+    }, "fr");
+    const text = (container.textContent ?? "").replace(/[  ]/g, " ");
+    expect(text).toContain("29 % dépensé");
+    expect(text).toContain("+260 % vs");
+  });
+
+  it("keeps en unchanged", () => {
+    const { container } = renderPanel([100, 200, 300, 400, 500, 1800], {
+      budgetMetrics: computeBudgetMetrics(null, 290, 1000),
+    });
+    expect(container.textContent).toContain("29% spent");
+    expect(container.textContent).toContain("+260% vs");
+    expect(screen.queryByText(/%%/)).toBeNull();
+  });
+});

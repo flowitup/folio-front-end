@@ -580,7 +580,9 @@
       "heading": "Invoice",
       "loading": "Loading…"
     },
-    "loadFailed": "Failed to load invoice."
+    "loadFailed": "Failed to load invoice.",
+    "loadListFailed": "Failed to load invoices.",
+    "deleteInvoiceFailed": "Failed to delete invoice."
   },
   "planning": {
     "title": "Planning",
@@ -729,7 +731,17 @@
     },
     "errors": {
       "supplementOutOfRange": "Supplement hours must be between 0 and 12.",
-      "updateFailed": "Failed to update attendance."
+      "updateFailed": "Failed to update attendance.",
+      "loadWorkersFailed": "Failed to load workers.",
+      "loadEntriesFailed": "Failed to load entries.",
+      "loadSummaryFailed": "Failed to load summary.",
+      "createWorkerFailed": "Failed to create worker.",
+      "updateWorkerFailed": "Failed to update worker.",
+      "deactivateWorkerFailed": "Failed to deactivate worker.",
+      "deleteEntryFailed": "Failed to delete entry.",
+      "saveWorkerFailed": "Failed to save worker.",
+      "workerNameRequired": "Worker name is required.",
+      "dailyRatePositive": "Daily rate must be greater than 0."
     },
     "logDayDialog": {
       "title": "Log day",
@@ -1227,7 +1239,8 @@
         "status": "Status",
         "totalTtc": "Total TTC",
         "actions": "Actions"
-      }
+      },
+      "loadMoreFailed": "Failed to load more documents. Please try again."
     },
     "form": {
       "modes": {

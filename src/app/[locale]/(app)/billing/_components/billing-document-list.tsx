@@ -154,7 +154,7 @@ export function BillingDocumentList({
       // For a SPA-feel we append client-side after server data arrives via router.
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
     } catch {
-      setLoadError("Failed to load more documents. Please try again.");
+      setLoadError(t("list.loadMoreFailed"));
     } finally {
       setIsLoadingMore(false);
     }

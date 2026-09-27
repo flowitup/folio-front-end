@@ -580,7 +580,9 @@
       "heading": "Facture",
       "loading": "Chargement…"
     },
-    "loadFailed": "Échec du chargement de la facture."
+    "loadFailed": "Échec du chargement de la facture.",
+    "loadListFailed": "Échec du chargement des dépenses.",
+    "deleteInvoiceFailed": "Échec de la suppression de la dépense."
   },
   "planning": {
     "title": "Planification",
@@ -729,7 +731,17 @@
     },
     "errors": {
       "supplementOutOfRange": "Les heures supplémentaires doivent être entre 0 et 12.",
-      "updateFailed": "Échec de la mise à jour de la présence."
+      "updateFailed": "Échec de la mise à jour de la présence.",
+      "loadWorkersFailed": "Échec du chargement des ouvriers.",
+      "loadEntriesFailed": "Échec du chargement des présences.",
+      "loadSummaryFailed": "Échec du chargement du récapitulatif.",
+      "createWorkerFailed": "Échec de la création de l'ouvrier.",
+      "updateWorkerFailed": "Échec de la mise à jour de l'ouvrier.",
+      "deactivateWorkerFailed": "Échec de la désactivation de l'ouvrier.",
+      "deleteEntryFailed": "Échec de la suppression de la présence.",
+      "saveWorkerFailed": "Échec de l'enregistrement de l'ouvrier.",
+      "workerNameRequired": "Le nom de l'ouvrier est obligatoire.",
+      "dailyRatePositive": "Le tarif journalier doit être supérieur à 0."
     },
     "logDayDialog": {
       "title": "Pointer la journée",
@@ -1227,7 +1239,8 @@
         "status": "Statut",
         "totalTtc": "Total TTC",
         "actions": "Actions"
-      }
+      },
+      "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer."
     },
     "form": {
       "modes": {

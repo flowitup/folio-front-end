@@ -580,7 +580,9 @@
       "heading": "Hóa đơn",
       "loading": "Đang tải…"
     },
-    "loadFailed": "Không tải được hóa đơn."
+    "loadFailed": "Không tải được hóa đơn.",
+    "loadListFailed": "Không tải được danh sách chi phí.",
+    "deleteInvoiceFailed": "Không xóa được chi phí."
   },
   "planning": {
     "title": "Kế hoạch",
@@ -729,7 +731,17 @@
     },
     "errors": {
       "supplementOutOfRange": "Giờ phụ phải từ 0 đến 12.",
-      "updateFailed": "Không cập nhật được chấm công."
+      "updateFailed": "Không cập nhật được chấm công.",
+      "loadWorkersFailed": "Không tải được danh sách thợ.",
+      "loadEntriesFailed": "Không tải được chấm công.",
+      "loadSummaryFailed": "Không tải được tổng hợp.",
+      "createWorkerFailed": "Không tạo được thợ.",
+      "updateWorkerFailed": "Không cập nhật được thợ.",
+      "deactivateWorkerFailed": "Không vô hiệu hóa được thợ.",
+      "deleteEntryFailed": "Không xóa được chấm công.",
+      "saveWorkerFailed": "Không lưu được thợ.",
+      "workerNameRequired": "Bắt buộc nhập tên thợ.",
+      "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0."
     },
     "logDayDialog": {
       "title": "Chấm công ngày",
@@ -1227,7 +1239,8 @@
         "status": "Trạng thái",
         "totalTtc": "Tổng (gồm VAT)",
         "actions": "Thao tác"
-      }
+      },
+      "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại."
     },
     "form": {
       "modes": {

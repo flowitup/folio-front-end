@@ -198,10 +198,11 @@ export default function InvoicesPage() {
         },
       });
     } catch {
-      setError("Failed to load invoices");
+      setError(t("loadListFailed"));
     } finally {
       setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- t only formats the error text; a new t must not refetch
   }, [projectId]);
 
   useEffect(() => {
@@ -233,7 +234,7 @@ export default function InvoicesPage() {
       await deleteInvoice(projectId, invoice.id);
       await loadInvoices();
     } catch {
-      setError("Failed to delete invoice");
+      setError(t("deleteInvoiceFailed"));
     }
   };
 

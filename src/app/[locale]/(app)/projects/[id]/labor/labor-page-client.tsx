@@ -223,8 +223,9 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       const data = await fetchWorkers(projectId);
       setWorkers(data);
     } catch {
-      setError("Failed to load workers");
+      setError(t("errors.loadWorkersFailed"));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- t only formats the error text; a new t must not refetch
   }, [projectId]);
 
   // Load entries.
@@ -241,10 +242,11 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       });
       setEntries(data);
     } catch {
-      setError("Failed to load entries");
+      setError(t("errors.loadEntriesFailed"));
     } finally {
       setIsTabLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- t only formats the error text; a new t must not refetch
   }, [projectId, entriesMonth, entriesWorkerFilter]);
 
   const loadActivities = useCallback(async () => {
@@ -291,10 +293,11 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       }
       await todayPromise;
     } catch {
-      setError("Failed to load summary");
+      setError(t("errors.loadSummaryFailed"));
     } finally {
       setIsTabLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- t only formats the error text; a new t must not refetch
   }, [projectId, summaryMonth]);
 
   // Initial load — workers + roles + payments summary in parallel. Member
@@ -379,7 +382,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       await createWorker(projectId, payload as CreateWorkerPayload);
       await loadWorkers();
     } catch {
-      setError("Failed to create worker");
+      setError(t("errors.createWorkerFailed"));
     }
   };
 
@@ -390,7 +393,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         await loadWorkers();
         setEditWorker(null);
       } catch {
-        setError("Failed to update worker");
+        setError(t("errors.updateWorkerFailed"));
       }
     }
   };
@@ -400,7 +403,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       await deleteWorker(projectId, worker.id);
       await loadWorkers();
     } catch {
-      setError("Failed to deactivate worker");
+      setError(t("errors.deactivateWorkerFailed"));
     }
   };
 
@@ -411,7 +414,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       await loadEntries();
       setEditEntry(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update entry");
+      setError(err instanceof Error ? err.message : t("errors.updateFailed"));
       throw err;
     }
   };
@@ -426,7 +429,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       await deleteAttendance(projectId, entry.id);
       await loadEntries();
     } catch {
-      setError("Failed to delete entry");
+      setError(t("errors.deleteEntryFailed"));
     }
   };
 

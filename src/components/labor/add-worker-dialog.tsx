@@ -104,7 +104,7 @@ export function AddWorkerDialog({
     if (isEdit) {
       // Edit path: name/phone/role only — rate changes go through AdjustRateDialog.
       if (!name.trim()) {
-        setError(t("workerName") + " is required");
+        setError(t("errors.workerNameRequired"));
         return;
       }
 
@@ -117,7 +117,7 @@ export function AddWorkerDialog({
         });
         handleClose();
       } catch {
-        setError("Failed to save worker");
+        setError(t("errors.saveWorkerFailed"));
       } finally {
         setIsSaving(false);
       }
@@ -127,11 +127,11 @@ export function AddWorkerDialog({
     // Create path — Person selection and rate are required.
     const rate = parseFloat(dailyRate);
     if (isNaN(rate) || rate <= 0) {
-      setError(t("dailyRate") + " must be > 0");
+      setError(t("errors.dailyRatePositive"));
       return;
     }
     if (!selectedPerson) {
-      setError(t("workerName") + " is required");
+      setError(t("errors.workerNameRequired"));
       return;
     }
     setIsSaving(true);
@@ -145,7 +145,7 @@ export function AddWorkerDialog({
       });
       handleClose();
     } catch {
-      setError("Failed to save worker");
+      setError(t("errors.saveWorkerFailed"));
     } finally {
       setIsSaving(false);
     }

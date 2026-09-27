@@ -2690,7 +2690,8 @@
       "empty": "No members to import.",
       "cancel": "Cancel",
       "submit": "{count, plural, =0 {Import} one {Import # member} other {Import # members}}",
-      "importedToast": "{count, plural, =0 {No members imported} one {# member imported} other {# members imported}}"
+      "importedToast": "{count, plural, =0 {No members imported} one {# member imported} other {# members imported}}",
+      "alreadyMember": "Already a member"
     },
     "grants": {
       "dialogTitle": "Custom permissions for {name}",

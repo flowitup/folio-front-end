@@ -2690,7 +2690,8 @@
       "empty": "Không có thành viên để nhập.",
       "cancel": "Huỷ",
       "submit": "{count, plural, other {Nhập # thành viên}}",
-      "importedToast": "{count, plural, other {Đã nhập # thành viên}}"
+      "importedToast": "{count, plural, other {Đã nhập # thành viên}}",
+      "alreadyMember": "Đã là thành viên"
     },
     "grants": {
       "dialogTitle": "Quyền tuỳ chỉnh cho {name}",

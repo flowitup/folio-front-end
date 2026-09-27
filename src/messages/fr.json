@@ -2690,7 +2690,8 @@
       "empty": "Aucun membre à importer.",
       "cancel": "Annuler",
       "submit": "{count, plural, =0 {Importer} one {Importer # membre} other {Importer # membres}}",
-      "importedToast": "{count, plural, =0 {Aucun membre importé} one {# membre importé} other {# membres importés}}"
+      "importedToast": "{count, plural, =0 {Aucun membre importé} one {# membre importé} other {# membres importés}}",
+      "alreadyMember": "Déjà membre"
     },
     "grants": {
       "dialogTitle": "Permissions personnalisées pour {name}",

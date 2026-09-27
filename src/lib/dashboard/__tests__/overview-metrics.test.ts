@@ -9,6 +9,7 @@ import {
   computePendingRefunds,
   computeBankOutstanding,
   buildPurseViews,
+  computeUnassignedSpend,
   buildTypeMonthlyBuckets,
   sharedMonthlyMax,
   buildReturnCredits,
@@ -284,7 +285,7 @@ describe("computeBankOutstanding", () => {
 describe("buildPurseViews", () => {
   it("splits counts client-side and falls back the company release when unset", () => {
     const invoices = [
-      mkInvoice({ type: "labor", issue_date: "2026-06-01", total_amount: 10, paid_by_personal: false }),
+      mkInvoice({ type: "labor", issue_date: "2026-06-01", total_amount: 10, paid_by_company: true }),
       mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 20, paid_by_personal: true }),
       mkInvoice({ type: "released_funds", issue_date: "2026-06-01", total_amount: 1000 }),
     ];
@@ -330,6 +331,37 @@ describe("buildPurseViews", () => {
       count: 0,
       cashAdvanced: 0,
     });
+  });
+});
+
+describe("company purse count vs unassigned expenses", () => {
+  const invoices = [
+    mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 1000 }),
+    mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 2000 }),
+    mkInvoice({ type: "others", issue_date: "2026-06-01", total_amount: 500, paid_by_company: true }),
+    mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 300, paid_by_personal: true }),
+    mkInvoice({
+      type: "materials_services",
+      issue_date: "2026-06-01",
+      total_amount: 70,
+      paid_by_personal: true,
+      refundable_status: "refunded",
+      refunded_by: "company",
+    }),
+  ];
+
+  it("counts in the company purse only what its Spent counts", () => {
+    const [company, personal] = buildPurseViews(invoices, {
+      fundsReleasedTotal: 10000,
+      companySpentTotal: 570,
+      personalSpentTotal: 300,
+    });
+    expect(company.count).toBe(2); // the company-method one and the company-reimbursed one
+    expect(personal.count).toBe(1);
+  });
+
+  it("reports the expenses in neither purse", () => {
+    expect(computeUnassignedSpend(invoices)).toEqual({ count: 2, total: 3000 });
   });
 });
 

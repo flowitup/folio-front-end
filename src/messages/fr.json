@@ -98,7 +98,8 @@
       "spentThisMonth": "Dépensé ce mois-ci",
       "pctSpent": "{pct}% dépensé · {spent}",
       "purseSpent": "dépensé",
-      "pctCreditDrawn": "{pct}% du crédit utilisé · {spent}"
+      "pctCreditDrawn": "{pct}% du crédit utilisé · {spent}",
+      "unassigned": "{n, plural, =1 {1 dépense} other {# dépenses}} · {amount} sans moyen de paiement entreprise ou personnel — dans aucune bourse"
     },
     "spendByType": {
       "title": "Dépenses mensuelles par type",

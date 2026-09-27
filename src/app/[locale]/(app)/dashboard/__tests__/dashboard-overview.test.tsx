@@ -455,3 +455,25 @@ describe("DashboardPage — remaining matches the Projects page", () => {
     expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toBe(`10% of credit drawn · ${eur(1000)}`);
   });
 });
+
+describe("DashboardPage — expenses in neither purse", () => {
+  it("names them instead of counting them in the company purse", async () => {
+    mockUseProject.mockReturnValue({ selectedProject: { id: "p-1", name: "Villa", budget: 10000 } });
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [
+        mkInvoice({ type: "materials_services", issue_date: "2026-07-05", total_amount: 1000 }),
+        mkInvoice({ type: "others", issue_date: "2026-07-05", total_amount: 500, paid_by_company: true }),
+      ],
+      funds_released_total: 10000,
+      company_spent_total: 500,
+      personal_spent_total: 0,
+      company_name: null,
+    });
+    renderDashboard();
+
+    const line = await screen.findByTestId("overview-unassigned-spend");
+    expect(line.textContent?.replace(/[\u202f\u00a0]/g, " ")).toContain(`1 expense · ${eur(1000)}`);
+    const moneyPanel = within(screen.getByTestId("overview-money-panel"));
+    expect(moneyPanel.getAllByText("1 expense").length).toBeGreaterThan(0);
+  });
+});

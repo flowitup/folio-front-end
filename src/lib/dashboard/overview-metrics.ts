@@ -51,6 +51,15 @@ export function isPersonalExpense(inv: Invoice): boolean {
   );
 }
 
+/** Mirrors the BE `is_company_paid` rule behind the company purse's "Spent":
+ * paid with a company-flagged method, or reimbursed by the company. */
+export function isCompanyPaidExpense(inv: Invoice): boolean {
+  return (
+    Boolean(inv.paid_by_company) ||
+    (inv.refundable_status === "refunded" && inv.refunded_by !== "bank")
+  );
+}
+
 function monthKeyOf(inv: Invoice): string {
   return (inv.service_month ?? inv.issue_date).slice(0, 7);
 }
@@ -313,10 +322,13 @@ interface InvoiceMetaLike {
 export function buildPurseViews(invoices: Invoice[], meta: InvoiceMetaLike): MoneyPurseView[] {
   let companyCount = 0;
   let personalCount = 0;
+  // Counted by the same rules as each purse's Spent (the backend's), so a
+  // purse never says "4 expenses" next to "Spent 0 €". Expenses in neither
+  // purse are reported by computeUnassignedSpend.
   for (const inv of invoices) {
     if (!isSpendInvoice(inv)) continue;
     if (isPersonalExpense(inv)) personalCount += 1;
-    else companyCount += 1;
+    else if (isCompanyPaidExpense(inv)) companyCount += 1;
   }
   const releasedPersonal = meta.fundsReleasedPersonalTotal ?? 0;
   const releasedCompany = meta.fundsReleasedCompanyTotal ?? meta.fundsReleasedTotal - releasedPersonal;
@@ -336,6 +348,20 @@ export function buildPurseViews(invoices: Invoice[], meta: InvoiceMetaLike): Mon
       cashAdvanced: 0,
     },
   ];
+}
+
+/** Expenses paid with no company- or personal-flagged method (no payment
+ * method, or an unflagged one): they count in neither purse. */
+export function computeUnassignedSpend(invoices: Invoice[]): PendingRefunds {
+  let count = 0;
+  let total = 0;
+  for (const inv of invoices) {
+    if (!isSpendInvoice(inv)) continue;
+    if (isPersonalExpense(inv) || isCompanyPaidExpense(inv)) continue;
+    count += 1;
+    total += inv.total_amount;
+  }
+  return { count, total };
 }
 
 export interface TypeMonthlyBucket {

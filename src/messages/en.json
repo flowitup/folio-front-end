@@ -98,7 +98,8 @@
       "spentThisMonth": "Spent this month",
       "pctSpent": "{pct}% spent · {spent}",
       "purseSpent": "spent",
-      "pctCreditDrawn": "{pct}% of credit drawn · {spent}"
+      "pctCreditDrawn": "{pct}% of credit drawn · {spent}",
+      "unassigned": "{n, plural, =1 {1 expense} other {# expenses}} · {amount} paid with no company or personal payment method — in neither purse"
     },
     "spendByType": {
       "title": "Monthly spend by type",

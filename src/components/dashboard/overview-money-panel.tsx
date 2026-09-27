@@ -63,6 +63,8 @@ export interface OverviewMoneyPanelProps {
    * separate balances and are never summed. */
   bankOutstanding: PendingRefunds;
   purses: MoneyPurseView[];
+  /** Expenses in neither purse (no company/personal payment method). */
+  unassigned?: PendingRefunds;
   /** True while the underlying invoices fetch hasn't settled yet for the
    * current project — figures aren't real yet (e.g. spentTotal defaults to
    * 0), so show placeholders instead of a briefly-wrong "full budget
@@ -93,6 +95,7 @@ export function OverviewMoneyPanel({
   pendingRefunds,
   bankOutstanding,
   purses,
+  unassigned,
   loading = false,
   canViewBudget = true,
   settingsHref = null,
@@ -333,6 +336,15 @@ export function OverviewMoneyPanel({
               ? `${tInvoices("summary.refundableCount", { n: pendingRefunds.count })} · ${formatEURWhole(pendingRefunds.total)}`
               : tInvoices("invoiceCount", { n: personal?.count ?? 0 }),
             "var(--accent)"
+          )}
+          {!loading && unassigned && unassigned.count > 0 && (
+            <div
+              className="text-[11px] sm:col-span-2"
+              style={{ opacity: 0.62 }}
+              data-testid="overview-unassigned-spend"
+            >
+              {t("money.unassigned", { n: unassigned.count, amount: formatEURWhole(unassigned.total) })}
+            </div>
           )}
         </div>
       )}

@@ -17,6 +17,7 @@ import {
   computePendingRefunds,
   computeBankOutstanding,
   buildPurseViews,
+  computeUnassignedSpend,
   buildTypeMonthlyBuckets,
   type MonthDelta,
   type MonthlySpendPoint,
@@ -179,6 +180,7 @@ export default function DashboardPage() {
   const pendingRefunds = useMemo(() => computePendingRefunds(activeInvoices), [activeInvoices]);
   const bankOutstanding = useMemo(() => computeBankOutstanding(activeInvoices), [activeInvoices]);
   const purses = useMemo(() => buildPurseViews(activeInvoices, activeMeta), [activeInvoices, activeMeta]);
+  const unassigned = useMemo(() => computeUnassignedSpend(activeInvoices), [activeInvoices]);
   const typeBuckets = useMemo(
     () =>
       referenceDate ? buildTypeMonthlyBuckets(activeInvoices, MONTHS_BACK, referenceDate) : EMPTY_TYPE_BUCKETS,
@@ -227,6 +229,7 @@ export default function DashboardPage() {
           pendingRefunds={pendingRefunds}
           bankOutstanding={bankOutstanding}
           purses={purses}
+          unassigned={unassigned}
           loading={showLoading}
           canViewBudget={canViewBudget}
           settingsHref={projectSettingsHref}

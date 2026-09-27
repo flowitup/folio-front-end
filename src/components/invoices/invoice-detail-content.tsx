@@ -19,6 +19,7 @@ import {
 } from "@/lib/invoices/refundable-status-display";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 import { formatQuantity, formatVatRate, invoiceTotals } from "@/lib/invoices/invoice-totals";
+import { invoiceItemLabel } from "@/lib/invoices/invoice-item-label";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import { InvoiceHighlightPicker } from "@/components/invoices/invoice-highlight-picker";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
@@ -412,7 +413,7 @@ export function InvoiceDetailContent({
                           style={{ borderColor: "var(--line)" }}
                         >
                           {/* Description full width */}
-                          <div className="text-[13px]">{item.description}</div>
+                          <div className="text-[13px]">{invoiceItemLabel(invoice, item.description, (number) => t("bankRefundLine", { number }))}</div>
                           {/* Qty × UnitPrice on left, Total on right */}
                           <div className="mt-1 flex items-center justify-between gap-2">
                             <span
@@ -500,7 +501,7 @@ export function InvoiceDetailContent({
                         <tbody>
                           {invoice.items.map((item, i) => (
                             <tr key={i} className="border-b last:border-0">
-                              <td className="px-3 py-1.5">{item.description}</td>
+                              <td className="px-3 py-1.5">{invoiceItemLabel(invoice, item.description, (number) => t("bankRefundLine", { number }))}</td>
                               <td className="px-3 py-1.5 text-right">{formatQuantity(item.quantity, locale)}</td>
                               <td className="px-3 py-1.5 text-right">{formatEUR(item.unit_price)}</td>
                               {hasVat && (

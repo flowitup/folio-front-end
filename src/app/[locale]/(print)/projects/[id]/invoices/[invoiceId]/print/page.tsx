@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { fetchInvoice } from "@/lib/api/invoice-api";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 import { formatQuantity, formatVatRate, invoiceTotals } from "@/lib/invoices/invoice-totals";
+import { invoiceItemLabel } from "@/lib/invoices/invoice-item-label";
 import type { Invoice } from "@/types/invoice";
 import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
 
@@ -144,7 +145,7 @@ export default function InvoicePrintPage() {
               <tbody>
                 {invoice.items.map((item, i) => (
                   <tr key={i}>
-                    <td>{item.description}</td>
+                    <td>{invoiceItemLabel(invoice, item.description, (number) => t("bankRefundLine", { number }))}</td>
                     <td className="right">{formatQuantity(item.quantity, locale)}</td>
                     <td className="right">{formatEUR(item.unit_price)}</td>
                     {hasVat && (

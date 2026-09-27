@@ -610,7 +610,8 @@
     "workerInactive": "{name} (inactive)",
     "errorQuantityTooLarge": "Quantity cannot exceed {max, number}.",
     "errorUnitPriceTooLarge": "Unit price cannot exceed {max, number}.",
-    "errorIssueDateRequired": "Enter the issue date"
+    "errorIssueDateRequired": "Enter the issue date",
+    "bankRefundLine": "Bank refund — {number}"
   },
   "planning": {
     "title": "Planning",

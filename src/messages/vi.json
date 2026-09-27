@@ -610,7 +610,8 @@
     "workerInactive": "{name} (không hoạt động)",
     "errorQuantityTooLarge": "Số lượng không được vượt quá {max, number}.",
     "errorUnitPriceTooLarge": "Đơn giá không được vượt quá {max, number}.",
-    "errorIssueDateRequired": "Vui lòng nhập ngày phát hành"
+    "errorIssueDateRequired": "Vui lòng nhập ngày phát hành",
+    "bankRefundLine": "Ngân hàng hoàn tiền — {number}"
   },
   "planning": {
     "title": "Kế hoạch",

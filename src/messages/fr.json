@@ -610,7 +610,8 @@
     "workerInactive": "{name} (inactif)",
     "errorQuantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
     "errorUnitPriceTooLarge": "Le prix unitaire ne peut pas dépasser {max, number}.",
-    "errorIssueDateRequired": "Indiquez la date d'émission"
+    "errorIssueDateRequired": "Indiquez la date d'émission",
+    "bankRefundLine": "Remboursement banque — {number}"
   },
   "planning": {
     "title": "Planification",

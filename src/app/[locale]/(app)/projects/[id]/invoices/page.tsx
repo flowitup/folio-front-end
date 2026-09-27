@@ -771,9 +771,11 @@ export default function InvoicesPage() {
                                           size="sm"
                                           className="h-7 w-7 p-0"
                                           style={{ color: "var(--muted)" }}
+                                          aria-label={t("deleteExpense", { number: invoice.invoice_number })}
+                                          title={t("deleteExpense", { number: invoice.invoice_number })}
                                           onClick={() => handleDelete(invoice)}
                                         >
-                                          <Trash2 size={13} />
+                                          <Trash2 size={13} aria-hidden />
                                         </Button>
                                       )}
                                     </div>

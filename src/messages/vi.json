@@ -498,7 +498,8 @@
       "summaryLine": "Đã chọn {count} tháng",
       "errorRangeInvalid": "\"Từ\" phải trước hoặc bằng \"Đến\"",
       "errorRangeTooLarge": "Khoảng thời gian không vượt quá 24 tháng",
-      "errorGeneric": "Không thể xuất chi phí"
+      "errorGeneric": "Không thể xuất chi phí",
+      "dialogDescription": "Chọn khoảng thời gian, loại và định dạng tệp."
     },
     "paymentMethod": {
       "label": "Phương thức thanh toán",
@@ -612,7 +613,10 @@
     "errorQuantityTooLarge": "Số lượng không được vượt quá {max, number}.",
     "errorUnitPriceTooLarge": "Đơn giá không được vượt quá {max, number}.",
     "errorIssueDateRequired": "Vui lòng nhập ngày phát hành",
-    "bankRefundLine": "Ngân hàng hoàn tiền — {number}"
+    "bankRefundLine": "Ngân hàng hoàn tiền — {number}",
+    "deleteExpense": "Xóa chi phí {number}",
+    "removeLine": "Xóa dòng",
+    "backToExpenses": "Quay lại danh sách chi phí"
   },
   "planning": {
     "title": "Kế hoạch",

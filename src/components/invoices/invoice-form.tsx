@@ -757,8 +757,10 @@ export function InvoiceForm({
                         className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                         onClick={() => removeItem(index)}
                         disabled={isLoading || items.length === 1}
+                        aria-label={t("removeLine")}
+                        title={t("removeLine")}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
                       </Button>
                     </div>
                   </div>
@@ -845,8 +847,10 @@ export function InvoiceForm({
                           className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                           onClick={() => removeItem(index)}
                           disabled={isLoading || items.length === 1}
+                          aria-label={t("removeLine")}
+                          title={t("removeLine")}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden />
                         </Button>
                       </div>
                     </div>

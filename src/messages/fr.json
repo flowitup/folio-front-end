@@ -498,7 +498,8 @@
       "summaryLine": "{count, plural, =1 {1 mois sélectionné} other {# mois sélectionnés}}",
       "errorRangeInvalid": "« De » doit être antérieur ou égal à « À »",
       "errorRangeTooLarge": "La période ne peut pas dépasser 24 mois",
-      "errorGeneric": "Échec de l'export des dépenses"
+      "errorGeneric": "Échec de l'export des dépenses",
+      "dialogDescription": "Choisissez une période, un type et un format de fichier."
     },
     "paymentMethod": {
       "label": "Moyen de paiement",
@@ -612,7 +613,10 @@
     "errorQuantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
     "errorUnitPriceTooLarge": "Le prix unitaire ne peut pas dépasser {max, number}.",
     "errorIssueDateRequired": "Indiquez la date d'émission",
-    "bankRefundLine": "Remboursement banque — {number}"
+    "bankRefundLine": "Remboursement banque — {number}",
+    "deleteExpense": "Supprimer la dépense {number}",
+    "removeLine": "Supprimer la ligne",
+    "backToExpenses": "Retour aux dépenses"
   },
   "planning": {
     "title": "Planification",

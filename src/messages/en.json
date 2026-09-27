@@ -498,7 +498,8 @@
       "summaryLine": "{count, plural, =1 {1 month selected} other {# months selected}}",
       "errorRangeInvalid": "\"From\" must be before or equal to \"To\"",
       "errorRangeTooLarge": "Range cannot exceed 24 months",
-      "errorGeneric": "Failed to export expenses"
+      "errorGeneric": "Failed to export expenses",
+      "dialogDescription": "Choose a period, a type and a file format."
     },
     "paymentMethod": {
       "label": "Payment method",
@@ -612,7 +613,10 @@
     "errorQuantityTooLarge": "Quantity cannot exceed {max, number}.",
     "errorUnitPriceTooLarge": "Unit price cannot exceed {max, number}.",
     "errorIssueDateRequired": "Enter the issue date",
-    "bankRefundLine": "Bank refund — {number}"
+    "bankRefundLine": "Bank refund — {number}",
+    "deleteExpense": "Delete expense {number}",
+    "removeLine": "Remove line",
+    "backToExpenses": "Back to expenses"
   },
   "planning": {
     "title": "Planning",

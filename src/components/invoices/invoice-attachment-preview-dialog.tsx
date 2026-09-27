@@ -135,6 +135,8 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
         className="sm:max-w-4xl w-full h-[85vh] max-h-[95vh] grid-rows-[auto_1fr_auto] overflow-hidden"
         style={resizeStyle}
         showCloseButton
+        // The file itself is the content; there is no description to point at.
+        aria-describedby={undefined}
       >
         <ResizableDialogHandles onResize={setBounds} />
         <DialogHeader>

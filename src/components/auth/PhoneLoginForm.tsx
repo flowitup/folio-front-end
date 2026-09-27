@@ -4,6 +4,7 @@ import { type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import { CodeBoxes, CODE_LENGTH } from "./CodeBoxes";
+import { FrenchPhoneInput } from "./FrenchPhoneInput";
 import type { PhoneLoginFlow } from "./use-phone-login-flow";
 
 interface PhoneLoginFormProps {
@@ -133,50 +134,16 @@ function PhoneStepFields({ flow }: { flow: PhoneLoginFlow }) {
       <label htmlFor="phone" className="label-cap">
         {t("phoneLabel")}
       </label>
-      {/* One control, two segments: sign-in codes only ever leave through a
-          French gateway, so the dial code is stated rather than chosen. The
-          border belongs to the wrapper, not to either segment. */}
-      <div
-        className="flex focus-within:border-[color:var(--ink)] focus-within:shadow-[var(--shadow-focus)]"
-        style={{
-          background: "var(--card-paper)",
-          border: "1px solid var(--line-2)",
-          borderRadius: 10,
-        }}
-      >
-        <span
-          data-testid="login-country"
-          className="flex flex-shrink-0 items-center gap-1.5 rounded-l-[9px] pl-3 pr-2.5 text-[13px] font-medium"
-          style={{
-            background: "var(--paper-2)",
-            borderRight: "1px solid var(--line-2)",
-            color: "var(--ink-2)",
-          }}
-        >
-          FR
-          <span className="num text-[12.5px]" style={{ color: "var(--muted)" }}>
-            +33
-          </span>
-        </span>
-        <input
-          id="phone"
-          name="phone"
-          data-testid="login-phone"
-          type="tel"
-          autoComplete="tel-national"
-          inputMode="tel"
-          required
-          autoFocus
-          value={flow.nationalNumber}
-          onChange={(event) => flow.setNationalNumber(event.target.value)}
-          aria-invalid={flow.errorKey === "errorInvalidPhone" || undefined}
-          aria-describedby={flow.errorKey ? "login-error" : undefined}
-          disabled={flow.isSendingCode}
-          placeholder={t("phonePlaceholder")}
-          className="num min-w-0 flex-1 bg-transparent px-3 py-[11px] text-[14px] outline-none"
-          style={{ color: "var(--ink)" }}
-        />
-      </div>
+      <FrenchPhoneInput
+        id="phone"
+        autoFocus
+        value={flow.nationalNumber}
+        onChange={flow.setNationalNumber}
+        invalid={flow.errorKey === "errorInvalidPhone"}
+        describedBy={flow.errorKey ? "login-error" : undefined}
+        disabled={flow.isSendingCode}
+        placeholder={t("phonePlaceholder")}
+      />
       <p className="mt-0.5 text-[12px]" style={{ color: "var(--muted)" }}>
         {t("phoneHint")}
       </p>

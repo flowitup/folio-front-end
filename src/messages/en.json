@@ -331,7 +331,26 @@
         "unknown": "Something went wrong. Please try again."
       }
     },
-    "errorInvalidProfile": "Check your name and phone: the name can be up to 255 characters."
+    "errorInvalidProfile": "Check your name: it can be up to 255 characters.",
+    "changePhone": {
+      "action": "Change number",
+      "title": "Change your phone number",
+      "readOnlyHint": "You sign in with this number. To use another one, change it with a code sent to the new number.",
+      "phoneStep": "Enter your new number. We will text a 6-digit code to it; your current number stays active until you confirm.",
+      "codeStep": "Enter the code sent to {phone}.",
+      "newNumber": "New phone number",
+      "confirm": "Confirm",
+      "confirming": "Confirming…",
+      "otherNumber": "Use another number",
+      "success": "Phone number changed. Sign in with your new number from now on.",
+      "errorInvalidPhone": "Enter a valid French phone number.",
+      "errorSameNumber": "This is already your phone number.",
+      "errorPhoneTaken": "This phone number is already used by another account.",
+      "errorThrottled": "Too many requests. Wait a minute and try again.",
+      "errorSmsFailed": "The SMS could not be sent. Try again later.",
+      "errorInvalidCode": "Wrong or expired code",
+      "errorFailed": "Couldn't change your phone number. Please try again."
+    }
   },
   "paymentMethods": {
     "title": "Payment methods",

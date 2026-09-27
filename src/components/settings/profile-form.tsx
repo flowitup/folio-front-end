@@ -1,10 +1,11 @@
 "use client";
 
 /**
- * ProfileForm — Settings › Profile: display name + phone, saved via
- * PATCH /auth/me. Email is read-only here on purpose: only an administrator
- * can change it (it stays the account's stable identifier while phone-only
- * sign-in rolls out), so there is no input for it.
+ * ProfileForm — Settings › Profile: display name, saved via PATCH /auth/me.
+ * The phone is how the user signs in, so it is read-only here and changes only
+ * through the verified "Change number" dialog (code texted to the new number).
+ * Email is read-only too: only an administrator can change it (it stays the
+ * account's stable identifier while phone-only sign-in rolls out).
  */
 
 import { useState } from "react";
@@ -15,6 +16,9 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { realEmail, userDisplayName, userInitial } from "@/lib/auth/user-display";
 import { updateProfileAction } from "@/app/[locale]/(app)/settings/_actions/profile-actions";
+import { formatFrenchPhone } from "@/lib/auth/phone-number";
+import type { User } from "@/lib/auth/types";
+import { ChangePhoneDialog } from "./change-phone-dialog";
 
 export function ProfileForm() {
   const t = useTranslations("settings");
@@ -24,6 +28,7 @@ export function ProfileForm() {
   const [displayName, setDisplayName] = useState(user?.display_name ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [isSaving, setIsSaving] = useState(false);
+  const [changePhoneOpen, setChangePhoneOpen] = useState(false);
 
   const initials = userInitial(user);
   const email = realEmail(user);
@@ -33,10 +38,8 @@ export function ProfileForm() {
     setIsSaving(true);
     try {
       const trimmedName = displayName.trim();
-      const trimmedPhone = phone.trim();
       const result = await updateProfileAction({
         display_name: trimmedName.length > 0 ? trimmedName : null,
-        phone: trimmedPhone.length > 0 ? trimmedPhone : null,
       });
 
       if (!result.success) {
@@ -64,6 +67,12 @@ export function ProfileForm() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function handlePhoneChanged(updated: User) {
+    setPhone(updated.phone ?? "");
+    toast.success(t("changePhone.success"));
+    router.refresh();
   }
 
   return (
@@ -103,17 +112,27 @@ export function ProfileForm() {
           <label htmlFor="profile-phone" className="label-cap">
             {t("phone")}
           </label>
-          <input
-            id="profile-phone"
-            className="folio-input mt-1.5"
-            type="tel"
-            autoComplete="tel"
-            placeholder="06 12 34 56 78"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            disabled={isSaving}
-            maxLength={32}
-          />
+          <div className="mt-1.5 flex gap-2">
+            <input
+              id="profile-phone"
+              className="folio-input num min-w-0 flex-1"
+              type="tel"
+              value={formatFrenchPhone(phone)}
+              readOnly
+              aria-describedby="profile-phone-hint"
+            />
+            <button
+              type="button"
+              className="btn btn-ghost flex-shrink-0"
+              data-testid="profile-change-phone"
+              onClick={() => setChangePhoneOpen(true)}
+            >
+              {t("changePhone.action")}
+            </button>
+          </div>
+          <p id="profile-phone-hint" className="mt-1 text-[12px]" style={{ color: "var(--muted)" }}>
+            {t("changePhone.readOnlyHint")}
+          </p>
         </div>
         {/* Phone-only accounts carry a synthetic address, not an e-mail. */}
         {email && (
@@ -146,6 +165,12 @@ export function ProfileForm() {
           </button>
         </div>
       </form>
+
+      <ChangePhoneDialog
+        open={changePhoneOpen}
+        onOpenChange={setChangePhoneOpen}
+        onChanged={handlePhoneChanged}
+      />
     </section>
   );
 }

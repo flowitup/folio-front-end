@@ -362,7 +362,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Your own details, the current project's invoice numbering, and which notifications reach your phone.",
     steps: [
       "Open Settings; the list down the left selects the section.",
-      "On “Profile”, edit your display name and phone and save. Your email is read-only — only an administrator can change it.",
+      "On “Profile”, edit your display name and save. To sign in with another phone number, use “Change number”: enter the new number, then the code texted to it. Your email is read-only — only an administrator can change it.",
       "On “Project”, set the invoice number prefix for the selected project, up to eight letters or digits, and watch the preview line before saving.",
       "On “Company”, manage the companies you belong to: the identity card of each, which one is primary, detaching, and attaching another with a code. Administering the selected one adds its join code, its members and its payment methods.",
       "On “Notifications”, use the master switch and the per-category switches: team chat, attendance, tasks, team and access, and money.",

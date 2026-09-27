@@ -108,6 +108,13 @@ describe("AddWorkerDialog — edit submit payload excludes daily_rate", () => {
     expect(payload.name).toBe("Alice Updated");
   });
 
+  it("pre-fills the name every screen shows (the person's), not the stale per-project copy", () => {
+    render(
+      <AddWorkerDialog {...BASE_PROPS} editWorker={{ ...EDIT_WORKER, person_id: "person-1", person_name: "Alice Martin" }} />,
+    );
+    expect((document.querySelector("#name") as HTMLInputElement).value).toBe("Alice Martin");
+  });
+
   it("sends an empty phone when the user clears it, so the API clears it", async () => {
     render(<AddWorkerDialog {...BASE_PROPS} editWorker={EDIT_WORKER} />);
     fireEvent.change(document.querySelector("#phone") as HTMLInputElement, { target: { value: "" } });

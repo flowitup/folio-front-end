@@ -45,10 +45,9 @@ interface AddWorkerDialogProps {
  * PersonTypeahead, then attaches a daily_rate. The Worker is linked to
  * the Person's id; name/phone derive from the Person selection.
  *
- * Edit flow: unchanged. The Worker's inline name/phone columns and
- * daily_rate remain editable. A future release (after workers.name and
- * workers.phone columns are dropped) will move name/phone edits to a
- * dedicated Person edit surface.
+ * Edit flow: name/phone/role. The name is the shared Person's name (what
+ * every screen shows); saving it renames that person in every project and
+ * company that uses them.
  */
 export function AddWorkerDialog({
   open,
@@ -84,7 +83,7 @@ export function AddWorkerDialog({
   // Hydrate form when entering edit mode.
   useEffect(() => {
     if (open && editWorker) {
-      setName(editWorker.name);
+      setName(editWorker.person_name ?? editWorker.name);
       setPhone(editWorker.phone || "");
       // daily_rate is intentionally not hydrated in edit mode:
       // rate changes are handled exclusively via the AdjustRateDialog.

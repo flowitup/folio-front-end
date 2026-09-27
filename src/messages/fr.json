@@ -1072,7 +1072,12 @@
     "codePlaceholder": "123456",
     "changeNumber": "Changer de numéro",
     "resendCode": "Renvoyer le code",
-    "resendIn": "Renvoyer dans {seconds}s"
+    "resendIn": "Renvoyer dans {seconds}s",
+    "roles": {
+      "admin": "administrateur",
+      "manager": "manager",
+      "member": "membre"
+    }
   },
   "admin": {
     "bulkAdd": {

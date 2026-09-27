@@ -1072,7 +1072,12 @@
     "codePlaceholder": "123456",
     "changeNumber": "Đổi số",
     "resendCode": "Gửi lại mã",
-    "resendIn": "Gửi lại sau {seconds}s"
+    "resendIn": "Gửi lại sau {seconds}s",
+    "roles": {
+      "admin": "quản trị viên",
+      "manager": "quản lý",
+      "member": "thành viên"
+    }
   },
   "admin": {
     "bulkAdd": {

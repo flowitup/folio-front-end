@@ -20,6 +20,7 @@ const TRANSLATIONS: Record<string, string> = {
   title: "You're invited to join {projectName}",
   intro: "Confirm your phone number to join the project.",
   subtitle: "{inviterName} invited you as {roleName}",
+  "roles.member": "membre",
   emailLabel: "Email",
   nameLabel: "Your full name",
   phoneLabel: "Phone number",
@@ -50,14 +51,18 @@ const TRANSLATIONS: Record<string, string> = {
 };
 
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string, params?: Record<string, unknown>) => {
-    const template = TRANSLATIONS[key] ?? key;
-    if (!params) return template;
-    return Object.entries(params).reduce(
-      (acc, [k, v]) => acc.replace(`{${k}}`, String(v)),
-      template
-    );
-  },
+  useTranslations: () =>
+    Object.assign(
+      (key: string, params?: Record<string, unknown>) => {
+        const template = TRANSLATIONS[key] ?? key;
+        if (!params) return template;
+        return Object.entries(params).reduce(
+          (acc, [k, v]) => acc.replace(`{${k}}`, String(v)),
+          template
+        );
+      },
+      { has: (key: string) => key in TRANSLATIONS }
+    ),
 }));
 
 Object.defineProperty(window, "location", {
@@ -105,6 +110,11 @@ describe("AcceptInviteForm", () => {
       expect(email).toHaveAttribute("readOnly");
       expect(screen.getByLabelText("Your full name")).toBeInTheDocument();
       expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
+    });
+
+    it("names the invited role in the app language, not the API's enum", () => {
+      renderForm("tok123", "fr", { ...VERIFIED, role_name: "member" });
+      expect(screen.getByText("Alice Admin invited you as membre")).toBeInTheDocument();
     });
 
     it("renders no password input", () => {

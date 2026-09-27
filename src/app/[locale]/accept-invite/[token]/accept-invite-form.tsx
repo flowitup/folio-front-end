@@ -362,7 +362,10 @@ function Shell({ locale, verified, t, children }: ShellProps) {
             <span>
               {t("subtitle", {
                 inviterName: verified.inviter_name,
-                roleName: verified.role_name,
+                // The API sends the role enum ("member"): say it in the app language.
+                roleName: t.has(`roles.${verified.role_name}`)
+                  ? t(`roles.${verified.role_name}`)
+                  : verified.role_name,
               })}
             </span>
           </div>

@@ -188,6 +188,19 @@ body {
 
 /* ─── Folio component primitives ─── */
 @layer components {
+  /* Card actions revealed on hover or keyboard focus — but only where the
+     device can hover. On touch screens they stay visible, since nothing
+     would ever reveal them there. */
+  @media (hover: hover) {
+    .hover-reveal {
+      opacity: 0;
+    }
+    .group:hover .hover-reveal,
+    .group:focus-within .hover-reveal {
+      opacity: 1;
+    }
+  }
+
   /* Cards */
   .folio-card {
     background: var(--card-paper);

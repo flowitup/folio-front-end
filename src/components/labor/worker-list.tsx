@@ -146,9 +146,10 @@ export function WorkerList({
                   )}
                 </div>
 
-                {/* Action bar — visible on hover or focus-within */}
+                {/* Action bar — revealed on hover or focus-within; always
+                    shown on touch devices (see .hover-reveal). */}
                 {worker.is_active && (
-                  <div className="absolute inset-x-0 bottom-2 flex items-center justify-center gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
+                  <div className="hover-reveal absolute inset-x-0 bottom-2 flex items-center justify-center gap-1 transition">
                     <Button
                       variant="ghost"
                       size="icon"

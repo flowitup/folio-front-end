@@ -91,4 +91,18 @@ describe("TaskDetailDrawer", () => {
     await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(en.planning.errors.save));
     expect(screen.getByLabelText(en.planning.titleLabel)).toHaveValue("Pour slab");
   });
+
+  it("sends cleared description and due date as null so they are cleared", async () => {
+    vi.mocked(updateTask).mockResolvedValue({ ...TASK, description: null, due_date: null });
+    renderDrawer();
+    await userEvent.clear(screen.getByLabelText(en.planning.descriptionLabel));
+    fireEvent.change(screen.getByLabelText(en.planning.dueDateLabel), { target: { value: "" } });
+    await userEvent.click(screen.getByRole("button", { name: en.planning.save }));
+    await waitFor(() =>
+      expect(updateTask).toHaveBeenCalledWith(
+        "t1",
+        expect.objectContaining({ description: null, due_date: null })
+      )
+    );
+  });
 });

@@ -26,7 +26,8 @@ export interface Task {
 
 export interface CreateTaskPayload {
   title: string;
-  description?: string;
+  /** On edit, an explicit null clears it. */
+  description?: string | null;
   status?: TaskStatus;
   priority?: TaskPriority;
   assignee_id?: string | null;

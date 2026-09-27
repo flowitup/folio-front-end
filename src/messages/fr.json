@@ -4,7 +4,8 @@
     "appTagline": "Journal de chantier",
     "signOut": "Déconnexion",
     "loading": "Chargement...",
-    "language": "Langue"
+    "language": "Langue",
+    "close": "Fermer"
   },
   "navigation": {
     "dashboard": "Aperçu",

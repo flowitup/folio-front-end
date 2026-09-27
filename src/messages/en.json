@@ -4,7 +4,8 @@
     "appTagline": "Build journal",
     "signOut": "Sign out",
     "loading": "Loading...",
-    "language": "Language"
+    "language": "Language",
+    "close": "Close"
   },
   "navigation": {
     "dashboard": "Overview",

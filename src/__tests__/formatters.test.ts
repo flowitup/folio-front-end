@@ -7,6 +7,7 @@ import {
   truncate,
   slugify,
   isValidEmail,
+  formatWeekdayDate,
 } from '@/lib/utils/formatters'
 
 describe('formatCurrency', () => {
@@ -156,3 +157,25 @@ describe('isValidEmail', () => {
     expect(isValidEmail('')).toBe(false)
   })
 })
+
+describe("formatWeekdayDate", () => {
+  it("names the weekday in the app locale", () => {
+    expect(formatWeekdayDate("2026-09-26", "en")).toBe("Saturday 26/09/2026");
+    expect(formatWeekdayDate("2026-09-26", "fr")).toBe("Samedi 26/09/2026");
+    expect(formatWeekdayDate("2026-09-26", "vi")).toMatch(/^Thứ Bảy 26\/09\/2026$/i);
+  });
+
+  it("keeps a date-only string on its calendar day west of UTC", () => {
+    const tz = process.env.TZ;
+    process.env.TZ = "America/New_York";
+    try {
+      expect(formatWeekdayDate("2026-09-26", "en")).toBe("Saturday 26/09/2026");
+    } finally {
+      process.env.TZ = tz;
+    }
+  });
+
+  it("reads a Date in local time", () => {
+    expect(formatWeekdayDate(new Date(2026, 8, 25), "en")).toBe("Friday 25/09/2026");
+  });
+});

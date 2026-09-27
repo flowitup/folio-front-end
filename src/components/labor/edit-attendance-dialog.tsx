@@ -16,7 +16,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 
 import {
@@ -36,9 +36,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { capitalizeFirst } from "@/lib/utils/capitalize-first";
-import { formatDate } from "@/lib/utils/formatters";
+import { formatWeekdayDate } from "@/lib/utils/formatters";
 import type { LaborEntry, ShiftType, UpdateAttendancePayload } from "@/types/labor";
+import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 
 // Radix Select forbids value=""; sentinel maps to null shift_type.
 const SHIFT_NONE = "__none__";
@@ -50,18 +50,6 @@ interface EditAttendanceDialogProps {
   onSave: (payload: UpdateAttendancePayload) => Promise<void>;
 }
 
-function formatEntryDate(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!m) return iso;
-  const [, y, mo, d] = m.map(Number);
-  const date = new Date(y, mo - 1, d);
-  // Localized weekday + canonical dd/mm/YYYY date.
-  return `${capitalizeFirst(
-    date.toLocaleDateString(undefined, { weekday: "long" }),
-    undefined,
-  )} ${formatDate(date)}`;
-}
-
 export function EditAttendanceDialog({
   open,
   onOpenChange,
@@ -69,6 +57,7 @@ export function EditAttendanceDialog({
   onSave,
 }: EditAttendanceDialogProps) {
   const t = useTranslations("labor");
+  const locale = useLocale();
   const [shiftType, setShiftType] = useState<ShiftType | null>(null);
   const [supplementHours, setSupplementHours] = useState(0);
   const [amountOverride, setAmountOverride] = useState("");
@@ -108,6 +97,10 @@ export function EditAttendanceDialog({
       return;
     }
     if (isEmptyRow || isOverrideWithoutShift) return;
+    if (amountOverride !== "" && parseFloat(amountOverride) > MAX_DAILY_AMOUNT) {
+      setError(t("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -139,7 +132,7 @@ export function EditAttendanceDialog({
             <div className="bg-muted/30 space-y-1 rounded-md p-3 text-sm">
               <div className="font-medium">{entry.worker_name}</div>
               <div className="text-muted-foreground text-xs">
-                {formatEntryDate(entry.date)}
+                {formatWeekdayDate(entry.date, locale)}
               </div>
             </div>
 
@@ -191,6 +184,7 @@ export function EditAttendanceDialog({
                 type="number"
                 step="0.01"
                 min="0"
+                max={MAX_DAILY_AMOUNT}
                 value={amountOverride}
                 onChange={(e) => setAmountOverride(e.target.value)}
                 placeholder={t("overridePlaceholder")}

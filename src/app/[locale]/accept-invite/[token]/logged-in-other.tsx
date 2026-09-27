@@ -35,7 +35,7 @@ export function LoggedInOther({ currentEmail }: LoggedInOtherProps) {
         </h1>
 
         <p className="text-[14px]" style={{ color: "var(--muted)" }}>
-          {t("loggedInOther.body", { email: currentEmail })}
+          {t("loggedInOther.body", { currentEmail })}
         </p>
 
         <button

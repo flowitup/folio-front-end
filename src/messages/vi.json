@@ -81,9 +81,7 @@
     "membersSubtitle": "Ai đang làm trong dự án này, với vai trò gì."
   },
   "sidebar": {
-    "todayOnSite": "Hôm nay tại công trường",
     "todayConditions": "{temp}° / {weather}",
-    "todayLocation": "{place} · {workers} công nhân tại công trường",
     "billing": {
       "title": "Báo giá & Hóa đơn",
       "devis": "Báo giá",
@@ -361,7 +359,18 @@
   },
   "errors": {
     "unauthorized": "Không được phép",
-    "accessDenied": "Bạn không có quyền truy cập trang này."
+    "accessDenied": "Bạn không có quyền truy cập trang này.",
+    "notFound": {
+      "title": "Không tìm thấy trang",
+      "body": "Trang này không tồn tại, đã bị xóa hoặc bạn không có quyền truy cập.",
+      "back": "Quay lại bảng điều khiển"
+    },
+    "boundary": {
+      "title": "Đã xảy ra lỗi",
+      "body": "Vui lòng tải lại trang. Nếu sự cố vẫn tiếp diễn, hãy đăng nhập lại.",
+      "refresh": "Tải lại",
+      "login": "Đến trang đăng nhập"
+    }
   },
   "invoices": {
     "title": "Chi phí",
@@ -498,7 +507,10 @@
       "failedToLoad": "Không thể tải phương thức thanh toán",
       "failedToLoadRetry": "Tải thất bại. Thử đóng và mở lại.",
       "noMethodsFound": "Không tìm thấy phương thức nào.",
-      "failedToCreate": "Không thể tạo phương thức thanh toán"
+      "failedToCreate": "Không thể tạo phương thức thanh toán",
+      "duplicateLabel": "Đã có phương thức thanh toán với tên này.",
+      "createForbidden": "Chỉ quản trị viên công ty mới có thể thêm phương thức thanh toán.",
+      "inactiveLabel": "{label} (không hoạt động)"
     },
     "refundHint": "Dùng đơn giá âm cho dòng trả hàng/giảm trừ và dương cho khoản tính phí; tổng là giá trị thực.",
     "refundsInvoiceLabel": "Hóa đơn được trả hàng (Vật tư & Dịch vụ)",
@@ -572,7 +584,9 @@
       "sumOfTypes": "Tổng",
       "sharedScaleTo": "thang chung đến {amount}",
       "cash": "Tiền mặt",
-      "cashAdvance": "gồm {amount} tiền mặt"
+      "cashAdvance": "gồm {amount} tiền mặt",
+      "noPurse": "Không thuộc quỹ nào",
+      "noPurseSpend": "{n} khoản chi không thuộc quỹ nào (không có phương thức thanh toán của công ty hoặc cá nhân) · {amount}"
     },
     "byWorker": {
       "totalPaid": "Tổng đã trả",
@@ -591,7 +605,11 @@
     },
     "loadFailed": "Không tải được hóa đơn.",
     "loadListFailed": "Không tải được danh sách chi phí.",
-    "deleteInvoiceFailed": "Không xóa được chi phí."
+    "deleteInvoiceFailed": "Không xóa được chi phí.",
+    "errorPaymentMethodInactive": "Phương thức thanh toán này đã bị vô hiệu hóa. Hãy chọn phương thức khác.",
+    "workerInactive": "{name} (không hoạt động)",
+    "errorQuantityTooLarge": "Số lượng không được vượt quá {max, number}.",
+    "errorUnitPriceTooLarge": "Đơn giá không được vượt quá {max, number}."
   },
   "planning": {
     "title": "Kế hoạch",
@@ -777,7 +795,9 @@
       "deleteEntryFailed": "Không xóa được chấm công.",
       "saveWorkerFailed": "Không lưu được thợ.",
       "workerNameRequired": "Bắt buộc nhập tên thợ.",
-      "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0."
+      "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0.",
+      "reactivateWorkerFailed": "Không thể kích hoạt lại công nhân",
+      "amountTooLarge": "Số tiền không được vượt quá {max, number}."
     },
     "logDayDialog": {
       "title": "Chấm công ngày",
@@ -854,7 +874,8 @@
       "countSingular": "hoạt động",
       "countPlural": "hoạt động",
       "sectionTitle": "Hoạt động",
-      "deleteFailed": "Không thể xóa hoạt động"
+      "deleteFailed": "Không thể xóa hoạt động",
+      "deleted": "Đã xóa hoạt động"
     },
     "dayDescription": {
       "label": "Mô tả trong ngày",
@@ -987,7 +1008,11 @@
       "loadFailed": "Không tải được đầy đủ các yêu cầu sửa.",
       "retry": "Thử lại",
       "refreshing": "Đang làm mới các yêu cầu sửa"
-    }
+    },
+    "entryDeleted": "Đã xóa mục chấm công",
+    "workerDeactivated": "Đã vô hiệu hóa {name}",
+    "reactivateWorker": "Kích hoạt lại",
+    "workerReactivated": "Đã kích hoạt lại {name}"
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",
@@ -1010,7 +1035,7 @@
       "codeRequired": "Vui lòng nhập mã gồm 6 chữ số",
       "invalidCode": "Mã không đúng hoặc đã hết hạn",
       "throttled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại.",
-      "title": "Lời mời không còn hiệu lực"
+      "title": "Lời mời không khả dụng"
     },
     "loggedInOther": {
       "title": "Bạn đang đăng nhập bằng tài khoản khác",
@@ -1310,7 +1335,8 @@
         "totalTtc": "Tổng (gồm VAT)",
         "actions": "Thao tác"
       },
-      "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại."
+      "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại.",
+      "searchLoadedOnly": "Tìm kiếm chỉ trong {loaded} tài liệu gần nhất trên tổng số {total}. Tải thêm để tìm các tài liệu cũ hơn."
     },
     "form": {
       "modes": {
@@ -1386,7 +1412,8 @@
         "sendStatus": "Đánh dấu đã gửi",
         "edit": "Chỉnh sửa",
         "previewPdf": "Xem trước PDF",
-        "openMenu": "Mở thao tác"
+        "openMenu": "Mở thao tác",
+        "openFacture": "Mở hóa đơn"
       },
       "errors": {
         "recipientRequired": "Tên khách hàng là bắt buộc.",
@@ -1406,7 +1433,15 @@
         "statusUpdateFailed": "Không cập nhật được trạng thái. Vui lòng thử lại.",
         "createFromTemplateFailed": "Không tạo được tài liệu từ mẫu.",
         "templatesLoadFailed": "Không tải được danh sách mẫu.",
-        "documentsLoadFailed": "Không tải được các tài liệu hiện có."
+        "documentsLoadFailed": "Không tải được các tài liệu hiện có.",
+        "recipientEmailInvalid": "Nhập địa chỉ email người nhận hợp lệ.",
+        "itemQuantityTooLarge": "Số lượng của một dòng không được vượt quá {max}.",
+        "itemUnitPriceTooLarge": "Đơn giá của một dòng không được vượt quá {max}.",
+        "itemVatRateInvalid": "Mỗi dòng cần có thuế suất VAT.",
+        "itemVatRateTooLarge": "Thuế suất VAT của một dòng không được vượt quá 100%.",
+        "invalidInput": "Một số trường không hợp lệ. Hãy kiểm tra ngày, email và số tiền của các dòng.",
+        "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+        "companyProfileMissing": "Hãy hoàn thiện hồ sơ công ty trước khi tạo chứng từ thanh toán."
       },
       "toast": {
         "documentSaved": "Đã lưu tài liệu.",
@@ -1497,7 +1532,8 @@
         "companyShare": "{percent}% công ty",
         "bothShare": "{percent}% cả hai",
         "bankShare": "{percent}% ngân hàng"
-      }
+      },
+      "companyPaidNotRefundable": "Đã thanh toán bằng phương thức của công ty nên không có gì để hoàn trả: {numbers}"
     },
     "import": {
       "button": "Nhập",
@@ -2206,6 +2242,20 @@
         "rate_limited": "Máy chủ vẫn đang bận, hãy thử lại sau một phút.",
         "generic": "Lỗi không mong muốn, hãy thử lại."
       }
+    },
+    "errors": {
+      "duplicate": "Đã có sản phẩm với mã tham chiếu này.",
+      "forbidden": "Bạn không có quyền quản lý thư viện.",
+      "notFound": "Không tìm thấy.",
+      "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
+      "invalidInput": "Một số trường không hợp lệ. Hãy kiểm tra các liên kết và con số.",
+      "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+      "noImageFile": "Chưa chọn tệp ảnh.",
+      "imageUnsupported": "Định dạng ảnh không được hỗ trợ (dùng JPG, PNG hoặc WebP).",
+      "imageTooLarge": "Ảnh quá lớn (tối đa 10 MB).",
+      "imageAlreadySet": "Sản phẩm này đã có ảnh.",
+      "imageLinkRefused": "Liên kết ảnh này không được chấp nhận. Hãy dùng liên kết https trỏ trực tiếp tới ảnh.",
+      "imageLinkNotImage": "Liên kết không phải là ảnh JPG, PNG hoặc WebP."
     }
   },
   "inventory": {
@@ -2351,7 +2401,8 @@
       "forbidden": "Bạn không có quyền thực hiện thao tác này",
       "invalidImage": "Ảnh không hợp lệ — tệp không thể được xử lý"
     },
-    "loadMore": "Tải thêm"
+    "loadMore": "Tải thêm",
+    "saved": "Đã lưu thay đổi"
   },
   "chiffrage": {
     "actions": "Thao tác",
@@ -2521,7 +2572,22 @@
     "comparePartialFooter": "Đã báo giá {priced}/{total} mục — chưa đủ",
     "compareExpandRow": "Xem ghi chú của {name}",
     "compareShopsEyebrow": "So sánh cửa hàng",
-    "compareGapExplanationNoPct": "{dearer} đắt hơn {gap} mỗi đơn vị — {lineGap} cho dòng này với {qty}. {cheaper} rẻ hơn."
+    "compareGapExplanationNoPct": "{dearer} đắt hơn {gap} mỗi đơn vị — {lineGap} cho dòng này với {qty}. {cheaper} rẻ hơn.",
+    "loadFailedTitle": "Không thể tải bảng dự toán",
+    "loadFailedHint": "Không có dữ liệu nào bị mất. Hãy kiểm tra kết nối và thử lại.",
+    "retry": "Thử lại",
+    "emptyHintReadOnly": "Dự án này chưa có hạng mục nào được lập.",
+    "quantityTooLarge": "Số lượng không được vượt quá {max, number}.",
+    "priceTooLarge": "Đơn giá (chưa thuế) không được vượt quá {max, number}.",
+    "errorForbidden": "Bạn không có quyền chỉnh sửa bảng dự toán này.",
+    "errorNotFound": "Mục này không còn tồn tại.",
+    "errorNameTaken": "Tên này đã được sử dụng.",
+    "errorImageTooLarge": "Ảnh quá lớn (tối đa 10 MB).",
+    "errorImageUnsupported": "Định dạng ảnh không được hỗ trợ (dùng JPG, PNG hoặc WebP).",
+    "errorImageLink": "Không thể tải ảnh từ liên kết này. Hãy dùng liên kết https trỏ trực tiếp tới ảnh.",
+    "errorInvalidInput": "Một số giá trị không hợp lệ. Hãy kiểm tra các trường và thử lại.",
+    "errorRateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
+    "errorGeneric": "Đã xảy ra lỗi. Vui lòng thử lại."
   },
   "onboarding": {
     "title": "Chào mừng đến với Folio",
@@ -2724,15 +2790,5 @@
       "error": "Lỗi"
     },
     "noCost": "—"
-  },
-  "notFoundPage": {
-    "title": "Không tìm thấy trang",
-    "body": "Trang này không tồn tại hoặc bạn không còn quyền truy cập.",
-    "backToDashboard": "Quay lại bảng điều khiển"
-  },
-  "authErrorBoundary": {
-    "title": "Đã có lỗi xảy ra",
-    "body": "Vui lòng tải lại trang hoặc đăng nhập lại.",
-    "goToLogin": "Đi đến đăng nhập"
   }
 }

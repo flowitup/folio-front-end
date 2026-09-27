@@ -13,6 +13,7 @@ import { EditAttendanceDialog } from "../edit-attendance-dialog";
 import type { LaborEntry } from "@/types/labor";
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "en",
   useTranslations: () => (key: string) => key,
 }));
 

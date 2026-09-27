@@ -9,6 +9,7 @@
  */
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import {
   createArticle,
@@ -54,18 +55,39 @@ import {
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 /**
- * Map a thrown API error to a short, user-facing message.
+ * Map a thrown API error to a short message in the user's language.
  *
- * The backend's `message` is the useful part (unknown unit, duplicate symbol,
- * cross-project 404); the generic HTTP wrapper text is not.
+ * Never the backend's own `message`: it is English (and sometimes technical,
+ * like "Missing permission: project:manage_invoices" or "Host not allowed"),
+ * so it is mapped from the status and error code instead.
  */
-function classifyBackendError(err: unknown): string {
-  const e = err as { status?: number; body?: { message?: string } | null; message?: string };
-  if (e?.body?.message) return e.body.message;
-  if (e?.status === 403) return "You do not have permission to modify this chiffrage.";
-  if (e?.status === 404) return "This item no longer exists.";
-  if (e?.status === 409) return "That name is already taken.";
-  return e?.message ?? "Unknown error";
+async function classifyBackendError(err: unknown): Promise<string> {
+  const e = err as { status?: number; body?: { error?: string; message?: string } | null };
+  const t = await getTranslations("chiffrage");
+  const message = e?.body?.message ?? "";
+  switch (e?.status) {
+    case 403:
+      return t("errorForbidden");
+    case 404:
+      return t("errorNotFound");
+    case 409:
+      return t("errorNameTaken");
+    case 413:
+      return t("errorImageTooLarge");
+    case 415:
+      return t("errorImageUnsupported");
+    case 429:
+      return t("errorRateLimited");
+    case 400:
+    case 422:
+      // The image-from-link fetch is refused as InvalidInput (blocked host,
+      // or the site answered with an error).
+      return /host not allowed|upstream|could not fetch|https image/i.test(message)
+        ? t("errorImageLink")
+        : t("errorInvalidInput");
+    default:
+      return t("errorGeneric");
+  }
 }
 
 function revalidate(projectId: string): void {
@@ -78,7 +100,7 @@ async function run<T>(projectId: string, fn: () => Promise<T>, mutating = true):
     if (mutating) revalidate(projectId);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: await classifyBackendError(err) };
   }
 }
 

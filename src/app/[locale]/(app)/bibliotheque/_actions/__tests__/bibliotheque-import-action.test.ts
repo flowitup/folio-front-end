@@ -6,6 +6,14 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("next-intl/server", async () => {
+  const en = (await import("@/messages/en.json")).default as unknown as Record<string, unknown>;
+  return {
+    getTranslations: async (ns: string) => (key: string) =>
+      [...ns.split("."), key].reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], en),
+  };
+});
+
 vi.mock("@/lib/api/bibliotheque", () => ({ importPurchases: vi.fn() }));
 
 import { importPurchasesAction } from "../bibliotheque-actions";

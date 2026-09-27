@@ -107,4 +107,26 @@ describe("AddWorkerDialog — edit submit payload excludes daily_rate", () => {
     expect("daily_rate" in payload).toBe(false);
     expect(payload.name).toBe("Alice Updated");
   });
+
+  it("sends an empty phone when the user clears it, so the API clears it", async () => {
+    render(<AddWorkerDialog {...BASE_PROPS} editWorker={EDIT_WORKER} />);
+    fireEvent.change(document.querySelector("#phone") as HTMLInputElement, { target: { value: "" } });
+    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    await waitFor(() => expect(BASE_PROPS.onSave).toHaveBeenCalled());
+    expect(BASE_PROPS.onSave.mock.calls[0][0]).toMatchObject({ phone: "" });
+  });
+});
+
+describe("AddWorkerDialog — daily rate cap", () => {
+  it("refuses a rate above the API's cap without saving", async () => {
+    const onSave = vi.fn();
+    render(<AddWorkerDialog open onOpenChange={vi.fn()} onSave={onSave} />);
+    fireEvent.click(document.querySelector('[data-testid="person-typeahead"]') as HTMLElement);
+    fireEvent.change(document.querySelector("#dailyRate") as HTMLInputElement, {
+      target: { value: "100000000" },
+    });
+    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    await waitFor(() => expect(document.body.textContent).toContain("errors.amountTooLarge"));
+    expect(onSave).not.toHaveBeenCalled();
+  });
 });

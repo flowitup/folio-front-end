@@ -145,6 +145,13 @@ describe("proxy session handling", () => {
     );
   });
 
+  it("keeps the deep link's query in callbackUrl", async () => {
+    const res = await proxy(request("/en/projects/p1/invoices?invoice=abc", {}));
+    expect(res.headers.get("location")).toBe(
+      "http://localhost:3000/en/login?callbackUrl=%2Fen%2Fprojects%2Fp1%2Finvoices%3Finvoice%3Dabc"
+    );
+  });
+
   it("does not refresh while the access token is still valid", async () => {
     const res = await proxy(
       request("/en/projects", { access_token_cookie: jwt(600), refresh_token_cookie: "r" })

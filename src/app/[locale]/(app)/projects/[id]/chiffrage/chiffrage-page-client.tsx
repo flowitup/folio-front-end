@@ -15,6 +15,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   DndContext,
@@ -93,6 +94,8 @@ interface Props {
   companyId: string | null;
   initialTree: ChiffrageTree;
   initialUnits: ChiffrageUnit[];
+  /** The tree could not be loaded: show an error with a retry, not an empty budget. */
+  loadFailed?: boolean;
 }
 
 export function ChiffragePageClient({
@@ -101,8 +104,10 @@ export function ChiffragePageClient({
   companyId,
   initialTree,
   initialUnits,
+  loadFailed = false,
 }: Props) {
   const t = useTranslations("chiffrage");
+  const router = useRouter();
   const [tree, setTree] = useState(initialTree);
   const [units, setUnits] = useState(initialUnits);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -349,7 +354,7 @@ export function ChiffragePageClient({
           <h1 className="text-xl font-semibold">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
-        {canManage ? (
+        {canManage && !loadFailed ? (
           <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
@@ -378,12 +383,24 @@ export function ChiffragePageClient({
         ) : null}
       </div>
 
-      <ChiffrageTotals tree={tree} />
+      {loadFailed ? (
+        <div role="alert" className="rounded-lg border border-dashed p-10 text-center">
+          <p className="font-medium">{t("loadFailedTitle")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("loadFailedHint")}</p>
+          <Button type="button" variant="outline" className="mt-4" onClick={() => router.refresh()}>
+            {t("retry")}
+          </Button>
+        </div>
+      ) : (
+        <ChiffrageTotals tree={tree} />
+      )}
 
-      {tree.postes.length === 0 ? (
+      {loadFailed ? null : tree.postes.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="font-medium">{t("emptyTitle")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t("emptyHint")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {canManage ? t("emptyHint") : t("emptyHintReadOnly")}
+          </p>
         </div>
       ) : (
         <DndContext

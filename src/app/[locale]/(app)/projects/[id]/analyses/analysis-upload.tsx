@@ -123,6 +123,10 @@ export function AnalysisUpload({ projectId, onUploaded }: Props) {
       } else {
         toast.error(tErrors(result.error as Parameters<typeof tErrors>[0]));
       }
+    } catch {
+      // A rejected action (network, or a body the server refused before the
+      // action ran) must not leave the dialog silently open.
+      toast.error(tErrors("generic"));
     } finally {
       setSubmitting(false);
     }

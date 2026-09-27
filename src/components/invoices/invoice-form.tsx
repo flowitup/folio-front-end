@@ -11,6 +11,7 @@ import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import type { CreateInvoicePayload, Invoice, InvoiceType, SettledVia } from "@/types/invoice";
 import { formatEUR } from "@/lib/utils/formatters";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
 
 interface LineItem {
   description: string;
@@ -46,6 +47,11 @@ interface InvoiceFormProps {
    * Defaults to true so callers that never surface releases stay unchanged.
    */
   canRecordReleases?: boolean;
+  /**
+   * Label snapshot of the invoice's current payment method, shown when that
+   * method is no longer in the active list (deactivated since).
+   */
+  paymentMethodLabel?: string | null;
 }
 
 const INVOICE_TYPES: InvoiceType[] = [
@@ -79,6 +85,7 @@ export function InvoiceForm({
   projectId,
   editingInvoiceId,
   canRecordReleases = true,
+  paymentMethodLabel,
 }: InvoiceFormProps) {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
@@ -269,7 +276,13 @@ export function InvoiceForm({
     for (const item of items) {
       if (!item.description.trim()) return t("errorDescriptionRequired");
       if (item.quantity <= 0) return t("errorQuantityPositive");
+      if (item.quantity > MAX_LINE_QUANTITY) {
+        return t("errorQuantityTooLarge", { max: MAX_LINE_QUANTITY });
+      }
       // No unit_price >= 0 check here — sign is user-controlled for mixed-sign types
+      if (Math.abs(item.unit_price) > MAX_LINE_UNIT_PRICE) {
+        return t("errorUnitPriceTooLarge", { max: MAX_LINE_UNIT_PRICE });
+      }
     }
     return null;
   };
@@ -296,8 +309,13 @@ export function InvoiceForm({
         unit_price: Number(item.unit_price),
         vat_rate: Number(item.vat_rate ?? 0),
       })),
-      // Always include payment_method_id so updates can explicitly clear it (null).
-      payment_method_id: paymentMethodId,
+      // Include payment_method_id on create, and on edit only when it changed
+      // (null explicitly clears it). Re-sending an unchanged method that has
+      // since been deactivated would make every edit of the expense fail.
+      ...(!editingInvoiceId ||
+      paymentMethodId !== (initialValues?.payment_method_id ?? null)
+        ? { payment_method_id: paymentMethodId }
+        : {}),
       // Include refunds_invoice_id, settled_via, and applied_to_invoice_id only
       // for return type (null = no link/unset / clear). settled_via stays null
       // when untouched — see the settledVia state comment above.
@@ -330,7 +348,8 @@ export function InvoiceForm({
         t("errorServiceMonthNotAllowed"),
         t("errorAppliedExceedsTarget"),
         t("errorWorkerLinkNotAllowed"),
-        t("errorWorkerNotInProject")
+        t("errorWorkerNotInProject"),
+        t("errorPaymentMethodInactive")
       ));
     }
   };
@@ -455,6 +474,11 @@ export function InvoiceForm({
                   value={paymentMethodId}
                   onChange={setPaymentMethodId}
                   disabled={isLoading}
+                  fallbackSelectedLabel={
+                    paymentMethodId && paymentMethodId === (initialValues?.payment_method_id ?? null)
+                      ? paymentMethodLabel
+                      : null
+                  }
                 />
               </div>
             )}
@@ -673,6 +697,7 @@ export function InvoiceForm({
                       <input
                         type="number"
                         min="0.01"
+                        max={MAX_LINE_QUANTITY}
                         step="0.01"
                         value={item.quantity}
                         onChange={(e) =>
@@ -686,6 +711,7 @@ export function InvoiceForm({
                       <input
                         type="number"
                         {...(allowNegativePrice ? {} : { min: "0" })}
+                        max={MAX_LINE_UNIT_PRICE}
                         step="0.01"
                         value={item.unit_price}
                         onChange={(e) =>
@@ -755,6 +781,7 @@ export function InvoiceForm({
                         <input
                           type="number"
                           min="0.01"
+                          max={MAX_LINE_QUANTITY}
                           step="0.01"
                           value={item.quantity}
                           onChange={(e) =>
@@ -769,6 +796,7 @@ export function InvoiceForm({
                         <input
                           type="number"
                           {...(allowNegativePrice ? {} : { min: "0" })}
+                          max={MAX_LINE_UNIT_PRICE}
                           step="0.01"
                           value={item.unit_price}
                           onChange={(e) =>
@@ -863,7 +891,8 @@ export function classifySubmitError(
   serviceMonthNotAllowedMessage?: string,
   appliedExceedsTargetMessage?: string,
   workerLinkNotAllowedMessage?: string,
-  workerNotInProjectMessage?: string
+  workerNotInProjectMessage?: string,
+  paymentMethodInactiveMessage?: string
 ): string {
   if (err && typeof err === "object") {
     const e = err as Record<string, unknown>;
@@ -902,6 +931,16 @@ export function classifySubmitError(
 
     if (code === "worker_not_in_project" && workerNotInProjectMessage) {
       return workerNotInProjectMessage;
+    }
+
+    // 409 "Conflict" is shared; the inactive-method case is told apart by its text.
+    if (
+      code === "Conflict" &&
+      typeof message === "string" &&
+      /inactive/i.test(message) &&
+      paymentMethodInactiveMessage
+    ) {
+      return paymentMethodInactiveMessage;
     }
 
     if (typeof message === "string" && message.trim()) return message;

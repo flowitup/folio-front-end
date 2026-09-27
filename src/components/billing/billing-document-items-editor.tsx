@@ -35,6 +35,7 @@ import { BillingTotalsCard, computeTotals, lineTotalHt } from "@/components/bill
 import { getActivitySuggestionsAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import type { BillingDocumentItem } from "@/types/billing";
 import type { ActivitySuggestion, ActivityCategory } from "@/lib/api/billing/documents";
+import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -379,6 +380,7 @@ function ItemRow({
           <Input
             type="number"
             min="0"
+            max={MAX_LINE_QUANTITY}
             step="any"
             value={item.quantity}
             onChange={(e) => onUpdate({ quantity: e.target.value })}
@@ -395,6 +397,7 @@ function ItemRow({
           <Input
             type="number"
             min="0"
+            max={MAX_LINE_UNIT_PRICE}
             step="any"
             value={item.unit_price}
             onChange={(e) => onUpdate({ unit_price: e.target.value })}
@@ -570,6 +573,7 @@ function MobileItemCard({
             <Input
               type="number"
               min="0"
+              max={MAX_LINE_QUANTITY}
               step="any"
               value={item.quantity}
               onChange={(e) => onUpdate({ quantity: e.target.value })}
@@ -587,6 +591,7 @@ function MobileItemCard({
             <Input
               type="number"
               min="0"
+              max={MAX_LINE_UNIT_PRICE}
               step="any"
               value={item.unit_price}
               onChange={(e) => onUpdate({ unit_price: e.target.value })}

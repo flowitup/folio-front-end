@@ -69,8 +69,9 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
 
   const editPath = `/${locale}/billing/${kindToSegment(document.kind)}/${document.id}`;
 
+  const convertedFactureId = document.converted_to_facture_id ?? null;
   const showConvertToFacture =
-    document.kind === "devis" && document.status === "accepted";
+    document.kind === "devis" && document.status === "accepted" && !convertedFactureId;
 
   async function handleDownloadPdf() {
     if (pdfLoadingRef.current) return;
@@ -135,9 +136,9 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
         return;
       }
       toast.success(tToast("devisConverted"));
-      // Navigate to the new facture
-      router.push(`/${locale}/billing/factures`);
-      onMutated();
+      // Open the new facture. No onMutated(): its router.refresh() would
+      // cancel this navigation and leave the user on the list.
+      router.push(`/${locale}/billing/factures/${result.data.id}`);
     } catch {
       toast.error(tErrors("convertFailed"));
     } finally {
@@ -198,6 +199,17 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
             <FileSpreadsheet size={13} className="mr-2" />
             {tActions("downloadXlsx")}
           </DropdownMenuItem>
+          {convertedFactureId && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => router.push(`/${locale}/billing/factures/${convertedFactureId}`)}
+              >
+                <ArrowRightLeft size={13} className="mr-2" />
+                {tActions("openFacture")}
+              </DropdownMenuItem>
+            </>
+          )}
           {showConvertToFacture && (
             <>
               <DropdownMenuSeparator />

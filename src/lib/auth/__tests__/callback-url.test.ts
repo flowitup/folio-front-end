@@ -8,6 +8,12 @@ describe("postLoginPath", () => {
     );
   });
 
+  it("keeps the query of a same-origin deep link", () => {
+    expect(postLoginPath("/en/projects/p1/invoices?invoice=abc", "en")).toBe(
+      "/en/projects/p1/invoices?invoice=abc"
+    );
+  });
+
   it.each([
     [null],
     [""],
@@ -16,6 +22,7 @@ describe("postLoginPath", () => {
     ["/\\evil.example"],
     ["/\t/evil.example"],
     ["javascript:alert(1)"],
+    ["en/x"],
     ["/en/login"],
     ["/en/login?callbackUrl=/en/dashboard"],
   ])("falls back to the dashboard for %j", (raw) => {

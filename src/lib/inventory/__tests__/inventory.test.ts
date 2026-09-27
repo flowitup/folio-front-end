@@ -82,6 +82,11 @@ describe("unitsByWarehouse", () => {
 });
 
 describe("parseQuantity", () => {
+  it("refuses a count above the API's integer column", () => {
+    expect(parseQuantity("2147483647")).toBe(2147483647);
+    expect(parseQuantity("2147483648")).toBeNull();
+  });
+
   it("accepts whole non-negative numbers only", () => {
     expect(parseQuantity("3")).toBe(3);
     expect(parseQuantity(" 0 ")).toBe(0);

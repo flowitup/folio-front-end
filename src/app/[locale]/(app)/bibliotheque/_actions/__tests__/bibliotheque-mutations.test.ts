@@ -10,6 +10,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---- Module mocks (hoisted) ----
 
+vi.mock("next-intl/server", async () => {
+  const en = (await import("@/messages/en.json")).default as unknown as Record<string, unknown>;
+  return {
+    getTranslations: async (ns: string) => (key: string) =>
+      [...ns.split("."), key].reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], en),
+  };
+});
+
 vi.mock("@/lib/api/bibliotheque", () => ({
   createProduct: vi.fn(),
   updateProduct: vi.fn(),
@@ -128,13 +136,13 @@ describe("createProductAction", () => {
     if (!result.ok) expect(result.error).toBe("Not found.");
   });
 
-  it("returns raw message for unexpected errors", async () => {
+  it("returns a translated generic message for unexpected errors", async () => {
     mockCreateProduct.mockRejectedValueOnce(new Error("Network timeout"));
 
     const result = await createProductAction("co-1", { name: "Test", supplier_id: "sup-1" });
 
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toBe("Network timeout");
+    if (!result.ok) expect(result.error).toBe("Something went wrong. Please try again.");
   });
 });
 
@@ -285,7 +293,7 @@ describe("uploadProductImageAction", () => {
     const result = await uploadProductImageAction("prod-1", fd);
 
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toBe("Image already set.");
+    if (!result.ok) expect(result.error).toBe("This product already has an image.");
   });
 });
 
@@ -329,7 +337,7 @@ describe("setProductImageFromUrlAction", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "Network error fetching product image from URL",
+      error: "Something went wrong. Please try again.",
       code: undefined,
     });
   });

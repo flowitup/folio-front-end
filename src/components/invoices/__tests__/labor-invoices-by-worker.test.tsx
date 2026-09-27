@@ -174,7 +174,7 @@ describe("LaborInvoicesByWorker — quick-assign on Unassigned rows", () => {
     render(<LaborInvoicesByWorker {...baseProps({ invoices, onMutated })} />);
 
     // Sole (Unassigned) group auto-expands on mount.
-    await waitFor(() => expect(mockFetchWorkers).toHaveBeenCalledWith("p1"));
+    await waitFor(() => expect(mockFetchWorkers).toHaveBeenCalledWith("p1", { includeInactive: true }));
 
     const trigger = await screen.findByTestId("assign-worker-select");
     fireEvent.click(trigger);

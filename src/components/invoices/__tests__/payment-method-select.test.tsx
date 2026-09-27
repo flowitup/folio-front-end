@@ -493,3 +493,44 @@ describe("PaymentMethodSelect — inline create (+ Add affordance)", () => {
     15000
   );
 });
+
+describe("PaymentMethodSelect — inline create gating and errors", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it(
+    "hides '+ Add' by default for a user who is not an admin of the company",
+    async () => {
+      mockList.mockResolvedValueOnce({ ok: true, data: METHODS });
+      render(<PaymentMethodSelect companyId={COMPANY_ID} value={null} onChange={vi.fn()} />);
+      await openPopover();
+      await waitFor(() => expect(screen.getByText("Cash")).toBeDefined());
+      fireEvent.change(screen.getByPlaceholderText(/Select a payment method/i), {
+        target: { value: "NewMethod" },
+      });
+      expect(screen.queryByText(/Add "NewMethod"/i)).toBeNull();
+    },
+    15000
+  );
+
+  it(
+    "translates a forbidden create instead of showing the action's English message",
+    async () => {
+      mockList.mockResolvedValueOnce({ ok: true, data: METHODS });
+      mockCreate.mockResolvedValueOnce({
+        ok: false,
+        error: { code: "forbidden", message: "You do not have permission to manage payment methods for this company." },
+      });
+      renderSelect();
+      await openPopover();
+      await waitFor(() => expect(screen.getByText("Cash")).toBeDefined());
+      fireEvent.change(screen.getByPlaceholderText(/Select a payment method/i), {
+        target: { value: "NewMethod" },
+      });
+      await act(async () => {
+        fireEvent.click(await screen.findByText(/Add "NewMethod"/i));
+      });
+      await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith("createForbidden"));
+    },
+    15000
+  );
+});

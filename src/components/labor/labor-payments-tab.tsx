@@ -40,6 +40,22 @@ export interface LaborPaymentsTabProps {
   onReloadPaymentsSummary?: () => Promise<LaborPaymentsSummaryResponse>;
 }
 
+/** Minimal Worker for the record dialog, from a payments-table row. */
+function workerFromPaymentRow(
+  projectId: string,
+  row: { worker_id: string; worker_name: string },
+): Worker {
+  return {
+    id: row.worker_id,
+    project_id: projectId,
+    name: row.worker_name,
+    phone: null,
+    daily_rate: 0,
+    is_active: false,
+    created_at: "",
+  };
+}
+
 function formatMonthLabel(month: string, locale: string): string {
   const [y, m] = month.split("-").map(Number);
   if (!y || !m) return month;
@@ -121,7 +137,13 @@ export function LaborPaymentsTab({
         reloadSignal={reloadSignal}
         onOpenRecordDialog={() => setRecordDialog({ open: true, worker: null })}
         onRecordPaymentForWorker={(workerId) => {
-          const w = workers.find((wk) => wk.id === workerId) ?? null;
+          // A worker missing from the list (e.g. deactivated, on an older
+          // list) is still owed this row's money: build it from the row so
+          // the dialog records for them instead of asking to pick someone.
+          const row = rows.find((r) => r.worker_id === workerId);
+          const w =
+            workers.find((wk) => wk.id === workerId) ??
+            (row ? workerFromPaymentRow(projectId, row) : null);
           setRecordDialog({ open: true, worker: w });
         }}
       />

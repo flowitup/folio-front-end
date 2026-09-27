@@ -71,7 +71,7 @@ describe("LaborWorkerSelect", () => {
 
     render(<LaborWorkerSelect projectId="proj-1" value={null} onChange={vi.fn()} />);
 
-    await waitFor(() => expect(mockFetchWorkers).toHaveBeenCalledWith("proj-1"));
+    await waitFor(() => expect(mockFetchWorkers).toHaveBeenCalledWith("proj-1", { includeInactive: true }));
 
     const select = screen.getByTestId("labor-worker-select");
     await waitFor(() => {
@@ -93,7 +93,8 @@ describe("LaborWorkerSelect", () => {
 
     // index 0 = "Not linked", index 1 should be the active worker
     expect(select.options[1].textContent).toBe("Amy Active");
-    expect(select.options[2].textContent).toBe("Zed Inactive");
+    // Deactivated workers are listed (they can still be paid), marked as such.
+    expect(select.options[2].textContent).toBe("workerInactive");
   });
 
   it("calls onChange with (id, worker) when a worker is selected", async () => {

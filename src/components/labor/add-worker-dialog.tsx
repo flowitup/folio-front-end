@@ -22,6 +22,7 @@ import type {
 } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
 import { RoleSelectWithCreate } from "./role-select-with-create";
+import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 
 interface AddWorkerDialogProps {
   open: boolean;
@@ -119,7 +120,8 @@ export function AddWorkerDialog({
       try {
         await onSave({
           name: name.trim(),
-          phone: phone.trim() || undefined,
+          // "" clears the phone (the API reads an absent field as unchanged).
+          phone: phone.trim(),
           role_id: roleId,
         });
         handleClose();
@@ -135,6 +137,10 @@ export function AddWorkerDialog({
     const rate = parseFloat(dailyRate);
     if (isNaN(rate) || rate <= 0) {
       setError(t("errors.dailyRatePositive"));
+      return;
+    }
+    if (rate > MAX_DAILY_AMOUNT) {
+      setError(t("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
       return;
     }
     if (!selectedPerson) {
@@ -233,6 +239,7 @@ export function AddWorkerDialog({
                 type="number"
                 step="0.01"
                 min="0"
+                max={MAX_DAILY_AMOUNT}
                 value={dailyRate}
                 onChange={(e) => setDailyRate(e.target.value)}
                 placeholder="100.00"

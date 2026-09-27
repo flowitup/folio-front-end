@@ -399,8 +399,16 @@ export function BillingDocumentList({
           </>
         )}
 
+        {/* Search only covers the loaded documents: say so, and keep Load
+            more reachable even when nothing loaded matches. */}
+        {hasMore && search.trim() !== "" && (
+          <p className="text-center text-[12.5px]" style={{ color: "var(--muted)" }}>
+            {t("list.searchLoadedOnly", { loaded: initialDocuments.length, total: initialTotal })}
+          </p>
+        )}
+
         {/* Pagination — load more */}
-        {hasMore && filtered.length > 0 && (
+        {hasMore && (
           <div className="flex justify-center">
             <Button
               variant="outline"

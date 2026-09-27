@@ -31,6 +31,8 @@ export async function InviteError({ reason, locale }: InviteErrorProps) {
         >
           <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
           <div>
+            {/* Not t("title"): that is the success heading "You're invited to
+                join {projectName}", and the error view has no project. */}
             <p className="font-medium">{t("errors.title")}</p>
             <p className="mt-1 text-[12.5px]">{t(messageKey as Parameters<typeof t>[0])}</p>
           </div>

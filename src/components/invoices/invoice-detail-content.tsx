@@ -231,6 +231,7 @@ export function InvoiceDetailContent({
           companyId={companyId}
           projectId={invoice.project_id}
           editingInvoiceId={invoice.id}
+          paymentMethodLabel={invoice.payment_method_label ?? null}
           initialValues={{
             type: invoice.type,
             issue_date: invoice.issue_date,

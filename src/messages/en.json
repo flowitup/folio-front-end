@@ -81,9 +81,7 @@
     "membersSubtitle": "Who's on this project, with what role."
   },
   "sidebar": {
-    "todayOnSite": "Today on site",
     "todayConditions": "{temp}° / {weather}",
-    "todayLocation": "{place} · {workers} workers on site",
     "billing": {
       "title": "Billing",
       "devis": "Quotes",
@@ -361,7 +359,18 @@
   },
   "errors": {
     "unauthorized": "Unauthorized",
-    "accessDenied": "You do not have permission to access this page."
+    "accessDenied": "You do not have permission to access this page.",
+    "notFound": {
+      "title": "Page not found",
+      "body": "This page doesn't exist, was deleted, or you don't have access to it.",
+      "back": "Back to dashboard"
+    },
+    "boundary": {
+      "title": "Something went wrong",
+      "body": "Please refresh the page. If the problem persists, sign in again.",
+      "refresh": "Refresh",
+      "login": "Go to login"
+    }
   },
   "invoices": {
     "title": "Expense",
@@ -498,7 +507,10 @@
       "failedToLoad": "Failed to load payment methods",
       "failedToLoadRetry": "Failed to load. Try reopening.",
       "noMethodsFound": "No methods found.",
-      "failedToCreate": "Failed to create payment method"
+      "failedToCreate": "Failed to create payment method",
+      "duplicateLabel": "A payment method with this name already exists.",
+      "createForbidden": "Only a company admin can add payment methods.",
+      "inactiveLabel": "{label} (inactive)"
     },
     "refundHint": "Use a negative unit price for a credit/return line and a positive one for a charge; the total is the net.",
     "refundsInvoiceLabel": "Returns invoice (Materials & Services)",
@@ -572,7 +584,9 @@
       "sumOfTypes": "Total",
       "sharedScaleTo": "shared scale to {amount}",
       "cash": "Cash",
-      "cashAdvance": "incl. {amount} cash"
+      "cashAdvance": "incl. {amount} cash",
+      "noPurse": "No purse",
+      "noPurseSpend": "{n, plural, one {# expense} other {# expenses}} in neither purse (no company or personal payment method) · {amount}"
     },
     "byWorker": {
       "totalPaid": "Total paid",
@@ -591,7 +605,11 @@
     },
     "loadFailed": "Failed to load invoice.",
     "loadListFailed": "Failed to load invoices.",
-    "deleteInvoiceFailed": "Failed to delete invoice."
+    "deleteInvoiceFailed": "Failed to delete invoice.",
+    "errorPaymentMethodInactive": "This payment method has been deactivated. Choose another one.",
+    "workerInactive": "{name} (inactive)",
+    "errorQuantityTooLarge": "Quantity cannot exceed {max, number}.",
+    "errorUnitPriceTooLarge": "Unit price cannot exceed {max, number}."
   },
   "planning": {
     "title": "Planning",
@@ -777,7 +795,9 @@
       "deleteEntryFailed": "Failed to delete entry.",
       "saveWorkerFailed": "Failed to save worker.",
       "workerNameRequired": "Worker name is required.",
-      "dailyRatePositive": "Daily rate must be greater than 0."
+      "dailyRatePositive": "Daily rate must be greater than 0.",
+      "reactivateWorkerFailed": "Failed to reactivate the worker",
+      "amountTooLarge": "The amount cannot exceed {max, number}."
     },
     "logDayDialog": {
       "title": "Log day",
@@ -854,7 +874,8 @@
       "countSingular": "activity",
       "countPlural": "activities",
       "sectionTitle": "Activities",
-      "deleteFailed": "Failed to delete activity"
+      "deleteFailed": "Failed to delete activity",
+      "deleted": "Activity deleted"
     },
     "dayDescription": {
       "label": "Day description",
@@ -987,7 +1008,11 @@
       "loadFailed": "Couldn't load all change requests.",
       "retry": "Retry",
       "refreshing": "Refreshing change requests"
-    }
+    },
+    "entryDeleted": "Entry deleted",
+    "workerDeactivated": "{name} deactivated",
+    "reactivateWorker": "Reactivate",
+    "workerReactivated": "{name} reactivated"
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",
@@ -1310,7 +1335,8 @@
         "totalTtc": "Total TTC",
         "actions": "Actions"
       },
-      "loadMoreFailed": "Failed to load more documents. Please try again."
+      "loadMoreFailed": "Failed to load more documents. Please try again.",
+      "searchLoadedOnly": "Search covers the {loaded} most recent of {total} documents. Load more to search older ones."
     },
     "form": {
       "modes": {
@@ -1386,7 +1412,8 @@
         "sendStatus": "Mark as Sent",
         "edit": "Edit",
         "previewPdf": "Preview PDF",
-        "openMenu": "Open actions"
+        "openMenu": "Open actions",
+        "openFacture": "Open invoice"
       },
       "errors": {
         "recipientRequired": "Recipient name is required.",
@@ -1406,7 +1433,15 @@
         "statusUpdateFailed": "Failed to update status. Please try again.",
         "createFromTemplateFailed": "Failed to create document from template.",
         "templatesLoadFailed": "Failed to load templates.",
-        "documentsLoadFailed": "Failed to load existing documents."
+        "documentsLoadFailed": "Failed to load existing documents.",
+        "recipientEmailInvalid": "Enter a valid recipient email address.",
+        "itemQuantityTooLarge": "Item quantity cannot exceed {max}.",
+        "itemUnitPriceTooLarge": "Item unit price cannot exceed {max}.",
+        "itemVatRateInvalid": "Every item needs a VAT rate.",
+        "itemVatRateTooLarge": "Item VAT rate cannot exceed 100%.",
+        "invalidInput": "Some fields are invalid. Check the dates, email and line amounts.",
+        "forbidden": "You do not have permission to perform this action.",
+        "companyProfileMissing": "Complete the company profile before creating billing documents."
       },
       "toast": {
         "documentSaved": "Document saved.",
@@ -1497,7 +1532,8 @@
         "companyShare": "{percent}% company",
         "bothShare": "{percent}% both",
         "bankShare": "{percent}% bank"
-      }
+      },
+      "companyPaidNotRefundable": "Paid with a company payment method, so there is nothing to refund: {numbers}"
     },
     "import": {
       "button": "Import",
@@ -2206,6 +2242,20 @@
         "rate_limited": "The server is still busy, try again in a minute.",
         "generic": "Unexpected error, try again."
       }
+    },
+    "errors": {
+      "duplicate": "A product with this reference already exists.",
+      "forbidden": "You don't have permission to manage the library.",
+      "notFound": "Not found.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "invalidInput": "Some fields are not valid. Check the links and the numbers.",
+      "generic": "Something went wrong. Please try again.",
+      "noImageFile": "No image file provided.",
+      "imageUnsupported": "Unsupported image type (use JPG, PNG or WebP).",
+      "imageTooLarge": "Image too large (max 10 MB).",
+      "imageAlreadySet": "This product already has an image.",
+      "imageLinkRefused": "This image link is not accepted. Use an https link to the image itself.",
+      "imageLinkNotImage": "The link is not a JPG, PNG or WebP image."
     }
   },
   "inventory": {
@@ -2351,7 +2401,8 @@
       "forbidden": "You do not have permission to perform this action",
       "invalidImage": "Invalid image — the file could not be processed"
     },
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "saved": "Changes saved"
   },
   "chiffrage": {
     "actions": "Actions",
@@ -2521,7 +2572,22 @@
     "comparePartialFooter": "{priced} of {total} items priced — partial",
     "compareExpandRow": "Show notes for {name}",
     "compareShopsEyebrow": "Compare shops",
-    "compareGapExplanationNoPct": "{dearer} is {gap} more per unit — {lineGap} on this line of {qty}. {cheaper} is cheaper."
+    "compareGapExplanationNoPct": "{dearer} is {gap} more per unit — {lineGap} on this line of {qty}. {cheaper} is cheaper.",
+    "loadFailedTitle": "The cost planning could not be loaded",
+    "loadFailedHint": "Nothing was lost. Check your connection and try again.",
+    "retry": "Try again",
+    "emptyHintReadOnly": "No section has been planned for this project yet.",
+    "quantityTooLarge": "The quantity cannot exceed {max, number}.",
+    "priceTooLarge": "The unit price (excl. tax) cannot exceed {max, number}.",
+    "errorForbidden": "You do not have permission to modify this chiffrage.",
+    "errorNotFound": "This item no longer exists.",
+    "errorNameTaken": "That name is already taken.",
+    "errorImageTooLarge": "Image too large (max 10 MB).",
+    "errorImageUnsupported": "Unsupported image type (use JPG, PNG or WebP).",
+    "errorImageLink": "The image could not be fetched from this link. Use an https link to the image itself.",
+    "errorInvalidInput": "Some values are not valid. Check the fields and try again.",
+    "errorRateLimited": "Too many requests. Wait a moment and try again.",
+    "errorGeneric": "Something went wrong. Please try again."
   },
   "onboarding": {
     "title": "Welcome to Folio",
@@ -2724,15 +2790,5 @@
       "error": "Error"
     },
     "noCost": "—"
-  },
-  "notFoundPage": {
-    "title": "Page not found",
-    "body": "This page does not exist or you no longer have access to it.",
-    "backToDashboard": "Back to dashboard"
-  },
-  "authErrorBoundary": {
-    "title": "Something went wrong",
-    "body": "Please try refreshing the page or signing in again.",
-    "goToLogin": "Go to sign-in"
   }
 }

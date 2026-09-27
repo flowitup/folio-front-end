@@ -9,6 +9,7 @@ import type { LaborEntry, Worker } from "@/types/labor";
 
 // Mock next-intl — returns key as fallback
 vi.mock("next-intl", () => ({
+  useLocale: () => "en",
   useTranslations: () => (key: string) => key,
 }));
 

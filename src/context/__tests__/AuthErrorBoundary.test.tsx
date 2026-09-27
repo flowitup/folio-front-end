@@ -1,14 +1,18 @@
 /**
- * notFound() must reach Next's not-found page, not this boundary's
- * session-clearing error screen.
+ * notFound(), forbidden() and redirect() must reach Next (its not-found page),
+ * not this boundary's error screen.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { Component, type ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import fr from "@/messages/fr.json";
-import { AuthErrorBoundary } from "../AuthErrorBoundary";
+import frMessages from "@/messages/fr.json";
+import { AuthErrorBoundary, isNextJsInternalError } from "../AuthErrorBoundary";
+
+function withDigest(digest: string) {
+  return Object.assign(new Error(digest), { digest });
+}
 
 class Outer extends Component<{ children: ReactNode }, { caught: string | null }> {
   state = { caught: null as string | null };
@@ -26,7 +30,7 @@ function Thrower({ error }: { error: Error }): never {
 
 function renderWith(error: Error) {
   return render(
-    <NextIntlClientProvider locale="fr" messages={fr}>
+    <NextIntlClientProvider locale="fr" messages={frMessages}>
       <Outer>
         <AuthErrorBoundary>
           <Thrower error={error} />
@@ -36,25 +40,40 @@ function renderWith(error: Error) {
   );
 }
 
+describe("isNextJsInternalError", () => {
+  it("lets notFound(), forbidden() and redirect() through on Next 16", () => {
+    expect(isNextJsInternalError(withDigest("NEXT_HTTP_ERROR_FALLBACK;404"))).toBe(true);
+    expect(isNextJsInternalError(withDigest("NEXT_HTTP_ERROR_FALLBACK;403"))).toBe(true);
+    expect(isNextJsInternalError(withDigest("NEXT_REDIRECT;replace;/en/login;307;"))).toBe(true);
+    expect(isNextJsInternalError(withDigest("NEXT_NOT_FOUND"))).toBe(true);
+  });
+
+  it("catches ordinary errors", () => {
+    expect(isNextJsInternalError(new Error("boom"))).toBe(false);
+    expect(isNextJsInternalError(withDigest("123456"))).toBe(false);
+  });
+});
+
 describe("AuthErrorBoundary", () => {
-  beforeEach(() => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
-  });
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+  afterEach(() => vi.restoreAllMocks());
 
   it.each(["NEXT_HTTP_ERROR_FALLBACK;404", "NEXT_HTTP_ERROR_FALLBACK;403", "NEXT_REDIRECT;replace;/fr/login;307;"])(
     "lets %s through to Next",
     (digest) => {
-      renderWith(Object.assign(new Error(digest), { digest }));
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      renderWith(withDigest(digest));
       expect(screen.getByText(`outer:${digest}`)).toBeInTheDocument();
     }
   );
 
-  it("shows a translated fallback for other errors", () => {
+  it("shows a translated fallback that keeps the current locale", () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
     renderWith(new Error("boom"));
-    expect(screen.getByText(fr.authErrorBoundary.title)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: fr.authErrorBoundary.goToLogin })).toBeInTheDocument();
+    expect(screen.getByText(frMessages.errors.boundary.title)).toBeInTheDocument();
+    expect(screen.queryByText("Authentication Error")).toBeNull();
+    expect(screen.getByRole("link", { name: frMessages.errors.boundary.login })).toHaveAttribute(
+      "href",
+      "/fr/login"
+    );
   });
 });

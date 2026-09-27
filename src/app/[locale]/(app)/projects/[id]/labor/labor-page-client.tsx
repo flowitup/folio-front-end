@@ -22,6 +22,7 @@ import { LaborSummary } from "@/components/labor/labor-summary";
 import { LaborPaymentsTab } from "@/components/labor/labor-payments-tab";
 
 import { ActivityDialog } from "@/components/labor/activity-dialog";
+import { ConfirmDeleteDialog } from "@/components/labor/confirm-delete-dialog";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { ChangeRequestsPanel, RefuseChangeDialog } from "@/components/labor/change-requests-panel";
 import type { ChangeRequestActions } from "@/components/labor/labor-entry-card";
@@ -33,6 +34,7 @@ import {
   createWorker,
   updateWorker,
   deleteWorker,
+  reactivateWorker,
   fetchLaborEntries,
   updateAttendance,
   deleteAttendance,
@@ -167,6 +169,9 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const [roles, setRoles] = useState<LaborRole[]>([]);
   const [palette, setPalette] = useState<string[]>([]);
 
+  // Only active workers can be logged for a day.
+  const activeWorkers = useMemo(() => workers.filter((w) => w.is_active), [workers]);
+
   // Worker lookup map for role-aware chip colors in calendar cells.
   const workerMap = useMemo(
     () => Object.fromEntries(workers.map((w) => [w.id, w])),
@@ -228,7 +233,9 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // Load workers
   const loadWorkers = useCallback(async () => {
     try {
-      const data = await fetchWorkers(projectId);
+      // Deactivated workers too: the Workers tab offers Reactivate, and a
+      // deactivated worker can still be owed pay (Summary, Payments, export).
+      const data = await fetchWorkers(projectId, { includeInactive: true });
       setWorkers(data);
     } catch {
       setError(t("errors.loadWorkersFailed"));
@@ -437,9 +444,20 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const handleDeactivateWorker = async (worker: Worker) => {
     try {
       await deleteWorker(projectId, worker.id);
+      toast.success(t("workerDeactivated", { name: worker.person_name ?? worker.name }));
       await loadWorkers();
     } catch {
       setError(t("errors.deactivateWorkerFailed"));
+    }
+  };
+
+  const handleReactivateWorker = async (worker: Worker) => {
+    try {
+      await reactivateWorker(projectId, worker.id);
+      toast.success(t("workerReactivated", { name: worker.person_name ?? worker.name }));
+      await loadWorkers();
+    } catch {
+      toast.error(t("errors.reactivateWorkerFailed"));
     }
   };
 
@@ -463,6 +481,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const handleDeleteEntry = async (entry: LaborEntry) => {
     try {
       await deleteAttendance(projectId, entry.id);
+      toast.success(t("entryDeleted"));
       // A deleted day takes its open change request with it.
       await Promise.all([loadEntries(), reloadChangeRequests()]);
     } catch {
@@ -528,9 +547,13 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     await loadActivities();
   };
 
+  // Activity awaiting the "Delete this activity?" confirmation.
+  const [pendingActivityDelete, setPendingActivityDelete] = useState<LaborActivity | null>(null);
+
   const handleDeleteActivity = async (activity: LaborActivity) => {
     try {
       await deleteLaborActivity(projectId, activity.id);
+      toast.success(t("activity.deleted"));
       await loadActivities();
     } catch {
       setError(t("activity.deleteFailed"));
@@ -633,6 +656,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
           onAdd={() => setShowAddWorker(true)}
           onEdit={(worker) => setEditWorker(worker)}
           onDeactivate={handleDeactivateWorker}
+          onReactivate={handleReactivateWorker}
           onWorkerRateChanged={loadWorkers}
         />
       )}
@@ -704,6 +728,15 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               onRetry={() => void reloadChangeRequests()}
             />
           )}
+          <ConfirmDeleteDialog
+            open={!!pendingActivityDelete}
+            title={t("activity.confirmDelete")}
+            onCancel={() => setPendingActivityDelete(null)}
+            onConfirm={() => {
+              if (pendingActivityDelete) void handleDeleteActivity(pendingActivityDelete);
+              setPendingActivityDelete(null);
+            }}
+          />
           {attendanceView === "calendar" ? (
             <AttendanceCalendar
               entries={entries}
@@ -725,7 +758,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               workerMap={workerMap}
               onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
-              onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
+              onDeleteActivity={canManageLabor ? setPendingActivityDelete : undefined}
               onSaveDayDescription={canManageLabor ? handleSaveDayDescription : undefined}
             />
           ) : (
@@ -746,7 +779,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               changeRequestActions={changeRequestActions}
               onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
-              onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
+              onDeleteActivity={canManageLabor ? setPendingActivityDelete : undefined}
               onSaveDayDescription={canManageLabor ? handleSaveDayDescription : undefined}
             />
           )}
@@ -811,7 +844,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
           if (!open) setLogDayDate(undefined);
         }}
         projectId={projectId}
-        workers={workers}
+        workers={activeWorkers}
         entries={entries}
         initialDate={logDayDate}
         onSaved={loadEntries}

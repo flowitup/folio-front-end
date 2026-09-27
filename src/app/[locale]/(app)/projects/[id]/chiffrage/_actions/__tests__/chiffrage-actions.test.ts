@@ -10,6 +10,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next-intl/server", async () => {
+  const fr = (await import("@/messages/fr.json")).default as unknown as Record<string, unknown>;
+  return {
+    getTranslations: async (ns: string) => (key: string) =>
+      [...ns.split("."), key].reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], fr),
+  };
+});
 
 const api = {
   getChiffrage: vi.fn(),
@@ -60,35 +67,49 @@ describe("chiffrage actions", () => {
     expect(api.createPoste).toHaveBeenCalledWith(PROJECT, { name: "Lumière" });
   });
 
-  it("surfaces the backend's own message so the user can act on it", async () => {
+  it("answers in the user's language, never with the backend's English text", async () => {
     api.createArticle.mockRejectedValue(
       Object.assign(new Error("Failed to create article (HTTP 400)"), {
         status: 400,
-        body: { message: "Unknown unit 'parsec' for this project." },
+        body: { error: "InvalidInput", message: "Unknown unit 'parsec' for this project." },
       })
     );
 
     const res = await createArticleAction(PROJECT, "poste-1", { name: "Bad", unit: "parsec" });
-    expect(res).toEqual({ ok: false, error: "Unknown unit 'parsec' for this project." });
+    expect(res).toEqual({
+      ok: false,
+      error: "Certaines valeurs ne sont pas valides. Vérifiez les champs et réessayez.",
+    });
+  });
+
+  it("names the link as the problem when an image URL is refused", async () => {
+    api.createArticle.mockRejectedValue(
+      Object.assign(new Error("boom"), {
+        status: 400,
+        body: { error: "InvalidInput", message: "Host not allowed: example.com." },
+      })
+    );
+    const res = await createArticleAction(PROJECT, "poste-1", { name: "Spot" });
+    expect(res).toMatchObject({ ok: false, error: expect.stringContaining("lien https") });
   });
 
   it("explains a name clash rather than echoing a status code", async () => {
     api.createUnit.mockRejectedValue(Object.assign(new Error("boom"), { status: 409, body: null }));
     const res = await createUnitAction(PROJECT, "u");
     // 409 covers units, rooms and shops, so the fallback names none of them.
-    expect(res).toEqual({ ok: false, error: "That name is already taken." });
+    expect(res).toEqual({ ok: false, error: "Ce nom est déjà utilisé." });
   });
 
   it("explains a permission failure in the user's terms", async () => {
     api.selectQuote.mockRejectedValue(Object.assign(new Error("boom"), { status: 403, body: null }));
     const res = await selectQuoteAction(PROJECT, "q1");
-    expect(res).toEqual({ ok: false, error: "You do not have permission to modify this chiffrage." });
+    expect(res).toEqual({ ok: false, error: "Vous n'avez pas l'autorisation de modifier ce chiffrage." });
   });
 
   it("reports a vanished item instead of failing silently", async () => {
     api.reorderArticle.mockRejectedValue(Object.assign(new Error("boom"), { status: 404, body: null }));
     const res = await reorderArticleAction(PROJECT, "a1", { before_id: "a2", after_id: null });
-    expect(res).toEqual({ ok: false, error: "This item no longer exists." });
+    expect(res).toEqual({ ok: false, error: "Cet élément n'existe plus." });
   });
 
   it("forwards the drop neighbours untouched", async () => {
@@ -119,7 +140,7 @@ describe("room and shop actions", () => {
   it("never throws on a failed room move, so the page can put the order back", async () => {
     api.reorderRoom.mockRejectedValue(Object.assign(new Error("boom"), { status: 404, body: null }));
     const res = await reorderRoomAction(PROJECT, "r2", { before_id: "r1", after_id: null });
-    expect(res).toEqual({ ok: false, error: "This item no longer exists." });
+    expect(res).toEqual({ ok: false, error: "Cet élément n'existe plus." });
   });
 
   it("sends a shop's cleared address as null so the backend clears it", async () => {
@@ -140,6 +161,6 @@ describe("room and shop actions", () => {
       })
     );
     const res = await deleteStoreAction(PROJECT, "s1");
-    expect(res).toEqual({ ok: false, error: "You do not have permission to modify this chiffrage." });
+    expect(res).toEqual({ ok: false, error: "Vous n'avez pas l'autorisation de modifier ce chiffrage." });
   });
 });

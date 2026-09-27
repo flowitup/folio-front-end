@@ -53,7 +53,8 @@ export function LaborWorkerSelect({ projectId, value, onChange, disabled }: Labo
       }
       if (!cancelled) setLoading(true);
       try {
-        const list = await fetchWorkers(projectId);
+        // Deactivated workers too: a payment can still be owed to them.
+        const list = await fetchWorkers(projectId, { includeInactive: true });
         if (!cancelled) setWorkers(list);
       } catch {
         if (!cancelled) setWorkers([]);
@@ -89,7 +90,9 @@ export function LaborWorkerSelect({ projectId, value, onChange, disabled }: Labo
       <option value="">{t("workerNotLinked")}</option>
       {sortedWorkers.map((w) => (
         <option key={w.id} value={w.id}>
-          {w.person_name ?? w.name}
+          {w.is_active
+            ? (w.person_name ?? w.name)
+            : t("workerInactive", { name: w.person_name ?? w.name })}
         </option>
       ))}
     </select>

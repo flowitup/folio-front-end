@@ -17,14 +17,13 @@
  * Plan: 260512-2341-labor-calendar-and-bulk-log → phase-02 (2c).
  */
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Plus, XIcon, Pencil, Trash2, ClipboardList } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { capitalizeFirst } from "@/lib/utils/capitalize-first";
-import { formatDate } from "@/lib/utils/formatters";
+import { formatWeekdayDate } from "@/lib/utils/formatters";
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { formatEUR } from "@/lib/api/labor";
 import { LaborEntryCard, type ChangeRequestActions } from "@/components/labor/labor-entry-card";
@@ -82,19 +81,14 @@ export function AttendanceDayDetailSheet({
   onSaveDayDescription,
 }: AttendanceDayDetailSheetProps) {
   const t = useTranslations("labor");
+  const locale = useLocale();
   const dayTotal = entries.reduce(
     (sum, e) => sum + Number(e.effective_cost ?? 0),
     0,
   );
 
-  // Localized weekday + canonical dd/mm/YYYY date — "Mercredi 13/05/2026".
-  // Weekday follows the browser locale; the numeric date is always dd/mm/YYYY.
-  const heading = date
-    ? `${capitalizeFirst(
-        date.toLocaleDateString(undefined, { weekday: "long" }),
-        undefined,
-      )} ${formatDate(date)}`
-    : "";
+  // Weekday in the app locale + canonical dd/mm/YYYY date — "Mercredi 13/05/2026".
+  const heading = date ? formatWeekdayDate(date, locale) : "";
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -189,6 +183,8 @@ export function AttendanceDayDetailSheet({
                             <button
                               type="button"
                               onClick={() => onEditActivity(activity)}
+                              aria-label={t("activity.editTitle")}
+                              title={t("activity.editTitle")}
                               className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
                             >
                               <Pencil className="h-3.5 w-3.5" />
@@ -198,6 +194,8 @@ export function AttendanceDayDetailSheet({
                             <button
                               type="button"
                               onClick={() => onDeleteActivity(activity)}
+                              aria-label={t("delete")}
+                              title={t("delete")}
                               className="text-muted-foreground hover:text-destructive rounded p-1 transition-colors"
                             >
                               <Trash2 className="h-3.5 w-3.5" />

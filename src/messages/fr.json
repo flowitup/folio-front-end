@@ -81,9 +81,7 @@
     "membersSubtitle": "Qui travaille sur ce projet, et avec quel rôle."
   },
   "sidebar": {
-    "todayOnSite": "Aujourd'hui sur site",
     "todayConditions": "{temp}° / {weather}",
-    "todayLocation": "{place} · {workers} ouvriers sur site",
     "billing": {
       "title": "Facturation",
       "devis": "Devis",
@@ -361,7 +359,18 @@
   },
   "errors": {
     "unauthorized": "Non autorisé",
-    "accessDenied": "Vous n'avez pas la permission d'accéder à cette page."
+    "accessDenied": "Vous n'avez pas la permission d'accéder à cette page.",
+    "notFound": {
+      "title": "Page introuvable",
+      "body": "Cette page n'existe pas, a été supprimée, ou vous n'y avez pas accès.",
+      "back": "Retour au tableau de bord"
+    },
+    "boundary": {
+      "title": "Une erreur s'est produite",
+      "body": "Veuillez actualiser la page. Si le problème persiste, reconnectez-vous.",
+      "refresh": "Actualiser",
+      "login": "Aller à la connexion"
+    }
   },
   "invoices": {
     "title": "Dépenses",
@@ -498,7 +507,10 @@
       "failedToLoad": "Échec du chargement des moyens de paiement",
       "failedToLoadRetry": "Échec du chargement. Réessayez en rouvrant.",
       "noMethodsFound": "Aucun moyen trouvé.",
-      "failedToCreate": "Échec de la création du moyen de paiement"
+      "failedToCreate": "Échec de la création du moyen de paiement",
+      "duplicateLabel": "Un moyen de paiement portant ce nom existe déjà.",
+      "createForbidden": "Seul un administrateur de l'entreprise peut ajouter des moyens de paiement.",
+      "inactiveLabel": "{label} (inactif)"
     },
     "refundHint": "Utilisez un prix unitaire négatif pour une ligne d'avoir et positif pour une charge ; le total est le net.",
     "refundsInvoiceLabel": "Avoir sur facture (Matériaux & Services)",
@@ -572,7 +584,9 @@
       "sumOfTypes": "Total",
       "sharedScaleTo": "échelle commune jusqu'à {amount}",
       "cash": "Espèces",
-      "cashAdvance": "dont {amount} en espèces"
+      "cashAdvance": "dont {amount} en espèces",
+      "noPurse": "Aucune caisse",
+      "noPurseSpend": "{n, plural, one {# dépense} other {# dépenses}} dans aucune caisse (sans moyen de paiement entreprise ou personnel) · {amount}"
     },
     "byWorker": {
       "totalPaid": "Total payé",
@@ -591,7 +605,11 @@
     },
     "loadFailed": "Échec du chargement de la facture.",
     "loadListFailed": "Échec du chargement des dépenses.",
-    "deleteInvoiceFailed": "Échec de la suppression de la dépense."
+    "deleteInvoiceFailed": "Échec de la suppression de la dépense.",
+    "errorPaymentMethodInactive": "Ce moyen de paiement a été désactivé. Choisissez-en un autre.",
+    "workerInactive": "{name} (inactif)",
+    "errorQuantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
+    "errorUnitPriceTooLarge": "Le prix unitaire ne peut pas dépasser {max, number}."
   },
   "planning": {
     "title": "Planification",
@@ -777,7 +795,9 @@
       "deleteEntryFailed": "Échec de la suppression de la présence.",
       "saveWorkerFailed": "Échec de l'enregistrement de l'ouvrier.",
       "workerNameRequired": "Le nom de l'ouvrier est obligatoire.",
-      "dailyRatePositive": "Le tarif journalier doit être supérieur à 0."
+      "dailyRatePositive": "Le tarif journalier doit être supérieur à 0.",
+      "reactivateWorkerFailed": "Impossible de réactiver l'ouvrier",
+      "amountTooLarge": "Le montant ne peut pas dépasser {max, number}."
     },
     "logDayDialog": {
       "title": "Pointer la journée",
@@ -854,7 +874,8 @@
       "countSingular": "activité",
       "countPlural": "activités",
       "sectionTitle": "Activités",
-      "deleteFailed": "Échec de la suppression de l'activité"
+      "deleteFailed": "Échec de la suppression de l'activité",
+      "deleted": "Activité supprimée"
     },
     "dayDescription": {
       "label": "Description du jour",
@@ -987,7 +1008,11 @@
       "loadFailed": "Impossible de charger toutes les demandes de modification.",
       "retry": "Réessayer",
       "refreshing": "Actualisation des demandes de modification"
-    }
+    },
+    "entryDeleted": "Entrée supprimée",
+    "workerDeactivated": "{name} désactivé(e)",
+    "reactivateWorker": "Réactiver",
+    "workerReactivated": "{name} réactivé(e)"
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",
@@ -1310,7 +1335,8 @@
         "totalTtc": "Total TTC",
         "actions": "Actions"
       },
-      "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer."
+      "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer.",
+      "searchLoadedOnly": "La recherche porte sur les {loaded} documents les plus récents sur {total}. Chargez-en plus pour chercher parmi les plus anciens."
     },
     "form": {
       "modes": {
@@ -1386,7 +1412,8 @@
         "sendStatus": "Marquer comme envoyé",
         "edit": "Modifier",
         "previewPdf": "Aperçu PDF",
-        "openMenu": "Ouvrir les actions"
+        "openMenu": "Ouvrir les actions",
+        "openFacture": "Ouvrir la facture"
       },
       "errors": {
         "recipientRequired": "Le nom du destinataire est obligatoire.",
@@ -1406,7 +1433,15 @@
         "statusUpdateFailed": "Échec de la mise à jour du statut. Veuillez réessayer.",
         "createFromTemplateFailed": "Échec de la création du document à partir du modèle.",
         "templatesLoadFailed": "Échec du chargement des modèles.",
-        "documentsLoadFailed": "Échec du chargement des documents existants."
+        "documentsLoadFailed": "Échec du chargement des documents existants.",
+        "recipientEmailInvalid": "Saisissez une adresse e-mail valide pour le destinataire.",
+        "itemQuantityTooLarge": "La quantité d'une ligne ne peut pas dépasser {max}.",
+        "itemUnitPriceTooLarge": "Le prix unitaire d'une ligne ne peut pas dépasser {max}.",
+        "itemVatRateInvalid": "Chaque ligne doit avoir un taux de TVA.",
+        "itemVatRateTooLarge": "Le taux de TVA d'une ligne ne peut pas dépasser 100 %.",
+        "invalidInput": "Certains champs sont invalides. Vérifiez les dates, l'e-mail et les montants des lignes.",
+        "forbidden": "Vous n'avez pas l'autorisation d'effectuer cette action.",
+        "companyProfileMissing": "Complétez le profil de l'entreprise avant de créer des documents de facturation."
       },
       "toast": {
         "documentSaved": "Document enregistré.",
@@ -1497,7 +1532,8 @@
         "companyShare": "{percent}% société",
         "bothShare": "{percent}% les deux",
         "bankShare": "{percent}% banque"
-      }
+      },
+      "companyPaidNotRefundable": "Payé avec un moyen de paiement de l'entreprise, il n'y a donc rien à rembourser : {numbers}"
     },
     "import": {
       "button": "Importer",
@@ -2206,6 +2242,20 @@
         "rate_limited": "Le serveur est toujours occupé, réessayez dans une minute.",
         "generic": "Erreur inattendue, réessayez."
       }
+    },
+    "errors": {
+      "duplicate": "Un produit avec cette référence existe déjà.",
+      "forbidden": "Vous n'avez pas l'autorisation de gérer la bibliothèque.",
+      "notFound": "Introuvable.",
+      "rateLimited": "Trop de requêtes. Patientez un instant puis réessayez.",
+      "invalidInput": "Certains champs ne sont pas valides. Vérifiez les liens et les nombres.",
+      "generic": "Une erreur s'est produite. Veuillez réessayer.",
+      "noImageFile": "Aucun fichier image fourni.",
+      "imageUnsupported": "Type d'image non pris en charge (JPG, PNG ou WebP).",
+      "imageTooLarge": "Image trop volumineuse (10 Mo max).",
+      "imageAlreadySet": "Ce produit a déjà une image.",
+      "imageLinkRefused": "Ce lien d'image n'est pas accepté. Utilisez un lien https vers l'image elle-même.",
+      "imageLinkNotImage": "Le lien ne pointe pas vers une image JPG, PNG ou WebP."
     }
   },
   "inventory": {
@@ -2351,7 +2401,8 @@
       "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
       "invalidImage": "Image invalide — le fichier n'a pas pu être traité"
     },
-    "loadMore": "Charger plus"
+    "loadMore": "Charger plus",
+    "saved": "Modifications enregistrées"
   },
   "chiffrage": {
     "actions": "Actions",
@@ -2521,7 +2572,22 @@
     "comparePartialFooter": "{priced, plural, one {# article} other {# articles}} sur {total} chiffrés — partiel",
     "compareExpandRow": "Afficher les notes de {name}",
     "compareShopsEyebrow": "Comparer les magasins",
-    "compareGapExplanationNoPct": "{dearer} coûte {gap} de plus par unité — {lineGap} sur cette ligne de {qty}. {cheaper} est moins cher."
+    "compareGapExplanationNoPct": "{dearer} coûte {gap} de plus par unité — {lineGap} sur cette ligne de {qty}. {cheaper} est moins cher.",
+    "loadFailedTitle": "Le chiffrage n'a pas pu être chargé",
+    "loadFailedHint": "Rien n'a été perdu. Vérifiez votre connexion et réessayez.",
+    "retry": "Réessayer",
+    "emptyHintReadOnly": "Aucune section n'a encore été prévue pour ce projet.",
+    "quantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
+    "priceTooLarge": "Le prix unitaire HT ne peut pas dépasser {max, number}.",
+    "errorForbidden": "Vous n'avez pas l'autorisation de modifier ce chiffrage.",
+    "errorNotFound": "Cet élément n'existe plus.",
+    "errorNameTaken": "Ce nom est déjà utilisé.",
+    "errorImageTooLarge": "Image trop volumineuse (10 Mo max).",
+    "errorImageUnsupported": "Type d'image non pris en charge (JPG, PNG ou WebP).",
+    "errorImageLink": "L'image n'a pas pu être récupérée depuis ce lien. Utilisez un lien https vers l'image elle-même.",
+    "errorInvalidInput": "Certaines valeurs ne sont pas valides. Vérifiez les champs et réessayez.",
+    "errorRateLimited": "Trop de requêtes. Patientez un instant puis réessayez.",
+    "errorGeneric": "Une erreur s'est produite. Veuillez réessayer."
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",
@@ -2724,15 +2790,5 @@
       "error": "Erreur"
     },
     "noCost": "—"
-  },
-  "notFoundPage": {
-    "title": "Page introuvable",
-    "body": "Cette page n’existe pas ou vous n’y avez plus accès.",
-    "backToDashboard": "Retour au tableau de bord"
-  },
-  "authErrorBoundary": {
-    "title": "Une erreur s’est produite",
-    "body": "Actualisez la page ou reconnectez-vous.",
-    "goToLogin": "Aller à la connexion"
   }
 }

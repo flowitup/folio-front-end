@@ -49,6 +49,8 @@ export interface UpdateWorkerPayload {
   name?: string;
   phone?: string;
   role_id?: string | null;
+  /** true reactivates a deactivated worker (deactivation is DELETE). */
+  is_active?: true;
 }
 
 /** Worker-submitted rows stay `pending` (unpriced) until a manager validates them. */

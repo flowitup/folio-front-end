@@ -84,6 +84,27 @@ export function formatMonthYear(dateStr: string, locale: string): string {
 /**
  * Format a date and time as dd/mm/YYYY HH:MM (24h, locale-independent).
  */
+/**
+ * "Samedi 26/09/2026" / "Saturday 26/09/2026": weekday in the app locale,
+ * then the canonical dd/mm/YYYY date. A "YYYY-MM-DD" string is read as that
+ * calendar day in every timezone (never parsed as UTC midnight, which shows
+ * the previous day west of UTC); a Date is read in local time.
+ */
+export function formatWeekdayDate(date: Date | string, locale: string): string {
+  const iso = typeof date === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(date) : null
+  if (typeof date === 'string' && !iso) return date
+  const [y, m, d] = iso
+    ? [Number(iso[1]), Number(iso[2]), Number(iso[3])]
+    : [(date as Date).getFullYear(), (date as Date).getMonth() + 1, (date as Date).getDate()]
+  const weekday = new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' }).format(
+    new Date(Date.UTC(y, m - 1, d, 12))
+  )
+  const first = weekday.charAt(0).toLocaleUpperCase(locale)
+  const dd = String(d).padStart(2, '0')
+  const mm = String(m).padStart(2, '0')
+  return `${first}${weekday.slice(1)} ${dd}/${mm}/${y}`
+}
+
 export function formatDateTime(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date
   const hh = String(d.getHours()).padStart(2, '0')

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { CalendarMonthGrid } from "@/components/labor/calendar-month-grid";
 import { AttendanceDayDetailSheet } from "@/components/labor/attendance-day-detail-sheet";
+import { ConfirmDeleteDialog } from "@/components/labor/confirm-delete-dialog";
 import type { ChangeRequestActions } from "@/components/labor/labor-entry-card";
 import {
   formatMonthTag,
@@ -119,6 +120,8 @@ export function AttendanceCalendar({
   }, [entries, workerFilter]);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  // Entry awaiting the "Delete this entry?" confirmation (same as the list view).
+  const [confirmDelete, setConfirmDelete] = useState<LaborEntry | null>(null);
 
   const dayEntries = useMemo(() => {
     if (!selectedDate) return [];
@@ -223,7 +226,7 @@ export function AttendanceCalendar({
           if (!o) setSelectedDate(null);
         }}
         canManage={canManage}
-        onDelete={onDelete}
+        onDelete={(entry) => setConfirmDelete(entry)}
         onEdit={onEditEntry}
         onValidate={onValidate}
         onReject={onReject}
@@ -248,6 +251,18 @@ export function AttendanceCalendar({
         onEditActivity={onEditActivity}
         onDeleteActivity={onDeleteActivity}
         onSaveDayDescription={onSaveDayDescription}
+      />
+
+      <ConfirmDeleteDialog
+        open={!!confirmDelete}
+        title={t("confirmDelete")}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) {
+            onDelete(confirmDelete);
+            setConfirmDelete(null);
+          }
+        }}
       />
     </div>
   );

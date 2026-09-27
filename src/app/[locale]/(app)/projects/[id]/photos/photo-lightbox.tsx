@@ -144,14 +144,16 @@ export function PhotoLightbox({
     if (!photo) return;
     setSaving(true);
     const result = await updatePhotoAction(projectId, photo.id, {
-      caption: captionDraft.trim() || null,
+      // An emptied caption is sent as "" — the API reads null as "field
+      // omitted" and would keep the old caption.
+      caption: captionDraft.trim(),
       capturedAt: capturedAtDraft || undefined,
     });
     setSaving(false);
     if (result.ok) {
       onUpdated(result.data);
       setEditing(false);
-      toast.success(t("save"));
+      toast.success(t("saved"));
     } else {
       const key = result.error as keyof typeof errorKeys;
       toast.error(t(`errors.${errorKeys[key] ?? "server"}`));

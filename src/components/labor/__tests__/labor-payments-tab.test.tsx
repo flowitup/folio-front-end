@@ -205,6 +205,19 @@ describe("LaborPaymentsTab — record payment dialog wiring", () => {
   });
 });
 
+describe("LaborPaymentsTab — worker missing from the list", () => {
+  it("still records for a row whose worker is not in the list (e.g. deactivated)", async () => {
+    const others: Worker[] = [{ ...WORKERS[0], id: "w9", name: "Zoe", person_name: "Zoe" }];
+    render(<LaborPaymentsTab projectId="p1" canManage workers={others} />);
+    await screen.findByTestId("row-w1");
+
+    fireEvent.click(screen.getByText("record-w1"));
+
+    const dialog = await screen.findByTestId("record-dialog");
+    expect(dialog).toHaveAttribute("data-worker-id", "w1");
+  });
+});
+
 describe("LaborPaymentsTab — quick-assign payloads", () => {
   it("assigning a worker in the this-month unassigned section PUTs worker_id only", async () => {
     render(<LaborPaymentsTab projectId="p1" canManage workers={WORKERS} />);

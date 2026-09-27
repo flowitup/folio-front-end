@@ -21,6 +21,7 @@ import {
   Wrench,
   FileSearch,
   ReceiptEuro,
+  Images,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -102,6 +103,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
             ? [{ key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files }]
             : []),
           { key: "analyses", href: `/projects/${selectedProjectId}/analyses`, icon: FileSearch },
+          { key: "photos", href: `/projects/${selectedProjectId}/photos`, icon: Images },
         ]
       : []),
   ];

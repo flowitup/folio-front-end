@@ -46,12 +46,16 @@ export function MobileBottomNav() {
   const moreIsActive =
     pathWithoutLocale.startsWith("/settings") ||
     pathWithoutLocale.startsWith("/billing") ||
+    pathWithoutLocale.startsWith("/bibliotheque") ||
+    pathWithoutLocale.startsWith("/inventory") ||
     (selectedProjectId
       ? pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/labor`) ||
         pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/billing`) ||
         pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/notes`) ||
         pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/documents`) ||
-        pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/analyses`)
+        pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/analyses`) ||
+        pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/chiffrage`) ||
+        pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/photos`)
       : false);
 
   return (

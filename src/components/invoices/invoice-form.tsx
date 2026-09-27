@@ -919,9 +919,10 @@ export function classifySubmitError(
     ) {
       // Extract the remaining amount from the backend message (numeric part,
       // sign-aware so a negative remaining isn't shown as positive).
+      // Shown as money ("1 243,10 €"), not the API's raw "1243.10".
       const match = message.match(/-?[\d]+[.,]?[\d]*/);
-      const remaining = match ? match[0] : "—";
-      return formatCapError(remaining);
+      const amount = match ? Number(match[0].replace(",", ".")) : NaN;
+      return formatCapError(Number.isFinite(amount) ? formatEUR(amount) : "—");
     }
 
     if (code === "service_month_not_allowed" && serviceMonthNotAllowedMessage) {

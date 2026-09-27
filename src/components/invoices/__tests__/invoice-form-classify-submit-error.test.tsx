@@ -19,16 +19,16 @@ import { describe, it, expect } from "vitest";
 import { classifySubmitError } from "../invoice-form";
 
 describe("classifySubmitError", () => {
-  it("classifies RefundExceedsSource via formatCapError", () => {
+  it("classifies RefundExceedsSource via formatCapError, with the amount as euros", () => {
     const err = {
-      data: { error: "RefundExceedsSource", message: "Remaining: 42.50" },
+      data: { error: "RefundExceedsSource", message: "Remaining: 1243.10" },
     };
     const result = classifySubmitError(
       err,
       (remaining) => `capped at ${remaining}`,
       "service month not allowed"
     );
-    expect(result).toBe("capped at 42.50");
+    expect(result).toMatch(/^capped at 1\s243,10\s€$/);
   });
 
   it("classifies service_month_not_allowed via the dedicated message", () => {

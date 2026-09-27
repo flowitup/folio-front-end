@@ -21,29 +21,46 @@ type Props = {
   onConfirm: (newFilename: string) => Promise<void> | void;
 };
 
+/** The extension the backend compares, like Python's os.path.splitext. */
+function fileExtension(name: string): string {
+  const i = name.lastIndexOf(".");
+  return i > 0 ? name.slice(i).toLowerCase() : "";
+}
+
 export function InvoiceAttachmentRenameDialog({ attachment, onCancel, onConfirm }: Props) {
   const t = useTranslations("invoices.attachmentRename");
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (attachment) setValue(attachment.filename);
+    if (attachment) {
+      setValue(attachment.filename);
+      setError(null);
+    }
   }, [attachment]);
 
-  const extension = attachment ? attachment.filename.slice(attachment.filename.lastIndexOf(".")) : "";
+  const extension = attachment ? fileExtension(attachment.filename) : "";
   const unchanged = value.trim() === attachment?.filename;
   const empty = !value.trim();
+  // The backend refuses a changed extension; say so before saving.
+  const extensionChanged = !empty && fileExtension(value.trim()) !== extension;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (empty || unchanged || loading) return;
+    if (empty || unchanged || extensionChanged || loading) return;
     setLoading(true);
+    setError(null);
     try {
       await onConfirm(value.trim());
+    } catch {
+      setError(t("error"));
     } finally {
       setLoading(false);
     }
   }
+
+  const message = extensionChanged ? t("errorExtension", { extension }) : error;
 
   return (
     <Dialog open={attachment !== null} onOpenChange={(open) => !open && !loading && onCancel()}>
@@ -60,16 +77,26 @@ export function InvoiceAttachmentRenameDialog({ attachment, onCancel, onConfirm 
             <Input
               id="attachment-rename-input"
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+              onChange={(e) => {
+                setValue(e.target.value);
+                setError(null);
+              }}
               disabled={loading}
               autoFocus
+              aria-invalid={message ? true : undefined}
+              aria-describedby={message ? "attachment-rename-error" : undefined}
             />
+            {message && (
+              <p id="attachment-rename-error" role="alert" className="mt-2 text-sm text-destructive">
+                {message}
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={loading || empty || unchanged}>
+            <Button type="submit" disabled={loading || empty || unchanged || extensionChanged}>
               {loading ? t("saving") : t("save")}
             </Button>
           </DialogFooter>

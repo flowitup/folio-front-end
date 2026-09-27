@@ -441,7 +441,6 @@
     "invalidFileType": "{name}: file type not allowed",
     "uploadFailed": "Failed to upload {name}",
     "deleteFailed": "Failed to delete attachment",
-    "renameFailed": "Failed to rename attachment",
     "rename": "Rename",
     "attachmentDeleteConfirm": "Delete this attachment? This cannot be undone.",
     "openAttachment": "Open",
@@ -451,7 +450,9 @@
       "label": "File name",
       "cancel": "Cancel",
       "save": "Save",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "error": "Couldn't rename the attachment. Try again.",
+      "errorExtension": "The extension must remain {extension}"
     },
     "attachmentPreview": {
       "preview": "Preview",

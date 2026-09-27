@@ -103,6 +103,20 @@ export interface CreateBillingDocumentPayload {
   issue_date?: string | null;
 }
 
+/** Statuses POST /billing-documents/import accepts for a historical document. */
+export type ImportBillingDocumentStatus = "draft" | "sent" | "paid" | "cancelled";
+
+/**
+ * Historical document with its original number (POST /billing-documents/import).
+ * Same fields as a creation plus the verbatim number, its status and, optionally,
+ * the original creation timestamp.
+ */
+export interface ImportBillingDocumentPayload extends CreateBillingDocumentPayload {
+  document_number: string;
+  status: ImportBillingDocumentStatus;
+  created_at?: string | null;
+}
+
 export interface UpdateBillingDocumentPayload {
   project_id?: string | null;
   recipient_name?: string;

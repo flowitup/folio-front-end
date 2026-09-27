@@ -1184,7 +1184,8 @@
           "title": "Aucun devis pour le moment",
           "description": "Créez votre premier devis pour commencer.",
           "cta": "Créer votre premier devis"
-        }
+        },
+        "importTitle": "Importer des devis"
       },
       "status": {
         "draft": "Brouillon",
@@ -1210,7 +1211,8 @@
           "title": "Aucune facture pour le moment",
           "description": "Créez votre première facture pour commencer.",
           "cta": "Créer votre première facture"
-        }
+        },
+        "importTitle": "Importer des factures"
       },
       "status": {
         "draft": "Brouillon",
@@ -1427,6 +1429,76 @@
         "companyShare": "{percent}% société",
         "bothShare": "{percent}% les deux",
         "bankShare": "{percent}% banque"
+      }
+    },
+    "import": {
+      "button": "Importer",
+      "description": {
+        "devis": "Reprenez les devis émis avant Folio, avec leur numéro d'origine. Les numéros déjà présents dans Folio sont ignorés.",
+        "facture": "Reprenez les factures émises avant Folio, avec leur numéro d'origine. Les numéros déjà présents dans Folio sont ignorés."
+      },
+      "dropzone": "Choisissez un fichier CSV ou JSON, ou déposez-le ici",
+      "csvHint": "CSV : une ligne par ligne de prestation ; les lignes qui partagent le même document_number forment un document. Colonnes obligatoires : {columns}. Dates au format AAAA-MM-JJ ou JJ/MM/AAAA.",
+      "jsonHint": "JSON : une liste de documents avec les noms de champs de l'API, tels que les exporte le plugin Folio.",
+      "downloadTemplate": "Télécharger le modèle CSV",
+      "defaultStatus": "Statut des lignes qui n'en indiquent pas",
+      "statusHint": "La colonne status accepte : {statuses}.",
+      "reading": "Lecture du fichier…",
+      "preview": "{count, plural, one {# document prêt à importer} other {# documents prêts à importer}}",
+      "previewRejected": "{count, plural, one {# document sera écarté :} other {# documents seront écartés :}}",
+      "nothingToImport": "Aucun document de ce fichier ne peut être importé.",
+      "start": "{count, plural, =0 {Importer} one {Importer # document} other {Importer # documents}}",
+      "progress": "{done} sur {total} documents",
+      "paused": "Le serveur demande une pause. Reprise dans {seconds} s…",
+      "stop": "Arrêter",
+      "stopping": "Arrêt en cours…",
+      "summaryTitle": "Import terminé",
+      "stoppedTitle": "Import interrompu",
+      "created": "Importés",
+      "skipped": "Déjà dans Folio",
+      "errors": "Erreurs",
+      "notProcessed": "{count, plural, one {# document n'a pas été traité.} other {# documents n'ont pas été traités.}}",
+      "skippedList": "Ignorés, numéro déjà utilisé :",
+      "errorList": "Non importés :",
+      "more": "et {count} de plus",
+      "chooseAnother": "Importer un autre fichier",
+      "close": "Fermer",
+      "cancel": "Annuler",
+      "toastDone": "{count, plural, one {# document importé} other {# documents importés}}",
+      "toastFailed": "Aucun document n'a pu être importé.",
+      "ref": {
+        "line": "Ligne {line}",
+        "position": "Document {position}"
+      },
+      "issues": {
+        "missingNumber": "Numéro de document manquant",
+        "numberTooLong": "Numéro de document de plus de {max} caractères",
+        "missingRecipient": "Nom du destinataire manquant",
+        "tooLong": "{field} dépasse {max} caractères",
+        "noItems": "Aucune ligne de prestation",
+        "tooManyItems": "Plus de {max} lignes de prestation",
+        "invalidItem": "La ligne de prestation {position} doit avoir une description, une quantité supérieure à 0, un prix unitaire positif ou nul et un taux de TVA entre 0 et 100",
+        "invalidItemLine": "La ligne {line} doit avoir une description, une quantité supérieure à 0, un prix unitaire positif ou nul et un taux de TVA entre 0 et 100",
+        "invalidStatus": "Statut « {value} » non accepté ici",
+        "invalidDate": "{field} n'est pas une date valide",
+        "wrongKind": "Document « {value} », pas pour cette liste",
+        "invalidProject": "project_id n'est pas un identifiant valide"
+      },
+      "fileErrors": {
+        "unreadable": "Ce fichier n'a pas pu être lu. Utilisez un fichier CSV ou JSON comme décrit ci-dessous.",
+        "empty": "Ce fichier ne contient aucun document.",
+        "missingColumns": "Colonnes manquantes : {columns}.",
+        "tooLarge": "Ce fichier dépasse 10 Mo."
+      },
+      "failures": {
+        "validation": "Refusé par le serveur ({detail})",
+        "forbidden": "Vous n'êtes pas autorisé à importer pour cette société",
+        "unauthorized": "Votre session a expiré, reconnectez-vous",
+        "company_no_longer_attached": "Vous n'êtes plus rattaché à cette société",
+        "company_profile_missing": "Le profil de la société est incomplet",
+        "rate_limited": "Le serveur est toujours occupé, réessayez dans une minute",
+        "not_found": "Société ou projet introuvable",
+        "generic": "Erreur inattendue, réessayez"
       }
     }
   },
@@ -1966,7 +2038,55 @@
       "imageUploadWarning": "Produit enregistré, mais l'image n'a pas pu être téléchargée."
     },
     "deleteWarning": "Cela supprime définitivement « {name} » et {count, plural, =0 {0 enregistrement d'achat} one {# enregistrement d'achat} other {# enregistrements d'achat}}.",
-    "deleteConfirmLabel": "Saisissez le nom du produit pour confirmer"
+    "deleteConfirmLabel": "Saisissez le nom du produit pour confirmer",
+    "import": {
+      "button": "Importer",
+      "title": "Importer des achats",
+      "description": "Ajoutez à la bibliothèque les lignes d'un export d'achats fournisseur. Les lignes déjà importées sont ignorées : le même fichier peut être réimporté sans risque.",
+      "dropzone": "Choisissez un fichier JSON, ou déposez-le ici",
+      "formatHint": "Format attendu : supplier_name, supplier_slug et records, chaque ligne avec supplier_reference, product_name, quantity, unit_price, purchased_at, source_document_ref, source_document_type (ticket ou commande) et line_index. Un fichier peut contenir plusieurs fournisseurs.",
+      "reading": "Lecture du fichier…",
+      "preview": "{count, plural, one {# ligne d'achat} other {# lignes d'achat}} de {suppliers}",
+      "previewRejected": "{count, plural, one {# ligne sera écartée :} other {# lignes seront écartées :}}",
+      "nothingToImport": "Aucune ligne d'achat de ce fichier ne peut être importée.",
+      "start": "{count, plural, =0 {Importer} one {Importer # ligne} other {Importer # lignes}}",
+      "progress": "{done} sur {total} lignes",
+      "paused": "Le serveur demande une pause. Reprise dans {seconds} s…",
+      "stop": "Arrêter",
+      "stopping": "Arrêt en cours…",
+      "summaryTitle": "Import terminé",
+      "stoppedTitle": "Import interrompu",
+      "created": "Produits créés",
+      "updated": "Produits mis à jour",
+      "purchasesAdded": "Achats ajoutés",
+      "skipped": "Déjà importées",
+      "errors": "Lignes en erreur",
+      "notProcessed": "{count, plural, one {# ligne n'a pas été traitée.} other {# lignes n'ont pas été traitées.}}",
+      "errorList": "Non importées :",
+      "more": "et {count} de plus",
+      "chooseAnother": "Importer un autre fichier",
+      "close": "Fermer",
+      "toastDone": "{count, plural, one {# achat ajouté à la bibliothèque} other {# achats ajoutés à la bibliothèque}}",
+      "toastFailed": "Aucune ligne d'achat n'a pu être importée.",
+      "issues": {
+        "invalidSupplier": "{supplier} : nom ou identifiant (slug) du fournisseur manquant ou trop long ({count, plural, one {# ligne écartée} other {# lignes écartées}})",
+        "noRecords": "{supplier} : aucune ligne d'achat",
+        "invalidRecord": "{supplier}, ligne {position} : un champ obligatoire est manquant ou invalide"
+      },
+      "fileErrors": {
+        "unreadable": "Ce fichier n'est pas un JSON valide.",
+        "empty": "Ce fichier ne contient aucune ligne d'achat.",
+        "tooLarge": "Ce fichier dépasse 10 Mo."
+      },
+      "failures": {
+        "batch": "{supplier} : {count, plural, one {# ligne non importée} other {# lignes non importées}}. {reason}",
+        "validation": "Refusé par le serveur ({detail})",
+        "forbidden": "Vous n'avez pas la permission de gérer la bibliothèque.",
+        "unauthorized": "Votre session a expiré, reconnectez-vous.",
+        "rate_limited": "Le serveur est toujours occupé, réessayez dans une minute.",
+        "generic": "Erreur inattendue, réessayez."
+      }
+    }
   },
   "inventory": {
     "title": "Inventaire du matériel",

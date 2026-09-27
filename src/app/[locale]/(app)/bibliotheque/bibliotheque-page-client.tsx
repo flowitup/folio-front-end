@@ -7,6 +7,9 @@
  * re-fetching companies client-side. Loads suppliers, categories, and
  * products via server actions. Debounces search 300ms.
  *
+ * Purchase import (supplier JSON export) is offered to callers holding
+ * bibliotheque:manage, the permission the API requires for it.
+ *
  * Deep-link strategy for product detail: push on first open (none → some)
  * to add a back-button history entry; replace on swap/close to avoid
  * history pollution — mirrors the invoices page pattern.
@@ -15,7 +18,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Loader2, BookOpen, Scale, Plus } from "lucide-react";
+import { Loader2, BookOpen, Scale, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ProductFilterBar } from "@/components/bibliotheque/product-filter-bar";
@@ -27,6 +30,9 @@ import { ProductDeleteDialog } from "@/components/bibliotheque/product-delete-di
 import { CompareBar } from "@/components/bibliotheque/compare-bar";
 import { ProductCompareDialog } from "@/components/bibliotheque/product-compare-dialog";
 import { LibraryPagination } from "@/components/bibliotheque/library-pagination";
+import { LibraryImportDialog } from "@/components/bibliotheque/library-import-dialog";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/auth/permissions";
 import {
   listSuppliersAction,
   listCategoriesAction,
@@ -46,6 +52,8 @@ export function BibliothequePageClient({ companyId }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const canImport = can("bibliotheque:manage", user?.permissions);
 
   // Filters
   const [supplier, setSupplier] = useState("");
@@ -56,6 +64,7 @@ export function BibliothequePageClient({ companyId }: Props) {
 
   // Mutation dialog state
   const [createOpen, setCreateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<LibraryProduct | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<LibraryProduct | null>(null);
 
@@ -224,14 +233,27 @@ export function BibliothequePageClient({ companyId }: Props) {
             {t("subtitle")}
           </p>
         </div>
-        <Button
-          size="sm"
-          className="shrink-0 gap-1.5"
-          onClick={() => setCreateOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          {t("addProduct")}
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          {canImport && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => setImportOpen(true)}
+            >
+              <Upload className="h-4 w-4" />
+              {t("import.button")}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            {t("addProduct")}
+          </Button>
+        </div>
       </div>
 
       {/* Filter bar + density control */}
@@ -342,6 +364,20 @@ export function BibliothequePageClient({ companyId }: Props) {
           reload();
         }}
       />
+
+      {/* Purchase import dialog */}
+      {canImport && (
+        <LibraryImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          companyId={companyId}
+          onImported={() => {
+            // New suppliers and categories may arrive with the imported lines.
+            reloadMeta();
+            reload();
+          }}
+        />
+      )}
 
       {/* Edit product dialog */}
       <ProductEditDialog

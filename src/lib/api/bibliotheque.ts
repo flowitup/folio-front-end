@@ -343,6 +343,67 @@ export async function uploadProductImage(
   return response.json() as Promise<{ image_storage_key: string }>;
 }
 
+// ---------------------------------------------------------------------------
+// Purchase import
+// ---------------------------------------------------------------------------
+
+/** One purchase line of POST /bibliotheque/import (field names mirror ImportRecordSchema). */
+export interface ImportPurchaseRecord {
+  supplier_reference: string;
+  product_name: string;
+  quantity: string;
+  unit_price: string;
+  purchased_at: string;
+  source_document_ref: string;
+  source_document_type: "ticket" | "commande";
+  line_index: number;
+  size?: string;
+  category?: string;
+  product_url?: string;
+  description?: string;
+}
+
+/** Request body minus company_id, which the caller adds. At most 1000 records per request. */
+export interface ImportPurchasesPayload {
+  supplier_name: string;
+  supplier_slug: string;
+  supplier_website_url?: string;
+  supplier_product_url_template?: string;
+  records: ImportPurchaseRecord[];
+}
+
+/** Counts returned by the import (re-importing the same lines only raises `skipped`). */
+export interface ImportPurchasesResult {
+  created: number;
+  updated: number;
+  purchases_added: number;
+  skipped: number;
+}
+
+/**
+ * Import purchase records into the company library (idempotent per line).
+ * POST /bibliotheque/import → 200 ImportPurchasesResult. Requires bibliotheque:manage.
+ */
+export async function importPurchases(
+  companyId: string,
+  payload: ImportPurchasesPayload
+): Promise<ImportPurchasesResult> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiBaseUrl}/bibliotheque/import`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({ company_id: companyId, ...payload }),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new Error(`Network error importing purchases: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to import purchases");
+  return response.json() as Promise<ImportPurchasesResult>;
+}
+
 // Product image bytes are streamed from GET /bibliotheque/products/<id>/image
 // and fetched client-side as a Blob by the ProductImage component (cookie auth),
 // mirroring invoice attachment previews. No server-side wrapper needed here.

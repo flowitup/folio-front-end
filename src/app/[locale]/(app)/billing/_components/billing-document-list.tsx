@@ -14,12 +14,14 @@
  *   - Table: Number / Date / Recipient / Status badge / Total TTC / Actions menu
  *   - Load-more pagination (25 per page) via router.push ?page= round-trip
  *   - Empty state with "Create your first {kind}" CTA
+ *   - Import of historical documents (CSV / JSON) for the companies the caller
+ *     may issue from; hidden when there is none
  */
 
 import { useState, useMemo, useCallback, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Loader2, FileText } from "lucide-react";
+import { Plus, Loader2, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,7 +34,9 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BillingStatusBadge } from "@/components/billing/billing-status-badge";
 import { BillingActionsMenu } from "@/components/billing/billing-actions-menu";
+import { BillingImportDialog } from "@/components/billing/billing-import-dialog";
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
+import type { MyCompany } from "@/types/companies";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { formatDate } from "@/lib/utils/formatters";
 
@@ -79,12 +83,15 @@ interface BillingDocumentListProps {
   kind: BillingDocumentKind;
   initialDocuments: BillingDocument[];
   initialTotal: number;
+  /** Companies the caller may issue documents for; the import action needs one. */
+  issuerCompanies?: MyCompany[];
 }
 
 export function BillingDocumentList({
   kind,
   initialDocuments,
   initialTotal,
+  issuerCompanies = [],
 }: BillingDocumentListProps) {
   const t = useTranslations("billing");
   const router = useRouter();
@@ -110,6 +117,7 @@ export function BillingDocumentList({
 
   // Load-more state — navigation-based; server page re-renders with new props.
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // Current page — driven from ?page= param
@@ -175,45 +183,74 @@ export function BillingDocumentList({
   const newPath = `/${locale}/billing/${kindToSegment(kind)}/new`;
 
   const statusOptions = kind === "devis" ? DEVIS_STATUSES : FACTURE_STATUSES;
+  const canImport = issuerCompanies.length > 0;
+
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      {canImport && (
+        <Button variant="outline" onClick={() => setImportOpen(true)}>
+          <Upload size={14} className="mr-2" />
+          {t("import.button")}
+        </Button>
+      )}
+      <Button onClick={() => router.push(newPath)}>
+        <Plus size={14} className="mr-2" />
+        {t(`${kind}.list.new`)}
+      </Button>
+    </div>
+  );
+
+  const importDialog = canImport ? (
+    <BillingImportDialog
+      kind={kind}
+      open={importOpen}
+      onOpenChange={setImportOpen}
+      companies={issuerCompanies}
+      onImported={handleMutated}
+    />
+  ) : null;
+
   const kindLabel = t(`${kind}.list.title`);
 
   // ---------------------------------------------------------------------------
   // Empty state
   // ---------------------------------------------------------------------------
 
+  // Both views return [page, importDialog] so the dialog keeps its state (and
+  // its summary) when a first import turns the empty state into the list.
   if (initialTotal === 0 && statusFilter === "all" && !search.trim()) {
     return (
-      <div className="fade-up space-y-6 px-8 pb-12">
-        <div className="flex items-center justify-between">
-          <h1 className="font-display text-xl font-medium">
-            {t(`${kind}.list.title`)}
-          </h1>
-          <Button onClick={() => router.push(newPath)}>
-            <Plus size={14} className="mr-2" />
-            {t(`${kind}.list.new`)}
-          </Button>
-        </div>
-        <div className="folio-card flex flex-col items-center justify-center gap-4 py-20">
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-full"
-            style={{ background: "var(--paper-2)" }}
-          >
-            <FileText size={22} style={{ color: "var(--muted)" }} />
+      <>
+        <div className="fade-up space-y-6 px-8 pb-12">
+          <div className="flex items-center justify-between">
+            <h1 className="font-display text-xl font-medium">
+              {t(`${kind}.list.title`)}
+            </h1>
+            {headerActions}
           </div>
-          <div className="text-center">
-            <p className="text-sm font-medium" style={{ color: "var(--ink)" }}>
-              {t(`${kind}.list.empty.title`)}
-            </p>
-            <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
-              {t(`${kind}.list.empty.description`)}
-            </p>
+          <div className="folio-card flex flex-col items-center justify-center gap-4 py-20">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-full"
+              style={{ background: "var(--paper-2)" }}
+            >
+              <FileText size={22} style={{ color: "var(--muted)" }} />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium" style={{ color: "var(--ink)" }}>
+                {t(`${kind}.list.empty.title`)}
+              </p>
+              <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
+                {t(`${kind}.list.empty.description`)}
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => router.push(newPath)}>
+              <Plus size={14} className="mr-2" />
+              {t(`${kind}.list.empty.cta`)}
+            </Button>
           </div>
-          <Button variant="outline" onClick={() => router.push(newPath)}>
-            <Plus size={14} className="mr-2" />
-            {t(`${kind}.list.empty.cta`)}
-          </Button>
         </div>
-      </div>
+        {importDialog}
+      </>
     );
   }
 
@@ -222,163 +259,163 @@ export function BillingDocumentList({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="fade-up space-y-6 px-8 pb-12">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-xl font-medium">
-          {t(`${kind}.list.title`)}
-        </h1>
-        <Button onClick={() => router.push(newPath)}>
-          <Plus size={14} className="mr-2" />
-          {t(`${kind}.list.new`)}
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Input
-          placeholder={t("list.searchPlaceholder")}
-          value={searchRaw}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="sm:w-64"
-        />
-        <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="sm:w-44">
-            <SelectValue placeholder={t("list.allStatuses")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("list.allStatuses")}</SelectItem>
-            {statusOptions.map((s) => (
-              <SelectItem key={s} value={s}>
-                {t(`${kind}.status.${s}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {loadError && (
-        <Alert variant="destructive">
-          <AlertDescription>{loadError}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Mobile card list */}
-      {filtered.length === 0 ? (
-        <div
-          className="folio-card flex items-center justify-center py-12 text-[13px]"
-          style={{ color: "var(--muted)" }}
-        >
-          {t("list.noResults")}
+    <>
+      <div className="fade-up space-y-6 px-8 pb-12">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="font-display text-xl font-medium">
+            {t(`${kind}.list.title`)}
+          </h1>
+          {headerActions}
         </div>
-      ) : (
-        <>
-          {/* Mobile cards — hidden on desktop */}
-          <div className="space-y-2 lg:hidden">
-            {filtered.map((doc) => (
-              <div key={doc.id} className="folio-card p-4">
-                {/* Row 1: document number + status badge */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="num text-[12.5px] font-medium">
-                    {doc.document_number}
-                  </span>
-                  <BillingStatusBadge
-                    status={doc.status}
-                    label={t(`${kind}.status.${doc.status}`)}
-                  />
-                </div>
-                {/* Row 2: recipient */}
-                <div className="mt-1.5 text-[13px]">{doc.recipient_name}</div>
-                {/* Row 3: date + total + actions */}
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="num text-[12px]"
-                      style={{ color: "var(--muted)" }}
-                    >
-                      {formatDate(doc.issue_date)}
+
+        {/* Filters */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Input
+            placeholder={t("list.searchPlaceholder")}
+            value={searchRaw}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="sm:w-64"
+          />
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className="sm:w-44">
+              <SelectValue placeholder={t("list.allStatuses")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("list.allStatuses")}</SelectItem>
+              {statusOptions.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {t(`${kind}.status.${s}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {loadError && (
+          <Alert variant="destructive">
+            <AlertDescription>{loadError}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Mobile card list */}
+        {filtered.length === 0 ? (
+          <div
+            className="folio-card flex items-center justify-center py-12 text-[13px]"
+            style={{ color: "var(--muted)" }}
+          >
+            {t("list.noResults")}
+          </div>
+        ) : (
+          <>
+            {/* Mobile cards — hidden on desktop */}
+            <div className="space-y-2 lg:hidden">
+              {filtered.map((doc) => (
+                <div key={doc.id} className="folio-card p-4">
+                  {/* Row 1: document number + status badge */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="num text-[12.5px] font-medium">
+                      {doc.document_number}
                     </span>
-                    <span className="num text-[13px] font-medium">
-                      {formatTTC(doc.total_ttc)}
-                    </span>
-                  </div>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <BillingActionsMenu
-                      document={doc}
-                      onMutated={handleMutated}
+                    <BillingStatusBadge
+                      status={doc.status}
+                      label={t(`${kind}.status.${doc.status}`)}
                     />
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop table — hidden on mobile */}
-          <div className="folio-card hidden overflow-hidden lg:block">
-            <div className="overflow-x-auto">
-              <table className="ledger">
-                <thead>
-                  <tr>
-                    <th>{t("list.columns.number")}</th>
-                    <th>{t("list.columns.date")}</th>
-                    <th>{t("list.columns.recipient")}</th>
-                    <th>{t("list.columns.status")}</th>
-                    <th style={{ textAlign: "right" }}>{t("list.columns.totalTtc")}</th>
-                    <th style={{ textAlign: "right" }}>{t("list.columns.actions")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((doc) => (
-                    <tr key={doc.id}>
-                      <td className="num text-[12.5px] font-medium">
-                        {doc.document_number}
-                      </td>
-                      <td className="num" style={{ color: "var(--muted)" }}>
-                        {formatDate(doc.issue_date)}
-                      </td>
-                      <td>{doc.recipient_name}</td>
-                      <td>
-                        <BillingStatusBadge
-                          status={doc.status}
-                          label={t(`${kind}.status.${doc.status}`)}
-                        />
-                      </td>
-                      <td className="num font-medium" style={{ textAlign: "right" }}>
-                        {formatTTC(doc.total_ttc)}
-                      </td>
-                      <td
-                        style={{ textAlign: "right" }}
-                        onClick={(e) => e.stopPropagation()}
+                  {/* Row 2: recipient */}
+                  <div className="mt-1.5 text-[13px]">{doc.recipient_name}</div>
+                  {/* Row 3: date + total + actions */}
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="num text-[12px]"
+                        style={{ color: "var(--muted)" }}
                       >
-                        <BillingActionsMenu
-                          document={doc}
-                          onMutated={handleMutated}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {formatDate(doc.issue_date)}
+                      </span>
+                      <span className="num text-[13px] font-medium">
+                        {formatTTC(doc.total_ttc)}
+                      </span>
+                    </div>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <BillingActionsMenu
+                        document={doc}
+                        onMutated={handleMutated}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        </>
-      )}
 
-      {/* Pagination — load more */}
-      {hasMore && filtered.length > 0 && (
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            onClick={handleLoadMore}
-            disabled={isLoadingMore}
-          >
-            {isLoadingMore ? (
-              <Loader2 size={14} className="mr-2 animate-spin" />
-            ) : null}
-            {t("list.loadMore", { kindLabel })}
-          </Button>
-        </div>
-      )}
-    </div>
+            {/* Desktop table — hidden on mobile */}
+            <div className="folio-card hidden overflow-hidden lg:block">
+              <div className="overflow-x-auto">
+                <table className="ledger">
+                  <thead>
+                    <tr>
+                      <th>{t("list.columns.number")}</th>
+                      <th>{t("list.columns.date")}</th>
+                      <th>{t("list.columns.recipient")}</th>
+                      <th>{t("list.columns.status")}</th>
+                      <th style={{ textAlign: "right" }}>{t("list.columns.totalTtc")}</th>
+                      <th style={{ textAlign: "right" }}>{t("list.columns.actions")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((doc) => (
+                      <tr key={doc.id}>
+                        <td className="num text-[12.5px] font-medium">
+                          {doc.document_number}
+                        </td>
+                        <td className="num" style={{ color: "var(--muted)" }}>
+                          {formatDate(doc.issue_date)}
+                        </td>
+                        <td>{doc.recipient_name}</td>
+                        <td>
+                          <BillingStatusBadge
+                            status={doc.status}
+                            label={t(`${kind}.status.${doc.status}`)}
+                          />
+                        </td>
+                        <td className="num font-medium" style={{ textAlign: "right" }}>
+                          {formatTTC(doc.total_ttc)}
+                        </td>
+                        <td
+                          style={{ textAlign: "right" }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <BillingActionsMenu
+                            document={doc}
+                            onMutated={handleMutated}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Pagination — load more */}
+        {hasMore && filtered.length > 0 && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+            >
+              {isLoadingMore ? (
+                <Loader2 size={14} className="mr-2 animate-spin" />
+              ) : null}
+              {t("list.loadMore", { kindLabel })}
+            </Button>
+          </div>
+        )}
+      </div>
+      {importDialog}
+    </>
   );
 }

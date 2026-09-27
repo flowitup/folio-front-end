@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { Globe, ChevronDown } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { locales, localeNames, type Locale } from "@/i18n/config";
 import {
@@ -14,17 +15,21 @@ import {
 /**
  * Top-right language control: a quiet Globe + locale-code button that opens a
  * dropdown of supported locales. next-intl's locale-aware router.replace swaps
- * only the locale prefix, preserving pathname + query.
+ * the locale prefix; its usePathname() has no query string, so the query (an
+ * open expense, filters, a view) and the hash are passed along explicitly.
  */
 export function LanguageSwitcher() {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const tCommon = useTranslations("common");
 
   const handleChange = (next: Locale) => {
     if (next === locale) return;
-    router.replace(pathname, { locale: next });
+    const query = searchParams.toString();
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    router.replace(`${pathname}${query ? `?${query}` : ""}${hash}`, { locale: next });
   };
 
   return (

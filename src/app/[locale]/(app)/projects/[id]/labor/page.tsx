@@ -21,6 +21,7 @@ import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { getProjectById } from "@/lib/api/projects-server";
 import { isPlatformOps } from "@/lib/auth/permissions";
+import { parisDayKey } from "@/lib/utils/paris-day";
 import { LaborPageClient } from "./labor-page-client";
 
 interface PageProps {
@@ -41,6 +42,7 @@ export default async function LaborPage({ params }: PageProps) {
     redirect(`/${locale}/projects`);
   }
 
-  const initialDate = new Date().toISOString().slice(0, 10);
+  // Today in Paris: the UTC day is still yesterday between 00:00 and 02:00.
+  const initialDate = parisDayKey();
   return <LaborPageClient initialDate={initialDate} />;
 }

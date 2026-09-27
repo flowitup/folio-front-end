@@ -49,4 +49,16 @@ describe("LaborPage", () => {
     await expect(LaborPage({ params })).rejects.toBe(REDIRECT);
     expect(redirect).toHaveBeenCalledWith("/fr/login");
   });
+
+  it("opens the roster on today in Paris, not the UTC day, just after midnight", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-26T22:30:00Z")); // 00:30 on the 27th in Paris
+    try {
+      vi.mocked(getProjectById).mockResolvedValue({ id: PID, my_permissions: [] } as never);
+      const el = (await LaborPage({ params })) as { props: { initialDate: string } };
+      expect(el.props.initialDate).toBe("2026-09-27");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

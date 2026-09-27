@@ -277,3 +277,21 @@ describe("ExpenseTypeBreakdown — axis and shares", () => {
     expect(row.textContent).toContain('invoices.invoiceCount({"n":74})');
   });
 });
+
+describe("ExpenseTypeBreakdown — axis labels", () => {
+  it("prints distinct tick labels when the steps are not whole thousands", () => {
+    // niceAxisMax(2 300) = 2 400, so the ticks fall on 600 · 1 200 · 1 800 · 2 400.
+    expect(niceAxisMax(2300)).toBe(2400);
+    render(
+      <ExpenseTypeBreakdown
+        company={breakdown({ materials_services: [2300, 3] })}
+        personal={breakdown({})}
+      />
+    );
+
+    for (const label of ["600", "1.2K", "1.8K", "2.4K"]) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    expect(screen.queryByText("2K")).toBeNull();
+  });
+});

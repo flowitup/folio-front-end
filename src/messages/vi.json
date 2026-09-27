@@ -1804,7 +1804,8 @@
       "alreadyInvited": "Đã có lời mời đang chờ cho {email}",
       "revoked": "Đã thu hồi lời mời",
       "rateLimited": "Gửi quá nhiều lời mời. Thử lại sau.",
-      "error": "Không thể gửi lời mời. Vui lòng thử lại."
+      "error": "Không thể gửi lời mời. Vui lòng thử lại.",
+      "revokeFailed": "Không thể thu hồi lời mời. Vui lòng thử lại."
     },
     "empty": {
       "members": "Chưa có thành viên nào",
@@ -1827,7 +1828,9 @@
         "saved": "Đã cập nhật thành viên",
         "removed": "Đã xóa thành viên",
         "emailTaken": "Email này đã được sử dụng",
-        "forbidden": "Bạn không có quyền thực hiện điều này"
+        "forbidden": "Bạn không có quyền thực hiện điều này",
+        "removeFailed": "Không thể xóa thành viên này. Vui lòng thử lại.",
+        "saveFailed": "Không thể lưu thay đổi. Vui lòng thử lại."
       }
     },
     "assign": {

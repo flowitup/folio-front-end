@@ -63,37 +63,36 @@ beforeEach(() => {
 describe("updateUserProfileAction", () => {
   it("updates display name + email on success", async () => {
     mockUpdateUser.mockResolvedValue({ id: UID, email: "a@b.com", display_name: "A" });
-    await updateUserProfileAction(PID, UID, { email: "a@b.com", display_name: "A" });
+    expect(await updateUserProfileAction(PID, UID, { email: "a@b.com", display_name: "A" })).toEqual({
+      ok: true,
+      data: null,
+    });
     expect(mockUpdateUser).toHaveBeenCalledWith(UID, { email: "a@b.com", display_name: "A" });
     expect(mockRevalidate).toHaveBeenCalled();
   });
 
   it("rejects an invalid email with 400", async () => {
-    await expect(
-      updateUserProfileAction(PID, UID, { email: "not-an-email" })
-    ).rejects.toMatchObject({ status: 400 });
+    expect(await updateUserProfileAction(PID, UID, { email: "not-an-email" })).toEqual({ ok: false, status: 400 });
     expect(mockUpdateUser).not.toHaveBeenCalled();
   });
 
   it("propagates a duplicate-email conflict (409)", async () => {
     mockUpdateUser.mockRejectedValue(httpError(409));
-    await expect(
-      updateUserProfileAction(PID, UID, { email: "dup@b.com" })
-    ).rejects.toMatchObject({ status: 409 });
+    expect(await updateUserProfileAction(PID, UID, { email: "dup@b.com" })).toEqual({ ok: false, status: 409 });
   });
 });
 
 describe("removeMemberAction", () => {
   it("unassigns the member and revalidates", async () => {
     mockUnassign.mockResolvedValue(undefined);
-    await removeMemberAction(PID, UID);
+    expect(await removeMemberAction(PID, UID)).toEqual({ ok: true, data: null });
     expect(mockUnassign).toHaveBeenCalledWith(PID, UID);
     expect(mockRemoveMemberLegacy).not.toHaveBeenCalled();
     expect(mockRevalidate).toHaveBeenCalled();
   });
 
   it("rejects non-UUID ids with 400", async () => {
-    await expect(removeMemberAction(PID, "bad")).rejects.toMatchObject({ status: 400 });
+    expect(await removeMemberAction(PID, "bad")).toEqual({ ok: false, status: 400 });
     expect(mockUnassign).not.toHaveBeenCalled();
   });
 
@@ -108,13 +107,13 @@ describe("removeMemberAction", () => {
 
   it("propagates a non-404 error from the assignments endpoint without falling back", async () => {
     mockUnassign.mockRejectedValue(httpError(403));
-    await expect(removeMemberAction(PID, UID)).rejects.toMatchObject({ status: 403 });
+    expect(await removeMemberAction(PID, UID)).toEqual({ ok: false, status: 403 });
     expect(mockRemoveMemberLegacy).not.toHaveBeenCalled();
   });
 
   it("propagates an error from the legacy fallback itself", async () => {
     mockUnassign.mockRejectedValue(httpError(404));
     mockRemoveMemberLegacy.mockRejectedValue(httpError(500));
-    await expect(removeMemberAction(PID, UID)).rejects.toMatchObject({ status: 500 });
+    expect(await removeMemberAction(PID, UID)).toEqual({ ok: false, status: 500 });
   });
 });

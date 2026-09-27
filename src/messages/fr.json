@@ -1804,7 +1804,8 @@
       "alreadyInvited": "Une invitation est déjà en attente pour {email}",
       "revoked": "Invitation révoquée",
       "rateLimited": "Trop d'invitations. Réessayez plus tard.",
-      "error": "Impossible d'envoyer l'invitation. Veuillez réessayer."
+      "error": "Impossible d'envoyer l'invitation. Veuillez réessayer.",
+      "revokeFailed": "Impossible de révoquer l’invitation. Veuillez réessayer."
     },
     "empty": {
       "members": "Aucun membre pour le moment",
@@ -1827,7 +1828,9 @@
         "saved": "Membre mis à jour",
         "removed": "Membre retiré",
         "emailTaken": "Cet e-mail est déjà utilisé",
-        "forbidden": "Vous n'avez pas la permission de faire cela"
+        "forbidden": "Vous n'avez pas la permission de faire cela",
+        "removeFailed": "Impossible de retirer ce membre. Veuillez réessayer.",
+        "saveFailed": "Impossible d’enregistrer les modifications. Veuillez réessayer."
       }
     },
     "assign": {

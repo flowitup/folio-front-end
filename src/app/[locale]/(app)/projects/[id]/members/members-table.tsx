@@ -98,11 +98,15 @@ export function MembersTable({
     if (!confirm(t("revokeConfirm"))) return;
     setRevokingId(invitationId);
     try {
-      await revokeInviteAction(invitationId, projectId);
+      const result = await revokeInviteAction(invitationId, projectId);
+      if (!result.ok) {
+        toast.error(result.status === 403 ? t("edit.toast.forbidden") : t("toast.revokeFailed"));
+        return;
+      }
       toast.success(t("toast.revoked"));
       router.refresh();
     } catch {
-      toast.error(t("toast.error"));
+      toast.error(t("toast.revokeFailed"));
     } finally {
       setRevokingId(null);
     }
@@ -114,12 +118,17 @@ export function MembersTable({
     }
     setRemovingId(member.user_id);
     try {
-      await removeMemberAction(projectId, member.user_id);
+      const result = await removeMemberAction(projectId, member.user_id);
+      if (!result.ok) {
+        toast.error(
+          result.status === 403 ? t("edit.toast.forbidden") : t("edit.toast.removeFailed")
+        );
+        return;
+      }
       toast.success(t("edit.toast.removed"));
       router.refresh();
-    } catch (err: unknown) {
-      const status = (err as { status?: number }).status;
-      toast.error(status === 403 ? t("edit.toast.forbidden") : t("toast.error"));
+    } catch {
+      toast.error(t("edit.toast.removeFailed"));
     } finally {
       setRemovingId(null);
     }

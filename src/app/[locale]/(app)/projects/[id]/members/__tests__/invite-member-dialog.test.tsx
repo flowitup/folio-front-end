@@ -105,9 +105,12 @@ describe("InviteMemberDialog", () => {
 
     it("calls inviteMemberAction with the project and email only", async () => {
       mockInviteAction.mockResolvedValueOnce({
-        kind: "invitation_sent",
-        invitation_id: "inv-1",
-        expires_at: "2099-01-01",
+        ok: true,
+        data: {
+          kind: "invitation_sent",
+          invitation_id: "inv-1",
+          expires_at: "2099-01-01",
+        },
       });
 
       await fillAndSubmit("new@example.com");
@@ -119,9 +122,12 @@ describe("InviteMemberDialog", () => {
 
     it("shows success toast on resolve with kind=invitation_sent", async () => {
       mockInviteAction.mockResolvedValueOnce({
-        kind: "invitation_sent",
-        invitation_id: "inv-1",
-        expires_at: "2099-01-01",
+        ok: true,
+        data: {
+          kind: "invitation_sent",
+          invitation_id: "inv-1",
+          expires_at: "2099-01-01",
+        },
       });
 
       await fillAndSubmit("new@example.com");
@@ -135,8 +141,11 @@ describe("InviteMemberDialog", () => {
 
     it("shows direct-added toast on kind=direct_added", async () => {
       mockInviteAction.mockResolvedValueOnce({
-        kind: "direct_added",
-        user_id: "user-99",
+        ok: true,
+        data: {
+          kind: "direct_added",
+          user_id: "user-99",
+        },
       });
 
       await fillAndSubmit("existing@example.com");
@@ -149,8 +158,7 @@ describe("InviteMemberDialog", () => {
     });
 
     it("shows alreadyInvited warning on 409 error", async () => {
-      const err = Object.assign(new Error("Conflict"), { status: 409 });
-      mockInviteAction.mockRejectedValueOnce(err);
+      mockInviteAction.mockResolvedValueOnce({ ok: false, status: 409 });
 
       await fillAndSubmit("dupe@example.com");
 
@@ -162,8 +170,7 @@ describe("InviteMemberDialog", () => {
     });
 
     it("shows rateLimited error on 429", async () => {
-      const err = Object.assign(new Error("Rate limit"), { status: 429 });
-      mockInviteAction.mockRejectedValueOnce(err);
+      mockInviteAction.mockResolvedValueOnce({ ok: false, status: 429 });
 
       await fillAndSubmit("ratelimited@example.com");
 
@@ -175,8 +182,7 @@ describe("InviteMemberDialog", () => {
     });
 
     it("shows generic error on unknown error", async () => {
-      const err = Object.assign(new Error("Internal"), { status: 500 });
-      mockInviteAction.mockRejectedValueOnce(err);
+      mockInviteAction.mockResolvedValueOnce({ ok: false, status: 500 });
 
       await fillAndSubmit("bad@example.com");
 

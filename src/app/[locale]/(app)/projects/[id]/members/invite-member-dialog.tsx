@@ -52,8 +52,20 @@ export function InviteMemberDialog({
     setIsSubmitting(true);
     try {
       const result = await inviteMemberAction(projectId, email.trim());
+      if (!result.ok) {
+        if (result.status === 409) {
+          toast.warning(t("toast.alreadyInvited", { email: email.trim() }));
+        } else if (result.status === 429) {
+          toast.error(t("toast.rateLimited"));
+        } else if (result.status === 403) {
+          toast.error(t("edit.toast.forbidden"));
+        } else {
+          toast.error(t("toast.error"));
+        }
+        return;
+      }
 
-      if (result.kind === "invitation_sent") {
+      if (result.data.kind === "invitation_sent") {
         toast.success(t("toast.inviteSent", { email: email.trim() }));
       } else {
         // kind === "direct_added"
@@ -63,15 +75,8 @@ export function InviteMemberDialog({
       onOpenChange(false);
       setEmail("");
       router.refresh();
-    } catch (err: unknown) {
-      const status = (err as { status?: number }).status;
-      if (status === 409) {
-        toast.warning(t("toast.alreadyInvited", { email: email.trim() }));
-      } else if (status === 429) {
-        toast.error(t("toast.rateLimited"));
-      } else {
-        toast.error(t("toast.error"));
-      }
+    } catch {
+      toast.error(t("toast.error"));
     } finally {
       setIsSubmitting(false);
     }

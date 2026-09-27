@@ -46,6 +46,7 @@ import { DeleteProjectDialog } from "@/components/project/delete-project-dialog"
 import type { Project, ProjectUser } from "@/types/project";
 import { fmtEUR, computeBudgetMeta, personalSpendRows } from "@/lib/projects/budget-display";
 import { userContact, userInitial } from "@/lib/auth/user-display";
+import { toast } from "sonner";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -66,6 +67,7 @@ type FilterTab = "all" | "active";
 
 export default function ProjectsPage() {
   const t = useTranslations("projects");
+  const tMembers = useTranslations("members");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -155,7 +157,15 @@ export default function ProjectsPage() {
   const handleRemoveUser = async () => {
     if (!removeMember) return;
     try {
-      await removeMemberAction(removeMember.projectId, removeMember.userId);
+      const result = await removeMemberAction(removeMember.projectId, removeMember.userId);
+      if (!result.ok) {
+        toast.error(
+          result.status === 403
+            ? tMembers("edit.toast.forbidden")
+            : tMembers("edit.toast.removeFailed")
+        );
+        return;
+      }
       setProjectUsers((prev) => {
 
         const { [removeMember.projectId]: _, ...rest } = prev;
@@ -163,11 +173,8 @@ export default function ProjectsPage() {
       });
       await loadProjectUsers(removeMember.projectId);
       refetch();
-    } catch (err) {
-      console.error(
-        "Failed to remove user:",
-        err instanceof Error ? err.message : "unknown"
-      );
+    } catch {
+      toast.error(tMembers("edit.toast.removeFailed"));
     } finally {
       setRemoveMember(null);
     }

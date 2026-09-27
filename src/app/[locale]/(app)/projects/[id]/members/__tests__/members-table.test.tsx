@@ -1,11 +1,17 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import type { ProjectMember } from "@/lib/api/members";
 
 vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-vi.mock("../actions", () => ({ revokeInviteAction: vi.fn(), removeMemberAction: vi.fn() }));
+const { mockRemove, mockToastError } = vi.hoisted(() => ({
+  mockRemove: vi.fn(),
+  mockToastError: vi.fn(),
+}));
+vi.mock("../actions", () => ({ revokeInviteAction: vi.fn(), removeMemberAction: mockRemove }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: mockToastError, warning: vi.fn() } }));
 vi.mock("../invite-member-dialog", () => ({ InviteMemberDialog: () => null }));
 vi.mock("../edit-member-dialog", () => ({ EditMemberDialog: () => null }));
 vi.mock("@/components/projects/assign-member-dialog", () => ({ AssignMemberDialog: () => null }));
@@ -50,5 +56,30 @@ describe("MembersTable", () => {
     expect(document.body.textContent).not.toContain("no-email");
     expect(screen.getAllByText("+336 00 00 00 97").length).toBeGreaterThan(0);
     expect(screen.getAllByText("dave@example.com").length).toBeGreaterThan(0);
+  });
+
+  it("names a failed removal as a removal and keeps a 403 distinct", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const dave = {
+      user_id: "u2",
+      email: "dave@example.com",
+      display_name: "Dave",
+      joined_at: "2026-09-01T00:00:00Z",
+    };
+
+    mockRemove.mockResolvedValueOnce({ ok: false, status: 500 });
+    const { unmount } = renderTable([dave]);
+    await userEvent.click(screen.getAllByRole("button", { name: en.members.edit.remove })[0]);
+    await waitFor(() =>
+      expect(mockToastError).toHaveBeenCalledWith(en.members.edit.toast.removeFailed)
+    );
+    unmount();
+
+    mockRemove.mockResolvedValueOnce({ ok: false, status: 403 });
+    renderTable([dave]);
+    await userEvent.click(screen.getAllByRole("button", { name: en.members.edit.remove })[0]);
+    await waitFor(() =>
+      expect(mockToastError).toHaveBeenCalledWith(en.members.edit.toast.forbidden)
+    );
   });
 });

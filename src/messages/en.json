@@ -1804,7 +1804,8 @@
       "alreadyInvited": "An invitation is already pending for {email}",
       "revoked": "Invitation revoked",
       "rateLimited": "Too many invitations. Try again later.",
-      "error": "Could not send invitation. Please try again."
+      "error": "Could not send invitation. Please try again.",
+      "revokeFailed": "Could not revoke the invitation. Please try again."
     },
     "empty": {
       "members": "No members yet",
@@ -1827,7 +1828,9 @@
         "saved": "Member updated",
         "removed": "Member removed",
         "emailTaken": "That email is already in use",
-        "forbidden": "You don't have permission to do that"
+        "forbidden": "You don't have permission to do that",
+        "removeFailed": "Could not remove this member. Please try again.",
+        "saveFailed": "Could not save the changes. Please try again."
       }
     },
     "assign": {

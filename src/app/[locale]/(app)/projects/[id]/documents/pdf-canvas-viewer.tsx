@@ -105,7 +105,9 @@ export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasView
         canvas.width = Math.floor(viewport.width * dpr);
         canvas.height = Math.floor(viewport.height * dpr);
         canvas.style.width = `${Math.floor(viewport.width)}px`;
-        canvas.style.height = `${Math.floor(viewport.height)}px`;
+        // The width is measured before the scrollbar appears; letting the height
+        // follow a capped width keeps the page inside the pane on phones.
+        canvas.style.height = "auto";
         ctx.scale(dpr, dpr);
 
         await page.render({ canvasContext: ctx, viewport, canvas }).promise;
@@ -265,7 +267,7 @@ export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasView
           >
             <canvas
               id={`${idPrefix}-pdf-page-${pageNum}`}
-              className="block"
+              className="block max-w-full"
             />
           </div>
         );

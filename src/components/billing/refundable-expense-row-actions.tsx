@@ -21,6 +21,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { setRefundableStatus } from "@/lib/api/billing/refundable-invoices";
 import type { RefundableExpense, RefundableStatus, RefundedBy } from "@/types/invoice";
 
@@ -49,6 +59,7 @@ export function RefundableExpenseRowActions({
 }: RefundableExpenseRowActionsProps) {
   const t = useTranslations("billing.refundable");
   const [loading, setLoading] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const currentStatus = expense.refundable_status;
 
@@ -56,6 +67,7 @@ export function RefundableExpenseRowActions({
     setLoading(true);
     try {
       await setRefundableStatus(expense.id, next, refundedBy);
+      if (next === null) toast.success(t("removed"));
       onReload();
     } catch {
       toast.error(t("updateError"));
@@ -134,13 +146,41 @@ export function RefundableExpenseRowActions({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onSelect={() => handleSetStatus(null)}
+            // Removing clears the refund status and deletes a bank refund's
+            // funds release: confirm first.
+            onSelect={() => setConfirmRemove(true)}
             className="text-destructive focus:text-destructive"
           >
             {t("action.remove")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog open={confirmRemove} onOpenChange={setConfirmRemove}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("removeConfirm.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("removeConfirm.body", { number: expense.invoice_number })}
+              {expense.funds_release_number && (
+                <>
+                  {" "}
+                  {t("removeConfirm.fundsRelease", { number: expense.funds_release_number })}
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("removeConfirm.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleSetStatus(null)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("action.remove")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

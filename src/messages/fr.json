@@ -1545,7 +1545,14 @@
         "bothShare": "{percent}% les deux",
         "bankShare": "{percent}% banque"
       },
-      "companyPaidNotRefundable": "Payé avec un moyen de paiement de l'entreprise, il n'y a donc rien à rembourser : {numbers}"
+      "companyPaidNotRefundable": "Payé avec un moyen de paiement de l'entreprise, il n'y a donc rien à rembourser : {numbers}",
+      "removed": "Retirée des dépenses remboursables",
+      "removeConfirm": {
+        "title": "Retirer des dépenses remboursables ?",
+        "body": "{number} ne sera plus suivie pour remboursement et son statut de remboursement sera effacé.",
+        "fundsRelease": "Le déblocage de fonds lié {number} sera aussi supprimé, ce qui réduit le total débloqué du projet.",
+        "cancel": "Annuler"
+      }
     },
     "import": {
       "button": "Importer",

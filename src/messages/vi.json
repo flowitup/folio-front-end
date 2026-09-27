@@ -1545,7 +1545,14 @@
         "bothShare": "{percent}% cả hai",
         "bankShare": "{percent}% ngân hàng"
       },
-      "companyPaidNotRefundable": "Đã thanh toán bằng phương thức của công ty nên không có gì để hoàn trả: {numbers}"
+      "companyPaidNotRefundable": "Đã thanh toán bằng phương thức của công ty nên không có gì để hoàn trả: {numbers}",
+      "removed": "Đã gỡ khỏi chi phí được hoàn",
+      "removeConfirm": {
+        "title": "Gỡ khỏi chi phí được hoàn?",
+        "body": "{number} sẽ không còn được theo dõi hoàn tiền và trạng thái hoàn tiền sẽ bị xóa.",
+        "fundsRelease": "Khoản giải ngân liên kết {number} cũng sẽ bị xóa, làm giảm tổng giải ngân của dự án.",
+        "cancel": "Hủy"
+      }
     },
     "import": {
       "button": "Nhập",

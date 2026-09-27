@@ -20,7 +20,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // ---------------------------------------------------------------------------
@@ -194,7 +194,7 @@ describe("RefundableInvoicesPage", () => {
     });
   });
 
-  it("calls setRefundableStatus(id, null) when Remove is selected", async () => {
+  it("calls setRefundableStatus(id, null) when Remove is selected and confirmed", async () => {
     const user = userEvent.setup();
     const expense = makeExpense();
     mockFetch.mockResolvedValue({ items: [expense], total: 1, summary: null });
@@ -216,6 +216,11 @@ describe("RefundableInvoicesPage", () => {
       (el) => /remove/i.test(el.textContent ?? "")
     )!;
     await user.click(removeItem);
+
+    // Nothing happens until the confirmation dialog is accepted.
+    expect(mockSet).not.toHaveBeenCalled();
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: /remove/i }));
 
     await waitFor(() => {
       expect(mockSet).toHaveBeenCalledWith("exp-1", null, undefined);

@@ -1545,7 +1545,14 @@
         "bothShare": "{percent}% both",
         "bankShare": "{percent}% bank"
       },
-      "companyPaidNotRefundable": "Paid with a company payment method, so there is nothing to refund: {numbers}"
+      "companyPaidNotRefundable": "Paid with a company payment method, so there is nothing to refund: {numbers}",
+      "removed": "Removed from refundable expenses",
+      "removeConfirm": {
+        "title": "Remove from refundable expenses?",
+        "body": "{number} will no longer be tracked for reimbursement and its refund status will be cleared.",
+        "fundsRelease": "The linked funds release {number} will also be deleted, which lowers the project's released total.",
+        "cancel": "Cancel"
+      }
     },
     "import": {
       "button": "Import",

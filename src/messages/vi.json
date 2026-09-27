@@ -1020,7 +1020,24 @@
     "entryDeleted": "Đã xóa mục chấm công",
     "workerDeactivated": "Đã vô hiệu hóa {name}",
     "reactivateWorker": "Kích hoạt lại",
-    "workerReactivated": "Đã kích hoạt lại {name}"
+    "workerReactivated": "Đã kích hoạt lại {name}",
+    "view": {
+      "ariaLabel": "Chế độ xem chấm công",
+      "calendar": "Lịch",
+      "list": "Danh sách"
+    },
+    "prevDay": "Ngày trước",
+    "nextDay": "Ngày sau",
+    "prevMonth": "Tháng trước",
+    "nextMonth": "Tháng sau",
+    "close": "Đóng",
+    "typeahead": {
+      "placeholder": "Tìm công nhân…",
+      "noMatches": "Không có kết quả",
+      "typeToSearch": "Nhập ít nhất 2 ký tự để tìm",
+      "existing": "Đã có",
+      "create": "Tạo “{name}”"
+    }
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

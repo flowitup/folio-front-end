@@ -719,7 +719,7 @@
     "totalLaborCost": "Coût total main-d'œuvre",
     "workerDays": "Jours-ouvriers",
     "onSiteToday": "Sur site aujourd'hui",
-    "acrossWorkers": "sur {n} ouvriers",
+    "acrossWorkers": "sur {n, plural, one {# ouvrier} other {# ouvriers}}",
     "workersLogged": "ouvriers pointés",
     "monthlySummary": "Résumé mensuel · {month}",
     "summaryAllHistoryTitle": "Résumé · Tout l'historique",
@@ -733,7 +733,7 @@
     "summaryDrillDown": "Cliquer pour voir le détail par ouvrier",
     "summaryMonthPickerAll": "Tous les mois",
     "summaryUnassignedHint": "+ {n} non attribué(s)",
-    "workersBadge": "{n} ouvriers",
+    "workersBadge": "{n, plural, one {# ouvrier} other {# ouvriers}}",
     "role": {
       "label": "Rôle",
       "selectRole": "Sélectionner un rôle",
@@ -1020,7 +1020,24 @@
     "entryDeleted": "Entrée supprimée",
     "workerDeactivated": "{name} désactivé(e)",
     "reactivateWorker": "Réactiver",
-    "workerReactivated": "{name} réactivé(e)"
+    "workerReactivated": "{name} réactivé(e)",
+    "view": {
+      "ariaLabel": "Affichage des présences",
+      "calendar": "Calendrier",
+      "list": "Liste"
+    },
+    "prevDay": "Jour précédent",
+    "nextDay": "Jour suivant",
+    "prevMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "close": "Fermer",
+    "typeahead": {
+      "placeholder": "Rechercher un ouvrier…",
+      "noMatches": "Aucun résultat",
+      "typeToSearch": "Tapez au moins 2 caractères pour rechercher",
+      "existing": "Existants",
+      "create": "Créer « {name} »"
+    }
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",

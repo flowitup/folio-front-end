@@ -719,7 +719,7 @@
     "totalLaborCost": "Total labor cost",
     "workerDays": "Worker-days",
     "onSiteToday": "On site today",
-    "acrossWorkers": "across {n} workers",
+    "acrossWorkers": "across {n, plural, one {# worker} other {# workers}}",
     "workersLogged": "workers logged",
     "monthlySummary": "Monthly summary · {month}",
     "summaryAllHistoryTitle": "Summary · All history",
@@ -733,7 +733,7 @@
     "summaryDrillDown": "Click to view per-worker breakdown",
     "summaryMonthPickerAll": "All months",
     "summaryUnassignedHint": "+ {n} unassigned",
-    "workersBadge": "{n} workers",
+    "workersBadge": "{n, plural, one {# worker} other {# workers}}",
     "role": {
       "label": "Role",
       "selectRole": "Select role",
@@ -1020,7 +1020,24 @@
     "entryDeleted": "Entry deleted",
     "workerDeactivated": "{name} deactivated",
     "reactivateWorker": "Reactivate",
-    "workerReactivated": "{name} reactivated"
+    "workerReactivated": "{name} reactivated",
+    "view": {
+      "ariaLabel": "Attendance view",
+      "calendar": "Calendar",
+      "list": "List"
+    },
+    "prevDay": "Previous day",
+    "nextDay": "Next day",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "close": "Close",
+    "typeahead": {
+      "placeholder": "Search workers…",
+      "noMatches": "No matches",
+      "typeToSearch": "Type at least 2 characters to search",
+      "existing": "Existing",
+      "create": "Create “{name}”"
+    }
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

@@ -10,6 +10,12 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { DatePickerWithArrows, shiftDate } from "../date-picker-with-arrows";
 
+// French UI: the arrow labels come from the messages, not hard-coded English.
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) =>
+    ({ prevDay: "Jour précédent", nextDay: "Jour suivant" })[key] ?? key,
+}));
+
 describe("shiftDate", () => {
   it("adds days within a month", () => {
     expect(shiftDate("2026-05-13", 1)).toBe("2026-05-14");
@@ -41,20 +47,20 @@ describe("DatePickerWithArrows component", () => {
   it("calls onChange when prev arrow is clicked", () => {
     const onChange = vi.fn();
     render(<DatePickerWithArrows value="2026-05-13" onChange={onChange} />);
-    fireEvent.click(screen.getByLabelText("Previous day"));
+    fireEvent.click(screen.getByLabelText("Jour précédent"));
     expect(onChange).toHaveBeenCalledWith("2026-05-12");
   });
 
   it("calls onChange when next arrow is clicked", () => {
     const onChange = vi.fn();
     render(<DatePickerWithArrows value="2026-05-13" onChange={onChange} />);
-    fireEvent.click(screen.getByLabelText("Next day"));
+    fireEvent.click(screen.getByLabelText("Jour suivant"));
     expect(onChange).toHaveBeenCalledWith("2026-05-14");
   });
 
   it("disables controls when disabled prop is set", () => {
     render(<DatePickerWithArrows value="2026-05-13" onChange={() => {}} disabled />);
-    expect(screen.getByLabelText("Previous day")).toBeDisabled();
-    expect(screen.getByLabelText("Next day")).toBeDisabled();
+    expect(screen.getByLabelText("Jour précédent")).toBeDisabled();
+    expect(screen.getByLabelText("Jour suivant")).toBeDisabled();
   });
 });

@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { formatBonusDays, formatDays } from "@/components/labor/format-days";
 import { Calendar, ChevronRight, ChevronDown, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
@@ -59,21 +60,6 @@ function formatMonthLabel(month: string, locale: string): string {
   const [y, m] = month.split("-").map(Number);
   if (!y || !m) return month;
   return new Date(y, m - 1, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
-}
-
-/** Format bonus_days value: render integer without decimal, float with one decimal */
-function formatBonusDays(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
-
-/** Format a fractional priced-day count compactly: "5" for 5.0, "5.5"
- *  for 5.5, "5.25" for 5.25. Strips trailing zeros after the dot so a
- *  whole-day total doesn't show a redundant decimal. */
-function formatDays(value: number): string {
-  if (!Number.isFinite(value)) return "0";
-  if (Number.isInteger(value)) return String(value);
-  // Render with up to 2 fraction digits, then trim trailing zeros.
-  return value.toFixed(2).replace(/\.?0+$/, "");
 }
 
 // Folio warm worker-accent palette, lifted from the Labor Summary
@@ -320,7 +306,7 @@ export function LaborSummary({
           <p className="text-[13px] font-medium">
             {t("supplement.banner", {
               banked: totalBankedHours,
-              bonusDays: formatBonusDays(totalBonusDays),
+              bonusDays: formatBonusDays(totalBonusDays, locale),
               bonusCost: formatEUR(totalBonusCost),
             })}
           </p>
@@ -343,7 +329,7 @@ export function LaborSummary({
         <div className="folio-card p-4 lg:p-5">
           <div className="label-cap">{t("workerDays")}</div>
           <div className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]">
-            {formatDays(totalDays)}
+            {formatDays(totalDays, locale)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
             {t("acrossWorkers", { n: workerCount })}
@@ -368,7 +354,7 @@ export function LaborSummary({
             {formatEUR(totalBonusCost)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("supplement.bonusDaysSubtitle", { days: formatBonusDays(totalBonusDays) })}
+            {t("supplement.bonusDaysSubtitle", { days: formatBonusDays(totalBonusDays, locale) })}
           </div>
         </div>
       </div>
@@ -594,7 +580,7 @@ export function LaborSummary({
                               <span
                                 key={w.worker_id}
                                 className="avatar"
-                                title={`${w.worker_name} · ${formatDays(w.days_worked)}d · ${formatEUR(w.total_cost)}`}
+                                title={`${w.worker_name} · ${formatDays(w.days_worked, locale)}d · ${formatEUR(w.total_cost)}`}
                                 style={{
                                   background: workerColor(w.worker_id),
                                   width: 22,
@@ -726,7 +712,7 @@ export function LaborSummary({
                               className="num text-[12.5px] tabular-nums"
                               style={{ textAlign: "right", border: "none", paddingTop: 6, paddingBottom: 6 }}
                             >
-                              {formatDays(w.days_worked)}
+                              {formatDays(w.days_worked, locale)}
                             </td>
                             <td style={{ border: "none", paddingTop: 6, paddingBottom: 6 }}>
                               <MiniBar
@@ -768,7 +754,7 @@ export function LaborSummary({
                       {t("workersBadge", { n: distinctWorkerCount })}
                     </td>
                     <td className="num font-medium" style={{ textAlign: "right" }}>
-                      {formatDays(totalDays)}
+                      {formatDays(totalDays, locale)}
                     </td>
                     <td />
                     <td
@@ -842,7 +828,7 @@ export function LaborSummary({
                       </td>
                       <td style={{ color: "var(--muted)" }}>{roleName ?? "—"}</td>
                       <td className="num" style={{ textAlign: "right" }}>
-                        {formatDays(row.days_worked)}
+                        {formatDays(row.days_worked, locale)}
                       </td>
                       <td className="num font-medium" style={{ textAlign: "right" }}>
                         {formatEUR(row.total_cost)}
@@ -892,7 +878,7 @@ export function LaborSummary({
                     {t("grandTotal")}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right" }}>
-                    {formatDays(summary.total_days)}
+                    {formatDays(summary.total_days, locale)}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {formatEUR(summary.total_cost)}

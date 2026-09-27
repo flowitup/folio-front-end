@@ -15,6 +15,7 @@
 
 import * as React from "react";
 import { ChevronsUpDown, Loader2, UserPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -58,12 +59,13 @@ export interface PersonTypeaheadProps {
 export function PersonTypeahead({
   value,
   onChange,
-  placeholder = "Search workers…",
+  placeholder,
   disabled = false,
   className,
   debounceMs = 200,
   limit = 20,
 }: PersonTypeaheadProps) {
+  const t = useTranslations("labor.typeahead");
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
@@ -169,7 +171,7 @@ export function PersonTypeahead({
       >
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder={placeholder}
+            placeholder={placeholder ?? t("placeholder")}
             value={query}
             onValueChange={setQuery}
             data-testid="person-typeahead-input"
@@ -177,11 +179,11 @@ export function PersonTypeahead({
           <CommandList id={listId}>
             {results.length === 0 && !showCreate && !loading && (
               <CommandEmpty>
-                {trimmed ? "No matches" : "Type to search"}
+                {trimmed ? t("noMatches") : t("typeToSearch")}
               </CommandEmpty>
             )}
             {results.length > 0 && (
-              <CommandGroup heading="Existing">
+              <CommandGroup heading={t("existing")}>
                 {results.map((person) => (
                   <CommandItem
                     key={person.id}
@@ -212,7 +214,7 @@ export function PersonTypeahead({
                     ) : (
                       <UserPlus className="h-3.5 w-3.5" />
                     )}
-                    Create &quot;{trimmed}&quot;
+                    {t("create", { name: trimmed })}
                   </CommandItem>
                 </CommandGroup>
               </>

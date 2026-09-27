@@ -34,6 +34,8 @@ import type {
 
 type SortColumn = "name" | "size" | "created_at" | "uploader";
 
+const TEXT_COLUMNS: SortColumn[] = ["name", "uploader"];
+
 type Member = {
   id: string;
   firstName?: string;
@@ -220,7 +222,8 @@ export function DocumentsPanel({
         setOrder((prev) => (prev === "asc" ? "desc" : "asc"));
       } else {
         setSort(col);
-        setOrder("desc");
+        // Names read A→Z first; dates and sizes newest/largest first.
+        setOrder(TEXT_COLUMNS.includes(col) ? "asc" : "desc");
       }
       setPage(1);
     },

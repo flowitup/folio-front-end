@@ -186,3 +186,23 @@ describe("DocumentsPanel — deleting the last document of the last page", () =>
     expect(calls[calls.length - 1][1]).toMatchObject({ page: 1 });
   });
 });
+
+describe("DocumentsPanel — sorting", () => {
+  it("sorts a newly picked text column A→Z and a date column newest first", async () => {
+    vi.mocked(listDocumentsAction).mockResolvedValue({
+      ok: true,
+      data: { items: [makeDoc(1)], total: 1, page: 1, per_page: 25 },
+    });
+    renderPanel([makeDoc(1)]);
+    const list = screen.getByTestId("documents-list");
+
+    lastListProps!.onSortChange("name");
+    await waitFor(() => expect(list).toHaveAttribute("data-sort", "name:asc"));
+
+    lastListProps!.onSortChange("uploader");
+    await waitFor(() => expect(list).toHaveAttribute("data-sort", "uploader:asc"));
+
+    lastListProps!.onSortChange("size");
+    await waitFor(() => expect(list).toHaveAttribute("data-sort", "size:desc"));
+  });
+});

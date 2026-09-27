@@ -101,6 +101,9 @@ function SortHeader({ column, label, activeSort, activeOrder, onSortChange }: So
         ) : (
           <ChevronDown className="size-3.5" />
         )
+      ) : column === "name" || column === "uploader" ? (
+        // The first click on a text column sorts A→Z.
+        <ChevronUp className="size-3.5 opacity-30" />
       ) : (
         <ChevronDown className="size-3.5 opacity-30" />
       )}

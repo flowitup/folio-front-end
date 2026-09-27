@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import type { Project } from "@/types/project";
 
 const mockUseAuth = vi.fn();
 vi.mock("@/context/AuthContext", () => ({ useAuth: () => mockUseAuth() }));
-vi.mock("../actions", () => ({ updateInvoicePrefix: vi.fn() }));
+const { mockUpdatePrefix } = vi.hoisted(() => ({ mockUpdatePrefix: vi.fn() }));
+vi.mock("../actions", () => ({ updateInvoicePrefix: mockUpdatePrefix }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("../bank-credit-card", () => ({ BankCreditCard: () => null }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -43,5 +45,24 @@ describe("ProjectSettingsClient — who may edit", () => {
     renderClient({ ...PROJECT, my_permissions: ["project:read", "project:update"] } as Project);
     expect(screen.getByLabelText(en.projects.invoicePrefix)).not.toBeDisabled();
     expect(screen.getByRole("button", { name: en.projects.save })).toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsClient — after a save", () => {
+  it("treats the saved prefix as the new baseline", async () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: [] } });
+    mockUpdatePrefix.mockResolvedValue({ ok: true });
+    renderClient({ ...PROJECT, my_permissions: ["project:update"] } as Project);
+    const input = screen.getByLabelText(en.projects.invoicePrefix);
+    const save = screen.getByRole("button", { name: en.projects.save });
+
+    fireEvent.change(input, { target: { value: "QAPM2" } });
+    fireEvent.click(save);
+    await waitFor(() => expect(mockUpdatePrefix).toHaveBeenCalledWith("p-1", "QAPM2"));
+    await waitFor(() => expect(screen.getByRole("button", { name: en.projects.save })).toBeDisabled());
+
+    // Going back to the old value is a change again.
+    fireEvent.change(input, { target: { value: "VIL" } });
+    expect(screen.getByRole("button", { name: en.projects.save })).not.toBeDisabled();
   });
 });

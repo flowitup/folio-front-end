@@ -172,3 +172,16 @@ describe("unitLabel", () => {
     expect(unitLabel("palette", t)).toBe("palette");
   });
 });
+
+describe("hasComparablePrices", () => {
+  it("is false when every shop's basket is empty, true once one holds a price", async () => {
+    const { hasComparablePrices } = await import("../compare-lines");
+    expect(hasComparablePrices({ store_baskets: [] })).toBe(false);
+    expect(
+      hasComparablePrices({ store_baskets: [{ priced_article_count: 0 }, { priced_article_count: 0 }] })
+    ).toBe(false);
+    expect(
+      hasComparablePrices({ store_baskets: [{ priced_article_count: 0 }, { priced_article_count: 2 }] })
+    ).toBe(true);
+  });
+});

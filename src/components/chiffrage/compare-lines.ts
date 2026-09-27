@@ -146,3 +146,13 @@ export function bestMixHt(articles: ChiffrageArticle[]): number {
   }
   return total;
 }
+
+/**
+ * Whether a section has anything to compare. The API returns one basket per
+ * project shop even with no price in it, so "has baskets" is true for every
+ * section once the project has a shop; a basket with a priced item is what
+ * gives the compare dialog something to show.
+ */
+export function hasComparablePrices(poste: { store_baskets: { priced_article_count: number }[] }): boolean {
+  return poste.store_baskets.some((b) => b.priced_article_count > 0);
+}

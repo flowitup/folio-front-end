@@ -47,6 +47,7 @@ import { SortableItem } from "@/components/chiffrage/sortable-item";
 import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
 import { StoresDialog } from "@/components/chiffrage/stores-dialog";
 import { neighboursAfterMove, planArticleDrop, planMove } from "@/components/chiffrage/reorder";
+import { hasComparablePrices } from "@/components/chiffrage/compare-lines";
 import {
   QuoteFormDialog,
   type QuoteFormValues,
@@ -425,7 +426,7 @@ export function ChiffragePageClient({
                       dragHandle={canManage ? handle : undefined}
                       collapsed={collapsedPostes.has(poste.id)}
                       onToggleCollapse={() => toggleCollapse(poste.id)}
-                      canCompare={poste.store_baskets.length > 0}
+                      canCompare={hasComparablePrices(poste)}
                       onCompare={() =>
                         setCompareDialog({ open: true, poste })
                       }

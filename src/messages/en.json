@@ -670,7 +670,15 @@
       "save": "Could not save the task. Please try again.",
       "delete": "Could not delete the task. Please try again."
     },
-    "statusLabel": "Status"
+    "statusLabel": "Status",
+    "close": "Close",
+    "dnd": {
+      "instructions": "To pick up a task, press Space or Enter. Move it with the arrow keys, press Space or Enter again to drop it, or Escape to cancel.",
+      "pickedUp": "Picked up task {title}.",
+      "over": "Task {title} is over {target}.",
+      "dropped": "Task {title} was dropped in {target}.",
+      "cancelled": "Moving task {title} was cancelled."
+    }
   },
   "labor": {
     "title": "Labor",

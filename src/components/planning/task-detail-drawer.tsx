@@ -170,7 +170,7 @@ export function TaskDetailDrawer({
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} aria-label={t("close")}>
               <X className="h-4 w-4" />
             </Button>
           </div>

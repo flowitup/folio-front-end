@@ -3,6 +3,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { TaskCard } from "@/components/planning/task-card";
 import type { Task, TaskStatus } from "@/types/task";
 
@@ -15,6 +16,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ status, title, tasks, onAdd, onTaskClick }: KanbanColumnProps) {
+  const t = useTranslations("planning");
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${status}`,
     data: { type: "column", status },
@@ -39,7 +41,7 @@ export function KanbanColumn({ status, title, tasks, onAdd, onTaskClick }: Kanba
             type="button"
             onClick={onAdd}
             className="btn btn-quiet"
-            aria-label="Add task"
+            aria-label={t("addTask")}
             style={{ padding: 4 }}
           >
             <Plus size={14} />

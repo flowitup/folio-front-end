@@ -6,6 +6,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   DndContext,
+  type Announcements,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
@@ -110,6 +111,35 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }, [searchParams, router, pathname]);
+
+  // dnd-kit's built-in screen-reader instructions and live announcements are
+  // English; name the task and the lane in the app language instead.
+  const dndAccessibility = useMemo(() => {
+    const titleOf = (active: { data: { current?: Record<string, unknown> } }) =>
+      (active.data.current?.task as Task | undefined)?.title ?? "";
+    const laneOf = (over: { data: { current?: Record<string, unknown> } } | null) => {
+      const data = over?.data.current;
+      const status =
+        data?.type === "column" ? (data.status as TaskStatus) : (data?.task as Task | undefined)?.status;
+      if (!status) return null;
+      return status === "backlog" ? t("backlog") : t(`column.${status}`);
+    };
+    const announcements: Announcements = {
+      onDragStart: ({ active }) => t("dnd.pickedUp", { title: titleOf(active) }),
+      onDragOver: ({ active, over }) => {
+        const target = laneOf(over);
+        return target ? t("dnd.over", { title: titleOf(active), target }) : undefined;
+      },
+      onDragEnd: ({ active, over }) => {
+        const target = laneOf(over);
+        return target
+          ? t("dnd.dropped", { title: titleOf(active), target })
+          : t("dnd.cancelled", { title: titleOf(active) });
+      },
+      onDragCancel: ({ active }) => t("dnd.cancelled", { title: titleOf(active) }),
+    };
+    return { announcements, screenReaderInstructions: { draggable: t("dnd.instructions") } };
+  }, [t]);
 
   // Silent variant for mutation-triggered refreshes — avoids whole-board
   // spinner flash after a card create / edit / delete.
@@ -260,6 +290,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
         <DndContext
           sensors={sensors}
           collisionDetection={pointerFirstCollision}
+          accessibility={dndAccessibility}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
         >

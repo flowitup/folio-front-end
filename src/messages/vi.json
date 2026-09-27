@@ -617,10 +617,10 @@
   "planning": {
     "title": "Kế hoạch",
     "subtitle": "Việc của đội — kéo thẻ trên bảng để di chuyển.",
-    "backlog": "Backlog",
-    "backlogEmpty": "Chưa có task trong backlog",
-    "newTask": "Tạo task",
-    "taskDetail": "Chi tiết task",
+    "backlog": "Việc tồn đọng",
+    "backlogEmpty": "Chưa có công việc tồn đọng",
+    "newTask": "Tạo công việc",
+    "taskDetail": "Chi tiết công việc",
     "titleLabel": "Tiêu đề",
     "titlePlaceholder": "Cần làm gì?",
     "descriptionLabel": "Mô tả",
@@ -633,10 +633,10 @@
     "saving": "Đang lưu...",
     "cancel": "Hủy",
     "delete": "Xóa",
-    "deleteConfirm": "Xóa task này? Không thể hoàn tác.",
-    "loadError": "Không thể tải task",
-    "taskCount": "{n, plural, =0 {không có task} other {# task}}",
-    "addTask": "Thêm task",
+    "deleteConfirm": "Xóa công việc này? Không thể hoàn tác.",
+    "loadError": "Không thể tải công việc",
+    "taskCount": "{n, plural, =0 {không có công việc} other {# công việc}}",
+    "addTask": "Thêm công việc",
     "view": {
       "board": "Bảng",
       "week": "Tuần"
@@ -670,7 +670,15 @@
       "save": "Không thể lưu công việc. Vui lòng thử lại.",
       "delete": "Không thể xóa công việc. Vui lòng thử lại."
     },
-    "statusLabel": "Trạng thái"
+    "statusLabel": "Trạng thái",
+    "close": "Đóng",
+    "dnd": {
+      "instructions": "Để nhấc một công việc, nhấn Space hoặc Enter. Di chuyển bằng các phím mũi tên, nhấn Space hoặc Enter lần nữa để thả, hoặc Escape để hủy.",
+      "pickedUp": "Đã nhấc công việc {title}.",
+      "over": "Công việc {title} đang ở trên {target}.",
+      "dropped": "Đã thả công việc {title} vào {target}.",
+      "cancelled": "Đã hủy di chuyển công việc {title}."
+    }
   },
   "labor": {
     "title": "Nhân công",

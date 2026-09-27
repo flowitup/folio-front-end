@@ -221,6 +221,7 @@ interface WeekTaskChipProps {
  * ancestor the week view doesn't provide.
  */
 function WeekTaskChip({ task, statusLabel, onClick }: WeekTaskChipProps) {
+  const t = useTranslations("planning");
   return (
     <div
       role="button"
@@ -238,7 +239,9 @@ function WeekTaskChip({ task, statusLabel, onClick }: WeekTaskChipProps) {
       <div className="flex items-start gap-1.5">
         <span
           className={`dot ${PRIORITY_DOT_CLASS[task.priority]} mt-1 flex-shrink-0`}
-          title={task.priority}
+          title={t(`priority.${task.priority}`)}
+          role="img"
+          aria-label={t(`priority.${task.priority}`)}
         />
         <p className="text-[12.5px] font-medium leading-snug">{task.title}</p>
       </div>

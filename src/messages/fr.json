@@ -670,7 +670,15 @@
       "save": "Impossible d’enregistrer la tâche. Veuillez réessayer.",
       "delete": "Impossible de supprimer la tâche. Veuillez réessayer."
     },
-    "statusLabel": "Statut"
+    "statusLabel": "Statut",
+    "close": "Fermer",
+    "dnd": {
+      "instructions": "Pour saisir une tâche, appuyez sur Espace ou Entrée. Déplacez-la avec les flèches, appuyez de nouveau sur Espace ou Entrée pour la déposer, ou sur Échap pour annuler.",
+      "pickedUp": "Tâche {title} saisie.",
+      "over": "La tâche {title} est au-dessus de {target}.",
+      "dropped": "Tâche {title} déposée dans {target}.",
+      "cancelled": "Déplacement de la tâche {title} annulé."
+    }
   },
   "labor": {
     "title": "Main-d'œuvre",

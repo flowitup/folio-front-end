@@ -22,13 +22,15 @@ function parseDateOnly(s: string): Date {
 interface OverviewAgendaProps {
   groups: AgendaGroup[];
   planningHref: string | null;
+  /** Tasks still loading: no "nothing on the agenda" before they arrive. */
+  loading?: boolean;
 }
 
 /** "This week" agenda — non-done tasks grouped by due date, Overdue tasks
  * flagged with a stamp (design Canvas 3a). Display-only checkboxes: this is
  * a read-at-a-glance list, not the board — clicking a row hands off to
  * Planning. */
-export function OverviewAgenda({ groups, planningHref }: OverviewAgendaProps) {
+export function OverviewAgenda({ groups, planningHref, loading = false }: OverviewAgendaProps) {
   const t = useTranslations("dashboard");
   const locale = useLocale();
   const dueFmt = new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short" });
@@ -71,7 +73,16 @@ export function OverviewAgenda({ groups, planningHref }: OverviewAgendaProps) {
         )}
       </div>
 
-      {groups.length === 0 ? (
+      {loading ? (
+        <div aria-busy="true" data-testid="overview-agenda-loading">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-2.5 py-[7px]" aria-hidden="true">
+              <span className="h-[15px] w-[15px] flex-none rounded-[5px]" style={{ background: "var(--paper-2)" }} />
+              <span className="h-[12px] flex-1 animate-pulse rounded" style={{ background: "var(--paper-2)" }} />
+            </div>
+          ))}
+        </div>
+      ) : groups.length === 0 ? (
         <p className="py-3 text-[13px]" style={{ color: "var(--muted)" }}>
           {t("agenda.empty")}
         </p>

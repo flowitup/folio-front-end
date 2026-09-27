@@ -151,7 +151,7 @@ export function OverviewMoneyPanel({
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-[12.5px] font-semibold">{title}</span>
             <span className="text-[10.5px] uppercase tracking-[0.05em]" style={{ opacity: 0.55 }}>
-              {stamp}
+              {loading ? PLACEHOLDER : stamp}
             </span>
           </div>
           <div

@@ -83,6 +83,7 @@ export default function DashboardPage() {
   // not leave the money panels computing "full budget left" from nothing.
   const [invoicesStatus, setInvoicesStatus] = useState<"loading" | "ok" | "error">("loading");
   const [tasksFailed, setTasksFailed] = useState(false);
+  const [tasksLoading, setTasksLoading] = useState(true);
 
   // Reference "now" for month labels / agenda-week math is resolved once on
   // mount instead of at render time: this component is SSR-prerendered, and
@@ -105,6 +106,7 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- resets loading/error state ahead of the fetches this effect kicks off for the (possibly new) projectId; the fetch is the "external system" being synchronized.
     setInvoicesStatus("loading");
     setTasksFailed(false);
+    setTasksLoading(true);
     fetchInvoicesWithMeta(projectId)
       .then((invoiceRes) => {
         if (cancelled) return;
@@ -128,12 +130,15 @@ export default function DashboardPage() {
       });
     fetchTasks(projectId)
       .then((taskRes) => {
-        if (!cancelled) setTasks(taskRes);
+        if (cancelled) return;
+        setTasks(taskRes);
+        setTasksLoading(false);
       })
       .catch(() => {
         if (cancelled) return;
         setTasks(EMPTY_TASKS);
         setTasksFailed(true);
+        setTasksLoading(false);
       });
     return () => {
       cancelled = true;
@@ -270,7 +275,11 @@ export default function DashboardPage() {
           )}
         </div>
         <div className="flex min-w-0 flex-col gap-5">
-          <OverviewAgenda groups={agendaGroups} planningHref={planningHref} />
+          <OverviewAgenda
+            groups={agendaGroups}
+            planningHref={planningHref}
+            loading={Boolean(projectId) && tasksLoading}
+          />
         </div>
       </div>
     </div>

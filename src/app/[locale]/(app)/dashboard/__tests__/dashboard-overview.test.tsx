@@ -499,3 +499,16 @@ describe("DashboardPage — expenses in neither purse", () => {
     expect(moneyPanel.getAllByText("1 expense").length).toBeGreaterThan(0);
   });
 });
+
+describe("DashboardPage — while loading", () => {
+  it("shows no empty-state wording before the expenses and tasks arrive", async () => {
+    mockUseProject.mockReturnValue({ selectedProject: { id: "p-1", name: "Villa", budget: 10000 } });
+    mockFetchInvoicesWithMeta.mockReturnValue(new Promise(() => {}));
+    mockFetchTasks.mockReturnValue(new Promise(() => {}));
+    renderDashboard();
+
+    expect(await screen.findByTestId("overview-agenda-loading")).toBeInTheDocument();
+    expect(screen.queryByText("Nothing on the agenda this week.")).toBeNull();
+    expect(screen.queryByText(/no expenses/i)).toBeNull();
+  });
+});

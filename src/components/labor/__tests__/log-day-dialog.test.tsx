@@ -20,6 +20,7 @@ vi.mock("@/hooks/use-cross-project-conflicts", () => ({
 vi.mock("@/lib/api/labor", () => ({
   bulkLogAttendance: vi.fn(),
   fetchLaborDayDescriptions: vi.fn().mockResolvedValue([]),
+  fetchLaborEntries: vi.fn().mockResolvedValue([]),
   setLaborDayDescription: vi.fn(),
 }));
 vi.mock("@/components/labor/cross-project-conflict-modal", () => ({
@@ -29,11 +30,13 @@ vi.mock("@/components/labor/cross-project-conflict-modal", () => ({
 vi.mock("@/components/labor/log-day-tile-grid", () => ({
   LogDayTileGrid: ({
     workers,
+    tileStates,
     onToggle,
     onSupplementHoursChange,
     onAmountOverrideChange,
   }: {
     workers: Worker[];
+    tileStates: Record<string, { locked: boolean }>;
     onToggle: (id: string, next: boolean) => void;
     onSupplementHoursChange: (id: string, next: number) => void;
     onAmountOverrideChange: (id: string, next: number | undefined) => void;
@@ -41,6 +44,7 @@ vi.mock("@/components/labor/log-day-tile-grid", () => ({
     <div>
       {workers.map((w) => (
         <div key={w.id}>
+          {tileStates[w.id]?.locked && <span>locked {w.name}</span>}
           <button type="button" onClick={() => onToggle(w.id, true)}>
             pick {w.name}
           </button>
@@ -56,7 +60,7 @@ vi.mock("@/components/labor/log-day-tile-grid", () => ({
   ),
 }));
 
-import { bulkLogAttendance } from "@/lib/api/labor";
+import { bulkLogAttendance, fetchLaborEntries } from "@/lib/api/labor";
 import { ApiError } from "@/lib/api/http";
 import { LogDayDialog } from "../log-day-dialog";
 
@@ -88,7 +92,10 @@ function save() {
   fireEvent.click(screen.getByRole("button", { name: /labor\.logDayDialog\.saveButton/ }));
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(fetchLaborEntries).mockResolvedValue([]);
+});
 
 describe("LogDayDialog — limits and errors", () => {
   it("refuses supplement hours past 12 before sending", async () => {
@@ -153,3 +160,27 @@ describe("LogDayDialog — 'Log next day' toast action", () => {
     expect(onLogNextDay).toHaveBeenCalledWith("2026-09-21");
   });
 });
+
+describe("LogDayDialog — what is already logged on the picked date", () => {
+  it("locks a worker logged that day even when the page's month does not hold it", async () => {
+    vi.mocked(fetchLaborEntries).mockResolvedValue([
+      {
+        id: "e-1",
+        worker_id: "w-1",
+        worker_name: "Alice",
+        date: "2026-09-20",
+        amount_override: null,
+        effective_cost: 100,
+        note: null,
+        shift_type: "full",
+        supplement_hours: 0,
+        created_at: "2026-09-20T08:00:00Z",
+      },
+    ] as never);
+    renderDialog(); // the page passes no entries (another month is shown)
+
+    expect(await screen.findByText("locked Alice")).toBeInTheDocument();
+    expect(fetchLaborEntries).toHaveBeenCalledWith("p-1", { from: "2026-08-21", to: "2026-09-20" });
+  });
+});
+

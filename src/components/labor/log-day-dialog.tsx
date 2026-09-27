@@ -46,6 +46,7 @@ import { useCrossProjectConflicts } from "@/hooks/use-cross-project-conflicts";
 import {
   bulkLogAttendance,
   fetchLaborDayDescriptions,
+  fetchLaborEntries,
   setLaborDayDescription,
 } from "@/lib/api/labor";
 import { ApiError } from "@/lib/api/http";
@@ -65,6 +66,9 @@ import type {
   Worker,
 } from "@/types/labor";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
+
+/** Days before the picked date read for "recent workers" and "Same as last day". */
+const LOOKBACK_DAYS = 30;
 
 function todayKey(): string {
   const d = new Date();
@@ -112,7 +116,34 @@ export function LogDayDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const lastDay = useLastLoggedDay(entries);
+  // The page's entries are filtered by its calendar month and worker filter.
+  // What is already logged around the picked date (every worker) is read
+  // here, so a day from another month still locks its workers and "Same as
+  // last day" means the day before the picked one.
+  const [windowEntries, setWindowEntries] = useState<LaborEntry[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    fetchLaborEntries(projectId, { from: shiftDate(date, -LOOKBACK_DAYS), to: date })
+      .then((rows) => {
+        if (!cancelled) setWindowEntries(rows);
+      })
+      .catch(() => {
+        // Fall back to the page's entries.
+        if (!cancelled) setWindowEntries([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, projectId, date]);
+  const knownEntries = useMemo(() => {
+    const byId = new Map<string, LaborEntry>();
+    for (const e of entries) byId.set(e.id, e);
+    for (const e of windowEntries) byId.set(e.id, e);
+    return Array.from(byId.values());
+  }, [entries, windowEntries]);
+
+  const lastDay = useLastLoggedDay(knownEntries, date);
 
   // Phase 4: conflict fetch + cache by date. The hook is enabled only
   // while the dialog is open so closed dialogs don't keep making
@@ -134,7 +165,7 @@ export function LogDayDialog({
   useEffect(() => {
     if (!open) return;
     setTileStates((prev) => {
-      const next = buildTileStates(workers, entries, date);
+      const next = buildTileStates(workers, knownEntries, date);
       // Preserve checked + shift_type on unlocked tiles so "log next
       // day" survives date bumps. Locked tiles are always reseeded.
       for (const [id, s] of Object.entries(next)) {
@@ -153,7 +184,7 @@ export function LogDayDialog({
       return next;
     });
     setError(null);
-  }, [open, date, workers, entries]);
+  }, [open, date, workers, knownEntries]);
 
   // Seed the day description from the backend for the picked date.
   useEffect(() => {
@@ -189,8 +220,8 @@ export function LogDayDialog({
   }, [open, initialDate]);
 
   const recent = useMemo(
-    () => recentWorkerSet(entries, date),
-    [entries, date],
+    () => recentWorkerSet(knownEntries, date),
+    [knownEntries, date],
   );
   const { recent: recentList, rest } = useMemo(
     () => partitionWorkers(workers, recent, search),

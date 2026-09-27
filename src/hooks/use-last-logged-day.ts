@@ -32,21 +32,33 @@ export interface LastDayTemplate {
   workers: LastDayWorkerSelection[];
 }
 
-export function useLastLoggedDay(entries: LaborEntry[]): LastDayTemplate {
+/**
+ * @param beforeDate  when given (the day being logged), only days strictly
+ *   before it count — "last day" is the one before the picked date, not the
+ *   latest date anywhere (a future day logged ahead).
+ */
+export function useLastLoggedDay(entries: LaborEntry[], beforeDate?: string): LastDayTemplate {
   return useMemo(() => {
-    if (entries.length === 0) {
+    // Only days a manager stands by: a worker's pending proposal is not a
+    // template (absent status on older responses means validated).
+    const usable = entries.filter(
+      (e) =>
+        (e.status === undefined || e.status === "validated") &&
+        (beforeDate === undefined || e.date < beforeDate)
+    );
+    if (usable.length === 0) {
       return { date: null, workers: [] };
     }
 
     let lastDate: string | null = null;
-    for (const e of entries) {
+    for (const e of usable) {
       if (lastDate === null || e.date > lastDate) {
         lastDate = e.date;
       }
     }
     if (lastDate === null) return { date: null, workers: [] };
 
-    const onLastDay = entries.filter((e) => e.date === lastDate);
+    const onLastDay = usable.filter((e) => e.date === lastDate);
     // Dedupe by worker_id; the BE rejects duplicates per (project, worker,
     // date) so this is defensive — but if the source ever changes (e.g.
     // multiple shifts/day), the first occurrence wins.
@@ -63,5 +75,5 @@ export function useLastLoggedDay(entries: LaborEntry[]): LastDayTemplate {
     }
 
     return { date: lastDate, workers };
-  }, [entries]);
+  }, [entries, beforeDate]);
 }

@@ -81,9 +81,7 @@
     "membersSubtitle": "Ai đang làm trong dự án này, với vai trò gì."
   },
   "sidebar": {
-    "todayOnSite": "Hôm nay tại công trường",
     "todayConditions": "{temp}° / {weather}",
-    "todayLocation": "{place} · {workers} công nhân tại công trường",
     "billing": {
       "title": "Báo giá & Hóa đơn",
       "devis": "Báo giá",

@@ -26,7 +26,6 @@ import { groupAgendaTasks } from "@/lib/dashboard/overview-agenda";
 import { OverviewMoneyPanel } from "@/components/dashboard/overview-money-panel";
 import { OverviewTypeMinis } from "@/components/dashboard/overview-type-minis";
 import { OverviewAgenda } from "@/components/dashboard/overview-agenda";
-import { OverviewWeatherCard } from "@/components/dashboard/overview-weather-card";
 import { BankReleaseChart } from "@/components/project/bank-release-chart";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/auth/permissions";
@@ -215,7 +214,6 @@ export default function DashboardPage() {
         </div>
         <div className="flex min-w-0 flex-col gap-5">
           <OverviewAgenda groups={agendaGroups} planningHref={planningHref} />
-          <OverviewWeatherCard />
         </div>
       </div>
     </div>

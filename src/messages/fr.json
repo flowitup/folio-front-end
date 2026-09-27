@@ -81,9 +81,7 @@
     "membersSubtitle": "Qui travaille sur ce projet, et avec quel rôle."
   },
   "sidebar": {
-    "todayOnSite": "Aujourd'hui sur site",
     "todayConditions": "{temp}° / {weather}",
-    "todayLocation": "{place} · {workers} ouvriers sur site",
     "billing": {
       "title": "Facturation",
       "devis": "Devis",

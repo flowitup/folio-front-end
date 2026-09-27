@@ -12,7 +12,6 @@ import {
   Calculator,
   Settings,
   ChevronDown,
-  Thermometer,
   Check,
   Plus,
   StickyNote,
@@ -56,7 +55,6 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations("navigation");
-  const tSidebar = useTranslations("sidebar");
   const tProjects = useTranslations("projects");
   const {
     projects,
@@ -279,22 +277,6 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
           );
         })()}
       </nav>
-
-      {/* Footer card — Today on site */}
-      <div className="px-4 pb-4 pt-3">
-        <div className="card-paper-surface p-3" style={{ borderRadius: 12 }}>
-          <div className="mb-1.5 flex items-center gap-2">
-            <Thermometer size={14} style={{ color: "var(--accent)" }} />
-            <span className="label-cap">{tSidebar("todayOnSite")}</span>
-          </div>
-          <div className="font-display num text-[20px] leading-none">
-            22°<span className="text-[12px]" style={{ color: "var(--muted)" }}> / clear</span>
-          </div>
-          <div className="mt-1 text-[11px]" style={{ color: "var(--muted)" }}>
-            {tSidebar("todayLocation", { place: "Le Lavandou", workers: 4 })}
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }

@@ -664,7 +664,10 @@ export default function InvoicesPage() {
                                         {t("types.return")}
                                       </span>
                                     )}
-                                    {invoice.type === "return" && invoice.settled_via === "avoir" && (
+                                    {/* Unapplied, the "outstanding avoir" stamp says it all. */}
+                                    {invoice.type === "return" &&
+                                      invoice.settled_via === "avoir" &&
+                                      invoice.applied_to_invoice_id && (
                                       <span
                                         className="stamp accent ml-2"
                                         style={{ fontSize: 10, verticalAlign: "middle" }}

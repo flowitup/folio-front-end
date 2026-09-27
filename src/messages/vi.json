@@ -395,7 +395,7 @@
     "description": "Mô tả",
     "quantity": "Số lượng",
     "unitPrice": "Đơn giá",
-    "vatRate": "TVA %",
+    "vatRate": "Thuế GTGT %",
     "total": "Thành tiền",
     "notes": "Ghi chú",
     "colTva": "Thuế GTGT",
@@ -514,7 +514,7 @@
       "inactiveLabel": "{label} (không hoạt động)"
     },
     "refundHint": "Dùng đơn giá âm cho dòng trả hàng/giảm trừ và dương cho khoản tính phí; tổng là giá trị thực.",
-    "refundsInvoiceLabel": "Hóa đơn được trả hàng (Vật tư & Dịch vụ)",
+    "refundsInvoiceLabel": "Hóa đơn được trả hàng (Vật tư & dịch vụ)",
     "refundsInvoiceNone": "— không —",
     "refundOf": "Trả hàng cho {number}",
     "appliedTo": "Áp dụng cho {number}",

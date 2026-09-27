@@ -514,7 +514,7 @@
       "inactiveLabel": "{label} (inactif)"
     },
     "refundHint": "Utilisez un prix unitaire négatif pour une ligne d'avoir et positif pour une charge ; le total est le net.",
-    "refundsInvoiceLabel": "Avoir sur facture (Matériaux & Services)",
+    "refundsInvoiceLabel": "Avoir sur facture (Achats & prestations)",
     "refundsInvoiceNone": "— aucune —",
     "refundOf": "Avoir sur {number}",
     "appliedTo": "Imputé sur {number}",

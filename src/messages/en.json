@@ -395,7 +395,7 @@
     "description": "Description",
     "quantity": "Qty",
     "unitPrice": "Unit price",
-    "vatRate": "TVA %",
+    "vatRate": "VAT %",
     "total": "Total",
     "notes": "Notes",
     "colTva": "VAT",

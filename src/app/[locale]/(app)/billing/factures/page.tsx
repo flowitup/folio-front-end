@@ -2,7 +2,8 @@
  * Factures list page — server component.
  *
  * Fetches the first page of billing documents with kind=facture and passes
- * the result as initial props to the shared BillingDocumentList client component.
+ * the result as initial props to the shared BillingDocumentList client component,
+ * together with the companies an import may be issued from.
  *
  * Auth: handled by layout middleware — no explicit guard needed here.
  * Error handling: API failures render an empty initial state; the client
@@ -10,6 +11,7 @@
  */
 
 import { fetchBillingDocuments } from "@/lib/api/billing/documents";
+import { fetchBillingIssuerCompanies } from "@/lib/billing/billing-issuer-companies";
 import { BillingDocumentList } from "@/app/[locale]/(app)/billing/_components/billing-document-list";
 import type { BillingDocument, BillingDocumentStatus } from "@/types/billing";
 
@@ -26,6 +28,9 @@ export default async function FacturesPage({ searchParams }: FacturesPageProps) 
 
   let initialDocuments: BillingDocument[] = [];
   let initialTotal = 0;
+
+  // Companies an import may be issued from — loaded alongside the list (never throws).
+  const issuerCompaniesPromise = fetchBillingIssuerCompanies();
 
   try {
     const result = await fetchBillingDocuments({
@@ -44,11 +49,14 @@ export default async function FacturesPage({ searchParams }: FacturesPageProps) 
     );
   }
 
+  const issuerCompanies = await issuerCompaniesPromise;
+
   return (
     <BillingDocumentList
       kind="facture"
       initialDocuments={initialDocuments}
       initialTotal={initialTotal}
+      issuerCompanies={issuerCompanies}
     />
   );
 }

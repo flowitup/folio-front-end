@@ -20,6 +20,7 @@
 import {
   fetchBillingDocuments,
   createBillingDocument,
+  importBillingDocument,
   updateBillingDocument,
   deleteBillingDocument,
   convertDevisToFacture,
@@ -42,6 +43,7 @@ import type {
   BillingDocumentTemplate,
   BillingDocumentStatus,
   CreateBillingDocumentPayload,
+  ImportBillingDocumentPayload,
   UpdateBillingDocumentPayload,
   ConvertDevisToFacturePayload,
   ApplyTemplatePayload,
@@ -110,6 +112,11 @@ function classifyBackendError(err: unknown): { code: string; message: string } {
   if (status === 409 && reason === "company_no_longer_attached") {
     return { code: "company_no_longer_attached", message: "Your access to this company has been revoked. Please select another company." };
   }
+  // 409 with reason: "document_already_exists" — an import whose number is already taken
+  // for this company and kind; the import dialog counts it as skipped, not failed.
+  if (status === 409 && reason === "document_already_exists") {
+    return { code: "document_already_exists", message: bodyMsg || "A document with this number already exists." };
+  }
   if (status === 409) return { code: "conflict", message: bodyMsg || "A conflict occurred." };
   if (status === 400 || status === 422) return { code: "validation", message: bodyMsg || "Validation error." };
   if (status === 401) return { code: "unauthorized", message: "Session expired. Please log in again." };
@@ -132,6 +139,24 @@ export async function createBillingDocumentAction(
   if (!auth.ok) return auth;
   try {
     const data = await createBillingDocument(payload);
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+/**
+ * Import one historical document (original number + status). The import dialog
+ * calls this once per document of the uploaded file.
+ */
+export async function importBillingDocumentAction(
+  payload: ImportBillingDocumentPayload
+): Promise<ActionResult<BillingDocument>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(payload.company_id)) return invalid();
+  try {
+    const data = await importBillingDocument(payload);
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: classifyBackendError(err) };

@@ -1232,7 +1232,8 @@
           "title": "No quotes yet",
           "description": "Create your first quote to get started.",
           "cta": "Create your first quote"
-        }
+        },
+        "importTitle": "Import quotes"
       },
       "status": {
         "draft": "Draft",
@@ -1258,7 +1259,8 @@
           "title": "No invoices yet",
           "description": "Create your first invoice to get started.",
           "cta": "Create your first invoice"
-        }
+        },
+        "importTitle": "Import invoices"
       },
       "status": {
         "draft": "Draft",
@@ -1475,6 +1477,80 @@
         "companyShare": "{percent}% company",
         "bothShare": "{percent}% both",
         "bankShare": "{percent}% bank"
+      }
+    },
+    "import": {
+      "button": "Import",
+      "description": {
+        "devis": "Bring in quotes issued before Folio, with their original numbers. Numbers already in Folio are skipped.",
+        "facture": "Bring in invoices issued before Folio, with their original numbers. Numbers already in Folio are skipped."
+      },
+      "dropzone": "Choose a CSV or JSON file, or drop it here",
+      "csvHint": "CSV: one row per line item; rows with the same document_number make one document. Required columns: {columns}. Dates as YYYY-MM-DD; DD/MM/YYYY or MM/DD/YYYY work when a date of the file shows the order (a day above 12), otherwise write YYYY-MM-DD.",
+      "jsonHint": "JSON: a list of documents with the API field names, as the Folio plugin exports them.",
+      "projectHint": "Project links are not imported: link a document to its project from the document page afterwards.",
+      "downloadTemplate": "Download the CSV template",
+      "defaultStatus": "Status for rows without one",
+      "statusHint": "The status column accepts: {statuses}.",
+      "reading": "Reading the file…",
+      "preview": "{count, plural, one {# document ready to import} other {# documents ready to import}}",
+      "previewRejected": "{count, plural, one {# document will be left out.} other {# documents will be left out.}}",
+      "rowsIgnored": "{count, plural, one {# row has no document number and is ignored.} other {# rows have no document number and are ignored.}}",
+      "nothingToImport": "No document in this file can be imported.",
+      "start": "{count, plural, =0 {Import} one {Import # document} other {Import # documents}}",
+      "progress": "{done} of {total} documents",
+      "paused": "The server asked for a pause. Resuming in {seconds} s…",
+      "stop": "Stop",
+      "stopping": "Stopping…",
+      "summaryTitle": "Import finished",
+      "stoppedTitle": "Import stopped",
+      "created": "Imported",
+      "skipped": "Already in Folio",
+      "errors": "Errors",
+      "notProcessed": "{count, plural, one {# document was not processed.} other {# documents were not processed.}}",
+      "skippedList": "Skipped, number already used:",
+      "errorList": "Not imported:",
+      "more": "and {count} more",
+      "chooseAnother": "Import another file",
+      "close": "Close",
+      "cancel": "Cancel",
+      "toastDone": "{count, plural, one {# document imported} other {# documents imported}}",
+      "toastFailed": "No document could be imported.",
+      "ref": {
+        "line": "Line {line}",
+        "position": "Document {position}"
+      },
+      "issues": {
+        "missingNumber": "Document number missing",
+        "numberTooLong": "Document number longer than {max} characters",
+        "missingRecipient": "Recipient name missing",
+        "tooLong": "{field} longer than {max} characters",
+        "noItems": "No line items",
+        "tooManyItems": "More than {max} line items",
+        "invalidItem": "Line item {position} needs a description, a quantity above 0, a unit price of 0 or more and a VAT rate from 0 to 100",
+        "invalidItemLine": "Line {line} needs a description, a quantity above 0, a unit price of 0 or more and a VAT rate from 0 to 100",
+        "invalidStatus": "Status “{value}” is not accepted here",
+        "invalidDate": "{field} is not a valid date",
+        "ambiguousDate": "{field} “{value}” could be day/month or month/day, write it as YYYY-MM-DD",
+        "invalidEmail": "“{value}” is not a valid email address",
+        "wrongKind": "“{value}” document, not for this list",
+        "documentTooLarge": "Too much text to send in one request, shorten the line item descriptions"
+      },
+      "fileErrors": {
+        "unreadable": "This file could not be read. Use a CSV or JSON file as described below.",
+        "empty": "This file contains no document.",
+        "missingColumns": "Missing columns: {columns}.",
+        "tooLarge": "This file is larger than 10 MB."
+      },
+      "failures": {
+        "validation": "Refused by the server ({detail})",
+        "forbidden": "You are not allowed to import for this company",
+        "unauthorized": "Your session has expired, sign in again",
+        "company_no_longer_attached": "You are no longer attached to this company",
+        "company_profile_missing": "The company profile is incomplete",
+        "rate_limited": "The server is still busy, try again in a minute",
+        "not_found": "Company not found",
+        "generic": "Unexpected error, try again"
       }
     }
   },
@@ -2034,7 +2110,57 @@
       "imageUploadWarning": "Product saved, but the image could not be uploaded."
     },
     "deleteWarning": "This permanently deletes \"{name}\" and its {count, plural, =0 {0 purchase records} one {# purchase record} other {# purchase records}}.",
-    "deleteConfirmLabel": "Type the product name to confirm"
+    "deleteConfirmLabel": "Type the product name to confirm",
+    "import": {
+      "button": "Import",
+      "title": "Import purchases",
+      "description": "Add the lines of a supplier purchase export to the library. Lines already imported are skipped, so the same file can be imported again safely.",
+      "dropzone": "Choose a JSON file, or drop it here",
+      "company": "Company",
+      "formatHint": "Expected format: supplier_name, supplier_slug and records, each record with supplier_reference, product_name, quantity, unit_price, purchased_at, source_document_ref, source_document_type (ticket or commande) and line_index. A file may list several suppliers.",
+      "reading": "Reading the file…",
+      "preview": "{count, plural, one {# purchase line} other {# purchase lines}} from {suppliers}",
+      "previewRejected": "{count, plural, one {# line will be left out:} other {# lines will be left out:}}",
+      "nothingToImport": "No purchase line in this file can be imported.",
+      "start": "{count, plural, =0 {Import} one {Import # line} other {Import # lines}}",
+      "progress": "{done} of {total} lines",
+      "paused": "The server asked for a pause. Resuming in {seconds} s…",
+      "stop": "Stop",
+      "stopping": "Stopping…",
+      "summaryTitle": "Import finished",
+      "stoppedTitle": "Import stopped",
+      "created": "Products created",
+      "updated": "Products updated",
+      "purchasesAdded": "Purchases added",
+      "skipped": "Already imported",
+      "errors": "Lines in error",
+      "notProcessed": "{count, plural, one {# line was not processed.} other {# lines were not processed.}}",
+      "errorList": "Not imported:",
+      "more": "and {count} more",
+      "chooseAnother": "Import another file",
+      "close": "Close",
+      "toastDone": "{count, plural, one {# purchase added to the library} other {# purchases added to the library}}",
+      "toastUpdated": "{count, plural, one {# product updated in the library} other {# products updated in the library}}",
+      "toastFailed": "No purchase line could be imported.",
+      "issues": {
+        "invalidSupplier": "{supplier}: supplier name or slug missing or too long ({count, plural, one {# line left out} other {# lines left out}})",
+        "noRecords": "{supplier}: no purchase lines",
+        "invalidRecord": "{supplier}, line {position}: a required field is missing or invalid"
+      },
+      "fileErrors": {
+        "unreadable": "This file is not valid JSON.",
+        "empty": "This file contains no purchase line.",
+        "tooLarge": "This file is larger than 10 MB."
+      },
+      "failures": {
+        "batch": "{supplier}: {count, plural, one {# line not imported} other {# lines not imported}}. {reason}",
+        "validation": "Refused by the server ({detail})",
+        "forbidden": "You don't have permission to manage the library.",
+        "unauthorized": "Your session has expired, sign in again.",
+        "rate_limited": "The server is still busy, try again in a minute.",
+        "generic": "Unexpected error, try again."
+      }
+    }
   },
   "inventory": {
     "title": "Equipment inventory",

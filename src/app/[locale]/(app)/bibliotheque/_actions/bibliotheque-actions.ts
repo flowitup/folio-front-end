@@ -17,12 +17,15 @@ import {
   deleteProduct,
   uploadProductImage,
   setProductImageFromUrl,
+  importPurchases,
   type ProductListResult,
   type ProductDetailResult,
   type Supplier,
   type LibraryProduct,
   type CreateProductPayload,
   type UpdateProductPayload,
+  type ImportPurchasesPayload,
+  type ImportPurchasesResult,
 } from "@/lib/api/bibliotheque";
 
 // ---------------------------------------------------------------------------
@@ -173,5 +176,40 @@ export async function setProductImageFromUrlAction(
     if (httpErr.status === 403) return { ok: false, error: "You don't have permission to manage the library.", code };
     if (httpErr.status === 404) return { ok: false, error: "Not found.", code };
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error", code };
+  }
+}
+
+export type ImportPurchasesErrorCode =
+  | "rate_limited"
+  | "unauthorized"
+  | "forbidden"
+  | "validation"
+  | "generic";
+
+/**
+ * Import one batch of purchase records (≤ 1000) into the company library.
+ * `code` lets the import dialog tell apart a rate limit (retry after a pause),
+ * a missing permission (stop) and a rejected batch (count its lines as errors).
+ */
+export async function importPurchasesAction(
+  companyId: string,
+  payload: ImportPurchasesPayload
+): Promise<
+  | { ok: true; data: ImportPurchasesResult }
+  | { ok: false; error: string; code: ImportPurchasesErrorCode }
+> {
+  try {
+    const data = await importPurchases(companyId, payload);
+    return { ok: true, data };
+  } catch (err) {
+    const httpErr = err as Error & { status?: number; body?: { message?: string } | null };
+    const message = httpErr.body?.message ?? (err instanceof Error ? err.message : "Unknown error");
+    if (httpErr.status === 429) return { ok: false, error: message, code: "rate_limited" };
+    if (httpErr.status === 401) return { ok: false, error: message, code: "unauthorized" };
+    if (httpErr.status === 403) return { ok: false, error: message, code: "forbidden" };
+    if (httpErr.status === 400 || httpErr.status === 422) {
+      return { ok: false, error: message, code: "validation" };
+    }
+    return { ok: false, error: message, code: "generic" };
   }
 }

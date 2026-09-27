@@ -12,6 +12,7 @@ import type {
   BillingDocumentKind,
   BillingDocumentStatus,
   CreateBillingDocumentPayload,
+  ImportBillingDocumentPayload,
   UpdateBillingDocumentPayload,
   CloneBillingDocumentPayload,
   ConvertDevisToFacturePayload,
@@ -127,6 +128,29 @@ export async function createBillingDocument(
     throw new Error(`Network error creating billing document: ${String(err)}`);
   }
   if (!response.ok) throw await buildHttpError(response, "Failed to create billing document");
+  return response.json() as Promise<BillingDocument>;
+}
+
+/**
+ * Import a historical billing document with its original number and status.
+ * One document per request; 409 `document_already_exists` when the number is taken.
+ */
+export async function importBillingDocument(
+  payload: ImportBillingDocumentPayload
+): Promise<BillingDocument> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl()}/billing-documents/import`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new Error(`Network error importing billing document: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to import billing document");
   return response.json() as Promise<BillingDocument>;
 }
 

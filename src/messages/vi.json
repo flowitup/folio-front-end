@@ -1232,7 +1232,8 @@
           "title": "Chưa có báo giá nào",
           "description": "Tạo báo giá đầu tiên để bắt đầu.",
           "cta": "Tạo báo giá đầu tiên"
-        }
+        },
+        "importTitle": "Nhập báo giá"
       },
       "status": {
         "draft": "Nháp",
@@ -1258,7 +1259,8 @@
           "title": "Chưa có hóa đơn nào",
           "description": "Tạo hóa đơn đầu tiên để bắt đầu.",
           "cta": "Tạo hóa đơn đầu tiên"
-        }
+        },
+        "importTitle": "Nhập hóa đơn"
       },
       "status": {
         "draft": "Nháp",
@@ -1475,6 +1477,80 @@
         "companyShare": "{percent}% công ty",
         "bothShare": "{percent}% cả hai",
         "bankShare": "{percent}% ngân hàng"
+      }
+    },
+    "import": {
+      "button": "Nhập",
+      "description": {
+        "devis": "Đưa các báo giá đã lập trước khi dùng Folio vào, giữ nguyên số gốc. Các số đã có trong Folio sẽ được bỏ qua.",
+        "facture": "Đưa các hóa đơn đã lập trước khi dùng Folio vào, giữ nguyên số gốc. Các số đã có trong Folio sẽ được bỏ qua."
+      },
+      "dropzone": "Chọn tệp CSV hoặc JSON, hoặc thả tệp vào đây",
+      "csvHint": "CSV: mỗi dòng là một hạng mục; các dòng có cùng document_number tạo thành một tài liệu. Cột bắt buộc: {columns}. Ngày theo dạng YYYY-MM-DD hoặc DD/MM/YYYY.",
+      "jsonHint": "JSON: danh sách tài liệu dùng tên trường của API, giống tệp xuất từ plugin Folio.",
+      "projectHint": "Liên kết dự án không được nhập: hãy gắn tài liệu vào dự án từ trang của tài liệu sau khi nhập.",
+      "downloadTemplate": "Tải mẫu CSV",
+      "defaultStatus": "Trạng thái cho các dòng không ghi trạng thái",
+      "statusHint": "Cột status chấp nhận: {statuses}.",
+      "reading": "Đang đọc tệp…",
+      "preview": "{count, plural, other {# tài liệu sẵn sàng để nhập}}",
+      "previewRejected": "{count, plural, other {# tài liệu sẽ bị loại ra.}}",
+      "rowsIgnored": "{count, plural, other {# dòng không có số tài liệu sẽ bị bỏ qua.}}",
+      "nothingToImport": "Không có tài liệu nào trong tệp này có thể nhập.",
+      "start": "{count, plural, =0 {Nhập} other {Nhập # tài liệu}}",
+      "progress": "{done} / {total} tài liệu",
+      "paused": "Máy chủ yêu cầu tạm dừng. Tiếp tục sau {seconds} giây…",
+      "stop": "Dừng",
+      "stopping": "Đang dừng…",
+      "summaryTitle": "Đã nhập xong",
+      "stoppedTitle": "Đã dừng nhập",
+      "created": "Đã nhập",
+      "skipped": "Đã có trong Folio",
+      "errors": "Lỗi",
+      "notProcessed": "{count, plural, other {# tài liệu chưa được xử lý.}}",
+      "skippedList": "Bỏ qua, số đã được dùng:",
+      "errorList": "Không nhập được:",
+      "more": "và {count} mục khác",
+      "chooseAnother": "Nhập tệp khác",
+      "close": "Đóng",
+      "cancel": "Hủy",
+      "toastDone": "{count, plural, other {Đã nhập # tài liệu}}",
+      "toastFailed": "Không nhập được tài liệu nào.",
+      "ref": {
+        "line": "Dòng {line}",
+        "position": "Tài liệu {position}"
+      },
+      "issues": {
+        "missingNumber": "Thiếu số tài liệu",
+        "numberTooLong": "Số tài liệu dài hơn {max} ký tự",
+        "missingRecipient": "Thiếu tên khách hàng",
+        "tooLong": "{field} dài hơn {max} ký tự",
+        "noItems": "Không có hạng mục nào",
+        "tooManyItems": "Nhiều hơn {max} hạng mục",
+        "invalidItem": "Hạng mục {position} cần có mô tả, số lượng lớn hơn 0, đơn giá từ 0 trở lên và thuế VAT từ 0 đến 100",
+        "invalidItemLine": "Dòng {line} cần có mô tả, số lượng lớn hơn 0, đơn giá từ 0 trở lên và thuế VAT từ 0 đến 100",
+        "invalidStatus": "Trạng thái “{value}” không được chấp nhận ở đây",
+        "invalidDate": "{field} không phải ngày hợp lệ",
+        "ambiguousDate": "{field} “{value}” có thể hiểu là ngày/tháng hoặc tháng/ngày, hãy ghi theo dạng YYYY-MM-DD",
+        "invalidEmail": "“{value}” không phải địa chỉ email hợp lệ",
+        "wrongKind": "Tài liệu loại “{value}”, không thuộc danh sách này",
+        "documentTooLarge": "Nội dung quá dài để gửi trong một yêu cầu, hãy rút ngắn mô tả các hạng mục"
+      },
+      "fileErrors": {
+        "unreadable": "Không đọc được tệp này. Hãy dùng tệp CSV hoặc JSON như mô tả bên dưới.",
+        "empty": "Tệp này không có tài liệu nào.",
+        "missingColumns": "Thiếu cột: {columns}.",
+        "tooLarge": "Tệp này lớn hơn 10 MB."
+      },
+      "failures": {
+        "validation": "Máy chủ từ chối ({detail})",
+        "forbidden": "Bạn không có quyền nhập cho công ty này",
+        "unauthorized": "Phiên đăng nhập đã hết hạn, hãy đăng nhập lại",
+        "company_no_longer_attached": "Bạn không còn liên kết với công ty này",
+        "company_profile_missing": "Hồ sơ công ty chưa đầy đủ",
+        "rate_limited": "Máy chủ vẫn đang bận, hãy thử lại sau một phút",
+        "not_found": "Không tìm thấy công ty",
+        "generic": "Lỗi không mong muốn, hãy thử lại"
       }
     }
   },
@@ -2034,7 +2110,57 @@
       "imageUploadWarning": "Sản phẩm đã được lưu, nhưng không thể tải lên hình ảnh."
     },
     "deleteWarning": "Thao tác này sẽ xóa vĩnh viễn \"{name}\" và {count, plural, =0 {0 bản ghi mua hàng} other {# bản ghi mua hàng}}.",
-    "deleteConfirmLabel": "Nhập tên sản phẩm để xác nhận"
+    "deleteConfirmLabel": "Nhập tên sản phẩm để xác nhận",
+    "import": {
+      "button": "Nhập",
+      "title": "Nhập dữ liệu mua hàng",
+      "description": "Thêm các dòng từ tệp xuất mua hàng của nhà cung cấp vào thư viện. Các dòng đã nhập sẽ được bỏ qua, nên có thể nhập lại cùng một tệp mà không lo trùng.",
+      "dropzone": "Chọn tệp JSON, hoặc thả tệp vào đây",
+      "company": "Công ty",
+      "formatHint": "Định dạng: supplier_name, supplier_slug và records, mỗi dòng gồm supplier_reference, product_name, quantity, unit_price, purchased_at, source_document_ref, source_document_type (ticket hoặc commande) và line_index. Một tệp có thể chứa nhiều nhà cung cấp.",
+      "reading": "Đang đọc tệp…",
+      "preview": "{count, plural, other {# dòng mua hàng}} từ {suppliers}",
+      "previewRejected": "{count, plural, other {# dòng sẽ bị loại ra:}}",
+      "nothingToImport": "Không có dòng mua hàng nào trong tệp này có thể nhập.",
+      "start": "{count, plural, =0 {Nhập} other {Nhập # dòng}}",
+      "progress": "{done} / {total} dòng",
+      "paused": "Máy chủ yêu cầu tạm dừng. Tiếp tục sau {seconds} giây…",
+      "stop": "Dừng",
+      "stopping": "Đang dừng…",
+      "summaryTitle": "Đã nhập xong",
+      "stoppedTitle": "Đã dừng nhập",
+      "created": "Sản phẩm mới",
+      "updated": "Sản phẩm được cập nhật",
+      "purchasesAdded": "Lượt mua đã thêm",
+      "skipped": "Đã nhập trước đó",
+      "errors": "Dòng bị lỗi",
+      "notProcessed": "{count, plural, other {# dòng chưa được xử lý.}}",
+      "errorList": "Không nhập được:",
+      "more": "và {count} mục khác",
+      "chooseAnother": "Nhập tệp khác",
+      "close": "Đóng",
+      "toastDone": "{count, plural, other {Đã thêm # lượt mua vào thư viện}}",
+      "toastUpdated": "{count, plural, other {Đã cập nhật # sản phẩm trong thư viện}}",
+      "toastFailed": "Không nhập được dòng mua hàng nào.",
+      "issues": {
+        "invalidSupplier": "{supplier}: thiếu hoặc quá dài tên hay mã (slug) nhà cung cấp ({count, plural, other {# dòng bị loại}})",
+        "noRecords": "{supplier}: không có dòng mua hàng nào",
+        "invalidRecord": "{supplier}, dòng {position}: thiếu hoặc sai một trường bắt buộc"
+      },
+      "fileErrors": {
+        "unreadable": "Tệp này không phải JSON hợp lệ.",
+        "empty": "Tệp này không có dòng mua hàng nào.",
+        "tooLarge": "Tệp này lớn hơn 10 MB."
+      },
+      "failures": {
+        "batch": "{supplier}: {count, plural, other {# dòng không nhập được}}. {reason}",
+        "validation": "Máy chủ từ chối ({detail})",
+        "forbidden": "Bạn không có quyền quản lý thư viện.",
+        "unauthorized": "Phiên đăng nhập đã hết hạn, hãy đăng nhập lại.",
+        "rate_limited": "Máy chủ vẫn đang bận, hãy thử lại sau một phút.",
+        "generic": "Lỗi không mong muốn, hãy thử lại."
+      }
+    }
   },
   "inventory": {
     "title": "Kho thiết bị",

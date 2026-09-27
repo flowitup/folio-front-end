@@ -2102,7 +2102,8 @@
       "unauthorized": "Session expired. Please log in again.",
       "notFound": "The requested resource was not found.",
       "rateLimited": "Too many requests. Please wait and try again.",
-      "generic": "An unexpected error occurred."
+      "generic": "An unexpected error occurred.",
+      "invalidJoinCode": "Invalid or revoked join code."
     }
   },
   "bibliotheque": {

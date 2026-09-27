@@ -2102,7 +2102,8 @@
       "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
       "notFound": "Không tìm thấy tài nguyên yêu cầu.",
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
-      "generic": "Đã xảy ra lỗi không mong muốn."
+      "generic": "Đã xảy ra lỗi không mong muốn.",
+      "invalidJoinCode": "Mã tham gia không hợp lệ hoặc đã bị thu hồi."
     }
   },
   "bibliotheque": {

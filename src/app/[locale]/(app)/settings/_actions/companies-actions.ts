@@ -260,7 +260,14 @@ export async function joinCompanyByCodeAction(code: string): Promise<ActionResul
     const data = await joinCompanyByCode(normalized);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: await classifyBackendError(err) };
+    const error = await classifyBackendError(err);
+    // Here a 404 means the code matches no company — say that, not the
+    // generic "requested resource was not found".
+    if (error.code === "not_found") {
+      const t = await getTranslations("companies.errors");
+      return { ok: false, error: { code: "invalid_join_code", message: t("invalidJoinCode") } };
+    }
+    return { ok: false, error };
   }
 }
 

@@ -19,7 +19,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Nếu bạn được mời qua email, đường dẫn trong thư đó liên kết thẳng bạn vào công ty.",
     ],
     gotchas: [
-      "Chỉ nhận số điện thoại Pháp, và bỏ số 0 đứng đầu.",
+      "Chỉ nhận số điện thoại Pháp, viết 06 12 34 56 78, 6 12 34 56 78 hoặc +33 6 12 34 56 78.",
     ],
     whoCanDoIt: "Bất kỳ ai có số điện thoại đã được thêm vào một công ty.",
   },
@@ -33,7 +33,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Nhóm đầu tiên của thanh bên dùng chung cho cả ứng dụng: “Tổng quan”, “Dự án” và “Thư viện”.",
       "Khi đã chọn một dự án, thanh bên hiện thêm các mục: “Kế hoạch”, “Nhân công”, “Chi phí”, “Hoạch toán”, “Ghi chú”, “Tài liệu” và “Phân tích”.",
       "Quản trị viên công ty còn thấy nhóm “Báo giá & Hóa đơn”: “Báo giá”, “Hóa đơn”, “Mẫu tài liệu” và “Hoàn tiền”.",
-      "Thanh trên cùng chứa thao tác chính của trang, dấu trợ giúp, chuông thông báo, nút chuyển sáng tối, bộ chọn ngôn ngữ và menu tài khoản của bạn.",
+      "Thanh trên cùng chứa thao tác chính của trang, dấu trợ giúp, chuông thông báo, bộ chọn ngôn ngữ và menu tài khoản của bạn.",
     ],
     whoCanDoIt:
       "Ai cũng thấy nhóm dùng chung. “Tài liệu” chỉ hiện nếu bạn được phép mở, còn nhóm “Báo giá & Hóa đơn” chỉ dành cho quản trị viên công ty.",
@@ -345,9 +345,10 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Dùng “Thêm bằng số điện thoại” để thêm người theo số, hoặc “Nhập từ công ty khác” để mang người từ một công ty khác bạn quản trị sang.",
       "Danh bạ liệt kê mọi người liên kết với công ty, kèm số điện thoại, đã đăng nhập lần nào chưa, và những dự án họ được giao.",
       "Ở “Phương thức thanh toán”, thêm, đổi tên hoặc xóa những cách hóa đơn của công ty đó được thanh toán. Phương thức có sẵn đổi tên được nhưng không xóa được.",
+      "Ở “Vai trò nhân công”, tạo, đổi tên, đổi màu hoặc xóa các vai trò gán cho công nhân trên công trình của công ty đó. Xóa một vai trò sẽ gỡ vai trò đó khỏi những công nhân đang có. Biểu tượng bút chì cạnh một vai trò, trong bộ chọn vai trò của hộp thoại công nhân, cũng làm được việc này ngay từ trang nhân công.",
     ],
     whoCanDoIt:
-      "Ai cũng xem được các công ty mình thuộc về và liên kết thêm công ty. Mã công ty, bảng thành viên, danh bạ và phương thức thanh toán chỉ dành cho quản trị viên của công ty đang chọn.",
+      "Ai cũng xem được các công ty mình thuộc về và liên kết thêm công ty. Mã công ty, bảng thành viên, danh bạ và phương thức thanh toán chỉ dành cho quản trị viên của công ty đang chọn; vai trò nhân công dành cho quản trị viên và quản lý của công ty đó.",
     gotchas: [
       "Có hai cách thêm người và chúng không thay thế cho nhau: mã mời dùng một lần, có hiệu lực bảy ngày, và mã công ty dùng lại được mà mọi người nhập trong app điện thoại.",
     ],
@@ -359,7 +360,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Thông tin của chính bạn, cách đánh số hóa đơn của dự án đang chọn, và những thông báo nào được gửi tới điện thoại của bạn.",
     steps: [
       "Mở “Cài đặt”; danh sách bên trái dùng để chọn mục.",
-      "Ở “Hồ sơ”, sửa tên hiển thị và số điện thoại rồi lưu. Email chỉ để xem — chỉ quản trị viên mới đổi được.",
+      "Ở “Hồ sơ”, sửa tên hiển thị rồi lưu. Để đăng nhập bằng số điện thoại khác, dùng “Đổi số điện thoại”: nhập số mới, rồi nhập mã SMS gửi tới số đó. Email chỉ để xem — chỉ quản trị viên mới đổi được.",
       "Ở “Dự án”, đặt tiền tố số hóa đơn cho dự án đang chọn, tối đa tám chữ cái hoặc chữ số, và xem dòng ví dụ trước khi lưu.",
       "Ở “Công ty”, quản lý những công ty bạn thuộc về: thẻ thông tin của từng công ty, công ty nào là chính, hủy liên kết, và liên kết thêm một công ty bằng mã. Nếu bạn quản trị công ty đang chọn, chỗ này có thêm mã tham gia, bảng thành viên và phương thức thanh toán của công ty đó.",
       "Ở “Thông báo”, dùng công tắc chính và các công tắc theo nhóm: “Trò chuyện nhóm”, “Chấm công”, “Công việc”, “Nhóm & quyền truy cập” và “Tiền”.",
@@ -368,7 +369,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Phiên bản Folio bạn đang chạy được ghi ở cuối trang, bên dưới mục đang mở.",
     ],
     whoCanDoIt:
-      "Ai cũng vào được hồ sơ của mình, tiền tố của dự án, lựa chọn thông báo và khóa API của riêng mình. “Công ty” cho ai cũng thấy liên kết công ty của chính mình, còn công cụ quản trị — mã tham gia, bảng thành viên, phương thức thanh toán — chỉ dành cho quản trị viên của công ty đang chọn. “Người dùng & vai trò” chỉ dành cho bộ phận hỗ trợ Folio.",
+      "Ai cũng vào được hồ sơ của mình, lựa chọn thông báo và khóa API của riêng mình. “Công ty” cho ai cũng thấy liên kết công ty của chính mình, còn công cụ quản trị — mã tham gia, bảng thành viên, phương thức thanh toán — chỉ dành cho quản trị viên của công ty đang chọn. “Người dùng & vai trò” chỉ dành cho bộ phận hỗ trợ Folio.",
     gotchas: [
       "Cài đặt không có mục báo giá hay hóa đơn nào. Báo giá, hóa đơn và mẫu đều nằm ở nhóm “Báo giá & Hóa đơn” trên thanh bên.",
       "Các công tắc thông báo điều khiển thông báo đẩy gửi tới app Folio trên điện thoại, không phải cái chuông trong cửa sổ này.",

@@ -4,7 +4,8 @@
     "appTagline": "Build journal",
     "signOut": "Sign out",
     "loading": "Loading...",
-    "language": "Language"
+    "language": "Language",
+    "close": "Close"
   },
   "navigation": {
     "dashboard": "Overview",
@@ -13,6 +14,7 @@
     "inventory": "Inventory",
     "labor": "Labor",
     "invoices": "Expense",
+    "quotesInvoices": "Quotes & invoices",
     "planning": "Planning",
     "notes": "Notes",
     "documents": "Documents",
@@ -21,7 +23,9 @@
     "projectSettings": "Settings",
     "settings": "Settings",
     "more": "More",
-    "chiffrage": "Cost planning"
+    "chiffrage": "Cost planning",
+    "close": "Close",
+    "homeLink": "Folio — home"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -30,7 +34,7 @@
     "heroTitle": "Step back onto the site.",
     "phoneLabel": "Phone number",
     "phonePlaceholder": "6 12 34 56 78",
-    "phoneHint": "French numbers only — without the leading 0. A 6-digit code by SMS.",
+    "phoneHint": "French numbers only, with or without the leading 0. A 6-digit code by SMS.",
     "sendCode": "Send code",
     "sendingCode": "Sending code...",
     "codeSentTo": "6-digit code sent to <mono>{phone}</mono>.",
@@ -52,12 +56,14 @@
     "codeCardTitle": "Enter the SMS code",
     "codeTitle": "Check your messages.",
     "heroSubtitlePhone": "Sign in with your phone number. One SMS code, no password.",
-    "codeExpires": "Expires in {minutes} minutes",
+    "codeExpires": "{minutes, plural, one {Expires in # minute} other {Expires in # minutes}}",
     "codeDigit": "Digit {position} of {total}",
     "stepEnterPhone": "Your number",
     "stepEnterCode": "The 6-digit code",
     "stepEnterSite": "On site",
-    "verified": "Verified"
+    "verified": "Verified",
+    "codeAlreadySent": "A code was already sent to this number — enter it, or get a new one in {seconds} s.",
+    "codeExpired": "Code expired — ask for a new one"
   },
   "topbar": {
     "viewNotifications": "View notifications",
@@ -80,9 +86,7 @@
     "membersSubtitle": "Who's on this project, with what role."
   },
   "sidebar": {
-    "todayOnSite": "Today on site",
     "todayConditions": "{temp}° / {weather}",
-    "todayLocation": "{place} · {workers} workers on site",
     "billing": {
       "title": "Billing",
       "devis": "Quotes",
@@ -95,14 +99,18 @@
     "loadError": "Failed to load overview data",
     "money": {
       "spentThisMonth": "Spent this month",
-      "pctSpent": "{pct}% spent · {spent}"
+      "pctSpent": "{pct} spent · {spent}",
+      "purseSpent": "spent",
+      "pctCreditDrawn": "{pct} of credit drawn · {spent}",
+      "unassigned": "{n, plural, =1 {1 expense} other {# expenses}} · {amount} paid with no company or personal payment method — in neither purse"
     },
     "spendByType": {
       "title": "Monthly spend by type",
       "rangeShared": "{from} – {to} · shared scale",
       "viewExpense": "Expense",
       "currentHighlighted": "Current month highlighted · trend line overlaid",
-      "sixMonthSpend": "6-month spend"
+      "sixMonthSpend": "6-month spend",
+      "monthTick": "{short}"
     },
     "agenda": {
       "title": "This week",
@@ -111,6 +119,11 @@
       "today": "Today",
       "thisWeek": "This week",
       "empty": "Nothing on the agenda this week."
+    },
+    "memberFinances": {
+      "title": "Project finances are visible to managers",
+      "body": "Your own days and pay are on the Labor page.",
+      "link": "Open Labor"
     }
   },
   "projects": {
@@ -153,7 +166,6 @@
     "cancel": "Cancel",
     "remove": "Remove",
     "allProjects": "All projects",
-    "active": "Active",
     "searchProjects": "Search projects",
     "projectStamp": "Project",
     "progress": "Progress",
@@ -193,14 +205,15 @@
       "openSettings": "Open project settings",
       "noReleases": "No funds released yet",
       "settingsCardTitle": "Bank credit (mortgage loan)",
-      "settingsCardHint": "Initial amount granted by the bank. Funds releases are deducted from it."
+      "settingsCardHint": "Initial amount granted by the bank. Funds releases are deducted from it.",
+      "headlineMetaOver": "over the <c>{credit}</c> credit · <p>{pct}</p> released",
+      "drawsMetaSingle": "{count, plural, one {# draw} other {# draws}} · {month}"
     },
     "team": "Team",
     "openDashboard": "Open dashboard",
     "photos": "Media",
     "invite": "Invite",
     "noneTeam": "none",
-    "memberRole": "Member",
     "save": "Save",
     "saving": "Saving...",
     "delete": "Delete",
@@ -231,7 +244,12 @@
     "waitingForAssignment": {
       "title": "Waiting to be assigned",
       "description": "Your company admin hasn't added you to a construction site yet."
-    }
+    },
+    "settingsReadOnly": "Only admins and managers of this project can change its settings.",
+    "teamSize": "{n, plural, one {# member} other {# members}}",
+    "projectCreated": "Project created",
+    "projectDeleted": "Project deleted",
+    "settingsForbidden": "You don't have permission to change this project's settings."
   },
   "settings": {
     "profile": "Profile",
@@ -313,6 +331,26 @@
         "rate_limited": "Too many attempts. Please wait a moment and try again.",
         "unknown": "Something went wrong. Please try again."
       }
+    },
+    "errorInvalidProfile": "Check your name: it can be up to 255 characters.",
+    "changePhone": {
+      "action": "Change number",
+      "title": "Change your phone number",
+      "readOnlyHint": "You sign in with this number. To use another one, change it with a code sent to the new number.",
+      "phoneStep": "Enter your new number. We will text a 6-digit code to it; your current number stays active until you confirm.",
+      "codeStep": "Enter the code sent to {phone}.",
+      "newNumber": "New phone number",
+      "confirm": "Confirm",
+      "confirming": "Confirming…",
+      "otherNumber": "Use another number",
+      "success": "Phone number changed. Your other devices have been signed out; sign in with your new number from now on.",
+      "errorInvalidPhone": "Enter a valid French phone number.",
+      "errorSameNumber": "This is already your phone number.",
+      "errorPhoneTaken": "This phone number is already used by another account.",
+      "errorThrottled": "Too many requests. Wait a minute and try again.",
+      "errorSmsFailed": "The SMS could not be sent. Try again later.",
+      "errorInvalidCode": "Wrong or expired code",
+      "errorFailed": "Couldn't change your phone number. Please try again."
     }
   },
   "paymentMethods": {
@@ -348,11 +386,23 @@
     },
     "paidByCompany": "Paid by the company",
     "personalPayment": "Personal payment",
-    "loadError": "Could not load payment methods. Please try again."
+    "loadError": "Could not load payment methods. Please try again.",
+    "saveEditAria": "Save changes"
   },
   "errors": {
     "unauthorized": "Unauthorized",
-    "accessDenied": "You do not have permission to access this page."
+    "accessDenied": "You do not have permission to access this page.",
+    "notFound": {
+      "title": "Page not found",
+      "body": "This page doesn't exist, was deleted, or you don't have access to it.",
+      "back": "Back to dashboard"
+    },
+    "boundary": {
+      "title": "Something went wrong",
+      "body": "Please refresh the page. If the problem persists, sign in again.",
+      "refresh": "Refresh",
+      "login": "Go to login"
+    }
   },
   "invoices": {
     "title": "Expense",
@@ -377,7 +427,7 @@
     "description": "Description",
     "quantity": "Qty",
     "unitPrice": "Unit price",
-    "vatRate": "TVA %",
+    "vatRate": "VAT %",
     "total": "Total",
     "notes": "Notes",
     "colTva": "VAT",
@@ -423,7 +473,6 @@
     "invalidFileType": "{name}: file type not allowed",
     "uploadFailed": "Failed to upload {name}",
     "deleteFailed": "Failed to delete attachment",
-    "renameFailed": "Failed to rename attachment",
     "rename": "Rename",
     "attachmentDeleteConfirm": "Delete this attachment? This cannot be undone.",
     "openAttachment": "Open",
@@ -433,7 +482,9 @@
       "label": "File name",
       "cancel": "Cancel",
       "save": "Save",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "error": "Couldn't rename the attachment. Try again.",
+      "errorExtension": "The extension must remain {extension}"
     },
     "attachmentPreview": {
       "preview": "Preview",
@@ -479,7 +530,8 @@
       "summaryLine": "{count, plural, =1 {1 month selected} other {# months selected}}",
       "errorRangeInvalid": "\"From\" must be before or equal to \"To\"",
       "errorRangeTooLarge": "Range cannot exceed 24 months",
-      "errorGeneric": "Failed to export expenses"
+      "errorGeneric": "Failed to export expenses",
+      "dialogDescription": "Choose a period, a type and a file format."
     },
     "paymentMethod": {
       "label": "Payment method",
@@ -489,7 +541,10 @@
       "failedToLoad": "Failed to load payment methods",
       "failedToLoadRetry": "Failed to load. Try reopening.",
       "noMethodsFound": "No methods found.",
-      "failedToCreate": "Failed to create payment method"
+      "failedToCreate": "Failed to create payment method",
+      "duplicateLabel": "A payment method with this name already exists.",
+      "createForbidden": "Only a company admin can add payment methods.",
+      "inactiveLabel": "{label} (inactive)"
     },
     "refundHint": "Use a negative unit price for a credit/return line and a positive one for a charge; the total is the net.",
     "refundsInvoiceLabel": "Returns invoice (Materials & Services)",
@@ -563,7 +618,9 @@
       "sumOfTypes": "Total",
       "sharedScaleTo": "shared scale to {amount}",
       "cash": "Cash",
-      "cashAdvance": "incl. {amount} cash"
+      "cashAdvance": "incl. {amount} cash",
+      "noPurse": "No purse",
+      "noPurseSpend": "{n, plural, one {# expense} other {# expenses}} in neither purse (no company or personal payment method) · {amount}"
     },
     "byWorker": {
       "totalPaid": "Total paid",
@@ -575,7 +632,23 @@
       "label": "Company cash advance",
       "hint": "Money the company handed over (e.g. cash to pay labor). Not counted as released funds — shown in the company purse as spent. Record what you pay with this cash under your own cash method, not a company method, so it is not counted twice.",
       "badge": "Cash advance"
-    }
+    },
+    "print": {
+      "heading": "Invoice",
+      "loading": "Loading…"
+    },
+    "loadFailed": "Failed to load invoice.",
+    "loadListFailed": "Failed to load invoices.",
+    "deleteInvoiceFailed": "Failed to delete invoice.",
+    "errorPaymentMethodInactive": "This payment method has been deactivated. Choose another one.",
+    "workerInactive": "{name} (inactive)",
+    "errorQuantityTooLarge": "Quantity cannot exceed {max, number}.",
+    "errorUnitPriceTooLarge": "Unit price cannot exceed {max, number}.",
+    "errorIssueDateRequired": "Enter the issue date",
+    "bankRefundLine": "Bank refund — {number}",
+    "deleteExpense": "Delete expense {number}",
+    "removeLine": "Remove line",
+    "backToExpenses": "Back to expenses"
   },
   "planning": {
     "title": "Planning",
@@ -623,7 +696,26 @@
       "medium": "Medium",
       "high": "High",
       "urgent": "Urgent"
-    }
+    },
+    "saved": "Task saved",
+    "errors": {
+      "forbidden": "You don’t have permission to do that on this project.",
+      "notFound": "This task no longer exists.",
+      "invalid": "Some details were not accepted. Check the title (255 characters at most) and try again.",
+      "create": "Could not create the task. Please try again.",
+      "save": "Could not save the task. Please try again.",
+      "delete": "Could not delete the task. Please try again."
+    },
+    "statusLabel": "Status",
+    "close": "Close",
+    "dnd": {
+      "instructions": "To pick up a task, press Space or Enter. Move it with the arrow keys, press Space or Enter again to drop it, or Escape to cancel.",
+      "pickedUp": "Picked up task {title}.",
+      "over": "Task {title} is over {target}.",
+      "dropped": "Task {title} was dropped in {target}.",
+      "cancelled": "Moving task {title} was cancelled."
+    },
+    "taskUnavailable": "This task doesn't exist or you don't have access to it."
   },
   "labor": {
     "title": "Labor",
@@ -668,7 +760,7 @@
     "totalLaborCost": "Total labor cost",
     "workerDays": "Worker-days",
     "onSiteToday": "On site today",
-    "acrossWorkers": "across {n} workers",
+    "acrossWorkers": "across {n, plural, one {# worker} other {# workers}}",
     "workersLogged": "workers logged",
     "monthlySummary": "Monthly summary · {month}",
     "summaryAllHistoryTitle": "Summary · All history",
@@ -682,7 +774,7 @@
     "summaryDrillDown": "Click to view per-worker breakdown",
     "summaryMonthPickerAll": "All months",
     "summaryUnassignedHint": "+ {n} unassigned",
-    "workersBadge": "{n} workers",
+    "workersBadge": "{n, plural, one {# worker} other {# workers}}",
     "role": {
       "label": "Role",
       "selectRole": "Select role",
@@ -692,7 +784,7 @@
       "deleteRole": "Delete role",
       "roleName": "Role name",
       "roleColor": "Color",
-      "confirmDelete": "Delete this role? Workers assigned to it will lose their role.",
+      "confirmDelete": "Workers assigned to it will lose their role.",
       "duplicateName": "A role with this name already exists.",
       "created": "Role created.",
       "updated": "Role updated.",
@@ -700,6 +792,30 @@
       "defaults": {
         "masterCraftsman": "Master craftsman",
         "assistant": "Assistant"
+      },
+      "searchRoles": "Search roles…",
+      "noMatchingRoles": "No matching roles",
+      "noRolesYet": "No roles yet",
+      "createNamed": "Create \"{name}\"",
+      "createFailed": "Failed to create role",
+      "create": "Create",
+      "cancel": "Cancel",
+      "save": "Save",
+      "nameRequired": "Enter a role name.",
+      "editNamed": "Edit {name}",
+      "deleteNamed": "Delete {name}",
+      "confirmDeleteTitle": "Delete “{name}”?",
+      "updateFailed": "Failed to update role",
+      "deleteFailed": "Failed to delete role",
+      "loadFailed": "Could not load the labor roles.",
+      "retry": "Retry",
+      "manageTitle": "Labor roles",
+      "manageDescription": "The roles you give workers on this company's projects. A new name or color shows on every worker who has the role; deleting a role clears it from them.",
+      "errors": {
+        "forbidden": "Only an admin or a manager of the company can change its labor roles.",
+        "notFound": "This role no longer exists, so it was removed from the list.",
+        "rateLimited": "Too many changes in a row. Wait a minute, then try again.",
+        "invalid": "Check the role name and color, then try again."
       }
     },
     "shift": {
@@ -716,7 +832,21 @@
       "standaloneShiftLabel": "(supplement only)"
     },
     "errors": {
-      "supplementOutOfRange": "Supplement hours must be between 0 and 12."
+      "supplementOutOfRange": "Supplement hours must be between 0 and 12.",
+      "updateFailed": "Failed to update attendance.",
+      "loadWorkersFailed": "Failed to load workers.",
+      "loadEntriesFailed": "Failed to load entries.",
+      "loadSummaryFailed": "Failed to load summary.",
+      "createWorkerFailed": "Failed to create worker.",
+      "updateWorkerFailed": "Failed to update worker.",
+      "deactivateWorkerFailed": "Failed to deactivate worker.",
+      "deleteEntryFailed": "Failed to delete entry.",
+      "saveWorkerFailed": "Failed to save worker.",
+      "workerNameRequired": "Worker name is required.",
+      "dailyRatePositive": "Daily rate must be greater than 0.",
+      "reactivateWorkerFailed": "Failed to reactivate the worker",
+      "amountTooLarge": "The amount cannot exceed {max, number}.",
+      "overrideNegative": "The amount cannot be negative."
     },
     "logDayDialog": {
       "title": "Log day",
@@ -743,14 +873,15 @@
         "supplementLabel": "Supplement (h)",
         "noteLabel": "Note",
         "notePlaceholder": "Optional"
-      }
+      },
+      "noWorkers": "No workers."
     },
     "editEntry": {
       "title": "Edit attendance"
     },
     "conflict": {
       "modalTitle": "Cross-project conflict",
-      "modalBody": "The following workers are already logged in another project today. Continue anyway?",
+      "modalBody": "The following workers are already logged on another project on {date}. Continue anyway?",
       "continueAnyway": "Continue anyway",
       "cancel": "Cancel",
       "sameAsLastDaySkipped": "{n} worker(s) skipped — already logged elsewhere"
@@ -793,7 +924,8 @@
       "countSingular": "activity",
       "countPlural": "activities",
       "sectionTitle": "Activities",
-      "deleteFailed": "Failed to delete activity"
+      "deleteFailed": "Failed to delete activity",
+      "deleted": "Activity deleted"
     },
     "dayDescription": {
       "label": "Day description",
@@ -901,6 +1033,52 @@
         "hours": "Hours",
         "dayType": "Day type"
       }
+    },
+    "overridePlaceholder": "Leave empty for default rate",
+    "changeRequest": {
+      "badge": "Change requested",
+      "badgeTooltip": "The worker asked to change this validated day — the current values stay priced until a manager applies the change",
+      "proposedLine": "Requested: {value}",
+      "cellIndicator": "{count, plural, one {# change request} other {# change requests}}",
+      "tabCount": "{count, plural, one {# change request to review} other {# change requests to review}}",
+      "panelTitle": "Change requests ({count})",
+      "panelHint": "Workers asked to correct these validated days. Applying a change replaces the day's values; refusing keeps the day as validated.",
+      "current": "Now",
+      "proposed": "Requested",
+      "noteCleared": "note removed",
+      "apply": "Apply",
+      "refuse": "Refuse",
+      "applied": "{worker}'s change applied",
+      "refused": "{worker}'s change refused — the day stays as validated",
+      "alreadySettled": "{worker}'s request was already settled",
+      "applyFailed": "Couldn't apply the change. Try again.",
+      "refuseFailed": "Couldn't refuse the change. Try again.",
+      "refuseTitle": "Refuse this change?",
+      "refuseConfirm": "{worker}'s day of {date} stays as validated and the request is dropped.",
+      "loadFailed": "Couldn't load all change requests.",
+      "retry": "Retry",
+      "refreshing": "Refreshing change requests"
+    },
+    "entryDeleted": "Entry deleted",
+    "workerDeactivated": "{name} deactivated",
+    "reactivateWorker": "Reactivate",
+    "workerReactivated": "{name} reactivated",
+    "view": {
+      "ariaLabel": "Attendance view",
+      "calendar": "Calendar",
+      "list": "List"
+    },
+    "prevDay": "Previous day",
+    "nextDay": "Next day",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "close": "Close",
+    "typeahead": {
+      "placeholder": "Search workers…",
+      "noMatches": "No matches",
+      "typeToSearch": "Type at least 2 characters to search",
+      "existing": "Existing",
+      "create": "Create “{name}”"
     }
   },
   "acceptInvite": {
@@ -923,7 +1101,9 @@
       "phoneRegistered": "This phone number already has an account. Sign in instead.",
       "codeRequired": "Please enter the 6-digit code",
       "invalidCode": "Wrong or expired code",
-      "throttled": "Too many requests. Wait a minute and try again."
+      "throttled": "Too many requests. Wait a minute and try again.",
+      "title": "Invitation unavailable",
+      "nameRequired": "Please enter your name"
     },
     "loggedInOther": {
       "title": "You're signed in as someone else",
@@ -941,7 +1121,12 @@
     "codePlaceholder": "123456",
     "changeNumber": "Change number",
     "resendCode": "Resend code",
-    "resendIn": "Resend in {seconds}s"
+    "resendIn": "Resend in {seconds}s",
+    "roles": {
+      "admin": "admin",
+      "manager": "manager",
+      "member": "member"
+    }
   },
   "admin": {
     "bulkAdd": {
@@ -1014,11 +1199,6 @@
     },
     "markDone": "Mark as done",
     "markOpen": "Reopen",
-    "addedLabel": "Added",
-    "relative": {
-      "today": "Today",
-      "yesterday": "Yesterday"
-    },
     "actions": {
       "save": "Save",
       "cancel": "Cancel",
@@ -1045,7 +1225,10 @@
       "notFound": "This note doesn’t exist anymore.",
       "rateLimited": "Too many requests. Try again in a moment.",
       "generic": "Something went wrong. Try again."
-    }
+    },
+    "addedOn": "Added {date}",
+    "addedToday": "Added today",
+    "addedYesterday": "Added yesterday"
   },
   "notifications": {
     "aria": {
@@ -1059,7 +1242,9 @@
     "errors": {
       "dismissFailed": "Couldn't dismiss. Try again.",
       "validateFailed": "Couldn't validate. Try again.",
-      "rejectFailed": "Couldn't reject. Try again."
+      "rejectFailed": "Couldn't reject. Try again.",
+      "applyChangeFailed": "Couldn't apply the change. Try again.",
+      "refuseChangeFailed": "Couldn't refuse the change. Try again."
     },
     "skeleton": {
       "loading": "Loading reminders..."
@@ -1071,7 +1256,12 @@
       "confirmReject": "Confirm reject",
       "cancel": "Cancel",
       "validated": "{worker}'s day validated",
-      "rejected": "{worker}'s day rejected"
+      "rejected": "{worker}'s day rejected",
+      "changeTitle": "Change request",
+      "applyChange": "Apply change",
+      "refuseChange": "Refuse change",
+      "changeApplied": "{worker}'s change applied",
+      "changeRefused": "{worker}'s change refused"
     },
     "companyEvents": {
       "title": "New members",
@@ -1108,7 +1298,9 @@
           "deleteConfirmDescription": "Delete \"{name}\"? This cannot be undone.",
           "deleteConfirm": "Delete",
           "deleteCancel": "Cancel"
-        }
+        },
+        "emptyGroup": "No templates in this group yet.",
+        "deleteFailed": "Failed to delete template. Please try again."
       },
       "form": {
         "titleCreate": "New template",
@@ -1130,7 +1322,8 @@
           "save": "Save",
           "saving": "Saving…",
           "cancel": "Cancel",
-          "delete": "Delete template"
+          "delete": "Delete template",
+          "create": "Create"
         },
         "errors": {
           "nameRequired": "Template name is required.",
@@ -1139,7 +1332,15 @@
           "duplicateName": "A template with this name already exists for this kind.",
           "saveFailed": "Failed to save template. Please try again.",
           "deleteFailed": "Failed to delete template. Please try again."
-        }
+        },
+        "toast": {
+          "saved": "Template saved.",
+          "created": "Template created.",
+          "deleted": "Template deleted."
+        },
+        "vatCustomPlaceholder": "e.g. 8.5",
+        "vatUsePreset": "Use preset",
+        "deleteConfirm": "Delete “{name}”? This cannot be undone."
       },
       "companyLabel": "Company"
     },
@@ -1151,7 +1352,9 @@
           "title": "No quotes yet",
           "description": "Create your first quote to get started.",
           "cta": "Create your first quote"
-        }
+        },
+        "importTitle": "Import quotes",
+        "heading": "Quotes"
       },
       "status": {
         "draft": "Draft",
@@ -1177,7 +1380,9 @@
           "title": "No invoices yet",
           "description": "Create your first invoice to get started.",
           "cta": "Create your first invoice"
-        }
+        },
+        "importTitle": "Import invoices",
+        "heading": "Invoices"
       },
       "status": {
         "draft": "Draft",
@@ -1206,7 +1411,11 @@
         "status": "Status",
         "totalTtc": "Total TTC",
         "actions": "Actions"
-      }
+      },
+      "loadMoreFailed": "Failed to load more documents. Please try again.",
+      "loadFailed": "The documents couldn't be loaded.",
+      "retry": "Try again",
+      "noFilterResults": "No documents with this status."
     },
     "form": {
       "modes": {
@@ -1233,7 +1442,7 @@
         "validityUntil": "Valid until",
         "paymentDue": "Payment due",
         "paymentTerms": "Payment terms",
-        "paymentTermsPlaceholder": "e.g. Net 30, virement bancaire",
+        "paymentTermsPlaceholder": "e.g. Net 30, bank transfer",
         "project": "Project (optional)",
         "projectNone": "No project"
       },
@@ -1252,7 +1461,9 @@
         "categoryPlaceholder": "e.g. Toiture, Plomberie",
         "descriptionSuggestionsHeading": "From your past invoices",
         "noSuggestions": "No matches — your text will be used",
-        "categoryNoMatches": "No categories yet — your text will be used"
+        "categoryNoMatches": "No categories yet — your text will be used",
+        "vatCustom": "Custom…",
+        "vatUsePreset": "Use a preset rate"
       },
       "totals": {
         "ht": "Total HT",
@@ -1280,7 +1491,10 @@
         "cloneSelected": "Clone selected",
         "createFromTemplate": "Create from template",
         "sendStatus": "Mark as Sent",
-        "edit": "Edit"
+        "edit": "Edit",
+        "previewPdf": "Preview PDF",
+        "openMenu": "Open actions",
+        "openFacture": "Open invoice"
       },
       "errors": {
         "recipientRequired": "Recipient name is required.",
@@ -1296,7 +1510,19 @@
         "convertFailed": "Failed to convert quote to invoice.",
         "alreadyConverted": "This quote has already been converted to an invoice.",
         "invalidTransition": "This status transition is not allowed. The document may have been updated by another session.",
-        "companyRequired": "Please select a company to issue this document from."
+        "companyRequired": "Please select a company to issue this document from.",
+        "statusUpdateFailed": "Failed to update status. Please try again.",
+        "createFromTemplateFailed": "Failed to create document from template.",
+        "templatesLoadFailed": "Failed to load templates.",
+        "documentsLoadFailed": "Failed to load existing documents.",
+        "recipientEmailInvalid": "Enter a valid recipient email address.",
+        "itemQuantityTooLarge": "Item quantity cannot exceed {max}.",
+        "itemUnitPriceTooLarge": "Item unit price cannot exceed {max}.",
+        "itemVatRateInvalid": "Every item needs a VAT rate.",
+        "itemVatRateTooLarge": "Item VAT rate cannot exceed 100%.",
+        "invalidInput": "Some fields are invalid. Check the dates, email and line amounts.",
+        "forbidden": "You do not have permission to perform this action.",
+        "companyProfileMissing": "Complete the company profile before creating billing documents."
       },
       "toast": {
         "documentSaved": "Document saved.",
@@ -1305,11 +1531,28 @@
         "pdfDownloaded": "PDF downloaded.",
         "xlsxDownloaded": "XLSX downloaded.",
         "devisConverted": "Quote converted to invoice.",
-        "companyNoLongerAttached": "Your access to this company has been revoked. Please select another company."
+        "companyNoLongerAttached": "Your access to this company has been revoked. Please select another company.",
+        "statusUpdated": "Status updated to {status}.",
+        "createdFromTemplate": "Document created from template."
       },
       "issuer": {
         "issuedFrom": "Issued from",
         "locked": "locked"
+      },
+      "deleteDialog": {
+        "title": "Delete document?",
+        "description": "This will permanently delete <strong>{number}</strong>. This action cannot be undone."
+      },
+      "applyTemplate": {
+        "title": "Apply a template",
+        "description": "Choose a saved template. Items, notes and terms will be copied. Enter the recipient details below before creating.",
+        "empty": "No {kind} templates saved yet."
+      },
+      "fromExisting": {
+        "description": "Select a document to use as the starting point for your new <strong>{kind}</strong>. Items, recipient, notes and terms will be copied; dates and number will be reset.",
+        "createAs": "Create as:",
+        "crossKindWarning": "Switching kinds resets the document lifecycle. The cloned {kind} will start as <strong>{draft}</strong>.",
+        "empty": "No existing documents found."
       }
     },
     "editPage": {
@@ -1372,7 +1615,110 @@
         "companyShare": "{percent}% company",
         "bothShare": "{percent}% both",
         "bankShare": "{percent}% bank"
+      },
+      "companyPaidNotRefundable": "Paid with a company payment method, so there is nothing to refund: {numbers}",
+      "removed": "Removed from refundable expenses",
+      "removeConfirm": {
+        "title": "Remove from refundable expenses?",
+        "body": "{number} will no longer be tracked for reimbursement and its refund status will be cleared.",
+        "fundsRelease": "The linked funds release {number} will also be deleted, which lowers the project's released total.",
+        "cancel": "Cancel"
       }
+    },
+    "import": {
+      "button": "Import",
+      "description": {
+        "devis": "Bring in quotes issued before Folio, with their original numbers. Numbers already in Folio are skipped.",
+        "facture": "Bring in invoices issued before Folio, with their original numbers. Numbers already in Folio are skipped."
+      },
+      "dropzone": "Choose a CSV or JSON file, or drop it here",
+      "csvHint": "CSV: one row per line item; rows with the same document_number make one document. Required columns: {columns}. Dates as YYYY-MM-DD; DD/MM/YYYY or MM/DD/YYYY work when a date of the file shows the order (a day above 12), otherwise write YYYY-MM-DD.",
+      "jsonHint": "JSON: a list of documents with the API field names, as the Folio plugin exports them.",
+      "projectHint": "Project links are not imported: link a document to its project from the document page afterwards.",
+      "downloadTemplate": "Download the CSV template",
+      "defaultStatus": "Status for rows without one",
+      "statusHint": "The status column accepts: {statuses}.",
+      "reading": "Reading the file…",
+      "preview": "{count, plural, one {# document ready to import} other {# documents ready to import}}",
+      "previewRejected": "{count, plural, one {# document will be left out.} other {# documents will be left out.}}",
+      "rowsIgnored": "{count, plural, one {# row has no document number and is ignored.} other {# rows have no document number and are ignored.}}",
+      "nothingToImport": "No document in this file can be imported.",
+      "start": "{count, plural, =0 {Import} one {Import # document} other {Import # documents}}",
+      "progress": "{done} of {total} documents",
+      "paused": "The server asked for a pause. Resuming in {seconds} s…",
+      "stop": "Stop",
+      "stopping": "Stopping…",
+      "summaryTitle": "Import finished",
+      "stoppedTitle": "Import stopped",
+      "created": "Imported",
+      "skipped": "Already in Folio",
+      "errors": "Errors",
+      "notProcessed": "{count, plural, one {# document was not processed.} other {# documents were not processed.}}",
+      "skippedList": "Skipped, number already used:",
+      "errorList": "Not imported:",
+      "more": "and {count} more",
+      "chooseAnother": "Import another file",
+      "close": "Close",
+      "cancel": "Cancel",
+      "toastDone": "{count, plural, one {# document imported} other {# documents imported}}",
+      "toastFailed": "No document could be imported.",
+      "ref": {
+        "line": "Line {line}",
+        "position": "Document {position}"
+      },
+      "issues": {
+        "missingNumber": "Document number missing",
+        "numberTooLong": "Document number longer than {max} characters",
+        "missingRecipient": "Recipient name missing",
+        "tooLong": "{field} longer than {max} characters",
+        "noItems": "No line items",
+        "tooManyItems": "More than {max} line items",
+        "invalidItem": "Line item {position} needs a description, a quantity above 0, a unit price of 0 or more and a VAT rate from 0 to 100",
+        "invalidItemLine": "Line {line} needs a description, a quantity above 0, a unit price of 0 or more and a VAT rate from 0 to 100",
+        "invalidStatus": "Status “{value}” is not accepted here",
+        "invalidDate": "{field} is not a valid date",
+        "ambiguousDate": "{field} “{value}” could be day/month or month/day, write it as YYYY-MM-DD",
+        "invalidEmail": "“{value}” is not a valid email address",
+        "wrongKind": "“{value}” document, not for this list",
+        "documentTooLarge": "Too much text to send in one request, shorten the line item descriptions"
+      },
+      "fileErrors": {
+        "unreadable": "This file could not be read. Use a CSV or JSON file as described below.",
+        "empty": "This file contains no document.",
+        "missingColumns": "Missing columns: {columns}.",
+        "tooLarge": "This file is larger than 10 MB."
+      },
+      "failures": {
+        "validation": "Refused by the server ({detail})",
+        "forbidden": "You are not allowed to import for this company",
+        "unauthorized": "Your session has expired, sign in again",
+        "company_no_longer_attached": "You are no longer attached to this company",
+        "company_profile_missing": "The company profile is incomplete",
+        "rate_limited": "The server is still busy, try again in a minute",
+        "not_found": "Company not found",
+        "generic": "Unexpected error, try again"
+      }
+    },
+    "project": {
+      "title": "Quotes & invoices",
+      "subtitle": "Every quote and invoice linked to this project.",
+      "loading": "Loading quotes and invoices…",
+      "columns": {
+        "kind": "Type"
+      },
+      "kind": {
+        "devis": "Quote",
+        "facture": "Invoice"
+      },
+      "empty": {
+        "title": "No quotes or invoices yet",
+        "description": "Choose this project in the “Project” field of a quote or invoice to see it here."
+      },
+      "errors": {
+        "load": "Couldn't load the quotes and invoices for this project.",
+        "forbidden": "You don't have access to this project's quotes and invoices."
+      },
+      "retry": "Try again"
     }
   },
   "documents": {
@@ -1391,10 +1737,12 @@
       "errorNetwork": "Network error — try again",
       "errorRateLimited": "Too many uploads — slow down",
       "errorForbidden": "Not allowed",
-      "errorServer": "Upload failed"
+      "errorServer": "Upload failed",
+      "errorEmpty": "This file is empty"
     },
     "list": {
       "empty": "No documents yet. Drag files into the upload area to start.",
+      "emptyFiltered": "No documents match these filters.",
       "formerMember": "(former member)",
       "columns": {
         "file": "File",
@@ -1426,13 +1774,17 @@
       "add": "Add tag",
       "remove": "Remove tag",
       "placeholder": "New tag…",
-      "done": "Done"
+      "done": "Done",
+      "errorTooMany": "A document can have at most {max} tags",
+      "errorTooLong": "A tag can be at most {max} characters long",
+      "errorSave": "Couldn't update the tags"
     },
     "filter": {
       "all": "All",
       "tags": "Tags",
       "clearTags": "Clear tags",
       "anyUploader": "Anyone",
+      "uploader": "Uploaded by",
       "reset": "Reset"
     },
     "preview": {
@@ -1440,7 +1792,8 @@
       "close": "Close",
       "download": "Download",
       "error": "Preview failed — download to view the file",
-      "loading": "Loading preview…"
+      "loading": "Loading preview…",
+      "downloadError": "Download failed — the file may have been deleted"
     },
     "delete": {
       "title": "Delete document?",
@@ -1449,12 +1802,14 @@
       "confirm": "Delete",
       "confirming": "Deleting…",
       "success": "Document deleted",
-      "errorForbidden": "Only the uploader or a project admin can delete this document",
-      "errorServer": "Failed to delete"
+      "errorForbidden": "You don't have permission to delete documents in this project",
+      "errorServer": "Failed to delete",
+      "errorNotFound": "This document no longer exists"
     },
     "toast": {
       "uploadSuccess": "{filename} uploaded",
-      "listLoadError": "Failed to load documents"
+      "listLoadError": "Failed to load documents",
+      "uploadersLoadError": "Couldn't load the list of uploaders"
     },
     "pagination": {
       "prev": "Prev",
@@ -1468,8 +1823,10 @@
       "save": "Save",
       "saving": "Saving…",
       "success": "Document renamed",
-      "errorForbidden": "Only the uploader or a project admin can rename this document",
-      "errorServer": "Failed to rename"
+      "errorForbidden": "You don't have permission to rename documents in this project",
+      "errorServer": "Failed to rename",
+      "errorExtension": "The extension must remain {extension}",
+      "errorInvalid": "This name can't be used. Check it and try again."
     },
     "restricted": {
       "title": "Documents are not available for your role",
@@ -1550,7 +1907,10 @@
       "forbidden": "Only the uploader, the project owner, or an admin can do this",
       "notFound": "Analysis not found",
       "rateLimited": "Too many requests — slow down",
-      "generic": "Something went wrong — try again"
+      "generic": "Something went wrong — try again",
+      "invalidSourceUrl": "The source link must start with http:// or https://",
+      "tooManyTags": "An analysis can have at most 20 tags",
+      "tagTooLong": "A tag can be at most 100 characters long"
     },
     "toast": {
       "listLoadError": "Failed to load analyses"
@@ -1599,7 +1959,8 @@
       "alreadyInvited": "An invitation is already pending for {email}",
       "revoked": "Invitation revoked",
       "rateLimited": "Too many invitations. Try again later.",
-      "error": "Could not send invitation. Please try again."
+      "error": "Could not send invitation. Please try again.",
+      "revokeFailed": "Could not revoke the invitation. Please try again."
     },
     "empty": {
       "members": "No members yet",
@@ -1610,7 +1971,7 @@
       "remove": "Remove",
       "removeConfirm": "Remove {name} from this project?",
       "dialogTitle": "Edit member",
-      "dialogDescription": "Update this member's role. Role changes take effect immediately.",
+      "dialogDescription": "Update this member's display name and email.",
       "nameLabel": "Display name",
       "emailLabel": "Email",
       "emailHint": "Email is the login identity. Changing it updates how this user signs in.",
@@ -1622,22 +1983,31 @@
         "saved": "Member updated",
         "removed": "Member removed",
         "emailTaken": "That email is already in use",
-        "forbidden": "You don't have permission to do that"
+        "forbidden": "You don't have permission to do that",
+        "removeFailed": "Could not remove this member. Please try again.",
+        "saveFailed": "Could not save the changes. Please try again."
       }
     },
     "assign": {
       "button": "Assign member",
       "dialogTitle": "Assign a member",
-      "dialogDescription": "Assign an existing company member to this project as manager or member.",
+      "dialogDescription": "Give an existing company member access to this project.",
       "personLabel": "Person",
       "personPlaceholder": "Search by name or phone…",
       "personEmpty": "No matching person",
-      "roleLabel": "Role",
+      "roleLabel": "Company role",
       "roleMember": "Member",
       "roleManager": "Manager",
       "submit": "Assign",
-      "successToast": "Member assigned."
-    }
+      "successToast": "Member assigned.",
+      "roleHint": "This is the person’s role in the whole company, not only in this project. Manager applies to every project they are assigned to; Member never lowers a role they already have. Change company roles in Settings › Company."
+    },
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "member": "Member"
+    },
+    "expired": "Expired"
   },
   "companies": {
     "masking": {
@@ -1790,7 +2160,8 @@
         "logoUrlInvalidScheme": "Logo URL must use http or https.",
         "logoUrlInvalidUrl": "Logo URL is not a valid URL.",
         "generic": "An unexpected error occurred. Please try again."
-      }
+      },
+      "maskedFieldHint": "Stored and hidden. Type a new value to replace it; leave empty to keep it."
     },
     "picker": {
       "label": "Issued from",
@@ -1809,7 +2180,8 @@
       "unauthorized": "Session expired. Please log in again.",
       "notFound": "The requested resource was not found.",
       "rateLimited": "Too many requests. Please wait and try again.",
-      "generic": "An unexpected error occurred."
+      "generic": "An unexpected error occurred.",
+      "invalidJoinCode": "Invalid or revoked join code."
     }
   },
   "bibliotheque": {
@@ -1865,7 +2237,7 @@
       "plomberie": "Plumbing",
       "quincaillerie": "Hardware",
       "droguerie": "Household & cleaning",
-      "autre": "Other / Uncategorized"
+      "autre": "Other"
     },
     "addProduct": "Add product",
     "createTitle": "Add product",
@@ -1889,6 +2261,23 @@
       "imageHint": "PNG / JPG / WebP, max 10 MB",
       "replaceImage": "Replace image"
     },
+    "imageUrl": {
+      "label": "Or from a supplier link",
+      "placeholder": "https://media.adeo.com/…",
+      "note": "Only supported supplier sites are accepted, such as Leroy Merlin.",
+      "noteOnCreate": "The image is fetched when the product is added. Only supported supplier sites are accepted, such as Leroy Merlin.",
+      "fetch": "Fetch",
+      "fetched": "Image updated.",
+      "saveWarning": "Product saved, but the image could not be fetched from the link.",
+      "errors": {
+        "invalid": "Enter a full image link starting with https://.",
+        "blocked": "This site is not accepted. Use an image link from a supported supplier site.",
+        "notImage": "This link does not point to a JPG, PNG or WebP image.",
+        "tooLarge": "This image is larger than 10 MB.",
+        "forbidden": "You don't have permission to manage the library.",
+        "failed": "The image could not be downloaded from this link. Check it and try again."
+      }
+    },
     "uncategorizedOption": "Uncategorized",
     "validation": {
       "nameRequired": "Product name is required.",
@@ -1911,7 +2300,73 @@
       "imageUploadWarning": "Product saved, but the image could not be uploaded."
     },
     "deleteWarning": "This permanently deletes \"{name}\" and its {count, plural, =0 {0 purchase records} one {# purchase record} other {# purchase records}}.",
-    "deleteConfirmLabel": "Type the product name to confirm"
+    "deleteConfirmLabel": "Type the product name to confirm",
+    "import": {
+      "button": "Import",
+      "title": "Import purchases",
+      "description": "Add the lines of a supplier purchase export to the library. Lines already imported are skipped, so the same file can be imported again safely.",
+      "dropzone": "Choose a JSON file, or drop it here",
+      "company": "Company",
+      "formatHint": "Expected format: supplier_name, supplier_slug and records, each record with supplier_reference, product_name, quantity, unit_price, purchased_at, source_document_ref, source_document_type (ticket or commande) and line_index. A file may list several suppliers.",
+      "reading": "Reading the file…",
+      "preview": "{count, plural, one {# purchase line} other {# purchase lines}} from {suppliers}",
+      "previewRejected": "{count, plural, one {# line will be left out:} other {# lines will be left out:}}",
+      "nothingToImport": "No purchase line in this file can be imported.",
+      "start": "{count, plural, =0 {Import} one {Import # line} other {Import # lines}}",
+      "progress": "{done} of {total} lines",
+      "paused": "The server asked for a pause. Resuming in {seconds} s…",
+      "stop": "Stop",
+      "stopping": "Stopping…",
+      "summaryTitle": "Import finished",
+      "stoppedTitle": "Import stopped",
+      "created": "Products created",
+      "updated": "Products updated",
+      "purchasesAdded": "Purchases added",
+      "skipped": "Already imported",
+      "errors": "Lines in error",
+      "notProcessed": "{count, plural, one {# line was not processed.} other {# lines were not processed.}}",
+      "errorList": "Not imported:",
+      "more": "and {count} more",
+      "chooseAnother": "Import another file",
+      "close": "Close",
+      "toastDone": "{count, plural, one {# purchase added to the library} other {# purchases added to the library}}",
+      "toastUpdated": "{count, plural, one {# product updated in the library} other {# products updated in the library}}",
+      "toastFailed": "No purchase line could be imported.",
+      "issues": {
+        "invalidSupplier": "{supplier}: supplier name or slug missing or too long ({count, plural, one {# line left out} other {# lines left out}})",
+        "noRecords": "{supplier}: no purchase lines",
+        "invalidRecord": "{supplier}, line {position}: a required field is missing or invalid"
+      },
+      "fileErrors": {
+        "unreadable": "This file is not valid JSON.",
+        "empty": "This file contains no purchase line.",
+        "tooLarge": "This file is larger than 10 MB."
+      },
+      "failures": {
+        "batch": "{supplier}: {count, plural, one {# line not imported} other {# lines not imported}}. {reason}",
+        "validation": "Refused by the server ({detail})",
+        "forbidden": "You don't have permission to manage the library.",
+        "unauthorized": "Your session has expired, sign in again.",
+        "rate_limited": "The server is still busy, try again in a minute.",
+        "generic": "Unexpected error, try again."
+      }
+    },
+    "errors": {
+      "duplicate": "A product with this reference already exists.",
+      "forbidden": "You don't have permission to manage the library.",
+      "notFound": "Not found.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "invalidInput": "Some fields are not valid. Check the links and the numbers.",
+      "generic": "Something went wrong. Please try again.",
+      "noImageFile": "No image file provided.",
+      "imageUnsupported": "Unsupported image type (use JPG, PNG or WebP).",
+      "imageTooLarge": "Image too large (max 10 MB).",
+      "imageAlreadySet": "This product already has an image.",
+      "imageLinkRefused": "This image link is not accepted. Use an https link to the image itself.",
+      "imageLinkNotImage": "The link is not a JPG, PNG or WebP image."
+    },
+    "selectSupplier": "Select a supplier",
+    "imagePreviewAlt": "Preview of the chosen image"
   },
   "inventory": {
     "title": "Equipment inventory",
@@ -2002,7 +2457,7 @@
       "delete": "Delete warehouse",
       "empty": "No warehouse yet. Add the place where the company keeps its tools.",
       "noAddress": "No address",
-      "deleteBlocked": "This warehouse still holds {count, plural, one {# unit} other {# units}}. Move or remove them first.",
+      "deleteBlocked": "This warehouse still lists {count, plural, one {# piece of equipment} other {# pieces of equipment}}. Move or remove them first.",
       "fields": {
         "name": "Name",
         "namePlaceholder": "e.g. Main warehouse",
@@ -2010,7 +2465,8 @@
         "addressPlaceholder": "Street, city"
       },
       "validation": {
-        "nameRequired": "Give the warehouse a name."
+        "nameRequired": "Give the warehouse a name.",
+        "nameTaken": "A warehouse already has this name."
       },
       "toast": {
         "created": "Warehouse added.",
@@ -2020,7 +2476,8 @@
         "updateError": "Failed to update the warehouse.",
         "deleteError": "Failed to delete the warehouse."
       }
-    }
+    },
+    "otherSite": "A site you are not assigned to"
   },
   "photos": {
     "title": "Media",
@@ -2054,9 +2511,16 @@
       "rateLimited": "Too many uploads — please slow down",
       "server": "Upload failed — please try again",
       "forbidden": "You do not have permission to perform this action",
-      "invalidImage": "Invalid image — the file could not be processed"
+      "invalidImage": "Invalid image — the file could not be processed",
+      "updateFailed": "Couldn't save the changes — please try again",
+      "deleteFailed": "Couldn't delete the photo — please try again",
+      "notFound": "This photo no longer exists",
+      "validation": "Check the caption and date, then try again"
     },
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "saved": "Changes saved",
+    "deleted": "Photo deleted",
+    "close": "Close"
   },
   "chiffrage": {
     "actions": "Actions",
@@ -2097,7 +2561,7 @@
     "confirmDeleteArticle": "Delete the item “{name}” and its prices?",
     "confirmDeletePoste": "Delete the section “{name}” and everything in it?",
     "confirmDeleteQuote": "Delete this supplier price?",
-    "confirmDeleteStore": "Delete the shop “{name}”?",
+    "confirmDeleteStore": "Delete the shop “{name}”? The prices recorded there are kept.",
     "create": "Create",
     "customUnits": "Your units",
     "deleteArticle": "Delete item",
@@ -2117,10 +2581,11 @@
     "fetch": "Fetch",
     "grandTotal": "Grand total",
     "imageFromUrl": "From a supplier link",
-    "imageFromUrlNote": "Only the fournisseurs' own sites are accepted.",
+    "imageFromUrlNote": "Only image links from supported supplier sites are accepted: Leroy Merlin, Castorama, Brico Dépôt, Point P, Cedeo, Brossette, Rexel, Saint-Gobain.",
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "That image is over 10 MB.",
     "imageUploadFailed": "The photo could not be uploaded.",
+    "actionFailed": "Something went wrong. Please try again.",
     "includingTax": "including tax",
     "newArticle": "New item",
     "newPoste": "New section",
@@ -2155,6 +2620,19 @@
     "retained": "Retained",
     "room": "Room",
     "rooms": "Rooms",
+    "roomsDialogHint": "Every section groups its items by room, in this order. Drag a room or use the arrows to move it.",
+    "noRoomsYet": "No room yet. Add the first one below.",
+    "roomName": "Room name",
+    "renameRoom": "Rename room",
+    "deleteRoom": "Delete room",
+    "confirmDeleteRoom": "Delete the room “{name}”? Its items are kept, under “No room”.",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "dragToReorder": "Drag to reorder",
+    "stores": "Shops",
+    "storesDialogHint": "The shops this project buys from, shared by every section. Prices recorded at the same shop are compared as one basket.",
+    "openInMaps": "Open in Maps",
+    "openWebsite": "Open the shop's website",
     "save": "Save",
     "searchProducts": "Search a product…",
     "selectUnit": "Choose a unit",
@@ -2163,7 +2641,7 @@
     "storeAddressHint": "Tap the shop in the list to open it in Maps.",
     "storeAddressOptional": "Address (optional)",
     "storeAddressPlaceholder": "45 av de Verdun, 94200 Ivry-sur-Seine",
-    "storeDialogHint": "Where to go and buy this poste's items. Add as many shops as the run needs.",
+    "storeDialogHint": "Where to go and buy. A shop is shared by every section of this project.",
     "storeName": "Shop",
     "storeNamePlaceholder": "e.g. Leroy Merlin Ivry",
     "storeRequired": "Choose the shop this price comes from — that is what makes the comparison possible.",
@@ -2212,7 +2690,29 @@
     "comparePartialFooter": "{priced} of {total} items priced — partial",
     "compareExpandRow": "Show notes for {name}",
     "compareShopsEyebrow": "Compare shops",
-    "compareGapExplanationNoPct": "{dearer} is {gap} more per unit — {lineGap} on this line of {qty}. {cheaper} is cheaper."
+    "compareGapExplanationNoPct": "{dearer} is {gap} more per unit — {lineGap} on this line of {qty}. {cheaper} is cheaper.",
+    "loadFailedTitle": "The cost planning could not be loaded",
+    "loadFailedHint": "Nothing was lost. Check your connection and try again.",
+    "retry": "Try again",
+    "emptyHintReadOnly": "No section has been planned for this project yet.",
+    "quantityTooLarge": "The quantity cannot exceed {max, number}.",
+    "priceTooLarge": "The unit price (excl. tax) cannot exceed {max, number}.",
+    "errorForbidden": "You do not have permission to modify this cost plan.",
+    "errorNotFound": "This item no longer exists.",
+    "errorNameTaken": "That name is already taken.",
+    "errorImageTooLarge": "Image too large (max 10 MB).",
+    "errorImageUnsupported": "Unsupported image type (use JPG, PNG or WebP).",
+    "errorImageLink": "The image could not be fetched from this link. Use an https link to the image itself.",
+    "errorInvalidInput": "Some values are not valid. Check the fields and try again.",
+    "errorRateLimited": "Too many requests. Wait a moment and try again.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "dragOtherRoom": "Use Edit to move an item to another room",
+    "unitSac": "bag",
+    "unitBoite": "box",
+    "unitRouleau": "roll",
+    "unitLot": "lot",
+    "unitForfait": "lump sum",
+    "productUrlInvalid": "Enter a web address, e.g. www.castorama.fr/…"
   },
   "onboarding": {
     "title": "Welcome to Folio",
@@ -2241,6 +2741,10 @@
     "retry": "Retry",
     "companyPicker": {
       "label": "Company"
+    },
+    "profile": {
+      "title": "Company profile",
+      "description": "Legal name, address, identifiers and bank details printed on your quotes and invoices."
     },
     "members": {
       "title": "Members",
@@ -2290,7 +2794,8 @@
       "empty": "No members to import.",
       "cancel": "Cancel",
       "submit": "{count, plural, =0 {Import} one {Import # member} other {Import # members}}",
-      "importedToast": "{count, plural, =0 {No members imported} one {# member imported} other {# members imported}}"
+      "importedToast": "{count, plural, =0 {No members imported} one {# member imported} other {# members imported}}",
+      "alreadyMember": "Already a member"
     },
     "grants": {
       "dialogTitle": "Custom permissions for {name}",
@@ -2410,6 +2915,26 @@
       "refused": "Refused",
       "error": "Error"
     },
-    "noCost": "—"
+    "noCost": "—",
+    "disabled": "The assistant is not enabled, so there is nothing to review."
+  },
+  "personsMerge": {
+    "title": "Merge persons",
+    "intro": "Consolidate two Person rows that represent the same person. All of the source's worker assignments move to the target, and the source row is deleted.",
+    "source": "Source",
+    "sourceHint": "(deleted)",
+    "sourcePlaceholder": "Pick the duplicate to remove…",
+    "target": "Target",
+    "targetHint": "(kept)",
+    "targetPlaceholder": "Pick the row to keep…",
+    "sameRow": "Source and target must be different rows.",
+    "clear": "Clear",
+    "merge": "Merge",
+    "cancel": "Cancel",
+    "confirmTitle": "Merge persons?",
+    "confirmBody": "Every worker pointing at {source} moves to {target}, and {source} is permanently deleted. This cannot be undone.",
+    "merged": "Merged “{source}” into “{target}”.",
+    "mergedDetail": "{n, plural, one {# worker} other {# workers}} reassigned. Source deleted.",
+    "failed": "The merge failed. Please try again."
   }
 }

@@ -20,7 +20,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Si vous avez été invité par e-mail, le lien contenu dans le message vous rattache directement.",
     ],
     gotchas: [
-      "Seuls les numéros français sont acceptés, et sans le 0 initial.",
+      "Seuls les numéros français sont acceptés, écrits 06 12 34 56 78, 6 12 34 56 78 ou +33 6 12 34 56 78.",
     ],
     whoCanDoIt:
       "Toute personne dont le numéro de téléphone a été ajouté à une entreprise.",
@@ -35,7 +35,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Le premier groupe du menu latéral vaut pour toute l'application : “Aperçu”, “Projets” et “Bibliothèque”.",
       "Une fois un projet sélectionné, le menu latéral déploie ses sections : “Planification”, “Main-d'œuvre”, “Dépenses”, “Chiffrage”, “Notes”, “Documents” et “Analyses”.",
       "Les administrateurs d'entreprise voient en plus un groupe “Facturation” : “Devis”, “Factures”, “Modèles” et “Remboursables”.",
-      "La barre du haut porte l'action principale de la page, le point d'aide, la cloche, le bouton de thème clair ou sombre, le choix de la langue et le menu de votre compte.",
+      "La barre du haut porte l'action principale de la page, le point d'aide, la cloche, le choix de la langue et le menu de votre compte.",
     ],
     whoCanDoIt:
       "Tout le monde voit le groupe général. “Documents” n'apparaît que si vous avez le droit de l'ouvrir, et “Facturation” seulement pour les administrateurs d'entreprise.",
@@ -349,9 +349,10 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Utilisez “Ajouter par téléphone” pour ajouter quelqu'un par son numéro, ou “Importer depuis une entreprise” pour reprendre des personnes d'une autre société que vous administrez.",
       "L'annuaire liste toutes les personnes liées à l'entreprise, avec leur téléphone, le fait qu'elles se soient déjà connectées ou non, et les projets qui leur sont assignés.",
       "Sous “Moyens de paiement”, ajoutez, renommez ou supprimez les façons dont les factures de cette société peuvent être payées. Les moyens intégrés se renomment mais ne se suppriment pas.",
+      "Sous “Rôles main-d'œuvre”, créez, renommez, recolorez ou supprimez les rôles attribués aux ouvriers sur les chantiers de cette société. Supprimer un rôle le retire des ouvriers qui l'avaient. Le crayon à côté d'un rôle, dans le sélecteur de rôle de la fiche ouvrier, fait la même chose depuis la page main-d'œuvre.",
     ],
     whoCanDoIt:
-      "Chacun voit les sociétés auxquelles il est rattaché et peut en rattacher une autre. Le code société, le tableau des membres, l'annuaire et les moyens de paiement sont réservés aux administrateurs de la société sélectionnée.",
+      "Chacun voit les sociétés auxquelles il est rattaché et peut en rattacher une autre. Le code société, le tableau des membres, l'annuaire et les moyens de paiement sont réservés aux administrateurs de la société sélectionnée ; les rôles main-d'œuvre, à ses administrateurs et managers.",
     gotchas: [
       "Il y a deux façons différentes d'ajouter une personne, et elles ne sont pas interchangeables : un jeton d'invitation à usage unique valable sept jours, et le code société réutilisable que l'on saisit dans l'application mobile.",
     ],
@@ -363,7 +364,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Vos informations personnelles, la numérotation des factures du projet en cours, et les notifications qui arrivent sur votre téléphone.",
     steps: [
       "Ouvrez “Paramètres” ; la liste à gauche sélectionne la section.",
-      "Dans “Profil”, modifiez votre nom affiché et votre téléphone, puis enregistrez. Votre e-mail est en lecture seule — seul un administrateur peut le changer.",
+      "Dans “Profil”, modifiez votre nom affiché, puis enregistrez. Pour vous connecter avec un autre numéro, utilisez “Changer de numéro” : saisissez le nouveau numéro, puis le code reçu par SMS. Votre e-mail est en lecture seule — seul un administrateur peut le changer.",
       "Dans “Projet”, fixez le préfixe de numéro de facture du projet sélectionné, jusqu'à huit lettres ou chiffres, et regardez la ligne d'aperçu avant d'enregistrer.",
       "Dans “Entreprise”, gérez les sociétés auxquelles vous êtes rattaché : la fiche d'identité de chacune, celle qui est principale, le détachement, et le rattachement d'une autre par code. Si vous administrez celle qui est sélectionnée, s'y ajoutent son code société, ses membres et ses moyens de paiement.",
       "Dans “Notifications”, utilisez l'interrupteur général et les interrupteurs par catégorie : “Discussion d'équipe”, “Présences”, “Tâches”, “Équipe et accès” et “Argent”.",
@@ -372,7 +373,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "La version de Folio que vous utilisez est indiquée en bas de la page, sous la section ouverte.",
     ],
     whoCanDoIt:
-      "Chacun accède à son profil, au préfixe du projet, à ses choix de notification et à ses propres clés API. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code société, membres, moyens de paiement — aux seuls administrateurs de la société sélectionnée. “Utilisateurs et rôles” est réservé à l'assistance Folio.",
+      "Chacun accède à son profil, à ses choix de notification et à ses propres clés API. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code société, membres, moyens de paiement — aux seuls administrateurs de la société sélectionnée. “Utilisateurs et rôles” est réservé à l'assistance Folio.",
     gotchas: [
       "Les paramètres n'ont pas de section de facturation. Les devis, les factures et les modèles sont tous dans le groupe “Facturation” du menu latéral.",
       "Les interrupteurs de notification commandent les notifications push qui arrivent dans l'application mobile Folio, pas la cloche de cette fenêtre.",

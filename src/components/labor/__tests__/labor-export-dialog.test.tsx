@@ -14,6 +14,7 @@ import type { Worker } from "@/types/labor";
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "fr",
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
     if (params) {
       return Object.entries(params).reduce(
@@ -240,7 +241,8 @@ describe("LaborExportDialog — submit happy path", () => {
         expect(fetchLaborExport).toHaveBeenCalledWith(
           "proj-test-1",
           { from: "2026-01", to: "2026-03" },
-          "xlsx"
+          "xlsx",
+          "fr",
         );
       },
       { timeout: 15000 }
@@ -568,6 +570,7 @@ describe("LaborExportDialog — with worker prop (submit happy path)", () => {
           "worker-uuid-1",
           { from: "2026-01", to: "2026-03" },
           "xlsx",
+          "fr",
         );
       },
       { timeout: 15000 },
@@ -838,6 +841,7 @@ describe("LaborExportDialog — pre-fill props", () => {
           "worker-uuid-1",
           { from: "2026-06", to: "2026-06" },
           "pdf",
+          "fr",
         );
       },
       { timeout: 15000 },

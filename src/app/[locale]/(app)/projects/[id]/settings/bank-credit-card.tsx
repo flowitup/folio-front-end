@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { Landmark, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { formatEURWhole } from "@/lib/utils/formatters";
+import { formatEUR } from "@/lib/utils/formatters";
 import { updateBankCredit } from "./actions";
 import type { Project } from "@/types/project";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 
 /**
  * Project settings card for the bank credit (crédit immobilier): the initial
@@ -24,9 +26,10 @@ interface Props {
   project: Project;
 }
 
-// Amount input accepts digits with an optional decimal part, "." or "," as
-// separator — the server action normalizes before sending.
-const AMOUNT_RE = /^\d*([.,]\d{0,2})?$/;
+// Amount input accepts digits, digit-grouping spaces/dots/commas and an
+// optional decimal part — parseMoneyInput reads it ("12 500,75") and the
+// server action re-parses it the same way before sending.
+const AMOUNT_RE = /^[\d\s\u00a0\u202f.,]*$/;
 
 export function BankCreditCard({ project }: Props) {
   const t = useTranslations("projects");
@@ -35,11 +38,17 @@ export function BankCreditCard({ project }: Props) {
   );
   const [source, setSource] = useState(project.budget_source ?? "");
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
+  // The values the server holds now (the props only reflect page load).
+  const [saved, setSaved] = useState({
+    amount: project.budget != null ? String(project.budget) : "",
+    source: project.budget_source ?? "",
+  });
 
-  const initialAmount = project.budget != null ? String(project.budget) : "";
-  const isDirty = amount !== initialAmount || source !== (project.budget_source ?? "");
-  const parsed = amount.trim() === "" ? null : Number(amount.replace(",", "."));
-  const preview = parsed != null && Number.isFinite(parsed) ? formatEURWhole(parsed) : null;
+  const isDirty = amount !== saved.amount || source !== saved.source;
+  const parsed = parseMoneyInput(amount);
+  // Cents shown: the preview confirms what was typed, "50 000,5" included.
+  const preview = parsed != null ? formatEUR(parsed) : null;
 
   const handleAmountChange = (value: string) => {
     if (AMOUNT_RE.test(value)) setAmount(value);
@@ -50,6 +59,8 @@ export function BankCreditCard({ project }: Props) {
     const result = await updateBankCredit(project.id, amount, source);
     setSaving(false);
     if (result.ok) {
+      setSaved({ amount, source });
+      router.refresh();
       toast.success(t("settingsSaved"));
     } else if (result.error === "validation") {
       toast.error(t("budgetInvalid"));

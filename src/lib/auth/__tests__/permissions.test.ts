@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { can, isPlatformOps, isCompanyAdmin, canCreateProject } from "../permissions";
+import {
+  can,
+  isPlatformOps,
+  isCompanyAdmin,
+  canCreateProject,
+  canManageLaborRoles,
+} from "../permissions";
 import type { UserCompanySummary } from "../permissions";
 
 describe("can", () => {
@@ -21,6 +27,22 @@ describe("can", () => {
 
   it("denies when neither global nor project perms grant it", () => {
     expect(can("project:manage_labor", ["project:read"], ["project:read"])).toBe(false);
+  });
+
+  it("honours a per-project deny the company-wide JWT list still advertises", () => {
+    const managerJwt = ["project:read", "project:update", "project:manage_users", "project:invite"];
+    const deniedHere = ["project:read", "project:manage_labor"];
+    expect(can("project:update", managerJwt, deniedHere)).toBe(false);
+    expect(can("project:invite", managerJwt, deniedHere)).toBe(false);
+  });
+
+  it("falls back to the global list while the project set is not resolved", () => {
+    expect(can("project:update", ["project:update"], undefined)).toBe(true);
+    expect(can("project:update", ["project:update"], [])).toBe(true);
+  });
+
+  it("keeps platform ops allowed on any project", () => {
+    expect(can("project:update", ["*:*"], ["project:read"])).toBe(true);
   });
 
   it("denies safely with no perms at all", () => {
@@ -88,5 +110,44 @@ describe("canCreateProject", () => {
 
   it("false with nothing at all", () => {
     expect(canCreateProject(undefined, undefined)).toBe(false);
+  });
+});
+
+describe("canManageLaborRoles", () => {
+  const primaryManager: UserCompanySummary = {
+    id: "c1",
+    legal_name: "Alpha",
+    role: "manager",
+    is_primary: true,
+  };
+  const otherAdmin: UserCompanySummary = {
+    id: "c2",
+    legal_name: "Beta",
+    role: "admin",
+    is_primary: false,
+  };
+  const primaryMember: UserCompanySummary = { ...primaryManager, role: "member" };
+
+  it("lets a manager of the primary company manage its roles — not only admins", () => {
+    expect(canManageLaborRoles([], [primaryManager])).toBe(true);
+  });
+
+  it("refuses a plain member of the primary company", () => {
+    expect(canManageLaborRoles([], [primaryMember, otherAdmin])).toBe(false);
+  });
+
+  it("checks the named company when one is given", () => {
+    expect(canManageLaborRoles([], [primaryMember, otherAdmin], "c2")).toBe(true);
+    expect(canManageLaborRoles([], [primaryMember, otherAdmin], "c1")).toBe(false);
+    expect(canManageLaborRoles([], [primaryMember], "unknown")).toBe(false);
+  });
+
+  it("lets platform ops through whatever the companies say", () => {
+    expect(canManageLaborRoles(["*:*"], [])).toBe(true);
+  });
+
+  it("refuses when there is no primary company to scope to", () => {
+    expect(canManageLaborRoles([], [otherAdmin])).toBe(false);
+    expect(canManageLaborRoles(undefined, undefined)).toBe(false);
   });
 });

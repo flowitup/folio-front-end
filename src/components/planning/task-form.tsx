@@ -54,9 +54,12 @@ export function TaskForm({ initial, defaultDueDate, isSaving, onSubmit, onCancel
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    // Editing: an emptied description is sent as null so it is cleared, not
+    // left out of the payload (which read as "unchanged").
+    const emptyDescription = initial ? null : undefined;
     onSubmit({
       title: title.trim(),
-      description: description.trim() || undefined,
+      description: description.trim() || emptyDescription,
       priority,
       due_date: dueDate || null,
       labels: labelsInput
@@ -77,6 +80,7 @@ export function TaskForm({ initial, defaultDueDate, isSaving, onSubmit, onCancel
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t("titlePlaceholder")}
+          maxLength={255}
         />
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Pencil, UserX, Download, TrendingUp } from "lucide-react";
+import { Plus, Pencil, UserX, UserCheck, Download, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -51,6 +51,8 @@ interface WorkerListProps {
   onAdd: () => void;
   onEdit: (worker: Worker) => void;
   onDeactivate: (worker: Worker) => void;
+  /** Turn a deactivated worker back on. */
+  onReactivate?: (worker: Worker) => void;
   /** Called after a rate change is added or deleted — parent should re-fetch workers. */
   onWorkerRateChanged?: () => void;
 }
@@ -62,6 +64,7 @@ export function WorkerList({
   onAdd,
   onEdit,
   onDeactivate,
+  onReactivate,
   onWorkerRateChanged,
 }: WorkerListProps) {
   const t = useTranslations("labor");
@@ -93,7 +96,11 @@ export function WorkerList({
         </Card>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {workers.map((worker) => {
+          {[...workers]
+            // Active workers first; deactivated ones (still payable,
+            // exportable and reactivatable) after them.
+            .sort((a, b) => Number(b.is_active) - Number(a.is_active))
+            .map((worker) => {
             // Prefer the joined Person identity once cook 1c backfill
             // links workers to persons; fall back to legacy fields.
             const displayName = worker.person_name ?? worker.name;
@@ -146,9 +153,35 @@ export function WorkerList({
                   )}
                 </div>
 
-                {/* Action bar — visible on hover or focus-within */}
+                {/* Action bar — revealed on hover or focus-within; always
+                    shown on touch devices (see .hover-reveal). */}
+                {!worker.is_active && (
+                  <div className="hover-reveal absolute inset-x-0 bottom-2 flex items-center justify-center gap-1 transition">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      aria-label={tExport("exportWorker")}
+                      onClick={() => setExportWorker(worker)}
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </Button>
+                    {canManage && onReactivate && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        aria-label={t("reactivateWorker")}
+                        title={t("reactivateWorker")}
+                        onClick={() => onReactivate(worker)}
+                      >
+                        <UserCheck className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                )}
                 {worker.is_active && (
-                  <div className="absolute inset-x-0 bottom-2 flex items-center justify-center gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
+                  <div className="hover-reveal absolute inset-x-0 bottom-2 flex items-center justify-center gap-1 transition">
                     <Button
                       variant="ghost"
                       size="icon"

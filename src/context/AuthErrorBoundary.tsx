@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, type ReactNode } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 interface Props {
   children: ReactNode;
@@ -12,21 +13,50 @@ interface State {
   error?: Error;
 }
 
+// Digest prefixes of Next.js control-flow errors: redirect(), and notFound(),
+// forbidden() and unauthorized() ("NEXT_HTTP_ERROR_FALLBACK;404" since
+// Next 15; "NEXT_NOT_FOUND" before).
+const NEXT_INTERNAL_DIGESTS = ["NEXT_REDIRECT", "NEXT_HTTP_ERROR_FALLBACK", "NEXT_NOT_FOUND"];
+
 /**
- * Check if an error is a Next.js redirect or React internal error.
+ * Check if an error is a Next.js redirect or HTTP fallback (not found…).
  * These should be re-thrown, not caught by error boundaries.
  */
-function isNextJsInternalError(error: unknown): boolean {
-  if (error && typeof error === "object") {
-    // Next.js redirect throws an error with digest containing "NEXT_REDIRECT"
-    if ("digest" in error && typeof (error as { digest?: string }).digest === "string") {
-      const digest = (error as { digest: string }).digest;
-      if (digest.startsWith("NEXT_REDIRECT") || digest.startsWith("NEXT_NOT_FOUND")) {
-        return true;
-      }
+export function isNextJsInternalError(error: unknown): boolean {
+  if (error && typeof error === "object" && "digest" in error) {
+    const digest = (error as { digest?: unknown }).digest;
+    if (typeof digest === "string") {
+      return NEXT_INTERNAL_DIGESTS.some((prefix) => digest.startsWith(prefix));
     }
   }
   return false;
+}
+
+/** Translated fallback. Keeps the session cookies (the HttpOnly ones can't be
+ * cleared from here anyway) and stays in the current locale. */
+function AuthErrorFallback() {
+  const t = useTranslations("errors.boundary");
+  const locale = useLocale();
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="text-center">
+        <h2 className="text-lg font-semibold">{t("title")}</h2>
+        <p className="text-muted-foreground mt-2">{t("body")}</p>
+        <div className="mt-4 flex justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="rounded bg-primary px-4 py-2 text-white"
+          >
+            {t("refresh")}
+          </button>
+          <a href={`/${locale}/login`} className="rounded border px-4 py-2">
+            {t("login")}
+          </a>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -61,31 +91,7 @@ export class AuthErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      return (
-        this.props.fallback || (
-          <div className="flex min-h-screen items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">Authentication Error</h2>
-              <p className="text-muted-foreground mt-2">
-                Please try refreshing the page or logging in again.
-              </p>
-              <button
-                onClick={() => {
-                  // Clear cookies client-side before redirecting
-                  document.cookie = "access_token_cookie=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-                  document.cookie = "refresh_token_cookie=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-                  document.cookie = "csrf_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-                  document.cookie = "csrf_refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-                  window.location.href = "/en/login";
-                }}
-                className="mt-4 rounded bg-primary px-4 py-2 text-white"
-              >
-                Go to Login
-              </button>
-            </div>
-          </div>
-        )
-      );
+      return this.props.fallback || <AuthErrorFallback />;
     }
 
     return this.props.children;

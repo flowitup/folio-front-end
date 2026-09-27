@@ -25,7 +25,14 @@ import { headers } from "next/headers";
 const IP_SHAPED = /^[0-9a-f:.]{3,45}$/i;
 
 export async function clientIpHeader(): Promise<Record<string, string>> {
-  const incoming = await headers();
+  return clientIpHeaderFrom(await headers());
+}
+
+/**
+ * Same as `clientIpHeader`, for callers that already hold the incoming request's headers
+ * (the proxy, which runs before any server component and cannot use next/headers).
+ */
+export function clientIpHeaderFrom(incoming: Headers): Record<string, string> {
   // Cloudflare sets cf-connecting-ip itself and overwrites whatever the caller sent, so it
   // is the one value here that cannot be forged. Without it (local development, or any
   // deployment that is not behind Cloudflare) fall back to the last x-forwarded-for entry:

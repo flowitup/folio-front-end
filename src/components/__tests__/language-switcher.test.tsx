@@ -19,6 +19,11 @@ vi.mock("next-intl", () => ({
   useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
 }));
 
+let mockSearch = "";
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(mockSearch),
+}));
+
 vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ replace: mockReplace }),
   usePathname: () => "/projects",
@@ -31,6 +36,7 @@ vi.mock("@/i18n/config", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockSearch = "";
 });
 
 describe("LanguageSwitcher", () => {
@@ -47,6 +53,15 @@ describe("LanguageSwitcher", () => {
     await user.click(screen.getByRole("button", { name: "common.language" }));
     await user.click(screen.getByRole("menuitem", { name: /Français/ }));
     expect(mockReplace).toHaveBeenCalledWith("/projects", { locale: "fr" });
+  });
+
+  it("keeps the query (open expense, filters) when switching", async () => {
+    mockSearch = "invoice=inv-1&tab=labor";
+    const user = userEvent.setup();
+    render(<LanguageSwitcher />);
+    await user.click(screen.getByRole("button", { name: "common.language" }));
+    await user.click(screen.getByRole("menuitem", { name: /Tiếng Việt/ }));
+    expect(mockReplace).toHaveBeenCalledWith("/projects?invoice=inv-1&tab=labor", { locale: "vi" });
   });
 
   it("does nothing when selecting the already-active locale", async () => {

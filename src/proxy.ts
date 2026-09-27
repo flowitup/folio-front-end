@@ -8,28 +8,16 @@ import {
   isAuthRoute,
   isProtectedRoute,
 } from "@/lib/auth/middleware";
-
-/**
- * Decode JWT and check if expired (without verification).
- * Returns true if token exists and is not expired.
- */
-function isTokenValid(token: string | undefined): boolean {
-  if (!token) return false;
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return false;
-    const payload = JSON.parse(atob(parts[1]));
-    if (!payload.exp) return true; // No expiry = assume valid
-    return payload.exp * 1000 > Date.now();
-  } catch {
-    return false;
-  }
-}
+import {
+  applySessionCookies,
+  isTokenValid,
+  refreshSession,
+} from "@/lib/auth/proxy-session";
 
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware(routing);
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for static files and API routes
@@ -50,28 +38,37 @@ export function proxy(request: NextRequest) {
   const pathnameWithoutLocale =
     pathname.replace(new RegExp(`^/(${locales.join("|")})(?=/|$)`), "") || "/";
 
-  // Check for access token cookie and validate expiry
-  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  // Check for access token cookie and validate expiry. An expired or missing
+  // access token is renewed with the refresh cookie before anything decides
+  // the user is signed out: the refresh token outlives it by days.
+  let accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const needsSession =
+    isProtectedRoute(pathnameWithoutLocale) || isAuthRoute(pathnameWithoutLocale);
+  const refreshed =
+    needsSession && !isTokenValid(accessToken) ? await refreshSession(request) : [];
+  accessToken = refreshed.find((c) => c.name === ACCESS_TOKEN_COOKIE)?.value ?? accessToken;
   const isAuthenticated = isTokenValid(accessToken);
 
   // Get the current locale from pathname or default
   const localeMatch = pathname.match(new RegExp(`^/(${locales.join("|")})(?=/|$)`));
   const locale = localeMatch ? localeMatch[1] : defaultLocale;
 
-  // Redirect authenticated users away from auth pages
-  if (isAuthenticated && isAuthRoute(pathnameWithoutLocale)) {
-    return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
-  }
+  // Auth pages (/login) are never redirected from here. An unexpired token
+  // may still be refused by the API (account deleted, token revoked, secret
+  // rotated); bouncing it to /dashboard looped with the app layout sending it
+  // back to /login. The login page redirects a signed-in user itself, after
+  // the API has accepted the session.
 
   // Default-deny: every route requires auth unless it's on the public
   // denylist (login, accept-invite, etc). Adding a new authenticated
   // route no longer requires touching this file.
   if (!isAuthenticated && isProtectedRoute(pathnameWithoutLocale)) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    loginUrl.searchParams.set("callbackUrl", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
   }
 
+  applySessionCookies(request, response, refreshed);
   return response;
 }
 

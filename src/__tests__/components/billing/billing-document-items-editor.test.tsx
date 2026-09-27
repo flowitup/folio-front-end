@@ -7,6 +7,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useState as useTestState } from "react";
 import { render, screen, fireEvent, act, within } from "@testing-library/react";
 import { BillingDocumentItemsEditor } from "@/components/billing/billing-document-items-editor";
 import type { BillingDocumentItem } from "@/types/billing";
@@ -211,5 +212,104 @@ describe("BillingDocumentItemsEditor — live totals", () => {
     renderEditor(items, vi.fn(), { showTotals: true });
     expect(screen.getByText("TVA 20%")).toBeDefined();
     expect(screen.getByText("TVA 10%")).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// VAT rate cell
+// ---------------------------------------------------------------------------
+
+
+function StatefulEditor({ initial }: { initial: BillingDocumentItem[] }) {
+  const [items, setItems] = useTestState(initial);
+  return <BillingDocumentItemsEditor items={items} onChange={setItems} />;
+}
+
+describe("BillingDocumentItemsEditor — custom VAT rate", () => {
+  it("keeps the custom input while typing a rate that passes through a preset (0 → 0.5)", () => {
+    render(<StatefulEditor initial={[makeItem({ vat_rate: "8.5" })]} />);
+
+    const [input] = screen.getAllByDisplayValue("8.5");
+    fireEvent.change(input, { target: { value: "0" } });
+    const [zero] = screen.getAllByDisplayValue("0");
+    fireEvent.change(zero, { target: { value: "0.5" } });
+
+    expect(screen.getAllByDisplayValue("0.5").length).toBeGreaterThan(0);
+  });
+
+  it("names the button that goes back to the preset rates", () => {
+    render(<StatefulEditor initial={[makeItem({ vat_rate: "8.5" })]} />);
+
+    expect(screen.getAllByRole("button", { name: "Use a preset rate" }).length).toBeGreaterThan(0);
+  });
+
+  it("treats the API's '10.00' as the 10% preset, not a custom value", () => {
+    render(<StatefulEditor initial={[makeItem({ vat_rate: "10.00" })]} />);
+
+    expect(screen.queryByDisplayValue("10.00")).toBeNull();
+    expect(screen.queryAllByRole("button", { name: "Use a preset rate" })).toHaveLength(0);
+  });
+
+  it("gives a new line the default rate it was handed", () => {
+    const onChange = vi.fn();
+    render(<BillingDocumentItemsEditor items={[]} onChange={onChange} defaultVatRate="10" />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: /add line/i })[0]);
+
+    expect(onChange.mock.calls[0][0][0].vat_rate).toBe("10");
+  });
+});
+
+describe("BillingDocumentItemsEditor — suggestion requests", () => {
+  it("opens a document with saved lines without one suggestion request per line", async () => {
+    const { getActivitySuggestionsAction } = await import(
+      "@/app/[locale]/(app)/billing/_actions/billing-actions"
+    );
+    vi.mocked(getActivitySuggestionsAction).mockClear();
+    vi.useFakeTimers();
+    try {
+      render(
+        <BillingDocumentItemsEditor
+          items={[
+            makeItem({ description: "Pose carrelage" }),
+            makeItem({ description: "Peinture" }),
+            makeItem({ description: "Plomberie" }),
+          ]}
+          onChange={vi.fn()}
+        />
+      );
+      await act(async () => {
+        vi.advanceTimersByTime(500);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+
+    // Only the editor-wide category load; no per-line (let alone per-layout) calls.
+    const lineCalls = vi
+      .mocked(getActivitySuggestionsAction)
+      .mock.calls.filter(([args]) => (args as { limit?: number }).limit === 20);
+    expect(lineCalls).toHaveLength(0);
+  });
+
+  it("shares one request between the desktop row and the mobile card of a new line", async () => {
+    const { getActivitySuggestionsAction } = await import(
+      "@/app/[locale]/(app)/billing/_actions/billing-actions"
+    );
+    vi.mocked(getActivitySuggestionsAction).mockClear();
+    vi.useFakeTimers();
+    try {
+      render(<BillingDocumentItemsEditor items={[makeItem({ description: "" })]} onChange={vi.fn()} />);
+      await act(async () => {
+        vi.advanceTimersByTime(500);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+
+    const lineCalls = vi
+      .mocked(getActivitySuggestionsAction)
+      .mock.calls.filter(([args]) => (args as { limit?: number }).limit === 20);
+    expect(lineCalls).toHaveLength(1);
   });
 });

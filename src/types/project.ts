@@ -49,6 +49,9 @@ export interface ProjectListResponse {
 export interface ProjectUser {
   id: string;
   email: string;
+  display_name?: string | null;
+  /** The person's company role; null when they no longer belong to it. */
+  role_name?: "admin" | "manager" | "member" | null;
 }
 
 export interface ProjectUsersResponse {

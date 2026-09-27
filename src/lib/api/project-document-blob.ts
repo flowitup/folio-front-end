@@ -7,6 +7,7 @@ import { env } from "@/lib/config/env";
 // ---- Types ----
 
 export type DocumentBlob = {
+  blob: Blob;
   objectUrl: string;
   contentType: string;
   revoke: () => void;
@@ -60,6 +61,7 @@ export async function fetchProjectDocumentBlob(
   const objectUrl = URL.createObjectURL(blob);
 
   return {
+    blob,
     objectUrl,
     contentType,
     revoke: () => URL.revokeObjectURL(objectUrl),

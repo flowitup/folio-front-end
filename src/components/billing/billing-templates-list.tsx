@@ -59,6 +59,7 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
   const router = useRouter();
   const locale = useLocale();
   const tList = useTranslations("billing.templates.list");
+  const tToast = useTranslations("billing.templates.form.toast");
   const [isDeleting, setIsDeleting] = useState(false);
   // Double-submit guard
   const deletingRef = useRef(false);
@@ -73,10 +74,10 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
     try {
       const result = await deleteBillingTemplateAction(template.id);
       if (!result.ok) {
-        toast.error(tList("actions.delete") + " failed. Please try again.");
+        toast.error(tList("deleteFailed"));
         return;
       }
-      toast.success("Template deleted.");
+      toast.success(tToast("deleted"));
       onDelete(template.id);
     } finally {
       setIsDeleting(false);
@@ -181,13 +182,14 @@ interface TemplateSectionProps {
 }
 
 function TemplateSection({ label, templates, onDelete }: TemplateSectionProps) {
+  const tList = useTranslations("billing.templates.list");
   if (templates.length === 0) {
     return (
       <div>
         <h3 className="mb-3 text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
           {label}
         </h3>
-        <p className="text-[13px]" style={{ color: "var(--muted)" }}>No templates in this group yet.</p>
+        <p className="text-[13px]" style={{ color: "var(--muted)" }}>{tList("emptyGroup")}</p>
       </div>
     );
   }

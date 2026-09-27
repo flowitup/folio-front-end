@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const BILLING_NAV = [
+/** Billing entries, shared by the desktop sidebar and the mobile "More" sheet. */
+export const BILLING_NAV = [
   { key: "devis", href: "/billing/devis", icon: FileText },
   { key: "factures", href: "/billing/factures", icon: FileCheck },
   { key: "templates", href: "/billing/templates", icon: LayoutTemplate },

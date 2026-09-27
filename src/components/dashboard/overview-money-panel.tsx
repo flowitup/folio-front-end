@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { formatEURWhole } from "@/lib/utils/formatters";
+import { formatPercent } from "@/lib/utils/format-percent";
 import {
   monthKeyToDate,
   type BudgetMetrics,
@@ -62,6 +64,8 @@ export interface OverviewMoneyPanelProps {
    * separate balances and are never summed. */
   bankOutstanding: PendingRefunds;
   purses: MoneyPurseView[];
+  /** Expenses in neither purse (no company/personal payment method). */
+  unassigned?: PendingRefunds;
   /** True while the underlying invoices fetch hasn't settled yet for the
    * current project — figures aren't real yet (e.g. spentTotal defaults to
    * 0), so show placeholders instead of a briefly-wrong "full budget
@@ -75,6 +79,8 @@ export interface OverviewMoneyPanelProps {
    * own — total spent, this month, the sparkline, outstanding refunds — stay.
    */
   canViewBudget?: boolean;
+  /** Where the credit is set — linked when the project has no budget. */
+  settingsHref?: string | null;
 }
 
 const PLACEHOLDER = "—";
@@ -90,19 +96,31 @@ export function OverviewMoneyPanel({
   pendingRefunds,
   bankOutstanding,
   purses,
+  unassigned,
   loading = false,
   canViewBudget = true,
+  settingsHref = null,
 }: OverviewMoneyPanelProps) {
   const t = useTranslations("dashboard");
   const tInvoices = useTranslations("invoices");
   const tProjects = useTranslations("projects");
+  const tBankRelease = useTranslations("projects.bankRelease");
+  // "Remaining to spend" and "% spent" need something to measure against: a
+  // project with no credit and no released funds shows what was spent.
+  const showRemaining = canViewBudget && budgetMetrics.hasBaseline;
   const locale = useLocale();
   const monthFmt = new Intl.DateTimeFormat(locale, { month: "short" });
   const fig = (value: string) => (loading ? PLACEHOLDER : value);
+  // Remaining is shown as whole euros beside the whole-euro spent and credit
+  // figures, so derive it from those: 5 000 € − 3 369 € reads 1 631 €, not a
+  // separately rounded 1 632 €.
+  const shownLeft = Math.round(budgetMetrics.denominator) - Math.round(budgetMetrics.spent);
 
   const sparkMax = Math.max(...monthlySeries.map((p) => p.total), 1);
   const sparkX = (i: number) => 4 + i * 30;
-  const sparkY = (v: number) => 38 - (v / sparkMax) * 30;
+  // A net-negative month (returns above purchases) sits on the baseline, as
+  // the bar charts floor it; unfloored it would be drawn far below the chart.
+  const sparkY = (v: number) => 38 - (Math.max(0, v) / sparkMax) * 30;
   const sparkPts = monthlySeries.map((p, i) => ({ x: sparkX(i), y: sparkY(p.total) }));
   const lastIdx = sparkPts.length - 1;
   const sparkArea =
@@ -123,6 +141,9 @@ export function OverviewMoneyPanel({
     if (!purse) return null;
     const pct = purse.released > 0 ? (purse.spent / purse.released) * 100 : 0;
     const left = purse.released - purse.spent;
+    // Nothing released into this purse: "left" would just be minus what was
+    // spent, drawn as an overdraft. Show the spend instead.
+    const hasReleased = purse.released > 0;
     return (
       <div className="flex items-center gap-4">
         <PurseMiniDial percent={pct} color={dialColor} />
@@ -130,16 +151,19 @@ export function OverviewMoneyPanel({
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-[12.5px] font-semibold">{title}</span>
             <span className="text-[10.5px] uppercase tracking-[0.05em]" style={{ opacity: 0.55 }}>
-              {stamp}
+              {loading ? PLACEHOLDER : stamp}
             </span>
           </div>
           <div
             className="num mt-1 text-[17px] font-medium"
-            style={{ letterSpacing: "-.02em", color: !loading && left < 0 ? NEGATIVE_ON_DARK : undefined }}
+            style={{
+              letterSpacing: "-.02em",
+              color: !loading && hasReleased && left < 0 ? NEGATIVE_ON_DARK : undefined,
+            }}
           >
-            {fig(formatEURWhole(left))}{" "}
+            {fig(formatEURWhole(hasReleased ? left : purse.spent))}{" "}
             <span className="font-sans text-[11px]" style={{ opacity: 0.6 }}>
-              {tInvoices("summary.left")}
+              {hasReleased ? tInvoices("summary.left") : t("money.purseSpent")}
             </span>
           </div>
           <div className="mt-0.5 text-[11px]" style={{ opacity: 0.62 }}>
@@ -171,17 +195,17 @@ export function OverviewMoneyPanel({
         <div className="flex flex-wrap items-start gap-9">
           <div>
             <div className="text-[10.5px] font-medium uppercase tracking-[0.1em]" style={{ opacity: 0.6 }}>
-              {canViewBudget ? tProjects("remainingToSpend") : tInvoices("summary.spent")}
+              {showRemaining ? tProjects("remainingToSpend") : tInvoices("summary.spent")}
             </div>
             <div
               className="num mt-2 text-[34px] font-medium leading-none"
               style={{
                 letterSpacing: "-.02em",
                 color:
-                  !loading && canViewBudget && budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined,
+                  !loading && showRemaining && budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined,
               }}
             >
-              {fig(formatEURWhole(canViewBudget ? budgetMetrics.left : spentTotal))}
+              {fig(formatEURWhole(showRemaining ? shownLeft : spentTotal))}
             </div>
           </div>
           <div className="flex items-end gap-6" style={{ borderLeft: "1px solid rgba(245,241,234,0.14)", paddingLeft: 32 }}>
@@ -200,7 +224,7 @@ export function OverviewMoneyPanel({
                     {monthDelta.deltaPct !== null && monthDelta.previous && (
                       <span style={{ color: monthDelta.deltaPct < 0 ? POSITIVE_ON_DARK : undefined }}>
                         {tInvoices("summary.vsMonth", {
-                          delta: `${monthDelta.deltaPct > 0 ? "+" : ""}${monthDelta.deltaPct}%`,
+                          delta: formatPercent(locale, monthDelta.deltaPct, true),
                           month: monthFmt.format(monthKeyToDate(monthDelta.previous.key)),
                         })}
                         {" · "}
@@ -265,7 +289,21 @@ export function OverviewMoneyPanel({
 
       {/* Credit progress + purse dials are measured against the project's
           financing, so both are budget-gated. */}
-      {canViewBudget && (
+      {canViewBudget && !loading && !budgetMetrics.hasBaseline && (
+        <div className="mt-[18px] text-[12px]" style={{ opacity: 0.75 }} data-testid="overview-no-budget">
+          {tBankRelease("noCredit")}
+          {settingsHref && (
+            <>
+              {" · "}
+              <Link href={settingsHref} className="font-medium underline underline-offset-2">
+                {tBankRelease("openSettings")}
+              </Link>
+            </>
+          )}
+        </div>
+      )}
+
+      {canViewBudget && (loading || budgetMetrics.hasBaseline) && (
         <div className="mt-[18px]">
           <div className="relative h-[10px] overflow-hidden rounded-full" style={{ background: TRACK_BG }}>
             <span
@@ -279,7 +317,10 @@ export function OverviewMoneyPanel({
               <span className="num">
                 {loading
                   ? PLACEHOLDER
-                  : t("money.pctSpent", { pct: budgetMetrics.pct, spent: formatEURWhole(spentTotal) })}
+                  : t(budgetMetrics.usesBudget ? "money.pctCreditDrawn" : "money.pctSpent", {
+                      pct: formatPercent(locale, budgetMetrics.pct),
+                      spent: formatEURWhole(budgetMetrics.spent),
+                    })}
               </span>
             </span>
             <span>{fig(formatEURWhole(budgetMetrics.denominator))}</span>
@@ -302,6 +343,15 @@ export function OverviewMoneyPanel({
               ? `${tInvoices("summary.refundableCount", { n: pendingRefunds.count })} · ${formatEURWhole(pendingRefunds.total)}`
               : tInvoices("invoiceCount", { n: personal?.count ?? 0 }),
             "var(--accent)"
+          )}
+          {!loading && unassigned && unassigned.count > 0 && (
+            <div
+              className="text-[11px] sm:col-span-2"
+              style={{ opacity: 0.62 }}
+              data-testid="overview-unassigned-spend"
+            >
+              {t("money.unassigned", { n: unassigned.count, amount: formatEURWhole(unassigned.total) })}
+            </div>
           )}
         </div>
       )}

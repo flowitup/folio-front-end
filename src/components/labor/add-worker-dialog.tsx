@@ -21,7 +21,8 @@ import type {
   UpdateWorkerPayload,
 } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
-import { RoleSelectWithCreate } from "@/app/[locale]/(app)/projects/[id]/labor/components/role-select-with-create";
+import { RoleSelectWithCreate } from "./role-select-with-create";
+import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 
 interface AddWorkerDialogProps {
   open: boolean;
@@ -31,6 +32,10 @@ interface AddWorkerDialogProps {
   roles?: LaborRole[];
   palette?: string[];
   onRoleCreated?: (role: LaborRole) => void;
+  /** Company admin or manager: the role picker offers rename / recolor / delete. */
+  canManageRoles?: boolean;
+  onRoleUpdated?: (role: LaborRole) => void;
+  onRoleDeleted?: (roleId: string) => void;
 }
 
 /**
@@ -40,10 +45,9 @@ interface AddWorkerDialogProps {
  * PersonTypeahead, then attaches a daily_rate. The Worker is linked to
  * the Person's id; name/phone derive from the Person selection.
  *
- * Edit flow: unchanged. The Worker's inline name/phone columns and
- * daily_rate remain editable. A future release (after workers.name and
- * workers.phone columns are dropped) will move name/phone edits to a
- * dedicated Person edit surface.
+ * Edit flow: name/phone/role. The name and phone are the shared Person's
+ * (what every screen shows); saving them changes that person in every
+ * project and company that uses them.
  */
 export function AddWorkerDialog({
   open,
@@ -53,6 +57,9 @@ export function AddWorkerDialog({
   roles = [],
   palette = [],
   onRoleCreated,
+  canManageRoles = false,
+  onRoleUpdated,
+  onRoleDeleted,
 }: AddWorkerDialogProps) {
   const t = useTranslations("labor");
 
@@ -76,8 +83,8 @@ export function AddWorkerDialog({
   // Hydrate form when entering edit mode.
   useEffect(() => {
     if (open && editWorker) {
-      setName(editWorker.name);
-      setPhone(editWorker.phone || "");
+      setName(editWorker.person_name ?? editWorker.name);
+      setPhone(editWorker.person_phone ?? editWorker.phone ?? "");
       // daily_rate is intentionally not hydrated in edit mode:
       // rate changes are handled exclusively via the AdjustRateDialog.
       setRoleId(editWorker.role_id ?? null);
@@ -104,7 +111,7 @@ export function AddWorkerDialog({
     if (isEdit) {
       // Edit path: name/phone/role only — rate changes go through AdjustRateDialog.
       if (!name.trim()) {
-        setError(t("workerName") + " is required");
+        setError(t("errors.workerNameRequired"));
         return;
       }
 
@@ -112,12 +119,13 @@ export function AddWorkerDialog({
       try {
         await onSave({
           name: name.trim(),
-          phone: phone.trim() || undefined,
+          // "" clears the phone (the API reads an absent field as unchanged).
+          phone: phone.trim(),
           role_id: roleId,
         });
         handleClose();
       } catch {
-        setError("Failed to save worker");
+        setError(t("errors.saveWorkerFailed"));
       } finally {
         setIsSaving(false);
       }
@@ -127,11 +135,15 @@ export function AddWorkerDialog({
     // Create path — Person selection and rate are required.
     const rate = parseFloat(dailyRate);
     if (isNaN(rate) || rate <= 0) {
-      setError(t("dailyRate") + " must be > 0");
+      setError(t("errors.dailyRatePositive"));
+      return;
+    }
+    if (rate > MAX_DAILY_AMOUNT) {
+      setError(t("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
       return;
     }
     if (!selectedPerson) {
-      setError(t("workerName") + " is required");
+      setError(t("errors.workerNameRequired"));
       return;
     }
     setIsSaving(true);
@@ -145,7 +157,7 @@ export function AddWorkerDialog({
       });
       handleClose();
     } catch {
-      setError("Failed to save worker");
+      setError(t("errors.saveWorkerFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -211,6 +223,9 @@ export function AddWorkerDialog({
                 onRoleCreated={(role) => {
                   onRoleCreated?.(role);
                 }}
+                canManage={canManageRoles}
+                onRoleUpdated={onRoleUpdated}
+                onRoleDeleted={onRoleDeleted}
               />
             </div>
           )}
@@ -223,6 +238,7 @@ export function AddWorkerDialog({
                 type="number"
                 step="0.01"
                 min="0"
+                max={MAX_DAILY_AMOUNT}
                 value={dailyRate}
                 onChange={(e) => setDailyRate(e.target.value)}
                 placeholder="100.00"

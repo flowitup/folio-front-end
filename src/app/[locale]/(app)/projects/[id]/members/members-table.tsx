@@ -14,6 +14,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { InviteMemberDialog } from "./invite-member-dialog";
 import { EditMemberDialog } from "./edit-member-dialog";
 import { AssignMemberDialog } from "@/components/projects/assign-member-dialog";
@@ -21,6 +30,7 @@ import { revokeInviteAction, removeMemberAction } from "./actions";
 import type { ProjectMember } from "@/lib/api/members";
 import type { PendingInvitation } from "@/lib/api/invitations";
 import { formatDate } from "@/lib/utils/formatters";
+import { realEmail, userContact } from "@/lib/auth/user-display";
 
 interface MembersTableProps {
   projectId: string;
@@ -40,24 +50,35 @@ interface MembersTableProps {
   currentUserId: string;
 }
 
-function expiresInDays(expiresAt: string): number | null {
-  try {
-    const diff = Math.ceil(
-      (new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    );
-    return diff > 0 ? diff : null;
-  } catch {
-    return null;
-  }
+/** Days left on an invitation, "expired" once past, null when unreadable.
+ * The API still lists an invitation nobody opened as pending after it
+ * expired, so the past case must read "Expired", not a bare "—". */
+function expiresInDays(expiresAt: string): number | "expired" | null {
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (Number.isNaN(ms)) return null;
+  if (ms <= 0) return "expired";
+  return Math.ceil(ms / (1000 * 60 * 60 * 24));
 }
 
 function memberInitials(member: ProjectMember): string {
-  const name = member.display_name ?? member.email;
+  const name = member.display_name?.trim() || realEmail(member);
+  if (!name) return "·";
   return name
     .split(/\s+/)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+/**
+ * Name shown for a member. Phone-only accounts have a synthetic address, so
+ * without a display name their phone stands in, never that address.
+ */
+function memberName(member: ProjectMember): string {
+  const name = member.display_name?.trim();
+  if (name) return name;
+  const email = realEmail(member);
+  return email ? email.split("@")[0] : userContact(member);
 }
 
 export function MembersTable({
@@ -79,45 +100,54 @@ export function MembersTable({
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<ProjectMember | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  // Awaiting the user's confirmation in the in-app dialog (the browser's
+  // confirm() was unstyled and labelled in the browser's language).
+  const [pendingRemove, setPendingRemove] = useState<ProjectMember | null>(null);
+  const [pendingRevoke, setPendingRevoke] = useState<string | null>(null);
 
 
   const handleRevoke = async (invitationId: string) => {
-    if (!confirm(t("revokeConfirm"))) return;
     setRevokingId(invitationId);
     try {
-      await revokeInviteAction(invitationId, projectId);
+      const result = await revokeInviteAction(invitationId, projectId);
+      if (!result.ok) {
+        toast.error(result.status === 403 ? t("edit.toast.forbidden") : t("toast.revokeFailed"));
+        return;
+      }
       toast.success(t("toast.revoked"));
       router.refresh();
     } catch {
-      toast.error(t("toast.error"));
+      toast.error(t("toast.revokeFailed"));
     } finally {
       setRevokingId(null);
     }
   };
 
   const handleRemove = async (member: ProjectMember) => {
-    if (!confirm(t("edit.removeConfirm", { name: member.display_name ?? member.email }))) {
-      return;
-    }
     setRemovingId(member.user_id);
     try {
-      await removeMemberAction(projectId, member.user_id);
+      const result = await removeMemberAction(projectId, member.user_id);
+      if (!result.ok) {
+        toast.error(
+          result.status === 403 ? t("edit.toast.forbidden") : t("edit.toast.removeFailed")
+        );
+        return;
+      }
       toast.success(t("edit.toast.removed"));
       router.refresh();
-    } catch (err: unknown) {
-      const status = (err as { status?: number }).status;
-      toast.error(status === 403 ? t("edit.toast.forbidden") : t("toast.error"));
+    } catch {
+      toast.error(t("edit.toast.removeFailed"));
     } finally {
       setRemovingId(null);
     }
   };
 
   return (
-    <div className="fade-up space-y-8 px-8 pb-12">
-      {/* Page header */}
-      <div className="flex items-center justify-between pt-2">
+    <div className="fade-up space-y-8 px-4 pb-12 lg:px-8">
+      {/* Page header — wraps on phones, where fr/vi button labels are long. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2" data-testid="members-header">
         <h1 className="font-display text-[22px] font-semibold">{t("title")}</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {canAssignMembers && companyId && (
             <Button
               size="sm"
@@ -167,11 +197,16 @@ export function MembersTable({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">
-                        {member.display_name ?? member.email.split("@")[0]}
+                        {memberName(member)}
                       </div>
                       <div className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
-                        {member.email}
+                        {userContact(member)}
                       </div>
+                      {member.role_name && (
+                        <div className="text-[12px]" style={{ color: "var(--muted)" }}>
+                          {t(`roles.${member.role_name}`)}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div
@@ -184,14 +219,16 @@ export function MembersTable({
                   </div>
                   {canManageMembers && (
                     <div className="mt-2.5 flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 flex-1"
-                        onClick={() => setEditing(member)}
-                      >
-                        {t("edit.button")}
-                      </Button>
+                      {canEditIdentity && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 flex-1"
+                          onClick={() => setEditing(member)}
+                        >
+                          {t("edit.button")}
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -201,7 +238,7 @@ export function MembersTable({
                           removingId === member.user_id ||
                           member.user_id === currentUserId
                         }
-                        onClick={() => handleRemove(member)}
+                        onClick={() => setPendingRemove(member)}
                       >
                         {t("edit.remove")}
                       </Button>
@@ -219,6 +256,7 @@ export function MembersTable({
                   <TableHead style={{ width: 40 }} />
                   <TableHead>{t("col.name")}</TableHead>
                   <TableHead>{t("col.email")}</TableHead>
+                  <TableHead>{t("col.role")}</TableHead>
                   <TableHead>{t("col.joined")}</TableHead>
                   {canManageMembers && (
                     <TableHead style={{ textAlign: "right" }}>
@@ -242,10 +280,13 @@ export function MembersTable({
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {member.display_name ?? member.email.split("@")[0]}
+                      {memberName(member)}
                     </TableCell>
                     <TableCell style={{ color: "var(--muted)" }}>
-                      {member.email}
+                      {userContact(member) || "—"}
+                    </TableCell>
+                    <TableCell style={{ color: "var(--muted)" }}>
+                      {member.role_name ? t(`roles.${member.role_name}`) : "—"}
                     </TableCell>
                     <TableCell className="num" style={{ color: "var(--muted)" }}>
                       {formatDate(member.joined_at)}
@@ -253,14 +294,16 @@ export function MembersTable({
                     {canManageMembers && (
                       <TableCell style={{ textAlign: "right" }}>
                         <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-[12px]"
-                            onClick={() => setEditing(member)}
-                          >
-                            {t("edit.button")}
-                          </Button>
+                          {canEditIdentity && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-[12px]"
+                              onClick={() => setEditing(member)}
+                            >
+                              {t("edit.button")}
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -270,7 +313,7 @@ export function MembersTable({
                               removingId === member.user_id ||
                               member.user_id === currentUserId
                             }
-                            onClick={() => handleRemove(member)}
+                            onClick={() => setPendingRemove(member)}
                           >
                             {t("edit.remove")}
                           </Button>
@@ -286,105 +329,149 @@ export function MembersTable({
         )}
       </section>
 
-      {/* Pending invitations table (outsiders — no role picker, always "member") */}
-      <section>
-        <div className="label-cap mb-3">{t("tab.pending")}</div>
-        {invites.length === 0 ? (
-          <div
-            className="folio-card flex items-center justify-center py-10 text-[13px]"
-            style={{ color: "var(--muted)" }}
-          >
-            {t("empty.pending")}
-          </div>
-        ) : (
-          <>
-            {/* Mobile cards (< lg) */}
-            <div className="flex flex-col gap-2 lg:hidden" data-testid="invites-mobile">
-              {invites.map((invite) => {
-                const days = expiresInDays(invite.expires_at);
-                return (
-                  <div key={invite.id} className="folio-card p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate font-medium">{invite.email}</div>
-                      </div>
-                      {canInvite && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9"
-                          style={{ color: "var(--negative)" }}
-                          disabled={revokingId === invite.id}
-                          onClick={() => handleRevoke(invite.id)}
-                        >
-                          {t("revoke")}
-                        </Button>
-                      )}
-                    </div>
-                    <div
-                      className="mt-3 flex items-center justify-between border-t pt-2.5 text-[12px]"
-                      style={{ borderColor: "var(--line)", color: "var(--muted)" }}
-                    >
-                      <span className="num">
-                        {days === null ? "—" : t("expiresIn", { days })}
-                      </span>
-                      <span>{invite.invited_by_name ?? "—"}</span>
-                    </div>
-                  </div>
-                );
-              })}
+      {/* Pending invitations table (outsiders — no role picker, always "member").
+          Only for callers who may invite: nobody else can read them. */}
+      {canInvite && (
+        <section>
+          <div className="label-cap mb-3">{t("tab.pending")}</div>
+          {invites.length === 0 ? (
+            <div
+              className="folio-card flex items-center justify-center py-10 text-[13px]"
+              style={{ color: "var(--muted)" }}
+            >
+              {t("empty.pending")}
             </div>
+          ) : (
+            <>
+              {/* Mobile cards (< lg) */}
+              <div className="flex flex-col gap-2 lg:hidden" data-testid="invites-mobile">
+                {invites.map((invite) => {
+                  const days = expiresInDays(invite.expires_at);
+                  return (
+                    <div key={invite.id} className="folio-card p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-medium">{invite.email}</div>
+                        </div>
+                        {canInvite && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9"
+                            style={{ color: "var(--negative)" }}
+                            disabled={revokingId === invite.id}
+                            onClick={() => setPendingRevoke(invite.id)}
+                          >
+                            {t("revoke")}
+                          </Button>
+                        )}
+                      </div>
+                      <div
+                        className="mt-3 flex items-center justify-between border-t pt-2.5 text-[12px]"
+                        style={{ borderColor: "var(--line)", color: "var(--muted)" }}
+                      >
+                        <span className="num">
+                          {days === null ? "—" : days === "expired" ? t("expired") : t("expiresIn", { days })}
+                        </span>
+                        <span>{invite.invited_by_name ?? "—"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-            {/* Desktop table (>= lg) */}
-            <div className="folio-card overflow-hidden hidden lg:block" data-testid="invites-desktop">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("col.email")}</TableHead>
-                  <TableHead>{t("col.expires")}</TableHead>
-                  <TableHead>{t("col.invitedBy")}</TableHead>
-                  {canInvite && (
-                    <TableHead style={{ textAlign: "right" }}>
-                      {t("col.actions")}
-                    </TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invites.map((invite) => (
-                  <TableRow key={invite.id}>
-                    <TableCell>{invite.email}</TableCell>
-                    <TableCell className="num" style={{ color: "var(--muted)" }}>
-                      {(() => {
-                        const days = expiresInDays(invite.expires_at);
-                        return days === null ? "—" : t("expiresIn", { days });
-                      })()}
-                    </TableCell>
-                    <TableCell style={{ color: "var(--muted)" }}>
-                      {invite.invited_by_name ?? "—"}
-                    </TableCell>
+              {/* Desktop table (>= lg) */}
+              <div className="folio-card overflow-hidden hidden lg:block" data-testid="invites-desktop">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("col.email")}</TableHead>
+                    <TableHead>{t("col.expires")}</TableHead>
+                    <TableHead>{t("col.invitedBy")}</TableHead>
                     {canInvite && (
-                      <TableCell style={{ textAlign: "right" }}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-[12px]"
-                          style={{ color: "var(--negative)" }}
-                          disabled={revokingId === invite.id}
-                          onClick={() => handleRevoke(invite.id)}
-                        >
-                          {t("revoke")}
-                        </Button>
-                      </TableCell>
+                      <TableHead style={{ textAlign: "right" }}>
+                        {t("col.actions")}
+                      </TableHead>
                     )}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            </div>
-          </>
-        )}
-      </section>
+                </TableHeader>
+                <TableBody>
+                  {invites.map((invite) => (
+                    <TableRow key={invite.id}>
+                      <TableCell>{invite.email}</TableCell>
+                      <TableCell className="num" style={{ color: "var(--muted)" }}>
+                        {(() => {
+                          const days = expiresInDays(invite.expires_at);
+                          if (days === null) return "—";
+                        return days === "expired" ? t("expired") : t("expiresIn", { days });
+                        })()}
+                      </TableCell>
+                      <TableCell style={{ color: "var(--muted)" }}>
+                        {invite.invited_by_name ?? "—"}
+                      </TableCell>
+                      {canInvite && (
+                        <TableCell style={{ textAlign: "right" }}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-[12px]"
+                            style={{ color: "var(--negative)" }}
+                            disabled={revokingId === invite.id}
+                            onClick={() => setPendingRevoke(invite.id)}
+                          >
+                            {t("revoke")}
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              </div>
+            </>
+          )}
+        </section>
+      )}
+
+      <AlertDialog open={pendingRemove !== null} onOpenChange={(open) => !open && setPendingRemove(null)}>
+        <AlertDialogContent aria-describedby={undefined}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingRemove ? t("edit.removeConfirm", { name: memberName(pendingRemove) }) : ""}
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("invite.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingRemove) void handleRemove(pendingRemove);
+                setPendingRemove(null);
+              }}
+            >
+              {t("edit.remove")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={pendingRevoke !== null} onOpenChange={(open) => !open && setPendingRevoke(null)}>
+        <AlertDialogContent aria-describedby={undefined}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("revokeConfirm")}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("invite.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingRevoke) void handleRevoke(pendingRevoke);
+                setPendingRevoke(null);
+              }}
+            >
+              {t("revoke")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {canInvite && (
         <InviteMemberDialog
@@ -405,7 +492,9 @@ export function MembersTable({
         />
       )}
 
-      {canManageMembers && (
+      {/* The dialog edits identity only (name, email) — nothing else to offer
+          a caller who may not change it. */}
+      {canManageMembers && canEditIdentity && (
         <EditMemberDialog
           open={editing !== null}
           onOpenChange={(open) => !open && setEditing(null)}

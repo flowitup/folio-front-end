@@ -191,8 +191,10 @@ describe("InvoicesPage — company purse card", () => {
 
   it("stamp counts only company-attributed expense rows", async () => {
     setupFetch([
-      makeInvoice({ id: "exp-company-1", paid_by_personal: false }),
-      makeInvoice({ id: "exp-company-2" }), // absent flag => company
+      makeInvoice({ id: "exp-company-1", paid_by_personal: false, paid_by_company: true }),
+      makeInvoice({ id: "exp-company-2", paid_by_company: true }),
+      // No company/personal method: in neither purse, so not in its count.
+      makeInvoice({ id: "exp-no-method" }),
       makeInvoice({ id: "exp-personal-1", paid_by_personal: true }),
       // Released rows are capital flows — never counted as purse expenses.
       makeInvoice({ id: "rf-1", type: "released_funds", is_auto_generated: true }),
@@ -300,14 +302,14 @@ describe("InvoicesPage — expenses-by-type breakdown", () => {
   it("renders one row per spent type, split across both purses, on the shared scale", async () => {
     setupFetch(
       [
-        makeInvoice({ id: "ms-company", type: "materials_services", total_amount: 40000 }),
+        makeInvoice({ id: "ms-company", type: "materials_services", total_amount: 40000, paid_by_company: true }),
         makeInvoice({
           id: "ms-personal",
           type: "materials_services",
           total_amount: 10000,
           paid_by_personal: true,
         }),
-        makeInvoice({ id: "labor-company", type: "labor", total_amount: 5000 }),
+        makeInvoice({ id: "labor-company", type: "labor", total_amount: 5000, paid_by_company: true }),
         makeInvoice({
           id: "labor-personal",
           type: "labor",

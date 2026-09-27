@@ -36,10 +36,14 @@ vi.mock("@/context/ProjectContext", () => ({
   useProject: () => mockUseProject(),
 }));
 
+// The caller holds project:view_budget and the labor/invoice rights — these
+// specs are not about the financing gate, so they render the full money
+// surface. The member specs below swap in a member's permissions.
+const MANAGER_PERMS = ["project:view_budget", "project:manage_labor", "project:manage_invoices"];
+let mockPermissions = MANAGER_PERMS;
+let mockUser: { permissions: string[]; companies?: unknown[] } | null = null;
 vi.mock("@/context/AuthContext", () => ({
-  // The caller holds project:view_budget — these specs are not about the
-  // financing gate, so they render the full money surface.
-  useAuth: () => ({ user: { permissions: ["project:view_budget"] } }),
+  useAuth: () => ({ user: mockUser ?? { permissions: mockPermissions } }),
 }));
 
 function mkInvoice(partial: Partial<Invoice> & Pick<Invoice, "type" | "issue_date" | "total_amount">): Invoice {
@@ -96,6 +100,8 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2026, 6, 15, 12, 0, 0)); // Wed 2026-07-15
   vi.clearAllMocks();
+  mockPermissions = MANAGER_PERMS;
+  mockUser = null;
   mockFetchInvoicesWithMeta.mockResolvedValue({ invoices: [], funds_released_total: 0, company_spent_total: 0, personal_spent_total: 0, company_name: null });
   mockFetchTasks.mockResolvedValue([]);
 });
@@ -105,15 +111,37 @@ afterEach(() => {
 });
 
 describe("DashboardPage — no project selected", () => {
-  it("renders a safe empty state without fetching", () => {
-    mockUseProject.mockReturnValue({ selectedProject: null });
+  it("offers to create a project instead of a dashboard of zeros", () => {
+    mockUseProject.mockReturnValue({ selectedProject: null, isLoading: false });
+    mockUser = { permissions: ["project:create"], companies: [{ id: "c-1", role: "admin" }] };
     renderDashboard();
 
     expect(mockFetchInvoicesWithMeta).not.toHaveBeenCalled();
     expect(mockFetchTasks).not.toHaveBeenCalled();
-    // Zero-budget/zero-spend headline still renders.
-    expect(screen.getAllByText(eur(0)).length).toBeGreaterThan(0);
-    expect(screen.getByText("Nothing on the agenda this week.")).toBeInTheDocument();
+    expect(screen.getByTestId("overview-no-project")).toHaveTextContent(enMessages.projects.noProjectsYet);
+    expect(screen.getByRole("link", { name: enMessages.projects.createFirst })).toHaveAttribute(
+      "href",
+      "/en/projects?new=1"
+    );
+    expect(screen.queryByTestId("overview-money-panel")).toBeNull();
+    expect(screen.queryByText("Nothing on the agenda this week.")).toBeNull();
+  });
+
+  it("tells a member without projects to wait for an assignment", () => {
+    mockUseProject.mockReturnValue({ selectedProject: null, isLoading: false });
+    mockUser = { permissions: [], companies: [{ id: "c-1", role: "member" }] };
+    renderDashboard();
+
+    expect(screen.getByTestId("overview-no-project")).toHaveTextContent(
+      enMessages.projects.waitingForAssignment.title
+    );
+    expect(screen.queryByRole("link")).toBeNull();
+  });
+
+  it("shows nothing final while the projects are still loading", () => {
+    mockUseProject.mockReturnValue({ selectedProject: null, isLoading: true });
+    renderDashboard();
+    expect(screen.queryByTestId("overview-no-project")).toBeNull();
   });
 });
 
@@ -221,11 +249,13 @@ describe("DashboardPage — money panel figures", () => {
     renderDashboard();
     const typeMinis = within(await screen.findByTestId("overview-type-minis"));
 
-    // Labor total (6-mo window) = 500, Materials & Services = 400.
-    expect(await typeMinis.findByText(eur(500))).toBeInTheDocument();
-    expect(typeMinis.getByText(eur(400))).toBeInTheDocument();
-    expect(typeMinis.getByText("Labor")).toBeInTheDocument();
-    expect(typeMinis.getByText("Materials & Services")).toBeInTheDocument();
+    // Labor total (6-mo window) = 500, Materials & Services = 400. The
+    // screen-reader tables repeat the figures, so look at the visible text.
+    const visible = { ignore: "script, style, table, table *" };
+    expect(await typeMinis.findByText(eur(500), visible)).toBeInTheDocument();
+    expect(typeMinis.getByText(eur(400), visible)).toBeInTheDocument();
+    expect(typeMinis.getByText("Labor", visible)).toBeInTheDocument();
+    expect(typeMinis.getByText("Materials & Services", visible)).toBeInTheDocument();
   });
 
   it("attaches a month|amount|count hover tooltip payload to every chart column", async () => {
@@ -253,6 +283,21 @@ describe("DashboardPage — money panel figures", () => {
 
 describe("DashboardPage — agenda grouping", () => {
   const project: Partial<Project> = { id: "p-1", name: "Villa" };
+
+  it("opens the clicked task and dates an overdue task from another year with its year", async () => {
+    mockUseProject.mockReturnValue({ selectedProject: project });
+    mockFetchTasks.mockResolvedValue([
+      mkTask({ id: "old-1", title: "Last year thing", due_date: "2025-01-07" }),
+      mkTask({ id: "now-1", title: "Friday thing", due_date: "2026-07-17" }),
+    ]);
+    renderDashboard();
+
+    const oldRow = (await screen.findByText("Last year thing")).closest("a")!;
+    expect(oldRow).toHaveAttribute("href", "/en/projects/p-1/planning?task=old-1");
+    expect(oldRow).toHaveTextContent("2025");
+    const nowRow = screen.getByText("Friday thing").closest("a")!;
+    expect(nowRow).not.toHaveTextContent("2026");
+  });
 
   it("groups non-done tasks into Overdue / Today / This week and excludes done/undated tasks", async () => {
     mockUseProject.mockReturnValue({ selectedProject: project });
@@ -341,5 +386,170 @@ describe("DashboardPage — project switch race (H1)", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(headlineValue()).toBe(eur(1800));
+  });
+});
+
+describe("DashboardPage — load failures", () => {
+  const project: Partial<Project> = { id: "p-1", name: "Villa", budget: 10000 };
+  const headline = (panel: ReturnType<typeof within>) =>
+    panel.getByText("Remaining to spend").nextElementSibling?.textContent;
+
+  beforeEach(() => {
+    mockUseProject.mockReturnValue({ selectedProject: project });
+  });
+
+  it("shows no made-up figures when the expenses fail to load", async () => {
+    mockFetchInvoicesWithMeta.mockRejectedValue(new Error("HTTP 500"));
+    renderDashboard();
+
+    expect(await screen.findByText(enMessages.dashboard.loadError)).toBeInTheDocument();
+    const moneyPanel = within(screen.getByTestId("overview-money-panel"));
+    expect(headline(moneyPanel)).toBe("—");
+    expect(moneyPanel.queryByText(eur(10000))).toBeNull();
+    const typeMinis = within(screen.getByTestId("overview-type-minis"));
+    expect(typeMinis.queryByText(eur(0))).toBeNull();
+  });
+
+  it("keeps the expense figures when only the tasks fail to load", async () => {
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [mkInvoice({ type: "labor", issue_date: "2026-07-05", total_amount: 500, paid_by_personal: false })],
+      funds_released_total: 0,
+      company_spent_total: 500,
+      personal_spent_total: 0,
+      company_name: null,
+    });
+    mockFetchTasks.mockRejectedValue(new Error("HTTP 500"));
+    renderDashboard();
+
+    expect(await screen.findByText(enMessages.dashboard.loadError)).toBeInTheDocument();
+    const moneyPanel = within(screen.getByTestId("overview-money-panel"));
+    await waitFor(() => expect(headline(moneyPanel)?.replace(/[\u202f\u00a0]/g, " ")).toBe(eur(9500)));
+  });
+});
+
+describe("DashboardPage — member without project money rights", () => {
+  it("does not present the member's own pay as the project's spending", async () => {
+    mockPermissions = ["project:read"];
+    mockUseProject.mockReturnValue({
+      selectedProject: { id: "p-1", name: "Villa", my_permissions: ["project:read"] },
+    });
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [mkInvoice({ type: "labor", issue_date: "2026-07-05", total_amount: 450 })],
+      funds_released_total: 0,
+      company_spent_total: 0,
+      personal_spent_total: 0,
+      company_name: null,
+    });
+    renderDashboard();
+
+    const note = await screen.findByTestId("overview-member-finances");
+    expect(note).toHaveTextContent(enMessages.dashboard.memberFinances.title);
+    expect(within(note).getByRole("link")).toHaveAttribute("href", "/en/projects/p-1/labor");
+    expect(screen.queryByTestId("overview-money-panel")).toBeNull();
+    expect(screen.queryByTestId("overview-type-minis")).toBeNull();
+  });
+});
+
+describe("DashboardPage — project with no budget", () => {
+  it("shows what was spent, not a negative 'remaining' and '0% spent'", async () => {
+    mockUseProject.mockReturnValue({ selectedProject: { id: "p-1", name: "Villa", budget: null } });
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [mkInvoice({ type: "labor", issue_date: "2026-07-05", total_amount: 750, paid_by_personal: false })],
+      funds_released_total: 0,
+      company_spent_total: 750,
+      personal_spent_total: 0,
+      company_name: null,
+    });
+    renderDashboard();
+
+    const noBudget = await screen.findByTestId("overview-no-budget");
+    expect(noBudget).toHaveTextContent(enMessages.projects.bankRelease.noCredit);
+    const moneyPanel = within(screen.getByTestId("overview-money-panel"));
+    expect(moneyPanel.queryByText("Remaining to spend")).toBeNull();
+    expect(moneyPanel.queryByText(/% spent/)).toBeNull();
+    expect(moneyPanel.queryByText(eur(-750))).toBeNull();
+  });
+});
+
+describe("DashboardPage — remaining matches the Projects page", () => {
+  it("subtracts only the spend drawn on the credit", async () => {
+    mockUseProject.mockReturnValue({
+      selectedProject: { id: "p-1", name: "Villa", budget: 10000, spent_by_credits: 1000 },
+    });
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [
+        mkInvoice({ type: "materials_services", issue_date: "2026-07-05", total_amount: 1000 }),
+        mkInvoice({ type: "materials_services", issue_date: "2026-07-06", total_amount: 2500, paid_by_personal: true }),
+      ],
+      funds_released_total: 4000,
+      company_spent_total: 1000,
+      personal_spent_total: 2500,
+      company_name: null,
+    });
+    renderDashboard();
+
+    const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
+    const norm = (v: string | null | undefined) => (v ?? "").replace(/[\u202f\u00a0]/g, " ");
+    await waitFor(() =>
+      expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(9000))
+    );
+    expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toBe(`10% of credit drawn · ${eur(1000)}`);
+  });
+
+  it("shows a whole-euro remaining that adds up with the whole-euro spent and credit", async () => {
+    mockUseProject.mockReturnValue({
+      selectedProject: { id: "p-1", name: "Villa", budget: 5000, spent_by_credits: 3368.5 },
+    });
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [mkInvoice({ type: "others", issue_date: "2026-07-05", total_amount: 3368.5 })],
+      funds_released_total: 5000,
+      company_spent_total: 3368.5,
+      personal_spent_total: 0,
+      company_name: null,
+    });
+    renderDashboard();
+
+    const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
+    const norm = (v: string | null | undefined) => (v ?? "").replace(/[\u202f\u00a0]/g, " ");
+    // 5 000 € − 3 369 € = 1 631 €, not a separately rounded 1 632 €.
+    await waitFor(() =>
+      expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(1631))
+    );
+    expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toContain(eur(3369));
+  });
+});
+
+describe("DashboardPage — expenses in neither purse", () => {
+  it("names them instead of counting them in the company purse", async () => {
+    mockUseProject.mockReturnValue({ selectedProject: { id: "p-1", name: "Villa", budget: 10000 } });
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [
+        mkInvoice({ type: "materials_services", issue_date: "2026-07-05", total_amount: 1000 }),
+        mkInvoice({ type: "others", issue_date: "2026-07-05", total_amount: 500, paid_by_company: true }),
+      ],
+      funds_released_total: 10000,
+      company_spent_total: 500,
+      personal_spent_total: 0,
+      company_name: null,
+    });
+    renderDashboard();
+
+    const line = await screen.findByTestId("overview-unassigned-spend");
+    expect(line.textContent?.replace(/[\u202f\u00a0]/g, " ")).toContain(`1 expense · ${eur(1000)}`);
+    const moneyPanel = within(screen.getByTestId("overview-money-panel"));
+    expect(moneyPanel.getAllByText("1 expense").length).toBeGreaterThan(0);
+  });
+});
+
+describe("DashboardPage — while loading", () => {
+  it("shows no empty-state wording before the expenses and tasks arrive", async () => {
+    mockUseProject.mockReturnValue({ selectedProject: { id: "p-1", name: "Villa", budget: 10000 } });
+    mockFetchInvoicesWithMeta.mockReturnValue(new Promise(() => {}));
+    mockFetchTasks.mockReturnValue(new Promise(() => {}));
+    renderDashboard();
+
+    expect(await screen.findByTestId("overview-agenda-loading")).toBeInTheDocument();
+    expect(screen.queryByText("Nothing on the agenda this week.")).toBeNull();
+    expect(screen.queryByText(/no expenses/i)).toBeNull();
   });
 });

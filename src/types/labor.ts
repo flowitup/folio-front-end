@@ -49,6 +49,8 @@ export interface UpdateWorkerPayload {
   name?: string;
   phone?: string;
   role_id?: string | null;
+  /** true reactivates a deactivated worker (deactivation is DELETE). */
+  is_active?: true;
 }
 
 /** Worker-submitted rows stay `pending` (unpriced) until a manager validates them. */
@@ -72,11 +74,44 @@ export interface LaborEntry {
   submitted_by_user_id?: string | null;
   validated_by_user_id?: string | null;
   validated_at?: string | null;
+  // Open worker change request on a validated day (proposed from the mobile
+  // app); all null/absent when there is none. The day keeps its priced values
+  // until a manager applies the proposal.
+  change_requested_at?: string | null;
+  proposed_shift_type?: ShiftType | null;
+  proposed_supplement_hours?: number | null;
+  proposed_note?: string | null;
 }
 
 /** True for a worker-submitted day a manager has not validated yet. */
 export function isPendingEntry(entry: Pick<LaborEntry, "status">): boolean {
   return entry.status === "pending";
+}
+
+/** True for a validated day the worker has asked to change (awaiting a manager). */
+export function hasChangeRequest(entry: Pick<LaborEntry, "change_requested_at">): boolean {
+  return Boolean(entry.change_requested_at);
+}
+
+/**
+ * A worker's open change request on a validated day, as a manager reviews it:
+ * the day's current values next to the proposed ones. Built from a labor
+ * entry or from the bell feed's `attendance_change` items.
+ */
+export interface AttendanceChangeRequest {
+  entry_id: string;
+  worker_id: string;
+  worker_name: string;
+  /** YYYY-MM-DD */
+  date: string;
+  shift_type: ShiftType | null;
+  supplement_hours: number;
+  note: string | null;
+  proposed_shift_type: ShiftType | null;
+  proposed_supplement_hours: number;
+  proposed_note: string | null;
+  /** When the worker asked (ISO datetime), when known. */
+  requested_at: string | null;
 }
 
 export interface LaborEntryListResponse {

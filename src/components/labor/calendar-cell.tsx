@@ -14,14 +14,15 @@
  */
 
 import { useMemo } from "react";
+import { PencilLine } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { isToday } from "@/lib/utils/calendar-month";
 import { getFrenchHolidayKey } from "@/lib/utils/french-holidays";
-import { personColor, workerColor } from "@/lib/utils/person-color";
+import { personColor, personInitials, workerColor } from "@/lib/utils/person-color";
 import { formatEUR } from "@/lib/api/labor";
-import type { LaborEntry, LaborActivity, Worker, ShiftType } from "@/types/labor";
+import { hasChangeRequest, type LaborEntry, type LaborActivity, type Worker, type ShiftType } from "@/types/labor";
 
 interface CalendarCellProps {
   /** The Date this cell represents, or null for grid padding cells. */
@@ -50,6 +51,8 @@ interface ChipDescriptor {
   supplementHours: number;
   /** Worker-submitted day not yet validated — drawn hollow, unpriced. */
   pending: boolean;
+  /** The worker asked to change this validated day — drawn with an amber ring. */
+  changeRequested: boolean;
 }
 
 export function CalendarCell({
@@ -64,7 +67,7 @@ export function CalendarCell({
   const locale = useLocale();
 
   // Aggregate the day's data once per render.
-  const { dayTotal, chips, overflow } = useMemo(() => {
+  const { dayTotal, chips, overflow, changeCount } = useMemo(() => {
     const total = entries.reduce(
       (sum, e) => sum + Number(e.effective_cost ?? 0),
       0,
@@ -76,6 +79,8 @@ export function CalendarCell({
     const pendingWorkers = new Set(
       entries.filter((e) => e.status === "pending").map((e) => e.worker_id),
     );
+    const changeEntries = entries.filter(hasChangeRequest);
+    const changeWorkers = new Set(changeEntries.map((e) => e.worker_id));
     const seen = new Set<string>();
     const list: ChipDescriptor[] = [];
     for (const e of entries) {
@@ -93,11 +98,17 @@ export function CalendarCell({
         shiftType: e.shift_type,
         supplementHours: e.supplement_hours,
         pending: pendingWorkers.has(id),
+        changeRequested: changeWorkers.has(id),
       });
     }
     const shown = list.slice(0, maxChips);
     const rest = Math.max(0, list.length - maxChips);
-    return { dayTotal: total, chips: shown, overflow: rest };
+    return {
+      dayTotal: total,
+      chips: shown,
+      overflow: rest,
+      changeCount: changeEntries.length,
+    };
   }, [entries, maxChips, workerMap]);
 
   // Padding cell (before first-of-month or after last-of-month).
@@ -110,19 +121,31 @@ export function CalendarCell({
     );
   }
 
+  const compactEUR = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "EUR",
+    notation: "compact",
+    maximumSignificantDigits: 3,
+  });
   const today = isToday(date);
   const sunday = date.getDay() === 0;
   const empty = entries.length === 0 && activities.length === 0;
   const holidayKey = getFrenchHolidayKey(date);
   const holidayName = holidayKey ? t(`holidays.${holidayKey}`) : null;
+  // Counted over every entry of the day, so a request stays visible even when
+  // that worker's chip is folded into "+N".
+  const changeLabel =
+    changeCount > 0 ? t("changeRequest.cellIndicator", { count: changeCount }) : null;
 
   return (
     <button
       type="button"
       onClick={() => onClick?.(date)}
       className={cn(
-        "min-h-20 rounded-md border p-2 text-left transition",
-        "flex flex-col gap-1.5",
+        // min-w-0 + overflow-hidden: at 375 px a cell is ~45 px wide and
+        // must not push the month grid (and the page) wider than the screen.
+        "min-h-20 min-w-0 overflow-hidden rounded-md border p-1 text-left transition sm:p-2",
+        "flex flex-col gap-1 sm:gap-1.5",
         "hover:border-primary/60 hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring",
         holidayName ? "bg-accent" : sunday ? "bg-muted/40" : "bg-card",
         today ? "border-primary ring-1 ring-primary/40" : "border-border",
@@ -133,10 +156,12 @@ export function CalendarCell({
           weekday: "long",
           day: "numeric",
           month: "long",
-        }) + (holidayName ? ` — ${holidayName} (${t("holidays.publicHoliday")})` : "")
+        }) +
+        (holidayName ? ` — ${holidayName} (${t("holidays.publicHoliday")})` : "") +
+        (changeLabel ? ` — ${changeLabel}` : "")
       }
     >
-      <div className="flex items-baseline justify-between gap-1">
+      <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-1">
         <span
           className={cn(
             "text-sm font-medium",
@@ -147,10 +172,25 @@ export function CalendarCell({
           {date.getDate()}
         </span>
         <div className="flex items-center gap-1">
-          {dayTotal > 0 && (
-            <span className="text-muted-foreground text-xs tabular-nums">
-              {formatEUR(dayTotal)}
+          {changeLabel && (
+            <span
+              data-testid="calendar-cell-change-indicator"
+              title={changeLabel}
+              className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-white"
+            >
+              <PencilLine className="h-2.5 w-2.5" aria-hidden="true" />
             </span>
+          )}
+          {dayTotal > 0 && (
+            <>
+              {/* Phones: "1,2 k€" fits a cell; "1 170,00 €" was cut. */}
+              <span className="text-muted-foreground truncate text-[10px] tabular-nums sm:hidden">
+                {compactEUR.format(dayTotal)}
+              </span>
+              <span className="text-muted-foreground hidden text-xs tabular-nums sm:inline">
+                {formatEUR(dayTotal)}
+              </span>
+            </>
           )}
         </div>
       </div>
@@ -166,20 +206,30 @@ export function CalendarCell({
           {chips.map((c) => (
             <span
               key={c.id}
-              title={c.pending ? `${c.name} · ${t("status.pending")}` : c.name}
+              title={
+                c.pending
+                  ? `${c.name} · ${t("status.pending")}`
+                  : c.changeRequested
+                    ? `${c.name} · ${t("changeRequest.badge")}`
+                    : c.name
+              }
               data-pending={c.pending || undefined}
-              className={
+              data-change-requested={c.changeRequested || undefined}
+              className={cn(
                 c.pending
                   ? "text-[10px] inline-flex items-center gap-1 truncate rounded-full border border-dashed bg-transparent px-1.5 py-0.5"
-                  : "text-[10px] inline-flex items-center gap-1 truncate rounded-full px-1.5 py-0.5 text-white"
-              }
+                  : "text-[10px] inline-flex items-center gap-1 truncate rounded-full px-1.5 py-0.5 text-white",
+                c.changeRequested && "ring-2 ring-amber-500 ring-offset-1 ring-offset-card",
+              )}
               style={
                 c.pending
                   ? { borderColor: c.chipColor, color: c.chipColor, maxWidth: "100%" }
                   : { backgroundColor: c.chipColor, maxWidth: "100%" }
               }
             >
-              {c.name}
+              {/* Phones show initials: a name cut to 5 letters helps nobody. */}
+              <span className="sm:hidden">{personInitials(c.name)}</span>
+              <span className="hidden truncate sm:inline">{c.name}</span>
               {c.shiftType === "half" && (
                 <span className="opacity-80" aria-label={t("shiftHalf")}>½</span>
               )}

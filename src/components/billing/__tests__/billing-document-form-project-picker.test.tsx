@@ -62,14 +62,20 @@ vi.mock("next-intl", () => {
       return undefined;
     }, obj) as string ?? path;
   }
-  const makeT = (ns: string) => (key: string, params?: Record<string, unknown>) => {
-    let val = resolve(en, `${ns}.${key}`);
-    if (params) {
-      Object.entries(params).forEach(([k, v]) => {
-        val = val?.replace(`{${k}}`, String(v)) ?? val;
-      });
-    }
-    return val ?? key;
+  const makeT = (ns: string) => {
+    const t = (key: string, params?: Record<string, unknown>) => {
+      let val = resolve(en, `${ns}.${key}`);
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          if (typeof v !== "function") val = val?.replace(`{${k}}`, String(v)) ?? val;
+        });
+      }
+      return val ?? key;
+    };
+    // Rich messages render as plain text here: tags are stripped, values interpolated.
+    t.rich = (key: string, params?: Record<string, unknown>) =>
+      t(key, params).replace(/<\/?\w+>/g, "");
+    return t;
   };
   return {
     useLocale: () => "en",

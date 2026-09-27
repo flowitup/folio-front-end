@@ -6,7 +6,7 @@
  * Behaviour:
  *  - Lazy-fetches the list on first open (not on mount) to avoid eager fetches.
  *  - Refetches on every open so the list stays fresh after Settings edits.
- *  - If `allowCreate` is true (default), a "+ Add …" footer item lets the user
+ *  - If `allowCreate` is true (default: company admins), a "+ Add …" footer item lets the user
  *    POST a new method inline, then auto-selects the new entry.
  *  - Selecting the "(None)" sentinel clears the value (calls onChange(null)).
  */
@@ -31,6 +31,8 @@ import {
   createPaymentMethodAction,
 } from "@/app/[locale]/(app)/settings/companies/[id]/_actions/payment-methods-actions";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { useOptionalAuth } from "@/context/AuthContext";
+import { isCompanyAdmin } from "@/lib/auth/permissions";
 import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 
 // ---------------------------------------------------------------------------
@@ -41,7 +43,11 @@ export interface PaymentMethodSelectProps {
   companyId: string;
   value: string | null;
   onChange: (id: string | null) => void;
-  /** Show the "+ Add new" inline-create affordance. Defaults to true. */
+  /**
+   * Show the "+ Add new" inline-create affordance. Defaults to whether the
+   * signed-in user is an admin of `companyId` — the only role the API lets
+   * create payment methods.
+   */
   allowCreate?: boolean;
   disabled?: boolean;
   className?: string;
@@ -66,13 +72,16 @@ export function PaymentMethodSelect({
   companyId,
   value,
   onChange,
-  allowCreate = true,
+  allowCreate: allowCreateProp,
   disabled = false,
   className,
   fallbackSelectedLabel,
 }: PaymentMethodSelectProps) {
   const t = useTranslations("invoices.paymentMethod");
   const tBuiltins = useTranslations("paymentMethods.builtins");
+  const user = useOptionalAuth()?.user;
+  const allowCreate =
+    allowCreateProp ?? isCompanyAdmin(user?.companies, companyId, user?.permissions);
 
   const [open, setOpen] = React.useState(false);
   const [methods, setMethods] = React.useState<PaymentMethod[]>([]);
@@ -85,13 +94,15 @@ export function PaymentMethodSelect({
     if (!value) return null;
     const raw = methods.find((m) => m.id === value)?.label ?? null;
     if (raw) return localizeMethodLabel(raw, tBuiltins);
-    // Methods list hasn't been fetched yet (lazy-loads on first open) — show the
-    // caller-provided snapshot instead of falling through to the placeholder.
-    if (loadState === "idle" && fallbackSelectedLabel) {
-      return localizeMethodLabel(fallbackSelectedLabel, tBuiltins);
+    // Methods list hasn't been fetched yet (lazy-loads on first open), or the
+    // value is a method deactivated since (the list holds active ones only) —
+    // show the caller-provided snapshot instead of the placeholder.
+    if (fallbackSelectedLabel && loadState !== "loading") {
+      const label = localizeMethodLabel(fallbackSelectedLabel, tBuiltins);
+      return loadState === "idle" ? label : t("inactiveLabel", { label });
     }
     return null;
-  }, [value, methods, tBuiltins, loadState, fallbackSelectedLabel]);
+  }, [value, methods, tBuiltins, loadState, fallbackSelectedLabel, t]);
 
   // -------------------------------------------------------------------------
   // Fetch on open
@@ -143,11 +154,15 @@ export function PaymentMethodSelect({
           toast.success(created.label);
         }
       } else {
-        const msg =
-          result.error.code === "duplicate_label"
-            ? t("failedToLoad")
-            : result.error.message;
-        toast.error(msg);
+        // Never the action's English message: map its code to our own text.
+        const code = result.error.code;
+        toast.error(
+          code === "duplicate_label"
+            ? t("duplicateLabel")
+            : code === "forbidden"
+              ? t("createForbidden")
+              : t("failedToCreate")
+        );
       }
     } catch {
       toast.error(t("failedToCreate"));

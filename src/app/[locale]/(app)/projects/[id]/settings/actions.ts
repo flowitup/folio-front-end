@@ -3,6 +3,7 @@
 import { env } from "@/lib/config/env";
 import { sessionAuthHeader } from "@/lib/api/auth-header";
 import { getSession } from "@/lib/auth/session";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 
 const PREFIX_RE = /^[A-Z0-9]{1,8}$/;
 
@@ -61,8 +62,8 @@ export async function updateBankCredit(
   const trimmedBudget = rawBudget.trim();
   let budget: number | null = null;
   if (trimmedBudget !== "") {
-    const parsed = Number(trimmedBudget.replace(",", "."));
-    if (!Number.isFinite(parsed) || parsed < 0) {
+    const parsed = parseMoneyInput(trimmedBudget);
+    if (parsed === null) {
       return { ok: false, error: "validation" };
     }
     budget = parsed;

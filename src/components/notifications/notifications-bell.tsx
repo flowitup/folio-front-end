@@ -15,7 +15,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { useNotificationsPoll } from "@/components/notifications/use-notifications-poll";
 import { dismissNotificationAction } from "@/components/notifications/actions";
-import { rejectAttendance, validateAttendance } from "@/lib/api/labor";
+import {
+  approveAttendanceChange,
+  rejectAttendance,
+  rejectAttendanceChange,
+  validateAttendance,
+} from "@/lib/api/labor";
 import type {
   AttendancePending,
   CompanyEvent,
@@ -108,15 +113,21 @@ export function NotificationsBell() {
     [t]
   );
 
+  // A change request on a validated day goes through the change routes: validating
+  // or rejecting the day itself would be a no-op or a 409 for it.
   const handleValidate = useCallback(
     (item: AttendancePending) =>
-      settleAttendance(item, validateAttendance, "attendance.validated", "errors.validateFailed"),
+      item.kind === "attendance_change"
+        ? settleAttendance(item, approveAttendanceChange, "attendance.changeApplied", "errors.applyChangeFailed")
+        : settleAttendance(item, validateAttendance, "attendance.validated", "errors.validateFailed"),
     [settleAttendance]
   );
 
   const handleReject = useCallback(
     (item: AttendancePending) =>
-      settleAttendance(item, rejectAttendance, "attendance.rejected", "errors.rejectFailed"),
+      item.kind === "attendance_change"
+        ? settleAttendance(item, rejectAttendanceChange, "attendance.changeRefused", "errors.refuseChangeFailed")
+        : settleAttendance(item, rejectAttendance, "attendance.rejected", "errors.rejectFailed"),
     [settleAttendance]
   );
 

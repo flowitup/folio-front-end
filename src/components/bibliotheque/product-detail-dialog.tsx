@@ -97,6 +97,10 @@ export function ProductDetailDialog({
       minimumFractionDigits: 2,
     }).format(parseFloat(val));
 
+  // "1", "2,5" — not the API's "1.0000".
+  const fmtQty = (val: string) =>
+    new Intl.NumberFormat(locale, { maximumFractionDigits: 4 }).format(parseFloat(val));
+
   const product = detail?.product;
   const supplier = product ? suppliersById[product.supplier_id] : undefined;
 
@@ -165,6 +169,7 @@ export function ProductDetailDialog({
             <ProductImage
               productId={product.id}
               hasImage={product.has_image}
+              version={product.updated_at}
               alt={product.name}
               className="w-full rounded-lg"
             />
@@ -261,7 +266,7 @@ export function ProductDetailDialog({
                               {t(`documentType.${p.source_document_type}`)}
                             </span>
                           </td>
-                          <td className="py-2 pr-4 num">{p.quantity}</td>
+                          <td className="py-2 pr-4 num">{fmtQty(p.quantity)}</td>
                           <td className="py-2 num">{fmtPrice(p.unit_price)}</td>
                         </tr>
                       ))}

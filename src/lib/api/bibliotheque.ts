@@ -343,6 +343,103 @@ export async function uploadProductImage(
   return response.json() as Promise<{ image_storage_key: string }>;
 }
 
+/**
+ * Have the server fetch a product image from a supplier link and store it.
+ * POST /bibliotheque/products/<id>/image-from-url → { image_storage_key }.
+ *
+ * Supplier CDNs are hotlink-protected, so the browser cannot download these
+ * images itself. The BE only fetches HTTPS links on its supplier allowlist.
+ * Errors: 422 SsrfBlocked (host not accepted / not HTTPS), 422 ValidationError
+ * (malformed URL), 415 not a JPG/PNG/WebP, 413 over 10 MB, 500 when the
+ * supplier's server fails. Without opts.force the BE keeps an existing image
+ * and returns its key unchanged — pass force:true to replace it.
+ */
+export async function setProductImageFromUrl(
+  productId: string,
+  url: string,
+  opts?: { force?: boolean }
+): Promise<{ image_storage_key: string }> {
+  const authHeaders = await sessionAuthHeader();
+  const qs = opts?.force ? "?force=true" : "";
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}/image-from-url${qs}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ url }),
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error fetching product image from URL: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to fetch product image from URL");
+  return response.json() as Promise<{ image_storage_key: string }>;
+}
+
+// ---------------------------------------------------------------------------
+// Purchase import
+// ---------------------------------------------------------------------------
+
+/** One purchase line of POST /bibliotheque/import (field names mirror ImportRecordSchema). */
+export interface ImportPurchaseRecord {
+  supplier_reference: string;
+  product_name: string;
+  quantity: string;
+  unit_price: string;
+  purchased_at: string;
+  source_document_ref: string;
+  source_document_type: "ticket" | "commande";
+  line_index: number;
+  size?: string;
+  category?: string;
+  product_url?: string;
+  description?: string;
+}
+
+/** Request body minus company_id, which the caller adds. At most 1000 records per request. */
+export interface ImportPurchasesPayload {
+  supplier_name: string;
+  supplier_slug: string;
+  supplier_website_url?: string;
+  supplier_product_url_template?: string;
+  records: ImportPurchaseRecord[];
+}
+
+/** Counts returned by the import (re-importing the same lines only raises `skipped`). */
+export interface ImportPurchasesResult {
+  created: number;
+  updated: number;
+  purchases_added: number;
+  skipped: number;
+}
+
+/**
+ * Import purchase records into the company library (idempotent per line).
+ * POST /bibliotheque/import → 200 ImportPurchasesResult. Requires bibliotheque:manage.
+ */
+export async function importPurchases(
+  companyId: string,
+  payload: ImportPurchasesPayload
+): Promise<ImportPurchasesResult> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiBaseUrl}/bibliotheque/import`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({ company_id: companyId, ...payload }),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new Error(`Network error importing purchases: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to import purchases");
+  return response.json() as Promise<ImportPurchasesResult>;
+}
+
 // Product image bytes are streamed from GET /bibliotheque/products/<id>/image
 // and fetched client-side as a Blob by the ProductImage component (cookie auth),
 // mirroring invoice attachment previews. No server-side wrapper needed here.

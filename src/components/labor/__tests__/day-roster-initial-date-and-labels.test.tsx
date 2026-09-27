@@ -10,6 +10,7 @@ import { DayRoster } from "../day-roster";
 import type { RosterRow } from "@/lib/api/roster";
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "fr",
   useTranslations: (ns?: string) => (key: string) => {
     const messages: Record<string, string> = {
       "labor.roster.title": "Today's roster",
@@ -55,7 +56,9 @@ describe("DayRoster", () => {
     await waitFor(() => {
       expect(mockFetchDayRosterAction).toHaveBeenCalledWith("proj-1", "2026-09-08");
     });
-    expect(screen.getByText("2026-09-08")).toBeInTheDocument();
+    // Shown as a date in the app language, not the raw ISO key.
+    expect(screen.getByText("Mardi 08/09/2026")).toBeInTheDocument();
+    expect(screen.queryByText("2026-09-08")).toBeNull();
   });
 
   it("maps day_type to the shared shift labels, not the raw BE string", async () => {

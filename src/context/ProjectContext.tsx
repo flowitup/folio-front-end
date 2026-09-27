@@ -8,10 +8,19 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import type { Project } from "@/types/project";
-import { fetchProjects } from "@/lib/api/projects";
+import { fetchProjectById, fetchProjects } from "@/lib/api/projects";
 
 const STORAGE_KEY = "selectedProjectId";
+
+/**
+ * The project id carried by a /projects/<id>/... URL (with or without the
+ * locale prefix), or null on any other route.
+ */
+export function projectIdFromPath(pathname: string | null | undefined): string | null {
+  return pathname?.match(/^(?:\/[a-z]{2})?\/projects\/([^/?#]+)\//)?.[1] ?? null;
+}
 
 interface ProjectContextType {
   projects: Project[];
@@ -30,6 +39,7 @@ interface ProjectProviderProps {
 }
 
 export function ProjectProvider({ children }: ProjectProviderProps) {
+  const pathname = usePathname();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null
@@ -95,14 +105,46 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     setSelectedProjectId(projectId);
   }, []);
 
+  // On a /projects/<id>/... page the URL names the project being viewed, so it
+  // wins over the stored selection: a deep link, bookmark or notification must
+  // not leave the breadcrumb, nav links and topbar actions on another project.
+  // The effective id is derived during render (no frame shows the stale one),
+  // and the effect persists it so the choice sticks after leaving the page.
+  const routeProjectId = projectIdFromPath(pathname);
+  const routeProjectKnown =
+    routeProjectId !== null && projects.some((p) => p.id === routeProjectId);
+  const effectiveProjectId = routeProjectKnown ? routeProjectId : selectedProjectId;
+
+  useEffect(() => {
+    if (routeProjectKnown) setSelectedProjectId(routeProjectId);
+  }, [routeProjectKnown, routeProjectId]);
+
+  // The URL project is missing from the loaded list (the list failed to load,
+  // or it came back without it): fetch that one project so the switcher and
+  // the project nav still show the project being viewed. A project the user
+  // cannot open is refused by the API and simply stays out.
+  useEffect(() => {
+    if (!isHydrated || isLoading || !routeProjectId || routeProjectKnown) return;
+    let cancelled = false;
+    fetchProjectById(routeProjectId)
+      .then((project) => {
+        if (cancelled || project.id !== routeProjectId) return;
+        setProjects((prev) => (prev.some((p) => p.id === project.id) ? prev : [...prev, project]));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isHydrated, isLoading, routeProjectId, routeProjectKnown]);
+
   const selectedProject =
-    projects.find((p) => p.id === selectedProjectId) ?? null;
+    projects.find((p) => p.id === effectiveProjectId) ?? null;
 
   return (
     <ProjectContext.Provider
       value={{
         projects,
-        selectedProjectId,
+        selectedProjectId: effectiveProjectId,
         selectedProject,
         selectProject,
         isLoading: isLoading || !isHydrated,

@@ -7,10 +7,15 @@
  * Server truth is authoritative for every total. Reordering applies an
  * optimistic local swap for responsiveness, then re-fetches; on failure the
  * previous order is restored rather than left silently diverged from the DB.
+ *
+ * Rooms and shops are project-level lists managed from their own dialogs:
+ * every poste groups its items by the room order, and every price points at
+ * one of the shops.
  */
 
 import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   DndContext,
@@ -24,14 +29,12 @@ import {
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Plus } from "lucide-react";
+import { DoorOpen, Plus, Store } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { ArticleRow, DragHandle } from "@/components/chiffrage/article-row";
+import { ArticleRow } from "@/components/chiffrage/article-row";
 import { ArticleFormDialog } from "@/components/chiffrage/article-form-dialog";
 import { ChiffrageTotals } from "@/components/chiffrage/chiffrage-totals";
 import { PosteCard } from "@/components/chiffrage/poste-card";
@@ -39,6 +42,12 @@ import { RoomHeading } from "@/components/chiffrage/room-heading";
 import { ArticleImageDialog } from "@/components/chiffrage/article-image-dialog";
 import { SectionCompareDialog } from "@/components/chiffrage/section-compare-dialog";
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
+import { RoomsDialog } from "@/components/chiffrage/rooms-dialog";
+import { SortableItem } from "@/components/chiffrage/sortable-item";
+import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
+import { StoresDialog } from "@/components/chiffrage/stores-dialog";
+import { neighboursAfterMove, planArticleDrop, planMove } from "@/components/chiffrage/reorder";
+import { hasComparablePrices } from "@/components/chiffrage/compare-lines";
 import {
   QuoteFormDialog,
   type QuoteFormValues,
@@ -53,14 +62,18 @@ import {
   createUnitAction,
   deleteArticleAction,
   deletePosteAction,
+  deleteRoomAction,
   deleteStoreAction,
   deleteQuoteAction,
   getChiffrageAction,
   reorderArticleAction,
   reorderPosteAction,
+  reorderRoomAction,
   selectQuoteAction,
   updateArticleAction,
   updatePosteAction,
+  updateRoomAction,
+  updateStoreAction,
   setArticleImageFromUrlAction,
   uploadArticleImageAction,
   updateQuoteAction,
@@ -82,54 +95,8 @@ interface Props {
   companyId: string | null;
   initialTree: ChiffrageTree;
   initialUnits: ChiffrageUnit[];
-}
-
-/** Neighbours of the slot an item was dropped into, in the post-move list. */
-function neighboursAfterMove<T extends { id: string }>(
-  items: T[],
-  activeId: string,
-  overId: string,
-): { before_id: string | null; after_id: string | null } | null {
-  const from = items.findIndex((i) => i.id === activeId);
-  const to = items.findIndex((i) => i.id === overId);
-  if (from === -1 || to === -1 || from === to) return null;
-  const reordered = [...items];
-  const [moved] = reordered.splice(from, 1);
-  reordered.splice(to, 0, moved);
-  const idx = reordered.findIndex((i) => i.id === activeId);
-  return {
-    before_id: idx > 0 ? reordered[idx - 1].id : null,
-    after_id: idx < reordered.length - 1 ? reordered[idx + 1].id : null,
-  };
-}
-
-function SortableItem({
-  id,
-  children,
-}: {
-  id: string;
-  children: (handle: React.ReactNode) => React.ReactNode;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
-  return (
-    <div
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.6 : 1,
-      }}
-    >
-      {children(<DragHandle {...attributes} {...listeners} />)}
-    </div>
-  );
+  /** The tree could not be loaded: show an error with a retry, not an empty budget. */
+  loadFailed?: boolean;
 }
 
 export function ChiffragePageClient({
@@ -138,8 +105,10 @@ export function ChiffragePageClient({
   companyId,
   initialTree,
   initialUnits,
+  loadFailed = false,
 }: Props) {
   const t = useTranslations("chiffrage");
+  const router = useRouter();
   const [tree, setTree] = useState(initialTree);
   const [units, setUnits] = useState(initialUnits);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -177,6 +146,12 @@ export function ChiffragePageClient({
     articleId: string | null;
     quote: ChiffrageQuote | null;
   }>({ open: false, articleId: null, quote: null });
+  const [roomsOpen, setRoomsOpen] = useState(false);
+  const [storesOpen, setStoresOpen] = useState(false);
+  const [storeForm, setStoreForm] = useState<{
+    open: boolean;
+    store: ChiffrageStore | null;
+  }>({ open: false, store: null });
 
   // dnd-kit's distance constraint is what keeps a click on a row button from
   // being swallowed as the start of a drag.
@@ -213,13 +188,21 @@ export function ChiffragePageClient({
   const mutate = useCallback(
     async (fn: () => Promise<{ ok: true } | { ok: false; error: string }>) => {
       setSubmitting(true);
-      const res = await fn();
-      if (!res.ok) toast.error(res.error);
-      else await refresh();
-      setSubmitting(false);
-      return res.ok;
+      try {
+        const res = await fn();
+        if (!res.ok) toast.error(res.error);
+        else await refresh();
+        return res.ok;
+      } catch {
+        // A rejected server action (e.g. a request the server refused before
+        // the action ran) must still surface and release the form.
+        toast.error(t("actionFailed"));
+        return false;
+      } finally {
+        setSubmitting(false);
+      }
     },
-    [refresh],
+    [refresh, t],
   );
 
   /**
@@ -281,6 +264,26 @@ export function ChiffragePageClient({
     return res.data;
   };
 
+  /**
+   * Move a room into the slot another one holds. Optimistic, so the room
+   * headings of every poste follow at once; on failure only the room order is
+   * put back, leaving anything else that changed meanwhile alone.
+   */
+  const reorderRoom = async (roomId: string, overId: string) => {
+    const plan = planMove(tree.rooms, roomId, overId);
+    if (!plan) return true;
+    const previous = tree.rooms;
+    setTree((prev) => ({ ...prev, rooms: plan.items }));
+    const res = await reorderRoomAction(projectId, roomId, plan.move);
+    if (!res.ok) {
+      setTree((prev) => ({ ...prev, rooms: previous }));
+      toast.error(res.error);
+      return false;
+    }
+    await refresh();
+    return true;
+  };
+
   const onDragEndPostes = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -315,26 +318,29 @@ export function ChiffragePageClient({
   ) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const move = neighboursAfterMove(
-      poste.articles,
-      String(active.id),
-      String(over.id),
-    );
-    if (!move) return;
+    const drop = planArticleDrop(poste.articles, String(active.id), String(over.id));
+    if (!drop) return;
+    if (drop.kind === "otherRoom") {
+      toast.info(t("dragOtherRoom"));
+      return;
+    }
+    const { move, optimisticPosition } = drop;
+    const movingId = String(active.id);
     const previous = tree;
     setTree((prev) => ({
       ...prev,
-      postes: prev.postes.map((p) => {
-        if (p.id !== poste.id) return p;
-        const from = p.articles.findIndex((a) => a.id === active.id);
-        const to = p.articles.findIndex((a) => a.id === over.id);
-        const articles = [...p.articles];
-        const [moved] = articles.splice(from, 1);
-        articles.splice(to, 0, moved);
-        return { ...p, articles };
-      }),
+      postes: prev.postes.map((p) =>
+        p.id !== poste.id
+          ? p
+          : {
+              ...p,
+              articles: p.articles.map((a) =>
+                a.id === movingId ? { ...a, position: optimisticPosition } : a,
+              ),
+            },
+      ),
     }));
-    const res = await reorderArticleAction(projectId, String(active.id), move);
+    const res = await reorderArticleAction(projectId, movingId, move);
     if (!res.ok) {
       setTree(previous);
       toast.error(res.error);
@@ -352,23 +358,53 @@ export function ChiffragePageClient({
           <h1 className="text-xl font-semibold">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
-        {canManage ? (
-          <Button
-            type="button"
-            onClick={() => setPosteDialog({ open: true, poste: null })}
-          >
-            <Plus className="mr-1 h-4 w-4" />
-            {t("newPoste")}
-          </Button>
+        {canManage && !loadFailed ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRoomsOpen(true)}
+            >
+              <DoorOpen className="mr-1 h-4 w-4" />
+              {t("rooms")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStoresOpen(true)}
+            >
+              <Store className="mr-1 h-4 w-4" />
+              {t("stores")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setPosteDialog({ open: true, poste: null })}
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              {t("newPoste")}
+            </Button>
+          </div>
         ) : null}
       </div>
 
-      <ChiffrageTotals tree={tree} />
+      {loadFailed ? (
+        <div role="alert" className="rounded-lg border border-dashed p-10 text-center">
+          <p className="font-medium">{t("loadFailedTitle")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("loadFailedHint")}</p>
+          <Button type="button" variant="outline" className="mt-4" onClick={() => router.refresh()}>
+            {t("retry")}
+          </Button>
+        </div>
+      ) : (
+        <ChiffrageTotals tree={tree} />
+      )}
 
-      {tree.postes.length === 0 ? (
+      {loadFailed ? null : tree.postes.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="font-medium">{t("emptyTitle")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t("emptyHint")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {canManage ? t("emptyHint") : t("emptyHintReadOnly")}
+          </p>
         </div>
       ) : (
         <DndContext
@@ -390,7 +426,7 @@ export function ChiffragePageClient({
                       dragHandle={canManage ? handle : undefined}
                       collapsed={collapsedPostes.has(poste.id)}
                       onToggleCollapse={() => toggleCollapse(poste.id)}
-                      canCompare={poste.store_baskets.length > 0}
+                      canCompare={hasComparablePrices(poste)}
                       onCompare={() =>
                         setCompareDialog({ open: true, poste })
                       }
@@ -534,6 +570,52 @@ export function ChiffragePageClient({
           onOpenChange={(open) =>
             setCompareDialog((prev) => ({ ...prev, open }))
           }
+        />
+      ) : null}
+
+      {roomsOpen ? (
+        <RoomsDialog
+          open
+          rooms={tree.rooms}
+          onOpenChange={setRoomsOpen}
+          onCreate={async (name) => (await addRoom(name)) !== null}
+          onRename={(room, name) =>
+            mutate(() => updateRoomAction(projectId, room.id, name))
+          }
+          onDelete={(room) =>
+            mutate(() => deleteRoomAction(projectId, room.id))
+          }
+          onReorder={reorderRoom}
+        />
+      ) : null}
+
+      {storesOpen ? (
+        <StoresDialog
+          open
+          stores={tree.stores}
+          onOpenChange={setStoresOpen}
+          onAdd={() => setStoreForm({ open: true, store: null })}
+          onEdit={(store) => setStoreForm({ open: true, store })}
+          onDelete={(store) =>
+            mutate(() => deleteStoreAction(projectId, store.id))
+          }
+        />
+      ) : null}
+
+      {storeForm.open ? (
+        <StoreFormDialog
+          open
+          store={storeForm.store}
+          submitting={submitting}
+          onOpenChange={(open) => setStoreForm((s) => ({ ...s, open }))}
+          onSubmit={async (values) => {
+            const ok = await mutate(() =>
+              storeForm.store
+                ? updateStoreAction(projectId, storeForm.store.id, values)
+                : createStoreAction(projectId, values),
+            );
+            if (ok) setStoreForm({ open: false, store: null });
+          }}
         />
       ) : null}
 

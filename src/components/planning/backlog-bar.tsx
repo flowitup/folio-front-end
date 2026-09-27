@@ -57,6 +57,7 @@ export function BacklogBar({ tasks, onAdd, onTaskClick }: BacklogBarProps) {
           size="sm"
           className="h-6 w-6 p-0"
           onClick={onAdd}
+          aria-label={t("addTask")}
         >
           <Plus className="h-3.5 w-3.5" />
         </Button>
@@ -92,6 +93,7 @@ interface BacklogCardProps {
 
 /** Compact horizontally-arranged card for the backlog row. */
 function BacklogCard({ task, onClick }: BacklogCardProps) {
+  const t = useTranslations("planning");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: { type: "task", task },
@@ -113,7 +115,9 @@ function BacklogCard({ task, onClick }: BacklogCardProps) {
       <div className="flex items-center gap-2">
         <span
           className={`${PRIORITY_DOT[task.priority]} flex-shrink-0`}
-          title={task.priority}
+          title={t(`priority.${task.priority}`)}
+          role="img"
+          aria-label={t(`priority.${task.priority}`)}
         />
         <p className="text-xs font-medium truncate">{task.title}</p>
       </div>

@@ -4,7 +4,7 @@
  * AdminCompanyManagePage — full admin management UI for a single company.
  *
  * Five tabs (manual implementation — no Tabs primitive in this project):
- *   1. Edit     — update all company fields
+ *   1. Edit     — update all company fields (CompanyProfileForm)
  *   2. Code     — the reusable company join code (mobile onboarding); the
  *                 only mechanism left to bring someone into the company
  *   3. Users    — AttachedUsersTable with Boot action
@@ -18,11 +18,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Loader2, Save, Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,13 +32,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AttachedUsersTable } from "@/components/companies/attached-users-table";
 import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-card";
+import { CompanyProfileForm } from "@/components/companies/company-profile-form";
 import {
-  updateCompanyAction,
   deleteCompanyAction,
   fetchAttachedUsersAction,
 } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { Company, AttachedUser } from "@/types/companies";
-import type { UpdateCompanyPayload } from "@/lib/api/companies/companies";
 import { PaymentMethodsSection } from "@/app/[locale]/(app)/settings/companies/[id]/_components/payment-methods-section";
 import { listPaymentMethodsAction } from "@/app/[locale]/(app)/settings/companies/[id]/_actions/payment-methods-actions";
 import type { PaymentMethod } from "@/lib/api/payment-methods-api";
@@ -99,22 +95,6 @@ export function AdminCompanyManagePage({
     };
   }, [activeTab, company.id]);
 
-  // ---- Edit tab state ----
-  const [form, setForm] = useState<UpdateCompanyPayload>({
-    legal_name: company.legal_name,
-    address: company.address,
-    siret: company.siret,
-    tva_number: company.tva_number,
-    iban: company.iban,
-    bic: company.bic,
-    logo_url: company.logo_url,
-    default_payment_terms: company.default_payment_terms,
-    prefix_override: company.prefix_override,
-  });
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const savingRef = useRef(false);
-
   // ---- Users tab state ----
   const [users, setUsers] = useState<AttachedUser[]>(initialUsers);
   const fetchingUsersRef = useRef(false);
@@ -123,65 +103,6 @@ export function AdminCompanyManagePage({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const deletingRef = useRef(false);
-
-  // ---------------------------------------------------------------------------
-  // Edit tab handlers
-  // ---------------------------------------------------------------------------
-
-  function setField(field: keyof UpdateCompanyPayload) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const val = e.target.value;
-      setForm((prev) => ({ ...prev, [field]: val === "" ? null : val }));
-      setFieldErrors((prev) => {
-        const n = { ...prev };
-        delete n[field];
-        return n;
-      });
-    };
-  }
-
-  function validateEdit(): boolean {
-    const errors: Record<string, string> = {};
-    if (!form.legal_name?.trim()) errors.legal_name = t("form.errors.legalNameRequired");
-    if (!form.address?.trim()) errors.address = t("form.errors.addressRequired");
-    if (form.logo_url) {
-      try {
-        const u = new URL(form.logo_url);
-        if (!/^https?:$/.test(u.protocol)) {
-          errors.logo_url = t("form.errors.logoUrlInvalidScheme");
-        }
-      } catch {
-        errors.logo_url = t("form.errors.logoUrlInvalidUrl");
-      }
-    }
-    if (form.prefix_override) {
-      if (form.prefix_override.length > 8) errors.prefix_override = t("form.errors.prefixTooLong");
-      else if (!/^[A-Z0-9]+$/.test(form.prefix_override))
-        errors.prefix_override = t("form.errors.prefixInvalidChars");
-    }
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
-  }
-
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validateEdit() || savingRef.current) return;
-    savingRef.current = true;
-    setIsSaving(true);
-    try {
-      const result = await updateCompanyAction(company.id, form);
-      if (!result.ok) {
-        toast.error(result.error.message);
-        return;
-      }
-      toast.success(t("admin.manage.edit.savedToast"));
-    } catch {
-      toast.error(t("form.errors.generic"));
-    } finally {
-      setIsSaving(false);
-      savingRef.current = false;
-    }
-  }
 
   // ---------------------------------------------------------------------------
   // Users tab handlers
@@ -227,8 +148,6 @@ export function AdminCompanyManagePage({
   // Render
   // ---------------------------------------------------------------------------
 
-  const str = (v: string | null | undefined) => v ?? "";
-
   const TABS: { key: ManageTab; label: string }[] = [
     { key: "edit", label: t("admin.manage.tabs.edit") },
     { key: "code", label: t("admin.manage.tabs.code") },
@@ -270,110 +189,7 @@ export function AdminCompanyManagePage({
       {/* ------------------------------------------------------------------ */}
       {/* Tab: Edit */}
       {/* ------------------------------------------------------------------ */}
-      {activeTab === "edit" && (
-        <form onSubmit={handleSave} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="mp-legal-name">
-                {t("form.fields.legalName.label")}
-                <span className="ml-1 text-destructive">*</span>
-              </Label>
-              <Input
-                id="mp-legal-name"
-                value={str(form.legal_name)}
-                onChange={setField("legal_name")}
-                disabled={isSaving}
-              />
-              {fieldErrors.legal_name && (
-                <p className="text-[12px] text-destructive">{fieldErrors.legal_name}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="mp-address">
-                {t("form.fields.address.label")}
-                <span className="ml-1 text-destructive">*</span>
-              </Label>
-              <Textarea
-                id="mp-address"
-                value={str(form.address)}
-                onChange={setField("address")}
-                disabled={isSaving}
-                rows={2}
-              />
-              {fieldErrors.address && (
-                <p className="text-[12px] text-destructive">{fieldErrors.address}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="mp-siret">{t("form.fields.siret.label")}</Label>
-              <Input id="mp-siret" value={str(form.siret)} onChange={setField("siret")} disabled={isSaving} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="mp-tva">{t("form.fields.tvaNumber.label")}</Label>
-              <Input id="mp-tva" value={str(form.tva_number)} onChange={setField("tva_number")} disabled={isSaving} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="mp-iban">{t("form.fields.iban.label")}</Label>
-              <Input id="mp-iban" value={str(form.iban)} onChange={setField("iban")} disabled={isSaving} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="mp-bic">{t("form.fields.bic.label")}</Label>
-              <Input id="mp-bic" value={str(form.bic)} onChange={setField("bic")} disabled={isSaving} />
-            </div>
-
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="mp-logo">{t("form.fields.logoUrl.label")}</Label>
-              <Input id="mp-logo" type="url" value={str(form.logo_url)} onChange={setField("logo_url")} disabled={isSaving} />
-              {fieldErrors.logo_url && (
-                <p className="text-[12px] text-destructive">{fieldErrors.logo_url}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="mp-terms">{t("form.fields.defaultPaymentTerms.label")}</Label>
-              <Textarea id="mp-terms" value={str(form.default_payment_terms)} onChange={setField("default_payment_terms")} disabled={isSaving} rows={2} />
-              <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                {t("form.fields.defaultPaymentTerms.help")}
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="mp-prefix">{t("form.fields.prefixOverride.label")}</Label>
-              <Input
-                id="mp-prefix"
-                value={str(form.prefix_override)}
-                onChange={(e) => {
-                  const val = e.target.value.toUpperCase();
-                  setForm((prev) => ({ ...prev, prefix_override: val === "" ? null : val }));
-                  setFieldErrors((prev) => { const n = { ...prev }; delete n.prefix_override; return n; });
-                }}
-                disabled={isSaving}
-                maxLength={8}
-              />
-              {fieldErrors.prefix_override ? (
-                <p className="text-[12px] text-destructive">{fieldErrors.prefix_override}</p>
-              ) : (
-                <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                  {t("form.fields.prefixOverride.help")}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? (
-                <Loader2 size={14} className="mr-2 animate-spin" />
-              ) : (
-                <Save size={14} className="mr-2" />
-              )}
-              {t("admin.manage.edit.save")}
-            </Button>
-          </div>
-        </form>
-      )}
+      {activeTab === "edit" && <CompanyProfileForm company={company} />}
 
       {/* ------------------------------------------------------------------ */}
       {/* Tab: Code — the reusable company join code (only attach mechanism) */}

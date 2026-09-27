@@ -14,6 +14,7 @@
 import { useState } from "react";
 import { Loader2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,6 +33,7 @@ import { mergePersons } from "@/lib/api/persons";
 import type { PersonSummary } from "@/types/person";
 
 export function PersonMergeForm() {
+  const t = useTranslations("personsMerge");
   const [source, setSource] = useState<PersonSummary | null>(null);
   const [target, setTarget] = useState<PersonSummary | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -47,20 +49,14 @@ export function PersonMergeForm() {
       const result = await mergePersons(source.id, {
         target_person_id: target.id,
       });
-      toast.success(
-        `Merged "${source.name}" into "${target.name}".`,
-        {
-          description: `${result.workers_reassigned} worker${
-            result.workers_reassigned === 1 ? "" : "s"
-          } reassigned. Source Person deleted.`,
-        },
-      );
+      toast.success(t("merged", { source: source.name, target: target.name }), {
+        description: t("mergedDetail", { n: result.workers_reassigned }),
+      });
       setSource(null);
       setTarget(null);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Unknown error";
-      toast.error("Merge failed", { description: message });
+    } catch {
+      // Never the raw "HTTP 403: FORBIDDEN" text.
+      toast.error(t("failed"));
     } finally {
       setMerging(false);
       setConfirmOpen(false);
@@ -74,12 +70,13 @@ export function PersonMergeForm() {
           <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-[1fr_auto_1fr]">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">
-                Source <span className="text-muted-foreground">(deleted)</span>
+                {t("source")} <span className="text-muted-foreground">{t("sourceHint")}</span>
               </label>
               <PersonTypeahead
                 value={source}
                 onChange={setSource}
-                placeholder="Pick the duplicate to remove…"
+                placeholder={t("sourcePlaceholder")}
+                allowCreate={false}
               />
               {source?.phone && (
                 <p className="text-muted-foreground font-mono text-xs">
@@ -94,12 +91,13 @@ export function PersonMergeForm() {
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium">
-                Target <span className="text-muted-foreground">(kept)</span>
+                {t("target")} <span className="text-muted-foreground">{t("targetHint")}</span>
               </label>
               <PersonTypeahead
                 value={target}
                 onChange={setTarget}
-                placeholder="Pick the row to keep…"
+                placeholder={t("targetPlaceholder")}
+                allowCreate={false}
               />
               {target?.phone && (
                 <p className="text-muted-foreground font-mono text-xs">
@@ -111,7 +109,7 @@ export function PersonMergeForm() {
 
           {sameId && (
             <p className="text-destructive text-sm">
-              Source and target must be different rows.
+              {t("sameRow")}
             </p>
           )}
 
@@ -124,14 +122,14 @@ export function PersonMergeForm() {
               }}
               disabled={merging}
             >
-              Clear
+              {t("clear")}
             </Button>
             <Button
               onClick={() => setConfirmOpen(true)}
               disabled={!canMerge}
             >
               {merging && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Merge
+              {t("merge")}
             </Button>
           </div>
         </CardContent>
@@ -140,19 +138,16 @@ export function PersonMergeForm() {
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Merge persons?</AlertDialogTitle>
+            <AlertDialogTitle>{t("confirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              All Worker rows currently pointing at{" "}
-              <strong>{source?.name}</strong> will be reassigned to{" "}
-              <strong>{target?.name}</strong>, and the source Person row
-              will be permanently deleted. This action cannot be undone.
+              {t("confirmBody", { source: source?.name ?? "", target: target?.name ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={merging}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={merging}>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm} disabled={merging}>
               {merging && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Merge
+              {t("merge")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -26,6 +26,7 @@ vi.mock("next-intl", () => ({
       "assign.roleLabel": "Role",
       "assign.roleMember": "Member",
       "assign.roleManager": "Manager",
+      "assign.roleHint": "This is the person's role in the whole company.",
       "assign.submit": "Assign",
       "assign.successToast": "Assigned.",
       "invite.cancel": "Cancel",
@@ -195,5 +196,44 @@ describe("AssignMemberDialog — role options (M3)", () => {
     await waitFor(() => {
       expect(vi.mocked(toast.error)).toHaveBeenCalledWith("Could not load the directory.");
     });
+  });
+
+  it("says the picked role is company-wide, not project-only", async () => {
+    render(
+      <AssignMemberDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        projectId="proj-1"
+        companyId="c1"
+        excludeUserIds={[]}
+        canAssignManager={true}
+      />
+    );
+
+    await waitFor(() => expect(screen.getByLabelText("Person")).toBeInTheDocument());
+    expect(screen.getByText("This is the person's role in the whole company.")).toBeInTheDocument();
+  });
+
+  it("does not offer a removed (deactivated) member", async () => {
+    mockFetchDirectory.mockResolvedValue({
+      ok: true,
+      data: [...ENTRIES, { ...ENTRIES[0], person_id: "p2", linked_user_id: "u2", name: "Booted", is_active: false }],
+    });
+    render(
+      <AssignMemberDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        projectId="proj-1"
+        companyId="c1"
+        excludeUserIds={[]}
+        canAssignManager={true}
+      />
+    );
+
+    await waitFor(() =>
+      expect(
+        Array.from((screen.getByLabelText("Person") as HTMLSelectElement).options).map((o) => o.value)
+      ).toEqual(["", "u1"])
+    );
   });
 });

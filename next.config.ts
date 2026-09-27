@@ -101,10 +101,11 @@ const securityHeaders = [
 // webfonts and (b) forbid framing it at all via frame-ancestors 'none' +
 // X-Frame-Options: DENY.
 //
-// This is safe ONLY because the embedding iframe is sandboxed without
-// `allow-same-origin` (see analysis-viewer.tsx), giving the report an opaque
-// origin with no access to Folio's cookies, storage, or parent DOM. The
-// relaxations below are scoped to this single path and nothing else.
+// This is safe ONLY because the report always runs sandboxed with an opaque
+// origin, with no access to Folio's cookies, storage, or parent DOM: the
+// embedding iframe omits `allow-same-origin` (see analysis-viewer.tsx), and the
+// `sandbox` directive below covers the URL opened directly. The relaxations
+// below are scoped to this single path and nothing else.
 const analysisReportHeaders = [
   {
     key: "Content-Security-Policy",
@@ -115,6 +116,9 @@ const analysisReportHeaders = [
       "font-src https://fonts.gstatic.com",
       "script-src 'unsafe-inline'",
       "frame-ancestors 'self'",
+      // Same as the route's own CSP: an opaque origin even when the report
+      // URL is opened directly rather than in the sandboxed iframe.
+      "sandbox allow-scripts",
     ].join("; "),
   },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
@@ -148,6 +152,14 @@ const nextConfig: NextConfig = {
   },
   turbopack: {
     root: __dirname,
+  },
+  // Product and chiffrage images (10 MB max, like the API) and HTML analyses
+  // are uploaded through server actions, whose request body Next caps at 1 MB
+  // by default, and every request is buffered through src/proxy.ts, which caps
+  // at 10 MB. 11 MB fits the largest allowed file plus multipart overhead.
+  experimental: {
+    serverActions: { bodySizeLimit: "11mb" },
+    proxyClientMaxBodySize: "11mb",
   },
   async headers() {
     return [

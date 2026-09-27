@@ -36,6 +36,7 @@ import { createInvoice } from "@/lib/api/invoice-api";
 import { formatMonthYear } from "@/lib/utils/formatters";
 import type { Worker } from "@/types/labor";
 import type { CreateInvoicePayload } from "@/types/invoice";
+import { MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
 
 function todayKey(): string {
   const d = new Date();
@@ -102,6 +103,10 @@ export function RecordLaborPaymentDialog({
     const numericAmount = Number(amount);
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       setError(t("errorAmountPositive"));
+      return;
+    }
+    if (numericAmount > MAX_LINE_UNIT_PRICE) {
+      setError(tLabor("errors.amountTooLarge", { max: MAX_LINE_UNIT_PRICE }));
       return;
     }
     const payload: CreateInvoicePayload = {
@@ -187,6 +192,7 @@ export function RecordLaborPaymentDialog({
             <input
               type="number"
               min="0.01"
+              max={MAX_LINE_UNIT_PRICE}
               step="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}

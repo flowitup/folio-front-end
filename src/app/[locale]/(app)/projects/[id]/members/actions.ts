@@ -15,9 +15,23 @@ function membersPath(projectId: string): string {
   return `/[locale]/projects/${projectId}/members`;
 }
 
-function rethrowWithStatus(err: unknown): never {
-  const status = (err as { status?: number }).status ?? 500;
-  throw Object.assign(new Error((err as Error)?.message ?? "Request failed"), { status });
+/**
+ * What a member action returns. Errors come back as values, never thrown:
+ * in a production build Next strips everything but a digest from an error
+ * thrown out of a server action, so a thrown `status` never reached the
+ * client and every failure read as a generic 500.
+ */
+export type MemberActionResult<T = null> =
+  | { ok: true; data: T }
+  | { ok: false; status: number };
+
+function failure(status: number): { ok: false; status: number } {
+  return { ok: false, status };
+}
+
+function statusOf(err: unknown): number {
+  const status = (err as { status?: number } | null)?.status;
+  return typeof status === "number" ? status : 500;
 }
 
 // Defense-in-depth: every mutating server action is an internet-reachable
@@ -42,30 +56,29 @@ function isEmail(value: string): boolean {
 
 /**
  * Server action: invite a member (or directly add existing user) to a project.
- * Returns discriminated result kind for client-side toast selection.
- * Re-throws errors with `status` property so client can map 409/429.
+ * Returns the discriminated result kind for client-side toast selection, or
+ * the failure status so the client can map 409/429.
  */
 export async function inviteMemberAction(
   projectId: string,
   email: string
-): Promise<CreateInvitationResult> {
+): Promise<MemberActionResult<CreateInvitationResult>> {
   const session = await getSession();
-  if (!session?.accessToken) {
-    throw Object.assign(new Error("Unauthorized"), { status: 401 });
-  }
-  if (!isUuid(projectId)) {
-    throw Object.assign(new Error("Invalid identifiers"), { status: 400 });
-  }
-  if (!email || !isEmail(email)) {
-    throw Object.assign(new Error("Invalid email"), { status: 400 });
-  }
+  if (!session?.accessToken) return failure(401);
+  if (!isUuid(projectId)) return failure(400);
+  if (!email || !isEmail(email)) return failure(400);
 
-  const result = await createInvitation({ project_id: projectId, email });
+  let result: CreateInvitationResult;
+  try {
+    result = await createInvitation({ project_id: projectId, email });
+  } catch (err) {
+    return failure(statusOf(err));
+  }
   // Route groups like `(app)` are stripped from Next.js cache keys, so
   // including them here makes the call a silent no-op. Use the resolved
   // path template without route-group segments.
   revalidatePath(`/[locale]/projects/${projectId}/members`, "page");
-  return result;
+  return { ok: true, data: result };
 }
 
 /**
@@ -74,20 +87,21 @@ export async function inviteMemberAction(
 export async function revokeInviteAction(
   invitationId: string,
   projectId: string
-): Promise<void> {
+): Promise<MemberActionResult> {
   const session = await getSession();
-  if (!session?.accessToken) {
-    throw Object.assign(new Error("Unauthorized"), { status: 401 });
-  }
-  if (!isUuid(invitationId) || !isUuid(projectId)) {
-    throw Object.assign(new Error("Invalid identifiers"), { status: 400 });
-  }
+  if (!session?.accessToken) return failure(401);
+  if (!isUuid(invitationId) || !isUuid(projectId)) return failure(400);
 
-  await revokeInvitation(invitationId);
+  try {
+    await revokeInvitation(invitationId);
+  } catch (err) {
+    return failure(statusOf(err));
+  }
   // Route groups like `(app)` are stripped from Next.js cache keys, so
   // including them here makes the call a silent no-op. Use the resolved
   // path template without route-group segments.
   revalidatePath(`/[locale]/projects/${projectId}/members`, "page");
+  return { ok: true, data: null };
 }
 
 /**
@@ -98,24 +112,19 @@ export async function updateUserProfileAction(
   projectId: string,
   userId: string,
   payload: { email?: string; display_name?: string | null }
-): Promise<void> {
+): Promise<MemberActionResult> {
   const session = await getSession();
-  if (!session?.accessToken) {
-    throw Object.assign(new Error("Unauthorized"), { status: 401 });
-  }
-  if (!isUuid(projectId) || !isUuid(userId)) {
-    throw Object.assign(new Error("Invalid identifiers"), { status: 400 });
-  }
-  if (payload.email !== undefined && !isEmail(payload.email)) {
-    throw Object.assign(new Error("Invalid email"), { status: 400 });
-  }
+  if (!session?.accessToken) return failure(401);
+  if (!isUuid(projectId) || !isUuid(userId)) return failure(400);
+  if (payload.email !== undefined && !isEmail(payload.email)) return failure(400);
 
   try {
     await updateUser(userId, payload);
   } catch (err) {
-    rethrowWithStatus(err);
+    return failure(statusOf(err));
   }
   revalidatePath(membersPath(projectId), "page");
+  return { ok: true, data: null };
 }
 
 /**
@@ -129,29 +138,24 @@ export async function updateUserProfileAction(
  * against a backend still on the pre-Phase-2/3 assignment contract (see the
  * BE Phase 2/3 vs 4 rollout note in the plan's Risk Assessment).
  */
-export async function removeMemberAction(projectId: string, userId: string): Promise<void> {
+export async function removeMemberAction(
+  projectId: string,
+  userId: string
+): Promise<MemberActionResult> {
   const session = await getSession();
-  if (!session?.accessToken) {
-    throw Object.assign(new Error("Unauthorized"), { status: 401 });
-  }
-  if (!isUuid(projectId) || !isUuid(userId)) {
-    throw Object.assign(new Error("Invalid identifiers"), { status: 400 });
-  }
+  if (!session?.accessToken) return failure(401);
+  if (!isUuid(projectId) || !isUuid(userId)) return failure(400);
 
   try {
     await unassignProjectMember(projectId, userId);
   } catch (err) {
-    const status = (err as { status?: number }).status;
-    if (status === 404) {
-      try {
-        await removeMemberLegacy(projectId, userId);
-      } catch (legacyErr) {
-        rethrowWithStatus(legacyErr);
-      }
-      revalidatePath(membersPath(projectId), "page");
-      return;
+    if (statusOf(err) !== 404) return failure(statusOf(err));
+    try {
+      await removeMemberLegacy(projectId, userId);
+    } catch (legacyErr) {
+      return failure(statusOf(legacyErr));
     }
-    rethrowWithStatus(err);
   }
   revalidatePath(membersPath(projectId), "page");
+  return { ok: true, data: null };
 }

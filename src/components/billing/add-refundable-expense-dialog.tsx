@@ -29,7 +29,16 @@ import {
   setRefundableStatus,
 } from "@/lib/api/billing/refundable-invoices";
 import type { RefundableExpense } from "@/types/invoice";
+import { ApiError } from "@/lib/api/http";
 import { formatEUR } from "@/lib/utils/formatters";
+
+/** The API's 400 for an expense already paid with a company payment method. */
+function isCompanyPaidRejection(reason: unknown): boolean {
+  if (!(reason instanceof ApiError) || reason.status !== 400) return false;
+  const data = reason.data as { message?: unknown } | undefined;
+  const message = typeof data?.message === "string" ? data.message : reason.message;
+  return /paid by the company/i.test(message);
+}
 
 interface AddRefundableExpenseDialogProps {
   open: boolean;
@@ -98,30 +107,42 @@ export function AddRefundableExpenseDialog({
     if (selected.size === 0) return;
     setSubmitting(true);
     try {
+      const ids = [...selected];
       const results = await Promise.allSettled(
-        [...selected].map((id) => setRefundableStatus(id, "refundable"))
+        ids.map((id) => setRefundableStatus(id, "refundable"))
       );
 
-      const rejected = results.filter((r) => r.status === "rejected");
+      // An expense paid with a company payment method can never be tracked
+      // for refund: drop it from the picker and say why, instead of asking
+      // for a retry that cannot succeed.
+      const companyPaidIds = ids.filter((_, i) => {
+        const r = results[i];
+        return r.status === "rejected" && isCompanyPaidRejection(r.reason);
+      });
+      const otherFailures = results.filter(
+        (r, i) => r.status === "rejected" && !companyPaidIds.includes(ids[i])
+      ).length;
       const succeeded = results.filter((r) => r.status === "fulfilled");
 
+      if (companyPaidIds.length > 0) {
+        const numbers = candidates
+          .filter((c) => companyPaidIds.includes(c.id))
+          .map((c) => c.invoice_number)
+          .join(", ");
+        toast.error(tRef.current("companyPaidNotRefundable", { numbers }));
+        setCandidates((prev) => prev.filter((c) => !companyPaidIds.includes(c.id)));
+        setSelected((prev) => new Set([...prev].filter((id) => !companyPaidIds.includes(id))));
+      }
+
       // Always call onAdded if at least one succeeded, so the parent list
-      // refetches the items that were successfully marked.
+      // refetches the items that were successfully marked (callers close the
+      // dialog then). When all failed the dialog stays open.
       if (succeeded.length > 0) {
         onAdded();
       }
 
-      if (rejected.length > 0) {
+      if (otherFailures > 0) {
         toast.error(tRef.current("partialAddError"));
-        // Keep dialog open when some failed so the user can retry.
-        // If all failed, stay open; if some succeeded, close is done via onAdded
-        // which callers typically use to close+reload. Let callers decide — we
-        // stay open only when ALL failed (no onAdded means parent won't close).
-        if (succeeded.length === 0) {
-          // All failed — keep dialog open, don't call onAdded (already skipped).
-          return;
-        }
-        // Partial success: onAdded already called above; dialog will close via parent.
       }
     } finally {
       setSubmitting(false);
@@ -158,14 +179,16 @@ export function AddRefundableExpenseDialog({
                 {t("truncatedNotice", { count: candidates.length, total: candidateTotal })}
               </p>
             )}
-            <table className="w-full text-sm">
+            {/* Fixed layout: a long project or recipient name is cut, not
+                allowed to push the amount out of the dialog. */}
+            <table className="w-full table-fixed text-sm" data-testid="refundable-candidates">
               <thead className="sticky top-0 bg-background border-b">
                 <tr className="text-left text-muted-foreground">
                   <th className="p-2 w-8" />
                   <th className="p-2 font-medium">{t("columns.project")}</th>
-                  <th className="p-2 font-medium">{t("columns.invoiceNumber")}</th>
+                  <th className="p-2 font-medium w-28 sm:w-32">{t("columns.invoiceNumber")}</th>
                   <th className="p-2 font-medium">{t("columns.recipient")}</th>
-                  <th className="p-2 font-medium text-right">{t("columns.total")}</th>
+                  <th className="p-2 font-medium text-right w-24 sm:w-28">{t("columns.total")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -184,10 +207,16 @@ export function AddRefundableExpenseDialog({
                         aria-label={expense.invoice_number}
                       />
                     </td>
-                    <td className="p-2">{expense.project_name}</td>
-                    <td className="p-2 font-mono text-xs">{expense.invoice_number}</td>
-                    <td className="p-2">{expense.recipient_name}</td>
-                    <td className="p-2 text-right tabular-nums">
+                    <td className="p-2 truncate" title={expense.project_name}>
+                      {expense.project_name}
+                    </td>
+                    <td className="p-2 truncate font-mono text-xs" title={expense.invoice_number}>
+                      {expense.invoice_number}
+                    </td>
+                    <td className="p-2 truncate" title={expense.recipient_name}>
+                      {expense.recipient_name}
+                    </td>
+                    <td className="p-2 whitespace-nowrap text-right tabular-nums">
                       {formatEUR(expense.total_amount)}
                     </td>
                   </tr>

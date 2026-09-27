@@ -16,6 +16,8 @@ const BANK_RELEASE_KEYS = [
   "overDrawn",
   "drawsMeta",
   "headlineMeta",
+  "headlineMetaOver",
+  "drawsMetaSingle",
   "segmentHint",
   "creditLabel",
   "leftLabel",

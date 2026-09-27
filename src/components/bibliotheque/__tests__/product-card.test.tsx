@@ -150,6 +150,8 @@ describe("ProductCard", () => {
 
     // Date rendered as canonical dd/mm/YYYY.
     expect(screen.getByText(/15\/05\/2024/)).toBeInTheDocument();
+    // A real space before the separator: "Purchased 5 times · 15/05/2024".
+    expect(document.body.textContent).toMatch(/times · 15\/05\/2024/);
   });
 
   it("does not render date separator when last_purchased_at is null", () => {

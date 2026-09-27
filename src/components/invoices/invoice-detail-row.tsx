@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { InvoiceDetailContent } from "@/components/invoices/invoice-detail-content";
 import { fetchInvoice } from "@/lib/api/invoice-api";
@@ -12,6 +12,8 @@ interface InvoiceDetailRowProps {
   projectId: string;
   invoiceId: string;
   canManage: boolean;
+  /** Offer "Transfer to company payment" (company admins of the project's company). */
+  canTransferToCompany?: boolean;
   /** Number of columns in the parent table — used for `colSpan` on the wrapper td. */
   colSpan: number;
   /** id used by the parent row's `aria-controls` to link disclosure trigger ↔ region. */
@@ -38,6 +40,7 @@ export function InvoiceDetailRow({
   projectId,
   invoiceId,
   canManage,
+  canTransferToCompany = false,
   colSpan,
   regionId,
   onMutated,
@@ -46,9 +49,10 @@ export function InvoiceDetailRow({
   companyName,
 }: InvoiceDetailRowProps) {
   const locale = useLocale();
+  const t = useTranslations("invoices");
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
   // Mount-then-flip pattern: render with grid 0fr on first paint, then flip
   // to 1fr on the next animation frame so CSS transitions the height open.
   const [open, setOpen] = useState(false);
@@ -69,10 +73,10 @@ export function InvoiceDetailRow({
         if (cancelled) return;
         setInvoice(invoiceData);
         setCompanyId(projectData?.company_id ?? null);
-        setError(null);
+        setError(false);
       })
       .catch(() => {
-        if (!cancelled) setError("Failed to load invoice");
+        if (!cancelled) setError(true);
       });
     return () => { cancelled = true; };
   }, [projectId, invoiceId]);
@@ -91,12 +95,13 @@ export function InvoiceDetailRow({
             </div>
           )}
           {error && (
-            <div className="py-4 text-sm text-destructive">{error}</div>
+            <div className="py-4 text-sm text-destructive">{t("loadFailed")}</div>
           )}
           {invoice && (
             <InvoiceDetailContent
               invoice={invoice}
               canManage={canManage}
+              canTransferToCompany={canTransferToCompany}
               companyId={companyId}
               companyName={companyName}
               onUpdated={(u) => { setInvoice(u); onMutated?.(); }}

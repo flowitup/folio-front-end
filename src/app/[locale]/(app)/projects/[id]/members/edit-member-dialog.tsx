@@ -69,19 +69,22 @@ export function EditMemberDialog({
       const payload: { email?: string; display_name?: string | null } = {};
       if (emailChanged) payload.email = email.trim();
       if (nameChanged) payload.display_name = displayName.trim() || null;
-      await updateUserProfileAction(projectId, member.user_id, payload);
+      const result = await updateUserProfileAction(projectId, member.user_id, payload);
+      if (!result.ok) {
+        if (result.status === 409) {
+          toast.error(t("edit.toast.emailTaken"));
+        } else if (result.status === 403) {
+          toast.error(t("edit.toast.forbidden"));
+        } else {
+          toast.error(t("edit.toast.saveFailed"));
+        }
+        return;
+      }
       toast.success(t("edit.toast.saved"));
       onOpenChange(false);
       router.refresh();
-    } catch (err: unknown) {
-      const status = (err as { status?: number }).status;
-      if (status === 409) {
-        toast.error(t("edit.toast.emailTaken"));
-      } else if (status === 403) {
-        toast.error(t("edit.toast.forbidden"));
-      } else {
-        toast.error(t("toast.error"));
-      }
+    } catch {
+      toast.error(t("edit.toast.saveFailed"));
     } finally {
       setIsSubmitting(false);
     }

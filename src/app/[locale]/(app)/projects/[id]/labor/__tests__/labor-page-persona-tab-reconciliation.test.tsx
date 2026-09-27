@@ -22,11 +22,12 @@ vi.mock("next-intl", () => ({
   useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
 }));
 
+const nav = vi.hoisted(() => ({ search: "" }));
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "proj-1" }),
   usePathname: () => "/en/projects/proj-1/labor",
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(nav.search),
 }));
 
 vi.mock("sonner", () => ({
@@ -91,8 +92,11 @@ vi.mock("@/lib/api/projects", () => ({
   fetchProjectById: vi.fn().mockResolvedValue({ company_id: null }),
 }));
 
-vi.mock("../actions", () => ({
+vi.mock("@/components/labor/labor-role-actions", () => ({
   fetchLaborRolesAction: vi.fn().mockResolvedValue({ success: true, data: { roles: [], palette: [] } }),
+}));
+vi.mock("../actions", () => ({
+  fetchAttendanceChangeRequestsAction: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }));
 
 vi.mock("@/components/labor/worker-list", () => ({ WorkerList: () => <div data-testid="worker-list" /> }));
@@ -111,6 +115,7 @@ vi.mock("@/components/labor/day-roster", () => ({ DayRoster: () => <div data-tes
 describe("LaborPage — persona/tab reconciliation (H1)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    nav.search = "";
     mockUseProject.mockReturnValue({ projects: [], isLoading: true });
   });
 
@@ -148,4 +153,36 @@ describe("LaborPage — persona/tab reconciliation (H1)", () => {
     await waitFor(() => expect(screen.getByTestId("day-roster")).toBeInTheDocument());
     expect(screen.queryByRole("button", { name: "labor.summary" })).not.toBeInTheDocument();
   });
+
+  it("honours a ?tab= deep link opened on a fresh page load, once the projects resolve", async () => {
+    nav.search = "tab=payments";
+    const { rerender } = render(<LaborPageClient initialDate="2026-09-08" />);
+
+    mockUseProject.mockReturnValue({
+      projects: [{ id: "proj-1", my_permissions: ["project:manage_labor", "project:manage_invoices"] }],
+      isLoading: false,
+    });
+    rerender(<LaborPageClient initialDate="2026-09-08" />);
+
+    await waitFor(() => expect(screen.getByTestId("labor-payments-tab")).toBeInTheDocument());
+    expect(screen.queryByTestId("labor-summary")).not.toBeInTheDocument();
+  });
+
+  it.each(["payments", "attendance"])(
+    "never shows a member the manager %s tab under the roster, even through ?tab=",
+    async (tab) => {
+      mockUseProject.mockReturnValue({
+        projects: [{ id: "proj-1", my_permissions: ["project:read"] }],
+        isLoading: false,
+      });
+      nav.search = `tab=${tab}`;
+      render(<LaborPageClient initialDate="2026-09-08" />);
+
+      await waitFor(() => expect(screen.getByTestId("day-roster")).toBeInTheDocument());
+      expect(screen.queryByTestId("labor-payments-tab")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("labor-summary")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "labor.logDay" })).not.toBeInTheDocument();
+    },
+  );
 });
+

@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 // useLocale is kept for the navigation URL (locale-prefixed routes)
 import type { DueNotification } from "@/lib/api/notifications";
+import { useProject } from "@/context/ProjectContext";
+import { projectDisplayName } from "@/lib/projects/project-display-name";
 
 interface NotificationRowProps {
   item: DueNotification;
@@ -22,9 +24,14 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
   const t = useTranslations("notifications");
   const router = useRouter();
   const locale = useLocale();
+  const { projects, selectProject } = useProject();
   const { note } = item;
+  // Reminders with the same title in two projects must be told apart.
+  const project = projects.find((p) => p.id === note.project_id);
 
   function handleClickThrough() {
+    // Keep the breadcrumb and project switcher on the note's project.
+    selectProject(note.project_id);
     router.push(`/${locale}/projects/${note.project_id}/notes`);
     onNavigate();
   }
@@ -48,6 +55,12 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
           style={{ color: "var(--foreground)" }}
         >
           {note.title}
+          {project && (
+            <span className="font-normal" style={{ color: "var(--muted-foreground)" }}>
+              {" · "}
+              {projectDisplayName(project)}
+            </span>
+          )}
         </p>
       </button>
 

@@ -160,7 +160,7 @@ describe("InvoiceForm — service_month field", () => {
     render(
       <InvoiceForm
         onSubmit={mockOnSubmit}
-        initialValues={{ type: "labor", recipient_name: "Worker Co" }}
+        initialValues={{ type: "labor", issue_date: "2026-01-01", recipient_name: "Worker Co" }}
         editingInvoiceId="inv-legacy"
       />
     );

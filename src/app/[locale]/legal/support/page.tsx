@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Folio · Support" };
 
+// French for French readers; English for everyone else (no Vietnamese version yet).
+
 const SUPPORT_EMAIL = "mt.bui.fr@gmail.com";
 
 /** Support page linked from the App Store / Play listings. */
@@ -11,9 +13,9 @@ export default async function SupportPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const fr = locale !== "en";
+  const fr = locale === "fr";
   return (
-    <>
+    <div lang={fr ? "fr" : "en"} className="space-y-4">
       <h1>{fr ? "Support Folio" : "Folio Support"}</h1>
       <p>
         {fr
@@ -33,6 +35,6 @@ export default async function SupportPage({
           {fr ? "Politique de confidentialité" : "Privacy policy"}
         </a>
       </p>
-    </>
+    </div>
   );
 }

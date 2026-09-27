@@ -59,6 +59,8 @@ export interface BillingDocument {
   issuer_bic: string | null;
   issuer_logo_url: string | null;
   source_devis_id: string | null;
+  /** Set on a devis once it has been converted: the facture it became. */
+  converted_to_facture_id?: string | null;
   total_ht: string;
   total_tva: string;
   total_ttc: string;
@@ -101,6 +103,20 @@ export interface CreateBillingDocumentPayload {
   payment_due_date?: string | null;
   payment_terms?: string | null;
   issue_date?: string | null;
+}
+
+/** Statuses POST /billing-documents/import accepts for a historical document. */
+export type ImportBillingDocumentStatus = "draft" | "sent" | "paid" | "cancelled";
+
+/**
+ * Historical document with its original number (POST /billing-documents/import).
+ * Same fields as a creation plus the verbatim number, its status and, optionally,
+ * the original creation timestamp.
+ */
+export interface ImportBillingDocumentPayload extends CreateBillingDocumentPayload {
+  document_number: string;
+  status: ImportBillingDocumentStatus;
+  created_at?: string | null;
 }
 
 export interface UpdateBillingDocumentPayload {
@@ -162,3 +178,19 @@ export interface UpdateBillingTemplatePayload {
   default_vat_rate?: string | null;
 }
 
+
+/**
+ * One row of GET /projects/<project_id>/billing-documents — every quote and
+ * invoice linked to a project, whoever issued it. Unlike BillingDocument, the
+ * totals arrive as JSON numbers (the backend summary casts them to float).
+ */
+export interface ProjectBillingDocumentSummary {
+  id: string;
+  kind: BillingDocumentKind;
+  document_number: string;
+  status: BillingDocumentStatus;
+  issue_date: string; // ISO date (YYYY-MM-DD)
+  recipient_name: string;
+  total_ht: number;
+  total_ttc: number;
+}

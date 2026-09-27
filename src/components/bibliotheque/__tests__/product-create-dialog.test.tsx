@@ -6,6 +6,9 @@
  * + dialog closes; error → inline error shown. Validation: empty name blocks submit.
  * Image: when a file is chosen, uploadProductImageAction is called after create;
  * image-upload failure is non-fatal (product still created, warning toast).
+ * Image from a supplier link: fetched after create (no force); a non-https
+ * link blocks creation; a refused link is non-fatal with the reason toasted;
+ * file and link replace each other.
  *
  * Uses fireEvent.change for inputs (avoids userEvent + fake-timer conflicts).
  * Mocks shadcn Select/Dialog so Radix portals don't interfere with jsdom.
@@ -22,6 +25,7 @@ vi.mock(
   () => ({
     createProductAction: vi.fn(),
     uploadProductImageAction: vi.fn(),
+    setProductImageFromUrlAction: vi.fn(),
   })
 );
 
@@ -100,6 +104,7 @@ vi.mock("@/components/ui/select", () => ({
 
 import {
   createProductAction,
+  setProductImageFromUrlAction,
   uploadProductImageAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import { toast } from "sonner";
@@ -108,6 +113,7 @@ import type { Supplier, LibraryProduct } from "@/lib/api/bibliotheque";
 
 const mockCreate = vi.mocked(createProductAction);
 const mockUploadImage = vi.mocked(uploadProductImageAction);
+const mockFromUrl = vi.mocked(setProductImageFromUrlAction);
 const mockToast = toast as unknown as {
   success: ReturnType<typeof vi.fn>;
   error: ReturnType<typeof vi.fn>;
@@ -550,5 +556,166 @@ describe("ProductCreateDialog", () => {
       expect(screen.getByText(/please select or enter a supplier/i)).toBeInTheDocument();
     });
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe("ProductCreateDialog — image from a supplier link", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const LINK = "https://media.adeo.com/marketplace/photo.jpg";
+  const linkInput = () => screen.getByLabelText(/supplier link/i) as HTMLInputElement;
+  const typeLink = (value: string) => fireEvent.change(linkInput(), { target: { value } });
+
+  function fillRequired() {
+    fireEvent.change(screen.getByLabelText(/supplier name/i), {
+      target: { value: "Supplier X" },
+    });
+    fireEvent.change(screen.getByLabelText(/product name/i), {
+      target: { value: "Product X" },
+    });
+  }
+
+  it("has no fetch button — the link is fetched once the product exists", () => {
+    renderDialog({ suppliers: [] });
+    expect(linkInput()).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^fetch$/i })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/the image is fetched when the product is added/i)
+    ).toBeInTheDocument();
+  });
+
+  it("fetches the link into the new product after create, without force", async () => {
+    const product = makeProduct();
+    mockCreate.mockResolvedValueOnce({ ok: true, data: product });
+    mockFromUrl.mockResolvedValueOnce({ ok: true, data: { image_storage_key: "k1" } });
+    const onCreated = vi.fn();
+    renderDialog({ suppliers: [], onCreated });
+
+    fillRequired();
+    typeLink(LINK);
+    fireEvent.click(screen.getByRole("button", { name: /add product/i }));
+
+    await waitFor(() => {
+      expect(mockFromUrl).toHaveBeenCalledWith(product.id, LINK);
+      expect(onCreated).toHaveBeenCalledWith(expect.objectContaining({ has_image: true }));
+    });
+    expect(mockCreate.mock.invocationCallOrder[0]).toBeLessThan(
+      mockFromUrl.mock.invocationCallOrder[0]
+    );
+    expect(mockUploadImage).not.toHaveBeenCalled();
+  });
+
+  it("does not create the product when the link is not https", () => {
+    renderDialog({ suppliers: [] });
+
+    fillRequired();
+    typeLink("http://media.adeo.com/photo.jpg");
+    fireEvent.click(screen.getByRole("button", { name: /add product/i }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Enter a full image link starting with https://."
+    );
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("a refused link is non-fatal — product created, warning with the reason", async () => {
+    const product = makeProduct();
+    mockCreate.mockResolvedValueOnce({ ok: true, data: product });
+    mockFromUrl.mockResolvedValueOnce({ ok: false, error: "refused", code: "SsrfBlocked" });
+    const onCreated = vi.fn();
+    renderDialog({ suppliers: [], onCreated });
+
+    fillRequired();
+    typeLink(LINK);
+    fireEvent.click(screen.getByRole("button", { name: /add product/i }));
+
+    await waitFor(() => {
+      expect(onCreated).toHaveBeenCalledWith(product);
+      expect(mockToast.warning).toHaveBeenCalledWith(
+        "Product saved, but the image could not be fetched from the link.",
+        {
+          description:
+            "This site is not accepted. Use an image link from a supported supplier site.",
+        }
+      );
+      expect(mockToast.success).toHaveBeenCalled();
+    });
+  });
+
+  it("choosing a file after typing a link clears the link; the file wins", async () => {
+    const product = makeProduct();
+    mockCreate.mockResolvedValueOnce({ ok: true, data: product });
+    mockUploadImage.mockResolvedValueOnce({ ok: true, data: { image_storage_key: "k1" } });
+    renderDialog({ suppliers: [] });
+
+    fillRequired();
+    typeLink(LINK);
+    const file = new File(["img"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(screen.getByLabelText(/^image$/i), {
+      target: { files: [file] },
+    });
+    expect(linkInput().value).toBe("");
+    fireEvent.click(screen.getByRole("button", { name: /add product/i }));
+
+    await waitFor(() => {
+      expect(mockUploadImage).toHaveBeenCalledWith(product.id, expect.any(FormData));
+    });
+    expect(mockFromUrl).not.toHaveBeenCalled();
+  });
+
+  it("typing a link after choosing a file drops the file; the link wins", async () => {
+    const product = makeProduct();
+    mockCreate.mockResolvedValueOnce({ ok: true, data: product });
+    mockFromUrl.mockResolvedValueOnce({ ok: true, data: { image_storage_key: "k1" } });
+    renderDialog({ suppliers: [] });
+
+    fillRequired();
+    const file = new File(["img"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(screen.getByLabelText(/^image$/i), {
+      target: { files: [file] },
+    });
+    expect(screen.getByAltText("Preview of the chosen image")).toBeInTheDocument();
+    typeLink(LINK);
+    expect(screen.queryByAltText("Preview of the chosen image")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /add product/i }));
+
+    await waitFor(() => {
+      expect(mockFromUrl).toHaveBeenCalledWith(product.id, LINK);
+    });
+    expect(mockUploadImage).not.toHaveBeenCalled();
+  });
+
+  it("closes with a warning when the image upload call rejects instead of hanging", async () => {
+    const product = makeProduct({ has_image: false });
+    mockCreate.mockResolvedValueOnce({ ok: true, data: product });
+    mockUploadImage.mockRejectedValueOnce(new Error("Body exceeded 1 MB limit"));
+    const onCreated = vi.fn();
+    const onOpenChange = vi.fn();
+    renderDialog({ suppliers: [], onCreated, onOpenChange });
+
+    fireEvent.change(screen.getByLabelText(/supplier name/i), {
+      target: { value: "Supplier X" },
+    });
+    fireEvent.change(screen.getByLabelText(/product name/i), {
+      target: { value: "Product X" },
+    });
+    const file = new File(["img"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(screen.getByLabelText(/image/i), { target: { files: [file] } });
+    fireEvent.click(screen.getByRole("button", { name: /add product/i }));
+
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(mockToast.warning).toHaveBeenCalled();
+    expect(onCreated).toHaveBeenCalledWith(expect.objectContaining({ has_image: false }));
+  });
+
+  it("refuses an image over 10 MB when it is picked", async () => {
+    renderDialog({ suppliers: [] });
+
+    const big = new File(["x"], "big.jpg", { type: "image/jpeg" });
+    Object.defineProperty(big, "size", { value: 10 * 1024 * 1024 + 1 });
+    fireEvent.change(screen.getByLabelText(/image/i), { target: { files: [big] } });
+
+    expect(mockToast.error).toHaveBeenCalledWith("This image is larger than 10 MB.");
+    expect(screen.queryByAltText(/preview/i)).toBeNull();
   });
 });

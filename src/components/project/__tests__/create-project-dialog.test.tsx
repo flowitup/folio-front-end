@@ -200,6 +200,39 @@ describe("CreateProjectDialog", () => {
     });
   });
 
+  it("reads a French-formatted budget exactly instead of truncating it", async () => {
+    mockCreateProject.mockResolvedValueOnce(FAKE_PROJECT);
+    const user = userEvent.setup();
+
+    render(<CreateProjectDialog open={true} onOpenChange={vi.fn()} />);
+
+    await user.type(screen.getByLabelText("Address"), "12 Rue des Martyrs");
+    await user.type(screen.getByLabelText("Budget (€)"), "12 500,75");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() => {
+      expect(mockCreateProject).toHaveBeenCalledWith({
+        address: "12 Rue des Martyrs",
+        budget: 12500.75,
+      });
+    });
+  });
+
+  it("rejects a budget with trailing garbage instead of saving its leading digits", async () => {
+    const user = userEvent.setup();
+
+    render(<CreateProjectDialog open={true} onOpenChange={vi.fn()} />);
+
+    await user.type(screen.getByLabelText("Address"), "12 Rue des Martyrs");
+    await user.type(screen.getByLabelText("Budget (€)"), "10abc");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    expect(
+      await screen.findByText("Budget must be a positive number")
+    ).toBeInTheDocument();
+    expect(mockCreateProject).not.toHaveBeenCalled();
+  });
+
   it("shows error when budget is negative", async () => {
     const user = userEvent.setup();
 

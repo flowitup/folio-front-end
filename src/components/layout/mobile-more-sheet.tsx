@@ -7,17 +7,20 @@ import {
   HardHat,
   StickyNote,
   Files,
-  FileText,
-  FileCheck,
   FileSearch,
-  LayoutTemplate,
+  ReceiptEuro,
+  Calculator,
+  Images,
+  Library,
+  Wrench,
   Settings,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
-import { can } from "@/lib/auth/permissions";
+import { can, isCompanyAdmin } from "@/lib/auth/permissions";
+import { BILLING_NAV } from "@/components/layout/sidebar-billing-group";
 
 interface MobileMoreSheetProps {
   open: boolean;
@@ -38,25 +41,45 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
     user?.permissions,
     selectedProject?.my_permissions
   );
+  // Client-side twin of hasBillingAccess() (the desktop sidebar's gate): the
+  // project's quotes & invoices open /billing pages, which are company-admin only.
+  const canViewBilling = isCompanyAdmin(user?.companies, null, user?.permissions);
   const pathWithoutLocale =
     pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
   const projectItems = selectedProjectId
     ? [
         { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
+        ...(canViewBilling
+          ? [
+              {
+                key: "quotesInvoices",
+                href: `/projects/${selectedProjectId}/billing`,
+                icon: ReceiptEuro,
+              },
+            ]
+          : []),
+        { key: "chiffrage", href: `/projects/${selectedProjectId}/chiffrage`, icon: Calculator },
         { key: "notes", href: `/projects/${selectedProjectId}/notes`, icon: StickyNote },
         ...(canSeeDocuments
           ? [{ key: "documents", href: `/projects/${selectedProjectId}/documents`, icon: Files }]
           : []),
         { key: "analyses", href: `/projects/${selectedProjectId}/analyses`, icon: FileSearch },
+        { key: "photos", href: `/projects/${selectedProjectId}/photos`, icon: Images },
       ]
     : [];
 
-  const billingItems = [
-    { key: "devis", href: "/billing/devis", icon: FileText, label: tBilling("devis") },
-    { key: "factures", href: "/billing/factures", icon: FileCheck, label: tBilling("factures") },
-    { key: "templates", href: "/billing/templates", icon: LayoutTemplate, label: tBilling("templates") },
+  // Company-wide pages, as in the desktop sidebar.
+  const companyItems = [
+    { key: "bibliotheque", href: "/bibliotheque", icon: Library },
+    { key: "inventory", href: "/inventory", icon: Wrench },
   ];
+
+  // Same entries and gate as the desktop sidebar's Billing group: company
+  // admins only (anyone else is redirected away from /billing).
+  const billingItems = canViewBilling
+    ? BILLING_NAV.map((item) => ({ ...item, label: tBilling(item.key) }))
+    : [];
 
   const settingsItem = { key: "settings", href: "/settings", icon: Settings };
 
@@ -88,7 +111,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full"
             style={{ background: "var(--paper-2)" }}
-            aria-label="Close"
+            aria-label={t("close")}
           >
             <X size={16} />
           </button>
@@ -125,6 +148,31 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
           )}
 
           <div className="mb-2">
+            {companyItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <Link prefetch={false}
+                  key={item.key}
+                  href={item.href}
+                  onClick={onClose}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium transition-colors",
+                    active
+                      ? "bg-[var(--paper-2)] text-[var(--accent)]"
+                      : "text-[var(--ink)] active:bg-[var(--paper-2)]",
+                  )}
+                >
+                  <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
+                  <span>{t(item.key)}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {billingItems.length > 0 && (
+          <div className="mb-2">
+            <div className="mx-4 my-1" style={{ borderTop: "1px solid var(--line)" }} />
             <div
               className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide"
               style={{ color: "var(--muted)" }}
@@ -152,6 +200,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
               );
             })}
           </div>
+          )}
 
           <div className="mx-4 my-1" style={{ borderTop: "1px solid var(--line)" }} />
 

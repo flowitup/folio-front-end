@@ -43,9 +43,14 @@ export interface PhoneLoginFlow {
   verified: boolean;
   /** Seconds left before "Resend" is allowed again. */
   cooldown: number;
-  /** How long the code the backend just sent stays valid, in whole minutes. */
+  /** Whole minutes (rounded up) the code just sent stays valid from now. */
   expiresInMinutes: number;
+  /** The code's lifetime has run out: it can only be refused. */
+  codeExpired: boolean;
   canSend: boolean;
+  /** Back on the phone step with the number a live code went to, inside the
+   * resend window: Send returns to that code instead of asking for another. */
+  waitingOnSameNumber: boolean;
   canVerify: boolean;
   sendCode: () => Promise<void>;
   verify: (explicitCode?: string) => Promise<void>;
@@ -62,7 +67,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
   const { loginWithPhone, isLoading } = useAuth();
 
   const [step, setStep] = useState<"phone" | "code">("phone");
-  const [nationalNumber, setNationalNumber] = useState("");
+  const [nationalNumber, setNationalNumberState] = useState("");
   const [sentTo, setSentTo] = useState("");
   const [code, setCode] = useState("");
   const [errorKey, setErrorKey] = useState<string | null>(null);
@@ -77,9 +82,20 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
   // state, not a ref, because the submit button's own state depends on it.
   const [lastSubmitted, setLastSubmitted] = useState<string | null>(null);
   // The backend decides the code's lifetime (OTP_TTL_SECONDS) and reports it on
-  // every request, so the card quotes what was actually sent rather than a
-  // number that silently drifts from the server's.
-  const [expiresInMinutes, setExpiresInMinutes] = useState(5);
+  // every request. Kept as a deadline and ticked down, so the card never keeps
+  // saying "Expires in 5 minutes" about a code that has already expired.
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (step !== "code" || expiresAt === null) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [step, expiresAt]);
+
+  const remainingSeconds = expiresAt === null ? 300 : Math.max(0, Math.ceil((expiresAt - now) / 1000));
+  const expiresInMinutes = Math.max(1, Math.ceil(remainingSeconds / 60));
+  const codeExpired = expiresAt !== null && remainingSeconds <= 0;
 
   // Countdown ticker for the "Resend in {n}s" label.
   useEffect(() => {
@@ -90,14 +106,24 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     return () => clearInterval(timer);
   }, [cooldown]);
 
+  // Editing the number clears the "enter a French number" message it caused.
+  const setNationalNumber = useCallback((value: string) => {
+    setNationalNumberState(value);
+    setErrorKey((prev) => (prev === "errorInvalidPhone" ? null : prev));
+  }, []);
+
   const phone = normalizeFrenchPhone(nationalNumber);
   // The backend throttles per number, so the countdown only gates asking again
   // for the SAME number: edit the number and "Send code" is live immediately.
-  const canSend = phone !== null && !isSendingCode && (cooldown === 0 || phone !== sentTo);
+  // An invalid number keeps the button live: pressing it says what is wrong,
+  // where a greyed-out button explained nothing.
+  const waitingOnSameNumber = phone !== null && phone === sentTo && cooldown > 0;
+  const canSend = nationalNumber.trim().length > 0 && !isSendingCode;
   const canVerify =
     new RegExp(`^\\d{${CODE_LENGTH}}$`).test(code) &&
     !isLoading &&
     !verified &&
+    !codeExpired &&
     code !== lastSubmitted;
 
   const sendCode = useCallback(async () => {
@@ -107,6 +133,12 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
       return;
     }
     setErrorKey(null);
+    if (target === sentTo && cooldown > 0) {
+      // The server would refuse a resend this soon, and the code already sent
+      // to this number is still good: go back to it.
+      setStep("code");
+      return;
+    }
     setIsSendingCode(true);
     const result = await requestOtpAction(target);
     setIsSendingCode(false);
@@ -118,16 +150,19 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     setCode("");
     setLastSubmitted(null);
     setSentTo(target);
-    setExpiresInMinutes(Math.max(1, Math.round(result.expiresIn / 60)));
+    const sentAt = Date.now();
+    setNow(sentAt);
+    setExpiresAt(sentAt + result.expiresIn * 1000);
     setCooldown(RESEND_COOLDOWN_SECONDS);
     setStep("code");
-  }, [nationalNumber]);
+  }, [nationalNumber, sentTo, cooldown]);
 
   const verify = useCallback(
     async (explicitCode?: string) => {
       // The backend counts a wrong code against a 5-attempt limit, so never let
       // an auto-submit and a manual submit of the same code both go out.
-      if (isLoading || verified) return;
+      // An expired code can only be refused and would spend an attempt.
+      if (isLoading || verified || codeExpired) return;
       // Auto-submit passes the code it just completed: reading it from state
       // here would still see the value from before that keystroke.
       const submitted = (explicitCode ?? code).trim();
@@ -153,7 +188,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
             : "errorPhoneLoginUnavailable"
       );
     },
-    [code, isLoading, lastSubmitted, loginWithPhone, sentTo, verified]
+    [code, codeExpired, isLoading, lastSubmitted, loginWithPhone, sentTo, verified]
   );
 
   const changeNumber = useCallback(() => {
@@ -179,7 +214,9 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     verified,
     cooldown,
     expiresInMinutes,
+    codeExpired,
     canSend,
+    waitingOnSameNumber,
     canVerify,
     sendCode,
     verify,

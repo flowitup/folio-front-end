@@ -5,6 +5,7 @@
  *
  * Items:
  *   - Edit → navigate to /billing/{segment}/{id} (segment = "devis" or "factures")
+ *   - Preview PDF → open the rendered PDF in a dialog
  *   - Download PDF → fetch PDF blob then trigger browser download
  *   - Convert to Facture → only rendered for devis with status=accepted
  *   - Delete → confirm then call server action
@@ -17,6 +18,7 @@ import {
   MoreHorizontal,
   Pencil,
   Download,
+  Eye,
   FileSpreadsheet,
   ArrowRightLeft,
   Trash2,
@@ -31,22 +33,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { deleteBillingDocumentAction, convertDevisToFactureAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
+import { fetchWithRefresh } from "@/lib/api/refresh";
 import type { BillingDocument } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
+import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
 
 interface BillingActionsMenuProps {
   document: BillingDocument;
@@ -58,8 +53,10 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
   const locale = useLocale();
   const tActions = useTranslations("billing.form.actions");
   const tErrors = useTranslations("billing.form.errors");
+  const tToast = useTranslations("billing.form.toast");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [isXlsxLoading, setIsXlsxLoading] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
@@ -72,20 +69,17 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
 
   const editPath = `/${locale}/billing/${kindToSegment(document.kind)}/${document.id}`;
 
+  const convertedFactureId = document.converted_to_facture_id ?? null;
   const showConvertToFacture =
-    document.kind === "devis" && document.status === "accepted";
+    document.kind === "devis" && document.status === "accepted" && !convertedFactureId;
 
   async function handleDownloadPdf() {
     if (pdfLoadingRef.current) return;
     pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
-      const response = await fetch(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/pdf`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
+      const response = await fetchWithRefresh(
+        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/pdf`
       );
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -110,12 +104,8 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
     xlsxLoadingRef.current = true;
     setIsXlsxLoading(true);
     try {
-      const response = await fetch(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/xlsx`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
+      const response = await fetchWithRefresh(
+        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/xlsx`
       );
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -145,10 +135,10 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
         toast.error(result.error.message);
         return;
       }
-      toast.success("Devis converted to facture successfully.");
-      // Navigate to the new facture
-      router.push(`/${locale}/billing/factures`);
-      onMutated();
+      toast.success(tToast("devisConverted"));
+      // Open the new facture. No onMutated(): its router.refresh() would
+      // cancel this navigation and leave the user on the list.
+      router.push(`/${locale}/billing/factures/${result.data.id}`);
     } catch {
       toast.error(tErrors("convertFailed"));
     } finally {
@@ -166,7 +156,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
         toast.error(result.error.message);
         return;
       }
-      toast.success("Document deleted.");
+      toast.success(tToast("documentDeleted"));
       onMutated();
     } finally {
       deletingRef.current = false;
@@ -189,13 +179,17 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
             ) : (
               <MoreHorizontal size={13} />
             )}
-            <span className="sr-only">Open actions</span>
+            <span className="sr-only">{tActions("openMenu")}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => router.push(editPath)}>
             <Pencil size={13} className="mr-2" />
-            {tActions("edit") ?? "Edit"}
+            {tActions("edit")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setPreviewOpen(true)}>
+            <Eye size={13} className="mr-2" />
+            {tActions("previewPdf")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleDownloadPdf} disabled={isPdfLoading}>
             <Download size={13} className="mr-2" />
@@ -205,6 +199,17 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
             <FileSpreadsheet size={13} className="mr-2" />
             {tActions("downloadXlsx")}
           </DropdownMenuItem>
+          {convertedFactureId && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => router.push(`/${locale}/billing/factures/${convertedFactureId}`)}
+              >
+                <ArrowRightLeft size={13} className="mr-2" />
+                {tActions("openFacture")}
+              </DropdownMenuItem>
+            </>
+          )}
           {showConvertToFacture && (
             <>
               <DropdownMenuSeparator />
@@ -228,27 +233,17 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete document?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete{" "}
-              <strong>{document.document_number}</strong>. This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tActions("cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
-            >
-              {tActions("delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <BillingDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        documentNumber={document.document_number}
+        onConfirm={handleDelete}
+      />
+
+      <BillingPdfPreviewDialog
+        document={previewOpen ? document : null}
+        onClose={() => setPreviewOpen(false)}
+      />
     </>
   );
 }

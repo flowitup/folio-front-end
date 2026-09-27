@@ -6,10 +6,14 @@
  * Props:
  *   value / onChange — controlled string value
  *   options          — list of { value, label, meta? } to display
- *   onQueryChange    — called on every keystroke for async data loading
+ *   onQueryChange    — called on every keystroke for async data loading; when
+ *                      omitted, options are filtered locally by the typed text
  *   placeholder      — input placeholder
  *   emptyText        — text shown when options list is empty (no match)
- *   allowFreeText    — default true; typed string becomes value on Enter / blur
+ *   allowFreeText    — default true; the typed string becomes the value on Enter
+ *                      (unless an option was picked with the arrow keys), on
+ *                      blur and when the popover closes; Escape reverts it, and
+ *                      an empty string clears the value
  *   loading          — shows a subtle spinner hint while fetching
  *   disabled         — passthrough to trigger button
  *   className        — added to the trigger button
@@ -80,6 +84,11 @@ export function Combobox({
   // Set when an option is selected; consulted by handleBlur to skip the
   // free-text overwrite that would otherwise race with the click.
   const justSelectedRef = React.useRef(false);
+  // Set when the user moves the highlight with the keyboard: Enter then picks
+  // the highlighted option instead of committing the typed text.
+  const navigatedRef = React.useRef(false);
+  // Set by Escape so the close that follows does not commit the typed text.
+  const cancelledRef = React.useRef(false);
 
   // Sync inputQuery whenever the controlled value changes from the outside
   // (e.g., when parent prefills after suggestion selection).
@@ -93,15 +102,39 @@ export function Combobox({
   // user can refine from where they left off.
   function handleOpenChange(next: boolean) {
     if (next) {
+      justSelectedRef.current = false;
+      navigatedRef.current = false;
+      cancelledRef.current = false;
       setInputQuery(value);
       onQueryChange?.(value);
+    } else if (!cancelledRef.current && !justSelectedRef.current) {
+      // Closed by a click outside or by tabbing away. The input can be
+      // unmounted before its blur fires, so commit the typed text here.
+      commitFreeText();
     }
     setOpen(next);
   }
 
   function handleQueryChange(q: string) {
+    navigatedRef.current = false;
     setInputQuery(q);
     onQueryChange?.(q);
+  }
+
+  /**
+   * Commit the typed text as the value. Text matching an option (ignoring
+   * case) takes that option's value; an empty input clears the value.
+   */
+  function commitFreeText() {
+    if (!allowFreeText) return;
+    const trimmed = inputQuery.trim();
+    const lower = trimmed.toLowerCase();
+    const match = options.find(
+      (o) => o.value.toLowerCase() === lower || o.label.toLowerCase() === lower
+    );
+    const next = trimmed ? (match?.value ?? trimmed) : "";
+    if (next !== value) onChange(next);
+    setInputQuery(next);
   }
 
   function handleSelect(selectedValue: string) {
@@ -111,19 +144,22 @@ export function Combobox({
     setOpen(false);
   }
 
-  /** Commit free-text when user presses Enter with no option highlighted. */
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && allowFreeText) {
-      // cmdk calls onSelect on the highlighted item first; we only reach here
-      // if nothing was selected (empty list or no highlight). Confirm raw text.
-      const trimmed = inputQuery.trim();
-      if (trimmed) {
-        onChange(trimmed);
-        setOpen(false);
-      }
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+      navigatedRef.current = true;
+    }
+    if (e.key === "Enter" && allowFreeText && !navigatedRef.current) {
+      // cmdk always highlights the first option and selects it on Enter from
+      // its root handler, after this one. Unless the user moved the highlight,
+      // commit what they typed and stop cmdk from picking the first option.
+      e.preventDefault();
+      commitFreeText();
+      justSelectedRef.current = true;
+      setOpen(false);
     }
     if (e.key === "Escape") {
       // Revert input to last committed value.
+      cancelledRef.current = true;
       setInputQuery(value);
       setOpen(false);
     }
@@ -138,19 +174,21 @@ export function Combobox({
       setTimeout(() => setOpen(false), 120);
       return;
     }
-    if (allowFreeText) {
-      const trimmed = inputQuery.trim();
-      // Only commit if it changed from the current value.
-      if (trimmed && trimmed !== value) {
-        onChange(trimmed);
-      } else if (!trimmed) {
-        // Blank → revert to last committed value.
-        setInputQuery(value);
-      }
+    if (cancelledRef.current) {
+      setTimeout(() => setOpen(false), 120);
+      return;
     }
+    commitFreeText();
     // Slight delay so popover item clicks aren't cancelled by blur.
     setTimeout(() => setOpen(false), 120);
   }
+
+  // Without an onQueryChange the caller has no way to filter, so filter here.
+  const query = inputQuery.trim().toLowerCase();
+  const visibleOptions =
+    onQueryChange || !query
+      ? options
+      : options.filter((o) => o.label.toLowerCase().includes(query));
 
   const displayLabel =
     value
@@ -189,6 +227,11 @@ export function Combobox({
         align="start"
         sideOffset={4}
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onEscapeKeyDown={() => {
+          // Radix closes on Escape before the input sees the key.
+          cancelledRef.current = true;
+          setInputQuery(value);
+        }}
       >
         <Command shouldFilter={false}>
           <CommandInput
@@ -201,7 +244,7 @@ export function Combobox({
           <CommandList id={listId}>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup heading={groupHeading}>
-              {options.map((option) => (
+              {visibleOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}

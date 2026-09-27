@@ -119,8 +119,13 @@ function setupAuth(canManage: boolean) {
   const perms = canManage
     ? ["project:manage_invoices", "project:view_budget"]
     : ["project:view_budget"];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mockUseAuth.mockReturnValue({ user: { permissions: perms } } as any);
+  mockUseAuth.mockReturnValue({
+    user: {
+      permissions: perms,
+      // The transfer is a company-admin action.
+      companies: canManage ? [{ id: "co-1", name: "Co", role: "admin" }] : [],
+    },
+  } as never);
 }
 
 function setupFetch(

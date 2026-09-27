@@ -52,7 +52,9 @@ export function PosteCard({
 
   return (
     <section className="rounded-lg border bg-card" data-testid="poste-card">
-      <header className="flex items-center gap-2 border-b px-3 py-2">
+      {/* Wraps on narrow screens so the section name keeps room instead of
+          being squeezed to a few letters by the totals and action buttons. */}
+      <header className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
         {dragHandle ?? (canManage ? <span className="w-4" /> : null)}
         <Button
           type="button"
@@ -69,7 +71,7 @@ export function PosteCard({
             <ChevronDown className="h-4 w-4" />
           )}
         </Button>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[10rem] flex-1">
           <h3 className="truncate font-semibold">{poste.name}</h3>
           {poste.note ? (
             <p className="truncate text-xs text-muted-foreground">

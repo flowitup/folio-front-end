@@ -46,7 +46,7 @@ import {
   summarizeLines,
   type CompareLine,
 } from "@/components/chiffrage/compare-lines";
-import { money, quantity } from "@/components/chiffrage/format";
+import { money, quantity, unitLabel } from "@/components/chiffrage/format";
 import { NOTE_DIFF_MARK_CLASS } from "@/components/chiffrage/note-diff-text";
 import type {
   ChiffragePoste,
@@ -403,7 +403,7 @@ export function SectionCompareDialog({
                         </td>
                         <td className={`${NUM} px-4 py-2.5 text-right text-muted-foreground`}>
                           {quantity(a.quantity)}
-                          {a.unit ? ` ${a.unit}` : ""}
+                          {a.unit ? ` ${unitLabel(a.unit, t)}` : ""}
                         </td>
                         <td className="px-4 py-2.5 text-right align-top">
                           {priceCell(line.quoteA, v.kind === "gap" && v.cheaper === "a")}

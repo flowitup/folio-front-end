@@ -32,6 +32,7 @@ import type {
 import { api, ApiError } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
+import { fetchWithRefresh } from "@/lib/api/refresh";
 
 // Build URL with optional query params
 function buildUrl(basePath: string, params?: Record<string, string | undefined>): string {
@@ -45,9 +46,22 @@ function buildUrl(basePath: string, params?: Record<string, string | undefined>)
 }
 
 // Worker API
-export async function fetchWorkers(projectId: string): Promise<Worker[]> {
-  const data = await api.get<WorkerListResponse>(`/projects/${projectId}/workers`);
+/**
+ * A project's workers: the active ones, or with `includeInactive` the
+ * deactivated ones too (they can still be owed pay, be exported, be linked
+ * to a payment or be reactivated).
+ */
+export async function fetchWorkers(
+  projectId: string,
+  options?: { includeInactive?: boolean }
+): Promise<Worker[]> {
+  const query = options?.includeInactive ? "?include_inactive=true" : "";
+  const data = await api.get<WorkerListResponse>(`/projects/${projectId}/workers${query}`);
   return data.workers;
+}
+
+export async function reactivateWorker(projectId: string, workerId: string): Promise<Worker> {
+  return updateWorker(projectId, workerId, { is_active: true });
 }
 
 export async function createWorker(projectId: string, payload: CreateWorkerPayload): Promise<Worker> {
@@ -149,6 +163,20 @@ export async function validateAttendance(projectId: string, entryId: string): Pr
 /** Manager: reject a pending entry — the row is deleted so the worker can log the day again. */
 export async function rejectAttendance(projectId: string, entryId: string): Promise<void> {
   await api.post(`/projects/${projectId}/labor-entries/${entryId}/reject`, {});
+}
+
+/**
+ * Manager: apply a worker's change request on a validated day — the proposed
+ * shift, supplement hours and note replace the day's values (409 when no
+ * request is open any more).
+ */
+export async function approveAttendanceChange(projectId: string, entryId: string): Promise<void> {
+  await api.post(`/projects/${projectId}/labor-entries/${entryId}/change/validate`, {});
+}
+
+/** Manager: drop a worker's change request — the validated day stays as it is (409 when none is open). */
+export async function rejectAttendanceChange(projectId: string, entryId: string): Promise<void> {
+  await api.post(`/projects/${projectId}/labor-entries/${entryId}/change/reject`, {});
 }
 
 // Summary API
@@ -314,9 +342,7 @@ async function fetchExportFile(
   format: LaborExportFormat,
 ): Promise<{ blob: Blob; filename: string }> {
   assertValidExportArgs(range, format);
-  const response = await fetch(url, {
-    credentials: 'include',
-  });
+  const response = await fetchWithRefresh(url);
 
   if (!response.ok) {
     let body: unknown;
@@ -334,14 +360,24 @@ async function fetchExportFile(
   return { blob, filename };
 }
 
+/** Languages the labor export renders labels and month names in. */
+const EXPORT_LOCALES: readonly string[] = ['en', 'fr', 'vi'];
+
+function exportQuery(range: LaborExportRange, format: LaborExportFormat, locale?: string): string {
+  const lang = locale && EXPORT_LOCALES.includes(locale) ? `&locale=${locale}` : '';
+  return `?from=${range.from}&to=${range.to}&format=${format}${lang}`;
+}
+
 export async function fetchLaborExport(
   projectId: string,
   range: LaborExportRange,
   format: LaborExportFormat,
+  /** UI language of the file (en / fr / vi); the API uses English without it. */
+  locale?: string,
 ): Promise<{ blob: Blob; filename: string }> {
   const url =
     `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/labor-export` +
-    `?from=${range.from}&to=${range.to}&format=${format}`;
+    exportQuery(range, format, locale);
   return fetchExportFile(url, range, format);
 }
 
@@ -350,10 +386,12 @@ export async function fetchWorkerLaborExport(
   workerId: string,
   range: LaborExportRange,
   format: LaborExportFormat,
+  /** UI language of the file (en / fr / vi); the API uses English without it. */
+  locale?: string,
 ): Promise<{ blob: Blob; filename: string }> {
   const url =
     `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}` +
     `/workers/${encodeURIComponent(workerId)}/labor-export` +
-    `?from=${range.from}&to=${range.to}&format=${format}`;
+    exportQuery(range, format, locale);
   return fetchExportFile(url, range, format);
 }

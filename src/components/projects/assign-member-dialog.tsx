@@ -94,11 +94,12 @@ export function AssignMemberDialog({
     if (!canAssignManager && role === "manager") setRole("member");
   }, [canAssignManager, role]);
 
-  // Only linked (has a user account), not-already-assigned persons are
-  // assignable — a pending phone-only profile has no user_id to assign.
+  // Only active, linked (has a user account), not-already-assigned persons
+  // are assignable — a pending phone-only profile has no user_id to assign,
+  // and a deactivated profile belongs to someone removed from the company.
   const excludeSet = useMemo(() => new Set(excludeUserIds), [excludeUserIds]);
   const options: ComboboxOption[] = entries
-    .filter((e) => e.linked_user_id && !excludeSet.has(e.linked_user_id))
+    .filter((e) => e.is_active && e.linked_user_id && !excludeSet.has(e.linked_user_id))
     .map((e) => ({ value: e.linked_user_id as string, label: `${e.name} · ${e.phone}` }));
 
   function reset() {
@@ -166,7 +167,7 @@ export function AssignMemberDialog({
               {t("assign.roleLabel")}
             </label>
             <Select value={role} onValueChange={(v) => setRole(v as ProjectAssignmentRole)} disabled={isSubmitting}>
-              <SelectTrigger id="assign-member-role">
+              <SelectTrigger id="assign-member-role" aria-describedby="assign-member-role-hint">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -176,6 +177,12 @@ export function AssignMemberDialog({
                 )}
               </SelectContent>
             </Select>
+            {/* The backend applies this as the person's COMPANY role (it
+                promotes, never demotes), so say so rather than imply a
+                project-only role. */}
+            <p id="assign-member-role-hint" className="text-[12px]" style={{ color: "var(--muted)" }}>
+              {t("assign.roleHint")}
+            </p>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-2">

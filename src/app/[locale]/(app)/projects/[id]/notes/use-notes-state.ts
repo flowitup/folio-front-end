@@ -6,10 +6,12 @@
  * and sonner toasts on error. Extracted from NotesView to keep it under 200 lines.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { confirmDelete } from "./delete-confirm-toast";
+import { confirmDelete, flushPendingDeletes } from "./delete-confirm-toast";
+import { env } from "@/lib/config/env";
+import { getCsrfHeader } from "@/lib/api/http";
 import {
   createNoteAction,
   updateNoteAction,
@@ -41,11 +43,41 @@ function makeTempNote(
   };
 }
 
+/**
+ * Delete a note from the browser straight to the API, surviving page unload
+ * (`keepalive`). Used only to flush a delete still in its undo window when
+ * the user leaves: the server action cannot be relied on once the page or
+ * route is going away.
+ */
+function sendNoteDeleteNow(projectId: string, noteId: string): void {
+  try {
+    void fetch(
+      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/notes/${encodeURIComponent(noteId)}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+        keepalive: true,
+        headers: getCsrfHeader("DELETE"),
+      }
+    ).catch(() => {});
+  } catch {
+    // Nothing more can be done while the page unloads.
+  }
+}
+
+const KNOWN_ERRORS = new Set(["validation", "forbidden", "notFound", "rateLimited"]);
+
+/** `notes.errors.*` key for a failed save: the reason when known. */
+function saveErrorKey(code: string): string {
+  return KNOWN_ERRORS.has(code) ? `errors.${code}` : "errors.saveFailed";
+}
+
 export interface UseNotesStateReturn {
   notes: Note[];
   editingId: string | null;
   setEditingId: (id: string | null) => void;
-  handleAdd: (payload: QuickAddPayload) => Promise<void>;
+  /** Resolves true once the note is saved, false when the save failed. */
+  handleAdd: (payload: QuickAddPayload) => Promise<boolean>;
   handleSave: (noteId: string, payload: NoteSavePayload) => Promise<void>;
   handleDelete: (noteId: string) => void;
   handleToggleDone: (noteId: string) => Promise<void>;
@@ -59,6 +91,10 @@ export function useNotesState(
   const [notes, setNotes] = useState<Note[]>(initialNotes);
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  // Leaving the notes view (client-side navigation) must not drop a delete
+  // the user was told had happened.
+  useEffect(() => () => flushPendingDeletes(), []);
+
   const handleAdd = useCallback(
     async (payload: QuickAddPayload) => {
       const tempId = makeTempId();
@@ -68,10 +104,11 @@ export function useNotesState(
       const result = await createNoteAction(projectId, payload);
       if (result.success) {
         setNotes((prev) => prev.map((n) => (n.id === tempId ? result.note : n)));
-      } else {
-        setNotes((prev) => prev.filter((n) => n.id !== tempId));
-        toast.error(t("errors.saveFailed"));
+        return true;
       }
+      setNotes((prev) => prev.filter((n) => n.id !== tempId));
+      toast.error(t(saveErrorKey(result.error) as Parameters<typeof t>[0]));
+      return false;
     },
     [projectId, t]
   );
@@ -82,15 +119,17 @@ export function useNotesState(
       setNotes((prev) =>
         prev.map((n) => (n.id === noteId ? { ...n, ...payload } : n))
       );
-      setEditingId(null);
 
+      // The editor stays open until the server answers: closing it first
+      // unmounted it, and a failed save then reopened it with the old text,
+      // throwing away what the user had typed.
       const result = await updateNoteAction(projectId, noteId, payload);
       if (result.success) {
         setNotes((prev) => prev.map((n) => (n.id === noteId ? result.note : n)));
+        setEditingId((current) => (current === noteId ? null : current));
       } else {
         setNotes(snapshot);
-        setEditingId(noteId);
-        toast.error(t("errors.saveFailed"));
+        toast.error(t(saveErrorKey(result.error) as Parameters<typeof t>[0]));
       }
     },
     [notes, projectId, t]
@@ -98,8 +137,18 @@ export function useNotesState(
 
   const handleDelete = useCallback(
     (noteId: string) => {
-      const target = notes.find((n) => n.id === noteId);
+      const index = notes.findIndex((n) => n.id === noteId);
+      const target = notes[index];
       if (!target) return;
+
+      // Put the note back where it was (or at the top if the list moved on).
+      const restore = () =>
+        setNotes((prev) => {
+          if (prev.some((n) => n.id === noteId)) return prev;
+          const next = [...prev];
+          next.splice(Math.min(index, next.length), 0, target);
+          return next;
+        });
 
       confirmDelete({
         label: t("deleted.toast"),
@@ -108,15 +157,17 @@ export function useNotesState(
           setNotes((prev) => prev.filter((n) => n.id !== noteId));
           setEditingId(null);
         },
+        onUndo: restore,
         onConfirm: async () => {
           const result = await deleteNoteAction(projectId, noteId);
           if (!result.success) {
-            setNotes((prev) => [target, ...prev]);
+            restore();
             toast.error(t("errors.deleteFailed"));
           }
         },
+        sendNow: () => sendNoteDeleteNow(projectId, noteId),
         onError: () => {
-          setNotes((prev) => [target, ...prev]);
+          restore();
           toast.error(t("errors.deleteFailed"));
         },
       });

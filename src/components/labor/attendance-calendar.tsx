@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/select";
 import { CalendarMonthGrid } from "@/components/labor/calendar-month-grid";
 import { AttendanceDayDetailSheet } from "@/components/labor/attendance-day-detail-sheet";
+import { ConfirmDeleteDialog } from "@/components/labor/confirm-delete-dialog";
+import type { ChangeRequestActions } from "@/components/labor/labor-entry-card";
 import {
   formatMonthTag,
   monthLabel,
@@ -57,6 +59,8 @@ interface AttendanceCalendarProps {
   /** Manager actions on worker-submitted (pending) rows. */
   onValidate?: (entry: LaborEntry) => void;
   onReject?: (entry: LaborEntry) => void;
+  /** Manager actions on a worker's change request (validated rows). */
+  changeRequestActions?: ChangeRequestActions;
   /** Worker lookup for role-aware chip colors. See CalendarCell. */
   workerMap?: Record<string, Worker>;
   /** Activity CRUD callbacks. */
@@ -83,6 +87,7 @@ export function AttendanceCalendar({
   onEditEntry,
   onValidate,
   onReject,
+  changeRequestActions,
   workerMap,
   onAddActivity,
   onEditActivity,
@@ -115,6 +120,8 @@ export function AttendanceCalendar({
   }, [entries, workerFilter]);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  // Entry awaiting the "Delete this entry?" confirmation (same as the list view).
+  const [confirmDelete, setConfirmDelete] = useState<LaborEntry | null>(null);
 
   const dayEntries = useMemo(() => {
     if (!selectedDate) return [];
@@ -154,7 +161,7 @@ export function AttendanceCalendar({
             variant="outline"
             size="icon"
             onClick={() => stepMonth(-1)}
-            aria-label="Previous month"
+            aria-label={t("prevMonth")}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -165,7 +172,7 @@ export function AttendanceCalendar({
             variant="outline"
             size="icon"
             onClick={() => stepMonth(1)}
-            aria-label="Next month"
+            aria-label={t("nextMonth")}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -219,10 +226,11 @@ export function AttendanceCalendar({
           if (!o) setSelectedDate(null);
         }}
         canManage={canManage}
-        onDelete={onDelete}
+        onDelete={(entry) => setConfirmDelete(entry)}
         onEdit={onEditEntry}
         onValidate={onValidate}
         onReject={onReject}
+        changeRequestActions={changeRequestActions}
         onAddMore={
           selectedDate && onLogDay
             ? () => {
@@ -243,6 +251,18 @@ export function AttendanceCalendar({
         onEditActivity={onEditActivity}
         onDeleteActivity={onDeleteActivity}
         onSaveDayDescription={onSaveDayDescription}
+      />
+
+      <ConfirmDeleteDialog
+        open={!!confirmDelete}
+        title={t("confirmDelete")}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) {
+            onDelete(confirmDelete);
+            setConfirmDelete(null);
+          }
+        }}
       />
     </div>
   );

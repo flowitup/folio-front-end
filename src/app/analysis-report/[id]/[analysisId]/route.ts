@@ -14,11 +14,15 @@
  * from its own URL makes it a separate document with the CSP set below, so the
  * report gets exactly the allowances it needs while the app's CSP stays strict.
  *
- * The iframe embedding this response is sandboxed WITHOUT `allow-same-origin`
- * (see analysis-viewer.tsx), which is what actually contains the untrusted
- * markup: the document runs with an opaque origin and cannot reach Folio's
- * cookies, storage, or parent DOM. `script-src 'unsafe-inline'` below is
- * acceptable only under that sandbox — do not relax one without the other.
+ * The untrusted markup is contained by a sandbox, applied twice: the iframe in
+ * analysis-viewer.tsx is sandboxed WITHOUT `allow-same-origin`, and the CSP
+ * below carries the same `sandbox allow-scripts` directive so the document
+ * also gets an opaque origin when this URL is opened directly (a shared link,
+ * "open frame in new tab") — without it, a report's script would run as the
+ * Folio origin and could read storage and drive the app with the viewer's
+ * session. The report cannot reach Folio's cookies, storage, or DOM either
+ * way. `script-src 'unsafe-inline'` is acceptable only under that sandbox —
+ * do not relax one without the other.
  */
 
 import { sessionAuthHeader } from "@/lib/api/auth-header";
@@ -34,6 +38,9 @@ const REPORT_CSP = [
   "font-src https://fonts.gstatic.com",
   "script-src 'unsafe-inline'",
   "frame-ancestors 'self'",
+  // Opaque origin even on top-level navigation; scripts still run, as in the
+  // sandboxed viewer iframe. Never add allow-same-origin.
+  "sandbox allow-scripts",
 ].join("; ");
 
 const BASE_HEADERS = {

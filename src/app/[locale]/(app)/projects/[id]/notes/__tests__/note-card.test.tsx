@@ -10,7 +10,9 @@ import { NoteCard } from "../note-card";
 import type { Note } from "@/lib/api/notes";
 
 vi.mock("next-intl", () => ({
-  useTranslations: (ns: string) => (key: string) => `${ns}.${key}`,
+  useTranslations: (ns: string) => (key: string, values?: Record<string, string>) =>
+    values ? `${ns}.${key}(${JSON.stringify(values)})` : `${ns}.${key}`,
+  useLocale: () => "fr",
 }));
 
 function makeNote(overrides: Partial<Note> = {}): Note {
@@ -108,7 +110,7 @@ describe("NoteCard — read view", () => {
         canEdit={true}
       />
     );
-    expect(screen.getByText(/notes\.addedLabel/)).toBeDefined();
+    expect(screen.getByText(/notes\.addedToday/)).toBeDefined();
   });
 
   it("calls onStartEdit when article is clicked outside nc-actions", () => {
@@ -307,5 +309,23 @@ describe("NoteCard — edit mode", () => {
       />
     );
     expect(screen.queryByRole("article")).toBeNull();
+  });
+});
+
+describe("NoteCard — added date", () => {
+  it("formats an older date in the app locale inside one message", () => {
+    render(
+      <NoteCard
+        note={makeNote({ created_at: "2026-01-21T09:00:00Z" })}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
+        canEdit
+      />
+    );
+    expect(screen.getByText(/notes\.addedOn/).textContent).toContain("21 janv.");
   });
 });

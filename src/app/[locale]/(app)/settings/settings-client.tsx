@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
@@ -11,7 +11,7 @@ import { CompanySettingsSection } from "@/components/companies/company-settings-
 import { NotificationPreferencesSection } from "@/components/notifications/notification-preferences-section";
 import { ApiKeysSection } from "@/components/settings/api-keys-section";
 import { ProfileForm } from "@/components/settings/profile-form";
-import { isPlatformOps } from "@/lib/auth/permissions";
+import { can, isPlatformOps } from "@/lib/auth/permissions";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 
 // Inlined by next.config.ts at build time. Importing package.json here
@@ -42,14 +42,32 @@ interface Props {
 const ALL_VALID_KEYS: readonly string[] = [...BASE_SECTION_KEYS, "project"];
 
 /**
- * Derive the initial active tab from the URL hash (if valid).
- * Using a lazy initializer avoids the cascading setState-in-effect pattern.
- * Falls back to "profile" when no hash or hash doesn't match a known section —
- * which is also what retired hashes (#team, #billing, #about) now do.
+ * The active tab lives in the URL hash, so a reload or a shared link keeps it.
+ * Read through useSyncExternalStore with an empty server snapshot: the server
+ * and the first client render both show Profile, then the hash's tab — reading
+ * the hash in a useState initializer rendered a different tab on the client
+ * than in the server HTML (React hydration error #418).
  */
-function initialActiveFromHash(isOps: boolean): SectionKey {
-  if (typeof window === "undefined") return "profile";
-  const hash = window.location.hash.replace("#", "");
+function subscribeHash(onChange: () => void): () => void {
+  window.addEventListener("hashchange", onChange);
+  return () => window.removeEventListener("hashchange", onChange);
+}
+const readHash = () => window.location.hash.replace("#", "");
+const serverHash = () => "";
+
+function selectTab(key: string) {
+  // replaceState keeps Back for leaving the page, not for stepping through tabs;
+  // it fires no hashchange, so announce the change ourselves.
+  window.history.replaceState(null, "", `#${key}`);
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+}
+
+/**
+ * Map a URL hash to a tab. Falls back to "profile" when there is no hash or it
+ * matches no known section — which is also what retired hashes (#team,
+ * #billing, #about) now do.
+ */
+function sectionFromHash(hash: string, isOps: boolean): SectionKey {
   // "my-companies" was the attachments tab before it was folded into
   // "company", and "payment-methods" was a tab of its own before the same
   // merge; keep old links and bookmarks landing on the merged section.
@@ -69,19 +87,23 @@ export function SettingsClient({ projects }: Props) {
   // the first render — the Users tab never flickers in and out.
   const isSuperadmin = isPlatformOps(user?.permissions);
 
-  // Lazy initializer reads window.location.hash once at mount — no effect needed.
-  const [active, setActive] = useState<SectionKey>(() =>
-    initialActiveFromHash(isSuperadmin)
-  );
+  const hash = useSyncExternalStore(subscribeHash, readHash, serverHash);
+  const active = sectionFromHash(hash, isSuperadmin);
 
-  // A #project deep link from someone with no project selected has nothing to
-  // render, and the placeholder card that used to cover that case is gone.
+  // The Project tab edits the invoice prefix (PUT /projects/<id>, which needs
+  // project:update): a member was offered a form whose Save always failed.
+  const canEditProject =
+    selectedProject !== null &&
+    can("project:update", user?.permissions, selectedProject.my_permissions);
+
+  // A #project deep link from someone with no project selected, or who may not
+  // edit it, has nothing to render.
   const resolved: SectionKey =
-    active === "project" && !selectedProject ? "profile" : active;
+    active === "project" && !canEditProject ? "profile" : active;
 
   const sectionKeys: SectionKey[] = [
     "profile",
-    ...(selectedProject ? ["project" as const] : []),
+    ...(canEditProject ? ["project" as const] : []),
     // One Company tab for everyone: it carries the caller's own attachments
     // (identity card, primary, detach, attach-by-code) and, for a company
     // admin only, that company's self-service tools.
@@ -113,7 +135,7 @@ export function SettingsClient({ projects }: Props) {
               <button
                 key={key}
                 type="button"
-                onClick={() => setActive(key)}
+                onClick={() => selectTab(key)}
                 className={`flex-shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors lg:w-full lg:rounded-lg lg:border-transparent lg:text-left ${
                   resolved === key
                     ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] lg:border-transparent lg:bg-[var(--paper-2)] lg:text-[var(--ink)]"

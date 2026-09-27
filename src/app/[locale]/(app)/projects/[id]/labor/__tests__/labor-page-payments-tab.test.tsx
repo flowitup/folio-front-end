@@ -81,8 +81,11 @@ vi.mock("@/lib/api/labor", () => ({
   setLaborDayDescription: vi.fn(),
 }));
 
-vi.mock("../actions", () => ({
+vi.mock("@/components/labor/labor-role-actions", () => ({
   fetchLaborRolesAction: vi.fn().mockResolvedValue({ success: true, data: { roles: [], palette: [] } }),
+}));
+vi.mock("../actions", () => ({
+  fetchAttendanceChangeRequestsAction: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }));
 
 vi.mock("@/components/labor/worker-list", () => ({ WorkerList: () => <div data-testid="worker-list" /> }));

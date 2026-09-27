@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ImageUrlField } from "@/components/ui/image-url-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ChiffrageArticle } from "@/lib/api/chiffrage";
@@ -56,16 +57,26 @@ export function ArticleImageDialog({
 
   const hasOwnImage = article.image_ref?.kind === "article";
 
+  /** Runs an action with the dialog busy; a rejection counts as a failure. */
+  const run = async (action: () => Promise<boolean>): Promise<boolean> => {
+    setBusy(true);
+    try {
+      return await action();
+    } catch {
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const upload = async (file: File) => {
     if (file.size > MAX_IMAGE_BYTES) {
       toast.error(t("imageTooLarge"));
       return;
     }
-    setBusy(true);
     const form = new FormData();
     form.append("image", file);
-    const ok = await onUpload(form);
-    setBusy(false);
+    const ok = await run(() => onUpload(form));
     if (ok) onOpenChange(false);
     else toast.error(t("imageUploadFailed"));
   };
@@ -94,37 +105,23 @@ export function ArticleImageDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="article-image-url">{t("imageFromUrl")}</Label>
-            <div className="flex gap-2">
-              <Input
-                id="article-image-url"
-                type="url"
-                inputMode="url"
-                value={url}
-                placeholder={t("imageFromUrlPlaceholder")}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-              <Button
-                type="button"
-                disabled={busy || !url.trim()}
-                onClick={async () => {
-                  setBusy(true);
-                  const ok = await onFromUrl(url.trim());
-                  setBusy(false);
-                  if (ok) {
-                    setUrl("");
-                    onOpenChange(false);
-                  }
-                }}
-              >
-                {t("fetch")}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t("imageFromUrlNote")}
-            </p>
-          </div>
+          <ImageUrlField
+            id="article-image-url"
+            label={t("imageFromUrl")}
+            value={url}
+            onChange={setUrl}
+            placeholder={t("imageFromUrlPlaceholder")}
+            note={t("imageFromUrlNote")}
+            disabled={busy}
+            fetchLabel={t("fetch")}
+            onFetch={async () => {
+              const ok = await run(() => onFromUrl(url.trim()));
+              if (ok) {
+                setUrl("");
+                onOpenChange(false);
+              }
+            }}
+          />
         </div>
 
         <DialogFooter className="sm:justify-between">
@@ -135,9 +132,7 @@ export function ArticleImageDialog({
               className="text-destructive"
               disabled={busy}
               onClick={async () => {
-                setBusy(true);
-                const ok = await onRemove();
-                setBusy(false);
+                const ok = await run(onRemove);
                 if (ok) onOpenChange(false);
               }}
             >

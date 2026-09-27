@@ -4,7 +4,10 @@
  * Tests: hydrates from product; submitting only-changed-field sends a diff
  * (NOT all fields); clearing an optional field sends null; no-change →
  * submit disabled; image replace calls uploadProductImageAction with force:true;
- * image failure is non-fatal.
+ * image failure is non-fatal. Image from a supplier link: Fetch replaces the
+ * image at once (force:true) and shows it; bad links get a translated inline
+ * reason; a link left unfetched is applied on Save; file and link replace each
+ * other.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -17,6 +20,7 @@ vi.mock(
   () => ({
     updateProductAction: vi.fn(),
     uploadProductImageAction: vi.fn(),
+    setProductImageFromUrlAction: vi.fn(),
   })
 );
 
@@ -86,14 +90,28 @@ vi.mock("@/components/ui/select", () => ({
 }));
 
 vi.mock("@/components/bibliotheque/product-image", () => ({
-  ProductImage: ({ alt }: { alt: string }) => (
-    <div data-testid="product-image" data-alt={alt} />
+  ProductImage: ({
+    alt,
+    hasImage,
+    version,
+  }: {
+    alt: string;
+    hasImage: boolean;
+    version?: string;
+  }) => (
+    <div
+      data-testid="product-image"
+      data-alt={alt}
+      data-has-image={String(hasImage)}
+      data-version={version}
+    />
   ),
 }));
 
 // ---- Imports after mocks ----
 
 import {
+  setProductImageFromUrlAction,
   updateProductAction,
   uploadProductImageAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
@@ -103,6 +121,7 @@ import type { LibraryProduct } from "@/lib/api/bibliotheque";
 
 const mockUpdate = vi.mocked(updateProductAction);
 const mockUploadImage = vi.mocked(uploadProductImageAction);
+const mockFromUrl = vi.mocked(setProductImageFromUrlAction);
 const mockToast = toast as unknown as {
   success: ReturnType<typeof vi.fn>;
   error: ReturnType<typeof vi.fn>;
@@ -141,6 +160,7 @@ function renderDialog(
     onOpenChange?: (o: boolean) => void;
     onUpdated?: (p: LibraryProduct) => void;
     supplierName?: string;
+    onImageChanged?: () => void;
   }
 ) {
   const onOpenChange = props?.onOpenChange ?? vi.fn();
@@ -152,6 +172,7 @@ function renderDialog(
       onOpenChange={onOpenChange}
       onUpdated={onUpdated}
       supplierName={props?.supplierName}
+      onImageChanged={props?.onImageChanged}
     />
   );
 }
@@ -419,5 +440,193 @@ describe("ProductEditDialog", () => {
   it("shows product image component when product has no pending image replacement", () => {
     renderDialog(makeProduct({ has_image: true }));
     expect(screen.getByTestId("product-image")).toBeInTheDocument();
+  });
+});
+
+describe("ProductEditDialog — image from a supplier link", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const LINK = "https://media.adeo.com/marketplace/photo.jpg";
+  const linkInput = () => screen.getByLabelText(/supplier link/i) as HTMLInputElement;
+  const typeLink = (value: string) => fireEvent.change(linkInput(), { target: { value } });
+  const fetchButton = () => screen.getByRole("button", { name: /^fetch$/i });
+
+  it("fetches the linked image at once with force:true and shows it", async () => {
+    mockFromUrl.mockResolvedValueOnce({ ok: true, data: { image_storage_key: "k1" } });
+    const onImageChanged = vi.fn();
+    const onUpdated = vi.fn();
+    renderDialog(makeProduct({ has_image: false }), { onImageChanged, onUpdated });
+
+    const image = screen.getByTestId("product-image");
+    expect(image).toHaveAttribute("data-has-image", "false");
+    expect(image).toHaveAttribute("data-version", "2024-01-01T00:00:00Z");
+
+    typeLink(LINK);
+    fireEvent.click(fetchButton());
+
+    await waitFor(() => {
+      expect(mockFromUrl).toHaveBeenCalledWith("prod-1", LINK, { force: true });
+      expect(mockToast.success).toHaveBeenCalledWith("Image updated.");
+    });
+    // New picture shown: flagged present and re-fetched under a new version.
+    const refreshed = screen.getByTestId("product-image");
+    expect(refreshed).toHaveAttribute("data-has-image", "true");
+    expect(refreshed.getAttribute("data-version")).not.toBe("2024-01-01T00:00:00Z");
+    expect(linkInput().value).toBe("");
+    expect(onImageChanged).toHaveBeenCalledTimes(1);
+    // Already saved server-side — the dialog stays open, nothing else to save.
+    expect(onUpdated).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /save/i })).toBeDisabled();
+  });
+
+  it("Enter in the link field fetches instead of submitting the form", async () => {
+    mockFromUrl.mockResolvedValueOnce({ ok: true, data: { image_storage_key: "k1" } });
+    renderDialog();
+
+    fireEvent.change(screen.getByLabelText(/product name/i), {
+      target: { value: "Changed Name" },
+    });
+    typeLink(LINK);
+    fireEvent.keyDown(linkInput(), { key: "Enter" });
+
+    await waitFor(() => {
+      expect(mockFromUrl).toHaveBeenCalledWith("prod-1", LINK, { force: true });
+    });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a link that is not https without calling the server", () => {
+    renderDialog();
+
+    typeLink("http://media.adeo.com/photo.jpg");
+    fireEvent.click(fetchButton());
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Enter a full image link starting with https://."
+    );
+    expect(mockFromUrl).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["SsrfBlocked", "This site is not accepted. Use an image link from a supported supplier site."],
+    ["UnsupportedMediaType", "This link does not point to a JPG, PNG or WebP image."],
+    ["FileTooLarge", "This image is larger than 10 MB."],
+    [undefined, "The image could not be downloaded from this link. Check it and try again."],
+  ])("shows the translated reason when the server refuses (%s)", async (code, message) => {
+    mockFromUrl.mockResolvedValueOnce({ ok: false, error: "refused", code });
+    const onImageChanged = vi.fn();
+    renderDialog(makeProduct(), { onImageChanged });
+
+    typeLink(LINK);
+    fireEvent.click(fetchButton());
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(message);
+    });
+    // The link stays so it can be corrected; nothing changed.
+    expect(linkInput().value).toBe(LINK);
+    expect(screen.getByTestId("product-image")).toHaveAttribute("data-has-image", "false");
+    expect(onImageChanged).not.toHaveBeenCalled();
+  });
+
+  it("clears the error once the link is edited", async () => {
+    mockFromUrl.mockResolvedValueOnce({ ok: false, error: "refused", code: "SsrfBlocked" });
+    renderDialog();
+
+    typeLink(LINK);
+    fireEvent.click(fetchButton());
+    await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
+
+    typeLink("https://media.adeo.com/other.jpg");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("applies a link left unfetched on Save, skipping PATCH when nothing else changed", async () => {
+    mockFromUrl.mockResolvedValueOnce({ ok: true, data: { image_storage_key: "k1" } });
+    const onUpdated = vi.fn();
+    renderDialog(makeProduct({ has_image: false }), { onUpdated });
+
+    typeLink(LINK);
+    const save = screen.getByRole("button", { name: /save/i });
+    expect(save).not.toBeDisabled();
+    fireEvent.click(save);
+
+    await waitFor(() => {
+      expect(mockFromUrl).toHaveBeenCalledWith("prod-1", LINK, { force: true });
+      expect(onUpdated).toHaveBeenCalledWith(expect.objectContaining({ has_image: true }));
+    });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("a link that fails on Save is non-fatal — warning with the reason, still saved", async () => {
+    mockUpdate.mockResolvedValueOnce({ ok: true, data: makeProduct({ name: "Changed" }) });
+    mockFromUrl.mockResolvedValueOnce({ ok: false, error: "refused", code: "UnsupportedMediaType" });
+    const onUpdated = vi.fn();
+    renderDialog(makeProduct(), { onUpdated });
+
+    fireEvent.change(screen.getByLabelText(/product name/i), {
+      target: { value: "Changed" },
+    });
+    typeLink(LINK);
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(mockToast.warning).toHaveBeenCalledWith(
+        "Product saved, but the image could not be fetched from the link.",
+        { description: "This link does not point to a JPG, PNG or WebP image." }
+      );
+      expect(onUpdated).toHaveBeenCalledWith(expect.objectContaining({ has_image: false }));
+    });
+  });
+
+  it("blocks Save on a pending link that is not https", () => {
+    // (A malformed value never gets here: the url input's native validation
+    // stops the submit first, in jsdom as in browsers.)
+    renderDialog();
+
+    typeLink("http://media.adeo.com/photo.jpg");
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Enter a full image link starting with https://."
+    );
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockFromUrl).not.toHaveBeenCalled();
+  });
+
+  it("typing a link drops a file chosen earlier; Save uses the link", async () => {
+    mockFromUrl.mockResolvedValueOnce({ ok: true, data: { image_storage_key: "k1" } });
+    renderDialog();
+
+    const file = new File(["img"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(screen.getByLabelText(/replace image/i), {
+      target: { files: [file] },
+    });
+    typeLink(LINK);
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(mockFromUrl).toHaveBeenCalledWith("prod-1", LINK, { force: true });
+    });
+    expect(mockUploadImage).not.toHaveBeenCalled();
+  });
+
+  it("choosing a file clears a typed link; Save uploads the file", async () => {
+    mockUploadImage.mockResolvedValueOnce({ ok: true, data: { image_storage_key: "k1" } });
+    renderDialog();
+
+    typeLink(LINK);
+    const file = new File(["img"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(screen.getByLabelText(/replace image/i), {
+      target: { files: [file] },
+    });
+    expect(linkInput().value).toBe("");
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(mockUploadImage).toHaveBeenCalled();
+    });
+    expect(mockFromUrl).not.toHaveBeenCalled();
   });
 });

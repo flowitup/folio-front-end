@@ -75,6 +75,9 @@ export function CreateFromExistingDialog({
   const tDevisStatus = useTranslations("billing.devis.status");
   const tFactureStatus = useTranslations("billing.facture.status");
   const tActions = useTranslations("billing.form.actions");
+  const tErrors = useTranslations("billing.form.errors");
+  const tFromExisting = useTranslations("billing.form.fromExisting");
+  const tKind = useTranslations("billing.templates.form");
 
   /** Locale-aware status label — devis-specific statuses take priority; rest fall back to facture. */
   function statusLabel(status: BillingDocumentStatus): string {
@@ -120,7 +123,7 @@ export function CreateFromExistingDialog({
       if (factureResult.ok) combined.push(...factureResult.data.items);
       // Both failed → surface error
       if (!devisResult.ok && !factureResult.ok) {
-        setLoadError("Could not load documents. The billing API may not be available yet.");
+        setLoadError(tErrors("documentsLoadFailed"));
         setDocuments([]);
         return;
       }
@@ -130,8 +133,8 @@ export function CreateFromExistingDialog({
       );
       setDocuments(combined.slice(0, 50));
     } catch {
-      setLoadError("Failed to load existing documents.");
-      toast.error("Failed to load existing documents.");
+      setLoadError(tErrors("documentsLoadFailed"));
+      toast.error(tErrors("documentsLoadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -148,6 +151,7 @@ export function CreateFromExistingDialog({
   }
 
   const selectedDoc = documents.find((d) => d.id === selectedId);
+  const targetKindLabel = targetKind === "devis" ? tKind("kindDevis") : tKind("kindFacture");
   const crossKind = selectedDoc && selectedDoc.kind !== targetKind;
 
   return (
@@ -156,16 +160,17 @@ export function CreateFromExistingDialog({
         <DialogHeader>
           <DialogTitle>{tActions("cloneSelected")}</DialogTitle>
           <DialogDescription>
-            Select a document to use as the starting point for your new{" "}
-            <strong>{targetKind}</strong>. Items, recipient, notes and terms will
-            be copied; dates and number will be reset.
+            {tFromExisting.rich("description", {
+              kind: targetKindLabel,
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
           </DialogDescription>
         </DialogHeader>
 
         {/* Target kind override */}
         <div className="flex items-center gap-3">
           <span className="text-[13px]" style={{ color: "var(--muted)" }}>
-            Create as:
+            {tFromExisting("createAs")}
           </span>
           <Select
             value={targetKind}
@@ -175,8 +180,8 @@ export function CreateFromExistingDialog({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="devis">Devis</SelectItem>
-              <SelectItem value="facture">Facture</SelectItem>
+              <SelectItem value="devis">{tKind("kindDevis")}</SelectItem>
+              <SelectItem value="facture">{tKind("kindFacture")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -185,8 +190,11 @@ export function CreateFromExistingDialog({
           <div className="flex items-start gap-2 rounded-md border border-[var(--warning)]/40 bg-[var(--warning-tint)] p-3 text-[13px] text-[#8e6418]">
             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
             <span>
-              Switching kinds resets the document lifecycle. The cloned{" "}
-              {targetKind} will start as <strong>Draft</strong>.
+              {tFromExisting.rich("crossKindWarning", {
+                kind: targetKindLabel,
+                draft: tDevisStatus("draft"),
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
             </span>
           </div>
         )}
@@ -205,7 +213,7 @@ export function CreateFromExistingDialog({
             <div className="flex flex-col items-center justify-center gap-2 py-12">
               <FileText size={20} style={{ color: "var(--muted)" }} />
               <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-                No existing documents found.
+                {tFromExisting("empty")}
               </p>
             </div>
           ) : (
@@ -247,7 +255,7 @@ export function CreateFromExistingDialog({
                         className="text-[11px] uppercase tracking-wide"
                         style={{ color: "var(--muted)" }}
                       >
-                        {doc.kind}
+                        {doc.kind === "devis" ? tKind("kindDevis") : tKind("kindFacture")}
                       </span>
                     </div>
                   </div>

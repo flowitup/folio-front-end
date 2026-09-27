@@ -98,27 +98,31 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
   async function handleFiles(files: File[]) {
     if (files.length === 0) return;
 
-    // Client-side validation
+    // Client-side validation: skip (and report) each invalid file, upload
+    // the rest — one bad file must not drop the whole batch.
+    const valid: File[] = [];
     for (const file of files) {
       const kind = mediaKind(file);
       if (!kind) {
         toast.error(t("errors.unsupported"), { description: file.name });
-        return;
+        continue;
       }
       // Per-kind size cap: videos get more headroom than images.
       const maxBytes = kind === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
       if (file.size > maxBytes) {
         toast.error(t("errors.oversize"), { description: file.name });
-        return;
+        continue;
       }
+      valid.push(file);
     }
+    if (valid.length === 0) return;
 
     setUploading(true);
-    setProgress({ done: 0, total: files.length });
+    setProgress({ done: 0, total: valid.length });
 
     let successCount = 0;
 
-    for (const file of files) {
+    for (const file of valid) {
       try {
         const photo = await uploadProjectPhoto(projectId, file, {
           caption: caption.trim() || undefined,

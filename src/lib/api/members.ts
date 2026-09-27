@@ -11,6 +11,8 @@ export interface ProjectMember {
   user_id: string;
   email: string;
   display_name: string | null;
+  /** Company role (admin | manager | member); null when no longer in the company. */
+  role_name?: "admin" | "manager" | "member" | null;
   joined_at: string;
 }
 

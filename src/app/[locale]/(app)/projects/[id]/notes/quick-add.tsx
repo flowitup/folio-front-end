@@ -20,7 +20,8 @@ export interface QuickAddPayload {
 }
 
 interface QuickAddProps {
-  onAdd: (payload: QuickAddPayload) => void;
+  /** Resolves true when the note was saved; the box is cleared only then. */
+  onAdd: (payload: QuickAddPayload) => Promise<boolean>;
   disabled?: boolean;
 }
 
@@ -30,6 +31,7 @@ export function QuickAdd({ onAdd, disabled = false }: QuickAddProps) {
   const [body, setBody] = useState("");
   const [cat, setCat] = useState<NoteCategory>("general");
   const [focused, setFocused] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -41,21 +43,28 @@ export function QuickAdd({ onAdd, disabled = false }: QuickAddProps) {
     setCat("general");
   }
 
-  function submit() {
+  async function submit() {
     const trimmed = title.trim();
-    if (!trimmed) return;
-    onAdd({ title: trimmed, description: body.trim() || null, category: cat });
-    reset();
+    if (!trimmed || submitting) return;
+    setSubmitting(true);
+    try {
+      // Keep the text until the note is saved, so a failed save loses nothing.
+      if (await onAdd({ title: trimmed, description: body.trim() || null, category: cat })) {
+        reset();
+      }
+    } finally {
+      setSubmitting(false);
+    }
     inputRef.current?.focus();
   }
 
   function onTitleKey(e: React.KeyboardEvent) {
-    if (e.key === "Enter") { e.preventDefault(); submit(); }
+    if (e.key === "Enter") { e.preventDefault(); void submit(); }
     if (e.key === "Escape") { (e.target as HTMLElement).blur(); reset(); setFocused(false); }
   }
 
   function onBodyKey(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submit(); }
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void submit(); }
     if (e.key === "Escape") { (e.target as HTMLElement).blur(); setFocused(false); }
   }
 
@@ -117,8 +126,8 @@ export function QuickAdd({ onAdd, disabled = false }: QuickAddProps) {
                 type="button"
                 className="btn btn-primary"
                 style={{ marginLeft: "auto", padding: "8px 16px" }}
-                onClick={submit}
-                disabled={disabled || !title.trim()}
+                onClick={() => void submit()}
+                disabled={disabled || submitting || !title.trim()}
               >
                 {t("quickAdd.save")}
               </button>

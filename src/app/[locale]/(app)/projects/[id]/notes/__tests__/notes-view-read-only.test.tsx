@@ -16,6 +16,7 @@ import type { Note } from "@/lib/api/notes";
 
 vi.mock("next-intl", () => ({
   useTranslations: (ns: string) => (key: string) => `${ns}.${key}`,
+  useLocale: () => "en",
 }));
 
 vi.mock("sonner", () => {

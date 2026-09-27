@@ -34,6 +34,7 @@ import {
   fetchBillingDocuments,
   fetchBillingDocument,
   createBillingDocument,
+  importBillingDocument,
   updateBillingDocument,
   deleteBillingDocument,
   cloneBillingDocument,
@@ -210,6 +211,51 @@ describe("test_api_client_documents_url_method_body_contract", () => {
       expect(body.recipient_name).toBe("ACME Corp");
       expect(body.items).toHaveLength(1);
       expect((init.headers as Record<string, string>)["Content-Type"]).toBe("application/json");
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // importBillingDocument
+  // ---------------------------------------------------------------------------
+
+  describe("importBillingDocument", () => {
+    it("POST /billing-documents/import — original number and status in the body", async () => {
+      fetchMock.mockResolvedValueOnce(makeOkResponse(SAMPLE_DOC));
+
+      await importBillingDocument({
+        kind: "facture",
+        company_id: "company-1",
+        document_number: "FAC-2024-001",
+        status: "paid",
+        recipient_name: "ACME Corp",
+        items: [SAMPLE_ITEM],
+      });
+
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(`${BASE_URL}/billing-documents/import`);
+      expect(init.method).toBe("POST");
+      const body = JSON.parse(init.body as string);
+      expect(body.document_number).toBe("FAC-2024-001");
+      expect(body.status).toBe("paid");
+      expect(body.company_id).toBe("company-1");
+    });
+
+    it("keeps the status and body of a refused import on the thrown error", async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: "Conflict", reason: "document_already_exists" }), {
+          status: 409,
+        })
+      );
+      await expect(
+        importBillingDocument({
+          kind: "facture",
+          company_id: "company-1",
+          document_number: "FAC-1",
+          status: "paid",
+          recipient_name: "ACME Corp",
+          items: [SAMPLE_ITEM],
+        })
+      ).rejects.toMatchObject({ status: 409, body: { reason: "document_already_exists" } });
     });
   });
 

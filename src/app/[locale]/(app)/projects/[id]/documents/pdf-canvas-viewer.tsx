@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useId } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 
 // ---- Types ----
@@ -50,6 +51,7 @@ function loadPdfjs() {
  */
 export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasViewerProps) {
   // Unique prefix for canvas IDs — prevents collision if multiple viewers mount
+  const t = useTranslations("documents.preview");
   const idPrefix = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const [pageCount, setPageCount] = useState(0);
@@ -103,7 +105,9 @@ export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasView
         canvas.width = Math.floor(viewport.width * dpr);
         canvas.height = Math.floor(viewport.height * dpr);
         canvas.style.width = `${Math.floor(viewport.width)}px`;
-        canvas.style.height = `${Math.floor(viewport.height)}px`;
+        // The width is measured before the scrollbar appears; letting the height
+        // follow a capped width keeps the page inside the pane on phones.
+        canvas.style.height = "auto";
         ctx.scale(dpr, dpr);
 
         await page.render({ canvasContext: ctx, viewport, canvas }).promise;
@@ -141,7 +145,9 @@ export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasView
           cMapPacked: true,
           standardFontDataUrl: "/standard_fonts/",
           wasmUrl: "/wasm/",
-          ...(data ? { data } : { url: src }),
+          // PDF.js transfers the buffer to its worker and detaches it, so hand
+          // it a copy: a re-run of this effect must still see the bytes.
+          ...(data ? { data: new Uint8Array(data.slice(0)) } : { url: src }),
         };
         const loadingTask = pdfjs.getDocument(docParams);
         const doc = await loadingTask.promise;
@@ -221,8 +227,11 @@ export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasView
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full text-sm text-destructive">
-        Failed to load PDF: {error}
+      <div
+        className="flex items-center justify-center h-full text-sm text-muted-foreground"
+        title={error}
+      >
+        {t("error")}
       </div>
     );
   }
@@ -258,7 +267,7 @@ export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasView
           >
             <canvas
               id={`${idPrefix}-pdf-page-${pageNum}`}
-              className="block"
+              className="block max-w-full"
             />
           </div>
         );

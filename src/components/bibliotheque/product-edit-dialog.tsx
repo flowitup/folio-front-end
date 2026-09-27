@@ -12,6 +12,12 @@
  *
  * Image: shows current image via ProductImage; file input replaces it with
  * uploadProductImageAction using force:true. Image failure is non-fatal.
+ *
+ * Image from a supplier link: "Fetch" has the server download it right away
+ * (force:true) and shows the new picture — the supplier CDNs block the
+ * browser, so there is no local preview to show first. A link typed but not
+ * fetched is applied on Save like a chosen file. File and link replace each
+ * other: the last one picked wins.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -35,11 +41,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ImageUrlField } from "@/components/ui/image-url-field";
 import {
+  setProductImageFromUrlAction,
   updateProductAction,
   uploadProductImageAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import { LIBRARY_CATEGORY_SLUGS, localizeCategory } from "@/lib/bibliotheque/categories";
+import {
+  MAX_PRODUCT_IMAGE_BYTES,
+  imageUrlErrorKey,
+  isHttpsUrl,
+} from "@/lib/bibliotheque/image-url";
 import { ProductImage } from "@/components/bibliotheque/product-image";
 import type { LibraryProduct, UpdateProductPayload } from "@/lib/api/bibliotheque";
 
@@ -53,6 +66,11 @@ interface ProductEditDialogProps {
   onUpdated: (product: LibraryProduct) => void | Promise<void>;
   /** Resolved supplier display name. Falls back to raw supplier_id when absent. */
   supplierName?: string;
+  /**
+   * The stored image was replaced from a link. The change is already saved,
+   * so the list should refresh even if the dialog is then cancelled.
+   */
+  onImageChanged?: () => void;
 }
 
 export function ProductEditDialog({
@@ -61,6 +79,7 @@ export function ProductEditDialog({
   onOpenChange,
   onUpdated,
   supplierName,
+  onImageChanged,
 }: ProductEditDialogProps) {
   const t = useTranslations("bibliotheque");
 
@@ -83,9 +102,18 @@ export function ProductEditDialog({
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Image from a supplier link
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrlError, setImageUrlError] = useState<string | null>(null);
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+  // Local copies so a fetched image shows at once, without waiting for the parent.
+  const [hasImage, setHasImage] = useState(false);
+  const [imageVersion, setImageVersion] = useState<string | undefined>(undefined);
+
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const busy = isSubmitting || isFetchingUrl;
 
   // Hydrate form from product when dialog opens or when product changes
   useEffect(() => {
@@ -105,6 +133,11 @@ export function ProductEditDialog({
       setOrigProductUrl(product.product_url ?? "");
       setImageFile(null);
       setImagePreviewUrl(null);
+      setImageUrl("");
+      setImageUrlError(null);
+      setIsFetchingUrl(false);
+      setHasImage(product.has_image);
+      setImageVersion(product.updated_at);
       setError(null);
       setIsSubmitting(false);
     }
@@ -121,13 +154,59 @@ export function ProductEditDialog({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
+    if (file && file.size > MAX_PRODUCT_IMAGE_BYTES) {
+      toast.error(t("imageUrl.errors.tooLarge"));
+      e.target.value = "";
+      return;
+    }
     if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
     setImageFile(file);
     setImagePreviewUrl(file ? URL.createObjectURL(file) : null);
+    if (file) {
+      setImageUrl("");
+      setImageUrlError(null);
+    }
+  };
+
+  const handleImageUrlChange = (value: string) => {
+    setImageUrl(value);
+    setImageUrlError(null);
+    // A link replaces a file chosen earlier (the preview URL is revoked by its effect).
+    if (value.trim() && imageFile) {
+      setImageFile(null);
+      setImagePreviewUrl(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const imageUrlErrorText = (code?: string) =>
+    t(`imageUrl.errors.${imageUrlErrorKey(code)}`);
+
+  /** Download the linked image now, replacing the stored one. */
+  const handleFetchImageUrl = async () => {
+    const url = imageUrl.trim();
+    if (!url || busy) return;
+    if (!isHttpsUrl(url)) {
+      setImageUrlError(t("imageUrl.errors.invalid"));
+      return;
+    }
+    setIsFetchingUrl(true);
+    setImageUrlError(null);
+    const result = await setProductImageFromUrlAction(product.id, url, { force: true });
+    setIsFetchingUrl(false);
+    if (!result.ok) {
+      setImageUrlError(imageUrlErrorText(result.code));
+      return;
+    }
+    setImageUrl("");
+    setHasImage(true);
+    setImageVersion(String(Date.now()));
+    toast.success(t("imageUrl.fetched"));
+    onImageChanged?.();
   };
 
   const handleClose = (isOpen: boolean) => {
-    if (!isSubmitting) onOpenChange(isOpen);
+    if (!busy) onOpenChange(isOpen);
   };
 
   /** Compute diff payload — only send changed keys to the BE. */
@@ -159,12 +238,17 @@ export function ProductEditDialog({
 
   const diff = buildDiff();
   const hasDiff = Object.keys(diff).length > 0;
-  const hasImageChange = imageFile !== null;
-  const canSubmit = (hasDiff || hasImageChange) && !isSubmitting && name.trim().length > 0;
+  const pendingImageUrl = imageUrl.trim();
+  const hasImageChange = imageFile !== null || pendingImageUrl.length > 0;
+  const canSubmit = (hasDiff || hasImageChange) && !busy && name.trim().length > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
+    if (pendingImageUrl && !isHttpsUrl(pendingImageUrl)) {
+      setImageUrlError(t("imageUrl.errors.invalid"));
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -187,12 +271,27 @@ export function ProductEditDialog({
     if (hasImageChange && imageFile) {
       const fd = new FormData();
       fd.append("image", imageFile);
-      const imgResult = await uploadProductImageAction(updated.id, fd, { force: true });
+      // A rejected call must not leave the dialog stuck on its spinner.
+      const imgResult = await uploadProductImageAction(updated.id, fd, { force: true }).catch(
+        () => ({ ok: false as const }),
+      );
       if (!imgResult.ok) {
         toast.warning(t("toast.imageUploadWarning"));
       } else {
         // Optimistically mark has_image so detail/card renders the new image
         // immediately without waiting for the next full reload.
+        updated = { ...updated, has_image: true };
+      }
+    } else if (pendingImageUrl) {
+      // Non-fatal like the file upload; the reason goes in the toast.
+      const urlResult = await setProductImageFromUrlAction(updated.id, pendingImageUrl, {
+        force: true,
+      });
+      if (!urlResult.ok) {
+        toast.warning(t("imageUrl.saveWarning"), {
+          description: imageUrlErrorText(urlResult.code),
+        });
+      } else {
         updated = { ...updated, has_image: true };
       }
     }
@@ -305,7 +404,8 @@ export function ProductEditDialog({
             {!imagePreviewUrl && (
               <ProductImage
                 productId={product.id}
-                hasImage={product.has_image}
+                hasImage={hasImage}
+                version={imageVersion}
                 alt={product.name}
                 className="h-24 w-auto rounded-md object-contain"
               />
@@ -316,7 +416,7 @@ export function ProductEditDialog({
               type="file"
               accept="image/png,image/jpeg,image/webp"
               onChange={handleFileChange}
-              disabled={isSubmitting}
+              disabled={busy}
               className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:px-3 file:py-1.5 file:text-sm"
             />
             <p className="text-[12px]" style={{ color: "var(--muted)" }}>
@@ -325,11 +425,26 @@ export function ProductEditDialog({
             {imagePreviewUrl && (
               <img
                 src={imagePreviewUrl}
-                alt="Preview"
+                alt={t("imagePreviewAlt")}
                 className="mt-2 h-32 w-auto rounded-md object-contain"
               />
             )}
           </div>
+
+          {/* Image from a supplier link — fetched server-side */}
+          <ImageUrlField
+            id="edit-product-image-url"
+            label={t("imageUrl.label")}
+            value={imageUrl}
+            onChange={handleImageUrlChange}
+            placeholder={t("imageUrl.placeholder")}
+            note={t("imageUrl.note")}
+            error={imageUrlError}
+            disabled={isSubmitting}
+            fetchLabel={t("imageUrl.fetch")}
+            onFetch={handleFetchImageUrl}
+            fetching={isFetchingUrl}
+          />
 
           {error && (
             <p className="text-sm text-destructive">{error}</p>
@@ -340,7 +455,7 @@ export function ProductEditDialog({
               type="button"
               variant="ghost"
               onClick={() => handleClose(false)}
-              disabled={isSubmitting}
+              disabled={busy}
             >
               {t("actions.cancel")}
             </Button>

@@ -15,6 +15,7 @@ import {
   getCurrentUserAction,
 } from "@/lib/auth/actions";
 import { verifyOtpAction } from "@/lib/auth/otp-actions";
+import { postLoginPath } from "@/lib/auth/callback-url";
 
 interface AuthContextType extends AuthState {
   loginWithPhone: (
@@ -22,6 +23,10 @@ interface AuthContextType extends AuthState {
     code: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  /** Merge saved profile fields into the signed-in user, so the header and
+   * avatar follow a profile save without a full reload (the provider is
+   * seeded once; router.refresh() does not re-seed it). */
+  updateUser: (patch: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -85,7 +90,9 @@ export function AuthProvider({
       // starts from /login, under the same not-yet-visited route), so
       // push() alone already fetches every layout server-side fresh,
       // including the session-reading root layout.
-      router.push(`/${locale}/dashboard`);
+      // Return to the page the proxy sent the visitor away from, if any.
+      const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+      router.push(postLoginPath(callbackUrl, locale));
     },
     [router, locale]
   );
@@ -121,6 +128,10 @@ export function AuthProvider({
     });
   }, []);
 
+  const updateUser = useCallback((patch: Partial<User>) => {
+    setState((prev) => (prev.user ? { ...prev, user: { ...prev.user, ...patch } } : prev));
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -128,11 +139,17 @@ export function AuthProvider({
         isLoading,
         loginWithPhone,
         logout,
+        updateUser,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+}
+
+/** Like useAuth, but returns undefined outside an AuthProvider instead of throwing. */
+export function useOptionalAuth(): AuthContextType | undefined {
+  return useContext(AuthContext);
 }
 
 export function useAuth() {

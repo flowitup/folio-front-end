@@ -92,7 +92,7 @@ export function LaborInvoicesByWorker({
       return;
     }
     let cancelled = false;
-    fetchWorkers(projectId)
+    fetchWorkers(projectId, { includeInactive: true })
       .then((list) => {
         if (!cancelled) setWorkers(list);
       })

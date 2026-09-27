@@ -131,6 +131,15 @@ vi.mock("@/components/companies/company-payment-methods-card", () => ({
   ),
 }));
 
+vi.mock("@/components/companies/company-labor-roles-card", () => ({
+  CompanyLaborRolesCard: ({ companyId }: { companyId: string }) => (
+    <div data-testid="labor-roles-card" data-company={companyId} />
+  ),
+}));
+
+
+const feature = vi.hoisted(() => ({ assistant: false as boolean | null }));
+vi.mock("@/hooks/use-chat-feature", () => ({ useAssistantFeature: () => feature.assistant }));
 
 vi.mock("@/components/companies/join-company-dialog", () => ({
   JoinCompanyDialog: () => <div data-testid="join-company-dialog" />,
@@ -202,6 +211,7 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     expect(screen.getByTestId("join-code-card")).toBeDefined();
     expect(screen.getByTestId("members-table")).toBeDefined();
     expect(screen.getByTestId("payment-methods-card")).toBeDefined();
+    expect(screen.getByTestId("labor-roles-card").getAttribute("data-company")).toBe("c1");
   });
 
   it("hides the admin tools when the caller is only a member of the company", async () => {
@@ -216,6 +226,8 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     expect(screen.queryByTestId("join-code-card")).toBeNull();
     expect(screen.queryByTestId("members-table")).toBeNull();
     expect(screen.queryByTestId("payment-methods-card")).toBeNull();
+    // Labor roles are admin-or-manager: a member would only get 403s.
+    expect(screen.queryByTestId("labor-roles-card")).toBeNull();
   });
 
   it("hides the admin tools for a manager too", async () => {
@@ -225,6 +237,35 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     expect(await screen.findByText("Maison Lavandou")).toBeDefined();
     expect(screen.queryByTestId("members-table")).toBeNull();
     expect(screen.queryByTestId("payment-methods-card")).toBeNull();
+  });
+
+  it("offers a manager the labor roles, which the backend lets them edit", async () => {
+    resolveWith([makeCompany({ role: "manager" })]);
+    render(<CompanySettingsSection />);
+
+    const card = await screen.findByTestId("labor-roles-card");
+    expect(card.getAttribute("data-company")).toBe("c1");
+  });
+
+  it("repoints the labor roles card on a company switch", async () => {
+    resolveWith([
+      makeCompany({ id: "c1", legal_name: "Maison Lavandou", is_primary: true, role: "manager" }),
+      makeCompany({ id: "c2", legal_name: "Atelier Sud", is_primary: false, role: "admin" }),
+      makeCompany({ id: "c3", legal_name: "Chantier Nord", is_primary: false, role: "member" }),
+    ]);
+    render(<CompanySettingsSection />);
+
+    expect((await screen.findByTestId("labor-roles-card")).getAttribute("data-company")).toBe("c1");
+
+    fireEvent.change(screen.getByLabelText("Company picker"), { target: { value: "c2" } });
+    await waitFor(() => {
+      expect(screen.getByTestId("labor-roles-card").getAttribute("data-company")).toBe("c2");
+    });
+
+    fireEvent.change(screen.getByLabelText("Company picker"), { target: { value: "c3" } });
+    await waitFor(() => {
+      expect(screen.queryByTestId("labor-roles-card")).toBeNull();
+    });
   });
 
   it("renders no picker for a single company, and one for several", async () => {
@@ -378,5 +419,41 @@ describe("CompanySettingsSection (merged Company tab)", () => {
       expect(screen.getByTestId("members-table")).toBeDefined();
     });
     expect(screen.queryByText(/Could not load your companies/i)).toBeNull();
+  });
+});
+
+describe("CompanySettingsSection — company profile", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("lets a company admin edit their own company profile", async () => {
+    resolveWith([makeCompany({ role: "admin" })]);
+    render(<CompanySettingsSection />);
+
+    expect(await screen.findByTestId("company-profile-card")).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Company profile" })).toBeDefined();
+    expect(screen.getByLabelText("IBAN")).toBeDefined();
+  });
+
+  it("does not offer the profile form to a manager or member", async () => {
+    resolveWith([makeCompany({ role: "manager" })]);
+    render(<CompanySettingsSection />);
+
+    expect(await screen.findByRole("heading", { name: "Company" })).toBeDefined();
+    expect(screen.queryByTestId("company-profile-card")).toBeNull();
+  });
+
+  it("links to the assistant audit only while the assistant is on", async () => {
+    resolveWith([makeCompany({ role: "admin" })]);
+    feature.assistant = false;
+    const { unmount } = render(<CompanySettingsSection />);
+    await screen.findByTestId("members-table");
+    expect(screen.queryByText(/Assistant audit|assistantAuditLink/)).toBeNull();
+    unmount();
+
+    feature.assistant = true;
+    render(<CompanySettingsSection />);
+    await screen.findByTestId("members-table");
+    expect(screen.getByRole("link", { name: /→/ }).getAttribute("href")).toContain("assistant-audit");
+    feature.assistant = false;
   });
 });

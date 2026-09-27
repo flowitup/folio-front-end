@@ -39,13 +39,14 @@ import {
 import { fetchProjectUsers } from "@/lib/api/projects";
 import { removeMemberAction } from "@/app/[locale]/(app)/projects/[id]/members/actions";
 import { can, canCreateProject } from "@/lib/auth/permissions";
-import { AddMemberDialog } from "@/components/project/add-member-dialog";
 import { ProjectCoverPhotos } from "@/components/project/project-cover-photos";
 import { CreateProjectDialog } from "@/components/project/create-project-dialog";
 import { EditProjectDialog } from "@/components/project/edit-project-dialog";
 import { DeleteProjectDialog } from "@/components/project/delete-project-dialog";
 import type { Project, ProjectUser } from "@/types/project";
 import { fmtEUR, computeBudgetMeta, personalSpendRows } from "@/lib/projects/budget-display";
+import { userContact, userInitial } from "@/lib/auth/user-display";
+import { toast } from "sonner";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -62,10 +63,10 @@ function coverFor(id: string): string {
   return COVER_GRADIENTS[h % COVER_GRADIENTS.length];
 }
 
-type FilterTab = "all" | "active";
 
 export default function ProjectsPage() {
   const t = useTranslations("projects");
+  const tMembers = useTranslations("members");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -73,7 +74,6 @@ export default function ProjectsPage() {
   const { projects, isLoading, error, selectedProjectId, selectProject, refetch } =
     useProject();
   const { user } = useAuth();
-  const [filterTab, setFilterTab] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   // Which card has its personal-spend breakdown open. Collapsed by default so the
@@ -81,9 +81,6 @@ export default function ProjectsPage() {
   const [openBreakdownId, setOpenBreakdownId] = useState<string | null>(null);
   const [projectUsers, setProjectUsers] = useState<Record<string, ProjectUser[]>>({});
   const [loadingUsers, setLoadingUsers] = useState<string | null>(null);
-  const [addMemberProject, setAddMemberProject] = useState<{ id: string; label: string } | null>(
-    null,
-  );
   const [removeMember, setRemoveMember] = useState<{
     projectId: string;
     userId: string;
@@ -103,23 +100,41 @@ export default function ProjectsPage() {
   const canDeleteProject = (project: Project) =>
     can("project:delete", user?.permissions, project.my_permissions);
 
-  // Open dialog when external triggers (Topbar/Sidebar) navigate with ?new=1.
+  const canCreate = canCreateProject(user?.permissions, user?.companies);
+
+  // Open dialog when external triggers (Topbar/Sidebar) navigate with ?new=1 —
+  // only for someone who may create a project (the API refuses anyone else).
+  // Waits for the user to load so an admin's rights are known first.
   useEffect(() => {
-    if (searchParams.get("new") === "1") {
-      setShowCreateDialog(true);
-      router.replace(pathname);
-    }
-  }, [searchParams, router, pathname]);
+    if (!user || searchParams.get("new") !== "1") return;
+    if (canCreate) setShowCreateDialog(true);
+    router.replace(pathname);
+  }, [user, canCreate, searchParams, router, pathname]);
 
   const handleProjectCreated = async (project: Project) => {
     await refetch();
     selectProject(project.id);
+    toast.success(t("projectCreated"));
+    // The new project lands at the end of a possibly long list: bring it in view.
+    requestAnimationFrame(() =>
+      document.getElementById(`project-${project.id}`)?.scrollIntoView?.({ behavior: "smooth", block: "center" })
+    );
+  };
+
+  const handleProjectDeleted = async () => {
+    await refetch();
+    toast.success(t("projectDeleted"));
   };
 
   const canManageUsers = (project: Project) =>
     can("project:manage_users", user?.permissions, project.my_permissions);
+  // Adding people happens on the project's members page, which holds both
+  // flows: e-mail invitation (project:invite) and assigning an existing company
+  // member (project:update, PUT /assignments — company-scoped search).
+  const canAddMembers = (project: Project) =>
+    can("project:invite", user?.permissions, project.my_permissions) ||
+    can("project:update", user?.permissions, project.my_permissions);
 
-  const canCreate = canCreateProject(user?.permissions, user?.companies);
   const adminCompanies = (user?.companies ?? []).filter((c) => c.role === "admin");
 
   const filteredProjects = projects.filter((p) => {
@@ -149,22 +164,18 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleMemberAdded = async () => {
-    if (addMemberProject) {
-      setProjectUsers((prev) => {
-
-        const { [addMemberProject.id]: _, ...rest } = prev;
-        return rest;
-      });
-      await loadProjectUsers(addMemberProject.id);
-      refetch();
-    }
-  };
-
   const handleRemoveUser = async () => {
     if (!removeMember) return;
     try {
-      await removeMemberAction(removeMember.projectId, removeMember.userId);
+      const result = await removeMemberAction(removeMember.projectId, removeMember.userId);
+      if (!result.ok) {
+        toast.error(
+          result.status === 403
+            ? tMembers("edit.toast.forbidden")
+            : tMembers("edit.toast.removeFailed")
+        );
+        return;
+      }
       setProjectUsers((prev) => {
 
         const { [removeMember.projectId]: _, ...rest } = prev;
@@ -172,11 +183,8 @@ export default function ProjectsPage() {
       });
       await loadProjectUsers(removeMember.projectId);
       refetch();
-    } catch (err) {
-      console.error(
-        "Failed to remove user:",
-        err instanceof Error ? err.message : "unknown"
-      );
+    } catch {
+      toast.error(tMembers("edit.toast.removeFailed"));
     } finally {
       setRemoveMember(null);
     }
@@ -187,33 +195,25 @@ export default function ProjectsPage() {
     router.push(`/${locale}/dashboard`);
   };
 
+  const openProjectMembers = (projectId: string) => {
+    selectProject(projectId);
+    router.push(`/${locale}/projects/${projectId}/members`);
+  };
+
   // Open the project's photo gallery (all images + its own upload control).
   const openProjectPhotos = (projectId: string) => {
     selectProject(projectId);
     router.push(`/${locale}/projects/${projectId}/photos`);
   };
 
-  const counts = {
-    all: projects.length,
-    active: projects.length,
-  };
-
   return (
     <div className="fade-up px-4 pb-12 lg:px-8">
       {/* Filter row */}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="seg">
-          {(["all", "active"] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setFilterTab(tab)}
-              className={filterTab === tab ? "on" : ""}
-            >
-              {tab === "all" ? t("allProjects") : t("active")} ·{" "}
-              <span className="num">{counts[tab]}</span>
-            </button>
-          ))}
+        {/* No project status exists yet, so there is nothing to filter by:
+            an "Active" tab listed the same projects as "All". */}
+        <div className="text-[12.5px] font-medium" style={{ color: "var(--ink-2)" }} data-testid="projects-count">
+          {t("allProjects")} · <span className="num">{projects.length}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -255,7 +255,6 @@ export default function ProjectsPage() {
             const users = projectUsers[project.id] || [];
             const isLoadingThisProject = loadingUsers === project.id;
             const cover = (project as { cover?: string }).cover ?? coverFor(project.id);
-            const phase = (project as { phase?: string }).phase ?? "Planning";
             const {
               creditTotal,
               spentByCredits,
@@ -276,17 +275,23 @@ export default function ProjectsPage() {
               user?.permissions,
               project.my_permissions
             );
+            // The backend zeroes spend for anyone without labor or pay rights
+            // (_spend_visible); shown, those zeros read as "nothing spent".
+            const canViewSpend =
+              can("project:manage_labor", user?.permissions, project.my_permissions) ||
+              can("project:view_pay", user?.permissions, project.my_permissions);
+            const moneyColumns = (canViewBudget ? 2 : 0) + (canViewSpend ? 2 : 0);
             const breakdownRows = personalSpendRows(project.personal_by_type);
             const laborUnpaid = project.labor_unpaid ?? 0;
             const hasBreakdown = breakdownRows.length > 0 || laborUnpaid > 0;
             const isBreakdownOpen = openBreakdownId === project.id;
             const isSelected = selectedProjectId === project.id;
             const userCount = project.user_count ?? 0;
-            const visibleAvatars = Math.min(userCount, 4);
 
             return (
               <article
                 key={project.id}
+                id={`project-${project.id}`}
                 className={`folio-card overflow-hidden ${
                   isFeatured ? "col-span-12" : "col-span-12 md:col-span-6"
                 }`}
@@ -294,8 +299,8 @@ export default function ProjectsPage() {
                 <div
                   className={`grid grid-cols-1 ${
                     isFeatured
-                      ? "sm:grid-cols-[1.2fr_2fr]"
-                      : "sm:grid-cols-[1fr_1.4fr]"
+                      ? "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]"
+                      : "sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]"
                   }`}
                 >
                   {/* Cover */}
@@ -320,17 +325,21 @@ export default function ProjectsPage() {
                     </div>
                     <div className="absolute bottom-4 left-4 right-4 text-white">
                       <div className="num mb-1 text-[10px] uppercase tracking-[0.2em] opacity-80">
-                        0{idx + 1}
+                        {String(idx + 1).padStart(2, "0")}
                       </div>
-                      <div className="font-display text-[22px] leading-tight">{phase}</div>
                     </div>
                   </button>
 
                   {/* Body */}
-                  <div className="flex flex-col p-6">
+                  {/* minmax(0,…) tracks + overflow-wrap: an unbroken address as
+                      the title used to widen the body and squeeze the cover to 0. */}
+                  <div className="flex min-w-0 flex-col p-6">
                     <div className="mb-3 flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="font-display text-[26px] font-medium leading-tight tracking-tight">
+                      <div className="min-w-0 flex-1">
+                        <h3
+                          className="font-display text-[26px] font-medium leading-tight tracking-tight [overflow-wrap:anywhere]"
+                          data-testid="project-card-title"
+                        >
                           {projectDisplayName(project)}
                         </h3>
                       </div>
@@ -389,76 +398,83 @@ export default function ProjectsPage() {
                     <div className="hairline mt-auto border-t pt-4">
                       {/* Credit total / Spent by credit / Spent personal / Remaining.
                           Two columns on narrow screens so the figures stay readable. */}
-                      <div
-                        className={`mb-3 grid grid-cols-2 gap-4 ${
-                          canViewBudget ? "sm:grid-cols-4" : "sm:grid-cols-2"
-                        }`}
-                      >
-                        {canViewBudget && (
-                          <div>
-                            {/* min-h reserves two label lines so a label that wraps in one
-                                locale (fr "Dépensé sur crédit") does not push its figure
-                                out of line with the other three. */}
-                            <div className="label-cap min-h-[3em]">{t("creditTotal")}</div>
-                            <div className="font-display num mt-0.5 text-[15px]">
-                              {creditTotal ? fmtEUR(creditTotal) : "—"}
+                      {moneyColumns > 0 && (
+                        <div
+                          className={`mb-3 grid grid-cols-2 gap-4 ${
+                            moneyColumns === 4 ? "sm:grid-cols-4" : "sm:grid-cols-2"
+                          }`}
+                          data-testid="project-money-grid"
+                        >
+                          {canViewBudget && (
+                            <div>
+                              {/* min-h reserves two label lines so a label that wraps in one
+                                  locale (fr "Dépensé sur crédit") does not push its figure
+                                  out of line with the other three. */}
+                              <div className="label-cap min-h-[3em]">{t("creditTotal")}</div>
+                              <div className="font-display num mt-0.5 text-[15px]">
+                                {creditTotal ? fmtEUR(creditTotal) : "—"}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        <div>
-                          <div className="label-cap min-h-[3em]">{t("spentByCredits")}</div>
-                          <div className="font-display num mt-0.5 text-[15px]">
-                            {spentByCredits ? fmtEUR(spentByCredits) : "—"}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="label-cap min-h-[3em]">{t("spentPersonal")}</div>
-                          {hasBreakdown ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setOpenBreakdownId(isBreakdownOpen ? null : project.id)
-                              }
-                              aria-expanded={isBreakdownOpen}
-                              aria-controls={`breakdown-${project.id}`}
-                              className="font-display num mt-0.5 flex items-center gap-1 text-[15px] hover:underline"
-                            >
-                              {spentPersonal ? fmtEUR(spentPersonal) : "—"}
-                              <ChevronDown
-                                size={13}
-                                style={{
-                                  color: "var(--muted)",
-                                  transform: isBreakdownOpen ? "rotate(180deg)" : undefined,
-                                }}
-                              />
-                            </button>
-                          ) : (
-                            <div className="font-display num mt-0.5 text-[15px]">
-                              {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                          )}
+                          {canViewSpend && (
+                            <>
+                              <div>
+                                <div className="label-cap min-h-[3em]">{t("spentByCredits")}</div>
+                                <div className="font-display num mt-0.5 text-[15px]">
+                                  {spentByCredits ? fmtEUR(spentByCredits) : "—"}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="label-cap min-h-[3em]">{t("spentPersonal")}</div>
+                                {hasBreakdown ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setOpenBreakdownId(isBreakdownOpen ? null : project.id)
+                                    }
+                                    aria-expanded={isBreakdownOpen}
+                                    aria-controls={`breakdown-${project.id}`}
+                                    className="font-display num mt-0.5 flex items-center gap-1 text-[15px] hover:underline"
+                                  >
+                                    {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                                    <ChevronDown
+                                      size={13}
+                                      style={{
+                                        color: "var(--muted)",
+                                        transform: isBreakdownOpen ? "rotate(180deg)" : undefined,
+                                      }}
+                                    />
+                                  </button>
+                                ) : (
+                                  <div className="font-display num mt-0.5 text-[15px]">
+                                    {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
+                          {canViewBudget && (
+                            <div>
+                              <div className="label-cap min-h-[3em]">{t("remaining")}</div>
+                              <div
+                                className="font-display num mt-0.5 text-[15px]"
+                                style={isOverBudget ? { color: "var(--negative)" } : undefined}
+                              >
+                                {creditTotal
+                                  ? isOverBudget
+                                    ? `${t("overBudget")} ${fmtEUR(Math.abs(remaining))}`
+                                    : fmtEUR(remaining)
+                                  : "—"}
+                              </div>
                             </div>
                           )}
                         </div>
-                        {canViewBudget && (
-                          <div>
-                            <div className="label-cap min-h-[3em]">{t("remaining")}</div>
-                            <div
-                              className="font-display num mt-0.5 text-[15px]"
-                              style={isOverBudget ? { color: "var(--negative)" } : undefined}
-                            >
-                              {creditTotal
-                                ? isOverBudget
-                                  ? `${t("overBudget")} ${fmtEUR(Math.abs(remaining))}`
-                                  : fmtEUR(remaining)
-                                : "—"}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      )}
 
                       {/* Personal spend breakdown — collapsed by default. Unpaid labor is
                           separated by a rule because it is owed, not spent, and is deliberately
                           NOT part of the personal total above. */}
-                      {hasBreakdown && isBreakdownOpen && (
+                      {canViewSpend && hasBreakdown && isBreakdownOpen && (
                         <div
                           id={`breakdown-${project.id}`}
                           className="hairline mb-3 rounded-md border p-3"
@@ -495,38 +511,12 @@ export default function ProjectsPage() {
                       {/* Team */}
                       <div>
                         <div className="label-cap">{t("team")}</div>
-                        <div className="mt-1 flex -space-x-1.5">
-                          {Array.from({ length: visibleAvatars }).map((_, i) => (
-                            <div
-                              key={i}
-                              className="avatar"
-                              style={{
-                                background: AVATAR_TONES[i % AVATAR_TONES.length],
-                                width: 24,
-                                height: 24,
-                                fontSize: 10,
-                                border: "2px solid white",
-                              }}
-                            >
-                              ·
-                            </div>
-                          ))}
-                          {userCount > 4 && (
-                            <div
-                              className="avatar"
-                              style={{
-                                background: "var(--paper-2)",
-                                color: "var(--ink-2)",
-                                width: 24,
-                                height: 24,
-                                fontSize: 10,
-                                border: "2px solid white",
-                              }}
-                            >
-                              +{userCount - 4}
-                            </div>
-                          )}
-                          {userCount === 0 && (
+                        {/* The list carries a head count, not the people: say how
+                            many rather than draw blank avatars. */}
+                        <div className="mt-1 text-[12.5px]" data-testid="project-team-size">
+                          {userCount > 0 ? (
+                            <span className="num">{t("teamSize", { n: userCount })}</span>
+                          ) : (
                             <span className="text-[11px]" style={{ color: "var(--muted)" }}>
                               {t("noneTeam")}
                             </span>
@@ -564,12 +554,10 @@ export default function ProjectsPage() {
                   >
                     <div className="mb-3 flex items-center justify-between">
                       <div className="label-cap">{t("teamMembers")}</div>
-                      {canManageThisProjectUsers && (
+                      {canAddMembers(project) && (
                         <button
                           type="button"
-                          onClick={() =>
-                            setAddMemberProject({ id: project.id, label: projectDisplayName(project) })
-                          }
+                          onClick={() => openProjectMembers(project.id)}
                           className="btn btn-ghost"
                           style={{ padding: "5px 10px", fontSize: 12 }}
                         >
@@ -593,15 +581,17 @@ export default function ProjectsPage() {
                               className="avatar"
                               style={{ background: AVATAR_TONES[i % AVATAR_TONES.length] }}
                             >
-                              {member.email.charAt(0).toUpperCase()}
+                              {userInitial(member)}
                             </div>
                             <div className="min-w-0">
                               <div className="truncate text-[13px] font-medium">
-                                {member.email}
+                                {userContact(member)}
                               </div>
-                              <div className="text-[11px]" style={{ color: "var(--muted)" }}>
-                                {t("memberRole")}
-                              </div>
+                              {member.role_name && (
+                                <div className="text-[11px]" style={{ color: "var(--muted)" }}>
+                                  {tMembers(`roles.${member.role_name}`)}
+                                </div>
+                              )}
                             </div>
                             {canManageThisProjectUsers && (
                               <button
@@ -610,7 +600,7 @@ export default function ProjectsPage() {
                                   setRemoveMember({
                                     projectId: project.id,
                                     userId: member.id,
-                                    email: member.email,
+                                    email: userContact(member),
                                   })
                                 }
                                 className="btn btn-quiet shrink-0"
@@ -677,7 +667,7 @@ export default function ProjectsPage() {
       )}
 
       <CreateProjectDialog
-        open={showCreateDialog}
+        open={showCreateDialog && canCreate}
         onOpenChange={setShowCreateDialog}
         onCreated={handleProjectCreated}
         adminCompanies={adminCompanies}
@@ -696,18 +686,8 @@ export default function ProjectsPage() {
         onOpenChange={(o) => !o && setDeleteProjectState(null)}
         // ProjectContext.loadProjects auto-clears selectedProjectId when the
         // previously-selected id is no longer in the list, so we just refetch.
-        onDeleted={refetch}
+        onDeleted={handleProjectDeleted}
       />
-
-      {addMemberProject && (
-        <AddMemberDialog
-          projectId={addMemberProject.id}
-          projectName={addMemberProject.label}
-          open={!!addMemberProject}
-          onOpenChange={(open) => !open && setAddMemberProject(null)}
-          onMemberAdded={handleMemberAdded}
-        />
-      )}
 
       <AlertDialog open={!!removeMember} onOpenChange={(open) => !open && setRemoveMember(null)}>
         <AlertDialogContent className="max-w-sm sm:max-w-md">

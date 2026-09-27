@@ -36,7 +36,11 @@ vi.mock("next-intl", () => {
       return undefined;
     }, obj) as string ?? path;
   }
-  const makeT = (ns: string) => (key: string) => resolve(en, `${ns}.${key}`);
+  const makeT = (ns: string) => (key: string, params?: Record<string, unknown>) =>
+    Object.entries(params ?? {}).reduce(
+      (text, [k, v]) => text.replace(`{${k}}`, String(v)),
+      resolve(en, `${ns}.${key}`),
+    );
   return {
     useLocale: () => "en",
     useTranslations: (ns: string) => makeT(ns),
@@ -184,13 +188,13 @@ describe("test_apply_template_dialog_lists_filtered_by_kind_and_creates_doc", ()
     });
   });
 
-  it("shows 'No <kind> templates saved yet' when list is empty", async () => {
+  it("shows 'No <kind> templates saved yet', with the kind translated, when list is empty", async () => {
     mockListAction.mockResolvedValueOnce({ ok: true, data: [] });
 
     renderDialog("devis");
 
     await waitFor(() => {
-      expect(screen.getByText(/no devis templates saved yet/i)).toBeDefined();
+      expect(screen.getByText("No Quote templates saved yet.")).toBeDefined();
     });
   });
 

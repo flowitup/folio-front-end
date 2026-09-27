@@ -17,8 +17,10 @@
  * The admin half renders only when the caller's role in the SELECTED company is
  * "admin"; nothing behind it would do anything but 403 for a manager or member,
  * and every mutation still goes through the company-scoped
- * `require_company_role("admin")` backend gate. `admin-companies-section.tsx`
- * stays separate: it is platform-ops only and manages ANY company.
+ * `require_company_role("admin")` backend gate. The labor-roles card is the
+ * one exception: the backend lets a manager edit labor roles too, so it shows
+ * for an admin or a manager. `admin-companies-section.tsx` stays separate: it
+ * is platform-ops only and manages ANY company.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -40,6 +42,9 @@ import { JoinCompanyDialog } from "@/components/companies/join-company-dialog";
 import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-card";
 import { CompanyMembersTable } from "@/components/companies/company-members-table";
 import { CompanyPaymentMethodsCard } from "@/components/companies/company-payment-methods-card";
+import { CompanyLaborRolesCard } from "@/components/companies/company-labor-roles-card";
+import { CompanyProfileForm } from "@/components/companies/company-profile-form";
+import { useAssistantFeature } from "@/hooks/use-chat-feature";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { CompanyRole, MyCompany } from "@/types/companies";
 
@@ -52,6 +57,7 @@ const ROLE_LABEL_KEY: Record<CompanyRole, string> = {
 
 export function CompanySettingsSection() {
   const t = useTranslations("companySettings");
+  const assistantEnabled = useAssistantFeature();
   const tc = useTranslations("companies");
   const tSettings = useTranslations("settings");
   const locale = useLocale();
@@ -65,10 +71,12 @@ export function CompanySettingsSection() {
 
   const fetchingRef = useRef(false);
 
-  const load = useCallback(async () => {
+  // `silent` refetches without the full-page spinner (which would unmount
+  // everything below), for refreshes after a mutation.
+  const load = useCallback(async (options?: { silent?: boolean }) => {
     if (fetchingRef.current) return;
     fetchingRef.current = true;
-    setIsLoading(true);
+    if (!options?.silent) setIsLoading(true);
     try {
       const result = await fetchMyCompaniesAction();
       if (result.ok) {
@@ -95,8 +103,13 @@ export function CompanySettingsSection() {
   }, [load]);
 
   // Bump after member-list-affecting mutations (role change, add, import,
-  // boot) so the members table and the directory both refetch.
-  const bumpRefresh = () => setRefreshToken((n) => n + 1);
+  // boot) so the members table and the directory both refetch. Removing a
+  // member also rotates the company's join code on the backend, so refetch
+  // the companies too: the join-code card must not keep showing a dead code.
+  const bumpRefresh = () => {
+    setRefreshToken((n) => n + 1);
+    void load({ silent: true });
+  };
 
   // "Import from company" only makes sense between companies the caller
   // administers, so the source list stays admin-scoped even though the picker
@@ -116,6 +129,9 @@ export function CompanySettingsSection() {
 
   const selectedCompany = companies.find((c) => c.id === selectedId) ?? companies[0];
   const isAdminOfSelected = selectedCompany?.role === "admin";
+  // Labor roles are writable by a company manager as well as an admin.
+  const canManageLaborRolesOfSelected =
+    selectedCompany?.role === "admin" || selectedCompany?.role === "manager";
 
   return (
     <div className="space-y-5">
@@ -224,13 +240,30 @@ export function CompanySettingsSection() {
           )}
 
           {/* Attachment half — visible whatever the caller's role is. */}
-          <MyCompanyCard company={selectedCompany} onMutated={load} />
+          <MyCompanyCard company={selectedCompany} onMutated={() => void load()} />
 
           {/* Admin half — company-admin self-service for the selected company. */}
           {isAdminOfSelected && (
             <>
+              {/* The company's identity as it prints on quotes and invoices.
+                  Keyed on updated_at too so a save reseeds it from the
+                  refetched company. */}
+              <section className="folio-card p-7" data-testid="company-profile-card">
+                <h3 className="font-display text-[18px] font-medium tracking-tight">
+                  {t("profile.title")}
+                </h3>
+                <p className="mt-0.5 mb-5 text-[13px]" style={{ color: "var(--muted)" }}>
+                  {t("profile.description")}
+                </p>
+                <CompanyProfileForm
+                  key={`profile-${selectedCompany.id}-${selectedCompany.updated_at}`}
+                  company={selectedCompany}
+                  onSaved={() => void load()}
+                />
+              </section>
+
               <CompanyJoinCodeCard
-                key={`join-code-${selectedCompany.id}`}
+                key={`join-code-${selectedCompany.id}-${selectedCompany.join_code ?? "none"}`}
                 companyId={selectedCompany.id}
                 initialCode={selectedCompany.join_code ?? null}
               />
@@ -245,17 +278,29 @@ export function CompanySettingsSection() {
 
               {/* Supervision page for the assistant's `@folio` mentions in this
                   company's chat channels — same admin gate as the cards above,
-                  re-checked server-side by the page itself. */}
-              <section className="folio-card p-7">
-                <a
-                  href={`/${locale}/company/assistant-audit?company_id=${selectedCompany.id}`}
-                  className="text-[13px] font-medium hover:underline"
-                  style={{ color: "var(--ink)" }}
-                >
-                  {t("assistantAuditLink")} →
-                </a>
-              </section>
+                  re-checked server-side by the page itself. Only while the
+                  assistant is on: switched off, the page has nothing to show. */}
+              {assistantEnabled === true && (
+                <section className="folio-card p-7">
+                  <a
+                    href={`/${locale}/company/assistant-audit?company_id=${selectedCompany.id}`}
+                    className="text-[13px] font-medium hover:underline"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    {t("assistantAuditLink")} →
+                  </a>
+                </section>
+              )}
             </>
+          )}
+
+          {/* Labor roles — the roles workers carry on this company's projects.
+              Keyed like the admin cards: it holds the fetched list. */}
+          {canManageLaborRolesOfSelected && (
+            <CompanyLaborRolesCard
+              key={`labor-roles-${selectedCompany.id}`}
+              companyId={selectedCompany.id}
+            />
           )}
         </>
       )}

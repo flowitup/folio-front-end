@@ -7,6 +7,9 @@
  * re-fetching companies client-side. Loads suppliers, categories, and
  * products via server actions. Debounces search 300ms.
  *
+ * Purchase import (supplier JSON export) is offered to callers holding
+ * bibliotheque:manage, the permission the API requires for it.
+ *
  * Deep-link strategy for product detail: push on first open (none → some)
  * to add a back-button history entry; replace on swap/close to avoid
  * history pollution — mirrors the invoices page pattern.
@@ -15,7 +18,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Loader2, BookOpen, Scale, Plus } from "lucide-react";
+import { Loader2, BookOpen, Scale, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ProductFilterBar } from "@/components/bibliotheque/product-filter-bar";
@@ -27,14 +30,17 @@ import { ProductDeleteDialog } from "@/components/bibliotheque/product-delete-di
 import { CompareBar } from "@/components/bibliotheque/compare-bar";
 import { ProductCompareDialog } from "@/components/bibliotheque/product-compare-dialog";
 import { LibraryPagination } from "@/components/bibliotheque/library-pagination";
+import { LibraryImportDialog } from "@/components/bibliotheque/library-import-dialog";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/auth/permissions";
 import {
   listSuppliersAction,
   listCategoriesAction,
   listProductsAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
+import { LIBRARY_PAGE_SIZE } from "@/lib/bibliotheque/page-size";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 
-const PAGE_SIZE = 24; // 12 rows of 2 / 8 of 3 / ~5 of 5 — fits every breakpoint
 const MAX_COMPARE = 4; // side-by-side columns that fit the compare dialog
 
 interface Props {
@@ -46,6 +52,11 @@ export function BibliothequePageClient({ companyId }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+  // Creating, editing, deleting and importing products all need
+  // bibliotheque:manage (the API answers 403 otherwise): a member browses only.
+  const canManage = can("bibliotheque:manage", user?.permissions);
+  const canImport = canManage;
 
   // Filters
   const [supplier, setSupplier] = useState("");
@@ -56,6 +67,7 @@ export function BibliothequePageClient({ companyId }: Props) {
 
   // Mutation dialog state
   const [createOpen, setCreateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<LibraryProduct | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<LibraryProduct | null>(null);
 
@@ -212,26 +224,41 @@ export function BibliothequePageClient({ companyId }: Props) {
 
   const selectedProducts = Array.from(selected.values());
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / LIBRARY_PAGE_SIZE);
 
   return (
     <div className="fade-up px-4 pb-12 lg:px-8">
       {/* Header */}
-      <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-[28px] font-medium tracking-tight">{t("title")}</h1>
           <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
             {t("subtitle")}
           </p>
         </div>
-        <Button
-          size="sm"
-          className="shrink-0 gap-1.5"
-          onClick={() => setCreateOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          {t("addProduct")}
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          {canImport && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => setImportOpen(true)}
+            >
+              <Upload className="h-4 w-4" />
+              {t("import.button")}
+            </Button>
+          )}
+          {canManage && (
+            <Button
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setCreateOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              {t("addProduct")}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filter bar + density control */}
@@ -318,15 +345,23 @@ export function BibliothequePageClient({ companyId }: Props) {
         productId={selectedProductId}
         suppliersById={suppliersById}
         onClose={closeProduct}
-        onEdit={(p) => {
-          // Close detail before opening edit to avoid two stacked modals
-          closeProduct();
-          setEditProduct(p);
-        }}
-        onDelete={(p) => {
-          closeProduct();
-          setDeleteProduct(p);
-        }}
+        onEdit={
+          canManage
+            ? (p) => {
+                // Close detail before opening edit to avoid two stacked modals
+                closeProduct();
+                setEditProduct(p);
+              }
+            : undefined
+        }
+        onDelete={
+          canManage
+            ? (p) => {
+                closeProduct();
+                setDeleteProduct(p);
+              }
+            : undefined
+        }
       />
 
       {/* Create product dialog */}
@@ -343,6 +378,23 @@ export function BibliothequePageClient({ companyId }: Props) {
         }}
       />
 
+      {/* Purchase import dialog */}
+      {canImport && (
+        <LibraryImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          companyId={companyId}
+          companies={user?.companies ?? []}
+          onImported={(importedInto) => {
+            // Another company's library is not the one on screen.
+            if (importedInto !== companyId) return;
+            // New suppliers and categories may arrive with the imported lines.
+            reloadMeta();
+            reload();
+          }}
+        />
+      )}
+
       {/* Edit product dialog */}
       <ProductEditDialog
         product={editProduct}
@@ -353,6 +405,7 @@ export function BibliothequePageClient({ companyId }: Props) {
           setEditProduct(null);
           reload();
         }}
+        onImageChanged={reload}
       />
 
       {/* Delete product dialog */}

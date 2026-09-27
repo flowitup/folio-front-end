@@ -11,6 +11,7 @@
  */
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ export function DatePickerWithArrows({
   label,
   disabled = false,
 }: DatePickerWithArrowsProps) {
+  const t = useTranslations("labor");
   return (
     <div className="space-y-1">
       {label && <Label className="text-xs">{label}</Label>}
@@ -56,7 +58,7 @@ export function DatePickerWithArrows({
           size="icon"
           onClick={() => onChange(shiftDate(value, -1))}
           disabled={disabled}
-          aria-label="Previous day"
+          aria-label={t("prevDay")}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -73,7 +75,7 @@ export function DatePickerWithArrows({
           size="icon"
           onClick={() => onChange(shiftDate(value, 1))}
           disabled={disabled}
-          aria-label="Next day"
+          aria-label={t("nextDay")}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>

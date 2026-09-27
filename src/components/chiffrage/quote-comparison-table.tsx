@@ -21,6 +21,7 @@ import {
   deltaVsCheapest,
   formatDelta,
   money,
+  toCents,
 } from "@/components/chiffrage/format";
 import {
   NOTE_DIFF_MARK_CLASS,
@@ -67,12 +68,15 @@ export function QuoteComparisonTable({
     );
   }
 
-  const cheapest = Math.min(...article.quotes.map((q) => q.unit_price_ht));
+  // Compared as shown (to the cent), not at the stored 4 decimals.
+  const cheapest = Math.min(...article.quotes.map((q) => toCents(q.unit_price_ht)));
   const noteDiff = diffQuoteNotes(article.quotes.map((q) => q.note));
   const showLegend = hasNoteDifferences(noteDiff);
 
   return (
-    <div className="overflow-x-auto">
+    // `relative` keeps any absolutely positioned descendant inside the
+    // scroller, so the wide table scrolls here instead of widening the page.
+    <div className="relative overflow-x-auto">
       <table
         className="w-full min-w-[640px] text-sm"
         data-testid="quote-comparison-table"
@@ -88,16 +92,19 @@ export function QuoteComparisonTable({
               {t("unitPriceTtc")}
             </th>
             <th className="px-4 py-2 text-right font-medium">{t("delta")}</th>
-            <th className="px-4 py-2 text-right font-medium sr-only">
-              {t("actions")}
+            {/* sr-only on the cell itself made it position:absolute and
+                pushed the page 64px wider on phones; hide only the label. */}
+            <th className="px-4 py-2 text-right font-medium">
+              <span className="sr-only">{t("actions")}</span>
             </th>
           </tr>
         </thead>
         <tbody>
           {article.quotes.map((q, i) => {
             const isEffective = q.id === article.effective_quote_id;
-            const isCheapest = q.unit_price_ht === cheapest;
-            const delta = deltaVsCheapest(q.unit_price_ht, cheapest);
+            const shown = toCents(q.unit_price_ht);
+            const isCheapest = shown === cheapest;
+            const delta = deltaVsCheapest(shown, cheapest);
             return (
               <tr
                 key={q.id}

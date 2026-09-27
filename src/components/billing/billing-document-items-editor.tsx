@@ -31,27 +31,41 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { BillingTotalsCard, computeTotals } from "@/components/billing/billing-totals-card";
+import { BillingTotalsCard, computeTotals, lineTotalHt } from "@/components/billing/billing-totals-card";
 import { getActivitySuggestionsAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import type { BillingDocumentItem } from "@/types/billing";
 import type { ActivitySuggestion, ActivityCategory } from "@/lib/api/billing/documents";
+import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const PRESET_VAT_RATES = ["20", "10", "5.5", "0"];
+export const PRESET_VAT_RATES = ["20", "10", "5.5", "0"];
+const DEFAULT_VAT_RATE = "20";
 
-function emptyItem(): BillingDocumentItem {
-  return { description: "", quantity: "1", unit_price: "0", vat_rate: "20", category: null };
+/**
+ * The rate as the presets spell it: the API returns "10.00" or "5.50" for a
+ * NUMERIC(5,2) column, which must still match the "10" / "5.5" presets.
+ */
+export function normalizeVatRate(rate: string): string {
+  if (rate.trim() === "") return rate;
+  const n = Number(rate);
+  return Number.isFinite(n) ? String(n) : rate;
+}
+
+export function isPresetVatRate(rate: string): boolean {
+  return PRESET_VAT_RATES.includes(normalizeVatRate(rate));
+}
+
+function emptyItem(vatRate: string = DEFAULT_VAT_RATE): BillingDocumentItem {
+  return { description: "", quantity: "1", unit_price: "0", vat_rate: vatRate, category: null };
 }
 
 function lineHt(item: BillingDocumentItem): string {
-  const qty = Number(item.quantity);
-  const up = Number(item.unit_price);
-  if (!Number.isFinite(qty) || !Number.isFinite(up)) return "—";
-  const ht = Math.round((qty * up + Number.EPSILON) * 100) / 100;
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(ht);
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(
+    lineTotalHt(item)
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -68,6 +82,43 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 }
 
 // ---------------------------------------------------------------------------
+// Suggestion requests — one per (category, query), shared by every line and by
+// the desktop row and mobile card of the same line, which are both mounted.
+// ---------------------------------------------------------------------------
+
+type SuggestionResult = Awaited<ReturnType<typeof getActivitySuggestionsAction>>;
+
+const inFlightSuggestions = new WeakMap<
+  Map<string, ActivitySuggestion[]>,
+  Map<string, Promise<SuggestionResult>>
+>();
+
+function requestSuggestions(
+  cache: Map<string, ActivitySuggestion[]> | null,
+  cacheKey: string,
+  category: string,
+  q: string
+): Promise<SuggestionResult> {
+  const call = () =>
+    getActivitySuggestionsAction({
+      category: category || undefined,
+      q: q || undefined,
+      limit: 20,
+    });
+  if (!cache) return call();
+  let pending = inFlightSuggestions.get(cache);
+  if (!pending) {
+    pending = new Map();
+    inFlightSuggestions.set(cache, pending);
+  }
+  const existing = pending.get(cacheKey);
+  if (existing) return existing;
+  const request = call().finally(() => pending!.delete(cacheKey));
+  pending.set(cacheKey, request);
+  return request;
+}
+
+// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
@@ -77,6 +128,8 @@ interface BillingDocumentItemsEditorProps {
   readOnly?: boolean;
   /** Set to false for template forms where totals are not meaningful. Default: true. */
   showTotals?: boolean;
+  /** VAT rate of a newly added line (a template's default rate). Default: 20. */
+  defaultVatRate?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -88,6 +141,7 @@ export function BillingDocumentItemsEditor({
   onChange,
   readOnly = false,
   showTotals = true,
+  defaultVatRate,
 }: BillingDocumentItemsEditorProps) {
   const uid = useId();
   const t = useTranslations("billing.form.items");
@@ -117,7 +171,7 @@ export function BillingDocumentItemsEditor({
   }
 
   function addItem() {
-    onChange([...items, emptyItem()]);
+    onChange([...items, emptyItem(defaultVatRate || DEFAULT_VAT_RATE)]);
   }
 
   function removeItem(index: number) {
@@ -290,11 +344,7 @@ function ItemRow({
     }
     if (mountedRef.current) setDescLoading(true);
     try {
-      const result = await getActivitySuggestionsAction({
-        category: category || undefined,
-        q: q || undefined,
-        limit: 20,
-      });
+      const result = await requestSuggestions(cache, cacheKey, category, q);
       if (!mountedRef.current) return;
       if (result.ok) {
         cache?.set(cacheKey, result.data.suggestions);
@@ -307,7 +357,14 @@ function ItemRow({
     }
   }, [suggestionCache]);
 
+  // A saved line's own description needs no suggestions until it is edited:
+  // opening a document must not cost one request per line.
+  const savedQueryRef = useRef({ q: item.description, category: item.category ?? "" });
   useEffect(() => {
+    const saved = savedQueryRef.current;
+    if (saved.q !== "" && debouncedDescQuery === saved.q && debouncedCategory === saved.category) {
+      return;
+    }
     fetchSuggestions(debouncedDescQuery, debouncedCategory);
   }, [debouncedDescQuery, debouncedCategory, fetchSuggestions]);
 
@@ -347,7 +404,6 @@ function ItemRow({
             value={item.category ?? ""}
             onChange={(v) => onUpdate({ category: v || null })}
             options={categoryOptions}
-            onQueryChange={() => {/* categories already loaded on mount */}}
             placeholder={t("categoryPlaceholder")}
             emptyText={t("categoryNoMatches")}
             allowFreeText
@@ -382,6 +438,7 @@ function ItemRow({
           <Input
             type="number"
             min="0"
+            max={MAX_LINE_QUANTITY}
             step="any"
             value={item.quantity}
             onChange={(e) => onUpdate({ quantity: e.target.value })}
@@ -398,6 +455,7 @@ function ItemRow({
           <Input
             type="number"
             min="0"
+            max={MAX_LINE_UNIT_PRICE}
             step="any"
             value={item.unit_price}
             onChange={(e) => onUpdate({ unit_price: e.target.value })}
@@ -478,11 +536,7 @@ function MobileItemCard({
     }
     if (mountedRef.current) setDescLoading(true);
     try {
-      const result = await getActivitySuggestionsAction({
-        category: category || undefined,
-        q: q || undefined,
-        limit: 20,
-      });
+      const result = await requestSuggestions(cache, cacheKey, category, q);
       if (!mountedRef.current) return;
       if (result.ok) {
         cache?.set(cacheKey, result.data.suggestions);
@@ -495,7 +549,14 @@ function MobileItemCard({
     }
   }, [suggestionCache]);
 
+  // A saved line's own description needs no suggestions until it is edited:
+  // opening a document must not cost one request per line.
+  const savedQueryRef = useRef({ q: item.description, category: item.category ?? "" });
   useEffect(() => {
+    const saved = savedQueryRef.current;
+    if (saved.q !== "" && debouncedDescQuery === saved.q && debouncedCategory === saved.category) {
+      return;
+    }
     fetchSuggestions(debouncedDescQuery, debouncedCategory);
   }, [debouncedDescQuery, debouncedCategory, fetchSuggestions]);
 
@@ -532,7 +593,6 @@ function MobileItemCard({
             value={item.category ?? ""}
             onChange={(v) => onUpdate({ category: v || null })}
             options={categoryOptions}
-            onQueryChange={() => {/* categories already loaded on mount */}}
             placeholder={t("categoryPlaceholder")}
             emptyText={t("categoryNoMatches")}
             allowFreeText
@@ -574,6 +634,7 @@ function MobileItemCard({
             <Input
               type="number"
               min="0"
+              max={MAX_LINE_QUANTITY}
               step="any"
               value={item.quantity}
               onChange={(e) => onUpdate({ quantity: e.target.value })}
@@ -591,6 +652,7 @@ function MobileItemCard({
             <Input
               type="number"
               min="0"
+              max={MAX_LINE_UNIT_PRICE}
               step="any"
               value={item.unit_price}
               onChange={(e) => onUpdate({ unit_price: e.target.value })}
@@ -660,10 +722,13 @@ interface VatRateCellProps {
 }
 
 function VatRateCell({ value, onChange }: VatRateCellProps) {
-  // isCustom: value not in presets, OR empty string (user just triggered custom mode)
-  const isCustom = !PRESET_VAT_RATES.includes(value);
+  const t = useTranslations("billing.form.items");
+  // Custom mode is kept as state, not derived from the value: typing "0.5"
+  // passes through "0", a preset, and must not swap the input for the select.
+  const [customMode, setCustomMode] = useState(() => !isPresetVatRate(value));
+  const showInput = customMode || !isPresetVatRate(value);
 
-  if (isCustom) {
+  if (showInput) {
     return (
       <div className="flex items-center gap-1">
         <Input
@@ -672,15 +737,24 @@ function VatRateCell({ value, onChange }: VatRateCellProps) {
           max="100"
           step="any"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            setCustomMode(true);
+            onChange(e.target.value);
+          }}
           className="h-7 w-16 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 num"
           placeholder="0"
+          autoFocus={customMode && value === ""}
         />
         <button
           type="button"
           className="text-[11px] underline"
           style={{ color: "var(--muted)" }}
-          onClick={() => onChange("20")}
+          aria-label={t("vatUsePreset")}
+          title={t("vatUsePreset")}
+          onClick={() => {
+            setCustomMode(false);
+            onChange(DEFAULT_VAT_RATE);
+          }}
         >
           ↩
         </button>
@@ -690,9 +764,10 @@ function VatRateCell({ value, onChange }: VatRateCellProps) {
 
   return (
     <Select
-      value={value}
+      value={normalizeVatRate(value)}
       onValueChange={(v) => {
         if (v === "__custom__") {
+          setCustomMode(true);
           onChange(""); // switch to freetext mode; user types their rate
         } else {
           onChange(v);
@@ -708,7 +783,7 @@ function VatRateCell({ value, onChange }: VatRateCellProps) {
             {r}%
           </SelectItem>
         ))}
-        <SelectItem value="__custom__">Custom…</SelectItem>
+        <SelectItem value="__custom__">{t("vatCustom")}</SelectItem>
       </SelectContent>
     </Select>
   );

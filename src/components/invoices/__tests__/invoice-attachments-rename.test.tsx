@@ -107,4 +107,31 @@ describe("InvoiceAttachments rename", () => {
     const save = screen.getByText("save").closest("button") as HTMLButtonElement;
     expect(save.disabled).toBe(true);
   });
+
+  it("shows a failed rename inside the dialog and keeps it open", async () => {
+    (renameAttachment as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("400"));
+    render(<InvoiceAttachments invoice={INVOICE} canManage />);
+    await screen.findByText("receipt.pdf");
+
+    fireEvent.click(screen.getByTitle("rename"));
+    const input = await screen.findByDisplayValue("receipt.pdf");
+    fireEvent.change(input, { target: { value: "March.pdf" } });
+    fireEvent.click(screen.getByText("save"));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("error");
+    expect(screen.getByDisplayValue("March.pdf")).toBeInTheDocument();
+  });
+
+  it("refuses a changed extension before saving", async () => {
+    render(<InvoiceAttachments invoice={INVOICE} canManage />);
+    await screen.findByText("receipt.pdf");
+
+    fireEvent.click(screen.getByTitle("rename"));
+    const input = await screen.findByDisplayValue("receipt.pdf");
+    fireEvent.change(input, { target: { value: "receipt.png" } });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("errorExtension");
+    expect((screen.getByText("save").closest("button") as HTMLButtonElement).disabled).toBe(true);
+  });
 });

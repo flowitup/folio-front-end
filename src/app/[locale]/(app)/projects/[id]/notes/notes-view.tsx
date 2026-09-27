@@ -57,7 +57,7 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
 
   return (
     <div className="notes-wrap wide">
-      {canEdit && <QuickAdd onAdd={(p) => void handleAdd(p)} disabled={false} />}
+      {canEdit && <QuickAdd onAdd={handleAdd} disabled={false} />}
 
       {!isEmpty && (
         <NotesToolbar

@@ -11,7 +11,11 @@ import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Lock } from "lucide-react";
 import { getSession } from "@/lib/auth/session";
-import { listProjectDocuments, listDocumentTags } from "@/lib/api/project-documents";
+import {
+  listProjectDocuments,
+  listDocumentTags,
+  listDocumentUploaders,
+} from "@/lib/api/project-documents";
 import { listMembers } from "@/lib/api/members";
 import { getProjectById } from "@/lib/api/projects-server";
 import { can, isPlatformOps } from "@/lib/auth/permissions";
@@ -63,8 +67,11 @@ export default async function DocumentsPage({ params }: PageProps) {
     );
   }
 
-  // Parallel fetch — members, documents, and tags
-  const [members, docsResult, tags] = await Promise.all([
+  // Parallel fetch — members, documents, tags and uploaders. The uploader
+  // filter is built from the documents' actual uploaders (former members and
+  // unassigned company admins included), not from the assignments; null tells
+  // the panel the list could not be read so it retries on the client.
+  const [members, docsResult, tags, uploaders] = await Promise.all([
     listMembers(projectId).catch(() => []),
     listProjectDocuments(projectId).catch(() => ({
       items: [],
@@ -73,6 +80,7 @@ export default async function DocumentsPage({ params }: PageProps) {
       per_page: 25,
     })),
     listDocumentTags(projectId).catch(() => [] as string[]),
+    listDocumentUploaders(projectId).catch(() => null),
   ]);
 
   // Adapt ProjectMember[] to the shape the panel/list components expect
@@ -89,6 +97,7 @@ export default async function DocumentsPage({ params }: PageProps) {
         initialDocuments={docsResult.items}
         initialTotal={docsResult.total}
         initialTags={tags}
+        initialUploaders={uploaders}
         members={adaptedMembers}
         currentUserId={session.user.id}
         isAdminOrOwner={isAdminOrOwner}

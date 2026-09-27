@@ -5,6 +5,7 @@
  *   - billing.*
  *   - sidebar.billing.*
  *   - companies.*
+ *   - navigation.* (carries the project "Quotes & invoices" entry)
  *
  * Also asserts no empty-string values exist under those namespaces.
  * Also asserts removed keys (billing.errors.companyProfileMissing.*) are absent.
@@ -52,6 +53,7 @@ const NAMESPACES = [
   "billing",
   "sidebar.billing",
   "companies",
+  "navigation",
 ] as const;
 
 const LOCALES = [

@@ -6,6 +6,7 @@
  */
 
 import type { InventoryItem, Warehouse } from "@/lib/api/inventory";
+import { MAX_INT_QUANTITY } from "@/lib/numeric-bounds";
 
 /** Canonical category slugs in display order — mirrors the backend vocabulary. */
 export const INVENTORY_CATEGORY_SLUGS = [
@@ -74,12 +75,14 @@ export interface SiteRef {
 }
 
 export interface InventoryLocationGroup {
-  /** `warehouse:<id>`, `site:<id>` or `unknown:<kind>` for a dangling reference. */
+  /** `warehouse:<id>`, `site:<id>`, `other:site` or `unknown:<kind>` for a dangling reference. */
   key: string;
   kind: "warehouse" | "site";
   /** Null when the row points at a warehouse or project the client no longer knows. */
   title: string | null;
   subtitle: string | null;
+  /** A project the viewer is not assigned to (key `other:site`): its name is not known here. */
+  otherSite: boolean;
   items: InventoryItem[];
   quantity: number;
 }
@@ -104,7 +107,9 @@ export function groupInventoryByLocation(
       subtitle = warehouse?.address ?? null;
     } else {
       const site = item.project_id ? sites.get(item.project_id) : undefined;
-      key = site ? `site:${site.id}` : "unknown:site";
+      // A project the viewer is not assigned to is not in their project list,
+      // so its name is unknown here — but it is not an unknown place.
+      key = site ? `site:${site.id}` : item.project_id ? "other:site" : "unknown:site";
       title = site?.name ?? null;
       subtitle = site?.address ?? null;
     }
@@ -113,6 +118,7 @@ export function groupInventoryByLocation(
       kind: item.location_type,
       title,
       subtitle,
+      otherSite: key === "other:site",
       items: [],
       quantity: 0,
     };
@@ -136,10 +142,24 @@ export function unitsByWarehouse(items: readonly InventoryItem[]): Map<string, n
   return map;
 }
 
+/**
+ * Equipment rows per warehouse id. The API refuses to delete a warehouse that
+ * still has rows — even rows with 0 units — so this, not the unit count,
+ * decides whether a warehouse can go.
+ */
+export function rowsByWarehouse(items: readonly InventoryItem[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const item of items)
+    if (item.location_type === "warehouse" && item.warehouse_id)
+      map.set(item.warehouse_id, (map.get(item.warehouse_id) ?? 0) + 1);
+  return map;
+}
+
 /** Whole non-negative number or null: a typo must never land as 0 units. */
 export function parseQuantity(text: string): number | null {
   const trimmed = text.trim();
   if (!/^\d+$/.test(trimmed)) return null;
   const value = Number(trimmed);
-  return Number.isSafeInteger(value) ? value : null;
+  // The API stores counts in an INTEGER column.
+  return Number.isSafeInteger(value) && value <= MAX_INT_QUANTITY ? value : null;
 }

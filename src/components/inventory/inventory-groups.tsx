@@ -16,8 +16,9 @@ import { localizeInventoryCategory, type InventoryLocationGroup } from "@/lib/in
 
 interface Props {
   groups: InventoryLocationGroup[];
-  onEdit: (item: InventoryItem) => void;
-  onDelete: (item: InventoryItem) => void;
+  /** Omitted for a read-only viewer: the row then has no edit/delete controls. */
+  onEdit?: (item: InventoryItem) => void;
+  onDelete?: (item: InventoryItem) => void;
 }
 
 export function InventoryGroups({ groups, onEdit, onDelete }: Props) {
@@ -32,7 +33,9 @@ export function InventoryGroups({ groups, onEdit, onDelete }: Props) {
             <div className="mb-2 flex items-center gap-2">
               <Icon size={14} style={{ color: "var(--muted)" }} />
               <div className="min-w-0 flex-1">
-                <div className="label-cap">{group.title ?? t("unknownLocation")}</div>
+                <div className="label-cap">
+                  {group.title ?? (group.otherSite ? t("otherSite") : t("unknownLocation"))}
+                </div>
                 {group.subtitle && (
                   <div className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
                     {group.subtitle}
@@ -85,22 +88,26 @@ export function InventoryGroups({ groups, onEdit, onDelete }: Props) {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={t("actions.edit")}
-                            onClick={() => onEdit(item)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={t("actions.delete")}
-                            onClick={() => onDelete(item)}
-                          >
-                            <Trash2 className="h-4 w-4" style={{ color: "var(--negative)" }} />
-                          </Button>
+                          {onEdit && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={t("actions.edit")}
+                              onClick={() => onEdit(item)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {onDelete && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={t("actions.delete")}
+                              onClick={() => onDelete(item)}
+                            >
+                              <Trash2 className="h-4 w-4" style={{ color: "var(--negative)" }} />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

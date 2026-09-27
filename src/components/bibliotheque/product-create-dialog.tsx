@@ -8,6 +8,11 @@
  * after product creation (non-fatal: product is kept even if image upload fails).
  *
  * Supplier choice: if suppliers.length === 0, defaults to "new" mode.
+ *
+ * The image can instead come from a supplier link: the product must exist
+ * before the server can fetch into it, so the link is checked for https on
+ * submit and fetched right after creation (non-fatal, like the file). File and
+ * link replace each other: the last one picked wins.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -31,11 +36,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ImageUrlField } from "@/components/ui/image-url-field";
 import {
   createProductAction,
+  setProductImageFromUrlAction,
   uploadProductImageAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import { LIBRARY_CATEGORY_SLUGS, localizeCategory } from "@/lib/bibliotheque/categories";
+import {
+  MAX_PRODUCT_IMAGE_BYTES,
+  imageUrlErrorKey,
+  isHttpsUrl,
+} from "@/lib/bibliotheque/image-url";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 
 // Sentinel value for the "no category" option in the Select component.
@@ -78,6 +90,8 @@ export function ProductCreateDialog({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrlError, setImageUrlError] = useState<string | null>(null);
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,6 +115,8 @@ export function ProductCreateDialog({
       setProductUrl("");
       setImageFile(null);
       setImagePreviewUrl(null);
+      setImageUrl("");
+      setImageUrlError(null);
       setError(null);
       setIsSubmitting(false);
     }
@@ -115,9 +131,29 @@ export function ProductCreateDialog({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
+    if (file && file.size > MAX_PRODUCT_IMAGE_BYTES) {
+      toast.error(t("imageUrl.errors.tooLarge"));
+      e.target.value = "";
+      return;
+    }
     if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
     setImageFile(file);
     setImagePreviewUrl(file ? URL.createObjectURL(file) : null);
+    if (file) {
+      setImageUrl("");
+      setImageUrlError(null);
+    }
+  };
+
+  const handleImageUrlChange = (value: string) => {
+    setImageUrl(value);
+    setImageUrlError(null);
+    // A link replaces a file chosen earlier (the preview URL is revoked by its effect).
+    if (value.trim() && imageFile) {
+      setImageFile(null);
+      setImagePreviewUrl(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const handleClose = (isOpen: boolean) => {
@@ -140,6 +176,13 @@ export function ProductCreateDialog({
     }
     if (supplierMode === "new" && !supplierName.trim()) {
       setError(t("validation.supplierRequired"));
+      return;
+    }
+
+    // Reject a link the server would refuse outright (not https) before creating.
+    const pendingImageUrl = imageUrl.trim();
+    if (pendingImageUrl && !isHttpsUrl(pendingImageUrl)) {
+      setImageUrlError(t("imageUrl.errors.invalid"));
       return;
     }
 
@@ -177,12 +220,26 @@ export function ProductCreateDialog({
     if (imageFile) {
       const fd = new FormData();
       fd.append("image", imageFile);
-      const imgResult = await uploadProductImageAction(created.id, fd);
+      // A rejected call (e.g. the request never reached the action) must not
+      // leave the dialog stuck on its spinner: the product exists, so it is
+      // handled like any other failed image upload.
+      const imgResult = await uploadProductImageAction(created.id, fd).catch(
+        () => ({ ok: false as const }),
+      );
       if (!imgResult.ok) {
         toast.warning(t("toast.imageUploadWarning"));
       } else {
         // Optimistically mark has_image so detail/card renders the new image
         // immediately without waiting for a full reload.
+        created = { ...created, has_image: true };
+      }
+    } else if (pendingImageUrl) {
+      const urlResult = await setProductImageFromUrlAction(created.id, pendingImageUrl);
+      if (!urlResult.ok) {
+        toast.warning(t("imageUrl.saveWarning"), {
+          description: t(`imageUrl.errors.${imageUrlErrorKey(urlResult.code)}`),
+        });
+      } else {
         created = { ...created, has_image: true };
       }
     }
@@ -232,7 +289,7 @@ export function ProductCreateDialog({
                 disabled={isSubmitting}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("allSuppliers")} />
+                  <SelectValue placeholder={t("selectSupplier")} />
                 </SelectTrigger>
                 <SelectContent>
                   {suppliers.map((s) => (
@@ -378,11 +435,23 @@ export function ProductCreateDialog({
             {imagePreviewUrl && (
               <img
                 src={imagePreviewUrl}
-                alt="Preview"
+                alt={t("imagePreviewAlt")}
                 className="mt-2 h-32 w-auto rounded-md object-contain"
               />
             )}
           </div>
+
+          {/* Image from a supplier link — fetched once the product exists */}
+          <ImageUrlField
+            id="create-product-image-url"
+            label={t("imageUrl.label")}
+            value={imageUrl}
+            onChange={handleImageUrlChange}
+            placeholder={t("imageUrl.placeholder")}
+            note={t("imageUrl.noteOnCreate")}
+            error={imageUrlError}
+            disabled={isSubmitting}
+          />
 
           {error && (
             <p className="text-sm text-destructive">{error}</p>

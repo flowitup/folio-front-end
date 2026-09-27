@@ -13,6 +13,7 @@ import { EditAttendanceDialog } from "../edit-attendance-dialog";
 import type { LaborEntry } from "@/types/labor";
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "en",
   useTranslations: () => (key: string) => key,
 }));
 
@@ -74,6 +75,8 @@ describe("EditAttendanceDialog", () => {
     fireEvent.change(supplement, { target: { value: "13" } });
     const save = screen.getByRole("button", { name: /save/i });
     expect(save).toBeDisabled();
+    // …and says why, next to the field.
+    expect(screen.getByRole("alert")).toHaveTextContent("errors.supplementOutOfRange");
   });
 
   it("calls onSave with the modified payload", async () => {

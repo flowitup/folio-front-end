@@ -1,10 +1,11 @@
 "use client";
 
 /**
- * ProfileForm — Settings › Profile: display name + phone, saved via
- * PATCH /auth/me. Email is read-only here on purpose: only an administrator
- * can change it (it stays the account's stable identifier while phone-only
- * sign-in rolls out), so there is no input for it.
+ * ProfileForm — Settings › Profile: display name, saved via PATCH /auth/me.
+ * The phone is how the user signs in, so it is read-only here and changes only
+ * through the verified "Change number" dialog (code texted to the new number).
+ * Email is read-only too: only an administrator can change it (it stays the
+ * account's stable identifier while phone-only sign-in rolls out).
  */
 
 import { useState } from "react";
@@ -13,37 +14,43 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { realEmail, userDisplayName, userInitial } from "@/lib/auth/user-display";
 import { updateProfileAction } from "@/app/[locale]/(app)/settings/_actions/profile-actions";
+import { formatFrenchPhone } from "@/lib/auth/phone-number";
+import type { User } from "@/lib/auth/types";
+import { ChangePhoneDialog } from "./change-phone-dialog";
 
 export function ProfileForm() {
   const t = useTranslations("settings");
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const [displayName, setDisplayName] = useState(user?.display_name ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [isSaving, setIsSaving] = useState(false);
+  const [changePhoneOpen, setChangePhoneOpen] = useState(false);
 
-  const initials = (user?.display_name ?? user?.email)?.charAt(0).toUpperCase() ?? "·";
+  const initials = userInitial(user);
+  const email = realEmail(user);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSaving(true);
     try {
       const trimmedName = displayName.trim();
-      const trimmedPhone = phone.trim();
       const result = await updateProfileAction({
         display_name: trimmedName.length > 0 ? trimmedName : null,
-        phone: trimmedPhone.length > 0 ? trimmedPhone : null,
       });
 
       if (!result.success) {
         const key =
           result.error === "invalid_phone"
             ? "errorInvalidPhone"
-            : result.error === "phone_taken"
-              ? "errorPhoneTaken"
-              : "errorSaveFailed";
+            : result.error === "invalid_input"
+              ? "errorInvalidProfile"
+              : result.error === "phone_taken"
+                ? "errorPhoneTaken"
+                : "errorSaveFailed";
         toast.error(t(key));
         return;
       }
@@ -51,6 +58,8 @@ export function ProfileForm() {
       // Keep the form in sync with what the backend actually saved.
       setDisplayName(result.user.display_name ?? "");
       setPhone(result.user.phone ?? "");
+      // The header, avatar and top bar read the context user.
+      updateUser({ display_name: result.user.display_name, phone: result.user.phone });
       toast.success(t("profileSaved"));
       // Server components (topbar, other settings sections) read the user
       // from the session cookie — refresh so they pick up the new values.
@@ -58,6 +67,12 @@ export function ProfileForm() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function handlePhoneChanged(updated: User) {
+    setPhone(updated.phone ?? "");
+    toast.success(t("changePhone.success"));
+    router.refresh();
   }
 
   return (
@@ -71,7 +86,7 @@ export function ProfileForm() {
         </div>
         <div>
           <h2 className="font-display text-[22px] font-medium tracking-tight">
-            {user?.display_name ?? user?.email}
+            {userDisplayName(user)}
           </h2>
         </div>
       </div>
@@ -90,38 +105,53 @@ export function ProfileForm() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             disabled={isSaving}
+            maxLength={255}
           />
         </div>
         <div>
           <label htmlFor="profile-phone" className="label-cap">
             {t("phone")}
           </label>
-          <input
-            id="profile-phone"
-            className="folio-input mt-1.5"
-            type="tel"
-            autoComplete="tel"
-            placeholder="06 12 34 56 78"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            disabled={isSaving}
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label htmlFor="profile-email" className="label-cap">
-            {t("email")}
-          </label>
-          <input
-            id="profile-email"
-            className="folio-input mt-1.5"
-            type="email"
-            value={user?.email ?? ""}
-            readOnly
-          />
-          <p className="mt-1 text-[12px]" style={{ color: "var(--muted)" }}>
-            {t("emailReadOnlyHint")}
+          <div className="mt-1.5 flex gap-2">
+            <input
+              id="profile-phone"
+              className="folio-input num min-w-0 flex-1"
+              type="tel"
+              value={formatFrenchPhone(phone)}
+              readOnly
+              aria-describedby="profile-phone-hint"
+            />
+            <button
+              type="button"
+              className="btn btn-ghost flex-shrink-0"
+              data-testid="profile-change-phone"
+              onClick={() => setChangePhoneOpen(true)}
+            >
+              {t("changePhone.action")}
+            </button>
+          </div>
+          <p id="profile-phone-hint" className="mt-1 text-[12px]" style={{ color: "var(--muted)" }}>
+            {t("changePhone.readOnlyHint")}
           </p>
         </div>
+        {/* Phone-only accounts carry a synthetic address, not an e-mail. */}
+        {email && (
+          <div className="md:col-span-2">
+            <label htmlFor="profile-email" className="label-cap">
+              {t("email")}
+            </label>
+            <input
+              id="profile-email"
+              className="folio-input mt-1.5"
+              type="email"
+              value={email}
+              readOnly
+            />
+            <p className="mt-1 text-[12px]" style={{ color: "var(--muted)" }}>
+              {t("emailReadOnlyHint")}
+            </p>
+          </div>
+        )}
         <div className="md:col-span-2">
           <button type="submit" className="btn btn-primary" disabled={isSaving}>
             {isSaving ? (
@@ -135,6 +165,12 @@ export function ProfileForm() {
           </button>
         </div>
       </form>
+
+      <ChangePhoneDialog
+        open={changePhoneOpen}
+        onOpenChange={setChangePhoneOpen}
+        onChanged={handlePhoneChanged}
+      />
     </section>
   );
 }

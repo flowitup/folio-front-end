@@ -46,9 +46,10 @@ import {
  *   spent. The credit strip below still itemizes the refunds received.
  * - Per-type rows are client-side attribution, also net of refunds — a refund
  *   is deducted from the category of the invoice it refunds (fallback:
- *   materials & services, the only refund-tracked type). They may still drift
- *   from the meta purse spent when unflagged rows exist; the purse headers
- *   stay the source of truth for who paid.
+ *   materials & services, the only refund-tracked type). Each purse's rows
+ *   use the backend's own rule (personal bucket / is_company_paid), so they
+ *   add up to its Spent; expenses in neither purse (no method, or an
+ *   unflagged one) are listed apart and still count in Total expenses.
  */
 export interface ExpenseSummaryMeta {
   fundsReleasedTotal: number;
@@ -105,6 +106,20 @@ function isPersonalExpense(inv: Invoice): boolean {
   );
 }
 
+/**
+ * Mirrors the BE `is_company_paid` rule behind the company purse's Spent:
+ * paid with a company-flagged method, or reimbursed by the company. An
+ * expense that is neither this nor personal (no method, or an unflagged one)
+ * is in neither purse — counting it in the company rows made them add up to
+ * more than the purse's Spent.
+ */
+function isCompanyPaidExpense(inv: Invoice): boolean {
+  return (
+    Boolean(inv.paid_by_company) ||
+    (inv.refundable_status === "refunded" && inv.refunded_by !== "bank")
+  );
+}
+
 export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryProps) {
   const t = useTranslations("invoices");
   const locale = useLocale();
@@ -113,6 +128,10 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   // ── Client-side attribution over the unfiltered list ──────────────────────
   const company = emptyBreakdown();
   const personal = emptyBreakdown();
+  // Expenses in neither purse — still part of Total expenses and the by-type block.
+  const unassigned = emptyBreakdown();
+  const purseOf = (inv: Invoice): PurseBreakdown =>
+    isPersonalExpense(inv) ? personal : isCompanyPaidExpense(inv) ? company : unassigned;
   let refundableCount = 0;
   let refundableTotal = 0;
   // Bank channel — see the accumulation in the loop below.
@@ -128,7 +147,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
 
   for (const inv of invoices) {
     if (inv.type === "released_funds" || inv.type === "return") continue;
-    const purse = isPersonalExpense(inv) ? personal : company;
+    const purse = purseOf(inv);
     purse.count += 1;
     const bucket = purse.types[inv.type as ExpenseType];
     if (bucket) {
@@ -172,7 +191,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
     if (!minDate || inv.issue_date < minDate) minDate = inv.issue_date;
     if (!maxDate || inv.issue_date > maxDate) maxDate = inv.issue_date;
   }
-  const expenseCount = company.count + personal.count;
+  const expenseCount = company.count + personal.count + unassigned.count;
 
   // ── Net refunds into the purses ───────────────────────────────────────────
   // Each `return` is subtracted from the purse that received the money back
@@ -185,7 +204,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   let outstandingAvoirsCount = 0;
   let outstandingAvoirsTotal = 0;
   for (const ref of refunds) {
-    const purse = isPersonalExpense(ref) ? personal : company;
+    const purse = purseOf(ref);
     const sourceType = ref.refunds_invoice_id
       ? invoiceById.get(ref.refunds_invoice_id)?.type
       : undefined;
@@ -198,6 +217,12 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
     purse.spent += ref.total_amount;
     purse.returnsCount += 1;
     purse.returnsTotal += ref.total_amount;
+    // Month figures are net of returns too, like the Overview's.
+    const refMonth = (monthlySpend[(ref.service_month ?? ref.issue_date).slice(0, 7)] ??= {
+      total: 0,
+      count: 0,
+    });
+    refMonth.total += ref.total_amount; // negative amount
     if (ref.settled_via === "avoir" && !ref.applied_to_invoice_id) {
       outstandingAvoirsCount += 1;
       outstandingAvoirsTotal += ref.total_amount;
@@ -213,7 +238,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   // handover left the company's hands, so it is spent from the purse's point of
   // view even though the expenses it pays for are booked elsewhere when paid.
   const companySpent = meta.companySpentTotal + cashAdvanced;
-  const spentTotal = company.spent + personal.spent;
+  const spentTotal = company.spent + personal.spent + unassigned.spent;
 
   // ── Month series from the first to the last active month, gaps filled ─────
   const monthKeys = Object.keys(monthlySpend).sort();
@@ -486,7 +511,12 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
                       <span style={{ opacity: 0.62 }}>
                         {" · "}
                         {t("summary.vsMonth", {
-                          delta: `${deltaPct > 0 ? "+" : ""}${deltaPct}%`,
+                          // Locale-aware: "+12 %" in French, "+12%" in English.
+                          delta: new Intl.NumberFormat(locale, {
+                            style: "percent",
+                            maximumFractionDigits: 0,
+                            signDisplay: "exceptZero",
+                          }).format(deltaPct / 100),
                           month: monthOnly.format(monthDate(prevMonth.key)),
                         })}
                       </span>
@@ -555,8 +585,17 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
         )}
       </div>
 
+      {unassigned.count > 0 && (
+        <div className="text-[11.5px]" style={{ color: "var(--muted)" }} data-testid="purse-unassigned-spend">
+          {t("summary.noPurseSpend", {
+            n: unassigned.count,
+            amount: formatEURWhole(unassigned.spent),
+          })}
+        </div>
+      )}
+
       {/* Type-first companion to the purse cards — same figures, shared scale. */}
-      <ExpenseTypeBreakdown company={company} personal={personal} />
+      <ExpenseTypeBreakdown company={company} personal={personal} unassigned={unassigned} />
 
       {refunds.length > 0 && (
         <div
@@ -583,6 +622,13 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
               {" · "}
               {t("summary.personalPurse")}{" "}
               <span className="num text-destructive">{formatEUR(personal.returnsTotal)}</span>
+              {unassigned.returnsCount > 0 && (
+                <>
+                  {" · "}
+                  {t("summary.noPurse")}{" "}
+                  <span className="num text-destructive">{formatEUR(unassigned.returnsTotal)}</span>
+                </>
+              )}
             </span>
             {outstandingAvoirsCount > 0 && (
               <span className="stamp" data-testid="outstanding-avoirs-chip">

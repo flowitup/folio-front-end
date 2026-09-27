@@ -10,10 +10,9 @@
  * sourcing them from the directory alone would show it as unassigned. They line up on
  * `linked_user_id` (directory) === `user_id` (attached).
  *
- * A directory row with no attached-user counterpart is either a genuine
- * pending profile (no account yet) or — defensively — a stale/orphaned link;
- * either way this table cannot edit their role, company or projects, so it
- * renders as `pending`. An attached user missing a directory profile (legacy
+ * A directory row with no attached-user counterpart renders as `pending`
+ * only when it is a live pending profile (no account yet); deactivated
+ * profiles of removed members and never-invited labor workers are left out. An attached user missing a directory profile (legacy
  * accounts predating the directory) still gets a row, built from their own
  * fields alone.
  */
@@ -66,12 +65,19 @@ export function mergeMemberRows(
   });
 
   // Anyone left in the directory has no attached-user counterpart in THIS
-  // company — either a real pending profile (no account) or an edge case
-  // (e.g. a stale link left over from a boot). Either way Role/Company/
-  // Projects can't be edited without an attached-user record, so every
-  // leftover row renders as pending rather than silently disappearing.
+  // company. Only a live pending profile (added by phone, no account yet,
+  // invitation window still open) is a member-to-be. The directory also
+  // returns deactivated profiles (a removed member keeps one, linked to their
+  // account) and labor workers who were never invited; listing those as
+  // "Pending" showed removed people as still joining.
   const pendingRows: MemberRow[] = directory
-    .filter((entry) => !consumedPersonIds.has(entry.person_id))
+    .filter(
+      (entry) =>
+        !consumedPersonIds.has(entry.person_id) &&
+        entry.is_active &&
+        entry.pending &&
+        !entry.linked_user_id
+    )
     .map((entry) => ({
       key: `person:${entry.person_id}`,
       userId: null,

@@ -10,11 +10,20 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---- Module mocks (hoisted) ----
 
+vi.mock("next-intl/server", async () => {
+  const en = (await import("@/messages/en.json")).default as unknown as Record<string, unknown>;
+  return {
+    getTranslations: async (ns: string) => (key: string) =>
+      [...ns.split("."), key].reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], en),
+  };
+});
+
 vi.mock("@/lib/api/bibliotheque", () => ({
   createProduct: vi.fn(),
   updateProduct: vi.fn(),
   deleteProduct: vi.fn(),
   uploadProductImage: vi.fn(),
+  setProductImageFromUrl: vi.fn(),
 }));
 
 // ---- Imports after mocks ----
@@ -24,6 +33,7 @@ import {
   updateProductAction,
   deleteProductAction,
   uploadProductImageAction,
+  setProductImageFromUrlAction,
 } from "../bibliotheque-actions";
 
 import {
@@ -31,12 +41,14 @@ import {
   updateProduct,
   deleteProduct,
   uploadProductImage,
+  setProductImageFromUrl,
 } from "@/lib/api/bibliotheque";
 
 const mockCreateProduct = vi.mocked(createProduct);
 const mockUpdateProduct = vi.mocked(updateProduct);
 const mockDeleteProduct = vi.mocked(deleteProduct);
 const mockUploadProductImage = vi.mocked(uploadProductImage);
+const mockSetProductImageFromUrl = vi.mocked(setProductImageFromUrl);
 
 // ---- Fixtures ----
 
@@ -124,13 +136,13 @@ describe("createProductAction", () => {
     if (!result.ok) expect(result.error).toBe("Not found.");
   });
 
-  it("returns raw message for unexpected errors", async () => {
+  it("returns a translated generic message for unexpected errors", async () => {
     mockCreateProduct.mockRejectedValueOnce(new Error("Network timeout"));
 
     const result = await createProductAction("co-1", { name: "Test", supplier_id: "sup-1" });
 
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toBe("Network timeout");
+    if (!result.ok) expect(result.error).toBe("Something went wrong. Please try again.");
   });
 });
 
@@ -281,6 +293,52 @@ describe("uploadProductImageAction", () => {
     const result = await uploadProductImageAction("prod-1", fd);
 
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toBe("Image already set.");
+    if (!result.ok) expect(result.error).toBe("This product already has an image.");
+  });
+});
+
+describe("setProductImageFromUrlAction", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const LINK = "https://media.adeo.com/marketplace/photo.jpg";
+
+  it("returns ok:true and passes the link and force flag through", async () => {
+    mockSetProductImageFromUrl.mockResolvedValueOnce({ image_storage_key: "key-1" });
+
+    const result = await setProductImageFromUrlAction("prod-1", LINK, { force: true });
+
+    expect(result).toEqual({ ok: true, data: { image_storage_key: "key-1" } });
+    expect(mockSetProductImageFromUrl).toHaveBeenCalledWith("prod-1", LINK, { force: true });
+  });
+
+  it.each([
+    [422, "SsrfBlocked"],
+    [422, "ValidationError"],
+    [415, "UnsupportedMediaType"],
+    [413, "FileTooLarge"],
+    [403, "Forbidden"],
+    [500, "InternalError"],
+  ])("returns ok:false with the BE code on %i %s", async (status, code) => {
+    mockSetProductImageFromUrl.mockRejectedValueOnce(makeHttpError(status, code));
+
+    const result = await setProductImageFromUrlAction("prod-1", LINK);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe(code);
+      expect(result.error).toBeTruthy();
+    }
+  });
+
+  it("returns ok:false without a code on a network error", async () => {
+    mockSetProductImageFromUrl.mockRejectedValueOnce(new Error("Network error fetching product image from URL"));
+
+    const result = await setProductImageFromUrlAction("prod-1", LINK);
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Something went wrong. Please try again.",
+      code: undefined,
+    });
   });
 });

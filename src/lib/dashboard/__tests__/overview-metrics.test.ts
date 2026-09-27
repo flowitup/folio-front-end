@@ -9,9 +9,11 @@ import {
   computePendingRefunds,
   computeBankOutstanding,
   buildPurseViews,
+  computeUnassignedSpend,
   buildTypeMonthlyBuckets,
   sharedMonthlyMax,
   buildReturnCredits,
+  roundPartsToTotal,
 } from "@/lib/dashboard/overview-metrics";
 
 let seq = 0;
@@ -191,6 +193,23 @@ describe("computeBudgetMetrics", () => {
     expect(m.denominator).toBe(900);
   });
 
+  it("measures a set credit against the spend drawn on it, like the Projects page", () => {
+    // 10 000 credit; 3 500 spent in all, of which 1 000 paid from the credit.
+    const m = computeBudgetMetrics(10000, 3500, 4000, 1000);
+    expect(m).toMatchObject({ spent: 1000, left: 9000, pct: 10 });
+  });
+
+  it("measures released funds against every expense when no credit is set", () => {
+    const m = computeBudgetMetrics(null, 3500, 4000, 1000);
+    expect(m).toMatchObject({ spent: 3500, left: 500 });
+  });
+
+  it("has no baseline when there is neither a credit nor released funds", () => {
+    expect(computeBudgetMetrics(null, 750, 0).hasBaseline).toBe(false);
+    expect(computeBudgetMetrics(null, 750, 900).hasBaseline).toBe(true);
+    expect(computeBudgetMetrics(1000, 750, 0).hasBaseline).toBe(true);
+  });
+
   it("goes negative and clamps the bar width when over budget", () => {
     const m = computeBudgetMetrics(1000, 1250, 900);
     expect(m.left).toBe(-250);
@@ -267,7 +286,7 @@ describe("computeBankOutstanding", () => {
 describe("buildPurseViews", () => {
   it("splits counts client-side and falls back the company release when unset", () => {
     const invoices = [
-      mkInvoice({ type: "labor", issue_date: "2026-06-01", total_amount: 10, paid_by_personal: false }),
+      mkInvoice({ type: "labor", issue_date: "2026-06-01", total_amount: 10, paid_by_company: true }),
       mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 20, paid_by_personal: true }),
       mkInvoice({ type: "released_funds", issue_date: "2026-06-01", total_amount: 1000 }),
     ];
@@ -313,6 +332,37 @@ describe("buildPurseViews", () => {
       count: 0,
       cashAdvanced: 0,
     });
+  });
+});
+
+describe("company purse count vs unassigned expenses", () => {
+  const invoices = [
+    mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 1000 }),
+    mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 2000 }),
+    mkInvoice({ type: "others", issue_date: "2026-06-01", total_amount: 500, paid_by_company: true }),
+    mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 300, paid_by_personal: true }),
+    mkInvoice({
+      type: "materials_services",
+      issue_date: "2026-06-01",
+      total_amount: 70,
+      paid_by_personal: true,
+      refundable_status: "refunded",
+      refunded_by: "company",
+    }),
+  ];
+
+  it("counts in the company purse only what its Spent counts", () => {
+    const [company, personal] = buildPurseViews(invoices, {
+      fundsReleasedTotal: 10000,
+      companySpentTotal: 570,
+      personalSpentTotal: 300,
+    });
+    expect(company.count).toBe(2); // the company-method one and the company-reimbursed one
+    expect(personal.count).toBe(1);
+  });
+
+  it("reports the expenses in neither purse", () => {
+    expect(computeUnassignedSpend(invoices)).toEqual({ count: 2, total: 3000 });
   });
 });
 
@@ -430,5 +480,41 @@ describe("buildTypeMonthlyBuckets — netting", () => {
     const summed = buckets.reduce((s, b) => s + b.total, 0);
     expect(summed).toBe(computeSpentTotal(invoices));
     expect(summed).toBe(1150);
+  });
+});
+
+describe("money sums snap to cents", () => {
+  // Summed as floats these five amounts give 3368.4999999999995, which the
+  // whole-euro display then shows as 3 368 € instead of 3 369 €.
+  const amounts = [1679.56, 490.96, 178.85, 310.03, 709.1];
+  const invoices = amounts.map((total_amount) =>
+    mkInvoice({ type: "others", issue_date: "2026-06-10", total_amount, paid_by_personal: true, refundable_status: "refundable" })
+  );
+
+  it("computeSpentTotal returns the exact cent total", () => {
+    expect(computeSpentTotal(invoices)).toBe(3368.5);
+  });
+
+  it("monthly, per-type and refund totals return the exact cent total", () => {
+    const ref = new Date(2026, 5, 15);
+    expect(buildMonthlySpendSeries(invoices, 6, ref).at(-1)!.total).toBe(3368.5);
+    expect(buildTypeMonthlyBuckets(invoices, 6, ref).find((b) => b.type === "others")!.total).toBe(3368.5);
+    expect(computePendingRefunds(invoices).total).toBe(3368.5);
+    expect(computeBankOutstanding(invoices).total).toBe(3368.5);
+  });
+});
+
+describe("roundPartsToTotal", () => {
+  it("rounds parts so they add up to the rounded total", () => {
+    // Rounded separately: 1 501 + 450 + 100 = 2 051, but the total is 2 050.
+    const parts = roundPartsToTotal([1500.5, 449.6, 99.9]);
+    expect(parts.reduce((s, v) => s + v, 0)).toBe(2050);
+    expect(parts).toEqual([1500, 450, 100]);
+  });
+
+  it("keeps exact whole parts untouched and handles negatives", () => {
+    expect(roundPartsToTotal([100, 200])).toEqual([100, 200]);
+    const parts = roundPartsToTotal([-1000, 300.4, 50.7]);
+    expect(parts.reduce((s, v) => s + v, 0)).toBe(Math.round(-1000 + 300.4 + 50.7));
   });
 });

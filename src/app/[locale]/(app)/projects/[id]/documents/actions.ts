@@ -8,8 +8,10 @@ import {
   renameProjectDocument,
   updateDocumentTags,
   listDocumentTags,
+  listDocumentUploaders,
 } from "@/lib/api/project-documents";
 import type {
+  DocumentUploader,
   ProjectDocument,
   ListProjectDocumentsParams,
   ListProjectDocumentsResult,
@@ -45,7 +47,13 @@ function classifyBackendError(err: unknown): string {
 
 export type ActionResult<T> =
   | { ok: true; data: T }
-  | { ok: false; error: string; message?: string };
+  | { ok: false; error: string; message?: string; code?: string };
+
+/** The backend's machine-readable error code (e.g. "TAG_TOO_LONG"), when it sent one. */
+function backendCode(err: unknown): string | undefined {
+  const body = (err as { body?: { error?: unknown } | null }).body;
+  return typeof body?.error === "string" ? body.error : undefined;
+}
 
 // ---- Server actions ----
 
@@ -92,7 +100,7 @@ export async function renameDocumentAction(
     revalidatePath(`/[locale]/projects/${projectId}/documents`, "page");
     return { ok: true, data };
   } catch (err: unknown) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: classifyBackendError(err), code: backendCode(err) };
   }
 }
 
@@ -119,7 +127,7 @@ export async function deleteDocumentAction(
     revalidatePath(`/[locale]/projects/${projectId}/documents`, "page");
     return { ok: true, data: null };
   } catch (err: unknown) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: classifyBackendError(err), code: backendCode(err) };
   }
 }
 
@@ -144,7 +152,7 @@ export async function updateDocumentTagsAction(
     revalidatePath(`/[locale]/projects/${projectId}/documents`, "page");
     return { ok: true, data };
   } catch (err: unknown) {
-    return { ok: false, error: classifyBackendError(err) };
+    return { ok: false, error: classifyBackendError(err), code: backendCode(err) };
   }
 }
 
@@ -160,6 +168,24 @@ export async function listDocumentTagsAction(
 
   try {
     const data = await listDocumentTags(projectId);
+    return { ok: true, data };
+  } catch (err: unknown) {
+    return { ok: false, error: classifyBackendError(err) };
+  }
+}
+
+/**
+ * List the distinct uploaders of a project's documents (the uploader filter's options).
+ */
+export async function listDocumentUploadersAction(
+  projectId: string
+): Promise<ActionResult<DocumentUploader[]>> {
+  if (!projectId || !isUuid(projectId)) {
+    return { ok: false, error: "validation", message: "Invalid project id" };
+  }
+
+  try {
+    const data = await listDocumentUploaders(projectId);
     return { ok: true, data };
   } catch (err: unknown) {
     return { ok: false, error: classifyBackendError(err) };

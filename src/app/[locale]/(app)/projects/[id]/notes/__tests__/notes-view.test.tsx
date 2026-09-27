@@ -16,6 +16,7 @@ import type { Note } from "@/lib/api/notes";
 vi.mock("next-intl", () => ({
   useTranslations: (ns: string) => (key: string, _params?: Record<string, unknown>) =>
     `${ns}.${key}`,
+  useLocale: () => "en",
 }));
 
 vi.mock("sonner", () => {

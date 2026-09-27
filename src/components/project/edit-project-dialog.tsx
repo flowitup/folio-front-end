@@ -16,6 +16,7 @@ import { updateProject } from "@/lib/api/projects";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/auth/permissions";
 import type { Project } from "@/types/project";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 
 interface EditProjectDialogProps {
   project: Project | null;
@@ -98,8 +99,8 @@ export function EditProjectDialog({
     if (trimmedBudgetStr === "") {
       budgetValue = null;
     } else {
-      const parsed = parseFloat(trimmedBudgetStr);
-      if (isNaN(parsed) || parsed < 0) {
+      const parsed = parseMoneyInput(trimmedBudgetStr);
+      if (parsed === null) {
         setError(t("budgetInvalid"));
         return;
       }

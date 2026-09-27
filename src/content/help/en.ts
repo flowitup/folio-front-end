@@ -19,7 +19,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "If you were invited by email instead, the link in that message attaches you directly.",
     ],
     gotchas: [
-      "Only French numbers are accepted, and without the leading zero.",
+      "Only French numbers are accepted, written 06 12 34 56 78, 6 12 34 56 78 or +33 6 12 34 56 78.",
     ],
     whoCanDoIt: "Anyone with a phone number that has been added to a company.",
   },
@@ -33,7 +33,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "The sidebar's first group is app-wide: Overview, Projects and Library.",
       "Once a project is selected the sidebar grows its sections: Planning, Labor, Expense, Cost planning, Notes, Documents and Analyses.",
       "Company administrators also see a Billing group: Quotes, Invoices, Templates and Refundable.",
-      "The top bar carries the page's main action, the help mark, the bell, the light and dark switch, the language picker and your account menu.",
+      "The top bar carries the page's main action, the help mark, the bell, the language picker and your account menu.",
     ],
     whoCanDoIt:
       "Everyone sees the app-wide group. Documents only appears if you may open it, and Billing only for company administrators.",
@@ -347,9 +347,10 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Use “Add by phone” to add someone by number, or “Import from company” to bring people across from another company you administer.",
       "The directory lists everyone linked to the company with their phone, whether they have signed in yet, and the projects they are assigned to.",
       "Under “Payment methods”, add, rename or delete the ways that company's invoices get paid. Built-in methods can be renamed but not removed.",
+      "Under “Labor roles”, create, rename, recolor or delete the roles workers carry on that company's projects. Deleting a role clears it from the workers who had it. The pencil beside a role in the worker dialog's role picker does the same from the labor page.",
     ],
     whoCanDoIt:
-      "Anyone can see the companies they belong to and attach another. The join code, the members table, the directory and the payment methods are for administrators of the selected company.",
+      "Anyone can see the companies they belong to and attach another. The join code, the members table, the directory and the payment methods are for administrators of the selected company; labor roles are for its administrators and managers.",
     gotchas: [
       "There are two different ways to add a person and they are not interchangeable: a single-use invite token valid seven days, and the reusable company code people type in the mobile app.",
     ],
@@ -361,7 +362,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Your own details, the current project's invoice numbering, and which notifications reach your phone.",
     steps: [
       "Open Settings; the list down the left selects the section.",
-      "On “Profile”, edit your display name and phone and save. Your email is read-only — only an administrator can change it.",
+      "On “Profile”, edit your display name and save. To sign in with another phone number, use “Change number”: enter the new number, then the code texted to it. Your email is read-only — only an administrator can change it.",
       "On “Project”, set the invoice number prefix for the selected project, up to eight letters or digits, and watch the preview line before saving.",
       "On “Company”, manage the companies you belong to: the identity card of each, which one is primary, detaching, and attaching another with a code. Administering the selected one adds its join code, its members and its payment methods.",
       "On “Notifications”, use the master switch and the per-category switches: team chat, attendance, tasks, team and access, and money.",
@@ -370,7 +371,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "The Folio version you are running is printed at the foot of the page, under whichever section is open.",
     ],
     whoCanDoIt:
-      "Everyone reaches their own profile, the project prefix, their notification choices and their own API keys. “Company” shows anyone their own attachments, and its admin tools — join code, members, payment methods — only to an administrator of the selected company. “Users & Roles” is reserved for Folio's support team.",
+      "Everyone reaches their own profile, their notification choices and their own API keys. “Company” shows anyone their own attachments, and its admin tools — join code, members, payment methods — only to an administrator of the selected company. “Users & Roles” is reserved for Folio's support team.",
     gotchas: [
       "Settings has no billing section of its own. Quotes, invoices and templates all live in the Billing group in the sidebar.",
       "The notification switches govern the pushes that reach the Folio mobile app, not the bell in this window.",

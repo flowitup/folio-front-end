@@ -38,9 +38,20 @@ const SUPERADMIN_WILDCARD = "*:*";
 
 /**
  * Core permission check: does `permission` appear (exact, resource wildcard,
- * or global `*:*`) in the union of the caller's global JWT permissions and
- * an optional project-scoped effective permission set
- * (`project.my_permissions`, already resolver-computed by the backend)?
+ * or global `*:*`) in the caller's effective permissions?
+ *
+ * When a project-scoped set (`project.my_permissions`, resolved by the
+ * backend) is given, it is the whole answer: it already contains the
+ * caller's company-role permissions with the project's D8 grants and denies
+ * applied. The global JWT list is company-wide and optimistic (a manager
+ * advertises `project:update` for every project), so merging it in used to
+ * undo per-project denies and show controls that then answered 403. The
+ * global list still counts for the platform-ops `*:*` escape hatch.
+ *
+ * An absent or empty project set means "not resolved" (the project has not
+ * loaded, or the response did not compute it: a caller with no permission on
+ * a project could not have loaded it), so the check falls back to the global
+ * list as before.
  *
  * This is the direct replacement for the old `canOnProject()` — same
  * 3-argument shape so existing call sites only need the import + name
@@ -51,7 +62,9 @@ export function can(
   globalPerms: string[] | undefined | null,
   projectPerms?: string[] | undefined | null
 ): boolean {
-  const perms = new Set([...(globalPerms ?? []), ...(projectPerms ?? [])]);
+  const scoped = projectPerms && projectPerms.length > 0 ? projectPerms : null;
+  if (scoped && isPlatformOps(globalPerms)) return true;
+  const perms = new Set(scoped ?? globalPerms ?? []);
   if (perms.has(permission) || perms.has(SUPERADMIN_WILDCARD)) return true;
   const resource = permission.split(":")[0];
   return perms.has(`${resource}:*`);
@@ -104,4 +117,26 @@ export function canCreateProject(
   companies: UserCompanySummary[] | undefined | null
 ): boolean {
   return isCompanyAdmin(companies, null, permissions);
+}
+
+/**
+ * Labor-role write gate (create / rename / recolor / delete). The backend
+ * accepts platform ops OR an admin or MANAGER of the company that owns the
+ * roles — broader than `isCompanyAdmin`, since crews are run by managers.
+ *
+ * Pass `companyId` when the roles shown belong to a specific company (e.g.
+ * Settings › Company); omit it for surfaces that list the caller's PRIMARY
+ * company's roles, which is what `/labor/roles` answers without a
+ * `company_id` (e.g. the role picker on the labor page).
+ */
+export function canManageLaborRoles(
+  permissions: string[] | undefined | null,
+  companies: UserCompanySummary[] | undefined | null,
+  companyId?: string | null
+): boolean {
+  if (isPlatformOps(permissions)) return true;
+  const company = (companies ?? []).find((c) =>
+    companyId ? c.id === companyId : c.is_primary
+  );
+  return company?.role === "admin" || company?.role === "manager";
 }

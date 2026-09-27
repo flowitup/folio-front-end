@@ -33,21 +33,31 @@ vi.mock("@/lib/api/projects-server", () => ({
 vi.mock("@/lib/api/project-documents", () => ({
   listProjectDocuments: vi.fn(),
   listDocumentTags: vi.fn(),
+  listDocumentUploaders: vi.fn(),
 }));
 
 vi.mock("@/lib/api/members", () => ({
   listMembers: vi.fn(),
 }));
 
+const panelProps = vi.fn();
+
 vi.mock("../documents-panel", () => ({
-  DocumentsPanel: () => <div data-testid="documents-panel" />,
+  DocumentsPanel: (props: Record<string, unknown>) => {
+    panelProps(props);
+    return <div data-testid="documents-panel" />;
+  },
 }));
 
 // ── Imports after mocks ──────────────────────────────────────────────────────
 
 import { getSession } from "@/lib/auth/session";
 import { getProjectById } from "@/lib/api/projects-server";
-import { listProjectDocuments, listDocumentTags } from "@/lib/api/project-documents";
+import {
+  listProjectDocuments,
+  listDocumentTags,
+  listDocumentUploaders,
+} from "@/lib/api/project-documents";
 import { listMembers } from "@/lib/api/members";
 import DocumentsPage from "../page";
 
@@ -73,6 +83,7 @@ beforeEach(() => {
     per_page: 25,
   } as unknown as Awaited<ReturnType<typeof listProjectDocuments>>);
   vi.mocked(listDocumentTags).mockResolvedValue([]);
+  vi.mocked(listDocumentUploaders).mockResolvedValue([]);
   vi.mocked(listMembers).mockResolvedValue([]);
 });
 
@@ -88,13 +99,14 @@ describe("DocumentsPage — member without project:update", () => {
     expect(screen.queryByTestId("documents-panel")).toBeNull();
   });
 
-  it("never requests documents, tags or members", async () => {
+  it("never requests documents, tags, uploaders or members", async () => {
     mockCaller(["project:read"]);
 
     render(await DocumentsPage({ params: Promise.resolve({ id: PROJECT_ID }) }));
 
     expect(listProjectDocuments).not.toHaveBeenCalled();
     expect(listDocumentTags).not.toHaveBeenCalled();
+    expect(listDocumentUploaders).not.toHaveBeenCalled();
     expect(listMembers).not.toHaveBeenCalled();
   });
 });
@@ -108,6 +120,29 @@ describe("DocumentsPage — manager with project:update", () => {
     expect(screen.getByTestId("documents-panel")).toBeInTheDocument();
     expect(screen.queryByText("documents.restricted.title")).toBeNull();
     expect(listProjectDocuments).toHaveBeenCalledWith(PROJECT_ID);
+  });
+
+  it("hands the panel the documents' uploaders for the uploader filter", async () => {
+    mockCaller(["project:read", "project:update"]);
+    const uploaders = [{ user_id: "u-2", display_name: "Former Member" }];
+    vi.mocked(listDocumentUploaders).mockResolvedValue(uploaders);
+
+    render(await DocumentsPage({ params: Promise.resolve({ id: PROJECT_ID }) }));
+
+    expect(listDocumentUploaders).toHaveBeenCalledWith(PROJECT_ID);
+    expect(panelProps).toHaveBeenCalledWith(
+      expect.objectContaining({ initialUploaders: uploaders })
+    );
+  });
+
+  it("passes null uploaders when they cannot be read, so the panel retries", async () => {
+    mockCaller(["project:read", "project:update"]);
+    vi.mocked(listDocumentUploaders).mockRejectedValue(new Error("HTTP 500"));
+
+    render(await DocumentsPage({ params: Promise.resolve({ id: PROJECT_ID }) }));
+
+    expect(screen.getByTestId("documents-panel")).toBeInTheDocument();
+    expect(panelProps).toHaveBeenCalledWith(expect.objectContaining({ initialUploaders: null }));
   });
 
   it("renders the documents panel for platform ops (wildcard permission)", async () => {

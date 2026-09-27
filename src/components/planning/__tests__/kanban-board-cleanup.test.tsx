@@ -41,3 +41,23 @@ describe("KanbanBoard — view switcher", () => {
     expect(KANBAN_SRC).not.toContain('t("filter")');
   });
 });
+
+describe("KanbanBoard — drag overlay placement", () => {
+  it("portals the drag overlay out of the zoomed/transformed page content", () => {
+    // Inside zoom:0.8 and the transformed .fade-up wrapper the fixed-position
+    // overlay drifted 130-160px from the pointer.
+    expect(KANBAN_SRC).toMatch(/createPortal\(\s*<DragOverlay>/);
+    expect(KANBAN_SRC).toContain("document.body");
+  });
+
+  it("resolves the drop lane from the pointer", () => {
+    expect(KANBAN_SRC).toContain("collisionDetection={pointerFirstCollision}");
+  });
+});
+
+describe("KanbanBoard — touch drag", () => {
+  it("registers a touch sensor so cards can be dragged on touch screens", () => {
+    expect(KANBAN_SRC).toContain("useSensor(TouchSensor");
+    expect(KANBAN_SRC).not.toContain("useSensor(PointerSensor");
+  });
+});

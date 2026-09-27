@@ -12,6 +12,8 @@ import { useTranslations } from "next-intl";
 import { Loader2, Plus, Warehouse as WarehouseIcon, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProject } from "@/context/ProjectContext";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/auth/permissions";
 import {
   listInventoryItemsAction,
   listWarehousesAction,
@@ -21,6 +23,7 @@ import {
   groupInventoryByLocation,
   summarizeInventory,
   unitsByWarehouse,
+  rowsByWarehouse,
   type SiteRef,
 } from "@/lib/inventory/inventory";
 import {
@@ -40,6 +43,9 @@ interface Props {
 
 export function InventoryPageClient({ companyId }: Props) {
   const t = useTranslations("inventory");
+  const { user } = useAuth();
+  // Every inventory and warehouse write needs inventory:manage (403 otherwise).
+  const canManage = can("inventory:manage", user?.permissions);
   const { projects } = useProject();
 
   // Filters — applied locally on the loaded list.
@@ -111,6 +117,7 @@ export function InventoryPageClient({ companyId }: Props) {
 
   const summary = useMemo(() => summarizeInventory(items), [items]);
   const units = useMemo(() => unitsByWarehouse(items), [items]);
+  const rows = useMemo(() => rowsByWarehouse(items), [items]);
 
   const filtered = useMemo(() => {
     const needle = debouncedQ.toLowerCase();
@@ -155,10 +162,12 @@ export function InventoryPageClient({ companyId }: Props) {
               {warehouses.length}
             </span>
           </Button>
-          <Button size="sm" className="gap-1.5" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            {t("addItem")}
-          </Button>
+          {canManage && (
+            <Button size="sm" className="gap-1.5" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              {t("addItem")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -206,7 +215,7 @@ export function InventoryPageClient({ companyId }: Props) {
           <p className="text-[13px]" style={{ color: "var(--muted)" }}>
             {items.length === 0 ? t("empty") : t("noResults")}
           </p>
-          {items.length === 0 && (
+          {items.length === 0 && canManage && (
             <Button size="sm" className="mt-4 gap-1.5" onClick={openCreate}>
               <Plus className="h-4 w-4" />
               {t("addItem")}
@@ -216,7 +225,11 @@ export function InventoryPageClient({ companyId }: Props) {
       )}
 
       {!loading && !error && groups.length > 0 && (
-        <InventoryGroups groups={groups} onEdit={openEdit} onDelete={setDeleteItem} />
+        <InventoryGroups
+          groups={groups}
+          onEdit={canManage ? openEdit : undefined}
+          onDelete={canManage ? setDeleteItem : undefined}
+        />
       )}
 
       <InventoryItemDialog
@@ -242,11 +255,13 @@ export function InventoryPageClient({ companyId }: Props) {
       />
 
       <WarehousesDialog
+        canManage={canManage}
         open={warehousesOpen}
         onOpenChange={setWarehousesOpen}
         companyId={companyId}
         warehouses={warehouses}
         unitsByWarehouse={units}
+        rowsByWarehouse={rows}
         onChanged={reload}
       />
     </div>

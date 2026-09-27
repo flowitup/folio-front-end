@@ -29,10 +29,23 @@ interface Props {
   warehouses: Warehouse[];
   /** Units per warehouse id, from the current inventory. */
   unitsByWarehouse: Map<string, number>;
+  /** Equipment rows per warehouse id: any row, even of 0 units, blocks a delete. */
+  rowsByWarehouse: Map<string, number>;
   onChanged: () => void | Promise<void>;
+  /** False for a viewer without inventory:manage: the list only, no create/edit/delete. */
+  canManage?: boolean;
 }
 
-export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, unitsByWarehouse, onChanged }: Props) {
+export function WarehousesDialog({
+  open,
+  onOpenChange,
+  companyId,
+  warehouses,
+  unitsByWarehouse,
+  rowsByWarehouse,
+  onChanged,
+  canManage = true,
+}: Props) {
   const t = useTranslations("inventory.warehouses");
   const tInv = useTranslations("inventory");
 
@@ -47,7 +60,7 @@ export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, un
   useEffect(() => {
     if (!open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFormOpen(warehouses.length === 0);
+    setFormOpen(canManage && warehouses.length === 0);
     setEditing(null);
     setName("");
     setAddress("");
@@ -75,6 +88,11 @@ export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, un
     e.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) return setError(t("validation.nameRequired"));
+    // Two warehouses with the same name cannot be told apart in the pickers.
+    const folded = trimmedName.toLocaleLowerCase();
+    if (warehouses.some((w) => w.id !== editing?.id && w.name.trim().toLocaleLowerCase() === folded)) {
+      return setError(t("validation.nameTaken"));
+    }
     const trimmedAddress = address.trim() || null;
     setBusy("form");
     setError(null);
@@ -121,7 +139,7 @@ export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, un
         result.code === "Forbidden"
           ? tInv("toast.forbidden")
           : result.code === "Conflict"
-            ? t("deleteBlocked", { count: unitsByWarehouse.get(w.id) ?? 0 })
+            ? t("deleteBlocked", { count: rowsByWarehouse.get(w.id) ?? 0 })
             : t("toast.deleteError")
       );
       setBusy(null);
@@ -151,6 +169,7 @@ export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, un
           <ul className="folio-card divide-y p-0" style={{ borderColor: "var(--line)" }}>
             {warehouses.map((w) => {
               const held = unitsByWarehouse.get(w.id) ?? 0;
+              const rows = rowsByWarehouse.get(w.id) ?? 0;
               const confirming = confirmDelete?.id === w.id;
               return (
                 <li key={w.id} className="flex items-center gap-3 px-3 py-2.5" data-testid={`warehouse-${w.id}`}>
@@ -169,7 +188,7 @@ export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, un
                   <span className="num shrink-0 text-[12px]" style={{ color: "var(--muted)" }}>
                     {tInv("units", { count: held })}
                   </span>
-                  {confirming ? (
+                  {!canManage ? null : confirming ? (
                     <div className="flex shrink-0 items-center gap-1">
                       <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(null)} disabled={busy === w.id}>
                         {tInv("actions.cancel")}
@@ -194,7 +213,7 @@ export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, un
                         size="icon"
                         aria-label={t("delete")}
                         onClick={() => {
-                          setError(held > 0 ? t("deleteBlocked", { count: held }) : null);
+                          setError(rows > 0 ? t("deleteBlocked", { count: rows }) : null);
                           setConfirmDelete(w);
                         }}
                       >
@@ -208,7 +227,7 @@ export function WarehousesDialog({ open, onOpenChange, companyId, warehouses, un
           </ul>
         )}
 
-        {formOpen ? (
+        {!canManage ? null : formOpen ? (
           <form onSubmit={submit} className="space-y-3 pt-1">
             <div className="label-cap">{editing ? t("editTitle") : t("createTitle")}</div>
             <div className="space-y-2">

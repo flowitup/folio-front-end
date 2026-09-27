@@ -13,6 +13,11 @@
 import { Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+/** True when the API returned the value masked (e.g. "····5678"). */
+export function isMaskedValue(value: string | null | undefined): boolean {
+  return value != null && value.startsWith("····");
+}
+
 interface MaskDisplayProps {
   /** The string value to display (may already be masked by the API). */
   value: string | null | undefined;

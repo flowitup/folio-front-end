@@ -330,3 +330,25 @@ describe("fetchInvoiceExport — non-2xx error paths", () => {
     expect((err as ApiError).data).toMatchObject({ detail: "export_range_too_large" });
   });
 });
+
+describe("fetchInvoiceExport — label language", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  async function exportUrl(locale?: string): Promise<string> {
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(new Blob(["bytes"]));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+    await fetchInvoiceExport("proj-abc", { from: "2026-01", to: "2026-03" }, "pdf", undefined, locale);
+    return vi.mocked(fetch).mock.calls[0][0] as string;
+  }
+
+  it("asks for the UI language", async () => {
+    expect(await exportUrl("fr")).toContain("locale=fr");
+  });
+
+  it("leaves out a language the export does not render", async () => {
+    expect(await exportUrl("de")).not.toContain("locale=");
+  });
+});

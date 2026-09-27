@@ -70,6 +70,7 @@ export function ProductCard({
       <ProductImage
         productId={product.id}
         hasImage={product.has_image}
+        version={product.updated_at}
         alt={product.name}
         className="w-full"
       />
@@ -116,7 +117,7 @@ export function ProductCard({
               {t("purchasedTimes", { count: product.purchase_count })}
             </span>
             {lastPurchased && (
-              <span className="ml-1">· {lastPurchased}</span>
+              <span>{" · "}{lastPurchased}</span>
             )}
           </div>
 

@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
-import { can } from "@/lib/auth/permissions";
+import { can, isCompanyAdmin } from "@/lib/auth/permissions";
 import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -130,8 +130,14 @@ export default function InvoicesPage() {
 
   // Effective per-project permissions (global role UNION this project's
   // membership-role perms) — not just the global JWT permissions.
-  const projectPerms = projects.find((p) => p.id === projectId)?.my_permissions;
+  const currentProject = projects.find((p) => p.id === projectId);
+  const projectPerms = currentProject?.my_permissions;
   const canManageInvoices = can("project:manage_invoices", user?.permissions, projectPerms);
+  // Moving a personally paid expense to a company payment method changes the
+  // company's refunds: the backend allows it to the project company's admins only.
+  const canTransferToCompany =
+    canManageInvoices &&
+    isCompanyAdmin(user?.companies, currentProject?.company_id ?? null, user?.permissions);
   // Financing side of the project: the released-funds tab, the two-purses card
   // and the bank draw-down all read money the backend now withholds without
   // `project:view_budget` (it strips the rows and zeroes the totals), so they
@@ -198,10 +204,11 @@ export default function InvoicesPage() {
         },
       });
     } catch {
-      setError("Failed to load invoices");
+      setError(t("loadListFailed"));
     } finally {
       setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- t only formats the error text; a new t must not refetch
   }, [projectId]);
 
   useEffect(() => {
@@ -233,7 +240,7 @@ export default function InvoicesPage() {
       await deleteInvoice(projectId, invoice.id);
       await loadInvoices();
     } catch {
-      setError("Failed to delete invoice");
+      setError(t("deleteInvoiceFailed"));
     }
   };
 
@@ -319,6 +326,7 @@ export default function InvoicesPage() {
         open={exportOpen}
         onOpenChange={setExportOpen}
         initialType={activeTab}
+        canViewBudget={canViewBudget}
       />
 
       {error && (
@@ -433,6 +441,7 @@ export default function InvoicesPage() {
                               projectId={projectId}
                               invoiceId={invoice.id}
                               canManage={canManageInvoices}
+                              canTransferToCompany={canTransferToCompany}
                               colSpan={1}
                               regionId={`invoice-detail-mobile-${invoice.id}`}
                               onMutated={loadInvoices}
@@ -655,7 +664,10 @@ export default function InvoicesPage() {
                                         {t("types.return")}
                                       </span>
                                     )}
-                                    {invoice.type === "return" && invoice.settled_via === "avoir" && (
+                                    {/* Unapplied, the "outstanding avoir" stamp says it all. */}
+                                    {invoice.type === "return" &&
+                                      invoice.settled_via === "avoir" &&
+                                      invoice.applied_to_invoice_id && (
                                       <span
                                         className="stamp accent ml-2"
                                         style={{ fontSize: 10, verticalAlign: "middle" }}
@@ -744,7 +756,7 @@ export default function InvoicesPage() {
                                           onUpdated={loadInvoices}
                                         />
                                       )}
-                                      {canManageInvoices &&
+                                      {canTransferToCompany &&
                                         invoice.type === "materials_services" &&
                                         invoice.refundable_status == null &&
                                         !invoice.paid_by_company && (
@@ -759,9 +771,11 @@ export default function InvoicesPage() {
                                           size="sm"
                                           className="h-7 w-7 p-0"
                                           style={{ color: "var(--muted)" }}
+                                          aria-label={t("deleteExpense", { number: invoice.invoice_number })}
+                                          title={t("deleteExpense", { number: invoice.invoice_number })}
                                           onClick={() => handleDelete(invoice)}
                                         >
-                                          <Trash2 size={13} />
+                                          <Trash2 size={13} aria-hidden />
                                         </Button>
                                       )}
                                     </div>
@@ -772,6 +786,7 @@ export default function InvoicesPage() {
                                     projectId={projectId}
                                     invoiceId={invoice.id}
                                     canManage={canManageInvoices}
+                                    canTransferToCompany={canTransferToCompany}
                                     colSpan={colCount}
                                     regionId={detailId}
                                     onMutated={loadInvoices}

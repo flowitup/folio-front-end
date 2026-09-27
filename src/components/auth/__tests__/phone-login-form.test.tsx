@@ -17,18 +17,20 @@ import { LoginStage } from "../LoginStage";
 const TRANSLATIONS: Record<string, string> = {
   phoneLabel: "Phone number",
   phonePlaceholder: "6 12 34 56 78",
-  phoneHint: "French numbers only — without the leading 0. A 6-digit code by SMS.",
+  phoneHint: "French numbers only, with or without the leading 0. A 6-digit code by SMS.",
   sendCode: "Send code",
   sendingCode: "Sending code...",
   codeSentTo: "Code sent to <mono>{phone}</mono>.",
   codeLabel: "SMS code",
   codeDigit: "Digit {position} of {total}",
   codeExpires: "Expires in {minutes} minutes",
+  codeExpired: "Code expired — ask for a new one",
   verifyCode: "Sign in",
   verifyingCode: "Signing in...",
   verified: "Verified",
   resendCode: "Resend code",
   resendIn: "Resend in {seconds} s",
+  codeAlreadySent: "A code was already sent to this number — enter it, or get a new one in {seconds} s.",
   changeNumber: "Change number",
   stepBadge: "Step {current} / {total}",
   errorPhoneRequired: "Please enter your phone number",
@@ -117,7 +119,7 @@ describe("Phone sign-in", () => {
     render(<LoginStage />);
 
     expect(
-      screen.getByText("French numbers only — without the leading 0. A 6-digit code by SMS.")
+      screen.getByText("French numbers only, with or without the leading 0. A 6-digit code by SMS.")
     ).toBeInTheDocument();
   });
 
@@ -127,19 +129,25 @@ describe("Phone sign-in", () => {
 
     await user.type(screen.getByLabelText("Phone number"), "+84912345678");
 
-    // Nothing to send: the button never enables for a non-French number.
-    expect(screen.getByTestId("login-send-code")).toBeDisabled();
+    // Pressing Send says what is wrong instead of a silently greyed-out button.
+    await user.click(screen.getByTestId("login-send-code"));
+    expect(screen.getByTestId("login-error")).toHaveTextContent("Enter a French phone number");
+    expect(screen.getByLabelText("Phone number")).toHaveAttribute("aria-invalid", "true");
     expect(mockRequestOtpAction).not.toHaveBeenCalled();
     expect(screen.queryByTestId("login-code-0")).toBeNull();
+
+    // Editing the number clears the message.
+    await user.type(screen.getByLabelText("Phone number"), "1");
+    expect(screen.queryByTestId("login-error")).toBeNull();
   });
 
   it("refuses a number that is too short to be French", async () => {
     const user = userEvent.setup();
     render(<LoginStage />);
 
-    await user.type(screen.getByLabelText("Phone number"), "0612");
+    await user.type(screen.getByLabelText("Phone number"), "0612{Enter}");
 
-    expect(screen.getByTestId("login-send-code")).toBeDisabled();
+    expect(screen.getByTestId("login-error")).toHaveTextContent("Enter a French phone number");
     expect(mockRequestOtpAction).not.toHaveBeenCalled();
   });
 
@@ -284,5 +292,36 @@ describe("Phone sign-in", () => {
 
     expect(screen.getByLabelText("Phone number")).toHaveValue("0612345678");
     expect(screen.queryByTestId("login-code-0")).toBeNull();
+  });
+
+  it("after Change number, Send code on the same number returns to the code already sent", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    const user = userEvent.setup();
+    render(<LoginStage />);
+
+    await sendCodeTo(user, "0612345678");
+    await user.click(screen.getByTestId("login-change-number"));
+
+    expect(screen.getByTestId("login-code-already-sent")).toHaveTextContent("get a new one in");
+    expect(screen.getByTestId("login-send-code")).toBeEnabled();
+    await user.click(screen.getByTestId("login-send-code"));
+
+    expect(screen.getByTestId("login-code-0")).toBeInTheDocument();
+    expect(mockRequestOtpAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("says the code has expired once its lifetime runs out, and stops submitting it", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 1 });
+    const user = userEvent.setup();
+    render(<LoginStage />);
+
+    await sendCodeTo(user, "0612345678");
+    expect(screen.getByTestId("login-code-expiry")).toHaveTextContent("Expires in 1 minutes");
+
+    await waitFor(() => expect(screen.getByTestId("login-code-expiry")).toHaveTextContent("Code expired"), {
+      timeout: 3000,
+    });
+    await typeCode(user, "123456");
+    expect(mockLoginWithPhone).not.toHaveBeenCalled();
   });
 });

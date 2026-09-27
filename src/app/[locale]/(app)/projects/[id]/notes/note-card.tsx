@@ -9,7 +9,7 @@
 
 import { useState } from "react";
 import { Pencil, Trash2, Clock, Check } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CATEGORY_MAP } from "@/lib/notes/categories";
 import { NoteEditor } from "./note-editor";
 import type { Note } from "@/lib/api/notes";
@@ -27,16 +27,20 @@ interface NoteCardProps {
   canEdit: boolean;
 }
 
-/** Format created_at ISO for the "Added …" footer label */
-function createdLabel(iso: string, t: (key: string) => string): string {
+/** The "Added …" footer: today / yesterday, else the date in the app locale
+ * (one message per case, so each language can phrase and agree it). */
+function createdLabel(
+  iso: string,
+  locale: string,
+  t: (key: string, values?: Record<string, string>) => string
+): string {
   const createdDate = iso.slice(0, 10);
   const todayDate = new Date().toISOString().slice(0, 10);
   const yesterdayDate = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  if (createdDate === todayDate) return t("relative.today");
-  if (createdDate === yesterdayDate) return t("relative.yesterday");
-  // Format as "Jun 10"
+  if (createdDate === todayDate) return t("addedToday");
+  if (createdDate === yesterdayDate) return t("addedYesterday");
   const d = new Date(`${createdDate}T12:00:00`);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return t("addedOn", { date: d.toLocaleDateString(locale, { month: "short", day: "numeric" }) });
 }
 
 export function NoteCard({
@@ -50,6 +54,7 @@ export function NoteCard({
   canEdit,
 }: NoteCardProps) {
   const t = useTranslations("notes");
+  const locale = useLocale();
   const [isSaving, setIsSaving] = useState(false);
 
   const cat = CATEGORY_MAP[note.category] ?? CATEGORY_MAP.general;
@@ -135,7 +140,7 @@ export function NoteCard({
         )}
         <div className="nc-foot">
           <Clock size={12} />
-          <span className="num">{t("addedLabel")} {createdLabel(note.created_at, t)}</span>
+          <span className="num">{createdLabel(note.created_at, locale, t)}</span>
         </div>
       </article>
     </div>

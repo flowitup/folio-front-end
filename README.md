@@ -52,7 +52,7 @@ Export labor data for any 1-to-24-month range in two formats:
 Export the whole project or just one worker. File names are auto-generated from the project name and date range.
 
 ### Cost planning — chiffrage (per project)
-Plan what a project needs to buy in sections (e.g. Lighting, Plumbing). List items with a quantity, unit and optional room (rooms show as sub-totalled dividers inside a section), record each shop's price, then compare two shops head to head per section and read the amount to budget. Anyone who can open the project can read it and use the comparison; creating or editing needs expense-management rights.
+Plan what a project needs to buy in sections (e.g. Lighting, Plumbing). List items with a quantity, unit and optional room (rooms show as sub-totalled dividers inside a section), record each shop's price, then compare two shops head to head per section and read the amount to budget. The **Rooms** and **Shops** buttons manage those project-wide lists: reorder rooms (the order every section groups its items by), rename or delete them, and add, edit or delete shops with their address and website. Anyone who can open the project can read it and use the comparison; creating or editing needs expense-management rights.
 
 ### Expenses (per project)
 - Tabs: **All / Released Funds / Labor / Materials & Services / Others / Return** — Released Funds only shows with budget-viewing rights.
@@ -76,6 +76,7 @@ A separate, company-wide document generator for the paperwork you issue to your 
 - **Invoices** — the invoices you issue to clients, tracked through to paid, with PDF and spreadsheet exports.
 - **Templates** — reusable line items, default VAT rate, notes and terms (CGV) for the quotes and invoices you issue often.
 - **Refundable** — a company-wide view of materials & services expenses flagged for reimbursement, across every project, where admins set the refund status.
+- **Per project** — the selected project's **Quotes & invoices** entry in the sidebar lists every quote and invoice linked to that project (number, type, recipient, status, date, total TTC), whoever issued it; each row opens the document's Billing page. A document shows up there once the project is picked in its form.
 
 ### Members & invitations
 - Company admins manage people in **Settings › Company**. The members table sets each person's company role (Admin, Manager or Member) and custom permission grants. Its **Projects** column puts people on sites, always as plain members; the company role is what makes someone a manager. Bring people in with **Add by phone**, **Import from company**, or the company's 8-character join code.

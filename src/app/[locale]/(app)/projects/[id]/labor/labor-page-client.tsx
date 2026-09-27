@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
-import { can } from "@/lib/auth/permissions";
+import { can, canManageLaborRoles } from "@/lib/auth/permissions";
 import { Plus, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,10 @@ import { LaborSummary } from "@/components/labor/labor-summary";
 import { LaborPaymentsTab } from "@/components/labor/labor-payments-tab";
 
 import { ActivityDialog } from "@/components/labor/activity-dialog";
+import { ConfirmDeleteDialog } from "@/components/labor/confirm-delete-dialog";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
+import { ChangeRequestsPanel, RefuseChangeDialog } from "@/components/labor/change-requests-panel";
+import type { ChangeRequestActions } from "@/components/labor/labor-entry-card";
 
 import type { Worker, LaborEntry, LaborActivity, LaborDayDescription, LaborSummaryResponse, LaborMonthlySummaryResponse, LaborPaymentsSummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
@@ -31,6 +34,7 @@ import {
   createWorker,
   updateWorker,
   deleteWorker,
+  reactivateWorker,
   fetchLaborEntries,
   updateAttendance,
   deleteAttendance,
@@ -48,7 +52,9 @@ import {
 } from "@/lib/api/labor";
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { fetchProjectById } from "@/lib/api/projects";
-import { fetchLaborRolesAction } from "./actions";
+import { fetchLaborRolesAction } from "@/components/labor/labor-role-actions";
+import { upsertLaborRole } from "@/components/labor/labor-role-helpers";
+import { useAttendanceChangeRequests } from "./use-attendance-change-requests";
 import { DayRoster } from "@/components/labor/day-roster";
 
 type TabType = "workers" | "attendance" | "summary" | "payments" | "roster";
@@ -109,6 +115,10 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // no view_pay): they were explicitly granted invoice rights and still need
   // the Payments tab, even without labor visibility.
   const isMemberPersona = !canManageLabor && !canViewPay && !canManageInvoices;
+  // Creating, renaming or deleting a labor role is a company-level write
+  // (admin or manager of the company whose roles `/labor/roles` lists — the
+  // primary one), not a project permission.
+  const canEditLaborRoles = canManageLaborRoles(user?.permissions, user?.companies);
 
   // State. `activeTab` is seeded with a placeholder and corrected by the
   // persona effect below the FIRST time ProjectContext resolves — never
@@ -124,7 +134,10 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     if (isProjectContextLoading) return;
     if (reconciledMemberPersonaRef.current === isMemberPersona) return;
     reconciledMemberPersonaRef.current = isMemberPersona;
-    setActiveTab(isMemberPersona ? "roster" : "summary");
+    // A member only has the roster. Anyone else keeps a tab already chosen
+    // (a ?tab= deep link consumed while the projects were still loading) and
+    // only leaves the member-only roster.
+    setActiveTab((prev) => (isMemberPersona ? "roster" : prev === "roster" ? "summary" : prev));
   }, [isProjectContextLoading, isMemberPersona]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -158,6 +171,9 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // Roles state
   const [roles, setRoles] = useState<LaborRole[]>([]);
   const [palette, setPalette] = useState<string[]>([]);
+
+  // Only active workers can be logged for a day.
+  const activeWorkers = useMemo(() => workers.filter((w) => w.is_active), [workers]);
 
   // Worker lookup map for role-aware chip colors in calendar cells.
   const workerMap = useMemo(
@@ -220,11 +236,14 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // Load workers
   const loadWorkers = useCallback(async () => {
     try {
-      const data = await fetchWorkers(projectId);
+      // Deactivated workers too: the Workers tab offers Reactivate, and a
+      // deactivated worker can still be owed pay (Summary, Payments, export).
+      const data = await fetchWorkers(projectId, { includeInactive: true });
       setWorkers(data);
     } catch {
-      setError("Failed to load workers");
+      setError(t("errors.loadWorkersFailed"));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- t only formats the error text; a new t must not refetch
   }, [projectId]);
 
   // Load entries.
@@ -241,10 +260,11 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       });
       setEntries(data);
     } catch {
-      setError("Failed to load entries");
+      setError(t("errors.loadEntriesFailed"));
     } finally {
       setIsTabLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- t only formats the error text; a new t must not refetch
   }, [projectId, entriesMonth, entriesWorkerFilter]);
 
   const loadActivities = useCallback(async () => {
@@ -291,10 +311,11 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       }
       await todayPromise;
     } catch {
-      setError("Failed to load summary");
+      setError(t("errors.loadSummaryFailed"));
     } finally {
       setIsTabLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- t only formats the error text; a new t must not refetch
   }, [projectId, summaryMonth]);
 
   // Initial load — workers + roles + payments summary in parallel. Member
@@ -346,6 +367,34 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     if (activeTab === "summary") loadSummary();
   }, [activeTab, loadSummary]);
 
+  // Worker change requests on validated days (proposed from the mobile app).
+  // Managers only — the same permission the backend checks on the decide routes.
+  const changeRequests = useAttendanceChangeRequests({
+    projectId,
+    enabled: canManageLabor && !isProjectContextLoading,
+    entries,
+    onDecided: loadEntries,
+  });
+  const reloadChangeRequests = changeRequests.reload;
+  const changeRequestActions = useMemo<ChangeRequestActions | undefined>(
+    () =>
+      canManageLabor
+        ? {
+            onApprove: changeRequests.approve,
+            onRefuse: changeRequests.requestRefuse,
+            busyIds: changeRequests.settlingIds,
+          }
+        : undefined,
+    [canManageLabor, changeRequests.approve, changeRequests.requestRefuse, changeRequests.settlingIds],
+  );
+  const changeRequestCount = changeRequests.requests.length;
+
+  // The list also loads with the page (for the tab count); refresh it whenever
+  // the attendance tab is opened so a request sent meanwhile shows up.
+  useEffect(() => {
+    if (activeTab === "attendance") void reloadChangeRequests();
+  }, [activeTab, reloadChangeRequests]);
+
   // Deep links (the bell's "attendance to validate" rows) pick a tab via ?tab=.
   // An effect, not a state initializer: the manager may already be on this page
   // when the URL changes, and Next does not remount the client page then.
@@ -353,25 +402,31 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   useEffect(() => {
     const requested = searchParams.get("tab");
     if (requested !== "workers" && requested !== "attendance" && requested !== "payments") return;
-    setActiveTab(requested);
+    // A member only has the roster; while the projects load the persona is
+    // unknown, and the persona effect sends a member back to the roster.
+    if (isProjectContextLoading || !isMemberPersona) setActiveTab(requested);
     const params = new URLSearchParams(searchParams.toString());
     params.delete("tab");
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [searchParams, router, pathname]);
+  }, [searchParams, router, pathname, isProjectContextLoading, isMemberPersona]);
 
   // Topbar "+ Log day" hands off via ?logDay=1 — jump to the attendance tab
   // and open the bulk-log dialog. Strip the param after consuming.
   useEffect(() => {
     if (searchParams.get("logDay") !== "1") return;
-    setActiveTab("attendance");
-    setLogDayDate(undefined);
-    setShowLogDay(true);
+    // Wait for the projects: only a labor manager may log days.
+    if (isProjectContextLoading) return;
+    if (canManageLabor) {
+      setActiveTab("attendance");
+      setLogDayDate(undefined);
+      setShowLogDay(true);
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.delete("logDay");
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [searchParams, router, pathname]);
+  }, [searchParams, router, pathname, isProjectContextLoading, canManageLabor]);
 
   // Handlers
   const handleCreateWorker = async (payload: CreateWorkerPayload | UpdateWorkerPayload) => {
@@ -379,7 +434,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       await createWorker(projectId, payload as CreateWorkerPayload);
       await loadWorkers();
     } catch {
-      setError("Failed to create worker");
+      setError(t("errors.createWorkerFailed"));
     }
   };
 
@@ -390,7 +445,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         await loadWorkers();
         setEditWorker(null);
       } catch {
-        setError("Failed to update worker");
+        setError(t("errors.updateWorkerFailed"));
       }
     }
   };
@@ -398,9 +453,20 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const handleDeactivateWorker = async (worker: Worker) => {
     try {
       await deleteWorker(projectId, worker.id);
+      toast.success(t("workerDeactivated", { name: worker.person_name ?? worker.name }));
       await loadWorkers();
     } catch {
-      setError("Failed to deactivate worker");
+      setError(t("errors.deactivateWorkerFailed"));
+    }
+  };
+
+  const handleReactivateWorker = async (worker: Worker) => {
+    try {
+      await reactivateWorker(projectId, worker.id);
+      toast.success(t("workerReactivated", { name: worker.person_name ?? worker.name }));
+      await loadWorkers();
+    } catch {
+      toast.error(t("errors.reactivateWorkerFailed"));
     }
   };
 
@@ -411,7 +477,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       await loadEntries();
       setEditEntry(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update entry");
+      setError(err instanceof Error ? err.message : t("errors.updateFailed"));
       throw err;
     }
   };
@@ -424,9 +490,11 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const handleDeleteEntry = async (entry: LaborEntry) => {
     try {
       await deleteAttendance(projectId, entry.id);
-      await loadEntries();
+      toast.success(t("entryDeleted"));
+      // A deleted day takes its open change request with it.
+      await Promise.all([loadEntries(), reloadChangeRequests()]);
     } catch {
-      setError("Failed to delete entry");
+      setError(t("errors.deleteEntryFailed"));
     }
   };
 
@@ -488,9 +556,13 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     await loadActivities();
   };
 
+  // Activity awaiting the "Delete this activity?" confirmation.
+  const [pendingActivityDelete, setPendingActivityDelete] = useState<LaborActivity | null>(null);
+
   const handleDeleteActivity = async (activity: LaborActivity) => {
     try {
       await deleteLaborActivity(projectId, activity.id);
+      toast.success(t("activity.deleted"));
       await loadActivities();
     } catch {
       setError(t("activity.deleteFailed"));
@@ -515,6 +587,28 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // resolving my_permissions (see the H1 comments above).
   const showContent = !isLoading && !isProjectContextLoading;
 
+  // Workers carry their role's name and color (the summary reads them from
+  // the workers list), and so do attendance entries (`role_color` on each
+  // card), so a rename or delete in the role picker reloads both — a deleted
+  // role is cleared from its workers by the backend, and nothing may keep
+  // showing it. Entries only reload when their tab is open: opening it later
+  // fetches them anyway.
+  const reloadRoleHolders = () => {
+    void loadWorkers();
+    if (activeTab === "attendance") void loadEntries();
+  };
+  const handleRoleCreated = (role: LaborRole) => {
+    setRoles((prev) => upsertLaborRole(prev, role));
+  };
+  const handleRoleUpdated = (role: LaborRole) => {
+    setRoles((prev) => upsertLaborRole(prev, role));
+    reloadRoleHolders();
+  };
+  const handleRoleDeleted = (roleId: string) => {
+    setRoles((prev) => prev.filter((r) => r.id !== roleId));
+    reloadRoleHolders();
+  };
+
   return (
     <div className="fade-up flex min-h-full flex-col gap-4 px-4 pb-12 lg:gap-6 lg:px-8">
       {/* Segmented tabs — member persona (D3) gets the single roster tab, no
@@ -530,6 +624,16 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
                 className={activeTab === tab ? "on" : ""}
               >
                 {tab === "payments" ? t("payments.tab") : t(tab)}
+                {tab === "attendance" && changeRequestCount > 0 && (
+                  <span
+                    className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold leading-none text-white"
+                    title={t("changeRequest.tabCount", { count: changeRequestCount })}
+                    data-testid="attendance-change-count"
+                  >
+                    <span aria-hidden="true">{changeRequestCount}</span>
+                    <span className="sr-only">{t("changeRequest.tabCount", { count: changeRequestCount })}</span>
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -561,11 +665,12 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
           onAdd={() => setShowAddWorker(true)}
           onEdit={(worker) => setEditWorker(worker)}
           onDeactivate={handleDeactivateWorker}
+          onReactivate={handleReactivateWorker}
           onWorkerRateChanged={loadWorkers}
         />
       )}
 
-      {showContent && activeTab === "attendance" && (
+      {showContent && !isMemberPersona && activeTab === "attendance" && (
         <div
           className={
             attendanceView === "calendar"
@@ -621,6 +726,26 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               </div>
             );
           })()}
+          {canManageLabor && (
+            <ChangeRequestsPanel
+              requests={changeRequests.requests}
+              isLoading={changeRequests.isLoading}
+              loadFailed={changeRequests.loadFailed}
+              settlingIds={changeRequests.settlingIds}
+              onApprove={changeRequests.approve}
+              onRefuse={changeRequests.requestRefuse}
+              onRetry={() => void reloadChangeRequests()}
+            />
+          )}
+          <ConfirmDeleteDialog
+            open={!!pendingActivityDelete}
+            title={t("activity.confirmDelete")}
+            onCancel={() => setPendingActivityDelete(null)}
+            onConfirm={() => {
+              if (pendingActivityDelete) void handleDeleteActivity(pendingActivityDelete);
+              setPendingActivityDelete(null);
+            }}
+          />
           {attendanceView === "calendar" ? (
             <AttendanceCalendar
               entries={entries}
@@ -636,12 +761,13 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               onDelete={handleDeleteEntry}
               onValidate={canManageLabor ? handleValidateEntry : undefined}
               onReject={canManageLabor ? handleRejectEntry : undefined}
+              changeRequestActions={changeRequestActions}
               onLogDay={canManageLabor ? handleOpenLogDay : undefined}
               onEditEntry={canManageLabor ? setEditEntry : undefined}
               workerMap={workerMap}
               onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
-              onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
+              onDeleteActivity={canManageLabor ? setPendingActivityDelete : undefined}
               onSaveDayDescription={canManageLabor ? handleSaveDayDescription : undefined}
             />
           ) : (
@@ -659,16 +785,17 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               onDelete={handleDeleteEntry}
               onValidate={canManageLabor ? handleValidateEntry : undefined}
               onReject={canManageLabor ? handleRejectEntry : undefined}
+              changeRequestActions={changeRequestActions}
               onAddActivity={canManageLabor ? handleOpenAddActivity : undefined}
               onEditActivity={canManageLabor ? handleOpenEditActivity : undefined}
-              onDeleteActivity={canManageLabor ? handleDeleteActivity : undefined}
+              onDeleteActivity={canManageLabor ? setPendingActivityDelete : undefined}
               onSaveDayDescription={canManageLabor ? handleSaveDayDescription : undefined}
             />
           )}
         </div>
       )}
 
-      {showContent && activeTab === "summary" && (
+      {showContent && !isMemberPersona && activeTab === "summary" && (
         <LaborSummary
           projectId={projectId}
           summary={summary}
@@ -682,7 +809,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         />
       )}
 
-      {showContent && activeTab === "payments" && (
+      {showContent && !isMemberPersona && activeTab === "payments" && (
         <LaborPaymentsTab
           projectId={projectId}
           canManage={canManageInvoices}
@@ -700,7 +827,10 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         onSave={handleCreateWorker}
         roles={roles}
         palette={palette}
-        onRoleCreated={(role) => setRoles((prev) => [...prev, role])}
+        onRoleCreated={handleRoleCreated}
+        canManageRoles={canEditLaborRoles}
+        onRoleUpdated={handleRoleUpdated}
+        onRoleDeleted={handleRoleDeleted}
       />
 
       <AddWorkerDialog
@@ -710,7 +840,10 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         editWorker={editWorker}
         roles={roles}
         palette={palette}
-        onRoleCreated={(role) => setRoles((prev) => [...prev, role])}
+        onRoleCreated={handleRoleCreated}
+        canManageRoles={canEditLaborRoles}
+        onRoleUpdated={handleRoleUpdated}
+        onRoleDeleted={handleRoleDeleted}
       />
 
       <LogDayDialog
@@ -720,9 +853,10 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
           if (!open) setLogDayDate(undefined);
         }}
         projectId={projectId}
-        workers={workers}
+        workers={activeWorkers}
         entries={entries}
         initialDate={logDayDate}
+        onLogNextDay={(next) => handleOpenLogDay(next)}
         onSaved={loadEntries}
       />
 
@@ -733,6 +867,16 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         }}
         entry={editEntry}
         onSave={handleUpdateAttendance}
+      />
+
+      <RefuseChangeDialog
+        request={changeRequests.refusing}
+        busy={
+          changeRequests.refusing !== null &&
+          changeRequests.settlingIds.has(changeRequests.refusing.entry_id)
+        }
+        onConfirm={() => void changeRequests.confirmRefuse()}
+        onCancel={changeRequests.cancelRefuse}
       />
 
       <ActivityDialog

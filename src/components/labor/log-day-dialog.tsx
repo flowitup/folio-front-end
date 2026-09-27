@@ -46,6 +46,7 @@ import { useCrossProjectConflicts } from "@/hooks/use-cross-project-conflicts";
 import {
   bulkLogAttendance,
   fetchLaborDayDescriptions,
+  fetchLaborEntries,
   setLaborDayDescription,
 } from "@/lib/api/labor";
 import { ApiError } from "@/lib/api/http";
@@ -64,6 +65,10 @@ import type {
   ShiftType,
   Worker,
 } from "@/types/labor";
+import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
+
+/** Days before the picked date read for "recent workers" and "Same as last day". */
+const LOOKBACK_DAYS = 30;
 
 function todayKey(): string {
   const d = new Date();
@@ -81,6 +86,8 @@ interface LogDayDialogProps {
   entries: LaborEntry[];
   /** Optional initial date when opened (defaults to today). */
   initialDate?: string;
+  /** Reopen the dialog on this date — the success toast's "Log next day" action. */
+  onLogNextDay?: (date: string) => void;
   /** Re-fetch parent entries after a successful save. */
   onSaved: () => void;
 }
@@ -92,6 +99,7 @@ export function LogDayDialog({
   workers,
   entries,
   initialDate,
+  onLogNextDay,
   onSaved,
 }: LogDayDialogProps) {
   const t = useTranslations("labor.logDayDialog");
@@ -108,7 +116,34 @@ export function LogDayDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const lastDay = useLastLoggedDay(entries);
+  // The page's entries are filtered by its calendar month and worker filter.
+  // What is already logged around the picked date (every worker) is read
+  // here, so a day from another month still locks its workers and "Same as
+  // last day" means the day before the picked one.
+  const [windowEntries, setWindowEntries] = useState<LaborEntry[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    fetchLaborEntries(projectId, { from: shiftDate(date, -LOOKBACK_DAYS), to: date })
+      .then((rows) => {
+        if (!cancelled) setWindowEntries(rows);
+      })
+      .catch(() => {
+        // Fall back to the page's entries.
+        if (!cancelled) setWindowEntries([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, projectId, date]);
+  const knownEntries = useMemo(() => {
+    const byId = new Map<string, LaborEntry>();
+    for (const e of entries) byId.set(e.id, e);
+    for (const e of windowEntries) byId.set(e.id, e);
+    return Array.from(byId.values());
+  }, [entries, windowEntries]);
+
+  const lastDay = useLastLoggedDay(knownEntries, date);
 
   // Phase 4: conflict fetch + cache by date. The hook is enabled only
   // while the dialog is open so closed dialogs don't keep making
@@ -130,7 +165,7 @@ export function LogDayDialog({
   useEffect(() => {
     if (!open) return;
     setTileStates((prev) => {
-      const next = buildTileStates(workers, entries, date);
+      const next = buildTileStates(workers, knownEntries, date);
       // Preserve checked + shift_type on unlocked tiles so "log next
       // day" survives date bumps. Locked tiles are always reseeded.
       for (const [id, s] of Object.entries(next)) {
@@ -149,7 +184,7 @@ export function LogDayDialog({
       return next;
     });
     setError(null);
-  }, [open, date, workers, entries]);
+  }, [open, date, workers, knownEntries]);
 
   // Seed the day description from the backend for the picked date.
   useEffect(() => {
@@ -172,8 +207,8 @@ export function LogDayDialog({
     };
   }, [open, date, projectId]);
 
-  // When the dialog closes, reset transient state. Date sticks to the
-  // initialDate prop for the next open.
+  // When the dialog closes, reset transient state. Each open starts on the
+  // initialDate prop, or today.
   useEffect(() => {
     if (open) return;
     setSearch("");
@@ -181,12 +216,12 @@ export function LogDayDialog({
   }, [open]);
 
   useEffect(() => {
-    if (open && initialDate) setDate(initialDate);
+    if (open) setDate(initialDate || todayKey());
   }, [open, initialDate]);
 
   const recent = useMemo(
-    () => recentWorkerSet(entries, date),
-    [entries, date],
+    () => recentWorkerSet(knownEntries, date),
+    [knownEntries, date],
   );
   const { recent: recentList, rest } = useMemo(
     () => partitionWorkers(workers, recent, search),
@@ -312,12 +347,14 @@ export function LogDayDialog({
         skipped > 0
           ? t("toastLoggedWithSkip", { n: created, skipped })
           : t("toastLogged", { n: created });
-      toast.success(msg, {
-        action: {
-          label: t("toastLogNextDay"),
-          onClick: () => setDate((d) => shiftDate(d, 1)),
-        },
-      });
+      // The dialog closes below; the action reopens it on the next day.
+      const nextDate = shiftDate(date, 1);
+      toast.success(
+        msg,
+        onLogNextDay
+          ? { action: { label: t("toastLogNextDay"), onClick: () => onLogNextDay(nextDate) } }
+          : undefined
+      );
       setShowConflictModal(false);
       onOpenChange(false);
     } catch (err) {
@@ -334,7 +371,9 @@ export function LogDayDialog({
           return;
         }
       }
-      setError(err instanceof Error ? err.message : t("saveFailed"));
+      // Never the raw "HTTP 400: BAD REQUEST": the fields are checked before
+      // sending, so what is left is a server-side refusal or a network error.
+      setError(t("saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -342,8 +381,30 @@ export function LogDayDialog({
 
   async function handleSave() {
     setError(null);
-    if (!buildBulkPayload(tileStates).length) {
+    const payload = buildBulkPayload(tileStates);
+    if (!payload.length) {
       setError(t("selectAtLeastOne"));
+      return;
+    }
+    // The API's limits, checked here so the user gets a translated message.
+    const toSave = Object.values(tileStates).filter((s) => s.checked && !s.locked);
+    if (
+      toSave.some(
+        (s) =>
+          !Number.isInteger(s.supplement_hours ?? 0) ||
+          (s.supplement_hours ?? 0) < 0 ||
+          (s.supplement_hours ?? 0) > 12
+      )
+    ) {
+      setError(tLabor("errors.supplementOutOfRange"));
+      return;
+    }
+    if (payload.some((e) => e.amount_override != null && e.amount_override < 0)) {
+      setError(tLabor("errors.overrideNegative"));
+      return;
+    }
+    if (payload.some((e) => (e.amount_override ?? 0) > MAX_DAILY_AMOUNT)) {
+      setError(tLabor("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
       return;
     }
     const inSelection = conflictsForSelection();
@@ -396,6 +457,7 @@ export function LogDayDialog({
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto pr-1">
+          {recentList.length > 0 && (
           <LogDayTileGrid
             heading={t("sectionRecent")}
             workers={recentList}
@@ -409,11 +471,15 @@ export function LogDayDialog({
             onSupplementHoursChange={setSupplementHours}
             onNoteChange={setNote}
           />
+          )}
           <LogDayTileGrid
             heading={t("sectionAll")}
             workers={rest}
             tileStates={tileStates}
             conflictsByPersonId={conflicts.byPersonId}
+            // "No workers." only when nothing is listed at all (e.g. the
+            // search matches nobody), not under a full Recent section.
+            showEmpty={recentList.length === 0}
             onToggle={toggleTile}
             onShiftChange={setShift}
             onToggleExpanded={toggleExpanded}
@@ -472,6 +538,7 @@ export function LogDayDialog({
           if (!o) setShowConflictModal(false);
         }}
         groups={pendingConflicts}
+        date={date}
         isSaving={isSaving}
         onCancel={() => setShowConflictModal(false)}
         onConfirm={() => doSave(true)}

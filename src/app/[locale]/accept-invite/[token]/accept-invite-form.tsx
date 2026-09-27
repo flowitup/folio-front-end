@@ -66,6 +66,9 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  // Last number a code went to. The server throttles resends per number, so
+  // the countdown belongs to it and survives "Change number".
+  const [sentTo, setSentTo] = useState("");
 
   // Countdown ticker for the "Resend in {n}s" button label.
   useEffect(() => {
@@ -85,6 +88,7 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
         return false;
       }
       setCooldown(RESEND_COOLDOWN_SECONDS);
+      setSentTo(e164);
       return true;
     } finally {
       setIsSendingCode(false);
@@ -96,7 +100,11 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
     setError(null);
 
     const trimmedName = name.trim();
-    if (trimmedName.length < 1 || trimmedName.length > 100) {
+    if (trimmedName.length < 1) {
+      setError(t("errors.nameRequired"));
+      return;
+    }
+    if (trimmedName.length > 100) {
       setError(t("errors.generic"));
       return;
     }
@@ -113,6 +121,13 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
       return;
     }
 
+    if (french === sentTo && cooldown > 0) {
+      // Same number, inside the resend window: the server would refuse a new
+      // code, and the one already sent is still good — go back to it.
+      setNormalizedPhone(french);
+      setStep("code");
+      return;
+    }
     if (await sendCode(french)) {
       setNormalizedPhone(french);
       setStep("code");
@@ -129,7 +144,6 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
     setNormalizedPhone("");
     setCode("");
     setError(null);
-    setCooldown(0);
   };
 
   const handleCodeSubmit = async (e: FormEvent) => {
@@ -362,7 +376,10 @@ function Shell({ locale, verified, t, children }: ShellProps) {
             <span>
               {t("subtitle", {
                 inviterName: verified.inviter_name,
-                roleName: verified.role_name,
+                // The API sends the role enum ("member"): say it in the app language.
+                roleName: t.has(`roles.${verified.role_name}`)
+                  ? t(`roles.${verified.role_name}`)
+                  : verified.role_name,
               })}
             </span>
           </div>

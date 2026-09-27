@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { MAX_ANALYSIS_TAGS, MAX_ANALYSIS_TAG_LENGTH, isHttpUrl } from "./analysis-form-limits";
 import { Upload, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,6 +94,10 @@ export function AnalysisUpload({ projectId, onUploaded }: Props) {
   function addTagFromInput() {
     const value = tagInput.trim().toLowerCase();
     if (!value) return;
+    if (!tags.includes(value) && tags.length >= MAX_ANALYSIS_TAGS) {
+      toast.error(tErrors("tooManyTags"));
+      return;
+    }
     if (!tags.includes(value)) setTags((prev) => [...prev, value]);
     setTagInput("");
   }
@@ -104,6 +109,10 @@ export function AnalysisUpload({ projectId, onUploaded }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file || !title.trim() || submitting) return;
+    if (sourceUrl.trim() && !isHttpUrl(sourceUrl)) {
+      toast.error(tErrors("invalidSourceUrl"));
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -123,6 +132,10 @@ export function AnalysisUpload({ projectId, onUploaded }: Props) {
       } else {
         toast.error(tErrors(result.error as Parameters<typeof tErrors>[0]));
       }
+    } catch {
+      // A rejected action (network, or a body the server refused before the
+      // action ran) must not leave the dialog silently open.
+      toast.error(tErrors("generic"));
     } finally {
       setSubmitting(false);
     }
@@ -229,6 +242,7 @@ export function AnalysisUpload({ projectId, onUploaded }: Props) {
                 <Input
                   id="analysis-upload-tags"
                   value={tagInput}
+                  maxLength={MAX_ANALYSIS_TAG_LENGTH}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === ",") {

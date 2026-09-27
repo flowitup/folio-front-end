@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { createProject } from "@/lib/api/projects";
 import type { Project } from "@/types/project";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 import type { UserCompanySummary } from "@/lib/auth/permissions";
 
 interface CreateProjectDialogProps {
@@ -82,8 +83,8 @@ export function CreateProjectDialog({
     // project by its address, so it is only sent when the user typed one.
     const trimmedName = name.trim();
 
-    const budgetNum = budget.trim() ? parseFloat(budget.trim()) : undefined;
-    if (budgetNum !== undefined && (isNaN(budgetNum) || budgetNum < 0)) {
+    const budgetNum = budget.trim() ? parseMoneyInput(budget) : undefined;
+    if (budgetNum === null) {
       setError(t("budgetInvalid"));
       return;
     }
@@ -117,7 +118,7 @@ export function CreateProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("createProjectTitle")}</DialogTitle>
         </DialogHeader>

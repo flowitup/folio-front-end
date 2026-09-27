@@ -77,7 +77,7 @@ describe("QuickAdd — submit", () => {
   });
 
   it("resets title after successful submit", async () => {
-    const onAdd = vi.fn();
+    const onAdd = vi.fn().mockResolvedValue(true);
     render(<QuickAdd onAdd={onAdd} />);
     const input = screen.getByPlaceholderText("notes.quickAdd.placeholderTitle");
     fireEvent.focus(input);
@@ -86,6 +86,21 @@ describe("QuickAdd — submit", () => {
     await waitFor(() => {
       expect((input as HTMLInputElement).value).toBe("");
     });
+  });
+
+  it("keeps the typed text when the save fails", async () => {
+    const onAdd = vi.fn().mockResolvedValue(false);
+    render(<QuickAdd onAdd={onAdd} />);
+    const input = screen.getByPlaceholderText("notes.quickAdd.placeholderTitle");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "Keep me" } });
+    const body = screen.getByPlaceholderText("notes.quickAdd.placeholderBody");
+    fireEvent.change(body, { target: { value: "Long body" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    await waitFor(() => expect(onAdd).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getByRole("button", { name: "notes.quickAdd.save" })).toBeEnabled());
+    expect((input as HTMLInputElement).value).toBe("Keep me");
+    expect((body as HTMLTextAreaElement).value).toBe("Long body");
   });
 
   it("calls onAdd with Cmd+Enter from body textarea", async () => {

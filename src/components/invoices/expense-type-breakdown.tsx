@@ -93,6 +93,8 @@ export function niceAxisMax(value: number): number {
 interface ExpenseTypeBreakdownProps {
   company: PurseBreakdown;
   personal: PurseBreakdown;
+  /** Expenses in neither purse (no company- or personal-flagged method). */
+  unassigned?: PurseBreakdown;
 }
 
 interface TypeRow {
@@ -101,25 +103,37 @@ interface TypeRow {
   companyCount: number;
   personalTotal: number;
   personalCount: number;
+  unassignedTotal: number;
+  unassignedCount: number;
   total: number;
   count: number;
 }
 
-export function ExpenseTypeBreakdown({ company, personal }: ExpenseTypeBreakdownProps) {
+// Neither purse: no company- or personal-flagged payment method.
+const UNASSIGNED_COLOR = "var(--muted-2)";
+
+export function ExpenseTypeBreakdown({
+  company,
+  personal,
+  unassigned = emptyBreakdown(),
+}: ExpenseTypeBreakdownProps) {
   const t = useTranslations("invoices");
   const locale = useLocale();
 
   const rows: TypeRow[] = EXPENSE_TYPES.map((type) => {
     const c = company.types[type];
     const p = personal.types[type];
+    const u = unassigned.types[type];
     return {
       type,
       companyTotal: c.total,
       companyCount: c.count,
       personalTotal: p.total,
       personalCount: p.count,
-      total: c.total + p.total,
-      count: c.count + p.count,
+      unassignedTotal: u.total,
+      unassignedCount: u.count,
+      total: c.total + p.total + u.total,
+      count: c.count + p.count + u.count,
     };
   })
     // A type nobody spent on is noise, not information. Kept if any figure is
@@ -142,9 +156,11 @@ export function ExpenseTypeBreakdown({ company, personal }: ExpenseTypeBreakdown
     return Math.min(100, Math.max(MIN_SEGMENT_PCT, (amount / scale) * 100));
   };
 
+  // Three significant digits print every tick niceAxisMax can produce exactly
+  // (1.2K, 1.8K, 2.25K); whole thousands turned 1 800 and 2 400 into "2K" twice.
   const tickFmt = new Intl.NumberFormat(locale, {
     notation: "compact",
-    maximumFractionDigits: 0,
+    maximumSignificantDigits: 3,
   });
 
   // Hover tooltips are delegated — the parent summary owns the single
@@ -193,15 +209,21 @@ export function ExpenseTypeBreakdown({ company, personal }: ExpenseTypeBreakdown
         </div>
 
         {rows.map((row) => {
-          const companyWidth = segmentWidth(row.companyTotal);
-          const personalWidth = segmentWidth(row.personalTotal);
           const typeLabel = t(`types.${row.type}`);
           const sharePct = grandTotal > 0 ? Math.round((row.total / grandTotal) * 100) : 0;
+          const segments = [
+            { key: "company", label: t("summary.companyPurse"), total: row.companyTotal, count: row.companyCount, color: COMPANY_COLOR },
+            { key: "personal", label: t("summary.personalPurse"), total: row.personalTotal, count: row.personalCount, color: PERSONAL_COLOR },
+            { key: "unassigned", label: t("summary.noPurse"), total: row.unassignedTotal, count: row.unassignedCount, color: UNASSIGNED_COLOR },
+          ].map((seg) => ({ ...seg, width: segmentWidth(seg.total) }));
           // Round the outer ends of the filled run only, so the bar reads as
-          // one pill with a straight company/personal seam inside it.
-          const companyRadius =
-            personalWidth > 0 ? "9999px 0 0 9999px" : "9999px";
-          const personalRadius = companyWidth > 0 ? "0 9999px 9999px 0" : "9999px";
+          // one pill with straight seams inside it.
+          const filled = segments.filter((seg) => seg.width > 0);
+          const radiusOf = (key: string): string => {
+            const first = filled[0]?.key === key;
+            const last = filled[filled.length - 1]?.key === key;
+            return `${first ? "9999px" : "0"} ${last ? "9999px 9999px" : "0 0"} ${first ? "9999px" : "0"}`;
+          };
           return (
             <div
               key={row.type}
@@ -231,30 +253,24 @@ export function ExpenseTypeBreakdown({ company, personal }: ExpenseTypeBreakdown
                   />
                 ))}
                 <span className="absolute inset-0 flex">
-                  <span
-                    className="h-full"
-                    data-testid={`type-segment-company-${row.type}`}
-                    data-tip={`${typeLabel} · ${t("summary.companyPurse")}|${formatEURWhole(
-                      row.companyTotal
-                    )}|${t("invoiceCount", { n: row.companyCount })}`}
-                    style={{
-                      width: `${companyWidth}%`,
-                      background: COMPANY_COLOR,
-                      borderRadius: companyRadius,
-                    }}
-                  />
-                  <span
-                    className="h-full"
-                    data-testid={`type-segment-personal-${row.type}`}
-                    data-tip={`${typeLabel} · ${t("summary.personalPurse")}|${formatEURWhole(
-                      row.personalTotal
-                    )}|${t("invoiceCount", { n: row.personalCount })}`}
-                    style={{
-                      width: `${personalWidth}%`,
-                      background: PERSONAL_COLOR,
-                      borderRadius: personalRadius,
-                    }}
-                  />
+                  {segments
+                    .filter((seg) => seg.key !== "unassigned" || seg.total !== 0 || seg.count > 0)
+                    .map((seg) => (
+                      <span
+                        key={seg.key}
+                        className="h-full"
+                        data-testid={`type-segment-${seg.key}-${row.type}`}
+                        data-tip={`${typeLabel} · ${seg.label}|${formatEURWhole(seg.total)}|${t(
+                          "invoiceCount",
+                          { n: seg.count }
+                        )}`}
+                        style={{
+                          width: `${seg.width}%`,
+                          background: seg.color,
+                          borderRadius: radiusOf(seg.key),
+                        }}
+                      />
+                    ))}
                 </span>
               </span>
 
@@ -297,6 +313,15 @@ export function ExpenseTypeBreakdown({ company, personal }: ExpenseTypeBreakdown
             />
             {t("summary.paidByPersonal")}
           </span>
+          {(unassigned.count > 0 || unassigned.spent !== 0) && (
+            <span className="flex items-center gap-1.5">
+              <span
+                className="inline-block h-[9px] w-[9px] rounded-full"
+                style={{ background: UNASSIGNED_COLOR }}
+              />
+              {t("summary.noPurse")}
+            </span>
+          )}
         </span>
         <span className="text-[11px]" style={{ color: "var(--muted)" }} data-testid="type-breakdown-total">
           {t("summary.sumOfTypes")}{" "}

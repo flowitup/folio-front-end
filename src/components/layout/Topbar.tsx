@@ -7,7 +7,7 @@ import { HelpSheet } from "@/components/help/help-sheet";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
-import { useProject } from "@/context/ProjectContext";
+import { projectIdFromPath, useProject } from "@/context/ProjectContext";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { can, canCreateProject } from "@/lib/auth/permissions";
 import { type Locale } from "@/i18n/config";
@@ -18,10 +18,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { userContact, userDisplayName, userInitial } from "@/lib/auth/user-display";
 
 // Page meta keys reference message keys in `topbar.*` (title/subtitle) and
 // `projects/planning/labor/invoices.newProject|newTask|logDay|newInvoice` for actions.
-type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents" | "analyses";
+type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents" | "analyses" | "billing";
 
 const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; actionKey?: string }> = {
   dashboard: {
@@ -74,6 +75,12 @@ const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; acti
     subtitleKey: "analyses.subtitle",
     // No topbar action — Upload analysis lives inline in the analyses panel.
   },
+  billing: {
+    // /projects/[id]/billing — the project's quotes & invoices, read-only;
+    // new documents are created from the Billing section.
+    titleKey: "billing.project.title",
+    subtitleKey: "billing.project.subtitle",
+  },
 };
 
 export function Topbar() {
@@ -97,11 +104,21 @@ export function Topbar() {
   else if (pathWithoutLocale === "/projects") pageKey = "projects";
   else if (pathWithoutLocale === "/settings") pageKey = "settings";
   else {
-    const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)/);
+    // Only the section root (/projects/<id>/invoices), not its sub-pages
+    // (/invoices/new, /invoices/<id>), which render their own header.
+    const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)\/?$/);
     if (projectMatch && (projectMatch[1] in TOPBAR_KEYS)) {
       pageKey = projectMatch[1] as PageKey;
     }
   }
+
+  // The project the page shows. On a /projects/<id>/... route that is the URL's
+  // project, never a different stored selection, so the breadcrumb, the action
+  // gate and the action target can only ever name the project being viewed.
+  const routeProjectId = projectIdFromPath(pathWithoutLocale);
+  const pageProject =
+    routeProjectId && selectedProject?.id !== routeProjectId ? null : selectedProject;
+  const pageProjectId = routeProjectId ?? selectedProject?.id ?? null;
 
   const cfg = pageKey ? TOPBAR_KEYS[pageKey] : null;
   const title = cfg ? tTopbar(cfg.titleKey) : null;
@@ -115,16 +132,16 @@ export function Topbar() {
     pageKey === "projects"
       ? canCreateProject(user?.permissions, user?.companies)
       : pageKey === "labor"
-        ? can("project:manage_labor", user?.permissions, selectedProject?.my_permissions)
+        ? can("project:manage_labor", user?.permissions, pageProject?.my_permissions)
         : pageKey === "invoices"
-          ? can("project:manage_invoices", user?.permissions, selectedProject?.my_permissions)
+          ? can("project:manage_invoices", user?.permissions, pageProject?.my_permissions)
           : pageKey === "planning"
-            ? can("project:update", user?.permissions, selectedProject?.my_permissions)
+            ? can("project:update", user?.permissions, pageProject?.my_permissions)
             : true;
   const actionLabel = cfg?.actionKey && canShowAction ? tTopbar(cfg.actionKey) : null;
 
-  const projectName = selectedProject ? projectDisplayName(selectedProject) : undefined;
-  const initials = user?.email?.charAt(0).toUpperCase() ?? "·";
+  const projectName = pageProject ? projectDisplayName(pageProject) : undefined;
+  const initials = userInitial(user);
 
   const handleSwitchProject = (projectId: string) => {
     selectProject(projectId);
@@ -142,17 +159,17 @@ export function Topbar() {
       router.push(`/${locale}/projects?new=1`);
       return;
     }
-    if (!selectedProject) return;
+    if (!pageProjectId) return;
     if (pageKey === "planning") {
-      router.push(`/${locale}/projects/${selectedProject.id}/planning?new=1`);
+      router.push(`/${locale}/projects/${pageProjectId}/planning?new=1`);
       return;
     }
     if (pageKey === "labor") {
-      router.push(`/${locale}/projects/${selectedProject.id}/labor?logDay=1`);
+      router.push(`/${locale}/projects/${pageProjectId}/labor?logDay=1`);
       return;
     }
     if (pathWithoutLocale.endsWith("/invoices")) {
-      router.push(`/${locale}/projects/${selectedProject.id}/invoices/new`);
+      router.push(`/${locale}/projects/${pageProjectId}/invoices/new`);
     }
   };
 
@@ -173,7 +190,11 @@ export function Topbar() {
               )}
               <span style={{ color: "var(--ink-2)" }}>{title}</span>
             </div>
-            <h1 className="font-display text-2xl font-medium leading-[1.05] tracking-tight lg:text-[34px]">
+            {/* One line, never spilling under the icons: a wrapped "Main-/d'œuvre" pushed the page down. */}
+            <h1
+              className="font-display truncate text-xl font-medium leading-[1.05] tracking-tight sm:text-2xl lg:text-[34px]"
+              title={title ?? undefined}
+            >
               {title}
             </h1>
             {subtitle && (
@@ -259,7 +280,7 @@ export function Topbar() {
               <button
                 type="button"
                 className="avatar ml-1"
-                title={user.email}
+                title={userDisplayName(user)}
                 style={{ background: "var(--accent)", color: "white", cursor: "pointer" }}
               >
                 {initials}
@@ -267,7 +288,7 @@ export function Topbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5 text-[12px]" style={{ color: "var(--muted)" }}>
-                {user.email}
+                {userContact(user) || userDisplayName(user)}
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem

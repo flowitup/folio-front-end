@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { fetchWorkerLaborExport } from "../labor";
+import { fetchLaborExport, fetchWorkerLaborExport } from "../labor";
 import { ApiError } from "../http";
 
 // Mock the http module — keep ApiError + CSRF helpers real
@@ -316,5 +316,29 @@ describe("fetchWorkerLaborExport — non-2xx error paths", () => {
 
     expect(err).toBeInstanceOf(ApiError);
     expect((err as ApiError).data).toMatchObject({ detail: "span too large" });
+  });
+});
+
+describe("labor exports — label language", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function stubFetch() {
+    const mockResponse = new Response("blob-bytes", { status: 200 });
+    vi.spyOn(mockResponse, "blob").mockResolvedValue(new Blob(["bytes"]));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+  }
+
+  it("asks for the UI language on the per-worker export", async () => {
+    stubFetch();
+    await fetchWorkerLaborExport("p", "w", { from: "2026-01", to: "2026-03" }, "xlsx", "vi");
+    expect(vi.mocked(fetch).mock.calls[0][0] as string).toContain("locale=vi");
+  });
+
+  it("asks for the UI language on the project export", async () => {
+    stubFetch();
+    await fetchLaborExport("p", { from: "2026-01", to: "2026-03" }, "pdf", "fr");
+    expect(vi.mocked(fetch).mock.calls[0][0] as string).toContain("locale=fr");
   });
 });

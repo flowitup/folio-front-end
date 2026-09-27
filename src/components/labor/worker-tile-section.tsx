@@ -14,6 +14,7 @@
  */
 
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ export function WorkerTileSection({
   showEmpty = true,
   className,
 }: WorkerTileSectionProps) {
+  const t = useTranslations("labor.logDayDialog");
   const tileCount = Array.isArray(children) ? children.length : children ? 1 : 0;
   const empty = tileCount === 0;
 
@@ -55,7 +57,7 @@ export function WorkerTileSection({
       )}
 
       {empty && showEmpty ? (
-        <p className="text-muted-foreground text-sm italic">No workers.</p>
+        <p className="text-muted-foreground text-sm italic">{t("noWorkers")}</p>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{children}</div>
       )}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { MAX_ANALYSIS_TAGS, MAX_ANALYSIS_TAG_LENGTH, isHttpUrl } from "./analysis-form-limits";
 import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,10 @@ export function AnalysisEditDialog({ projectId, analysis, onCancel, onUpdated }:
   function addTagFromInput() {
     const value = tagInput.trim().toLowerCase();
     if (!value) return;
+    if (!tags.includes(value) && tags.length >= MAX_ANALYSIS_TAGS) {
+      toast.error(tErrors("tooManyTags"));
+      return;
+    }
     if (!tags.includes(value)) setTags((prev) => [...prev, value]);
     setTagInput("");
   }
@@ -64,6 +69,10 @@ export function AnalysisEditDialog({ projectId, analysis, onCancel, onUpdated }:
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!analysis || saving || !title.trim()) return;
+    if (sourceUrl.trim() && !isHttpUrl(sourceUrl)) {
+      toast.error(tErrors("invalidSourceUrl"));
+      return;
+    }
 
     // Only send fields that actually changed — an omitted key leaves the
     // corresponding value untouched server-side (PATCH semantics).
@@ -162,6 +171,7 @@ export function AnalysisEditDialog({ projectId, analysis, onCancel, onUpdated }:
                 <Input
                   id="analysis-edit-tags"
                   value={tagInput}
+                  maxLength={MAX_ANALYSIS_TAG_LENGTH}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === ",") {

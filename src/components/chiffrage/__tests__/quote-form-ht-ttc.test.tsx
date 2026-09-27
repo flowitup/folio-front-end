@@ -203,3 +203,87 @@ describe("conversion helpers", () => {
     expect(ttcToHt(10.75, 0)).toBe(10.75);
   });
 });
+
+describe("QuoteFormDialog edit keeps the stored price", () => {
+  const QUOTE = {
+    id: "q1",
+    article_id: "a1",
+    store_id: "shop-lm",
+    supplier_id: null,
+    supplier_name: "Leroy Merlin",
+    library_product_id: null,
+    unit_price_ht: 9.99, // the API's cent-rounded view of a stored 9.9917
+    tva_rate: 20,
+    unit_price_ttc: 11.99,
+    product_url: null,
+    note: null,
+    is_selected: false,
+  };
+
+  function renderEdit() {
+    const onSubmit = vi.fn();
+    render(
+      <QuoteFormDialog
+        open
+        quote={QUOTE}
+        submitting={false}
+        companyId={null}
+        stores={SHOPS}
+        onOpenChange={() => {}}
+        onSubmit={onSubmit}
+        onCreateStore={vi.fn()}
+      />
+    );
+    return { onSubmit, user: userEvent.setup() };
+  }
+
+  it("leaves price and TVA out when only the note changed", async () => {
+    const { onSubmit, user } = renderEdit();
+    await user.type(screen.getByLabelText("noteOptional"), "delivered Friday");
+    await user.click(screen.getByRole("button", { name: "save" }));
+
+    const values = onSubmit.mock.calls[0][0];
+    expect(values).not.toHaveProperty("unit_price_ht");
+    expect(values).not.toHaveProperty("tva_rate");
+    expect(values.note).toBe("delivered Friday");
+  });
+
+  it("sends the price once the user changes it", async () => {
+    const { onSubmit, user } = renderEdit();
+    const price = screen.getByLabelText("unitPrice");
+    await user.clear(price);
+    await user.type(price, "10.50");
+    await user.click(screen.getByRole("button", { name: "save" }));
+
+    expect(onSubmit.mock.calls[0][0].unit_price_ht).toBe("10.5000");
+  });
+});
+
+describe("QuoteFormDialog price cap", () => {
+  it("refuses an HT unit price above the API's cap", async () => {
+    const { onSubmit, user } = await fill("100000000", "ht");
+    await user.click(screen.getByRole("button", { name: "create" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText("priceTooLarge")).toBeDefined();
+  });
+});
+
+describe("QuoteFormDialog product link", () => {
+  it("accepts a link typed without https:// and stores it with the scheme", async () => {
+    const { onSubmit, user } = await fill("12.40", "ht");
+    await user.type(screen.getByLabelText("productUrlOptional"), "www.castorama.fr/switch");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit.mock.calls[0][0].product_url).toBe("https://www.castorama.fr/switch");
+  });
+
+  it("refuses something that is not a web address, with the form's own message", async () => {
+    const { onSubmit, user } = await fill("12.40", "ht");
+    await user.type(screen.getByLabelText("productUrlOptional"), "not a link");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText("productUrlInvalid")).toBeInTheDocument();
+  });
+});

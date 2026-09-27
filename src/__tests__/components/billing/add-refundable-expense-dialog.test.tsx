@@ -147,6 +147,22 @@ describe("AddRefundableExpenseDialog", () => {
     expect(screen.getByText("BuildSupply Co")).toBeDefined();
   });
 
+  it("cuts a long project or recipient name instead of widening the table past the amount", async () => {
+    const long = "Rénovation complète ".repeat(30).trim();
+    mockFetchCandidates.mockResolvedValue({
+      items: [makeCandidate({ project_name: long, recipient_name: long })],
+      total: 1,
+    });
+
+    render(<AddRefundableExpenseDialog {...DEFAULT_PROPS} />);
+
+    const table = await screen.findByTestId("refundable-candidates");
+    expect(table.className).toContain("table-fixed");
+    const cells = screen.getAllByTitle(long);
+    expect(cells).toHaveLength(2);
+    for (const cell of cells) expect(cell.className).toContain("truncate");
+  });
+
   it("shows empty state when no candidates", async () => {
     mockFetchCandidates.mockResolvedValue({ items: [], total: 0 });
 
@@ -370,5 +386,35 @@ describe("AddRefundableExpenseDialog", () => {
       const confirmBtn = screen.getByText("Add selected").closest("button");
       expect(confirmBtn?.disabled).toBe(false);
     });
+  });
+
+  it("company-paid expense: says why, drops it from the picker, no 'try again'", async () => {
+    const { ApiError } = await import("@/lib/api/http");
+    mockFetchCandidates.mockResolvedValue({
+      items: [makeCandidate({ id: "company-paid", invoice_number: "INV-CO" })],
+      total: 1,
+    });
+    mockSet.mockRejectedValue(
+      new ApiError("HTTP 400: Bad Request", 400, {
+        error: "ValidationError",
+        message: "Expense already paid by the company — refund tracking does not apply",
+      })
+    );
+
+    const onAdded = vi.fn();
+    render(<AddRefundableExpenseDialog open={true} onOpenChange={vi.fn()} onAdded={onAdded} />);
+    await waitFor(() => screen.getByText("INV-CO"));
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "INV-CO" }));
+    fireEvent.click(screen.getByText("Add selected"));
+
+    await waitFor(() => {
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith(
+        "Paid with a company payment method, so there is nothing to refund: INV-CO"
+      );
+    });
+    expect(vi.mocked(toast.error)).toHaveBeenCalledTimes(1);
+    expect(onAdded).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.queryByText("INV-CO")).toBeNull());
   });
 });

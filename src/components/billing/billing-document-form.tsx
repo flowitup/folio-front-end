@@ -20,10 +20,11 @@
  * State: plain useState (no react-hook-form). Server is source of truth.
  */
 
+import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE, MAX_VAT_RATE } from "@/lib/numeric-bounds";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, Loader2, Download, FileSpreadsheet, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Eye, FileSpreadsheet, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BillingStatusMenu } from "@/components/billing/billing-status-menu";
-import { BillingDocumentItemsEditor } from "@/components/billing/billing-document-items-editor";
+import {
+  BillingDocumentItemsEditor,
+  normalizeVatRate,
+} from "@/components/billing/billing-document-items-editor";
 import { CreateFromExistingDialog } from "@/components/billing/create-from-existing-dialog";
 import { ApplyTemplateDialog } from "@/components/billing/apply-template-dialog";
 import { CompanyPickerSelect } from "@/components/billing/company-picker-select";
@@ -52,6 +56,7 @@ import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/c
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
+import { fetchWithRefresh } from "@/lib/api/refresh";
 import type {
   BillingDocument,
   BillingDocumentKind,
@@ -62,6 +67,13 @@ import type { MyCompany } from "@/types/companies";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { addDaysToDayKey, parisDayKey } from "@/lib/utils/paris-day";
+import { toIsoDate, toItemPayload } from "@/lib/billing/document-payload";
+import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
+import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
+
+// Loose shape check; the API does the strict one.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -92,14 +104,17 @@ export type BillingDocumentFormProps =
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Today as YYYY-MM-DD in Paris — the same on the server render and in the
+ * browser, and never yesterday between 00:00 and 02:00.
+ */
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return parisDayKey();
 }
 
-function plus30Days(from?: string): string {
-  const base = from ? new Date(from) : new Date();
-  base.setDate(base.getDate() + 30);
-  return base.toISOString().slice(0, 10);
+/** The YYYY-MM-DD date 30 days after `from` (itself YYYY-MM-DD). */
+function plus30Days(from: string): string {
+  return addDaysToDayKey(from, 30);
 }
 
 type CreateMode = "blank" | "from-existing" | "from-template";
@@ -108,7 +123,25 @@ type CreateMode = "blank" | "from-existing" | "from-template";
 // Component
 // ---------------------------------------------------------------------------
 
+/**
+ * The form keeps its fields in state seeded once from its props. Choosing a
+ * document in "From existing" navigates to the same route with ?from=, which
+ * re-renders this component with new props instead of mounting a new one, so
+ * key the fields on what they were seeded from to start over.
+ */
 export function BillingDocumentForm(props: BillingDocumentFormProps) {
+  const seedKey =
+    props.mode === "edit"
+      ? props.document.id
+      : props.initialFromSource
+        ? `from:${props.initialFromSource.id}`
+        : props.initialFromTemplate
+          ? `template:${props.initialFromTemplate.id}`
+          : "blank";
+  return <BillingDocumentFormFields key={seedKey} {...props} />;
+}
+
+function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const router = useRouter();
   const locale = useLocale();
   const tForm = useTranslations("billing.form");
@@ -163,19 +196,27 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     !!(seed?.recipient_email || seed?.recipient_siret)
   );
 
-  const today = todayIso();
-  const [issueDate, setIssueDate] = useState(seed?.issue_date ?? today);
+  // Only an edited document keeps its dates; a copy is issued today.
+  // The API may send dates as RFC 1123 strings; date inputs and the request
+  // schemas both need YYYY-MM-DD.
+  const dateSeed = props.mode === "edit" ? props.document : null;
+  const seedIssueDate = toIsoDate(dateSeed?.issue_date) ?? todayIso();
+  const [issueDate, setIssueDate] = useState(seedIssueDate);
   const [validityUntil, setValidityUntil] = useState(
-    seed?.validity_until ?? plus30Days(seed?.issue_date)
+    toIsoDate(dateSeed?.validity_until) ?? plus30Days(seedIssueDate)
   );
   const [paymentDueDate, setPaymentDueDate] = useState(
-    seed?.payment_due_date ?? plus30Days(seed?.issue_date)
+    toIsoDate(dateSeed?.payment_due_date) ?? plus30Days(seedIssueDate)
   );
   const [paymentTerms, setPaymentTerms] = useState(seed?.payment_terms ?? "");
 
   const [items, setItems] = useState<BillingDocumentItem[]>(
     seed?.items ?? templateSeed?.items ?? []
   );
+  // A line added to a document started from a template takes the template's default VAT rate.
+  const templateVatRate = templateSeed?.default_vat_rate
+    ? normalizeVatRate(templateSeed.default_vat_rate)
+    : undefined;
   const [notes, setNotes] = useState(seed?.notes ?? templateSeed?.notes ?? "");
   const [terms, setTerms] = useState(seed?.terms ?? templateSeed?.terms ?? "");
   const [signatureBlock, setSignatureBlock] = useState(seed?.signature_block_text ?? "");
@@ -188,6 +229,8 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [isXlsxLoading, setIsXlsxLoading] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -206,13 +249,34 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     if (!isEdit && !selectedCompanyId) return tForm("errors.companyRequired");
     if (!recipientName.trim()) return tForm("errors.recipientRequired");
     if (items.length === 0) return tForm("errors.atLeastOneItem");
+    if (recipientEmail.trim() && !EMAIL_RE.test(recipientEmail.trim())) {
+      return tForm("errors.recipientEmailInvalid");
+    }
     for (const item of items) {
       if (!item.description.trim()) return tForm("errors.itemDescriptionRequired");
       if (Number(item.quantity) <= 0) return tForm("errors.itemQuantityPositive");
+      if (Number(item.quantity) > MAX_LINE_QUANTITY) {
+        return tForm("errors.itemQuantityTooLarge", { max: MAX_LINE_QUANTITY });
+      }
       if (Number(item.unit_price) < 0) return tForm("errors.itemUnitPricePositive");
-      if (Number(item.vat_rate) < 0) return tForm("errors.itemVatRatePositive");
+      if (Number(item.unit_price) > MAX_LINE_UNIT_PRICE) {
+        return tForm("errors.itemUnitPriceTooLarge", { max: MAX_LINE_UNIT_PRICE });
+      }
+      const vat = String(item.vat_rate ?? "").trim();
+      if (vat === "" || !Number.isFinite(Number(vat))) return tForm("errors.itemVatRateInvalid");
+      if (Number(vat) < 0) return tForm("errors.itemVatRatePositive");
+      if (Number(vat) > MAX_VAT_RATE) return tForm("errors.itemVatRateTooLarge");
     }
     return null;
+  }
+
+  /** Translated message for a failed save — never the API's raw (English,
+   * field-path) validation text. */
+  function saveErrorMessage(error: { code: string }): string {
+    if (error.code === "validation") return tForm("errors.invalidInput");
+    if (error.code === "forbidden") return tForm("errors.forbidden");
+    if (error.code === "company_profile_missing") return tForm("errors.companyProfileMissing");
+    return tForm("errors.saveFailed");
   }
 
   // ---------------------------------------------------------------------------
@@ -250,11 +314,12 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         recipient_address: recipientAddress.trim() || null,
         recipient_email: recipientEmail.trim() || null,
         recipient_siret: recipientSiret.trim() || null,
-        issue_date: issueDate,
-        validity_until: kind === "devis" ? validityUntil : null,
-        payment_due_date: kind === "facture" ? paymentDueDate : null,
+        issue_date: issueDate || null,
+        validity_until: kind === "devis" ? validityUntil || null : null,
+        payment_due_date: kind === "facture" ? paymentDueDate || null : null,
         payment_terms: kind === "facture" ? (paymentTerms.trim() || null) : null,
-        items,
+        // Lines seeded from the API carry read-only totals the schema rejects.
+        items: items.map(toItemPayload),
         notes: notes.trim() || null,
         terms: terms.trim() || null,
         signature_block_text: signatureBlock.trim() || null,
@@ -263,7 +328,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
 
       if (isEdit && liveDoc) {
         const result = await updateBillingDocumentAction(liveDoc.id, payload);
-        if (!result.ok) { setFormError(result.error.message); return; }
+        if (!result.ok) { setFormError(saveErrorMessage(result.error)); return; }
         toast.success(tForm("toast.documentSaved"));
         setLiveDoc(result.data);
       } else {
@@ -278,7 +343,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
             await handleCompanyNoLongerAttached();
             return;
           }
-          setFormError(result.error.message);
+          setFormError(saveErrorMessage(result.error));
           return;
         }
         toast.success(tForm("toast.documentCreated"));
@@ -316,11 +381,8 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
-      const response = await fetch(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/pdf`,
-        {
-          credentials: "include",
-        }
+      const response = await fetchWithRefresh(
+        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/pdf`
       );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const cd = response.headers.get("Content-Disposition");
@@ -342,11 +404,8 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
     xlsxLoadingRef.current = true;
     setIsXlsxLoading(true);
     try {
-      const response = await fetch(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/xlsx`,
-        {
-          credentials: "include",
-        }
+      const response = await fetchWithRefresh(
+        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/xlsx`
       );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const cd = response.headers.get("Content-Disposition");
@@ -397,8 +456,9 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
   // Render helpers
   // ---------------------------------------------------------------------------
 
+  const convertedFactureId = isEdit ? (liveDoc?.converted_to_facture_id ?? null) : null;
   const showConvertButton =
-    isEdit && liveDoc?.kind === "devis" && liveDoc.status === "accepted";
+    isEdit && liveDoc?.kind === "devis" && liveDoc.status === "accepted" && !convertedFactureId;
 
   const kindLabel = tBilling(`${kind}.list.title`);
   const newLabel = tBilling(`${kind}.list.new`);
@@ -431,6 +491,16 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
               onStatusChanged={setLiveDoc}
             />
             <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
+              {convertedFactureId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push(`/${locale}/billing/factures/${convertedFactureId}`)}
+                >
+                  <ArrowRightLeft size={13} className="mr-2" />
+                  {tForm("actions.openFacture")}
+                </Button>
+              )}
               {showConvertButton && (
                 <Button
                   variant="outline"
@@ -446,6 +516,10 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
                   {tForm("actions.convertToFacture")}
                 </Button>
               )}
+              <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
+                <Eye size={13} className="mr-2" />
+                {tForm("actions.previewPdf")}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -686,7 +760,11 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
           {tForm("items.section")}
         </p>
-        <BillingDocumentItemsEditor items={items} onChange={setItems} />
+        <BillingDocumentItemsEditor
+          items={items}
+          onChange={setItems}
+          defaultVatRate={templateVatRate}
+        />
       </div>
 
       {/* 7. Notes / Terms / Signature */}
@@ -757,7 +835,7 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
             type="button"
             variant="outline"
             className="ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={handleDelete}
+            onClick={() => setDeleteOpen(true)}
             disabled={isSubmitting}
           >
             {tForm("actions.delete")}
@@ -775,6 +853,18 @@ export function BillingDocumentForm(props: BillingDocumentFormProps) {
         open={fromTemplateOpen}
         onOpenChange={setFromTemplateOpen}
         kind={kind}
+      />
+      {liveDoc && (
+        <BillingDeleteDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          documentNumber={liveDoc.document_number}
+          onConfirm={handleDelete}
+        />
+      )}
+      <BillingPdfPreviewDialog
+        document={previewOpen ? liveDoc : null}
+        onClose={() => setPreviewOpen(false)}
       />
     </div>
   );

@@ -14,7 +14,7 @@ vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
-vi.mock("../delete-confirm-toast", () => ({ confirmDelete: vi.fn() }));
+vi.mock("../delete-confirm-toast", () => ({ confirmDelete: vi.fn(), flushPendingDeletes: vi.fn() }));
 vi.mock("../actions", () => ({
   createNoteAction: vi.fn(),
   updateNoteAction: vi.fn(),
@@ -24,6 +24,7 @@ vi.mock("../actions", () => ({
 // ---- Imports after mocks ----
 
 const { useNotesState } = await import("../use-notes-state");
+const { confirmDelete, flushPendingDeletes } = await import("../delete-confirm-toast");
 const { updateNoteAction } = await import("../actions");
 const { toast } = await import("sonner");
 
@@ -134,5 +135,67 @@ describe("useNotesState — handleToggleDone", () => {
 
     expect(mockUpdate).not.toHaveBeenCalled();
     expect(result.current.notes[0].status).toBe("open");
+  });
+});
+
+describe("useNotesState — handleDelete", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("Undo puts the note back where it was", () => {
+    const a = makeNote({ id: "a" });
+    const b = makeNote({ id: "b" });
+    const c = makeNote({ id: "c" });
+    const { result } = renderHook(() => useNotesState(PROJECT_ID, [a, b, c]));
+
+    act(() => result.current.handleDelete("b"));
+    const options = vi.mocked(confirmDelete).mock.calls[0][0];
+    act(() => options.onRemove());
+    expect(result.current.notes.map((n) => n.id)).toEqual(["a", "c"]);
+
+    act(() => options.onUndo());
+    expect(result.current.notes.map((n) => n.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("sends pending deletes when the notes view goes away", () => {
+    const { unmount } = renderHook(() => useNotesState(PROJECT_ID, [makeNote()]));
+    unmount();
+    expect(vi.mocked(flushPendingDeletes)).toHaveBeenCalled();
+  });
+});
+
+describe("useNotesState — handleSave", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("keeps the editor open (with the user's text) when the save fails", async () => {
+    const note = makeNote();
+    mockUpdate.mockResolvedValue({ success: false, error: "validation" });
+    const { result } = renderHook(() => useNotesState(PROJECT_ID, [note]));
+    act(() => result.current.setEditingId(NOTE_ID));
+
+    await act(async () => {
+      await result.current.handleSave(NOTE_ID, {
+        title: "Edited",
+        description: "x".repeat(2100),
+        category: "general",
+      });
+    });
+
+    expect(result.current.editingId).toBe(NOTE_ID);
+    expect(result.current.notes[0].title).toBe("A note");
+    expect(mockToastError).toHaveBeenCalledWith("errors.validation");
+  });
+
+  it("closes the editor once the save succeeds", async () => {
+    const note = makeNote();
+    mockUpdate.mockResolvedValue({ success: true, note: { ...note, title: "Edited" } });
+    const { result } = renderHook(() => useNotesState(PROJECT_ID, [note]));
+    act(() => result.current.setEditingId(NOTE_ID));
+
+    await act(async () => {
+      await result.current.handleSave(NOTE_ID, { title: "Edited", description: null, category: "general" });
+    });
+
+    expect(result.current.editingId).toBeNull();
+    expect(result.current.notes[0].title).toBe("Edited");
   });
 });

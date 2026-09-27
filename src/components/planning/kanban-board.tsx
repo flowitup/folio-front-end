@@ -1,14 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   DndContext,
+  type Announcements,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
@@ -23,7 +26,11 @@ import { TaskCreateDialog } from "@/components/planning/task-create-dialog";
 import { WeekView } from "@/components/planning/week-view";
 import { fetchTasks, moveTask } from "@/lib/api/task-api";
 import { weekOffsetFromParam } from "@/lib/planning/week";
+import { pointerFirstCollision } from "@/lib/planning/collision";
 import { BOARD_COLUMNS } from "@/types/task";
+import { useAuth } from "@/context/AuthContext";
+import { useProject } from "@/context/ProjectContext";
+import { can } from "@/lib/auth/permissions";
 import type { Task, TaskStatus } from "@/types/task";
 
 type PlanningView = "board" | "week";
@@ -60,10 +67,23 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [createState, setCreateState] = useState<CreateState | null>(null);
 
+  // Deleting a task needs project write access (members may edit, not delete).
+  const { user } = useAuth();
+  const { selectedProject } = useProject();
+  const canDeleteTasks = can(
+    "project:update",
+    user?.permissions,
+    selectedProject?.id === projectId ? selectedProject.my_permissions : undefined
+  );
+
   const sensors = useSensors(
     // Slight activation distance prevents click-without-drag from being treated
     // as a drag — this lets `onClick` on the card still fire to open the drawer.
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    // Touch: a short press picks the card up, so a plain swipe still scrolls
+    // the board. (PointerSensor alone never activated on touch: the browser
+    // claimed the gesture for scrolling and cancelled the pointer.)
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor),
   );
 
@@ -91,6 +111,35 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }, [searchParams, router, pathname]);
+
+  // dnd-kit's built-in screen-reader instructions and live announcements are
+  // English; name the task and the lane in the app language instead.
+  const dndAccessibility = useMemo(() => {
+    const titleOf = (active: { data: { current?: Record<string, unknown> } }) =>
+      (active.data.current?.task as Task | undefined)?.title ?? "";
+    const laneOf = (over: { data: { current?: Record<string, unknown> } } | null) => {
+      const data = over?.data.current;
+      const status =
+        data?.type === "column" ? (data.status as TaskStatus) : (data?.task as Task | undefined)?.status;
+      if (!status) return null;
+      return status === "backlog" ? t("backlog") : t(`column.${status}`);
+    };
+    const announcements: Announcements = {
+      onDragStart: ({ active }) => t("dnd.pickedUp", { title: titleOf(active) }),
+      onDragOver: ({ active, over }) => {
+        const target = laneOf(over);
+        return target ? t("dnd.over", { title: titleOf(active), target }) : undefined;
+      },
+      onDragEnd: ({ active, over }) => {
+        const target = laneOf(over);
+        return target
+          ? t("dnd.dropped", { title: titleOf(active), target })
+          : t("dnd.cancelled", { title: titleOf(active) });
+      },
+      onDragCancel: ({ active }) => t("dnd.cancelled", { title: titleOf(active) }),
+    };
+    return { announcements, screenReaderInstructions: { draggable: t("dnd.instructions") } };
+  }, [t]);
 
   // Silent variant for mutation-triggered refreshes — avoids whole-board
   // spinner flash after a card create / edit / delete.
@@ -238,7 +287,13 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
 
       {view === "board" ? (
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={pointerFirstCollision}
+          accessibility={dndAccessibility}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+        >
           {/* Backlog row across the top */}
           <BacklogBar
             tasks={tasksByStatus.backlog}
@@ -260,10 +315,23 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
             ))}
           </div>
 
-          {/* Drag overlay — semi-transparent floating card while dragging */}
-          <DragOverlay>
-            {activeTask && <TaskCard task={activeTask} onClick={() => {}} />}
-          </DragOverlay>
+          {/* Drag overlay — floating card while dragging. Portaled to <body>:
+              inside the app's zoom:0.8 content and the page's transformed
+              .fade-up wrapper, its position:fixed viewport coordinates would
+              be rescaled/re-anchored and the card would drift away from the
+              pointer. The inner zoom keeps it the size of the zoomed board.
+              The board only renders client-side (after the task fetch). */}
+          {typeof document !== "undefined" &&
+            createPortal(
+              <DragOverlay>
+                {activeTask && (
+                  <div style={{ zoom: 0.8 }}>
+                    <TaskCard task={activeTask} onClick={() => {}} />
+                  </div>
+                )}
+              </DragOverlay>,
+              document.body,
+            )}
         </DndContext>
       ) : (
         <WeekView
@@ -283,6 +351,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
         seed={tasks.find((t) => t.id === selectedTaskId) ?? null}
         onClose={() => setSelected(null)}
         onMutated={silentReload}
+        canDelete={canDeleteTasks}
       />
 
       {/* Create dialog — shared by both views */}

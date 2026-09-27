@@ -51,6 +51,43 @@ export function isPersonalExpense(inv: Invoice): boolean {
   );
 }
 
+/** Mirrors the BE `is_company_paid` rule behind the company purse's "Spent":
+ * paid with a company-flagged method, or reimbursed by the company. */
+export function isCompanyPaidExpense(inv: Invoice): boolean {
+  return (
+    Boolean(inv.paid_by_company) ||
+    (inv.refundable_status === "refunded" && inv.refunded_by !== "bank")
+  );
+}
+
+/** Snap a money sum to whole cents. Summing euro amounts as floats drifts
+ * (3 368,50 € adds up to 3368.4999999999995), and the whole-euro display
+ * then rounds the drifted value the wrong way. */
+export function roundCents(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/**
+ * Round each part to whole euros so the rounded parts add up to the rounded
+ * sum (largest-remainder method). Rounding every figure on its own shows
+ * "1 501 € + 450 € + 100 €" beside a "2 050 €" total.
+ */
+export function roundPartsToTotal(parts: number[]): number[] {
+  const total = Math.round(roundCents(parts.reduce((s, p) => s + p, 0)));
+  const floors = parts.map((p) => Math.floor(roundCents(p)));
+  let spare = total - floors.reduce((s, f) => s + f, 0);
+  const byRemainder = parts
+    .map((p, i) => ({ i, rem: roundCents(p) - floors[i] }))
+    .sort((a, b) => b.rem - a.rem || a.i - b.i);
+  const out = [...floors];
+  for (const { i } of byRemainder) {
+    if (spare <= 0) break;
+    out[i] += 1;
+    spare -= 1;
+  }
+  return out;
+}
+
 function monthKeyOf(inv: Invoice): string {
   return (inv.service_month ?? inv.issue_date).slice(0, 7);
 }
@@ -99,7 +136,7 @@ export function buildReturnCredits(invoices: Invoice[]): ReturnCredit[] {
  * total the Expense page's dark "Total expenses" card shows. */
 export function computeSpentTotal(invoices: Invoice[]): number {
   const spend = invoices.filter(isSpendInvoice).reduce((s, i) => s + i.total_amount, 0);
-  return buildReturnCredits(invoices).reduce((s, c) => s + c.amount, spend);
+  return roundCents(buildReturnCredits(invoices).reduce((s, c) => s + c.amount, spend));
 }
 
 export interface MonthlySpendPoint {
@@ -161,9 +198,9 @@ export function buildMonthlySpendSeries(
     const bucket = byMonth.get(key);
     series.push({
       key,
-      total: bucket?.total ?? 0,
+      total: roundCents(bucket?.total ?? 0),
       count: bucket?.count ?? 0,
-      credited: bucket?.credited ?? 0,
+      credited: roundCents(bucket?.credited ?? 0),
       creditCount: bucket?.creditCount ?? 0,
     });
   }
@@ -195,24 +232,49 @@ export interface BudgetMetrics {
    * no credit has been recorded). */
   denominator: number;
   usesBudget: boolean;
-  /** denominator − spentTotal. Negative when over. */
+  /** What is measured against the denominator: the spend drawn on the credit
+   * line when a credit is set (personal money never depletes it — the rule
+   * the Projects page follows), else every expense. */
+  spent: number;
+  /** denominator − spent. Negative when over. */
   left: number;
   /** Rounded percent spent, unclamped (may exceed 100 when over budget). */
   pct: number;
   /** Same percent, clamped 0–100 for a progress-bar width. */
   pctClamped: number;
+  /** False when there is nothing to measure against (no credit set and no
+   * funds released): `left` and `pct` then mean nothing and must not be
+   * shown as "remaining" or "% spent". */
+  hasBaseline: boolean;
 }
 
+/**
+ * `creditSpent` is the spend paid from the credit line (the project's
+ * `spent_by_credits`). With a credit set, "remaining" is the credit minus
+ * that, as on the Projects page; before, the Overview subtracted every
+ * expense, so the two screens showed different remaining figures and
+ * percentages for the same project.
+ */
 export function computeBudgetMetrics(
   budget: number | null | undefined,
   spentTotal: number,
-  fundsReleasedTotal: number
+  fundsReleasedTotal: number,
+  creditSpent?: number | null
 ): BudgetMetrics {
   const usesBudget = typeof budget === "number" && budget > 0;
   const denominator = usesBudget ? budget : fundsReleasedTotal;
-  const left = denominator - spentTotal;
-  const pct = denominator > 0 ? Math.round((spentTotal / denominator) * 100) : 0;
-  return { denominator, usesBudget, left, pct, pctClamped: Math.min(Math.max(pct, 0), 100) };
+  const spent = usesBudget && typeof creditSpent === "number" ? creditSpent : spentTotal;
+  const left = denominator - spent;
+  const pct = denominator > 0 ? Math.round((spent / denominator) * 100) : 0;
+  return {
+    denominator,
+    usesBudget,
+    spent,
+    left,
+    pct,
+    pctClamped: Math.min(Math.max(pct, 0), 100),
+    hasBaseline: denominator > 0,
+  };
 }
 
 export interface PendingRefunds {
@@ -242,7 +304,7 @@ export function computeBankOutstanding(invoices: Invoice[]): PendingRefunds {
     count += 1;
     total += inv.total_amount;
   }
-  return { count, total };
+  return { count, total: roundCents(total) };
 }
 
 /** Personal expenses still awaiting reimbursement (refundable or already
@@ -259,7 +321,7 @@ export function computePendingRefunds(invoices: Invoice[]): PendingRefunds {
       total += inv.total_amount;
     }
   }
-  return { count, total };
+  return { count, total: roundCents(total) };
 }
 
 export interface MoneyPurseView {
@@ -288,10 +350,13 @@ interface InvoiceMetaLike {
 export function buildPurseViews(invoices: Invoice[], meta: InvoiceMetaLike): MoneyPurseView[] {
   let companyCount = 0;
   let personalCount = 0;
+  // Counted by the same rules as each purse's Spent (the backend's), so a
+  // purse never says "4 expenses" next to "Spent 0 €". Expenses in neither
+  // purse are reported by computeUnassignedSpend.
   for (const inv of invoices) {
     if (!isSpendInvoice(inv)) continue;
     if (isPersonalExpense(inv)) personalCount += 1;
-    else companyCount += 1;
+    else if (isCompanyPaidExpense(inv)) companyCount += 1;
   }
   const releasedPersonal = meta.fundsReleasedPersonalTotal ?? 0;
   const releasedCompany = meta.fundsReleasedCompanyTotal ?? meta.fundsReleasedTotal - releasedPersonal;
@@ -311,6 +376,20 @@ export function buildPurseViews(invoices: Invoice[], meta: InvoiceMetaLike): Mon
       cashAdvanced: 0,
     },
   ];
+}
+
+/** Expenses paid with no company- or personal-flagged method (no payment
+ * method, or an unflagged one): they count in neither purse. */
+export function computeUnassignedSpend(invoices: Invoice[]): PendingRefunds {
+  let count = 0;
+  let total = 0;
+  for (const inv of invoices) {
+    if (!isSpendInvoice(inv)) continue;
+    if (isPersonalExpense(inv) || isCompanyPaidExpense(inv)) continue;
+    count += 1;
+    total += inv.total_amount;
+  }
+  return { count, total: roundCents(total) };
 }
 
 export interface TypeMonthlyBucket {
@@ -337,7 +416,7 @@ export function buildTypeMonthlyBuckets(
       referenceDate,
       credits.filter((c) => c.type === type)
     );
-    const total = monthly.reduce((s, m) => s + m.total, 0);
+    const total = roundCents(monthly.reduce((s, m) => s + m.total, 0));
     const count = monthly.reduce((s, m) => s + m.count, 0);
     const { deltaPct } = computeMonthDelta(monthly);
     return { type, monthly, total, count, deltaPct };

@@ -26,6 +26,7 @@ import { htToTtc, money, ttcToHt } from "@/components/chiffrage/format";
 import { StoreSelect } from "@/components/chiffrage/store-select";
 import { SupplierProductPicker } from "@/components/chiffrage/supplier-product-picker";
 import type { ChiffrageQuote, ChiffrageStore } from "@/lib/api/chiffrage";
+import { MAX_QUOTE_UNIT_PRICE } from "@/lib/numeric-bounds";
 
 const TVA_PRESETS = ["20", "10", "5.5"];
 
@@ -34,8 +35,11 @@ export interface QuoteFormValues {
   supplier_name: string | null;
   supplier_id: string | null;
   library_product_id: string | null;
-  unit_price_ht: string;
-  tva_rate: string;
+  /** Omitted on an edit that left price, HT/TTC tab and TVA untouched: the
+   * form shows the price rounded to cents, and re-sending that would
+   * overwrite the stored 4-decimal value (e.g. 9.9917 → 9.99). */
+  unit_price_ht?: string;
+  tva_rate?: string;
   product_url: string | null;
   note: string | null;
 }
@@ -51,6 +55,25 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: QuoteFormValues) => void;
   onCreateStore: (name: string) => Promise<ChiffrageStore | null>;
+}
+
+/**
+ * The product link as stored: null when empty, "https://" added to a link
+ * typed without a scheme ("www.castorama.fr/…"), undefined when it is not an
+ * http(s) address at all.
+ */
+export function normalizeProductUrl(raw: string): string | null | undefined {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const parsed = new URL(withScheme);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return undefined;
+    if (!parsed.hostname.includes(".")) return undefined;
+    return withScheme;
+  } catch {
+    return undefined;
+  }
 }
 
 export function QuoteFormDialog({
@@ -114,11 +137,25 @@ export function QuoteFormDialog({
       setError(t("tvaInvalid"));
       return;
     }
+    if (htValue > MAX_QUOTE_UNIT_PRICE) {
+      setError(t("priceTooLarge", { max: MAX_QUOTE_UNIT_PRICE }));
+      return;
+    }
+    const productUrl = normalizeProductUrl(url);
+    if (productUrl === undefined) {
+      setError(t("productUrlInvalid"));
+      return;
+    }
     if (!storeValid) {
       setError(t("storeRequired"));
       return;
     }
     setError(null);
+    const priceUnchanged =
+      quote !== null &&
+      mode === "ht" &&
+      price === String(quote.unit_price_ht) &&
+      tva === String(quote.tva_rate);
     onSubmit({
       store_id: storeId,
       // A readable snapshot of the shop, kept so deleting the shop later never
@@ -126,9 +163,8 @@ export function QuoteFormDialog({
       supplier_name: stores.find((s) => s.id === storeId)?.name ?? null,
       supplier_id: supplierId,
       library_product_id: productId,
-      unit_price_ht: htValue.toFixed(4),
-      tva_rate: tva,
-      product_url: url.trim() || null,
+      ...(priceUnchanged ? {} : { unit_price_ht: htValue.toFixed(4), tva_rate: tva }),
+      product_url: productUrl,
       note: note.trim() || null,
     });
   };
@@ -285,7 +321,10 @@ export function QuoteFormDialog({
               <Label htmlFor="quote-url">{t("productUrlOptional")}</Label>
               <Input
                 id="quote-url"
-                type="url"
+                // Text, not type="url": the browser would refuse "www.castorama.fr/…"
+                // with a tooltip in its own language; the form checks it below.
+                type="text"
+                inputMode="url"
                 value={url}
                 maxLength={500}
                 placeholder="https://"

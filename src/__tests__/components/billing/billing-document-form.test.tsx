@@ -332,9 +332,13 @@ describe("test_form_blank_create_calls_createBillingDocument_with_decimal_string
     render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />);
     await fillAndSubmitCreateForm();
 
+    // The API's raw validation text is never shown; the form's own is.
     await waitFor(() => {
-      expect(screen.getByText("Invalid payload")).toBeDefined();
+      expect(
+        screen.getByText("Some fields are invalid. Check the dates, email and line amounts.")
+      ).toBeDefined();
     });
+    expect(screen.queryByText("Invalid payload")).toBeNull();
     expect(mockRouterPush).not.toHaveBeenCalled();
   });
 
@@ -426,8 +430,11 @@ describe("test_form_edit_calls_update_with_partial_payload", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("Update failed")).toBeDefined();
+      expect(
+        screen.getByText("Some fields are invalid. Check the dates, email and line amounts.")
+      ).toBeDefined();
     });
+    expect(screen.queryByText("Update failed")).toBeNull();
   });
 
   it("asks for confirmation and does not delete when cancelled", async () => {

@@ -670,3 +670,27 @@ describe("BillingDocumentForm — copy of an existing document", () => {
     }
   });
 });
+
+describe("BillingDocumentForm — choosing a source on the new-document page", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("fills the form when the page re-renders with a source document", () => {
+    const { rerender } = render(
+      <BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />
+    );
+    expect((screen.getByLabelText(/name \*/i) as HTMLInputElement).value).toBe("");
+
+    rerender(
+      <BillingDocumentForm
+        mode="create"
+        kind="devis"
+        attachedCompanies={ATTACHED_COMPANIES}
+        initialFromSource={makeDoc({ recipient_name: "Source Client", notes: "Source notes" })}
+      />
+    );
+
+    expect((screen.getByLabelText(/name \*/i) as HTMLInputElement).value).toBe("Source Client");
+    expect(screen.getByDisplayValue("Source notes")).toBeDefined();
+    expect(screen.getAllByText("Consulting").length).toBeGreaterThan(0);
+  });
+});

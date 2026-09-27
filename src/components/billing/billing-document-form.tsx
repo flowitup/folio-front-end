@@ -116,7 +116,25 @@ type CreateMode = "blank" | "from-existing" | "from-template";
 // Component
 // ---------------------------------------------------------------------------
 
+/**
+ * The form keeps its fields in state seeded once from its props. Choosing a
+ * document in "From existing" navigates to the same route with ?from=, which
+ * re-renders this component with new props instead of mounting a new one, so
+ * key the fields on what they were seeded from to start over.
+ */
 export function BillingDocumentForm(props: BillingDocumentFormProps) {
+  const seedKey =
+    props.mode === "edit"
+      ? props.document.id
+      : props.initialFromSource
+        ? `from:${props.initialFromSource.id}`
+        : props.initialFromTemplate
+          ? `template:${props.initialFromTemplate.id}`
+          : "blank";
+  return <BillingDocumentFormFields key={seedKey} {...props} />;
+}
+
+function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const router = useRouter();
   const locale = useLocale();
   const tForm = useTranslations("billing.form");

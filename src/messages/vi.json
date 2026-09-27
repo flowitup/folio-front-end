@@ -1994,7 +1994,8 @@
         "logoUrlInvalidScheme": "URL logo phải sử dụng http hoặc https.",
         "logoUrlInvalidUrl": "URL logo không hợp lệ.",
         "generic": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
-      }
+      },
+      "maskedFieldHint": "Đã lưu và được ẩn. Nhập giá trị mới để thay thế; để trống để giữ nguyên."
     },
     "picker": {
       "label": "Phát hành từ",
@@ -2392,6 +2393,7 @@
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "Ảnh vượt quá 10 MB.",
     "imageUploadFailed": "Không tải được ảnh lên.",
+    "actionFailed": "Đã xảy ra lỗi. Vui lòng thử lại.",
     "includingTax": "đã gồm thuế",
     "newArticle": "Vật tư mới",
     "newPoste": "Hạng mục mới",
@@ -2525,6 +2527,10 @@
     "retry": "Thử lại",
     "companyPicker": {
       "label": "Công ty"
+    },
+    "profile": {
+      "title": "Hồ sơ công ty",
+      "description": "Tên pháp lý, địa chỉ, mã định danh và thông tin ngân hàng in trên báo giá và hóa đơn của bạn."
     },
     "members": {
       "title": "Thành viên",

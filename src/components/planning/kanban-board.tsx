@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -23,6 +24,7 @@ import { TaskCreateDialog } from "@/components/planning/task-create-dialog";
 import { WeekView } from "@/components/planning/week-view";
 import { fetchTasks, moveTask } from "@/lib/api/task-api";
 import { weekOffsetFromParam } from "@/lib/planning/week";
+import { pointerFirstCollision } from "@/lib/planning/collision";
 import { BOARD_COLUMNS } from "@/types/task";
 import type { Task, TaskStatus } from "@/types/task";
 
@@ -238,7 +240,12 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
 
       {view === "board" ? (
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={pointerFirstCollision}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+        >
           {/* Backlog row across the top */}
           <BacklogBar
             tasks={tasksByStatus.backlog}
@@ -260,10 +267,23 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
             ))}
           </div>
 
-          {/* Drag overlay — semi-transparent floating card while dragging */}
-          <DragOverlay>
-            {activeTask && <TaskCard task={activeTask} onClick={() => {}} />}
-          </DragOverlay>
+          {/* Drag overlay — floating card while dragging. Portaled to <body>:
+              inside the app's zoom:0.8 content and the page's transformed
+              .fade-up wrapper, its position:fixed viewport coordinates would
+              be rescaled/re-anchored and the card would drift away from the
+              pointer. The inner zoom keeps it the size of the zoomed board.
+              The board only renders client-side (after the task fetch). */}
+          {typeof document !== "undefined" &&
+            createPortal(
+              <DragOverlay>
+                {activeTask && (
+                  <div style={{ zoom: 0.8 }}>
+                    <TaskCard task={activeTask} onClick={() => {}} />
+                  </div>
+                )}
+              </DragOverlay>,
+              document.body,
+            )}
         </DndContext>
       ) : (
         <WeekView

@@ -39,7 +39,6 @@ import {
 import { fetchProjectUsers } from "@/lib/api/projects";
 import { removeMemberAction } from "@/app/[locale]/(app)/projects/[id]/members/actions";
 import { can, canCreateProject } from "@/lib/auth/permissions";
-import { AddMemberDialog } from "@/components/project/add-member-dialog";
 import { ProjectCoverPhotos } from "@/components/project/project-cover-photos";
 import { CreateProjectDialog } from "@/components/project/create-project-dialog";
 import { EditProjectDialog } from "@/components/project/edit-project-dialog";
@@ -81,9 +80,6 @@ export default function ProjectsPage() {
   const [openBreakdownId, setOpenBreakdownId] = useState<string | null>(null);
   const [projectUsers, setProjectUsers] = useState<Record<string, ProjectUser[]>>({});
   const [loadingUsers, setLoadingUsers] = useState<string | null>(null);
-  const [addMemberProject, setAddMemberProject] = useState<{ id: string; label: string } | null>(
-    null,
-  );
   const [removeMember, setRemoveMember] = useState<{
     projectId: string;
     userId: string;
@@ -118,6 +114,12 @@ export default function ProjectsPage() {
 
   const canManageUsers = (project: Project) =>
     can("project:manage_users", user?.permissions, project.my_permissions);
+  // Adding people happens on the project's members page, which holds both
+  // flows: e-mail invitation (project:invite) and assigning an existing company
+  // member (project:update, PUT /assignments — company-scoped search).
+  const canAddMembers = (project: Project) =>
+    can("project:invite", user?.permissions, project.my_permissions) ||
+    can("project:update", user?.permissions, project.my_permissions);
 
   const canCreate = canCreateProject(user?.permissions, user?.companies);
   const adminCompanies = (user?.companies ?? []).filter((c) => c.role === "admin");
@@ -149,18 +151,6 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleMemberAdded = async () => {
-    if (addMemberProject) {
-      setProjectUsers((prev) => {
-
-        const { [addMemberProject.id]: _, ...rest } = prev;
-        return rest;
-      });
-      await loadProjectUsers(addMemberProject.id);
-      refetch();
-    }
-  };
-
   const handleRemoveUser = async () => {
     if (!removeMember) return;
     try {
@@ -185,6 +175,11 @@ export default function ProjectsPage() {
   const openProject = (projectId: string) => {
     selectProject(projectId);
     router.push(`/${locale}/dashboard`);
+  };
+
+  const openProjectMembers = (projectId: string) => {
+    selectProject(projectId);
+    router.push(`/${locale}/projects/${projectId}/members`);
   };
 
   // Open the project's photo gallery (all images + its own upload control).
@@ -564,12 +559,10 @@ export default function ProjectsPage() {
                   >
                     <div className="mb-3 flex items-center justify-between">
                       <div className="label-cap">{t("teamMembers")}</div>
-                      {canManageThisProjectUsers && (
+                      {canAddMembers(project) && (
                         <button
                           type="button"
-                          onClick={() =>
-                            setAddMemberProject({ id: project.id, label: projectDisplayName(project) })
-                          }
+                          onClick={() => openProjectMembers(project.id)}
                           className="btn btn-ghost"
                           style={{ padding: "5px 10px", fontSize: 12 }}
                         >
@@ -698,16 +691,6 @@ export default function ProjectsPage() {
         // previously-selected id is no longer in the list, so we just refetch.
         onDeleted={refetch}
       />
-
-      {addMemberProject && (
-        <AddMemberDialog
-          projectId={addMemberProject.id}
-          projectName={addMemberProject.label}
-          open={!!addMemberProject}
-          onOpenChange={(open) => !open && setAddMemberProject(null)}
-          onMemberAdded={handleMemberAdded}
-        />
-      )}
 
       <AlertDialog open={!!removeMember} onOpenChange={(open) => !open && setRemoveMember(null)}>
         <AlertDialogContent className="max-w-sm sm:max-w-md">

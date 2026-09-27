@@ -369,6 +369,36 @@ describe("EditProjectDialog", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
+  it("reads a French-formatted budget exactly instead of truncating it", async () => {
+    mockUpdateProject.mockResolvedValueOnce({
+      ...FAKE_PROJECT_WITH_BUDGET,
+      budget: 12500.75,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <EditProjectDialog
+        project={FAKE_PROJECT_WITH_BUDGET}
+        open={true}
+        onOpenChange={vi.fn()}
+      />
+    );
+
+    const budgetInput = screen.getByLabelText("Budget (€)");
+    await user.clear(budgetInput);
+    await user.type(budgetInput, "12\u202f500,75");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(mockUpdateProject).toHaveBeenCalledWith("p-1", {
+        name: "Acme",
+        address: "12 rue X",
+        budget: 12500.75,
+        budget_source: "Bank loan BNP",
+      });
+    });
+  });
+
   it("sends budget: null and budget_source: null when both are cleared", async () => {
     mockUpdateProject.mockResolvedValueOnce({
       ...FAKE_PROJECT_WITH_BUDGET,

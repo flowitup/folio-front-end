@@ -54,14 +54,6 @@ export async function fetchProjectUsers(projectId: string): Promise<ProjectUsers
   return api.get<ProjectUsersResponse>(`/projects/${projectId}/users`);
 }
 
-export async function searchUsers(query: string): Promise<{ users: { id: string; email: string }[]; total: number }> {
-  return api.get(`/users?q=${encodeURIComponent(query)}`);
-}
-
-export async function addUserToProject(projectId: string, userId: string): Promise<void> {
-  await api.post(`/projects/${projectId}/users`, { user_id: userId });
-}
-
 // Member REMOVAL has a single path: removeMemberAction (server action, in
 // projects/[id]/members/actions.ts — assignment DELETE with a legacy
 // /users/<id> fallback on 404), used by both the members page and the

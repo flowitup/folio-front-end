@@ -182,13 +182,21 @@ export function ChiffragePageClient({
   const mutate = useCallback(
     async (fn: () => Promise<{ ok: true } | { ok: false; error: string }>) => {
       setSubmitting(true);
-      const res = await fn();
-      if (!res.ok) toast.error(res.error);
-      else await refresh();
-      setSubmitting(false);
-      return res.ok;
+      try {
+        const res = await fn();
+        if (!res.ok) toast.error(res.error);
+        else await refresh();
+        return res.ok;
+      } catch {
+        // A rejected server action (e.g. a request the server refused before
+        // the action ran) must still surface and release the form.
+        toast.error(t("actionFailed"));
+        return false;
+      } finally {
+        setSubmitting(false);
+      }
     },
-    [refresh],
+    [refresh, t],
   );
 
   /**

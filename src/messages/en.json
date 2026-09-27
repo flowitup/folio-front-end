@@ -1994,7 +1994,8 @@
         "logoUrlInvalidScheme": "Logo URL must use http or https.",
         "logoUrlInvalidUrl": "Logo URL is not a valid URL.",
         "generic": "An unexpected error occurred. Please try again."
-      }
+      },
+      "maskedFieldHint": "Stored and hidden. Type a new value to replace it; leave empty to keep it."
     },
     "picker": {
       "label": "Issued from",
@@ -2392,6 +2393,7 @@
     "imageFromUrlPlaceholder": "https://media.adeo.com/…",
     "imageTooLarge": "That image is over 10 MB.",
     "imageUploadFailed": "The photo could not be uploaded.",
+    "actionFailed": "Something went wrong. Please try again.",
     "includingTax": "including tax",
     "newArticle": "New item",
     "newPoste": "New section",
@@ -2525,6 +2527,10 @@
     "retry": "Retry",
     "companyPicker": {
       "label": "Company"
+    },
+    "profile": {
+      "title": "Company profile",
+      "description": "Legal name, address, identifiers and bank details printed on your quotes and invoices."
     },
     "members": {
       "title": "Members",

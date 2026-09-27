@@ -43,7 +43,11 @@ import {
   uploadProductImageAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import { LIBRARY_CATEGORY_SLUGS, localizeCategory } from "@/lib/bibliotheque/categories";
-import { imageUrlErrorKey, isHttpsUrl } from "@/lib/bibliotheque/image-url";
+import {
+  MAX_PRODUCT_IMAGE_BYTES,
+  imageUrlErrorKey,
+  isHttpsUrl,
+} from "@/lib/bibliotheque/image-url";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
 
 // Sentinel value for the "no category" option in the Select component.
@@ -127,6 +131,11 @@ export function ProductCreateDialog({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
+    if (file && file.size > MAX_PRODUCT_IMAGE_BYTES) {
+      toast.error(t("imageUrl.errors.tooLarge"));
+      e.target.value = "";
+      return;
+    }
     if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
     setImageFile(file);
     setImagePreviewUrl(file ? URL.createObjectURL(file) : null);
@@ -211,7 +220,12 @@ export function ProductCreateDialog({
     if (imageFile) {
       const fd = new FormData();
       fd.append("image", imageFile);
-      const imgResult = await uploadProductImageAction(created.id, fd);
+      // A rejected call (e.g. the request never reached the action) must not
+      // leave the dialog stuck on its spinner: the product exists, so it is
+      // handled like any other failed image upload.
+      const imgResult = await uploadProductImageAction(created.id, fd).catch(
+        () => ({ ok: false as const }),
+      );
       if (!imgResult.ok) {
         toast.warning(t("toast.imageUploadWarning"));
       } else {

@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MaskDisplay } from "@/components/companies/mask-display";
+import { MaskDisplay, isMaskedValue } from "@/components/companies/mask-display";
 import {
   setPrimaryCompanyAction,
   detachCompanyAction,
@@ -140,14 +140,7 @@ export function MyCompanyCard({ company, onMutated }: MyCompanyCardProps) {
               >
                 {label}
               </span>
-              <MaskDisplay
-                value={value}
-                isMasked={
-                  value !== null &&
-                  value !== undefined &&
-                  value.startsWith("····")
-                }
-              />
+              <MaskDisplay value={value} isMasked={isMaskedValue(value)} />
             </div>
           ))}
         </div>

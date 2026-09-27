@@ -684,4 +684,38 @@ describe("ProductCreateDialog — image from a supplier link", () => {
     });
     expect(mockUploadImage).not.toHaveBeenCalled();
   });
+
+  it("closes with a warning when the image upload call rejects instead of hanging", async () => {
+    const product = makeProduct({ has_image: false });
+    mockCreate.mockResolvedValueOnce({ ok: true, data: product });
+    mockUploadImage.mockRejectedValueOnce(new Error("Body exceeded 1 MB limit"));
+    const onCreated = vi.fn();
+    const onOpenChange = vi.fn();
+    renderDialog({ suppliers: [], onCreated, onOpenChange });
+
+    fireEvent.change(screen.getByLabelText(/supplier name/i), {
+      target: { value: "Supplier X" },
+    });
+    fireEvent.change(screen.getByLabelText(/product name/i), {
+      target: { value: "Product X" },
+    });
+    const file = new File(["img"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(screen.getByLabelText(/image/i), { target: { files: [file] } });
+    fireEvent.click(screen.getByRole("button", { name: /add product/i }));
+
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(mockToast.warning).toHaveBeenCalled();
+    expect(onCreated).toHaveBeenCalledWith(expect.objectContaining({ has_image: false }));
+  });
+
+  it("refuses an image over 10 MB when it is picked", async () => {
+    renderDialog({ suppliers: [] });
+
+    const big = new File(["x"], "big.jpg", { type: "image/jpeg" });
+    Object.defineProperty(big, "size", { value: 10 * 1024 * 1024 + 1 });
+    fireEvent.change(screen.getByLabelText(/image/i), { target: { files: [big] } });
+
+    expect(mockToast.error).toHaveBeenCalledWith("This image is larger than 10 MB.");
+    expect(screen.queryByAltText(/preview/i)).toBeNull();
+  });
 });

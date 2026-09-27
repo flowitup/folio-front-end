@@ -57,16 +57,26 @@ export function ArticleImageDialog({
 
   const hasOwnImage = article.image_ref?.kind === "article";
 
+  /** Runs an action with the dialog busy; a rejection counts as a failure. */
+  const run = async (action: () => Promise<boolean>): Promise<boolean> => {
+    setBusy(true);
+    try {
+      return await action();
+    } catch {
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const upload = async (file: File) => {
     if (file.size > MAX_IMAGE_BYTES) {
       toast.error(t("imageTooLarge"));
       return;
     }
-    setBusy(true);
     const form = new FormData();
     form.append("image", file);
-    const ok = await onUpload(form);
-    setBusy(false);
+    const ok = await run(() => onUpload(form));
     if (ok) onOpenChange(false);
     else toast.error(t("imageUploadFailed"));
   };
@@ -105,9 +115,7 @@ export function ArticleImageDialog({
             disabled={busy}
             fetchLabel={t("fetch")}
             onFetch={async () => {
-              setBusy(true);
-              const ok = await onFromUrl(url.trim());
-              setBusy(false);
+              const ok = await run(() => onFromUrl(url.trim()));
               if (ok) {
                 setUrl("");
                 onOpenChange(false);
@@ -124,9 +132,7 @@ export function ArticleImageDialog({
               className="text-destructive"
               disabled={busy}
               onClick={async () => {
-                setBusy(true);
-                const ok = await onRemove();
-                setBusy(false);
+                const ok = await run(onRemove);
                 if (ok) onOpenChange(false);
               }}
             >

@@ -44,6 +44,7 @@ export function PhoneLoginForm({ flow }: PhoneLoginFormProps) {
       {flow.errorKey && (
         <div
           data-testid="login-error"
+          id="login-error"
           role="alert"
           className="flex items-start gap-2 rounded-[10px] p-3 text-[12.5px]"
           style={{
@@ -159,6 +160,8 @@ function PhoneStepFields({ flow }: { flow: PhoneLoginFlow }) {
           autoFocus
           value={flow.nationalNumber}
           onChange={(event) => flow.setNationalNumber(event.target.value)}
+          aria-invalid={flow.errorKey === "errorInvalidPhone" || undefined}
+          aria-describedby={flow.errorKey ? "login-error" : undefined}
           disabled={flow.isSendingCode}
           placeholder={t("phonePlaceholder")}
           className="num min-w-0 flex-1 bg-transparent px-3 py-[11px] text-[14px] outline-none"

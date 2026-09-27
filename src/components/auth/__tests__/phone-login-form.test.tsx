@@ -127,19 +127,25 @@ describe("Phone sign-in", () => {
 
     await user.type(screen.getByLabelText("Phone number"), "+84912345678");
 
-    // Nothing to send: the button never enables for a non-French number.
-    expect(screen.getByTestId("login-send-code")).toBeDisabled();
+    // Pressing Send says what is wrong instead of a silently greyed-out button.
+    await user.click(screen.getByTestId("login-send-code"));
+    expect(screen.getByTestId("login-error")).toHaveTextContent("Enter a French phone number");
+    expect(screen.getByLabelText("Phone number")).toHaveAttribute("aria-invalid", "true");
     expect(mockRequestOtpAction).not.toHaveBeenCalled();
     expect(screen.queryByTestId("login-code-0")).toBeNull();
+
+    // Editing the number clears the message.
+    await user.type(screen.getByLabelText("Phone number"), "1");
+    expect(screen.queryByTestId("login-error")).toBeNull();
   });
 
   it("refuses a number that is too short to be French", async () => {
     const user = userEvent.setup();
     render(<LoginStage />);
 
-    await user.type(screen.getByLabelText("Phone number"), "0612");
+    await user.type(screen.getByLabelText("Phone number"), "0612{Enter}");
 
-    expect(screen.getByTestId("login-send-code")).toBeDisabled();
+    expect(screen.getByTestId("login-error")).toHaveTextContent("Enter a French phone number");
     expect(mockRequestOtpAction).not.toHaveBeenCalled();
   });
 

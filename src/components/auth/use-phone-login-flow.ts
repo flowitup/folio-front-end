@@ -62,7 +62,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
   const { loginWithPhone, isLoading } = useAuth();
 
   const [step, setStep] = useState<"phone" | "code">("phone");
-  const [nationalNumber, setNationalNumber] = useState("");
+  const [nationalNumber, setNationalNumberState] = useState("");
   const [sentTo, setSentTo] = useState("");
   const [code, setCode] = useState("");
   const [errorKey, setErrorKey] = useState<string | null>(null);
@@ -90,10 +90,21 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     return () => clearInterval(timer);
   }, [cooldown]);
 
+  // Editing the number clears the "enter a French number" message it caused.
+  const setNationalNumber = useCallback((value: string) => {
+    setNationalNumberState(value);
+    setErrorKey((prev) => (prev === "errorInvalidPhone" ? null : prev));
+  }, []);
+
   const phone = normalizeFrenchPhone(nationalNumber);
   // The backend throttles per number, so the countdown only gates asking again
   // for the SAME number: edit the number and "Send code" is live immediately.
-  const canSend = phone !== null && !isSendingCode && (cooldown === 0 || phone !== sentTo);
+  // An invalid number keeps the button live: pressing it says what is wrong,
+  // where a greyed-out button explained nothing.
+  const canSend =
+    nationalNumber.trim().length > 0 &&
+    !isSendingCode &&
+    (phone === null || cooldown === 0 || phone !== sentTo);
   const canVerify =
     new RegExp(`^\\d{${CODE_LENGTH}}$`).test(code) &&
     !isLoading &&

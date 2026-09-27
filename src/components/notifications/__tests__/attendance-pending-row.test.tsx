@@ -6,6 +6,8 @@
  * - Validate button calls onValidate with the item
  * - Reject requires an inline confirmation before calling onReject
  * - Main area navigates to the project's attendance tab
+ * - A change request on a validated day reads "current → requested" and its
+ *   actions are labelled Apply / Refuse change
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -99,5 +101,45 @@ describe("AttendancePendingRow — actions", () => {
     fireEvent.click(screen.getByLabelText("notifications.aria.goToAttendance:Nguyen Van Tho"));
     expect(push).toHaveBeenCalledWith("/en/projects/proj-1/labor?tab=attendance");
     expect(onNavigate).toHaveBeenCalled();
+  });
+});
+
+const CHANGE: AttendancePending = {
+  ...ITEM,
+  kind: "attendance_change",
+  entry_id: "e2",
+  note: null,
+  submitted_at: "2026-09-08T18:00:00",
+  proposed_shift_type: "half",
+  proposed_supplement_hours: 0,
+  proposed_note: "left at noon",
+};
+
+describe("AttendancePendingRow — change request", () => {
+  it("shows the change title and the current → requested values", () => {
+    render(
+      <AttendancePendingRow item={CHANGE} onValidate={vi.fn()} onReject={vi.fn()} onNavigate={vi.fn()} />
+    );
+    expect(screen.getByText("notifications.attendance.changeTitle")).toBeDefined();
+    expect(screen.getByTestId("attendance-change-line").textContent).toBe(
+      "labor.shiftFull · +2h → labor.shiftHalf — left at noon"
+    );
+  });
+
+  it("apply calls onValidate at once; refuse needs the inline confirmation", () => {
+    const onValidate = vi.fn();
+    const onReject = vi.fn();
+    render(
+      <AttendancePendingRow item={CHANGE} onValidate={onValidate} onReject={onReject} onNavigate={vi.fn()} />
+    );
+    expect(screen.queryByLabelText("notifications.attendance.validate")).toBeNull();
+
+    fireEvent.click(screen.getByLabelText("notifications.attendance.applyChange"));
+    expect(onValidate).toHaveBeenCalledWith(CHANGE);
+
+    fireEvent.click(screen.getByLabelText("notifications.attendance.refuseChange"));
+    expect(onReject).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText("notifications.attendance.confirmReject"));
+    expect(onReject).toHaveBeenCalledWith(CHANGE);
   });
 });

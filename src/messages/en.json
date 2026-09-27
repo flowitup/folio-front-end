@@ -927,7 +927,31 @@
         "dayType": "Day type"
       }
     },
-    "overridePlaceholder": "Leave empty for default rate"
+    "overridePlaceholder": "Leave empty for default rate",
+    "changeRequest": {
+      "badge": "Change requested",
+      "badgeTooltip": "The worker asked to change this validated day — the current values stay priced until a manager applies the change",
+      "proposedLine": "Requested: {value}",
+      "cellIndicator": "{count, plural, one {# change request} other {# change requests}}",
+      "tabCount": "{count, plural, one {# change request to review} other {# change requests to review}}",
+      "panelTitle": "Change requests ({count})",
+      "panelHint": "Workers asked to correct these validated days. Applying a change replaces the day's values; refusing keeps the day as validated.",
+      "current": "Now",
+      "proposed": "Requested",
+      "noteCleared": "note removed",
+      "apply": "Apply",
+      "refuse": "Refuse",
+      "applied": "{worker}'s change applied",
+      "refused": "{worker}'s change refused — the day stays as validated",
+      "alreadySettled": "{worker}'s request was already settled",
+      "applyFailed": "Couldn't apply the change. Try again.",
+      "refuseFailed": "Couldn't refuse the change. Try again.",
+      "refuseTitle": "Refuse this change?",
+      "refuseConfirm": "{worker}'s day of {date} stays as validated and the request is dropped.",
+      "loadFailed": "Couldn't load all change requests.",
+      "retry": "Retry",
+      "refreshing": "Refreshing change requests"
+    }
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",
@@ -1085,7 +1109,9 @@
     "errors": {
       "dismissFailed": "Couldn't dismiss. Try again.",
       "validateFailed": "Couldn't validate. Try again.",
-      "rejectFailed": "Couldn't reject. Try again."
+      "rejectFailed": "Couldn't reject. Try again.",
+      "applyChangeFailed": "Couldn't apply the change. Try again.",
+      "refuseChangeFailed": "Couldn't refuse the change. Try again."
     },
     "skeleton": {
       "loading": "Loading reminders..."
@@ -1097,7 +1123,12 @@
       "confirmReject": "Confirm reject",
       "cancel": "Cancel",
       "validated": "{worker}'s day validated",
-      "rejected": "{worker}'s day rejected"
+      "rejected": "{worker}'s day rejected",
+      "changeTitle": "Change request",
+      "applyChange": "Apply change",
+      "refuseChange": "Refuse change",
+      "changeApplied": "{worker}'s change applied",
+      "changeRefused": "{worker}'s change refused"
     },
     "companyEvents": {
       "title": "New members",

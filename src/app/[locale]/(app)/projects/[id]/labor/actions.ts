@@ -7,6 +7,9 @@ import {
 } from "@/lib/api/labor-roles";
 import { fetchDayRoster } from "@/lib/api/roster";
 import type { RosterResponse } from "@/lib/api/roster";
+import { listDueNotifications } from "@/lib/api/notifications";
+import { changeRequestFromFeedItem } from "@/lib/labor/change-requests";
+import type { AttendanceChangeRequest } from "@/types/labor";
 import type {
   LaborRole,
   LaborRoleListResponse,
@@ -95,6 +98,32 @@ export async function fetchDayRosterAction(
   if (!DATE_RE.test(date)) return { success: false, error: "validation" };
   try {
     const data = await fetchDayRoster(projectId, date);
+    return { success: true, data };
+  } catch (err: unknown) {
+    return { success: false, error: classifyBackendError(err) };
+  }
+}
+
+// ---- Worker change requests (manager review) ----
+
+export type ChangeRequestsActionResult =
+  | { success: true; data: AttendanceChangeRequest[] }
+  | { success: false; error: string };
+
+/**
+ * Open worker change requests on this project's validated days that the caller
+ * may decide. The backend has no per-project listing for them: the
+ * notifications feed carries every open request the caller can settle
+ * (project:manage_labor), whatever the month, so it is filtered here.
+ */
+export async function fetchAttendanceChangeRequestsAction(
+  projectId: string
+): Promise<ChangeRequestsActionResult> {
+  try {
+    const feed = await listDueNotifications();
+    const data = (feed.attendance_pending ?? [])
+      .filter((item) => item.kind === "attendance_change" && item.project_id === projectId)
+      .map(changeRequestFromFeedItem);
     return { success: true, data };
   } catch (err: unknown) {
     return { success: false, error: classifyBackendError(err) };

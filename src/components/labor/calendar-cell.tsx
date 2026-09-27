@@ -14,6 +14,7 @@
  */
 
 import { useMemo } from "react";
+import { PencilLine } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
@@ -21,7 +22,7 @@ import { isToday } from "@/lib/utils/calendar-month";
 import { getFrenchHolidayKey } from "@/lib/utils/french-holidays";
 import { personColor, workerColor } from "@/lib/utils/person-color";
 import { formatEUR } from "@/lib/api/labor";
-import type { LaborEntry, LaborActivity, Worker, ShiftType } from "@/types/labor";
+import { hasChangeRequest, type LaborEntry, type LaborActivity, type Worker, type ShiftType } from "@/types/labor";
 
 interface CalendarCellProps {
   /** The Date this cell represents, or null for grid padding cells. */
@@ -50,6 +51,8 @@ interface ChipDescriptor {
   supplementHours: number;
   /** Worker-submitted day not yet validated — drawn hollow, unpriced. */
   pending: boolean;
+  /** The worker asked to change this validated day — drawn with an amber ring. */
+  changeRequested: boolean;
 }
 
 export function CalendarCell({
@@ -64,7 +67,7 @@ export function CalendarCell({
   const locale = useLocale();
 
   // Aggregate the day's data once per render.
-  const { dayTotal, chips, overflow } = useMemo(() => {
+  const { dayTotal, chips, overflow, changeCount } = useMemo(() => {
     const total = entries.reduce(
       (sum, e) => sum + Number(e.effective_cost ?? 0),
       0,
@@ -76,6 +79,8 @@ export function CalendarCell({
     const pendingWorkers = new Set(
       entries.filter((e) => e.status === "pending").map((e) => e.worker_id),
     );
+    const changeEntries = entries.filter(hasChangeRequest);
+    const changeWorkers = new Set(changeEntries.map((e) => e.worker_id));
     const seen = new Set<string>();
     const list: ChipDescriptor[] = [];
     for (const e of entries) {
@@ -93,11 +98,17 @@ export function CalendarCell({
         shiftType: e.shift_type,
         supplementHours: e.supplement_hours,
         pending: pendingWorkers.has(id),
+        changeRequested: changeWorkers.has(id),
       });
     }
     const shown = list.slice(0, maxChips);
     const rest = Math.max(0, list.length - maxChips);
-    return { dayTotal: total, chips: shown, overflow: rest };
+    return {
+      dayTotal: total,
+      chips: shown,
+      overflow: rest,
+      changeCount: changeEntries.length,
+    };
   }, [entries, maxChips, workerMap]);
 
   // Padding cell (before first-of-month or after last-of-month).
@@ -115,6 +126,10 @@ export function CalendarCell({
   const empty = entries.length === 0 && activities.length === 0;
   const holidayKey = getFrenchHolidayKey(date);
   const holidayName = holidayKey ? t(`holidays.${holidayKey}`) : null;
+  // Counted over every entry of the day, so a request stays visible even when
+  // that worker's chip is folded into "+N".
+  const changeLabel =
+    changeCount > 0 ? t("changeRequest.cellIndicator", { count: changeCount }) : null;
 
   return (
     <button
@@ -133,7 +148,9 @@ export function CalendarCell({
           weekday: "long",
           day: "numeric",
           month: "long",
-        }) + (holidayName ? ` — ${holidayName} (${t("holidays.publicHoliday")})` : "")
+        }) +
+        (holidayName ? ` — ${holidayName} (${t("holidays.publicHoliday")})` : "") +
+        (changeLabel ? ` — ${changeLabel}` : "")
       }
     >
       <div className="flex items-baseline justify-between gap-1">
@@ -147,6 +164,15 @@ export function CalendarCell({
           {date.getDate()}
         </span>
         <div className="flex items-center gap-1">
+          {changeLabel && (
+            <span
+              data-testid="calendar-cell-change-indicator"
+              title={changeLabel}
+              className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-white"
+            >
+              <PencilLine className="h-2.5 w-2.5" aria-hidden="true" />
+            </span>
+          )}
           {dayTotal > 0 && (
             <span className="text-muted-foreground text-xs tabular-nums">
               {formatEUR(dayTotal)}
@@ -166,13 +192,21 @@ export function CalendarCell({
           {chips.map((c) => (
             <span
               key={c.id}
-              title={c.pending ? `${c.name} · ${t("status.pending")}` : c.name}
+              title={
+                c.pending
+                  ? `${c.name} · ${t("status.pending")}`
+                  : c.changeRequested
+                    ? `${c.name} · ${t("changeRequest.badge")}`
+                    : c.name
+              }
               data-pending={c.pending || undefined}
-              className={
+              data-change-requested={c.changeRequested || undefined}
+              className={cn(
                 c.pending
                   ? "text-[10px] inline-flex items-center gap-1 truncate rounded-full border border-dashed bg-transparent px-1.5 py-0.5"
-                  : "text-[10px] inline-flex items-center gap-1 truncate rounded-full px-1.5 py-0.5 text-white"
-              }
+                  : "text-[10px] inline-flex items-center gap-1 truncate rounded-full px-1.5 py-0.5 text-white",
+                c.changeRequested && "ring-2 ring-amber-500 ring-offset-1 ring-offset-card",
+              )}
               style={
                 c.pending
                   ? { borderColor: c.chipColor, color: c.chipColor, maxWidth: "100%" }

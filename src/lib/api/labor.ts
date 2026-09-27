@@ -152,6 +152,20 @@ export async function rejectAttendance(projectId: string, entryId: string): Prom
   await api.post(`/projects/${projectId}/labor-entries/${entryId}/reject`, {});
 }
 
+/**
+ * Manager: apply a worker's change request on a validated day — the proposed
+ * shift, supplement hours and note replace the day's values (409 when no
+ * request is open any more).
+ */
+export async function approveAttendanceChange(projectId: string, entryId: string): Promise<void> {
+  await api.post(`/projects/${projectId}/labor-entries/${entryId}/change/validate`, {});
+}
+
+/** Manager: drop a worker's change request — the validated day stays as it is (409 when none is open). */
+export async function rejectAttendanceChange(projectId: string, entryId: string): Promise<void> {
+  await api.post(`/projects/${projectId}/labor-entries/${entryId}/change/reject`, {});
+}
+
 // Summary API
 export async function fetchLaborSummary(projectId: string, params?: SummaryParams): Promise<LaborSummaryResponse> {
   const url = buildUrl(`/projects/${projectId}/labor-summary`, {

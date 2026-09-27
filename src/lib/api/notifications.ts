@@ -17,9 +17,18 @@ export interface DueNotification {
   dismissed: boolean; // BE always sends this; v1 always false but must be declared
 }
 
-/** A worker-submitted attendance day awaiting the current user's validation. */
+/**
+ * An attendance item awaiting the current user's decision: a worker-submitted
+ * day to validate (`attendance_pending`), or a worker's change request on an
+ * already validated day (`attendance_change`, which carries the `proposed_*`
+ * values and is settled through the change validate / reject routes).
+ */
 export interface AttendancePending {
-  kind: "attendance_pending";
+  kind: "attendance_pending" | "attendance_change";
+  /** Set on `attendance_change` only — what the worker wants the day to become. */
+  proposed_shift_type?: "full" | "half" | "overtime" | null;
+  proposed_supplement_hours?: number | null;
+  proposed_note?: string | null;
   entry_id: string;
   project_id: string;
   project_name: string;
@@ -29,6 +38,7 @@ export interface AttendancePending {
   shift_type: "full" | "half" | "overtime" | null;
   supplement_hours: number;
   note: string | null;
+  /** For a change request: when the worker asked, not when the day was first logged. */
   submitted_at: string;
 }
 

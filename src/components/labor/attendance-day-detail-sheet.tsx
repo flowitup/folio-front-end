@@ -27,7 +27,7 @@ import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatDate } from "@/lib/utils/formatters";
 import { toDateKey } from "@/lib/utils/calendar-month";
 import { formatEUR } from "@/lib/api/labor";
-import { LaborEntryCard } from "@/components/labor/labor-entry-card";
+import { LaborEntryCard, type ChangeRequestActions } from "@/components/labor/labor-entry-card";
 import { DayDescriptionField } from "@/components/labor/day-description-field";
 import type { LaborEntry, LaborActivity } from "@/types/labor";
 
@@ -50,6 +50,8 @@ interface AttendanceDayDetailSheetProps {
   /** Manager actions on worker-submitted (pending) rows. */
   onValidate?: (entry: LaborEntry) => void;
   onReject?: (entry: LaborEntry) => void;
+  /** Manager actions on a worker's change request (validated rows). */
+  changeRequestActions?: ChangeRequestActions;
   /** "+ Log more" button → opens LogDayDialog for this date. Optional. */
   onAddMore?: () => void;
   /** Activity CRUD callbacks. */
@@ -72,6 +74,7 @@ export function AttendanceDayDetailSheet({
   onEdit,
   onValidate,
   onReject,
+  changeRequestActions,
   onAddMore,
   onAddActivity,
   onEditActivity,
@@ -158,6 +161,7 @@ export function AttendanceDayDetailSheet({
                 onEdit={canManage ? onEdit : undefined}
                 onValidate={onValidate}
                 onReject={onReject}
+                changeRequestActions={changeRequestActions}
               />
             ))}
 

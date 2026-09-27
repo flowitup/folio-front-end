@@ -16,8 +16,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatEUR } from "@/lib/api/labor";
+import { changeRequestFromEntry, describeChangeRequest } from "@/lib/labor/change-requests";
 import { personInitials, workerColor } from "@/lib/utils/person-color";
-import { isPendingEntry, type LaborEntry, type ShiftType } from "@/types/labor";
+import {
+  hasChangeRequest,
+  isPendingEntry,
+  type AttendanceChangeRequest,
+  type LaborEntry,
+  type ShiftType,
+} from "@/types/labor";
+
+/** Manager decisions on a worker's open change request (validated day). */
+export interface ChangeRequestActions {
+  onApprove: (request: AttendanceChangeRequest) => void;
+  onRefuse: (request: AttendanceChangeRequest) => void;
+  /** Entry ids with a decision in flight — their buttons are disabled. */
+  busyIds: ReadonlySet<string>;
+}
 
 function EntryAvatar({
   initials,
@@ -46,6 +61,8 @@ interface LaborEntryCardProps {
   /** Manager actions for a worker-submitted (pending) row. */
   onValidate?: (entry: LaborEntry) => void;
   onReject?: (entry: LaborEntry) => void;
+  /** Manager actions for a worker's change request on a validated row. */
+  changeRequestActions?: ChangeRequestActions;
 }
 
 export function LaborEntryCard({
@@ -55,9 +72,12 @@ export function LaborEntryCard({
   onEdit,
   onValidate,
   onReject,
+  changeRequestActions,
 }: LaborEntryCardProps) {
   const t = useTranslations("labor");
   const pending = isPendingEntry(entry);
+  const changeRequest = hasChangeRequest(entry) ? changeRequestFromEntry(entry) : null;
+  const changeBusy = changeRequestActions?.busyIds.has(entry.id) ?? false;
 
   const shiftLabel: Record<ShiftType, string> = {
     full: t("shiftFull"),
@@ -134,11 +154,33 @@ export function LaborEntryCard({
               {t("status.pending")}
             </Badge>
           )}
+
+          {changeRequest && (
+            <Badge
+              variant="outline"
+              className="border-amber-500/60 bg-amber-500/10 text-xs text-amber-700 dark:text-amber-300"
+              title={t("changeRequest.badgeTooltip")}
+              data-testid="entry-change-badge"
+            >
+              {t("changeRequest.badge")}
+            </Badge>
+          )}
         </div>
 
         {entry.note && (
           <p className="text-muted-foreground mt-0.5 truncate text-xs">
             {entry.note}
+          </p>
+        )}
+
+        {changeRequest && (
+          <p
+            className="mt-0.5 truncate text-xs font-medium text-amber-700 dark:text-amber-300"
+            data-testid="entry-change-proposed"
+          >
+            {t("changeRequest.proposedLine", {
+              value: describeChangeRequest(t, changeRequest).proposed,
+            })}
           </p>
         )}
       </div>
@@ -196,6 +238,37 @@ export function LaborEntryCard({
               <X className="h-4 w-4" />
             </Button>
           )}
+        </div>
+      ) : canManage && changeRequest && changeRequestActions ? (
+        <div className="flex flex-none items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-primary flex-none"
+            disabled={changeBusy}
+            onClick={(e) => {
+              e.stopPropagation();
+              changeRequestActions.onApprove(changeRequest);
+            }}
+            aria-label={t("changeRequest.apply")}
+            title={t("changeRequest.apply")}
+          >
+            <Check className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-destructive flex-none"
+            disabled={changeBusy}
+            onClick={(e) => {
+              e.stopPropagation();
+              changeRequestActions.onRefuse(changeRequest);
+            }}
+            aria-label={t("changeRequest.refuse")}
+            title={t("changeRequest.refuse")}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       ) : canManage ? (
         <Button

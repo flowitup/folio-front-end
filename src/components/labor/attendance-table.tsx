@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ClipboardList, Pencil, Trash2 as ActivityTrash } from "lucide-react";
-import { LaborEntryCard } from "@/components/labor/labor-entry-card";
+import { LaborEntryCard, type ChangeRequestActions } from "@/components/labor/labor-entry-card";
 import { DayDescriptionField } from "@/components/labor/day-description-field";
 import type { LaborEntry, LaborActivity, LaborDayDescription, Worker } from "@/types/labor";
 import { isPendingEntry } from "@/types/labor";
@@ -45,6 +45,8 @@ interface AttendanceTableProps {
   /** Manager actions on worker-submitted (pending) rows. */
   onValidate?: (entry: LaborEntry) => void;
   onReject?: (entry: LaborEntry) => void;
+  /** Manager actions on a worker's change request (validated rows). */
+  changeRequestActions?: ChangeRequestActions;
   onAddActivity?: (date: string) => void;
   onEditActivity?: (activity: LaborActivity) => void;
   onDeleteActivity?: (activity: LaborActivity) => void;
@@ -65,6 +67,7 @@ export function AttendanceTable({
   onDelete,
   onValidate,
   onReject,
+  changeRequestActions,
   onAddActivity,
   onEditActivity,
   onDeleteActivity,
@@ -226,6 +229,7 @@ export function AttendanceTable({
                           onDelete={(e) => setConfirmDelete(e)}
                           onValidate={onValidate}
                           onReject={onReject}
+                          changeRequestActions={changeRequestActions}
                         />
                       ))}
                       {dayActivities.map((activity) => (

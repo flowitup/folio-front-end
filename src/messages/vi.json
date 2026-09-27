@@ -927,7 +927,31 @@
         "dayType": "Loại ngày công"
       }
     },
-    "overridePlaceholder": "Để trống để dùng mức giá mặc định"
+    "overridePlaceholder": "Để trống để dùng mức giá mặc định",
+    "changeRequest": {
+      "badge": "Chờ duyệt sửa",
+      "badgeTooltip": "Công nhân yêu cầu sửa ngày công đã duyệt này — giá trị hiện tại vẫn được tính cho đến khi quản lý áp dụng thay đổi",
+      "proposedLine": "Yêu cầu: {value}",
+      "cellIndicator": "{count, plural, other {# yêu cầu sửa}}",
+      "tabCount": "{count, plural, other {# yêu cầu sửa cần duyệt}}",
+      "panelTitle": "Yêu cầu sửa ({count})",
+      "panelHint": "Công nhân yêu cầu sửa các ngày công đã duyệt này. Áp dụng sẽ thay thế giá trị của ngày; từ chối sẽ giữ nguyên ngày như đã duyệt.",
+      "current": "Hiện tại",
+      "proposed": "Yêu cầu",
+      "noteCleared": "xoá ghi chú",
+      "apply": "Áp dụng",
+      "refuse": "Từ chối",
+      "applied": "Đã áp dụng yêu cầu sửa của {worker}",
+      "refused": "Đã từ chối yêu cầu sửa của {worker} — ngày công giữ nguyên như đã duyệt",
+      "alreadySettled": "Yêu cầu của {worker} đã được xử lý",
+      "applyFailed": "Không áp dụng được yêu cầu sửa. Thử lại.",
+      "refuseFailed": "Không từ chối được yêu cầu sửa. Thử lại.",
+      "refuseTitle": "Từ chối yêu cầu sửa này?",
+      "refuseConfirm": "Ngày công {date} của {worker} giữ nguyên như đã duyệt và yêu cầu sẽ bị huỷ.",
+      "loadFailed": "Không tải được đầy đủ các yêu cầu sửa.",
+      "retry": "Thử lại",
+      "refreshing": "Đang làm mới các yêu cầu sửa"
+    }
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",
@@ -1085,7 +1109,9 @@
     "errors": {
       "dismissFailed": "Không thể bỏ qua. Vui lòng thử lại.",
       "validateFailed": "Không duyệt được. Thử lại.",
-      "rejectFailed": "Không từ chối được. Thử lại."
+      "rejectFailed": "Không từ chối được. Thử lại.",
+      "applyChangeFailed": "Không áp dụng được yêu cầu sửa. Thử lại.",
+      "refuseChangeFailed": "Không từ chối được yêu cầu sửa. Thử lại."
     },
     "skeleton": {
       "loading": "Đang tải nhắc nhở..."
@@ -1097,7 +1123,12 @@
       "confirmReject": "Xác nhận từ chối",
       "cancel": "Hủy",
       "validated": "Đã duyệt ngày công của {worker}",
-      "rejected": "Đã từ chối ngày công của {worker}"
+      "rejected": "Đã từ chối ngày công của {worker}",
+      "changeTitle": "Yêu cầu sửa",
+      "applyChange": "Áp dụng yêu cầu sửa",
+      "refuseChange": "Từ chối yêu cầu sửa",
+      "changeApplied": "Đã áp dụng yêu cầu sửa của {worker}",
+      "changeRefused": "Đã từ chối yêu cầu sửa của {worker}"
     },
     "companyEvents": {
       "title": "Thành viên mới",

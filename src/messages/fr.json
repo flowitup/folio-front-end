@@ -927,7 +927,31 @@
         "dayType": "Type de journée"
       }
     },
-    "overridePlaceholder": "Laisser vide pour le tarif par défaut"
+    "overridePlaceholder": "Laisser vide pour le tarif par défaut",
+    "changeRequest": {
+      "badge": "Modification demandée",
+      "badgeTooltip": "L'ouvrier a demandé à modifier cette journée validée — les valeurs actuelles restent comptées tant qu'un responsable n'a pas appliqué la modification",
+      "proposedLine": "Demandé : {value}",
+      "cellIndicator": "{count, plural, one {# demande de modification} other {# demandes de modification}}",
+      "tabCount": "{count, plural, one {# demande de modification à traiter} other {# demandes de modification à traiter}}",
+      "panelTitle": "Demandes de modification ({count})",
+      "panelHint": "Des ouvriers ont demandé à corriger ces journées validées. Appliquer remplace les valeurs de la journée ; refuser la garde telle que validée.",
+      "current": "Actuel",
+      "proposed": "Demandé",
+      "noteCleared": "note supprimée",
+      "apply": "Appliquer",
+      "refuse": "Refuser",
+      "applied": "Modification de {worker} appliquée",
+      "refused": "Modification de {worker} refusée — la journée reste telle que validée",
+      "alreadySettled": "La demande de {worker} a déjà été traitée",
+      "applyFailed": "Impossible d'appliquer la modification. Réessayez.",
+      "refuseFailed": "Impossible de refuser la modification. Réessayez.",
+      "refuseTitle": "Refuser cette modification ?",
+      "refuseConfirm": "La journée du {date} de {worker} reste telle que validée et la demande est abandonnée.",
+      "loadFailed": "Impossible de charger toutes les demandes de modification.",
+      "retry": "Réessayer",
+      "refreshing": "Actualisation des demandes de modification"
+    }
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",
@@ -1085,7 +1109,9 @@
     "errors": {
       "dismissFailed": "Impossible d'ignorer. Réessayez.",
       "validateFailed": "Validation impossible. Réessayez.",
-      "rejectFailed": "Refus impossible. Réessayez."
+      "rejectFailed": "Refus impossible. Réessayez.",
+      "applyChangeFailed": "Impossible d'appliquer la modification. Réessayez.",
+      "refuseChangeFailed": "Impossible de refuser la modification. Réessayez."
     },
     "skeleton": {
       "loading": "Chargement des rappels..."
@@ -1097,7 +1123,12 @@
       "confirmReject": "Confirmer le refus",
       "cancel": "Annuler",
       "validated": "Journée de {worker} validée",
-      "rejected": "Journée de {worker} refusée"
+      "rejected": "Journée de {worker} refusée",
+      "changeTitle": "Demande de modification",
+      "applyChange": "Appliquer la modification",
+      "refuseChange": "Refuser la modification",
+      "changeApplied": "Modification de {worker} appliquée",
+      "changeRefused": "Modification de {worker} refusée"
     },
     "companyEvents": {
       "title": "Nouveaux membres",

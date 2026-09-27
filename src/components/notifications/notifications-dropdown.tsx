@@ -15,7 +15,7 @@ import type { AttendancePending, CompanyEvent, DueNotification } from "@/lib/api
 
 interface NotificationsDropdownProps {
   items: DueNotification[];
-  /** Worker-submitted days awaiting this user's validation. Defaults to none. */
+  /** Worker-submitted days and change requests awaiting this user's decision. Defaults to none. */
   attendance?: AttendancePending[];
   /** Members who joined a company the caller admins without a project assignment yet. */
   companyEvents?: CompanyEvent[];

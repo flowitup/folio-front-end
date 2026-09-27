@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { CalendarMonthGrid } from "@/components/labor/calendar-month-grid";
 import { AttendanceDayDetailSheet } from "@/components/labor/attendance-day-detail-sheet";
+import type { ChangeRequestActions } from "@/components/labor/labor-entry-card";
 import {
   formatMonthTag,
   monthLabel,
@@ -57,6 +58,8 @@ interface AttendanceCalendarProps {
   /** Manager actions on worker-submitted (pending) rows. */
   onValidate?: (entry: LaborEntry) => void;
   onReject?: (entry: LaborEntry) => void;
+  /** Manager actions on a worker's change request (validated rows). */
+  changeRequestActions?: ChangeRequestActions;
   /** Worker lookup for role-aware chip colors. See CalendarCell. */
   workerMap?: Record<string, Worker>;
   /** Activity CRUD callbacks. */
@@ -83,6 +86,7 @@ export function AttendanceCalendar({
   onEditEntry,
   onValidate,
   onReject,
+  changeRequestActions,
   workerMap,
   onAddActivity,
   onEditActivity,
@@ -223,6 +227,7 @@ export function AttendanceCalendar({
         onEdit={onEditEntry}
         onValidate={onValidate}
         onReject={onReject}
+        changeRequestActions={changeRequestActions}
         onAddMore={
           selectedDate && onLogDay
             ? () => {

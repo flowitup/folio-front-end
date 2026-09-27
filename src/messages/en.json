@@ -353,7 +353,18 @@
   },
   "errors": {
     "unauthorized": "Unauthorized",
-    "accessDenied": "You do not have permission to access this page."
+    "accessDenied": "You do not have permission to access this page.",
+    "notFound": {
+      "title": "Page not found",
+      "body": "This page doesn't exist, was deleted, or you don't have access to it.",
+      "back": "Back to dashboard"
+    },
+    "boundary": {
+      "title": "Something went wrong",
+      "body": "Please refresh the page. If the problem persists, sign in again.",
+      "refresh": "Refresh",
+      "login": "Go to login"
+    }
   },
   "invoices": {
     "title": "Expense",

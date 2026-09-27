@@ -353,7 +353,18 @@
   },
   "errors": {
     "unauthorized": "Không được phép",
-    "accessDenied": "Bạn không có quyền truy cập trang này."
+    "accessDenied": "Bạn không có quyền truy cập trang này.",
+    "notFound": {
+      "title": "Không tìm thấy trang",
+      "body": "Trang này không tồn tại, đã bị xóa hoặc bạn không có quyền truy cập.",
+      "back": "Quay lại bảng điều khiển"
+    },
+    "boundary": {
+      "title": "Đã xảy ra lỗi",
+      "body": "Vui lòng tải lại trang. Nếu sự cố vẫn tiếp diễn, hãy đăng nhập lại.",
+      "refresh": "Tải lại",
+      "login": "Đến trang đăng nhập"
+    }
   },
   "invoices": {
     "title": "Chi phí",

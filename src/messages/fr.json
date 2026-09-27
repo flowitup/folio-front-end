@@ -353,7 +353,18 @@
   },
   "errors": {
     "unauthorized": "Non autorisé",
-    "accessDenied": "Vous n'avez pas la permission d'accéder à cette page."
+    "accessDenied": "Vous n'avez pas la permission d'accéder à cette page.",
+    "notFound": {
+      "title": "Page introuvable",
+      "body": "Cette page n'existe pas, a été supprimée, ou vous n'y avez pas accès.",
+      "back": "Retour au tableau de bord"
+    },
+    "boundary": {
+      "title": "Une erreur s'est produite",
+      "body": "Veuillez actualiser la page. Si le problème persiste, reconnectez-vous.",
+      "refresh": "Actualiser",
+      "login": "Aller à la connexion"
+    }
   },
   "invoices": {
     "title": "Dépenses",

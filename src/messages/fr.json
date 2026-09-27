@@ -851,7 +851,8 @@
       "countSingular": "activité",
       "countPlural": "activités",
       "sectionTitle": "Activités",
-      "deleteFailed": "Échec de la suppression de l'activité"
+      "deleteFailed": "Échec de la suppression de l'activité",
+      "deleted": "Activité supprimée"
     },
     "dayDescription": {
       "label": "Description du jour",
@@ -984,7 +985,9 @@
       "loadFailed": "Impossible de charger toutes les demandes de modification.",
       "retry": "Réessayer",
       "refreshing": "Actualisation des demandes de modification"
-    }
+    },
+    "entryDeleted": "Entrée supprimée",
+    "workerDeactivated": "{name} désactivé(e)"
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",

@@ -851,7 +851,8 @@
       "countSingular": "activity",
       "countPlural": "activities",
       "sectionTitle": "Activities",
-      "deleteFailed": "Failed to delete activity"
+      "deleteFailed": "Failed to delete activity",
+      "deleted": "Activity deleted"
     },
     "dayDescription": {
       "label": "Day description",
@@ -984,7 +985,9 @@
       "loadFailed": "Couldn't load all change requests.",
       "retry": "Retry",
       "refreshing": "Refreshing change requests"
-    }
+    },
+    "entryDeleted": "Entry deleted",
+    "workerDeactivated": "{name} deactivated"
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

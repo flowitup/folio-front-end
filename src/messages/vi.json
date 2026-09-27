@@ -851,7 +851,8 @@
       "countSingular": "hoạt động",
       "countPlural": "hoạt động",
       "sectionTitle": "Hoạt động",
-      "deleteFailed": "Không thể xóa hoạt động"
+      "deleteFailed": "Không thể xóa hoạt động",
+      "deleted": "Đã xóa hoạt động"
     },
     "dayDescription": {
       "label": "Mô tả trong ngày",
@@ -984,7 +985,9 @@
       "loadFailed": "Không tải được đầy đủ các yêu cầu sửa.",
       "retry": "Thử lại",
       "refreshing": "Đang làm mới các yêu cầu sửa"
-    }
+    },
+    "entryDeleted": "Đã xóa mục chấm công",
+    "workerDeactivated": "Đã vô hiệu hóa {name}"
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

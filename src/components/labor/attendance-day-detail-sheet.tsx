@@ -189,6 +189,8 @@ export function AttendanceDayDetailSheet({
                             <button
                               type="button"
                               onClick={() => onEditActivity(activity)}
+                              aria-label={t("activity.editTitle")}
+                              title={t("activity.editTitle")}
                               className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
                             >
                               <Pencil className="h-3.5 w-3.5" />
@@ -198,6 +200,8 @@ export function AttendanceDayDetailSheet({
                             <button
                               type="button"
                               onClick={() => onDeleteActivity(activity)}
+                              aria-label={t("delete")}
+                              title={t("delete")}
                               className="text-muted-foreground hover:text-destructive rounded p-1 transition-colors"
                             >
                               <Trash2 className="h-3.5 w-3.5" />

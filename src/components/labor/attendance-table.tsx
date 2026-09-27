@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,8 +20,8 @@ import { LaborEntryCard, type ChangeRequestActions } from "@/components/labor/la
 import { DayDescriptionField } from "@/components/labor/day-description-field";
 import type { LaborEntry, LaborActivity, LaborDayDescription, Worker } from "@/types/labor";
 import { isPendingEntry } from "@/types/labor";
-import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import { formatEUR } from "@/lib/api/labor";
+import { formatWeekdayDate } from "@/lib/utils/formatters";
 
 interface AttendanceTableProps {
   entries: LaborEntry[];
@@ -67,6 +67,7 @@ export function AttendanceTable({
   onSaveDayDescription,
 }: AttendanceTableProps) {
   const t = useTranslations("labor");
+  const locale = useLocale();
   const [confirmDelete, setConfirmDelete] = useState<LaborEntry | null>(null);
 
   if (isLoading) {
@@ -169,15 +170,7 @@ export function AttendanceTable({
                   <header className="flex items-baseline justify-between gap-3 px-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-foreground text-sm font-semibold tracking-tight">
-                        {capitalizeFirst(
-                          new Date(date).toLocaleDateString("fr-FR", {
-                            weekday: "long",
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          }),
-                          "fr-FR",
-                        )}
+                        {formatWeekdayDate(date, locale)}
                       </h3>
                     </div>
                     <div className="text-muted-foreground flex items-center gap-2 text-xs">

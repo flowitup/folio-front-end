@@ -76,8 +76,11 @@ export default function DashboardPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [meta, setMeta] = useState<OverviewMeta>(EMPTY_META);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  // The expenses and the tasks load independently: a failed task fetch must
+  // not throw away expenses that loaded fine, and a failed expense fetch must
+  // not leave the money panels computing "full budget left" from nothing.
+  const [invoicesStatus, setInvoicesStatus] = useState<"loading" | "ok" | "error">("loading");
+  const [tasksFailed, setTasksFailed] = useState(false);
 
   // Reference "now" for month labels / agenda-week math is resolved once on
   // mount instead of at render time: this component is SSR-prerendered, and
@@ -93,20 +96,15 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    // `loaded` doesn't need resetting here: showLoading below is already
-    // gated on `projectId` being set, so a stale `loaded=true` from a
-    // previous project is harmless once no project is selected.
+    // The status doesn't need resetting when no project is selected:
+    // showLoading below is gated on `projectId`.
     if (!projectId) return;
     let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets loading/error state ahead of the fetch this effect kicks off for the (possibly new) projectId; the fetch is the "external system" being synchronized.
-    setLoaded(false);
-    setError(null);
-    (async () => {
-      try {
-        const [invoiceRes, taskRes] = await Promise.all([
-          fetchInvoicesWithMeta(projectId),
-          fetchTasks(projectId),
-        ]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets loading/error state ahead of the fetches this effect kicks off for the (possibly new) projectId; the fetch is the "external system" being synchronized.
+    setInvoicesStatus("loading");
+    setTasksFailed(false);
+    fetchInvoicesWithMeta(projectId)
+      .then((invoiceRes) => {
         if (cancelled) return;
         setInvoices(invoiceRes.invoices);
         setMeta({
@@ -117,18 +115,32 @@ export default function DashboardPage() {
           personalSpentTotal: invoiceRes.personal_spent_total ?? 0,
           companyCashAdvancedTotal: invoiceRes.company_cash_advanced_total ?? 0,
         });
-        setTasks(taskRes);
-        setLoaded(true);
-      } catch {
+        setInvoicesStatus("ok");
+      })
+      .catch(() => {
         if (cancelled) return;
-        setError(t("loadError"));
-        setLoaded(true);
-      }
-    })();
+        // Drop the previous project's figures; the panels show "—".
+        setInvoices(EMPTY_INVOICES);
+        setMeta(EMPTY_META);
+        setInvoicesStatus("error");
+      });
+    fetchTasks(projectId)
+      .then((taskRes) => {
+        if (!cancelled) setTasks(taskRes);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setTasks(EMPTY_TASKS);
+        setTasksFailed(true);
+      });
     return () => {
       cancelled = true;
     };
-  }, [projectId, t]);
+  }, [projectId]);
+
+  const error = projectId && (invoicesStatus === "error" || tasksFailed) ? t("loadError") : null;
+  // No expense data to show: while loading, and after a failed load.
+  const moneyUnavailable = Boolean(projectId) && invoicesStatus !== "ok";
 
   // Overview is reachable with no selected project. Mask any previously
   // fetched data instead of resetting it from an effect (which would cause a
@@ -140,7 +152,7 @@ export default function DashboardPage() {
   );
   const activeMeta = useMemo(() => (projectId ? meta : EMPTY_META), [projectId, meta]);
   const activeTasks = useMemo(() => (projectId ? tasks : EMPTY_TASKS), [projectId, tasks]);
-  const showLoading = Boolean(projectId) && !loaded;
+  const showLoading = moneyUnavailable;
 
   const spentTotal = useMemo(() => computeSpentTotal(activeInvoices), [activeInvoices]);
   const monthlySeries = useMemo(
@@ -211,7 +223,11 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="min-w-0">
-          <OverviewTypeMinis buckets={typeBuckets} viewExpenseHref={viewExpenseHref} />
+          <OverviewTypeMinis
+            buckets={moneyUnavailable ? EMPTY_TYPE_BUCKETS : typeBuckets}
+            viewExpenseHref={viewExpenseHref}
+            unavailable={moneyUnavailable}
+          />
         </div>
         <div className="flex min-w-0 flex-col gap-5">
           <OverviewAgenda groups={agendaGroups} planningHref={planningHref} />

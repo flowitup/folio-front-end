@@ -37,12 +37,14 @@ const RETURN_MARKER_H = 5;
 interface OverviewTypeMinisProps {
   buckets: TypeMonthlyBucket[];
   viewExpenseHref: string | null;
+  /** The expenses could not be loaded: show "—", never zeros read as real. */
+  unavailable?: boolean;
 }
 
 /** "Monthly spend by type" — a small multiple per expense type (bars + trend
  * line overlay, current month highlighted) on one shared scale (design Canvas
  * 3a, section 2b). */
-export function OverviewTypeMinis({ buckets, viewExpenseHref }: OverviewTypeMinisProps) {
+export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = false }: OverviewTypeMinisProps) {
   const t = useTranslations("dashboard");
   const tInvoices = useTranslations("invoices");
   const locale = useLocale();
@@ -104,10 +106,10 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref }: OverviewTypeMini
                 <span className="text-[12.5px] font-semibold">{tInvoices(`types.${bucket.type}`)}</span>
               </div>
               <div className="num my-1.5 text-[18px] font-medium" style={{ letterSpacing: "-.02em" }}>
-                {formatEURWhole(bucket.total)}
+                {unavailable ? "—" : formatEURWhole(bucket.total)}
               </div>
               <div className="mb-2 text-[11px]" style={{ color: "var(--muted)" }}>
-                {tInvoices("invoiceCount", { n: bucket.count })}
+                {unavailable ? "\u00a0" : tInvoices("invoiceCount", { n: bucket.count })}
                 {bucket.deltaPct !== null && (
                   <>
                     {" · "}
@@ -211,7 +213,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref }: OverviewTypeMini
         <span>
           {t("spendByType.sixMonthSpend")}{" "}
           <span className="num font-semibold" style={{ color: "var(--ink)" }}>
-            {formatEURWhole(sixMonthTotal)}
+            {unavailable ? "—" : formatEURWhole(sixMonthTotal)}
           </span>
         </span>
       </div>

@@ -481,3 +481,24 @@ describe("buildTypeMonthlyBuckets — netting", () => {
     expect(summed).toBe(1150);
   });
 });
+
+describe("money sums snap to cents", () => {
+  // Summed as floats these five amounts give 3368.4999999999995, which the
+  // whole-euro display then shows as 3 368 € instead of 3 369 €.
+  const amounts = [1679.56, 490.96, 178.85, 310.03, 709.1];
+  const invoices = amounts.map((total_amount) =>
+    mkInvoice({ type: "others", issue_date: "2026-06-10", total_amount, paid_by_personal: true, refundable_status: "refundable" })
+  );
+
+  it("computeSpentTotal returns the exact cent total", () => {
+    expect(computeSpentTotal(invoices)).toBe(3368.5);
+  });
+
+  it("monthly, per-type and refund totals return the exact cent total", () => {
+    const ref = new Date(2026, 5, 15);
+    expect(buildMonthlySpendSeries(invoices, 6, ref).at(-1)!.total).toBe(3368.5);
+    expect(buildTypeMonthlyBuckets(invoices, 6, ref).find((b) => b.type === "others")!.total).toBe(3368.5);
+    expect(computePendingRefunds(invoices).total).toBe(3368.5);
+    expect(computeBankOutstanding(invoices).total).toBe(3368.5);
+  });
+});

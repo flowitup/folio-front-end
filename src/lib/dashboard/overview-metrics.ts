@@ -60,6 +60,13 @@ export function isCompanyPaidExpense(inv: Invoice): boolean {
   );
 }
 
+/** Snap a money sum to whole cents. Summing euro amounts as floats drifts
+ * (3 368,50 € adds up to 3368.4999999999995), and the whole-euro display
+ * then rounds the drifted value the wrong way. */
+export function roundCents(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 function monthKeyOf(inv: Invoice): string {
   return (inv.service_month ?? inv.issue_date).slice(0, 7);
 }
@@ -108,7 +115,7 @@ export function buildReturnCredits(invoices: Invoice[]): ReturnCredit[] {
  * total the Expense page's dark "Total expenses" card shows. */
 export function computeSpentTotal(invoices: Invoice[]): number {
   const spend = invoices.filter(isSpendInvoice).reduce((s, i) => s + i.total_amount, 0);
-  return buildReturnCredits(invoices).reduce((s, c) => s + c.amount, spend);
+  return roundCents(buildReturnCredits(invoices).reduce((s, c) => s + c.amount, spend));
 }
 
 export interface MonthlySpendPoint {
@@ -170,9 +177,9 @@ export function buildMonthlySpendSeries(
     const bucket = byMonth.get(key);
     series.push({
       key,
-      total: bucket?.total ?? 0,
+      total: roundCents(bucket?.total ?? 0),
       count: bucket?.count ?? 0,
-      credited: bucket?.credited ?? 0,
+      credited: roundCents(bucket?.credited ?? 0),
       creditCount: bucket?.creditCount ?? 0,
     });
   }
@@ -276,7 +283,7 @@ export function computeBankOutstanding(invoices: Invoice[]): PendingRefunds {
     count += 1;
     total += inv.total_amount;
   }
-  return { count, total };
+  return { count, total: roundCents(total) };
 }
 
 /** Personal expenses still awaiting reimbursement (refundable or already
@@ -293,7 +300,7 @@ export function computePendingRefunds(invoices: Invoice[]): PendingRefunds {
       total += inv.total_amount;
     }
   }
-  return { count, total };
+  return { count, total: roundCents(total) };
 }
 
 export interface MoneyPurseView {
@@ -361,7 +368,7 @@ export function computeUnassignedSpend(invoices: Invoice[]): PendingRefunds {
     count += 1;
     total += inv.total_amount;
   }
-  return { count, total };
+  return { count, total: roundCents(total) };
 }
 
 export interface TypeMonthlyBucket {
@@ -388,7 +395,7 @@ export function buildTypeMonthlyBuckets(
       referenceDate,
       credits.filter((c) => c.type === type)
     );
-    const total = monthly.reduce((s, m) => s + m.total, 0);
+    const total = roundCents(monthly.reduce((s, m) => s + m.total, 0));
     const count = monthly.reduce((s, m) => s + m.count, 0);
     const { deltaPct } = computeMonthDelta(monthly);
     return { type, monthly, total, count, deltaPct };

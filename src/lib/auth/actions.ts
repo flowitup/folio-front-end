@@ -8,6 +8,7 @@ import type { User, AcceptInvitePayload, RequestInviteCodePayload } from "./type
 import { acceptInvite, requestInviteCode } from "@/lib/api/invitations";
 import { setForwardedCookies } from "./forward-cookies";
 import { getCurrentUser } from "./session";
+import { isTokenValid, REFRESH_TOKEN_COOKIE } from "./proxy-session";
 
 /**
  * Fetch the canonical current-user record via `GET /auth/me`.
@@ -24,20 +25,34 @@ export async function getCurrentUserAction(): Promise<User | null> {
 
 /**
  * Logout server action.
- * Clears cookies, calls backend, then redirects.
+ * Revokes the session on the backend, clears cookies, then redirects.
+ *
+ * The backend enforces CSRF on cookie-authenticated requests, so forwarding
+ * the access cookie alone was refused with 401 before anything was revoked
+ * and both tokens stayed usable after sign-out. The server-side call is not
+ * a browser request, so it authenticates like the mobile app: the access
+ * token as a Bearer header (only while unexpired: an expired one would fail
+ * the whole request) and the refresh token in the JSON body.
  */
 export async function logout(): Promise<never> {
   const cookieStore = await cookies();
   const token = cookieStore.get("access_token_cookie")?.value;
+  const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
 
   try {
-    await fetch(`${env.apiBaseUrl}/auth/logout`, {
+    const response = await fetch(`${env.apiBaseUrl}/auth/logout`, {
       method: "POST",
       headers: {
-        ...(token ? { Cookie: `access_token_cookie=${token}` } : {}),
+        "Content-Type": "application/json",
+        ...(isTokenValid(token) ? { Authorization: `Bearer ${token}` } : {}),
         ...(await clientIpHeader()),
       },
+      body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
+      cache: "no-store",
     });
+    if (!response.ok) {
+      console.error(`Logout: backend answered ${response.status}; session may stay valid`);
+    }
   } catch {
     // Continue even if backend call fails
   }

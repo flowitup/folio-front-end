@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { X, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,16 @@ interface TaskDetailDrawerProps {
   onMutated?: () => void;
 }
 
+const noopSubscribe = () => () => {};
+
 /**
  * Right-side slide-in drawer (custom, no shadcn Sheet dep). Backdrop click +
  * Escape close. Fetches task on open unless a seed is provided.
+ *
+ * Portaled to document.body: rendered in place it sat inside the planning
+ * page's `.fade-up` wrapper, whose animation leaves a transform that makes it
+ * the containing block of fixed children, so on phones the drawer started
+ * under the topbar, kept a gutter and was overlapped by the bottom nav.
  */
 export function TaskDetailDrawer({ taskId, seed, onClose, onMutated }: TaskDetailDrawerProps) {
   const t = useTranslations("planning");
@@ -46,10 +54,17 @@ export function TaskDetailDrawer({ taskId, seed, onClose, onMutated }: TaskDetai
     return () => { cancelled = true; };
   }, [taskId, seed]);
 
-  // Esc to close
+  // Only portal on the client (document does not exist during SSR).
+  const isClient = useSyncExternalStore(noopSubscribe, () => true, () => false);
+
+  // Esc to close — unless a nested layer (the priority Select, a popover)
+  // already handled that Escape to close itself: Radix prevent-defaults it,
+  // and closing the whole drawer then discarded the user's edits.
   useEffect(() => {
     if (!taskId) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !e.defaultPrevented) onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [taskId, onClose]);
@@ -74,9 +89,9 @@ export function TaskDetailDrawer({ taskId, seed, onClose, onMutated }: TaskDetai
     onClose();
   };
 
-  if (!taskId) return null;
+  if (!taskId || !isClient) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -129,6 +144,7 @@ export function TaskDetailDrawer({ taskId, seed, onClose, onMutated }: TaskDetai
           )}
         </div>
       </aside>
-    </>
+    </>,
+    document.body
   );
 }

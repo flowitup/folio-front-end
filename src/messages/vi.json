@@ -2555,19 +2555,17 @@
     "loadFailedHint": "Không có dữ liệu nào bị mất. Hãy kiểm tra kết nối và thử lại.",
     "retry": "Thử lại",
     "emptyHintReadOnly": "Dự án này chưa có hạng mục nào được lập.",
-    "errors": {
-      "forbidden": "Bạn không có quyền chỉnh sửa bảng dự toán này.",
-      "notFound": "Mục này không còn tồn tại.",
-      "nameTaken": "Tên này đã được sử dụng.",
-      "imageTooLarge": "Ảnh quá lớn (tối đa 10 MB).",
-      "imageUnsupported": "Định dạng ảnh không được hỗ trợ (dùng JPG, PNG hoặc WebP).",
-      "imageLink": "Không thể tải ảnh từ liên kết này. Hãy dùng liên kết https trỏ trực tiếp tới ảnh.",
-      "invalidInput": "Một số giá trị không hợp lệ. Hãy kiểm tra các trường và thử lại.",
-      "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
-      "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
-    },
     "quantityTooLarge": "Số lượng không được vượt quá {max, number}.",
-    "priceTooLarge": "Đơn giá (chưa thuế) không được vượt quá {max, number}."
+    "priceTooLarge": "Đơn giá (chưa thuế) không được vượt quá {max, number}.",
+    "errorForbidden": "Bạn không có quyền chỉnh sửa bảng dự toán này.",
+    "errorNotFound": "Mục này không còn tồn tại.",
+    "errorNameTaken": "Tên này đã được sử dụng.",
+    "errorImageTooLarge": "Ảnh quá lớn (tối đa 10 MB).",
+    "errorImageUnsupported": "Định dạng ảnh không được hỗ trợ (dùng JPG, PNG hoặc WebP).",
+    "errorImageLink": "Không thể tải ảnh từ liên kết này. Hãy dùng liên kết https trỏ trực tiếp tới ảnh.",
+    "errorInvalidInput": "Một số giá trị không hợp lệ. Hãy kiểm tra các trường và thử lại.",
+    "errorRateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
+    "errorGeneric": "Đã xảy ra lỗi. Vui lòng thử lại."
   },
   "onboarding": {
     "title": "Chào mừng đến với Folio",

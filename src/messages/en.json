@@ -2555,19 +2555,17 @@
     "loadFailedHint": "Nothing was lost. Check your connection and try again.",
     "retry": "Try again",
     "emptyHintReadOnly": "No section has been planned for this project yet.",
-    "errors": {
-      "forbidden": "You do not have permission to modify this chiffrage.",
-      "notFound": "This item no longer exists.",
-      "nameTaken": "That name is already taken.",
-      "imageTooLarge": "Image too large (max 10 MB).",
-      "imageUnsupported": "Unsupported image type (use JPG, PNG or WebP).",
-      "imageLink": "The image could not be fetched from this link. Use an https link to the image itself.",
-      "invalidInput": "Some values are not valid. Check the fields and try again.",
-      "rateLimited": "Too many requests. Wait a moment and try again.",
-      "generic": "Something went wrong. Please try again."
-    },
     "quantityTooLarge": "The quantity cannot exceed {max, number}.",
-    "priceTooLarge": "The unit price (excl. tax) cannot exceed {max, number}."
+    "priceTooLarge": "The unit price (excl. tax) cannot exceed {max, number}.",
+    "errorForbidden": "You do not have permission to modify this chiffrage.",
+    "errorNotFound": "This item no longer exists.",
+    "errorNameTaken": "That name is already taken.",
+    "errorImageTooLarge": "Image too large (max 10 MB).",
+    "errorImageUnsupported": "Unsupported image type (use JPG, PNG or WebP).",
+    "errorImageLink": "The image could not be fetched from this link. Use an https link to the image itself.",
+    "errorInvalidInput": "Some values are not valid. Check the fields and try again.",
+    "errorRateLimited": "Too many requests. Wait a moment and try again.",
+    "errorGeneric": "Something went wrong. Please try again."
   },
   "onboarding": {
     "title": "Welcome to Folio",

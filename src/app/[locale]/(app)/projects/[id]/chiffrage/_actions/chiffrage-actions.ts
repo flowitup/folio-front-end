@@ -63,30 +63,30 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string };
  */
 async function classifyBackendError(err: unknown): Promise<string> {
   const e = err as { status?: number; body?: { error?: string; message?: string } | null };
-  const t = await getTranslations("chiffrage.errors");
+  const t = await getTranslations("chiffrage");
   const message = e?.body?.message ?? "";
   switch (e?.status) {
     case 403:
-      return t("forbidden");
+      return t("errorForbidden");
     case 404:
-      return t("notFound");
+      return t("errorNotFound");
     case 409:
-      return t("nameTaken");
+      return t("errorNameTaken");
     case 413:
-      return t("imageTooLarge");
+      return t("errorImageTooLarge");
     case 415:
-      return t("imageUnsupported");
+      return t("errorImageUnsupported");
     case 429:
-      return t("rateLimited");
+      return t("errorRateLimited");
     case 400:
     case 422:
       // The image-from-link fetch is refused as InvalidInput (blocked host,
       // or the site answered with an error).
       return /host not allowed|upstream|could not fetch|https image/i.test(message)
-        ? t("imageLink")
-        : t("invalidInput");
+        ? t("errorImageLink")
+        : t("errorInvalidInput");
     default:
-      return t("generic");
+      return t("errorGeneric");
   }
 }
 

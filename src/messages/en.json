@@ -58,7 +58,8 @@
     "stepEnterPhone": "Your number",
     "stepEnterCode": "The 6-digit code",
     "stepEnterSite": "On site",
-    "verified": "Verified"
+    "verified": "Verified",
+    "codeAlreadySent": "A code was already sent to this number — enter it, or get a new one in {seconds} s."
   },
   "topbar": {
     "viewNotifications": "View notifications",

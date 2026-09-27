@@ -110,7 +110,13 @@ export function PhoneLoginForm({ flow }: PhoneLoginFormProps) {
         </div>
       ) : (
         <div className="text-center text-[12px]" style={{ color: "var(--muted)" }}>
-          {t("contactAdmin")}
+          {flow.waitingOnSameNumber ? (
+            <span data-testid="login-code-already-sent">
+              {t("codeAlreadySent", { seconds: flow.cooldown })}
+            </span>
+          ) : (
+            t("contactAdmin")
+          )}
         </div>
       )}
     </form>

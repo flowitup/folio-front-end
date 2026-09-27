@@ -58,7 +58,8 @@
     "stepEnterPhone": "Nhập số",
     "stepEnterCode": "Nhập mã 6 số",
     "stepEnterSite": "Vào công trình",
-    "verified": "Đã xác minh"
+    "verified": "Đã xác minh",
+    "codeAlreadySent": "Mã đã được gửi đến số này — hãy nhập mã đó, hoặc nhận mã mới sau {seconds} giây."
   },
   "topbar": {
     "viewNotifications": "Xem thông báo",

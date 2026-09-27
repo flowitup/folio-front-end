@@ -29,6 +29,7 @@ const TRANSLATIONS: Record<string, string> = {
   verified: "Verified",
   resendCode: "Resend code",
   resendIn: "Resend in {seconds} s",
+  codeAlreadySent: "A code was already sent to this number — enter it, or get a new one in {seconds} s.",
   changeNumber: "Change number",
   stepBadge: "Step {current} / {total}",
   errorPhoneRequired: "Please enter your phone number",
@@ -290,5 +291,21 @@ describe("Phone sign-in", () => {
 
     expect(screen.getByLabelText("Phone number")).toHaveValue("0612345678");
     expect(screen.queryByTestId("login-code-0")).toBeNull();
+  });
+
+  it("after Change number, Send code on the same number returns to the code already sent", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    const user = userEvent.setup();
+    render(<LoginStage />);
+
+    await sendCodeTo(user, "0612345678");
+    await user.click(screen.getByTestId("login-change-number"));
+
+    expect(screen.getByTestId("login-code-already-sent")).toHaveTextContent("get a new one in");
+    expect(screen.getByTestId("login-send-code")).toBeEnabled();
+    await user.click(screen.getByTestId("login-send-code"));
+
+    expect(screen.getByTestId("login-code-0")).toBeInTheDocument();
+    expect(mockRequestOtpAction).toHaveBeenCalledTimes(1);
   });
 });

@@ -46,6 +46,9 @@ export interface PhoneLoginFlow {
   /** How long the code the backend just sent stays valid, in whole minutes. */
   expiresInMinutes: number;
   canSend: boolean;
+  /** Back on the phone step with the number a live code went to, inside the
+   * resend window: Send returns to that code instead of asking for another. */
+  waitingOnSameNumber: boolean;
   canVerify: boolean;
   sendCode: () => Promise<void>;
   verify: (explicitCode?: string) => Promise<void>;
@@ -101,10 +104,8 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
   // for the SAME number: edit the number and "Send code" is live immediately.
   // An invalid number keeps the button live: pressing it says what is wrong,
   // where a greyed-out button explained nothing.
-  const canSend =
-    nationalNumber.trim().length > 0 &&
-    !isSendingCode &&
-    (phone === null || cooldown === 0 || phone !== sentTo);
+  const waitingOnSameNumber = phone !== null && phone === sentTo && cooldown > 0;
+  const canSend = nationalNumber.trim().length > 0 && !isSendingCode;
   const canVerify =
     new RegExp(`^\\d{${CODE_LENGTH}}$`).test(code) &&
     !isLoading &&
@@ -118,6 +119,12 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
       return;
     }
     setErrorKey(null);
+    if (target === sentTo && cooldown > 0) {
+      // The server would refuse a resend this soon, and the code already sent
+      // to this number is still good: go back to it.
+      setStep("code");
+      return;
+    }
     setIsSendingCode(true);
     const result = await requestOtpAction(target);
     setIsSendingCode(false);
@@ -132,7 +139,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     setExpiresInMinutes(Math.max(1, Math.round(result.expiresIn / 60)));
     setCooldown(RESEND_COOLDOWN_SECONDS);
     setStep("code");
-  }, [nationalNumber]);
+  }, [nationalNumber, sentTo, cooldown]);
 
   const verify = useCallback(
     async (explicitCode?: string) => {
@@ -191,6 +198,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     cooldown,
     expiresInMinutes,
     canSend,
+    waitingOnSameNumber,
     canVerify,
     sendCode,
     verify,

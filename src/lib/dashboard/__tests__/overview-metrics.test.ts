@@ -83,7 +83,7 @@ describe("isPersonalExpense", () => {
     ).toBe(true);
   });
 
-  it("stays personal when refunded by company and bank (its bank refund is released to the personal purse)", () => {
+  it("moves to the company when refunded by company and bank (the company reimbursed it)", () => {
     const inv = mkInvoice({
       type: "materials_services",
       issue_date: "2026-06-01",
@@ -92,8 +92,8 @@ describe("isPersonalExpense", () => {
       refundable_status: "refunded",
       refunded_by: "both",
     });
-    expect(isPersonalExpense(inv)).toBe(true);
-    expect(isCompanyPaidExpense(inv)).toBe(false);
+    expect(isPersonalExpense(inv)).toBe(false);
+    expect(isCompanyPaidExpense(inv)).toBe(true);
   });
 });
 

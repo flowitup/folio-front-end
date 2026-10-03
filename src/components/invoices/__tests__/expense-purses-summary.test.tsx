@@ -272,14 +272,16 @@ describe("ExpensePursesSummary — overspent purse", () => {
 });
 
 describe("ExpensePursesSummary — dark-card KPIs", () => {
-  it("sums pending refunds over refundable + refund_pending personal expenses only", () => {
+  it("sums what the company still owes: refundable, requested and bank-only refunded", () => {
     render(
       <ExpensePursesSummary
         invoices={[
           makeInvoice({ id: "a", paid_by_personal: true, refundable_status: "refundable", total_amount: 1200 }),
           makeInvoice({ id: "b", paid_by_personal: true, refundable_status: "refund_pending", total_amount: 800 }),
-          // Already refunded and company-paid rows don't count.
+          // Refunded by the bank alone: the company still owes it.
           makeInvoice({ id: "c", paid_by_personal: true, refundable_status: "refunded", refunded_by: "bank", total_amount: 500 }),
+          // Company-refunded and company-paid rows don't count.
+          makeInvoice({ id: "e", paid_by_personal: true, refundable_status: "refunded", refunded_by: "company", total_amount: 400 }),
           makeInvoice({ id: "d", paid_by_personal: false, total_amount: 900 }),
         ]}
         meta={ZERO_META}
@@ -287,11 +289,11 @@ describe("ExpensePursesSummary — dark-card KPIs", () => {
     );
     const amount = within(screen.getByTestId("refundable-by-company"))
       .getByText(/\d/) as HTMLElement;
-    expect(amount.textContent).toMatch(/2[^\d]*000/);
+    expect(amount.textContent).toMatch(/2[^\d]*500/);
     expect(amount.style.color).toBe("rgb(241, 200, 163)");
     // The personal-purse company stamp carries the same total next to the count.
     const stamp = screen.getByTestId("personal-purse-refundable-company");
-    expect(stamp.textContent).toMatch(/·\s*2[^\d]*000/);
+    expect(stamp.textContent).toMatch(/·\s*2[^\d]*500/);
   });
 
   it("tracks the bank channel independently of refundable_status", () => {
@@ -318,8 +320,8 @@ describe("ExpensePursesSummary — dark-card KPIs", () => {
       .getByText(/\d/) as HTMLElement;
     const bankAmount = within(screen.getByTestId("refundable-by-bank"))
       .getByText(/\d/) as HTMLElement;
-    // Company: only "a" is still owed back by the company.
-    expect(companyAmount.textContent).toMatch(/1[^\d]*200/);
+    // Company: "a" + "d" (refunded by the bank alone) = 1 900.
+    expect(companyAmount.textContent).toMatch(/1[^\d]*900/);
     // Bank: "a" + "b" = 1 700 — deliberately overlapping the company figure
     // and larger than it, so the two must never be summed or stacked.
     expect(bankAmount.textContent).toMatch(/1[^\d]*700/);

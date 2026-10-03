@@ -13,7 +13,11 @@ import {
   type ExpenseType,
   type PurseBreakdown,
 } from "./expense-type-breakdown";
-import { isCompanyPaidExpense, isPersonalExpense } from "@/lib/dashboard/overview-metrics";
+import {
+  isCompanyPaidExpense,
+  isCompanyRefundOwed,
+  isPersonalExpense,
+} from "@/lib/dashboard/overview-metrics";
 
 /**
  * "Two purses" expenses summary (design Expense Dataviz 1b).
@@ -131,13 +135,9 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
       purse.spent += inv.total_amount;
       bucket.count += 1;
     }
-    // Company channel: what the company still owes the person back.
-    // refundable_status tracks ONLY this channel — it flips to 'refunded' the
-    // moment the company settles, regardless of the bank.
-    if (
-      purse === personal &&
-      (inv.refundable_status === "refundable" || inv.refundable_status === "refund_pending")
-    ) {
+    // Company channel: what the company still owes the person back — still
+    // refundable/requested, or refunded by the bank alone (see isCompanyRefundOwed).
+    if (purse === personal && isCompanyRefundOwed(inv)) {
       refundableCount += 1;
       refundableTotal += inv.total_amount;
     }

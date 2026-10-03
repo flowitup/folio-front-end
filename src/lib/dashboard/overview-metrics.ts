@@ -56,6 +56,19 @@ function isCompanyReimbursed(inv: Invoice): boolean {
   );
 }
 
+/**
+ * The company still owes this expense back: refundable or already requested,
+ * or refunded by the bank alone (refunded_by "bank"), which settles only the
+ * bank channel. "company", "both" and legacy null mean the company paid.
+ */
+export function isCompanyRefundOwed(inv: Invoice): boolean {
+  return (
+    inv.refundable_status === "refundable" ||
+    inv.refundable_status === "refund_pending" ||
+    (inv.refundable_status === "refunded" && inv.refunded_by === "bank")
+  );
+}
+
 /** Mirrors the BE bucket rule: a personally-paid expense the company alone
  * reimbursed counts as company money. */
 export function isPersonalExpense(inv: Invoice): boolean {
@@ -315,8 +328,8 @@ export function computeBankOutstanding(invoices: Invoice[]): PendingRefunds {
   return { count, total: roundCents(total) };
 }
 
-/** Personal expenses still awaiting reimbursement (refundable or already
- * requested) — same rule as the Expense page's dark card "Pending refunds" line.
+/** Personal expenses the company still owes back (see isCompanyRefundOwed) —
+ * same rule as the Expense page's dark card "Refundable · company" line.
  * Company channel only; see computeBankOutstanding for the bank side. */
 export function computePendingRefunds(invoices: Invoice[]): PendingRefunds {
   let count = 0;
@@ -324,7 +337,7 @@ export function computePendingRefunds(invoices: Invoice[]): PendingRefunds {
   for (const inv of invoices) {
     if (!isSpendInvoice(inv)) continue;
     if (!isPersonalExpense(inv)) continue;
-    if (inv.refundable_status === "refundable" || inv.refundable_status === "refund_pending") {
+    if (isCompanyRefundOwed(inv)) {
       count += 1;
       total += inv.total_amount;
     }

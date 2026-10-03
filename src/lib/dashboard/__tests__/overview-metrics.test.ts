@@ -245,8 +245,12 @@ describe("computePendingRefunds", () => {
       mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 50, paid_by_personal: true, refundable_status: "refund_pending" }),
       mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 40, paid_by_personal: true, refundable_status: "refunded", refunded_by: "company" }),
       mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 30, paid_by_personal: false, refundable_status: "refundable" }),
+      // Refunded by the bank alone — the company still owes it.
+      mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 20, paid_by_personal: true, refundable_status: "refunded", refunded_by: "bank" }),
+      // Refunded by company and bank — nothing left for the company to pay.
+      mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 10, paid_by_personal: true, refundable_status: "refunded", refunded_by: "both" }),
     ];
-    expect(computePendingRefunds(invoices)).toEqual({ count: 2, total: 150 });
+    expect(computePendingRefunds(invoices)).toEqual({ count: 3, total: 170 });
   });
 
   it("excludes released_funds/return rows even if flagged personal+refundable (BE-unreachable edge, FE shouldn't rely on the guard)", () => {
@@ -274,10 +278,10 @@ describe("computeBankOutstanding", () => {
       // Not refund-tracked at all.
       mkInvoice({ type: "materials_services", issue_date: "2026-06-01", total_amount: 30, paid_by_personal: false }),
     ];
-    // 100 + 40 — deliberately overlapping computePendingRefunds (which sees only
-    // the 100), and larger than it, so the two must never be summed.
+    // 100 + 40 — deliberately overlapping computePendingRefunds (100 + the
+    // bank-only 70), so the two must never be summed.
     expect(computeBankOutstanding(invoices)).toEqual({ count: 2, total: 140 });
-    expect(computePendingRefunds(invoices)).toEqual({ count: 1, total: 100 });
+    expect(computePendingRefunds(invoices)).toEqual({ count: 2, total: 170 });
   });
 
   it("counts a company-reimbursed expense even though it left the personal purse", () => {

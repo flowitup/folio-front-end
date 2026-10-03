@@ -750,3 +750,28 @@ describe("ExpensePursesSummary — purse rows follow the backend's purse rule", 
     expect(bar.dataset.tip).toMatch(/\|800\s*€|\|800/);
   });
 });
+
+describe("ExpensePursesSummary — refunded expenses stay with their refund", () => {
+  it("keeps bank and company+bank refunded expenses in the personal purse rows", () => {
+    // Bank refunds of both (700 + 300) are personal releases, so their expenses
+    // must stay in the personal rows; only the company-only refund (500) moves.
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "bank", paid_by_personal: true, refundable_status: "refunded", refunded_by: "bank", total_amount: 700 }),
+          makeInvoice({ id: "both", paid_by_personal: true, refundable_status: "refunded", refunded_by: "both", total_amount: 300 }),
+          makeInvoice({ id: "co", paid_by_personal: true, refundable_status: "refunded", refunded_by: "company", total_amount: 500 }),
+        ]}
+        meta={{ ...ZERO_META, fundsReleasedTotal: 1000, fundsReleasedPersonalTotal: 1000, personalSpentTotal: 1000, companySpentTotal: 500 }}
+      />
+    );
+    const rowSum = (title: string) =>
+      Array.from(
+        (screen.getByText(title).closest(".folio-card") as HTMLElement).querySelectorAll<HTMLElement>(
+          ".num.w-\\[72px\\]"
+        )
+      ).reduce((sum, el) => sum + Number(el.textContent!.replace(/[^\d-]/g, "")), 0);
+    expect(rowSum("invoices.summary.personalPurse")).toBe(1000);
+    expect(rowSum("invoices.summary.companyPurse")).toBe(500);
+  });
+});

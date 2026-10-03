@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { Invoice } from "@/types/invoice";
 import {
+  isCompanyPaidExpense,
   isPersonalExpense,
   computeSpentTotal,
   buildMonthlySpendSeries,
@@ -80,6 +81,19 @@ describe("isPersonalExpense", () => {
         })
       )
     ).toBe(true);
+  });
+
+  it("stays personal when refunded by company and bank (its bank refund is released to the personal purse)", () => {
+    const inv = mkInvoice({
+      type: "materials_services",
+      issue_date: "2026-06-01",
+      total_amount: 10,
+      paid_by_personal: true,
+      refundable_status: "refunded",
+      refunded_by: "both",
+    });
+    expect(isPersonalExpense(inv)).toBe(true);
+    expect(isCompanyPaidExpense(inv)).toBe(false);
   });
 });
 

@@ -43,21 +43,29 @@ function isExpenseType(t: InvoiceType | undefined): t is ExpenseType {
   return t === "labor" || t === "materials_services" || t === "others";
 }
 
-/** Mirrors the BE bucket rule (see expense-purses-summary.tsx). */
-export function isPersonalExpense(inv: Invoice): boolean {
+/**
+ * Mirrors the BE `is_company_reimbursed` rule: the company alone paid a
+ * personally-funded expense back (refunded_by "company", or legacy null).
+ * "bank" and "both" do not count: their bank refund is a full-amount release
+ * into the payer's purse, so the expense stays in that purse to balance it.
+ */
+function isCompanyReimbursed(inv: Invoice): boolean {
   return (
-    Boolean(inv.paid_by_personal) &&
-    !(inv.refundable_status === "refunded" && inv.refunded_by !== "bank")
+    inv.refundable_status === "refunded" &&
+    (inv.refunded_by == null || inv.refunded_by === "company")
   );
 }
 
+/** Mirrors the BE bucket rule: a personally-paid expense the company alone
+ * reimbursed counts as company money. */
+export function isPersonalExpense(inv: Invoice): boolean {
+  return Boolean(inv.paid_by_personal) && !isCompanyReimbursed(inv);
+}
+
 /** Mirrors the BE `is_company_paid` rule behind the company purse's "Spent":
- * paid with a company-flagged method, or reimbursed by the company. */
+ * paid with a company-flagged method, or reimbursed by the company alone. */
 export function isCompanyPaidExpense(inv: Invoice): boolean {
-  return (
-    Boolean(inv.paid_by_company) ||
-    (inv.refundable_status === "refunded" && inv.refunded_by !== "bank")
-  );
+  return Boolean(inv.paid_by_company) || isCompanyReimbursed(inv);
 }
 
 /** Snap a money sum to whole cents. Summing euro amounts as floats drifts

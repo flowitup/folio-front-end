@@ -34,8 +34,8 @@ import {
  *
  * Figure sourcing:
  * - Purse released/spent come from the backend meta — the authoritative
- *   buckets (flagged payment methods only, refunds netted, rows the company
- *   alone refunded reassigned; bank and company+bank refunds stay put).
+ *   buckets (flagged payment methods only, refunds netted, company-refunded
+ *   rows reassigned; bank-only refunds stay put).
  * - The company purse's spent ALSO includes `companyCashAdvancedTotal`: money
  *   the company handed to a person (released_funds rows flagged
  *   is_cash_advance). The backend keeps that figure out of every released

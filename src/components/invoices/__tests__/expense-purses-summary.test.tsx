@@ -754,9 +754,9 @@ describe("ExpensePursesSummary — purse rows follow the backend's purse rule", 
 });
 
 describe("ExpensePursesSummary — refunded expenses stay with their refund", () => {
-  it("keeps bank and company+bank refunded expenses in the personal purse rows", () => {
-    // Bank refunds of both (700 + 300) are personal releases, so their expenses
-    // must stay in the personal rows; only the company-only refund (500) moves.
+  it("keeps bank-only refunds personal and moves every company refund to the company rows", () => {
+    // The bank-only refund (700) is a personal release, so it stays personal;
+    // anything the company reimbursed (300 with the bank, 500 alone) is company spend.
     render(
       <ExpensePursesSummary
         invoices={[
@@ -764,7 +764,7 @@ describe("ExpensePursesSummary — refunded expenses stay with their refund", ()
           makeInvoice({ id: "both", paid_by_personal: true, refundable_status: "refunded", refunded_by: "both", total_amount: 300 }),
           makeInvoice({ id: "co", paid_by_personal: true, refundable_status: "refunded", refunded_by: "company", total_amount: 500 }),
         ]}
-        meta={{ ...ZERO_META, fundsReleasedTotal: 1000, fundsReleasedPersonalTotal: 1000, personalSpentTotal: 1000, companySpentTotal: 500 }}
+        meta={{ ...ZERO_META, fundsReleasedTotal: 1000, fundsReleasedPersonalTotal: 700, personalSpentTotal: 700, companySpentTotal: 800 }}
       />
     );
     const rowSum = (title: string) =>
@@ -773,7 +773,7 @@ describe("ExpensePursesSummary — refunded expenses stay with their refund", ()
           ".num.w-\\[72px\\]"
         )
       ).reduce((sum, el) => sum + Number(el.textContent!.replace(/[^\d-]/g, "")), 0);
-    expect(rowSum("invoices.summary.personalPurse")).toBe(1000);
-    expect(rowSum("invoices.summary.companyPurse")).toBe(500);
+    expect(rowSum("invoices.summary.personalPurse")).toBe(700);
+    expect(rowSum("invoices.summary.companyPurse")).toBe(800);
   });
 });

@@ -13,6 +13,11 @@ import {
   type ExpenseType,
   type PurseBreakdown,
 } from "./expense-type-breakdown";
+import {
+  isCompanyPaidExpense,
+  isCompanyRefundOwed,
+  isPersonalExpense,
+} from "@/lib/dashboard/overview-metrics";
 
 /**
  * "Two purses" expenses summary (design Expense Dataviz 1b).
@@ -29,8 +34,8 @@ import {
  *
  * Figure sourcing:
  * - Purse released/spent come from the backend meta — the authoritative
- *   buckets (flagged payment methods only, refunds netted, company-refunded
- *   rows reassigned).
+ *   buckets (flagged payment methods only, refunds netted, rows the company
+ *   alone refunded reassigned; bank and company+bank refunds stay put).
  * - The company purse's spent ALSO includes `companyCashAdvancedTotal`: money
  *   the company handed to a person (released_funds rows flagged
  *   is_cash_advance). The backend keeps that figure out of every released
@@ -95,31 +100,6 @@ function monthDate(key: string): Date {
   return new Date(y, m - 1, 1);
 }
 
-/**
- * Mirrors the BE bucket rule: a personally-paid expense the company already
- * reimbursed (status refunded, not by bank) counts as company money.
- */
-function isPersonalExpense(inv: Invoice): boolean {
-  return (
-    Boolean(inv.paid_by_personal) &&
-    !(inv.refundable_status === "refunded" && inv.refunded_by !== "bank")
-  );
-}
-
-/**
- * Mirrors the BE `is_company_paid` rule behind the company purse's Spent:
- * paid with a company-flagged method, or reimbursed by the company. An
- * expense that is neither this nor personal (no method, or an unflagged one)
- * is in neither purse — counting it in the company rows made them add up to
- * more than the purse's Spent.
- */
-function isCompanyPaidExpense(inv: Invoice): boolean {
-  return (
-    Boolean(inv.paid_by_company) ||
-    (inv.refundable_status === "refunded" && inv.refunded_by !== "bank")
-  );
-}
-
 export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryProps) {
   const t = useTranslations("invoices");
   const locale = useLocale();
@@ -155,13 +135,9 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
       purse.spent += inv.total_amount;
       bucket.count += 1;
     }
-    // Company channel: what the company still owes the person back.
-    // refundable_status tracks ONLY this channel — it flips to 'refunded' the
-    // moment the company settles, regardless of the bank.
-    if (
-      purse === personal &&
-      (inv.refundable_status === "refundable" || inv.refundable_status === "refund_pending")
-    ) {
+    // Company channel: what the company still owes the person back — still
+    // refundable/requested, or refunded by the bank alone (see isCompanyRefundOwed).
+    if (purse === personal && isCompanyRefundOwed(inv)) {
       refundableCount += 1;
       refundableTotal += inv.total_amount;
     }

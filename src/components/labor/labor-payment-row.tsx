@@ -16,7 +16,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { formatDays } from "@/components/labor/format-days";
 import { personInitials } from "@/lib/utils/person-color";
 import Link from "next/link";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatEUR } from "@/lib/api/labor";
 import { formatDate } from "@/lib/utils/formatters";
@@ -42,6 +42,10 @@ export interface LaborPaymentRowProps {
    *  invoice list so a just-recorded payment shows up without a re-toggle. */
   reloadSignal: number;
   onRecordPayment: () => void;
+  /** This worker's note for the viewed month ("" when none). */
+  note?: string;
+  /** Opens the note dialog — omitted (or canManage false) hides the button. */
+  onEditNote?: () => void;
   variant: "desktop" | "mobile";
 }
 
@@ -52,6 +56,8 @@ export function LaborPaymentRow({
   canManage,
   reloadSignal,
   onRecordPayment,
+  note = "",
+  onEditNote,
   variant,
 }: LaborPaymentRowProps) {
   const t = useTranslations("labor.payments");
@@ -149,11 +155,40 @@ export function LaborPaymentRow({
     </Button>
   );
 
+  const noteText = note && (
+    <p
+      className="flex items-start gap-1.5 text-[12px]"
+      style={{ color: "var(--muted)" }}
+      title={note}
+      data-testid={`labor-payment-note-${testIdSuffix}`}
+    >
+      <StickyNote size={12} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+      <span className="line-clamp-2 min-w-0 whitespace-pre-line">{note}</span>
+    </p>
+  );
+
+  const noteButton = canManage && onEditNote && (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      onClick={onEditNote}
+      aria-label={t(note ? "editNote" : "addNote")}
+      title={t(note ? "editNote" : "addNote")}
+      data-testid={`labor-payment-note-button-${testIdSuffix}`}
+    >
+      <StickyNote size={14} aria-hidden="true" />
+    </Button>
+  );
+
   if (variant === "desktop") {
     return (
       <>
         <tr data-testid={`labor-payment-row-${testIdSuffix}`}>
-          <td>{expandToggle}</td>
+          <td>
+            {expandToggle}
+            {noteText && <div className="mt-1 max-w-[320px] pl-[22px]">{noteText}</div>}
+          </td>
           <td className="num" style={{ textAlign: "right" }}>
             {formatDays(row.days_worked, locale)}
           </td>
@@ -169,7 +204,12 @@ export function LaborPaymentRow({
           <td>
             <span className={STATUS_STAMP_CLASS[row.status]}>{statusLabel}</span>
           </td>
-          <td style={{ textAlign: "right" }}>{recordButton}</td>
+          <td style={{ textAlign: "right" }}>
+            <div className="flex items-center justify-end gap-1">
+              {noteButton}
+              {recordButton}
+            </div>
+          </td>
         </tr>
         {expanded && (
           <tr data-testid={`labor-payment-expand-${testIdSuffix}`}>
@@ -188,6 +228,7 @@ export function LaborPaymentRow({
         {expandToggle}
         <span className={STATUS_STAMP_CLASS[row.status]}>{statusLabel}</span>
       </div>
+      {noteText}
       <div className="grid grid-cols-3 gap-2 text-[12.5px]">
         <div>
           <div style={{ color: "var(--muted)" }}>{tLabor("daysWorked")}</div>
@@ -207,7 +248,10 @@ export function LaborPaymentRow({
           <span style={{ color: "var(--muted)" }}>{t("balance")}: </span>
           <span className="num font-medium">{formatEUR(row.balance)}</span>
         </div>
-        {recordButton}
+        <div className="flex items-center gap-1">
+          {noteButton}
+          {recordButton}
+        </div>
       </div>
       {expanded && invoiceList}
     </div>

@@ -35,6 +35,9 @@ export interface LaborPaymentsWorkerTableProps {
   reloadSignal: number;
   onOpenRecordDialog: () => void;
   onRecordPaymentForWorker: (workerId: string) => void;
+  /** Viewed month's notes keyed by worker id. */
+  notes?: Record<string, string>;
+  onEditNoteForWorker?: (workerId: string) => void;
 }
 
 export function LaborPaymentsWorkerTable({
@@ -50,6 +53,8 @@ export function LaborPaymentsWorkerTable({
   reloadSignal,
   onOpenRecordDialog,
   onRecordPaymentForWorker,
+  notes,
+  onEditNoteForWorker,
 }: LaborPaymentsWorkerTableProps) {
   const t = useTranslations("labor.payments");
   const tLabor = useTranslations("labor");
@@ -132,6 +137,8 @@ export function LaborPaymentsWorkerTable({
                     canManage={canManage}
                     reloadSignal={reloadSignal}
                     onRecordPayment={() => onRecordPaymentForWorker(row.worker_id)}
+                    note={notes?.[row.worker_id]}
+                    onEditNote={onEditNoteForWorker && (() => onEditNoteForWorker(row.worker_id))}
                     variant="desktop"
                   />
                 ))}
@@ -176,6 +183,8 @@ export function LaborPaymentsWorkerTable({
                 canManage={canManage}
                 reloadSignal={reloadSignal}
                 onRecordPayment={() => onRecordPaymentForWorker(row.worker_id)}
+                note={notes?.[row.worker_id]}
+                onEditNote={onEditNoteForWorker && (() => onEditNoteForWorker(row.worker_id))}
                 variant="mobile"
               />
             ))}

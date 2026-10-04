@@ -1002,7 +1002,17 @@
       "noMonthTitle": "Sans mois",
       "assignToMonth": "Attribuer à {month}",
       "emptyMonth": "Aucune donnée pour ce mois",
-      "loadFailed": "Échec du chargement des paiements"
+      "loadFailed": "Échec du chargement des paiements",
+      "addNote": "Ajouter une note",
+      "editNote": "Modifier la note",
+      "noteTitle": "Note pour {name} — {month}",
+      "notePlaceholder": "Ex. : reste payé en espèces le 12, en attente du virement du client…",
+      "noteHint": "Laissez vide pour supprimer la note.",
+      "noteSave": "Enregistrer",
+      "noteCancel": "Annuler",
+      "noteSavedToast": "Note enregistrée",
+      "noteClearedToast": "Note supprimée",
+      "noteSaveFailed": "Impossible d'enregistrer la note"
     },
     "summaryUnpaidWarning": "{amount} impayé",
     "summaryUnpaidWarningTitle": "Les charges de main-d'œuvre de ce mois ne sont pas entièrement payées",

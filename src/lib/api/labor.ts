@@ -28,6 +28,8 @@ import type {
   CreateRateChangePayload,
   LaborDayDescription,
   LaborDayDescriptionListResponse,
+  LaborPaymentNote,
+  LaborPaymentNoteListResponse,
 } from "@/types/labor";
 import { api, ApiError } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
@@ -274,6 +276,25 @@ export async function setLaborDayDescription(
   payload: { date: string; description: string },
 ): Promise<void> {
   await api.put<unknown>(`/projects/${projectId}/labor-day-descriptions`, payload);
+}
+
+// ─── Labor payment notes ─────────────────────────────────────────────────────
+
+export async function fetchLaborPaymentNotes(
+  projectId: string,
+  month: string,
+): Promise<LaborPaymentNote[]> {
+  const url = buildUrl(`/projects/${projectId}/labor-payment-notes`, { month });
+  const data = await api.get<LaborPaymentNoteListResponse>(url);
+  return data.notes;
+}
+
+/** Upsert a worker's note for `month` ("YYYY-MM"); a blank note clears it. */
+export async function setLaborPaymentNote(
+  projectId: string,
+  payload: { worker_id: string; month: string; note: string },
+): Promise<void> {
+  await api.put<unknown>(`/projects/${projectId}/labor-payment-notes`, payload);
 }
 
 // ─── Worker rate changes ─────────────────────────────────────────────────────

@@ -1002,7 +1002,17 @@
       "noMonthTitle": "Chưa có tháng",
       "assignToMonth": "Gán vào {month}",
       "emptyMonth": "Không có dữ liệu cho tháng này",
-      "loadFailed": "Không thể tải dữ liệu thanh toán"
+      "loadFailed": "Không thể tải dữ liệu thanh toán",
+      "addNote": "Thêm ghi chú",
+      "editNote": "Sửa ghi chú",
+      "noteTitle": "Ghi chú cho {name} — {month}",
+      "notePlaceholder": "VD: phần còn lại đã trả tiền mặt ngày 12, đang chờ khách chuyển khoản…",
+      "noteHint": "Để trống để xoá ghi chú.",
+      "noteSave": "Lưu",
+      "noteCancel": "Huỷ",
+      "noteSavedToast": "Đã lưu ghi chú",
+      "noteClearedToast": "Đã xoá ghi chú",
+      "noteSaveFailed": "Không lưu được ghi chú"
     },
     "summaryUnpaidWarning": "{amount} chưa trả",
     "summaryUnpaidWarningTitle": "Chi phí nhân công tháng này chưa được trả đủ",

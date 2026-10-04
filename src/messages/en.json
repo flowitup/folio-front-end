@@ -1002,7 +1002,17 @@
       "noMonthTitle": "No month set",
       "assignToMonth": "Assign to {month}",
       "emptyMonth": "No data for this month",
-      "loadFailed": "Failed to load payment data"
+      "loadFailed": "Failed to load payment data",
+      "addNote": "Add note",
+      "editNote": "Edit note",
+      "noteTitle": "Note for {name} — {month}",
+      "notePlaceholder": "E.g. rest paid in cash on the 12th, waiting for the client's transfer…",
+      "noteHint": "Leave it empty to remove the note.",
+      "noteSave": "Save",
+      "noteCancel": "Cancel",
+      "noteSavedToast": "Note saved",
+      "noteClearedToast": "Note removed",
+      "noteSaveFailed": "Could not save the note"
     },
     "summaryUnpaidWarning": "{amount} unpaid",
     "summaryUnpaidWarningTitle": "Labor charges for this month are not fully paid",

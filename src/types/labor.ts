@@ -306,6 +306,24 @@ export interface LaborDayDescriptionListResponse {
   day_descriptions: LaborDayDescription[];
 }
 
+// ─── Labor payment notes (one per worker per month, Payments tab) ───────────
+
+export interface LaborPaymentNote {
+  id: string;
+  project_id: string;
+  worker_id: string;
+  /** YYYY-MM */
+  month: string;
+  note: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LaborPaymentNoteListResponse {
+  notes: LaborPaymentNote[];
+}
+
 // ─── Worker rate changes ─────────────────────────────────────────────────────
 
 export interface WorkerRateChange {

@@ -52,3 +52,51 @@ export function useLaborPaymentNotes(projectId: string, month: string) {
 
   return { notes, saveNote };
 }
+
+/** Key of a note in `useProjectLaborPaymentNotes` — month is "YYYY-MM". */
+export function paymentNoteKey(workerId: string, month: string): string {
+  return `${month}|${workerId}`;
+}
+
+/**
+ * useProjectLaborPaymentNotes — every labor payment note on the project,
+ * keyed by `paymentNoteKey`, for the Summary tab which shows one month or
+ * the whole history.
+ */
+export function useProjectLaborPaymentNotes(projectId: string) {
+  const [notes, setNotes] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await fetchLaborPaymentNotes(projectId);
+        if (!cancelled && list.length > 0) {
+          setNotes(Object.fromEntries(list.map((n) => [paymentNoteKey(n.worker_id, n.month), n.note])));
+        }
+      } catch {
+        // Secondary to the summary figures — leave rows note-less on failure.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
+
+  const saveNote = useCallback(
+    async (workerId: string, month: string, note: string) => {
+      const trimmed = note.trim();
+      await setLaborPaymentNote(projectId, { worker_id: workerId, month, note: trimmed });
+      const key = paymentNoteKey(workerId, month);
+      setNotes((prev) => {
+        const next = { ...prev };
+        if (trimmed) next[key] = trimmed;
+        else delete next[key];
+        return next;
+      });
+    },
+    [projectId],
+  );
+
+  return { notes, saveNote };
+}

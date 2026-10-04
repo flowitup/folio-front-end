@@ -22,6 +22,8 @@ import { useLaborPaymentsData } from "@/components/labor/use-labor-payments-data
 import { LaborPaymentsWorkerTable } from "@/components/labor/labor-payments-worker-table";
 import { UnassignedLaborInvoices } from "@/components/labor/unassigned-labor-invoices";
 import { RecordLaborPaymentDialog } from "@/components/labor/record-labor-payment-dialog";
+import { LaborPaymentNoteDialog } from "@/components/labor/labor-payment-note-dialog";
+import { useLaborPaymentNotes } from "@/components/labor/use-labor-payment-notes";
 
 export interface LaborPaymentsTabProps {
   projectId: string;
@@ -97,6 +99,15 @@ export function LaborPaymentsTab({
     worker: null,
   });
 
+  const { notes, saveNote } = useLaborPaymentNotes(projectId, month);
+  // Keeps the last worker after close so the dialog's exit animation still
+  // renders its title.
+  const [noteDialog, setNoteDialog] = useState<{ open: boolean; workerId: string; workerName: string }>({
+    open: false,
+    workerId: "",
+    workerName: "",
+  });
+
   if (isLoading) {
     return (
       <div className="folio-card flex items-center justify-center p-12">
@@ -146,6 +157,11 @@ export function LaborPaymentsTab({
             (row ? workerFromPaymentRow(projectId, row) : null);
           setRecordDialog({ open: true, worker: w });
         }}
+        notes={notes}
+        onEditNoteForWorker={(workerId) => {
+          const name = rows.find((r) => r.worker_id === workerId)?.worker_name ?? "";
+          setNoteDialog({ open: true, workerId, workerName: name });
+        }}
       />
 
       <UnassignedLaborInvoices
@@ -175,6 +191,15 @@ export function LaborPaymentsTab({
           onAssignMonth={handleAssignMonth}
         />
       )}
+
+      <LaborPaymentNoteDialog
+        open={noteDialog.open}
+        onOpenChange={(open) => setNoteDialog((prev) => ({ ...prev, open }))}
+        workerName={noteDialog.workerName}
+        periodLabel={periodLabel}
+        initialNote={notes[noteDialog.workerId] ?? ""}
+        onSave={(note) => saveNote(noteDialog.workerId, note)}
+      />
 
       <RecordLaborPaymentDialog
         projectId={projectId}

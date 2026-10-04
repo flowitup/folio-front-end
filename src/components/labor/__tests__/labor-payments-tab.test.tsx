@@ -35,6 +35,8 @@ vi.mock("@/lib/api/labor", () => ({
   fetchLaborSummary: vi.fn(),
   fetchLaborMonthlySummary: vi.fn(),
   fetchLaborPaymentsSummary: vi.fn(),
+  fetchLaborPaymentNotes: vi.fn().mockResolvedValue([]),
+  setLaborPaymentNote: vi.fn(),
   formatEUR: (v: number) => `€${v}`,
 }));
 
@@ -91,6 +93,10 @@ vi.mock("../unassigned-labor-invoices", () => ({
       ))}
     </div>
   ),
+}));
+
+vi.mock("../labor-payment-note-dialog", () => ({
+  LaborPaymentNoteDialog: () => null,
 }));
 
 vi.mock("../record-labor-payment-dialog", () => ({

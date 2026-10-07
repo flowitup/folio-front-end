@@ -17,6 +17,7 @@ import {
   isCompanyPaidExpense,
   isCompanyRefundOwed,
   isPersonalExpense,
+  roundCents,
 } from "@/lib/dashboard/overview-metrics";
 
 /**
@@ -167,6 +168,9 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
     if (!minDate || inv.issue_date < minDate) minDate = inv.issue_date;
     if (!maxDate || inv.issue_date > maxDate) maxDate = inv.issue_date;
   }
+  // Snap float drift before the whole-euro display rounds it the wrong way.
+  refundableTotal = roundCents(refundableTotal);
+  bankOutstandingTotal = roundCents(bankOutstandingTotal);
   const expenseCount = company.count + personal.count + unassigned.count;
 
   // ── Net refunds into the purses ───────────────────────────────────────────

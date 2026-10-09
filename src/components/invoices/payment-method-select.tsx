@@ -59,6 +59,8 @@ export interface PaymentMethodSelectProps {
    * row look unattributed. Once the list loads, the fetched label takes over.
    */
   fallbackSelectedLabel?: string | null;
+  /** Id of the trigger button, for a <label htmlFor>. */
+  id?: string;
 }
 
 // Sentinel value used to signal "clear the selection"
@@ -76,6 +78,7 @@ export function PaymentMethodSelect({
   disabled = false,
   className,
   fallbackSelectedLabel,
+  id,
 }: PaymentMethodSelectProps) {
   const t = useTranslations("invoices.paymentMethod");
   const tBuiltins = useTranslations("paymentMethods.builtins");
@@ -210,6 +213,7 @@ export function PaymentMethodSelect({
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
+          id={id}
           type="button"
           role="combobox"
           aria-expanded={open}
@@ -238,7 +242,6 @@ export function PaymentMethodSelect({
         className="w-[var(--radix-popover-trigger-width)] min-w-[200px] p-0"
         align="start"
         sideOffset={4}
-        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <Command shouldFilter={false}>
           <CommandInput

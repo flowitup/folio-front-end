@@ -479,3 +479,12 @@ export async function selectQuote(projectId: string, quoteId: string): Promise<C
     "Failed to select quote"
   );
 }
+
+/** Stop retaining a quote: its article falls back to the cheapest price again. */
+export async function unselectQuote(projectId: string, quoteId: string): Promise<ChiffrageQuote> {
+  return request<ChiffrageQuote>(
+    `${base(projectId)}/quotes/${quoteId}/select`,
+    { method: "DELETE" },
+    "Failed to unselect quote"
+  );
+}

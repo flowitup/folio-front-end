@@ -31,19 +31,21 @@ import {
 import { deleteBillingTemplateAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import type { BillingDocumentTemplate, BillingDocumentKind } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { formatBillingVatRate } from "@/lib/billing/vat-rate";
+import { calendarDaysFromToday } from "@/lib/utils/local-day";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Format a relative date using the current locale (M-3 fix: was hard-coded "en"). */
+/** Format a relative date using the current locale (M-3 fix: was hard-coded "en").
+ * Counts the viewer's calendar days, not 24 h periods: saved yesterday at 19:00
+ * is "yesterday" at 05:00 today. */
 function formatRelativeDate(isoDate: string, locale: string): string {
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return isoDate;
-  return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
-    Math.round((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-    "day"
-  );
+  return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(calendarDaysFromToday(date), "day");
 }
 
 // ---------------------------------------------------------------------------
@@ -63,6 +65,8 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   // Double-submit guard
   const deletingRef = useRef(false);
+  // "Updated today" depends on the browser's time zone, which the server lacks.
+  const hydrated = useHydrated();
 
   const editPath = `/${locale}/billing/templates/${template.id}`;
   const usePath = `/${locale}/billing/${kindToSegment(template.kind)}/new?template=${template.id}`;
@@ -89,23 +93,23 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
   // Use ICU plural key from billing.templates.list.card.items
   const itemCountLabel = tList("card.items", { n: itemCount });
   const vatLabel = template.default_vat_rate
-    ? tList("card.vatRate", { rate: template.default_vat_rate })
+    ? tList("card.vatRate", { rate: formatBillingVatRate(template.default_vat_rate, locale) })
     : tList("card.vatRateNone");
   const lastUpdatedLabel = tList("card.lastUpdated", {
     date: formatRelativeDate(template.updated_at, locale),
   });
 
   return (
-    <div className="folio-card flex flex-col gap-3 p-5">
-      {/* Top row: name + actions */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0">
+    <div className="folio-card flex min-w-0 flex-col gap-3 p-5">
+      {/* Top row: name + actions — the actions wrap under a long name on narrow cards */}
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+        <div className="flex min-w-0 flex-1 basis-40 items-center gap-2 sm:basis-24">
           <FileText size={15} style={{ color: "var(--muted)", flexShrink: 0 }} />
           <span className="truncate font-medium text-sm">{template.name}</span>
         </div>
 
         {/* Actions */}
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           <Button
             variant="ghost"
             size="sm"
@@ -133,6 +137,7 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
                 size="sm"
                 className="h-7 px-2 text-[12px] text-destructive hover:text-destructive"
                 disabled={isDeleting}
+                aria-label={tList("actions.deleteAriaLabel", { name: template.name })}
               >
                 <Trash2 size={12} />
               </Button>
@@ -163,8 +168,12 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
         <span>{itemCountLabel}</span>
         <span>·</span>
         <span>{vatLabel}</span>
-        <span>·</span>
-        <span>{lastUpdatedLabel}</span>
+        {hydrated && (
+          <>
+            <span>·</span>
+            <span>{lastUpdatedLabel}</span>
+          </>
+        )}
       </div>
     </div>
   );
@@ -199,7 +208,7 @@ function TemplateSection({ label, templates, onDelete }: TemplateSectionProps) {
       <h3 className="mb-3 text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
         {label}
       </h3>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {templates.map((t) => (
           <TemplateCard key={t.id} template={t} onDelete={onDelete} />
         ))}
@@ -234,13 +243,13 @@ export function BillingTemplatesList({ initialTemplates, companyId }: BillingTem
   }
 
   return (
-    <div className="fade-up space-y-6 px-8 pb-16">
+    <div className="fade-up space-y-6 px-4 pb-16 lg:px-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="font-display text-xl font-medium">{tList("title")}</h2>
           <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-            {tList("empty.description")}
+            {tList("subtitle")}
           </p>
         </div>
         <Button

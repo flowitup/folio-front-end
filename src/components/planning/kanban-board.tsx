@@ -17,7 +17,9 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ApiError } from "@/lib/api/http";
 import { BacklogBar } from "@/components/planning/backlog-bar";
 import { KanbanColumn } from "@/components/planning/kanban-column";
 import { TaskCard } from "@/components/planning/task-card";
@@ -25,13 +27,17 @@ import { TaskDetailDrawer } from "@/components/planning/task-detail-drawer";
 import { TaskCreateDialog } from "@/components/planning/task-create-dialog";
 import { WeekView } from "@/components/planning/week-view";
 import { fetchTasks, moveTask } from "@/lib/api/task-api";
+import { fetchProjectUsers } from "@/lib/api/projects";
+import { userDisplayName } from "@/lib/auth/user-display";
 import { weekOffsetFromParam } from "@/lib/planning/week";
 import { pointerFirstCollision } from "@/lib/planning/collision";
+import { dropNeighbours } from "@/lib/planning/drop";
+import { taskErrorKey } from "@/lib/planning/task-error";
 import { BOARD_COLUMNS } from "@/types/task";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { can } from "@/lib/auth/permissions";
-import type { Task, TaskStatus } from "@/types/task";
+import type { Task, TaskAssignee, TaskStatus } from "@/types/task";
 
 type PlanningView = "board" | "week";
 
@@ -50,7 +56,8 @@ interface KanbanBoardProps {
  *
  * State sync rules:
  * - URL `?task=<id>` is the source of truth for the open drawer (deep-linkable).
- * - Drag-drop applies optimistic UI + fires API; on error, refetches full board.
+ * - Drag-drop applies optimistic UI + fires API; on error, says why and
+ *   quietly refetches the board.
  */
 export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const t = useTranslations("planning");
@@ -64,8 +71,29 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // The project whose tasks loaded last: a failed FIRST load leaves no board
+  // to act on, so the error replaces it (a failed refresh keeps the board).
+  const [loadedProjectId, setLoadedProjectId] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [createState, setCreateState] = useState<CreateState | null>(null);
+  // People a task can be assigned to (the project team); the cards show
+  // their names. Without the list the board still works, nameless.
+  const [assignees, setAssignees] = useState<TaskAssignee[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchProjectUsers(projectId)
+      .then(({ users }) => {
+        if (cancelled) return;
+        setAssignees(users.map((u) => ({ id: u.id, name: userDisplayName(u) || u.email })));
+      })
+      .catch(() => {
+        if (!cancelled) setAssignees([]);
+      });
+    return () => { cancelled = true; };
+  }, [projectId]);
+
+  const assigneeNames = useMemo(() => new Map(assignees.map((a) => [a.id, a.name])), [assignees]);
 
   // Deleting a task needs project write access (members may edit, not delete).
   const { user } = useAuth();
@@ -84,7 +112,11 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     // the board. (PointerSensor alone never activated on touch: the browser
     // claimed the gesture for scrolling and cancelled the pointer.)
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
-    useSensor(KeyboardSensor),
+    // Space picks a focused card up (and drops it); Enter is left to open
+    // the task, as it does on the week view's chips.
+    useSensor(KeyboardSensor, {
+      keyboardCodes: { start: ["Space"], cancel: ["Escape"], end: ["Space", "Enter", "Tab"] },
+    }),
   );
 
   const reload = useCallback(async (silent = false) => {
@@ -92,8 +124,12 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     try {
       const data = await fetchTasks(projectId);
       setTasks(data);
-    } catch {
-      setError(t("loadError"));
+      setLoadedProjectId(projectId);
+      setError(null);
+    } catch (err) {
+      // 403/404: a project the caller cannot open (not on it, or another company's).
+      const noAccess = err instanceof ApiError && (err.status === 403 || err.status === 404);
+      setError(noAccess ? t("loadForbidden") : t("loadError"));
     } finally {
       if (!silent) setLoading(false);
     }
@@ -210,15 +246,9 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     } else if (overData?.type === "task") {
       const overTask = overData.task as Task;
       targetStatus = overTask.status;
-      // Look up neighbours in the (sorted) column the user is dropping into.
-      const lane = tasksByStatus[targetStatus]
-        .filter((t) => t.id !== draggedTask.id)
-        .sort((a, b) => a.position - b.position);
-      const overIndex = lane.findIndex((t) => t.id === overTask.id);
-      // Drop ABOVE the over-task: above-neighbour = lane[overIndex - 1], below-neighbour = overTask.
-      const above = overIndex > 0 ? lane[overIndex - 1] : undefined;
-      beforeId = above?.id;
-      afterId = overTask.id;
+      // Neighbours in the column the user is dropping into, where the
+      // sortable preview showed the card.
+      ({ beforeId, afterId } = dropNeighbours(tasksByStatus[targetStatus], draggedTask, overTask));
     } else {
       return;
     }
@@ -242,8 +272,11 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       });
       // Sync with server-truth (position is now correct).
       setTasks((curr) => curr.map((tk) => (tk.id === updated.id ? updated : tk)));
-    } catch {
-      reload();
+    } catch (err) {
+      // Say why the card is going back (or away, when it was deleted), then
+      // redraw from the server without blanking the board.
+      toast.error(t(`errors.${taskErrorKey(err, "save")}`));
+      void reload(true);
     }
   };
 
@@ -252,6 +285,14 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       <div className="folio-card flex items-center justify-center p-12">
         <Loader2 size={20} className="animate-spin" style={{ color: "var(--muted)" }} />
       </div>
+    );
+  }
+
+  if (error && loadedProjectId !== projectId) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
     );
   }
 
@@ -297,6 +338,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
           {/* Backlog row across the top */}
           <BacklogBar
             tasks={tasksByStatus.backlog}
+            assigneeNames={assigneeNames}
             onAdd={() => setCreateState({ status: "backlog", dueDate: null })}
             onTaskClick={(t) => setSelected(t.id)}
           />
@@ -309,6 +351,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
                 status={status}
                 title={t(`column.${status}`)}
                 tasks={tasksByStatus[status]}
+                assigneeNames={assigneeNames}
                 onAdd={() => setCreateState({ status, dueDate: null })}
                 onTaskClick={(t) => setSelected(t.id)}
               />
@@ -326,7 +369,11 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
               <DragOverlay>
                 {activeTask && (
                   <div style={{ zoom: 0.8 }}>
-                    <TaskCard task={activeTask} onClick={() => {}} />
+                    <TaskCard
+                      task={activeTask}
+                      assigneeName={activeTask.assignee_id ? assigneeNames.get(activeTask.assignee_id) : null}
+                      onClick={() => {}}
+                    />
                   </div>
                 )}
               </DragOverlay>,
@@ -336,6 +383,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       ) : (
         <WeekView
           tasks={tasks}
+          assigneeNames={assigneeNames}
           weekOffset={weekOffset}
           onWeekOffsetChange={setWeekOffset}
           onTaskClick={(t) => setSelected(t.id)}
@@ -352,6 +400,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
         onClose={() => setSelected(null)}
         onMutated={silentReload}
         canDelete={canDeleteTasks}
+        assignees={assignees}
       />
 
       {/* Create dialog — shared by both views */}
@@ -360,6 +409,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
         projectId={projectId}
         defaultStatus={createState?.status ?? "backlog"}
         defaultDueDate={createState?.dueDate ?? null}
+        assignees={assignees}
         onOpenChange={(open) => { if (!open) setCreateState(null); }}
         onCreated={silentReload}
       />

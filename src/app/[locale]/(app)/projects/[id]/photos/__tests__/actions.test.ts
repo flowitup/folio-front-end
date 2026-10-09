@@ -275,10 +275,17 @@ describe("loadMorePhotosAction — input validation", () => {
     expect(result).toMatchObject({ ok: false, error: "validation" });
   });
 
-  it("rejects page < 2 (page 1 is served by SSR)", async () => {
-    const result = await loadMorePhotosAction(PROJECT_ID, 1);
+  it("rejects page < 1", async () => {
+    const result = await loadMorePhotosAction(PROJECT_ID, 0);
     expect(result).toMatchObject({ ok: false, error: "validation" });
     expect(mockListPhotos).not.toHaveBeenCalled();
+  });
+
+  it("accepts page 1 so the gallery can retry a failed first load", async () => {
+    mockListPhotos.mockResolvedValueOnce({ items: [], total: 0, page: 1, perPage: 50 });
+    const result = await loadMorePhotosAction(PROJECT_ID, 1);
+    expect(result.ok).toBe(true);
+    expect(mockListPhotos).toHaveBeenCalledWith(PROJECT_ID, { page: 1, perPage: 50 });
   });
 
   it("rejects non-integer page", async () => {

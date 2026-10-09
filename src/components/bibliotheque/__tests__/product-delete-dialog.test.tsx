@@ -73,6 +73,7 @@ vi.mock("@/components/ui/alert-dialog", () => ({
   AlertDialogTitle: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <h2 className={className}>{children}</h2>
   ),
+  AlertDialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
   AlertDialogFooter: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
   ),
@@ -230,6 +231,20 @@ describe("ProductDeleteDialog", () => {
 
     expect(screen.getByTestId("delete-btn")).not.toBeDisabled();
   });
+
+  it.each(["Cheville 6mm", "Cheville 6mm "])(
+    "deletes a product whose stored name ends with a space when %j is typed",
+    async (typed) => {
+      mockDelete.mockResolvedValueOnce({ ok: true });
+      renderDialog({ product: makeProduct({ name: "Cheville 6mm ", id: "prod-trail" }) });
+
+      fireEvent.change(screen.getByRole("textbox"), { target: { value: typed } });
+      expect(screen.getByTestId("delete-btn")).not.toBeDisabled();
+      fireEvent.click(screen.getByTestId("delete-btn"));
+
+      await waitFor(() => expect(mockDelete).toHaveBeenCalledWith("prod-trail"));
+    }
+  );
 
   it("calls deleteProductAction with product id on confirm", async () => {
     mockDelete.mockResolvedValueOnce({ ok: true });

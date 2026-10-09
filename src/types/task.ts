@@ -37,6 +37,12 @@ export interface CreateTaskPayload {
 
 export type UpdateTaskPayload = Partial<Omit<CreateTaskPayload, "status">>;
 
+/** A person a task can be assigned to (a project member), as the pickers list them. */
+export interface TaskAssignee {
+  id: string;
+  name: string;
+}
+
 export interface MoveTaskPayload {
   status: TaskStatus;
   before_id?: string;

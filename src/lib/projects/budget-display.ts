@@ -7,12 +7,19 @@
  * real drift instead of mirroring the math.
  */
 
-/** Format a number as whole-euro currency (fr-FR, no decimals). */
+/**
+ * Format a number as fr-FR euro currency: whole euros without decimals
+ * ("12 500 €"), anything with cents to the cent ("12 500,75 €"). Rounding
+ * cents away made the row contradict itself (1 001 € − 100 € shown as 900 €,
+ * a 0,40 € overrun as "Over by 0 €").
+ */
 export function fmtEUR(n: number): string {
+  const wholeEuros = Math.round(n * 100) % 100 === 0;
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: wholeEuros ? 0 : 2,
+    maximumFractionDigits: wholeEuros ? 0 : 2,
   }).format(n);
 }
 

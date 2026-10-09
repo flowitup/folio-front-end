@@ -12,7 +12,9 @@
  * value is never put in an input nor sent back — saving it would overwrite the
  * real IBAN/BIC with the mask. Those four fields are sent only when the user
  * actually changed them; a masked one starts empty with the mask as its
- * placeholder, and typing a value replaces what is stored.
+ * placeholder, typing a value replaces what is stored, and its Remove button
+ * sends null so the save clears it. An emptied plain field is sent as null,
+ * which clears it too.
  */
 
 import { useRef, useState } from "react";
@@ -40,6 +42,15 @@ type PlainField =
 
 export type CompanyProfileValues = Record<PlainField | SensitiveField, string>;
 
+/** Inline message for a field the API rejected (422 `details[].loc`). */
+const SERVER_FIELD_ERRORS: Partial<Record<keyof CompanyProfileValues, string>> = {
+  siret: "form.errors.siretInvalid",
+  tva_number: "form.errors.tvaInvalid",
+  iban: "form.errors.ibanInvalid",
+  bic: "form.errors.bicInvalid",
+  logo_url: "form.errors.logoUrlInvalidUrl",
+};
+
 /** What the inputs start with: masked sensitive values start empty. */
 export function initialProfileValues(company: Company): CompanyProfileValues {
   const sensitive = (v: string | null) => (v == null || isMaskedValue(v) ? "" : v);
@@ -58,11 +69,13 @@ export function initialProfileValues(company: Company): CompanyProfileValues {
 
 /**
  * PUT body: the plain fields as typed (empty → null), plus each sensitive
- * field only when it differs from what the input started with.
+ * field only when it differs from what the input started with, or as null
+ * when the admin removed its stored (masked) value.
  */
 export function buildCompanyUpdatePayload(
   company: Company,
-  values: CompanyProfileValues
+  values: CompanyProfileValues,
+  removed: ReadonlySet<SensitiveField> = new Set()
 ): UpdateCompanyPayload {
   const orNull = (v: string) => (v.trim() === "" ? null : v.trim());
   const payload: UpdateCompanyPayload = {
@@ -74,7 +87,8 @@ export function buildCompanyUpdatePayload(
   };
   const initial = initialProfileValues(company);
   for (const field of SENSITIVE_FIELDS) {
-    if (values[field].trim() !== initial[field].trim()) payload[field] = orNull(values[field]);
+    if (removed.has(field) && values[field].trim() === "") payload[field] = null;
+    else if (values[field].trim() !== initial[field].trim()) payload[field] = orNull(values[field]);
   }
   return payload;
 }
@@ -89,6 +103,8 @@ export function CompanyProfileForm({ company, onSaved }: CompanyProfileFormProps
 
   const [values, setValues] = useState<CompanyProfileValues>(() => initialProfileValues(company));
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // Masked fields whose stored value the admin chose to remove on save.
+  const [removed, setRemoved] = useState<ReadonlySet<SensitiveField>>(() => new Set());
   const [isSaving, setIsSaving] = useState(false);
   const savingRef = useRef(false);
 
@@ -135,8 +151,14 @@ export function CompanyProfileForm({ company, onSaved }: CompanyProfileFormProps
     savingRef.current = true;
     setIsSaving(true);
     try {
-      const result = await updateCompanyAction(company.id, buildCompanyUpdatePayload(company, values));
+      const result = await updateCompanyAction(company.id, buildCompanyUpdatePayload(company, values, removed));
       if (!result.ok) {
+        const errors: Record<string, string> = {};
+        for (const field of result.error.fields ?? []) {
+          const key = SERVER_FIELD_ERRORS[field as keyof CompanyProfileValues];
+          if (key) errors[field] = t(key);
+        }
+        if (Object.keys(errors).length > 0) setFieldErrors(errors);
         toast.error(result.error.message);
         return;
       }
@@ -150,24 +172,63 @@ export function CompanyProfileForm({ company, onSaved }: CompanyProfileFormProps
     }
   }
 
+  function toggleRemoved(field: SensitiveField, on: boolean) {
+    setRemoved((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(field);
+      else next.delete(field);
+      return next;
+    });
+  }
+
   const sensitiveInput = (field: SensitiveField, id: string, labelKey: string) => {
     const stored = company[field];
     const masked = stored != null && isMaskedValue(stored);
+    const isRemoved = removed.has(field);
+    const error = fieldErrors[field];
     return (
       <div className="space-y-1.5">
         <Label htmlFor={id}>{t(`form.fields.${labelKey}.label`)}</Label>
         <Input
           id={id}
           value={values[field]}
-          onChange={setField(field)}
-          placeholder={masked ? stored : undefined}
+          onChange={(e) => {
+            update(field, e.target.value);
+            // Typing a new value replaces the stored one instead of removing it.
+            if (isRemoved) toggleRemoved(field, false);
+          }}
+          placeholder={masked && !isRemoved ? stored : undefined}
           autoComplete="off"
           disabled={isSaving}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
         />
-        {masked && (
-          <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("form.maskedFieldHint")}
+        {error ? (
+          <p id={`${id}-error`} className="text-[12px] text-destructive">
+            {error}
           </p>
+        ) : (
+          masked && (
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+                {isRemoved ? t("form.removedFieldHint") : t("form.maskedFieldHint")}
+              </p>
+              <button
+                type="button"
+                onClick={() => toggleRemoved(field, !isRemoved)}
+                disabled={isSaving}
+                className="shrink-0 text-[11px] font-medium underline-offset-2 hover:underline"
+                style={{ color: isRemoved ? "var(--ink)" : "var(--negative)" }}
+                aria-label={
+                  isRemoved
+                    ? undefined
+                    : t("form.removeStoredValueLabel", { field: t(`form.fields.${labelKey}.label`) })
+                }
+              >
+                {isRemoved ? t("form.undoRemove") : t("form.removeStoredValue")}
+              </button>
+            </div>
+          )
         )}
       </div>
     );

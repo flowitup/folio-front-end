@@ -66,9 +66,13 @@ import type {
   Worker,
 } from "@/types/labor";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
+import { formatDate } from "@/lib/utils/formatters";
 
 /** Days before the picked date read for "recent workers" and "Same as last day". */
 const LOOKBACK_DAYS = 30;
+
+/** The API's floor for attendance days; anything older is a typo. */
+const EARLIEST_ATTENDANCE_DATE = "2000-01-01";
 
 function todayKey(): string {
   const d = new Date();
@@ -347,11 +351,12 @@ export function LogDayDialog({
         skipped > 0
           ? t("toastLoggedWithSkip", { n: created, skipped })
           : t("toastLogged", { n: created });
-      // The dialog closes below; the action reopens it on the next day.
+      // The dialog closes below; the action reopens it on the next day
+      // (never a future one: attendance can't be logged ahead).
       const nextDate = shiftDate(date, 1);
       toast.success(
         msg,
-        onLogNextDay
+        onLogNextDay && nextDate <= todayKey()
           ? { action: { label: t("toastLogNextDay"), onClick: () => onLogNextDay(nextDate) } }
           : undefined
       );
@@ -373,7 +378,8 @@ export function LogDayDialog({
       }
       // Never the raw "HTTP 400: BAD REQUEST": the fields are checked before
       // sending, so what is left is a server-side refusal or a network error.
-      setError(t("saveFailed"));
+      const code = err instanceof ApiError ? (err.data as { error?: string } | undefined)?.error : undefined;
+      setError(code === "AttendanceDateOutOfRange" ? tLabor("errors.dateOutOfRange") : t("saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -381,6 +387,10 @@ export function LogDayDialog({
 
   async function handleSave() {
     setError(null);
+    if (date && (date > todayKey() || date < EARLIEST_ATTENDANCE_DATE)) {
+      setError(tLabor("errors.dateOutOfRange"));
+      return;
+    }
     const payload = buildBulkPayload(tileStates);
     if (!payload.length) {
       setError(t("selectAtLeastOne"));
@@ -420,7 +430,7 @@ export function LogDayDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] flex-col gap-3 sm:max-w-2xl">
+      <DialogContent className="flex max-h-[90vh] flex-col gap-3 sm:max-w-2xl" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
@@ -430,6 +440,8 @@ export function LogDayDialog({
             value={date}
             onChange={setDate}
             label={t("dateLabel")}
+            min={EARLIEST_ATTENDANCE_DATE}
+            max={todayKey()}
           />
           <Button
             type="button"
@@ -438,7 +450,7 @@ export function LogDayDialog({
             disabled={!canUseLastDay}
             title={
               canUseLastDay && lastDay.date
-                ? t("sameAsLastDayHint", { date: lastDay.date })
+                ? t("sameAsLastDayHint", { date: formatDate(lastDay.date) })
                 : t("noPreviousDay")
             }
           >

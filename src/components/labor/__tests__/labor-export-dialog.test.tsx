@@ -29,7 +29,7 @@ vi.mock("next-intl", () => ({
 vi.mock("@/lib/api/labor", () => ({
   fetchLaborExport: vi.fn(),
   fetchWorkerLaborExport: vi.fn(),
-  formatEUR: (amount: number) => `€${amount.toFixed(2)}`,
+  formatEUR: vi.fn((amount: number) => `€${amount.toFixed(2)}`),
 }));
 
 vi.mock("@/lib/util/trigger-browser-download", () => ({
@@ -45,7 +45,7 @@ vi.mock("sonner", () => ({
 }));
 
 // Import after mocking
-import { fetchLaborExport, fetchWorkerLaborExport } from "@/lib/api/labor";
+import { fetchLaborExport, fetchWorkerLaborExport, formatEUR } from "@/lib/api/labor";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { toast } from "sonner";
 
@@ -327,7 +327,7 @@ describe("LaborExportDialog — error path", () => {
     vi.clearAllMocks();
   });
 
-  it("calls toast.error with error message when fetchLaborExport rejects", async () => {
+  it("calls toast.error with the translated message, never the raw API error", async () => {
     vi.mocked(fetchLaborExport).mockRejectedValue(
       new Error("Server error: 500")
     );
@@ -346,7 +346,7 @@ describe("LaborExportDialog — error path", () => {
     await waitFor(
       () => {
         expect(toast.error).toHaveBeenCalledWith(
-          "Server error: 500",
+          "errorGeneric",
           expect.objectContaining({ id: "toast-id-1" })
         );
       },
@@ -476,6 +476,12 @@ describe("LaborExportDialog — with worker prop (render)", () => {
   it("renders subtitle containing formatted daily rate", () => {
     renderWorkerDialog();
     expect(screen.getByText(/workerSubtitle/)).toBeDefined();
+  });
+
+  it("shows the rate in force today, not the creation rate, after a rate change", () => {
+    renderWorkerDialog({ ...ACTIVE_WORKER, daily_rate: 70, current_daily_rate: 75 });
+    expect(formatEUR).toHaveBeenCalledWith(75);
+    expect(formatEUR).not.toHaveBeenCalledWith(70);
   });
 
   it("renders from/to inputs with worker-prefixed IDs", () => {
@@ -666,7 +672,7 @@ describe("LaborExportDialog — with worker prop (failure path)", () => {
     vi.clearAllMocks();
   });
 
-  it("shows error toast with Error message when fetchWorkerLaborExport rejects", async () => {
+  it("shows the translated error toast, never the raw API error, when fetchWorkerLaborExport rejects", async () => {
     vi.mocked(fetchWorkerLaborExport).mockRejectedValue(new Error("Server error: 500"));
 
     renderWorkerDialog();
@@ -681,7 +687,7 @@ describe("LaborExportDialog — with worker prop (failure path)", () => {
     await waitFor(
       () => {
         expect(toast.error).toHaveBeenCalledWith(
-          "Server error: 500",
+          "workerToastError",
           expect.objectContaining({ id: "toast-id-1" }),
         );
       },
@@ -865,5 +871,23 @@ describe("LaborExportDialog — pre-fill props", () => {
 
     const xlsxBtn = screen.getByText("xlsx").closest("button");
     expect(xlsxBtn?.className).toContain("bg-primary");
+  });
+});
+
+describe("LaborExportDialog — picker month label", () => {
+  it("names the month in the app language, not the browser's", () => {
+    // useLocale() is mocked to "fr"; the test runner's own locale is not French.
+    render(
+      <LaborExportDialog
+        projectId="proj-uuid-1"
+        open={true}
+        onOpenChange={vi.fn()}
+        workers={[ACTIVE_WORKER]}
+        initialFrom="2026-10"
+        initialTo="2026-10"
+      />,
+    );
+    expect(screen.getByText("octobre 2026")).toBeInTheDocument();
+    expect(screen.queryByText("October 2026")).toBeNull();
   });
 });

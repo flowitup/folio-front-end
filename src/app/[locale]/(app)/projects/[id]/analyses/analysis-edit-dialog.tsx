@@ -107,7 +107,7 @@ export function AnalysisEditDialog({ projectId, analysis, onCancel, onUpdated }:
 
   return (
     <Dialog open={analysis !== null} onOpenChange={(open) => !open && !saving && onCancel()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{t("dialogTitle")}</DialogTitle>

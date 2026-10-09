@@ -149,9 +149,31 @@ describe("BillingDocumentForm validation", () => {
     [{ items: line({ quantity: "10000000" }) }, "Item quantity cannot exceed 9999999."],
     [{ items: line({ unit_price: "1000000000" }) }, "Item unit price cannot exceed 999999999."],
     [{ recipient_email: "no-at-sign" }, "Enter a valid recipient email address."],
+    // Text filled in from a template over the API cap names its field.
+    [{ notes: "n".repeat(2990) }, "Notes must be 2000 characters or fewer."],
+    [{ terms: "t".repeat(2001) }, "General terms (CGV) must be 2000 characters or fewer."],
+    [{ signature_block_text: "s".repeat(501) }, "Signature block must be 500 characters or fewer."],
   ])("blocks %j before calling the API", async (overrides, message) => {
     renderWith(overrides as Partial<BillingDocument>);
     expect(await screen.findByText(message)).toBeDefined();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("names facture payment terms over 500 characters and caps the fields' input", async () => {
+    render(
+      <BillingDocumentForm
+        mode="edit"
+        kind="facture"
+        document={{ ...DOC, kind: "facture", validity_until: null, payment_due_date: "2026-07-01", payment_terms: "p".repeat(690) } as BillingDocument}
+        attachedCompanies={[]}
+      />
+    );
+    expect(document.getElementById("payment-terms")?.getAttribute("maxlength")).toBe("500");
+    expect(document.getElementById("notes")?.getAttribute("maxlength")).toBe("2000");
+    expect(document.getElementById("terms")?.getAttribute("maxlength")).toBe("2000");
+    expect(document.getElementById("signature-block")?.getAttribute("maxlength")).toBe("500");
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(await screen.findByText("Payment terms must be 500 characters or fewer.")).toBeDefined();
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 

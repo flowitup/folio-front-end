@@ -51,3 +51,25 @@ describe("PersonTypeahead", () => {
     expect(screen.queryByText(/labor\.typeahead\.create/)).toBeNull();
   });
 });
+
+describe("PersonTypeahead — people already on the project", () => {
+  it("lists them as unavailable and never picks them", async () => {
+    vi.mocked(fetchPersons).mockResolvedValue([
+      { id: "p-on", name: "Alpha Éloïse", phone: "+33620600001" },
+      { id: "p-free", name: "Alpha Bravo", phone: null },
+    ]);
+    const onChange = vi.fn();
+    render(<PersonTypeahead value={null} onChange={onChange} excludeIds={["p-on"]} />);
+    fireEvent.click(screen.getByRole("combobox"));
+    await type("Alpha");
+
+    const taken = screen.getByText("Alpha Éloïse").closest("[cmdk-item]") as HTMLElement;
+    expect(taken).toHaveAttribute("aria-disabled", "true");
+    expect(taken.textContent).toContain("labor.typeahead.alreadyOnProject");
+    fireEvent.click(taken);
+    expect(onChange).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByText("Alpha Bravo"));
+    expect(onChange).toHaveBeenCalledWith({ id: "p-free", name: "Alpha Bravo", phone: null });
+  });
+});

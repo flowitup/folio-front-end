@@ -5,7 +5,15 @@
     "signOut": "Đăng xuất",
     "loading": "Đang tải...",
     "language": "Ngôn ngữ",
-    "close": "Đóng"
+    "close": "Đóng",
+    "notificationsRegion": "Thông báo"
+  },
+  "meta": {
+    "description": "Một ứng dụng ấm áp, gần gũi để quản lý việc xây dựng ngôi nhà của chính bạn.",
+    "signIn": "Đăng nhập",
+    "quotes": "Báo giá",
+    "invoices": "Hóa đơn",
+    "onboarding": "Bắt đầu"
   },
   "navigation": {
     "dashboard": "Tổng quan",
@@ -49,6 +57,7 @@
     "errorCodeRequired": "Vui lòng nhập mã gồm 6 chữ số",
     "errorInvalidCode": "Mã không đúng hoặc đã hết hạn",
     "errorThrottled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại.",
+    "errorHourlyLimit": "Đã yêu cầu quá nhiều mã cho số này. Vui lòng thử lại sau {minutes} phút.",
     "errorSmsFailed": "Không thể gửi SMS. Vui lòng thử lại sau.",
     "errorPhoneLoginUnavailable": "Đăng nhập bằng số điện thoại không khả dụng trên máy chủ này.",
     "stepBadge": "Bước {current} / {total}",
@@ -88,7 +97,7 @@
   "sidebar": {
     "todayConditions": "{temp}° / {weather}",
     "billing": {
-      "title": "Báo giá & Hóa đơn",
+      "title": "Lập hóa đơn",
       "devis": "Báo giá",
       "factures": "Hóa đơn",
       "templates": "Mẫu tài liệu",
@@ -132,6 +141,7 @@
     "selectProject": "Chọn dự án",
     "loading": "Đang tải...",
     "loadError": "Không thể tải dự án",
+    "retry": "Thử lại",
     "noProjects": "Không có dự án nào",
     "newProject": "Tạo dự án",
     "member": "thành viên",
@@ -167,6 +177,10 @@
     "remove": "Xóa",
     "allProjects": "Tất cả",
     "searchProjects": "Tìm dự án",
+    "noSearchResults": {
+      "title": "Không có dự án nào khớp với “{query}”",
+      "clear": "Xóa tìm kiếm"
+    },
     "projectStamp": "Dự án",
     "progress": "Tiến độ",
     "creditTotal": "Tổng tín dụng",
@@ -189,7 +203,7 @@
     "budgetLabel": "Tổng tín dụng (€)",
     "budgetSourceLabelOptional": "Nguồn tài trợ (tùy chọn)",
     "budgetSourcePlaceholder": "vd. Vay ngân hàng BNP",
-    "budgetInvalid": "Tổng tín dụng phải là số dương",
+    "budgetInvalid": "Nhập tổng tín dụng dưới dạng số tiền, ví dụ 12500 hoặc 12.500,00",
     "bankRelease": {
       "title": "Giải ngân tín dụng ngân hàng",
       "overDrawn": "Vượt quá",
@@ -245,10 +259,16 @@
       "title": "Chờ quản lý thêm bạn vào công trình",
       "description": "Quản trị viên công ty sẽ thêm bạn vào một công trình khi sẵn sàng."
     },
+    "noCompany": {
+      "title": "Bạn chưa thuộc công ty nào",
+      "description": "Tạo công ty của bạn hoặc nhập mã để tham gia một công ty có sẵn.",
+      "cta": "Tạo hoặc tham gia công ty"
+    },
     "settingsReadOnly": "Chỉ quản trị viên và quản lý của dự án này mới có thể thay đổi cài đặt.",
     "teamSize": "{n, plural, other {# thành viên}}",
     "projectCreated": "Đã tạo dự án",
     "projectDeleted": "Đã xóa dự án",
+    "projectUpdated": "Đã cập nhật dự án",
     "settingsForbidden": "Bạn không có quyền thay đổi cài đặt của dự án này."
   },
   "settings": {
@@ -319,6 +339,7 @@
       "cancel": "Hủy",
       "usageHintTitle": "Cách dùng khóa của bạn",
       "usageHintBody": "Gửi khóa dưới dạng bearer token trong tiêu đề Authorization của mỗi yêu cầu từ script hoặc công cụ tự động hóa của bạn.",
+      "usageHintPlaceholder": "khóa của bạn",
       "toasts": {
         "created": "Đã tạo khóa API",
         "revoked": "Đã thu hồi khóa API"
@@ -348,6 +369,7 @@
       "errorSameNumber": "Đây đã là số điện thoại của bạn.",
       "errorPhoneTaken": "Số điện thoại này đã được dùng cho một tài khoản khác.",
       "errorThrottled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại.",
+      "errorHourlyLimit": "Đã yêu cầu quá nhiều mã cho số này. Vui lòng thử lại sau {minutes} phút.",
       "errorSmsFailed": "Không thể gửi SMS. Vui lòng thử lại sau.",
       "errorInvalidCode": "Mã không đúng hoặc đã hết hạn",
       "errorFailed": "Không thể đổi số điện thoại. Vui lòng thử lại."
@@ -355,31 +377,36 @@
   },
   "paymentMethods": {
     "title": "Phương thức thanh toán",
-    "description": "Quản lý cách hoá đơn được thanh toán cho công ty này. Phương thức mặc định không thể xoá nhưng có thể đổi tên.",
+    "description": "Quản lý cách hóa đơn được thanh toán cho công ty này. Phương thức mặc định không thể xóa nhưng có thể đổi tên.",
     "addPlaceholder": "ví dụ Wise, Stripe…",
     "addButton": "Thêm",
     "builtin": "Mặc định",
     "noMethods": "Chưa có phương thức thanh toán. Thêm một phương thức ở trên.",
-    "usedInInvoices": "{count, plural, one {# hoá đơn} other {# hoá đơn}}",
-    "deleteConfirmTitle": "Xoá phương thức thanh toán này?",
-    "deleteConfirmBody": "Các hoá đơn hiện tại vẫn giữ nhãn đã chụp. Hoá đơn mới sẽ không thể chọn phương thức này.",
-    "deleteConfirmCta": "Xoá",
-    "cancel": "Huỷ",
-    "cancelEditAria": "Huỷ chỉnh sửa",
+    "usedInInvoices": "{count, plural, one {# hóa đơn} other {# hóa đơn}}",
+    "deleteConfirmTitle": "Xóa phương thức thanh toán này?",
+    "deleteConfirmBody": "Các hóa đơn hiện tại vẫn giữ nhãn đã chụp. Hóa đơn mới sẽ không thể chọn phương thức này.",
+    "deleteConfirmCta": "Xóa",
+    "cancel": "Hủy",
+    "cancelEditAria": "Hủy chỉnh sửa",
     "editLabelAria": "Chỉnh sửa \"{name}\"",
-    "deleteLabelAria": "Xoá \"{name}\"",
+    "deleteLabelAria": "Xóa \"{name}\"",
     "errors": {
       "duplicate_label": "Đã tồn tại phương thức thanh toán với tên này.",
-      "builtin_protected": "Không thể xoá phương thức mặc định.",
+      "builtin_protected": "Không thể xóa phương thức mặc định.",
       "not_found": "Không tìm thấy phương thức thanh toán.",
       "permission_denied": "Bạn không có quyền quản lý phương thức thanh toán cho công ty này.",
       "label_required": "Tên là bắt buộc.",
-      "label_too_long": "Tên quá dài (tối đa 120 ký tự)."
+      "label_too_long": "Tên quá dài (tối đa 120 ký tự).",
+      "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+      "validation": "Dữ liệu không hợp lệ. Vui lòng kiểm tra và thử lại.",
+      "conflict": "Đã xảy ra xung đột. Vui lòng thử lại.",
+      "rate_limited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
+      "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
     },
     "toasts": {
       "created": "Đã thêm phương thức thanh toán",
       "renamed": "Đã đổi tên phương thức thanh toán",
-      "deleted": "Đã xoá phương thức thanh toán"
+      "deleted": "Đã xóa phương thức thanh toán"
     },
     "builtins": {
       "cash": "Tiền mặt"
@@ -473,6 +500,8 @@
     "invalidFileType": "{name}: loại tệp không hợp lệ",
     "uploadFailed": "Tải lên {name} thất bại",
     "deleteFailed": "Xóa tệp thất bại",
+    "downloadFailed": "Tải xuống {name} thất bại",
+    "attachmentGone": "Tệp {name} không còn tồn tại",
     "rename": "Đổi tên",
     "attachmentDeleteConfirm": "Xóa tệp đính kèm này? Không thể hoàn tác.",
     "openAttachment": "Mở",
@@ -484,7 +513,8 @@
       "save": "Lưu",
       "saving": "Đang lưu…",
       "error": "Không thể đổi tên tệp đính kèm. Hãy thử lại.",
-      "errorExtension": "Phần mở rộng phải giữ nguyên là {extension}"
+      "errorExtension": "Phần mở rộng phải giữ nguyên là {extension}",
+      "errorTooLong": "Tên quá dài (tối đa {max} ký tự)"
     },
     "attachmentPreview": {
       "preview": "Xem trước",
@@ -531,6 +561,7 @@
       "errorRangeInvalid": "\"Từ\" phải trước hoặc bằng \"Đến\"",
       "errorRangeTooLarge": "Khoảng thời gian không vượt quá 24 tháng",
       "errorGeneric": "Không thể xuất chi phí",
+      "errorForbidden": "Bạn không có quyền xuất chi phí của dự án này.",
       "dialogDescription": "Chọn khoảng thời gian, loại và định dạng tệp."
     },
     "paymentMethod": {
@@ -553,6 +584,11 @@
     "appliedTo": "Áp dụng cho {number}",
     "errorRefundExceedsSource": "Khoản trả hàng vượt quá số tiền còn lại ({remaining}) của hóa đơn này.",
     "errorAppliedExceedsTarget": "Số tiền avoir vượt quá tổng số tiền của hóa đơn được áp dụng.",
+    "errorCompanyPaidRefundTracked": "Khoản chi này đang được theo dõi hoàn tiền nên không thể chuyển sang phương thức thanh toán của công ty. Hãy xóa trạng thái hoàn tiền trước.",
+    "errorUnlinkAvoirsFirst": "Hóa đơn này đang được áp dụng avoir. Hãy gỡ liên kết các avoir trước khi chuyển nó thành trả hàng hoặc vốn giải ngân.",
+    "errorRefundedLocked": "Chi phí này đã được hoàn tiền nên bị khóa. Hãy xóa trạng thái hoàn tiền trước khi sửa hoặc xóa chi phí.",
+    "errorReturnTotalPositive": "Tổng của khoản trả hàng phải bằng 0 hoặc âm. Hãy nhập các dòng với số tiền âm.",
+    "errorUnlinkReturnsFirst": "Hóa đơn này có các khoản trả hàng liên kết. Hãy gỡ liên kết hoặc xóa chúng trước.",
     "settledVia": {
       "label": "Thanh toán qua",
       "cash": "Hoàn tiền mặt",
@@ -639,12 +675,18 @@
     },
     "loadFailed": "Không tải được hóa đơn.",
     "loadListFailed": "Không tải được danh sách chi phí.",
+    "loadForbidden": "Bạn không có quyền truy cập dự án này.",
     "deleteInvoiceFailed": "Không xóa được chi phí.",
     "errorPaymentMethodInactive": "Phương thức thanh toán này đã bị vô hiệu hóa. Hãy chọn phương thức khác.",
     "workerInactive": "{name} (không hoạt động)",
     "errorQuantityTooLarge": "Số lượng không được vượt quá {max, number}.",
     "errorUnitPriceTooLarge": "Đơn giá không được vượt quá {max, number}.",
     "errorIssueDateRequired": "Vui lòng nhập ngày phát hành",
+    "errorQuantityInvalid": "Số lượng phải là một số có tối đa {decimals} chữ số thập phân",
+    "errorUnitPriceInvalid": "Đơn giá phải là một số có tối đa {decimals} chữ số thập phân",
+    "errorUnitPriceNegative": "Đơn giá không được âm đối với loại chi phí này",
+    "errorVatRateInvalid": "VAT phải là một số từ 0 đến 100, tối đa {decimals} chữ số thập phân",
+    "errorDateOutOfRange": "Vui lòng nhập ngày trong khoảng từ năm {min} đến năm {max}",
     "bankRefundLine": "Ngân hàng hoàn tiền — {number}",
     "deleteExpense": "Xóa chi phí {number}",
     "removeLine": "Xóa dòng",
@@ -665,12 +707,15 @@
     "dueDateLabel": "Hạn",
     "labelsLabel": "Nhãn",
     "labelsPlaceholder": "tag, phân cách, bằng, dấu phẩy",
+    "labelsTooMany": "Tối đa {max} nhãn.",
+    "labelTooLong": "Mỗi nhãn tối đa {max} ký tự: “{label}” quá dài.",
     "save": "Lưu",
     "saving": "Đang lưu...",
     "cancel": "Hủy",
     "delete": "Xóa",
     "deleteConfirm": "Xóa công việc này? Không thể hoàn tác.",
     "loadError": "Không thể tải công việc",
+    "loadForbidden": "Bạn không có quyền truy cập dự án này.",
     "taskCount": "{n, plural, =0 {không có công việc} other {# công việc}}",
     "addTask": "Thêm công việc",
     "view": {
@@ -683,7 +728,8 @@
       "nextWeek": "Tuần sau",
       "unscheduled": "Chưa lên lịch",
       "noTasksDay": "—",
-      "addOnDay": "Thêm"
+      "addOnDay": "Thêm công việc ngày {day}",
+      "addUnscheduled": "Thêm công việc chưa lên lịch"
     },
     "column": {
       "todo": "Cần làm",
@@ -701,7 +747,7 @@
     "errors": {
       "forbidden": "Bạn không có quyền thực hiện thao tác này trong dự án.",
       "notFound": "Công việc này không còn tồn tại.",
-      "invalid": "Một số thông tin không được chấp nhận. Kiểm tra tiêu đề (tối đa 255 ký tự) rồi thử lại.",
+      "invalid": "Một số thông tin không được chấp nhận. Kiểm tra tiêu đề (tối đa 255 ký tự), mô tả (tối đa 5.000 ký tự) và nhãn (tối đa 20 nhãn, mỗi nhãn 50 ký tự) rồi thử lại.",
       "create": "Không thể tạo công việc. Vui lòng thử lại.",
       "save": "Không thể lưu công việc. Vui lòng thử lại.",
       "delete": "Không thể xóa công việc. Vui lòng thử lại."
@@ -709,13 +755,18 @@
     "statusLabel": "Trạng thái",
     "close": "Đóng",
     "dnd": {
-      "instructions": "Để nhấc một công việc, nhấn Space hoặc Enter. Di chuyển bằng các phím mũi tên, nhấn Space hoặc Enter lần nữa để thả, hoặc Escape để hủy.",
+      "instructions": "Để nhấc một công việc, nhấn Space. Di chuyển bằng các phím mũi tên, nhấn Space lần nữa để thả, hoặc Escape để hủy. Nhấn Enter để mở công việc.",
       "pickedUp": "Đã nhấc công việc {title}.",
       "over": "Công việc {title} đang ở trên {target}.",
       "dropped": "Đã thả công việc {title} vào {target}.",
       "cancelled": "Đã hủy di chuyển công việc {title}."
     },
-    "taskUnavailable": "Công việc này không tồn tại hoặc bạn không có quyền truy cập."
+    "taskUnavailable": "Công việc này không tồn tại hoặc bạn không có quyền truy cập.",
+    "assigneeLabel": "Người phụ trách",
+    "unassigned": "Chưa giao",
+    "assigneeOther": "Một người ngoài nhóm dự án",
+    "assignedTo": "Giao cho {name}",
+    "discardChanges": "Bỏ các thay đổi chưa lưu của công việc này?"
   },
   "labor": {
     "title": "Nhân công",
@@ -748,6 +799,7 @@
     "filterWorkerAll": "Tất cả công nhân",
     "confirmDeactivate": "Vô hiệu hóa công nhân này?",
     "confirmDelete": "Xóa bản ghi này?",
+    "deleteIrreversible": "Thao tác này không thể hoàn tác.",
     "cancel": "Hủy",
     "save": "Lưu",
     "delete": "Xóa",
@@ -770,6 +822,7 @@
     "summaryCrewColumn": "Đội ngũ",
     "summaryCostColumn": "Chi phí",
     "summaryPerDay": "{rate} / ngày",
+    "daysShort": "{n} ngày",
     "summaryToggleBreakdown": "Hiển thị chi tiết theo công nhân",
     "summaryDrillDown": "Nhấn để xem chi tiết theo công nhân",
     "summaryMonthPickerAll": "Tất cả tháng",
@@ -838,15 +891,20 @@
       "loadEntriesFailed": "Không tải được chấm công.",
       "loadSummaryFailed": "Không tải được tổng hợp.",
       "createWorkerFailed": "Không tạo được thợ.",
+      "workerAlreadyOnProject": "Người này đã là công nhân của dự án này.",
+      "workerAlreadyOnProjectInactive": "Người này đã có trong dự án này nhưng đang bị vô hiệu hóa. Hãy kích hoạt lại từ danh sách công nhân.",
       "updateWorkerFailed": "Không cập nhật được thợ.",
       "deactivateWorkerFailed": "Không vô hiệu hóa được thợ.",
       "deleteEntryFailed": "Không xóa được chấm công.",
       "saveWorkerFailed": "Không lưu được thợ.",
+      "invalidPhone": "Nhập số điện thoại hợp lệ, ví dụ 06 12 34 56 78 hoặc +84 912 345 678.",
       "workerNameRequired": "Bắt buộc nhập tên thợ.",
       "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0.",
       "reactivateWorkerFailed": "Không thể kích hoạt lại công nhân",
       "amountTooLarge": "Số tiền không được vượt quá {max, number}.",
-      "overrideNegative": "Số tiền không được âm."
+      "overrideNegative": "Số tiền không được âm.",
+      "dateOutOfRange": "Không thể chấm công cho một ngày trong tương lai hoặc trước năm 2000.",
+      "noteTooLong": "Ghi chú không được dài quá {max, number} ký tự."
     },
     "logDayDialog": {
       "title": "Chấm công ngày",
@@ -897,7 +955,7 @@
       "pdf": "PDF (.pdf)",
       "summaryLine": "{count} tháng đã chọn",
       "download": "Tải xuống",
-      "cancel": "Huỷ",
+      "cancel": "Hủy",
       "generating": "Đang tạo file…",
       "downloaded": "Đã tải xong",
       "errorGeneric": "Không tạo được file xuất",
@@ -925,6 +983,7 @@
       "countPlural": "hoạt động",
       "sectionTitle": "Hoạt động",
       "deleteFailed": "Không thể xóa hoạt động",
+      "saveFailed": "Không thể lưu hoạt động",
       "deleted": "Đã xóa hoạt động"
     },
     "dayDescription": {
@@ -968,6 +1027,7 @@
       "deletedToast": "Đã xóa thay đổi mức lương",
       "effectiveFrom": "Từ ngày {date}",
       "errorRatePositive": "Mức lương phải lớn hơn 0",
+      "errorDateRequired": "Hãy chọn ngày có hiệu lực",
       "errorGeneric": "Đã xảy ra lỗi"
     },
     "payments": {
@@ -988,6 +1048,7 @@
       "recordPaymentFor": "Ghi nhận thanh toán cho {name}",
       "recordedToast": "Đã ghi nhận thanh toán",
       "recordFailed": "Không thể ghi nhận thanh toán",
+      "descriptionTooLong": "Mô tả không được dài quá {max, number} ký tự.",
       "errorWorkerRequired": "Vui lòng chọn nhân công",
       "errorAmountPositive": "Số tiền phải lớn hơn 0",
       "expandInvoices": "Hiện hóa đơn",
@@ -1007,11 +1068,11 @@
       "editNote": "Sửa ghi chú",
       "noteTitle": "Ghi chú cho {name} — {month}",
       "notePlaceholder": "VD: phần còn lại đã trả tiền mặt ngày 12, đang chờ khách chuyển khoản…",
-      "noteHint": "Để trống để xoá ghi chú.",
+      "noteHint": "Để trống để xóa ghi chú.",
       "noteSave": "Lưu",
-      "noteCancel": "Huỷ",
+      "noteCancel": "Hủy",
       "noteSavedToast": "Đã lưu ghi chú",
-      "noteClearedToast": "Đã xoá ghi chú",
+      "noteClearedToast": "Đã xóa ghi chú",
       "noteSaveFailed": "Không lưu được ghi chú"
     },
     "summaryUnpaidWarning": "{amount} chưa trả",
@@ -1055,7 +1116,7 @@
       "panelHint": "Công nhân yêu cầu sửa các ngày công đã duyệt này. Áp dụng sẽ thay thế giá trị của ngày; từ chối sẽ giữ nguyên ngày như đã duyệt.",
       "current": "Hiện tại",
       "proposed": "Yêu cầu",
-      "noteCleared": "xoá ghi chú",
+      "noteCleared": "xóa ghi chú",
       "apply": "Áp dụng",
       "refuse": "Từ chối",
       "applied": "Đã áp dụng yêu cầu sửa của {worker}",
@@ -1064,7 +1125,7 @@
       "applyFailed": "Không áp dụng được yêu cầu sửa. Thử lại.",
       "refuseFailed": "Không từ chối được yêu cầu sửa. Thử lại.",
       "refuseTitle": "Từ chối yêu cầu sửa này?",
-      "refuseConfirm": "Ngày công {date} của {worker} giữ nguyên như đã duyệt và yêu cầu sẽ bị huỷ.",
+      "refuseConfirm": "Ngày công {date} của {worker} giữ nguyên như đã duyệt và yêu cầu sẽ bị hủy.",
       "loadFailed": "Không tải được đầy đủ các yêu cầu sửa.",
       "retry": "Thử lại",
       "refreshing": "Đang làm mới các yêu cầu sửa"
@@ -1073,6 +1134,8 @@
     "workerDeactivated": "Đã vô hiệu hóa {name}",
     "reactivateWorker": "Kích hoạt lại",
     "workerReactivated": "Đã kích hoạt lại {name}",
+    "workerAdded": "Đã thêm {name}",
+    "workerUpdated": "Đã cập nhật {name}",
     "view": {
       "ariaLabel": "Chế độ xem chấm công",
       "calendar": "Lịch",
@@ -1088,7 +1151,8 @@
       "noMatches": "Không có kết quả",
       "typeToSearch": "Nhập ít nhất 2 ký tự để tìm",
       "existing": "Đã có",
-      "create": "Tạo “{name}”"
+      "create": "Tạo “{name}”",
+      "alreadyOnProject": "Đã có trong dự án này"
     }
   },
   "acceptInvite": {
@@ -1112,8 +1176,11 @@
       "codeRequired": "Vui lòng nhập mã gồm 6 chữ số",
       "invalidCode": "Mã không đúng hoặc đã hết hạn",
       "throttled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại.",
+      "hourlyLimit": "Đã yêu cầu quá nhiều mã cho số này. Vui lòng thử lại sau {minutes} phút.",
       "title": "Lời mời không khả dụng",
-      "nameRequired": "Vui lòng nhập tên của bạn"
+      "nameRequired": "Vui lòng nhập tên của bạn",
+      "accountExists": "Lời mời này dành cho một tài khoản Folio đã có. Hãy nhập số điện thoại của tài khoản đó, hoặc đăng nhập vào tài khoản đó trước.",
+      "wrongAccount": "Lời mời này đã được gửi đến một địa chỉ email khác."
     },
     "loggedInOther": {
       "title": "Bạn đang đăng nhập bằng tài khoản khác",
@@ -1136,6 +1203,12 @@
       "admin": "quản trị viên",
       "manager": "quản lý",
       "member": "thành viên"
+    },
+    "joinAsMe": {
+      "title": "Tham gia {projectName}",
+      "body": "Bạn đang đăng nhập bằng {currentUser}, đúng tài khoản được gửi lời mời này.",
+      "submit": "Tham gia dự án",
+      "submitting": "Đang tham gia…"
     }
   },
   "admin": {
@@ -1170,7 +1243,8 @@
       "toast": {
         "added": "Đã thêm người dùng vào {count} dự án",
         "alreadyMember": "{count} dự án đã bỏ qua — người dùng đã là thành viên",
-        "notFound": "{count} dự án không tồn tại"
+        "notFound": "{count} dự án không tồn tại",
+        "notInCompany": "{count} dự án đã bỏ qua — người dùng không thuộc công ty của dự án. Hãy thêm họ vào công ty trước."
       }
     }
   },
@@ -1249,6 +1323,7 @@
     "title": "Nhắc nhở",
     "empty": "Không có nhắc nhở nào lúc này",
     "dismissButton": "Bỏ qua",
+    "due": "Đến hạn {date}",
     "errors": {
       "dismissFailed": "Không thể bỏ qua. Vui lòng thử lại.",
       "validateFailed": "Không duyệt được. Thử lại.",
@@ -1281,11 +1356,12 @@
   },
   "billing": {
     "group": {
-      "title": "Báo giá & Hóa đơn"
+      "title": "Lập hóa đơn"
     },
     "templates": {
       "list": {
         "title": "Mẫu tài liệu",
+        "subtitle": "Các dòng dịch vụ và điều khoản dùng lại cho báo giá và hóa đơn của bạn.",
         "new": "Mẫu mới",
         "devisGroup": "Mẫu báo giá",
         "factureGroup": "Mẫu hóa đơn",
@@ -1296,7 +1372,7 @@
         },
         "card": {
           "items": "{n, plural, =0 {không có mục} =1 {1 mục} other {# mục}}",
-          "vatRate": "VAT mặc định {rate}%",
+          "vatRate": "VAT mặc định {rate}",
           "vatRateNone": "Không có VAT mặc định",
           "lastUpdated": "Cập nhật {date}"
         },
@@ -1307,7 +1383,8 @@
           "deleteConfirmTitle": "Xóa mẫu",
           "deleteConfirmDescription": "Xóa \"{name}\"? Không thể hoàn tác.",
           "deleteConfirm": "Xóa",
-          "deleteCancel": "Hủy"
+          "deleteCancel": "Hủy",
+          "deleteAriaLabel": "Xóa mẫu “{name}”"
         },
         "emptyGroup": "Chưa có mẫu nào trong nhóm này.",
         "deleteFailed": "Không xóa được mẫu. Vui lòng thử lại."
@@ -1324,7 +1401,7 @@
         "defaultVatRate": "Tỉ lệ VAT mặc định",
         "vatRateCustom": "Tùy chỉnh…",
         "notes": "Ghi chú",
-        "notesPlaceholder": "Ghi chú nội bộ hoặc cho khách hàng",
+        "notesPlaceholder": "In trên báo giá/hóa đơn (PDF và Excel)",
         "terms": "Điều khoản chung",
         "termsPlaceholder": "Điều khoản và điều kiện chung",
         "items": "Danh mục dịch vụ",
@@ -1338,6 +1415,7 @@
         "errors": {
           "nameRequired": "Tên mẫu là bắt buộc.",
           "nameTooLong": "Tên mẫu không được vượt quá 120 ký tự.",
+          "textTooLong": "Trường “{field}” không được vượt quá {max} ký tự.",
           "kindRequired": "Loại là bắt buộc.",
           "duplicateName": "Đã có mẫu trùng tên cho loại này.",
           "saveFailed": "Lưu mẫu thất bại. Vui lòng thử lại.",
@@ -1350,7 +1428,9 @@
         },
         "vatCustomPlaceholder": "vd. 8.5",
         "vatUsePreset": "Dùng thuế suất có sẵn",
-        "deleteConfirm": "Xóa “{name}”? Không thể hoàn tác."
+        "deleteConfirm": "Xóa “{name}”? Không thể hoàn tác.",
+        "deleteConfirmTitle": "Xóa mẫu?",
+        "backToList": "Quay lại danh sách mẫu"
       },
       "companyLabel": "Công ty"
     },
@@ -1477,13 +1557,13 @@
       },
       "totals": {
         "ht": "Tổng (chưa VAT)",
-        "tva": "VAT {rate}%",
+        "tva": "VAT {rate}",
         "ttc": "Tổng (gồm VAT)"
       },
       "notes": {
         "section": "Ghi chú & điều khoản",
         "notes": "Ghi chú",
-        "notesPlaceholder": "Ghi chú nội bộ hoặc cho khách hàng",
+        "notesPlaceholder": "In trên báo giá/hóa đơn (PDF và Excel)",
         "terms": "Điều khoản chung",
         "termsPlaceholder": "Điều khoản và điều kiện chung",
         "signatureBlock": "Khối chữ ký",
@@ -1504,7 +1584,8 @@
         "edit": "Chỉnh sửa",
         "previewPdf": "Xem trước PDF",
         "openMenu": "Mở thao tác",
-        "openFacture": "Mở hóa đơn"
+        "openFacture": "Mở hóa đơn",
+        "backToList": "Quay lại danh sách"
       },
       "errors": {
         "recipientRequired": "Tên khách hàng là bắt buộc.",
@@ -1519,6 +1600,7 @@
         "xlsxFailed": "Tải XLSX thất bại. Vui lòng thử lại.",
         "convertFailed": "Chuyển đổi báo giá sang hóa đơn thất bại.",
         "alreadyConverted": "Báo giá này đã được chuyển thành hóa đơn.",
+        "devisLocked": "Báo giá này đã được chuyển thành hóa đơn nên bị khóa. Hãy hủy hóa đơn để sửa báo giá.",
         "invalidTransition": "Chuyển đổi trạng thái này không được phép. Tài liệu có thể đã được cập nhật bởi phiên khác.",
         "companyRequired": "Vui lòng chọn một công ty để phát hành tài liệu này.",
         "statusUpdateFailed": "Không cập nhật được trạng thái. Vui lòng thử lại.",
@@ -1531,8 +1613,11 @@
         "itemVatRateInvalid": "Mỗi dòng cần có thuế suất VAT.",
         "itemVatRateTooLarge": "Thuế suất VAT của một dòng không được vượt quá 100%.",
         "invalidInput": "Một số trường không hợp lệ. Hãy kiểm tra ngày, email và số tiền của các dòng.",
+        "validityBeforeIssue": "Ngày hết hiệu lực không được trước ngày phát hành.",
+        "dueBeforeIssue": "Hạn thanh toán không được trước ngày phát hành.",
         "forbidden": "Bạn không có quyền thực hiện thao tác này.",
-        "companyProfileMissing": "Hãy hoàn thiện hồ sơ công ty trước khi tạo chứng từ thanh toán."
+        "companyProfileMissing": "Hãy hoàn thiện hồ sơ công ty trước khi tạo chứng từ thanh toán.",
+        "textTooLong": "Trường “{field}” không được vượt quá {max} ký tự."
       },
       "toast": {
         "documentSaved": "Đã lưu tài liệu.",
@@ -1571,6 +1656,11 @@
     "errors": {
       "invalidTransition": "Chuyển đổi trạng thái không hợp lệ.",
       "numberCollision": "Đã có tài liệu với số này.",
+      "documentNotFound": "Tài liệu này không còn tồn tại. Có thể nó đã bị xóa.",
+      "templateNotFound": "Mẫu này không còn tồn tại. Có thể nó đã bị xóa.",
+      "validation": "Một số giá trị bị từ chối. Hãy kiểm tra lại biểu mẫu và thử lại.",
+      "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+      "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
       "generic": "Đã xảy ra lỗi không mong đợi."
     },
     "refundable": {
@@ -1581,6 +1671,7 @@
       "loadError": "Không thể tải danh sách chi phí.",
       "updateError": "Cập nhật trạng thái thất bại. Vui lòng thử lại.",
       "truncatedNotice": "Đang hiển thị {count} trong số {total}",
+      "loadMore": "Tải thêm",
       "fundsReleaseLabel": "Vốn giải ngân: {number}",
       "partialAddError": "Một số chi phí không thể được thêm vào. Vui lòng thử lại.",
       "columns": {
@@ -1733,7 +1824,7 @@
   },
   "documents": {
     "title": "Tài liệu",
-    "subtitle": "Bản vẽ, hợp đồng, ảnh, hoá đơn — mọi thứ liên quan đến dự án.",
+    "subtitle": "Bản vẽ, hợp đồng, ảnh, hóa đơn — mọi thứ liên quan đến dự án.",
     "upload": {
       "ctaPick": "Chọn tệp",
       "dragHere": "Kéo tệp vào đây hoặc nhấn để chọn",
@@ -1765,7 +1856,7 @@
       "actions": {
         "preview": "Xem trước",
         "download": "Tải xuống",
-        "delete": "Xoá",
+        "delete": "Xóa",
         "downloadError": "Tải xuống thất bại — vui lòng thử lại",
         "rename": "Đổi tên"
       }
@@ -1782,7 +1873,7 @@
     "tags": {
       "column": "Nhãn",
       "add": "Thêm nhãn",
-      "remove": "Xoá nhãn",
+      "remove": "Xóa nhãn",
       "placeholder": "Nhãn mới…",
       "done": "Xong",
       "errorTooMany": "Mỗi tài liệu chỉ có tối đa {max} nhãn",
@@ -1792,8 +1883,9 @@
     "filter": {
       "all": "Tất cả",
       "tags": "Nhãn",
-      "clearTags": "Xoá nhãn lọc",
+      "clearTags": "Xóa nhãn lọc",
       "anyUploader": "Bất kỳ ai",
+      "formerMember": "Thành viên cũ",
       "uploader": "Người tải lên",
       "reset": "Đặt lại"
     },
@@ -1803,17 +1895,17 @@
       "download": "Tải xuống",
       "error": "Xem trước thất bại — hãy tải xuống để xem tệp",
       "loading": "Đang tải xem trước…",
-      "downloadError": "Tải xuống thất bại — tệp có thể đã bị xoá"
+      "downloadError": "Tải xuống thất bại — tệp có thể đã bị xóa"
     },
     "delete": {
-      "title": "Xoá tài liệu?",
-      "body": "Bạn chắc chắn muốn xoá \"{filename}\"? Không thể khôi phục từ giao diện.",
-      "cancel": "Huỷ",
-      "confirm": "Xoá",
-      "confirming": "Đang xoá…",
-      "success": "Đã xoá tài liệu",
-      "errorForbidden": "Bạn không có quyền xoá tài liệu trong dự án này",
-      "errorServer": "Xoá thất bại",
+      "title": "Xóa tài liệu?",
+      "body": "Bạn chắc chắn muốn xóa \"{filename}\"? Không thể khôi phục từ giao diện.",
+      "cancel": "Hủy",
+      "confirm": "Xóa",
+      "confirming": "Đang xóa…",
+      "success": "Đã xóa tài liệu",
+      "errorForbidden": "Bạn không có quyền xóa tài liệu trong dự án này",
+      "errorServer": "Xóa thất bại",
       "errorNotFound": "Tài liệu này không còn tồn tại"
     },
     "toast": {
@@ -1942,7 +2034,7 @@
       "email": "Email",
       "role": "Vai trò",
       "joined": "Tham gia",
-      "expires": "Hết hạn",
+      "expires": "Hết hạn sau",
       "invitedBy": "Được mời bởi",
       "actions": "Thao tác"
     },
@@ -1962,7 +2054,10 @@
     },
     "revoke": "Thu hồi",
     "revokeConfirm": "Thu hồi lời mời này?",
+    "revokeDescription": "Liên kết lời mời sẽ không còn hoạt động.",
     "expiresIn": "{days} ngày",
+    "expiresInLabeled": "Hết hạn sau {days} ngày",
+    "invitedByName": "Được mời bởi {name}",
     "toast": {
       "inviteSent": "Đã gửi lời mời đến {email}",
       "directAdded": "{email} đã được thêm trực tiếp vào dự án",
@@ -1970,7 +2065,10 @@
       "revoked": "Đã thu hồi lời mời",
       "rateLimited": "Gửi quá nhiều lời mời. Thử lại sau.",
       "error": "Không thể gửi lời mời. Vui lòng thử lại.",
-      "revokeFailed": "Không thể thu hồi lời mời. Vui lòng thử lại."
+      "revokeFailed": "Không thể thu hồi lời mời. Vui lòng thử lại.",
+      "invalidEmail": "Folio không chấp nhận địa chỉ email {email}. Vui lòng kiểm tra và thử lại.",
+      "accountDeactivated": "{email} thuộc về một tài khoản đã bị vô hiệu hóa nên không thể thêm vào.",
+      "alreadyMember": "{email} đã có trong dự án này"
     },
     "empty": {
       "members": "Chưa có thành viên nào",
@@ -1980,11 +2078,14 @@
       "button": "Sửa",
       "remove": "Xóa",
       "removeConfirm": "Xóa {name} khỏi dự án này?",
+      "removeOnlyAdmin": "Chỉ quản trị viên công ty mới có thể xóa người này khỏi dự án.",
+      "removeAria": "Xóa {name}",
+      "removeDescription": "Thành viên này sẽ bị xóa khỏi nhóm dự án.",
       "dialogTitle": "Chỉnh sửa thành viên",
       "dialogDescription": "Cập nhật tên hiển thị và email của thành viên này.",
       "nameLabel": "Tên hiển thị",
       "emailLabel": "Email",
-      "emailHint": "Email là danh tính đăng nhập. Thay đổi nó sẽ thay đổi cách người dùng này đăng nhập.",
+      "emailHint": "Dùng cho lời mời và thông báo. Đăng nhập bằng số điện thoại.",
       "roleLabel": "Vai trò dự án",
       "roleHint": "Kiểm soát những gì thành viên này có thể làm trên dự án này.",
       "submit": "Lưu thay đổi",
@@ -2021,7 +2122,7 @@
   },
   "companies": {
     "masking": {
-      "tooltip": "Chỉ quản trị viên mới nhìn thấy"
+      "tooltip": "Đã ẩn để bảo mật. Nhập giá trị mới trong hồ sơ công ty để thay thế."
     },
     "my": {
       "addCta": "Thêm công ty",
@@ -2033,7 +2134,8 @@
         "primaryBadge": "Chính",
         "setPrimary": "Đặt làm chính",
         "detach": "Hủy liên kết",
-        "detachConfirm": "Xóa bạn khỏi \"{name}\"? Bạn sẽ mất quyền truy cập và cần mã công ty từ quản trị viên để liên kết lại."
+        "detachConfirm": "Xóa bạn khỏi \"{name}\"? Bạn sẽ mất quyền truy cập và cần mã công ty từ quản trị viên để liên kết lại.",
+        "detached": "Bạn đã rời khỏi \"{name}\"."
       }
     },
     "invite": {
@@ -2169,9 +2271,17 @@
         "prefixInvalidChars": "Tiền tố chỉ được chứa chữ hoa và chữ số (A-Z, 0-9).",
         "logoUrlInvalidScheme": "URL logo phải sử dụng http hoặc https.",
         "logoUrlInvalidUrl": "URL logo không hợp lệ.",
+        "siretInvalid": "Mã số doanh nghiệp (SIRET) phải gồm 14 chữ số.",
+        "tvaInvalid": "Mã số thuế GTGT phải gồm 2 đến 16 chữ cái hoặc chữ số, ví dụ FR40552100554.",
+        "ibanInvalid": "Số IBAN không hợp lệ. Hãy kiểm tra mã quốc gia, chữ số kiểm tra và độ dài.",
+        "bicInvalid": "Mã BIC / SWIFT phải gồm 8 hoặc 11 chữ cái hoặc chữ số.",
         "generic": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
       },
-      "maskedFieldHint": "Đã lưu và được ẩn. Nhập giá trị mới để thay thế; để trống để giữ nguyên."
+      "maskedFieldHint": "Đã lưu và được ẩn. Nhập giá trị mới để thay thế; để trống để giữ nguyên.",
+      "removeStoredValue": "Xóa",
+      "removeStoredValueLabel": "Xóa giá trị đã lưu: {field}",
+      "removedFieldHint": "Sẽ bị xóa khi bạn lưu.",
+      "undoRemove": "Hoàn tác"
     },
     "picker": {
       "label": "Phát hành từ",
@@ -2185,13 +2295,14 @@
     "errors": {
       "forbiddenAdminRequired": "Yêu cầu quyền quản trị viên.",
       "companyAlreadyAttached": "Bạn đã được liên kết với công ty này.",
+      "lastAdmin": "Công ty phải có ít nhất một quản trị viên. Hãy chỉ định một thành viên khác làm quản trị viên trước.",
       "conflict": "Đã xảy ra xung đột.",
       "validation": "Lỗi xác thực dữ liệu.",
       "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
       "notFound": "Không tìm thấy tài nguyên yêu cầu.",
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
       "generic": "Đã xảy ra lỗi không mong muốn.",
-      "invalidJoinCode": "Mã tham gia không hợp lệ hoặc đã bị thu hồi."
+      "invalidJoinCode": "Mã công ty không hợp lệ hoặc đã bị thu hồi."
     }
   },
   "bibliotheque": {
@@ -2456,7 +2567,8 @@
       "createError": "Không thêm được thiết bị.",
       "updateError": "Không cập nhật được thiết bị.",
       "deleteError": "Không xóa được thiết bị.",
-      "forbidden": "Bạn không có quyền quản lý kho thiết bị."
+      "forbidden": "Bạn không có quyền quản lý kho thiết bị.",
+      "notFound": "Mục này không còn tồn tại. Hãy tải lại trang rồi thử lại."
     },
     "warehouses": {
       "title": "Kho hàng",
@@ -2516,6 +2628,7 @@
     },
     "errors": {
       "oversize": "Tệp quá lớn (tối đa 25 MB)",
+      "oversizeVideo": "Tệp quá lớn (video tối đa 50 MB)",
       "unsupported": "Định dạng tệp không được hỗ trợ (ảnh: JPEG, PNG, WebP; video: MP4, WebM, MOV)",
       "network": "Lỗi mạng — vui lòng thử lại",
       "rateLimited": "Tải lên quá nhiều — vui lòng chờ một lúc",
@@ -2526,6 +2639,11 @@
       "deleteFailed": "Không thể xóa ảnh — vui lòng thử lại",
       "notFound": "Ảnh này không còn tồn tại",
       "validation": "Hãy kiểm tra chú thích và ngày, rồi thử lại"
+    },
+    "loadError": {
+      "title": "Không thể tải phương tiện",
+      "description": "Đã xảy ra lỗi khi tải ảnh và video của dự án này.",
+      "retry": "Thử lại"
     },
     "loadMore": "Tải thêm",
     "saved": "Đã lưu thay đổi",
@@ -2550,7 +2668,7 @@
     "articleName": "Tên vật tư",
     "articlePlaceholder": "ví dụ Đèn âm trần",
     "autoCheapest": "Tự động · rẻ nhất",
-    "cancel": "Huỷ",
+    "cancel": "Hủy",
     "cheapest": "Rẻ nhất",
     "cheapestBasket": "Giỏ hàng đầy đủ rẻ nhất",
     "close": "Đóng",
@@ -2568,23 +2686,23 @@
     "compareNoNote": "Không có ghi chú",
     "compareDiffLegendSample": "Được tô sáng",
     "compareDiffLegend": "= chỉ có trong ghi chú này, không có ở ghi chú kia.",
-    "confirmDeleteArticle": "Xoá vật tư “{name}” cùng các báo giá?",
-    "confirmDeletePoste": "Xoá hạng mục “{name}” cùng toàn bộ nội dung?",
-    "confirmDeleteQuote": "Xoá báo giá này?",
-    "confirmDeleteStore": "Xoá cửa hàng “{name}”? Các giá đã ghi tại cửa hàng này vẫn được giữ.",
+    "confirmDeleteArticle": "Xóa vật tư “{name}” cùng các báo giá?",
+    "confirmDeletePoste": "Xóa hạng mục “{name}” cùng toàn bộ nội dung?",
+    "confirmDeleteQuote": "Xóa báo giá này?",
+    "confirmDeleteStore": "Xóa cửa hàng “{name}”? Các giá đã ghi tại cửa hàng này vẫn được giữ.",
     "create": "Tạo",
     "customUnits": "Đơn vị của bạn",
-    "deleteArticle": "Xoá vật tư",
-    "deletePoste": "Xoá hạng mục",
-    "deleteQuote": "Xoá báo giá",
-    "deleteStore": "Xoá cửa hàng",
+    "deleteArticle": "Xóa vật tư",
+    "deletePoste": "Xóa hạng mục",
+    "deleteQuote": "Xóa báo giá",
+    "deleteStore": "Xóa cửa hàng",
     "delta": "chênh lệch",
     "editArticle": "Sửa vật tư",
     "editPoste": "Sửa hạng mục",
     "editQuote": "Sửa báo giá",
     "editStore": "Sửa cửa hàng",
     "emptyHint": "Tạo một hạng mục như Đèn chiếu sáng, rồi liệt kê những thứ cần mua.",
-    "emptyTitle": "Chưa hoạch toán gì",
+    "emptyTitle": "Chưa hạch toán gì",
     "estimatedTotal": "Số tiền cần dự trù",
     "excludingTax": "chưa thuế",
     "expandQuotes": "Xem các báo giá",
@@ -2617,25 +2735,27 @@
     "postePlaceholder": "ví dụ Đèn chiếu sáng",
     "presetUnits": "Đơn vị có sẵn",
     "priceMode": "Loại giá",
-    "pricePlaceholderHt": "Giá HT",
-    "pricePlaceholderTtc": "Giá TTC",
+    "pricePlaceholderHt": "Giá chưa VAT",
+    "pricePlaceholderTtc": "Giá gồm VAT",
     "priceRequired": "Nhập đơn giá từ 0 trở lên.",
     "productUrlOptional": "Liên kết sản phẩm (không bắt buộc)",
     "quantity": "Số lượng",
     "quantityShort": "SL",
-    "quoteDialogHint": "Nhập giá đúng như nhà cung cấp niêm yết — HT hay TTC — hệ thống sẽ quy về cùng một chuẩn.",
+    "quoteDialogHint": "Nhập giá đúng như nhà cung cấp niêm yết — chưa VAT hay gồm VAT — hệ thống sẽ quy về cùng một chuẩn.",
     "removeImage": "Gỡ ảnh",
     "retain": "Chọn",
     "retainThisQuote": "Chọn báo giá này để tính dự trù",
     "retained": "Đã chọn",
+    "unretain": "Bỏ chọn",
+    "unretainThisQuote": "Bỏ chọn báo giá này: dự trù quay lại dùng giá rẻ nhất",
     "room": "Phòng",
     "rooms": "Các phòng",
     "roomsDialogHint": "Mỗi hạng mục nhóm vật tư theo phòng, theo đúng thứ tự này. Kéo một phòng hoặc dùng các mũi tên để di chuyển.",
     "noRoomsYet": "Chưa có phòng nào. Hãy thêm phòng đầu tiên bên dưới.",
     "roomName": "Tên phòng",
     "renameRoom": "Đổi tên phòng",
-    "deleteRoom": "Xoá phòng",
-    "confirmDeleteRoom": "Xoá phòng “{name}”? Vật tư của phòng vẫn được giữ, chuyển sang “Chưa gán phòng”.",
+    "deleteRoom": "Xóa phòng",
+    "confirmDeleteRoom": "Xóa phòng “{name}”? Vật tư của phòng vẫn được giữ, chuyển sang “Chưa gán phòng”.",
     "moveUp": "Chuyển lên",
     "moveDown": "Chuyển xuống",
     "dragToReorder": "Kéo để sắp xếp lại",
@@ -2657,20 +2777,20 @@
     "storeRequired": "Hãy chọn cửa hàng cung cấp mức giá này — đó là điều giúp việc so sánh trở nên khả thi.",
     "storeWebsiteOptional": "Trang web (không bắt buộc)",
     "storeWebsitePlaceholder": "https://www.leroymerlin.fr/magasin/ivry",
-    "storedAsHt": "Lưu: {ht} HT · {ttc} TTC",
+    "storedAsHt": "Lưu: {ht} chưa VAT · {ttc} gồm VAT",
     "subtitle": "Liệt kê những thứ cần mua, so sánh giá các nhà cung cấp và biết số tiền cần dự trù.",
     "supplier": "Nhà cung cấp",
     "title": "Hạch toán vật tư",
-    "totalHt": "Tổng HT",
-    "totalTtc": "Tổng TTC",
-    "ttcShort": "TTC",
+    "totalHt": "Tổng (chưa VAT)",
+    "totalTtc": "Tổng (gồm VAT)",
+    "ttcShort": "gồm VAT",
     "tva": "VAT",
     "tvaInvalid": "Thuế suất VAT phải nằm trong khoảng từ 0 đến 100.",
     "tvaRate": "Thuế suất VAT",
     "unit": "Đơn vị",
     "unitPrice": "Đơn giá",
-    "unitPriceHt": "Đơn giá HT",
-    "unitPriceTtc": "Đơn giá TTC",
+    "unitPriceHt": "Đơn giá (chưa VAT)",
+    "unitPriceTtc": "Đơn giá (gồm VAT)",
     "unnamedSupplier": "Nhà cung cấp chưa đặt tên",
     "unpricedWarning": "Còn {count} vật tư chưa có giá — tổng này chưa đầy đủ.",
     "uploadImage": "Tải ảnh lên",
@@ -2706,6 +2826,7 @@
     "retry": "Thử lại",
     "emptyHintReadOnly": "Dự án này chưa có hạng mục nào được lập.",
     "quantityTooLarge": "Số lượng không được vượt quá {max, number}.",
+    "quantityInvalid": "Nhập số lượng từ 0 trở lên, tối đa 3 chữ số thập phân (ví dụ 2,5).",
     "priceTooLarge": "Đơn giá (chưa thuế) không được vượt quá {max, number}.",
     "errorForbidden": "Bạn không có quyền chỉnh sửa bảng dự toán này.",
     "errorNotFound": "Mục này không còn tồn tại.",
@@ -2729,7 +2850,7 @@
     "subtitle": "Tạo công ty của bạn hoặc nhập mã để tham gia một công ty có sẵn.",
     "createCompanyCta": "Tạo công ty",
     "createCompanyHint": "Bắt đầu mới — bạn sẽ là quản trị viên.",
-    "joinCompanyCta": "Nhập mã tham gia",
+    "joinCompanyCta": "Nhập mã công ty",
     "joinCompanyHint": "Quản trị viên của bạn có thể cung cấp mã gồm 8 ký tự.",
     "back": "Quay lại",
     "create": {
@@ -2739,7 +2860,7 @@
       "successToast": "Đã tạo công ty."
     },
     "join": {
-      "codeLabel": "Mã tham gia",
+      "codeLabel": "Mã công ty",
       "codePlaceholder": "vd. AB12CD34",
       "submit": "Tham gia",
       "successToast": "Đã tham gia {company}."
@@ -2772,16 +2893,20 @@
       "roleAdmin": "Quản trị viên",
       "roleManager": "Quản lý",
       "roleMember": "Thành viên",
-      "customPermissions": "Quyền tuỳ chỉnh",
+      "customPermissions": "Quyền tùy chỉnh",
       "roleUpdatedToast": "Đã cập nhật vai trò.",
       "pendingBadge": "Đang chờ",
       "companyPickerPlaceholder": "Thêm công ty",
       "companyPickerEmpty": "Không có công ty nào khác bạn quản trị",
       "projectsPickerPlaceholder": "Gán dự án",
       "projectsPickerEmpty": "Công ty này chưa có dự án nào",
-      "cancel": "Huỷ",
-      "bootAction": "Xoá khỏi công ty",
-      "bootConfirmDescription": "Xoá {member} khỏi {company}? Thao tác này sẽ ngay lập tức huỷ các dự án được giao và hồ sơ danh bạ của họ ở đó, đồng thời làm mới mã tham gia của công ty."
+      "cancel": "Hủy",
+      "bootAction": "Xóa khỏi công ty",
+      "bootConfirmDescription": "Xóa {member} khỏi {company}? Thao tác này sẽ ngay lập tức hủy các dự án được giao và hồ sơ danh bạ của họ ở đó, đồng thời làm mới mã công ty.",
+      "cancelInvitation": "Hủy lời mời",
+      "cancelInvitationConfirmDescription": "Hủy lời mời của {member}? Đăng ký bằng số điện thoại này sẽ không còn tự động thêm họ vào công ty.",
+      "keepInvitation": "Giữ lời mời",
+      "invitationCancelledToast": "Đã hủy lời mời."
     },
     "addByPhone": {
       "dialogTitle": "Thêm thành viên bằng số điện thoại",
@@ -2793,7 +2918,7 @@
       "roleManager": "Quản lý",
       "candidatesHint": "Có nhiều người khớp với số điện thoại này — hãy chọn đúng người.",
       "candidatesPlaceholder": "Chọn một người",
-      "cancel": "Huỷ",
+      "cancel": "Hủy",
       "submit": "Thêm",
       "addedToast": "Đã thêm {name}."
     },
@@ -2802,28 +2927,28 @@
       "dialogDescription": "Sao chép hồ sơ từ một công ty khác mà bạn quản trị vào công ty này.",
       "sourcePlaceholder": "Công ty nguồn",
       "empty": "Không có thành viên để nhập.",
-      "cancel": "Huỷ",
-      "submit": "{count, plural, other {Nhập # thành viên}}",
-      "importedToast": "{count, plural, other {Đã nhập # thành viên}}",
+      "cancel": "Hủy",
+      "submit": "{count, plural, =0 {Nhập} other {Nhập # thành viên}}",
+      "importedToast": "{count, plural, =0 {Không có thành viên nào được nhập} other {Đã nhập # thành viên}}",
       "alreadyMember": "Đã là thành viên"
     },
     "grants": {
-      "dialogTitle": "Quyền tuỳ chỉnh cho {name}",
+      "dialogTitle": "Quyền tùy chỉnh cho {name}",
       "dialogDescription": "Cấp hoặc từ chối quyền cụ thể, áp dụng cho toàn công ty hoặc một dự án. Từ chối luôn được ưu tiên.",
-      "empty": "Chưa có quyền tuỳ chỉnh nào.",
+      "empty": "Chưa có quyền tùy chỉnh nào.",
       "effectGrant": "Cấp quyền",
       "effectDeny": "Từ chối",
       "scopeCompanyWide": "Toàn công ty",
       "permissionPlaceholder": "Chọn quyền",
       "add": "Thêm",
-      "remove": "Xoá",
+      "remove": "Xóa",
       "savedToast": "Đã lưu.",
       "permission": {
         "project_update": "Chỉnh sửa dự án",
         "project_invite": "Mời thành viên",
         "project_manage_users": "Quản lý thành viên",
         "project_manage_labor": "Quản lý nhân công",
-        "project_manage_invoices": "Quản lý hoá đơn",
+        "project_manage_invoices": "Quản lý hóa đơn",
         "project_log_own_attendance": "Chấm công cho bản thân",
         "bibliotheque_manage": "Quản lý thư viện",
         "inventory_manage": "Quản lý kho thiết bị",
@@ -2840,7 +2965,8 @@
       "rateLimited": "Quá nhiều lần thử. Vui lòng thử lại sau.",
       "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
       "multipleCandidates": "Có nhiều người khớp với số điện thoại này.",
-      "phoneAlreadyInCompany": "Số điện thoại này đã có trong công ty của bạn."
+      "phoneAlreadyInCompany": "Số điện thoại này đã có trong công ty của bạn.",
+      "invalidPhone": "Nhập số điện thoại Pháp (+33… hoặc 0…)."
     },
     "assistantAuditLink": "Nhật ký trợ lý"
   },

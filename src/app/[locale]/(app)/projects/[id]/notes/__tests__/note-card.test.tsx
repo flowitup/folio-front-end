@@ -4,7 +4,7 @@
  * done modifier class, edit/delete hover actions, isEditing renders NoteEditor.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { NoteCard } from "../note-card";
 import type { Note } from "@/lib/api/notes";
@@ -316,7 +316,7 @@ describe("NoteCard — added date", () => {
   it("formats an older date in the app locale inside one message", () => {
     render(
       <NoteCard
-        note={makeNote({ created_at: "2026-01-21T09:00:00Z" })}
+        note={makeNote({ created_at: new Date(2026, 0, 21, 12).toISOString() })}
         isEditing={false}
         onStartEdit={vi.fn()}
         onSave={vi.fn()}
@@ -327,5 +327,90 @@ describe("NoteCard — added date", () => {
       />
     );
     expect(screen.getByText(/notes\.addedOn/).textContent).toContain("21 janv.");
+  });
+});
+
+describe("NoteCard — today / yesterday in the viewer's time zone", () => {
+  const savedTz = process.env.TZ;
+
+  beforeEach(() => {
+    process.env.TZ = "Asia/Ho_Chi_Minh";
+    vi.useFakeTimers({ toFake: ["Date"] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    if (savedTz === undefined) delete process.env.TZ;
+    else process.env.TZ = savedTz;
+  });
+
+  function renderAddedAt(createdAt: string) {
+    render(
+      <NoteCard
+        note={makeNote({ created_at: createdAt })}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
+        canEdit
+      />
+    );
+  }
+
+  it("says 'today' for a note added at 01:13 Hanoi time (still yesterday in UTC)", () => {
+    vi.setSystemTime(new Date("2026-10-10T03:00:00Z")); // 10 Oct 10:00 Hanoi
+    renderAddedAt("2026-10-09T18:13:00+00:00"); // 10 Oct 01:13 Hanoi
+    expect(screen.getByText("notes.addedToday")).toBeDefined();
+  });
+
+  it("says 'yesterday' for a note added late yesterday evening (same UTC day)", () => {
+    vi.setSystemTime(new Date("2026-10-09T22:00:00Z")); // 10 Oct 05:00 Hanoi
+    renderAddedAt("2026-10-09T16:48:23.164602+00:00"); // 9 Oct 23:48 Hanoi
+    expect(screen.getByText("notes.addedYesterday")).toBeDefined();
+  });
+
+  it("dates an older note on its local day", () => {
+    vi.setSystemTime(new Date("2026-10-10T03:00:00Z"));
+    renderAddedAt("2026-10-07T18:30:00+00:00"); // 8 Oct 01:30 Hanoi, 7 Oct in UTC
+    expect(screen.getByText(/notes\.addedOn/).textContent).toContain("8 oct.");
+  });
+});
+
+describe("NoteCard — year of an older note", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function addedText(createdAt: string): string {
+    render(
+      <NoteCard
+        note={makeNote({ created_at: createdAt })}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
+        canEdit
+      />
+    );
+    return screen.getByText(/notes\.addedOn/).textContent ?? "";
+  }
+
+  it("shows the year of a note from another year", () => {
+    // Local noons, so the days hold in any time zone the suite runs in.
+    vi.setSystemTime(new Date(2027, 9, 12, 12));
+    expect(addedText(new Date(2026, 9, 9, 12).toISOString())).toContain("9 oct. 2026");
+  });
+
+  it("leaves the year out for a note from this year", () => {
+    vi.setSystemTime(new Date(2026, 9, 14, 12));
+    expect(addedText(new Date(2026, 9, 9, 12).toISOString())).not.toContain("2026");
   });
 });

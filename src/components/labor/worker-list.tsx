@@ -10,6 +10,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -130,8 +131,8 @@ export function WorkerList({
                 />
 
                 {/* Identity */}
-                <div className="min-w-0 space-y-0.5">
-                  <p className="truncate text-sm font-semibold leading-tight">
+                <div className="w-full min-w-0 space-y-0.5">
+                  <p className="truncate text-sm font-semibold leading-tight" title={displayName}>
                     {displayName}
                   </p>
                   <p className="text-primary text-sm font-medium tabular-nums">
@@ -260,9 +261,9 @@ export function WorkerList({
             <AlertDialogTitle className="text-center">
               {t("confirmDeactivate")}
             </AlertDialogTitle>
-            <p className="text-sm text-muted-foreground">
+            <AlertDialogDescription>
               {confirmDeactivate?.person_name ?? confirmDeactivate?.name}
-            </p>
+            </AlertDialogDescription>
           </div>
           <AlertDialogFooter className="sm:justify-center gap-2">
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>

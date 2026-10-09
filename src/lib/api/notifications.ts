@@ -13,7 +13,8 @@ import type { Note } from "@/lib/api/notes";
 // ---- Types ----
 
 export interface DueNotification {
-  note: Note;
+  /** The reminder's note, plus when it is for (YYYY-MM-DD) and how long before it fires. */
+  note: Note & { due_date?: string | null; lead_time_minutes?: number | null };
   dismissed: boolean; // BE always sends this; v1 always false but must be declared
 }
 

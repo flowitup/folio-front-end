@@ -75,6 +75,14 @@ export function deltaVsCheapest(price: number, cheapest: number): number | null 
   return (price - cheapest) / cheapest;
 }
 
+/** Format a rate given in percent, such as a VAT rate: 5.5 → "5,5 %". */
+export function percent(value: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "percent",
+    maximumFractionDigits: 2,
+  }).format(value / 100);
+}
+
 /** Format a delta as a signed percentage, e.g. "+15 %". */
 export function formatDelta(delta: number, maximumFractionDigits = 0): string {
   return new Intl.NumberFormat("fr-FR", {

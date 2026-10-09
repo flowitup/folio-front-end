@@ -132,7 +132,7 @@ export function WorkerTile({
             className="text-[var(--warning)] inline-flex items-center gap-1 text-[10px] shrink-0"
             title={conflict.entries
               .map((e) =>
-                `${e.project_name}: ${e.shift_type ?? "(supplement)"}`,
+                `${e.project_name}: ${e.shift_type ? shiftLabels[e.shift_type] : t("supplement.standaloneShiftLabel")}`,
               )
               .join(", ")}
             aria-label={tTile("conflictBadge")}

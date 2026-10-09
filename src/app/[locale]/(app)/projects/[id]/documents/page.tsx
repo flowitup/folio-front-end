@@ -19,11 +19,15 @@ import {
 import { listMembers } from "@/lib/api/members";
 import { getProjectById } from "@/lib/api/projects-server";
 import { can, isPlatformOps } from "@/lib/auth/permissions";
+import { realEmail, userDisplayName } from "@/lib/auth/user-display";
 import { DocumentsPanel } from "./documents-panel";
+import { pageTitle } from "@/lib/i18n/page-title";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
+
+export const generateMetadata = pageTitle("navigation.documents");
 
 export default async function DocumentsPage({ params }: PageProps) {
   const { id: projectId } = await params;
@@ -83,11 +87,12 @@ export default async function DocumentsPage({ params }: PageProps) {
     listDocumentUploaders(projectId).catch(() => null),
   ]);
 
-  // Adapt ProjectMember[] to the shape the panel/list components expect
+  // Adapt ProjectMember[] to the shape the panel/list components expect. A
+  // phone-only account's synthetic address is never shown: it reads by its phone.
   const adaptedMembers = members.map((m) => ({
     id: m.user_id,
-    firstName: m.display_name ?? undefined,
-    email: m.email,
+    firstName: userDisplayName(m) || undefined,
+    email: realEmail(m) || undefined,
   }));
 
   return (

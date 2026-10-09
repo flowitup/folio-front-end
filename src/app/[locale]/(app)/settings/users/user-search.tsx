@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { searchUsersAction } from "./actions";
 import type { UserSearchItem } from "@/lib/api/admin";
+import { userContact, userDisplayName } from "@/lib/auth/user-display";
 
 interface UserSearchProps {
   onSelect: (user: UserSearchItem) => void;
@@ -129,14 +130,14 @@ export function UserSearch({ onSelect }: UserSearchProps) {
                 }}
               >
                 <span className="font-medium">
-                  {user.display_name ?? user.email}
+                  {userDisplayName(user)}
                 </span>
-                {user.display_name && (
+                {user.display_name && userContact(user) && (
                   <span
                     className="ml-2 text-xs"
                     style={{ color: "var(--muted-foreground)" }}
                   >
-                    {user.email}
+                    {userContact(user)}
                   </span>
                 )}
               </li>

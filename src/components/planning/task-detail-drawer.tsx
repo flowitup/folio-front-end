@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { X, Loader2, Trash2 } from "lucide-react";
@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BOARD_COLUMNS } from "@/types/task";
-import type { Task, TaskStatus, UpdateTaskPayload } from "@/types/task";
+import type { Task, TaskAssignee, TaskStatus, UpdateTaskPayload } from "@/types/task";
 
 const STATUSES: TaskStatus[] = ["backlog", ...BOARD_COLUMNS];
 
@@ -32,6 +32,8 @@ interface TaskDetailDrawerProps {
   /** Whether the caller may delete tasks here (the backend requires project
       write access); hides the trash button otherwise. */
   canDelete?: boolean;
+  /** Project members offered by the assignee picker. */
+  assignees?: TaskAssignee[];
 }
 
 const noopSubscribe = () => () => {};
@@ -51,6 +53,7 @@ export function TaskDetailDrawer({
   onClose,
   onMutated,
   canDelete = false,
+  assignees,
 }: TaskDetailDrawerProps) {
   const t = useTranslations("planning");
   const [task, setTask] = useState<Task | null>(seed ?? null);
@@ -58,6 +61,23 @@ export function TaskDetailDrawer({
   const [saving, setSaving] = useState(false);
   // The `?task=` id could not be loaded (deleted, another project's, no access).
   const [loadFailed, setLoadFailed] = useState(false);
+  // Whether the form holds edits not saved yet (reported by TaskForm).
+  const dirtyRef = useRef(false);
+  const onDirtyChange = useCallback((dirty: boolean) => {
+    dirtyRef.current = dirty;
+  }, []);
+
+  // A form left by Cancel or Delete must not make the next task's drawer ask.
+  useEffect(() => {
+    dirtyRef.current = false;
+  }, [taskId]);
+
+  // The backdrop, the X and Escape ask before throwing typed edits away.
+  const requestClose = useCallback(() => {
+    if (dirtyRef.current && !confirm(t("discardChanges"))) return;
+    dirtyRef.current = false;
+    onClose();
+  }, [onClose, t]);
 
   // Fetch when opening (unless seed already supplied for the same id).
   useEffect(() => {
@@ -92,11 +112,11 @@ export function TaskDetailDrawer({
   useEffect(() => {
     if (!taskId) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !e.defaultPrevented) onClose();
+      if (e.key === "Escape" && !e.defaultPrevented) requestClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [taskId, onClose]);
+  }, [taskId, requestClose]);
 
   const handleUpdate = async (payload: UpdateTaskPayload) => {
     if (!task) return;
@@ -151,7 +171,7 @@ export function TaskDetailDrawer({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/30 z-40"
-        onClick={onClose}
+        onClick={requestClose}
         aria-hidden
       />
       {/* Drawer */}
@@ -177,7 +197,7 @@ export function TaskDetailDrawer({
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={onClose} aria-label={t("close")}>
+            <Button variant="ghost" size="sm" onClick={requestClose} aria-label={t("close")}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -221,10 +241,15 @@ export function TaskDetailDrawer({
           )}
           {!loading && task && (
             <TaskForm
+              // Seeded once per task: a status change or a board refresh hands
+              // in a fresh copy of the same task and must keep what is typed.
+              key={task.id}
               initial={task}
+              assignees={assignees}
               isSaving={saving}
               onSubmit={handleUpdate}
               onCancel={onClose}
+              onDirtyChange={onDirtyChange}
             />
           )}
         </div>

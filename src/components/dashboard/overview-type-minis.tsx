@@ -75,8 +75,10 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
     >
-      <div className="mb-4 flex items-baseline justify-between gap-3">
-        <div className="flex items-baseline gap-2.5">
+      {/* Wraps the range and the link to their own lines on narrow screens
+          rather than squeezing the title onto three lines ("Chi / phí →"). */}
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
           <h2 className="font-display text-[18px] font-semibold tracking-tight">
             {t("spendByType.title")}
           </h2>
@@ -92,7 +94,10 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
           )}
         </div>
         {viewExpenseHref && (
-          <Link href={viewExpenseHref} className="flex items-center gap-1 text-[12.5px] font-medium">
+          <Link
+            href={viewExpenseHref}
+            className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[12.5px] font-medium"
+          >
             {t("spendByType.viewExpense")} <ArrowRight size={12} />
           </Link>
         )}

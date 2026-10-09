@@ -9,6 +9,7 @@ import type { ProjectPhoto } from "@/lib/api/project-photo-blob";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { parisDayKey } from "@/lib/utils/paris-day";
 
 // ---- Constants ----
 
@@ -54,22 +55,25 @@ interface Props {
 /**
  * Maps HTTP status and BE error codes from uploadProjectPhoto into i18n keys.
  * err.body.error takes priority over err.status for the most specific match.
+ * `kind` picks the oversize message that names the right cap (videos: 50 MB).
  */
-function classifyError(err: unknown): string {
+function classifyError(err: unknown, kind: "image" | "video" | null): string {
   const e = err as {
     status?: number;
     body?: { error?: string; message?: string } | null;
   };
   const code = e.body?.error;
   const status = e.status;
+  const oversize = kind === "video" ? "oversizeVideo" : "oversize";
 
   // Photo-specific BE error codes (most specific — checked first)
-  if (code === "FILE_TOO_LARGE") return "oversize";
+  if (code === "FILE_TOO_LARGE") return oversize;
   if (code === "UNSUPPORTED_TYPE") return "unsupported";
   if (code === "INVALID_IMAGE") return "invalidImage";
+  if (code === "INVALID_CAPTURED_AT" || code === "INVALID_CAPTION") return "validation";
 
   // HTTP status fallbacks
-  if (status === 413) return "oversize";
+  if (status === 413) return oversize;
   if (status === 415) return "unsupported";
   if (status === 403) return "forbidden";
   if (status === 429) return "rateLimited";
@@ -110,7 +114,9 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
       // Per-kind size cap: videos get more headroom than images.
       const maxBytes = kind === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
       if (file.size > maxBytes) {
-        toast.error(t("errors.oversize"), { description: file.name });
+        toast.error(t(kind === "video" ? "errors.oversizeVideo" : "errors.oversize"), {
+          description: file.name,
+        });
         continue;
       }
       valid.push(file);
@@ -131,7 +137,7 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
         onUploaded(photo);
         successCount++;
       } catch (err: unknown) {
-        const errorKey = classifyError(err);
+        const errorKey = classifyError(err, mediaKind(file));
         const msgKey = `errors.${errorKey}` as Parameters<typeof t>[0];
         toast.error(t(msgKey), { description: file.name });
       }
@@ -171,6 +177,9 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
           <Input
             id="upload-captured-at"
             type="date"
+            // The API refuses capture dates before 1900 or in the future
+            min="1900-01-01"
+            max={parisDayKey()}
             value={capturedAt}
             onChange={(e) => setCapturedAt(e.target.value)}
             disabled={uploading}

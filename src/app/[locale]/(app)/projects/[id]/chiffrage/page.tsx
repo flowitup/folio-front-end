@@ -15,6 +15,7 @@ import { can, isPlatformOps } from "@/lib/auth/permissions";
 import { getChiffrage, listUnits, type ChiffrageTree, type ChiffrageUnit } from "@/lib/api/chiffrage";
 import { getProjectById } from "@/lib/api/projects-server";
 import { ChiffragePageClient } from "./chiffrage-page-client";
+import { pageTitle } from "@/lib/i18n/page-title";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -30,6 +31,8 @@ const EMPTY_TREE = (projectId: string): ChiffrageTree => ({
   total_ttc: 0,
   unpriced_article_count: 0,
 });
+
+export const generateMetadata = pageTitle("navigation.chiffrage");
 
 export default async function ChiffragePage({ params }: PageProps) {
   const { id: projectId } = await params;

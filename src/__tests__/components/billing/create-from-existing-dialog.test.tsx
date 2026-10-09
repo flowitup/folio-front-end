@@ -6,7 +6,7 @@
  * Interaction strategy: fireEvent (no fake timers needed — no debounce in this component).
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { CreateFromExistingDialog } from "@/components/billing/create-from-existing-dialog";
 import type { BillingDocument } from "@/types/billing";
@@ -289,5 +289,25 @@ describe("create-from-existing dialog copy comes from the locale messages", () =
     });
     // The kind appears in the description by its translated label ("Quote"), not the raw enum value.
     expect(screen.getByText(/starting point for your new/i).textContent).toContain("Quote");
+  });
+});
+
+describe("CreateFromExistingDialog dates", () => {
+  const savedTz = process.env.TZ;
+  afterEach(() => {
+    process.env.TZ = savedTz;
+  });
+
+  it("shows the stored issue date west of UTC, not the day before", async () => {
+    // The API sends calendar dates as RFC 1123 midnight GMT.
+    process.env.TZ = "Pacific/Tahiti";
+    const doc = makeDoc("d-9", "devis", { issue_date: "Fri, 09 Oct 2026 00:00:00 GMT" });
+    mockAction.mockImplementation(async (kind) =>
+      kind === "devis" ? { ok: true, data: { items: [doc], total: 1 } } : { ok: true, data: { items: [], total: 0 } }
+    );
+    renderDialog("devis");
+
+    await waitFor(() => expect(screen.getByText(/09\/10\/2026/)).toBeDefined());
+    expect(screen.queryByText(/08\/10\/2026/)).toBeNull();
   });
 });

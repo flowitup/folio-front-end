@@ -40,6 +40,7 @@ import { listBillingDocumentsAction } from "@/app/[locale]/(app)/billing/_action
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { formatDate } from "@/lib/utils/formatters";
+import { toIsoDate } from "@/lib/billing/document-payload";
 
 function formatTTC(value: string): string {
   const n = Number(value);
@@ -239,7 +240,7 @@ export function CreateFromExistingDialog({
                       <div>
                         <p className="text-[13px] font-medium">{doc.document_number}</p>
                         <p className="text-[12px]" style={{ color: "var(--muted)" }}>
-                          {doc.recipient_name} · {formatDate(doc.issue_date)}
+                          {doc.recipient_name} · {formatDate(toIsoDate(doc.issue_date) ?? doc.issue_date)}
                         </p>
                       </div>
                     </div>

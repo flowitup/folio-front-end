@@ -209,6 +209,25 @@ describe("UserSearch", () => {
         expect(screen.getByText("alice@example.com")).toBeDefined();
       });
     });
+
+    it("shows a phone sign-up's phone instead of its synthetic placeholder address", async () => {
+      mockSearch.mockResolvedValue({
+        items: [
+          { id: "user-3", email: "phone-33621300001@no-email.folio.flowitup.com", display_name: "Owner" },
+          { id: "user-4", email: "phone-33621300002@no-email.folio.flowitup.com", display_name: null },
+        ],
+      });
+      renderSearch();
+      setInputValue(screen.getByRole("textbox", { name: /search for a user/i }), "+336");
+      await triggerDebounce();
+
+      await waitFor(() => {
+        expect(screen.getByRole("option", { name: /Owner/ })).toBeDefined();
+      });
+      expect(screen.getByText("+336 21 30 00 01")).toBeDefined();
+      expect(screen.getByRole("option", { name: "+336 21 30 00 02" })).toBeDefined();
+      expect(screen.queryByText(/no-email\.folio\.flowitup\.com/)).toBeNull();
+    });
   });
 
   // ---------------------------------------------------------------------------

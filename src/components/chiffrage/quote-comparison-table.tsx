@@ -13,7 +13,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import { Check, ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { Check, ExternalLink, Pencil, Trash2, Undo2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import {
   deltaVsCheapest,
   formatDelta,
   money,
+  percent,
   toCents,
 } from "@/components/chiffrage/format";
 import {
@@ -45,6 +46,8 @@ interface Props {
   canManage: boolean;
   busyQuoteId: string | null;
   onSelect: (quote: ChiffrageQuote) => void;
+  /** Stop retaining a quote: the article falls back to the cheapest price. */
+  onUnselect: (quote: ChiffrageQuote) => void;
   onEdit: (quote: ChiffrageQuote) => void;
   onDelete: (quote: ChiffrageQuote) => void;
 }
@@ -55,6 +58,7 @@ export function QuoteComparisonTable({
   canManage,
   busyQuoteId,
   onSelect,
+  onUnselect,
   onEdit,
   onDelete,
 }: Props) {
@@ -148,7 +152,7 @@ export function QuoteComparisonTable({
                   {money(q.unit_price_ht)}
                 </td>
                 <td className="px-4 py-2 text-right tabular-nums text-muted-foreground">
-                  {q.tva_rate}%
+                  {percent(q.tva_rate)}
                 </td>
                 <td className="px-4 py-2 text-right tabular-nums">
                   {money(q.unit_price_ttc)}
@@ -159,19 +163,35 @@ export function QuoteComparisonTable({
                 <td className="px-4 py-2">
                   {canManage ? (
                     <div className="flex items-center justify-end gap-1">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={q.is_selected ? "secondary" : "ghost"}
-                        disabled={q.is_selected || busyQuoteId === q.id}
-                        onClick={() => onSelect(q)}
-                        title={t("retainThisQuote")}
-                      >
-                        <Check className="h-4 w-4" />
-                        <span className="ml-1 hidden sm:inline">
-                          {t("retain")}
-                        </span>
-                      </Button>
+                      {q.is_selected ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          disabled={busyQuoteId === q.id}
+                          onClick={() => onUnselect(q)}
+                          title={t("unretainThisQuote")}
+                        >
+                          <Undo2 className="h-4 w-4" />
+                          <span className="ml-1 hidden sm:inline">
+                            {t("unretain")}
+                          </span>
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          disabled={busyQuoteId === q.id}
+                          onClick={() => onSelect(q)}
+                          title={t("retainThisQuote")}
+                        >
+                          <Check className="h-4 w-4" />
+                          <span className="ml-1 hidden sm:inline">
+                            {t("retain")}
+                          </span>
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         size="sm"

@@ -59,8 +59,10 @@ export default async function AnalysisDetailPage({ params }: PageProps) {
     hasAdminPermission ||
     can("project:update", session.user.permissions, project?.my_permissions);
 
+  // The API names the uploader even when they are not a project member.
   const uploader = members.find((m) => m.user_id === analysis.uploader_id);
-  const uploaderName = uploader?.display_name || uploader?.email || "";
+  const uploaderName =
+    analysis.uploader_name || uploader?.display_name || uploader?.email || "";
 
   const siblings = siblingsResult.items
     .filter((a) => a.id !== analysis.id)

@@ -21,7 +21,8 @@
  *
  * Pending rows (no user account yet) get disabled Role/Company/Projects —
  * project and company assignment both key on user_id, so neither is
- * possible until the person signs up.
+ * possible until the person signs up. Their invitation can be cancelled
+ * (confirmed first), so a sign-up with that number no longer joins.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -30,6 +31,16 @@ import { toast } from "sonner";
 import { Loader2, Phone, Users as UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import {
   fetchAttachedUsersAction,
@@ -42,6 +53,7 @@ import {
   assignProjectMemberAction,
   unassignProjectMemberAction,
   attachUserToCompanyAction,
+  cancelPendingMemberAction,
 } from "@/app/[locale]/(app)/settings/_actions/company-settings-actions";
 import { AddMemberByPhoneDialog } from "@/components/companies/add-member-by-phone-dialog";
 import { ImportMembersDialog } from "@/components/companies/import-members-dialog";
@@ -79,6 +91,9 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
   const [bootTarget, setBootTarget] = useState<CompanyMemberBootTarget | null>(null);
   const [isBooting, setIsBooting] = useState(false);
   const bootingRef = useRef(false);
+  const [cancelTarget, setCancelTarget] = useState<MemberRow | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const cancellingRef = useRef(false);
 
   const fetchingRef = useRef(false);
 
@@ -197,6 +212,26 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
     }
   }
 
+  async function handleConfirmCancelInvitation() {
+    const personId = cancelTarget?.personId;
+    if (!personId || cancellingRef.current) return;
+    cancellingRef.current = true;
+    setIsCancelling(true);
+    try {
+      const result = await cancelPendingMemberAction(companyId, personId);
+      if (!result.ok) {
+        toast.error(result.error.message);
+        return;
+      }
+      toast.success(t("invitationCancelledToast"));
+      setCancelTarget(null);
+      onMutated();
+    } finally {
+      setIsCancelling(false);
+      cancellingRef.current = false;
+    }
+  }
+
   async function handleProjectToggle(row: MemberRow, option: MemberPickerOption, checked: boolean) {
     if (!row.userId) return;
     setPendingProjectUserId(row.userId);
@@ -274,6 +309,7 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
                   onCompanyToggle={handleCompanyToggle}
                   onProjectToggle={handleProjectToggle}
                   onOpenGrants={setGrantsTarget}
+                  onCancelInvitation={setCancelTarget}
                 />
               ))}
             </TableBody>
@@ -317,6 +353,37 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
         onOpenChange={(open) => !open && setBootTarget(null)}
         onConfirm={handleConfirmBoot}
       />
+
+      <AlertDialog
+        open={cancelTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !isCancelling) setCancelTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("cancelInvitation")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("cancelInvitationConfirmDescription", { member: cancelTarget?.name ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isCancelling}>{t("keepInvitation")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                // Stay open until the request settles (errors keep it open).
+                e.preventDefault();
+                void handleConfirmCancelInvitation();
+              }}
+              disabled={isCancelling}
+              className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
+            >
+              {isCancelling && <Loader2 size={12} className="mr-1.5 animate-spin" />}
+              {t("cancelInvitation")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

@@ -155,6 +155,9 @@ export function useLaborPaymentsData(
 
   const bucket = useMemo(() => findMonthBucket(paymentsSummary, month), [paymentsSummary, month]);
   const rows = useMemo(() => mergeWorkerPaymentRows(laborSummary, bucket), [laborSummary, bucket]);
+  // Balance is settled worker by worker (the back end's labor_unpaid rule,
+  // same as monthSettlement): one worker's overpayment never shrinks what
+  // another is still owed, so overpayments are totalled separately.
   const totals = useMemo(
     () =>
       rows.reduce(
@@ -162,9 +165,10 @@ export function useLaborPaymentsData(
           days: acc.days + r.days_worked,
           owed: acc.owed + r.owed,
           paid: acc.paid + r.paid,
-          balance: acc.balance + r.balance,
+          balance: acc.balance + Math.max(0, r.balance),
+          overpaid: acc.overpaid + Math.max(0, -r.balance),
         }),
-        { days: 0, owed: 0, paid: 0, balance: 0 },
+        { days: 0, owed: 0, paid: 0, balance: 0, overpaid: 0 },
       ),
     [rows],
   );

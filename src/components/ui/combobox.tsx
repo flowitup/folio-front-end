@@ -17,6 +17,10 @@
  *   loading          — shows a subtle spinner hint while fetching
  *   disabled         — passthrough to trigger button
  *   className        — added to the trigger button
+ *
+ * Opening the popover moves focus into its search input, and typing a
+ * character on the focused (closed) trigger opens it with that character, so
+ * the field works from the keyboard and no typed text is lost.
  */
 
 import * as React from "react";
@@ -59,6 +63,18 @@ export interface ComboboxProps {
   groupHeading?: string;
 }
 
+const TABBABLE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]';
+
+/** Focus the tabbable element after (1) or before (-1) *from* in document order. */
+function focusTabbableFrom(from: HTMLElement, direction: 1 | -1) {
+  const tabbables = Array.from(document.querySelectorAll<HTMLElement>(TABBABLE)).filter(
+    (el) => el.tabIndex >= 0 && (el.checkVisibility?.() ?? true)
+  );
+  const index = tabbables.indexOf(from);
+  (tabbables[index + direction] ?? from).focus();
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -89,6 +105,10 @@ export function Combobox({
   const navigatedRef = React.useRef(false);
   // Set by Escape so the close that follows does not commit the typed text.
   const cancelledRef = React.useRef(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  // Set by Tab / Shift+Tab in the input: where focus goes once the popover closes.
+  const tabDirectionRef = React.useRef<0 | 1 | -1>(0);
 
   // Sync inputQuery whenever the controlled value changes from the outside
   // (e.g., when parent prefills after suggestion selection).
@@ -98,21 +118,37 @@ export function Combobox({
     }
   }, [value, open]);
 
+  /** Reset the per-opening flags and show *query* in the input. */
+  function startQuery(query: string) {
+    justSelectedRef.current = false;
+    navigatedRef.current = false;
+    cancelledRef.current = false;
+    setInputQuery(query);
+    onQueryChange?.(query);
+  }
+
   // On open — pre-populate the input with the current committed value so the
   // user can refine from where they left off.
   function handleOpenChange(next: boolean) {
     if (next) {
-      justSelectedRef.current = false;
-      navigatedRef.current = false;
-      cancelledRef.current = false;
-      setInputQuery(value);
-      onQueryChange?.(value);
+      startQuery(value);
     } else if (!cancelledRef.current && !justSelectedRef.current) {
       // Closed by a click outside or by tabbing away. The input can be
       // unmounted before its blur fires, so commit the typed text here.
       commitFreeText();
     }
     setOpen(next);
+  }
+
+  /**
+   * A character typed on the closed trigger opens the popover and starts the
+   * search with it. Space and Enter keep their button role (open the list).
+   */
+  function handleTriggerKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
+    if (open || e.key.length !== 1 || e.key === " " || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    startQuery(e.key);
+    setOpen(true);
   }
 
   function handleQueryChange(q: string) {
@@ -157,6 +193,15 @@ export function Combobox({
       justSelectedRef.current = true;
       setOpen(false);
     }
+    if (e.key === "Tab" && !e.altKey && !e.ctrlKey && !e.metaKey) {
+      // Radix loops focus inside the popover, so Tab would never leave the
+      // input: commit, close, and move on from the trigger like a plain field.
+      e.preventDefault();
+      commitFreeText();
+      justSelectedRef.current = true;
+      tabDirectionRef.current = e.shiftKey ? -1 : 1;
+      setOpen(false);
+    }
     if (e.key === "Escape") {
       // Revert input to last committed value.
       cancelledRef.current = true;
@@ -199,11 +244,13 @@ export function Combobox({
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
+          ref={triggerRef}
           type="button"
           role="combobox"
           aria-expanded={open}
           aria-controls={listId}
           disabled={disabled}
+          onKeyDown={handleTriggerKeyDown}
           className={cn(
             "flex h-7 w-full items-center justify-between gap-1 truncate border-0 bg-transparent px-0 text-left text-sm shadow-none",
             "focus:outline-none focus-visible:outline-none",
@@ -226,7 +273,19 @@ export function Combobox({
         className="w-[var(--radix-popover-trigger-width)] min-w-[180px] p-0"
         align="start"
         sideOffset={4}
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        onOpenAutoFocus={(e) => {
+          // Focus the search input (Radix would also select its text, so a
+          // character typed on the trigger would be overwritten by the next one).
+          e.preventDefault();
+          inputRef.current?.focus({ preventScroll: true });
+        }}
+        onCloseAutoFocus={(e) => {
+          const direction = tabDirectionRef.current;
+          tabDirectionRef.current = 0;
+          if (direction === 0 || !triggerRef.current) return;
+          e.preventDefault();
+          focusTabbableFrom(triggerRef.current, direction);
+        }}
         onEscapeKeyDown={() => {
           // Radix closes on Escape before the input sees the key.
           cancelledRef.current = true;
@@ -235,6 +294,7 @@ export function Combobox({
       >
         <Command shouldFilter={false}>
           <CommandInput
+            ref={inputRef}
             placeholder={placeholder}
             value={inputQuery}
             onValueChange={handleQueryChange}

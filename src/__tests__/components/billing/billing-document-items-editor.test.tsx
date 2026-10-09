@@ -113,12 +113,12 @@ describe("BillingDocumentItemsEditor — rendering", () => {
 
   it("hides totals card when showTotals=false", () => {
     renderEditor([makeItem()], vi.fn(), { showTotals: false });
-    expect(screen.queryByText("Total TTC")).toBeNull();
+    expect(screen.queryByText("Total (incl. VAT)")).toBeNull();
   });
 
   it("shows totals card by default (showTotals=true)", () => {
     renderEditor([makeItem()], vi.fn(), { showTotals: true });
-    expect(screen.getByText("Total TTC")).toBeDefined();
+    expect(screen.getByText("Total (incl. VAT)")).toBeDefined();
   });
 });
 
@@ -198,10 +198,9 @@ describe("BillingDocumentItemsEditor — live totals", () => {
     renderEditor(items, vi.fn(), { showTotals: true });
     // Total HT: 200, TVA: 40, TTC: 240
     // BillingTotalsCard formats with fr-FR currency notation.
-    // NOTE: "Total HT" also appears as a <th> column header; use getAllByText.
-    expect(screen.getAllByText("Total HT").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Total TTC")).toBeDefined();
-    expect(screen.getByText("TVA 20%")).toBeDefined();
+    expect(screen.getByText("Subtotal (excl. VAT)")).toBeDefined();
+    expect(screen.getByText("Total (incl. VAT)")).toBeDefined();
+    expect(screen.getByText("VAT 20%")).toBeDefined();
   });
 
   it("displays correct TVA lines for mixed VAT rates (200@20% + 100@10%)", () => {
@@ -210,8 +209,8 @@ describe("BillingDocumentItemsEditor — live totals", () => {
       { description: "B", quantity: "1", unit_price: "100", vat_rate: "10" },
     ];
     renderEditor(items, vi.fn(), { showTotals: true });
-    expect(screen.getByText("TVA 20%")).toBeDefined();
-    expect(screen.getByText("TVA 10%")).toBeDefined();
+    expect(screen.getByText("VAT 20%")).toBeDefined();
+    expect(screen.getByText("VAT 10%")).toBeDefined();
   });
 });
 
@@ -311,5 +310,60 @@ describe("BillingDocumentItemsEditor — suggestion requests", () => {
       .mocked(getActivitySuggestionsAction)
       .mock.calls.filter(([args]) => (args as { limit?: number }).limit === 20);
     expect(lineCalls).toHaveLength(1);
+  });
+});
+
+describe("BillingDocumentItemsEditor — field names", () => {
+  it("names the quantity, unit price and VAT controls of the desktop row and the mobile card", () => {
+    renderEditor([makeItem(), makeItem({ vat_rate: "8.5" })], vi.fn());
+
+    const desktop = screen.getByTestId("billing-items-desktop");
+    expect(within(desktop).getAllByRole("spinbutton", { name: "Qty" })).toHaveLength(2);
+    expect(within(desktop).getAllByRole("spinbutton", { name: "Unit price (excl. VAT)" })).toHaveLength(2);
+    // A preset rate is a select, a custom one an input: both carry the column name.
+    expect(within(desktop).getByRole("combobox", { name: "VAT %" })).toBeDefined();
+    expect(within(desktop).getByRole("spinbutton", { name: "VAT %" })).toBeDefined();
+
+    // The mobile card's visible labels are linked to their inputs.
+    const mobile = screen.getByTestId("billing-items-mobile");
+    expect(within(mobile).getAllByLabelText("Qty")).toHaveLength(2);
+    expect(within(mobile).getAllByLabelText("Unit price (excl. VAT)")).toHaveLength(2);
+  });
+});
+
+describe("BillingDocumentItemsEditor — deleting a line", () => {
+  it("leaves the next line with its own VAT select, not the deleted line's custom input", () => {
+    render(
+      <StatefulEditor
+        initial={[
+          makeItem({ unit_price: "10", vat_rate: "8.5" }),
+          makeItem({ unit_price: "20" }),
+          makeItem({ unit_price: "30" }),
+        ]}
+      />
+    );
+    const desktop = screen.getByTestId("billing-items-desktop");
+    expect(within(desktop).getByRole("spinbutton", { name: "VAT %" })).toBeDefined();
+
+    fireEvent.click(within(desktop).getAllByRole("button", { name: /remove line/i })[0]);
+
+    // Two lines left, both on the 20% preset: two selects and no free-text VAT box.
+    expect(within(desktop).getAllByRole("combobox", { name: "VAT %" })).toHaveLength(2);
+    expect(within(desktop).queryByRole("spinbutton", { name: "VAT %" })).toBeNull();
+    const prices = within(desktop).getAllByRole("spinbutton", { name: "Unit price (excl. VAT)" });
+    expect(prices.map((el) => (el as HTMLInputElement).value)).toEqual(["20", "30"]);
+  });
+
+  it("keeps a line's row (and focus) while it is edited", () => {
+    render(<StatefulEditor initial={[makeItem({ quantity: "1" }), makeItem({ quantity: "2" })]} />);
+    const desktop = screen.getByTestId("billing-items-desktop");
+    const [qty] = within(desktop).getAllByRole("spinbutton", { name: "Qty" });
+    qty.focus();
+
+    fireEvent.change(qty, { target: { value: "3" } });
+
+    const [qtyAfter] = within(desktop).getAllByRole("spinbutton", { name: "Qty" });
+    expect(qtyAfter).toBe(qty);
+    expect(document.activeElement).toBe(qty);
   });
 });

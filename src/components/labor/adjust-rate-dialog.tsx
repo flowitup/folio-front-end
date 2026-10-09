@@ -96,9 +96,9 @@ export function AdjustRateDialog({
       try {
         const list = await fetchWorkerRateChanges(projectId, worker.id);
         if (!cancelled) setRateChanges(list);
-      } catch (err) {
+      } catch {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : t("rateChange.errorGeneric"));
+          setError(t("rateChange.errorGeneric"));
         }
       }
     }
@@ -126,6 +126,10 @@ export function AdjustRateDialog({
       setError(t("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
       return;
     }
+    if (!effectiveDate) {
+      setError(t("rateChange.errorDateRequired"));
+      return;
+    }
     if (!worker) return;
 
     setIsSaving(true);
@@ -141,8 +145,10 @@ export function AdjustRateDialog({
       setEffectiveDate(todayIso());
       toast.success(t("rateChange.addedToast"));
       onChanged?.();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("rateChange.errorGeneric"));
+    } catch {
+      // Translated, never ApiError's raw "HTTP 400: BAD REQUEST": the rate and
+      // the date are checked above, so what is left is a server-side refusal.
+      setError(t("rateChange.errorGeneric"));
     } finally {
       setIsSaving(false);
       setIsRefreshing(false);
@@ -159,8 +165,8 @@ export function AdjustRateDialog({
       setRateChanges(list);
       toast.success(t("rateChange.deletedToast"));
       onChanged?.();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("rateChange.errorGeneric"));
+    } catch {
+      setError(t("rateChange.errorGeneric"));
     } finally {
       setDeletingId(null);
       setIsRefreshing(false);
@@ -185,7 +191,7 @@ export function AdjustRateDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("rateChange.title")}</DialogTitle>
         </DialogHeader>
@@ -223,6 +229,7 @@ export function AdjustRateDialog({
               type="date"
               value={effectiveDate}
               onChange={(e) => setEffectiveDate(e.target.value)}
+              required
               data-testid="adjust-rate-date"
             />
           </div>

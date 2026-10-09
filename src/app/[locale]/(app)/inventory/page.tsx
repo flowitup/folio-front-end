@@ -10,9 +10,17 @@
 
 import { fetchMyCompanies } from "@/lib/api/companies/companies";
 import { InventoryPageClient } from "./inventory-page-client";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { redirectToOnboardingIfNeeded } from "@/lib/auth/onboarding-redirect";
+import { pageTitle } from "@/lib/i18n/page-title";
+
+export const generateMetadata = pageTitle("navigation.inventory");
 
 export default async function InventoryPage() {
+  // Onboarding gate (as on /dashboard and /projects): a user with no company
+  // is sent to create or join one rather than shown an empty page.
+  await redirectToOnboardingIfNeeded(await getLocale());
+
   let companyId: string | null = null;
 
   try {

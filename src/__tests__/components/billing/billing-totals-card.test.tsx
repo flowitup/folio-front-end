@@ -9,7 +9,7 @@ import { render, screen } from "@testing-library/react";
 import { BillingTotalsCard, computeTotals, lineTotalHt } from "@/components/billing/billing-totals-card";
 import type { BillingDocumentItem } from "@/types/billing";
 
-// next-intl mock — returns English values so assertions on "Total HT" / "TVA X%" still pass.
+// next-intl mock — returns English values so assertions on "Subtotal (excl. VAT)" / "VAT X%" still pass.
 vi.mock("next-intl", () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const en = require("../../../messages/en.json") as Record<string, unknown>;
@@ -162,15 +162,15 @@ describe("computeTotals", () => {
 // ---------------------------------------------------------------------------
 
 describe("BillingTotalsCard", () => {
-  it("renders Total HT, TVA line, and Total TTC", () => {
+  it("renders the subtotal, VAT line and total", () => {
     const totals = computeTotals([
       { description: "Consulting", quantity: "2", unit_price: "100", vat_rate: "20" },
     ]);
     render(<BillingTotalsCard totals={totals} />);
 
-    expect(screen.getByText("Total HT")).toBeDefined();
-    expect(screen.getByText("Total TTC")).toBeDefined();
-    expect(screen.getByText("TVA 20%")).toBeDefined();
+    expect(screen.getByText("Subtotal (excl. VAT)")).toBeDefined();
+    expect(screen.getByText("Total (incl. VAT)")).toBeDefined();
+    expect(screen.getByText("VAT 20%")).toBeDefined();
   });
 
   it("renders multiple TVA lines for mixed VAT rates", () => {
@@ -181,18 +181,18 @@ describe("BillingTotalsCard", () => {
     const totals = computeTotals(items);
     render(<BillingTotalsCard totals={totals} />);
 
-    expect(screen.getByText("TVA 20%")).toBeDefined();
-    expect(screen.getByText("TVA 10%")).toBeDefined();
+    expect(screen.getByText("VAT 20%")).toBeDefined();
+    expect(screen.getByText("VAT 10%")).toBeDefined();
   });
 
   it("renders zero totals for empty items", () => {
     const totals = computeTotals([]);
     render(<BillingTotalsCard totals={totals} />);
 
-    expect(screen.getByText("Total HT")).toBeDefined();
-    expect(screen.getByText("Total TTC")).toBeDefined();
-    // No TVA lines for empty items
-    expect(screen.queryByText(/TVA \d/)).toBeNull();
+    expect(screen.getByText("Subtotal (excl. VAT)")).toBeDefined();
+    expect(screen.getByText("Total (incl. VAT)")).toBeDefined();
+    // No VAT lines for empty items
+    expect(screen.queryByText(/VAT \d/)).toBeNull();
   });
 });
 

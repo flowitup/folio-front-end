@@ -11,6 +11,20 @@ export interface FetchRefundableExpensesParams {
   companyId?: string;
   limit?: number;
   offset?: number;
+  /** Server-side search: invoice number, recipient or project name. */
+  q?: string;
+}
+
+/** Shared query string of both listings: company, page and search. */
+function listQuery(refundable: boolean, params?: FetchRefundableExpensesParams): string {
+  const qs = new URLSearchParams({ refundable: String(refundable) });
+  if (params?.companyId) qs.set("company_id", params.companyId);
+  const limit = params?.limit !== undefined ? params.limit : 200;
+  qs.set("limit", String(limit));
+  if (params?.offset !== undefined) qs.set("offset", String(params.offset));
+  const q = params?.q?.trim();
+  if (q) qs.set("q", q);
+  return qs.toString();
 }
 
 /**
@@ -23,14 +37,8 @@ export interface FetchRefundableExpensesParams {
 export async function fetchRefundableExpenses(
   params?: FetchRefundableExpensesParams
 ): Promise<{ items: RefundableExpense[]; total: number; summary: RefundableSummary | null }> {
-  const qs = new URLSearchParams({ refundable: "true" });
-  if (params?.companyId) qs.set("company_id", params.companyId);
-  const limit = params?.limit !== undefined ? params.limit : 200;
-  qs.set("limit", String(limit));
-  if (params?.offset !== undefined) qs.set("offset", String(params.offset));
-
   return api.get<{ items: RefundableExpense[]; total: number; summary: RefundableSummary | null }>(
-    `/billing/materials-expenses?${qs.toString()}`
+    `/billing/materials-expenses?${listQuery(true, params)}`
   );
 }
 
@@ -44,14 +52,8 @@ export async function fetchRefundableExpenses(
 export async function fetchRefundableCandidates(
   params?: FetchRefundableExpensesParams
 ): Promise<{ items: RefundableExpense[]; total: number }> {
-  const qs = new URLSearchParams({ refundable: "false" });
-  if (params?.companyId) qs.set("company_id", params.companyId);
-  const limit = params?.limit !== undefined ? params.limit : 200;
-  qs.set("limit", String(limit));
-  if (params?.offset !== undefined) qs.set("offset", String(params.offset));
-
   return api.get<{ items: RefundableExpense[]; total: number }>(
-    `/billing/materials-expenses?${qs.toString()}`
+    `/billing/materials-expenses?${listQuery(false, params)}`
   );
 }
 

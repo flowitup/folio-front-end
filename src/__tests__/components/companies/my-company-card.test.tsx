@@ -50,6 +50,11 @@ vi.mock(
   })
 );
 
+const { mockRefreshUser } = vi.hoisted(() => ({ mockRefreshUser: vi.fn() }));
+vi.mock("@/context/AuthContext", () => ({
+  useOptionalAuth: () => ({ refreshUser: mockRefreshUser }),
+}));
+
 import {
   setPrimaryCompanyAction,
   detachCompanyAction,
@@ -113,6 +118,14 @@ describe("test_my_company_card_masks_sensitive_fields_for_non_admin", () => {
     expect(screen.queryByText("12345678900012")).toBeNull();
   });
 
+  it("masked tooltip does not claim admins can see the value (they cannot either)", () => {
+    render(<MyCompanyCard company={makeCompany()} onMutated={vi.fn()} />);
+    const wrapper = screen.getByText("····3456").parentElement as HTMLElement;
+    const title = wrapper.getAttribute("title") ?? "";
+    expect(title).toMatch(/hidden for security/i);
+    expect(title).not.toMatch(/admins? only/i);
+  });
+
   it("shows '—' when sensitive fields are null", () => {
     const company = makeCompany({ siret: null, tva_number: null, iban: null, bic: null });
     render(<MyCompanyCard company={company} onMutated={vi.fn()} />);
@@ -170,6 +183,8 @@ describe("MyCompanyCard — set-primary action", () => {
       expect(mockSetPrimary).toHaveBeenCalledWith("co-1");
       expect(onMutated).toHaveBeenCalledOnce();
     });
+    // The primary company sets the user's permissions: re-read them right away.
+    expect(mockRefreshUser).toHaveBeenCalledOnce();
   });
 
   it("shows toast.error when setPrimaryCompanyAction returns ok=false", async () => {
@@ -187,6 +202,7 @@ describe("MyCompanyCard — set-primary action", () => {
     await waitFor(() => {
       expect(mockToast.error).toHaveBeenCalledWith("Already primary");
     });
+    expect(mockRefreshUser).not.toHaveBeenCalled();
   });
 });
 
@@ -234,5 +250,27 @@ describe("MyCompanyCard — detach confirm", () => {
       expect(mockDetach).toHaveBeenCalledWith("co-1");
       expect(onMutated).toHaveBeenCalledOnce();
     });
+    expect(mockRefreshUser).toHaveBeenCalledOnce();
+  });
+
+  it("confirms leaving with a toast and hands over to onDetached", async () => {
+    mockDetach.mockResolvedValueOnce({ ok: true, data: undefined });
+    const onMutated = vi.fn();
+    const onDetached = vi.fn();
+
+    render(<MyCompanyCard company={makeCompany()} onMutated={onMutated} onDetached={onDetached} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /detach/i }));
+    });
+    await waitFor(() => screen.getByRole("alertdialog"));
+    const actionButtons = screen.getAllByRole("button", { name: /detach/i });
+    await act(async () => {
+      fireEvent.click(actionButtons[actionButtons.length - 1]);
+    });
+
+    await waitFor(() => expect(onDetached).toHaveBeenCalledOnce());
+    expect(onMutated).not.toHaveBeenCalled();
+    expect(mockToast.success).toHaveBeenCalledWith('You left "ACME Corp".');
   });
 });

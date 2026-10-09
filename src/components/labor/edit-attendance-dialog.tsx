@@ -39,6 +39,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatWeekdayDate } from "@/lib/utils/formatters";
 import type { LaborEntry, ShiftType, UpdateAttendancePayload } from "@/types/labor";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
+import { ApiError } from "@/lib/api/http";
+
+/** The API's limit on an attendance note. */
+const NOTE_MAX_LENGTH = 500;
 
 // Radix Select forbids value=""; sentinel maps to null shift_type.
 const SHIFT_NONE = "__none__";
@@ -114,7 +118,14 @@ export function EditAttendanceDialog({
       });
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.updateFailed"));
+      // Never the raw "HTTP 400: BAD REQUEST": a refused note says why, any
+      // other failure gets the translated generic message.
+      const message = err instanceof ApiError ? (err.data as { message?: string } | undefined)?.message : undefined;
+      setError(
+        err instanceof ApiError && err.status === 400 && /\bnote\b/.test(message ?? "")
+          ? t("errors.noteTooLong", { max: NOTE_MAX_LENGTH })
+          : t("errors.updateFailed"),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -122,7 +133,7 @@ export function EditAttendanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("editEntry.title")}</DialogTitle>
         </DialogHeader>
@@ -207,6 +218,7 @@ export function EditAttendanceDialog({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder={t("note")}
+                maxLength={NOTE_MAX_LENGTH}
               />
             </div>
 

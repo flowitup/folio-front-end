@@ -304,6 +304,53 @@ describe("LaborPaymentsTab — shared payments summary from a parent", () => {
   });
 });
 
+describe("LaborPaymentsTab — grand-total Balance", () => {
+  it("keeps one worker's overpayment out of another worker's balance and shows it apart", async () => {
+    mockFetchLaborSummary.mockResolvedValue({
+      rows: [
+        { worker_id: "w1", worker_name: "Alice", days_worked: 5, total_cost: 500, banked_hours: 0, bonus_full_days: 0, bonus_half_days: 0, bonus_cost: 0 },
+        { worker_id: "w2", worker_name: "Bob", days_worked: 1, total_cost: 37.5, banked_hours: 0, bonus_full_days: 0, bonus_half_days: 0, bonus_cost: 0 },
+      ],
+      total_days: 6,
+      total_cost: 537.5,
+      total_banked_hours: 0,
+      total_bonus_days: 0,
+      total_bonus_cost: 0,
+    });
+    mockFetchLaborPaymentsSummary.mockResolvedValue({
+      months: [
+        {
+          year: 2026,
+          month: 7,
+          total_paid: 340,
+          workers: [
+            { worker_id: "w1", worker_name: "Alice", paid: 300, invoice_count: 1 },
+            { worker_id: "w2", worker_name: "Bob", paid: 40, invoice_count: 1 },
+          ],
+          unassigned_paid: 0,
+          unassigned_count: 0,
+        },
+      ],
+    });
+
+    render(<LaborPaymentsTab projectId="p1" canManage workers={WORKERS} />);
+    await screen.findByTestId("row-w2");
+
+    const footer = screen.getByText("labor.grandTotal").closest("tr")!;
+    const balanceCell = footer.querySelectorAll("td")[4];
+    // Alice still owes 200; Bob's 2.5 overpayment is not subtracted (197.5).
+    expect(balanceCell.textContent).toContain("€200");
+    expect(balanceCell.textContent).not.toContain("197.5");
+    expect(screen.getByTestId("payments-total-overpaid").textContent).toBe("labor.summaryOverpaidWarning");
+  });
+
+  it("shows no overpaid stamp when nobody was overpaid", async () => {
+    render(<LaborPaymentsTab projectId="p1" canManage workers={WORKERS} />);
+    await screen.findByTestId("row-w1");
+    expect(screen.queryByTestId("payments-total-overpaid")).toBeNull();
+  });
+});
+
 describe("LaborPaymentsTab — company/personal split caption under grand-total Paid", () => {
   it("renders the caption from the viewed month's bucket split", async () => {
     mockFetchLaborPaymentsSummary.mockResolvedValue({

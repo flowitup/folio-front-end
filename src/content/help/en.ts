@@ -31,7 +31,7 @@ export const helpCatalogueEn: HelpCatalogue = [
     steps: [
       "Pick the active site from the project switcher at the top of the sidebar. On a narrow screen it sits in the top bar instead.",
       "The sidebar's first group is app-wide: Overview, Projects and Library.",
-      "Once a project is selected the sidebar grows its sections: Planning, Labor, Expense, Cost planning, Notes, Documents and Analyses.",
+      "Once a project is selected the sidebar grows its sections: Planning, Labor, Expenses, Cost planning, Notes, Documents and Analyses.",
       "Company administrators also see a Billing group: Quotes, Invoices, Templates and Refundable.",
       "The top bar carries the page's main action, the help mark, the bell, the language picker and your account menu.",
     ],
@@ -50,7 +50,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Select a project first — with none selected the panels stay empty.",
       "Read “Spent this month” and the share of the budget it represents.",
       "Read the “Bank credit release” chart. With no credit recorded it offers “Open project settings” instead.",
-      "Use “Monthly spend by type” to see where the money went, and “Expense” to jump into the ledger.",
+      "Use “Monthly spend by type” to see where the money went, and “Expenses” to jump into the ledger.",
       "Read “This week” for tasks due, with overdue ones stamped, and “Agenda” to open Planning.",
     ],
     whoCanDoIt:
@@ -65,7 +65,7 @@ export const helpCatalogueEn: HelpCatalogue = [
     purpose:
       "Every site you can see, with its credit and spend, its team, and the forms to create, edit or delete one.",
     steps: [
-      "Filter the list with the “All projects” and “Active” toggle, or search by name.",
+      "Search the list by project name or address.",
       "Click “New project”, then give it a name — required — and optionally an address, a credit total and a funding source. If you administer several companies, pick which one it belongs to.",
       "On a project card, the actions menu offers “Edit project” and “Delete project”. Deleting asks you to type the confirmation text shown in bold.",
       "“Show team” expands the member list; “Invite” adds someone, and the row's trash icon removes them.",
@@ -87,13 +87,13 @@ export const helpCatalogueEn: HelpCatalogue = [
     steps: [
       "Switch between “Board” and “Week” with the toggle at the top.",
       "On the board, work across the backlog strip and the “To do”, “In progress”, “Blocked” and “Done” columns.",
-      "Click “Add task” in any column to create one there: a title, a description, a priority, a due date and comma-separated labels.",
+      "Click the “+” (“Add task”) in any column to create one there: a title, a description, a priority, a due date and comma-separated labels.",
       "Drag a card between columns to change its status.",
       "Click a card to open its detail panel, edit it inline, or delete it.",
       "In the week view, move between weeks and use the “+” on a day to create a task due that day, or the one on “Unscheduled” for a task with no date.",
     ],
     whoCanDoIt:
-      "Anyone who can open the project. Planning has no permission gate at all — everyone can create, move, edit and delete tasks.",
+      "Anyone who can open the project can create, move and edit tasks. Deleting a task needs project-editing rights (admins and the project's managers).",
     gotchas: [
       "Deleting a task is immediate and has no undo, only a browser confirmation.",
     ],
@@ -335,7 +335,7 @@ export const helpCatalogueEn: HelpCatalogue = [
     id: "company",
     title: "Your company, its members and permissions",
     purpose:
-      "The companies you belong to, and — for the ones you administer — the join code, the member roles, the permission grants and the people directory.",
+      "The companies you belong to, and — for the ones you administer — the company code, the member roles, the permission grants and the people directory.",
     steps: [
       "Open Settings → Company. The members table leads the page; the company's own card, its code and its payment methods follow underneath.",
       "Click “Add company” and paste an invite token or a company code to attach yourself to another one.",
@@ -350,7 +350,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Under “Labor roles”, create, rename, recolor or delete the roles workers carry on that company's projects. Deleting a role clears it from the workers who had it. The pencil beside a role in the worker dialog's role picker does the same from the labor page.",
     ],
     whoCanDoIt:
-      "Anyone can see the companies they belong to and attach another. The join code, the members table, the directory and the payment methods are for administrators of the selected company; labor roles are for its administrators and managers.",
+      "Anyone can see the companies they belong to and attach another. The company code, the members table, the directory and the payment methods are for administrators of the selected company; labor roles are for its administrators and managers.",
     gotchas: [
       "There are two different ways to add a person and they are not interchangeable: a single-use invite token valid seven days, and the reusable company code people type in the mobile app.",
     ],
@@ -364,14 +364,14 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Open Settings; the list down the left selects the section.",
       "On “Profile”, edit your display name and save. To sign in with another phone number, use “Change number”: enter the new number, then the code texted to it. Your email is read-only — only an administrator can change it.",
       "On “Project”, set the invoice number prefix for the selected project, up to eight letters or digits, and watch the preview line before saving.",
-      "On “Company”, manage the companies you belong to: the identity card of each, which one is primary, detaching, and attaching another with a code. Administering the selected one adds its join code, its members and its payment methods.",
+      "On “Company”, manage the companies you belong to: the identity card of each, which one is primary, detaching, and attaching another with a code. Administering the selected one adds its company code, its members and its payment methods.",
       "On “Notifications”, use the master switch and the per-category switches: team chat, attendance, tasks, team and access, and money.",
       "On “API Keys”, name a key and create it to call the Folio API from your own scripts: copy it straight away, because it is never shown again. Revoking one stops every automation using it, immediately and for good.",
       "On “Users & Roles”, which only Folio's support team can open, attach an existing account to projects: find the person, tick the projects, and submit. Roles are not set here — they come from the company role and the per-project grants under “Company”.",
       "The Folio version you are running is printed at the foot of the page, under whichever section is open.",
     ],
     whoCanDoIt:
-      "Everyone reaches their own profile, their notification choices and their own API keys. “Company” shows anyone their own attachments, and its admin tools — join code, members, payment methods — only to an administrator of the selected company. “Users & Roles” is reserved for Folio's support team.",
+      "Everyone reaches their own profile, their notification choices and their own API keys. “Company” shows anyone their own attachments, and its admin tools — company code, members, payment methods — only to an administrator of the selected company. “Users & Roles” is reserved for Folio's support team.",
     gotchas: [
       "Settings has no billing section of its own. Quotes, invoices and templates all live in the Billing group in the sidebar.",
       "The notification switches govern the pushes that reach the Folio mobile app, not the bell in this window.",

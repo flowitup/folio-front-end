@@ -95,6 +95,36 @@ describe("AttachedUsersTable — list render", () => {
     expect(screen.getByText("bob@example.com")).toBeDefined();
   });
 
+  it("shows a phone sign-up's phone, never its synthetic placeholder address", async () => {
+    const named: AttachedUser = {
+      ...BOB,
+      user_id: "user-3",
+      email: "phone-33621300001@no-email.folio.flowitup.com",
+      display_name: "Owner",
+      phone: "+33621300001",
+    };
+    const nameless: AttachedUser = {
+      ...BOB,
+      user_id: "user-4",
+      email: "phone-33621300002@no-email.folio.flowitup.com",
+      display_name: null,
+      phone: "+33621300002",
+    };
+    renderTable([named, nameless]);
+
+    expect(screen.getByText("Owner")).toBeDefined();
+    expect(screen.getByText("+336 21 30 00 01")).toBeDefined();
+    expect(screen.getByText("+336 21 30 00 02")).toBeDefined();
+    expect(screen.queryByText(/no-email\.folio\.flowitup\.com/)).toBeNull();
+
+    // The boot dialog names them the same way.
+    await act(async () => {
+      fireEvent.click(screen.getAllByTitle(/boot|remove/i)[1]);
+    });
+    await waitFor(() => expect(screen.getAllByText(/\+336 21 30 00 02/).length).toBeGreaterThan(1));
+    expect(screen.queryByText(/no-email\.folio\.flowitup\.com/)).toBeNull();
+  });
+
   it("shows empty message when user list is empty", () => {
     renderTable([]);
     // Empty state paragraph is rendered

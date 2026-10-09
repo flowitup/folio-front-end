@@ -11,6 +11,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { isPlatformOps } from "@/lib/auth/permissions";
 import { PersonMergeForm } from "@/components/persons/person-merge-form";
+import { pageTitle } from "@/lib/i18n/page-title";
+
+export const generateMetadata = pageTitle("personsMerge.title");
 
 export default async function PersonsMergePage() {
   const session = await getSession();

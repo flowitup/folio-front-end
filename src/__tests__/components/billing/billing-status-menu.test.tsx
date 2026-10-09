@@ -210,6 +210,28 @@ describe("test_status_menu_devis_transitions_only", () => {
     renderMenu("devis", "expired");
     expect(screen.queryByRole("button", { name: /change status/i })).toBeNull();
   });
+
+  it("devis accepted and converted to a live facture → no Change status button", () => {
+    const doc = {
+      ...makeDoc("devis", "accepted"),
+      converted_to_facture_id: "fac-1",
+      converted_facture_status: "sent" as const,
+    };
+    render(<BillingStatusMenu document={doc} onStatusChanged={vi.fn()} />);
+    expect(screen.queryByRole("button", { name: /change status/i })).toBeNull();
+  });
+
+  it("devis whose facture was cancelled → offers 'Revert to Sent' again", async () => {
+    const user = userEvent.setup();
+    const doc = {
+      ...makeDoc("devis", "accepted"),
+      converted_to_facture_id: "fac-1",
+      converted_facture_status: "cancelled" as const,
+    };
+    render(<BillingStatusMenu document={doc} onStatusChanged={vi.fn()} />);
+    const labels = await openMenuAndGetLabels(user);
+    expect(labels).toEqual(["Revert to Sent"]);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -345,7 +367,29 @@ describe("BillingStatusMenu — action invocation", () => {
     });
   });
 
-  it("shows generic error message toast on non-conflict error", async () => {
+  it("says the devis is locked by its invoice on a devis_locked error", async () => {
+    const user = userEvent.setup();
+    mockAction.mockResolvedValueOnce({
+      ok: false,
+      error: { code: "devis_locked", message: "Devis x was converted to a facture" },
+    });
+
+    renderMenu("devis", "accepted");
+    await openMenuAndGetLabels(user);
+
+    const revertItem = Array.from(document.querySelectorAll("[role='menuitem']")).find(
+      (el) => /revert to sent/i.test(el.textContent ?? "")
+    )!;
+    await user.click(revertItem);
+
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalledWith(
+        "This quote was converted to an invoice and is locked. Cancel the invoice to change it."
+      );
+    });
+  });
+
+  it("shows the translated failure, not the API's message, on non-conflict error", async () => {
     const user = userEvent.setup();
     mockAction.mockResolvedValueOnce({
       ok: false,
@@ -361,7 +405,29 @@ describe("BillingStatusMenu — action invocation", () => {
     await user.click(sentItem);
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("Something went wrong");
+      expect(mockToast.error).toHaveBeenCalledWith("Failed to update status. Please try again.");
+    });
+  });
+
+  it("says the document no longer exists on not_found", async () => {
+    const user = userEvent.setup();
+    mockAction.mockResolvedValueOnce({
+      ok: false,
+      error: { code: "not_found", message: "The requested resource was not found." },
+    });
+
+    renderMenu("devis", "draft");
+    await openMenuAndGetLabels(user);
+
+    const sentItem = Array.from(document.querySelectorAll("[role='menuitem']")).find(
+      (el) => /mark as sent/i.test(el.textContent ?? "")
+    )!;
+    await user.click(sentItem);
+
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalledWith(
+        "This document no longer exists. It may have been deleted."
+      );
     });
   });
 

@@ -26,6 +26,7 @@ export function renderBulkAddResultsToasts(
   const added = results.filter((r) => r.status === "added");
   const alreadyMember = results.filter((r) => r.status === "already_member");
   const notFound = results.filter((r) => r.status === "project_not_found");
+  const notInCompany = results.filter((r) => r.status === "not_in_company");
 
   if (added.length > 0) {
     toast.success(t("added", { count: added.length }));
@@ -35,5 +36,8 @@ export function renderBulkAddResultsToasts(
   }
   if (notFound.length > 0) {
     toast.error(t("notFound", { count: notFound.length }));
+  }
+  if (notInCompany.length > 0) {
+    toast.error(t("notInCompany", { count: notInCompany.length }));
   }
 }

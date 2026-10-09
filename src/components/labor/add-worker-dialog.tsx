@@ -23,6 +23,7 @@ import type {
 import type { LaborRole } from "@/types/labor-role";
 import { RoleSelectWithCreate } from "./role-select-with-create";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
+import { ApiError } from "@/lib/api/http";
 
 interface AddWorkerDialogProps {
   open: boolean;
@@ -36,6 +37,18 @@ interface AddWorkerDialogProps {
   canManageRoles?: boolean;
   onRoleUpdated?: (role: LaborRole) => void;
   onRoleDeleted?: (roleId: string) => void;
+  /** People who already have a worker row on this project: the picker shows
+   * them as unavailable (one person, one row per project). */
+  existingPersonIds?: string[];
+}
+
+/** The API refused the worker's phone as not a phone number (400 InvalidPhone). */
+function isInvalidPhoneError(err: unknown): boolean {
+  return (
+    err instanceof ApiError &&
+    err.status === 400 &&
+    (err.data as { error?: string } | undefined)?.error === "InvalidPhone"
+  );
 }
 
 /**
@@ -60,6 +73,7 @@ export function AddWorkerDialog({
   canManageRoles = false,
   onRoleUpdated,
   onRoleDeleted,
+  existingPersonIds,
 }: AddWorkerDialogProps) {
   const t = useTranslations("labor");
 
@@ -77,6 +91,8 @@ export function AddWorkerDialog({
   const [roleId, setRoleId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The API refused the phone ("hello world"): shown under the phone field.
+  const [phoneInvalid, setPhoneInvalid] = useState(false);
 
   const isEdit = !!editWorker;
 
@@ -101,12 +117,14 @@ export function AddWorkerDialog({
     setDailyRate("");
     setRoleId(null);
     setError(null);
+    setPhoneInvalid(false);
     onOpenChange(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setPhoneInvalid(false);
 
     if (isEdit) {
       // Edit path: name/phone/role only — rate changes go through AdjustRateDialog.
@@ -124,8 +142,9 @@ export function AddWorkerDialog({
           role_id: roleId,
         });
         handleClose();
-      } catch {
-        setError(t("errors.saveWorkerFailed"));
+      } catch (err) {
+        if (isInvalidPhoneError(err)) setPhoneInvalid(true);
+        else setError(t("errors.saveWorkerFailed"));
       } finally {
         setIsSaving(false);
       }
@@ -156,8 +175,15 @@ export function AddWorkerDialog({
         role_id: roleId ?? undefined,
       });
       handleClose();
-    } catch {
-      setError(t("errors.saveWorkerFailed"));
+    } catch (err) {
+      // 409: the person already has a worker row here (the API names it and
+      // whether it is deactivated, in which case it only needs reactivating).
+      if (err instanceof ApiError && err.status === 409) {
+        const inactive = (err.data as { is_active?: boolean } | undefined)?.is_active === false;
+        setError(t(inactive ? "errors.workerAlreadyOnProjectInactive" : "errors.workerAlreadyOnProject"));
+      } else {
+        setError(t("errors.saveWorkerFailed"));
+      }
     } finally {
       setIsSaving(false);
     }
@@ -165,7 +191,7 @@ export function AddWorkerDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>
             {isEdit ? t("editWorker") : t("addWorker")}
@@ -182,6 +208,7 @@ export function AddWorkerDialog({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={t("workerName")}
+                  maxLength={255}
                   autoFocus
                 />
               </div>
@@ -189,10 +216,24 @@ export function AddWorkerDialog({
                 <Label htmlFor="phone">{t("workerPhone")}</Label>
                 <Input
                   id="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  maxLength={50}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    setPhoneInvalid(false);
+                  }}
                   placeholder="+33 6 12 34 56 78"
+                  aria-invalid={phoneInvalid || undefined}
+                  aria-describedby={phoneInvalid ? "phone-error" : undefined}
                 />
+                {phoneInvalid && (
+                  <p id="phone-error" className="text-destructive text-sm">
+                    {t("errors.invalidPhone")}
+                  </p>
+                )}
               </div>
             </>
           ) : (
@@ -202,6 +243,7 @@ export function AddWorkerDialog({
                 value={selectedPerson}
                 onChange={setSelectedPerson}
                 placeholder={t("workerName")}
+                excludeIds={existingPersonIds}
               />
               {selectedPerson?.phone && (
                 <p className="text-muted-foreground font-mono text-xs">

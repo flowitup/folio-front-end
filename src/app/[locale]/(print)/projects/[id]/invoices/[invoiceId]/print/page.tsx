@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { fetchInvoice } from "@/lib/api/invoice-api";
-import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
+import { formatDate, formatEUR, formatMonthYear, formatUnitPriceEUR } from "@/lib/utils/formatters";
 import { formatQuantity, formatVatRate, invoiceTotals } from "@/lib/invoices/invoice-totals";
 import { invoiceItemLabel } from "@/lib/invoices/invoice-item-label";
 import type { Invoice } from "@/types/invoice";
@@ -63,10 +63,22 @@ export default function InvoicePrintPage() {
         .notes-text { font-size: 10pt; white-space: pre-line; }
         .print-btn { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 1.5rem; padding: 8px 16px; background: #111; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; }
         .print-btn:hover { background: #333; }
+        .items-scroll { overflow-x: auto; margin-bottom: 1rem; }
+        .items-scroll .items-table { margin-bottom: 0; }
+        /* Phone screens: tighter page and cells, no fixed column hints, so the
+           table fits 375px; anything still wider scrolls inside .items-scroll
+           instead of panning the whole page. */
+        @media screen and (max-width: 640px) {
+          .page { padding: 1rem; }
+          .meta-table td:first-child { width: 110px; }
+          .items-table th, .items-table td { padding: 4px 6px; font-size: 9pt; }
+          .items-table th { width: auto !important; }
+        }
         @media print {
           @page { margin: 15mm; size: A4; }
           body { font-size: 11pt; }
           .no-print { display: none !important; }
+          .items-scroll { overflow: visible; }
         }
       `}</style>
 
@@ -149,57 +161,59 @@ export default function InvoicePrintPage() {
           const colCount = hasVat ? 5 : 4;
 
           return (
-            <table className="items-table">
-              <thead>
-                <tr>
-                  <th>{t("description")}</th>
-                  <th className="right" style={{ width: "80px" }}>{t("quantity")}</th>
-                  <th className="right" style={{ width: "110px" }}>{t("unitPrice")}</th>
-                  {hasVat && <th className="right" style={{ width: "70px" }}>{t("colTva")} %</th>}
-                  <th className="right" style={{ width: "110px" }}>{t("total")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoice.items.map((item, i) => (
-                  <tr key={i}>
-                    <td>{invoiceItemLabel(invoice, item.description, (number) => t("bankRefundLine", { number }))}</td>
-                    <td className="right">{formatQuantity(item.quantity, locale)}</td>
-                    <td className="right">{formatEUR(item.unit_price)}</td>
-                    {hasVat && (
-                      <td className="right">
-                        {(item.vat_rate ?? 0) > 0 ? formatVatRate(item.vat_rate ?? 0, locale) : "—"}
-                      </td>
-                    )}
-                    <td className="right">{formatEUR(item.total)}</td>
+            <div className="items-scroll">
+              <table className="items-table">
+                <thead>
+                  <tr>
+                    <th>{t("description")}</th>
+                    <th className="right" style={{ width: "80px" }}>{t("quantity")}</th>
+                    <th className="right" style={{ width: "110px" }}>{t("unitPrice")}</th>
+                    {hasVat && <th className="right" style={{ width: "70px" }}>{t("colTva")} %</th>}
+                    <th className="right" style={{ width: "110px" }}>{t("total")}</th>
                   </tr>
-                ))}
-                {hasVat ? (
-                  <>
-                    <tr>
-                      <td colSpan={colCount - 1} className="right" style={{ fontWeight: "normal", color: "#555" }}>
-                        {t("totalHt")}
-                      </td>
-                      <td className="right">{formatEUR(totalHt)}</td>
+                </thead>
+                <tbody>
+                  {invoice.items.map((item, i) => (
+                    <tr key={i}>
+                      <td>{invoiceItemLabel(invoice, item.description, (number) => t("bankRefundLine", { number }))}</td>
+                      <td className="right">{formatQuantity(item.quantity, locale)}</td>
+                      <td className="right">{formatUnitPriceEUR(item.unit_price)}</td>
+                      {hasVat && (
+                        <td className="right">
+                          {(item.vat_rate ?? 0) > 0 ? formatVatRate(item.vat_rate ?? 0, locale) : "—"}
+                        </td>
+                      )}
+                      <td className="right">{formatEUR(item.total)}</td>
                     </tr>
-                    <tr>
-                      <td colSpan={colCount - 1} className="right" style={{ fontWeight: "normal", color: "#555" }}>
-                        {t("totalTva")}
-                      </td>
-                      <td className="right">{formatEUR(totalVat)}</td>
-                    </tr>
+                  ))}
+                  {hasVat ? (
+                    <>
+                      <tr>
+                        <td colSpan={colCount - 1} className="right" style={{ fontWeight: "normal", color: "#555" }}>
+                          {t("totalHt")}
+                        </td>
+                        <td className="right">{formatEUR(totalHt)}</td>
+                      </tr>
+                      <tr>
+                        <td colSpan={colCount - 1} className="right" style={{ fontWeight: "normal", color: "#555" }}>
+                          {t("totalTva")}
+                        </td>
+                        <td className="right">{formatEUR(totalVat)}</td>
+                      </tr>
+                      <tr className="total-row">
+                        <td colSpan={colCount - 1} className="right">{t("totalTtc")}</td>
+                        <td className="right">{formatEUR(invoice.total_amount)}</td>
+                      </tr>
+                    </>
+                  ) : (
                     <tr className="total-row">
-                      <td colSpan={colCount - 1} className="right">{t("totalTtc")}</td>
+                      <td colSpan={colCount - 1} className="right">{t("total")}</td>
                       <td className="right">{formatEUR(invoice.total_amount)}</td>
                     </tr>
-                  </>
-                ) : (
-                  <tr className="total-row">
-                    <td colSpan={colCount - 1} className="right">{t("total")}</td>
-                    <td className="right">{formatEUR(invoice.total_amount)}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           );
         })()}
 

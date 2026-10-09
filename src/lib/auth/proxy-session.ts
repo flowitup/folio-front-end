@@ -101,23 +101,40 @@ export function applySessionCookies(
   for (const cookie of cookies) jar.set(cookie.name, cookie.value);
   const cookieHeader = [...jar].map(([name, value]) => `${name}=${value}`).join("; ");
 
+  forwardRequestHeader(request, response, "cookie", cookieHeader);
+}
+
+/**
+ * Set a header on the request the page renders with.
+ *
+ * `response` comes from the next-intl middleware, so the request-header
+ * override is merged into whatever it set rather than built with
+ * NextResponse.next({ request }).
+ */
+export function forwardRequestHeader(
+  request: NextRequest,
+  response: NextResponse,
+  name: string,
+  value: string
+): void {
+  const header = name.toLowerCase();
   const existing = response.headers.get(OVERRIDE_HEADERS);
   if (existing) {
     const keys = new Set(existing.split(",").map((k) => k.trim()).filter(Boolean));
-    keys.add("cookie");
+    keys.add(header);
     response.headers.set(OVERRIDE_HEADERS, [...keys].join(","));
-    response.headers.set(`${REQUEST_HEADER_PREFIX}cookie`, cookieHeader);
+    response.headers.set(`${REQUEST_HEADER_PREFIX}${header}`, value);
     return;
   }
 
   // No override yet: the list must name every request header, since Next
   // drops the headers an override list leaves out.
   const forwarded = new Headers(request.headers);
-  forwarded.set("cookie", cookieHeader);
+  forwarded.set(header, value);
   const keys: string[] = [];
-  forwarded.forEach((value, key) => {
+  forwarded.forEach((headerValue, key) => {
     keys.push(key);
-    response.headers.set(`${REQUEST_HEADER_PREFIX}${key}`, value);
+    response.headers.set(`${REQUEST_HEADER_PREFIX}${key}`, headerValue);
   });
   response.headers.set(OVERRIDE_HEADERS, keys.join(","));
 }

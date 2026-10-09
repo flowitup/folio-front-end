@@ -5,13 +5,21 @@ import { clientIpHeader } from "@/lib/api/client-ip";
 import type { AuthTokenResponse, User } from "./types";
 import { setForwardedCookies } from "./forward-cookies";
 import { normalizeFrenchPhone } from "./phone-number";
+import { hourlyLimitMinutesOf } from "./otp-throttle";
 
-export type RequestOtpError = "invalid_phone" | "throttled" | "sms_failed" | "unavailable" | "unknown";
+export type RequestOtpError =
+  | "invalid_phone"
+  | "throttled"
+  | "hourly_limit"
+  | "sms_failed"
+  | "unavailable"
+  | "unknown";
 export type VerifyOtpError = "invalid_code" | "throttled" | "unavailable" | "unknown";
 
 type RequestOtpResult =
   | { success: true; expiresIn: number }
-  | { success: false; error: RequestOtpError };
+  // `retryAfterMinutes` comes with "hourly_limit": how long the number stays capped.
+  | { success: false; error: RequestOtpError; retryAfterMinutes?: number };
 
 type VerifyOtpResult = {
   success: boolean;
@@ -53,7 +61,12 @@ export async function requestOtpAction(phone: string): Promise<RequestOtpResult>
     }
 
     if (response.status === 400) return { success: false, error: "invalid_phone" };
-    if (response.status === 429) return { success: false, error: "throttled" };
+    if (response.status === 429) {
+      const minutes = await hourlyLimitMinutesOf(response);
+      return minutes === null
+        ? { success: false, error: "throttled" }
+        : { success: false, error: "hourly_limit", retryAfterMinutes: minutes };
+    }
     if (response.status === 503) return { success: false, error: "sms_failed" };
     if (response.status === 404) return { success: false, error: "unavailable" };
 

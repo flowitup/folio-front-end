@@ -99,6 +99,68 @@ describe("CompanyProfileForm", () => {
     expect(payload).not.toHaveProperty("siret");
   });
 
+  it("marks the fields the API rejected with a specific message", async () => {
+    mockUpdate.mockResolvedValue({
+      ok: false,
+      error: { code: "validation", message: "Validation error.", fields: ["siret", "iban"] },
+    });
+    render(<CompanyProfileForm company={makeCompany()} />);
+
+    fireEvent.change(screen.getByLabelText("SIRET"), { target: { value: "552 100 554 0002" } });
+    fireEvent.change(screen.getByLabelText("IBAN"), { target: { value: "FR7630006000011234567890188" } });
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(await screen.findByText("SIRET must be 14 digits.")).toBeInTheDocument();
+    expect(screen.getByText(/This IBAN is not valid/)).toBeInTheDocument();
+    expect(screen.getByLabelText("SIRET")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("BIC / SWIFT")).not.toHaveAttribute("aria-invalid");
+
+    // Editing the field clears its error.
+    fireEvent.change(screen.getByLabelText("SIRET"), { target: { value: "552 100 554 00025" } });
+    await waitFor(() => expect(screen.queryByText("SIRET must be 14 digits.")).toBeNull());
+    expect(screen.getByText(/This IBAN is not valid/)).toBeInTheDocument();
+  });
+
+  it("removes a stored (masked) value on save, and Undo keeps it", async () => {
+    render(<CompanyProfileForm company={makeCompany()} />);
+
+    // One per masked field, in form order: SIRET, TVA, IBAN, BIC.
+    const removeButtons = screen.getAllByRole("button", { name: /Remove the stored value/ });
+    expect(removeButtons).toHaveLength(4);
+    fireEvent.click(removeButtons[2]);
+    expect(screen.getByText("Removed when you save.")).toBeInTheDocument();
+    expect((screen.getByLabelText("IBAN") as HTMLInputElement).placeholder).toBe("");
+    fireEvent.click(removeButtons[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "Undo" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    const payload = mockUpdate.mock.calls[0][1];
+    expect(payload.iban).toBeNull();
+    expect(payload).not.toHaveProperty("siret");
+    expect(payload).not.toHaveProperty("bic");
+  });
+
+  it("typing a value after Remove replaces the stored value instead", () => {
+    const company = makeCompany();
+    const values = { ...initialProfileValues(company), iban: "FR7630006000011234567890189" };
+    expect(buildCompanyUpdatePayload(company, values, new Set(["iban"])).iban).toBe("FR7630006000011234567890189");
+  });
+
+  it("sends an emptied logo, payment terms and prefix as null so the save clears them", () => {
+    const company = makeCompany({
+      logo_url: "https://example.com/logo.png",
+      default_payment_terms: "30 jours",
+      prefix_override: "QAA",
+    });
+    const values = { ...initialProfileValues(company), logo_url: "", default_payment_terms: " ", prefix_override: "" };
+    expect(buildCompanyUpdatePayload(company, values)).toMatchObject({
+      logo_url: null,
+      default_payment_terms: null,
+      prefix_override: null,
+    });
+  });
+
   it("prefills full values (platform ops) and still omits them when unchanged", () => {
     const company = makeCompany({ iban: "FR7630006000011234567890189", bic: "BNPAFRPPXXX" });
     const values = initialProfileValues(company);

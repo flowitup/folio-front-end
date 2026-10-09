@@ -553,3 +553,57 @@ describe("RefundableInvoicesPage — layouts", () => {
   });
 });
 
+
+describe("RefundableInvoicesPage — more than one page", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSet.mockResolvedValue(undefined);
+    const pages = [
+      makeExpense({ id: "exp-1", invoice_number: "INV-P1" }),
+      makeExpense({ id: "exp-2", invoice_number: "INV-P2" }),
+    ];
+    mockFetch.mockImplementation(async (params) => ({
+      items: [pages[params?.offset ?? 0]],
+      total: 2,
+      summary: null,
+    }));
+  });
+
+  it("loads the next page after the loaded rows", async () => {
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => table().getByText("INV-P1"));
+    expect(screen.getByText("Showing 1 of 2")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "Load more" }));
+
+    await waitFor(() => table().getByText("INV-P2"));
+    expect(mockFetch).toHaveBeenLastCalledWith({ offset: 1 });
+    expect(table().getByText("INV-P1")).toBeDefined();
+    expect(screen.queryByText(/Showing \d+ of \d+/)).toBeNull();
+  });
+
+  it("keeps the loaded pages after a status change reloads the list", async () => {
+    const user = userEvent.setup();
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => table().getByText("INV-P1"));
+    fireEvent.click(screen.getByRole("button", { name: "Load more" }));
+    await waitFor(() => table().getByText("INV-P2"));
+
+    await user.click(table().getAllByRole("button", { name: /change status/i })[1]);
+    await waitFor(() => {
+      if (document.querySelectorAll("[role='menuitem']").length === 0) throw new Error("menu items not rendered");
+    });
+    const removeItem = Array.from(document.querySelectorAll("[role='menuitem']")).find((el) =>
+      /remove/i.test(el.textContent ?? "")
+    )!;
+    await user.click(removeItem);
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: /remove/i }));
+
+    await waitFor(() => expect(mockSet).toHaveBeenCalledWith("exp-2", null, undefined));
+    // First page, then the second again: both rows stay on screen.
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(4));
+    expect(mockFetch).toHaveBeenLastCalledWith({ offset: 1 });
+    await waitFor(() => table().getByText("INV-P2"));
+    expect(table().getByText("INV-P1")).toBeDefined();
+  });
+});

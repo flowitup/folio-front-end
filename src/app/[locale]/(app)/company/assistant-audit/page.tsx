@@ -34,6 +34,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { MyCompany, AttachedUser } from "@/types/companies";
 import type { AssistantAuditEntry } from "@/types/assistant-audit";
+import { pageTitle } from "@/lib/i18n/page-title";
+import { userDisplayName } from "@/lib/auth/user-display";
 
 const PARIS_TZ = "Europe/Paris";
 const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -150,6 +152,8 @@ interface Props {
   params: Promise<{ locale: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
+
+export const generateMetadata = pageTitle("assistantAudit.title");
 
 export default async function AssistantAuditPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -326,7 +330,7 @@ export default async function AssistantAuditPage({ params, searchParams }: Props
               <option value="">{t("filters.userAll")}</option>
               {attachedUsers.map((u) => (
                 <option key={u.user_id} value={u.user_id}>
-                  {u.display_name ?? u.email}
+                  {userDisplayName(u) || u.user_id}
                 </option>
               ))}
             </select>

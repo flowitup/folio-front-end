@@ -120,3 +120,19 @@ describe("BillingDocumentList rows", () => {
     expect(screen.getByRole("heading", { name: "Quotes" })).toBeInTheDocument();
   });
 });
+
+describe("BillingDocumentList dates", () => {
+  const savedTz = process.env.TZ;
+  afterEach(() => {
+    process.env.TZ = savedTz;
+  });
+
+  it("shows the stored issue date west of UTC, not the day before", () => {
+    // The API sends calendar dates as RFC 1123 midnight GMT.
+    process.env.TZ = "America/Cayenne";
+    renderList({ initialDocuments: [{ ...DOC, issue_date: "Fri, 09 Oct 2026 00:00:00 GMT" }] });
+
+    expect(screen.getAllByText("09/10/2026").length).toBe(2);
+    expect(screen.queryByText("08/10/2026")).toBeNull();
+  });
+});

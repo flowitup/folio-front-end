@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { postLoginPath } from "../callback-url";
+import { loginPathFor, postLoginPath } from "../callback-url";
 
 describe("postLoginPath", () => {
   it("returns a same-origin deep link unchanged", () => {
@@ -27,5 +27,15 @@ describe("postLoginPath", () => {
     ["/en/login?callbackUrl=/en/dashboard"],
   ])("falls back to the dashboard for %j", (raw) => {
     expect(postLoginPath(raw, "fr")).toBe("/fr/dashboard");
+  });
+});
+
+describe("loginPathFor", () => {
+  it("keeps the requested page as callbackUrl", () => {
+    expect(loginPathFor("/fr/projects?x=1", "fr")).toBe("/fr/login?callbackUrl=%2Ffr%2Fprojects%3Fx%3D1");
+  });
+
+  it.each([[null], [""], ["//evil.example"], ["/en/login"]])("drops a path postLoginPath would refuse: %j", (raw) => {
+    expect(loginPathFor(raw, "en")).toBe("/en/login");
   });
 });

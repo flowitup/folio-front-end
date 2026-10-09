@@ -18,11 +18,10 @@ describe("legal pages", () => {
   });
 
   it("titles the privacy page in the reader's language", async () => {
-    expect((await generateMetadata({ params: Promise.resolve({ locale: "en" }) })).title).toBe(
-      "Folio · Privacy Policy"
-    );
+    // The [locale] layout's title template adds " · Folio".
+    expect((await generateMetadata({ params: Promise.resolve({ locale: "en" }) })).title).toBe("Privacy Policy");
     expect((await generateMetadata({ params: Promise.resolve({ locale: "fr" }) })).title).toBe(
-      "Folio · Politique de confidentialité"
+      "Politique de confidentialité"
     );
   });
 

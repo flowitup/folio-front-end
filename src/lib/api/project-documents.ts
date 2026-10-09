@@ -57,7 +57,11 @@ export type ListProjectDocumentsResult = {
  */
 export type DocumentUploader = {
   user_id: string;
-  display_name: string; // the account's display name, or its e-mail when it has none
+  /** Name, else real e-mail, else phone — never a synthetic or erased address; "" for an erased account. */
+  display_name: string;
+  phone?: string | null;
+  /** The account was erased: shown as a former member. */
+  is_deleted?: boolean;
 };
 
 // ---- Error helper ----

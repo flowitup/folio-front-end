@@ -68,14 +68,21 @@ export function CategoryMenu({ value, onChange, disabled = false }: CategoryMenu
       const insidePop = popRef.current?.contains(target) ?? false;
       if (!insideTrigger && !insidePop) close();
     }
+    // Escape closes only the menu. Caught in the capture phase and marked
+    // handled before any React handler runs, so the note editor around the
+    // menu does not take the same Escape as "cancel" and drop the edits.
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") close();
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      const focusInPop = popRef.current?.contains(document.activeElement) ?? false;
+      close();
+      if (focusInPop) triggerRef.current?.focus();
     }
     document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey, true);
     return () => {
       document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("keydown", onKey, true);
     };
   }, [open, close]);
 

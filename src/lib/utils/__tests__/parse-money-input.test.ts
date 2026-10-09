@@ -32,3 +32,28 @@ describe("parseMoneyInput", () => {
     },
   );
 });
+
+describe("parseMoneyInput options", () => {
+  it.each([
+    ["45,90", { maxDecimals: 4 }, 45.9],
+    ["1,859", { maxDecimals: 4 }, 1.859],
+    ["2,375", { maxDecimals: 3 }, 2.375],
+    ["1 234,5678", { maxDecimals: 4 }, 1234.5678],
+    ["-50", { allowNegative: true }, -50],
+    ["-12,5", { allowNegative: true, maxDecimals: 4 }, -12.5],
+  ] as const)("reads %j with %j as %d", (input, options, expected) => {
+    expect(parseMoneyInput(input, options)).toBe(expected);
+  });
+
+  it.each([
+    ["1,85912", { maxDecimals: 4 }],
+    ["2,3755", { maxDecimals: 3 }],
+    ["-", { allowNegative: true }],
+    ["--5", { allowNegative: true }],
+    ["5-", { allowNegative: true }],
+    ["1e3", { maxDecimals: 4 }],
+    ["-5", { maxDecimals: 4 }],
+  ] as const)("rejects %j with %j", (input, options) => {
+    expect(parseMoneyInput(input, options)).toBeNull();
+  });
+});

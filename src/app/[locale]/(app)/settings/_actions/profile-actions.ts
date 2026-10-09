@@ -15,6 +15,7 @@ import { sessionAuthHeader } from "@/lib/api/auth-header";
 import type { User } from "@/lib/auth/types";
 import { normalizeFrenchPhone } from "@/lib/auth/phone-number";
 import { setForwardedCookies } from "@/lib/auth/forward-cookies";
+import { hourlyLimitMinutesOf } from "@/lib/auth/otp-throttle";
 
 export interface UpdateProfilePayload {
   display_name?: string | null;
@@ -87,12 +88,14 @@ export type RequestPhoneChangeError =
   | "same_phone"
   | "phone_taken"
   | "throttled"
+  | "hourly_limit"
   | "sms_failed"
   | "unknown";
 
 export type RequestPhoneChangeResult =
   | { success: true; expiresIn: number }
-  | { success: false; error: RequestPhoneChangeError };
+  // `retryAfterMinutes` comes with "hourly_limit": how long the new number stays capped.
+  | { success: false; error: RequestPhoneChangeError; retryAfterMinutes?: number };
 
 export type ConfirmPhoneChangeError =
   | "invalid_code"
@@ -138,7 +141,12 @@ export async function requestPhoneChangeCodeAction(
     return { success: false, error: data?.error === "PhoneUnchanged" ? "same_phone" : "invalid_phone" };
   }
   if (response.status === 409) return { success: false, error: "phone_taken" };
-  if (response.status === 429) return { success: false, error: "throttled" };
+  if (response.status === 429) {
+    const minutes = await hourlyLimitMinutesOf(response);
+    return minutes === null
+      ? { success: false, error: "throttled" }
+      : { success: false, error: "hourly_limit", retryAfterMinutes: minutes };
+  }
   if (response.status === 503) return { success: false, error: "sms_failed" };
   return { success: false, error: "unknown" };
 }

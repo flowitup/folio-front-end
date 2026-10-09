@@ -219,6 +219,17 @@ interface MonthlyWorkerSubRow {
   days_worked: number;
   /** EUR */
   total_cost: number;
+  /** Share of total_cost earned by banked supplement hours (EUR). */
+  bonus_cost?: number;
+  /** Supplement hours banked this month. */
+  banked_hours?: number;
+  /** Bonus days those hours earned (a half day counts 0.5). */
+  bonus_days?: number;
+  /** Daily rate on the month's last day (EUR). Optional: an older API omits it. */
+  daily_rate?: number;
+  /** Daily rate on the month's first day; differs from daily_rate when the
+   *  rate changed during the month. */
+  month_start_rate?: number;
 }
 
 export interface MonthlySummaryRow {
@@ -228,8 +239,14 @@ export interface MonthlySummaryRow {
   month: number;
   /** Priced shifts in this month (supplement-only rows excluded) */
   total_days: number;
-  /** Total cost in EUR for this month */
+  /** Total cost in EUR for this month (bonus included) */
   total_cost: number;
+  /** Share of total_cost earned by banked supplement hours (EUR). */
+  total_bonus_cost?: number;
+  /** Supplement hours banked this month. */
+  total_banked_hours?: number;
+  /** Bonus days those hours earned (a half day counts 0.5). */
+  total_bonus_days?: number;
   /** Per-worker breakdown for this month, sorted ASC by name. */
   workers: MonthlyWorkerSubRow[];
 }

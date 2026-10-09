@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useProject } from "@/context/ProjectContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import { fetchTasks } from "@/lib/api/task-api";
 import type { Invoice } from "@/types/invoice";
@@ -69,7 +70,7 @@ const EMPTY_TYPE_BUCKETS: TypeMonthlyBucket[] = EXPENSE_TYPES.map((type) => ({
 }));
 
 export default function DashboardPage() {
-  const { selectedProject, isLoading: projectsLoading } = useProject();
+  const { selectedProject, isLoading: projectsLoading, error: projectsError, refetch: refetchProjects } = useProject();
   const { user } = useAuth();
   const locale = useLocale();
   const t = useTranslations("dashboard");
@@ -216,6 +217,23 @@ export default function DashboardPage() {
   const planningHref = projectId ? `/${locale}/projects/${projectId}/planning` : null;
   const projectSettingsHref = projectId ? `/${locale}/projects/${projectId}/settings` : null;
   const laborHref = projectId ? `/${locale}/projects/${projectId}/labor` : null;
+
+  // The project list failed to load: say so with a retry, rather than the
+  // "create your first project" state an account with projects must not see.
+  if (!projectsLoading && !selectedProject && projectsError) {
+    return (
+      <div className="fade-up px-4 pb-12 lg:px-8">
+        <Alert variant="destructive" data-testid="overview-projects-error">
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>{tProjects("loadError")}</span>
+            <Button variant="outline" size="sm" onClick={() => void refetchProjects()}>
+              {tProjects("retry")}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   // No project at all: a money dashboard of zeros would read as real figures,
   // so point to creating one (or, without that right, say one is coming).

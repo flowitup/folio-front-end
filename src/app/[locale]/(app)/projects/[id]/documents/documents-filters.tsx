@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import type { DocumentUploader, ProjectDocumentKind } from "@/lib/api/project-documents";
+import { uploaderLabel } from "./uploader-label";
 
 // ---- Types ----
 
@@ -127,7 +128,7 @@ export function DocumentsFilters({ kinds, selectedTags, availableTags, uploaderI
             <SelectItem value="__anyone__">{t("anyUploader")}</SelectItem>
             {uploaders.map((u) => (
               <SelectItem key={u.user_id} value={u.user_id}>
-                {u.display_name}
+                {uploaderLabel(u) || t("formerMember")}
               </SelectItem>
             ))}
           </SelectContent>

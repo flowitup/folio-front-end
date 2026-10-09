@@ -20,7 +20,7 @@
  *     may issue from; hidden when there is none
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Plus, Loader2, FileText, Upload } from "lucide-react";
@@ -41,6 +41,7 @@ import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from
 import type { MyCompany } from "@/types/companies";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { formatDate } from "@/lib/utils/formatters";
+import { toIsoDate } from "@/lib/billing/document-payload";
 import { parsePage, parseQuery, parseStatus, statusesFor } from "./billing-list-params";
 
 // ---------------------------------------------------------------------------
@@ -116,9 +117,10 @@ export function BillingDocumentList({
   }, [searchRaw, search, searchParams, pathname, router]);
 
   // Load-more state — navigation-based; server page re-renders with new props.
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  // The navigation runs in a transition, so isLoadingMore stays true until the
+  // next page is rendered (a failed load comes back as the loadError prop).
+  const [isLoadingMore, startLoadMore] = useTransition();
   const [importOpen, setImportOpen] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Current page — driven from ?page= param
   const currentPage = parsePage(searchParams.get("page"));
@@ -157,21 +159,13 @@ export function BillingDocumentList({
     router.push(`${pathname}?${params.toString()}`);
   }
 
-  async function handleLoadMore() {
-    setIsLoadingMore(true);
-    setLoadError(null);
-    try {
-      const nextPage = currentPage + 1;
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", String(nextPage));
-      // Navigate — server component will re-fetch and pass new initialDocuments.
-      // For a SPA-feel we append client-side after server data arrives via router.
+  function handleLoadMore() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(currentPage + 1));
+    // Navigate — server component will re-fetch and pass new initialDocuments.
+    startLoadMore(() => {
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    } catch {
-      setLoadError(t("list.loadMoreFailed"));
-    } finally {
-      setIsLoadingMore(false);
-    }
+    });
   }
 
   function handleMutated() {
@@ -300,12 +294,6 @@ export function BillingDocumentList({
           </Select>
         </div>
 
-        {loadError && (
-          <Alert variant="destructive">
-            <AlertDescription>{loadError}</AlertDescription>
-          </Alert>
-        )}
-
         {listLoadError ? (
           <Alert variant="destructive">
             <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
@@ -347,7 +335,7 @@ export function BillingDocumentList({
                         className="num text-[12px]"
                         style={{ color: "var(--muted)" }}
                       >
-                        {formatDate(doc.issue_date)}
+                        {formatDate(toIsoDate(doc.issue_date) ?? doc.issue_date)}
                       </span>
                       <span className="num text-[13px] font-medium">
                         {formatTTC(doc.total_ttc)}
@@ -385,7 +373,7 @@ export function BillingDocumentList({
                           {doc.document_number}
                         </td>
                         <td className="num" style={{ color: "var(--muted)" }}>
-                          {formatDate(doc.issue_date)}
+                          {formatDate(toIsoDate(doc.issue_date) ?? doc.issue_date)}
                         </td>
                         <td>{doc.recipient_name}</td>
                         <td>

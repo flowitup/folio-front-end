@@ -28,11 +28,15 @@ type PageState = {
 
 // ---- Lazy PDF.js loader ----
 
-let pdfjsPromise: Promise<typeof import("pdfjs-dist")> | null = null;
+// The legacy build bundles core-js polyfills (e.g. Map.prototype.getOrInsertComputed,
+// only native from Chrome 145 / Safari 26.2 / Firefox 144). The modern build throws
+// on older browsers, so every PDF preview failed there. The worker copied to
+// public/ by predev/prebuild must come from the same legacy build.
+let pdfjsPromise: Promise<typeof import("pdfjs-dist/legacy/build/pdf.mjs")> | null = null;
 
 function loadPdfjs() {
   if (!pdfjsPromise) {
-    pdfjsPromise = import("pdfjs-dist").then((mod) => {
+    pdfjsPromise = import("pdfjs-dist/legacy/build/pdf.mjs").then((mod) => {
       mod.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
       return mod;
     });
@@ -59,7 +63,7 @@ export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasView
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // Keep the PDF document reference alive for on-demand page rendering
-  const pdfDocRef = useRef<import("pdfjs-dist").PDFDocumentProxy | null>(null);
+  const pdfDocRef = useRef<import("pdfjs-dist/legacy/build/pdf.mjs").PDFDocumentProxy | null>(null);
   // Track which pages are currently being rendered to avoid double-render
   const renderingRef = useRef<Set<number>>(new Set());
   const observerRef = useRef<IntersectionObserver | null>(null);

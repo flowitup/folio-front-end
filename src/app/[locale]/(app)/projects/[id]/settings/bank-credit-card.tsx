@@ -12,6 +12,7 @@ import { formatEUR } from "@/lib/utils/formatters";
 import { updateBankCredit } from "./actions";
 import type { Project } from "@/types/project";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { useOptionalProject } from "@/context/ProjectContext";
 
 /**
  * Project settings card for the bank credit (crédit immobilier): the initial
@@ -39,6 +40,9 @@ export function BankCreditCard({ project }: Props) {
   const [source, setSource] = useState(project.budget_source ?? "");
   const [saving, setSaving] = useState(false);
   const router = useRouter();
+  // The Overview, Projects and Expense pages read the budget from the cached
+  // project list, which router.refresh() does not reload.
+  const refetchProjects = useOptionalProject()?.refetch;
   // The values the server holds now (the props only reflect page load).
   const [saved, setSaved] = useState({
     amount: project.budget != null ? String(project.budget) : "",
@@ -56,16 +60,23 @@ export function BankCreditCard({ project }: Props) {
 
   const handleSave = async () => {
     setSaving(true);
-    const result = await updateBankCredit(project.id, amount, source);
-    setSaving(false);
-    if (result.ok) {
-      setSaved({ amount, source });
-      router.refresh();
-      toast.success(t("settingsSaved"));
-    } else if (result.error === "validation") {
-      toast.error(t("budgetInvalid"));
-    } else {
+    try {
+      const result = await updateBankCredit(project.id, amount, source);
+      if (result.ok) {
+        setSaved({ amount, source });
+        router.refresh();
+        void refetchProjects?.();
+        toast.success(t("settingsSaved"));
+      } else if (result.error === "validation") {
+        toast.error(t("budgetInvalid"));
+      } else {
+        toast.error(t("settingsSaveError"));
+      }
+    } catch {
+      // The action call itself failed (offline): Save must not stay on "Saving…".
       toast.error(t("settingsSaveError"));
+    } finally {
+      setSaving(false);
     }
   };
 

@@ -62,7 +62,7 @@ export function LaborPaymentNoteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("noteTitle", { name: workerName, month: periodLabel })}</DialogTitle>
         </DialogHeader>

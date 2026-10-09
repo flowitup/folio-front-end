@@ -777,3 +777,58 @@ describe("ExpensePursesSummary — refunded expenses stay with their refund", ()
     expect(rowSum("invoices.summary.companyPurse")).toBe(800);
   });
 });
+
+describe("ExpensePursesSummary — whole-euro totals match the Overview", () => {
+  it("rounds 100,10 + 100,10 + 33,30 = 233,50 € up to 234 €, not 233 €", () => {
+    // In this order the float sum is 233.49999999999997.
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "a", type: "others", total_amount: 33.3 }),
+          makeInvoice({ id: "b", type: "others", total_amount: 100.1 }),
+          makeInvoice({ id: "c", type: "others", total_amount: 100.1 }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const text = document.body.textContent!.replace(/[  ]/g, " ");
+    expect(text).not.toMatch(/233 €/);
+    // Headline, month bar, neither-purse line and type rows all read 234 €.
+    expect(screen.getByText("invoices.summary.totalExpenses").parentElement!.textContent).toContain("234");
+    const bar = screen.getByTestId("monthly-spend-bars").querySelector("[data-tip]") as HTMLElement;
+    expect(bar.dataset.tip).toMatch(/\|234\s*€\|/);
+    expect(screen.getByTestId("purse-unassigned-spend").textContent).toMatch(/"amount":"234\s*€"/);
+    expect(screen.getByTestId("type-breakdown-total").textContent).toMatch(/234\s*€/);
+  });
+});
+
+describe("ExpensePursesSummary — month timeline bound", () => {
+  it("draws at most 60 month bars, ending at the latest month", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "old", issue_date: "1900-01-01", total_amount: 10 }),
+          makeInvoice({ id: "new", issue_date: "2026-06-15", total_amount: 20 }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    const bars = screen.getByTestId("monthly-spend-bars").children;
+    expect(bars.length).toBe(60);
+    expect((bars[0] as HTMLElement).dataset.tip).toContain("Jul 2021");
+    expect((bars[59] as HTMLElement).dataset.tip).toContain("Jun 2026");
+  });
+
+  it("keeps every month of a project shorter than the cap", () => {
+    render(
+      <ExpensePursesSummary
+        invoices={[
+          makeInvoice({ id: "a", issue_date: "2022-07-01", total_amount: 10 }),
+          makeInvoice({ id: "b", issue_date: "2027-06-30", total_amount: 20 }),
+        ]}
+        meta={ZERO_META}
+      />
+    );
+    expect(screen.getByTestId("monthly-spend-bars").children.length).toBe(60);
+  });
+});

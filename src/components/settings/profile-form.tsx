@@ -71,6 +71,9 @@ export function ProfileForm() {
 
   function handlePhoneChanged(updated: User) {
     setPhone(updated.phone ?? "");
+    // The header falls back to the phone when there is no name: it reads the context user,
+    // which router.refresh() does not re-seed.
+    updateUser({ phone: updated.phone, ...(updated.email ? { email: updated.email } : {}) });
     toast.success(t("changePhone.success"));
     router.refresh();
   }

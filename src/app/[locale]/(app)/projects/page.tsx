@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { projectDisplayName, projectMatchesSearch } from "@/lib/projects/project-display-name";
 import { useAuth } from "@/context/AuthContext";
@@ -21,11 +22,13 @@ import {
   Clock,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -38,7 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { fetchProjectUsers } from "@/lib/api/projects";
 import { removeMemberAction } from "@/app/[locale]/(app)/projects/[id]/members/actions";
-import { can, canCreateProject } from "@/lib/auth/permissions";
+import { can, canCreateProject, isCompanyAdmin } from "@/lib/auth/permissions";
 import { ProjectCoverPhotos } from "@/components/project/project-cover-photos";
 import { CreateProjectDialog } from "@/components/project/create-project-dialog";
 import { EditProjectDialog } from "@/components/project/edit-project-dialog";
@@ -56,6 +59,20 @@ const COVER_GRADIENTS = [
 ];
 
 const AVATAR_TONES = ["#1a1a1a", "#5a7a4a", "#c9a961", "#e8843c", "#8a8479", "#b3543d"];
+
+/**
+ * Grid placement of the n-th figure on a card's money grid. Labels and figures
+ * are direct grid items: the labels share a row and the figures the next one,
+ * so a label that wraps further in one locale (fr "Dépensé sur crédit") never
+ * moves its figure out of line. While the grid is two columns wide, the third
+ * and fourth figures take rows 3-4. Literal class names, so Tailwind emits them.
+ */
+const MONEY_CELL_ROWS = [
+  { label: "row-start-1", value: "row-start-2" },
+  { label: "row-start-1", value: "row-start-2" },
+  { label: "row-start-3 mt-3.5 @lg:row-start-1 @lg:mt-0", value: "row-start-4 @lg:row-start-2" },
+  { label: "row-start-3 mt-3.5 @lg:row-start-1 @lg:mt-0", value: "row-start-4 @lg:row-start-2" },
+];
 
 function coverFor(id: string): string {
   let h = 0;
@@ -101,6 +118,9 @@ export default function ProjectsPage() {
     can("project:delete", user?.permissions, project.my_permissions);
 
   const canCreate = canCreateProject(user?.permissions, user?.companies);
+  // No company at all (e.g. they just left their only one): nobody can assign
+  // them, so point to onboarding rather than "waiting to be assigned".
+  const hasNoCompany = !canCreate && Array.isArray(user?.companies) && user.companies.length === 0;
 
   // Open dialog when external triggers (Topbar/Sidebar) navigate with ?new=1 —
   // only for someone who may create a project (the API refuses anyone else).
@@ -126,8 +146,19 @@ export default function ProjectsPage() {
     toast.success(t("projectDeleted"));
   };
 
+  const handleProjectUpdated = async () => {
+    await refetch();
+    toast.success(t("projectUpdated"));
+  };
+
   const canManageUsers = (project: Project) =>
     can("project:manage_users", user?.permissions, project.my_permissions);
+  // Same rule as the API (DELETE /assignments) and the members page: a company
+  // admin may remove anyone, a manager only a company `member`, nobody themselves.
+  const canRemoveFromTeam = (project: Project, member: ProjectUser) =>
+    member.id !== user?.id &&
+    (isCompanyAdmin(user?.companies, project.company_id ?? null, user?.permissions) ||
+      member.role_name === "member");
   // Adding people happens on the project's members page, which holds both
   // flows: e-mail invitation (project:invite) and assigning an existing company
   // member (project:update, PUT /assignments — company-scoped search).
@@ -213,7 +244,13 @@ export default function ProjectsPage() {
         {/* No project status exists yet, so there is nothing to filter by:
             an "Active" tab listed the same projects as "All". */}
         <div className="text-[12.5px] font-medium" style={{ color: "var(--ink-2)" }} data-testid="projects-count">
-          {t("allProjects")} · <span className="num">{projects.length}</span>
+          {t("allProjects")} ·{" "}
+          {/* While a search hides some, say how many of them are shown. */}
+          <span className="num">
+            {filteredProjects.length === projects.length
+              ? projects.length
+              : `${filteredProjects.length} / ${projects.length}`}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -239,8 +276,13 @@ export default function ProjectsPage() {
       )}
 
       {error && !isLoading && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+        <Alert variant="destructive" data-testid="projects-load-error">
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>{t("loadError")}</span>
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              {t("retry")}
+            </Button>
+          </AlertDescription>
         </Alert>
       )}
 
@@ -281,6 +323,11 @@ export default function ProjectsPage() {
               can("project:manage_labor", user?.permissions, project.my_permissions) ||
               can("project:view_pay", user?.permissions, project.my_permissions);
             const moneyColumns = (canViewBudget ? 2 : 0) + (canViewSpend ? 2 : 0);
+            // Grid rows of each shown figure (see MONEY_CELL_ROWS), by its position.
+            const creditCell = MONEY_CELL_ROWS[0];
+            const byCreditsCell = MONEY_CELL_ROWS[canViewBudget ? 1 : 0];
+            const personalCell = MONEY_CELL_ROWS[canViewBudget ? 2 : 1];
+            const remainingCell = MONEY_CELL_ROWS[canViewSpend ? 3 : 1];
             const breakdownRows = personalSpendRows(project.personal_by_type);
             const laborUnpaid = project.labor_unpaid ?? 0;
             const hasBreakdown = breakdownRows.length > 0 || laborUnpaid > 0;
@@ -395,69 +442,76 @@ export default function ProjectsPage() {
                     )}
 
                     {/* Meta row */}
-                    <div className="hairline mt-auto border-t pt-4">
+                    <div className="hairline @container mt-auto border-t pt-4">
                       {/* Credit total / Spent by credit / Spent personal / Remaining.
-                          Two columns on narrow screens so the figures stay readable. */}
+                          Four columns only when the card itself is wide enough for
+                          "125 000,75 €" in each (a half-width card on a laptop left
+                          ~50-80px per figure), else two, so the figures stay readable
+                          and never run into the next column. */}
                       {moneyColumns > 0 && (
                         <div
-                          className={`mb-3 grid grid-cols-2 gap-4 ${
-                            moneyColumns === 4 ? "sm:grid-cols-4" : "sm:grid-cols-2"
+                          className={`mb-3 grid grid-cols-2 items-start gap-x-4 gap-y-0.5 ${
+                            moneyColumns === 4 ? "@lg:grid-cols-4" : ""
                           }`}
                           data-testid="project-money-grid"
                         >
+                          {/* Labels and figures sit straight on the grid (MONEY_CELL_ROWS):
+                              every figure starts on the same line whatever its label's
+                              length, and wraps rather than overflowing into the next one. */}
                           {canViewBudget && (
-                            <div>
-                              {/* min-h reserves two label lines so a label that wraps in one
-                                  locale (fr "Dépensé sur crédit") does not push its figure
-                                  out of line with the other three. */}
-                              <div className="label-cap min-h-[3em]">{t("creditTotal")}</div>
-                              <div className="font-display num mt-0.5 text-[15px]">
-                                {creditTotal ? fmtEUR(creditTotal) : "—"}
-                              </div>
-                            </div>
-                          )}
-                          {canViewSpend && (
                             <>
-                              <div>
-                                <div className="label-cap min-h-[3em]">{t("spentByCredits")}</div>
-                                <div className="font-display num mt-0.5 text-[15px]">
-                                  {spentByCredits ? fmtEUR(spentByCredits) : "—"}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="label-cap min-h-[3em]">{t("spentPersonal")}</div>
-                                {hasBreakdown ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setOpenBreakdownId(isBreakdownOpen ? null : project.id)
-                                    }
-                                    aria-expanded={isBreakdownOpen}
-                                    aria-controls={`breakdown-${project.id}`}
-                                    className="font-display num mt-0.5 flex items-center gap-1 text-[15px] hover:underline"
-                                  >
-                                    {spentPersonal ? fmtEUR(spentPersonal) : "—"}
-                                    <ChevronDown
-                                      size={13}
-                                      style={{
-                                        color: "var(--muted)",
-                                        transform: isBreakdownOpen ? "rotate(180deg)" : undefined,
-                                      }}
-                                    />
-                                  </button>
-                                ) : (
-                                  <div className="font-display num mt-0.5 text-[15px]">
-                                    {spentPersonal ? fmtEUR(spentPersonal) : "—"}
-                                  </div>
-                                )}
+                              <div className={`label-cap min-w-0 ${creditCell.label}`}>{t("creditTotal")}</div>
+                              <div
+                                className={`font-display num min-w-0 text-[15px] [overflow-wrap:anywhere] ${creditCell.value}`}
+                              >
+                                {creditTotal ? fmtEUR(creditTotal) : "—"}
                               </div>
                             </>
                           )}
-                          {canViewBudget && (
-                            <div>
-                              <div className="label-cap min-h-[3em]">{t("remaining")}</div>
+                          {canViewSpend && (
+                            <>
+                              <div className={`label-cap min-w-0 ${byCreditsCell.label}`}>{t("spentByCredits")}</div>
                               <div
-                                className="font-display num mt-0.5 text-[15px]"
+                                className={`font-display num min-w-0 text-[15px] [overflow-wrap:anywhere] ${byCreditsCell.value}`}
+                              >
+                                {spentByCredits ? fmtEUR(spentByCredits) : "—"}
+                              </div>
+                              <div className={`label-cap min-w-0 ${personalCell.label}`}>{t("spentPersonal")}</div>
+                              {hasBreakdown ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setOpenBreakdownId(isBreakdownOpen ? null : project.id)
+                                  }
+                                  aria-expanded={isBreakdownOpen}
+                                  aria-controls={`breakdown-${project.id}`}
+                                  className={`font-display num min-w-0 text-left text-[15px] [overflow-wrap:anywhere] hover:underline ${personalCell.value}`}
+                                >
+                                  {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                                  {/* Inline, so it drops under the figure when the column is narrow. */}
+                                  <ChevronDown
+                                    size={13}
+                                    className="ml-1 inline-block align-middle"
+                                    style={{
+                                      color: "var(--muted)",
+                                      transform: isBreakdownOpen ? "rotate(180deg)" : undefined,
+                                    }}
+                                  />
+                                </button>
+                              ) : (
+                                <div
+                                  className={`font-display num min-w-0 text-[15px] [overflow-wrap:anywhere] ${personalCell.value}`}
+                                >
+                                  {spentPersonal ? fmtEUR(spentPersonal) : "—"}
+                                </div>
+                              )}
+                            </>
+                          )}
+                          {canViewBudget && (
+                            <>
+                              <div className={`label-cap min-w-0 ${remainingCell.label}`}>{t("remaining")}</div>
+                              <div
+                                className={`font-display num min-w-0 text-[15px] [overflow-wrap:anywhere] ${remainingCell.value}`}
                                 style={isOverBudget ? { color: "var(--negative)" } : undefined}
                               >
                                 {creditTotal
@@ -466,7 +520,7 @@ export default function ProjectsPage() {
                                     : fmtEUR(remaining)
                                   : "—"}
                               </div>
-                            </div>
+                            </>
                           )}
                         </div>
                       )}
@@ -593,7 +647,7 @@ export default function ProjectsPage() {
                                 </div>
                               )}
                             </div>
-                            {canManageThisProjectUsers && (
+                            {canManageThisProjectUsers && canRemoveFromTeam(project, member) && (
                               <button
                                 type="button"
                                 onClick={() =>
@@ -604,7 +658,7 @@ export default function ProjectsPage() {
                                   })
                                 }
                                 className="btn btn-quiet shrink-0"
-                                aria-label="Remove"
+                                aria-label={tMembers("edit.removeAria", { name: userContact(member) })}
                               >
                                 <Trash2 size={14} style={{ color: "var(--negative)" }} />
                               </button>
@@ -622,6 +676,24 @@ export default function ProjectsPage() {
               </article>
             );
           })}
+        </div>
+      )}
+
+      {/* A search that matches nothing: say so, with a way back to the full list. */}
+      {!isLoading && !error && projects.length > 0 && filteredProjects.length === 0 && (
+        <div
+          className="folio-card flex flex-col items-center justify-center py-16 text-center"
+          data-testid="projects-no-search-results"
+        >
+          <div className="mb-4 rounded-xl p-4" style={{ background: "var(--paper-2)" }}>
+            <Search size={36} style={{ color: "var(--muted)" }} />
+          </div>
+          <h3 className="font-display max-w-full text-[20px] font-medium tracking-tight [overflow-wrap:anywhere]">
+            {t("noSearchResults.title", { query: search.trim() })}
+          </h3>
+          <button type="button" className="btn btn-ghost mt-4" onClick={() => setSearch("")}>
+            {t("noSearchResults.clear")}
+          </button>
         </div>
       )}
 
@@ -652,7 +724,25 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      {!isLoading && !error && projects.length === 0 && !canCreate && (
+      {!isLoading && !error && projects.length === 0 && hasNoCompany && (
+        <div className="folio-card flex flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 rounded-xl p-4" style={{ background: "var(--paper-2)" }}>
+            <Building2 size={36} style={{ color: "var(--muted)" }} />
+          </div>
+          <h3 className="font-display text-[20px] font-medium tracking-tight">
+            {t("noCompany.title")}
+          </h3>
+          <p className="mt-1 max-w-sm text-[13px]" style={{ color: "var(--muted)" }}>
+            {t("noCompany.description")}
+          </p>
+          <Link href={`/${locale}/onboarding`} className="btn btn-primary mt-4">
+            {t("noCompany.cta")}
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
+
+      {!isLoading && !error && projects.length === 0 && !canCreate && !hasNoCompany && (
         <div className="folio-card flex flex-col items-center justify-center py-16 text-center">
           <div className="mb-4 rounded-xl p-4" style={{ background: "var(--paper-2)" }}>
             <Clock size={36} style={{ color: "var(--muted)" }} />
@@ -677,7 +767,7 @@ export default function ProjectsPage() {
         project={editProject}
         open={!!editProject}
         onOpenChange={(o) => !o && setEditProject(null)}
-        onUpdated={refetch}
+        onUpdated={handleProjectUpdated}
       />
 
       <DeleteProjectDialog
@@ -702,9 +792,9 @@ export default function ProjectsPage() {
               <AlertDialogTitle className="font-display text-center">
                 {t("removeMemberTitle")}
               </AlertDialogTitle>
-              <p className="text-sm" style={{ color: "var(--muted)" }}>
+              <AlertDialogDescription style={{ color: "var(--muted)" }}>
                 {removeMember?.email}
-              </p>
+              </AlertDialogDescription>
             </div>
           </div>
           <AlertDialogFooter className="gap-2 sm:justify-center">

@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -50,7 +52,11 @@ export function DeleteProjectDialog({
   // Users identify projects by the same label shown everywhere else (address, else name).
   const projectLabel = projectDisplayName(project);
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: MouseEvent<HTMLButtonElement>) => {
+    // AlertDialogAction closes the dialog after its onClick by default; the
+    // parent then drops the project and the spinner and any error never show.
+    // Keep it open while the request runs and close only on success.
+    e.preventDefault();
     if (!project || confirmText.trim() !== projectLabel) return;
     setIsDeleting(true);
     setError(null);
@@ -60,8 +66,11 @@ export function DeleteProjectDialog({
       // so a refetch failure surfaces while the dialog is still up.
       await onDeleted?.(project.id);
       onOpenChange(false);
+      // The dialog stays mounted for the next project: don't open it on a spinner.
+      setIsDeleting(false);
     } catch {
       setError(t("deleteProjectError"));
+      toast.error(t("deleteProjectError"));
       setIsDeleting(false);
     }
   };
@@ -89,7 +98,9 @@ export function DeleteProjectDialog({
 
         {/* Body — irreversible warning + cascade copy + billing note */}
         <div className="space-y-2 text-sm" style={{ color: "var(--muted)" }}>
-          <p style={{ color: "var(--negative)" }}>{t("deleteProjectIrreversible")}</p>
+          <AlertDialogDescription style={{ color: "var(--negative)" }}>
+            {t("deleteProjectIrreversible")}
+          </AlertDialogDescription>
           <p>{t("deleteProjectCascade")}</p>
           <p>{t("deleteProjectBillingNote")}</p>
         </div>

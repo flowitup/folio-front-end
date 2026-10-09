@@ -16,7 +16,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Saisissez votre numéro de téléphone sur la page de connexion et demandez le code.",
       "Tapez le code reçu par SMS pour terminer la connexion.",
       "Si votre compte n'appartient encore à aucune entreprise, Folio vous envoie sur une courte page de démarrage.",
-      "Là, choisissez “Créer une entreprise” — vous en devenez l'administrateur — ou “Saisir un code d'adhésion” pour rejoindre une entreprise existante avec le code que son administrateur vous a donné.",
+      "Là, choisissez “Créer une société” — vous en devenez l'administrateur — ou “Saisir un code société” pour rejoindre une société existante avec le code que son administrateur vous a donné.",
       "Si vous avez été invité par e-mail, le lien contenu dans le message vous rattache directement.",
     ],
     gotchas: [
@@ -67,7 +67,7 @@ export const helpCatalogueFr: HelpCatalogue = [
     purpose:
       "Tous les chantiers auxquels vous avez accès, avec leur crédit et leurs dépenses, leur équipe, et les formulaires pour en créer, en modifier ou en supprimer un.",
     steps: [
-      "Filtrez la liste avec le sélecteur “Tous les projets” / “Actifs”, ou cherchez par nom.",
+      "Cherchez un projet par son nom ou son adresse.",
       "Cliquez sur “Nouveau projet”, puis donnez-lui un nom — obligatoire — et, si vous le souhaitez, une adresse, un crédit total et une source de financement. Si vous administrez plusieurs entreprises, choisissez celle à laquelle il appartient.",
       "Sur la carte d'un projet, le menu d'actions propose “Modifier le projet” et “Supprimer le projet”. La suppression vous demande de taper le texte de confirmation affiché en gras.",
       "“Afficher l'équipe” déplie la liste des membres ; “Inviter” ajoute quelqu'un, et l'icône corbeille de la ligne le retire.",
@@ -89,13 +89,13 @@ export const helpCatalogueFr: HelpCatalogue = [
     steps: [
       "Basculez entre “Tableau” et “Semaine” avec le sélecteur en haut de la page.",
       "Sur le tableau, travaillez avec la bande “Backlog” et les colonnes “À faire”, “En cours”, “Bloqué” et “Terminé”.",
-      "Cliquez sur “Ajouter une tâche” dans une colonne pour en créer une à cet endroit : un titre, une description, une priorité, une échéance et des étiquettes séparées par des virgules.",
+      "Cliquez sur le “+” (“Ajouter une tâche”) d'une colonne pour en créer une à cet endroit : un titre, une description, une priorité, une échéance et des étiquettes séparées par des virgules.",
       "Glissez une carte d'une colonne à l'autre pour changer son statut.",
       "Cliquez sur une carte pour ouvrir son panneau de détail, la modifier sur place, ou la supprimer.",
       "Dans la vue semaine, passez d'une semaine à l'autre et utilisez le “+” d'un jour pour créer une tâche à échéance ce jour-là, ou celui de “Non planifié” pour une tâche sans date.",
     ],
     whoCanDoIt:
-      "Toute personne qui peut ouvrir le projet. La planification n'a aucune barrière de permission — chacun peut créer, déplacer, modifier et supprimer des tâches.",
+      "Toute personne qui peut ouvrir le projet peut créer, déplacer et modifier des tâches. Supprimer une tâche demande le droit de modifier le projet (administrateurs et managers du projet).",
     gotchas: [
       "La suppression d'une tâche est immédiate et sans retour en arrière : il n'y a qu'une confirmation du navigateur.",
     ],
@@ -127,7 +127,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Chaque euro qui entre et sort d'un chantier — achats fournisseurs, paiements de main-d'œuvre, fonds débloqués par la banque et avoirs — avec les pièces jointes, la surbrillance et l'export.",
     steps: [
       "Lisez le résumé des deux caisses — entreprise et personnelle — et le graphique du crédit bancaire en haut de la page.",
-      "Filtrez avec les onglets de type : “Toutes”, “Fond débloqué”, “Main-d'œuvre”, “Achats & prestations”, “Autres” ou “Avoir”.",
+      "Filtrez avec les onglets de type : “Toutes”, “Fonds débloqués”, “Main-d'œuvre”, “Achats & prestations”, “Autres” ou “Avoir”.",
       "Cliquez sur “Nouvelle dépense” et indiquez le type, la date d'émission, le destinataire — pour la main-d'œuvre, il devient un sélecteur d'ouvrier —, le moyen de paiement et d'éventuelles notes.",
       "Ajoutez les lignes avec une description, une quantité, un prix unitaire et un taux de TVA, puis enregistrez.",
       "Pour un avoir, choisissez la dépense “Achats & prestations” qu'il rembourse, dites s'il a été réglé en espèces ou sous forme d'avoir fournisseur, et dans ce dernier cas sur quelle facture il est imputé.",

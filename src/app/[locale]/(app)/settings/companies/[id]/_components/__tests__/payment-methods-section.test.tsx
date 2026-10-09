@@ -258,11 +258,19 @@ describe("PaymentMethodsSection — inline add", () => {
       });
 
       await waitFor(() => {
-        expect(mockToast.error).toHaveBeenCalled();
+        expect(mockToast.error).toHaveBeenCalledWith("A payment method with this label already exists.");
       });
+      // The refused label stays in the input so it can be corrected.
+      expect((input as HTMLInputElement).value).toBe("Cash");
     },
     15000
   );
+
+  it("add input accepts labels up to the backend limit (120)", () => {
+    renderSection();
+    const input = screen.getByRole("textbox", { name: /e\.g\./i });
+    expect(input.getAttribute("maxlength")).toBe("120");
+  });
 
   it("add button disabled when input is empty", () => {
     renderSection();
@@ -447,6 +455,9 @@ describe("PaymentMethodsSection — inline edit / rename", () => {
       await waitFor(() => {
         expect(mockToast.error).toHaveBeenCalled();
       });
+      // The editor stays open with the refused label, capped at the backend limit.
+      const stillEditing = screen.getByDisplayValue("Cash");
+      expect(stillEditing.getAttribute("maxlength")).toBe("120");
     },
     15000
   );

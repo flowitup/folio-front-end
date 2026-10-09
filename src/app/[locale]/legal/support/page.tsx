@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Folio · Support" };
+// The [locale] layout's title template adds " · Folio".
+export const metadata: Metadata = { title: "Support" };
 
 // French for French readers; English for everyone else (no Vietnamese version yet).
 

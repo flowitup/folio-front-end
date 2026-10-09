@@ -147,8 +147,10 @@ export function InventoryPageClient({ companyId }: Props) {
 
   return (
     <div className="fade-up px-4 pb-12 lg:px-8">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
+      {/* Wraps the buttons below the title on narrow screens instead of
+          squeezing "Inventaire du matériel" onto three lines. */}
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0 flex-1 basis-80">
           <h1 className="font-display text-[28px] font-medium tracking-tight">{t("title")}</h1>
           <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
             {t("subtitle")}

@@ -27,7 +27,9 @@ export interface LaborPaymentsWorkerTableProps {
   canManage: boolean;
   isLoading: boolean;
   rows: WorkerPaymentRow[];
-  totals: { days: number; owed: number; paid: number; balance: number };
+  /** `balance` is what is still owed (each worker floored at 0); `overpaid`
+   *  is the sum of the workers' overpayments, shown apart. */
+  totals: { days: number; owed: number; paid: number; balance: number; overpaid: number };
   /** Flagged-method split of the viewed month's paid total (whole bucket:
    *  worker-linked + unassigned), for the caption under the grand-total
    *  Paid. Zeros hide the caption. */
@@ -164,6 +166,17 @@ export function LaborPaymentsWorkerTable({
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {formatEUR(totals.balance)}
+                    {totals.overpaid > 0.01 && (
+                      <div style={{ marginTop: 4 }}>
+                        <span
+                          className="stamp accent num"
+                          title={tLabor("summaryOverpaidWarningTitle")}
+                          data-testid="payments-total-overpaid"
+                        >
+                          {tLabor("summaryOverpaidWarning", { amount: formatEUR(totals.overpaid) })}
+                        </span>
+                      </div>
+                    )}
                   </td>
                   <td />
                   <td />

@@ -24,6 +24,7 @@ import {
   type NotificationCategory,
   type NotificationPreferences,
 } from "@/types/notification-preferences";
+import { useChatFeature } from "@/hooks/use-chat-feature";
 
 type LoadState = "loading" | "ready" | "error";
 type PreferenceKey = "push_enabled" | NotificationCategory;
@@ -37,6 +38,9 @@ export function NotificationPreferencesSection() {
   // mount → cleanup → mount cycle in development neither double-fetches nor throws
   // away the only result; a state update after unmount is harmless in React 19.
   const loadingRef = useRef(false);
+  // No chat switch while the chat feature is off (or not confirmed yet): nothing to notify.
+  const chatEnabled = useChatFeature() === true;
+  const categories = NOTIFICATION_CATEGORIES.filter((category) => category !== "chat" || chatEnabled);
 
   useEffect(() => {
     if (loadingRef.current) return;
@@ -104,7 +108,7 @@ export function NotificationPreferencesSection() {
             disabled={saving !== null}
             onChange={(value) => void toggle("push_enabled", value)}
           />
-          {NOTIFICATION_CATEGORIES.map((category) => (
+          {categories.map((category) => (
             <PreferenceRow
               key={category}
               id={category}

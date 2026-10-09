@@ -11,10 +11,13 @@ import { getProjectById } from "@/lib/api/projects-server";
 import { listProjectPhotos } from "@/lib/api/project-photos";
 import { can, isPlatformOps } from "@/lib/auth/permissions";
 import { PhotosGallery } from "./photos-gallery";
+import { pageTitle } from "@/lib/i18n/page-title";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
+
+export const generateMetadata = pageTitle("navigation.photos");
 
 export default async function PhotosPage({ params }: PageProps) {
   const { id: projectId } = await params;
@@ -25,15 +28,11 @@ export default async function PhotosPage({ params }: PageProps) {
     redirect(`/${locale}/login`);
   }
 
-  // Parallel fetch — project metadata + initial photo list
+  // Parallel fetch — project metadata + initial photo list. A failed list is
+  // null, not an empty one: the gallery must not claim the project has no media.
   const [project, photosResult] = await Promise.all([
     getProjectById(projectId).catch(() => null),
-    listProjectPhotos(projectId, { page: 1, perPage: 50 }).catch(() => ({
-      items: [],
-      total: 0,
-      page: 1,
-      perPage: 50,
-    })),
+    listProjectPhotos(projectId, { page: 1, perPage: 50 }).catch(() => null),
   ]);
 
   // Project not found or no access → 404
@@ -51,8 +50,9 @@ export default async function PhotosPage({ params }: PageProps) {
     <div className="px-6 py-6">
       <PhotosGallery
         projectId={projectId}
-        initialPhotos={photosResult.items}
-        initialTotal={photosResult.total}
+        initialPhotos={photosResult?.items ?? []}
+        initialTotal={photosResult?.total ?? 0}
+        initialLoadFailed={photosResult === null}
         canEdit={canEdit}
       />
     </div>

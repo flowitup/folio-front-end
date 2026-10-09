@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations, useFormatter } from "next-intl";
 import { dayKeyToUtcNoon, parisDayKey } from "@/lib/utils/paris-day";
-import { Camera, Loader2 } from "lucide-react";
+import { AlertCircle, Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PhotoThumb } from "./photo-thumb";
 import { PhotosUpload } from "./photos-upload";
@@ -11,10 +11,15 @@ import { PhotoLightbox } from "./photo-lightbox";
 import { loadMorePhotosAction } from "./actions";
 import type { ProjectPhoto } from "@/lib/api/project-photos";
 
+/** Page size of the photo list; page.tsx and loadMorePhotosAction use the same. */
+const PER_PAGE = 50;
+
 interface Props {
   projectId: string;
   initialPhotos: ProjectPhoto[];
   initialTotal: number;
+  /** The server could not read the photo list: show an error with a retry, not "No media yet". */
+  initialLoadFailed?: boolean;
   /** Write rights on the project's photos (effective `project:update`). */
   canEdit: boolean;
 }
@@ -28,6 +33,7 @@ export function PhotosGallery({
   projectId,
   initialPhotos,
   initialTotal,
+  initialLoadFailed = false,
   canEdit,
 }: Props) {
   const t = useTranslations("photos");
@@ -35,8 +41,14 @@ export function PhotosGallery({
 
   const [photos, setPhotos] = useState<ProjectPhoto[]>(initialPhotos);
   const [total, setTotal] = useState(initialTotal);
-  const [page, setPage] = useState(1);
+  // Rows of the server's order (newest capture first) loaded so far, counted
+  // from the top. "Load more" asks for the page holding the next row instead
+  // of a page counter, so a delete (which moves later rows up by one) never
+  // makes it skip a photo.
+  const [serverLoaded, setServerLoaded] = useState(initialPhotos.length);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(initialLoadFailed);
+  const [retrying, setRetrying] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<ProjectPhoto | null>(null);
 
@@ -50,10 +62,17 @@ export function PhotosGallery({
   function handleDeleted(photoId: string) {
     setPhotos((prev) => prev.filter((p) => p.id !== photoId));
     setTotal((prev) => Math.max(0, prev - 1));
+    setServerLoaded((prev) => Math.max(0, prev - 1));
   }
 
   // Replace updated photo in place
   function handleUpdated(updated: ProjectPhoto) {
+    // A new capture date moves the row in the server's order; if it moved out
+    // of the loaded rows, the next row slid up into them, as after a delete.
+    const before = photos.find((p) => p.id === updated.id);
+    if (before && before.capturedAt !== updated.capturedAt) {
+      setServerLoaded((prev) => Math.max(0, prev - 1));
+    }
     setPhotos((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
     // If lightbox is open on this photo, update it too
     if (selectedPhoto?.id === updated.id) {
@@ -63,7 +82,7 @@ export function PhotosGallery({
 
   async function handleLoadMore() {
     setLoadingMore(true);
-    const nextPage = page + 1;
+    const nextPage = Math.floor(serverLoaded / PER_PAGE) + 1;
     const result = await loadMorePhotosAction(projectId, nextPage);
     setLoadingMore(false);
     if (!result.ok) return;
@@ -75,7 +94,23 @@ export function PhotosGallery({
       return [...prev, ...fresh];
     });
     setTotal(result.data.total);
-    setPage(nextPage);
+    setServerLoaded((nextPage - 1) * PER_PAGE + result.data.items.length);
+  }
+
+  async function handleRetry() {
+    setRetrying(true);
+    const result = await loadMorePhotosAction(projectId, 1);
+    setRetrying(false);
+    if (!result.ok) return;
+
+    setPhotos((prev) => {
+      // Keep anything uploaded meanwhile that the fresh page does not hold
+      const freshIds = new Set(result.data.items.map((p) => p.id));
+      return [...prev.filter((p) => !freshIds.has(p.id)), ...result.data.items];
+    });
+    setTotal(result.data.total);
+    setServerLoaded(result.data.items.length);
+    setLoadFailed(false);
   }
 
   // Group photos by YYYY-MM-DD of capturedAt, newest date first
@@ -118,7 +153,7 @@ export function PhotosGallery({
     return b.dateKey.localeCompare(a.dateKey);
   });
 
-  const isEmpty = photos.length === 0;
+  const isEmpty = photos.length === 0 && !loadFailed;
   const hasMore = photos.length < total;
 
   return (
@@ -151,6 +186,31 @@ export function PhotosGallery({
             handleUploaded(photo);
           }}
         />
+      )}
+
+      {/* Load error — the list could not be read, which is not "no media" */}
+      {loadFailed && (
+        <div
+          role="alert"
+          className="flex flex-col items-center justify-center gap-4 py-20 text-center"
+        >
+          <AlertCircle className="size-12 text-muted-foreground/40" aria-hidden />
+          <div>
+            <p className="font-medium">{t("loadError.title")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("loadError.description")}</p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handleRetry}
+            disabled={retrying}
+            className="gap-2"
+          >
+            {retrying ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+            {t("loadError.retry")}
+          </Button>
+        </div>
       )}
 
       {/* Empty state */}

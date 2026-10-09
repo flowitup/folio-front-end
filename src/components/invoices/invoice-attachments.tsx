@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, Upload, X, FileText, Image as ImageIcon, Download, Eye, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,10 +12,12 @@ import {
   renameAttachment,
   fetchAttachmentBlobUrl,
 } from "@/lib/api/invoice-api";
+import { ApiError } from "@/lib/api/http";
 import type { Invoice, InvoiceAttachment } from "@/types/invoice";
 import { InvoiceAttachmentPreviewDialog } from "./invoice-attachment-preview-dialog";
 import { InvoiceAttachmentRenameDialog } from "./invoice-attachment-rename-dialog";
 import { formatDate } from "@/lib/utils/formatters";
+import { formatBytes } from "@/app/[locale]/(app)/projects/[id]/documents/format-bytes";
 
 const ALLOWED_MIME = [
   "application/pdf",
@@ -30,12 +32,6 @@ const MAX_BYTES = 10 * 1024 * 1024;
 interface InvoiceAttachmentsProps {
   invoice: Invoice;
   canManage: boolean;
-}
-
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function isImageMime(mime: string): boolean {
@@ -118,6 +114,12 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
     }
   };
 
+  // A file deleted from another tab or device answers 404: say so and drop its row.
+  const handleDownloadFailed = (filename: string, gone: boolean) => {
+    setError(t(gone ? "attachmentGone" : "downloadFailed", { name: filename }));
+    if (gone) void reload();
+  };
+
   return (
     <Card>
       <CardContent className="p-0">
@@ -184,6 +186,7 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
                   onDelete={() => handleDelete(att.id)}
                   onRename={() => setRenameTarget(att)}
                   onPreview={() => setPreviewAttachment(att)}
+                  onDownloadFailed={(gone) => handleDownloadFailed(att.filename, gone)}
                 />
               ))}
             </ul>
@@ -209,10 +212,13 @@ interface AttachmentRowProps {
   onDelete: () => void;
   onRename: () => void;
   onPreview: () => void;
+  /** `gone` when the file no longer exists (404). */
+  onDownloadFailed: (gone: boolean) => void;
 }
 
-function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview }: AttachmentRowProps) {
+function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview, onDownloadFailed }: AttachmentRowProps) {
   const t = useTranslations("invoices");
+  const locale = useLocale();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const isImage = isImageMime(attachment.mime_type);
 
@@ -241,8 +247,8 @@ function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview }:
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch {
-      /* swallow — row stays usable */
+    } catch (err) {
+      onDownloadFailed(err instanceof ApiError && err.status === 404);
     }
   };
 
@@ -272,7 +278,7 @@ function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview }:
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{attachment.filename}</p>
         <p className="text-xs text-muted-foreground">
-          {formatBytes(attachment.size_bytes)} · {formatDate(attachment.uploaded_at)}
+          {formatBytes(attachment.size_bytes, locale)} · {formatDate(attachment.uploaded_at)}
         </p>
       </div>
 

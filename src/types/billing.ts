@@ -61,6 +61,8 @@ export interface BillingDocument {
   source_devis_id: string | null;
   /** Set on a devis once it has been converted: the facture it became. */
   converted_to_facture_id?: string | null;
+  /** Status of that facture: the devis stays locked until it is "cancelled". */
+  converted_facture_status?: BillingDocumentStatus | null;
   total_ht: string;
   total_tva: string;
   total_ttc: string;

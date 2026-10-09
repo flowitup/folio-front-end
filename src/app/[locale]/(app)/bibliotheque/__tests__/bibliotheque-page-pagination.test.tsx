@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import enMessages from "@/messages/en.json";
 import { BibliothequePageClient } from "../bibliotheque-page-client";
@@ -77,5 +77,26 @@ describe("BibliothequePageClient pagination", () => {
     const next = screen.getByRole("button", { name: enMessages.bibliotheque.nextPage });
     expect((next as HTMLButtonElement).disabled).toBe(false);
     expect(screen.getByText("/ 2")).toBeDefined();
+  });
+
+  it("goes back to the last real page when the current page comes back empty", async () => {
+    // Page 1 holds 20 of 21 products; by the time page 2 loads its only product
+    // is gone (deleted), so the API returns no items and a total of 20.
+    vi.mocked(listProductsAction).mockClear();
+    vi.mocked(listProductsAction).mockImplementation(async (_companyId, filters) =>
+      filters?.page === 2
+        ? { ok: true, data: { items: [], total: 20, page: 2 } }
+        : { ok: true, data: { items: Array.from({ length: 20 }, (_, i) => product(i + 1)), total: 21, page: 1 } }
+    );
+    renderPage();
+    await waitFor(() => expect(screen.getByText("Product 1")).toBeDefined());
+
+    fireEvent.click(screen.getByRole("button", { name: enMessages.bibliotheque.nextPage }));
+
+    await waitFor(() =>
+      expect(vi.mocked(listProductsAction).mock.calls.map((c) => c[1]?.page)).toEqual([1, 2, 1])
+    );
+    await waitFor(() => expect(screen.getByText("Product 1")).toBeDefined());
+    expect(screen.queryByText(enMessages.bibliotheque.noResults)).toBeNull();
   });
 });

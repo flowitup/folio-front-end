@@ -10,6 +10,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, fireEvent, waitFor } from "@testing-library/react";
 import { AddWorkerDialog } from "../add-worker-dialog";
+import { ApiError } from "@/lib/api/http";
 import type { Worker } from "@/types/labor";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -145,5 +146,64 @@ describe("AddWorkerDialog — daily rate cap", () => {
     fireEvent.submit(document.querySelector("form") as HTMLFormElement);
     await waitFor(() => expect(document.body.textContent).toContain("errors.amountTooLarge"));
     expect(onSave).not.toHaveBeenCalled();
+  });
+});
+
+describe("AddWorkerDialog — person already on the project", () => {
+  async function submitWith(error: unknown) {
+    const onSave = vi.fn().mockRejectedValue(error);
+    render(<AddWorkerDialog open onOpenChange={vi.fn()} onSave={onSave} />);
+    fireEvent.click(document.querySelector('[data-testid="person-typeahead"]') as HTMLElement);
+    fireEvent.change(document.querySelector("#dailyRate") as HTMLInputElement, { target: { value: "100" } });
+    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+  }
+
+  it("says the person is already a worker here on a 409", async () => {
+    await submitWith(new ApiError("HTTP 409", 409, { error: "WorkerAlreadyOnProject", is_active: true }));
+    await waitFor(() => expect(document.body.textContent).toContain("errors.workerAlreadyOnProject"));
+    expect(document.body.textContent).not.toContain("errors.saveWorkerFailed");
+  });
+
+  it("points to Reactivate when the existing worker is deactivated", async () => {
+    await submitWith(new ApiError("HTTP 409", 409, { error: "WorkerAlreadyOnProject", is_active: false }));
+    await waitFor(() => expect(document.body.textContent).toContain("errors.workerAlreadyOnProjectInactive"));
+  });
+
+  it("keeps the generic message for other failures", async () => {
+    await submitWith(new ApiError("HTTP 500", 500));
+    await waitFor(() => expect(document.body.textContent).toContain("errors.saveWorkerFailed"));
+  });
+});
+
+describe("AddWorkerDialog — phone the API refuses", () => {
+  it("shows the invalid-phone message under the phone field and keeps the dialog open", async () => {
+    const onSave = vi
+      .fn()
+      .mockRejectedValue(new ApiError("HTTP 400", 400, { error: "InvalidPhone", message: "Invalid phone number" }));
+    const onOpenChange = vi.fn();
+    render(<AddWorkerDialog open onOpenChange={onOpenChange} onSave={onSave} editWorker={EDIT_WORKER} />);
+    const input = document.querySelector("#phone") as HTMLInputElement;
+    expect(input.type).toBe("tel");
+    fireEvent.change(input, { target: { value: "hello world" } });
+    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+
+    await waitFor(() => expect(document.querySelector("#phone-error")?.textContent).toBe("errors.invalidPhone"));
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(input.getAttribute("aria-describedby")).toBe("phone-error");
+    expect(document.body.textContent).not.toContain("errors.saveWorkerFailed");
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    // Typing again clears the message.
+    fireEvent.change(input, { target: { value: "06 12 34 56 78" } });
+    expect(document.querySelector("#phone-error")).toBeNull();
+  });
+
+  it("keeps the generic message for another 400", async () => {
+    const onSave = vi.fn().mockRejectedValue(new ApiError("HTTP 400", 400, { error: "ValidationError" }));
+    render(<AddWorkerDialog open onOpenChange={vi.fn()} onSave={onSave} editWorker={EDIT_WORKER} />);
+    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    await waitFor(() => expect(document.body.textContent).toContain("errors.saveWorkerFailed"));
+    expect(document.querySelector("#phone-error")).toBeNull();
   });
 });

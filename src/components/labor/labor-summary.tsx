@@ -164,12 +164,10 @@ export function LaborSummary({
     return ids.size;
   }, [filteredMonthlyRows]);
 
-  // Lookup table: worker_id → Worker. We must NOT derive the rate from
+  // Lookup table: worker_id → Worker (role column, and the sub-row rate when
+  // an older API sends no per-month rate). We must NOT derive the rate from
   // total_cost / days_worked — that blends full days, half days, and
-  // overrides into a misleading "effective" rate. The contract shown to
-  // users is the worker's configured rate: current_daily_rate (post
-  // rate-change, matches the Workers tab tiles) falling back to the base
-  // daily_rate for older API responses.
+  // overrides into a misleading "effective" rate.
   const workerById = useMemo(() => {
     const m = new Map<string, Worker>();
     for (const w of workers ?? []) m.set(w.id, w);
@@ -217,9 +215,17 @@ export function LaborSummary({
   // all-history mode; the month's worker rows when a month is selected.
   const workerCount = isAllHistory ? distinctWorkerCount : summary?.rows.length ?? 0;
 
-  const totalBankedHours = summary?.total_banked_hours ?? 0;
-  const totalBonusDays = summary?.total_bonus_days ?? 0;
-  const totalBonusCost = summary?.total_bonus_cost ?? 0;
+  // Bonus KPIs follow the same rule: all-history sums the visible months
+  // (the single-month `summary` is null there, or holds the last month viewed).
+  const totalBankedHours = isAllHistory
+    ? filteredMonthlyRows.reduce((sum, r) => sum + (r.total_banked_hours ?? 0), 0)
+    : summary?.total_banked_hours ?? 0;
+  const totalBonusDays = isAllHistory
+    ? filteredMonthlyRows.reduce((sum, r) => sum + (r.total_bonus_days ?? 0), 0)
+    : summary?.total_bonus_days ?? 0;
+  const totalBonusCost = isAllHistory
+    ? filteredMonthlyRows.reduce((sum, r) => sum + (r.total_bonus_cost ?? 0), 0)
+    : summary?.total_bonus_cost ?? 0;
 
   // ── Paid/Balance lookups (labor-payments-summary) ──────────────────────
   // Single-month mode: the one bucket matching the viewed month (or null
@@ -241,7 +247,19 @@ export function LaborSummary({
     if (!summary) return 0;
     return summary.rows.reduce((sum, r) => sum + (paidByWorkerId.get(r.worker_id) ?? 0), 0);
   }, [summary, paidByWorkerId]);
-  const footerBalance = (summary?.total_cost ?? 0) - footerPaid;
+  // Footer Balance is settled worker by worker (as monthSettlement does for
+  // the month rows): what is still owed, with overpayments totalled apart so
+  // one worker's overpayment never hides another's debt.
+  const { footerBalance, footerOverpay } = useMemo(() => {
+    let owed = 0;
+    let over = 0;
+    for (const r of summary?.rows ?? []) {
+      const diff = r.total_cost - (paidByWorkerId.get(r.worker_id) ?? 0);
+      if (diff > 0) owed += diff;
+      else over -= diff;
+    }
+    return { footerBalance: owed, footerOverpay: over };
+  }, [summary, paidByWorkerId]);
 
   // All-history mode: every bucket keyed by "yyyy-mm" so each visible month
   // header/sub-row can look up its own Paid figure in O(1).
@@ -299,6 +317,7 @@ export function LaborSummary({
             {t("supplement.banner", {
               banked: totalBankedHours,
               bonusDays: formatBonusDays(totalBonusDays, locale),
+              count: totalBonusDays,
               bonusCost: formatEUR(totalBonusCost),
             })}
           </p>
@@ -333,7 +352,7 @@ export function LaborSummary({
             {onSiteToday}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("workersLogged")}
+            {t("workersLogged", { n: onSiteToday })}
           </div>
         </div>
         {/* Bonus cost KPI — always rendered to keep grid stable; value is 0 when no supplements */}
@@ -346,7 +365,10 @@ export function LaborSummary({
             {formatEUR(totalBonusCost)}
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("supplement.bonusDaysSubtitle", { days: formatBonusDays(totalBonusDays, locale) })}
+            {t("supplement.bonusDaysSubtitle", {
+              days: formatBonusDays(totalBonusDays, locale),
+              count: totalBonusDays,
+            })}
           </div>
         </div>
       </div>
@@ -381,7 +403,7 @@ export function LaborSummary({
       {/* Summary table */}
       <div className="folio-card overflow-hidden">
         <div
-          className="flex items-center justify-between border-b px-5 py-4"
+          className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4"
           style={{ borderColor: "var(--line)" }}
         >
           <div className="flex items-center gap-3">
@@ -524,47 +546,62 @@ export function LaborSummary({
                       >
                         {/* Chevron — toggles per-worker breakdown. Stops
                             propagation so the row click still drills the
-                            user into the single-month view. */}
+                            user into the single-month view. The whole cell
+                            takes the mouse click; the button inside gives
+                            keyboard and screen-reader users the same toggle
+                            (its click, also from Enter or Space, bubbles to
+                            the cell's handler). */}
                         <td
                           style={{ paddingRight: 0, color: "var(--muted)", width: 32 }}
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleMonth(ym);
                           }}
-                          aria-label={t("summaryToggleBreakdown")}
-                          title={t("summaryToggleBreakdown")}
                         >
-                          <span
-                            style={{
-                              display: "inline-block",
-                              transition: "transform 160ms ease",
-                              transform: `rotate(${open ? 90 : 0}deg)`,
-                              cursor: "pointer",
-                            }}
+                          <button
+                            type="button"
+                            aria-expanded={open}
+                            aria-label={t("summaryToggleBreakdown")}
+                            title={t("summaryToggleBreakdown")}
+                            data-testid={`month-toggle-${ym}`}
+                            className="inline-flex rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            style={{ color: "inherit", cursor: "pointer" }}
                           >
-                            <ChevronRight size={14} aria-hidden="true" />
-                          </span>
+                            <span
+                              style={{
+                                display: "inline-block",
+                                transition: "transform 160ms ease",
+                                transform: `rotate(${open ? 90 : 0}deg)`,
+                              }}
+                            >
+                              <ChevronRight size={14} aria-hidden="true" />
+                            </span>
+                          </button>
                         </td>
                         <td className="font-display text-[14px] font-semibold tracking-tight">
                           {formatYearMonthLabel(row, locale)}
-                          {showUnpaidWarning && (
-                            <span
-                              className="stamp warning num"
-                              style={{ marginLeft: 8, verticalAlign: "middle" }}
-                              title={t("summaryUnpaidWarningTitle")}
-                              data-testid={`month-unpaid-warning-${ym}`}
-                            >
-                              {t("summaryUnpaidWarning", { amount: formatEUR(monthShortfall) })}
-                            </span>
-                          )}
-                          {showOverpaidWarning && (
-                            <span
-                              className="stamp negative num"
-                              style={{ marginLeft: 8, verticalAlign: "middle" }}
-                              title={t("summaryOverpaidWarningTitle")}
-                              data-testid={`month-overpaid-warning-${ym}`}
-                            >
-                              {t("summaryOverpaidWarning", { amount: formatEUR(monthOverpay) })}
+                          {(showUnpaidWarning || showOverpaidWarning) && (
+                            // Under the month on a phone, beside it from sm up; a stamp
+                            // never wraps inside its pill.
+                            <span className="mt-1 flex flex-wrap gap-2 sm:ml-2 sm:mt-0 sm:inline-flex sm:align-middle">
+                              {showUnpaidWarning && (
+                                <span
+                                  className="stamp warning num whitespace-nowrap"
+                                  title={t("summaryUnpaidWarningTitle")}
+                                  data-testid={`month-unpaid-warning-${ym}`}
+                                >
+                                  {t("summaryUnpaidWarning", { amount: formatEUR(monthShortfall) })}
+                                </span>
+                              )}
+                              {showOverpaidWarning && (
+                                <span
+                                  className="stamp negative num whitespace-nowrap"
+                                  title={t("summaryOverpaidWarningTitle")}
+                                  data-testid={`month-overpaid-warning-${ym}`}
+                                >
+                                  {t("summaryOverpaidWarning", { amount: formatEUR(monthOverpay) })}
+                                </span>
+                              )}
                             </span>
                           )}
                         </td>
@@ -577,7 +614,7 @@ export function LaborSummary({
                               <span
                                 key={w.worker_id}
                                 className="avatar"
-                                title={`${w.worker_name} · ${formatDays(w.days_worked, locale)}d · ${formatEUR(w.total_cost)}`}
+                                title={`${w.worker_name} · ${t("daysShort", { n: formatDays(w.days_worked, locale) })} · ${formatEUR(w.total_cost)}`}
                                 style={{
                                   background: workerColor(w.worker_id),
                                   width: 22,
@@ -640,15 +677,21 @@ export function LaborSummary({
                     if (open) {
                       for (const w of row.workers) {
                         const color = workerColor(w.worker_id);
-                        // True configured daily rate from the worker
-                        // record — NOT total_cost / days_worked, which
-                        // averages full + half + override shifts into
-                        // a fractional value that doesn't match what
-                        // the user actually pays per day. Prefer the
-                        // current effective rate so this matches the
-                        // Workers tab after a scheduled rate change.
+                        // Configured daily rate — NOT total_cost / days_worked,
+                        // which averages full + half + override shifts into
+                        // a fractional value that doesn't match what the user
+                        // actually pays per day. The rate in force that month
+                        // (from the API: first and last day, "A → B" when it
+                        // changed mid-month), never today's rate on a past
+                        // month. An older API without it falls back to the
+                        // worker's current rate.
                         const worker = workerById.get(w.worker_id);
-                        const rate = worker ? worker.current_daily_rate ?? worker.daily_rate : undefined;
+                        const rate = w.daily_rate ?? (worker ? worker.current_daily_rate ?? worker.daily_rate : undefined);
+                        const startRate = w.month_start_rate;
+                        const rateLabel =
+                          rate != null && startRate != null && startRate > 0 && Math.abs(startRate - rate) >= 0.005
+                            ? `${formatEUR(startRate)} → ${formatEUR(rate)}`
+                            : formatEUR(rate ?? 0);
                         const workerPaid =
                           bucket?.workers.find((wb) => wb.worker_id === w.worker_id)?.paid ?? 0;
                         rows.push(
@@ -701,9 +744,7 @@ export function LaborSummary({
                               className="num text-[11.5px]"
                               style={{ color: "var(--muted)", border: "none", paddingTop: 6, paddingBottom: 6 }}
                             >
-                              {rate != null && rate > 0
-                                ? t("summaryPerDay", { rate: formatEUR(rate) })
-                                : ""}
+                              {rate != null && rate > 0 ? t("summaryPerDay", { rate: rateLabel }) : ""}
                             </td>
                             <td
                               className="num text-[12.5px] tabular-nums"
@@ -878,16 +919,19 @@ export function LaborSummary({
                   <td className="num font-medium" style={{ textAlign: "right" }}>
                     {footerPaid > 0 ? formatEUR(footerPaid) : "—"}
                   </td>
-                  <td
-                    className="num font-medium"
-                    style={{
-                      textAlign: "right",
-                      color: footerBalance < -0.01 ? "var(--negative)" : "var(--accent-ink)",
-                    }}
-                    title={footerBalance < -0.01 ? t("summaryOverpaidWarningTitle") : undefined}
-                    data-testid={footerBalance < -0.01 ? "footer-overpaid" : undefined}
-                  >
+                  <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {formatEUR(footerBalance)}
+                    {footerOverpay > 0.01 && (
+                      <div style={{ marginTop: 4 }}>
+                        <span
+                          className="stamp negative num whitespace-nowrap"
+                          title={t("summaryOverpaidWarningTitle")}
+                          data-testid="footer-overpaid"
+                        >
+                          {t("summaryOverpaidWarning", { amount: formatEUR(footerOverpay) })}
+                        </span>
+                      </div>
+                    )}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {totalBonusCost > 0 ? formatEUR(totalBonusCost) : "—"}

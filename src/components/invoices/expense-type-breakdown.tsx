@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { formatEURWhole } from "@/lib/utils/formatters";
+import { roundCents } from "@/lib/dashboard/overview-metrics";
 
 /**
  * Type-first companion to the "two purses" summary.
@@ -132,7 +133,8 @@ export function ExpenseTypeBreakdown({
       personalCount: p.count,
       unassignedTotal: u.total,
       unassignedCount: u.count,
-      total: c.total + p.total + u.total,
+      // Snapped to the cent so the whole-euro figure rounds like the Overview.
+      total: roundCents(c.total + p.total + u.total),
       count: c.count + p.count + u.count,
     };
   })
@@ -147,7 +149,7 @@ export function ExpenseTypeBreakdown({
   // The shared denominator. Every bar in the block is measured against it —
   // that is what makes the rows comparable, and the axis what makes them legible.
   const scale = niceAxisMax(largest);
-  const grandTotal = rows.reduce((sum, r) => sum + r.total, 0);
+  const grandTotal = roundCents(rows.reduce((sum, r) => sum + r.total, 0));
 
   /** Absolute amount → % of the shared scale. Over-refunded (negative)
    * categories collapse to 0 rather than rendering a backwards bar. */

@@ -125,6 +125,30 @@ describe("QuoteFormDialog HT/TTC handling", () => {
     expect(onSubmit.mock.calls[0][0].supplier_name).toBe("Point P");
   });
 
+  it("cuts a long shop name to the 120-character snapshot the API accepts", async () => {
+    const longName = "Grande Surface " + "x".repeat(140);
+    const onSubmit = vi.fn();
+    render(
+      <QuoteFormDialog
+        open
+        quote={null}
+        submitting={false}
+        companyId={null}
+        stores={[{ ...SHOPS[0], id: "shop-long", name: longName }]}
+        onOpenChange={() => {}}
+        onSubmit={onSubmit}
+        onCreateStore={vi.fn()}
+      />
+    );
+    const user = userEvent.setup();
+    await pickShop(user, longName);
+    await user.type(screen.getByLabelText("unitPrice"), "10");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit.mock.calls[0][0].store_id).toBe("shop-long");
+    expect(onSubmit.mock.calls[0][0].supplier_name).toBe(longName.slice(0, 120));
+  });
+
   it("refuses to submit without a shop, and says why", async () => {
     const { onSubmit, user } = renderDialog();
     await user.type(screen.getByLabelText("unitPrice"), "10");
@@ -285,5 +309,67 @@ describe("QuoteFormDialog product link", () => {
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText("productUrlInvalid")).toBeInTheDocument();
+  });
+});
+
+describe("QuoteFormDialog decimal comma", () => {
+  // The fields used to be type="number", which Chrome parses in the OS
+  // language: in an English browser "19,99" became 1999 without a warning.
+  it("reads a French price and VAT rate with a comma", async () => {
+    const { onSubmit, user } = await fill("19,99", "ht", "5,5");
+    expect(screen.getByLabelText("unitPrice")).toHaveAttribute("type", "text");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit.mock.calls[0][0].unit_price_ht).toBe("19.9900");
+    expect(onSubmit.mock.calls[0][0].tva_rate).toBe("5.5");
+  });
+
+  it("converts a TTC shelf price typed with a comma", async () => {
+    const { onSubmit, user } = await fill("12,90", "ttc");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(Number(onSubmit.mock.calls[0][0].unit_price_ht)).toBeCloseTo(10.75, 2);
+  });
+
+  it("refuses a price it cannot read instead of guessing", async () => {
+    const { onSubmit, user } = await fill("19,9,9", "ht");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByTestId("quote-form-error")).toHaveTextContent("priceRequired");
+  });
+
+  it("refuses a VAT rate it cannot read", async () => {
+    const { onSubmit, user } = await fill("10", "ht", "5,5,5");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByTestId("quote-form-error")).toHaveTextContent("tvaInvalid");
+  });
+});
+
+describe("QuoteFormDialog shop field and VAT presets", () => {
+  it("links the shop label to the picker, named by the label and the shop shown", async () => {
+    const { user } = renderDialog();
+    const trigger = screen.getByTestId("store-select-trigger");
+    expect(screen.getByLabelText("shop")).toBe(trigger);
+    expect(screen.getByRole("button", { name: "shop pickStore" })).toBe(trigger);
+
+    await user.click(screen.getByText("shop"));
+    // The label opens the picker, like a click on the field itself.
+    const popover = screen.getByText("Point P").closest("[role='dialog']");
+    expect(popover?.className).toContain("w-[var(--radix-popover-trigger-width)]");
+  });
+
+  it("labels the VAT presets in French notation and still sends the plain rate", async () => {
+    const { onSubmit, user } = renderDialog();
+    await pickShop(user, "Leroy Merlin");
+    expect(screen.queryByRole("button", { name: "5.5%" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: /^5,5\s%$/ }));
+    await user.type(screen.getByLabelText("unitPrice"), "10");
+    await user.click(screen.getByRole("button", { name: "create" }));
+
+    expect(onSubmit.mock.calls[0][0].tva_rate).toBe("5.5");
   });
 });

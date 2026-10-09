@@ -7,9 +7,14 @@ import { useLocale } from "next-intl";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InvoiceForm, classifySubmitError } from "@/components/invoices/invoice-form";
+import {
+  InvoiceForm,
+  classifySubmitError,
+  invoiceValidationMessages,
+} from "@/components/invoices/invoice-form";
 import { createInvoice } from "@/lib/api/invoice-api";
 import { fetchProjectById } from "@/lib/api/projects";
+import { ApiError } from "@/lib/api/http";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/auth/permissions";
 import type { CreateInvoicePayload } from "@/types/invoice";
@@ -25,17 +30,23 @@ export default function NewInvoicePage() {
   const [error, setError] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [projectPerms, setProjectPerms] = useState<string[] | undefined>(undefined);
+  // The API refused the project (403/404): no form, since saving can only fail.
+  const [noAccess, setNoAccess] = useState(false);
   const { user } = useAuth();
 
   // Fetch the project for its company id and this caller's effective
-  // permissions on it. Non-fatal.
+  // permissions on it. Non-fatal, except a project the caller cannot open.
   useEffect(() => {
     fetchProjectById(projectId)
       .then((p) => {
         setCompanyId(p.company_id ?? null);
         setProjectPerms(p.my_permissions);
+        setNoAccess(false);
       })
-      .catch(() => setCompanyId(null));
+      .catch((err) => {
+        setCompanyId(null);
+        setNoAccess(err instanceof ApiError && (err.status === 403 || err.status === 404));
+      });
   }, [projectId]);
 
   // Without `project:view_budget` the backend refuses to record a release, so
@@ -56,7 +67,9 @@ export default function NewInvoicePage() {
           t("errorServiceMonthNotAllowed"),
           t("errorAppliedExceedsTarget"),
           t("errorWorkerLinkNotAllowed"),
-          t("errorWorkerNotInProject")
+          t("errorWorkerNotInProject"),
+          t("errorPaymentMethodInactive"),
+          invoiceValidationMessages(t)
         )
       );
       setIsLoading(false);
@@ -86,13 +99,19 @@ export default function NewInvoicePage() {
         </Alert>
       )}
 
-      <InvoiceForm
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-        companyId={companyId}
-        projectId={projectId}
-        canRecordReleases={canViewBudget}
-      />
+      {noAccess ? (
+        <Alert variant="destructive">
+          <AlertDescription>{t("loadForbidden")}</AlertDescription>
+        </Alert>
+      ) : (
+        <InvoiceForm
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          companyId={companyId}
+          projectId={projectId}
+          canRecordReleases={canViewBudget}
+        />
+      )}
     </div>
   );
 }

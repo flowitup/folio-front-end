@@ -32,7 +32,7 @@ interface PaymentMethodRowProps {
     newLabel: string,
     isCompanyPayment: boolean,
     isPersonalPayment: boolean
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   onDeleteRequest: (method: PaymentMethod) => void;
 }
 
@@ -101,8 +101,9 @@ export function PaymentMethodRow({
     savingRef.current = true;
     setIsSaving(true);
     try {
-      await onRenameRequest(method.id, effectiveLabel, editIsCompanyPayment, editIsPersonalPayment);
-      setIsEditing(false);
+      // A refused rename keeps the editor open with the typed label.
+      const saved = await onRenameRequest(method.id, effectiveLabel, editIsCompanyPayment, editIsPersonalPayment);
+      if (saved) setIsEditing(false);
     } finally {
       setIsSaving(false);
       savingRef.current = false;
@@ -135,6 +136,7 @@ export function PaymentMethodRow({
               disabled={isSaving}
               className="h-7 text-[13px] py-0"
               aria-label={t("title")}
+              maxLength={120}
             />
             <label className="flex items-center gap-2 text-[12px] cursor-pointer select-none">
               <input

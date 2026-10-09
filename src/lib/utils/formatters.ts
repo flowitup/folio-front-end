@@ -25,6 +25,21 @@ export function formatEUR(amount: number): string {
 }
 
 /**
+ * Format a unit price like formatEUR, but keep the decimals it carries
+ * ("15,015 €", "200,00 €"): a line's amount is quantity × unit price, so a
+ * price rounded to the cent would not multiply back to the amount shown.
+ * Capped at 6 decimals, which also hides float noise (15.015 → 15.0149999…).
+ */
+export function formatUnitPriceEUR(amount: number): string {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+  }).format(amount)
+}
+
+/**
  * Format a number as whole-euro fr-FR EUR currency ("17 831 €").
  * Used by summary/KPI figures where cents are visual noise.
  */

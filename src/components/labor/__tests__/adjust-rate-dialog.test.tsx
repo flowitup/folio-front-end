@@ -47,6 +47,7 @@ import {
   deleteWorkerRateChange,
 } from "@/lib/api/labor";
 import { toast } from "sonner";
+import { ApiError } from "@/lib/api/http";
 
 // Cast through `unknown` to access mocked toast without TS type errors.
 // The runtime object is a vi.fn() stub; the narrow shape used in assertions
@@ -447,6 +448,76 @@ describe("AdjustRateDialog — delete", () => {
 
     await waitFor(() => {
       expect(onChanged).toHaveBeenCalledTimes(1);
+    });
+  });
+});
+
+describe("AdjustRateDialog — effective date and API errors", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(fetchWorkerRateChanges).mockResolvedValue([]);
+  });
+
+  it("asks for an effective date instead of sending an empty one", async () => {
+    renderDialog();
+    await waitFor(() => {
+      expect(document.querySelector("[data-testid='adjust-rate-form']")).toBeTruthy();
+    });
+
+    fireEvent.change(document.querySelector("[data-testid='adjust-rate-amount']") as HTMLInputElement, {
+      target: { value: "200" },
+    });
+    const dateInput = document.querySelector("[data-testid='adjust-rate-date']") as HTMLInputElement;
+    expect(dateInput.required).toBe(true);
+    fireEvent.change(dateInput, { target: { value: "" } });
+    fireEvent.submit(document.querySelector("[data-testid='adjust-rate-form']") as HTMLFormElement);
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toBe("rateChange.errorDateRequired");
+    });
+    expect(createWorkerRateChange).not.toHaveBeenCalled();
+  });
+
+  it("shows the translated message, never the raw 'HTTP 400: BAD REQUEST'", async () => {
+    vi.mocked(createWorkerRateChange).mockRejectedValue(
+      new ApiError("HTTP 400: BAD REQUEST", 400, { error: "ValidationError", message: "..." }),
+    );
+    renderDialog();
+    await waitFor(() => {
+      expect(document.querySelector("[data-testid='adjust-rate-form']")).toBeTruthy();
+    });
+
+    fireEvent.change(document.querySelector("[data-testid='adjust-rate-amount']") as HTMLInputElement, {
+      target: { value: "200" },
+    });
+    fireEvent.submit(document.querySelector("[data-testid='adjust-rate-form']") as HTMLFormElement);
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toBe("rateChange.errorGeneric");
+    });
+  });
+
+  it("shows the translated message when the history fails to load", async () => {
+    vi.mocked(fetchWorkerRateChanges).mockRejectedValue(new ApiError("HTTP 500: INTERNAL SERVER ERROR", 500, {}));
+    renderDialog();
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toBe("rateChange.errorGeneric");
+    });
+  });
+
+  it("shows the translated message when a delete fails", async () => {
+    vi.mocked(fetchWorkerRateChanges).mockResolvedValue([RATE_CHANGE_1]);
+    vi.mocked(deleteWorkerRateChange).mockRejectedValue(new ApiError("HTTP 404: NOT FOUND", 404, {}));
+    renderDialog();
+    await waitFor(() => {
+      expect(document.querySelector("[data-testid='delete-rate-change-rc-uuid-1']")).toBeTruthy();
+    });
+
+    fireEvent.click(document.querySelector("[data-testid='delete-rate-change-rc-uuid-1']") as HTMLButtonElement);
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toBe("rateChange.errorGeneric");
     });
   });
 });

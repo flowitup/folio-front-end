@@ -19,6 +19,10 @@ export interface ProjectAnalysis {
   id: string;
   project_id: string;
   uploader_id: string;
+  /** The uploader's name from their account (name, else e-mail, else phone),
+   * also for someone never assigned to the project; null once that account
+   * was erased. */
+  uploader_name?: string | null;
   title: string;
   summary: string | null;
   source_url: string | null;

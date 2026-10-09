@@ -107,3 +107,44 @@ describe("BillingTemplateForm — default VAT rate", () => {
   });
 });
 
+
+describe("BillingTemplateForm — notes and terms caps", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("caps notes and terms at 2000 characters, like a document", () => {
+    render(<BillingTemplateForm mode="edit" template={TEMPLATE} />);
+    expect(document.getElementById("tpl-notes")?.getAttribute("maxlength")).toBe("2000");
+    expect(document.getElementById("tpl-terms")?.getAttribute("maxlength")).toBe("2000");
+  });
+
+  it("refuses to save notes longer than a document accepts", async () => {
+    render(<BillingTemplateForm mode="edit" template={{ ...TEMPLATE, notes: "n".repeat(2990) }} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+    });
+
+    // This file's t() mock does not interpolate: the message is the textTooLong key's text.
+    expect(await screen.findByText(/characters or fewer/)).toBeInTheDocument();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("BillingTemplateForm — header and delete dialog", () => {
+  it("names the icon-only back button", () => {
+    render(<BillingTemplateForm mode="create" />);
+
+    expect(screen.getByRole("button", { name: "Back to templates" })).toBeInTheDocument();
+  });
+
+  it("titles the delete confirmation as a delete question, not as the page title", async () => {
+    render(<BillingTemplateForm mode="edit" template={TEMPLATE} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Delete template" }));
+    });
+
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveAccessibleName("Delete template?");
+  });
+});

@@ -97,9 +97,27 @@ describe("WeekView", () => {
 
   it("Unscheduled add button requests a task with no due date", () => {
     const { onAddForDate } = renderWeek({ tasks: [] });
-    // Multiple "Add task" buttons (per day + unscheduled); the last is Unscheduled.
-    const addButtons = screen.getAllByLabelText("Add task");
-    fireEvent.click(addButtons[addButtons.length - 1]);
+    fireEvent.click(screen.getByRole("button", { name: "Add unscheduled task" }));
     expect(onAddForDate).toHaveBeenCalledWith("");
+  });
+
+  it("names each day's add button after its day, so a screen reader can tell them apart", () => {
+    const { onAddForDate } = renderWeek({ tasks: [] });
+    const names = screen
+      .getAllByRole("button", { name: /^Add task on / })
+      .map((b) => b.getAttribute("aria-label"));
+    expect(names).toHaveLength(7);
+    expect(new Set(names).size).toBe(7);
+    fireEvent.click(screen.getByRole("button", { name: /^Add task on Wednesday, (June 3|3 June)$/ }));
+    expect(onAddForDate).toHaveBeenCalledWith("2026-06-03");
+  });
+
+  it("wraps a long unbroken title inside its chip instead of letting it overflow", () => {
+    const title = "Longword".repeat(30);
+    renderWeek({ tasks: [makeTask({ id: "long", title, due_date: "2026-06-03" })] });
+    const p = screen.getByText(title);
+    expect(p.className).toContain("[overflow-wrap:anywhere]");
+    expect(p.className).toContain("min-w-0");
+    expect(p).toHaveAttribute("title", title);
   });
 });

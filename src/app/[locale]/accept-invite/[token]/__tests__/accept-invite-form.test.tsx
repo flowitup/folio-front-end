@@ -49,6 +49,8 @@ const TRANSLATIONS: Record<string, string> = {
   "errors.codeRequired": "Please enter the 6-digit code",
   "errors.invalidCode": "Wrong or expired code",
   "errors.throttled": "Too many requests. Wait a minute and try again.",
+  "errors.accountExists": "This invitation is for an existing Folio account. Enter that account's phone number.",
+  "errors.hourlyLimit": "Too many codes were requested for this number. Try again in {minutes} minutes.",
 };
 
 vi.mock("next-intl", () => ({
@@ -160,6 +162,35 @@ describe("AcceptInviteForm", () => {
       });
       expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
     });
+  });
+
+  it("tells the invitee to use the existing account's phone when the address already has one", async () => {
+    mockRequestCode.mockResolvedValue({ success: false, error: "account_exists" });
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Your full name"), "Someone Else");
+    await user.type(screen.getByLabelText("Phone number"), "0612345678");
+    await user.click(screen.getByRole("button", { name: /Send code/i }));
+
+    expect(
+      await screen.findByText("This invitation is for an existing Folio account. Enter that account's phone number.")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
+  });
+
+  it("names the wait when the number hit its hourly code cap", async () => {
+    mockRequestCode.mockResolvedValue({ success: false, error: "hourly_limit", retryAfterMinutes: 42 });
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Your full name"), "Bob Builder");
+    await user.type(screen.getByLabelText("Phone number"), "0612345678");
+    await user.click(screen.getByRole("button", { name: /Send code/i }));
+
+    expect(
+      await screen.findByText("Too many codes were requested for this number. Try again in 42 minutes.")
+    ).toBeInTheDocument();
   });
 
   describe("code step", () => {

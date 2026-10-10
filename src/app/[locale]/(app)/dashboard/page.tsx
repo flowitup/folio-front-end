@@ -173,15 +173,10 @@ export default function DashboardPage() {
     () => (monthlySeries.length > 0 ? computeMonthDelta(monthlySeries) : EMPTY_MONTH_DELTA),
     [monthlySeries]
   );
+  // Remaining = credit (or funds released without one) minus the total expenses.
   const budgetMetrics = useMemo(
-    () =>
-      computeBudgetMetrics(
-        selectedProject?.budget,
-        spentTotal,
-        activeMeta.fundsReleasedTotal,
-        selectedProject?.spent_by_credits
-      ),
-    [selectedProject?.budget, spentTotal, activeMeta.fundsReleasedTotal, selectedProject?.spent_by_credits]
+    () => computeBudgetMetrics(selectedProject?.budget, spentTotal, activeMeta.fundsReleasedTotal),
+    [selectedProject?.budget, spentTotal, activeMeta.fundsReleasedTotal]
   );
   const pendingRefunds = useMemo(() => computePendingRefunds(activeInvoices), [activeInvoices]);
   const bankOutstanding = useMemo(() => computeBankOutstanding(activeInvoices), [activeInvoices]);

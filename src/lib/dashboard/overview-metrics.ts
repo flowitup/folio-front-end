@@ -250,9 +250,7 @@ export interface BudgetMetrics {
    * no credit has been recorded). */
   denominator: number;
   usesBudget: boolean;
-  /** What is measured against the denominator: the spend drawn on the credit
-   * line when a credit is set (personal money never depletes it — the rule
-   * the Projects page follows), else every expense. */
+  /** Every expense (net of returns), measured against the denominator. */
   spent: number;
   /** denominator − spent. Negative when over. */
   left: number;
@@ -266,28 +264,21 @@ export interface BudgetMetrics {
   hasBaseline: boolean;
 }
 
-/**
- * `creditSpent` is the spend paid from the credit line (the project's
- * `spent_by_credits`). With a credit set, "remaining" is the credit minus
- * that, as on the Projects page; before, the Overview subtracted every
- * expense, so the two screens showed different remaining figures and
- * percentages for the same project.
- */
+/** "Remaining" is the credit total (or, without one, the funds released) minus the total
+ * expenses — the same figure the Expense page adds up. */
 export function computeBudgetMetrics(
   budget: number | null | undefined,
   spentTotal: number,
-  fundsReleasedTotal: number,
-  creditSpent?: number | null
+  fundsReleasedTotal: number
 ): BudgetMetrics {
   const usesBudget = typeof budget === "number" && budget > 0;
   const denominator = usesBudget ? budget : fundsReleasedTotal;
-  const spent = usesBudget && typeof creditSpent === "number" ? creditSpent : spentTotal;
-  const left = denominator - spent;
-  const pct = denominator > 0 ? Math.round((spent / denominator) * 100) : 0;
+  const left = denominator - spentTotal;
+  const pct = denominator > 0 ? Math.round((spentTotal / denominator) * 100) : 0;
   return {
     denominator,
     usesBudget,
-    spent,
+    spent: spentTotal,
     left,
     pct,
     pctClamped: Math.min(Math.max(pct, 0), 100),

@@ -484,8 +484,8 @@ describe("DashboardPage — project with no budget", () => {
   });
 });
 
-describe("DashboardPage — remaining matches the Projects page", () => {
-  it("subtracts only the spend drawn on the credit", async () => {
+describe("DashboardPage — remaining is the credit minus total expenses", () => {
+  it("subtracts every expense, personal included", async () => {
     mockUseProject.mockReturnValue({
       selectedProject: { id: "p-1", name: "Villa", budget: 10000, spent_by_credits: 1000 },
     });
@@ -504,9 +504,9 @@ describe("DashboardPage — remaining matches the Projects page", () => {
     const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
     const norm = (v: string | null | undefined) => (v ?? "").replace(/[\u202f\u00a0]/g, " ");
     await waitFor(() =>
-      expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(9000))
+      expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(6500))
     );
-    expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toBe(`10% of credit drawn · ${eur(1000)}`);
+    expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toBe(`35% of credit drawn · ${eur(3500)}`);
   });
 
   it("shows a whole-euro remaining that adds up with the whole-euro spent and credit", async () => {

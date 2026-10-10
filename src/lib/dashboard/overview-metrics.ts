@@ -250,13 +250,14 @@ export interface BudgetMetrics {
    * no credit has been recorded). */
   denominator: number;
   usesBudget: boolean;
-  /** What is measured against the denominator: the spend drawn on the credit
-   * line when a credit is set (personal money never depletes it — the rule
-   * the Projects page follows), else every expense. */
+  /** What is measured against the denominator: the funds drawn (released) out
+   * of the credit when a credit is set, else every expense against the funds
+   * released. */
   spent: number;
-  /** denominator − spent. Negative when over. */
+  /** denominator − spent: the credit not yet released, or without a credit the
+   * released funds not yet spent. Negative when over. */
   left: number;
-  /** Rounded percent spent, unclamped (may exceed 100 when over budget). */
+  /** Rounded percent of the denominator used, unclamped (may exceed 100). */
   pct: number;
   /** Same percent, clamped 0–100 for a progress-bar width. */
   pctClamped: number;
@@ -267,21 +268,18 @@ export interface BudgetMetrics {
 }
 
 /**
- * `creditSpent` is the spend paid from the credit line (the project's
- * `spent_by_credits`). With a credit set, "remaining" is the credit minus
- * that, as on the Projects page; before, the Overview subtracted every
- * expense, so the two screens showed different remaining figures and
- * percentages for the same project.
+ * With a credit set, "remaining" is the credit minus the funds already released
+ * out of it. Without one, it is the funds released minus `spentTotal` (every
+ * purse's spend).
  */
 export function computeBudgetMetrics(
   budget: number | null | undefined,
   spentTotal: number,
-  fundsReleasedTotal: number,
-  creditSpent?: number | null
+  fundsReleasedTotal: number
 ): BudgetMetrics {
   const usesBudget = typeof budget === "number" && budget > 0;
   const denominator = usesBudget ? budget : fundsReleasedTotal;
-  const spent = usesBudget && typeof creditSpent === "number" ? creditSpent : spentTotal;
+  const spent = usesBudget ? fundsReleasedTotal : spentTotal;
   const left = denominator - spent;
   const pct = denominator > 0 ? Math.round((spent / denominator) * 100) : 0;
   return {

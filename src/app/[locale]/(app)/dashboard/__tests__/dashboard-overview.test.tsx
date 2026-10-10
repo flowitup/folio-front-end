@@ -199,7 +199,7 @@ describe("DashboardPage — company purse cash", () => {
 });
 
 describe("DashboardPage — money panel figures", () => {
-  const project: Partial<Project> = { id: "p-1", name: "Villa", budget: 4000 };
+  const project: Partial<Project> = { id: "p-1", name: "Villa", budget: 10000 };
 
   beforeEach(() => {
     mockUseProject.mockReturnValue({ selectedProject: project });
@@ -230,8 +230,8 @@ describe("DashboardPage — money panel figures", () => {
     renderDashboard();
     const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
 
-    // Released 5000 (3500 company + 1500 personal), spent 500 + 400 = 900 → left 4100.
-    await waitFor(() => expect(moneyPanel.getByText(eur(4100))).toBeInTheDocument());
+    // Credit 10000 − funds released 5000 → 5000 still to release.
+    await waitFor(() => expect(moneyPanel.getByText(eur(5000))).toBeInTheDocument());
 
     // Spent this month (July) = 500 — read via its label's sibling since the
     // company purse also happens to show "500 €" for its own spent figure.
@@ -355,7 +355,7 @@ describe("DashboardPage — project switch race (H1)", () => {
         invoices: [
           mkInvoice({ type: "labor", issue_date: "2026-07-05", total_amount: 200, paid_by_personal: false }),
         ],
-        funds_released_total: 2000,
+        funds_released_total: 200,
         company_spent_total: 200,
         personal_spent_total: 0,
         company_name: null,
@@ -373,7 +373,7 @@ describe("DashboardPage — project switch race (H1)", () => {
       </NextIntlClientProvider>
     );
 
-    // B's headline lands: budget 2000, spent 200 → left 1800. Read via the
+    // B's headline lands: budget 2000, released 200 → left 1800. Read via the
     // "Remaining to spend" label's sibling — the raw figure also coincidentally
     // matches the company purse's "left" in this fixture.
     const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
@@ -404,6 +404,8 @@ describe("DashboardPage — project switch race (H1)", () => {
 
 describe("DashboardPage — load failures", () => {
   const project: Partial<Project> = { id: "p-1", name: "Villa", budget: 10000 };
+  const headline = (panel: ReturnType<typeof within>) =>
+    panel.getByText("Remaining to spend").nextElementSibling?.textContent;
 
   beforeEach(() => {
     mockUseProject.mockReturnValue({ selectedProject: project });
@@ -415,9 +417,7 @@ describe("DashboardPage — load failures", () => {
 
     expect(await screen.findByText(enMessages.dashboard.loadError)).toBeInTheDocument();
     const moneyPanel = within(screen.getByTestId("overview-money-panel"));
-    // Nothing released is known: no "remaining" figure, and no made-up zero.
-    expect(moneyPanel.queryByText("Remaining to spend")).toBeNull();
-    expect(moneyPanel.getAllByText("—").length).toBeGreaterThan(0);
+    expect(headline(moneyPanel)).toBe("—");
     expect(moneyPanel.queryByText(eur(10000))).toBeNull();
     const typeMinis = within(screen.getByTestId("overview-type-minis"));
     expect(typeMinis.queryByText(eur(0))).toBeNull();
@@ -426,7 +426,7 @@ describe("DashboardPage — load failures", () => {
   it("keeps the expense figures when only the tasks fail to load", async () => {
     mockFetchInvoicesWithMeta.mockResolvedValue({
       invoices: [mkInvoice({ type: "labor", issue_date: "2026-07-05", total_amount: 500, paid_by_personal: false })],
-      funds_released_total: 0,
+      funds_released_total: 500,
       company_spent_total: 500,
       personal_spent_total: 0,
       company_name: null,
@@ -436,9 +436,7 @@ describe("DashboardPage — load failures", () => {
 
     expect(await screen.findByText(enMessages.dashboard.loadError)).toBeInTheDocument();
     const moneyPanel = within(screen.getByTestId("overview-money-panel"));
-    // No funds released: the headline is the plain spend, not a negative "remaining".
-    await waitFor(() => expect(moneyPanel.getAllByText(eur(500)).length).toBeGreaterThan(0));
-    expect(moneyPanel.queryByText("Remaining to spend")).toBeNull();
+    await waitFor(() => expect(headline(moneyPanel)?.replace(/[\u202f\u00a0]/g, " ")).toBe(eur(9500)));
   });
 });
 
@@ -486,10 +484,10 @@ describe("DashboardPage — project with no budget", () => {
   });
 });
 
-describe("DashboardPage — remaining is measured against released funds", () => {
-  it("subtracts every purse's spend from the funds released", async () => {
+describe("DashboardPage — remaining is the credit not yet released", () => {
+  it("subtracts the funds released from the credit", async () => {
     mockUseProject.mockReturnValue({
-      selectedProject: { id: "p-1", name: "Villa", budget: 10000, spent_by_credits: 1000 },
+      selectedProject: { id: "p-1", name: "Villa", budget: 10000 },
     });
     mockFetchInvoicesWithMeta.mockResolvedValue({
       invoices: [
@@ -506,19 +504,18 @@ describe("DashboardPage — remaining is measured against released funds", () =>
     const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
     const norm = (v: string | null | undefined) => (v ?? "").replace(/[\u202f\u00a0]/g, " ");
     await waitFor(() =>
-      expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(500))
+      expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(6000))
     );
-    // 1 000 company + 2 500 personal spent of 4 000 released.
-    expect(norm(moneyPanel.getByText(/spent ·/).textContent)).toBe(`88% spent · ${eur(3500)}`);
+    expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toBe(`40% of credit drawn · ${eur(4000)}`);
   });
 
-  it("shows a whole-euro remaining that adds up with the whole-euro spent and released", async () => {
+  it("shows a whole-euro remaining that adds up with the whole-euro released and credit", async () => {
     mockUseProject.mockReturnValue({
-      selectedProject: { id: "p-1", name: "Villa", budget: 5000, spent_by_credits: 3368.5 },
+      selectedProject: { id: "p-1", name: "Villa", budget: 5000 },
     });
     mockFetchInvoicesWithMeta.mockResolvedValue({
       invoices: [mkInvoice({ type: "others", issue_date: "2026-07-05", total_amount: 3368.5 })],
-      funds_released_total: 5000,
+      funds_released_total: 3368.5,
       company_spent_total: 3368.5,
       personal_spent_total: 0,
       company_name: null,
@@ -531,7 +528,7 @@ describe("DashboardPage — remaining is measured against released funds", () =>
     await waitFor(() =>
       expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(1631))
     );
-    expect(norm(moneyPanel.getByText(/spent ·/).textContent)).toContain(eur(3369));
+    expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toContain(eur(3369));
   });
 });
 

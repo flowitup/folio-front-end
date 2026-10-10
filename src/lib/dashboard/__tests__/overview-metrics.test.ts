@@ -193,7 +193,7 @@ describe("computeMonthDelta", () => {
 describe("computeBudgetMetrics", () => {
   it("uses the project credit total as denominator when set", () => {
     const m = computeBudgetMetrics(1000, 400, 900);
-    expect(m).toMatchObject({ denominator: 1000, usesBudget: true, left: 600, pct: 40, pctClamped: 40 });
+    expect(m).toMatchObject({ denominator: 1000, usesBudget: true, left: 100, pct: 90, pctClamped: 90 });
   });
 
   it("falls back to funds released when no credit total is set", () => {
@@ -207,14 +207,14 @@ describe("computeBudgetMetrics", () => {
     expect(m.denominator).toBe(900);
   });
 
-  it("measures a set credit against the spend drawn on it, like the Projects page", () => {
-    // 10 000 credit; 3 500 spent in all, of which 1 000 paid from the credit.
-    const m = computeBudgetMetrics(10000, 3500, 4000, 1000);
-    expect(m).toMatchObject({ spent: 1000, left: 9000, pct: 10 });
+  it("measures a set credit against the funds released out of it", () => {
+    // 10 000 credit, 4 000 released, 3 500 spent: 6 000 of credit still to release.
+    const m = computeBudgetMetrics(10000, 3500, 4000);
+    expect(m).toMatchObject({ spent: 4000, left: 6000, pct: 40 });
   });
 
   it("measures released funds against every expense when no credit is set", () => {
-    const m = computeBudgetMetrics(null, 3500, 4000, 1000);
+    const m = computeBudgetMetrics(null, 3500, 4000);
     expect(m).toMatchObject({ spent: 3500, left: 500 });
   });
 
@@ -225,7 +225,7 @@ describe("computeBudgetMetrics", () => {
   });
 
   it("goes negative and clamps the bar width when over budget", () => {
-    const m = computeBudgetMetrics(1000, 1250, 900);
+    const m = computeBudgetMetrics(1000, 1250, 1250);
     expect(m.left).toBe(-250);
     expect(m.pct).toBe(125);
     expect(m.pctClamped).toBe(100);

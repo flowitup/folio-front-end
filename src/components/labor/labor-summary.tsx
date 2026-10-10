@@ -21,6 +21,9 @@ import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
 import { findMonthBucket } from "@/components/labor/labor-payments-tab-state";
 import { PaidSplitCaption } from "@/components/labor/paid-split-caption";
 import { monthSettlement } from "@/lib/labor/month-settlement";
+import { LaborPaymentNoteDialog } from "@/components/labor/labor-payment-note-dialog";
+import { PaymentNoteButton, PaymentNoteText } from "@/components/labor/labor-payment-note-parts";
+import { paymentNoteKey, useProjectLaborPaymentNotes } from "@/components/labor/use-labor-payment-notes";
 
 interface LaborSummaryProps {
   projectId: string;
@@ -44,6 +47,9 @@ interface LaborSummaryProps {
   isLoading: boolean;
   month: string;
   onMonthChange: (value: string) => void;
+  /** Shows the add/edit button on each worker's monthly note (same
+   *  permission as recording a payment). Notes are shown to everyone. */
+  canEditNotes?: boolean;
 }
 
 /** Format a (year, month) into a compact label like "Nov 2025".
@@ -115,11 +121,21 @@ export function LaborSummary({
   isLoading,
   month,
   onMonthChange,
+  canEditNotes = false,
 }: LaborSummaryProps) {
   const t = useTranslations("labor");
   const tRole = useTranslations("labor.role.defaults");
   const locale = useLocale();
   const [exportOpen, setExportOpen] = useState(false);
+  const { notes, saveNote } = useProjectLaborPaymentNotes(projectId);
+  const [noteDialog, setNoteDialog] = useState<{
+    open: boolean;
+    workerId: string;
+    workerName: string;
+    month: string;
+  }>({ open: false, workerId: "", workerName: "", month: "" });
+  const openNoteDialog = (workerId: string, workerName: string, ym: string) =>
+    setNoteDialog({ open: true, workerId, workerName, month: ym });
   // Year filter — null = "All years". Only meaningful when month filter
   // is unset (we're in the all-history monthly-rollup view).
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
@@ -738,6 +754,19 @@ export function LaborSummary({
                                 >
                                   {w.worker_name}
                                 </div>
+                                {canEditNotes && (
+                                  <PaymentNoteButton
+                                    hasNote={!!notes[paymentNoteKey(w.worker_id, ym)]}
+                                    onClick={() => openNoteDialog(w.worker_id, w.worker_name, ym)}
+                                    testId={`summary-note-button-${ym}-${w.worker_id}`}
+                                  />
+                                )}
+                              </div>
+                              <div className="max-w-[320px] pl-[30px]">
+                                <PaymentNoteText
+                                  note={notes[paymentNoteKey(w.worker_id, ym)]}
+                                  testId={`summary-note-${ym}-${w.worker_id}`}
+                                />
                               </div>
                             </td>
                             <td
@@ -857,6 +886,19 @@ export function LaborSummary({
                         <div className="flex items-center gap-3">
                           <div className="avatar">{initials}</div>
                           <span>{row.worker_name}</span>
+                          {canEditNotes && (
+                            <PaymentNoteButton
+                              hasNote={!!notes[paymentNoteKey(row.worker_id, month)]}
+                              onClick={() => openNoteDialog(row.worker_id, row.worker_name, month)}
+                              testId={`summary-note-button-${month}-${row.worker_id}`}
+                            />
+                          )}
+                        </div>
+                        <div className="mt-1 max-w-[320px] pl-[44px]">
+                          <PaymentNoteText
+                            note={notes[paymentNoteKey(row.worker_id, month)]}
+                            testId={`summary-note-${month}-${row.worker_id}`}
+                          />
                         </div>
                       </td>
                       <td style={{ color: "var(--muted)" }}>{roleName ?? "—"}</td>
@@ -946,6 +988,14 @@ export function LaborSummary({
         projectId={projectId}
         open={exportOpen}
         onOpenChange={setExportOpen}
+      />
+      <LaborPaymentNoteDialog
+        open={noteDialog.open}
+        onOpenChange={(open) => setNoteDialog((prev) => ({ ...prev, open }))}
+        workerName={noteDialog.workerName}
+        periodLabel={noteDialog.month ? formatMonthLabel(noteDialog.month, locale) : ""}
+        initialNote={notes[paymentNoteKey(noteDialog.workerId, noteDialog.month)] ?? ""}
+        onSave={(note) => saveNote(noteDialog.workerId, noteDialog.month, note)}
       />
     </div>
   );

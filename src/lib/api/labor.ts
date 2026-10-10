@@ -280,9 +280,10 @@ export async function setLaborDayDescription(
 
 // ─── Labor payment notes ─────────────────────────────────────────────────────
 
+/** The project's notes, only those of `month` ("YYYY-MM") when given. */
 export async function fetchLaborPaymentNotes(
   projectId: string,
-  month: string,
+  month?: string,
 ): Promise<LaborPaymentNote[]> {
   const url = buildUrl(`/projects/${projectId}/labor-payment-notes`, { month });
   const data = await api.get<LaborPaymentNoteListResponse>(url);

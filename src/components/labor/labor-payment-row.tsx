@@ -16,12 +16,13 @@ import { useTranslations, useLocale } from "next-intl";
 import { formatDays } from "@/components/labor/format-days";
 import { personInitials } from "@/lib/utils/person-color";
 import Link from "next/link";
-import { ChevronRight, Loader2, StickyNote } from "lucide-react";
+import { ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatEUR } from "@/lib/api/labor";
 import { formatDate } from "@/lib/utils/formatters";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { PaymentNoteButton, PaymentNoteText } from "@/components/labor/labor-payment-note-parts";
 import type { Invoice } from "@/types/invoice";
 import type { WorkerPaymentRow } from "@/components/labor/labor-payments-tab-state";
 
@@ -155,30 +156,16 @@ export function LaborPaymentRow({
     </Button>
   );
 
-  const noteText = note && (
-    <p
-      className="flex items-start gap-1.5 text-[12px]"
-      style={{ color: "var(--muted)" }}
-      title={note}
-      data-testid={`labor-payment-note-${testIdSuffix}`}
-    >
-      <StickyNote size={12} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
-      <span className="line-clamp-2 min-w-0 whitespace-pre-line">{note}</span>
-    </p>
-  );
+  const noteText = note ? (
+    <PaymentNoteText note={note} testId={`labor-payment-note-${testIdSuffix}`} />
+  ) : null;
 
   const noteButton = canManage && onEditNote && (
-    <Button
-      type="button"
-      size="sm"
-      variant="ghost"
+    <PaymentNoteButton
+      hasNote={!!note}
       onClick={onEditNote}
-      aria-label={t(note ? "editNote" : "addNote")}
-      title={t(note ? "editNote" : "addNote")}
-      data-testid={`labor-payment-note-button-${testIdSuffix}`}
-    >
-      <StickyNote size={14} aria-hidden="true" />
-    </Button>
+      testId={`labor-payment-note-button-${testIdSuffix}`}
+    />
   );
 
   if (variant === "desktop") {

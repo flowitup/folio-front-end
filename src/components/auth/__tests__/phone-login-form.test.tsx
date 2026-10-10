@@ -38,6 +38,7 @@ const TRANSLATIONS: Record<string, string> = {
   errorCodeRequired: "Please enter the 6-digit code",
   errorInvalidCode: "Wrong or expired code",
   errorThrottled: "Too many requests. Wait a minute and try again.",
+  errorHourlyLimit: "Too many codes were requested for this number. Try again in {minutes} minutes.",
   errorSmsFailed: "The SMS could not be sent. Try again later.",
   errorPhoneLoginUnavailable: "Phone sign-in is not available on this server.",
 };
@@ -61,6 +62,11 @@ vi.mock("next-intl", () => ({
         fill(key, params).replace(/<\/?[a-z]+>/g, ""),
     });
   },
+}));
+
+// The language control needs the locale router; it has its own tests.
+vi.mock("@/components/language-switcher", () => ({
+  LanguageSwitcher: () => null,
 }));
 
 const mockRequestOtpAction = vi.fn();
@@ -167,6 +173,21 @@ describe("Phone sign-in", () => {
     // Still on step 1 — phone input is present, the code boxes are not.
     expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
     expect(screen.queryByTestId("login-code-0")).toBeNull();
+  });
+
+  it("names the wait when the number hit its hourly code cap", async () => {
+    // Regression: the hourly cap lasts up to an hour, but showed the resend gap's "Wait a minute".
+    mockRequestOtpAction.mockResolvedValue({ success: false, error: "hourly_limit", retryAfterMinutes: 55 });
+    const user = userEvent.setup();
+    render(<LoginStage />);
+
+    await user.type(screen.getByLabelText("Phone number"), "0612345678");
+    await user.click(screen.getByTestId("login-send-code"));
+
+    expect(await screen.findByTestId("login-error")).toHaveTextContent(
+      "Too many codes were requested for this number. Try again in 55 minutes."
+    );
+    expect(screen.queryByText("Too many requests. Wait a minute and try again.")).toBeNull();
   });
 
   it("signs in on its own once the sixth digit is typed", async () => {

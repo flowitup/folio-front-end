@@ -3,7 +3,8 @@
 /**
  * MaskDisplay — renders a sensitive field value or a masked placeholder.
  *
- * - When `isMasked` is true: shows "····" tooltip hint ("Visible to admins only").
+ * - When `isMasked` is true: shows "····" with a tooltip saying the value is hidden
+ *   (only platform ops get unmasked values; company admins re-enter to replace).
  * - When `isMasked` is false: shows the full value (or a dash when empty).
  *
  * The value prop is already either full or pre-masked by the API (e.g. "····5678").

@@ -9,8 +9,9 @@
  * float math gives 49.97. No new npm deps.
  */
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { BillingDocumentItem } from "@/types/billing";
+import { formatBillingVatRate } from "@/lib/billing/vat-rate";
 
 // ---------------------------------------------------------------------------
 // Exact decimal helpers
@@ -155,6 +156,7 @@ interface BillingTotalsCardProps {
 
 export function BillingTotalsCard({ totals }: BillingTotalsCardProps) {
   const t = useTranslations("billing.form.totals");
+  const locale = useLocale();
 
   return (
     <div className="folio-card space-y-2 p-4">
@@ -165,7 +167,7 @@ export function BillingTotalsCard({ totals }: BillingTotalsCardProps) {
 
       {totals.vatLines.map((line) => (
         <div key={line.rate} className="flex items-center justify-between text-[13px]">
-          <span style={{ color: "var(--muted)" }}>{t("tva", { rate: line.rate })}</span>
+          <span style={{ color: "var(--muted)" }}>{t("tva", { rate: formatBillingVatRate(line.rate, locale) })}</span>
           <span className="num">{formatEUR(line.tvaAmount)}</span>
         </div>
       ))}

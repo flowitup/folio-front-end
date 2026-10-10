@@ -5,7 +5,15 @@
     "signOut": "Déconnexion",
     "loading": "Chargement...",
     "language": "Langue",
-    "close": "Fermer"
+    "close": "Fermer",
+    "notificationsRegion": "Notifications"
+  },
+  "meta": {
+    "description": "Une application chaleureuse et humaine pour gérer la construction de votre propre maison.",
+    "signIn": "Connexion",
+    "quotes": "Devis",
+    "invoices": "Factures",
+    "onboarding": "Premiers pas"
   },
   "navigation": {
     "dashboard": "Aperçu",
@@ -49,6 +57,7 @@
     "errorCodeRequired": "Veuillez saisir le code à 6 chiffres",
     "errorInvalidCode": "Code incorrect ou expiré",
     "errorThrottled": "Trop de demandes. Attendez une minute et réessayez.",
+    "errorHourlyLimit": "Trop de codes ont été demandés pour ce numéro. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
     "errorSmsFailed": "Le SMS n'a pas pu être envoyé. Réessayez plus tard.",
     "errorPhoneLoginUnavailable": "La connexion par téléphone n'est pas disponible sur ce serveur.",
     "stepBadge": "Étape {current} / {total}",
@@ -132,6 +141,7 @@
     "selectProject": "Sélectionner un projet",
     "loading": "Chargement...",
     "loadError": "Échec du chargement des projets",
+    "retry": "Réessayer",
     "noProjects": "Aucun projet disponible",
     "newProject": "Nouveau projet",
     "member": "membre",
@@ -167,6 +177,10 @@
     "remove": "Retirer",
     "allProjects": "Tous les projets",
     "searchProjects": "Rechercher un projet",
+    "noSearchResults": {
+      "title": "Aucun projet ne correspond à « {query} »",
+      "clear": "Effacer la recherche"
+    },
     "projectStamp": "Projet",
     "progress": "Avancement",
     "creditTotal": "Crédit total",
@@ -189,7 +203,7 @@
     "budgetLabel": "Crédit total (€)",
     "budgetSourceLabelOptional": "Source de financement (facultatif)",
     "budgetSourcePlaceholder": "ex. Prêt bancaire BNP",
-    "budgetInvalid": "Le crédit total doit être un nombre positif",
+    "budgetInvalid": "Saisissez le crédit total sous forme de montant, par ex. 12500 ou 12 500,00",
     "bankRelease": {
       "title": "Déblocage du crédit bancaire",
       "overDrawn": "Dépassement de",
@@ -245,10 +259,16 @@
       "title": "En attente d'affectation",
       "description": "L'administrateur de votre entreprise ne vous a pas encore ajouté à un chantier."
     },
+    "noCompany": {
+      "title": "Vous n'appartenez à aucune entreprise",
+      "description": "Créez votre entreprise ou rejoignez-en une avec un code pour commencer.",
+      "cta": "Créer ou rejoindre une entreprise"
+    },
     "settingsReadOnly": "Seuls les administrateurs et managers de ce projet peuvent modifier ses paramètres.",
     "teamSize": "{n, plural, one {# membre} other {# membres}}",
     "projectCreated": "Projet créé",
     "projectDeleted": "Projet supprimé",
+    "projectUpdated": "Projet mis à jour",
     "settingsForbidden": "Vous n'avez pas le droit de modifier les paramètres de ce projet."
   },
   "settings": {
@@ -319,6 +339,7 @@
       "cancel": "Annuler",
       "usageHintTitle": "Utiliser votre clé",
       "usageHintBody": "Envoyez-la comme jeton porteur dans l'en-tête Authorization de chaque requête envoyée par votre script ou automatisation.",
+      "usageHintPlaceholder": "votre clé",
       "toasts": {
         "created": "Clé API créée",
         "revoked": "Clé API révoquée"
@@ -348,6 +369,7 @@
       "errorSameNumber": "C'est déjà votre numéro de téléphone.",
       "errorPhoneTaken": "Ce numéro de téléphone est déjà utilisé par un autre compte.",
       "errorThrottled": "Trop de demandes. Attendez une minute et réessayez.",
+      "errorHourlyLimit": "Trop de codes ont été demandés pour ce numéro. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
       "errorSmsFailed": "Le SMS n'a pas pu être envoyé. Réessayez plus tard.",
       "errorInvalidCode": "Code incorrect ou expiré",
       "errorFailed": "Impossible de changer votre numéro de téléphone. Veuillez réessayer."
@@ -355,7 +377,7 @@
   },
   "paymentMethods": {
     "title": "Moyens de paiement",
-    "description": "Gérez comment les factures peuvent être payées pour cette société. Les moyens intégrés ne peuvent pas être supprimés mais peuvent être renommés.",
+    "description": "Gérez comment les factures peuvent être payées pour cette entreprise. Les moyens intégrés ne peuvent pas être supprimés mais peuvent être renommés.",
     "addPlaceholder": "ex. Wise, Stripe…",
     "addButton": "Ajouter",
     "builtin": "Intégré",
@@ -372,9 +394,14 @@
       "duplicate_label": "Un moyen de paiement avec ce nom existe déjà.",
       "builtin_protected": "Les moyens intégrés ne peuvent pas être supprimés.",
       "not_found": "Moyen de paiement introuvable.",
-      "permission_denied": "Vous n'avez pas la permission de gérer les moyens de paiement pour cette société.",
+      "permission_denied": "Vous n'avez pas la permission de gérer les moyens de paiement pour cette entreprise.",
       "label_required": "Le nom est requis.",
-      "label_too_long": "Le nom est trop long (max 120 caractères)."
+      "label_too_long": "Le nom est trop long (max 120 caractères).",
+      "unauthorized": "Votre session a expiré. Veuillez vous reconnecter.",
+      "validation": "Saisie invalide. Vérifiez votre saisie et réessayez.",
+      "conflict": "Un conflit est survenu. Veuillez réessayer.",
+      "rate_limited": "Trop de requêtes. Patientez puis réessayez.",
+      "generic": "Une erreur est survenue. Veuillez réessayer."
     },
     "toasts": {
       "created": "Moyen de paiement ajouté",
@@ -410,7 +437,7 @@
     "invoiceNumber": "Facture #",
     "type": "Type",
     "types": {
-      "released_funds": "Fond débloqué",
+      "released_funds": "Fonds débloqués",
       "labor": "Main-d'œuvre",
       "materials_services": "Achats & prestations",
       "others": "Autres",
@@ -473,6 +500,8 @@
     "invalidFileType": "{name} : type de fichier non autorisé",
     "uploadFailed": "Échec du téléversement de {name}",
     "deleteFailed": "Échec de la suppression",
+    "downloadFailed": "Échec du téléchargement de {name}",
+    "attachmentGone": "{name} n'est plus disponible",
     "rename": "Renommer",
     "attachmentDeleteConfirm": "Supprimer cette pièce jointe ? Cette action est irréversible.",
     "openAttachment": "Ouvrir",
@@ -484,7 +513,8 @@
       "save": "Enregistrer",
       "saving": "Enregistrement…",
       "error": "Impossible de renommer la pièce jointe. Réessayez.",
-      "errorExtension": "L'extension doit rester {extension}"
+      "errorExtension": "L'extension doit rester {extension}",
+      "errorTooLong": "Le nom est trop long ({max} caractères maximum)"
     },
     "attachmentPreview": {
       "preview": "Aperçu",
@@ -515,7 +545,7 @@
       "to": "Mois de fin",
       "typeFilter": "Type",
       "typeAll": "Tous les types",
-      "typeReleasedFunds": "Fond débloqué",
+      "typeReleasedFunds": "Fonds débloqués",
       "typeLabor": "Main-d'œuvre",
       "typeMaterialsServices": "Achats & prestations",
       "typeOthers": "Autres",
@@ -531,6 +561,7 @@
       "errorRangeInvalid": "« De » doit être antérieur ou égal à « À »",
       "errorRangeTooLarge": "La période ne peut pas dépasser 24 mois",
       "errorGeneric": "Échec de l'export des dépenses",
+      "errorForbidden": "Vous n'avez pas l'autorisation d'exporter les dépenses de ce projet.",
       "dialogDescription": "Choisissez une période, un type et un format de fichier."
     },
     "paymentMethod": {
@@ -553,6 +584,11 @@
     "appliedTo": "Imputé sur {number}",
     "errorRefundExceedsSource": "L'avoir dépasse le montant restant ({remaining}) pour cette facture.",
     "errorAppliedExceedsTarget": "Le montant de l'avoir dépasse le total de la facture visée.",
+    "errorCompanyPaidRefundTracked": "Cette dépense est suivie pour remboursement : elle ne peut pas passer sur un moyen de paiement de l'entreprise. Effacez d'abord son statut de remboursement.",
+    "errorUnlinkAvoirsFirst": "Des avoirs sont imputés sur cette facture. Détachez-les avant d'en faire un avoir ou des fonds débloqués.",
+    "errorRefundedLocked": "Cette dépense a été remboursée : elle est verrouillée. Effacez d'abord son statut de remboursement pour la modifier ou la supprimer.",
+    "errorReturnTotalPositive": "Le total d'un avoir doit être nul ou négatif. Saisissez ses lignes en montants négatifs.",
+    "errorUnlinkReturnsFirst": "Des avoirs sont rattachés à cette facture. Détachez-les ou supprimez-les d'abord.",
     "settledVia": {
       "label": "Réglé via",
       "cash": "Remboursement en espèces",
@@ -639,12 +675,18 @@
     },
     "loadFailed": "Échec du chargement de la facture.",
     "loadListFailed": "Échec du chargement des dépenses.",
+    "loadForbidden": "Vous n'avez pas accès à ce projet.",
     "deleteInvoiceFailed": "Échec de la suppression de la dépense.",
     "errorPaymentMethodInactive": "Ce moyen de paiement a été désactivé. Choisissez-en un autre.",
     "workerInactive": "{name} (inactif)",
     "errorQuantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
     "errorUnitPriceTooLarge": "Le prix unitaire ne peut pas dépasser {max, number}.",
     "errorIssueDateRequired": "Indiquez la date d'émission",
+    "errorQuantityInvalid": "La quantité doit être un nombre avec au plus {decimals} décimales",
+    "errorUnitPriceInvalid": "Le prix unitaire doit être un nombre avec au plus {decimals} décimales",
+    "errorUnitPriceNegative": "Le prix unitaire ne peut pas être négatif pour ce type de dépense",
+    "errorVatRateInvalid": "La TVA doit être un nombre entre 0 et 100 avec au plus {decimals} décimales",
+    "errorDateOutOfRange": "Indiquez une date entre {min} et {max}",
     "bankRefundLine": "Remboursement banque — {number}",
     "deleteExpense": "Supprimer la dépense {number}",
     "removeLine": "Supprimer la ligne",
@@ -665,12 +707,15 @@
     "dueDateLabel": "Échéance",
     "labelsLabel": "Étiquettes",
     "labelsPlaceholder": "tags, séparés, par, virgules",
+    "labelsTooMany": "{max} étiquettes au maximum.",
+    "labelTooLong": "Une étiquette compte {max} caractères au maximum : « {label} » est trop longue.",
     "save": "Enregistrer",
     "saving": "Enregistrement...",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "deleteConfirm": "Supprimer cette tâche ? Cette action est irréversible.",
     "loadError": "Échec du chargement des tâches",
+    "loadForbidden": "Vous n'avez pas accès à ce projet.",
     "taskCount": "{n, plural, =0 {aucune tâche} =1 {1 tâche} other {# tâches}}",
     "addTask": "Ajouter une tâche",
     "view": {
@@ -683,7 +728,8 @@
       "nextWeek": "Semaine suivante",
       "unscheduled": "Non planifié",
       "noTasksDay": "—",
-      "addOnDay": "Ajouter"
+      "addOnDay": "Ajouter une tâche le {day}",
+      "addUnscheduled": "Ajouter une tâche non planifiée"
     },
     "column": {
       "todo": "À faire",
@@ -701,7 +747,7 @@
     "errors": {
       "forbidden": "Vous n’avez pas l’autorisation de faire cela sur ce projet.",
       "notFound": "Cette tâche n’existe plus.",
-      "invalid": "Certaines informations n’ont pas été acceptées. Vérifiez le titre (255 caractères maximum) et réessayez.",
+      "invalid": "Certaines informations n’ont pas été acceptées. Vérifiez le titre (255 caractères maximum), la description (5 000 maximum) et les étiquettes (20 maximum, de 50 caractères chacune), puis réessayez.",
       "create": "Impossible de créer la tâche. Veuillez réessayer.",
       "save": "Impossible d’enregistrer la tâche. Veuillez réessayer.",
       "delete": "Impossible de supprimer la tâche. Veuillez réessayer."
@@ -709,13 +755,18 @@
     "statusLabel": "Statut",
     "close": "Fermer",
     "dnd": {
-      "instructions": "Pour saisir une tâche, appuyez sur Espace ou Entrée. Déplacez-la avec les flèches, appuyez de nouveau sur Espace ou Entrée pour la déposer, ou sur Échap pour annuler.",
+      "instructions": "Pour saisir une tâche, appuyez sur Espace. Déplacez-la avec les flèches, appuyez de nouveau sur Espace pour la déposer, ou sur Échap pour annuler. Appuyez sur Entrée pour ouvrir la tâche.",
       "pickedUp": "Tâche {title} saisie.",
       "over": "La tâche {title} est au-dessus de {target}.",
       "dropped": "Tâche {title} déposée dans {target}.",
       "cancelled": "Déplacement de la tâche {title} annulé."
     },
-    "taskUnavailable": "Cette tâche n'existe pas ou vous n'y avez pas accès."
+    "taskUnavailable": "Cette tâche n'existe pas ou vous n'y avez pas accès.",
+    "assigneeLabel": "Responsable",
+    "unassigned": "Non assignée",
+    "assigneeOther": "Une personne hors de l’équipe du projet",
+    "assignedTo": "Assignée à {name}",
+    "discardChanges": "Abandonner les modifications non enregistrées de cette tâche ?"
   },
   "labor": {
     "title": "Main-d'œuvre",
@@ -748,6 +799,7 @@
     "filterWorkerAll": "Tous les ouvriers",
     "confirmDeactivate": "Désactiver cet ouvrier ?",
     "confirmDelete": "Supprimer cette entrée ?",
+    "deleteIrreversible": "Cette action est irréversible.",
     "cancel": "Annuler",
     "save": "Enregistrer",
     "delete": "Supprimer",
@@ -761,7 +813,7 @@
     "workerDays": "Jours-ouvriers",
     "onSiteToday": "Sur site aujourd'hui",
     "acrossWorkers": "sur {n, plural, one {# ouvrier} other {# ouvriers}}",
-    "workersLogged": "ouvriers pointés",
+    "workersLogged": "{n, plural, one {ouvrier pointé} other {ouvriers pointés}}",
     "monthlySummary": "Résumé mensuel · {month}",
     "summaryAllHistoryTitle": "Résumé · Tout l'historique",
     "summaryYearTitle": "Résumé · {year}",
@@ -770,10 +822,11 @@
     "summaryCrewColumn": "Équipe",
     "summaryCostColumn": "Coût",
     "summaryPerDay": "{rate} / jour",
+    "daysShort": "{n} j",
     "summaryToggleBreakdown": "Afficher le détail par ouvrier",
     "summaryDrillDown": "Cliquer pour voir le détail par ouvrier",
     "summaryMonthPickerAll": "Tous les mois",
-    "summaryUnassignedHint": "+ {n} non attribué(s)",
+    "summaryUnassignedHint": "+ {n, plural, one {# non attribué} other {# non attribués}}",
     "workersBadge": "{n, plural, one {# ouvrier} other {# ouvriers}}",
     "role": {
       "label": "Rôle",
@@ -825,10 +878,10 @@
       "fieldLabel": "Heures supplémentaires",
       "fieldHelp": "Cumulées vers des jours bonus. Non facturées aujourd'hui.",
       "badgeTooltip": "Heures supplémentaires (cumulées, non facturées aujourd'hui)",
-      "banner": "Cumulé {banked}h → {bonusDays} jours bonus ({bonusCost})",
+      "banner": "Cumulé {banked}h → {count, plural, one {{bonusDays} jour bonus} other {{bonusDays} jours bonus}} ({bonusCost})",
       "bonusCost": "Coût bonus",
       "bonusDays": "Jours bonus",
-      "bonusDaysSubtitle": "{days} jours cumulés",
+      "bonusDaysSubtitle": "{count, plural, one {{days} jour cumulé} other {{days} jours cumulés}}",
       "standaloneShiftLabel": "(supplément seul)"
     },
     "errors": {
@@ -838,15 +891,20 @@
       "loadEntriesFailed": "Échec du chargement des présences.",
       "loadSummaryFailed": "Échec du chargement du récapitulatif.",
       "createWorkerFailed": "Échec de la création de l'ouvrier.",
+      "workerAlreadyOnProject": "Cette personne est déjà ouvrier sur ce chantier.",
+      "workerAlreadyOnProjectInactive": "Cette personne est déjà sur ce chantier comme ouvrier désactivé. Réactivez-la depuis la liste des ouvriers.",
       "updateWorkerFailed": "Échec de la mise à jour de l'ouvrier.",
       "deactivateWorkerFailed": "Échec de la désactivation de l'ouvrier.",
       "deleteEntryFailed": "Échec de la suppression de la présence.",
       "saveWorkerFailed": "Échec de l'enregistrement de l'ouvrier.",
+      "invalidPhone": "Saisissez un numéro de téléphone valide, par ex. 06 12 34 56 78 ou +84 912 345 678.",
       "workerNameRequired": "Le nom de l'ouvrier est obligatoire.",
       "dailyRatePositive": "Le tarif journalier doit être supérieur à 0.",
       "reactivateWorkerFailed": "Impossible de réactiver l'ouvrier",
       "amountTooLarge": "Le montant ne peut pas dépasser {max, number}.",
-      "overrideNegative": "Le montant ne peut pas être négatif."
+      "overrideNegative": "Le montant ne peut pas être négatif.",
+      "dateOutOfRange": "La présence ne peut pas être saisie pour un jour futur ni pour un jour antérieur à 2000.",
+      "noteTooLong": "La note ne doit pas dépasser {max, number} caractères."
     },
     "logDayDialog": {
       "title": "Pointer la journée",
@@ -860,8 +918,8 @@
       "selectAtLeastOne": "Sélectionnez au moins un ouvrier.",
       "saveButton": "Enregistrer ({count})",
       "saveFailed": "Échec de l'enregistrement",
-      "toastLogged": "{n} pointé(s)",
-      "toastLoggedWithSkip": "{n} pointé(s), {skipped} ignoré(s) (déjà existant)",
+      "toastLogged": "{n, plural, one {# ouvrier pointé} other {# ouvriers pointés}}",
+      "toastLoggedWithSkip": "{n, plural, one {# ouvrier pointé} other {# ouvriers pointés}}, {skipped, plural, one {# ignoré (déjà saisi)} other {# ignorés (déjà saisis)}}",
       "toastLogNextDay": "Pointer le jour suivant →",
       "tile": {
         "alreadyLogged": "déjà pointé",
@@ -884,7 +942,7 @@
       "modalBody": "Les ouvriers suivants sont déjà pointés sur un autre chantier le {date}. Continuer quand même ?",
       "continueAnyway": "Continuer quand même",
       "cancel": "Annuler",
-      "sameAsLastDaySkipped": "{n} ouvrier(s) ignoré(s) — déjà pointé(s) ailleurs"
+      "sameAsLastDaySkipped": "{n, plural, one {# ouvrier ignoré — déjà pointé ailleurs} other {# ouvriers ignorés — déjà pointés ailleurs}}"
     },
     "export": {
       "button": "Exporter",
@@ -925,6 +983,7 @@
       "countPlural": "activités",
       "sectionTitle": "Activités",
       "deleteFailed": "Échec de la suppression de l'activité",
+      "saveFailed": "Échec de l'enregistrement de l'activité",
       "deleted": "Activité supprimée"
     },
     "dayDescription": {
@@ -968,6 +1027,7 @@
       "deletedToast": "Changement de tarif supprimé",
       "effectiveFrom": "À partir du {date}",
       "errorRatePositive": "Le tarif doit être supérieur à 0",
+      "errorDateRequired": "Choisissez une date d'effet",
       "errorGeneric": "Une erreur est survenue"
     },
     "payments": {
@@ -975,7 +1035,7 @@
       "statusColumn": "Statut",
       "owed": "Dû",
       "paid": "Payé",
-      "companyShare": "Société {amount}",
+      "companyShare": "Entreprise {amount}",
       "personalShare": "Personnel {amount}",
       "balance": "Solde",
       "status": {
@@ -988,14 +1048,15 @@
       "recordPaymentFor": "Enregistrer un paiement pour {name}",
       "recordedToast": "Paiement enregistré",
       "recordFailed": "Échec de l'enregistrement du paiement",
+      "descriptionTooLong": "La description ne doit pas dépasser {max, number} caractères.",
       "errorWorkerRequired": "Sélectionnez un ouvrier",
       "errorAmountPositive": "Le montant doit être supérieur à 0",
       "expandInvoices": "Afficher les factures",
       "collapseInvoices": "Masquer les factures",
       "viewInExpenses": "Voir dans les dépenses",
       "unassignedTitle": "Non attribué",
-      "unassignedHint": "{n} non attribuée(s)",
-      "invoiceCount": "{n} facture(s)",
+      "unassignedHint": "{n, plural, one {# non attribuée} other {# non attribuées}}",
+      "invoiceCount": "{n, plural, one {# facture} other {# factures}}",
       "assignWorker": "Attribuer un ouvrier",
       "assignedToast": "Facture attribuée",
       "assignFailed": "Échec de l'attribution",
@@ -1073,6 +1134,8 @@
     "workerDeactivated": "{name} désactivé(e)",
     "reactivateWorker": "Réactiver",
     "workerReactivated": "{name} réactivé(e)",
+    "workerAdded": "{name} ajouté(e)",
+    "workerUpdated": "{name} mis(e) à jour",
     "view": {
       "ariaLabel": "Affichage des présences",
       "calendar": "Calendrier",
@@ -1088,7 +1151,8 @@
       "noMatches": "Aucun résultat",
       "typeToSearch": "Tapez au moins 2 caractères pour rechercher",
       "existing": "Existants",
-      "create": "Créer « {name} »"
+      "create": "Créer « {name} »",
+      "alreadyOnProject": "Déjà sur ce chantier"
     }
   },
   "acceptInvite": {
@@ -1112,8 +1176,11 @@
       "codeRequired": "Saisissez le code à 6 chiffres",
       "invalidCode": "Code incorrect ou expiré",
       "throttled": "Trop de demandes. Attendez une minute et réessayez.",
+      "hourlyLimit": "Trop de codes ont été demandés pour ce numéro. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
       "title": "Invitation indisponible",
-      "nameRequired": "Saisissez votre nom"
+      "nameRequired": "Saisissez votre nom",
+      "accountExists": "Cette invitation concerne un compte Folio existant. Saisissez le numéro de téléphone de ce compte, ou connectez-vous d'abord à ce compte.",
+      "wrongAccount": "Cette invitation a été envoyée à une autre adresse e-mail."
     },
     "loggedInOther": {
       "title": "Vous êtes connecté sous un autre compte",
@@ -1136,6 +1203,12 @@
       "admin": "administrateur",
       "manager": "manager",
       "member": "membre"
+    },
+    "joinAsMe": {
+      "title": "Rejoindre {projectName}",
+      "body": "Vous êtes connecté en tant que {currentUser}, le compte auquel cette invitation a été envoyée.",
+      "submit": "Rejoindre le projet",
+      "submitting": "Connexion au projet…"
     }
   },
   "admin": {
@@ -1170,7 +1243,8 @@
       "toast": {
         "added": "Utilisateur ajouté à {count} projet(s)",
         "alreadyMember": "{count} projet(s) ignoré(s) — l'utilisateur en est déjà membre",
-        "notFound": "{count} projet(s) introuvable(s)"
+        "notFound": "{count} projet(s) introuvable(s)",
+        "notInCompany": "{count} projet(s) ignoré(s) — l'utilisateur n'appartient pas à l'entreprise du projet. Rattachez-le d'abord à l'entreprise."
       }
     }
   },
@@ -1249,6 +1323,7 @@
     "title": "Rappels",
     "empty": "Aucun rappel pour le moment",
     "dismissButton": "Ignorer",
+    "due": "Échéance {date}",
     "errors": {
       "dismissFailed": "Impossible d'ignorer. Réessayez.",
       "validateFailed": "Validation impossible. Réessayez.",
@@ -1286,6 +1361,7 @@
     "templates": {
       "list": {
         "title": "Modèles",
+        "subtitle": "Lignes et conditions réutilisables pour vos devis et factures.",
         "new": "Nouveau modèle",
         "devisGroup": "Modèles de devis",
         "factureGroup": "Modèles de facture",
@@ -1296,7 +1372,7 @@
         },
         "card": {
           "items": "{n, plural, =0 {aucun article} =1 {1 article} other {# articles}}",
-          "vatRate": "TVA par défaut {rate}%",
+          "vatRate": "TVA par défaut {rate}",
           "vatRateNone": "Pas de TVA par défaut",
           "lastUpdated": "Mis à jour {date}"
         },
@@ -1307,7 +1383,8 @@
           "deleteConfirmTitle": "Supprimer le modèle",
           "deleteConfirmDescription": "Supprimer « {name} » ? Cette action est irréversible.",
           "deleteConfirm": "Supprimer",
-          "deleteCancel": "Annuler"
+          "deleteCancel": "Annuler",
+          "deleteAriaLabel": "Supprimer le modèle « {name} »"
         },
         "emptyGroup": "Aucun modèle dans ce groupe pour l'instant.",
         "deleteFailed": "Échec de la suppression du modèle. Veuillez réessayer."
@@ -1323,8 +1400,9 @@
         "namePlaceholder": "ex. Projet web standard",
         "defaultVatRate": "Taux de TVA par défaut",
         "vatRateCustom": "Personnalisé…",
+        "vatRateNone": "Pas de TVA par défaut",
         "notes": "Notes",
-        "notesPlaceholder": "Notes internes ou à destination du client",
+        "notesPlaceholder": "Imprimées sur le document (PDF et Excel)",
         "terms": "Conditions générales (CGV)",
         "termsPlaceholder": "Conditions générales de vente",
         "items": "Lignes",
@@ -1338,6 +1416,7 @@
         "errors": {
           "nameRequired": "Le nom du modèle est obligatoire.",
           "nameTooLong": "Le nom du modèle doit comporter 120 caractères au maximum.",
+          "textTooLong": "Le champ « {field} » doit comporter {max} caractères au maximum.",
           "kindRequired": "Le type est obligatoire.",
           "duplicateName": "Un modèle portant ce nom existe déjà pour ce type.",
           "saveFailed": "Échec de l'enregistrement du modèle. Veuillez réessayer.",
@@ -1350,7 +1429,9 @@
         },
         "vatCustomPlaceholder": "ex. 8,5",
         "vatUsePreset": "Utiliser un taux prédéfini",
-        "deleteConfirm": "Supprimer « {name} » ? Cette action est irréversible."
+        "deleteConfirm": "Supprimer « {name} » ? Cette action est irréversible.",
+        "deleteConfirmTitle": "Supprimer le modèle ?",
+        "backToList": "Retour aux modèles"
       },
       "companyLabel": "Entreprise"
     },
@@ -1477,13 +1558,13 @@
       },
       "totals": {
         "ht": "Total HT",
-        "tva": "TVA {rate}%",
+        "tva": "TVA {rate}",
         "ttc": "Total TTC"
       },
       "notes": {
         "section": "Notes & conditions",
         "notes": "Notes",
-        "notesPlaceholder": "Notes internes ou à destination du client",
+        "notesPlaceholder": "Imprimées sur le document (PDF et Excel)",
         "terms": "Conditions générales (CGV)",
         "termsPlaceholder": "Conditions générales de vente",
         "signatureBlock": "Bloc de signature",
@@ -1504,7 +1585,8 @@
         "edit": "Modifier",
         "previewPdf": "Aperçu PDF",
         "openMenu": "Ouvrir les actions",
-        "openFacture": "Ouvrir la facture"
+        "openFacture": "Ouvrir la facture",
+        "backToList": "Retour à la liste"
       },
       "errors": {
         "recipientRequired": "Le nom du destinataire est obligatoire.",
@@ -1519,6 +1601,7 @@
         "xlsxFailed": "Échec du téléchargement du XLSX. Veuillez réessayer.",
         "convertFailed": "Échec de la conversion du devis en facture.",
         "alreadyConverted": "Ce devis a déjà été converti en facture.",
+        "devisLocked": "Ce devis a été converti en facture et est verrouillé. Annulez la facture pour le modifier.",
         "invalidTransition": "Cette transition de statut n'est pas autorisée. Le document a peut-être été modifié dans une autre session.",
         "companyRequired": "Veuillez sélectionner une entreprise pour émettre ce document.",
         "statusUpdateFailed": "Échec de la mise à jour du statut. Veuillez réessayer.",
@@ -1531,8 +1614,11 @@
         "itemVatRateInvalid": "Chaque ligne doit avoir un taux de TVA.",
         "itemVatRateTooLarge": "Le taux de TVA d'une ligne ne peut pas dépasser 100 %.",
         "invalidInput": "Certains champs sont invalides. Vérifiez les dates, l'e-mail et les montants des lignes.",
+        "validityBeforeIssue": "La date de validité ne peut pas être antérieure à la date d'émission.",
+        "dueBeforeIssue": "L'échéance de paiement ne peut pas être antérieure à la date d'émission.",
         "forbidden": "Vous n'avez pas l'autorisation d'effectuer cette action.",
-        "companyProfileMissing": "Complétez le profil de l'entreprise avant de créer des documents de facturation."
+        "companyProfileMissing": "Complétez le profil de l'entreprise avant de créer des documents de facturation.",
+        "textTooLong": "Le champ « {field} » doit comporter {max} caractères au maximum."
       },
       "toast": {
         "documentSaved": "Document enregistré.",
@@ -1541,7 +1627,7 @@
         "pdfDownloaded": "PDF téléchargé.",
         "xlsxDownloaded": "XLSX téléchargé.",
         "devisConverted": "Devis converti en facture.",
-        "companyNoLongerAttached": "Votre accès à cette société a été révoqué. Veuillez en sélectionner une autre.",
+        "companyNoLongerAttached": "Votre accès à cette entreprise a été révoqué. Veuillez en sélectionner une autre.",
         "statusUpdated": "Statut mis à jour : {status}.",
         "createdFromTemplate": "Document créé à partir du modèle."
       },
@@ -1571,6 +1657,11 @@
     "errors": {
       "invalidTransition": "Transition de statut invalide.",
       "numberCollision": "Un document avec ce numéro existe déjà.",
+      "documentNotFound": "Ce document n'existe plus. Il a peut-être été supprimé.",
+      "templateNotFound": "Ce modèle n'existe plus. Il a peut-être été supprimé.",
+      "validation": "Certaines valeurs ont été refusées. Vérifiez le formulaire et réessayez.",
+      "unauthorized": "Votre session a expiré. Veuillez vous reconnecter.",
+      "rateLimited": "Trop de requêtes. Patientez un instant puis réessayez.",
       "generic": "Une erreur inattendue s'est produite."
     },
     "refundable": {
@@ -1581,6 +1672,7 @@
       "loadError": "Impossible de charger les dépenses.",
       "updateError": "Échec de la mise à jour du statut. Veuillez réessayer.",
       "truncatedNotice": "Affichage de {count} sur {total}",
+      "loadMore": "Charger plus",
       "fundsReleaseLabel": "Fonds débloqués : {number}",
       "partialAddError": "Certaines dépenses n'ont pas pu être ajoutées. Veuillez réessayer.",
       "columns": {
@@ -1606,9 +1698,9 @@
       "action": {
         "remove": "Retirer",
         "changeStatus": "Changer le statut",
-        "refundedByCompany": "Remboursé par la société",
+        "refundedByCompany": "Remboursé par l'entreprise",
         "refundedByBank": "Remboursé par la banque",
-        "refundedByBoth": "Remboursé par la société + la banque"
+        "refundedByBoth": "Remboursé par l'entreprise + la banque"
       },
       "dialog": {
         "title": "Ajouter une dépense remboursable",
@@ -1619,10 +1711,10 @@
       },
       "summary": {
         "refundedTotal": "Total remboursé",
-        "refundedByCompany": "Remboursé par la société",
+        "refundedByCompany": "Remboursé par l'entreprise",
         "refundedByBank": "Remboursé par la banque",
         "refundable": "À rembourser",
-        "companyShare": "{percent}% société",
+        "companyShare": "{percent}% entreprise",
         "bothShare": "{percent}% les deux",
         "bankShare": "{percent}% banque"
       },
@@ -1700,12 +1792,12 @@
       },
       "failures": {
         "validation": "Refusé par le serveur ({detail})",
-        "forbidden": "Vous n'êtes pas autorisé à importer pour cette société",
+        "forbidden": "Vous n'êtes pas autorisé à importer pour cette entreprise",
         "unauthorized": "Votre session a expiré, reconnectez-vous",
-        "company_no_longer_attached": "Vous n'êtes plus rattaché à cette société",
-        "company_profile_missing": "Le profil de la société est incomplet",
+        "company_no_longer_attached": "Vous n'êtes plus rattaché à cette entreprise",
+        "company_profile_missing": "Le profil de l'entreprise est incomplet",
         "rate_limited": "Le serveur est toujours occupé, réessayez dans une minute",
-        "not_found": "Société introuvable",
+        "not_found": "Entreprise introuvable",
         "generic": "Erreur inattendue, réessayez"
       }
     },
@@ -1794,6 +1886,7 @@
       "tags": "Étiquettes",
       "clearTags": "Effacer les étiquettes",
       "anyUploader": "N'importe qui",
+      "formerMember": "Ancien membre",
       "uploader": "Déposé par",
       "reset": "Réinitialiser"
     },
@@ -1942,7 +2035,7 @@
       "email": "E-mail",
       "role": "Rôle",
       "joined": "Rejoint le",
-      "expires": "Expire le",
+      "expires": "Expire dans",
       "invitedBy": "Invité par",
       "actions": "Actions"
     },
@@ -1962,7 +2055,10 @@
     },
     "revoke": "Révoquer",
     "revokeConfirm": "Révoquer cette invitation ?",
+    "revokeDescription": "Le lien d'invitation ne fonctionnera plus.",
     "expiresIn": "{days, plural, one {# jour} other {# jours}}",
+    "expiresInLabeled": "Expire dans {days, plural, one {# jour} other {# jours}}",
+    "invitedByName": "Invité par {name}",
     "toast": {
       "inviteSent": "Invitation envoyée à {email}",
       "directAdded": "{email} a été ajouté directement au projet",
@@ -1970,7 +2066,10 @@
       "revoked": "Invitation révoquée",
       "rateLimited": "Trop d'invitations. Réessayez plus tard.",
       "error": "Impossible d'envoyer l'invitation. Veuillez réessayer.",
-      "revokeFailed": "Impossible de révoquer l’invitation. Veuillez réessayer."
+      "revokeFailed": "Impossible de révoquer l’invitation. Veuillez réessayer.",
+      "invalidEmail": "{email} n'est pas une adresse e-mail acceptée par Folio. Vérifiez-la et réessayez.",
+      "accountDeactivated": "{email} correspond à un compte désactivé et ne peut pas être ajouté.",
+      "alreadyMember": "{email} fait déjà partie de ce projet"
     },
     "empty": {
       "members": "Aucun membre pour le moment",
@@ -1980,11 +2079,14 @@
       "button": "Modifier",
       "remove": "Retirer",
       "removeConfirm": "Retirer {name} de ce projet ?",
+      "removeOnlyAdmin": "Seul un administrateur de l’entreprise peut retirer cette personne du projet.",
+      "removeAria": "Retirer {name}",
+      "removeDescription": "Ce membre sera retiré de l'équipe du projet.",
       "dialogTitle": "Modifier le membre",
       "dialogDescription": "Mettez à jour le nom affiché et l'e-mail de ce membre.",
       "nameLabel": "Nom affiché",
       "emailLabel": "E-mail",
-      "emailHint": "L'e-mail est l'identifiant de connexion. Le modifier change la façon dont cet utilisateur se connecte.",
+      "emailHint": "Utilisé pour les invitations et les notifications. La connexion se fait par le numéro de téléphone.",
       "roleLabel": "Rôle du projet",
       "roleHint": "Détermine ce que ce membre peut faire sur ce projet.",
       "submit": "Enregistrer",
@@ -2021,37 +2123,38 @@
   },
   "companies": {
     "masking": {
-      "tooltip": "Visible uniquement par les administrateurs"
+      "tooltip": "Masqué pour des raisons de sécurité. Saisissez une nouvelle valeur dans le profil de l'entreprise pour le remplacer."
     },
     "my": {
-      "addCta": "Ajouter une société",
+      "addCta": "Ajouter une entreprise",
       "empty": {
-        "title": "Aucune société rattachée",
-        "cta": "Utilisez un code société de votre administrateur pour rattacher votre première société."
+        "title": "Aucune entreprise rattachée",
+        "cta": "Utilisez un code entreprise de votre administrateur pour rattacher votre première entreprise."
       },
       "card": {
         "primaryBadge": "Principale",
         "setPrimary": "Définir comme principale",
         "detach": "Détacher",
-        "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un code société de votre administrateur pour vous rattacher."
+        "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un code entreprise de votre administrateur pour vous rattacher.",
+        "detached": "Vous avez quitté « {name} »."
       }
     },
     "invite": {
-      "dialogTitle": "Rattacher une société",
-      "inputLabel": "Code société",
-      "inputPlaceholder": "Saisissez le code société à 8 caractères…",
+      "dialogTitle": "Rattacher une entreprise",
+      "inputLabel": "Code entreprise",
+      "inputPlaceholder": "Saisissez le code entreprise à 8 caractères…",
       "attachCta": "Rattacher",
-      "successToast": "Société rattachée avec succès.",
-      "tokenInvalidError": "Ce code société est invalide ou a été révoqué."
+      "successToast": "Entreprise rattachée avec succès.",
+      "tokenInvalidError": "Ce code entreprise est invalide ou a été révoqué."
     },
     "admin": {
-      "title": "Toutes les sociétés",
+      "title": "Toutes les entreprises",
       "description": "Vue administrateur — valeurs complètes des champs sensibles visibles.",
-      "newCompany": "Nouvelle société",
-      "createSuccessToast": "Société créée.",
+      "newCompany": "Nouvelle entreprise",
+      "createSuccessToast": "Entreprise créée.",
       "empty": {
-        "title": "Aucune société pour le moment",
-        "description": "Créez votre première société pour commencer."
+        "title": "Aucune entreprise pour le moment",
+        "description": "Créez votre première entreprise pour commencer."
       },
       "table": {
         "createdAt": "Créée le",
@@ -2061,14 +2164,14 @@
         "title": "Gérer",
         "tabs": {
           "edit": "Modifier",
-          "code": "Code société",
+          "code": "Code entreprise",
           "users": "Utilisateurs rattachés",
           "delete": "Supprimer",
           "payments": "Moyens de paiement"
         },
         "edit": {
           "save": "Enregistrer les modifications",
-          "savedToast": "Société enregistrée."
+          "savedToast": "Entreprise enregistrée."
         },
         "attached": {
           "nameEmail": "Nom / E-mail",
@@ -2076,8 +2179,8 @@
           "attachedAt": "Rattaché le",
           "primaryBadge": "Principale",
           "boot": "Retirer l'utilisateur",
-          "bootConfirm": "Retirer {name} de cette société ? Il perdra l'accès immédiatement.",
-          "empty": "Aucun utilisateur rattaché à cette société pour le moment.",
+          "bootConfirm": "Retirer {name} de cette entreprise ? Il perdra l'accès immédiatement.",
+          "empty": "Aucun utilisateur rattaché à cette entreprise pour le moment.",
           "countSingular": "utilisateur",
           "countPlural": "utilisateurs",
           "roleColumn": "Rôle",
@@ -2089,27 +2192,27 @@
           "roleManager": "Manager"
         },
         "delete": {
-          "title": "Supprimer la société",
-          "body": "Suppression définitive de cette société. Tous les utilisateurs rattachés perdront l'accès. Les instantanés de documents existants sont conservés. Cette action est irréversible.",
-          "confirm": "Supprimer la société",
-          "deletedToast": "Société supprimée."
+          "title": "Supprimer l'entreprise",
+          "body": "Suppression définitive de cette entreprise. Tous les utilisateurs rattachés perdront l'accès. Les instantanés de documents existants sont conservés. Cette action est irréversible.",
+          "confirm": "Supprimer l'entreprise",
+          "deletedToast": "Entreprise supprimée."
         },
         "paymentsLoading": "Chargement des moyens de paiement…",
         "paymentsLoadError": "Échec du chargement des moyens de paiement",
         "joinCode": {
-          "title": "Code société",
-          "description": "Code réutilisable que les membres saisissent dans l'application mobile Folio (« Rejoindre une société ») après s'être inscrits avec leur numéro de téléphone. Ils rejoignent en tant que membres.",
-          "none": "Aucun code actif. Créez-en un pour permettre de rejoindre la société depuis l'application mobile.",
+          "title": "Code entreprise",
+          "description": "Code réutilisable que les membres saisissent dans l'application mobile Folio (« Rejoindre une entreprise ») après s'être inscrits avec leur numéro de téléphone. Ils rejoignent en tant que membres.",
+          "none": "Aucun code actif. Créez-en un pour permettre de rejoindre l'entreprise depuis l'application mobile.",
           "create": "Créer un code",
           "renew": "Nouveau code",
           "revoke": "Révoquer le code",
           "copy": "Copier",
           "copied": "Copié",
           "renewConfirm": "Le code actuel cessera de fonctionner immédiatement ; les personnes déjà rattachées gardent leur accès. Continuer ?",
-          "revokeConfirm": "Plus personne ne pourra rejoindre la société avec ce code ; les personnes déjà rattachées gardent leur accès.",
-          "createdToast": "Code société créé.",
-          "renewedToast": "Nouveau code société créé.",
-          "revokedToast": "Code société révoqué.",
+          "revokeConfirm": "Plus personne ne pourra rejoindre l'entreprise avec ce code ; les personnes déjà rattachées gardent leur accès.",
+          "createdToast": "Code entreprise créé.",
+          "renewedToast": "Nouveau code entreprise créé.",
+          "revokedToast": "Code entreprise révoqué.",
           "copiedToast": "Code copié dans le presse-papiers.",
           "copyFailed": "Impossible de copier le code.",
           "genericError": "Une erreur inattendue s'est produite.",
@@ -2169,29 +2272,38 @@
         "prefixInvalidChars": "Le préfixe ne doit contenir que des lettres majuscules et des chiffres (A-Z, 0-9).",
         "logoUrlInvalidScheme": "L'URL du logo doit utiliser http ou https.",
         "logoUrlInvalidUrl": "L'URL du logo n'est pas valide.",
+        "siretInvalid": "Le SIRET doit comporter 14 chiffres.",
+        "tvaInvalid": "Le numéro de TVA doit comporter de 2 à 16 lettres ou chiffres, par ex. FR40552100554.",
+        "ibanInvalid": "Cet IBAN n'est pas valide. Vérifiez le code pays, la clé de contrôle et la longueur.",
+        "bicInvalid": "Le BIC / SWIFT doit comporter 8 ou 11 lettres ou chiffres.",
         "generic": "Une erreur inattendue s'est produite. Veuillez réessayer."
       },
-      "maskedFieldHint": "Enregistré et masqué. Saisissez une nouvelle valeur pour le remplacer ; laissez vide pour le conserver."
+      "maskedFieldHint": "Enregistré et masqué. Saisissez une nouvelle valeur pour le remplacer ; laissez vide pour le conserver.",
+      "removeStoredValue": "Supprimer",
+      "removeStoredValueLabel": "Supprimer la valeur enregistrée : {field}",
+      "removedFieldHint": "Supprimé à l'enregistrement.",
+      "undoRemove": "Annuler"
     },
     "picker": {
       "label": "Émis par",
-      "placeholder": "Sélectionner une société",
+      "placeholder": "Sélectionner une entreprise",
       "primaryBadge": "Principale",
-      "noCompaniesCalloutTitle": "Aucune société rattachée",
-      "noCompaniesCalloutBody": "Ajoutez une société dans les Paramètres pour commencer à créer des devis et des factures.",
+      "noCompaniesCalloutTitle": "Aucune entreprise rattachée",
+      "noCompaniesCalloutBody": "Ajoutez une entreprise dans les Paramètres pour commencer à créer des devis et des factures.",
       "noCompaniesCalloutCta": "Ouvrir les paramètres",
-      "detachedDuringEditError": "La société sélectionnée n'est plus rattachée à votre compte. Veuillez actualiser la page."
+      "detachedDuringEditError": "L'entreprise sélectionnée n'est plus rattachée à votre compte. Veuillez actualiser la page."
     },
     "errors": {
       "forbiddenAdminRequired": "Accès administrateur requis.",
-      "companyAlreadyAttached": "Vous êtes déjà rattaché·e à cette société.",
+      "companyAlreadyAttached": "Vous êtes déjà rattaché·e à cette entreprise.",
+      "lastAdmin": "L'entreprise doit garder au moins un administrateur. Nommez d'abord un autre membre administrateur.",
       "conflict": "Un conflit est survenu.",
       "validation": "Erreur de validation.",
       "unauthorized": "Session expirée. Veuillez vous reconnecter.",
       "notFound": "La ressource demandée est introuvable.",
       "rateLimited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
       "generic": "Une erreur inattendue est survenue.",
-      "invalidJoinCode": "Code d'adhésion invalide ou révoqué."
+      "invalidJoinCode": "Code entreprise invalide ou révoqué."
     }
   },
   "bibliotheque": {
@@ -2316,7 +2428,7 @@
       "title": "Importer des achats",
       "description": "Ajoutez à la bibliothèque les lignes d'un export d'achats fournisseur. Les lignes déjà importées sont ignorées : le même fichier peut être réimporté sans risque.",
       "dropzone": "Choisissez un fichier JSON, ou déposez-le ici",
-      "company": "Société",
+      "company": "Entreprise",
       "formatHint": "Format attendu : supplier_name, supplier_slug et records, chaque ligne avec supplier_reference, product_name, quantity, unit_price, purchased_at, source_document_ref, source_document_type (ticket ou commande) et line_index. Un fichier peut contenir plusieurs fournisseurs.",
       "reading": "Lecture du fichier…",
       "preview": "{count, plural, one {# ligne d'achat} other {# lignes d'achat}} de {suppliers}",
@@ -2456,7 +2568,8 @@
       "createError": "Impossible d'ajouter le matériel.",
       "updateError": "Impossible de mettre à jour le matériel.",
       "deleteError": "Impossible de retirer le matériel.",
-      "forbidden": "Vous n'avez pas la permission de gérer l'inventaire."
+      "forbidden": "Vous n'avez pas la permission de gérer l'inventaire.",
+      "notFound": "Cet élément n'existe plus. Actualisez la page et réessayez."
     },
     "warehouses": {
       "title": "Dépôts",
@@ -2467,7 +2580,7 @@
       "delete": "Supprimer le dépôt",
       "empty": "Aucun dépôt pour l'instant. Ajoutez l'endroit où l'entreprise range ses outils.",
       "noAddress": "Sans adresse",
-      "deleteBlocked": "Ce dépôt contient encore {count, plural, one {# équipement} other {# équipements}}. Déplacez-les ou retirez-les d'abord.",
+      "deleteBlocked": "Ce dépôt contient encore {count, plural, one {# équipement. Déplacez-le ou retirez-le} other {# équipements. Déplacez-les ou retirez-les}} d'abord.",
       "fields": {
         "name": "Nom",
         "namePlaceholder": "ex. Dépôt principal",
@@ -2516,6 +2629,7 @@
     },
     "errors": {
       "oversize": "Fichier trop volumineux (max 25 Mo)",
+      "oversizeVideo": "Fichier trop volumineux (max 50 Mo pour une vidéo)",
       "unsupported": "Type de fichier non pris en charge (images : JPEG, PNG, WebP ; vidéos : MP4, WebM, MOV)",
       "network": "Erreur réseau — veuillez réessayer",
       "rateLimited": "Trop d'envois — veuillez ralentir",
@@ -2526,6 +2640,11 @@
       "deleteFailed": "Impossible de supprimer la photo — veuillez réessayer",
       "notFound": "Cette photo n'existe plus",
       "validation": "Vérifiez la légende et la date, puis réessayez"
+    },
+    "loadError": {
+      "title": "Impossible de charger les médias",
+      "description": "Une erreur est survenue lors du chargement des photos et vidéos de ce projet.",
+      "retry": "Réessayer"
     },
     "loadMore": "Charger plus",
     "saved": "Modifications enregistrées",
@@ -2628,6 +2747,8 @@
     "retain": "Retenir",
     "retainThisQuote": "Retenir ce prix pour le budget",
     "retained": "Retenu",
+    "unretain": "Ne plus retenir",
+    "unretainThisQuote": "Ne plus retenir ce prix : le budget reprend le moins cher",
     "room": "Pièce",
     "rooms": "Pièces",
     "roomsDialogHint": "Chaque poste regroupe ses articles par pièce, dans cet ordre. Faites glisser une pièce ou utilisez les flèches pour la déplacer.",
@@ -2706,6 +2827,7 @@
     "retry": "Réessayer",
     "emptyHintReadOnly": "Aucune section n'a encore été prévue pour ce projet.",
     "quantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
+    "quantityInvalid": "Saisissez une quantité supérieure ou égale à 0, avec 3 décimales au plus (par exemple 2,5).",
     "priceTooLarge": "Le prix unitaire HT ne peut pas dépasser {max, number}.",
     "errorForbidden": "Vous n'avez pas l'autorisation de modifier ce chiffrage.",
     "errorNotFound": "Cet élément n'existe plus.",
@@ -2729,7 +2851,7 @@
     "subtitle": "Créez votre entreprise ou rejoignez-en une avec un code pour commencer.",
     "createCompanyCta": "Créer une entreprise",
     "createCompanyHint": "Démarrez de zéro — vous serez l'administrateur.",
-    "joinCompanyCta": "Saisir un code d'adhésion",
+    "joinCompanyCta": "Saisir un code entreprise",
     "joinCompanyHint": "Votre administrateur peut vous donner un code à 8 caractères.",
     "back": "Retour",
     "create": {
@@ -2739,15 +2861,15 @@
       "successToast": "Entreprise créée."
     },
     "join": {
-      "codeLabel": "Code d'adhésion",
+      "codeLabel": "Code entreprise",
       "codePlaceholder": "ex. AB12CD34",
       "submit": "Rejoindre",
       "successToast": "Vous avez rejoint {company}."
     }
   },
   "companySettings": {
-    "description": "Les sociétés auxquelles vous êtes rattaché, et les outils de celles que vous administrez.",
-    "loadError": "Impossible de charger vos sociétés. Veuillez réessayer.",
+    "description": "Les entreprises auxquelles vous êtes rattaché, et les outils de celles que vous administrez.",
+    "loadError": "Impossible de charger vos entreprises. Veuillez réessayer.",
     "retry": "Réessayer",
     "companyPicker": {
       "label": "Entreprise"
@@ -2781,7 +2903,11 @@
       "projectsPickerEmpty": "Aucun projet dans cette entreprise pour l'instant",
       "cancel": "Annuler",
       "bootAction": "Retirer de l'entreprise",
-      "bootConfirmDescription": "Retirer {member} de {company} ? Cela supprime immédiatement ses affectations de projet et son profil d'annuaire là-bas, et renouvelle le code d'adhésion de l'entreprise."
+      "bootConfirmDescription": "Retirer {member} de {company} ? Cela supprime immédiatement ses affectations de projet et son profil d'annuaire là-bas, et renouvelle le code entreprise.",
+      "cancelInvitation": "Annuler l'invitation",
+      "cancelInvitationConfirmDescription": "Annuler l'invitation de {member} ? S'inscrire avec ce numéro de téléphone ne l'ajoutera plus à l'entreprise.",
+      "keepInvitation": "Conserver l'invitation",
+      "invitationCancelledToast": "Invitation annulée."
     },
     "addByPhone": {
       "dialogTitle": "Ajouter un membre par téléphone",
@@ -2840,7 +2966,8 @@
       "rateLimited": "Trop de tentatives. Réessayez plus tard.",
       "generic": "Une erreur est survenue. Veuillez réessayer.",
       "multipleCandidates": "Plusieurs personnes correspondent à ce numéro.",
-      "phoneAlreadyInCompany": "Ce numéro de téléphone est déjà dans votre entreprise."
+      "phoneAlreadyInCompany": "Ce numéro de téléphone est déjà dans votre entreprise.",
+      "invalidPhone": "Saisissez un numéro de téléphone français (+33… ou 0…)."
     },
     "assistantAuditLink": "Audit de l'assistant"
   },
@@ -2853,12 +2980,12 @@
     "unread": "{count, plural, one {# non lu} other {# non lus}}",
     "channels": "Canaux",
     "kind": {
-      "company": "Société",
+      "company": "Entreprise",
       "project": "Chantier",
       "admin": "Administration"
     },
     "membersCount": "{count, plural, one {# membre} other {# membres}}",
-    "adminSubtitle": "Confidentiel — réservé aux administrateurs de la société",
+    "adminSubtitle": "Confidentiel — réservé aux administrateurs de l'entreprise",
     "placeholder": "Message…",
     "send": "Envoyer",
     "attachImage": "Ajouter une photo",
@@ -2896,7 +3023,7 @@
   },
   "assistantAudit": {
     "title": "Audit de l'assistant",
-    "description": "Chaque mention @folio à laquelle l'assistant a répondu dans cette société, du plus récent au plus ancien.",
+    "description": "Chaque mention @folio à laquelle l'assistant a répondu dans cette entreprise, du plus récent au plus ancien.",
     "columns": {
       "date": "Date",
       "channel": "Canal",
@@ -2910,7 +3037,7 @@
     "filters": {
       "from": "Du",
       "to": "Au",
-      "company": "Société",
+      "company": "Entreprise",
       "user": "Utilisateur",
       "userAll": "Tous les utilisateurs",
       "userIdLabel": "ID utilisateur",

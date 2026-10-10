@@ -3,7 +3,7 @@
 /**
  * Notification server actions
  * Client components call these instead of importing lib/api/notifications directly.
- * fetchNotificationsFeedAction swallows errors (bell silently shows last-known state).
+ * fetchNotificationsFeedAction swallows errors and returns null (bell keeps its last-known state).
  * dismissNotificationAction maps backend errors for optimistic-rollback handling.
  */
 
@@ -40,9 +40,10 @@ function classifyBackendError(err: unknown): string {
 
 /**
  * Fetch the whole bell feed (note reminders + attendance awaiting validation).
- * Returns an empty feed on any error — the bell keeps its last-known state.
+ * Returns null on any error, never an empty feed: an empty feed means "nothing
+ * due" and would clear the bell, which keeps its last-known state instead.
  */
-export async function fetchNotificationsFeedAction(): Promise<NotificationsFeed> {
+export async function fetchNotificationsFeedAction(): Promise<NotificationsFeed | null> {
   try {
     const result = await listDueNotifications();
     return {
@@ -51,7 +52,7 @@ export async function fetchNotificationsFeedAction(): Promise<NotificationsFeed>
       companyEvents: result.company_events ?? [],
     };
   } catch {
-    return { items: [], attendance: [], companyEvents: [] };
+    return null;
   }
 }
 

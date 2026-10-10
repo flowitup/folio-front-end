@@ -15,11 +15,13 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { deleteInventoryItemAction } from "@/app/[locale]/(app)/inventory/_actions/inventory-actions";
 import type { InventoryItem } from "@/lib/api/inventory";
+import { useInventoryErrorMessage } from "@/components/inventory/use-inventory-error-message";
 
 interface Props {
   item: InventoryItem | null;
@@ -30,6 +32,7 @@ interface Props {
 
 export function InventoryItemDeleteDialog({ item, open, onOpenChange, onDeleted }: Props) {
   const t = useTranslations("inventory");
+  const errorMessage = useInventoryErrorMessage();
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,8 +43,9 @@ export function InventoryItemDeleteDialog({ item, open, onOpenChange, onDeleted 
     setError(null);
     const result = await deleteInventoryItemAction(item.id);
     if (!result.ok) {
-      setError(result.error);
-      toast.error(result.code === "Forbidden" ? t("toast.forbidden") : t("toast.deleteError"));
+      const message = errorMessage(result, { fallback: t("toast.deleteError") });
+      setError(message);
+      toast.error(message);
       setIsDeleting(false);
       return;
     }
@@ -65,9 +69,9 @@ export function InventoryItemDeleteDialog({ item, open, onOpenChange, onDeleted 
             <AlertDialogTitle className="font-display text-center">
               {t("deleteConfirm", { name: item.name })}
             </AlertDialogTitle>
-            <p className="text-sm" style={{ color: "var(--muted)" }}>
+            <AlertDialogDescription style={{ color: "var(--muted)" }}>
               {t("deleteHint")}
-            </p>
+            </AlertDialogDescription>
           </div>
         </div>
         {error && <p className="text-center text-sm text-destructive">{error}</p>}

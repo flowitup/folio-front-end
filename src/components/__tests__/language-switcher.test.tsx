@@ -64,6 +64,33 @@ describe("LanguageSwitcher", () => {
     expect(mockReplace).toHaveBeenCalledWith("/projects?invoice=inv-1&tab=labor", { locale: "vi" });
   });
 
+  it("moves a sign-in callbackUrl to the chosen language", async () => {
+    mockSearch = "callbackUrl=%2Fen%2Fprojects%3Ftab%3Dlabor";
+    const user = userEvent.setup();
+    render(<LanguageSwitcher />);
+    await user.click(screen.getByRole("button", { name: "common.language" }));
+    await user.click(screen.getByRole("menuitem", { name: /Français/ }));
+    expect(mockReplace).toHaveBeenCalledWith("/projects?callbackUrl=%2Ffr%2Fprojects%3Ftab%3Dlabor", {
+      locale: "fr",
+    });
+  });
+
+  it("leaves a callbackUrl in another language prefix alone", async () => {
+    mockSearch = "callbackUrl=%2Fenglish-page";
+    const user = userEvent.setup();
+    render(<LanguageSwitcher />);
+    await user.click(screen.getByRole("button", { name: "common.language" }));
+    await user.click(screen.getByRole("menuitem", { name: /Français/ }));
+    expect(mockReplace).toHaveBeenCalledWith("/projects?callbackUrl=%2Fenglish-page", { locale: "fr" });
+  });
+
+  it("uses light text on the dark sign-in board (tone=ink)", () => {
+    render(<LanguageSwitcher tone="ink" />);
+    const trigger = screen.getByRole("button", { name: "common.language" });
+    expect(trigger.getAttribute("style")).toContain("color");
+    expect(trigger.className).toContain("hover:bg-white/10");
+  });
+
   it("does nothing when selecting the already-active locale", async () => {
     const user = userEvent.setup();
     render(<LanguageSwitcher />);

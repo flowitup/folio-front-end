@@ -9,6 +9,9 @@
 
 import { redirect } from "next/navigation";
 import { hasBillingAccess } from "@/lib/auth/billing-access";
+import { pageTitle } from "@/lib/i18n/page-title";
+
+export const generateMetadata = pageTitle("navigation.quotesInvoices");
 
 export default async function BillingLayout({
   children,

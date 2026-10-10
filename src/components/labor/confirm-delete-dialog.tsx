@@ -7,6 +7,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -29,6 +30,7 @@ export function ConfirmDeleteDialog({ open, title, onCancel, onConfirm }: Confir
             <Trash2 className="h-6 w-6 text-destructive" />
           </div>
           <AlertDialogTitle className="text-center">{title}</AlertDialogTitle>
+          <AlertDialogDescription className="sr-only">{t("deleteIrreversible")}</AlertDialogDescription>
         </div>
         <AlertDialogFooter className="sm:justify-center gap-2">
           <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>

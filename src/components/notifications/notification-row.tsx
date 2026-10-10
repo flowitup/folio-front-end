@@ -13,6 +13,13 @@ import { useLocale, useTranslations } from "next-intl";
 import type { DueNotification } from "@/lib/api/notifications";
 import { useProject } from "@/context/ProjectContext";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
+import { formatDate } from "@/lib/utils/formatters";
+
+/** Today as YYYY-MM-DD in the viewer's time zone (ISO dates compare as strings). */
+function todayIso(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 interface NotificationRowProps {
   item: DueNotification;
@@ -28,6 +35,8 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
   const { note } = item;
   // Reminders with the same title in two projects must be told apart.
   const project = projects.find((p) => p.id === note.project_id);
+  // An overdue reminder must stand out from today's.
+  const overdue = !!note.due_date && note.due_date < todayIso();
 
   function handleClickThrough() {
     // Keep the breadcrumb and project switcher on the note's project.
@@ -62,14 +71,24 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
             </span>
           )}
         </p>
+        {note.due_date && (
+          <p
+            className="num mt-0.5 text-xs"
+            style={{ color: overdue ? "var(--negative)" : "var(--muted-foreground)" }}
+          >
+            {t("due", { date: formatDate(note.due_date) })}
+          </p>
+        )}
       </button>
 
-      {/* Dismiss button — separate click target, no navigation */}
+      {/* Dismiss button — separate click target, no navigation. Revealed on
+          hover only where the device can hover: on a touch screen it is
+          always shown, or phone users would never find it. */}
       <button
         type="button"
         onClick={handleDismiss}
         aria-label={t("dismissButton")}
-        className="mt-0.5 shrink-0 rounded p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-destructive/10 transition-opacity"
+        className="mt-0.5 shrink-0 rounded p-1 opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-destructive/10 transition-opacity"
       >
         <X className="h-3.5 w-3.5" style={{ color: "var(--muted-foreground)" }} />
       </button>

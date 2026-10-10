@@ -15,10 +15,13 @@ import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { hasBillingAccess } from "@/lib/auth/billing-access";
 import { ProjectBillingPanel } from "./project-billing-panel";
+import { pageTitle } from "@/lib/i18n/page-title";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
+
+export const generateMetadata = pageTitle("navigation.quotesInvoices");
 
 export default async function ProjectBillingPage({ params }: PageProps) {
   const { id: projectId } = await params;

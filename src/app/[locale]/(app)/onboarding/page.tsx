@@ -11,6 +11,9 @@ import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { OnboardingClient } from "./onboarding-client";
+import { pageTitle } from "@/lib/i18n/page-title";
+
+export const generateMetadata = pageTitle("meta.onboarding");
 
 export default async function OnboardingPage() {
   const locale = await getLocale();

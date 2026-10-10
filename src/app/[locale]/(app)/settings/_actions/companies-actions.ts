@@ -8,6 +8,7 @@
  *
  * Special-case error codes surfaced to callers:
  * - 'company_already_attached'    — user already belongs to this company (409)
+ * - 'last_admin'                  — leave/demote/remove would leave no admin (409)
  * - 'forbidden_admin_required'    — admin-only endpoint called by non-admin (403)
  */
 
@@ -40,9 +41,10 @@ import type { CreateCompanyPayload, UpdateCompanyPayload } from "@/lib/api/compa
 // Shared result type (re-exported so callers can type-narrow)
 // ---------------------------------------------------------------------------
 
+// `error.fields`: on a validation error, the request fields the API rejected.
 export type ActionResult<T> =
   | { ok: true; data: T }
-  | { ok: false; error: { code: string; message: string } };
+  | { ok: false; error: { code: string; message: string; fields?: string[] } };
 
 // Defense-in-depth: every action checks for a session locally before
 // touching the BE. Keeps the action endpoint inert when no cookie is
@@ -109,6 +111,10 @@ async function classifyBackendError(
     if (reason === "company_already_attached") {
       return { code: "company_already_attached", message: t("companyAlreadyAttached") };
     }
+    // Leave, demote or remove would leave the company without an admin.
+    if (reason === "last_admin") {
+      return { code: "last_admin", message: t("lastAdmin") };
+    }
     return { code: "conflict", message: t("conflict") };
   }
 
@@ -126,6 +132,17 @@ async function classifyBackendError(
   }
 
   return { code: "generic", message: t("generic") };
+}
+
+/** The top-level fields a 422 body names (`details[].loc[0]`), without duplicates. */
+function rejectedFields(err: unknown): string[] {
+  const details = (err as { body?: { details?: unknown } | null }).body?.details;
+  if (!Array.isArray(details)) return [];
+  const fields = details.map((d) => {
+    const loc = (d as { loc?: unknown } | null)?.loc;
+    return Array.isArray(loc) && typeof loc[0] === "string" ? loc[0] : null;
+  });
+  return [...new Set(fields.filter((f): f is string => f !== null))];
 }
 
 // ---------------------------------------------------------------------------
@@ -181,7 +198,13 @@ export async function updateCompanyAction(
     const data = await updateCompany(id, payload);
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: await classifyBackendError(err) };
+    const error = await classifyBackendError(err);
+    // Name the rejected fields so the form can mark them, not just toast.
+    if (error.code === "validation") {
+      const fields = rejectedFields(err);
+      if (fields.length > 0) return { ok: false, error: { ...error, fields } };
+    }
+    return { ok: false, error };
   }
 }
 

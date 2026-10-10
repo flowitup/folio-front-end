@@ -153,6 +153,52 @@ describe("LaborSummary — sub-row daily rate", () => {
   });
 });
 
+describe("LaborSummary — sub-row rate of that month (API month rates)", () => {
+  // Mành: 70 until mid-June, 75 since; today's rate (current_daily_rate) is 80.
+  const withMonthRates: LaborMonthlySummaryResponse = {
+    rows: [
+      {
+        year: 2026,
+        month: 7,
+        total_days: 2,
+        total_cost: 150,
+        workers: [
+          { worker_id: "w1", worker_name: "Mành", days_worked: 2, total_cost: 150, daily_rate: 75, month_start_rate: 75 },
+        ],
+      },
+      {
+        year: 2026,
+        month: 6,
+        total_days: 5,
+        total_cost: 360,
+        workers: [
+          { worker_id: "w1", worker_name: "Mành", days_worked: 5, total_cost: 360, daily_rate: 75, month_start_rate: 70 },
+        ],
+      },
+    ],
+  };
+  const props = {
+    ...baseProps,
+    monthlySummary: withMonthRates,
+    workers: [makeWorker({ id: "w1", name: "Mành", daily_rate: 70, current_daily_rate: 80 })],
+  };
+
+  it("shows each month's own rate, not today's", () => {
+    render(<LaborSummary {...props} month="" onSiteToday={0} />);
+    expect(screen.getByTestId("worker-subrow-2026-07-w1").textContent).toContain(
+      'summaryPerDay:{"rate":"€75.00"}',
+    );
+    expect(screen.queryByText('summaryPerDay:{"rate":"€80.00"}')).toBeNull();
+  });
+
+  it("shows 'A → B' for a month in which the rate changed", () => {
+    render(<LaborSummary {...props} month="" onSiteToday={0} />);
+    expect(screen.getByTestId("worker-subrow-2026-06-w1").textContent).toContain(
+      'summaryPerDay:{"rate":"€70.00 → €75.00"}',
+    );
+  });
+});
+
 describe("LaborSummary — month view role column", () => {
   const summary: LaborSummaryResponse = {
     rows: [
@@ -189,5 +235,59 @@ describe("LaborSummary — month view role column", () => {
     expect(screen.getByText("role.label")).toBeInTheDocument();
     // Custom (non-seed) role names render verbatim.
     expect(screen.getByText("Chef d'équipe")).toBeInTheDocument();
+  });
+});
+
+describe("LaborSummary — bonus KPI in all-history mode", () => {
+  const withBonus: LaborMonthlySummaryResponse = {
+    rows: [
+      {
+        year: 2026,
+        month: 10,
+        total_days: 1,
+        total_cost: 160,
+        total_bonus_cost: 60,
+        total_banked_hours: 4,
+        total_bonus_days: 0.5,
+        workers: [{ worker_id: "w1", worker_name: "Mành", days_worked: 1, total_cost: 160 }],
+      },
+      {
+        year: 2025,
+        month: 9,
+        total_days: 2,
+        total_cost: 470,
+        total_bonus_cost: 270,
+        total_banked_hours: 20,
+        total_bonus_days: 2.5,
+        workers: [{ worker_id: "w1", worker_name: "Mành", days_worked: 2, total_cost: 470 }],
+      },
+    ],
+  };
+  // The last month viewed: must not leak into the all-history KPI.
+  const staleMonth: LaborSummaryResponse = {
+    rows: [],
+    total_days: 0,
+    total_cost: 0,
+    total_banked_hours: 0,
+    total_bonus_days: 0,
+    total_bonus_cost: 0,
+  };
+
+  it("sums the visible months' bonus instead of the single-month summary", () => {
+    render(
+      <LaborSummary
+        {...baseProps}
+        monthlySummary={withBonus}
+        summary={staleMonth}
+        month=""
+        onSiteToday={0}
+      />,
+    );
+    const label = screen.getByText("supplement.bonusCost");
+    expect(label.parentElement?.textContent).toContain("€330.00");
+    expect(screen.getByText('supplement.bonusDaysSubtitle:{"days":"3","count":3}')).toBeInTheDocument();
+    expect(
+      screen.getByText('supplement.banner:{"banked":24,"bonusDays":"3","count":3,"bonusCost":"€330.00"}'),
+    ).toBeInTheDocument();
   });
 });

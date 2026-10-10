@@ -169,6 +169,7 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
         className="sm:max-w-4xl w-full h-[85vh] max-h-[95vh] grid-rows-[auto_1fr_auto] overflow-hidden"
         style={resizeStyle}
         showCloseButton
+        aria-describedby={undefined}
       >
         <ResizableDialogHandles onResize={setBounds} />
         <DialogHeader>

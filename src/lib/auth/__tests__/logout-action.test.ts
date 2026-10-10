@@ -87,4 +87,17 @@ describe("logout redirect", () => {
   it("lands on the locale-prefixed login page", async () => {
     await expect(logout()).rejects.toMatchObject({ digest: "NEXT_REDIRECT;/fr/login" });
   });
+
+  it("comes back to the invitation the user signed out to accept", async () => {
+    await expect(logout("/fr/accept-invite/tok")).rejects.toMatchObject({
+      digest: "NEXT_REDIRECT;/fr/accept-invite/tok",
+    });
+  });
+
+  it.each(["https://evil.example/x", "//evil.example", "/\\evil.example"])(
+    "ignores an off-site return path %j",
+    async (returnTo) => {
+      await expect(logout(returnTo)).rejects.toMatchObject({ digest: "NEXT_REDIRECT;/fr/login" });
+    }
+  );
 });

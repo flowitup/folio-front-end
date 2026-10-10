@@ -35,6 +35,7 @@ const api = {
   updateQuote: vi.fn(),
   deleteQuote: vi.fn(),
   selectQuote: vi.fn(),
+  unselectQuote: vi.fn(),
   reorderRoom: vi.fn(),
   updateStore: vi.fn(),
   deleteStore: vi.fn(),
@@ -48,6 +49,7 @@ const {
   reorderArticleAction,
   reorderRoomAction,
   selectQuoteAction,
+  unselectQuoteAction,
   updateStoreAction,
   deleteStoreAction,
 } = await import("../chiffrage-actions");
@@ -125,6 +127,15 @@ describe("chiffrage actions", () => {
   it("never throws, so an optimistic reorder can always revert", async () => {
     api.reorderArticle.mockRejectedValue(new Error("network down"));
     await expect(reorderArticleAction(PROJECT, "a1", {})).resolves.toMatchObject({ ok: false });
+  });
+
+  it("un-retains a quote through the unselect endpoint", async () => {
+    api.unselectQuote.mockResolvedValue({ id: "q1", is_selected: false });
+    const res = await unselectQuoteAction(PROJECT, "q1");
+
+    expect(api.unselectQuote).toHaveBeenCalledWith(PROJECT, "q1");
+    expect(api.selectQuote).not.toHaveBeenCalled();
+    expect(res).toEqual({ ok: true, data: { id: "q1", is_selected: false } });
   });
 });
 

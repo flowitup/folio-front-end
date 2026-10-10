@@ -305,4 +305,27 @@ describe("test_company_no_longer_attached_409_resets_picker", () => {
     // Router.push should NOT have been called (no redirect on this error)
     expect(mockRouterPush).not.toHaveBeenCalled();
   });
+  it("after the 409 refetch, offers only companies the user administers", async () => {
+    mockCreate.mockResolvedValueOnce({
+      ok: false,
+      error: { code: "company_no_longer_attached", message: "Access revoked." },
+    });
+    mockFetchMyCompanies.mockResolvedValueOnce({
+      ok: true,
+      data: [makeCompany("co-admin", false), { ...makeCompany("co-member", false), role: "member" }],
+    });
+
+    render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ONE_COMPANY} />);
+    await waitFor(() => {
+      expect(screen.getByText("Company co-primary")).toBeDefined();
+    });
+    await fillAndSubmit();
+
+    await waitFor(() => {
+      expect(screen.getByText("Company co-admin")).toBeDefined();
+    });
+    // One issuer left: the static label, not a picker that would also offer co-member.
+    expect(screen.queryAllByRole("combobox").filter((el) => el.textContent?.includes("Company"))).toHaveLength(0);
+    expect(screen.queryByText("Company co-member")).toBeNull();
+  });
 });

@@ -72,3 +72,44 @@ describe("RoomSelect", () => {
     expect(screen.getByLabelText("addRoom")).toBeDisabled();
   });
 });
+
+describe("RoomSelect as a labelled field", () => {
+  function renderLabelled(value: string | null = "r2") {
+    render(
+      <>
+        <label id="room-label" htmlFor="room">
+          Room
+        </label>
+        <RoomSelect
+          id="room"
+          labelledBy="room-label"
+          value={value}
+          rooms={ROOMS}
+          onChange={() => {}}
+          onCreateRoom={async () => null}
+        />
+      </>,
+    );
+  }
+
+  it("is named by its label plus the room it shows", () => {
+    renderLabelled();
+    const trigger = screen.getByTestId("room-select-trigger");
+    expect(screen.getByLabelText("Room")).toBe(trigger);
+    expect(screen.getByRole("button", { name: "Room Cuisine" })).toBe(trigger);
+  });
+
+  it("opens from a click on its label", async () => {
+    renderLabelled(null);
+    await userEvent.click(screen.getByText("Room"));
+    expect(screen.getByRole("button", { name: "Salon" })).toBeInTheDocument();
+  });
+
+  it("sizes the dropdown to the field (a v4-valid var() width)", async () => {
+    renderLabelled();
+    await userEvent.click(screen.getByTestId("room-select-trigger"));
+    const content = screen.getByRole("dialog");
+    expect(content.className).toContain("w-[var(--radix-popover-trigger-width)]");
+    expect(content.className).not.toContain("w-[--radix-popover-trigger-width]");
+  });
+});

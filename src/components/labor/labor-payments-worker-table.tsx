@@ -9,10 +9,11 @@
  */
 
 import { useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Calendar, ChevronDown, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatEUR } from "@/lib/api/labor";
+import { formatDays } from "@/components/labor/format-days";
 import { LaborPaymentRow } from "@/components/labor/labor-payment-row";
 import { PaidSplitCaption } from "@/components/labor/paid-split-caption";
 import type { WorkerPaymentRow } from "@/components/labor/labor-payments-tab-state";
@@ -27,7 +28,9 @@ export interface LaborPaymentsWorkerTableProps {
   canManage: boolean;
   isLoading: boolean;
   rows: WorkerPaymentRow[];
-  totals: { days: number; owed: number; paid: number; balance: number };
+  /** `balance` is what is still owed (each worker floored at 0); `overpaid`
+   *  is the sum of the workers' overpayments, shown apart. */
+  totals: { days: number; owed: number; paid: number; balance: number; overpaid: number };
   /** Flagged-method split of the viewed month's paid total (whole bucket:
    *  worker-linked + unassigned), for the caption under the grand-total
    *  Paid. Zeros hide the caption. */
@@ -58,6 +61,7 @@ export function LaborPaymentsWorkerTable({
 }: LaborPaymentsWorkerTableProps) {
   const t = useTranslations("labor.payments");
   const tLabor = useTranslations("labor");
+  const locale = useLocale();
   const monthInputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -147,7 +151,7 @@ export function LaborPaymentsWorkerTable({
                 <tr style={{ background: "var(--paper-2)" }}>
                   <td className="font-medium">{tLabor("grandTotal")}</td>
                   <td className="num font-medium" style={{ textAlign: "right" }}>
-                    {totals.days}
+                    {formatDays(totals.days, locale)}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right" }}>
                     {formatEUR(totals.owed)}
@@ -164,6 +168,17 @@ export function LaborPaymentsWorkerTable({
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right", color: "var(--accent-ink)" }}>
                     {formatEUR(totals.balance)}
+                    {totals.overpaid > 0.01 && (
+                      <div style={{ marginTop: 4 }}>
+                        <span
+                          className="stamp accent num"
+                          title={tLabor("summaryOverpaidWarningTitle")}
+                          data-testid="payments-total-overpaid"
+                        >
+                          {tLabor("summaryOverpaidWarning", { amount: formatEUR(totals.overpaid) })}
+                        </span>
+                      </div>
+                    )}
                   </td>
                   <td />
                   <td />

@@ -16,7 +16,8 @@ import { fetchNotificationsFeedAction } from "@/components/notifications/actions
 interface UseNotificationsPollOptions {
   intervalMs: number;
   jitterMs: number;
-  onUpdate: (feed: NotificationsFeed) => void;
+  /** Called after every poll; `null` when the poll failed (keep the last-known feed). */
+  onUpdate: (feed: NotificationsFeed | null) => void;
 }
 
 export function useNotificationsPoll({
@@ -37,12 +38,14 @@ export function useNotificationsPoll({
         return;
       }
 
+      let feed: NotificationsFeed | null;
       try {
-        const feed = await fetchNotificationsFeedAction();
-        if (!cancelled) onUpdate(feed);
+        feed = await fetchNotificationsFeedAction();
       } catch {
-        // Swallow — don't disrupt UI; last-known state stays visible
+        // The action call itself failed (offline, server unreachable).
+        feed = null;
       }
+      if (!cancelled) onUpdate(feed);
 
       if (cancelled) return;
       const jitter = Math.floor((Math.random() - 0.5) * 2 * jitterMs);

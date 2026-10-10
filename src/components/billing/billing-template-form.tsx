@@ -21,6 +21,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { firstTooLongField, MAX_BILLING_NOTES } from "@/lib/billing/text-limits";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeft, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
@@ -54,6 +55,8 @@ import {
   normalizeVatRate,
 } from "@/components/billing/billing-document-items-editor";
 import { toItemPayload } from "@/lib/billing/document-payload";
+import { formatBillingVatRate } from "@/lib/billing/vat-rate";
+import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
 import {
   createBillingTemplateAction,
   updateBillingTemplateAction,
@@ -70,6 +73,8 @@ import type {
 // ---------------------------------------------------------------------------
 
 const TEMPLATES_PATH = "/billing/templates";
+// Select value for "no default VAT"; sent to the API as null.
+const NO_VAT_RATE = "__none__";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -96,6 +101,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
   const locale = useLocale();
   const tForm = useTranslations("billing.templates.form");
   const tToast = useTranslations("billing.templates.form.toast");
+  const errorMessage = useBillingErrorMessage("template");
   const isEdit = props.mode === "edit";
   const template = isEdit ? props.template : null;
 
@@ -114,7 +120,10 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
   const savedVatRate = template?.default_vat_rate
     ? normalizeVatRate(template.default_vat_rate)
     : null;
-  const [defaultVatRate, setDefaultVatRate] = useState<string>(savedVatRate ?? "20");
+  // An existing template without a default VAT keeps "none" instead of turning into 20 %.
+  const [defaultVatRate, setDefaultVatRate] = useState<string>(
+    savedVatRate ?? (isEdit ? NO_VAT_RATE : "20")
+  );
   const [customVatRate, setCustomVatRate] = useState<string>(
     savedVatRate && !isPresetVatRate(savedVatRate) ? savedVatRate : ""
   );
@@ -135,7 +144,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
   // Computed
   // ---------------------------------------------------------------------------
 
-  const effectiveVatRate = isCustomVat ? customVatRate : defaultVatRate;
+  const effectiveVatRate = isCustomVat ? customVatRate : defaultVatRate === NO_VAT_RATE ? "" : defaultVatRate;
   const listPath = `/${locale}${TEMPLATES_PATH}`;
 
   // ---------------------------------------------------------------------------
@@ -146,6 +155,12 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
     if (!name.trim()) return tForm("errors.nameRequired");
     if (name.trim().length > 120) return tForm("errors.nameTooLong");
     if (!kind) return tForm("errors.kindRequired");
+    // Same caps as a document's notes and terms, so the template always makes a savable document.
+    const tooLong = firstTooLongField([
+      { label: tForm("notes"), value: notes, max: MAX_BILLING_NOTES },
+      { label: tForm("terms"), value: terms, max: MAX_BILLING_NOTES },
+    ]);
+    if (tooLong) return tForm("errors.textTooLong", { field: tooLong.label, max: tooLong.max });
     return null;
   }
 
@@ -177,7 +192,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
           if (result.error.code === "conflict") {
             setFormError(tForm("errors.duplicateName"));
           } else {
-            setFormError(result.error.message);
+            setFormError(errorMessage(result.error, tForm("errors.saveFailed")));
           }
           return;
         }
@@ -193,7 +208,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
           if (result.error.code === "conflict") {
             setFormError(tForm("errors.duplicateName"));
           } else {
-            setFormError(result.error.message);
+            setFormError(errorMessage(result.error, tForm("errors.saveFailed")));
           }
           return;
         }
@@ -243,7 +258,12 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
     <div className="fade-up space-y-6 px-8 pb-16">
       {/* 1. Header */}
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => router.push(listPath)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={tForm("backToList")}
+          onClick={() => router.push(listPath)}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h2 className="font-display text-xl font-medium">
@@ -331,8 +351,9 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
               </SelectTrigger>
               <SelectContent>
                 {PRESET_VAT_RATES.map((r) => (
-                  <SelectItem key={r} value={r}>{r}%</SelectItem>
+                  <SelectItem key={r} value={r}>{formatBillingVatRate(r, locale)}</SelectItem>
                 ))}
+                <SelectItem value={NO_VAT_RATE}>{tForm("vatRateNone")}</SelectItem>
                 <SelectItem value="__custom__">{tForm("vatRateCustom")}</SelectItem>
               </SelectContent>
             </Select>
@@ -363,6 +384,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
           <Textarea
             id="tpl-notes"
             value={notes}
+            maxLength={MAX_BILLING_NOTES}
             onChange={(e) => setNotes(e.target.value)}
             placeholder={tForm("notesPlaceholder")}
             rows={3}
@@ -374,6 +396,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
           <Textarea
             id="tpl-terms"
             value={terms}
+            maxLength={MAX_BILLING_NOTES}
             onChange={(e) => setTerms(e.target.value)}
             placeholder={tForm("termsPlaceholder")}
             rows={3}
@@ -418,7 +441,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>{tForm("titleEdit")}</AlertDialogTitle>
+                <AlertDialogTitle>{tForm("deleteConfirmTitle")}</AlertDialogTitle>
                 <AlertDialogDescription>
                   {tForm("deleteConfirm", { name: template!.name })}
                 </AlertDialogDescription>

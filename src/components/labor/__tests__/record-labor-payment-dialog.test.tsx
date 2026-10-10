@@ -35,13 +35,16 @@ vi.mock("@/lib/api/invoice-api", () => ({
 
 vi.mock("@/components/invoices/labor-worker-select", () => ({
   LaborWorkerSelect: ({
+    id,
     value,
     onChange,
   }: {
+    id?: string;
     value: string | null;
     onChange: (id: string | null, worker: Worker | null) => void;
   }) => (
     <select
+      id={id}
       data-testid="labor-worker-select-mock"
       value={value ?? ""}
       onChange={(e) => {
@@ -57,15 +60,18 @@ vi.mock("@/components/invoices/labor-worker-select", () => ({
 
 vi.mock("@/components/invoices/payment-method-select", () => ({
   PaymentMethodSelect: ({
+    id,
     companyId,
     value,
     onChange,
   }: {
+    id?: string;
     companyId: string;
     value: string | null;
     onChange: (id: string | null) => void;
   }) => (
     <select
+      id={id}
       data-testid="payment-method-select-mock"
       data-company-id={companyId}
       value={value ?? ""}
@@ -78,6 +84,7 @@ vi.mock("@/components/invoices/payment-method-select", () => ({
 }));
 
 import { createInvoice } from "@/lib/api/invoice-api";
+import { ApiError } from "@/lib/api/http";
 import { toast } from "sonner";
 
 const mockCreateInvoice = vi.mocked(createInvoice);
@@ -224,5 +231,49 @@ describe("RecordLaborPaymentDialog — optional payment method picker", () => {
 
     await waitFor(() => expect(mockCreateInvoice).toHaveBeenCalledTimes(1));
     expect(mockCreateInvoice.mock.calls[0][1]).toMatchObject({ payment_method_id: null });
+  });
+});
+
+describe("RecordLaborPaymentDialog — labels and errors", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("names every field through its label", () => {
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={null} companyId="co-1" />);
+    expect(screen.getByLabelText("invoices.workerPicker")).toBe(screen.getByTestId("labor-worker-select-mock"));
+    expect(screen.getByLabelText("labor.date")).toHaveAttribute("type", "date");
+    expect(screen.getByLabelText("invoices.description")).toHaveAttribute("type", "text");
+    expect(screen.getByLabelText("invoices.totalAmount")).toBe(screen.getByTestId("record-payment-amount"));
+    expect(screen.getByLabelText("invoices.paymentMethod.label")).toBe(
+      screen.getByTestId("payment-method-select-mock"),
+    );
+  });
+
+  it("caps the description at the API's 500 characters", () => {
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} />);
+    expect(screen.getByLabelText("invoices.description")).toHaveAttribute("maxLength", "500");
+  });
+
+  it("explains a refused description instead of showing 'HTTP 400: BAD REQUEST'", async () => {
+    mockCreateInvoice.mockRejectedValue(
+      new ApiError("HTTP 400: BAD REQUEST", 400, { error: "ValidationError", message: "Invalid input: description" }),
+    );
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} />);
+    fireEvent.change(screen.getByTestId("record-payment-amount"), { target: { value: "1" } });
+    fireEvent.click(screen.getByText("invoices.save"));
+
+    expect(await screen.findByText("labor.payments.descriptionTooLong")).toBeInTheDocument();
+    expect(screen.queryByText(/HTTP 400/)).toBeNull();
+  });
+
+  it("falls back to the translated generic message for any other failure", async () => {
+    mockCreateInvoice.mockRejectedValue(new ApiError("HTTP 500: INTERNAL SERVER ERROR", 500, {}));
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} />);
+    fireEvent.change(screen.getByTestId("record-payment-amount"), { target: { value: "1" } });
+    fireEvent.click(screen.getByText("invoices.save"));
+
+    expect(await screen.findByText("labor.payments.recordFailed")).toBeInTheDocument();
+    expect(screen.queryByText(/HTTP 500/)).toBeNull();
   });
 });

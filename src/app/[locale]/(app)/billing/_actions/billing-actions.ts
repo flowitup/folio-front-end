@@ -117,6 +117,11 @@ function classifyBackendError(err: unknown): { code: string; message: string } {
   if (status === 409 && reason === "document_already_exists") {
     return { code: "document_already_exists", message: bodyMsg || "A document with this number already exists." };
   }
+  // 409 with reason: "devis_locked_by_facture" — the devis was converted and its facture is
+  // still live; distinct from a status race, so the caller can say "cancel the invoice first".
+  if (status === 409 && reason === "devis_locked_by_facture") {
+    return { code: "devis_locked", message: bodyMsg || "Cancel the invoice before changing this quote." };
+  }
   if (status === 409) return { code: "conflict", message: bodyMsg || "A conflict occurred." };
   if (status === 400 || status === 422) return { code: "validation", message: bodyMsg || "Validation error." };
   if (status === 401) return { code: "unauthorized", message: "Session expired. Please log in again." };

@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
+import { projectSwitchPath } from "@/lib/projects/project-switch-path";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { can, canCreateProject } from "@/lib/auth/permissions";
 import { FolioLogo } from "@/components/folio-logo";
@@ -118,13 +119,14 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
       : 0;
 
   // Switching the active project. If we're currently on a project-scoped
-  // route (planning/labor/invoices), keep the same sub-page but swap the id —
-  // otherwise just update context and stay where we are.
+  // route (planning/labor/invoices), keep the same section but swap the id
+  // (an analysis or expense page goes to that list) — otherwise just update
+  // context and stay where we are.
   const handleSwitchProject = (projectId: string) => {
     selectProject(projectId);
-    const projectSubrouteMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/(.+)$/);
-    if (projectSubrouteMatch) {
-      router.push(`/projects/${projectId}/${projectSubrouteMatch[1]}`);
+    const switchPath = projectSwitchPath(pathWithoutLocale, projectId);
+    if (switchPath) {
+      router.push(switchPath);
     }
   };
 

@@ -22,7 +22,9 @@ export interface BulkAddResultItem {
   status:
     | "added"
     | "already_member"
-    | "project_not_found";
+    | "project_not_found"
+    // Target has no access to the project's company: nothing was added.
+    | "not_in_company";
 }
 
 // ---- Wrappers ----

@@ -5,11 +5,13 @@ import { routing } from "@/i18n/routing";
 import { locales, defaultLocale } from "@/i18n/config";
 import {
   ACCESS_TOKEN_COOKIE,
+  REQUEST_PATH_HEADER,
   isAuthRoute,
   isProtectedRoute,
 } from "@/lib/auth/middleware";
 import {
   applySessionCookies,
+  forwardRequestHeader,
   isTokenValid,
   refreshSession,
 } from "@/lib/auth/proxy-session";
@@ -32,6 +34,16 @@ export async function proxy(request: NextRequest) {
   // Run i18n middleware first to handle locale detection/redirect
   const response = intlMiddleware(request);
 
+  // An unprefixed path ("/projects") is first sent to the locale the visitor
+  // chose or their browser asks for (NEXT_LOCALE cookie, Accept-Language).
+  // Building the login redirect from it here would fall back to English and
+  // the login page would then overwrite their locale cookie. The prefixed
+  // request that follows gets the auth checks (and any session refresh).
+  const localeMatch = pathname.match(new RegExp(`^/(${locales.join("|")})(?=/|$)`));
+  if (!localeMatch && response.headers.has("location")) {
+    return response;
+  }
+
   // Extract the pathname without locale prefix for auth checks. Strip
   // exactly the leading "/<locale>" segment if present so denylist
   // matching is locale-agnostic.
@@ -50,7 +62,6 @@ export async function proxy(request: NextRequest) {
   const isAuthenticated = isTokenValid(accessToken);
 
   // Get the current locale from pathname or default
-  const localeMatch = pathname.match(new RegExp(`^/(${locales.join("|")})(?=/|$)`));
   const locale = localeMatch ? localeMatch[1] : defaultLocale;
 
   // Auth pages (/login) are never redirected from here. An unexpired token
@@ -68,6 +79,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // An unexpired token the API refuses (revoked by a sign-out or a phone
+  // change elsewhere) passes this gate; the (app) layout then sends it to
+  // /login and needs the page to keep it as callbackUrl. Always set here, so
+  // a client-sent value never reaches the render.
+  if (isProtectedRoute(pathnameWithoutLocale)) {
+    forwardRequestHeader(request, response, REQUEST_PATH_HEADER, `${pathname}${request.nextUrl.search}`);
+  }
   applySessionCookies(request, response, refreshed);
   return response;
 }

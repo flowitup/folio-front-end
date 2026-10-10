@@ -46,6 +46,7 @@ vi.mock("sonner", () => ({
 // ── Imports after mocking ─────────────────────────────────────────────────────
 
 import { fetchInvoiceExport } from "@/lib/api/invoice-api";
+import { ApiError } from "@/lib/api/http";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { toast } from "sonner";
 
@@ -443,7 +444,7 @@ describe("InvoiceExportDialog — error path", () => {
     vi.clearAllMocks();
   });
 
-  it("calls toast.error with error message when fetchInvoiceExport rejects with Error", async () => {
+  it("calls toast.error with errorGeneric, never the raw text, when fetchInvoiceExport rejects with Error", async () => {
     vi.mocked(fetchInvoiceExport).mockRejectedValue(new Error("Server error: 500"));
 
     renderDialog();
@@ -460,13 +461,28 @@ describe("InvoiceExportDialog — error path", () => {
     await waitFor(
       () => {
         expect(toast.error).toHaveBeenCalledWith(
-          "Server error: 500",
+          "errorGeneric",
           expect.objectContaining({ id: "toast-id-1" }),
         );
       },
       { timeout: 15000 },
     );
   }, 20000);
+
+  it("says the caller may not export on a 403 instead of 'Export failed: 403'", async () => {
+    vi.mocked(fetchInvoiceExport).mockRejectedValue(
+      new ApiError("Export failed: 403", 403, { error: "Forbidden" }),
+    );
+
+    renderDialog();
+    fireEvent.change(document.getElementById("invoice-export-from")!, { target: { value: "2026-01" } });
+    fireEvent.change(document.getElementById("invoice-export-to")!, { target: { value: "2026-03" } });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("errorForbidden", expect.objectContaining({ id: "toast-id-1" })),
+    );
+  });
 
   it("uses errorGeneric i18n key when rejection is not an Error instance", async () => {
     vi.mocked(fetchInvoiceExport).mockRejectedValue("raw string error");
@@ -657,5 +673,37 @@ describe("InvoiceExportDialog — released funds need the budget view", () => {
     await waitFor(() => expect(fetchInvoiceExport).toHaveBeenCalled());
     expect(vi.mocked(fetchInvoiceExport).mock.calls[0][3]).toBeUndefined();
     expect(screen.queryByText("typeReleasedFunds")).toBeNull();
+  });
+});
+
+describe("InvoiceExportDialog — type follows the active tab on every open", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  async function exportedType() {
+    fireEvent.change(document.getElementById("invoice-export-from")!, { target: { value: "2026-01" } });
+    fireEvent.change(document.getElementById("invoice-export-to")!, { target: { value: "2026-01" } });
+    fireEvent.click(screen.getByText("download").closest("button")!);
+    await waitFor(() => expect(fetchInvoiceExport).toHaveBeenCalled());
+    return vi.mocked(fetchInvoiceExport).mock.calls.at(-1)![3];
+  }
+
+  it("preselects the tab active when it opens, not the one at mount or at the last close", async () => {
+    vi.mocked(fetchInvoiceExport).mockResolvedValue({ blob: new Blob(["x"]), filename: "f.xlsx" });
+    const props = { projectId: "proj-test-1", onOpenChange: vi.fn() };
+    // Mounted closed while the page is on "all" (the page keeps it mounted).
+    const { rerender } = render(<InvoiceExportDialog {...props} open={false} initialType="all" />);
+
+    // Labor tab, then open.
+    rerender(<InvoiceExportDialog {...props} open={false} initialType="labor" />);
+    rerender(<InvoiceExportDialog {...props} open={true} initialType="labor" />);
+    expect(await exportedType()).toBe("labor");
+
+    // Closed, Others tab, then open again.
+    rerender(<InvoiceExportDialog {...props} open={false} initialType="labor" />);
+    rerender(<InvoiceExportDialog {...props} open={false} initialType="others" />);
+    rerender(<InvoiceExportDialog {...props} open={true} initialType="others" />);
+    expect(await exportedType()).toBe("others");
   });
 });

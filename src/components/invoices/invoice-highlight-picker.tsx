@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { updateInvoice } from "@/lib/api/invoice-api";
 import { HIGHLIGHT_COLORS, highlightSwatch } from "@/lib/invoices/highlight-colors";
-import { ApiError } from "@/lib/api/http";
 import type { HighlightColor, Invoice } from "@/types/invoice";
 
 interface InvoiceHighlightPickerProps {
@@ -42,12 +41,10 @@ export function InvoiceHighlightPicker({ invoice, onUpdated }: InvoiceHighlightP
       const updated = await updateInvoice(invoice.project_id, invoice.id, { highlight_color: color });
       onUpdated(updated);
       setOpen(false);
-    } catch (err) {
-      const backendMsg =
-        err instanceof ApiError
-          ? ((err.data as Record<string, unknown> | undefined)?.message as string | undefined)
-          : undefined;
-      toast.error(backendMsg?.trim() || t("highlight.error"));
+    } catch {
+      // The API's refusal text is English-only; the highlight has no
+      // user-fixable refusal left, so the translated message is enough.
+      toast.error(t("highlight.error"));
     } finally {
       setLoading(false);
     }

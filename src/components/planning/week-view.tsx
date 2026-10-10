@@ -25,6 +25,8 @@ const PRIORITY_RANK: Record<TaskPriority, number> = { urgent: 0, high: 1, medium
 
 interface WeekViewProps {
   tasks: Task[];
+  /** Assignee names by user id, for the chips. */
+  assigneeNames?: ReadonlyMap<string, string>;
   weekOffset: number;
   onWeekOffsetChange: (n: number) => void;
   onTaskClick: (task: Task) => void;
@@ -39,6 +41,7 @@ interface WeekViewProps {
  */
 export function WeekView({
   tasks,
+  assigneeNames,
   weekOffset,
   onWeekOffsetChange,
   onTaskClick,
@@ -53,6 +56,11 @@ export function WeekView({
   );
   const days = useMemo(() => weekDays(weekStart), [weekStart]);
   const todayKey = toDateKey(new Date());
+  // Each day's "+" names its day for screen readers ("Add task on Monday 12 October").
+  const dayLabelFmt = useMemo(
+    () => new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long" }),
+    [locale],
+  );
 
   // Bucket tasks: by due-date key for in-week days, plus an unscheduled list.
   const { byDay, unscheduled } = useMemo(() => {
@@ -117,7 +125,7 @@ export function WeekView({
           return (
             <div
               key={key}
-              className="flex min-h-[160px] flex-col rounded-[10px] p-2"
+              className="flex min-h-[160px] min-w-0 flex-col rounded-[10px] p-2"
               style={{
                 border: isToday ? "1px solid var(--accent)" : "1px solid var(--line)",
                 background: isToday ? "rgba(232,132,60,0.05)" : "var(--paper)",
@@ -142,7 +150,7 @@ export function WeekView({
                   type="button"
                   className="btn btn-quiet"
                   style={{ padding: 3 }}
-                  aria-label={t("weekView.addOnDay")}
+                  aria-label={t("weekView.addOnDay", { day: dayLabelFmt.format(day) })}
                   onClick={() => onAddForDate(key)}
                 >
                   <Plus size={13} />
@@ -156,7 +164,13 @@ export function WeekView({
                   </span>
                 ) : (
                   dayTasks.map((task) => (
-                    <WeekTaskChip key={task.id} task={task} statusLabel={t(statusKey(task.status))} onClick={() => onTaskClick(task)} />
+                    <WeekTaskChip
+                      key={task.id}
+                      task={task}
+                      statusLabel={t(statusKey(task.status))}
+                      assigneeName={task.assignee_id ? assigneeNames?.get(task.assignee_id) : null}
+                      onClick={() => onTaskClick(task)}
+                    />
                   ))
                 )}
               </div>
@@ -180,7 +194,7 @@ export function WeekView({
             type="button"
             className="btn btn-quiet"
             style={{ padding: 3 }}
-            aria-label={t("weekView.addOnDay")}
+            aria-label={t("weekView.addUnscheduled")}
             onClick={() => onAddForDate("")}
           >
             <Plus size={13} />
@@ -194,7 +208,12 @@ export function WeekView({
           <div className="flex flex-wrap gap-1.5">
             {unscheduled.map((task) => (
               <div key={task.id} className="min-w-[180px] flex-1">
-                <WeekTaskChip task={task} statusLabel={t(statusKey(task.status))} onClick={() => onTaskClick(task)} />
+                <WeekTaskChip
+                  task={task}
+                  statusLabel={t(statusKey(task.status))}
+                  assigneeName={task.assignee_id ? assigneeNames?.get(task.assignee_id) : null}
+                  onClick={() => onTaskClick(task)}
+                />
               </div>
             ))}
           </div>
@@ -212,6 +231,7 @@ function statusKey(status: TaskStatus): string {
 interface WeekTaskChipProps {
   task: Task;
   statusLabel: string;
+  assigneeName?: string | null;
   onClick: () => void;
 }
 
@@ -220,7 +240,7 @@ interface WeekTaskChipProps {
  * Kanban `TaskCard` — that relies on `useSortable`, which requires a DndContext
  * ancestor the week view doesn't provide.
  */
-function WeekTaskChip({ task, statusLabel, onClick }: WeekTaskChipProps) {
+function WeekTaskChip({ task, statusLabel, assigneeName, onClick }: WeekTaskChipProps) {
   const t = useTranslations("planning");
   return (
     <div
@@ -243,11 +263,27 @@ function WeekTaskChip({ task, statusLabel, onClick }: WeekTaskChipProps) {
           role="img"
           aria-label={t(`priority.${task.priority}`)}
         />
-        <p className="text-[12.5px] font-medium leading-snug">{task.title}</p>
+        {/* A long unbroken title wraps inside the chip instead of running over the next days. */}
+        <p
+          className="line-clamp-3 min-w-0 text-[12.5px] font-medium leading-snug [overflow-wrap:anywhere]"
+          title={task.title}
+        >
+          {task.title}
+        </p>
       </div>
       <span className="mt-1 inline-block text-[10px]" style={{ color: "var(--muted)" }}>
         {statusLabel}
       </span>
+      {assigneeName && (
+        <span
+          className="mt-0.5 block truncate text-[10px]"
+          style={{ color: "var(--muted)" }}
+          title={t("assignedTo", { name: assigneeName })}
+        >
+          <span aria-hidden>{assigneeName}</span>
+          <span className="sr-only">{t("assignedTo", { name: assigneeName })}</span>
+        </span>
+      )}
     </div>
   );
 }

@@ -22,6 +22,11 @@ vi.mock("@/app/[locale]/(app)/settings/_actions/notification-preferences-actions
   updateNotificationPreferencesAction: (...args: unknown[]) => updateAction(...args),
 }));
 
+let chatFeature: boolean | null = true;
+vi.mock("@/hooks/use-chat-feature", () => ({
+  useChatFeature: () => chatFeature,
+}));
+
 vi.mock("sonner", () => ({
   toast: { error: (...args: unknown[]) => toastError(...args), success: vi.fn() },
 }));
@@ -45,6 +50,7 @@ function renderSection() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  chatFeature = true;
 });
 
 describe("NotificationPreferencesSection", () => {
@@ -93,6 +99,15 @@ describe("NotificationPreferencesSection", () => {
     for (const name of ["Team chat", "Attendance", "Tasks", "Team & access", "Money"]) {
       expect(screen.getByRole("switch", { name })).toBeDisabled();
     }
+  });
+
+  it.each([false, null])("hides the chat switch while the chat feature is %s", async (flag) => {
+    chatFeature = flag;
+    fetchAction.mockResolvedValue({ ok: true, data: ALL_ON });
+    renderSection();
+
+    expect(await screen.findAllByRole("switch")).toHaveLength(5);
+    expect(screen.queryByRole("switch", { name: "Team chat" })).toBeNull();
   });
 
   it("shows the load error instead of switches when the fetch fails", async () => {

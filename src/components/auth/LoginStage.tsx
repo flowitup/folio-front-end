@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { FolioLogo } from "@/components/folio-logo";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { PhoneLoginForm } from "./PhoneLoginForm";
 import { usePhoneLoginFlow } from "./use-phone-login-flow";
 
@@ -60,6 +61,11 @@ export function LoginStage() {
             "linear-gradient(90deg, rgba(26,26,26,0.94) 0%, rgba(26,26,26,0.88) 45%, rgba(26,26,26,0.6) 100%)",
         }}
       />
+
+      {/* Language, before signing in: the URL prefix is not a control anyone finds. */}
+      <div className="absolute right-4 top-4 z-[3] lg:right-8 lg:top-6">
+        <LanguageSwitcher tone="ink" />
+      </div>
 
       {/* Copy column — the step the card is on, told in words */}
       <div className="relative z-[2] flex max-w-[520px] flex-col gap-5 lg:gap-7">

@@ -61,6 +61,18 @@ describe("InvoicePrintPage", () => {
     expect(screen.getAllByText(/300,00\s€/).length).toBe(2);
   });
 
+  it("keeps the items table inside its own scroller on phone screens", async () => {
+    fetchInvoice.mockResolvedValueOnce(invoice);
+    const { container } = renderFr();
+
+    await screen.findByText("F-001");
+    const table = container.querySelector("table.items-table") as HTMLElement;
+    expect(table.parentElement?.className).toBe("items-scroll");
+    const css = container.querySelector("style")?.textContent ?? "";
+    expect(css).toMatch(/\.items-scroll \{ overflow-x: auto;/);
+    expect(css).toMatch(/@media screen and \(max-width: 640px\) \{[^@]*\.page \{ padding: 1rem; \}/);
+  });
+
   it("shows a translated error when the invoice cannot be loaded", async () => {
     fetchInvoice.mockRejectedValueOnce(new Error("boom"));
     renderFr();

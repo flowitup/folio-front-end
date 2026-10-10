@@ -32,6 +32,7 @@ import {
   reorderRoom,
   selectQuote,
   setArticleImageFromUrl,
+  unselectQuote,
   uploadArticleImage,
   updateArticle,
   updatePoste,
@@ -281,4 +282,8 @@ export async function deleteQuoteAction(projectId: string, quoteId: string): Pro
 
 export async function selectQuoteAction(projectId: string, quoteId: string): Promise<Result<ChiffrageQuote>> {
   return run(projectId, () => selectQuote(projectId, quoteId));
+}
+
+export async function unselectQuoteAction(projectId: string, quoteId: string): Promise<Result<ChiffrageQuote>> {
+  return run(projectId, () => unselectQuote(projectId, quoteId));
 }

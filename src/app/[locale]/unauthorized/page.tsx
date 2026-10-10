@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
+import { pageTitle } from "@/lib/i18n/page-title";
+
+export const generateMetadata = pageTitle("errors.unauthorized");
 
 /** 403 screen in the visitor's language, linking to their locale's dashboard. */
 export default async function UnauthorizedPage() {

@@ -1,6 +1,9 @@
 import { getLocale } from "next-intl/server";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
+import { loginPathFor } from "@/lib/auth/callback-url";
+import { REQUEST_PATH_HEADER } from "@/lib/auth/middleware";
 import { hasBillingAccess } from "@/lib/auth/billing-access";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
@@ -26,16 +29,18 @@ export default async function AppLayout({
     // redirects once the API accepts the session. The stale cookie just gets
     // overwritten on the next successful login. An expired access token has
     // already been renewed by the proxy from the refresh cookie by now.
-    redirect(`/${locale}/login`);
+    // The token got past the proxy (unexpired but revoked), so this is the only
+    // redirect: keep the requested page, as the proxy's own redirect does.
+    redirect(loginPathFor((await headers()).get(REQUEST_PATH_HEADER), locale));
   }
 
   // Onboarding gate: a signed-in user with no company (fresh sign-up, or a
   // company they detached from) must create or join one before using the app.
-  // Enforced in dashboard/layout.tsx rather than here — this shared layout
-  // also wraps /onboarding itself, and Server Component layouts have no
-  // pathname API to avoid a self-redirect loop without one (login always
-  // lands on /dashboard, so gating there covers "after sign-up/login"
-  // without touching the existing proxy.ts auth/locale middleware).
+  // Enforced in the dashboard and projects layouts and the bibliotheque and
+  // inventory pages rather than here — this shared layout also wraps /onboarding
+  // itself, and Next does not re-render it on a client navigation, so a
+  // sidebar link followed from /onboarding would skip a gate placed here.
+  // See redirectToOnboardingIfNeeded.
 
   // Per-company admin gate: only show the billing nav to users who can access
   // billing (superadmin or admin of at least one company).
@@ -58,6 +63,11 @@ export default async function AppLayout({
           <main className="scroll-area flex-1 pb-16 lg:pb-0">
             <div style={{ zoom: 0.8 }} className="h-full">
               {children}
+              {/* main's pb-16 only pads the h-full box, not a long page that
+                  overflows it; this spacer keeps a long page's end (e.g. a
+                  pager) above the fixed mobile bottom nav. Its 80px × 0.8 zoom
+                  equals pb-16, so an h-full page still fits without scrolling. */}
+              <div aria-hidden className="h-20 lg:hidden" />
             </div>
           </main>
         </div>

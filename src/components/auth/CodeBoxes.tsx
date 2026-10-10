@@ -63,6 +63,25 @@ export function CodeBoxes({
     boxes.current[Math.min(Math.max(index, 0), CODE_LENGTH - 1)]?.focus();
   };
 
+  // The boxes are disabled while a code is checked, which drops the caret to
+  // <body>: after a rejection, typing did nothing until the user clicked a box.
+  // Put it back on the first box (its digit is selected on focus, so typing
+  // overwrites the row, and Backspace still drops the last digit).
+  const submitted = useRef(false);
+  useEffect(() => {
+    if (disabled) {
+      submitted.current = true;
+      return;
+    }
+    if (!submitted.current || state !== "error") return;
+    submitted.current = false;
+    const active = document.activeElement;
+    // Only take the caret back if it was lost, never from another field.
+    if (!active || active === document.body || boxes.current.includes(active as HTMLInputElement)) {
+      boxes.current[0]?.focus();
+    }
+  }, [disabled, state]);
+
   const commit = (next: string) => {
     // A rejected code keeps its digits, so the row is still full while the user
     // retypes over it. Only the edit that *fills* the row may submit, or every

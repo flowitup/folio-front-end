@@ -9,6 +9,7 @@ import { can, isCompanyAdmin } from "@/lib/auth/permissions";
 import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ApiError } from "@/lib/api/http";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 import { fetchInvoicesWithMeta, deleteInvoice } from "@/lib/api/invoice-api";
 import {
@@ -21,8 +22,10 @@ import { InvoiceMobileCard } from "@/components/invoices/invoice-mobile-card";
 import { InvoiceHighlightPicker } from "@/components/invoices/invoice-highlight-picker";
 import { highlightRowTint } from "@/lib/invoices/highlight-colors";
 import { InvoiceExportDialog } from "@/components/invoices/invoice-export-dialog";
+import { classifyActionError, invoiceValidationMessages } from "@/components/invoices/invoice-form";
 import { LaborInvoicesByWorker } from "@/components/invoices/labor-invoices-by-worker";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
+import { TruncatedStamp } from "@/components/invoices/truncated-stamp";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import {
   REFUND_STATUS_STAMP,
@@ -34,6 +37,7 @@ import {
   ledgerTypeOf,
   monthKeyForInvoice,
 } from "@/lib/invoices/group-invoices-by-month";
+import { invoiceTotals } from "@/lib/invoices/invoice-totals";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 
 type TabType = "all" | InvoiceType;
@@ -47,12 +51,9 @@ const TVA_COLUMN_TABS: ReadonlySet<TabType> = new Set([
   "others",
 ]);
 
-/** Sum of VAT amounts across all items: Σ qty × price × (vat_rate/100). */
-function invoiceTva(items: Invoice["items"]): number {
-  return items.reduce(
-    (sum, it) => sum + it.quantity * it.unit_price * ((it.vat_rate ?? 0) / 100),
-    0
-  );
+/** The invoice's VAT as its detail and print pages split it: TTC − the lines' rounded HT. */
+function invoiceTva(invoice: Invoice): number {
+  return invoiceTotals(invoice.items, invoice.total_amount).totalVat;
 }
 
 // Base column count without the TVA column.
@@ -143,6 +144,11 @@ export default function InvoicesPage() {
   // `project:view_budget` (it strips the rows and zeroes the totals), so they
   // are hidden rather than rendered empty.
   const canViewBudget = can("project:view_budget", user?.permissions, projectPerms);
+  // The whole-project export is closed to restricted members: the API asks for
+  // project:manage_labor or project:view_pay (require_full_project_view).
+  const canExport =
+    can("project:manage_labor", user?.permissions, projectPerms) ||
+    can("project:view_pay", user?.permissions, projectPerms);
 
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [exportOpen, setExportOpen] = useState(false);
@@ -203,8 +209,11 @@ export default function InvoicesPage() {
           companyCashAdvancedTotal: sum.company_cash_advanced_total ?? 0,
         },
       });
-    } catch {
-      setError(t("loadListFailed"));
+    } catch (err) {
+      // 403/404: a project the caller cannot open (not on it, or another
+      // company's) — say so rather than a generic retry-able failure.
+      const noAccess = err instanceof ApiError && (err.status === 403 || err.status === 404);
+      setError(noAccess ? t("loadForbidden") : t("loadListFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -239,8 +248,8 @@ export default function InvoicesPage() {
     try {
       await deleteInvoice(projectId, invoice.id);
       await loadInvoices();
-    } catch {
-      setError(t("deleteInvoiceFailed"));
+    } catch (err) {
+      setError(classifyActionError(err, invoiceValidationMessages(t), t("deleteInvoiceFailed")));
     }
   };
 
@@ -300,6 +309,9 @@ export default function InvoicesPage() {
         />
       )}
 
+      {/* Tabs, export and list need a loaded list: after a failed first load
+          the error alert below is the whole page, not an empty ledger. */}
+      {(isLoading || summary) && (
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="seg">
           {tabs.map((tab) => (
@@ -313,21 +325,26 @@ export default function InvoicesPage() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setExportOpen(true)}>
-            <Download className="mr-2 h-4 w-4" />
-            {t("export.trigger")}
-          </Button>
-        </div>
+        {canExport && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setExportOpen(true)}>
+              <Download className="mr-2 h-4 w-4" />
+              {t("export.trigger")}
+            </Button>
+          </div>
+        )}
       </div>
+      )}
 
-      <InvoiceExportDialog
-        projectId={projectId}
-        open={exportOpen}
-        onOpenChange={setExportOpen}
-        initialType={activeTab}
-        canViewBudget={canViewBudget}
-      />
+      {canExport && (
+        <InvoiceExportDialog
+          projectId={projectId}
+          open={exportOpen}
+          onOpenChange={setExportOpen}
+          initialType={activeTab}
+          canViewBudget={canViewBudget}
+        />
+      )}
 
       {error && (
         <Alert variant="destructive">
@@ -341,7 +358,7 @@ export default function InvoicesPage() {
         </div>
       )}
 
-      {!isLoading && (
+      {!isLoading && summary && (
         <>
         {invoices.length === 0 ? (
           <div className="folio-card overflow-hidden">
@@ -595,7 +612,7 @@ export default function InvoicesPage() {
                           {!isCollapsed && items.map((invoice) => {
                             const isOpen = selectedInvoiceId === invoice.id;
                             const detailId = `invoice-detail-${invoice.id}`;
-                            const tvaAmount = showTvaCol ? invoiceTva(invoice.items) : 0;
+                            const tvaAmount = showTvaCol ? invoiceTva(invoice) : 0;
                             return (
                               <Fragment key={invoice.id}>
                                 <tr
@@ -656,18 +673,15 @@ export default function InvoicesPage() {
                                         {formatMonthYear(invoice.service_month, locale)}
                                       </span>
                                     )}
-                                    {invoice.type === "return" && (
-                                      <span
-                                        className="stamp warning ml-2"
-                                        style={{ fontSize: 10, verticalAlign: "middle" }}
-                                      >
-                                        {t("types.return")}
-                                      </span>
-                                    )}
-                                    {/* Unapplied, the "outstanding avoir" stamp says it all. */}
+                                    {/* A return row always sits under its type's stamp (month
+                                        group or Return tab), so it carries none of its own; the
+                                        settlement badge is skipped where it reads the same as that
+                                        type (fr: both "Avoir"). Unapplied, the "outstanding avoir"
+                                        stamp says it all. */}
                                     {invoice.type === "return" &&
                                       invoice.settled_via === "avoir" &&
-                                      invoice.applied_to_invoice_id && (
+                                      invoice.applied_to_invoice_id &&
+                                      t("settledVia.avoirBadge") !== t("types.return") && (
                                       <span
                                         className="stamp accent ml-2"
                                         style={{ fontSize: 10, verticalAlign: "middle" }}
@@ -712,11 +726,14 @@ export default function InvoicesPage() {
                                   <td>
                                     <div className="flex flex-wrap items-center gap-1">
                                       {invoice.refundable_status != null && companyName ? (
-                                        <span className="stamp truncate max-w-[180px]">
-                                          {invoice.payment_method_label?.trim()
-                                            ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
-                                            : `→ ${companyName}`}
-                                        </span>
+                                        <TruncatedStamp
+                                          className="max-w-[180px]"
+                                          label={
+                                            invoice.payment_method_label?.trim()
+                                              ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
+                                              : `→ ${companyName}`
+                                          }
+                                        />
                                       ) : invoice.payment_method_label?.trim() ? (
                                         <span className="stamp">
                                           {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}
@@ -765,19 +782,33 @@ export default function InvoicesPage() {
                                             onSuccess={loadInvoices}
                                           />
                                         )}
-                                      {canManageInvoices && !invoice.is_auto_generated && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0"
-                                          style={{ color: "var(--muted)" }}
-                                          aria-label={t("deleteExpense", { number: invoice.invoice_number })}
-                                          title={t("deleteExpense", { number: invoice.invoice_number })}
-                                          onClick={() => handleDelete(invoice)}
-                                        >
-                                          <Trash2 size={13} aria-hidden />
-                                        </Button>
-                                      )}
+                                      {canManageInvoices && !invoice.is_auto_generated &&
+                                        (invoice.refundable_status === "refunded" ? (
+                                          // Locked by the API until its refund status is cleared:
+                                          // say so instead of a delete that can only fail.
+                                          <span
+                                            role="img"
+                                            className="inline-flex h-7 w-7 items-center justify-center"
+                                            style={{ color: "var(--muted)" }}
+                                            aria-label={t("errorRefundedLocked")}
+                                            title={t("errorRefundedLocked")}
+                                            data-testid="refunded-locked-desktop"
+                                          >
+                                            <Lock size={13} aria-hidden />
+                                          </span>
+                                        ) : (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-7 w-7 p-0"
+                                            style={{ color: "var(--muted)" }}
+                                            aria-label={t("deleteExpense", { number: invoice.invoice_number })}
+                                            title={t("deleteExpense", { number: invoice.invoice_number })}
+                                            onClick={() => handleDelete(invoice)}
+                                          >
+                                            <Trash2 size={13} aria-hidden />
+                                          </Button>
+                                        ))}
                                     </div>
                                   </td>
                                 </tr>

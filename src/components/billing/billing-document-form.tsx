@@ -21,6 +21,12 @@
  */
 
 import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE, MAX_VAT_RATE } from "@/lib/numeric-bounds";
+import {
+  firstTooLongField,
+  MAX_BILLING_NOTES,
+  MAX_PAYMENT_TERMS,
+  MAX_SIGNATURE_BLOCK,
+} from "@/lib/billing/text-limits";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -67,9 +73,11 @@ import type { MyCompany } from "@/types/companies";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { isDevisLockedByFacture } from "@/lib/billing/devis-lock";
 import { addDaysToDayKey, parisDayKey } from "@/lib/utils/paris-day";
 import { toIsoDate, toItemPayload } from "@/lib/billing/document-payload";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
+import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
 import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
 
 // Loose shape check; the API does the strict one.
@@ -146,6 +154,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const locale = useLocale();
   const tForm = useTranslations("billing.form");
   const tBilling = useTranslations("billing");
+  const errorMessage = useBillingErrorMessage();
   const isEdit = props.mode === "edit";
   const kind = props.kind;
 
@@ -209,6 +218,13 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     toIsoDate(dateSeed?.payment_due_date) ?? plus30Days(seedIssueDate)
   );
   const [paymentTerms, setPaymentTerms] = useState(seed?.payment_terms ?? "");
+  // A new document's validity / due date follows its issue date (+30 days) until
+  // the user picks one; an edited document keeps the dates it was saved with.
+  const validityTouchedRef = useRef(isEdit);
+  const dueTouchedRef = useRef(isEdit);
+  // A new facture shows the issuing company's default terms (what the API applies
+  // to an empty field) until the user types their own.
+  const termsTouchedRef = useRef(isEdit || !!seed?.payment_terms);
 
   const [items, setItems] = useState<BillingDocumentItem[]>(
     seed?.items ?? templateSeed?.items ?? []
@@ -245,13 +261,31 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   // Validation
   // ---------------------------------------------------------------------------
 
+  // YYYY-MM-DD strings compare in date order.
+  const validityBeforeIssue =
+    kind === "devis" && !!validityUntil && !!issueDate && validityUntil < issueDate;
+  const dueBeforeIssue =
+    kind === "facture" && !!paymentDueDate && !!issueDate && paymentDueDate < issueDate;
+
   function validate(): string | null {
     if (!isEdit && !selectedCompanyId) return tForm("errors.companyRequired");
+    if (validityBeforeIssue) return tForm("errors.validityBeforeIssue");
+    if (dueBeforeIssue) return tForm("errors.dueBeforeIssue");
     if (!recipientName.trim()) return tForm("errors.recipientRequired");
     if (items.length === 0) return tForm("errors.atLeastOneItem");
     if (recipientEmail.trim() && !EMAIL_RE.test(recipientEmail.trim())) {
       return tForm("errors.recipientEmailInvalid");
     }
+    // Text a template filled in can exceed what the API accepts: name the field.
+    const tooLong = firstTooLongField([
+      { label: tForm("notes.notes"), value: notes, max: MAX_BILLING_NOTES },
+      { label: tForm("notes.terms"), value: terms, max: MAX_BILLING_NOTES },
+      { label: tForm("notes.signatureBlock"), value: signatureBlock, max: MAX_SIGNATURE_BLOCK },
+      ...(kind === "facture"
+        ? [{ label: tForm("details.paymentTerms"), value: paymentTerms, max: MAX_PAYMENT_TERMS }]
+        : []),
+    ]);
+    if (tooLong) return tForm("errors.textTooLong", { field: tooLong.label, max: tooLong.max });
     for (const item of items) {
       if (!item.description.trim()) return tForm("errors.itemDescriptionRequired");
       if (Number(item.quantity) <= 0) return tForm("errors.itemQuantityPositive");
@@ -276,6 +310,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     if (error.code === "validation") return tForm("errors.invalidInput");
     if (error.code === "forbidden") return tForm("errors.forbidden");
     if (error.code === "company_profile_missing") return tForm("errors.companyProfileMissing");
+    if (error.code === "devis_locked") return tForm("errors.devisLocked");
     return tForm("errors.saveFailed");
   }
 
@@ -286,11 +321,12 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   async function handleCompanyNoLongerAttached() {
     toast.error(tForm("toast.companyNoLongerAttached"));
     setSelectedCompanyId(null);
-    // Refetch attached companies so the picker shows the current list.
+    // Refetch attached companies so the picker shows the current list (issuers
+    // only: the API refuses billing where the user is just a member).
     try {
       const result = await fetchMyCompaniesAction();
       if (result.ok) {
-        setAttachedCompanies(result.data);
+        setAttachedCompanies(result.data.filter((company) => company.role === "admin"));
       }
     } catch {
       // Non-fatal — picker will reflect stale list until page refresh.
@@ -300,6 +336,20 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
+
+  function handleIssueDateChange(value: string) {
+    setIssueDate(value);
+    if (!value) return;
+    if (!validityTouchedRef.current) setValidityUntil(plus30Days(value));
+    if (!dueTouchedRef.current) setPaymentDueDate(plus30Days(value));
+  }
+
+  function handleCompanyChange(companyId: string) {
+    setSelectedCompanyId(companyId);
+    if (kind !== "facture" || termsTouchedRef.current) return;
+    const company = attachedCompanies.find((c) => c.id === companyId);
+    setPaymentTerms(company?.default_payment_terms ?? "");
+  }
 
   async function handleSave() {
     if (submittingRef.current) return;
@@ -317,7 +367,12 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         issue_date: issueDate || null,
         validity_until: kind === "devis" ? validityUntil || null : null,
         payment_due_date: kind === "facture" ? paymentDueDate || null : null,
-        payment_terms: kind === "facture" ? (paymentTerms.trim() || null) : null,
+        // A new facture's emptied terms field means "no terms": null would make the API
+        // apply the company default again (on an edit, null leaves the terms unchanged).
+        payment_terms:
+          kind === "facture"
+            ? paymentTerms.trim() || (!isEdit && termsTouchedRef.current ? "" : null)
+            : null,
         // Lines seeded from the API carry read-only totals the schema rejects.
         items: items.map(toItemPayload),
         notes: notes.trim() || null,
@@ -364,7 +419,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     setIsSubmitting(true);
     try {
       const result = await deleteBillingDocumentAction(liveDoc.id);
-      if (!result.ok) { toast.error(result.error.message); return; }
+      if (!result.ok) { toast.error(errorMessage(result.error, tForm("errors.deleteFailed"))); return; }
       toast.success(tForm("toast.documentDeleted"));
       router.push(`/${locale}/billing/${kindToSegment(kind)}`);
     } catch {
@@ -438,7 +493,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         if (result.error.code === "conflict") {
           toast.error(tForm("errors.alreadyConverted"));
         } else {
-          toast.error(result.error.message);
+          toast.error(errorMessage(result.error, tForm("errors.convertFailed")));
         }
         return;
       }
@@ -459,6 +514,8 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const convertedFactureId = isEdit ? (liveDoc?.converted_to_facture_id ?? null) : null;
   const showConvertButton =
     isEdit && liveDoc?.kind === "devis" && liveDoc.status === "accepted" && !convertedFactureId;
+  // The API refuses any edit of a devis whose facture is still live: say so, and don't offer Save.
+  const lockedByFacture = isEdit && liveDoc ? isDevisLockedByFacture(liveDoc) : false;
 
   const kindLabel = tBilling(`${kind}.list.title`);
   const newLabel = tBilling(`${kind}.list.new`);
@@ -475,7 +532,12 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     <div className="fade-up space-y-6 px-4 pb-16 lg:px-8">
       {/* 1. Header bar */}
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => router.push(listPath)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={tForm("actions.backToList")}
+          onClick={() => router.push(listPath)}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h2 className="font-display text-xl font-medium">
@@ -547,6 +609,15 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
                 {tForm("actions.downloadXlsx")}
               </Button>
             </div>
+            {lockedByFacture && (
+              <p
+                id="devis-locked-note"
+                className="w-full text-[12px]"
+                style={{ color: "var(--muted)" }}
+              >
+                {tForm("errors.devisLocked")}
+              </p>
+            )}
           </>
         )}
       </div>
@@ -571,7 +642,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           kind={kind}
           attachedCompanies={attachedCompanies}
           value={selectedCompanyId}
-          onChange={setSelectedCompanyId}
+          onChange={handleCompanyChange}
         />
       )}
 
@@ -691,7 +762,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
               id="issue-date"
               type="date"
               value={issueDate}
-              onChange={(e) => setIssueDate(e.target.value)}
+              onChange={(e) => handleIssueDateChange(e.target.value)}
             />
           </div>
           {kind === "devis" && (
@@ -700,9 +771,20 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
               <Input
                 id="validity-until"
                 type="date"
+                min={issueDate || undefined}
                 value={validityUntil}
-                onChange={(e) => setValidityUntil(e.target.value)}
+                aria-invalid={validityBeforeIssue || undefined}
+                aria-describedby={validityBeforeIssue ? "validity-until-error" : undefined}
+                onChange={(e) => {
+                  validityTouchedRef.current = true;
+                  setValidityUntil(e.target.value);
+                }}
               />
+              {validityBeforeIssue && (
+                <p id="validity-until-error" className="text-[12px] text-destructive">
+                  {tForm("errors.validityBeforeIssue")}
+                </p>
+              )}
             </div>
           )}
           {kind === "facture" && (
@@ -712,16 +794,31 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
                 <Input
                   id="payment-due"
                   type="date"
+                  min={issueDate || undefined}
                   value={paymentDueDate}
-                  onChange={(e) => setPaymentDueDate(e.target.value)}
+                  aria-invalid={dueBeforeIssue || undefined}
+                  aria-describedby={dueBeforeIssue ? "payment-due-error" : undefined}
+                  onChange={(e) => {
+                    dueTouchedRef.current = true;
+                    setPaymentDueDate(e.target.value);
+                  }}
                 />
+                {dueBeforeIssue && (
+                  <p id="payment-due-error" className="text-[12px] text-destructive">
+                    {tForm("errors.dueBeforeIssue")}
+                  </p>
+                )}
               </div>
               <div className="col-span-full space-y-1">
                 <Label htmlFor="payment-terms" className="text-[12px]">{tForm("details.paymentTerms")}</Label>
                 <Input
                   id="payment-terms"
                   value={paymentTerms}
-                  onChange={(e) => setPaymentTerms(e.target.value)}
+                  maxLength={MAX_PAYMENT_TERMS}
+                  onChange={(e) => {
+                    termsTouchedRef.current = true;
+                    setPaymentTerms(e.target.value);
+                  }}
                   placeholder={tForm("details.paymentTermsPlaceholder")}
                 />
               </div>
@@ -777,6 +874,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           <Textarea
             id="notes"
             value={notes}
+            maxLength={MAX_BILLING_NOTES}
             onChange={(e) => setNotes(e.target.value)}
             placeholder={tForm("notes.notesPlaceholder")}
             rows={3}
@@ -788,6 +886,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           <Textarea
             id="terms"
             value={terms}
+            maxLength={MAX_BILLING_NOTES}
             onChange={(e) => setTerms(e.target.value)}
             placeholder={tForm("notes.termsPlaceholder")}
             rows={3}
@@ -799,6 +898,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           <Textarea
             id="signature-block"
             value={signatureBlock}
+            maxLength={MAX_SIGNATURE_BLOCK}
             onChange={(e) => setSignatureBlock(e.target.value)}
             placeholder={tForm("notes.signatureBlockPlaceholder")}
             rows={2}
@@ -824,7 +924,12 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         >
           {tForm("actions.cancel")}
         </Button>
-        <Button type="button" onClick={handleSave} disabled={isSubmitting}>
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={isSubmitting || lockedByFacture}
+          aria-describedby={lockedByFacture ? "devis-locked-note" : undefined}
+        >
           {isSubmitting ? (
             <Loader2 size={13} className="mr-2 animate-spin" />
           ) : null}

@@ -7,20 +7,24 @@ import { logout } from "@/lib/auth/actions";
 
 interface LoggedInOtherProps {
   currentEmail: string;
+  /** This invitation's page, to come back to signed out. */
+  returnPath: string;
 }
 
-export function LoggedInOther({ currentEmail }: LoggedInOtherProps) {
+export function LoggedInOther({ currentEmail, returnPath }: LoggedInOtherProps) {
   const t = useTranslations("acceptInvite");
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
-      await logout();
+      // Signed out, the server sends the browser back to this invitation, not to /login.
+      await logout(returnPath);
     } catch {
-      // logout() calls redirect() which throws NEXT_REDIRECT — that's expected.
-      // For any other error, reload to let the page re-evaluate session state.
-      window.location.reload();
+      // logout() ends in redirect(), which rejects here with NEXT_REDIRECT. Load
+      // the invitation in full either way (also after any other error), so the
+      // page renders for the signed-out visitor with no stale session state.
+      window.location.assign(returnPath);
     }
   };
 

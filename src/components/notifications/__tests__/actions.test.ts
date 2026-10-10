@@ -3,7 +3,7 @@
  * Mirrors admin/users/actions.test.ts pattern.
  *
  * Covers:
- * - fetchNotificationsFeedAction: returns {items, attendance} on success, empty feed on any error
+ * - fetchNotificationsFeedAction: returns {items, attendance} on success, null on any error
  * - dismissNotificationAction: UUID validation + classifyBackendError mapping
  */
 
@@ -78,10 +78,10 @@ describe("fetchNotificationsFeedAction — happy path", () => {
     mockList.mockResolvedValueOnce({ items: [item], count: 1 });
 
     const result = await fetchNotificationsFeedAction();
-    expect(result.items).toHaveLength(1);
-    expect(result.items[0].note.id).toBe(NOTE_ID);
+    expect(result?.items).toHaveLength(1);
+    expect(result?.items[0].note.id).toBe(NOTE_ID);
     // Older backends omit attendance_pending — treated as an empty list.
-    expect(result.attendance).toEqual([]);
+    expect(result?.attendance).toEqual([]);
     expect(mockList).toHaveBeenCalledTimes(1);
   });
 
@@ -95,28 +95,29 @@ describe("fetchNotificationsFeedAction — happy path", () => {
 describe("fetchNotificationsFeedAction — graceful error handling", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns an empty feed on 500 error (bell shows last-known state without disrupting UI)", async () => {
+  // null, never an empty feed: an empty feed reads as "nothing due" and would clear the bell.
+  it("returns null on 500 error (bell keeps its last-known state)", async () => {
     mockList.mockRejectedValueOnce(httpError(500));
     const result = await fetchNotificationsFeedAction();
-    expect(result).toEqual({ items: [], attendance: [], companyEvents: [] });
+    expect(result).toBeNull();
   });
 
-  it("returns an empty feed on 401 error (auth expired — don't crash the page)", async () => {
+  it("returns null on 401 error (auth expired — don't crash the page)", async () => {
     mockList.mockRejectedValueOnce(httpError(401));
     const result = await fetchNotificationsFeedAction();
-    expect(result).toEqual({ items: [], attendance: [], companyEvents: [] });
+    expect(result).toBeNull();
   });
 
-  it("returns an empty feed on network error", async () => {
+  it("returns null on network error", async () => {
     mockList.mockRejectedValueOnce(new Error("Network error"));
     const result = await fetchNotificationsFeedAction();
-    expect(result).toEqual({ items: [], attendance: [], companyEvents: [] });
+    expect(result).toBeNull();
   });
 
-  it("returns an empty feed on 429 rate-limit error", async () => {
+  it("returns null on 429 rate-limit error", async () => {
     mockList.mockRejectedValueOnce(httpError(429));
     const result = await fetchNotificationsFeedAction();
-    expect(result).toEqual({ items: [], attendance: [], companyEvents: [] });
+    expect(result).toBeNull();
   });
 });
 

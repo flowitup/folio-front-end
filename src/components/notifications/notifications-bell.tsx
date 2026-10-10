@@ -45,10 +45,13 @@ export function NotificationsBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
 
-  const handleUpdate = useCallback((feed: NotificationsFeed) => {
-    setItems(feed.items);
-    setAttendance(feed.attendance);
-    setCompanyEvents(feed.companyEvents ?? []);
+  const handleUpdate = useCallback((feed: NotificationsFeed | null) => {
+    // A failed poll (null) keeps the last-known items rather than clearing the bell.
+    if (feed) {
+      setItems(feed.items);
+      setAttendance(feed.attendance);
+      setCompanyEvents(feed.companyEvents ?? []);
+    }
     setHasLoaded(true);
   }, []);
 

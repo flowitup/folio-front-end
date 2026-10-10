@@ -92,7 +92,8 @@ export function UnassignedLaborInvoices({
                     {methodLabel ? ` · ${methodLabel}` : ""}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                {/* Wraps on a phone: amount + worker picker, then the month button. */}
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
                   <span className="num text-[13px] font-medium">
                     {formatEUR(inv.total_amount)}
                   </span>

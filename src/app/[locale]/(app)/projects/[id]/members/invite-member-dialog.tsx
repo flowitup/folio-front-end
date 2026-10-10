@@ -55,6 +55,11 @@ export function InviteMemberDialog({
       if (!result.ok) {
         if (result.status === 409) {
           toast.warning(t("toast.alreadyInvited", { email: email.trim() }));
+        } else if (result.status === 422 && result.reason === "account_deactivated") {
+          toast.error(t("toast.accountDeactivated", { email: email.trim() }));
+        } else if (result.status === 400 || result.status === 422) {
+          // The address itself was refused: retrying the same one cannot help.
+          toast.error(t("toast.invalidEmail", { email: email.trim() }));
         } else if (result.status === 429) {
           toast.error(t("toast.rateLimited"));
         } else if (result.status === 403) {
@@ -67,6 +72,8 @@ export function InviteMemberDialog({
 
       if (result.data.kind === "invitation_sent") {
         toast.success(t("toast.inviteSent", { email: email.trim() }));
+      } else if (result.data.kind === "already_member") {
+        toast.info(t("toast.alreadyMember", { email: email.trim() }));
       } else {
         // kind === "direct_added"
         toast.success(t("toast.directAdded", { email: email.trim() }));

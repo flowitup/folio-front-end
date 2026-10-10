@@ -70,6 +70,7 @@ import {
   reorderPosteAction,
   reorderRoomAction,
   selectQuoteAction,
+  unselectQuoteAction,
   updateArticleAction,
   updatePosteAction,
   updateRoomAction,
@@ -523,6 +524,16 @@ export function ChiffragePageClient({
                                   onSelectQuote={async (q) => {
                                     setBusyQuoteId(q.id);
                                     const res = await selectQuoteAction(
+                                      projectId,
+                                      q.id,
+                                    );
+                                    if (!res.ok) toast.error(res.error);
+                                    else await refresh();
+                                    setBusyQuoteId(null);
+                                  }}
+                                  onUnselectQuote={async (q) => {
+                                    setBusyQuoteId(q.id);
+                                    const res = await unselectQuoteAction(
                                       projectId,
                                       q.id,
                                     );

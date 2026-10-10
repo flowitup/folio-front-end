@@ -42,6 +42,7 @@ import type { BillingDocument } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
 import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
+import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
 
 interface BillingActionsMenuProps {
   document: BillingDocument;
@@ -54,6 +55,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
   const tActions = useTranslations("billing.form.actions");
   const tErrors = useTranslations("billing.form.errors");
   const tToast = useTranslations("billing.form.toast");
+  const errorMessage = useBillingErrorMessage();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -132,7 +134,11 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
     try {
       const result = await convertDevisToFactureAction(document.id);
       if (!result.ok) {
-        toast.error(result.error.message);
+        toast.error(
+          result.error.code === "conflict"
+            ? tErrors("alreadyConverted")
+            : errorMessage(result.error, tErrors("convertFailed"))
+        );
         return;
       }
       toast.success(tToast("devisConverted"));
@@ -153,7 +159,9 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
     try {
       const result = await deleteBillingDocumentAction(document.id);
       if (!result.ok) {
-        toast.error(result.error.message);
+        toast.error(errorMessage(result.error, tErrors("deleteFailed")));
+        // Deleted elsewhere: refresh so the stale row goes away.
+        if (result.error.code === "not_found") onMutated();
         return;
       }
       toast.success(tToast("documentDeleted"));

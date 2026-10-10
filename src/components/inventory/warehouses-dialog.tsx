@@ -21,6 +21,7 @@ import {
   updateWarehouseAction,
 } from "@/app/[locale]/(app)/inventory/_actions/inventory-actions";
 import type { UpdateWarehousePayload, Warehouse } from "@/lib/api/inventory";
+import { useInventoryErrorMessage } from "@/components/inventory/use-inventory-error-message";
 
 interface Props {
   open: boolean;
@@ -48,6 +49,7 @@ export function WarehousesDialog({
 }: Props) {
   const t = useTranslations("inventory.warehouses");
   const tInv = useTranslations("inventory");
+  const errorMessage = useInventoryErrorMessage();
 
   const [editing, setEditing] = useState<Warehouse | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -103,8 +105,13 @@ export function WarehousesDialog({
       if (Object.keys(diff).length > 0) {
         const result = await updateWarehouseAction(editing.id, diff);
         if (!result.ok) {
-          setError(result.error);
-          toast.error(result.code === "Forbidden" ? tInv("toast.forbidden") : t("toast.updateError"));
+          // A 409 here is a name already taken (the server's English text is never shown).
+          const message = errorMessage(result, {
+            conflict: t("validation.nameTaken"),
+            fallback: t("toast.updateError"),
+          });
+          setError(message);
+          toast.error(message);
           setBusy(null);
           return;
         }
@@ -114,8 +121,12 @@ export function WarehousesDialog({
     } else {
       const result = await createWarehouseAction(companyId, { name: trimmedName, address: trimmedAddress });
       if (!result.ok) {
-        setError(result.error);
-        toast.error(result.code === "Forbidden" ? tInv("toast.forbidden") : t("toast.createError"));
+        const message = errorMessage(result, {
+          conflict: t("validation.nameTaken"),
+          fallback: t("toast.createError"),
+        });
+        setError(message);
+        toast.error(message);
         setBusy(null);
         return;
       }
@@ -134,14 +145,12 @@ export function WarehousesDialog({
     setError(null);
     const result = await deleteWarehouseAction(w.id);
     if (!result.ok) {
-      setError(result.error);
-      toast.error(
-        result.code === "Forbidden"
-          ? tInv("toast.forbidden")
-          : result.code === "Conflict"
-            ? t("deleteBlocked", { count: rowsByWarehouse.get(w.id) ?? 0 })
-            : t("toast.deleteError")
-      );
+      const message = errorMessage(result, {
+        conflict: t("deleteBlocked", { count: rowsByWarehouse.get(w.id) ?? 0 }),
+        fallback: t("toast.deleteError"),
+      });
+      setError(message);
+      toast.error(message);
       setBusy(null);
       setConfirmDelete(null);
       return;
@@ -154,7 +163,9 @@ export function WarehousesDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      {/* minmax(0,1fr): the grid's auto column would grow to the rows' unwrapped
+          width and push the row buttons and "Add" past a phone-width dialog. */}
+      <DialogContent className="max-h-[90vh] grid-cols-[minmax(0,1fr)] overflow-y-auto sm:max-w-lg" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>

@@ -91,6 +91,8 @@ describe("mergeMemberRows", () => {
     expect(rows[0]).toMatchObject({
       key: "person:person-1",
       userId: null,
+      // Cancelling the invitation keys on the directory person id.
+      personId: "person-1",
       attachedUser: null,
       name: "Chantier Nord",
       phone: "+33698765432",

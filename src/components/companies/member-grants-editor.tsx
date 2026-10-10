@@ -39,6 +39,7 @@ import {
 import type { GrantEffect, MemberGrantRow } from "@/lib/api/member-grants";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import type { AttachedUser } from "@/types/companies";
+import { userDisplayName } from "@/lib/auth/user-display";
 
 interface Props {
   open: boolean;
@@ -83,12 +84,17 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
 
   const [grants, setGrants] = useState<MemberGrantRow[]>([]);
   const [customisable, setCustomisable] = useState<string[]>([]);
+  // Library/inventory permissions are only checked company-wide by the backend,
+  // which refuses a project scope for them.
+  const [companyWideOnly, setCompanyWideOnly] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
 
   const [newPermission, setNewPermission] = useState("");
   const [newEffect, setNewEffect] = useState<GrantEffect>("grant");
   const [newScope, setNewScope] = useState<string>(COMPANY_WIDE);
+  const scopeLocked = companyWideOnly.includes(newPermission);
+  const effectiveScope = scopeLocked ? COMPANY_WIDE : newScope;
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -97,6 +103,7 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
       if (result.ok) {
         setGrants(result.data.grants);
         setCustomisable(result.data.customisable);
+        setCompanyWideOnly(result.data.company_wide_only ?? []);
         setNewPermission((prev) => prev || result.data.customisable[0] || "");
       } else {
         toast.error(result.error.message);
@@ -131,7 +138,7 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
     if (!newPermission || isMutating) return;
     setIsMutating(true);
     try {
-      const projectId = newScope === COMPANY_WIDE ? null : newScope;
+      const projectId = effectiveScope === COMPANY_WIDE ? null : effectiveScope;
       const result = await setMemberGrantAction(companyId, target.user_id, newPermission, newEffect, projectId);
       if (!result.ok) {
         toast.error(result.error.message);
@@ -164,7 +171,7 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
         <DialogHeader>
           {/* pr-6 keeps a long name off the dialog's absolutely-positioned
               close button, which the header reserves no room for. */}
-          <DialogTitle className="pr-6">{t("dialogTitle", { name: target.display_name ?? target.email })}</DialogTitle>
+          <DialogTitle className="pr-6">{t("dialogTitle", { name: userDisplayName(target) })}</DialogTitle>
           <DialogDescription>{t("dialogDescription")}</DialogDescription>
         </DialogHeader>
 
@@ -236,7 +243,7 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
                     <SelectItem value="deny">{t("effectDeny")}</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={newScope} onValueChange={setNewScope} disabled={isMutating}>
+                <Select value={effectiveScope} onValueChange={setNewScope} disabled={isMutating || scopeLocked}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>

@@ -31,6 +31,8 @@ export interface MemberGrantsListResult {
   grants: MemberGrantRow[];
   /** Whitelist of permissions this admin may grant/deny to this target. */
   customisable: string[];
+  /** Subset of `customisable` that only takes a company-wide row (no project scope). */
+  company_wide_only?: string[];
 }
 
 async function buildHttpError(

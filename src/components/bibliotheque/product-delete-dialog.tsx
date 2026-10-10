@@ -18,6 +18,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -56,8 +57,11 @@ export function ProductDeleteDialog({
 
   if (!product) return null;
 
+  // Both sides trimmed: an imported name may end with a space the user cannot see.
+  const confirmed = confirmText.trim() === product.name.trim();
+
   const handleDelete = async () => {
-    if (confirmText.trim() !== product.name) return;
+    if (!confirmed) return;
 
     setIsDeleting(true);
     setError(null);
@@ -99,9 +103,9 @@ export function ProductDeleteDialog({
 
         {/* Warning body — purchase count included via ICU plural */}
         <div className="space-y-2 text-sm" style={{ color: "var(--muted)" }}>
-          <p style={{ color: "var(--negative)" }}>
+          <AlertDialogDescription style={{ color: "var(--negative)" }}>
             {t("deleteWarning", { name: product.name, count: product.purchase_count })}
-          </p>
+          </AlertDialogDescription>
         </div>
 
         {/* Typed confirmation */}
@@ -126,7 +130,7 @@ export function ProductDeleteDialog({
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            disabled={confirmText.trim() !== product.name || isDeleting}
+            disabled={!confirmed || isDeleting}
             style={{ background: "var(--negative)", color: "white" }}
           >
             {isDeleting ? (

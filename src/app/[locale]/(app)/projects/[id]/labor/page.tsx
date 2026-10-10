@@ -23,10 +23,13 @@ import { getProjectById } from "@/lib/api/projects-server";
 import { isPlatformOps } from "@/lib/auth/permissions";
 import { parisDayKey } from "@/lib/utils/paris-day";
 import { LaborPageClient } from "./labor-page-client";
+import { pageTitle } from "@/lib/i18n/page-title";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
+
+export const generateMetadata = pageTitle("navigation.labor");
 
 export default async function LaborPage({ params }: PageProps) {
   const { id: projectId } = await params;

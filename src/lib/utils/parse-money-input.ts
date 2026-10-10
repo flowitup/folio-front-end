@@ -14,13 +14,31 @@
  * - at most two decimals, so an ambiguous "12,500" or "12.500" is rejected
  *   rather than guessed; letters or a minus sign are invalid too.
  *
+ * Options widen this for other figures: `maxDecimals` (a quantity or a unit
+ * price carries more than cents, so "2,375" reads as 2.375 there) and
+ * `allowNegative` (a leading "-", e.g. a return's credit line).
+ *
  * Returns the amount, or null when the text is empty or not a valid amount.
  */
 const GROUPED_RE = /^\d{1,3}(?:[.,]\d{3})+$/;
-const AMOUNT_RE = /^\d+(?:\.\d{1,2})?$/;
 
-export function parseMoneyInput(raw: string): number | null {
+export interface ParseMoneyInputOptions {
+  /** Most decimals accepted; default 2 (cents). */
+  maxDecimals?: number;
+  /** Accept a leading minus sign; default false. */
+  allowNegative?: boolean;
+}
+
+export function parseMoneyInput(
+  raw: string,
+  { maxDecimals = 2, allowNegative = false }: ParseMoneyInputOptions = {}
+): number | null {
   let s = raw.replace(/[\s  €]/g, "");
+  let sign = 1;
+  if (allowNegative && /^[-−]/.test(s)) {
+    sign = -1;
+    s = s.slice(1);
+  }
   if (s === "") return null;
 
   const lastComma = s.lastIndexOf(",");
@@ -42,7 +60,7 @@ export function parseMoneyInput(raw: string): number | null {
     }
   }
 
-  if (!AMOUNT_RE.test(s)) return null;
+  if (!new RegExp(`^\\d+(?:\\.\\d{1,${maxDecimals}})?$`).test(s)) return null;
   const value = Number(s);
-  return Number.isFinite(value) ? value : null;
+  return Number.isFinite(value) ? sign * value : null;
 }

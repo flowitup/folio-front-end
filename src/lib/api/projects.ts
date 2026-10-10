@@ -58,6 +58,7 @@ export async function fetchProjectUsers(projectId: string): Promise<ProjectUsers
       user_id: string;
       email: string;
       display_name: string | null;
+      phone?: string | null;
       role_name: ProjectUser["role_name"];
     }[];
     total: number;
@@ -67,6 +68,7 @@ export async function fetchProjectUsers(projectId: string): Promise<ProjectUsers
       id: m.user_id,
       email: m.email,
       display_name: m.display_name,
+      phone: m.phone ?? null,
       role_name: m.role_name,
     })),
     total: res.total,

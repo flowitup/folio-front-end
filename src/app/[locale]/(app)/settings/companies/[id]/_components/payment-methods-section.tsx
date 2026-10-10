@@ -95,18 +95,20 @@ export function PaymentMethodsSection({
   // Handlers
   // ---------------------------------------------------------------------------
 
-  async function handleAdd(label: string) {
-    if (!startMutation()) return;
+  async function handleAdd(label: string): Promise<boolean> {
+    if (!startMutation()) return false;
     try {
       const result = await createPaymentMethodAction(companyId, label);
       if (!result.ok) {
         toast.error(result.error.message);
-        return;
+        return false;
       }
       setMethods(result.data);
       toast.success(t("toasts.created"));
+      return true;
     } catch {
-      toast.error(t("errors.label_required"));
+      toast.error(t("errors.generic"));
+      return false;
     } finally {
       endMutation();
     }
@@ -117,8 +119,8 @@ export function PaymentMethodsSection({
     newLabel: string,
     isCompanyPayment: boolean,
     isPersonalPayment: boolean
-  ) {
-    if (!startMutation()) return;
+  ): Promise<boolean> {
+    if (!startMutation()) return false;
     try {
       const result = await updatePaymentMethodAction(companyId, id, {
         label: newLabel,
@@ -127,12 +129,14 @@ export function PaymentMethodsSection({
       });
       if (!result.ok) {
         toast.error(result.error.message);
-        return;
+        return false;
       }
       setMethods(result.data);
       toast.success(t("toasts.renamed"));
+      return true;
     } catch {
-      toast.error(t("errors.label_required"));
+      toast.error(t("errors.generic"));
+      return false;
     } finally {
       endMutation();
     }

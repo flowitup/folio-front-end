@@ -6,10 +6,13 @@ import { listInvitations } from "@/lib/api/invitations";
 import { getProjectById } from "@/lib/api/projects-server";
 import { can, isCompanyAdmin, isPlatformOps } from "@/lib/auth/permissions";
 import { MembersTable } from "./members-table";
+import { pageTitle } from "@/lib/i18n/page-title";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
+
+export const generateMetadata = pageTitle("members.title");
 
 export default async function MembersPage({ params }: PageProps) {
   const { id: projectId } = await params;

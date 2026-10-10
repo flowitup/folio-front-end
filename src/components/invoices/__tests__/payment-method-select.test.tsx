@@ -158,6 +158,17 @@ describe("PaymentMethodSelect — initial render (closed state)", () => {
     const trigger = screen.getByRole("combobox");
     expect(trigger).toBeDefined();
   });
+
+  it("puts the given id on the trigger so a <label htmlFor> names it", () => {
+    mockList.mockResolvedValue({ ok: true, data: METHODS });
+    render(
+      <>
+        <label htmlFor="pm-field">Payment method</label>
+        <PaymentMethodSelect id="pm-field" companyId={COMPANY_ID} value={null} onChange={vi.fn()} />
+      </>
+    );
+    expect(screen.getByLabelText("Payment method")).toBe(screen.getByRole("combobox"));
+  });
 });
 
 describe("PaymentMethodSelect — fallbackSelectedLabel", () => {

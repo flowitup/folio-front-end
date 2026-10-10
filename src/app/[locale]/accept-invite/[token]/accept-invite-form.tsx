@@ -22,16 +22,22 @@ interface AcceptInviteFormProps {
 }
 
 /** Translation key under `acceptInvite.errors` for each backend failure. */
-function errorMessageKey(error: InviteFlowError): string {
+export function errorMessageKey(error: InviteFlowError): string {
   switch (error) {
     case "invalid_phone":
       return "errors.invalidPhone";
     case "phone_registered":
       return "errors.phoneRegistered";
+    case "account_exists":
+      return "errors.accountExists";
+    case "wrong_account":
+      return "errors.wrongAccount";
     case "invalid_code":
       return "errors.invalidCode";
     case "throttled":
       return "errors.throttled";
+    case "hourly_limit":
+      return "errors.hourlyLimit";
     case "expired":
       return "errors.expired";
     case "revoked":
@@ -84,7 +90,7 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
     try {
       const result = await requestInviteCodeAction(token, e164);
       if (!result.success) {
-        setError(t(errorMessageKey(result.error ?? "unknown")));
+        setError(t(errorMessageKey(result.error ?? "unknown"), { minutes: result.retryAfterMinutes ?? 0 }));
         return false;
       }
       setCooldown(RESEND_COOLDOWN_SECONDS);

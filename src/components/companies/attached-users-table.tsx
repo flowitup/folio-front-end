@@ -36,6 +36,7 @@ import {
 } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { AttachedUser } from "@/types/companies";
 import { formatDate } from "@/lib/utils/formatters";
+import { userContact, userDisplayName } from "@/lib/auth/user-display";
 
 interface AttachedUsersTableProps {
   companyId: string;
@@ -129,7 +130,7 @@ export function AttachedUsersTable({
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[13px] font-medium">
-                        {u.display_name ?? u.email}
+                        {userDisplayName(u)}
                       </span>
                       {u.is_primary && (
                         <span
@@ -141,12 +142,12 @@ export function AttachedUsersTable({
                         </span>
                       )}
                     </div>
-                    {u.display_name && (
+                    {u.display_name && userContact(u) && (
                       <div
                         className="text-[12px]"
                         style={{ color: "var(--muted)" }}
                       >
-                        {u.email}
+                        {userContact(u)}
                       </div>
                     )}
                   </div>
@@ -222,7 +223,7 @@ export function AttachedUsersTable({
                   onClick={() =>
                     setBootTarget({
                       userId: u.user_id,
-                      displayName: u.display_name ?? u.email,
+                      displayName: userDisplayName(u),
                     })
                   }
                   title={t("admin.manage.attached.boot")}

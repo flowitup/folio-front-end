@@ -668,3 +668,35 @@ describe("LaborSummary — monthly rollup + year filter (all-history mode)", () 
     expect(onMonthChange).toHaveBeenCalledWith("2026-04");
   });
 });
+
+describe("LaborSummary — per-worker breakdown toggle", () => {
+  const monthly = makeMonthlySummary([
+    {
+      year: 2026,
+      month: 4,
+      total_days: 12,
+      total_cost: 3000,
+      workers: [{ worker_id: "w-alice", worker_name: "Alice", days_worked: 12, total_cost: 3000 }],
+    },
+  ]);
+
+  it("is a named button that collapses and re-expands the month without drilling down", () => {
+    const onMonthChange = vi.fn();
+    render(
+      <LaborSummary {...defaultProps} summary={null} monthlySummary={monthly} month="" onMonthChange={onMonthChange} />
+    );
+
+    const toggle = screen.getByRole("button", { name: "summaryToggleBreakdown" });
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+    // A keyboard press on a button fires its click.
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByTestId("worker-subrow-2026-04-w-alice")).toBeNull();
+
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByTestId("worker-subrow-2026-04-w-alice")).toBeDefined();
+    expect(onMonthChange).not.toHaveBeenCalled();
+  });
+});

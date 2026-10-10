@@ -418,3 +418,62 @@ describe("AddRefundableExpenseDialog", () => {
     await waitFor(() => expect(screen.queryByText("INV-CO")).toBeNull());
   });
 });
+
+describe("AddRefundableExpenseDialog — past the first 200 candidates", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSet.mockResolvedValue(undefined);
+  });
+
+  it("searches on the server, so an expense that was never loaded is found", async () => {
+    const recent = makeCandidate({ id: "recent", invoice_number: "INV-0205", recipient_name: "Supplier 204" });
+    const oldest = makeCandidate({ id: "oldest", invoice_number: "INV-0001", recipient_name: "Supplier 000" });
+    mockFetchCandidates.mockImplementation(async (params) =>
+      params?.q ? { items: [oldest], total: 1 } : { items: [recent], total: 205 }
+    );
+
+    render(<AddRefundableExpenseDialog {...DEFAULT_PROPS} />);
+    await screen.findByText("INV-0205");
+
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Supplier 000" } });
+    // Not among the loaded rows: wait for the server rather than say "none".
+    expect(screen.queryByText("No eligible expenses found.")).toBeNull();
+    expect(screen.getByText("Loading...")).toBeDefined();
+
+    expect(await screen.findByText("INV-0001")).toBeDefined();
+    expect(mockFetchCandidates).toHaveBeenLastCalledWith({ q: "Supplier 000", offset: undefined });
+    expect(screen.queryByText(/Showing \d+ of \d+/)).toBeNull();
+  });
+
+  it("says none were found once the server finds nothing", async () => {
+    mockFetchCandidates.mockImplementation(async (params) =>
+      params?.q ? { items: [], total: 0 } : { items: [makeCandidate()], total: 205 }
+    );
+
+    render(<AddRefundableExpenseDialog {...DEFAULT_PROPS} />);
+    await screen.findByText("Riverside Tower");
+
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "nothing like it" } });
+    expect(await screen.findByText("No eligible expenses found.")).toBeDefined();
+    expect(mockFetchCandidates).toHaveBeenCalledTimes(2);
+  });
+
+  it("loads the next page after the loaded rows", async () => {
+    mockFetchCandidates.mockImplementation(async (params) =>
+      params?.offset
+        ? { items: [makeCandidate({ id: "b", invoice_number: "INV-B" })], total: 2 }
+        : { items: [makeCandidate({ id: "a", invoice_number: "INV-A" })], total: 2 }
+    );
+
+    render(<AddRefundableExpenseDialog {...DEFAULT_PROPS} />);
+    await screen.findByText("INV-A");
+    expect(screen.getByText("Showing 1 of 2")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "Load more" }));
+
+    expect(await screen.findByText("INV-B")).toBeDefined();
+    expect(mockFetchCandidates).toHaveBeenLastCalledWith({ q: "", offset: 1 });
+    expect(screen.getByText("INV-A")).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
+  });
+});

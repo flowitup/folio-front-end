@@ -95,7 +95,7 @@ export function ArticleImage({ projectId, imageRef, alt, version = 0 }: Props) {
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby={undefined}>
           <DialogTitle className="sr-only">{alt}</DialogTitle>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

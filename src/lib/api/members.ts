@@ -11,6 +11,8 @@ export interface ProjectMember {
   user_id: string;
   email: string;
   display_name: string | null;
+  /** Current sign-in number; the e-mail of a phone-only account keeps the one it signed up with. */
+  phone?: string | null;
   /** Company role (admin | manager | member); null when no longer in the company. */
   role_name?: "admin" | "manager" | "member" | null;
   joined_at: string;

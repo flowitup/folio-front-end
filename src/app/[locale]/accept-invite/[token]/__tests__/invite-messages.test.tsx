@@ -30,7 +30,7 @@ describe.each(LOCALES)("invite screens (%s)", (locale, messages) => {
   it("fills the signed-in email into the body", () => {
     render(
       <NextIntlClientProvider locale={locale} messages={messages}>
-        <LoggedInOther currentEmail="someone@example.com" />
+        <LoggedInOther currentEmail="someone@example.com" returnPath={`/${locale}/accept-invite/tok`} />
       </NextIntlClientProvider>,
     );
     expect(screen.getByText(/someone@example\.com/)).toBeInTheDocument();

@@ -29,9 +29,11 @@ export interface LaborWorkerSelectProps {
    */
   onChange: (workerId: string | null, worker: Worker | null) => void;
   disabled?: boolean;
+  /** Id of the <select>, for a <label htmlFor>. */
+  id?: string;
 }
 
-export function LaborWorkerSelect({ projectId, value, onChange, disabled }: LaborWorkerSelectProps) {
+export function LaborWorkerSelect({ projectId, value, onChange, disabled, id: selectId }: LaborWorkerSelectProps) {
   const t = useTranslations("invoices");
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(false);
@@ -77,6 +79,7 @@ export function LaborWorkerSelect({ projectId, value, onChange, disabled }: Labo
 
   return (
     <select
+      id={selectId}
       value={value ?? ""}
       onChange={(e) => {
         const id = e.target.value === "" ? null : e.target.value;

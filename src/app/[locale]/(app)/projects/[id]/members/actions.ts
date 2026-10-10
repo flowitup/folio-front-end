@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getLocale } from "next-intl/server";
 import { createInvitation, revokeInvitation } from "@/lib/api/invitations";
 import type { CreateInvitationResult } from "@/lib/api/invitations";
 import { unassignProjectMember } from "@/lib/api/assignments";
@@ -23,15 +24,28 @@ function membersPath(projectId: string): string {
  */
 export type MemberActionResult<T = null> =
   | { ok: true; data: T }
-  | { ok: false; status: number };
+  | { ok: false; status: number; reason?: string };
 
-function failure(status: number): { ok: false; status: number } {
-  return { ok: false, status };
+function failure(status: number, reason?: string): { ok: false; status: number; reason?: string } {
+  return reason ? { ok: false, status, reason } : { ok: false, status };
 }
 
 function statusOf(err: unknown): number {
   const status = (err as { status?: number } | null)?.status;
   return typeof status === "number" ? status : 500;
+}
+
+/** The backend's `reason` discriminator, when the error carries one. */
+function reasonOf(err: unknown): string | undefined {
+  const reason = (err as { reason?: unknown } | null)?.reason;
+  return typeof reason === "string" ? reason : undefined;
+}
+
+const EMAIL_LOCALES = ["en", "fr", "vi"] as const;
+type EmailLocale = (typeof EMAIL_LOCALES)[number];
+
+function emailLocale(locale: string): EmailLocale {
+  return (EMAIL_LOCALES as readonly string[]).includes(locale) ? (locale as EmailLocale) : "en";
 }
 
 // Defense-in-depth: every mutating server action is an internet-reachable
@@ -70,9 +84,11 @@ export async function inviteMemberAction(
 
   let result: CreateInvitationResult;
   try {
-    result = await createInvitation({ project_id: projectId, email });
+    // The invitation email (and the page its link opens) speaks the inviter's language.
+    const locale = emailLocale(await getLocale());
+    result = await createInvitation({ project_id: projectId, email, locale });
   } catch (err) {
-    return failure(statusOf(err));
+    return failure(statusOf(err), reasonOf(err));
   }
   // Route groups like `(app)` are stripped from Next.js cache keys, so
   // including them here makes the call a silent no-op. Use the resolved

@@ -19,6 +19,7 @@ import { UnitSelect } from "@/components/chiffrage/unit-select";
 import { RoomSelect } from "@/components/chiffrage/room-select";
 import type { ChiffrageArticle, ChiffrageRoom, ChiffrageUnit } from "@/lib/api/chiffrage";
 import { MAX_ARTICLE_QUANTITY } from "@/lib/numeric-bounds";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 
 interface Props {
   open: boolean;
@@ -56,17 +57,23 @@ export function ArticleFormDialog({
   const [unit, setUnit] = useState<string | null>(article?.unit ?? null);
   const [note, setNote] = useState(article?.note ?? "");
   const [roomId, setRoomId] = useState<string | null>(article?.room_id ?? null);
+  // Unreadable text is flagged once the field is left, not on a half-typed "2,".
+  const [qtyTouched, setQtyTouched] = useState(false);
 
-  const qtyTooLarge = Number(qty) > MAX_ARTICLE_QUANTITY;
-  const qtyValid =
-    qty.trim() !== "" && Number(qty) >= 0 && !Number.isNaN(Number(qty)) && !qtyTooLarge;
+  // A text field, not type="number": Chrome reads a number field in the OS
+  // language, so in an English browser "2,5" became 25 without a word. Here
+  // "," and "." both work (3 decimals, as stored) and anything else is refused.
+  const qtyNum = parseMoneyInput(qty, { maxDecimals: 3 });
+  const qtyTooLarge = qtyNum !== null && qtyNum > MAX_ARTICLE_QUANTITY;
+  const qtyInvalid = qty.trim() !== "" && qtyNum === null && qtyTouched;
+  const qtyValid = qtyNum !== null && !qtyTooLarge;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !qtyValid) return;
+    if (!name.trim() || qtyNum === null || !qtyValid) return;
     onSubmit({
       name: name.trim(),
-      quantity: qty,
+      quantity: String(qtyNum),
       unit,
       note: note.trim() || null,
       room_id: roomId,
@@ -85,8 +92,12 @@ export function ArticleFormDialog({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>{t("room")}</Label>
+              <Label id="article-room-label" htmlFor="article-room">
+                {t("room")}
+              </Label>
               <RoomSelect
+                id="article-room"
+                labelledBy="article-room-label"
                 value={roomId}
                 rooms={rooms}
                 onChange={setRoomId}
@@ -109,18 +120,20 @@ export function ArticleFormDialog({
                 <Label htmlFor="article-qty">{t("quantity")}</Label>
                 <Input
                   id="article-qty"
-                  type="number"
-                  min="0"
-                  max={MAX_ARTICLE_QUANTITY}
-                  step="0.001"
+                  type="text"
                   inputMode="decimal"
                   value={qty}
                   onChange={(e) => setQty(e.target.value)}
-                  aria-invalid={qtyTooLarge || undefined}
+                  onBlur={() => setQtyTouched(true)}
+                  aria-invalid={qtyTooLarge || qtyInvalid || undefined}
                 />
                 {qtyTooLarge ? (
                   <p className="text-xs text-destructive" role="alert">
                     {t("quantityTooLarge", { max: MAX_ARTICLE_QUANTITY })}
+                  </p>
+                ) : qtyInvalid ? (
+                  <p className="text-xs text-destructive" role="alert">
+                    {t("quantityInvalid")}
                   </p>
                 ) : null}
               </div>

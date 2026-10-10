@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
+import fr from "@/messages/fr.json";
 import type { ProjectMember } from "@/lib/api/members";
 
 vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -152,6 +153,39 @@ describe("MembersTable", () => {
     expect(screen.getAllByText(en.members.expired).length).toBeGreaterThan(0);
   });
 
+  it("heads the remaining time with 'Expire dans' and labels it and the inviter on phone cards", () => {
+    render(
+      <NextIntlClientProvider locale="fr" messages={fr}>
+        <MembersTable
+          projectId="p1"
+          companyId="c1"
+          members={[]}
+          invites={[
+            {
+              id: "i1",
+              email: "new@example.com",
+              // Just under 7 days left, so it rounds up to 7.
+              expires_at: new Date(Date.now() + 7 * 86_400_000 - 60_000).toISOString(),
+              invited_by_name: "Ann",
+            } as never,
+          ]}
+          canInvite
+          canManageMembers={false}
+          canAssignMembers={false}
+          callerIsCompanyAdmin={false}
+          canEditIdentity={false}
+          currentUserId="me"
+        />
+      </NextIntlClientProvider>
+    );
+    // "Expire le" (expires on) announced a date above a duration.
+    expect(screen.getByRole("columnheader", { name: "Expire dans" })).toBeInTheDocument();
+    expect(within(screen.getByTestId("invites-desktop")).getByText("7 jours")).toBeInTheDocument();
+    const meta = screen.getByTestId("invite-card-meta");
+    expect(meta).toHaveTextContent("Expire dans 7 jours");
+    expect(meta).toHaveTextContent("Invité par Ann");
+  });
+
   it("lets the header and its buttons wrap on narrow screens", () => {
     renderTable([]);
     const header = screen.getByTestId("members-header");
@@ -171,5 +205,61 @@ describe("MembersTable", () => {
     await userEvent.click(within(dialog).getByRole("button", { name: en.members.invite.cancel }));
     expect(mockRemove).not.toHaveBeenCalled();
     expect(confirmSpy).not.toHaveBeenCalled();
+  });
+
+  it("lets a manager remove only company members, as the API does", () => {
+    const at = "2026-09-01T00:00:00Z";
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <MembersTable
+          projectId="p1"
+          companyId="c1"
+          members={[
+            { user_id: "me", email: "alice@example.com", display_name: "Alice", role_name: "manager", joined_at: at },
+            { user_id: "u-dave", email: "dave@example.com", display_name: "Dave", role_name: "member", joined_at: at },
+            { user_id: "u-bob", email: "bob@example.com", display_name: "Bob", role_name: "manager", joined_at: at },
+            { user_id: "u-ann", email: "ann@example.com", display_name: "Ann", role_name: "admin", joined_at: at },
+            { user_id: "u-gone", email: "gone@example.com", display_name: "Gone", role_name: null, joined_at: at },
+          ]}
+          invites={[]}
+          canInvite
+          canManageMembers
+          canAssignMembers
+          callerIsCompanyAdmin={false}
+          canEditIdentity={false}
+          currentUserId="me"
+        />
+      </NextIntlClientProvider>
+    );
+    const rows = within(screen.getByTestId("members-desktop")).getAllByRole("row").slice(1);
+    const removeIn = (name: string) =>
+      within(rows.find((r) => within(r).queryByText(name))!).getByRole("button", { name: en.members.edit.remove });
+
+    expect(removeIn("Dave")).toBeEnabled();
+    for (const name of ["Bob", "Ann", "Gone"]) {
+      expect(removeIn(name)).toBeDisabled();
+      expect(removeIn(name)).toHaveAttribute("title", en.members.edit.removeOnlyAdmin);
+    }
+    // Their own row stays disabled, without the admin-only reason.
+    expect(removeIn("Alice")).toBeDisabled();
+    expect(removeIn("Alice")).not.toHaveAttribute("title");
+    // The phone layout follows the same rule.
+    const mobileRemoves = within(screen.getByTestId("members-mobile")).getAllByRole("button", {
+      name: en.members.edit.remove,
+    });
+    expect(mobileRemoves.map((b) => (b as HTMLButtonElement).disabled)).toEqual([true, false, true, true, true]);
+  });
+
+  it("lets a company admin remove anyone but themselves", () => {
+    const at = "2026-09-01T00:00:00Z";
+    renderTable([
+      { user_id: "me", email: "ann@example.com", display_name: "Ann", role_name: "admin", joined_at: at },
+      { user_id: "u-bob", email: "bob@example.com", display_name: "Bob", role_name: "manager", joined_at: at },
+      { user_id: "u-gone", email: "gone@example.com", display_name: "Gone", role_name: null, joined_at: at },
+    ]);
+    const removes = within(screen.getByTestId("members-desktop")).getAllByRole("button", {
+      name: en.members.edit.remove,
+    });
+    expect(removes.map((b) => (b as HTMLButtonElement).disabled)).toEqual([true, false, false]);
   });
 });

@@ -3,7 +3,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { fetchProjects, fetchProjectById } from '../projects'
+import { fetchProjects, fetchProjectById, fetchProjectUsers } from '../projects'
+import { userContact } from '@/lib/auth/user-display'
 
 // Mock the http module
 vi.mock('../http', () => ({
@@ -126,5 +127,34 @@ describe('fetchProjectById', () => {
     vi.mocked(api.get).mockRejectedValueOnce(error)
 
     await expect(fetchProjectById('1')).rejects.toThrow('Network error')
+  })
+})
+
+describe('fetchProjectUsers', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('keeps the current phone, so a changed number is not read from the sign-up e-mail', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      members: [
+        {
+          user_id: 'u1',
+          // A phone-only account keeps the address minted from the number it signed up with.
+          email: 'phone-33620150003@no-email.folio.flowitup.com',
+          display_name: null,
+          phone: '+33620150004',
+          role_name: 'member',
+        },
+      ],
+      total: 1,
+    })
+
+    const result = await fetchProjectUsers('p1')
+
+    expect(api.get).toHaveBeenCalledWith('/projects/p1/members')
+    expect(result.users[0].phone).toBe('+33620150004')
+    expect(userContact(result.users[0])).toBe(userContact({ phone: '+33620150004' }))
+    expect(userContact(result.users[0])).not.toBe(userContact({ phone: '+33620150003' }))
   })
 })

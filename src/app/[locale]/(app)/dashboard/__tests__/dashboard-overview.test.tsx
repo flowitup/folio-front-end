@@ -5,7 +5,7 @@
  * agenda's "this week" (Mon 2026-07-13 → Sun 2026-07-19) are deterministic.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import enMessages from "@/messages/en.json";
 import type { Invoice } from "@/types/invoice";
@@ -142,6 +142,19 @@ describe("DashboardPage — no project selected", () => {
     mockUseProject.mockReturnValue({ selectedProject: null, isLoading: true });
     renderDashboard();
     expect(screen.queryByTestId("overview-no-project")).toBeNull();
+  });
+
+  it("says the projects failed to load, with a retry, instead of inviting a first project", () => {
+    const refetch = vi.fn().mockResolvedValue(undefined);
+    mockUseProject.mockReturnValue({ selectedProject: null, isLoading: false, error: "load_failed", refetch });
+    mockUser = { permissions: ["project:create"], companies: [{ id: "c-1", role: "admin" }] };
+    renderDashboard();
+
+    expect(screen.getByTestId("overview-projects-error")).toHaveTextContent(enMessages.projects.loadError);
+    expect(screen.queryByTestId("overview-no-project")).toBeNull();
+    expect(screen.queryByRole("link", { name: enMessages.projects.createFirst })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: enMessages.projects.retry }));
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });
 

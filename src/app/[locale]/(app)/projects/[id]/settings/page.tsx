@@ -5,6 +5,7 @@ import { env } from "@/lib/config/env";
 import { sessionAuthHeader } from "@/lib/api/auth-header";
 import { ProjectSettingsClient } from "./project-settings-client";
 import type { Project } from "@/types/project";
+import { pageTitle } from "@/lib/i18n/page-title";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -23,6 +24,8 @@ async function fetchProject(projectId: string): Promise<Project | null> {
     return null;
   }
 }
+
+export const generateMetadata = pageTitle("navigation.projectSettings");
 
 export default async function ProjectSettingsPage({ params }: PageProps) {
   const { id: projectId } = await params;

@@ -141,6 +141,68 @@ describe("PhotosGallery — empty state", () => {
   });
 });
 
+// ── Load error ────────────────────────────────────────────────────────────────
+
+describe("PhotosGallery — load error", () => {
+  it("shows an error with a retry instead of 'No media yet' when the list could not be read", () => {
+    render(
+      <PhotosGallery
+        projectId={PROJECT_ID}
+        initialPhotos={[]}
+        initialTotal={0}
+        initialLoadFailed
+        canEdit={true}
+      />
+    );
+    expect(screen.getByRole("alert")).toBeDefined();
+    expect(screen.getByText("photos.loadError.title")).toBeDefined();
+    expect(screen.queryByText("photos.empty.title")).toBeNull();
+  });
+
+  it("retry loads the first page again and shows the photos", async () => {
+    const { loadMorePhotosAction } = await import("../actions");
+    vi.mocked(loadMorePhotosAction).mockResolvedValueOnce({
+      ok: true,
+      data: { items: [makePhoto("p1", "2024-06-15T10:00:00Z")], total: 1, page: 1, perPage: 50 },
+    });
+    render(
+      <PhotosGallery
+        projectId={PROJECT_ID}
+        initialPhotos={[]}
+        initialTotal={0}
+        initialLoadFailed
+        canEdit={false}
+      />
+    );
+
+    fireEvent.click(screen.getByText("photos.loadError.retry"));
+
+    await waitFor(() => expect(screen.queryByText("photos.loadError.title")).toBeNull());
+    expect(loadMorePhotosAction).toHaveBeenCalledWith(PROJECT_ID, 1);
+    expect(document.querySelectorAll("section[aria-label]").length).toBe(1);
+    expect(screen.queryByText("photos.empty.title")).toBeNull();
+  });
+
+  it("keeps the error when the retry fails too", async () => {
+    const { loadMorePhotosAction } = await import("../actions");
+    vi.mocked(loadMorePhotosAction).mockResolvedValueOnce({ ok: false, error: "server" });
+    render(
+      <PhotosGallery
+        projectId={PROJECT_ID}
+        initialPhotos={[]}
+        initialTotal={0}
+        initialLoadFailed
+        canEdit={false}
+      />
+    );
+
+    fireEvent.click(screen.getByText("photos.loadError.retry"));
+
+    await waitFor(() => expect(loadMorePhotosAction).toHaveBeenCalled());
+    expect(screen.getByText("photos.loadError.title")).toBeDefined();
+  });
+});
+
 // ── Date grouping ─────────────────────────────────────────────────────────────
 
 describe("PhotosGallery — date groups", () => {

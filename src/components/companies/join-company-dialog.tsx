@@ -28,6 +28,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { joinCompanyByCodeAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
+import { useOptionalAuth } from "@/context/AuthContext";
 
 interface JoinCompanyDialogProps {
   open: boolean;
@@ -42,6 +43,8 @@ export function JoinCompanyDialog({
   onAttached,
 }: JoinCompanyDialogProps) {
   const t = useTranslations("companies");
+  // A first company becomes the primary one, which sets the user's permissions.
+  const refreshUser = useOptionalAuth()?.refreshUser;
 
   const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,6 +90,7 @@ export function JoinCompanyDialog({
       setCode("");
       onOpenChange(false);
       onAttached();
+      void refreshUser?.();
     } catch {
       toast.error(t("invite.tokenInvalidError"));
     } finally {
@@ -97,7 +101,7 @@ export function JoinCompanyDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("invite.dialogTitle")}</DialogTitle>
         </DialogHeader>

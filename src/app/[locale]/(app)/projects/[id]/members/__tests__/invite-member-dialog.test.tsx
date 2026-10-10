@@ -32,6 +32,9 @@ vi.mock("next-intl", () => ({
       "toast.alreadyInvited": `An invitation is already pending for ${params?.email ?? ""}`,
       "toast.rateLimited": "Too many invitations. Try again later.",
       "toast.error": "Could not send invitation. Please try again.",
+      "toast.invalidEmail": `${params?.email ?? ""} is not an email address Folio can accept`,
+      "toast.accountDeactivated": `${params?.email ?? ""} belongs to a deactivated account`,
+      "toast.alreadyMember": `${params?.email ?? ""} is already on this project`,
     };
     return t[key] ?? key;
   },
@@ -43,6 +46,7 @@ vi.mock("sonner", () => ({
     success: vi.fn(),
     warning: vi.fn(),
     error: vi.fn(),
+    info: vi.fn(),
   },
 }));
 
@@ -62,6 +66,7 @@ const mockToast = toast as unknown as {
   success: ReturnType<typeof vi.fn>;
   warning: ReturnType<typeof vi.fn>;
   error: ReturnType<typeof vi.fn>;
+  info: ReturnType<typeof vi.fn>;
 };
 
 
@@ -178,6 +183,42 @@ describe("InviteMemberDialog", () => {
         expect(mockToast.error).toHaveBeenCalledWith(
           expect.stringContaining("Too many invitations")
         );
+      });
+    });
+
+    it("says the person is already on the project instead of 'added' (kind=already_member)", async () => {
+      mockInviteAction.mockResolvedValueOnce({
+        ok: true,
+        data: { kind: "already_member", user_id: "user-7" },
+      });
+
+      await fillAndSubmit("dave@example.com");
+
+      await waitFor(() => {
+        expect(mockToast.info).toHaveBeenCalledWith("dave@example.com is already on this project");
+      });
+      expect(mockToast.success).not.toHaveBeenCalled();
+    });
+
+    it("explains a refused address on 422 instead of 'try again'", async () => {
+      mockInviteAction.mockResolvedValueOnce({ ok: false, status: 422, reason: "invalid_email" });
+
+      await fillAndSubmit("o'brien@example.com");
+
+      await waitFor(() => {
+        expect(mockToast.error).toHaveBeenCalledWith(
+          "o'brien@example.com is not an email address Folio can accept"
+        );
+      });
+    });
+
+    it("explains a deactivated account on 422 account_deactivated", async () => {
+      mockInviteAction.mockResolvedValueOnce({ ok: false, status: 422, reason: "account_deactivated" });
+
+      await fillAndSubmit("inactive@example.com");
+
+      await waitFor(() => {
+        expect(mockToast.error).toHaveBeenCalledWith("inactive@example.com belongs to a deactivated account");
       });
     });
 

@@ -6,10 +6,12 @@ import { getLocale } from "next-intl/server";
 import { env } from "@/lib/config/env";
 import { clientIpHeader } from "@/lib/api/client-ip";
 import type { User, AcceptInvitePayload, RequestInviteCodePayload } from "./types";
-import { acceptInvite, requestInviteCode } from "@/lib/api/invitations";
+import { acceptInvite, acceptInviteAsMe, requestInviteCode } from "@/lib/api/invitations";
 import { setForwardedCookies } from "./forward-cookies";
-import { getCurrentUser } from "./session";
+import { getCurrentUser, getSession } from "./session";
 import { isTokenValid, REFRESH_TOKEN_COOKIE } from "./proxy-session";
+import { postLoginPath } from "./callback-url";
+import { hourlyLimitMinutes } from "./otp-throttle";
 
 /**
  * Fetch the canonical current-user record via `GET /auth/me`.
@@ -35,7 +37,7 @@ export async function getCurrentUserAction(): Promise<User | null> {
  * token as a Bearer header (only while unexpired: an expired one would fail
  * the whole request) and the refresh token in the JSON body.
  */
-export async function logout(): Promise<never> {
+export async function logout(returnTo?: string): Promise<never> {
   const cookieStore = await cookies();
   const token = cookieStore.get("access_token_cookie")?.value;
   const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
@@ -64,8 +66,12 @@ export async function logout(): Promise<never> {
   cookieStore.delete("csrf_access_token");
   cookieStore.delete("csrf_refresh_token");
 
-  // Every route is locale-prefixed: land on /<locale>/login like the rest.
-  redirect(`/${await getLocale()}/login`);
+  // Every route is locale-prefixed: land on /<locale>/login like the rest, or
+  // on the same-origin page the caller signed out to reach (an invitation for
+  // another account). Same check as a sign-in callbackUrl, so no open redirect.
+  const locale = await getLocale();
+  const backTo = typeof returnTo === "string" && postLoginPath(returnTo, locale) === returnTo ? returnTo : null;
+  redirect(backTo ?? `/${locale}/login`);
 }
 
 /**
@@ -77,8 +83,11 @@ export async function logout(): Promise<never> {
 export type InviteFlowError =
   | "invalid_phone"
   | "phone_registered"
+  | "account_exists"
+  | "wrong_account"
   | "invalid_code"
   | "throttled"
+  | "hourly_limit"
   | "not_found"
   | "expired"
   | "revoked"
@@ -96,12 +105,16 @@ function classifyInviteError(error: unknown): InviteFlowError {
   const err = error as { status?: number; reason?: string } | null;
   const reason = err?.reason;
   if (reason === "phone_registered") return "phone_registered";
+  // The invited address already has an account: only its own phone (or its session) accepts.
+  if (reason === "account_exists") return "account_exists";
   if (reason === "expired" || reason === "revoked" || reason === "accepted") return reason;
   switch (err?.status) {
     case 400:
       return "invalid_phone";
     case 401:
       return "invalid_code";
+    case 403:
+      return "wrong_account";
     case 404:
       return "not_found";
     case 429:
@@ -120,7 +133,7 @@ function classifyInviteError(error: unknown): InviteFlowError {
 export async function requestInviteCodeAction(
   token: string,
   phone: string
-): Promise<{ success: boolean; error?: InviteFlowError }> {
+): Promise<{ success: boolean; error?: InviteFlowError; retryAfterMinutes?: number }> {
   if (!token || typeof token !== "string" || token.trim().length === 0) {
     return { success: false, error: "not_found" };
   }
@@ -135,6 +148,36 @@ export async function requestInviteCodeAction(
   } catch (error) {
     console.error(
       "Request invite code error:",
+      error instanceof Error ? error.message : "unknown"
+    );
+    // The number's hourly code cap lasts up to an hour: say how long, not "wait a minute".
+    const err = error as { status?: number; code?: string; retryAfter?: string | null } | null;
+    const minutes = err?.status === 429 ? hourlyLimitMinutes(err.code, err.retryAfter) : null;
+    if (minutes !== null) return { success: false, error: "hourly_limit", retryAfterMinutes: minutes };
+    return { success: false, error: classifyInviteError(error) };
+  }
+}
+
+/**
+ * Accept an invitation as the signed-in user: someone who already has an
+ * account joins from their session, without a phone step. The backend checks
+ * the session's account is the one the invitation was sent to.
+ */
+export async function acceptInviteAsMeAction(
+  token: string
+): Promise<{ success: boolean; error?: InviteFlowError; projectId?: string }> {
+  if (!token || typeof token !== "string" || token.trim().length === 0) {
+    return { success: false, error: "not_found" };
+  }
+  const session = await getSession();
+  if (!session?.accessToken) return { success: false, error: "wrong_account" };
+
+  try {
+    const { project_id } = await acceptInviteAsMe(token);
+    return { success: true, projectId: project_id };
+  } catch (error) {
+    console.error(
+      "Accept invite as me error:",
       error instanceof Error ? error.message : "unknown"
     );
     return { success: false, error: classifyInviteError(error) };

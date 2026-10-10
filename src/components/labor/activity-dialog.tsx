@@ -69,8 +69,9 @@ export function ActivityDialog({
         title: title.trim(),
       });
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+    } catch {
+      // Translated, never ApiError's raw "HTTP 400: BAD REQUEST".
+      setError(t("activity.saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -78,7 +79,7 @@ export function ActivityDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>
             {isEdit

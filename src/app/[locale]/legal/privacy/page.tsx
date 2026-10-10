@@ -11,8 +11,9 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  // The [locale] layout's title template adds " · Folio".
   return {
-    title: isFrench(locale) ? "Folio · Politique de confidentialité" : "Folio · Privacy Policy",
+    title: isFrench(locale) ? "Politique de confidentialité" : "Privacy Policy",
   };
 }
 

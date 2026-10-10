@@ -26,6 +26,9 @@ import type {
   ChiffrageStore,
 } from "@/lib/api/chiffrage";
 
+/** Keeps a status badge inside the name block, wrapping rather than overflowing. */
+const BADGE_FITS = "max-w-full whitespace-normal";
+
 interface Props {
   article: ChiffrageArticle;
   /** The project's shops, so each price can name the shop it points at. */
@@ -43,6 +46,7 @@ interface Props {
   /** Bumped after an image change to force the thumbnail to refetch. */
   imageVersion: number;
   onSelectQuote: (quote: ChiffrageQuote) => void;
+  onUnselectQuote: (quote: ChiffrageQuote) => void;
   onEditQuote: (quote: ChiffrageQuote) => void;
   onDeleteQuote: (quote: ChiffrageQuote) => void;
 }
@@ -62,6 +66,7 @@ export function ArticleRow({
   onManageImage,
   imageVersion,
   onSelectQuote,
+  onUnselectQuote,
   onEditQuote,
   onDeleteQuote,
 }: Props) {
@@ -110,12 +115,20 @@ export function ArticleRow({
               {quantity(article.quantity)}
               {article.unit ? ` ${unitLabel(article.unit, t)}` : ""}
             </span>
-            {unpriced ? <Badge variant="outline">{t("noPrice")}</Badge> : null}
+            {/* Badges may wrap: on a phone this block is narrower than
+                "Auto · moins cher", and a no-wrap badge spilled over the amounts. */}
+            {unpriced ? (
+              <Badge variant="outline" className={BADGE_FITS}>
+                {t("noPrice")}
+              </Badge>
+            ) : null}
             {article.effective_source === "cheapest" ? (
-              <Badge variant="secondary">{t("autoCheapest")}</Badge>
+              <Badge variant="secondary" className={BADGE_FITS}>
+                {t("autoCheapest")}
+              </Badge>
             ) : null}
             {article.effective_source === "selected" ? (
-              <Badge>{t("retained")}</Badge>
+              <Badge className={BADGE_FITS}>{t("retained")}</Badge>
             ) : null}
           </div>
           {article.note ? (
@@ -171,6 +184,7 @@ export function ArticleRow({
             canManage={canManage}
             busyQuoteId={busyQuoteId}
             onSelect={onSelectQuote}
+            onUnselect={onUnselectQuote}
             onEdit={onEditQuote}
             onDelete={onDeleteQuote}
           />

@@ -45,8 +45,10 @@ import { CompanyPaymentMethodsCard } from "@/components/companies/company-paymen
 import { CompanyLaborRolesCard } from "@/components/companies/company-labor-roles-card";
 import { CompanyProfileForm } from "@/components/companies/company-profile-form";
 import { useAssistantFeature } from "@/hooks/use-chat-feature";
+import { useOptionalProject } from "@/context/ProjectContext";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { CompanyRole, MyCompany } from "@/types/companies";
+import { queueFlashToast } from "@/lib/flash-toast";
 
 /** Role chip copy — reuses the labels already shown in the members table. */
 const ROLE_LABEL_KEY: Record<CompanyRole, string> = {
@@ -61,6 +63,7 @@ export function CompanySettingsSection() {
   const tc = useTranslations("companies");
   const tSettings = useTranslations("settings");
   const locale = useLocale();
+  const refetchProjects = useOptionalProject()?.refetch;
 
   const [companies, setCompanies] = useState<MyCompany[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,9 +75,10 @@ export function CompanySettingsSection() {
   const fetchingRef = useRef(false);
 
   // `silent` refetches without the full-page spinner (which would unmount
-  // everything below), for refreshes after a mutation.
-  const load = useCallback(async (options?: { silent?: boolean }) => {
-    if (fetchingRef.current) return;
+  // everything below), for refreshes after a mutation. Resolves to the fresh
+  // list, or null when nothing was loaded.
+  const load = useCallback(async (options?: { silent?: boolean }): Promise<MyCompany[] | null> => {
+    if (fetchingRef.current) return null;
     fetchingRef.current = true;
     if (!options?.silent) setIsLoading(true);
     try {
@@ -86,11 +90,13 @@ export function CompanySettingsSection() {
           if (prev && result.data.some((c) => c.id === prev)) return prev;
           return (result.data.find((c) => c.is_primary) ?? result.data[0])?.id ?? null;
         });
+        return result.data;
       } else {
         // Keep whatever list we already had — but remember the failure, so a
         // first load that errors shows "could not load" instead of claiming
         // the caller belongs to no company and pushing a join-code CTA.
         setLoadFailed(true);
+        return null;
       }
     } finally {
       setIsLoading(false);
@@ -109,6 +115,21 @@ export function CompanySettingsSection() {
   const bumpRefresh = () => {
     setRefreshToken((n) => n + 1);
     void load({ silent: true });
+  };
+
+  // Leaving a company takes its projects with it, so the shared project list
+  // is refetched. Someone left with no company at all goes to the dashboard,
+  // whose gate offers onboarding; the full load also drops every bit of
+  // client state that belonged to the company they left.
+  const handleDetached = async (message: string) => {
+    const remaining = await load();
+    if (remaining?.length === 0) {
+      // The full load clears the toast already on screen: show it again on the next page.
+      queueFlashToast(message);
+      window.location.assign(`/${locale}/dashboard`);
+      return;
+    }
+    void refetchProjects?.();
   };
 
   // "Import from company" only makes sense between companies the caller
@@ -240,7 +261,11 @@ export function CompanySettingsSection() {
           )}
 
           {/* Attachment half — visible whatever the caller's role is. */}
-          <MyCompanyCard company={selectedCompany} onMutated={() => void load()} />
+          <MyCompanyCard
+            company={selectedCompany}
+            onMutated={() => void load()}
+            onDetached={(message) => void handleDetached(message)}
+          />
 
           {/* Admin half — company-admin self-service for the selected company. */}
           {isAdminOfSelected && (

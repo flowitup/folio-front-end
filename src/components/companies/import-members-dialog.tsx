@@ -51,14 +51,17 @@ export function ImportMembersDialog({ open, onOpenChange, companyId, sourceCompa
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   // People already in this company: the API "imports" them again and counts
-  // them, so they are marked and left unselectable instead.
+  // them, so they are marked and left unselectable instead. A removed member
+  // (inactive profile) is not one of them: importing brings them back.
   const [existing, setExisting] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     void fetchCompanyDirectoryAction(companyId).then((result) => {
-      if (!cancelled && result.ok) setExisting(new Set(result.data.map((e) => e.person_id)));
+      if (!cancelled && result.ok) {
+        setExisting(new Set(result.data.filter((e) => e.is_active).map((e) => e.person_id)));
+      }
     });
     return () => {
       cancelled = true;

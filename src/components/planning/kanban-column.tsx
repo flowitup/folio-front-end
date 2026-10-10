@@ -11,11 +11,13 @@ interface KanbanColumnProps {
   status: TaskStatus;
   title: string;
   tasks: Task[];
+  /** Assignee names by user id, for the cards. */
+  assigneeNames?: ReadonlyMap<string, string>;
   onAdd?: () => void;
   onTaskClick: (task: Task) => void;
 }
 
-export function KanbanColumn({ status, title, tasks, onAdd, onTaskClick }: KanbanColumnProps) {
+export function KanbanColumn({ status, title, tasks, assigneeNames, onAdd, onTaskClick }: KanbanColumnProps) {
   const t = useTranslations("planning");
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${status}`,
@@ -56,7 +58,12 @@ export function KanbanColumn({ status, title, tasks, onAdd, onTaskClick }: Kanba
       >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              assigneeName={task.assignee_id ? assigneeNames?.get(task.assignee_id) : null}
+              onClick={() => onTaskClick(task)}
+            />
           ))}
         </SortableContext>
       </div>

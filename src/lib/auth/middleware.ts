@@ -24,6 +24,11 @@ export const authRoutes = ["/login"];
 // Cookie names
 export const ACCESS_TOKEN_COOKIE = "access_token_cookie";
 
+/** Request header the proxy sets to the requested path and query on protected
+ * routes: server layouts have no pathname API, and the (app) layout needs it
+ * to keep the page in callbackUrl when it sends a refused session to /login. */
+export const REQUEST_PATH_HEADER = "x-folio-path";
+
 /**
  * True when the pathname (without the locale prefix) is a public route.
  * Match by prefix so locale-stripped paths like "/accept-invite/abc123"

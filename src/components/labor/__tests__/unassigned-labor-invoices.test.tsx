@@ -147,3 +147,24 @@ describe("UnassignedLaborInvoices — no-month 'assign to this month' action", (
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });
+
+describe("UnassignedLaborInvoices — phone width", () => {
+  it("lets the amount, worker picker and month button wrap inside the card", () => {
+    render(
+      <UnassignedLaborInvoices
+        testId="section"
+        title="No month"
+        invoices={[makeInvoice({ id: "inv-7" })]}
+        workers={WORKERS}
+        canManage
+        emptyMessage="Nothing to assign"
+        assignMonthLabel="Assign to October 2026"
+        onAssignWorker={vi.fn()}
+        onAssignMonth={vi.fn()}
+      />,
+    );
+    const controls = screen.getByRole("button", { name: "Assign to October 2026" }).parentElement!;
+    expect(controls.className).toContain("flex-wrap");
+    expect(controls.className).toContain("w-full");
+  });
+});

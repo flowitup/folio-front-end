@@ -75,9 +75,10 @@ export function ProductDetailDialog({
           return;
         }
         setDetail(detailRes.data);
-      } catch (err) {
+      } catch {
+        // The action itself failed (network): translated, never a raw message.
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Unknown error");
+          setError(t("errors.generic"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -86,6 +87,8 @@ export function ProductDetailDialog({
 
     load();
     return () => { cancelled = true; };
+    // `t` only formats the error text; a new `t` must not refetch the product.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   const fmtDate = (iso: string) => formatDate(iso);
@@ -113,7 +116,7 @@ export function ProductDetailDialog({
 
   return (
     <Dialog open={!!productId} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="font-display text-[18px] tracking-tight">
             {product ? product.name : t("detailTitle")}

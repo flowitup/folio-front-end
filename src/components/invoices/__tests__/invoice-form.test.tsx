@@ -7,6 +7,10 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InvoiceForm } from "../invoice-form";
 
+/** The line figures (qty, unit price, VAT) — decimal text inputs, desktop rows first. */
+const numberInputs = (root: ParentNode = document) =>
+  Array.from(root.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]'));
+
 // Mock next-intl
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => {
@@ -161,7 +165,7 @@ describe("InvoiceForm", () => {
         await user.type(descriptionInputs[0], "Work Item");
 
         // Find quantity input - typically comes after description in the grid
-        const numInputs = screen.getAllByRole("spinbutton");
+        const numInputs = numberInputs();
         if (numInputs.length > 0) {
           await user.clear(numInputs[0]);
           await user.type(numInputs[0], "0");
@@ -215,7 +219,7 @@ describe("InvoiceForm", () => {
         const descriptionInputs = screen.getAllByPlaceholderText(/description/i);
         await user.type(descriptionInputs[0], "Consulting Services");
 
-        const numInputs = screen.getAllByRole("spinbutton");
+        const numInputs = numberInputs();
         if (numInputs.length >= 2) {
           await user.clear(numInputs[0]);
           await user.type(numInputs[0], "10");
@@ -312,7 +316,7 @@ describe("InvoiceForm", () => {
       const user = userEvent.setup();
       render(<InvoiceForm onSubmit={mockOnSubmit} />);
 
-      const numInputs = screen.getAllByRole("spinbutton");
+      const numInputs = numberInputs();
 
       if (numInputs.length >= 2) {
         await user.clear(numInputs[0]);
@@ -356,7 +360,7 @@ describe("InvoiceForm", () => {
       const user = userEvent.setup();
       render(<InvoiceForm onSubmit={mockOnSubmit} />);
 
-      const numInputs = screen.getAllByRole("spinbutton");
+      const numInputs = numberInputs();
 
       if (numInputs.length >= 2) {
         await user.clear(numInputs[0]);
@@ -373,7 +377,7 @@ describe("InvoiceForm", () => {
         if (addBtn) {
           await user.click(addBtn);
 
-          const numInputsAfter = screen.getAllByRole("spinbutton");
+          const numInputsAfter = numberInputs();
 
           if (numInputsAfter.length >= 4) {
             await user.clear(numInputsAfter[2]);

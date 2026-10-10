@@ -167,4 +167,114 @@ describe("ProjectsPage money columns", () => {
     expect(screen.getByText(enMessages.projects.spentByCredits)).toBeInTheDocument();
     expect(screen.getByText(enMessages.projects.spentPersonal)).toBeInTheDocument();
   });
+
+  it("goes to four columns only when the card is wide enough, and lets figures wrap", () => {
+    mockUseAuth.mockReturnValue({
+      user: { permissions: ["project:read", "project:view_budget", "project:manage_labor"], companies: [] },
+    });
+    renderPage();
+    const grid = screen.getByTestId("project-money-grid");
+    // A container query on the card, not the viewport: half-width cards on a
+    // laptop left ~40-60px per figure and the amounts ran into each other.
+    expect(grid.className).toContain("@lg:grid-cols-4");
+    expect(grid.className).not.toMatch(/(^|\s)sm:grid-cols-4/);
+    expect(grid.parentElement!.className).toContain("@container");
+    // Labels share one grid row and figures the next, so a label that wraps
+    // further in one locale never pushes its figure below the others.
+    const items = Array.from(grid.children) as HTMLElement[];
+    const labels = items.filter((el) => el.className.includes("label-cap"));
+    const figures = items.filter((el) => !el.className.includes("label-cap"));
+    expect(labels.map((el) => el.textContent)).toEqual([
+      enMessages.projects.creditTotal,
+      enMessages.projects.spentByCredits,
+      enMessages.projects.spentPersonal,
+      enMessages.projects.remaining,
+    ]);
+    expect(labels.map((el) => el.className.match(/(^|\s)(@lg:)?row-start-\d/g)?.join("").trim())).toEqual([
+      "row-start-1",
+      "row-start-1",
+      "row-start-3 @lg:row-start-1",
+      "row-start-3 @lg:row-start-1",
+    ]);
+    expect(figures.map((el) => el.className.match(/(^|\s)(@lg:)?row-start-\d/g)?.join("").trim())).toEqual([
+      "row-start-2",
+      "row-start-2",
+      "row-start-4 @lg:row-start-2",
+      "row-start-4 @lg:row-start-2",
+    ]);
+    for (const figure of figures) expect(figure.className).toContain("[overflow-wrap:anywhere]");
+  });
+
+  it("keeps the two figures of a two-column grid on the first pair of rows", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read", "project:manage_labor"], companies: [] } });
+    renderPage();
+    const items = Array.from(screen.getByTestId("project-money-grid").children) as HTMLElement[];
+    expect(items.map((el) => el.className.match(/(^|\s)row-start-\d/)?.[0].trim())).toEqual([
+      "row-start-1",
+      "row-start-2",
+      "row-start-1",
+      "row-start-2",
+    ]);
+  });
+});
+
+describe("ProjectsPage team panel — Remove", () => {
+  async function openTeamWith(user: object) {
+    vi.mocked(fetchProjectUsers).mockResolvedValueOnce({
+      users: [
+        { id: "me", email: "alice@example.com", display_name: "Alice", role_name: "manager" },
+        { id: "u-d", email: "dave@example.com", display_name: "Dave", role_name: "member" },
+        { id: "u-b", email: "bob@example.com", display_name: "Bob", role_name: "manager" },
+        { id: "u-a", email: "ann@example.com", display_name: "Ann", role_name: "admin" },
+      ],
+      total: 4,
+    });
+    mockUseAuth.mockReturnValue({ user });
+    renderPage();
+    await openTeam();
+    await screen.findByText("dave@example.com");
+  }
+  const removeButtons = () =>
+    screen.queryAllByRole("button", { name: /^Remove / }).map((b) => b.getAttribute("aria-label"));
+
+  it("offers a manager Remove only on company members, never on themselves", async () => {
+    await openTeamWith({
+      id: "me",
+      permissions: ["project:read", "project:manage_users"],
+      companies: [{ id: "co-1", name: "Co", role: "manager" }],
+    });
+    expect(removeButtons()).toEqual(["Remove dave@example.com"]);
+  });
+
+  it("offers a company admin Remove on everyone else", async () => {
+    await openTeamWith({
+      id: "me",
+      permissions: ["project:read", "project:manage_users"],
+      companies: [{ id: "co-1", name: "Co", role: "admin" }],
+    });
+    expect(removeButtons()).toEqual([
+      "Remove dave@example.com",
+      "Remove bob@example.com",
+      "Remove ann@example.com",
+    ]);
+  });
+});
+
+describe("ProjectsPage search", () => {
+  it("says when nothing matches, counts what is shown, and clears back to the list", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });
+    renderPage();
+    const search = screen.getByPlaceholderText(enMessages.projects.searchProjects);
+
+    fireEvent.change(search, { target: { value: "zzzzzz" } });
+    expect(screen.queryByTestId("project-card-title")).toBeNull();
+    expect(screen.getByTestId("projects-no-search-results")).toHaveTextContent("No project matches “zzzzzz”");
+    expect(screen.getByTestId("projects-count")).toHaveTextContent("0 / 1");
+
+    fireEvent.click(screen.getByRole("button", { name: enMessages.projects.noSearchResults.clear }));
+    expect(search).toHaveValue("");
+    expect(screen.queryByTestId("projects-no-search-results")).toBeNull();
+    expect(screen.getByTestId("project-card-title")).toBeInTheDocument();
+    expect(screen.getByTestId("projects-count")).toHaveTextContent(/· 1$/);
+  });
 });

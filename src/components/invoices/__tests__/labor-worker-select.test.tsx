@@ -54,6 +54,16 @@ describe("LaborWorkerSelect", () => {
     vi.clearAllMocks();
   });
 
+  it("puts the given id on the <select> so a <label htmlFor> names it", () => {
+    render(
+      <>
+        <label htmlFor="worker-field">Worker</label>
+        <LaborWorkerSelect id="worker-field" value={null} onChange={vi.fn()} />
+      </>
+    );
+    expect(screen.getByLabelText("Worker")).toBe(screen.getByTestId("labor-worker-select"));
+  });
+
   it("does not fetch and shows only the 'Not linked' option when projectId is absent", async () => {
     render(<LaborWorkerSelect value={null} onChange={vi.fn()} />);
 

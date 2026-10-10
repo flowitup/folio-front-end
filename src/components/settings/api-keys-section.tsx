@@ -218,7 +218,8 @@ export function ApiKeysSection() {
               {t("usageHintBody")}
             </p>
             <span className="mt-2 block font-mono text-[12.5px] break-all">
-              Authorization: Bearer &lt;your key&gt;
+              {/* The header syntax stays literal; only the placeholder is translated. */}
+              {`Authorization: Bearer <${t("usageHintPlaceholder")}>`}
             </span>
           </div>
         </>

@@ -23,7 +23,8 @@ describe("labor.summaryUnassignedHint i18n parity", () => {
 
   it("carries the {n} placeholder in every locale", () => {
     for (const messages of [en, fr, vi]) {
-      expect(messages.labor.summaryUnassignedHint).toContain("{n}");
+      // "{n}" or an ICU plural on n ("{n, plural, …}").
+      expect(messages.labor.summaryUnassignedHint).toMatch(/\{n[,}]/);
     }
   });
 });

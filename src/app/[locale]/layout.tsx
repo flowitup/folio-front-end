@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getLocale } from "next-intl/server";
+import { getMessages, getLocale, getTranslations } from "next-intl/server";
 import "../globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthErrorBoundary } from "@/context/AuthErrorBoundary";
 import { getCurrentUser } from "@/lib/auth/session";
 import { Toaster } from "@/components/ui/sonner";
+import { FlashToast } from "@/components/flash-toast";
 import { AgentationWrapper } from "@/components/dev/agentation-wrapper";
 
 const inter = Inter({
@@ -28,10 +29,25 @@ const fraunces = Fraunces({
   axes: ["opsz"],
 });
 
-export const metadata: Metadata = {
-  title: "Folio · Build Journal",
-  description: "A warm, human-feeling app for managing the construction of your own house.",
-};
+/**
+ * Title and description in the URL's language. App pages and sections set
+ * their own title with pageTitle (@/lib/i18n/page-title); a plain string title
+ * (the legal pages) gets the app name from the template; a page with neither
+ * shows the default.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale });
+  const appName = t("common.appName");
+  return {
+    title: { default: `${appName} · ${t("common.appTagline")}`, template: `%s · ${appName}` },
+    description: t("meta.description"),
+  };
+}
 
 export default async function LocaleLayout({
   children,
@@ -53,9 +69,11 @@ export default async function LocaleLayout({
           <AuthErrorBoundary>
             <AuthProvider initialUser={user}>{children}</AuthProvider>
           </AuthErrorBoundary>
+          {/* Inside the provider: it names its landmark in the page's language. */}
+          <Toaster />
+          <FlashToast />
         </NextIntlClientProvider>
         <AgentationWrapper />
-        <Toaster />
       </body>
     </html>
   );

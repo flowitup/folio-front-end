@@ -17,7 +17,10 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InvoiceForm } from "../invoice-form";
 import { formatEUR } from "@/lib/utils/formatters";
-// formatEUR emits U+202F/U+00A0 spaces; testing-library's default normalizer
+
+/** The line figures (qty, unit price, VAT) — decimal text inputs, desktop rows first. */
+const numberInputs = (root: ParentNode = document) =>
+  Array.from(root.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]'));// formatEUR emits U+202F/U+00A0 spaces; testing-library's default normalizer
 // collapses them to ASCII spaces, so match against the normalized string.
 const eur = (n: number) => formatEUR(n).replace(/[\u202f\u00a0]/g, " ");
 
@@ -76,16 +79,14 @@ describe("InvoiceForm — VAT % field", () => {
     expect(within(desktop).getByText("TVA %")).toBeDefined();
   });
 
-  it("renders a numeric input for vat_rate with default value 0", () => {
+  it("renders a decimal input for vat_rate with default value 0", () => {
     render(<InvoiceForm onSubmit={mockOnSubmit} />);
     const desktop = screen.getByTestId("invoice-items-desktop");
-    const vatInputs = within(desktop).getAllByRole("spinbutton");
-    // Spinbutton order in desktop: qty(0), unit_price(1), vat_rate(2)
-    const vatInput = vatInputs[2];
-    expect(vatInput).toBeDefined();
-    expect(vatInput).toHaveAttribute("min", "0");
-    expect(vatInput).toHaveAttribute("max", "100");
-    expect(vatInput).toHaveAttribute("step", "0.1");
+    // Order in desktop: qty(0), unit_price(1), vat_rate(2)
+    const vatInput = numberInputs(desktop)[2];
+    expect(vatInput).toBe(within(desktop).getByLabelText("TVA %"));
+    expect(vatInput).toHaveAttribute("inputmode", "decimal");
+    expect(vatInput).toHaveValue("0");
   });
 
   it("computes rowTotal as qty × price × (1 + vat/100)", async () => {
@@ -93,7 +94,7 @@ describe("InvoiceForm — VAT % field", () => {
     render(<InvoiceForm onSubmit={mockOnSubmit} />);
 
     const desktop = screen.getByTestId("invoice-items-desktop");
-    const spinbuttons = within(desktop).getAllByRole("spinbutton");
+    const spinbuttons = numberInputs(desktop);
 
     // Set qty = 1, price = 100, vat = 20 → TTC = 120.00
     await user.clear(spinbuttons[0]);
@@ -115,10 +116,8 @@ describe("InvoiceForm — VAT % field", () => {
     const user = userEvent.setup();
     render(<InvoiceForm onSubmit={mockOnSubmit} />);
 
-    const desktop = within(screen.getByTestId("invoice-items-desktop"));
-
     // First item: qty=1 price=100 vat=10 → 110.00
-    const sb1 = desktop.getAllByRole("spinbutton");
+    const sb1 = numberInputs(screen.getByTestId("invoice-items-desktop"));
     await user.clear(sb1[0]);
     await user.type(sb1[0], "1");
     await user.clear(sb1[1]);
@@ -131,7 +130,7 @@ describe("InvoiceForm — VAT % field", () => {
     await user.click(addBtn);
 
     // Second item: qty=2 price=50 vat=0 → 100.00
-    const sb2 = within(screen.getByTestId("invoice-items-desktop")).getAllByRole("spinbutton");
+    const sb2 = numberInputs(screen.getByTestId("invoice-items-desktop"));
     await user.clear(sb2[3]);
     await user.type(sb2[3], "2");
     await user.clear(sb2[4]);
@@ -157,7 +156,7 @@ describe("InvoiceForm — VAT % field", () => {
     const descInputs = desktop.getAllByPlaceholderText(/description/i);
     await user.type(descInputs[0], "Service fee");
 
-    const spinbuttons = desktop.getAllByRole("spinbutton");
+    const spinbuttons = numberInputs(screen.getByTestId("invoice-items-desktop"));
     await user.clear(spinbuttons[0]);
     await user.type(spinbuttons[0], "1");
     await user.clear(spinbuttons[1]);
@@ -184,10 +183,9 @@ describe("InvoiceForm — VAT % field", () => {
       />
     );
 
-    const desktop = within(screen.getByTestId("invoice-items-desktop"));
-    const spinbuttons = desktop.getAllByRole("spinbutton");
+    const spinbuttons = numberInputs(screen.getByTestId("invoice-items-desktop"));
     // Order: qty(0), price(1), vat(2)
-    expect(spinbuttons[2]).toHaveValue(10);
+    expect(spinbuttons[2]).toHaveValue("10");
   });
 
   it("treats missing vat_rate as 0 % (legacy item — total unchanged)", async () => {

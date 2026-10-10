@@ -53,6 +53,9 @@ export interface PersonTypeaheadProps {
   /** Offer "Create …" for an unmatched name. Off where a new Person makes no
    * sense (the merge tool picks existing rows only). Default true. */
   allowCreate?: boolean;
+  /** People who cannot be picked here (e.g. already workers on the project):
+   * listed but disabled, with an "Already on this project" note. */
+  excludeIds?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -71,6 +74,7 @@ export function PersonTypeahead({
   debounceMs = 200,
   limit = 20,
   allowCreate = true,
+  excludeIds,
 }: PersonTypeaheadProps) {
   const t = useTranslations("labor.typeahead");
   const listId = React.useId();
@@ -118,6 +122,7 @@ export function PersonTypeahead({
     trimmed.length > 0 &&
     results.some((p) => p.name.trim().toLowerCase() === trimmed.toLowerCase());
   const showCreate = allowCreate && trimmed.length > 0 && !exactMatch && !creating;
+  const excluded = React.useMemo(() => new Set(excludeIds ?? []), [excludeIds]);
 
   async function handleSelect(person: PersonSummary) {
     onChange(person);
@@ -181,7 +186,6 @@ export function PersonTypeahead({
         className="w-[var(--radix-popover-trigger-width)] min-w-[260px] p-0"
         align="start"
         sideOffset={4}
-        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <Command shouldFilter={false}>
           <CommandInput
@@ -202,14 +206,21 @@ export function PersonTypeahead({
                   <CommandItem
                     key={person.id}
                     value={person.id}
+                    disabled={excluded.has(person.id)}
                     onSelect={() => handleSelect(person)}
                     className="flex items-center justify-between gap-3"
                   >
                     <span className="truncate">{person.name}</span>
-                    {person.phone && (
-                      <span className="text-muted-foreground ml-2 shrink-0 font-mono text-xs">
-                        {person.phone}
+                    {excluded.has(person.id) ? (
+                      <span className="text-muted-foreground ml-2 shrink-0 text-xs">
+                        {t("alreadyOnProject")}
                       </span>
+                    ) : (
+                      person.phone && (
+                        <span className="text-muted-foreground ml-2 shrink-0 font-mono text-xs">
+                          {person.phone}
+                        </span>
+                      )
                     )}
                   </CommandItem>
                 ))}

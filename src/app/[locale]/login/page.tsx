@@ -3,6 +3,9 @@ import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { LoginStage } from "@/components/auth/LoginStage";
 import { postLoginPath } from "@/lib/auth/callback-url";
+import { pageTitle } from "@/lib/i18n/page-title";
+
+export const generateMetadata = pageTitle("meta.signIn");
 
 export default async function LoginPage({
   searchParams,

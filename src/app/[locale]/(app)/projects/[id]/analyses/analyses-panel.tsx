@@ -76,8 +76,14 @@ export function AnalysesPanel({
     [members]
   );
 
-  function resolveUploaderName(uploaderId: string): string {
-    return memberDisplayName(memberMap.get(uploaderId)) || t("card.unknownUploader");
+  // The API names the uploader from their account, members or not (a company
+  // admin who was never assigned); "Former member" is left for an erased one.
+  function resolveUploaderName(analysis: ProjectAnalysis): string {
+    return (
+      analysis.uploader_name ||
+      memberDisplayName(memberMap.get(analysis.uploader_id)) ||
+      t("card.unknownUploader")
+    );
   }
 
   // ---- Debounce search input ----
@@ -235,7 +241,7 @@ export function AnalysesPanel({
               key={analysis.id}
               analysis={analysis}
               projectId={projectId}
-              uploaderName={resolveUploaderName(analysis.uploader_id)}
+              uploaderName={resolveUploaderName(analysis)}
             />
           ))}
         </div>

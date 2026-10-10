@@ -100,6 +100,20 @@ describe("BillingTemplateForm — default VAT rate", () => {
     expect(screen.queryByPlaceholderText("e.g. 8.5")).toBeNull();
   });
 
+  it("keeps a template without a default VAT at none when saved unchanged", async () => {
+    vi.clearAllMocks();
+    mockUpdate.mockResolvedValueOnce({ ok: true, data: TEMPLATE });
+    render(<BillingTemplateForm mode="edit" template={{ ...TEMPLATE, default_vat_rate: null }} />);
+
+    expect(screen.getByText("No default VAT")).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+    });
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledOnce());
+    expect(mockUpdate.mock.calls[0][1].default_vat_rate).toBeNull();
+  });
+
   it("labels the create button Create", () => {
     render(<BillingTemplateForm mode="create" />);
 
@@ -107,3 +121,44 @@ describe("BillingTemplateForm — default VAT rate", () => {
   });
 });
 
+
+describe("BillingTemplateForm — notes and terms caps", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("caps notes and terms at 2000 characters, like a document", () => {
+    render(<BillingTemplateForm mode="edit" template={TEMPLATE} />);
+    expect(document.getElementById("tpl-notes")?.getAttribute("maxlength")).toBe("2000");
+    expect(document.getElementById("tpl-terms")?.getAttribute("maxlength")).toBe("2000");
+  });
+
+  it("refuses to save notes longer than a document accepts", async () => {
+    render(<BillingTemplateForm mode="edit" template={{ ...TEMPLATE, notes: "n".repeat(2990) }} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+    });
+
+    // This file's t() mock does not interpolate: the message is the textTooLong key's text.
+    expect(await screen.findByText(/characters or fewer/)).toBeInTheDocument();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("BillingTemplateForm — header and delete dialog", () => {
+  it("names the icon-only back button", () => {
+    render(<BillingTemplateForm mode="create" />);
+
+    expect(screen.getByRole("button", { name: "Back to templates" })).toBeInTheDocument();
+  });
+
+  it("titles the delete confirmation as a delete question, not as the page title", async () => {
+    render(<BillingTemplateForm mode="edit" template={TEMPLATE} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Delete template" }));
+    });
+
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveAccessibleName("Delete template?");
+  });
+});

@@ -8,6 +8,7 @@ import {
   slugify,
   isValidEmail,
   formatWeekdayDate,
+  formatUnitPriceEUR,
 } from '@/lib/utils/formatters'
 
 describe('formatCurrency', () => {
@@ -25,6 +26,26 @@ describe('formatCurrency', () => {
 
   it('should handle large numbers', () => {
     expect(formatCurrency(1000000)).toBe('$1,000,000.00')
+  })
+})
+
+describe('formatUnitPriceEUR', () => {
+  // Intl separators are U+202F (thousands) and U+00A0 (before €); normalise them for readability.
+  const fmt = (n: number) => formatUnitPriceEUR(n).replace(/[\u202f\u00a0]/g, ' ')
+
+  it('keeps the decimals a unit price carries, so quantity × price gives the line amount', () => {
+    expect(fmt(15.015)).toBe('15,015 €')
+    expect(fmt(1234.565)).toBe('1 234,565 €')
+  })
+
+  it('still shows two decimals for a price at the cent or whole', () => {
+    expect(fmt(200)).toBe('200,00 €')
+    expect(fmt(19.9)).toBe('19,90 €')
+  })
+
+  it('caps at 6 decimals, hiding float noise', () => {
+    expect(fmt(0.1 + 0.2)).toBe('0,30 €')
+    expect(fmt(1.23456789)).toBe('1,234568 €')
   })
 })
 

@@ -14,6 +14,7 @@ import { DocumentsUpload } from "./documents-upload";
 import { DocumentsPreviewDialog } from "./documents-preview-dialog";
 import { DocumentsRenameDialog } from "./documents-rename-dialog";
 import { DocumentsDeleteDialog } from "./documents-delete-dialog";
+import { uploaderLabel } from "./uploader-label";
 import {
   listDocumentsAction,
   deleteDocumentAction,
@@ -117,7 +118,8 @@ export function DocumentsPanel({
       ...members,
       ...uploaders
         .filter((u) => !memberIds.has(u.user_id))
-        .map((u) => ({ id: u.user_id, firstName: u.display_name })),
+        // "" for an erased account: the list then says "(former member)".
+        .map((u) => ({ id: u.user_id, firstName: uploaderLabel(u) })),
     ];
   }, [members, uploaders]);
 

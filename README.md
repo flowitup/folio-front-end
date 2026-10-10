@@ -86,10 +86,8 @@ A separate, company-wide document generator for the paperwork you issue to your 
 ### Accept invitation
 A public landing page for people clicking an invitation email. The invitee enters their name and phone number and verifies it with an SMS code to create their account — the email is shown read-only, just to confirm which invitation they're accepting, since sign-in itself is phone-only. If that number already has an account, the page asks them to sign in instead and the invitation is not applied. Every other state is handled too: already accepted, expired, revoked, invalid token, or "you're signed in as someone else."
 
-### Team chat & assistant
+### Team chat
 - A floating chat button opens a drawer with one channel per company you belong to and one per project, plus a private admin channel for company admins. Send text or a photo; see who's read up to your latest message.
-- Chat and the **@folio** assistant are separate feature flags on the API. With chat off, the chat button doesn't appear. With the assistant off, its answer buttons are hidden; the Assistant audit link stays visible, but the API refuses the audit request, so the page has nothing to show.
-- Company admins get an **Assistant audit** page (under Company settings) listing every `@folio` mention the assistant answered, filterable by date range, company and user.
 
 ### Notifications
 The bell in the top bar shows attendance days waiting for a manager's validation (validate or reject inline) and, for company admins, new members who joined without a project assignment yet, linking to Settings to place them. The badge (capped at "9+") counts what needs action; new-member events aren't counted. Reminders on notes written before notes became a journal still show up there too.

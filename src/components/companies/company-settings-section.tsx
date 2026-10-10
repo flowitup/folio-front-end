@@ -44,7 +44,6 @@ import { CompanyMembersTable } from "@/components/companies/company-members-tabl
 import { CompanyPaymentMethodsCard } from "@/components/companies/company-payment-methods-card";
 import { CompanyLaborRolesCard } from "@/components/companies/company-labor-roles-card";
 import { CompanyProfileForm } from "@/components/companies/company-profile-form";
-import { useAssistantFeature } from "@/hooks/use-chat-feature";
 import { useOptionalProject } from "@/context/ProjectContext";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { CompanyRole, MyCompany } from "@/types/companies";
@@ -59,7 +58,6 @@ const ROLE_LABEL_KEY: Record<CompanyRole, string> = {
 
 export function CompanySettingsSection() {
   const t = useTranslations("companySettings");
-  const assistantEnabled = useAssistantFeature();
   const tc = useTranslations("companies");
   const tSettings = useTranslations("settings");
   const locale = useLocale();
@@ -300,22 +298,6 @@ export function CompanySettingsSection() {
                 key={`payment-methods-${selectedCompany.id}`}
                 companyId={selectedCompany.id}
               />
-
-              {/* Supervision page for the assistant's `@folio` mentions in this
-                  company's chat channels — same admin gate as the cards above,
-                  re-checked server-side by the page itself. Only while the
-                  assistant is on: switched off, the page has nothing to show. */}
-              {assistantEnabled === true && (
-                <section className="folio-card p-7">
-                  <a
-                    href={`/${locale}/company/assistant-audit?company_id=${selectedCompany.id}`}
-                    className="text-[13px] font-medium hover:underline"
-                    style={{ color: "var(--ink)" }}
-                  >
-                    {t("assistantAuditLink")} →
-                  </a>
-                </section>
-              )}
             </>
           )}
 

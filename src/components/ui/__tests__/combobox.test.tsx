@@ -6,6 +6,7 @@
 import * as React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 
 const OPTIONS: ComboboxOption[] = [
@@ -116,5 +117,61 @@ describe("Combobox — free text", () => {
     await openAndType("gros");
     expect(screen.queryByRole("option", { name: "Finitions" })).toBeNull();
     expect(screen.getByRole("option", { name: "Gros oeuvre" })).toBeDefined();
+  });
+});
+
+describe("Combobox — keyboard", () => {
+  it("moves focus into the search input when it opens, so typing goes there", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    await user.click(screen.getByRole("combobox"));
+    const input = screen.getByPlaceholderText("Section");
+    expect(document.activeElement).toBe(input);
+
+    await user.keyboard("Peinture murs");
+    expect((input as HTMLInputElement).value).toBe("Peinture murs");
+    // The space went into the text instead of closing the list.
+    expect(document.querySelector("button[role='combobox']")?.getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("opens with the character typed on the focused trigger and keeps the rest", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    screen.getByRole("combobox").focus();
+    await user.keyboard("Pe");
+
+    const input = screen.getByPlaceholderText("Section") as HTMLInputElement;
+    expect(document.activeElement).toBe(input);
+    expect(input.value).toBe("Pe");
+
+    await user.keyboard("{Enter}");
+    expect(committed()).toBe("Pe");
+  });
+
+  it("is reachable without a mouse: Enter opens it, typing and Enter commit", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    screen.getByRole("combobox").focus();
+    await user.keyboard("{Enter}");
+    expect(document.activeElement).toBe(screen.getByPlaceholderText("Section"));
+
+    await user.keyboard("Plomberie{Enter}");
+    expect(committed()).toBe("Plomberie");
+  });
+
+  it("Tab in the search input commits the text, closes, and moves on past the trigger", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    screen.getByRole("combobox").focus();
+    await user.keyboard("{Enter}Pose tuyaux{Tab}");
+
+    expect(committed()).toBe("Pose tuyaux");
+    expect(screen.getByRole("combobox").getAttribute("aria-expanded")).toBe("false");
+    // The popover loops focus inside itself: Tab must not leave the user stuck in the input.
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "outside" }));
   });
 });

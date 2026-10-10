@@ -18,6 +18,24 @@ vi.mock("@/lib/auth/otp-actions", () => ({ verifyOtpAction: vi.fn() }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 const { mockUpdate } = vi.hoisted(() => ({ mockUpdate: vi.fn() }));
 vi.mock("@/app/[locale]/(app)/settings/_actions/profile-actions", () => ({ updateProfileAction: mockUpdate }));
+// Stands in for the verified dialog: confirming the code hands the updated user back.
+vi.mock("../change-phone-dialog", () => ({
+  ChangePhoneDialog: ({ onChanged }: { onChanged: (user: User) => void }) => (
+    <button
+      type="button"
+      onClick={() =>
+        onChanged({
+          ...USER,
+          email: "phone-33620150007@no-email.folio.flowitup.com",
+          display_name: null,
+          phone: "+33620150008",
+        } as unknown as User)
+      }
+    >
+      confirm-new-number
+    </button>
+  ),
+}));
 
 import { ProfileForm } from "../profile-form";
 
@@ -37,5 +55,24 @@ describe("ProfileForm header after save", () => {
     fireEvent.change(screen.getByLabelText(en.settings.displayName), { target: { value: "Renamed" } });
     fireEvent.click(screen.getByRole("button", { name: en.settings.save }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Renamed" })).toBeInTheDocument());
+  });
+
+  it("shows the new number at once after Change number, for a user with no name", async () => {
+    const noName = {
+      ...USER,
+      email: "phone-33620150007@no-email.folio.flowitup.com",
+      display_name: null,
+      phone: "+33620150007",
+    } as unknown as User;
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <AuthProvider initialUser={noName}>
+          <ProfileForm />
+        </AuthProvider>
+      </NextIntlClientProvider>
+    );
+    expect(screen.getByRole("heading", { name: "+336 20 15 00 07" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "confirm-new-number" }));
+    await waitFor(() => expect(screen.getByRole("heading", { name: "+336 20 15 00 08" })).toBeInTheDocument());
   });
 });

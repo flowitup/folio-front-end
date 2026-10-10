@@ -21,6 +21,9 @@ type Props = {
   onConfirm: (newFilename: string) => Promise<void> | void;
 };
 
+/** The stored name's column length; the backend refuses a longer name. */
+const MAX_FILENAME_LENGTH = 255;
+
 /** The extension the backend compares, like Python's os.path.splitext. */
 function fileExtension(name: string): string {
   const i = name.lastIndexOf(".");
@@ -45,10 +48,13 @@ export function InvoiceAttachmentRenameDialog({ attachment, onCancel, onConfirm 
   const empty = !value.trim();
   // The backend refuses a changed extension; say so before saving.
   const extensionChanged = !empty && fileExtension(value.trim()) !== extension;
+  // Said before saving rather than as the generic failure the API's 400 gives.
+  const tooLong = value.trim().length > MAX_FILENAME_LENGTH;
+  const invalid = empty || unchanged || extensionChanged || tooLong;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (empty || unchanged || extensionChanged || loading) return;
+    if (invalid || loading) return;
     setLoading(true);
     setError(null);
     try {
@@ -60,7 +66,11 @@ export function InvoiceAttachmentRenameDialog({ attachment, onCancel, onConfirm 
     }
   }
 
-  const message = extensionChanged ? t("errorExtension", { extension }) : error;
+  const message = tooLong
+    ? t("errorTooLong", { max: MAX_FILENAME_LENGTH })
+    : extensionChanged
+      ? t("errorExtension", { extension })
+      : error;
 
   return (
     <Dialog open={attachment !== null} onOpenChange={(open) => !open && !loading && onCancel()}>
@@ -96,7 +106,7 @@ export function InvoiceAttachmentRenameDialog({ attachment, onCancel, onConfirm 
             <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={loading || empty || unchanged || extensionChanged}>
+            <Button type="submit" disabled={loading || invalid}>
               {loading ? t("saving") : t("save")}
             </Button>
           </DialogFooter>

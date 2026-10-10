@@ -77,6 +77,20 @@ describe("requestPhoneChangeCodeAction", () => {
     });
   });
 
+  it("names the wait when the new number hit its hourly code cap", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: "OtpHourlyLimit" }), {
+        status: 429,
+        headers: { "Content-Type": "application/json", "Retry-After": "3290" },
+      })
+    );
+    await expect(requestPhoneChangeCodeAction("0698765432")).resolves.toEqual({
+      success: false,
+      error: "hourly_limit",
+      retryAfterMinutes: 55,
+    });
+  });
+
   it("fails without a session", async () => {
     mockAuthHeader.mockResolvedValueOnce({});
     await expect(requestPhoneChangeCodeAction("0698765432")).resolves.toEqual({

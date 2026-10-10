@@ -104,8 +104,11 @@ function setupMocks() {
   mockUsePathname.mockReturnValue("/en/projects/proj-test-1/invoices");
   // project:view_budget — this spec renders the financing surface (the
   // released-funds tab / purses card), which is hidden without it.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mockUseAuth.mockReturnValue({ user: { permissions: ["project:view_budget"] } } as any);
+  // project:manage_labor — the export is closed to restricted members.
+  mockUseAuth.mockReturnValue(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { user: { permissions: ["project:view_budget", "project:manage_labor"] } } as any
+  );
   mockFetchInvoicesWithMeta.mockResolvedValue({
     invoices: [],
     total: 0,
@@ -136,6 +139,23 @@ describe("InvoicesPage — export range trigger button", () => {
       },
       { timeout: 5000 },
     );
+  });
+
+  it("hides the trigger from a member, who may not export the project", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:manage_invoices"] } } as any);
+    render(<InvoicesPage />);
+
+    await waitFor(() => expect(screen.getByText("noInvoices")).toBeDefined());
+    expect(screen.queryByText("export.trigger")).toBeNull();
+  });
+
+  it("shows the trigger to a pay viewer (project:view_pay)", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:view_pay"] } } as any);
+    render(<InvoicesPage />);
+
+    expect(await screen.findByText("export.trigger")).toBeDefined();
   });
 
   it("dialog is not visible before the trigger button is clicked", async () => {

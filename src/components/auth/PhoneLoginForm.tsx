@@ -55,7 +55,7 @@ export function PhoneLoginForm({ flow }: PhoneLoginFormProps) {
           }}
         >
           <AlertCircle size={14} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
-          <span>{t(flow.errorKey)}</span>
+          <span>{t(flow.errorKey, flow.errorValues)}</span>
         </div>
       )}
 

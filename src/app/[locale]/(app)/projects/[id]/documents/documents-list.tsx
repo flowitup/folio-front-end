@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import type { ProjectDocument, ProjectDocumentKind } from "@/lib/api/project-documents";
 import { downloadProjectDocument } from "@/lib/api/project-document-blob";
 import { formatDate } from "@/lib/utils/formatters";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { DocumentMobileCard } from "./document-mobile-card";
 import { formatBytes } from "./format-bytes";
 
@@ -147,6 +148,10 @@ export function DocumentsList({
   const locale = useLocale();
   const tKinds = useTranslations("documents.kinds");
   const tTags = useTranslations("documents.tags");
+  // The upload day depends on the browser's time zone: render it once hydrated,
+  // or a file uploaded near midnight UTC shows another day on the server.
+  const hydrated = useHydrated();
+  const uploadedOn = (iso: string) => (hydrated ? formatDate(iso) : "");
   const [editingTagsDocId, setEditingTagsDocId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const tagInputRef = useRef<HTMLInputElement>(null);
@@ -185,7 +190,7 @@ export function DocumentsList({
             key={doc.id}
             doc={doc}
             uploaderName={resolveUploaderName(doc.uploader_id)}
-            formattedDate={formatDate(doc.uploaded_at)}
+            formattedDate={uploadedOn(doc.uploaded_at)}
             formattedSize={formatBytes(doc.size_bytes, locale)}
             kindLabel={tKinds(doc.kind)}
             editingTagsDocId={editingTagsDocId}
@@ -394,7 +399,7 @@ export function DocumentsList({
 
                 {/* Uploaded at */}
                 <TableCell className="text-sm text-muted-foreground">
-                  {formatDate(doc.uploaded_at)}
+                  {uploadedOn(doc.uploaded_at)}
                 </TableCell>
 
                 {/* Actions */}

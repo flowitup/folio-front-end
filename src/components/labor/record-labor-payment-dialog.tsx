@@ -17,7 +17,7 @@
  * the payment unattributed, editable later via the normal invoices flow.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -37,6 +37,10 @@ import { formatMonthYear } from "@/lib/utils/formatters";
 import type { Worker } from "@/types/labor";
 import type { CreateInvoicePayload } from "@/types/invoice";
 import { MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
+import { ApiError } from "@/lib/api/http";
+
+/** The API's limit on an invoice line description. */
+const DESCRIPTION_MAX_LENGTH = 500;
 
 function todayKey(): string {
   const d = new Date();
@@ -80,6 +84,13 @@ export function RecordLaborPaymentDialog({
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Each label names its field (screen readers, click-to-focus).
+  const fieldId = useId();
+  const workerFieldId = `${fieldId}-worker`;
+  const dateFieldId = `${fieldId}-date`;
+  const descriptionFieldId = `${fieldId}-description`;
+  const amountFieldId = `${fieldId}-amount`;
+  const methodFieldId = `${fieldId}-method`;
 
   // Seed fields fresh each time the dialog opens.
   useEffect(() => {
@@ -132,7 +143,14 @@ export function RecordLaborPaymentDialog({
       onSaved();
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("recordFailed"));
+      // Never the raw "HTTP 400: BAD REQUEST": a refused description says
+      // why, any other failure gets the translated generic message.
+      const message = err instanceof ApiError ? (err.data as { message?: string } | undefined)?.message : undefined;
+      setError(
+        err instanceof ApiError && err.status === 400 && /\bdescription\b/.test(message ?? "")
+          ? t("descriptionTooLong", { max: DESCRIPTION_MAX_LENGTH })
+          : t("recordFailed"),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -140,7 +158,7 @@ export function RecordLaborPaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>
             {workerName ? t("recordPaymentFor", { name: workerName }) : t("recordPayment")}
@@ -150,8 +168,11 @@ export function RecordLaborPaymentDialog({
         <div className="space-y-3">
           {!worker && (
             <div>
-              <label className="mb-1 block text-xs font-medium">{tInvoices("workerPicker")}</label>
+              <label htmlFor={workerFieldId} className="mb-1 block text-xs font-medium">
+                {tInvoices("workerPicker")}
+              </label>
               <LaborWorkerSelect
+                id={workerFieldId}
                 projectId={projectId}
                 value={workerId}
                 onChange={(id, w) => {
@@ -166,8 +187,11 @@ export function RecordLaborPaymentDialog({
           )}
 
           <div>
-            <label className="mb-1 block text-xs font-medium">{tLabor("date")}</label>
+            <label htmlFor={dateFieldId} className="mb-1 block text-xs font-medium">
+              {tLabor("date")}
+            </label>
             <input
+              id={dateFieldId}
               type="date"
               value={issueDate}
               onChange={(e) => setIssueDate(e.target.value)}
@@ -177,19 +201,26 @@ export function RecordLaborPaymentDialog({
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium">{tInvoices("description")}</label>
+            <label htmlFor={descriptionFieldId} className="mb-1 block text-xs font-medium">
+              {tInvoices("description")}
+            </label>
             <input
+              id={descriptionFieldId}
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              maxLength={DESCRIPTION_MAX_LENGTH}
               className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               disabled={isSaving}
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium">{tInvoices("totalAmount")}</label>
+            <label htmlFor={amountFieldId} className="mb-1 block text-xs font-medium">
+              {tInvoices("totalAmount")}
+            </label>
             <input
+              id={amountFieldId}
               type="number"
               min="0.01"
               max={MAX_LINE_UNIT_PRICE}
@@ -205,10 +236,11 @@ export function RecordLaborPaymentDialog({
 
           {companyId && (
             <div>
-              <label className="mb-1 block text-xs font-medium">
+              <label htmlFor={methodFieldId} className="mb-1 block text-xs font-medium">
                 {tInvoices("paymentMethod.label")}
               </label>
               <PaymentMethodSelect
+                id={methodFieldId}
                 companyId={companyId}
                 value={paymentMethodId}
                 onChange={setPaymentMethodId}

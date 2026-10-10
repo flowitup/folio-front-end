@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Calendar, AlertCircle } from "lucide-react";
+import { Calendar, AlertCircle, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { formatDate } from "@/lib/utils/formatters";
 import type { Task, TaskPriority } from "@/types/task";
@@ -16,10 +16,12 @@ const PRIORITY_DOT_CLASS: Record<TaskPriority, string> = {
 
 interface TaskCardProps {
   task: Task;
+  /** Name of the person the task is assigned to; nothing shown when unknown. */
+  assigneeName?: string | null;
   onClick: () => void;
 }
 
-export function TaskCard({ task, onClick }: TaskCardProps) {
+export function TaskCard({ task, assigneeName, onClick }: TaskCardProps) {
   const t = useTranslations("planning");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -39,11 +41,16 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
       {...attributes}
       {...listeners}
       onClick={onClick}
+      // Enter opens the task; every other key goes on to dnd-kit's listener,
+      // so Space picks the card up to move it with the arrow keys. (Replacing
+      // its onKeyDown outright left keyboard users no way to move a card.)
       onKeyDown={(e) => {
-        if (e.key === "Enter") {
+        if (e.key === "Enter" && !isDragging) {
           e.preventDefault();
           onClick();
+          return;
         }
+        listeners?.onKeyDown?.(e);
       }}
       role="button"
       tabIndex={0}
@@ -61,9 +68,9 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
 
       {task.labels.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1">
-          {task.labels.map((label) => (
+          {task.labels.map((label, i) => (
             <span
-              key={label}
+              key={`${label}-${i}`}
               title={label}
               className="max-w-full truncate rounded px-1.5 py-0.5 text-[10px] font-medium"
               style={{
@@ -79,20 +86,29 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
       )}
 
       <div
-        className="flex items-center justify-between text-[11px]"
+        className="flex items-center justify-between gap-2 text-[11px]"
         style={{ color: "var(--muted)" }}
       >
         {task.due_date ? (
-          <span className="num flex items-center gap-1">
+          <span className="num flex flex-shrink-0 items-center gap-1">
             <Calendar size={12} />
             {formatDate(task.due_date)}
           </span>
         ) : (
           <span />
         )}
-        {task.priority === "urgent" && (
-          <AlertCircle size={13} style={{ color: "var(--negative)" }} />
-        )}
+        <span className="flex min-w-0 items-center gap-1.5">
+          {assigneeName && (
+            <span className="flex min-w-0 items-center gap-1" title={t("assignedTo", { name: assigneeName })}>
+              <User size={12} className="flex-shrink-0" aria-hidden />
+              <span className="truncate" aria-hidden>{assigneeName}</span>
+              <span className="sr-only">{t("assignedTo", { name: assigneeName })}</span>
+            </span>
+          )}
+          {task.priority === "urgent" && (
+            <AlertCircle size={13} className="flex-shrink-0" style={{ color: "var(--negative)" }} />
+          )}
+        </span>
       </div>
     </div>
   );

@@ -770,3 +770,62 @@ describe("BillingDocumentForm — default dates", () => {
     expect((screen.getByLabelText(/payment due/i) as HTMLInputElement).value).toBe("2026-10-27");
   });
 });
+
+describe("BillingDocumentForm — back button", () => {
+  beforeEach(() => mockRouterPush.mockReset());
+
+  it("names the icon-only back button and returns to the list", () => {
+    render(<BillingDocumentForm mode="create" kind="devis" attachedCompanies={ATTACHED_COMPANIES} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to list" }));
+
+    expect(mockRouterPush).toHaveBeenCalledWith("/en/billing/devis");
+  });
+});
+
+describe("BillingDocumentForm — devis locked by its facture", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const LOCKED_NOTE = "This quote was converted to an invoice and is locked. Cancel the invoice to change it.";
+
+  it("explains the lock and disables Save while the facture is live", () => {
+    const devis = makeDoc({
+      status: "accepted",
+      converted_to_facture_id: "fac-1",
+      converted_facture_status: "sent",
+    });
+    render(<BillingDocumentForm mode="edit" kind="devis" document={devis} attachedCompanies={ATTACHED_COMPANIES} />);
+
+    expect(screen.getByText(LOCKED_NOTE)).toBeDefined();
+    expect((screen.getByRole("button", { name: /save changes/i }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole("button", { name: /open invoice/i })).toBeDefined();
+    expect(screen.queryByRole("button", { name: /change status/i })).toBeNull();
+  });
+
+  it("lets the devis be saved again once its facture is cancelled", () => {
+    const devis = makeDoc({
+      status: "accepted",
+      converted_to_facture_id: "fac-1",
+      converted_facture_status: "cancelled",
+    });
+    render(<BillingDocumentForm mode="edit" kind="devis" document={devis} attachedCompanies={ATTACHED_COMPANIES} />);
+
+    expect(screen.queryByText(LOCKED_NOTE)).toBeNull();
+    expect((screen.getByRole("button", { name: /save changes/i }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("shows the lock message, not a generic error, when the API refuses the save", async () => {
+    mockUpdate.mockResolvedValueOnce({
+      ok: false,
+      error: { code: "devis_locked", message: "Devis x was converted to a facture" },
+    });
+    render(<BillingDocumentForm mode="edit" kind="devis" document={makeDoc()} attachedCompanies={ATTACHED_COMPANIES} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    });
+
+    await waitFor(() => expect(screen.getByText(LOCKED_NOTE)).toBeDefined());
+    expect(screen.queryByText(/unexpected error/i)).toBeNull();
+  });
+});

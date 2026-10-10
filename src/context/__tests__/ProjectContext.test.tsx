@@ -217,7 +217,9 @@ describe('ProjectContext', () => {
   })
 
   it('handles fetch error gracefully', async () => {
-    mockFetchProjects.mockRejectedValueOnce(new Error('Network error'))
+    // ApiError's message is raw English ("HTTP 500: ..."): the context keeps
+    // a code that pages translate instead.
+    mockFetchProjects.mockRejectedValueOnce(new Error('HTTP 500: Internal Server Error'))
 
     render(
       <ProjectProvider>
@@ -226,7 +228,7 @@ describe('ProjectContext', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByTestId('error')).toHaveTextContent('Network error')
+      expect(screen.getByTestId('error')).toHaveTextContent('load_failed')
     })
 
     expect(screen.getByTestId('count')).toHaveTextContent('0')

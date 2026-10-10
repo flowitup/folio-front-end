@@ -41,6 +41,8 @@ vi.mock("next-intl", () => ({
       cancel: "Cancel",
       usageHintTitle: "Using your key",
       usageHintBody: "Send it as a bearer token in the Authorization header.",
+      // Not the English text, so the test proves the placeholder goes through t().
+      usageHintPlaceholder: "votre clé",
       "errors.invalid_name": "Please enter a name for this key.",
       "errors.limit_reached": "You've reached the maximum number of API keys.",
       "errors.not_found": "This API key no longer exists.",
@@ -110,6 +112,16 @@ describe("ApiKeysSection — load", () => {
     });
     expect(screen.getByText(/folio_sk_AbCd/)).toBeDefined();
     expect(screen.getByText(/folio_sk_WxYz/)).toBeDefined();
+  });
+
+  it("translates the placeholder of the usage hint but keeps the header syntax literal", async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, data: [KEY_1] });
+    render(<ApiKeysSection />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Authorization: Bearer <votre clé>")).toBeDefined();
+    });
+    expect(screen.queryByText(/<your key>/)).toBeNull();
   });
 
   it("renders the empty state when there are no keys", async () => {

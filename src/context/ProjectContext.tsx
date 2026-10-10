@@ -28,7 +28,8 @@ interface ProjectContextType {
   selectedProject: Project | null;
   selectProject: (projectId: string) => void;
   isLoading: boolean;
-  error: string | null;
+  /** Set when the project list failed to load; pages show a translated message. */
+  error: "load_failed" | null;
   refetch: () => Promise<void>;
 }
 
@@ -46,7 +47,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   );
   const [isHydrated, setIsHydrated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<"load_failed" | null>(null);
 
   // Load from localStorage on mount (client-only)
   useEffect(() => {
@@ -87,8 +88,9 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         }
         return prevId;
       });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load projects");
+    } catch {
+      // A code, not err.message: ApiError's message is "HTTP 500: ..." in English.
+      setError("load_failed");
     } finally {
       setIsLoading(false);
     }
@@ -155,6 +157,11 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       {children}
     </ProjectContext.Provider>
   );
+}
+
+/** Like useProject, but returns undefined outside a ProjectProvider instead of throwing. */
+export function useOptionalProject(): ProjectContextType | undefined {
+  return useContext(ProjectContext);
 }
 
 export function useProject() {

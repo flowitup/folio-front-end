@@ -23,6 +23,7 @@ vi.mock("next-intl", () => ({
     }
     return key;
   },
+  useLocale: () => "en",
 }));
 
 vi.mock("@/lib/api/invoice-api", () => ({
@@ -133,5 +134,25 @@ describe("InvoiceAttachments rename", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("errorExtension");
     expect((screen.getByText("save").closest("button") as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("refuses a name longer than 255 characters before saving", async () => {
+    render(<InvoiceAttachments invoice={INVOICE} canManage />);
+    await screen.findByText("receipt.pdf");
+
+    fireEvent.click(screen.getByTitle("rename"));
+    const input = await screen.findByDisplayValue("receipt.pdf");
+    fireEvent.change(input, { target: { value: `${"a".repeat(252)}.pdf` } });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("errorTooLong");
+    const save = screen.getByText("save").closest("button") as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    fireEvent.click(save);
+    expect(renameAttachment).not.toHaveBeenCalled();
+
+    // Exactly 255 characters is fine.
+    fireEvent.change(input, { target: { value: `${"a".repeat(251)}.pdf` } });
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(save.disabled).toBe(false);
   });
 });

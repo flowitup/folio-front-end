@@ -25,6 +25,8 @@ export interface MemberRow {
   key: string;
   /** Null for a pending row (no user account exists yet). */
   userId: string | null;
+  /** Directory person id; set on every pending row (cancelling one keys on it). */
+  personId: string | null;
   /** Present exactly when userId is present — backs the D8 grants editor. */
   attachedUser: AttachedUser | null;
   name: string;
@@ -54,6 +56,7 @@ export function mergeMemberRows(
     return {
       key: u.user_id,
       userId: u.user_id,
+      personId: entry?.person_id ?? null,
       attachedUser: u,
       name: entry?.name ?? u.display_name ?? u.phone ?? u.email,
       phone: entry?.phone ?? u.phone,
@@ -81,6 +84,7 @@ export function mergeMemberRows(
     .map((entry) => ({
       key: `person:${entry.person_id}`,
       userId: null,
+      personId: entry.person_id,
       attachedUser: null,
       name: entry.name,
       phone: entry.phone,

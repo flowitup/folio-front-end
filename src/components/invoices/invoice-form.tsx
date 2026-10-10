@@ -11,15 +11,57 @@ import { parisDayKey } from "@/lib/utils/paris-day";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import type { CreateInvoicePayload, Invoice, InvoiceType, SettledVia } from "@/types/invoice";
 import { formatEUR } from "@/lib/utils/formatters";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { invoiceTotalTtc, lineTotalTtc } from "@/lib/invoices/invoice-totals";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
-import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
+import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE, MAX_VAT_RATE } from "@/lib/numeric-bounds";
+import {
+  MAX_BUSINESS_DATE,
+  MAX_BUSINESS_MONTH,
+  MAX_BUSINESS_YEAR,
+  MIN_BUSINESS_DATE,
+  MIN_BUSINESS_MONTH,
+  MIN_BUSINESS_YEAR,
+  isBusinessDate,
+} from "@/lib/date-bounds";
 
+/**
+ * A line as typed. The figures stay raw text ("45,90", "-", "") and are only
+ * read for the totals and on submit: rewriting a half-typed "45," as 0 under
+ * the cursor turned "45,90" into 4590.
+ */
 interface LineItem {
   description: string;
-  quantity: number;
-  unit_price: number;
-  /** VAT rate as a percentage (0–100). Defaults to 0 when not set. */
-  vat_rate: number;
+  quantity: string;
+  unit_price: string;
+  /** VAT rate as a percentage (0–100); empty reads as 0. */
+  vat_rate: string;
+}
+
+/** Decimals kept per figure — the precision the totals and the API handle exactly. */
+const QUANTITY_DECIMALS = 4;
+const UNIT_PRICE_DECIMALS = 4;
+const VAT_RATE_DECIMALS = 2;
+
+/**
+ * A line's figures read in any of the app's locales ("45,90" or "45.90"), each
+ * null when it cannot be read. Signs are read here and checked by the caller.
+ */
+function parseLine(item: LineItem) {
+  return {
+    quantity: parseMoneyInput(item.quantity, { maxDecimals: QUANTITY_DECIMALS, allowNegative: true }),
+    unit_price: parseMoneyInput(item.unit_price, { maxDecimals: UNIT_PRICE_DECIMALS, allowNegative: true }),
+    // An emptied VAT field means no VAT, like a legacy line without a rate.
+    vat_rate: item.vat_rate.trim()
+      ? parseMoneyInput(item.vat_rate, { maxDecimals: VAT_RATE_DECIMALS, allowNegative: true })
+      : 0,
+  };
+}
+
+/** The line as the live totals read it: a figure still being typed counts as 0. */
+function lineForTotals(item: LineItem) {
+  const { quantity, unit_price, vat_rate } = parseLine(item);
+  return { quantity: quantity ?? 0, unit_price: unit_price ?? 0, vat_rate: vat_rate ?? 0 };
 }
 
 interface InvoiceFormProps {
@@ -69,14 +111,14 @@ const SPEND_ONLY_INVOICE_TYPES: InvoiceType[] = INVOICE_TYPES.filter(
 
 /**
  * Types that allow mixed-sign (negative) unit_price on line items.
- * For all other types, the input min is clamped to 0.
+ * For all other types, a negative price is refused on submit.
  */
 const MIXED_SIGN_TYPES: ReadonlySet<InvoiceType> = new Set([
   "materials_services",
   "return",
 ]);
 
-const emptyItem = (): LineItem => ({ description: "", quantity: 1, unit_price: 0, vat_rate: 0 });
+const emptyItem = (): LineItem => ({ description: "", quantity: "1", unit_price: "0", vat_rate: "0" });
 
 export function InvoiceForm({
   onSubmit,
@@ -130,9 +172,9 @@ export function InvoiceForm({
     initialValues?.items && initialValues.items.length > 0
       ? initialValues.items.map((i) => ({
           description: i.description,
-          quantity: i.quantity,
-          unit_price: i.unit_price,
-          vat_rate: i.vat_rate ?? 0,
+          quantity: String(i.quantity),
+          unit_price: String(i.unit_price),
+          vat_rate: String(i.vat_rate ?? 0),
         }))
       : [emptyItem()]
   );
@@ -244,14 +286,11 @@ export function InvoiceForm({
   const needsUnlinkedLaborRecipient = type === "labor" && !editingInvoiceId && !workerId;
   const recipientNameRequired = type !== "labor" || needsUnlinkedLaborRecipient;
 
-  // Grand total is TTC: qty × unit_price × (1 + vat_rate/100).
-  // Legacy items without a vat_rate are treated as 0 % VAT.
-  const grandTotal = items.reduce(
-    (sum, item) => sum + item.quantity * item.unit_price * (1 + (item.vat_rate ?? 0) / 100),
-    0
-  );
+  // Grand total is TTC: qty × unit_price × (1 + vat_rate/100), computed and
+  // rounded exactly like the API so the preview matches the saved amount.
+  const grandTotal = invoiceTotalTtc(items.map(lineForTotals));
 
-  const updateItem = (index: number, field: keyof LineItem, value: string | number) => {
+  const updateItem = (index: number, field: keyof LineItem, value: string) => {
     setItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
@@ -270,23 +309,36 @@ export function InvoiceForm({
     // worker to snapshot from, so the free-text input reappears (see JSX
     // below) and recipient_name is required there too — the backend rejects
     // an empty recipient_name regardless of type.
+    // The API refuses a date outside these years; "0026" for "2026" is the usual typo.
+    const dateRange = { min: String(MIN_BUSINESS_YEAR), max: String(MAX_BUSINESS_YEAR) };
     if (!issueDate) return t("errorIssueDateRequired");
+    if (!isBusinessDate(issueDate)) return t("errorDateOutOfRange", dateRange);
     if (recipientNameRequired && !recipientName.trim()) return t("errorRecipientRequired");
     // service_month is required for NEW labor invoices only — editing a
     // legacy row that predates this field must not be blocked by it.
     if (type === "labor" && !editingInvoiceId && !serviceMonth) {
       return t("serviceMonthRequired");
     }
+    if (type === "labor" && serviceMonth && !isBusinessDate(serviceMonth)) {
+      return t("errorDateOutOfRange", dateRange);
+    }
     if (items.length === 0) return t("errorAtLeastOneItem");
     for (const item of items) {
       if (!item.description.trim()) return t("errorDescriptionRequired");
-      if (item.quantity <= 0) return t("errorQuantityPositive");
-      if (item.quantity > MAX_LINE_QUANTITY) {
+      const { quantity, unit_price, vat_rate } = parseLine(item);
+      if (quantity === null) return t("errorQuantityInvalid", { decimals: QUANTITY_DECIMALS });
+      if (quantity <= 0) return t("errorQuantityPositive");
+      if (quantity > MAX_LINE_QUANTITY) {
         return t("errorQuantityTooLarge", { max: MAX_LINE_QUANTITY });
       }
-      // No unit_price >= 0 check here — sign is user-controlled for mixed-sign types
-      if (Math.abs(item.unit_price) > MAX_LINE_UNIT_PRICE) {
+      if (unit_price === null) return t("errorUnitPriceInvalid", { decimals: UNIT_PRICE_DECIMALS });
+      // Negative lines (credits) are only for the mixed-sign types.
+      if (unit_price < 0 && !MIXED_SIGN_TYPES.has(type)) return t("errorUnitPriceNegative");
+      if (Math.abs(unit_price) > MAX_LINE_UNIT_PRICE) {
         return t("errorUnitPriceTooLarge", { max: MAX_LINE_UNIT_PRICE });
+      }
+      if (vat_rate === null || vat_rate < 0 || vat_rate > MAX_VAT_RATE) {
+        return t("errorVatRateInvalid", { decimals: VAT_RATE_DECIMALS });
       }
     }
     return null;
@@ -306,13 +358,14 @@ export function InvoiceForm({
       type,
       issue_date: issueDate,
       recipient_name: recipientName.trim(),
-      ...(recipientAddress.trim() ? { recipient_address: recipientAddress.trim() } : {}),
-      ...(notes.trim() ? { notes: notes.trim() } : {}),
+      // On edit both are always sent: an emptied field goes as "" so the API clears it
+      // (a missing key means "keep", which brought the old text back).
+      ...(editingInvoiceId || recipientAddress.trim() ? { recipient_address: recipientAddress.trim() } : {}),
+      ...(editingInvoiceId || notes.trim() ? { notes: notes.trim() } : {}),
+      // validate() has checked every figure reads as a number.
       items: items.map((item) => ({
         description: item.description.trim(),
-        quantity: Number(item.quantity),
-        unit_price: Number(item.unit_price),
-        vat_rate: Number(item.vat_rate ?? 0),
+        ...lineForTotals(item),
       })),
       // Include payment_method_id on create, and on edit only when it changed
       // (null explicitly clears it). Re-sending an unchanged method that has
@@ -354,13 +407,11 @@ export function InvoiceForm({
         t("errorAppliedExceedsTarget"),
         t("errorWorkerLinkNotAllowed"),
         t("errorWorkerNotInProject"),
-        t("errorPaymentMethodInactive")
+        t("errorPaymentMethodInactive"),
+        invoiceValidationMessages(t)
       ));
     }
   };
-
-  // Whether the current type allows negative unit prices
-  const allowNegativePrice = MIXED_SIGN_TYPES.has(type);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -376,8 +427,9 @@ export function InvoiceForm({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Type */}
             <div>
-              <label className="block text-xs font-medium mb-1">{t("type")}</label>
+              <label htmlFor="invoice-type" className="block text-xs font-medium mb-1">{t("type")}</label>
               <select
+                id="invoice-type"
                 value={type}
                 onChange={(e) => {
                   const newType = e.target.value as InvoiceType;
@@ -409,6 +461,8 @@ export function InvoiceForm({
                 id="invoice-issue-date"
                 type="date"
                 aria-required="true"
+                min={MIN_BUSINESS_DATE}
+                max={MAX_BUSINESS_DATE}
                 value={issueDate}
                 onChange={(e) => setIssueDate(e.target.value)}
                 className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -419,10 +473,11 @@ export function InvoiceForm({
             {/* Recipient: worker picker for labor, free-text for other types */}
             {type === "labor" ? (
               <div>
-                <label className="block text-xs font-medium mb-1">
+                <label htmlFor="invoice-worker" className="block text-xs font-medium mb-1">
                   {t("workerPicker")}
                 </label>
                 <LaborWorkerSelect
+                  id="invoice-worker"
                   projectId={projectId}
                   value={workerId}
                   onChange={(id, worker) => {
@@ -437,10 +492,11 @@ export function InvoiceForm({
               </div>
             ) : (
               <div>
-                <label className="block text-xs font-medium mb-1">
+                <label htmlFor="invoice-recipient" className="block text-xs font-medium mb-1">
                   {t("recipient")} <span className="text-destructive">*</span>
                 </label>
                 <input
+                  id="invoice-recipient"
                   type="text"
                   value={recipientName}
                   onChange={(e) => setRecipientName(e.target.value)}
@@ -459,10 +515,11 @@ export function InvoiceForm({
                 a worker is picked, and never shown in edit mode. */}
             {needsUnlinkedLaborRecipient && (
               <div>
-                <label className="block text-xs font-medium mb-1">
+                <label htmlFor="invoice-unlinked-recipient" className="block text-xs font-medium mb-1">
                   {t("recipient")} <span className="text-destructive">*</span>
                 </label>
                 <input
+                  id="invoice-unlinked-recipient"
                   type="text"
                   value={recipientName}
                   onChange={(e) => setRecipientName(e.target.value)}
@@ -478,8 +535,11 @@ export function InvoiceForm({
             {/* Payment Method */}
             {companyId && (
               <div>
-                <label className="block text-xs font-medium mb-1">{t("paymentMethod.label")}</label>
+                <label htmlFor="invoice-payment-method" className="block text-xs font-medium mb-1">
+                  {t("paymentMethod.label")}
+                </label>
                 <PaymentMethodSelect
+                  id="invoice-payment-method"
                   companyId={companyId}
                   value={paymentMethodId}
                   onChange={setPaymentMethodId}
@@ -496,10 +556,11 @@ export function InvoiceForm({
 
           {/* Recipient Address */}
           <div>
-            <label className="block text-xs font-medium mb-1">
+            <label htmlFor="invoice-recipient-address" className="block text-xs font-medium mb-1">
               {t("recipientAddress")}
             </label>
             <textarea
+              id="invoice-recipient-address"
               value={recipientAddress}
               onChange={(e) => setRecipientAddress(e.target.value)}
               rows={1}
@@ -510,8 +571,9 @@ export function InvoiceForm({
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-medium mb-1">{t("notes")}</label>
+            <label htmlFor="invoice-notes" className="block text-xs font-medium mb-1">{t("notes")}</label>
             <textarea
+              id="invoice-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
@@ -528,10 +590,11 @@ export function InvoiceForm({
 
               {/* M&S link selector */}
               <div>
-                <label className="block text-xs font-medium mb-1">
+                <label htmlFor="invoice-refunds-invoice" className="block text-xs font-medium mb-1">
                   {t("refundsInvoiceLabel")}
                 </label>
                 <select
+                  id="invoice-refunds-invoice"
                   value={refundsInvoiceId ?? ""}
                   onChange={(e) =>
                     setRefundsInvoiceId(e.target.value === "" ? null : e.target.value)
@@ -554,10 +617,11 @@ export function InvoiceForm({
 
               {/* Settled via: cash refund (default) or avoir credit note */}
               <div>
-                <label className="block text-xs font-medium mb-1">
+                <label htmlFor="invoice-settled-via" className="block text-xs font-medium mb-1">
                   {t("settledVia.label")}
                 </label>
                 <select
+                  id="invoice-settled-via"
                   value={settledVia ?? "cash"}
                   onChange={(e) => {
                     const next = e.target.value as SettledVia;
@@ -576,10 +640,11 @@ export function InvoiceForm({
               {/* Applied-to invoice picker — avoir only */}
               {settledVia === "avoir" && (
                 <div className="space-y-1">
-                  <label className="block text-xs font-medium mb-1">
+                  <label htmlFor="invoice-applied-to" className="block text-xs font-medium mb-1">
                     {t("appliedToInvoiceLabel")}
                   </label>
                   <select
+                    id="invoice-applied-to"
                     value={appliedToInvoiceId ?? ""}
                     onChange={(e) =>
                       setAppliedToInvoiceId(e.target.value === "" ? null : e.target.value)
@@ -620,12 +685,15 @@ export function InvoiceForm({
               optional when editing a legacy row that predates this field */}
           {type === "labor" && (
             <div>
-              <label className="block text-xs font-medium mb-1">
+              <label htmlFor="invoice-service-month" className="block text-xs font-medium mb-1">
                 {t("serviceMonth")}
                 {!editingInvoiceId && <span className="text-destructive"> *</span>}
               </label>
               <input
+                id="invoice-service-month"
                 type="month"
+                min={MIN_BUSINESS_MONTH}
+                max={MAX_BUSINESS_MONTH}
                 value={serviceMonth}
                 onChange={(e) => setServiceMonth(e.target.value)}
                 className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:w-1/2"
@@ -689,8 +757,8 @@ export function InvoiceForm({
 
               {/* Desktop items */}
               {items.map((item, index) => {
-                // Row total is TTC: qty × price × (1 + vat/100)
-                const rowTotal = item.quantity * item.unit_price * (1 + (item.vat_rate ?? 0) / 100);
+                // Row total is TTC: qty × price × (1 + vat/100), rounded like the API
+                const rowTotal = lineTotalTtc(lineForTotals(item));
                 return (
                   <div key={index} className="hidden lg:grid grid-cols-12 gap-2 items-center">
                     <div className="col-span-4">
@@ -701,46 +769,37 @@ export function InvoiceForm({
                         placeholder={t("description")}
                         className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         disabled={isLoading}
+                        aria-label={t("description")}
                       />
                     </div>
                     <div className="col-span-2">
                       <input
-                        type="number"
-                        min="0.01"
-                        max={MAX_LINE_QUANTITY}
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         value={item.quantity}
-                        onChange={(e) =>
-                          updateItem(index, "quantity", parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => updateItem(index, "quantity", e.target.value)}
                         className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         disabled={isLoading}
+                        aria-label={t("quantity")}
                       />
                     </div>
                     <div className="col-span-2">
                       <input
-                        type="number"
-                        {...(allowNegativePrice ? {} : { min: "0" })}
-                        max={MAX_LINE_UNIT_PRICE}
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         value={item.unit_price}
-                        onChange={(e) =>
-                          updateItem(index, "unit_price", parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => updateItem(index, "unit_price", e.target.value)}
                         className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         disabled={isLoading}
+                        aria-label={t("unitPrice")}
                       />
                     </div>
                     <div className="col-span-2">
                       <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        value={item.vat_rate ?? 0}
-                        onChange={(e) =>
-                          updateItem(index, "vat_rate", parseFloat(e.target.value) || 0)
-                        }
+                        type="text"
+                        inputMode="decimal"
+                        value={item.vat_rate}
+                        onChange={(e) => updateItem(index, "vat_rate", e.target.value)}
                         className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         disabled={isLoading}
                         aria-label={t("vatRate")}
@@ -771,8 +830,8 @@ export function InvoiceForm({
             {/* Mobile wrapper */}
             <div className="lg:hidden" data-testid="invoice-items-mobile">
               {items.map((item, index) => {
-              // Row total is TTC: qty × price × (1 + vat/100)
-              const rowTotal = item.quantity * item.unit_price * (1 + (item.vat_rate ?? 0) / 100);
+              // Row total is TTC: qty × price × (1 + vat/100), rounded like the API
+              const rowTotal = lineTotalTtc(lineForTotals(item));
               return (
                 <div key={index}>
                   {/* Mobile card layout (< lg) */}
@@ -785,35 +844,40 @@ export function InvoiceForm({
                       placeholder={t("description")}
                       className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                       disabled={isLoading}
+                      aria-label={t("description")}
                     />
                     {/* Qty + Unit Price — 2-col row */}
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-xs text-muted-foreground mb-0.5">{t("quantity")}</label>
+                        <label
+                          htmlFor={`invoice-line-${index}-quantity`}
+                          className="block text-xs text-muted-foreground mb-0.5"
+                        >
+                          {t("quantity")}
+                        </label>
                         <input
-                          type="number"
-                          min="0.01"
-                          max={MAX_LINE_QUANTITY}
-                          step="0.01"
+                          id={`invoice-line-${index}-quantity`}
+                          type="text"
+                          inputMode="decimal"
                           value={item.quantity}
-                          onChange={(e) =>
-                            updateItem(index, "quantity", parseFloat(e.target.value) || 0)
-                          }
+                          onChange={(e) => updateItem(index, "quantity", e.target.value)}
                           className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                           disabled={isLoading}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-muted-foreground mb-0.5">{t("unitPrice")}</label>
+                        <label
+                          htmlFor={`invoice-line-${index}-unit-price`}
+                          className="block text-xs text-muted-foreground mb-0.5"
+                        >
+                          {t("unitPrice")}
+                        </label>
                         <input
-                          type="number"
-                          {...(allowNegativePrice ? {} : { min: "0" })}
-                          max={MAX_LINE_UNIT_PRICE}
-                          step="0.01"
+                          id={`invoice-line-${index}-unit-price`}
+                          type="text"
+                          inputMode="decimal"
                           value={item.unit_price}
-                          onChange={(e) =>
-                            updateItem(index, "unit_price", parseFloat(e.target.value) || 0)
-                          }
+                          onChange={(e) => updateItem(index, "unit_price", e.target.value)}
                           className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                           disabled={isLoading}
                         />
@@ -821,16 +885,18 @@ export function InvoiceForm({
                     </div>
                     {/* TVA % — full width below qty/price */}
                     <div>
-                      <label className="block text-xs text-muted-foreground mb-0.5">{t("vatRate")}</label>
+                      <label
+                        htmlFor={`invoice-line-${index}-vat-rate`}
+                        className="block text-xs text-muted-foreground mb-0.5"
+                      >
+                        {t("vatRate")}
+                      </label>
                       <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        value={item.vat_rate ?? 0}
-                        onChange={(e) =>
-                          updateItem(index, "vat_rate", parseFloat(e.target.value) || 0)
-                        }
+                        id={`invoice-line-${index}-vat-rate`}
+                        type="text"
+                        inputMode="decimal"
+                        value={item.vat_rate}
+                        onChange={(e) => updateItem(index, "vat_rate", e.target.value)}
                         className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         disabled={isLoading}
                       />
@@ -897,6 +963,8 @@ export function InvoiceForm({
  * backend's `worker_link_not_allowed` (worker_id set on a non-labor type).
  * `workerNotInProjectMessage`, when provided, is returned verbatim for the
  * backend's `worker_not_in_project` (worker_id references another project).
+ * `validationMessages` pairs a pattern on a `ValidationError` message with the
+ * translated text to show instead (see `invoiceValidationMessages`).
  * Falls back to the raw error message, then a generic fallback.
  */
 export function classifySubmitError(
@@ -906,7 +974,8 @@ export function classifySubmitError(
   appliedExceedsTargetMessage?: string,
   workerLinkNotAllowedMessage?: string,
   workerNotInProjectMessage?: string,
-  paymentMethodInactiveMessage?: string
+  paymentMethodInactiveMessage?: string,
+  validationMessages: ReadonlyArray<readonly [RegExp, string]> = []
 ): string {
   if (err && typeof err === "object") {
     const e = err as Record<string, unknown>;
@@ -958,7 +1027,60 @@ export function classifySubmitError(
       return paymentMethodInactiveMessage;
     }
 
+    if (code === "ValidationError" && typeof message === "string") {
+      const known = validationMessages.find(([pattern]) => pattern.test(message));
+      if (known) return known[1];
+    }
+
     if (typeof message === "string" && message.trim()) return message;
   }
   return err instanceof Error ? err.message : "Failed to save invoice";
+}
+
+/**
+ * Translations for the refusals the API words in English only: moving a
+ * refund-tracked expense onto a company payment method, turning an invoice
+ * that avoirs are applied to into a return or a funds release, touching a
+ * refunded expense, saving a return with a positive total, and deleting or
+ * retyping a purchase that returns are linked to.
+ */
+export function invoiceValidationMessages(
+  t: (
+    key:
+      | "errorCompanyPaidRefundTracked"
+      | "errorUnlinkAvoirsFirst"
+      | "errorRefundedLocked"
+      | "errorReturnTotalPositive"
+      | "errorUnlinkReturnsFirst"
+  ) => string
+): ReadonlyArray<readonly [RegExp, string]> {
+  return [
+    [/already paid by the company/i, t("errorCompanyPaidRefundTracked")],
+    [/unlink the avoirs applied/i, t("errorUnlinkAvoirsFirst")],
+    [/refunded expenses are locked/i, t("errorRefundedLocked")],
+    [/return's total must be zero or negative/i, t("errorReturnTotalPositive")],
+    [/unlink (or delete )?this invoice's returns/i, t("errorUnlinkReturnsFirst")],
+  ];
+}
+
+/**
+ * The message for a failed delete or highlight: a known API refusal in the UI
+ * language (see `invoiceValidationMessages`), anything else `fallback` — never
+ * the API's English text.
+ */
+export function classifyActionError(
+  err: unknown,
+  validationMessages: ReadonlyArray<readonly [RegExp, string]>,
+  fallback: string
+): string {
+  if (err && typeof err === "object") {
+    const e = err as Record<string, unknown>;
+    const body = (e.data ?? e.body) as Record<string, unknown> | undefined;
+    const message = body?.message;
+    if (body?.error === "ValidationError" && typeof message === "string") {
+      const known = validationMessages.find(([pattern]) => pattern.test(message));
+      if (known) return known[1];
+    }
+  }
+  return fallback;
 }

@@ -10,6 +10,7 @@ import {
 } from "@/lib/invoices/refundable-status-display";
 import { formatDate, formatMonthYear } from "@/lib/utils/formatters";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
+import { TruncatedStamp } from "@/components/invoices/truncated-stamp";
 import { highlightRowTint } from "@/lib/invoices/highlight-colors";
 import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
 import type { Invoice, InvoiceType } from "@/types/invoice";
@@ -77,10 +78,13 @@ export function InvoiceMobileCard({
             <span className={TYPE_STAMP_CLASS[ledgerTypeOf(invoice)]}>
               {t(`types.${ledgerTypeOf(invoice)}`)}
             </span>
-            {/* Unapplied, the "outstanding avoir" stamp says it all: no second "Avoir". */}
+            {/* Unapplied, the "outstanding avoir" stamp says it all: no second "Avoir".
+                Applied, the badge is skipped where it reads the same as the type
+                stamp just before it (fr: both "Avoir"). */}
             {invoice.type === "return" &&
               invoice.settled_via === "avoir" &&
-              invoice.applied_to_invoice_id && (
+              invoice.applied_to_invoice_id &&
+              t("settledVia.avoirBadge") !== t("types.return") && (
               <span className="stamp accent" data-testid="avoir-badge">
                 {t("settledVia.avoirBadge")}
               </span>
@@ -113,11 +117,14 @@ export function InvoiceMobileCard({
               </span>
             )}
             {invoice.refundable_status != null && companyName ? (
-              <span className="stamp truncate max-w-[160px]">
-                {invoice.payment_method_label?.trim()
-                  ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
-                  : `→ ${companyName}`}
-              </span>
+              <TruncatedStamp
+                className="max-w-[160px]"
+                label={
+                  invoice.payment_method_label?.trim()
+                    ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
+                    : `→ ${companyName}`
+                }
+              />
             ) : invoice.payment_method_label?.trim() ? (
               <span className="stamp">
                 {localizeMethodLabel(invoice.payment_method_label, tBuiltins)}

@@ -1,7 +1,7 @@
 import { api, ApiError, getCsrfHeader } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
-import { fetchWithRefresh } from "@/lib/api/refresh";
+import { fetchWithRefresh, refreshAccessTokenViaCookie } from "@/lib/api/refresh";
 import type {
   Invoice,
   CreateInvoicePayload,
@@ -94,20 +94,27 @@ export const uploadAttachment = async (
   invoiceId: string,
   file: File
 ): Promise<InvoiceAttachment> => {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const response = await fetch(
-    `${env.apiBaseUrl}/projects/${projectId}/invoices/${invoiceId}/attachments`,
-    {
+  // Rebuilt per attempt: the CSRF header is read again after a refresh (the
+  // refresh rotates csrf_access_token), and a FormData body is not reused.
+  const send = () => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return fetch(`${env.apiBaseUrl}/projects/${projectId}/invoices/${invoiceId}/attachments`, {
       method: "POST",
       headers: {
         ...getCsrfHeader("POST"),
       },
       credentials: "include",
       body: formData,
-    }
-  );
+    });
+  };
+
+  // A raw fetch skips the `api` wrapper's refresh-on-401: an access token that
+  // expired while the expense sat open would fail the upload of a live session.
+  let response = await send();
+  if (response.status === 401 && (await refreshAccessTokenViaCookie())) {
+    response = await send();
+  }
 
   if (!response.ok) {
     let data: unknown;

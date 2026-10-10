@@ -30,6 +30,10 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
+vi.mock("next-intl/server", () => ({
+  getLocale: vi.fn().mockResolvedValue("fr"),
+}));
+
 vi.mock("@/lib/auth/session", () => ({
   getSession: vi.fn().mockResolvedValue({
     user: { id: "11111111-1111-1111-1111-111111111111" },
@@ -38,7 +42,9 @@ vi.mock("@/lib/auth/session", () => ({
   }),
 }));
 
-const { updateUserProfileAction, removeMemberAction } = await import("../actions");
+const { updateUserProfileAction, removeMemberAction, inviteMemberAction } = await import("../actions");
+const { createInvitation } = await import("@/lib/api/invitations");
+const mockCreateInvitation = vi.mocked(createInvitation);
 const { unassignProjectMember } = await import("@/lib/api/assignments");
 const { removeMember } = await import("@/lib/api/members");
 const { updateUser } = await import("@/lib/api/admin");
@@ -79,6 +85,21 @@ describe("updateUserProfileAction", () => {
   it("propagates a duplicate-email conflict (409)", async () => {
     mockUpdateUser.mockRejectedValue(httpError(409));
     expect(await updateUserProfileAction(PID, UID, { email: "dup@b.com" })).toEqual({ ok: false, status: 409 });
+  });
+});
+
+describe("inviteMemberAction", () => {
+  it("asks for the invitation email in the inviter's language", async () => {
+    mockCreateInvitation.mockResolvedValueOnce({ kind: "already_member", user_id: UID });
+    const result = await inviteMemberAction(PID, "dave@example.com");
+    expect(mockCreateInvitation).toHaveBeenCalledWith({ project_id: PID, email: "dave@example.com", locale: "fr" });
+    expect(result).toEqual({ ok: true, data: { kind: "already_member", user_id: UID } });
+  });
+
+  it("passes the backend's reason through with the status", async () => {
+    mockCreateInvitation.mockRejectedValueOnce(Object.assign(httpError(422), { reason: "account_deactivated" }));
+    const result = await inviteMemberAction(PID, "inactive@example.com");
+    expect(result).toEqual({ ok: false, status: 422, reason: "account_deactivated" });
   });
 });
 

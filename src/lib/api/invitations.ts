@@ -28,11 +28,14 @@ export interface PendingInvitation {
 export interface CreateInvitationPayload {
   project_id: string;
   email: string;
+  /** Language of the invitation email and of the page its link opens. */
+  locale?: "en" | "fr" | "vi";
 }
 
 export type CreateInvitationResult =
   | { kind: "invitation_sent"; invitation_id: string; expires_at: string }
-  | { kind: "direct_added"; user_id: string };
+  | { kind: "direct_added"; user_id: string }
+  | { kind: "already_member"; user_id: string };
 
 /**
  * List pending invitations for a project.
@@ -67,7 +70,8 @@ export async function listInvitations(
 /**
  * Create an invitation (or directly add existing user).
  * Returns a discriminated result with kind field.
- * Throws errors with a `status` property for 409/429 handling.
+ * Throws errors with a `status` property for 409/429 handling, and the
+ * backend's `reason` on a 422 (invalid email vs deactivated account).
  */
 export async function createInvitation(
   payload: CreateInvitationPayload
@@ -87,8 +91,15 @@ export async function createInvitation(
   if (!response.ok) {
     const err = new Error(`Failed to create invitation (HTTP ${response.status})`) as Error & {
       status: number;
+      reason?: string;
     };
     err.status = response.status;
+    try {
+      const body = await response.json();
+      if (typeof body?.reason === "string") err.reason = body.reason;
+    } catch {
+      // ignore parse error
+    }
     throw err;
   }
   return response.json();
@@ -213,6 +224,46 @@ export async function acceptInvite(
 }
 
 /**
+ * Accept an invitation as the signed-in user (`POST /invitations/accept-as-me`).
+ *
+ * For someone who already has an account: the session proves who they are, so
+ * there is no phone step. Only the account the invitation was sent to may use
+ * it. Throws on any non-2xx, carrying `status` and the backend's `reason`.
+ */
+export async function acceptInviteAsMe(token: string): Promise<{ project_id: string }> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiBaseUrl}/invitations/accept-as-me`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({ token }),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new Error(`Network error accepting invitation: ${String(err)}`);
+  }
+
+  if (!response.ok) {
+    let reason: string | undefined;
+    try {
+      const body = await response.json();
+      if (typeof body?.reason === "string") reason = body.reason;
+    } catch {
+      // ignore parse error
+    }
+    const err = new Error(`Failed to accept invitation (HTTP ${response.status})`) as Error & {
+      status: number;
+      reason?: string;
+    };
+    err.status = response.status;
+    err.reason = reason;
+    throw err;
+  }
+  return response.json();
+}
+
+/**
  * Ask the backend to text a sign-in code to the phone an invitee is claiming
  * (`POST /invitations/accept/request-code`).
  *
@@ -236,17 +287,27 @@ export async function requestInviteCode(payload: RequestInviteCodePayload): Prom
   if (!response.ok) {
     let message = `Failed to request invitation code (HTTP ${response.status})`;
     let reason: string | undefined;
+    let code: string | undefined;
     try {
       const body = await response.json();
       if (body?.message) message = body.message;
       else if (body?.error) message = body.error;
       if (typeof body?.reason === "string") reason = body.reason;
+      // A 429's `error` tells the hourly cap ("OtpHourlyLimit") from the short resend gap.
+      if (typeof body?.error === "string") code = body.error;
     } catch {
       // ignore parse error
     }
-    const err = new Error(message) as Error & { status: number; reason?: string };
+    const err = new Error(message) as Error & {
+      status: number;
+      reason?: string;
+      code?: string;
+      retryAfter?: string | null;
+    };
     err.status = response.status;
     err.reason = reason;
+    err.code = code;
+    err.retryAfter = response.headers.get("Retry-After");
     throw err;
   }
 }

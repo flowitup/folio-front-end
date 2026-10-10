@@ -288,7 +288,6 @@ export function RoleSelectWithCreate({
         className="w-[var(--radix-popover-trigger-width)] min-w-[240px] p-0"
         align="start"
         sideOffset={4}
-        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <Command shouldFilter={false}>
           <CommandInput

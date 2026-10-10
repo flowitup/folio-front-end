@@ -159,6 +159,13 @@ export function BibliothequePageClient({ companyId }: Props) {
         setLoading(false);
         return;
       }
+      // The page emptied under us (e.g. its last product was deleted): go to
+      // the last page that still has products instead of showing "no results".
+      const lastPage = Math.max(1, Math.ceil(res.data.total / LIBRARY_PAGE_SIZE));
+      if (res.data.items.length === 0 && res.data.total > 0 && page > lastPage) {
+        setPage(lastPage);
+        return;
+      }
       setProducts(res.data.items);
       setTotal(res.data.total);
       setLoading(false);

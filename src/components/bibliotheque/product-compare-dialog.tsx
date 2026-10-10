@@ -123,7 +123,7 @@ export function ProductCompareDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-auto">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="font-display text-[18px] tracking-tight">
             {t("compareTitle")}

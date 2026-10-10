@@ -10,6 +10,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { EditAttendanceDialog } from "../edit-attendance-dialog";
+import { ApiError } from "@/lib/api/http";
 import type { LaborEntry } from "@/types/labor";
 
 vi.mock("next-intl", () => ({
@@ -110,5 +111,35 @@ describe("EditAttendanceDialog", () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ amount_override: null, note: null }),
     );
+  });
+});
+
+describe("EditAttendanceDialog — limits and errors", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("caps the note at the API's 500 characters", () => {
+    renderDialog();
+    expect(screen.getByLabelText(/^note$/i)).toHaveAttribute("maxLength", "500");
+  });
+
+  it("explains a refused note instead of showing 'HTTP 400: BAD REQUEST'", async () => {
+    const onSave = vi
+      .fn()
+      .mockRejectedValue(new ApiError("HTTP 400: BAD REQUEST", 400, { message: "Invalid input: note" }));
+    const { onOpenChange } = renderDialog({ onSave });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    expect(await screen.findByText("errors.noteTooLong")).toBeInTheDocument();
+    expect(screen.queryByText(/HTTP 400/)).toBeNull();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it("falls back to the translated generic message for any other failure", async () => {
+    const onSave = vi.fn().mockRejectedValue(new ApiError("HTTP 404: NOT FOUND", 404, {}));
+    renderDialog({ onSave });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    expect(await screen.findByText("errors.updateFailed")).toBeInTheDocument();
+    expect(screen.queryByText(/HTTP 404/)).toBeNull();
   });
 });

@@ -17,17 +17,26 @@ import {
  * dropdown of supported locales. next-intl's locale-aware router.replace swaps
  * the locale prefix; its usePathname() has no query string, so the query (an
  * open expense, filters, a view) and the hash are passed along explicitly.
+ * `tone="ink"` is the light-on-dark variant for the sign-in board.
  */
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ tone = "paper" }: { tone?: "paper" | "ink" } = {}) {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const tCommon = useTranslations("common");
+  const onInk = tone === "ink";
 
   const handleChange = (next: Locale) => {
     if (next === locale) return;
-    const query = searchParams.toString();
+    // On the sign-in page, the page to return to keeps the language just
+    // chosen: "/vi/projects" becomes "/fr/projects".
+    const params = new URLSearchParams(searchParams.toString());
+    const callbackUrl = params.get("callbackUrl");
+    if (callbackUrl && new RegExp(`^/${locale}(?=[/?#]|$)`).test(callbackUrl)) {
+      params.set("callbackUrl", `/${next}${callbackUrl.slice(locale.length + 1)}`);
+    }
+    const query = params.toString();
     const hash = typeof window !== "undefined" ? window.location.hash : "";
     router.replace(`${pathname}${query ? `?${query}` : ""}${hash}`, { locale: next });
   };
@@ -37,12 +46,13 @@ export function LanguageSwitcher() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="btn btn-quiet gap-1.5"
+          className={`btn btn-quiet gap-1.5${onInk ? " hover:bg-white/10" : ""}`}
+          style={onInk ? { color: "#f1ece3" } : undefined}
           aria-label={tCommon("language")}
         >
           <Globe size={16} />
           <span className="text-[13px] font-medium">{locale.toUpperCase()}</span>
-          <ChevronDown size={12} style={{ color: "var(--muted)" }} />
+          <ChevronDown size={12} style={{ color: onInk ? "#9c948a" : "var(--muted)" }} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">

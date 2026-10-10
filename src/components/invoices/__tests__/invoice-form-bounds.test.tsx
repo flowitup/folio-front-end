@@ -6,13 +6,16 @@ import { InvoiceForm } from "../invoice-form";
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 vi.mock("@/components/invoices/payment-method-select", () => ({ PaymentMethodSelect: () => null }));
 
-function submitWith(item: { quantity: number; unit_price: number }) {
+function submitWith(
+  item: { quantity: number; unit_price: number },
+  type: "others" | "materials_services" = "others",
+) {
   const onSubmit = vi.fn();
   render(
     <InvoiceForm
       onSubmit={onSubmit}
       initialValues={{
-        type: "others",
+        type,
         issue_date: "2026-09-01",
         recipient_name: "Leroy",
         items: [{ description: "Tape", vat_rate: 0, ...item }],
@@ -31,7 +34,8 @@ describe("InvoiceForm line caps", () => {
   });
 
   it("refuses a unit price above the cap, either sign", () => {
-    const onSubmit = submitWith({ quantity: 1, unit_price: -1_000_000_000 });
+    // A negative line is only allowed on the mixed-sign types.
+    const onSubmit = submitWith({ quantity: 1, unit_price: -1_000_000_000 }, "materials_services");
     expect(screen.getByText("errorUnitPriceTooLarge")).toBeDefined();
     expect(onSubmit).not.toHaveBeenCalled();
   });

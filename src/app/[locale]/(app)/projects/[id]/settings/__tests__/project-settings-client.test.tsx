@@ -6,8 +6,9 @@ import type { Project } from "@/types/project";
 
 const mockUseAuth = vi.fn();
 vi.mock("@/context/AuthContext", () => ({ useAuth: () => mockUseAuth() }));
-const { mockUpdatePrefix } = vi.hoisted(() => ({ mockUpdatePrefix: vi.fn() }));
+const { mockUpdatePrefix, mockRefetch } = vi.hoisted(() => ({ mockUpdatePrefix: vi.fn(), mockRefetch: vi.fn() }));
 vi.mock("../actions", () => ({ updateInvoicePrefix: mockUpdatePrefix }));
+vi.mock("@/context/ProjectContext", () => ({ useOptionalProject: () => ({ refetch: mockRefetch }) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("../bank-credit-card", () => ({ BankCreditCard: () => null }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -64,5 +65,43 @@ describe("ProjectSettingsClient — after a save", () => {
     // Going back to the old value is a change again.
     fireEvent.change(input, { target: { value: "VIL" } });
     expect(screen.getByRole("button", { name: en.projects.save })).not.toBeDisabled();
+  });
+
+  it("reloads the cached project list after a save", async () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: [] } });
+    mockUpdatePrefix.mockResolvedValue({ ok: true });
+    renderClient({ ...PROJECT, my_permissions: ["project:update"] } as Project);
+    fireEvent.change(screen.getByLabelText(en.projects.invoicePrefix), { target: { value: "QAPM2" } });
+    fireEvent.click(screen.getByRole("button", { name: en.projects.save }));
+    await waitFor(() => expect(mockRefetch).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe("ProjectSettingsClient — layout", () => {
+  it("keeps the side gutters of the other project pages", () => {
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"] } });
+    renderClient();
+    // Without them the cards touched the screen edge at 375px and the sidebar on desktop.
+    const root = screen.getByTestId("project-settings");
+    expect(root.className).toContain("px-4");
+    expect(root.className).toContain("lg:px-8");
+    expect(root.className).toContain("pb-12");
+  });
+});
+
+describe("ProjectSettingsClient — network failure", () => {
+  it("toasts the error and frees Save when the save action cannot be reached", async () => {
+    const { toast } = await import("sonner");
+    mockUseAuth.mockReturnValue({ user: { permissions: [] } });
+    // What a server action call does offline: the promise rejects.
+    mockUpdatePrefix.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderClient({ ...PROJECT, my_permissions: ["project:update"] } as Project);
+    fireEvent.change(screen.getByLabelText(en.projects.invoicePrefix), { target: { value: "QAV" } });
+    fireEvent.click(screen.getByRole("button", { name: en.projects.save }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(en.projects.settingsSaveError));
+    // Back to "Save", enabled: the prefix is still unsaved.
+    await waitFor(() => expect(screen.getByRole("button", { name: en.projects.save })).not.toBeDisabled());
+    expect(screen.queryByText(en.projects.saving)).toBeNull();
   });
 });

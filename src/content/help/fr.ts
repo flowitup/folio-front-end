@@ -16,7 +16,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Saisissez votre numéro de téléphone sur la page de connexion et demandez le code.",
       "Tapez le code reçu par SMS pour terminer la connexion.",
       "Si votre compte n'appartient encore à aucune entreprise, Folio vous envoie sur une courte page de démarrage.",
-      "Là, choisissez “Créer une entreprise” — vous en devenez l'administrateur — ou “Saisir un code d'adhésion” pour rejoindre une entreprise existante avec le code que son administrateur vous a donné.",
+      "Là, choisissez “Créer une entreprise” — vous en devenez l'administrateur — ou “Saisir un code entreprise” pour rejoindre une entreprise existante avec le code que son administrateur vous a donné.",
       "Si vous avez été invité par e-mail, le lien contenu dans le message vous rattache directement.",
     ],
     gotchas: [
@@ -67,7 +67,7 @@ export const helpCatalogueFr: HelpCatalogue = [
     purpose:
       "Tous les chantiers auxquels vous avez accès, avec leur crédit et leurs dépenses, leur équipe, et les formulaires pour en créer, en modifier ou en supprimer un.",
     steps: [
-      "Filtrez la liste avec le sélecteur “Tous les projets” / “Actifs”, ou cherchez par nom.",
+      "Cherchez un projet par son nom ou son adresse.",
       "Cliquez sur “Nouveau projet”, puis donnez-lui un nom — obligatoire — et, si vous le souhaitez, une adresse, un crédit total et une source de financement. Si vous administrez plusieurs entreprises, choisissez celle à laquelle il appartient.",
       "Sur la carte d'un projet, le menu d'actions propose “Modifier le projet” et “Supprimer le projet”. La suppression vous demande de taper le texte de confirmation affiché en gras.",
       "“Afficher l'équipe” déplie la liste des membres ; “Inviter” ajoute quelqu'un, et l'icône corbeille de la ligne le retire.",
@@ -89,13 +89,13 @@ export const helpCatalogueFr: HelpCatalogue = [
     steps: [
       "Basculez entre “Tableau” et “Semaine” avec le sélecteur en haut de la page.",
       "Sur le tableau, travaillez avec la bande “Backlog” et les colonnes “À faire”, “En cours”, “Bloqué” et “Terminé”.",
-      "Cliquez sur “Ajouter une tâche” dans une colonne pour en créer une à cet endroit : un titre, une description, une priorité, une échéance et des étiquettes séparées par des virgules.",
+      "Cliquez sur le “+” (“Ajouter une tâche”) d'une colonne pour en créer une à cet endroit : un titre, une description, une priorité, une échéance et des étiquettes séparées par des virgules.",
       "Glissez une carte d'une colonne à l'autre pour changer son statut.",
       "Cliquez sur une carte pour ouvrir son panneau de détail, la modifier sur place, ou la supprimer.",
       "Dans la vue semaine, passez d'une semaine à l'autre et utilisez le “+” d'un jour pour créer une tâche à échéance ce jour-là, ou celui de “Non planifié” pour une tâche sans date.",
     ],
     whoCanDoIt:
-      "Toute personne qui peut ouvrir le projet. La planification n'a aucune barrière de permission — chacun peut créer, déplacer, modifier et supprimer des tâches.",
+      "Toute personne qui peut ouvrir le projet peut créer, déplacer et modifier des tâches. Supprimer une tâche demande le droit de modifier le projet (administrateurs et managers du projet).",
     gotchas: [
       "La suppression d'une tâche est immédiate et sans retour en arrière : il n'y a qu'une confirmation du navigateur.",
     ],
@@ -127,7 +127,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Chaque euro qui entre et sort d'un chantier — achats fournisseurs, paiements de main-d'œuvre, fonds débloqués par la banque et avoirs — avec les pièces jointes, la surbrillance et l'export.",
     steps: [
       "Lisez le résumé des deux caisses — entreprise et personnelle — et le graphique du crédit bancaire en haut de la page.",
-      "Filtrez avec les onglets de type : “Toutes”, “Fond débloqué”, “Main-d'œuvre”, “Achats & prestations”, “Autres” ou “Avoir”.",
+      "Filtrez avec les onglets de type : “Toutes”, “Fonds débloqués”, “Main-d'œuvre”, “Achats & prestations”, “Autres” ou “Avoir”.",
       "Cliquez sur “Nouvelle dépense” et indiquez le type, la date d'émission, le destinataire — pour la main-d'œuvre, il devient un sélecteur d'ouvrier —, le moyen de paiement et d'éventuelles notes.",
       "Ajoutez les lignes avec une description, une quantité, un prix unitaire et un taux de TVA, puis enregistrez.",
       "Pour un avoir, choisissez la dépense “Achats & prestations” qu'il rembourse, dites s'il a été réglé en espèces ou sous forme d'avoir fournisseur, et dans ce dernier cas sur quelle facture il est imputé.",
@@ -324,9 +324,9 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Ouvrez “Facturation” → “Remboursables”.",
       "Cliquez sur “Ajouter une dépense remboursable” et cherchez parmi les dépenses pas encore marquées, par chantier, par numéro ou par destinataire.",
       "Cochez celles à suivre et ajoutez-les.",
-      "Réglez le statut de chaque ligne : “Remboursable”, “Remboursement en cours”, remboursé par la société, par la banque ou par les deux — ou retirez complètement la marque.",
+      "Réglez le statut de chaque ligne : “Remboursable”, “Remboursement en cours”, remboursé par l'entreprise, par la banque ou par les deux — ou retirez complètement la marque.",
       "Ouvrez les pièces jointes d'une dépense depuis la colonne “Facture” pour vérifier les justificatifs.",
-      "Lisez les totaux : total remboursé, remboursé par la société, remboursé par la banque, et encore à rembourser.",
+      "Lisez les totaux : total remboursé, remboursé par l'entreprise, remboursé par la banque, et encore à rembourser.",
     ],
     whoCanDoIt: "Réservé aux administrateurs d'entreprise.",
     gotchas: [
@@ -337,24 +337,24 @@ export const helpCatalogueFr: HelpCatalogue = [
     id: "company",
     title: "Votre entreprise, ses membres et les permissions",
     purpose:
-      "Les sociétés auxquelles vous êtes rattaché et, pour celles que vous administrez, le code société, les rôles des membres, les permissions accordées et l'annuaire des personnes.",
+      "Les entreprises auxquelles vous êtes rattaché et, pour celles que vous administrez, le code entreprise, les rôles des membres, les permissions accordées et l'annuaire des personnes.",
     steps: [
-      "Ouvrez “Paramètres” → “Entreprise”. Le tableau des membres ouvre la page ; la fiche de la société, son code et ses moyens de paiement suivent en dessous.",
-      "Cliquez sur “Ajouter une société” et collez un jeton d'invitation ou saisissez un code société pour vous rattacher à une autre.",
-      "Si vous appartenez à plusieurs sociétés, passez de l'une à l'autre avec le sélecteur d'entreprise ; une pastille indique votre rôle dans chacune.",
-      "Utilisez “Définir comme principale” pour choisir votre société par défaut, ou “Détacher” pour en sortir.",
-      "En tant qu'administrateur, gérez le code société : créez-le, renouvelez-le, révoquez-le, ou copiez-le pour le partager. C'est ce code que l'on saisit dans l'application mobile pour rejoindre l'entreprise comme membre.",
+      "Ouvrez “Paramètres” → “Entreprise”. Le tableau des membres ouvre la page ; la fiche de l'entreprise, son code et ses moyens de paiement suivent en dessous.",
+      "Cliquez sur “Ajouter une entreprise” et collez un jeton d'invitation ou saisissez un code entreprise pour vous rattacher à une autre.",
+      "Si vous appartenez à plusieurs entreprises, passez de l'une à l'autre avec le sélecteur d'entreprise ; une pastille indique votre rôle dans chacune.",
+      "Utilisez “Définir comme principale” pour choisir votre entreprise par défaut, ou “Détacher” pour en sortir.",
+      "En tant qu'administrateur, gérez le code entreprise : créez-le, renouvelez-le, révoquez-le, ou copiez-le pour le partager. C'est ce code que l'on saisit dans l'application mobile pour rejoindre l'entreprise comme membre.",
       "Dans le tableau des membres, changez le rôle de quelqu'un, ou ouvrez “Permissions personnalisées” pour accorder ou refuser une permission précise, sur toute l'entreprise ou sur un seul projet.",
       "La colonne “Projets” de ce même tableau sert à placer quelqu'un sur un chantier : cochez un projet pour l'y assigner, décochez-le pour l'en retirer.",
-      "Utilisez “Ajouter par téléphone” pour ajouter quelqu'un par son numéro, ou “Importer depuis une entreprise” pour reprendre des personnes d'une autre société que vous administrez.",
+      "Utilisez “Ajouter par téléphone” pour ajouter quelqu'un par son numéro, ou “Importer depuis une entreprise” pour reprendre des personnes d'une autre entreprise que vous administrez.",
       "L'annuaire liste toutes les personnes liées à l'entreprise, avec leur téléphone, le fait qu'elles se soient déjà connectées ou non, et les projets qui leur sont assignés.",
-      "Sous “Moyens de paiement”, ajoutez, renommez ou supprimez les façons dont les factures de cette société peuvent être payées. Les moyens intégrés se renomment mais ne se suppriment pas.",
-      "Sous “Rôles main-d'œuvre”, créez, renommez, recolorez ou supprimez les rôles attribués aux ouvriers sur les chantiers de cette société. Supprimer un rôle le retire des ouvriers qui l'avaient. Le crayon à côté d'un rôle, dans le sélecteur de rôle de la fiche ouvrier, fait la même chose depuis la page main-d'œuvre.",
+      "Sous “Moyens de paiement”, ajoutez, renommez ou supprimez les façons dont les factures de cette entreprise peuvent être payées. Les moyens intégrés se renomment mais ne se suppriment pas.",
+      "Sous “Rôles main-d'œuvre”, créez, renommez, recolorez ou supprimez les rôles attribués aux ouvriers sur les chantiers de cette entreprise. Supprimer un rôle le retire des ouvriers qui l'avaient. Le crayon à côté d'un rôle, dans le sélecteur de rôle de la fiche ouvrier, fait la même chose depuis la page main-d'œuvre.",
     ],
     whoCanDoIt:
-      "Chacun voit les sociétés auxquelles il est rattaché et peut en rattacher une autre. Le code société, le tableau des membres, l'annuaire et les moyens de paiement sont réservés aux administrateurs de la société sélectionnée ; les rôles main-d'œuvre, à ses administrateurs et managers.",
+      "Chacun voit les entreprises auxquelles il est rattaché et peut en rattacher une autre. Le code entreprise, le tableau des membres, l'annuaire et les moyens de paiement sont réservés aux administrateurs de l'entreprise sélectionnée ; les rôles main-d'œuvre, à ses administrateurs et managers.",
     gotchas: [
-      "Il y a deux façons différentes d'ajouter une personne, et elles ne sont pas interchangeables : un jeton d'invitation à usage unique valable sept jours, et le code société réutilisable que l'on saisit dans l'application mobile.",
+      "Il y a deux façons différentes d'ajouter une personne, et elles ne sont pas interchangeables : un jeton d'invitation à usage unique valable sept jours, et le code entreprise réutilisable que l'on saisit dans l'application mobile.",
     ],
   },
   {
@@ -366,14 +366,14 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Ouvrez “Paramètres” ; la liste à gauche sélectionne la section.",
       "Dans “Profil”, modifiez votre nom affiché, puis enregistrez. Pour vous connecter avec un autre numéro, utilisez “Changer de numéro” : saisissez le nouveau numéro, puis le code reçu par SMS. Votre e-mail est en lecture seule — seul un administrateur peut le changer.",
       "Dans “Projet”, fixez le préfixe de numéro de facture du projet sélectionné, jusqu'à huit lettres ou chiffres, et regardez la ligne d'aperçu avant d'enregistrer.",
-      "Dans “Entreprise”, gérez les sociétés auxquelles vous êtes rattaché : la fiche d'identité de chacune, celle qui est principale, le détachement, et le rattachement d'une autre par code. Si vous administrez celle qui est sélectionnée, s'y ajoutent son code société, ses membres et ses moyens de paiement.",
+      "Dans “Entreprise”, gérez les entreprises auxquelles vous êtes rattaché : la fiche d'identité de chacune, celle qui est principale, le détachement, et le rattachement d'une autre par code. Si vous administrez celle qui est sélectionnée, s'y ajoutent son code entreprise, ses membres et ses moyens de paiement.",
       "Dans “Notifications”, utilisez l'interrupteur général et les interrupteurs par catégorie : “Discussion d'équipe”, “Présences”, “Tâches”, “Équipe et accès” et “Argent”.",
       "Dans “Clés API”, nommez une clé et créez-la pour appeler l'API Folio depuis vos propres scripts : copiez-la tout de suite, car elle ne sera plus jamais affichée. Révoquer une clé arrête immédiatement et définitivement toute automatisation qui l'utilise.",
-      "Dans “Utilisateurs et rôles”, que seule l'assistance Folio peut ouvrir, rattachez un compte existant à des projets : cherchez la personne, cochez les projets, puis validez. Les rôles ne se règlent pas ici — ils viennent du rôle dans la société et des permissions accordées projet par projet, sous “Entreprise”.",
+      "Dans “Utilisateurs et rôles”, que seule l'assistance Folio peut ouvrir, rattachez un compte existant à des projets : cherchez la personne, cochez les projets, puis validez. Les rôles ne se règlent pas ici — ils viennent du rôle dans l'entreprise et des permissions accordées projet par projet, sous “Entreprise”.",
       "La version de Folio que vous utilisez est indiquée en bas de la page, sous la section ouverte.",
     ],
     whoCanDoIt:
-      "Chacun accède à son profil, à ses choix de notification et à ses propres clés API. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code société, membres, moyens de paiement — aux seuls administrateurs de la société sélectionnée. “Utilisateurs et rôles” est réservé à l'assistance Folio.",
+      "Chacun accède à son profil, à ses choix de notification et à ses propres clés API. “Entreprise” montre à chacun ses propres rattachements, et ses outils d'administration — code entreprise, membres, moyens de paiement — aux seuls administrateurs de l'entreprise sélectionnée. “Utilisateurs et rôles” est réservé à l'assistance Folio.",
     gotchas: [
       "Les paramètres n'ont pas de section de facturation. Les devis, les factures et les modèles sont tous dans le groupe “Facturation” du menu latéral.",
       "Les interrupteurs de notification commandent les notifications push qui arrivent dans l'application mobile Folio, pas la cloche de cette fenêtre.",
@@ -401,7 +401,7 @@ export const helpCatalogueFr: HelpCatalogue = [
     id: "chat",
     title: "La discussion d'équipe",
     purpose:
-      "Une conversation avec votre société et vos équipes de chantier, un canal par société et par chantier.",
+      "Une conversation avec votre entreprise et vos équipes de chantier, un canal par entreprise et par chantier.",
     steps: [
       "Ouvrez la discussion depuis son bouton, dans le coin de la fenêtre.",
       "Choisissez un canal dans la liste ; les canaux non lus sont signalés.",

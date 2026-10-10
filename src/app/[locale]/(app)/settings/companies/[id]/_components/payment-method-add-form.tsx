@@ -5,7 +5,8 @@
  *
  * Renders a single Input + Save button (Enter to submit, Escape to cancel/clear).
  * Parent provides the async onAdd callback and a busy flag to disable the form
- * while a mutation is in flight.
+ * while a mutation is in flight. The typed label is cleared only when onAdd
+ * reports success, so a refused label can be corrected instead of retyped.
  */
 
 import { useRef, useState } from "react";
@@ -20,7 +21,8 @@ import { Input } from "@/components/ui/input";
 
 interface PaymentMethodAddFormProps {
   isMutating: boolean;
-  onAdd: (label: string) => Promise<void>;
+  /** Resolves true when the method was added. */
+  onAdd: (label: string) => Promise<boolean>;
 }
 
 // ---------------------------------------------------------------------------
@@ -41,8 +43,7 @@ export function PaymentMethodAddForm({ isMutating, onAdd }: PaymentMethodAddForm
     submittingRef.current = true;
     setIsSubmitting(true);
     try {
-      await onAdd(trimmed);
-      setLabel("");
+      if (await onAdd(trimmed)) setLabel("");
     } finally {
       setIsSubmitting(false);
       submittingRef.current = false;
@@ -67,7 +68,7 @@ export function PaymentMethodAddForm({ isMutating, onAdd }: PaymentMethodAddForm
         disabled={busy}
         className="h-8 text-[13px]"
         aria-label={t("addPlaceholder")}
-        maxLength={100}
+        maxLength={120}
       />
       <Button
         type="submit"

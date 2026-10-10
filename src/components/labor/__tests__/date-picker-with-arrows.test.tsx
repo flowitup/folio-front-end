@@ -58,6 +58,21 @@ describe("DatePickerWithArrows component", () => {
     expect(onChange).toHaveBeenCalledWith("2026-05-14");
   });
 
+  it("disables the ▶ arrow on the max day and the ◀ arrow on the min day", () => {
+    const { rerender } = render(
+      <DatePickerWithArrows value="2026-10-09" onChange={() => {}} min="2000-01-01" max="2026-10-09" />,
+    );
+    expect(screen.getByLabelText("Jour suivant")).toBeDisabled();
+    expect(screen.getByLabelText("Jour précédent")).toBeEnabled();
+    const input = document.querySelector('input[type="date"]') as HTMLInputElement;
+    expect(input.min).toBe("2000-01-01");
+    expect(input.max).toBe("2026-10-09");
+
+    rerender(<DatePickerWithArrows value="2000-01-01" onChange={() => {}} min="2000-01-01" max="2026-10-09" />);
+    expect(screen.getByLabelText("Jour précédent")).toBeDisabled();
+    expect(screen.getByLabelText("Jour suivant")).toBeEnabled();
+  });
+
   it("disables controls when disabled prop is set", () => {
     render(<DatePickerWithArrows value="2026-05-13" onChange={() => {}} disabled />);
     expect(screen.getByLabelText("Jour précédent")).toBeDisabled();

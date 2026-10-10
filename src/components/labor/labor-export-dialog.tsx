@@ -44,11 +44,12 @@ interface LaborExportDialogProps {
   initialFormat?: LaborExportFormat;
 }
 
-function formatMonth(ym: string): string {
+/** "octobre 2026" in the app's language (not the browser's). */
+function formatMonth(ym: string, locale: string): string {
   if (!ym) return "";
   const [y, m] = ym.split("-").map(Number);
   try {
-    return new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(
+    return new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
       new Date(y, m - 1, 1),
     );
   } catch {
@@ -152,9 +153,9 @@ export function LaborExportDialog({
         toast.success(t("downloaded"), { id: toastId });
       }
       handleClose();
-    } catch (err) {
-      const fallbackKey = needsWorker ? t("workerToastError") : t("errorGeneric");
-      toast.error(err instanceof Error ? err.message : fallbackKey, {
+    } catch {
+      // Translated, never ApiError's raw "Export failed: 403".
+      toast.error(needsWorker ? t("workerToastError") : t("errorGeneric"), {
         id: toastId,
       });
     } finally {
@@ -174,16 +175,20 @@ export function LaborExportDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>
             {worker
               ? t("workerDialogTitle", { name: worker.person_name ?? worker.name })
               : t("dialogTitle")}
           </DialogTitle>
+          {/* The rate in force today (after any rate change), as on the worker
+              tile — daily_rate is only the rate the worker was created with. */}
           {subtitleWorker && (
             <p className="text-sm text-muted-foreground pt-1">
-              {t("workerSubtitle", { rate: formatEUR(subtitleWorker.daily_rate) })}
+              {t("workerSubtitle", {
+                rate: formatEUR(subtitleWorker.current_daily_rate ?? subtitleWorker.daily_rate),
+              })}
             </p>
           )}
         </DialogHeader>
@@ -213,7 +218,7 @@ export function LaborExportDialog({
                read-only (no range selection). */
             <div className="space-y-2">
               <Label>{t("month")}</Label>
-              <p className="text-sm font-medium">{formatMonth(from)}</p>
+              <p className="text-sm font-medium">{formatMonth(from, locale)}</p>
             </div>
           ) : (
             <>

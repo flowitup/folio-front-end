@@ -2,8 +2,8 @@
  * invoice-form-refund.test.tsx
  *
  * Tests for refund-type-specific behaviour in InvoiceForm:
- * - Mixed-sign unit_price allowed for refund + materials_services (no min=0)
- * - Positive-only types keep min=0
+ * - Mixed-sign unit_price allowed for refund + materials_services
+ * - Positive-only types refuse a negative unit price on submit
  * - Signed values submitted as-is (no negation/abs)
  * - Edit-load populates stored signed values verbatim
  * - Refund link selector appears only for type=refund; "none" option present
@@ -14,6 +14,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InvoiceForm } from "../invoice-form";
+
+/** The line figures (qty, unit price, VAT) — decimal text inputs, desktop rows first. */
+const numberInputs = (root: ParentNode = document) =>
+  Array.from(root.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]'));
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -135,95 +139,45 @@ describe("InvoiceForm — mixed-sign unit_price gating", () => {
     });
   });
 
-  it("unit_price input has no min attribute for type=refund", async () => {
-    render(<InvoiceForm onSubmit={onSubmit} initialValues={{ type: "return" }} projectId="proj-1" />);
-
-    const desktop = screen.getByTestId("invoice-items-desktop");
-    const numInputs = within(desktop).getAllByRole("spinbutton");
-    // spinbutton order: quantity(0), unit_price(1), vat_rate(2)
-    const unitPriceInput = numInputs[1];
-    expect(unitPriceInput.getAttribute("min")).toBeNull();
-  });
-
-  it("unit_price input has no min attribute for type=materials_services", async () => {
-    render(
+  /** Submit a saved expense whose only line is priced -5, under `type`. */
+  function submitNegativeLine(type: "return" | "materials_services" | "labor" | "others" | "released_funds") {
+    const { container } = render(
       <InvoiceForm
         onSubmit={onSubmit}
-        initialValues={{ type: "materials_services" }}
+        editingInvoiceId="inv-1"
+        projectId="proj-1"
+        initialValues={{
+          type,
+          issue_date: "2026-09-01",
+          recipient_name: "Supplier",
+          items: [{ description: "Credit", quantity: 1, unit_price: -5, vat_rate: 0 }],
+        }}
       />
     );
+    fireEvent.submit(container.querySelector("form")!);
+  }
 
-    const desktop = screen.getByTestId("invoice-items-desktop");
-    const numInputs = within(desktop).getAllByRole("spinbutton");
-    const unitPriceInput = numInputs[1];
-    expect(unitPriceInput.getAttribute("min")).toBeNull();
+  it.each(["return", "materials_services"] as const)("accepts a negative unit price for type=%s", (type) => {
+    submitNegativeLine(type);
+    expect(screen.queryByText("errorUnitPriceNegative")).toBeNull();
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit.mock.calls[0][0].items[0].unit_price).toBe(-5);
   });
 
-  it("unit_price input keeps min=0 for type=labor", async () => {
-    render(<InvoiceForm onSubmit={onSubmit} initialValues={{ type: "labor" }} />);
-
-    const desktop = screen.getByTestId("invoice-items-desktop");
-    const numInputs = within(desktop).getAllByRole("spinbutton");
-    const unitPriceInput = numInputs[1];
-    expect(unitPriceInput.getAttribute("min")).toBe("0");
+  it.each(["labor", "others", "released_funds"] as const)("refuses a negative unit price for type=%s", (type) => {
+    submitNegativeLine(type);
+    expect(screen.getByText("errorUnitPriceNegative")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it("unit_price input keeps min=0 for type=others", async () => {
-    render(<InvoiceForm onSubmit={onSubmit} initialValues={{ type: "others" }} />);
+  it("lets a minus sign be typed (it is kept as text, not rewritten to 0)", async () => {
+    render(<InvoiceForm onSubmit={onSubmit} initialValues={{ type: "return" }} projectId="proj-1" />);
 
-    const desktop = screen.getByTestId("invoice-items-desktop");
-    const numInputs = within(desktop).getAllByRole("spinbutton");
-    const unitPriceInput = numInputs[1];
-    expect(unitPriceInput.getAttribute("min")).toBe("0");
-  });
-
-  it("unit_price input keeps min=0 for type=released_funds", async () => {
-    render(<InvoiceForm onSubmit={onSubmit} initialValues={{ type: "released_funds" }} />);
-
-    const desktop = screen.getByTestId("invoice-items-desktop");
-    const numInputs = within(desktop).getAllByRole("spinbutton");
-    const unitPriceInput = numInputs[1];
-    expect(unitPriceInput.getAttribute("min")).toBe("0");
-  });
-
-  it("min follows the type's mixed-sign gating (released_funds → refund)", async () => {
-    render(<InvoiceForm onSubmit={onSubmit} projectId="proj-1" />);
-
-    // Default type is materials_services — mixed-sign allowed, no min clamp.
-    const desktop = screen.getByTestId("invoice-items-desktop");
-    expect(within(desktop).getAllByRole("spinbutton")[1].getAttribute("min")).toBeNull();
-
-    // released_funds forbids negative unit prices — min clamps to 0.
-    const allSelects = screen.getAllByRole("combobox");
-    fireEvent.change(allSelects[0], { target: { value: "released_funds" } });
-    await waitFor(() => {
-      expect(within(desktop).getAllByRole("spinbutton")[1].getAttribute("min")).toBe("0");
-    });
-
-    // refund re-allows mixed sign — min cleared again.
-    fireEvent.change(allSelects[0], { target: { value: "return" } });
-    await waitFor(() => {
-      expect(within(desktop).getAllByRole("spinbutton")[1].getAttribute("min")).toBeNull();
-    });
-  });
-
-  it("min restored when switching from refund back to labor", async () => {
-    render(
-      <InvoiceForm onSubmit={onSubmit} initialValues={{ type: "return" }} projectId="proj-1" />
-    );
-
-    const desktop = screen.getByTestId("invoice-items-desktop");
-    let numInputs = within(desktop).getAllByRole("spinbutton");
-    expect(numInputs[1].getAttribute("min")).toBeNull();
-
-    // The first combobox is the type selector; others may include the M&S link select
-    const allSelects = screen.getAllByRole("combobox");
-    fireEvent.change(allSelects[0], { target: { value: "labor" } });
-
-    await waitFor(() => {
-      numInputs = within(desktop).getAllByRole("spinbutton");
-      expect(numInputs[1].getAttribute("min")).toBe("0");
-    });
+    const user = userEvent.setup();
+    const unitPriceInput = numberInputs(screen.getByTestId("invoice-items-desktop"))[1];
+    await user.clear(unitPriceInput);
+    await user.type(unitPriceInput, "-50");
+    expect(unitPriceInput).toHaveValue("-50");
   });
 });
 
@@ -263,10 +217,9 @@ describe("InvoiceForm — signed values submitted as-is", () => {
     const descInputs = screen.getAllByPlaceholderText(/description/i);
     await user.type(descInputs[0], "Credit note");
 
-    // Use fireEvent.change to set a negative value on the number input
-    // (userEvent.type doesn't reliably produce negatives on number inputs in jsdom)
+    // Type a negative value into the unit price (a decimal text input)
     const desktop = screen.getByTestId("invoice-items-desktop");
-    const numInputs = within(desktop).getAllByRole("spinbutton");
+    const numInputs = numberInputs(desktop);
     fireEvent.change(numInputs[1], { target: { value: "-200" } });
 
     const submitBtn = screen.getByRole("button", { name: /save/i });
@@ -312,9 +265,9 @@ describe("InvoiceForm — edit-load shows stored signed values", () => {
     );
 
     const desktop = screen.getByTestId("invoice-items-desktop");
-    const numInputs = within(desktop).getAllByRole("spinbutton");
+    const numInputs = numberInputs(desktop);
     // unit_price is numInputs[1]
-    expect(numInputs[1]).toHaveValue(-200);
+    expect(numInputs[1]).toHaveValue("-200");
   });
 
   it("populates positive unit_price unchanged", () => {
@@ -333,8 +286,8 @@ describe("InvoiceForm — edit-load shows stored signed values", () => {
     );
 
     const desktop = screen.getByTestId("invoice-items-desktop");
-    const numInputs = within(desktop).getAllByRole("spinbutton");
-    expect(numInputs[1]).toHaveValue(30);
+    const numInputs = numberInputs(desktop);
+    expect(numInputs[1]).toHaveValue("30");
   });
 });
 

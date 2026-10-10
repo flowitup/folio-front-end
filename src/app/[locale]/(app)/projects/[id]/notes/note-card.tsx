@@ -11,6 +11,8 @@ import { useState } from "react";
 import { Pencil, Trash2, Clock, Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { CATEGORY_MAP } from "@/lib/notes/categories";
+import { calendarDaysFromToday } from "@/lib/utils/local-day";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { NoteEditor } from "./note-editor";
 import type { Note } from "@/lib/api/notes";
 import type { NoteSavePayload } from "./note-editor";
@@ -28,19 +30,21 @@ interface NoteCardProps {
 }
 
 /** The "Added …" footer: today / yesterday, else the date in the app locale
- * (one message per case, so each language can phrase and agree it). */
+ * (one message per case, so each language can phrase and agree it). Days are
+ * the viewer's local calendar days, not UTC ones. */
 function createdLabel(
   iso: string,
   locale: string,
   t: (key: string, values?: Record<string, string>) => string
 ): string {
-  const createdDate = iso.slice(0, 10);
-  const todayDate = new Date().toISOString().slice(0, 10);
-  const yesterdayDate = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  if (createdDate === todayDate) return t("addedToday");
-  if (createdDate === yesterdayDate) return t("addedYesterday");
-  const d = new Date(`${createdDate}T12:00:00`);
-  return t("addedOn", { date: d.toLocaleDateString(locale, { month: "short", day: "numeric" }) });
+  const created = new Date(iso);
+  const days = calendarDaysFromToday(created);
+  if (days === 0) return t("addedToday");
+  if (days === -1) return t("addedYesterday");
+  // The year only when it is not this one, so last year's 9 Oct is not read as this year's.
+  const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  if (created.getFullYear() !== new Date().getFullYear()) opts.year = "numeric";
+  return t("addedOn", { date: created.toLocaleDateString(locale, opts) });
 }
 
 export function NoteCard({
@@ -56,6 +60,8 @@ export function NoteCard({
   const t = useTranslations("notes");
   const locale = useLocale();
   const [isSaving, setIsSaving] = useState(false);
+  // The footer depends on the browser's time zone, which the server lacks.
+  const hydrated = useHydrated();
 
   const cat = CATEGORY_MAP[note.category] ?? CATEGORY_MAP.general;
   const isDone = note.status === "done";
@@ -140,7 +146,7 @@ export function NoteCard({
         )}
         <div className="nc-foot">
           <Clock size={12} />
-          <span className="num">{createdLabel(note.created_at, locale, t)}</span>
+          <span className="num">{hydrated ? createdLabel(note.created_at, locale, t) : null}</span>
         </div>
       </article>
     </div>

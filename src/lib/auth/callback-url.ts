@@ -21,3 +21,13 @@ export function postLoginPath(callbackUrl: string | null | undefined, locale: st
   }
   return callbackUrl;
 }
+
+/**
+ * The sign-in page for a visitor whose session was refused while opening
+ * `requestedPath`, carrying it as callbackUrl when postLoginPath would honour it.
+ */
+export function loginPathFor(requestedPath: string | null | undefined, locale: string): string {
+  const login = `/${locale}/login`;
+  if (!requestedPath || postLoginPath(requestedPath, locale) !== requestedPath) return login;
+  return `${login}?callbackUrl=${encodeURIComponent(requestedPath)}`;
+}

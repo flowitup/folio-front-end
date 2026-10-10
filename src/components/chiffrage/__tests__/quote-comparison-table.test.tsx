@@ -70,6 +70,7 @@ describe("QuoteComparisonTable", () => {
         canManage
         busyQuoteId={null}
         onSelect={noop}
+        onUnselect={noop}
         onEdit={noop}
         onDelete={noop}
       />
@@ -91,6 +92,7 @@ describe("QuoteComparisonTable", () => {
         canManage
         busyQuoteId={null}
         onSelect={noop}
+        onUnselect={noop}
         onEdit={noop}
         onDelete={noop}
       />
@@ -112,6 +114,7 @@ describe("QuoteComparisonTable", () => {
         canManage
         busyQuoteId={null}
         onSelect={noop}
+        onUnselect={noop}
         onEdit={noop}
         onDelete={noop}
       />
@@ -135,6 +138,7 @@ describe("QuoteComparisonTable", () => {
         canManage
         busyQuoteId={null}
         onSelect={noop}
+        onUnselect={noop}
         onEdit={noop}
         onDelete={noop}
       />
@@ -157,6 +161,7 @@ describe("QuoteComparisonTable", () => {
         canManage={false}
         busyQuoteId={null}
         onSelect={noop}
+        onUnselect={noop}
         onEdit={noop}
         onDelete={noop}
       />
@@ -167,26 +172,55 @@ describe("QuoteComparisonTable", () => {
     expect(screen.queryByLabelText("deleteQuote")).not.toBeInTheDocument();
   });
 
-  it("cannot re-select the quote that is already retained", async () => {
+  it("un-retains the retained quote instead of re-selecting it", async () => {
     const onSelect = vi.fn();
+    const onUnselect = vi.fn();
     const retained = quote({ id: "retained", is_selected: true });
+    const other = quote({ id: "other", supplier_name: "Point P", unit_price_ht: 9 });
 
     render(
       <QuoteComparisonTable
-        article={article([retained])}
+        article={article([retained, other])}
         stores={[]}
         canManage
         busyQuoteId={null}
         onSelect={onSelect}
+        onUnselect={onUnselect}
         onEdit={noop}
         onDelete={noop}
       />
     );
 
-    const button = screen.getByTitle("retainThisQuote");
-    expect(button).toBeDisabled();
-    await userEvent.click(button);
+    // Round 1 left the retained row with a dead button and no way back to
+    // the automatic cheapest choice short of deleting the price.
+    const [retainedRow, otherRow] = screen.getAllByTestId("quote-row");
+    const unretain = within(retainedRow).getByTitle("unretainThisQuote");
+    expect(unretain).toBeEnabled();
+    expect(unretain).toHaveTextContent("unretain");
+    expect(within(retainedRow).queryByTitle("retainThisQuote")).not.toBeInTheDocument();
+    await userEvent.click(unretain);
+    expect(onUnselect).toHaveBeenCalledWith(retained);
     expect(onSelect).not.toHaveBeenCalled();
+
+    await userEvent.click(within(otherRow).getByTitle("retainThisQuote"));
+    expect(onSelect).toHaveBeenCalledWith(other);
+  });
+
+  it("disables the un-retain button while that quote is being saved", () => {
+    const retained = quote({ id: "retained", is_selected: true });
+    render(
+      <QuoteComparisonTable
+        article={article([retained])}
+        stores={[]}
+        canManage
+        busyQuoteId="retained"
+        onSelect={noop}
+        onUnselect={noop}
+        onEdit={noop}
+        onDelete={noop}
+      />
+    );
+    expect(screen.getByTitle("unretainThisQuote")).toBeDisabled();
   });
 
   it("invites the user to add a price when the article has none", () => {
@@ -197,6 +231,7 @@ describe("QuoteComparisonTable", () => {
         canManage
         busyQuoteId={null}
         onSelect={noop}
+        onUnselect={noop}
         onEdit={noop}
         onDelete={noop}
       />
@@ -215,6 +250,7 @@ describe("QuoteComparisonTable", () => {
         canManage={false}
         busyQuoteId={null}
         onSelect={() => {}}
+        onUnselect={noop}
         onEdit={() => {}}
         onDelete={() => {}}
       />,
@@ -235,6 +271,7 @@ describe("QuoteComparisonTable", () => {
         canManage={false}
         busyQuoteId={null}
         onSelect={() => {}}
+        onUnselect={noop}
         onEdit={() => {}}
         onDelete={() => {}}
       />,
@@ -257,6 +294,7 @@ describe("QuoteComparisonTable on a phone", () => {
         canManage
         busyQuoteId={null}
         onSelect={noop}
+        onUnselect={noop}
         onEdit={noop}
         onDelete={noop}
       />
@@ -267,5 +305,26 @@ describe("QuoteComparisonTable on a phone", () => {
       expect(th.className).not.toMatch(/\bsr-only\b/);
     }
     expect(screen.getByText("actions").className).toContain("sr-only");
+  });
+});
+
+describe("QuoteComparisonTable VAT column", () => {
+  it("formats the rate like the amounts beside it (5,5 %, not 5.5%)", () => {
+    render(
+      <QuoteComparisonTable
+        article={article([quote({ tva_rate: 5.5, unit_price_ttc: 11.34 })])}
+        stores={[]}
+        canManage={false}
+        busyQuoteId={null}
+        onSelect={noop}
+        onUnselect={noop}
+        onEdit={noop}
+        onDelete={noop}
+      />
+    );
+    const row = screen.getByTestId("quote-row");
+    // Intl puts a narrow no-break space before "%".
+    expect(within(row).getByText(/^5,5\s%$/)).toBeInTheDocument();
+    expect(row.textContent).not.toContain("5.5%");
   });
 });

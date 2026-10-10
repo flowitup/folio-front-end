@@ -212,6 +212,30 @@ describe("DocumentsPanel — uploader filter options", () => {
     expect(screen.queryByText(/\(former member\)/)).toBeNull();
   });
 
+  it("names a phone-only uploader by phone and an erased one as a former member", () => {
+    const DAVE = "dddddddd-dddd-dddd-dddd-dddddddddddd";
+    const ERASED = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee";
+    renderPanel([
+      ...UPLOADERS,
+      { user_id: DAVE, display_name: "+33620159009", phone: "+33620159009", is_deleted: false },
+      { user_id: ERASED, display_name: "", phone: null, is_deleted: true },
+    ]);
+
+    const options = within(uploaderSelect())
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(options).toEqual([
+      "documents.filter.anyUploader",
+      "Alice Martin",
+      "Bob Former",
+      "+336 20 15 90 09",
+      "documents.filter.formerMember",
+    ]);
+    // The list gets no name for the erased account, so it says "(former member)".
+    const people = listProps.mock.calls[listProps.mock.calls.length - 1][0].members;
+    expect(people).toEqual(expect.arrayContaining([{ id: ERASED, firstName: "" }]));
+  });
+
   it("retries the uploaders from the client when the server could not read them", async () => {
     renderPanel(null);
 

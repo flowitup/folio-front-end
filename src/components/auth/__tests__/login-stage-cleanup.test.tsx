@@ -21,6 +21,12 @@ vi.mock("next-intl", () => ({
   },
 }));
 
+vi.mock("@/components/language-switcher", () => ({
+  LanguageSwitcher: ({ tone }: { tone?: string }) => (
+    <div data-testid="language-switcher" data-tone={tone} />
+  ),
+}));
+
 vi.mock("@/context/AuthContext", () => ({
   useAuth: () => ({
     loginWithPhone: vi.fn(),
@@ -55,5 +61,10 @@ describe("Login screen — email credentials removed", () => {
   it("does not render Continue with Google button", () => {
     render(<LoginStage />);
     expect(screen.queryByRole("button", { name: /continueWithGoogle/i })).toBeNull();
+  });
+
+  it("offers the language switcher before signing in", () => {
+    render(<LoginStage />);
+    expect(screen.getByTestId("language-switcher").getAttribute("data-tone")).toBe("ink");
   });
 });

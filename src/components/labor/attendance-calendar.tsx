@@ -35,6 +35,7 @@ import {
   parseMonthTag,
   toDateKey,
 } from "@/lib/utils/calendar-month";
+import { capitalizeFirst } from "@/lib/utils/capitalize-first";
 import type { LaborEntry, LaborActivity, LaborDayDescription, Worker } from "@/types/labor";
 
 interface AttendanceCalendarProps {
@@ -165,8 +166,9 @@ export function AttendanceCalendar({
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h3 className="min-w-[10ch] text-base font-semibold capitalize">
-            {monthLabel(cursor, locale)}
+          {/* Only the first letter: CSS capitalize would make vi "Tháng 10 Năm 2026". */}
+          <h3 className="min-w-[10ch] text-base font-semibold">
+            {capitalizeFirst(monthLabel(cursor, locale), locale)}
           </h3>
           <Button
             variant="outline"

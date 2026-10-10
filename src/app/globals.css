@@ -309,6 +309,8 @@ body {
     font-size: 12.5px;
     font-weight: 500;
     line-height: 1;
+    /* Keep "Tous les mois" / long month names on one line in narrow headers. */
+    white-space: nowrap;
     cursor: pointer;
     transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
   }
@@ -702,11 +704,15 @@ body {
 }
 .quickadd.focused .quickadd-plus { background: var(--accent-ink); }
 .quickadd-input {
-  flex: 1; border: none; background: transparent; outline: none;
+  flex: 1; min-width: 0; border: none; background: transparent; outline: none;
   font-size: 15px; font-weight: 500; color: var(--ink); padding: 4px 0;
 }
 .quickadd-input::placeholder { color: var(--muted-2); font-weight: 500; }
 .quickadd-hint { font-size: 11.5px; color: var(--muted-2); white-space: nowrap; }
+/* At 375 the French hint ran past the card: let it wrap beside the input instead. */
+@media (max-width: 639px) {
+  .quickadd-hint { white-space: normal; text-align: right; max-width: 40%; line-height: 1.3; }
+}
 .quickadd-meta {
   display: grid; grid-template-rows: 0fr; transition: grid-template-rows 200ms ease;
 }
@@ -827,9 +833,9 @@ body {
 .nc-actions { display: flex; gap: 2px; opacity: 0; transition: opacity var(--transition-fast); }
 .note-card:hover .nc-actions,
 .note-card:focus-within .nc-actions { opacity: 1; }
-.nc-title { font-size: 16.5px; font-weight: 600; color: var(--ink); margin: 0 0 7px; line-height: 1.3; letter-spacing: -0.01em; }
+.nc-title { font-size: 16.5px; font-weight: 600; color: var(--ink); margin: 0 0 7px; line-height: 1.3; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 .nc-body {
-  font-size: 13px; color: var(--ink-2); line-height: 1.6; margin: 0; white-space: pre-wrap;
+  font-size: 13px; color: var(--ink-2); line-height: 1.6; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 9; -webkit-box-orient: vertical; overflow: hidden;
 }
 .nc-foot { display: flex; align-items: center; gap: 6px; margin-top: 13px; font-size: 11px; color: var(--muted-2); }

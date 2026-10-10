@@ -12,7 +12,8 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { Receipt } from "lucide-react";
+import { toast } from "sonner";
+import { Loader2, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fetchRefundableExpenses } from "@/lib/api/billing/refundable-invoices";
 import { RefundableExpenseRowActions } from "@/components/billing/refundable-expense-row-actions";
@@ -62,8 +63,12 @@ export default function RefundableInvoicesPage() {
   const [total, setTotal] = useState<number>(0);
   const [summary, setSummary] = useState<RefundableSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  // Rows on screen: a reload after a status change fetches as many pages
+  // again, instead of folding the list back to the first one.
+  const loadedRef = useRef(0);
 
   // Keep t in a ref so the load callback can access the latest value without
   // being re-created on every render (next-intl's t is stable in production,
@@ -75,8 +80,14 @@ export default function RefundableInvoicesPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchRefundableExpenses();
-      setItems(result.items);
+      let result = await fetchRefundableExpenses();
+      let rows = result.items;
+      while (rows.length < loadedRef.current && rows.length < result.total && result.items.length > 0) {
+        result = await fetchRefundableExpenses({ offset: rows.length });
+        rows = [...rows, ...result.items];
+      }
+      loadedRef.current = rows.length;
+      setItems(rows);
       setTotal(result.total);
       setSummary(result.summary);
     } catch {
@@ -85,6 +96,24 @@ export default function RefundableInvoicesPage() {
       setLoading(false);
     }
   }, []);
+
+  // Next page (the API sends at most 200 rows at a time), appended.
+  const loadMore = async () => {
+    setLoadingMore(true);
+    try {
+      const result = await fetchRefundableExpenses({ offset: items.length });
+      const seen = new Set(items.map((i) => i.id));
+      const next = [...items, ...result.items.filter((i) => !seen.has(i.id))];
+      loadedRef.current = next.length;
+      setItems(next);
+      setTotal(result.total);
+      setSummary(result.summary);
+    } catch {
+      toast.error(t("loadError"));
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
     void load();
@@ -186,9 +215,15 @@ export default function RefundableInvoicesPage() {
           </table>
           </div>
           {items.length < total && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {t("truncatedNotice", { count: items.length, total })}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <p className="text-xs text-muted-foreground">
+                {t("truncatedNotice", { count: items.length, total })}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => void loadMore()} disabled={loadingMore}>
+                {loadingMore && <Loader2 size={14} className="mr-1 animate-spin" />}
+                {t("loadMore")}
+              </Button>
+            </div>
           )}
         </div>
       )}

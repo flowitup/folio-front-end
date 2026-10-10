@@ -27,11 +27,17 @@ export async function updateInvoicePrefix(
   }
 
   const authHeaders = await sessionAuthHeader();
-  const response = await fetch(`${env.apiBaseUrl}/projects/${projectId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", ...authHeaders },
-    body: JSON.stringify({ invoice_prefix: cleaned === "" ? null : cleaned }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiBaseUrl}/projects/${projectId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({ invoice_prefix: cleaned === "" ? null : cleaned }),
+    });
+  } catch {
+    // API unreachable: a result the form can toast, not a thrown action.
+    return { ok: false, error: "unknown" };
+  }
 
   if (response.ok) return { ok: true };
   if (response.status === 400) return { ok: false, error: "validation" };
@@ -72,14 +78,20 @@ export async function updateBankCredit(
   const trimmedSource = rawSource.trim();
 
   const authHeaders = await sessionAuthHeader();
-  const response = await fetch(`${env.apiBaseUrl}/projects/${projectId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", ...authHeaders },
-    body: JSON.stringify({
-      budget,
-      budget_source: trimmedSource === "" ? null : trimmedSource,
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiBaseUrl}/projects/${projectId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({
+        budget,
+        budget_source: trimmedSource === "" ? null : trimmedSource,
+      }),
+    });
+  } catch {
+    // API unreachable: a result the form can toast, not a thrown action.
+    return { ok: false, error: "unknown" };
+  }
 
   if (response.ok) return { ok: true };
   if (response.status === 400) return { ok: false, error: "validation" };

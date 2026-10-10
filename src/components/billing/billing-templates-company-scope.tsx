@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { listBillingTemplatesAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import { BillingTemplatesList } from "@/components/billing/billing-templates-list";
+import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
 import type { BillingDocumentTemplate } from "@/types/billing";
 import type { MyCompany } from "@/types/companies";
 
@@ -33,6 +34,8 @@ interface Props {
 
 export function BillingTemplatesCompanyScope({ adminCompanies, initialTemplates, initialCompanyId }: Props) {
   const t = useTranslations("billing.templates");
+  const tErrors = useTranslations("billing.form.errors");
+  const errorMessage = useBillingErrorMessage("template");
   const [companyId, setCompanyId] = useState<string | null>(initialCompanyId);
   const [templates, setTemplates] = useState(initialTemplates);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +51,7 @@ export function BillingTemplatesCompanyScope({ adminCompanies, initialTemplates,
       } else {
         // Surface the failure — an empty list otherwise reads as "no
         // templates in this company", not "couldn't load templates".
-        toast.error(result.error.message);
+        toast.error(errorMessage(result.error, tErrors("templatesLoadFailed")));
       }
       setIsLoading(false);
     });

@@ -3,11 +3,16 @@
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
-import { Printer, Pencil, Trash2 } from "lucide-react";
+import { Printer, Pencil, Trash2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InvoiceForm, classifySubmitError } from "@/components/invoices/invoice-form";
+import {
+  InvoiceForm,
+  classifyActionError,
+  classifySubmitError,
+  invoiceValidationMessages,
+} from "@/components/invoices/invoice-form";
 import { InvoiceAttachments } from "@/components/invoices/invoice-attachments";
 import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
 import { updateInvoice, deleteInvoice } from "@/lib/api/invoice-api";
@@ -17,12 +22,13 @@ import {
   REFUND_STATUS_I18N,
   refundStatusI18nKey,
 } from "@/lib/invoices/refundable-status-display";
-import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
+import { formatDate, formatEUR, formatMonthYear, formatUnitPriceEUR } from "@/lib/utils/formatters";
 import { formatQuantity, formatVatRate, invoiceTotals } from "@/lib/invoices/invoice-totals";
 import { invoiceItemLabel } from "@/lib/invoices/invoice-item-label";
 import { TransferToCompanyPaymentAction } from "@/components/invoices/transfer-to-company-payment-action";
 import { InvoiceHighlightPicker } from "@/components/invoices/invoice-highlight-picker";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
+import { TruncatedStamp } from "@/components/invoices/truncated-stamp";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
 import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
 
@@ -89,6 +95,8 @@ export function InvoiceDetailContent({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAttributing, setIsAttributing] = useState(false);
+  // Refunded = locked by the API (only the highlight stays editable).
+  const isRefunded = invoice.refundable_status === "refunded";
 
   /** Extract a user-facing message from an API error, falling back to a default. */
   function extractErrorMessage(err: unknown, fallback: string): string {
@@ -117,7 +125,9 @@ export function InvoiceDetailContent({
           t("errorServiceMonthNotAllowed"),
           t("errorAppliedExceedsTarget"),
           t("errorWorkerLinkNotAllowed"),
-          t("errorWorkerNotInProject")
+          t("errorWorkerNotInProject"),
+          t("errorPaymentMethodInactive"),
+          invoiceValidationMessages(t)
         )
       );
     } finally {
@@ -131,7 +141,7 @@ export function InvoiceDetailContent({
       await deleteInvoice(invoice.project_id, invoice.id);
       onDeleted();
     } catch (err) {
-      setError(extractErrorMessage(err, "Failed to delete invoice"));
+      setError(classifyActionError(err, invoiceValidationMessages(t), t("deleteInvoiceFailed")));
     }
   };
 
@@ -203,19 +213,25 @@ export function InvoiceDetailContent({
           {canManage && !isEditing && !invoice.is_auto_generated && (
             <>
               <InvoiceHighlightPicker invoice={invoice} onUpdated={onUpdated} />
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                <Pencil className="h-4 w-4 mr-1" />
-                {t("edit")}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-destructive"
-                aria-label={t("delete")}
-                onClick={handleDelete}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {/* The API locks a refunded expense until its refund status is
+                  cleared: no Edit/Delete that could only fail (note below). */}
+              {!isRefunded && (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    <Pencil className="h-4 w-4 mr-1" />
+                    {t("edit")}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-destructive"
+                    aria-label={t("delete")}
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
             </>
           )}
           {isEditing && (
@@ -225,6 +241,16 @@ export function InvoiceDetailContent({
           )}
         </div>
       </div>
+
+      {canManage && isRefunded && !invoice.is_auto_generated && (
+        <p
+          className="flex items-center gap-1.5 text-xs text-muted-foreground"
+          data-testid="invoice-refunded-locked"
+        >
+          <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          {t("errorRefundedLocked")}
+        </p>
+      )}
 
       {error && (
         <Alert variant="destructive">
@@ -296,16 +322,19 @@ export function InvoiceDetailContent({
                   </div>
                 )}
                 <div>
-                  <dt className="text-xs font-medium text-muted-foreground tracking-wide">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {t("paymentMethod.label")}
                   </dt>
                   <dd className="mt-0.5 text-sm flex flex-wrap items-center gap-1.5">
                     {invoice.refundable_status != null && companyName ? (
-                      <span className="stamp truncate max-w-[200px]">
-                        {invoice.payment_method_label?.trim()
-                          ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
-                          : `→ ${companyName}`}
-                      </span>
+                      <TruncatedStamp
+                        className="max-w-[200px]"
+                        label={
+                          invoice.payment_method_label?.trim()
+                            ? `${localizeMethodLabel(invoice.payment_method_label, tBuiltins)} → ${companyName}`
+                            : `→ ${companyName}`
+                        }
+                      />
                     ) : (
                       <span>
                         {invoice.payment_method_label
@@ -441,7 +470,7 @@ export function InvoiceDetailContent({
                               className="num text-[12px]"
                               style={{ color: "var(--muted)" }}
                             >
-                              {formatQuantity(item.quantity, locale)} × {formatEUR(item.unit_price)}
+                              {formatQuantity(item.quantity, locale)} × {formatUnitPriceEUR(item.unit_price)}
                               {hasVat && (item.vat_rate ?? 0) > 0 && (
                                 <span className="ml-1">({formatVatRate(item.vat_rate ?? 0, locale)})</span>
                               )}
@@ -524,7 +553,7 @@ export function InvoiceDetailContent({
                             <tr key={i} className="border-b last:border-0">
                               <td className="px-3 py-1.5">{invoiceItemLabel(invoice, item.description, (number) => t("bankRefundLine", { number }))}</td>
                               <td className="px-3 py-1.5 text-right">{formatQuantity(item.quantity, locale)}</td>
-                              <td className="px-3 py-1.5 text-right">{formatEUR(item.unit_price)}</td>
+                              <td className="px-3 py-1.5 text-right">{formatUnitPriceEUR(item.unit_price)}</td>
                               {hasVat && (
                                 <td className="px-3 py-1.5 text-right">
                                   {(item.vat_rate ?? 0) > 0 ? formatVatRate(item.vat_rate ?? 0, locale) : "—"}

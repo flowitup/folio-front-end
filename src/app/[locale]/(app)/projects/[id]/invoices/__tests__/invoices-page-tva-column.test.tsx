@@ -257,4 +257,23 @@ describe("InvoicesPage — TVA column", () => {
       expect(dashes.length).toBeGreaterThanOrEqual(1);
     });
   });
+
+  it("shows the VAT the detail page shows: TTC minus the lines' rounded HT", async () => {
+    // Two 2.5 × 19.99 lines at 20 %: HT 49.98 each, TTC 59.97 each (119.94).
+    // VAT is 119.94 − 99.96 = 19.98, not the exact Σ 19.99 that left HT + VAT ≠ TTC.
+    const paint = { description: "Paint", quantity: 2.5, unit_price: 19.99, total: 59.97, vat_rate: 20 };
+    setupMocks([makeInvoice({ type: "materials_services", items: [paint, paint], total_amount: 119.94 })]);
+    render(<InvoicesPage />);
+
+    await waitFor(() => expect(screen.queryByText("invoices.noInvoices")).toBeNull());
+
+    const tabBtn = screen.getByRole("button", { name: /invoices\.types\.materials_services/i });
+    fireEvent.click(tabBtn);
+
+    await waitFor(() => {
+      const desktop = screen.getByTestId("invoices-table-desktop");
+      expect(within(desktop).queryByText(eur(19.98))).not.toBeNull();
+      expect(within(desktop).queryByText(eur(19.99))).toBeNull();
+    });
+  });
 });

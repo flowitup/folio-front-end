@@ -160,6 +160,23 @@ describe("proxy session handling", () => {
     expect(res.headers.get("location")).toBeNull();
   });
 
+  it("hands the requested page to the render, for the layout's own redirect to /login", async () => {
+    // An unexpired but revoked token passes the proxy; the (app) layout then
+    // redirects and needs the page to keep it as callbackUrl.
+    const req = request("/fr/projects?x=1", { access_token_cookie: jwt(600) });
+    req.headers.set("x-folio-path", "/spoofed");
+    const res = await proxy(req);
+    expect(res.headers.get("x-middleware-request-x-folio-path")).toBe("/fr/projects?x=1");
+    expect(res.headers.get("x-middleware-override-headers")?.split(",")).toEqual(
+      expect.arrayContaining(["x-folio-path", "cookie"])
+    );
+  });
+
+  it("does not forward the path on public pages", async () => {
+    const res = await proxy(request("/en/login", {}));
+    expect(res.headers.get("x-middleware-request-x-folio-path")).toBeNull();
+  });
+
   it("never redirects /login on an unexpired cookie the API may refuse", async () => {
     const res = await proxy(request("/en/login", { access_token_cookie: jwt(600) }));
     expect(res.headers.get("location")).toBeNull();

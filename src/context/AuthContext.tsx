@@ -16,6 +16,7 @@ import {
 } from "@/lib/auth/actions";
 import { verifyOtpAction } from "@/lib/auth/otp-actions";
 import { postLoginPath } from "@/lib/auth/callback-url";
+import { isPlatformOps } from "@/lib/auth/permissions";
 
 interface AuthContextType extends AuthState {
   loginWithPhone: (
@@ -27,6 +28,10 @@ interface AuthContextType extends AuthState {
    * avatar follow a profile save without a full reload (the provider is
    * seeded once; router.refresh() does not re-seed it). */
   updateUser: (patch: Partial<User>) => void;
+  /** Re-read the signed-in user from /auth/me after an action that changes
+   * their companies or permissions (switching the primary company, leaving
+   * or joining one), so permission gates follow without a full reload. */
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -90,9 +95,15 @@ export function AuthProvider({
       // starts from /login, under the same not-yet-visited route), so
       // push() alone already fetches every layout server-side fresh,
       // including the session-reading root layout.
-      // Return to the page the proxy sent the visitor away from, if any.
+      // Return to the page the proxy sent the visitor away from, if any —
+      // except for someone with no company: the onboarding gate lives in the
+      // /dashboard layout, so they go through it (a deep link would skip it).
       const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
-      router.push(postLoginPath(callbackUrl, locale));
+      const companyLess =
+        Array.isArray(freshUser?.companies) &&
+        freshUser.companies.length === 0 &&
+        !isPlatformOps(freshUser.permissions);
+      router.push(companyLess ? `/${locale}/dashboard` : postLoginPath(callbackUrl, locale));
     },
     [router, locale]
   );
@@ -132,6 +143,17 @@ export function AuthProvider({
     setState((prev) => (prev.user ? { ...prev, user: { ...prev.user, ...patch } } : prev));
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    let fresh: User | null = null;
+    try {
+      fresh = await getCurrentUserAction();
+    } catch {
+      // Keep the current user; the next full load re-seeds it.
+    }
+    if (!fresh) return;
+    setState((prev) => (prev.user ? { ...prev, user: fresh } : prev));
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -140,6 +162,7 @@ export function AuthProvider({
         loginWithPhone,
         logout,
         updateUser,
+        refreshUser,
       }}
     >
       {children}

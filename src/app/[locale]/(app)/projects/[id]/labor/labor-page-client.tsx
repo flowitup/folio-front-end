@@ -174,6 +174,11 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
 
   // Only active workers can be logged for a day.
   const activeWorkers = useMemo(() => workers.filter((w) => w.is_active), [workers]);
+  // People already on the roster (deactivated included): Add worker cannot pick them again.
+  const workerPersonIds = useMemo(
+    () => workers.map((w) => w.person_id).filter((id): id is string => Boolean(id)),
+    [workers],
+  );
 
   // Worker lookup map for role-aware chip colors in calendar cells.
   const workerMap = useMemo(
@@ -429,24 +434,22 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   }, [searchParams, router, pathname, isProjectContextLoading, canManageLabor]);
 
   // Handlers
+  // A failed save throws on to AddWorkerDialog, which stays open with the
+  // typed values and shows the error itself (no page-level banner).
   const handleCreateWorker = async (payload: CreateWorkerPayload | UpdateWorkerPayload) => {
-    try {
-      await createWorker(projectId, payload as CreateWorkerPayload);
-      await loadWorkers();
-    } catch {
-      setError(t("errors.createWorkerFailed"));
-    }
+    const created = await createWorker(projectId, payload as CreateWorkerPayload);
+    setError(null);
+    toast.success(t("workerAdded", { name: created.person_name ?? created.name }));
+    await loadWorkers();
   };
 
   const handleUpdateWorker = async (payload: CreateWorkerPayload | UpdateWorkerPayload) => {
     if (editWorker) {
-      try {
-        await updateWorker(projectId, editWorker.id, payload as UpdateWorkerPayload);
-        await loadWorkers();
-        setEditWorker(null);
-      } catch {
-        setError(t("errors.updateWorkerFailed"));
-      }
+      const updated = await updateWorker(projectId, editWorker.id, payload as UpdateWorkerPayload);
+      setError(null);
+      toast.success(t("workerUpdated", { name: updated.person_name ?? updated.name }));
+      await loadWorkers();
+      setEditWorker(null);
     }
   };
 
@@ -470,16 +473,12 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     }
   };
 
+  // A failed save throws on to EditAttendanceDialog, which shows the error.
   const handleUpdateAttendance = async (payload: UpdateAttendancePayload) => {
     if (!editEntry) return;
-    try {
-      await updateAttendance(projectId, editEntry.id, payload);
-      await loadEntries();
-      setEditEntry(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.updateFailed"));
-      throw err;
-    }
+    await updateAttendance(projectId, editEntry.id, payload);
+    await loadEntries();
+    setEditEntry(null);
   };
 
   const handleOpenLogDay = (date?: string) => {
@@ -620,7 +619,12 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               <button
                 key={tab}
                 type="button"
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  // A banner from one tab's failed action must not follow the
+                  // user to the next tab; the new tab's own load sets a fresh one.
+                  setError(null);
+                  setActiveTab(tab);
+                }}
                 className={activeTab === tab ? "on" : ""}
               >
                 {tab === "payments" ? t("payments.tab") : t(tab)}
@@ -826,6 +830,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         open={showAddWorker}
         onOpenChange={setShowAddWorker}
         onSave={handleCreateWorker}
+        existingPersonIds={workerPersonIds}
         roles={roles}
         palette={palette}
         onRoleCreated={handleRoleCreated}

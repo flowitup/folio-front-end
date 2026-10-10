@@ -192,6 +192,23 @@ describe("BulkAddForm", () => {
       // No different-role → toast.warning not called
       expect(mockToast.warning).not.toHaveBeenCalled();
     });
+
+    it("tells ops which projects were skipped because the user is not in their company", async () => {
+      const { renderBulkAddResultsToasts } = await import("../results-toast-renderer");
+      const t = (key: string, values?: Record<string, string | number | Date>) =>
+        `${key}:${values?.count ?? ""}`;
+
+      renderBulkAddResultsToasts(
+        [
+          { project_id: "p1", project_name: "P1", status: "not_in_company" as const },
+          { project_id: "p2", project_name: "P2", status: "not_in_company" as const },
+        ],
+        t
+      );
+
+      expect(mockToast.error).toHaveBeenCalledWith("notInCompany:2");
+      expect(mockToast.success).not.toHaveBeenCalled();
+    });
     it(
       "renders cap caption and disables unchecked checkboxes when 50 projects are selected",
       async () => {

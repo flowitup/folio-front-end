@@ -102,6 +102,34 @@ describe("BudgetMeta — over budget", () => {
     expect(remaining.getAttribute("data-over-budget")).toBeNull();
     expect(remaining.textContent).not.toMatch(/Over by/);
   });
+
+  it("names a sub-euro overrun to the cent, never 'Over by 0 €'", () => {
+    render(<BudgetMeta creditTotal={100} spentPersonal={0} spentByCredits={100.4} />);
+    expect(plain(screen.getByTestId("remaining-value").textContent)).toBe("Over by 0,40 €");
+  });
+});
+
+/** Intl's fr-FR output uses no-break spaces; compare with plain ones. */
+const plain = (s: string | null) => (s ?? "").replace(/\s/g, " ");
+
+describe("fmtEUR", () => {
+  it("keeps whole euros without decimals", () => {
+    expect(plain(fmtEUR(12500))).toBe("12 500 €");
+    expect(plain(fmtEUR(0))).toBe("0 €");
+  });
+
+  it("shows cents when the amount has any", () => {
+    expect(plain(fmtEUR(12500.75))).toBe("12 500,75 €");
+    expect(plain(fmtEUR(1000.5))).toBe("1 000,50 €");
+    expect(plain(fmtEUR(0.4))).toBe("0,40 €");
+    expect(plain(fmtEUR(-20.1))).toBe("-20,10 €");
+  });
+
+  it("keeps the remaining figure consistent with the figures it is computed from", () => {
+    // 1 000,50 − 100,40 used to read "1 001 € − 100 € = 900 €".
+    const meta = computeBudgetMeta(1000.5, 0, 100.4);
+    expect(plain(fmtEUR(meta.remaining))).toBe("900,10 €");
+  });
 });
 
 describe("computeBudgetMeta — derived values", () => {

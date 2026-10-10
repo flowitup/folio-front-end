@@ -30,7 +30,7 @@ type Props = {
   projectId: string;
   analysis: ProjectAnalysis;
   canManage: boolean;
-  /** Resolved display name of the uploader; empty when no longer a member. */
+  /** Resolved display name of the uploader; empty once their account was erased. */
   uploaderName: string;
   /** Upload date preformatted on the server — formatting it here would
       hydration-mismatch when server and browser sit in different timezones. */

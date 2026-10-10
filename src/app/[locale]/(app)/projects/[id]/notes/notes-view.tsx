@@ -9,7 +9,8 @@
 import { useState } from "react";
 import { FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { buildSections } from "@/lib/notes/grouping";
+import { buildSections, type NoteSection } from "@/lib/notes/grouping";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { CATEGORY_ORDER } from "@/lib/notes/categories";
 import { QuickAdd } from "./quick-add";
 import { NotesToolbar } from "./notes-toolbar";
@@ -50,7 +51,14 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
     return (n.title + " " + (n.description ?? "")).toLowerCase().includes(q);
   });
 
-  const sections = buildSections(filtered, "date");
+  // Day sections follow the viewer's calendar, which the server lacks: until
+  // hydrated, one unheaded list (newest first) so the HTML cannot mismatch.
+  const hydrated = useHydrated();
+  const sections: NoteSection[] = hydrated
+    ? buildSections(filtered, "date")
+    : filtered.length > 0
+      ? [{ key: "all", labelKey: "", items: [...filtered].sort((x, y) => y.created_at.localeCompare(x.created_at)) }]
+      : [];
   const isEmpty = notes.length === 0;
 
   // ---- Render ----
@@ -84,17 +92,19 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
       ) : (
         sections.map((sec) => (
           <section className="agenda-section" key={sec.key}>
-            <div className="agenda-head">
-              {sec.dotColor && (
-                <span
-                  className="cat-dot"
-                  style={{ background: sec.dotColor, width: 10, height: 10 }}
-                />
-              )}
-              <h2>{t(sec.labelKey.replace("notes.", "") as Parameters<typeof t>[0])}</h2>
-              <span className="rule" />
-              <span className="count num">{sec.items.length}</span>
-            </div>
+            {sec.labelKey && (
+              <div className="agenda-head">
+                {sec.dotColor && (
+                  <span
+                    className="cat-dot"
+                    style={{ background: sec.dotColor, width: 10, height: 10 }}
+                  />
+                )}
+                <h2>{t(sec.labelKey.replace("notes.", "") as Parameters<typeof t>[0])}</h2>
+                <span className="rule" />
+                <span className="count num">{sec.items.length}</span>
+              </div>
+            )}
             <div className="notes-grid">
               {sec.items.map((note) => (
                 <NoteCard

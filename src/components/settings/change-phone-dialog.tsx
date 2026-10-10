@@ -45,6 +45,8 @@ function errorKeyFor(error: RequestPhoneChangeError | ConfirmPhoneChangeError): 
       return "errorPhoneTaken";
     case "throttled":
       return "errorThrottled";
+    case "hourly_limit":
+      return "errorHourlyLimit";
     case "sms_failed":
       return "errorSmsFailed";
     case "invalid_code":
@@ -70,6 +72,8 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
   const [sentTo, setSentTo] = useState("");
   const [code, setCode] = useState("");
   const [errorKey, setErrorKey] = useState<string | null>(null);
+  // Minutes left on the new number's hourly code cap, shown in its message.
+  const [retryAfterMinutes, setRetryAfterMinutes] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -111,6 +115,7 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
     const result = await requestPhoneChangeCodeAction(phone);
     setIsSending(false);
     if (!result.success) {
+      setRetryAfterMinutes(result.retryAfterMinutes ?? 0);
       setErrorKey(errorKeyFor(result.error));
       return;
     }
@@ -173,7 +178,7 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
               }}
             >
               <AlertCircle size={14} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
-              <span>{t(errorKey)}</span>
+              <span>{t(errorKey, { minutes: retryAfterMinutes })}</span>
             </div>
           )}
 

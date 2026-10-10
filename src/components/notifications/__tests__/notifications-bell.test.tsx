@@ -454,3 +454,52 @@ describe("NotificationsBell — polling cadence", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });
+
+describe("NotificationsBell — failed poll", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0.5); // jitter = 0
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("keeps the last-known items when a later poll fails", async () => {
+    const items = [makeNotification("n1"), makeNotification("n2")];
+    mockFetch
+      .mockResolvedValueOnce({ items, attendance: [PENDING] })
+      // The server action could not reach the API.
+      .mockResolvedValueOnce(null)
+      // The action call itself failed (browser offline).
+      .mockRejectedValueOnce(new Error("Failed to fetch"));
+    render(<NotificationsBell />);
+    await flushTick();
+    expect(screen.getByText("3")).toBeDefined();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(screen.getByText("3")).toBeDefined();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+    expect(screen.getByText("3")).toBeDefined();
+  }, 15000);
+
+  it("stops the loading state when the first poll fails", async () => {
+    mockFetch.mockResolvedValue(null);
+    render(<NotificationsBell />);
+    await flushTick();
+
+    fireEvent.click(screen.getByRole("button", { name: /notifications\.aria\.bell/i }));
+
+    expect(screen.getByText("notifications.empty")).toBeDefined();
+  });
+});

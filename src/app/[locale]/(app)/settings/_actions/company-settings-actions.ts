@@ -13,6 +13,7 @@ import { getSession } from "@/lib/auth/session";
 import {
   fetchCompanyDirectory,
   addMemberByPhone,
+  cancelPendingMember,
   importMembers,
   type AddMemberByPhoneResult,
   type CompanyDirectoryEntry,
@@ -151,6 +152,35 @@ export async function addMemberByPhoneAction(
         },
       };
     }
+    // 409 — the phone's account is already a member of this company.
+    if (e.status === 409 && body["reason"] === "already_member") {
+      const t = await getTranslations("companySettings.errors");
+      return { ok: false, error: { code: "already_member", message: t("phoneAlreadyInCompany") } };
+    }
+    // 400 — not a phone number, or not a French one.
+    if (e.status === 400 && body["reason"] === "invalid_phone") {
+      const t = await getTranslations("companySettings.errors");
+      return { ok: false, error: { code: "invalid_phone", message: t("invalidPhone") } };
+    }
+    return { ok: false, error: await classifyError(err) };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cancel a pending member (added by phone, no account yet)
+// ---------------------------------------------------------------------------
+
+export async function cancelPendingMemberAction(
+  companyId: string,
+  personId: string
+): Promise<ActionResult<void>> {
+  const auth = await requireSession();
+  if (!auth.ok) return auth;
+  if (!isUuid(companyId) || !isUuid(personId)) return invalid();
+  try {
+    await cancelPendingMember(companyId, personId);
+    return { ok: true, data: undefined };
+  } catch (err) {
     return { ok: false, error: await classifyError(err) };
   }
 }

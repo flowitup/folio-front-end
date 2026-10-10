@@ -29,6 +29,7 @@ vi.mock("sonner", () => ({
 }));
 
 import { updateInvoice } from "@/lib/api/invoice-api";
+import { toast } from "sonner";
 
 const baseInvoice: Invoice = {
   id: "inv-1",
@@ -107,5 +108,22 @@ describe("InvoiceHighlightPicker", () => {
     await waitFor(() =>
       expect(updateInvoice).toHaveBeenCalledWith("proj-1", "inv-1", { highlight_color: null })
     );
+  });
+});
+
+describe("InvoiceHighlightPicker — failure", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("toasts the translated error, never the API's English text", async () => {
+    vi.mocked(updateInvoice).mockRejectedValue({
+      status: 400,
+      data: { error: "ValidationError", message: "Refunded expenses are locked; clear the refund status first" },
+    });
+    render(<InvoiceHighlightPicker invoice={baseInvoice} onUpdated={vi.fn()} />);
+
+    fireEvent.click(screen.getByLabelText("invoices.highlight.label"));
+    fireEvent.click(await screen.findByLabelText("invoices.highlight.colors.yellow"));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("invoices.highlight.error"));
   });
 });

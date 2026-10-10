@@ -21,6 +21,8 @@ const PRIORITY_DOT: Record<TaskPriority, string> = {
 
 interface BacklogBarProps {
   tasks: Task[];
+  /** Assignee names by user id, for the cards. */
+  assigneeNames?: ReadonlyMap<string, string>;
   onAdd: () => void;
   onTaskClick: (task: Task) => void;
 }
@@ -29,7 +31,7 @@ interface BacklogBarProps {
  * Collapsible backlog row above the Kanban columns. Cards are draggable INTO
  * board columns (status changes to "todo"/etc.) and within the backlog itself.
  */
-export function BacklogBar({ tasks, onAdd, onTaskClick }: BacklogBarProps) {
+export function BacklogBar({ tasks, assigneeNames, onAdd, onTaskClick }: BacklogBarProps) {
   const t = useTranslations("planning");
   const [expanded, setExpanded] = useState(true);
 
@@ -75,7 +77,12 @@ export function BacklogBar({ tasks, onAdd, onTaskClick }: BacklogBarProps) {
             <SortableContext items={tasks.map((t) => t.id)} strategy={horizontalListSortingStrategy}>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {tasks.map((task) => (
-                  <BacklogCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
+                  <BacklogCard
+                    key={task.id}
+                    task={task}
+                    assigneeName={task.assignee_id ? assigneeNames?.get(task.assignee_id) : null}
+                    onClick={() => onTaskClick(task)}
+                  />
                 ))}
               </div>
             </SortableContext>
@@ -88,11 +95,12 @@ export function BacklogBar({ tasks, onAdd, onTaskClick }: BacklogBarProps) {
 
 interface BacklogCardProps {
   task: Task;
+  assigneeName?: string | null;
   onClick: () => void;
 }
 
 /** Compact horizontally-arranged card for the backlog row. */
-function BacklogCard({ task, onClick }: BacklogCardProps) {
+function BacklogCard({ task, assigneeName, onClick }: BacklogCardProps) {
   const t = useTranslations("planning");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -106,6 +114,15 @@ function BacklogCard({ task, onClick }: BacklogCardProps) {
       {...attributes}
       {...listeners}
       onClick={onClick}
+      // As on the board cards: Enter opens the task, Space picks it up.
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !isDragging) {
+          e.preventDefault();
+          onClick();
+          return;
+        }
+        listeners?.onKeyDown?.(e);
+      }}
       className={`
         flex-shrink-0 w-56 rounded-md border bg-card p-2 shadow-sm cursor-grab active:cursor-grabbing
         hover:shadow-md transition-shadow
@@ -120,6 +137,15 @@ function BacklogCard({ task, onClick }: BacklogCardProps) {
           aria-label={t(`priority.${task.priority}`)}
         />
         <p className="text-xs font-medium truncate">{task.title}</p>
+        {assigneeName && (
+          <span
+            className="ml-auto max-w-[45%] flex-shrink-0 truncate text-[10px] text-muted-foreground"
+            title={t("assignedTo", { name: assigneeName })}
+          >
+            <span aria-hidden>{assigneeName}</span>
+            <span className="sr-only">{t("assignedTo", { name: assigneeName })}</span>
+          </span>
+        )}
       </div>
     </div>
   );

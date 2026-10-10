@@ -23,6 +23,10 @@ interface DatePickerWithArrowsProps {
   label?: string;
   /** Disable both arrows + input. */
   disabled?: boolean;
+  /** Earliest / latest selectable day (YYYY-MM-DD): the arrow pointing past
+   *  it is disabled and the native picker greys out the days beyond. */
+  min?: string;
+  max?: string;
 }
 
 /**
@@ -46,6 +50,8 @@ export function DatePickerWithArrows({
   onChange,
   label,
   disabled = false,
+  min,
+  max,
 }: DatePickerWithArrowsProps) {
   const t = useTranslations("labor");
   return (
@@ -57,7 +63,7 @@ export function DatePickerWithArrows({
           variant="outline"
           size="icon"
           onClick={() => onChange(shiftDate(value, -1))}
-          disabled={disabled}
+          disabled={disabled || (!!min && value <= min)}
           aria-label={t("prevDay")}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -67,6 +73,8 @@ export function DatePickerWithArrows({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
+          min={min}
+          max={max}
           className="flex-1"
         />
         <Button
@@ -74,7 +82,7 @@ export function DatePickerWithArrows({
           variant="outline"
           size="icon"
           onClick={() => onChange(shiftDate(value, 1))}
-          disabled={disabled}
+          disabled={disabled || (!!max && value >= max)}
           aria-label={t("nextDay")}
         >
           <ChevronRight className="h-4 w-4" />

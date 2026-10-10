@@ -10,6 +10,9 @@
  *   404                       → not_found
  *   409 + reason="delete"     → builtin_delete
  *   401                       → unauthorized
+ *
+ * Messages come from paymentMethods.errors in the caller's locale (fr here),
+ * never from hard-coded English.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -33,6 +36,15 @@ vi.mock("@/lib/auth/session", () => ({
     expiresAt: Date.now() + 60_000,
   }),
 }));
+
+// Translations resolve against the real French catalogue.
+vi.mock("next-intl/server", async () => {
+  const fr = (await import("@/messages/fr.json")).default as unknown as Record<string, unknown>;
+  return {
+    getTranslations: async (ns: string) => (key: string) =>
+      [...ns.split("."), key].reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], fr),
+  };
+});
 
 // ---- Imports after mocks ----
 
@@ -158,8 +170,10 @@ describe("createPaymentMethodAction", () => {
       httpError(409, { reason: "duplicate", message: "Label already exists." })
     );
     const result = await createPaymentMethodAction(COMPANY_ID, "Cash");
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("duplicate_label");
+    expect(result).toEqual({
+      ok: false,
+      error: { code: "duplicate_label", message: "Un moyen de paiement avec ce nom existe déjà." },
+    });
   });
 
   it("403 → ok:false, error.code='forbidden'", async () => {
@@ -180,10 +194,43 @@ describe("createPaymentMethodAction", () => {
   });
 
   it("rejects labels exceeding max length before hitting BE", async () => {
-    const result = await createPaymentMethodAction(COMPANY_ID, "x".repeat(200));
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("validation");
+    const result = await createPaymentMethodAction(COMPANY_ID, "x".repeat(121));
+    expect(result).toEqual({
+      ok: false,
+      error: { code: "label_too_long", message: "Le nom est trop long (max 120 caractères)." },
+    });
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("accepts labels up to the backend limit of 120 characters", async () => {
+    mockCreate.mockResolvedValueOnce(PAYMENT_METHOD);
+    mockFetch.mockResolvedValueOnce(METHODS_LIST);
+    const result = await createPaymentMethodAction(COMPANY_ID, "x".repeat(120));
+    expect(result.ok).toBe(true);
+    expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "x".repeat(120));
+  });
+
+  it("rejects a blank label with label_required", async () => {
+    const result = await createPaymentMethodAction(COMPANY_ID, "   ");
+    expect(result).toEqual({ ok: false, error: { code: "label_required", message: "Le nom est requis." } });
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("a non-UUID company id gives a translated validation error", async () => {
+    const result = await createPaymentMethodAction("not-a-uuid", "Wise");
+    expect(result).toEqual({
+      ok: false,
+      error: { code: "validation", message: "Saisie invalide. Vérifiez votre saisie et réessayez." },
+    });
+  });
+
+  it("an unexpected error never leaks the API client's English text", async () => {
+    mockCreate.mockRejectedValueOnce(new Error("Failed to create payment method (HTTP 500)"));
+    const result = await createPaymentMethodAction(COMPANY_ID, "Wise");
+    expect(result).toEqual({
+      ok: false,
+      error: { code: "generic", message: "Une erreur est survenue. Veuillez réessayer." },
+    });
   });
 
   it("429 → ok:false, error.code='rate_limited'", async () => {
@@ -232,6 +279,12 @@ describe("updatePaymentMethodAction", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("not_found");
   });
+
+  it("a rename longer than 120 characters is refused as label_too_long", async () => {
+    const result = await updatePaymentMethodAction(COMPANY_ID, PM_ID, { label: "y".repeat(121) });
+    expect(result.ok === false && result.error.code).toBe("label_too_long");
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
 });
 
 describe("deletePaymentMethodAction", () => {
@@ -252,8 +305,10 @@ describe("deletePaymentMethodAction", () => {
       httpError(409, { reason: "delete" })
     );
     const result = await deletePaymentMethodAction(COMPANY_ID, PM_ID);
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("builtin_delete");
+    expect(result).toEqual({
+      ok: false,
+      error: { code: "builtin_delete", message: "Les moyens intégrés ne peuvent pas être supprimés." },
+    });
   });
 
   it("403 → forbidden (permission_denied mapping)", async () => {

@@ -4,14 +4,16 @@
  * AddRefundableExpenseDialog — picker for promoting expenses into the
  * refundable tracking list.
  *
- * On open it fetches all materials & services expenses that have not yet been
- * marked refundable (refundable_status = null). The admin can search by project
- * name, invoice number, or recipient, select one or more rows, then confirm.
+ * On open it fetches the materials & services expenses that have not yet been
+ * marked refundable (refundable_status = null), 200 at a time with "Load more".
+ * The search (project name, invoice number or recipient) narrows the loaded
+ * rows at once and runs on the server, so it reaches every expense. The admin
+ * selects one or more rows, then confirms.
  * Confirming patches each selected expense to refundable_status="refundable"
  * and triggers the parent's onAdded callback.
  */
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -46,6 +48,9 @@ interface AddRefundableExpenseDialogProps {
   onAdded: () => void;
 }
 
+/** Wait after the last keystroke before searching on the server. */
+const SEARCH_DEBOUNCE_MS = 300;
+
 export function AddRefundableExpenseDialog({
   open,
   onOpenChange,
@@ -56,8 +61,11 @@ export function AddRefundableExpenseDialog({
   const [candidates, setCandidates] = useState<RefundableExpense[]>([]);
   const [candidateTotal, setCandidateTotal] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  // The search the loaded candidates answer ("" = no search).
+  const [loadedQuery, setLoadedQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
 
@@ -67,21 +75,69 @@ export function AddRefundableExpenseDialog({
   const tRef = useRef(t);
   useEffect(() => { tRef.current = t; });
 
+  // Only the latest request may update the list (typing fires several).
+  const requestRef = useRef(0);
+  // The search last asked of the server, so it is not asked twice (null
+  // after a failure, so the next keystroke asks again).
+  const queryRef = useRef<string | null>("");
+  // Invoice numbers of every row seen, for messages about selected rows that
+  // a later search no longer shows.
+  const numbersRef = useRef(new Map<string, string>());
+
+  /** First page of `q` (replaces the list) or the next one (appended). */
+  const fetchPage = useCallback(async (q: string, offset: number) => {
+    const request = ++requestRef.current;
+    if (offset === 0) queryRef.current = q;
+    try {
+      const res = await fetchRefundableCandidates({ q, offset: offset || undefined });
+      if (request !== requestRef.current) return;
+      for (const c of res.items) numbersRef.current.set(c.id, c.invoice_number);
+      setCandidates((prev) => {
+        if (offset === 0) return res.items;
+        const seen = new Set(prev.map((c) => c.id));
+        return [...prev, ...res.items.filter((c) => !seen.has(c.id))];
+      });
+      setCandidateTotal(res.total);
+      setLoadedQuery(q);
+      setError(null);
+    } catch {
+      if (request !== requestRef.current) return;
+      if (offset === 0) queryRef.current = null;
+      setError(tRef.current("loadError"));
+    }
+  }, []);
+
   // Fetch candidates each time the dialog opens.
   useEffect(() => {
     if (!open) return;
     setSearch("");
+    setLoadedQuery("");
     setSelected(new Set());
     setError(null);
     setLoading(true);
-    fetchRefundableCandidates()
-      .then((res) => {
-        setCandidates(res.items);
-        setCandidateTotal(res.total);
-      })
-      .catch(() => setError(tRef.current("loadError")))
-      .finally(() => setLoading(false));
-  }, [open]);
+    void fetchPage("", 0).finally(() => setLoading(false));
+  }, [open, fetchPage]);
+
+  // Search on the server once typing pauses.
+  useEffect(() => {
+    if (!open) return;
+    const q = search.trim();
+    if (q === queryRef.current) return;
+    const timer = setTimeout(() => void fetchPage(q, 0), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [open, search, fetchPage]);
+
+  // A search typed but not answered yet: an empty list means "wait", not "none".
+  const searching = search.trim() !== loadedQuery;
+
+  async function loadMore() {
+    setLoadingMore(true);
+    try {
+      await fetchPage(loadedQuery, candidates.length);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -125,9 +181,8 @@ export function AddRefundableExpenseDialog({
       const succeeded = results.filter((r) => r.status === "fulfilled");
 
       if (companyPaidIds.length > 0) {
-        const numbers = candidates
-          .filter((c) => companyPaidIds.includes(c.id))
-          .map((c) => c.invoice_number)
+        const numbers = companyPaidIds
+          .map((id) => numbersRef.current.get(id) ?? id)
           .join(", ");
         toast.error(tRef.current("companyPaidNotRefundable", { numbers }));
         setCandidates((prev) => prev.filter((c) => !companyPaidIds.includes(c.id)));
@@ -151,7 +206,7 @@ export function AddRefundableExpenseDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("dialog.title")}</DialogTitle>
         </DialogHeader>
@@ -163,7 +218,7 @@ export function AddRefundableExpenseDialog({
           className="mb-3"
         />
 
-        {loading ? (
+        {loading || (searching && filtered.length === 0 && !error) ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
             <Loader2 size={14} className="animate-spin" />
             <span>{t("loading")}</span>
@@ -223,6 +278,19 @@ export function AddRefundableExpenseDialog({
                 ))}
               </tbody>
             </table>
+            {candidates.length < candidateTotal && (
+              <div className="flex justify-center border-t p-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void loadMore()}
+                  disabled={loadingMore || searching}
+                >
+                  {loadingMore && <Loader2 size={14} className="animate-spin mr-1" />}
+                  {t("loadMore")}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 

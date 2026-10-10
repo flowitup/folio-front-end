@@ -7,7 +7,8 @@
  *   Devis:   draft→sent, sent→accepted|rejected|expired, accepted↔sent, rejected→draft
  *   Facture: draft→sent, sent→paid|overdue|cancelled, overdue→paid, paid→cancelled
  *
- * Terminal states (no outbound transitions) render the button disabled.
+ * Terminal states (no outbound transitions) render the button disabled, and so
+ * does a devis converted to a live facture (the API refuses any change to it).
  * On 409 (race / invalid transition from server) surfaces a toast error.
  */
 
@@ -24,6 +25,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { BillingStatusBadge } from "@/components/billing/billing-status-badge";
 import { updateBillingDocumentStatusAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
+import { isDevisLockedByFacture } from "@/lib/billing/devis-lock";
+import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
 
 // ---------------------------------------------------------------------------
@@ -95,12 +98,16 @@ export function BillingStatusMenu({
   const tActions = useTranslations("billing.form.actions");
   const tErrors = useTranslations("billing.form.errors");
   const tToast = useTranslations("billing.form.toast");
+  const errorMessage = useBillingErrorMessage();
 
   const [isUpdating, setIsUpdating] = useState(false);
   // Double-submit guard: synchronous check before React commit
   const updatingRef = useRef(false);
 
-  const transitions = getTransitions(document.kind, document.status);
+  // Until its facture is cancelled, a converted devis has no transition to offer.
+  const transitions = isDevisLockedByFacture(document)
+    ? []
+    : getTransitions(document.kind, document.status);
   const isTerminal = transitions.length === 0;
 
   /** Locale-aware status label for the current document's kind. */
@@ -133,10 +140,12 @@ export function BillingStatusMenu({
     try {
       const result = await updateBillingDocumentStatusAction(document.id, to);
       if (!result.ok) {
-        if (result.error.code === "conflict") {
+        if (result.error.code === "devis_locked") {
+          toast.error(tErrors("devisLocked"));
+        } else if (result.error.code === "conflict") {
           toast.error(tErrors("invalidTransition"));
         } else {
-          toast.error(result.error.message);
+          toast.error(errorMessage(result.error, tErrors("statusUpdateFailed")));
         }
         return;
       }

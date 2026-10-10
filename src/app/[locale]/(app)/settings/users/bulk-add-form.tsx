@@ -14,6 +14,7 @@ import { renderBulkAddResultsToasts } from "./results-toast-renderer";
 import { projectDisplayName, projectMatchesSearch } from "@/lib/projects/project-display-name";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import type { UserSearchItem } from "@/lib/api/admin";
+import { userContact, userDisplayName } from "@/lib/auth/user-display";
 
 const MAX_PROJECTS = 50;
 
@@ -108,7 +109,9 @@ export function BulkAddForm({ projects }: BulkAddFormProps) {
         />
         {selectedUser && (
           <p className="text-sm -mt-2" style={{ color: "var(--muted-foreground)" }}>
-            {t("userSearch.selected", { email: selectedUser.email })}
+            {t("userSearch.selected", {
+              email: userContact(selectedUser) || userDisplayName(selectedUser),
+            })}
           </p>
         )}
 

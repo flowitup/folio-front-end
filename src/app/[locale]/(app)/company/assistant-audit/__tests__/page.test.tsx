@@ -184,6 +184,28 @@ describe("AssistantAuditPage — company admin", () => {
     expect(screen.getByText("Minh")).toBeInTheDocument();
   });
 
+  it("labels a nameless phone account by its phone, never its synthetic address", async () => {
+    vi.mocked(fetchMyCompanies).mockResolvedValue([adminCompany]);
+    vi.mocked(fetchAttachedUsers).mockResolvedValue([
+      {
+        user_id: "u-2",
+        email: "phone-33621300009@no-email.folio.flowitup.com",
+        display_name: null,
+        phone: "+33621300009",
+        is_primary: false,
+        attached_at: "2026-01-01T00:00:00Z",
+        role: "member",
+      },
+    ]);
+    vi.mocked(listAssistantAudit).mockResolvedValue({ items: [] });
+
+    render(await renderPage());
+
+    const option = screen.getByRole("option", { name: /21 30 00 09/ });
+    expect(option).toHaveValue("u-2");
+    expect(screen.queryByText(/no-email/)).toBeNull();
+  });
+
   it("falls back to a free-text user id field when the attached-users wrapper fails", async () => {
     vi.mocked(fetchMyCompanies).mockResolvedValue([adminCompany]);
     vi.mocked(fetchAttachedUsers).mockRejectedValue(new Error("boom"));

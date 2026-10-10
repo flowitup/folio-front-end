@@ -9,6 +9,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
 import { projectIdFromPath, useProject } from "@/context/ProjectContext";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
+import { projectSwitchPath } from "@/lib/projects/project-switch-path";
 import { can, canCreateProject } from "@/lib/auth/permissions";
 import { type Locale } from "@/i18n/config";
 import {
@@ -125,18 +126,21 @@ export function Topbar() {
   const subtitle = cfg ? tTopbar(cfg.subtitleKey) : null;
   // "New project" is admin-only (project:create, global or any admin company);
   // "Log day" opens the manager bulk-log dialog, not the member day roster;
-  // "New invoice" writes an invoice; "New task" edits the plan — hide every
-  // action for a caller who lacks the matching permission so no control
-  // ever renders that would 403.
+  // "New invoice" writes an invoice; "New task" needs only read access, as
+  // the board's own "+" buttons and the API do (any member can create tasks)
+  // — hide every action for a caller who lacks the matching permission so no
+  // control ever renders that would 403. A project tab's action waits for the
+  // URL project to load with the caller's rights on it: one the caller cannot
+  // open never loads, so its 404 page offers no "New task" or "New expense".
   const canShowAction =
     pageKey === "projects"
       ? canCreateProject(user?.permissions, user?.companies)
       : pageKey === "labor"
-        ? can("project:manage_labor", user?.permissions, pageProject?.my_permissions)
+        ? !!pageProject && can("project:manage_labor", user?.permissions, pageProject.my_permissions)
         : pageKey === "invoices"
-          ? can("project:manage_invoices", user?.permissions, pageProject?.my_permissions)
+          ? !!pageProject && can("project:manage_invoices", user?.permissions, pageProject.my_permissions)
           : pageKey === "planning"
-            ? can("project:update", user?.permissions, pageProject?.my_permissions)
+            ? !!pageProject && can("project:read", user?.permissions, pageProject.my_permissions)
             : true;
   const actionLabel = cfg?.actionKey && canShowAction ? tTopbar(cfg.actionKey) : null;
 
@@ -145,9 +149,9 @@ export function Topbar() {
 
   const handleSwitchProject = (projectId: string) => {
     selectProject(projectId);
-    const projectSubrouteMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/(.+)$/);
-    if (projectSubrouteMatch) {
-      router.push(`/${locale}/projects/${projectId}/${projectSubrouteMatch[1]}`);
+    const switchPath = projectSwitchPath(pathWithoutLocale, projectId);
+    if (switchPath) {
+      router.push(`/${locale}${switchPath}`);
     }
   };
 
@@ -174,89 +178,95 @@ export function Topbar() {
   };
 
   return (
-    <header className="flex items-start justify-between gap-4 px-4 pb-3 pt-4 lg:gap-6 lg:px-8 lg:pb-4 lg:pt-6">
-      <div className="min-w-0 flex-1">
-        {title && (
-          <>
-            <div
-              className="mb-1 hidden items-center gap-2 text-[12px] lg:flex"
-              style={{ color: "var(--muted)" }}
-            >
-              {projectName && (
-                <>
-                  <span>{projectName}</span>
-                  <span style={{ color: "var(--line-2)" }}>›</span>
-                </>
-              )}
-              <span style={{ color: "var(--ink-2)" }}>{title}</span>
-            </div>
-            {/* One line, never spilling under the icons: a wrapped "Main-/d'œuvre" pushed the page down. */}
-            <h1
-              className="font-display truncate text-xl font-medium leading-[1.05] tracking-tight sm:text-2xl lg:text-[34px]"
-              title={title ?? undefined}
-            >
-              {title}
-            </h1>
-            {subtitle && (
-              <p
-                className="mt-1 hidden text-[13.5px] lg:block"
-                style={{ color: "var(--muted)", maxWidth: 540 }}
-              >
-                {subtitle}
-              </p>
+    // Below lg the page title gets a row of its own under the project switcher and the icons:
+    // sharing a row with five icons left it ~93px at 375, so "Planification" read "Planific…".
+    <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-3 pt-4 lg:flex-nowrap lg:items-start lg:gap-6 lg:px-8 lg:pb-4 lg:pt-6">
+      {title && (
+        <div className="order-last min-w-0 basis-full lg:order-none lg:flex-1 lg:basis-auto">
+          <div
+            className="mb-1 hidden items-center gap-2 text-[12px] lg:flex"
+            style={{ color: "var(--muted)" }}
+          >
+            {/* A long project name truncates (the project switcher shows it in full);
+                the page title never splits ("Main- / d'œuvre"). */}
+            {projectName && (
+              <>
+                <span className="min-w-0 truncate">{projectName}</span>
+                <span className="shrink-0" style={{ color: "var(--line-2)" }}>›</span>
+              </>
             )}
-          </>
-        )}
-        {projects.length > 0 && (
-          <div className="mt-2 lg:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-[13px] font-semibold shadow-sm"
-                  style={{ background: "var(--surface-2)", color: "var(--ink)", borderColor: "var(--line)" }}
+            <span className="shrink-0 whitespace-nowrap" style={{ color: "var(--ink-2)" }}>
+              {title}
+            </span>
+          </div>
+          {/* One line: a wrapped "Main-/d'œuvre" pushed the page down. */}
+          <h1
+            className="font-display truncate text-xl font-medium leading-[1.05] tracking-tight sm:text-2xl lg:text-[34px]"
+            title={title ?? undefined}
+          >
+            {title}
+          </h1>
+          {subtitle && (
+            <p
+              className="mt-1 hidden text-[13.5px] lg:block"
+              style={{ color: "var(--muted)", maxWidth: 540 }}
+            >
+              {subtitle}
+            </p>
+          )}
+        </div>
+      )}
+      {projects.length > 0 && (
+        // Shares the icons' row while it keeps 8rem; next to the "+" action that would leave the
+        // project name a few letters ("789 C…"), so it takes a row of its own there instead.
+        <div className="min-w-[8rem] flex-1 lg:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex max-w-full items-center gap-2 rounded-xl px-3 py-1.5 text-[13px] font-semibold shadow-sm"
+                style={{ background: "var(--surface-2)", color: "var(--ink)", borderColor: "var(--line)" }}
+              >
+                <span
+                  className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white"
+                  style={{ background: "var(--accent)" }}
+                >
+                  {(projectName ?? "P").charAt(0).toUpperCase()}
+                </span>
+                <span
+                  className="line-clamp-2 min-w-0 max-w-[220px] text-left leading-snug"
+                  title={projectName ?? undefined}
+                >
+                  {projectName ?? tProjects("selectProject")}
+                </span>
+                <ChevronDown size={14} className="flex-shrink-0" style={{ color: "var(--muted)" }} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[240px]">
+              {projects.map((p) => (
+                <DropdownMenuItem
+                  key={p.id}
+                  onSelect={() => handleSwitchProject(p.id)}
+                  className="flex items-center gap-2"
                 >
                   <span
-                    className="flex h-5 w-5 items-center justify-center rounded-md text-[10px] font-bold text-white"
-                    style={{ background: "var(--accent)" }}
+                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white"
+                    style={{ background: p.id === selectedProjectId ? "var(--accent)" : "var(--muted)" }}
                   >
-                    {(projectName ?? "P").charAt(0).toUpperCase()}
+                    {projectDisplayName(p).charAt(0).toUpperCase()}
                   </span>
-                  <span
-                    className="line-clamp-2 max-w-[220px] text-left leading-snug"
-                    title={projectName ?? undefined}
-                  >
-                    {projectName ?? tProjects("selectProject")}
-                  </span>
-                  <ChevronDown size={14} style={{ color: "var(--muted)" }} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[240px]">
-                {projects.map((p) => (
-                  <DropdownMenuItem
-                    key={p.id}
-                    onSelect={() => handleSwitchProject(p.id)}
-                    className="flex items-center gap-2"
-                  >
-                    <span
-                      className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white"
-                      style={{ background: p.id === selectedProjectId ? "var(--accent)" : "var(--muted)" }}
-                    >
-                      {projectDisplayName(p).charAt(0).toUpperCase()}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-[13px]">{projectDisplayName(p)}</span>
-                    {p.id === selectedProjectId && (
-                      <Check size={14} className="flex-shrink-0" style={{ color: "var(--accent)" }} />
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-      </div>
+                  <span className="min-w-0 flex-1 truncate text-[13px]">{projectDisplayName(p)}</span>
+                  {p.id === selectedProjectId && (
+                    <Check size={14} className="flex-shrink-0" style={{ color: "var(--accent)" }} />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
 
-      <div className="flex flex-shrink-0 items-center gap-1 lg:gap-2">
+      <div className="ml-auto flex flex-shrink-0 items-center gap-1 lg:gap-2">
         <HelpSheet />
         <NotificationsBell />
         <LanguageSwitcher />

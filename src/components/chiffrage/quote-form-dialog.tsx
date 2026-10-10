@@ -22,13 +22,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { htToTtc, money, ttcToHt } from "@/components/chiffrage/format";
+import { htToTtc, money, percent, ttcToHt } from "@/components/chiffrage/format";
 import { StoreSelect } from "@/components/chiffrage/store-select";
 import { SupplierProductPicker } from "@/components/chiffrage/supplier-product-picker";
 import type { ChiffrageQuote, ChiffrageStore } from "@/lib/api/chiffrage";
 import { MAX_QUOTE_UNIT_PRICE } from "@/lib/numeric-bounds";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 
 const TVA_PRESETS = ["20", "10", "5.5"];
+// Width of the quote's supplier_name column (the API refuses anything longer).
+const SUPPLIER_NAME_MAX = 120;
 
 export interface QuoteFormValues {
   store_id: string | null;
@@ -101,8 +104,12 @@ export function QuoteFormDialog({
   // Surfaced after a submit attempt, never while the user is still typing.
   const [error, setError] = useState<string | null>(null);
 
-  const priceNum = Number(price);
-  const tvaNum = Number(tva);
+  // The price and rate fields are text, not type="number": Chrome reads a
+  // number field in the OS language, so in an English browser "19,99" became
+  // 1999 without a word. Here "," and "." both work, and anything else is
+  // refused. Prices are stored with 4 decimals, VAT rates with 2.
+  const priceNum = parseMoneyInput(price, { maxDecimals: 4 }) ?? NaN;
+  const tvaNum = parseMoneyInput(tva) ?? NaN;
   // Price validity is deliberately independent of the fournisseur: the HT/TTC
   // preview has to confirm the figure as soon as it is typed, whatever else is
   // still blank, or the price looks like it was not registered at all.
@@ -160,10 +167,12 @@ export function QuoteFormDialog({
       store_id: storeId,
       // A readable snapshot of the shop, kept so deleting the shop later never
       // blanks the row out. The link, not this string, drives the comparison.
-      supplier_name: stores.find((s) => s.id === storeId)?.name ?? null,
+      // Shop names run to 160 characters, the snapshot column to 120.
+      supplier_name:
+        stores.find((s) => s.id === storeId)?.name.slice(0, SUPPLIER_NAME_MAX) ?? null,
       supplier_id: supplierId,
       library_product_id: productId,
-      ...(priceUnchanged ? {} : { unit_price_ht: htValue.toFixed(4), tva_rate: tva }),
+      ...(priceUnchanged ? {} : { unit_price_ht: htValue.toFixed(4), tva_rate: String(tvaNum) }),
       product_url: productUrl,
       note: note.trim() || null,
     });
@@ -208,12 +217,16 @@ export function QuoteFormDialog({
               {/* The asterisk sits beside the Label, not inside it, so the
                   field's accessible name stays the plain label. */}
               <div className="flex items-center gap-1">
-                <Label htmlFor="quote-store">{t("shop")}</Label>
+                <Label id="quote-store-label" htmlFor="quote-store">
+                  {t("shop")}
+                </Label>
                 <span aria-hidden="true" className="text-destructive">
                   *
                 </span>
               </div>
               <StoreSelect
+                id="quote-store"
+                labelledBy="quote-store-label"
                 value={storeId}
                 stores={stores}
                 invalid={error !== null && !storeValid}
@@ -253,9 +266,7 @@ export function QuoteFormDialog({
               </div>
               <Input
                 id="quote-price"
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
                 inputMode="decimal"
                 value={price}
                 placeholder={
@@ -287,10 +298,7 @@ export function QuoteFormDialog({
               <div className="flex items-center gap-2">
                 <Input
                   id="quote-tva"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
+                  type="text"
                   inputMode="decimal"
                   value={tva}
                   aria-invalid={error !== null && !tvaValid}
@@ -310,7 +318,7 @@ export function QuoteFormDialog({
                       className="h-7 px-2"
                       onClick={() => setTva(rate)}
                     >
-                      {rate}%
+                      {percent(Number(rate))}
                     </Button>
                   ))}
                 </div>

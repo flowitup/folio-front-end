@@ -17,6 +17,8 @@ function requestErrorKey(error: RequestOtpError): string {
       return "errorInvalidPhone";
     case "throttled":
       return "errorThrottled";
+    case "hourly_limit":
+      return "errorHourlyLimit";
     case "sms_failed":
       return "errorSmsFailed";
     case "unavailable":
@@ -37,6 +39,8 @@ export interface PhoneLoginFlow {
   setCode: (value: string) => void;
   /** `auth` message key of the current error, or null. */
   errorKey: string | null;
+  /** Values the error message needs (the hourly cap's `minutes`). */
+  errorValues: { minutes: number } | undefined;
   isSendingCode: boolean;
   isVerifying: boolean;
   /** Code accepted — held while the redirect into the app takes over. */
@@ -71,6 +75,8 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
   const [sentTo, setSentTo] = useState("");
   const [code, setCode] = useState("");
   const [errorKey, setErrorKey] = useState<string | null>(null);
+  // Minutes left on the number's hourly code cap, shown in its message.
+  const [retryAfterMinutes, setRetryAfterMinutes] = useState(0);
   // requestOtpAction is a plain server action, not wired into AuthContext, so
   // it needs its own pending flag distinct from useAuth().isLoading (which
   // only tracks login / loginWithPhone).
@@ -143,6 +149,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     const result = await requestOtpAction(target);
     setIsSendingCode(false);
     if (!result.success) {
+      setRetryAfterMinutes(result.retryAfterMinutes ?? 0);
       setErrorKey(requestErrorKey(result.error));
       return;
     }
@@ -209,6 +216,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     code,
     setCode,
     errorKey,
+    errorValues: errorKey === "errorHourlyLimit" ? { minutes: retryAfterMinutes } : undefined,
     isSendingCode,
     isVerifying: isLoading,
     verified,

@@ -198,7 +198,7 @@ describe("test_apply_template_dialog_lists_filtered_by_kind_and_creates_doc", ()
     });
   });
 
-  it("shows load error when action fails", async () => {
+  it("shows a translated load error, not the API's message, when action fails", async () => {
     mockListAction.mockResolvedValueOnce({
       ok: false,
       error: { code: "generic", message: "Server unavailable" },
@@ -207,8 +207,9 @@ describe("test_apply_template_dialog_lists_filtered_by_kind_and_creates_doc", ()
     renderDialog("devis");
 
     await waitFor(() => {
-      expect(screen.getByText("Server unavailable")).toBeDefined();
+      expect(screen.getByText("Failed to load templates.")).toBeDefined();
     });
+    expect(screen.queryByText("Server unavailable")).toBeNull();
   });
 
   it("shows recipient fields after selecting a template", async () => {
@@ -316,7 +317,7 @@ describe("test_apply_template_dialog_lists_filtered_by_kind_and_creates_doc", ()
     fireEvent.click(screen.getByRole("button", { name: /create from template/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("Create failed");
+      expect(mockToast.error).toHaveBeenCalledWith("Failed to create document from template.");
     });
     // Dialog stays open
     expect(onOpenChange).not.toHaveBeenCalled();

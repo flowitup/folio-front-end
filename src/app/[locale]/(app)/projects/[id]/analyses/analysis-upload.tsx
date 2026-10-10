@@ -156,7 +156,7 @@ export function AnalysisUpload({ projectId, onUploaded }: Props) {
           {t("trigger")}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{t("dialogTitle")}</DialogTitle>

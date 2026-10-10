@@ -12,7 +12,7 @@ import { TaskForm } from "@/components/planning/task-form";
 import { toast } from "sonner";
 import { createTask } from "@/lib/api/task-api";
 import { taskErrorKey } from "@/lib/planning/task-error";
-import type { CreateTaskPayload, TaskStatus } from "@/types/task";
+import type { CreateTaskPayload, TaskAssignee, TaskStatus } from "@/types/task";
 
 interface TaskCreateDialogProps {
   open: boolean;
@@ -21,6 +21,8 @@ interface TaskCreateDialogProps {
   defaultStatus: TaskStatus;
   /** Pre-fills the due date (week view's per-day "+"); null/undefined = blank. */
   defaultDueDate?: string | null;
+  /** Project members offered by the assignee picker. */
+  assignees?: TaskAssignee[];
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
 }
@@ -35,6 +37,7 @@ export function TaskCreateDialog({
   projectId,
   defaultStatus,
   defaultDueDate,
+  assignees,
   onOpenChange,
   onCreated,
 }: TaskCreateDialogProps) {
@@ -67,6 +70,7 @@ export function TaskCreateDialog({
           // (week view reuses the same dialog instance across different days).
           key={defaultDueDate ?? "none"}
           defaultDueDate={defaultDueDate}
+          assignees={assignees}
           isSaving={saving}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}

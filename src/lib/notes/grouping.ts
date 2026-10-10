@@ -5,6 +5,7 @@
 
 import type { Note } from "@/lib/api/notes";
 import { CATEGORY_ORDER, CATEGORY_MAP } from "@/lib/notes/categories";
+import { startOfWeekMonday } from "@/lib/planning/week";
 
 // ---- Types ----
 
@@ -32,40 +33,39 @@ const CREATED_LABEL_KEYS: Record<CreatedBucket, string> = {
 
 // ---- Date helpers ----
 
+/** `YYYY-MM-DD` of the local calendar day (the viewer's time zone, never UTC). */
 function toDateKey(date: Date): string {
-  const y = date.getUTCFullYear();
-  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(date.getUTCDate()).padStart(2, "0");
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
 
 /**
- * Map an ISO timestamp to a created-date bucket relative to today (UTC).
- * - today:     created_at date == today
- * - yesterday: created_at date == yesterday
- * - week:      created_at date within last 7 days (excl. today and yesterday)
+ * Map an ISO timestamp to a created-date bucket relative to today, on the
+ * viewer's local calendar (a note written at 00:30 in Paris is still the
+ * previous day in UTC):
+ * - today:     created on today's local date
+ * - yesterday: created on yesterday's local date
+ * - week:      created earlier this calendar week (Monday onwards), before yesterday
  * - earlier:   anything older
  */
 export function createdBucket(iso: string, today: Date = new Date()): CreatedBucket {
-  const createdKey = iso.slice(0, 10); // fast YYYY-MM-DD extraction
+  const createdKey = toDateKey(new Date(iso));
   const todayKey = toDateKey(today);
 
   if (createdKey === todayKey) return "today";
 
-  const yesterdayDate = new Date(
-    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 1)
+  const yesterdayKey = toDateKey(
+    new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)
   );
-  const yesterdayKey = toDateKey(yesterdayDate);
 
   if (createdKey === yesterdayKey) return "yesterday";
 
-  // "week" = last 7 calendar days, excluding today and yesterday
-  const weekAgoDate = new Date(
-    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 7)
-  );
-  const weekAgoKey = toDateKey(weekAgoDate);
+  // "Earlier this week" = since this week's Monday, excluding today and yesterday
+  const weekStartKey = toDateKey(startOfWeekMonday(today));
 
-  if (createdKey >= weekAgoKey && createdKey < yesterdayKey) return "week";
+  if (createdKey >= weekStartKey && createdKey < yesterdayKey) return "week";
 
   return "earlier";
 }

@@ -50,6 +50,8 @@ export interface ProjectUser {
   id: string;
   email: string;
   display_name?: string | null;
+  /** Current sign-in number; the e-mail of a phone-only account keeps the one it signed up with. */
+  phone?: string | null;
   /** The person's company role; null when they no longer belong to it. */
   role_name?: "admin" | "manager" | "member" | null;
 }

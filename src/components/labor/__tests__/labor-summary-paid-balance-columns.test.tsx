@@ -371,6 +371,8 @@ describe("LaborSummary — past-month unpaid warning (all-history mode)", () => 
     // July: past, 1000 owed vs 700 paid -> warn with the 300 shortfall.
     const warn = screen.getByTestId("month-unpaid-warning-2026-07");
     expect(warn.textContent).toContain("300");
+    // A pill never wraps inside (at 375px it used to become a tall oval).
+    expect(warn.className).toContain("whitespace-nowrap");
     // August: current month, unpaid -> deliberately NOT flagged.
     expect(screen.queryByTestId("month-unpaid-warning-2026-08")).toBeNull();
     // June: fully settled -> no warning.
@@ -501,8 +503,27 @@ describe("LaborSummary — overpaid balance tint (single-month mode)", () => {
         paymentsSummary={paymentsSummary}
       />,
     );
-    // Footer: 1000 owed vs 1100 paid -> balance -100 -> flagged.
-    expect(screen.getByTestId("footer-overpaid")).toBeInTheDocument();
+    // Footer: Alice's 300 overpayment is flagged on its own.
+    expect(screen.getByTestId("footer-overpaid").textContent).toContain("€300.00");
+  });
+
+  it("never nets one worker's overpayment against another worker's debt in the footer Balance", () => {
+    render(
+      <LaborSummary
+        {...baseProps}
+        summary={summary}
+        monthlySummary={null}
+        month="2026-06"
+        paymentsSummary={paymentsSummary}
+      />,
+    );
+    const footerRow = screen.getByText("grandTotal").closest("tr")!;
+    const balanceCell = footerRow.querySelectorAll("td")[4];
+    // Bob still owes 200; Alice's 300 overpayment does not shrink it (the
+    // netted figure would be -100).
+    expect(balanceCell.textContent).toContain("€200.00");
+    expect(balanceCell.textContent).not.toContain("-100");
+    expect(screen.getByTestId("footer-overpaid").textContent).toContain("summaryOverpaidWarning");
   });
 });
 

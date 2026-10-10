@@ -19,6 +19,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -105,6 +106,13 @@ export function MembersTable({
   const [pendingRemove, setPendingRemove] = useState<ProjectMember | null>(null);
   const [pendingRevoke, setPendingRevoke] = useState<string | null>(null);
 
+  // Same rule as the API (DELETE /assignments): a company admin may remove
+  // anyone, a manager only a company `member`; nobody removes themselves here.
+  const canRemove = (member: ProjectMember) =>
+    member.user_id !== currentUserId && (callerIsCompanyAdmin || member.role_name === "member");
+  // Why Remove is greyed out on someone else's row (it used to stay active and 403).
+  const removeBlockedReason = (member: ProjectMember) =>
+    member.user_id !== currentUserId && !canRemove(member) ? t("edit.removeOnlyAdmin") : undefined;
 
   const handleRevoke = async (invitationId: string) => {
     setRevokingId(invitationId);
@@ -234,10 +242,8 @@ export function MembersTable({
                         size="sm"
                         className="h-9 flex-1"
                         style={{ color: "var(--negative)" }}
-                        disabled={
-                          removingId === member.user_id ||
-                          member.user_id === currentUserId
-                        }
+                        disabled={removingId === member.user_id || !canRemove(member)}
+                        title={removeBlockedReason(member)}
                         onClick={() => setPendingRemove(member)}
                       >
                         {t("edit.remove")}
@@ -309,10 +315,8 @@ export function MembersTable({
                             size="sm"
                             className="h-7 px-2 text-[12px]"
                             style={{ color: "var(--negative)" }}
-                            disabled={
-                              removingId === member.user_id ||
-                              member.user_id === currentUserId
-                            }
+                            disabled={removingId === member.user_id || !canRemove(member)}
+                            title={removeBlockedReason(member)}
                             onClick={() => setPendingRemove(member)}
                           >
                             {t("edit.remove")}
@@ -367,13 +371,15 @@ export function MembersTable({
                         )}
                       </div>
                       <div
-                        className="mt-3 flex items-center justify-between border-t pt-2.5 text-[12px]"
+                        className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t pt-2.5 text-[12px]"
                         style={{ borderColor: "var(--line)", color: "var(--muted)" }}
+                        data-testid="invite-card-meta"
                       >
+                        {/* No column headers on a card: each value says what it is. */}
                         <span className="num">
-                          {days === null ? "—" : days === "expired" ? t("expired") : t("expiresIn", { days })}
+                          {days === null ? "—" : days === "expired" ? t("expired") : t("expiresInLabeled", { days })}
                         </span>
-                        <span>{invite.invited_by_name ?? "—"}</span>
+                        <span>{invite.invited_by_name ? t("invitedByName", { name: invite.invited_by_name }) : "—"}</span>
                       </div>
                     </div>
                   );
@@ -434,11 +440,12 @@ export function MembersTable({
       )}
 
       <AlertDialog open={pendingRemove !== null} onOpenChange={(open) => !open && setPendingRemove(null)}>
-        <AlertDialogContent aria-describedby={undefined}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               {pendingRemove ? t("edit.removeConfirm", { name: memberName(pendingRemove) }) : ""}
             </AlertDialogTitle>
+            <AlertDialogDescription className="sr-only">{t("edit.removeDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("invite.cancel")}</AlertDialogCancel>
@@ -455,9 +462,10 @@ export function MembersTable({
       </AlertDialog>
 
       <AlertDialog open={pendingRevoke !== null} onOpenChange={(open) => !open && setPendingRevoke(null)}>
-        <AlertDialogContent aria-describedby={undefined}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("revokeConfirm")}</AlertDialogTitle>
+            <AlertDialogDescription className="sr-only">{t("revokeDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("invite.cancel")}</AlertDialogCancel>

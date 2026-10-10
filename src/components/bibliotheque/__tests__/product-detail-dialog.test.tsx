@@ -253,6 +253,23 @@ describe("ProductDetailDialog", () => {
     });
   });
 
+  it("shows the translated generic message, not the raw error, when the action itself fails", async () => {
+    mockGetProduct.mockRejectedValueOnce(new Error("Failed to fetch"));
+
+    render(
+      <ProductDetailDialog
+        productId="prod-1"
+        suppliersById={{ "sup-1": makeSupplier() }}
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("bibliotheque.errors.generic")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Failed to fetch")).toBeNull();
+  });
+
   it("renders product name in dialog title", async () => {
     const detailResult = makeDetailResult({ product: { name: "Hammer" } });
     mockGetProduct.mockResolvedValueOnce({

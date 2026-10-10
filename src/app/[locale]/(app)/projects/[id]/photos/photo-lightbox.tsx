@@ -210,7 +210,7 @@ export function PhotoLightbox({
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="max-w-3xl w-full p-0 overflow-hidden">
+        <DialogContent className="max-w-3xl w-full p-0 overflow-hidden" aria-describedby={undefined}>
           <DialogHeader className="sr-only">
             <DialogTitle>{photo?.caption ?? photo?.filename ?? t("title")}</DialogTitle>
           </DialogHeader>
@@ -303,6 +303,9 @@ export function PhotoLightbox({
                     <Input
                       id="photo-captured-at"
                       type="date"
+                      // The API refuses capture dates before 1900 or in the future
+                      min="1900-01-01"
+                      max={parisDayKey()}
                       value={capturedAtDraft}
                       onChange={(e) => setCapturedAtDraft(e.target.value)}
                     />

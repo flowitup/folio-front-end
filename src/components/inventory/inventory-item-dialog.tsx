@@ -36,6 +36,7 @@ import type {
   UpdateInventoryItemPayload,
   Warehouse,
 } from "@/lib/api/inventory";
+import { useInventoryErrorMessage } from "@/components/inventory/use-inventory-error-message";
 
 // shadcn Select does not allow value="" for an item, so "no category" is a sentinel.
 const NO_CATEGORY = "__none__";
@@ -55,6 +56,7 @@ const orNull = (value: string) => value.trim() || null;
 
 export function InventoryItemDialog({ open, onOpenChange, companyId, item, warehouses, sites, onSaved }: Props) {
   const t = useTranslations("inventory");
+  const errorMessage = useInventoryErrorMessage();
   const editing = item !== null;
 
   const [name, setName] = useState("");
@@ -79,7 +81,9 @@ export function InventoryItemDialog({ open, onOpenChange, companyId, item, wareh
     setCondition(item?.condition ?? "working");
     setLocationType(item?.location_type ?? (warehouses.length > 0 ? "warehouse" : "site"));
     setWarehouseId(item?.warehouse_id ?? warehouses[0]?.id ?? "");
-    setProjectId(item?.project_id ?? sites[0]?.id ?? "");
+    // A site row whose project was deleted has no project: leave the site empty so a
+    // save asks where it is, instead of silently moving it to the first site.
+    setProjectId(item?.project_id ?? (item?.location_type === "site" ? "" : sites[0]?.id ?? ""));
     setReference(item?.reference ?? "");
     setDescription(item?.description ?? "");
     setError(null);
@@ -118,8 +122,9 @@ export function InventoryItemDialog({ open, onOpenChange, companyId, item, wareh
     if (!item) {
       const result = await createInventoryItemAction(companyId, payload);
       if (!result.ok) {
-        setError(result.error);
-        toast.error(result.code === "Forbidden" ? t("toast.forbidden") : t("toast.createError"));
+        const message = errorMessage(result, { fallback: t("toast.createError") });
+        setError(message);
+        toast.error(message);
         setIsSubmitting(false);
         return;
       }
@@ -151,8 +156,9 @@ export function InventoryItemDialog({ open, onOpenChange, companyId, item, wareh
     }
     const result = await updateInventoryItemAction(item.id, diff);
     if (!result.ok) {
-      setError(result.error);
-      toast.error(result.code === "Forbidden" ? t("toast.forbidden") : t("toast.updateError"));
+      const message = errorMessage(result, { fallback: t("toast.updateError") });
+      setError(message);
+      toast.error(message);
       setIsSubmitting(false);
       return;
     }
@@ -163,7 +169,7 @@ export function InventoryItemDialog({ open, onOpenChange, companyId, item, wareh
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{editing ? t("editTitle") : t("createTitle")}</DialogTitle>
         </DialogHeader>

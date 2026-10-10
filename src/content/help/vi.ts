@@ -15,7 +15,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Nhập số điện thoại ở trang đăng nhập rồi bấm “Gửi mã”.",
       "Nhập mã 6 số nhận được qua SMS để hoàn tất đăng nhập.",
       "Nếu tài khoản chưa thuộc công ty nào, Folio đưa bạn tới một trang thiết lập ngắn.",
-      "Ở đó, hoặc bấm “Tạo công ty” — bạn thành quản trị viên của công ty đó — hoặc “Nhập mã tham gia” bằng mã quản trị viên đưa cho bạn.",
+      "Ở đó, hoặc bấm “Tạo công ty” — bạn thành quản trị viên của công ty đó — hoặc “Nhập mã công ty” bằng mã quản trị viên đưa cho bạn.",
       "Nếu bạn được mời qua email, đường dẫn trong thư đó liên kết thẳng bạn vào công ty.",
     ],
     gotchas: [
@@ -31,12 +31,12 @@ export const helpCatalogueVi: HelpCatalogue = [
     steps: [
       "Chọn công trình đang làm ở bộ chọn dự án trên đầu thanh bên. Trên màn hình hẹp, bộ chọn nằm ở thanh trên cùng.",
       "Nhóm đầu tiên của thanh bên dùng chung cho cả ứng dụng: “Tổng quan”, “Dự án” và “Thư viện”.",
-      "Khi đã chọn một dự án, thanh bên hiện thêm các mục: “Kế hoạch”, “Nhân công”, “Chi phí”, “Hoạch toán”, “Ghi chú”, “Tài liệu” và “Phân tích”.",
-      "Quản trị viên công ty còn thấy nhóm “Báo giá & Hóa đơn”: “Báo giá”, “Hóa đơn”, “Mẫu tài liệu” và “Hoàn tiền”.",
+      "Khi đã chọn một dự án, thanh bên hiện thêm các mục: “Kế hoạch”, “Nhân công”, “Chi phí”, “Hạch toán”, “Ghi chú”, “Tài liệu” và “Phân tích”.",
+      "Quản trị viên công ty còn thấy nhóm “Lập hóa đơn”: “Báo giá”, “Hóa đơn”, “Mẫu tài liệu” và “Hoàn tiền”.",
       "Thanh trên cùng chứa thao tác chính của trang, dấu trợ giúp, chuông thông báo, bộ chọn ngôn ngữ và menu tài khoản của bạn.",
     ],
     whoCanDoIt:
-      "Ai cũng thấy nhóm dùng chung. “Tài liệu” chỉ hiện nếu bạn được phép mở, còn nhóm “Báo giá & Hóa đơn” chỉ dành cho quản trị viên công ty.",
+      "Ai cũng thấy nhóm dùng chung. “Tài liệu” chỉ hiện nếu bạn được phép mở, còn nhóm “Lập hóa đơn” chỉ dành cho quản trị viên công ty.",
     gotchas: [
       "Nút hành động trên thanh trên cùng thay đổi theo từng trang, và nó bị ẩn hẳn nếu bạn không có quyền tương ứng: nếu bạn chờ “Chi phí mới” hay “Chấm ngày” mà không thấy, đó là do quyền chứ không phải lỗi.",
     ],
@@ -63,7 +63,7 @@ export const helpCatalogueVi: HelpCatalogue = [
     purpose:
       "Mọi công trình bạn thấy được, kèm tín dụng và chi tiêu, đội ngũ của nó, và các biểu mẫu để tạo, sửa hoặc xóa một dự án.",
     steps: [
-      "Lọc danh sách bằng hai nút “Tất cả” và “Đang chạy”, hoặc tìm theo tên.",
+      "Tìm dự án theo tên hoặc địa chỉ.",
       "Bấm “Tạo dự án”, đặt tên — bắt buộc — và nếu muốn thì thêm địa chỉ, tổng tín dụng và nguồn tài trợ. Nếu bạn quản trị nhiều công ty, chọn công ty mà dự án thuộc về.",
       "Trên thẻ dự án, menu thao tác có “Sửa dự án” và “Xóa dự án”. Khi xóa, bạn phải gõ lại đúng chữ in đậm hiện trên màn hình.",
       "“Hiện đội ngũ” mở danh sách thành viên; “Mời” thêm người, và biểu tượng thùng rác ở mỗi dòng xóa họ đi.",
@@ -81,19 +81,19 @@ export const helpCatalogueVi: HelpCatalogue = [
     id: "planning",
     title: "Công việc và kế hoạch",
     purpose:
-      "Bảng việc của đội cho một công trình: một bảng Kanban kèm backlog, cùng một chế độ xem theo tuần sắp theo ngày đến hạn.",
+      "Bảng việc của đội cho một công trình: một bảng Kanban kèm dải việc tồn đọng, cùng một chế độ xem theo tuần sắp theo ngày đến hạn.",
     steps: [
       "Chuyển giữa “Bảng” và “Tuần” bằng nút gạt ở trên cùng.",
-      "Trên bảng, làm việc với dải backlog và các cột “Cần làm”, “Đang làm”, “Bị chặn” và “Xong”.",
-      "Bấm “Thêm task” trong cột nào để tạo việc ngay ở đó: tiêu đề, mô tả, độ ưu tiên, hạn và các nhãn cách nhau bằng dấu phẩy.",
+      "Trên bảng, làm việc với dải “Việc tồn đọng” và các cột “Cần làm”, “Đang làm”, “Bị chặn” và “Xong”.",
+      "Bấm nút “+” (“Thêm công việc”) trong cột nào để tạo việc ngay ở đó: tiêu đề, mô tả, độ ưu tiên, hạn và các nhãn cách nhau bằng dấu phẩy.",
       "Kéo thẻ từ cột này sang cột khác để đổi trạng thái.",
       "Bấm vào một thẻ để mở bảng chi tiết, sửa ngay tại chỗ, hoặc xóa.",
       "Ở chế độ xem tuần, chuyển qua lại giữa các tuần và dùng nút “+” trên một ngày để tạo việc đến hạn ngày đó, hoặc nút “+” ở “Chưa lên lịch” cho việc chưa có hạn.",
     ],
     whoCanDoIt:
-      "Bất kỳ ai mở được dự án. Kế hoạch không có rào quyền nào cả — ai cũng tạo, kéo, sửa và xóa task được.",
+      "Bất kỳ ai mở được dự án đều có thể tạo, kéo và sửa công việc. Xóa công việc cần quyền chỉnh sửa dự án (quản trị viên và quản lý của dự án).",
     gotchas: [
-      "Xóa task có hiệu lực ngay và không hoàn tác được, chỉ có một hộp xác nhận của trình duyệt.",
+      "Xóa công việc có hiệu lực ngay và không hoàn tác được, chỉ có một hộp xác nhận của trình duyệt.",
     ],
   },
   {
@@ -139,7 +139,7 @@ export const helpCatalogueVi: HelpCatalogue = [
   },
   {
     id: "chiffrage",
-    title: "Hoạch toán vật tư",
+    title: "Hạch toán vật tư",
     purpose:
       "Lên danh sách những thứ cần mua cho công trình — các hạng mục gồm nhiều vật tư kèm số lượng — ghi giá của từng cửa hàng cho mỗi vật tư, và biết số tiền cần dự trù.",
     steps: [
@@ -268,7 +268,7 @@ export const helpCatalogueVi: HelpCatalogue = [
     purpose:
       "Những báo giá công ty bạn phát hành cho khách của mình: soạn, gửi, theo dõi, và chuyển một báo giá đã được chấp nhận thành hóa đơn.",
     steps: [
-      "Mở “Báo giá & Hóa đơn” → “Báo giá” rồi bấm “Báo giá mới”.",
+      "Mở “Lập hóa đơn” → “Báo giá” rồi bấm “Báo giá mới”.",
       "Bắt đầu từ trống, từ một tài liệu có sẵn, hoặc từ một mẫu.",
       "Nếu bạn quản trị nhiều công ty, chọn công ty đứng ra phát hành báo giá.",
       "Điền khách hàng — tên là bắt buộc — và phần chi tiết: ngày phát hành, ngày hết hiệu lực, và công trình liên quan nếu có.",
@@ -276,7 +276,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Chuyển trạng thái dần từ “Nháp” sang “Đã gửi” rồi “Đã chấp nhận”, sau đó dùng “Chuyển thành hóa đơn”.",
     ],
     whoCanDoIt:
-      "Chỉ quản trị viên công ty. Những người khác không thấy nhóm “Báo giá & Hóa đơn”.",
+      "Chỉ quản trị viên công ty. Những người khác không thấy nhóm “Lập hóa đơn”.",
   },
   {
     id: "billing-factures",
@@ -284,7 +284,7 @@ export const helpCatalogueVi: HelpCatalogue = [
     purpose:
       "Những hóa đơn công ty bạn phát hành cho khách, theo dõi cho tới khi được thanh toán, kèm xuất PDF và bảng tính.",
     steps: [
-      "Mở “Báo giá & Hóa đơn” → “Hóa đơn” rồi bấm “Hóa đơn mới”.",
+      "Mở “Lập hóa đơn” → “Hóa đơn” rồi bấm “Hóa đơn mới”.",
       "Bắt đầu từ trống, từ một tài liệu có sẵn hoặc từ một mẫu, và chọn công ty phát hành nếu bạn quản trị nhiều công ty.",
       "Điền khách hàng, rồi ngày phát hành, hạn thanh toán, điều khoản thanh toán, và công trình nếu có.",
       "Thêm các dòng dịch vụ, xem phần tổng tự cập nhật, rồi tạo hóa đơn.",
@@ -302,7 +302,7 @@ export const helpCatalogueVi: HelpCatalogue = [
     purpose:
       "Bộ khung dùng lại cho những tài liệu bạn phát hành thường xuyên: các dòng dịch vụ, thuế suất VAT mặc định, ghi chú và điều khoản chung của bạn.",
     steps: [
-      "Mở “Báo giá & Hóa đơn” → “Mẫu tài liệu”. Nếu bạn quản trị nhiều công ty, chọn xem mẫu của công ty nào — mỗi mẫu thuộc về một công ty.",
+      "Mở “Lập hóa đơn” → “Mẫu tài liệu”. Nếu bạn quản trị nhiều công ty, chọn xem mẫu của công ty nào — mỗi mẫu thuộc về một công ty.",
       "Bấm “Mẫu mới” và chọn loại, báo giá hay hóa đơn. Tạo xong thì không đổi loại được nữa.",
       "Đặt tên mẫu và chọn thuế suất VAT mặc định, lấy một mức thông dụng hoặc tự nhập mức riêng.",
       "Thêm các dòng dịch vụ, và nếu muốn thì thêm ghi chú cùng điều khoản chung, rồi lưu.",
@@ -317,7 +317,7 @@ export const helpCatalogueVi: HelpCatalogue = [
     purpose:
       "Cái nhìn toàn công ty về những chi phí vật tư & dịch vụ đã đánh dấu chờ hoàn tiền ở mọi dự án, và mỗi khoản đã được hoàn tới đâu.",
     steps: [
-      "Mở “Báo giá & Hóa đơn” → “Hoàn tiền”.",
+      "Mở “Lập hóa đơn” → “Hoàn tiền”.",
       "Bấm “Thêm chi phí hoàn tiền” rồi tìm trong những chi phí chưa được đánh dấu, theo dự án, số hóa đơn hoặc người nhận.",
       "Tích những khoản cần theo dõi rồi thêm vào.",
       "Đặt trạng thái cho từng dòng: “Có thể hoàn tiền”, “Đang chờ hoàn tiền”, được công ty hoàn, được ngân hàng hoàn, hay được cả hai — hoặc gỡ đánh dấu hẳn.",
@@ -333,14 +333,14 @@ export const helpCatalogueVi: HelpCatalogue = [
     id: "company",
     title: "Công ty, thành viên và quyền",
     purpose:
-      "Những công ty bạn thuộc về, và — với công ty bạn quản trị — mã tham gia, vai trò của thành viên, các quyền được cấp riêng và danh bạ nhân sự.",
+      "Những công ty bạn thuộc về, và — với công ty bạn quản trị — mã công ty, vai trò của thành viên, các quyền được cấp riêng và danh bạ nhân sự.",
     steps: [
       "Mở “Cài đặt” → “Công ty”. Bảng thành viên nằm đầu trang; thông tin công ty, mã công ty và phương thức thanh toán nằm bên dưới.",
       "Bấm “Thêm công ty” rồi dán mã mời hoặc nhập mã công ty để liên kết mình với một công ty khác.",
       "Nếu bạn thuộc nhiều công ty, chuyển qua lại bằng bộ chọn công ty; một nhãn nhỏ cho biết vai trò của bạn ở từng nơi.",
       "Dùng “Đặt làm chính” để chọn công ty mặc định, hoặc “Hủy liên kết” để rời khỏi một công ty.",
       "Là quản trị viên, hãy quản lý mã công ty: tạo mã, tạo mã mới, thu hồi, hoặc sao chép để chia sẻ. Mọi người nhập mã đó trong app Folio trên điện thoại để tham gia với vai trò thành viên.",
-      "Trong bảng thành viên, đổi vai trò của một người, hoặc mở “Quyền tuỳ chỉnh” để cấp hay từ chối một quyền cụ thể, cho toàn công ty hoặc chỉ trên một dự án.",
+      "Trong bảng thành viên, đổi vai trò của một người, hoặc mở “Quyền tùy chỉnh” để cấp hay từ chối một quyền cụ thể, cho toàn công ty hoặc chỉ trên một dự án.",
       "Cột “Dự án” ngay trong bảng đó là chỗ đưa một người vào công trình: tích vào một dự án để giao, bỏ tích để rút họ ra.",
       "Dùng “Thêm bằng số điện thoại” để thêm người theo số, hoặc “Nhập từ công ty khác” để mang người từ một công ty khác bạn quản trị sang.",
       "Danh bạ liệt kê mọi người liên kết với công ty, kèm số điện thoại, đã đăng nhập lần nào chưa, và những dự án họ được giao.",
@@ -362,16 +362,16 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Mở “Cài đặt”; danh sách bên trái dùng để chọn mục.",
       "Ở “Hồ sơ”, sửa tên hiển thị rồi lưu. Để đăng nhập bằng số điện thoại khác, dùng “Đổi số điện thoại”: nhập số mới, rồi nhập mã SMS gửi tới số đó. Email chỉ để xem — chỉ quản trị viên mới đổi được.",
       "Ở “Dự án”, đặt tiền tố số hóa đơn cho dự án đang chọn, tối đa tám chữ cái hoặc chữ số, và xem dòng ví dụ trước khi lưu.",
-      "Ở “Công ty”, quản lý những công ty bạn thuộc về: thẻ thông tin của từng công ty, công ty nào là chính, hủy liên kết, và liên kết thêm một công ty bằng mã. Nếu bạn quản trị công ty đang chọn, chỗ này có thêm mã tham gia, bảng thành viên và phương thức thanh toán của công ty đó.",
+      "Ở “Công ty”, quản lý những công ty bạn thuộc về: thẻ thông tin của từng công ty, công ty nào là chính, hủy liên kết, và liên kết thêm một công ty bằng mã. Nếu bạn quản trị công ty đang chọn, chỗ này có thêm mã công ty, bảng thành viên và phương thức thanh toán của công ty đó.",
       "Ở “Thông báo”, dùng công tắc chính và các công tắc theo nhóm: “Trò chuyện nhóm”, “Chấm công”, “Công việc”, “Nhóm & quyền truy cập” và “Tiền”.",
       "Ở “Khóa API”, đặt tên rồi tạo một khóa để gọi API của Folio từ script của bạn: hãy sao chép ngay, vì khóa sẽ không bao giờ hiện lại. Thu hồi một khóa sẽ lập tức và vĩnh viễn dừng mọi tự động hóa đang dùng khóa đó.",
       "Ở “Người dùng & vai trò”, mục chỉ bộ phận hỗ trợ Folio mới mở được, hãy gắn một tài khoản có sẵn vào các dự án: tìm người đó, tích chọn dự án, rồi gửi. Vai trò không đặt ở đây — chúng đến từ vai trò trong công ty và các quyền cấp riêng theo từng dự án, ở “Công ty”.",
       "Phiên bản Folio bạn đang chạy được ghi ở cuối trang, bên dưới mục đang mở.",
     ],
     whoCanDoIt:
-      "Ai cũng vào được hồ sơ của mình, lựa chọn thông báo và khóa API của riêng mình. “Công ty” cho ai cũng thấy liên kết công ty của chính mình, còn công cụ quản trị — mã tham gia, bảng thành viên, phương thức thanh toán — chỉ dành cho quản trị viên của công ty đang chọn. “Người dùng & vai trò” chỉ dành cho bộ phận hỗ trợ Folio.",
+      "Ai cũng vào được hồ sơ của mình, lựa chọn thông báo và khóa API của riêng mình. “Công ty” cho ai cũng thấy liên kết công ty của chính mình, còn công cụ quản trị — mã công ty, bảng thành viên, phương thức thanh toán — chỉ dành cho quản trị viên của công ty đang chọn. “Người dùng & vai trò” chỉ dành cho bộ phận hỗ trợ Folio.",
     gotchas: [
-      "Cài đặt không có mục báo giá hay hóa đơn nào. Báo giá, hóa đơn và mẫu đều nằm ở nhóm “Báo giá & Hóa đơn” trên thanh bên.",
+      "Cài đặt không có mục báo giá hay hóa đơn nào. Báo giá, hóa đơn và mẫu đều nằm ở nhóm “Lập hóa đơn” trên thanh bên.",
       "Các công tắc thông báo điều khiển thông báo đẩy gửi tới app Folio trên điện thoại, không phải cái chuông trong cửa sổ này.",
     ],
   },

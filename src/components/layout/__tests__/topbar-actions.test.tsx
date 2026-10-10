@@ -68,7 +68,7 @@ function setup(opts: {
 }) {
   mockPathname = opts.pathname;
   mockUseAuth.mockReturnValue({
-    // project:manage_labor / project:manage_invoices / project:update so
+    // project:manage_labor / project:manage_invoices / project:read so
     // those gated topbar actions ("Log day", "New invoice", "New task")
     // render, plus company-admin standing so canCreateProject ("New
     // project", M2: ignores the legacy project:create claim alone) also
@@ -76,7 +76,7 @@ function setup(opts: {
     // gates themselves.
     user: {
       email: "user@test.com",
-      permissions: ["project:manage_labor", "project:manage_invoices", "project:update"],
+      permissions: ["project:manage_labor", "project:manage_invoices", "project:read"],
       companies: [{ id: "c1", legal_name: "Test Co", role: "admin", is_primary: true }],
     },
     logout: vi.fn(),
@@ -168,13 +168,19 @@ describe("Topbar action button wiring", () => {
     expect(h1).toHaveAttribute("title", h1.textContent ?? "");
   });
 
-  it("planning: action targets the URL project even when no project is selected", async () => {
-    setup({ pathname: "/en/projects/p-1/planning" });
-    const user = userEvent.setup();
-    render(<Topbar />);
-    await user.click(screen.getByRole("button", { name: /planning.newTask/ }));
-    expect(mockPush).toHaveBeenCalledWith("/en/projects/p-1/planning?new=1");
-  });
+  it.each([
+    ["planning", /planning.newTask/],
+    ["labor", /labor.logDay/],
+    ["invoices", /invoices.newInvoice/],
+  ])(
+    "%s: no action while the URL project is not loaded (a project the caller cannot open never is)",
+    (section, label) => {
+      // Admin-wide claims, but the URL project is not among the caller's projects.
+      setup({ pathname: `/en/projects/p-url/${section}` });
+      render(<Topbar />);
+      expect(screen.queryByRole("button", { name: label })).toBeNull();
+    },
+  );
 
   it.each([
     ["planning", /planning.newTask/, "/en/projects/p-url/planning?new=1"],
@@ -184,10 +190,17 @@ describe("Topbar action button wiring", () => {
     "%s: action and breadcrumb follow the URL project, not a different stored one",
     async (section, label, target) => {
       setup({ pathname: `/en/projects/p-url/${section}`, selectedProjectId: "p-stored" });
+      // The stored project's name must not be shown as the page's project,
+      // and no action is offered until the URL project has loaded.
+      const { unmount } = render(<Topbar />);
+      expect(screen.queryByTitle("Test")).toBeNull();
+      expect(screen.queryByRole("button", { name: label })).toBeNull();
+      unmount();
+
+      // Loaded: the context resolves the URL project, and the action targets it.
+      setup({ pathname: `/en/projects/p-url/${section}`, selectedProjectId: "p-url" });
       const user = userEvent.setup();
       render(<Topbar />);
-      // The stored project's name must not be shown as the page's project.
-      expect(screen.queryByTitle("Test")).toBeNull();
       await user.click(screen.getByRole("button", { name: label }));
       expect(mockPush).toHaveBeenCalledWith(target);
     },
@@ -204,7 +217,7 @@ describe("Topbar action button wiring", () => {
     expect(screen.queryByRole("button", { name: /invoices.newInvoice/ })).toBeNull();
   });
 
-  it("planning: action button is NOT rendered without project:update (M9)", () => {
+  it("planning: action button is NOT rendered without project:read (M9)", () => {
     setup({ pathname: "/en/projects/p-1/planning", selectedProjectId: "p-1" });
     mockUseAuth.mockReturnValue({
       user: { email: "member@test.com", permissions: [] },
@@ -213,6 +226,27 @@ describe("Topbar action button wiring", () => {
     });
     render(<Topbar />);
     expect(screen.queryByRole("button", { name: /planning.newTask/ })).toBeNull();
+  });
+
+  it("planning: a member who may only read the project still gets New task, as the API lets them create tasks", () => {
+    setup({ pathname: "/en/projects/p-1/planning", selectedProjectId: "p-1" });
+    mockUseAuth.mockReturnValue({
+      user: { email: "member@test.com", permissions: [] },
+      logout: vi.fn(),
+      isLoading: false,
+    });
+    mockUseProject.mockReturnValue({
+      projects: [{ id: "p-1", name: "Test" }],
+      selectedProjectId: "p-1",
+      selectedProject: {
+        id: "p-1",
+        name: "Test",
+        my_permissions: ["project:log_own_attendance", "project:read", "project:view_roster"],
+      },
+      selectProject: vi.fn(),
+    });
+    render(<Topbar />);
+    expect(screen.getByRole("button", { name: /planning.newTask/ })).toBeInTheDocument();
   });
 });
 

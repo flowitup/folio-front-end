@@ -15,6 +15,9 @@ vi.mock("@/lib/api/projects", () => ({
   deleteProject: vi.fn(),
 }));
 
+const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+vi.mock("sonner", () => ({ toast }));
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => {
     const t: Record<string, string> = {
@@ -49,6 +52,9 @@ const FAKE_PROJECT = {
 describe("DeleteProjectDialog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // clearAllMocks keeps queued *Once results: one left unused by a test used
+    // to answer the next test's delete.
+    mockDeleteProject.mockReset();
   });
 
   it("renders project name + cascade copy + billing note + irreversible warning", () => {
@@ -222,6 +228,73 @@ describe("DeleteProjectDialog", () => {
     // Verify onDeleted was NOT called (deletion didn't succeed)
     // (We need to get a reference to test this, but we can at least verify the button is still there)
     expect(deleteButton).toBeInTheDocument();
+  });
+
+  it("stays open while deleting and after a failure, and toasts the error", async () => {
+    // The parent unmounts the dialog as soon as onOpenChange(false) fires, so
+    // the Delete click itself must not close it (Radix Action does by default).
+    let reject: (err: Error) => void = () => {};
+    mockDeleteProject.mockReturnValueOnce(
+      new Promise<void>((_, rej) => {
+        reject = rej;
+      })
+    );
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    const onDeleted = vi.fn();
+    render(
+      <DeleteProjectDialog
+        project={FAKE_PROJECT}
+        open={true}
+        onOpenChange={onOpenChange}
+        onDeleted={onDeleted}
+      />
+    );
+
+    await user.type(screen.getByPlaceholderText("e.g. Acme"), "12 rue X");
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(await screen.findByText("Deleting...")).toBeInTheDocument();
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    reject(new Error("HTTP 404"));
+
+    expect(await screen.findByText("Failed to delete project. Please try again.")).toBeInTheDocument();
+    expect(toast.error).toHaveBeenCalledWith("Failed to delete project. Please try again.");
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(onDeleted).not.toHaveBeenCalled();
+  });
+
+  it("opens ready for the next project after a successful delete", async () => {
+    // The dialog stays mounted between deletes: a "deleting" flag left on
+    // after a success opened the next one stuck on the spinner, uncancellable.
+    mockDeleteProject.mockResolvedValueOnce(undefined);
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <DeleteProjectDialog project={FAKE_PROJECT} open={true} onOpenChange={vi.fn()} />
+    );
+    await user.type(screen.getByPlaceholderText("e.g. Acme"), "12 rue X");
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(mockDeleteProject).toHaveBeenCalledWith("p-1"));
+
+    rerender(<DeleteProjectDialog project={null} open={false} onOpenChange={vi.fn()} />);
+    rerender(
+      <DeleteProjectDialog
+        project={{ ...FAKE_PROJECT, id: "p-2", address: "3 rue Y" }}
+        open={true}
+        onOpenChange={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText("Deleting...")).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText("e.g. Acme")).toBeEnabled();
+    expect(screen.getByPlaceholderText("e.g. Acme")).toHaveValue("");
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled();
+  });
+
+  it("gives the dialog an accessible description", () => {
+    render(<DeleteProjectDialog project={FAKE_PROJECT} open={true} onOpenChange={vi.fn()} />);
+    expect(screen.getByRole("alertdialog")).toHaveAccessibleDescription(/This action cannot be undone\./);
   });
 
   it("renders confirmation input label with project name", () => {

@@ -68,3 +68,17 @@ describe("OverviewTypeMinis screen-reader table", () => {
     expect(table).toHaveTextContent(/return/i);
   });
 });
+
+describe("OverviewTypeMinis header at narrow widths", () => {
+  it("lets the header wrap and keeps the expense link on one line", () => {
+    const { container } = render(
+      <NextIntlClientProvider locale="vi" messages={MESSAGES.vi}>
+        <OverviewTypeMinis buckets={buckets()} viewExpenseHref="/vi/projects/p1/invoices" />
+      </NextIntlClientProvider>
+    );
+    const link = container.querySelector('a[href="/vi/projects/p1/invoices"]') as HTMLElement;
+    expect(link.className).toContain("whitespace-nowrap");
+    expect(link.className).toContain("shrink-0");
+    expect(link.parentElement!.className).toContain("flex-wrap");
+  });
+});

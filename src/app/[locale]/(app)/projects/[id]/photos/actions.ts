@@ -90,7 +90,8 @@ export type LoadMorePhotosResult =
   | { ok: false; error: string; message?: string };
 
 /**
- * Load a page of photos for the gallery "Load more" button.
+ * Load a page of photos for the gallery "Load more" button, or page 1 again
+ * when the gallery retries a first load that failed in page.tsx.
  * Uses the server-only listProjectPhotos wrapper; perPage is fixed at 50 to
  * match the initial page fetch in page.tsx.
  */
@@ -101,7 +102,7 @@ export async function loadMorePhotosAction(
   if (!projectId || !isUuid(projectId)) {
     return { ok: false, error: "validation", message: "Invalid project id" };
   }
-  if (!Number.isInteger(page) || page < 2) {
+  if (!Number.isInteger(page) || page < 1) {
     return { ok: false, error: "validation", message: "Invalid page number" };
   }
 

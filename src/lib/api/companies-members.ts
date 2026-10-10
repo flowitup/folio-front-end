@@ -1,8 +1,10 @@
 /**
  * Company member-onboarding API wrappers — server-only.
  *
- * Three endpoints (Phase 2 onboarding slice):
+ * Four endpoints (Phase 2 onboarding slice):
  *   POST /companies/<id>/members          — add a member by phone (admin)
+ *   DELETE /companies/<id>/members/<person_id>
+ *                                         — cancel a pending member (admin)
  *   POST /companies/<id>/members/import   — import profiles from another
  *                                            company the caller also admins
  *   GET  /companies/<id>/persons          — company member directory
@@ -116,6 +118,28 @@ export async function importMembers(
   }
   if (!response.ok) throw await buildHttpError(response, "Failed to import members");
   return response.json() as Promise<ImportMembersResult>;
+}
+
+// ---------------------------------------------------------------------------
+// Cancel a pending member (added by phone, no account yet)
+// ---------------------------------------------------------------------------
+
+export async function cancelPendingMember(companyId: string, personId: string): Promise<void> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/companies/${encodeURIComponent(companyId)}/members/${encodeURIComponent(personId)}`,
+      {
+        method: "DELETE",
+        headers: { ...authHeaders },
+        cache: "no-store",
+      }
+    );
+  } catch (err) {
+    throw new Error(`Network error cancelling pending member: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to cancel pending member");
 }
 
 // ---------------------------------------------------------------------------

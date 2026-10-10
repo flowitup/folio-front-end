@@ -116,6 +116,27 @@ describe("InvoiceMobileCard — refund arrow and stamps", () => {
     expect(screen.getByText(/→ TVA VERIFY SAS/)).toBeDefined();
   });
 
+  it("clips a long arrow label with an ellipsis and keeps the full text as a tooltip", () => {
+    const label = "QA2-05 Company card → Folio Demo SARL";
+    render(
+      <InvoiceMobileCard
+        invoice={makeInvoice({ payment_method_label: "QA2-05 Company card", refundable_status: "refundable" })}
+        isOpen={false}
+        onToggle={vi.fn()}
+        formatAmount={formatAmount}
+        companyName="Folio Demo SARL"
+      />,
+    );
+
+    // The ellipsis needs the text in its own shrinkable block: `.stamp` is inline-flex.
+    const text = screen.getByText(label);
+    expect(text.className).toContain("truncate");
+    const pill = text.parentElement!;
+    expect(pill.className).toContain("stamp");
+    expect(pill.className).not.toContain("truncate");
+    expect(pill.getAttribute("title")).toBe(label);
+  });
+
   it("does NOT render arrow when refundable_status is null", () => {
     render(
       <InvoiceMobileCard
@@ -237,6 +258,24 @@ describe("InvoiceDetailContent — transfer action in detail view", () => {
         screen.queryByRole("button", { name: "invoices.refund.action.transfer" }),
       ).not.toBeNull();
     });
+  });
+
+  it("gives the clipped method → company pill its full text as a tooltip", async () => {
+    const label = "QA2-05 Perso card → Folio Demo SARL";
+    render(
+      <InvoiceDetailContent
+        invoice={makeInvoice({ payment_method_label: "QA2-05 Perso card", refundable_status: "refundable" })}
+        canManage={false}
+        companyName="Folio Demo SARL"
+        onUpdated={vi.fn()}
+        onDeleted={vi.fn()}
+        printUrl="/print"
+      />,
+    );
+
+    const text = await screen.findByText(label);
+    expect(text.className).toContain("truncate");
+    expect(text.parentElement!.getAttribute("title")).toBe(label);
   });
 
   it("does NOT show transfer action when canManage=false", async () => {

@@ -19,7 +19,7 @@
  */
 
 import { useId, useEffect, useRef, useState, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ import { getActivitySuggestionsAction } from "@/app/[locale]/(app)/billing/_acti
 import type { BillingDocumentItem } from "@/types/billing";
 import type { ActivitySuggestion, ActivityCategory } from "@/lib/api/billing/documents";
 import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
+import { formatBillingVatRate } from "@/lib/billing/vat-rate";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -60,6 +61,35 @@ export function isPresetVatRate(rate: string): boolean {
 
 function emptyItem(vatRate: string = DEFAULT_VAT_RATE): BillingDocumentItem {
   return { description: "", quantity: "1", unit_price: "0", vat_rate: vatRate, category: null };
+}
+
+// ---------------------------------------------------------------------------
+// Line keys — a line keeps its React key while it is edited, so deleting a line
+// never hands its row state (custom VAT mode, description search) to the next one.
+// Keyed by the line object: an edit passes the key on to the line that replaces it.
+// ---------------------------------------------------------------------------
+
+const lineKeys = new WeakMap<BillingDocumentItem, string>();
+let lastLineKey = 0;
+
+function lineKeyOf(item: BillingDocumentItem): string {
+  let key = lineKeys.get(item);
+  if (key === undefined) {
+    key = `line-${++lastLineKey}`;
+    lineKeys.set(item, key);
+  }
+  return key;
+}
+
+/** One key per line; the same line object listed twice still gets two keys. */
+function lineKeysFor(items: BillingDocumentItem[]): string[] {
+  const seen = new Set<string>();
+  return items.map((item, index) => {
+    const key = lineKeyOf(item);
+    const unique = seen.has(key) ? `${key}-${index}` : key;
+    seen.add(unique);
+    return unique;
+  });
 }
 
 function lineHt(item: BillingDocumentItem): string {
@@ -143,7 +173,6 @@ export function BillingDocumentItemsEditor({
   showTotals = true,
   defaultVatRate,
 }: BillingDocumentItemsEditorProps) {
-  const uid = useId();
   const t = useTranslations("billing.form.items");
 
   // Per-editor suggestion cache: key = `${category||''}|${q}` → suggestions
@@ -164,9 +193,12 @@ export function BillingDocumentItemsEditor({
   }, []);
 
   function updateItem(index: number, patch: Partial<BillingDocumentItem>) {
-    const next = items.map((item, i) =>
-      i === index ? { ...item, ...patch } : item
-    );
+    const next = items.map((item, i) => {
+      if (i !== index) return item;
+      const updated = { ...item, ...patch };
+      lineKeys.set(updated, lineKeyOf(item));
+      return updated;
+    });
     onChange(next);
   }
 
@@ -179,6 +211,7 @@ export function BillingDocumentItemsEditor({
   }
 
   const totals = computeTotals(items);
+  const keys = lineKeysFor(items);
 
   const categoryOptions: ComboboxOption[] = categories.map((c) => ({
     value: c.name,
@@ -196,8 +229,9 @@ export function BillingDocumentItemsEditor({
               <tr>
                 <th className="w-32 min-w-[120px]">{t("categoryLabel")}</th>
                 <th className="min-w-[180px]">{t("description")}</th>
-                <th className="w-20 text-right">{t("quantity")}</th>
-                <th className="w-28 text-right">{t("unitPrice")}</th>
+                {/* Wide enough for "1234.5" / "123456.78" next to the number spinner. */}
+                <th className="w-28 text-right">{t("quantity")}</th>
+                <th className="w-36 text-right">{t("unitPrice")}</th>
                 <th className="w-24">{t("vatRate")}</th>
                 <th className="w-24 text-right">{t("totalHt")}</th>
                 {!readOnly && <th className="w-10" />}
@@ -217,7 +251,7 @@ export function BillingDocumentItemsEditor({
               )}
               {items.map((item, index) => (
                 <ItemRow
-                  key={`${uid}-${index}`}
+                  key={keys[index]}
                   item={item}
                   index={index}
                   readOnly={readOnly}
@@ -257,7 +291,7 @@ export function BillingDocumentItemsEditor({
         )}
         {items.map((item, index) => (
           <MobileItemCard
-            key={`${uid}-mob-${index}`}
+            key={keys[index]}
             item={item}
             index={index}
             readOnly={readOnly}
@@ -318,6 +352,7 @@ function ItemRow({
   onRemove,
   t,
 }: ItemRowProps) {
+  const locale = useLocale();
   const [descQuery, setDescQuery] = useState(item.description);
   const [descLoading, setDescLoading] = useState(false);
   const [descOptions, setDescOptions] = useState<ComboboxOption[]>([]);
@@ -407,6 +442,7 @@ function ItemRow({
             placeholder={t("categoryPlaceholder")}
             emptyText={t("categoryNoMatches")}
             allowFreeText
+            aria-label={t("categoryLabel")}
           />
         )}
       </td>
@@ -417,6 +453,7 @@ function ItemRow({
           <span className="text-sm">{item.description}</span>
         ) : (
           <Combobox
+            aria-label={t("description")}
             value={item.description}
             onChange={handleDescSelect}
             options={descOptions}
@@ -443,6 +480,7 @@ function ItemRow({
             value={item.quantity}
             onChange={(e) => onUpdate({ quantity: e.target.value })}
             className="h-7 border-0 bg-transparent px-0 text-right text-sm shadow-none focus-visible:ring-0 num"
+            aria-label={t("quantity")}
           />
         )}
       </td>
@@ -460,6 +498,7 @@ function ItemRow({
             value={item.unit_price}
             onChange={(e) => onUpdate({ unit_price: e.target.value })}
             className="h-7 border-0 bg-transparent px-0 text-right text-sm shadow-none focus-visible:ring-0 num"
+            aria-label={t("unitPrice")}
           />
         )}
       </td>
@@ -467,7 +506,7 @@ function ItemRow({
       {/* VAT rate */}
       <td>
         {readOnly ? (
-          <span className="num text-sm">{item.vat_rate}%</span>
+          <span className="num text-sm">{formatBillingVatRate(item.vat_rate, locale)}</span>
         ) : (
           <VatRateCell
             value={item.vat_rate}
@@ -513,6 +552,8 @@ function MobileItemCard({
   onRemove,
   t,
 }: ItemRowProps) {
+  const locale = useLocale();
+  const fieldId = useId();
   const [descQuery, setDescQuery] = useState(item.description);
   const [descLoading, setDescLoading] = useState(false);
   const [descOptions, setDescOptions] = useState<ComboboxOption[]>([]);
@@ -583,7 +624,11 @@ function MobileItemCard({
     <div className="folio-card p-3 space-y-2">
       {/* Category — full width */}
       <div>
-        <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+        <label
+          htmlFor={readOnly ? undefined : `${fieldId}-category`}
+          className="block text-xs font-medium mb-0.5"
+          style={{ color: "var(--muted)" }}
+        >
           {t("categoryLabel")}
         </label>
         {readOnly ? (
@@ -596,19 +641,25 @@ function MobileItemCard({
             placeholder={t("categoryPlaceholder")}
             emptyText={t("categoryNoMatches")}
             allowFreeText
+            id={`${fieldId}-category`}
           />
         )}
       </div>
 
       {/* Description — full width */}
       <div>
-        <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+        <label
+          htmlFor={readOnly ? undefined : `${fieldId}-description`}
+          className="block text-xs font-medium mb-0.5"
+          style={{ color: "var(--muted)" }}
+        >
           {t("description")}
         </label>
         {readOnly ? (
           <span className="text-sm">{item.description}</span>
         ) : (
           <Combobox
+            id={`${fieldId}-description`}
             value={item.description}
             onChange={handleDescSelect}
             options={descOptions}
@@ -625,13 +676,18 @@ function MobileItemCard({
       {/* Qty + Unit Price — 2-col row */}
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+          <label
+            htmlFor={`${fieldId}-quantity`}
+            className="block text-xs font-medium mb-0.5"
+            style={{ color: "var(--muted)" }}
+          >
             {t("quantity")}
           </label>
           {readOnly ? (
             <span className="num text-sm">{item.quantity}</span>
           ) : (
             <Input
+              id={`${fieldId}-quantity`}
               type="number"
               min="0"
               max={MAX_LINE_QUANTITY}
@@ -643,13 +699,18 @@ function MobileItemCard({
           )}
         </div>
         <div>
-          <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+          <label
+            htmlFor={`${fieldId}-unit-price`}
+            className="block text-xs font-medium mb-0.5"
+            style={{ color: "var(--muted)" }}
+          >
             {t("unitPrice")}
           </label>
           {readOnly ? (
             <span className="num text-sm">{item.unit_price}</span>
           ) : (
             <Input
+              id={`${fieldId}-unit-price`}
               type="number"
               min="0"
               max={MAX_LINE_UNIT_PRICE}
@@ -668,7 +729,7 @@ function MobileItemCard({
           {t("vatRate")}
         </label>
         {readOnly ? (
-          <span className="num text-sm">{item.vat_rate}%</span>
+          <span className="num text-sm">{formatBillingVatRate(item.vat_rate, locale)}</span>
         ) : (
           <VatRateCell
             value={item.vat_rate}
@@ -723,6 +784,7 @@ interface VatRateCellProps {
 
 function VatRateCell({ value, onChange }: VatRateCellProps) {
   const t = useTranslations("billing.form.items");
+  const locale = useLocale();
   // Custom mode is kept as state, not derived from the value: typing "0.5"
   // passes through "0", a preset, and must not swap the input for the select.
   const [customMode, setCustomMode] = useState(() => !isPresetVatRate(value));
@@ -742,6 +804,7 @@ function VatRateCell({ value, onChange }: VatRateCellProps) {
             onChange(e.target.value);
           }}
           className="h-7 w-16 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 num"
+          aria-label={t("vatRate")}
           placeholder="0"
           autoFocus={customMode && value === ""}
         />
@@ -774,13 +837,16 @@ function VatRateCell({ value, onChange }: VatRateCellProps) {
         }
       }}
     >
-      <SelectTrigger className="h-7 border-0 bg-transparent px-0 text-sm shadow-none focus:ring-0 num">
+      <SelectTrigger
+        className="h-7 border-0 bg-transparent px-0 text-sm shadow-none focus:ring-0 num"
+        aria-label={t("vatRate")}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
         {PRESET_VAT_RATES.map((r) => (
           <SelectItem key={r} value={r}>
-            {r}%
+            {formatBillingVatRate(r, locale)}
           </SelectItem>
         ))}
         <SelectItem value="__custom__">{t("vatCustom")}</SelectItem>

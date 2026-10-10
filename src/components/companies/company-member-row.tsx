@@ -8,10 +8,11 @@
  * and no `attachedUser` — Role renders as a dash instead of a select, and
  * the Company/Projects pickers are disabled (D2: project and company
  * assignment both key on user_id, so neither is possible before sign-up).
+ * Its only action cancels the invitation (a mistyped phone, a change of mind).
  */
 
 import { useTranslations } from "next-intl";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import {
@@ -39,6 +40,7 @@ interface Props {
   onCompanyToggle: (row: MemberRow, option: MemberPickerOption, checked: boolean) => void;
   onProjectToggle: (row: MemberRow, option: MemberPickerOption, checked: boolean) => void;
   onOpenGrants: (target: AttachedUser) => void;
+  onCancelInvitation: (row: MemberRow) => void;
 }
 
 export function CompanyMemberRow({
@@ -52,6 +54,7 @@ export function CompanyMemberRow({
   onCompanyToggle,
   onProjectToggle,
   onOpenGrants,
+  onCancelInvitation,
 }: Props) {
   const t = useTranslations("companySettings.members");
   const userId = row.userId;
@@ -139,6 +142,19 @@ export function CompanyMemberRow({
           >
             <SlidersHorizontal size={12} className="xl:mr-1" aria-hidden="true" />
             <span className="hidden xl:inline">{t("customPermissions")}</span>
+          </Button>
+        )}
+        {row.pending && row.personId && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-[12px]"
+            onClick={() => onCancelInvitation(row)}
+            aria-label={t("cancelInvitation")}
+            title={t("cancelInvitation")}
+          >
+            <UserX size={12} className="xl:mr-1" aria-hidden="true" />
+            <span className="hidden xl:inline">{t("cancelInvitation")}</span>
           </Button>
         )}
       </TableCell>

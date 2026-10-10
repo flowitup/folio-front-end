@@ -50,7 +50,8 @@ export function NoteEditor({ note, onSave, onCancel, onDelete, isSaving = false 
 
   function onKey(e: React.KeyboardEvent) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void save(); }
-    if (e.key === "Escape") { e.preventDefault(); onCancel(); }
+    // An Escape already handled (it closed the open category menu) is not a cancel.
+    if (e.key === "Escape" && !e.defaultPrevented) { e.preventDefault(); onCancel(); }
   }
 
   function handleBlur(e: React.FocusEvent) {

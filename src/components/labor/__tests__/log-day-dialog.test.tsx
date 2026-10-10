@@ -2,7 +2,7 @@
  * LogDayDialog — checks the API's limits before sending, and never shows the
  * raw "HTTP 400: BAD REQUEST" of a refused save.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import type { Worker } from "@/types/labor";
 
@@ -129,6 +129,72 @@ describe("LogDayDialog — limits and errors", () => {
     await waitFor(() => expect(bulkLogAttendance).toHaveBeenCalled());
     expect(await screen.findByText("labor.logDayDialog.saveFailed")).toBeInTheDocument();
     expect(screen.queryByText(/HTTP 400/)).toBeNull();
+  });
+});
+
+describe("LogDayDialog — date range", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function renderOn(initialDate: string, onLogNextDay?: (d: string) => void) {
+    render(
+      <LogDayDialog
+        open
+        onOpenChange={vi.fn()}
+        projectId="p-1"
+        workers={[WORKER]}
+        entries={[]}
+        initialDate={initialDate}
+        onLogNextDay={onLogNextDay}
+        onSaved={vi.fn()}
+      />
+    );
+  }
+
+  it("stops the ▶ arrow and the date input at today", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 9, 9, 12) });
+    renderOn("2026-10-09");
+    await screen.findByRole("button", { name: "pick Alice" });
+
+    expect(screen.getByRole("button", { name: "labor.nextDay" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "labor.prevDay" })).toBeEnabled();
+    const input = document.querySelector('input[type="date"]') as HTMLInputElement;
+    expect(input.max).toBe("2026-10-09");
+    expect(input.min).toBe("2000-01-01");
+  });
+
+  it("refuses a typed future day before sending", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 9, 9, 12) });
+    renderOn("2031-12-25");
+    fireEvent.click(await screen.findByRole("button", { name: "pick Alice" }));
+    save();
+
+    expect(await screen.findByText("labor.errors.dateOutOfRange")).toBeInTheDocument();
+    expect(bulkLogAttendance).not.toHaveBeenCalled();
+  });
+
+  it("translates the server's out-of-range refusal", async () => {
+    vi.mocked(bulkLogAttendance).mockRejectedValue(
+      new ApiError("HTTP 400: BAD REQUEST", 400, { error: "AttendanceDateOutOfRange", message: "..." })
+    );
+    renderOn("2026-09-20");
+    fireEvent.click(await screen.findByRole("button", { name: "pick Alice" }));
+    save();
+
+    expect(await screen.findByText("labor.errors.dateOutOfRange")).toBeInTheDocument();
+  });
+
+  it("offers no 'Log next day' action after logging today", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 9, 9, 12) });
+    const { toast } = await import("sonner");
+    vi.mocked(bulkLogAttendance).mockResolvedValue({ created: [{}], skipped_worker_ids: [] } as never);
+    renderOn("2026-10-09", vi.fn());
+    fireEvent.click(await screen.findByRole("button", { name: "pick Alice" }));
+    save();
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalled());
+    expect(vi.mocked(toast.success).mock.calls[0][1]).toBeUndefined();
   });
 });
 

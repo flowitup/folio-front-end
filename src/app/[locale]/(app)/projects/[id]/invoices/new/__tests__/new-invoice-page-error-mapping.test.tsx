@@ -23,6 +23,8 @@ const TRANSLATIONS: Record<string, string> = {
   errorAppliedExceedsTarget: "The avoir amount exceeds the target invoice's total.",
   errorWorkerLinkNotAllowed: "A worker can only be linked on labor expenses.",
   errorWorkerNotInProject: "The selected worker is not part of this project.",
+  errorPaymentMethodInactive: "This payment method has been deactivated. Choose another one.",
+  errorReturnTotalPositive: "Le total d'un avoir doit être nul ou négatif.",
 };
 
 vi.mock("next-intl", () => ({
@@ -116,6 +118,26 @@ describe("NewInvoicePage — classifySubmitError arg wiring", () => {
       ).toBeDefined()
     );
     expect(screen.queryByText("raw backend text")).toBeNull();
+  });
+
+  it("translates the inactive payment method and the positive-return refusals", async () => {
+    mockCreateInvoice.mockRejectedValueOnce({
+      data: { error: "Conflict", message: "Payment method is inactive and cannot be used" },
+    });
+    render(<NewInvoicePage />);
+    fireEvent.click(await screen.findByTestId("submit-stub"));
+    await waitFor(() =>
+      expect(screen.getByText(TRANSLATIONS.errorPaymentMethodInactive)).toBeDefined()
+    );
+
+    mockCreateInvoice.mockRejectedValueOnce({
+      data: { error: "ValidationError", message: "A return's total must be zero or negative" },
+    });
+    fireEvent.click(screen.getByTestId("submit-stub"));
+    await waitFor(() =>
+      expect(screen.getByText(TRANSLATIONS.errorReturnTotalPositive)).toBeDefined()
+    );
+    expect(screen.queryByText("A return's total must be zero or negative")).toBeNull();
   });
 
   it("still translates AppliedExceedsTarget (pre-existing arg, regression guard)", async () => {

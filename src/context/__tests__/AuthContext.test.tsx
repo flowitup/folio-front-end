@@ -109,6 +109,57 @@ describe("AuthContext.loginWithPhone", () => {
     }
   });
 
+  it("sends a user with no company through the dashboard's onboarding gate, not the deep link", async () => {
+    mockVerifyOtpAction.mockResolvedValue({
+      success: true,
+      user: { id: "u3", email: "phone-33620150006@no-email.folio.flowitup.com", permissions: [] },
+    });
+    mockGetCurrentUserAction.mockResolvedValue({
+      id: "u3",
+      email: "phone-33620150006@no-email.folio.flowitup.com",
+      permissions: [],
+      companies: [],
+    });
+    window.history.pushState({}, "", "/en/login?callbackUrl=%2Fen%2Fprojects");
+    try {
+      render(
+        <AuthProvider>
+          <LoginProbe />
+        </AuthProvider>
+      );
+      await userEvent.click(screen.getByRole("button", { name: "sign in with phone" }));
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/en/dashboard"));
+      expect(mockPush).not.toHaveBeenCalledWith("/en/projects");
+    } finally {
+      window.history.pushState({}, "", "/");
+    }
+  });
+
+  it("keeps the deep link for platform ops, who never has a company", async () => {
+    mockVerifyOtpAction.mockResolvedValue({
+      success: true,
+      user: { id: "u4", email: "ops@example.com", permissions: ["*:*"] },
+    });
+    mockGetCurrentUserAction.mockResolvedValue({
+      id: "u4",
+      email: "ops@example.com",
+      permissions: ["*:*"],
+      companies: [],
+    });
+    window.history.pushState({}, "", "/en/login?callbackUrl=%2Fen%2Fprojects");
+    try {
+      render(
+        <AuthProvider>
+          <LoginProbe />
+        </AuthProvider>
+      );
+      await userEvent.click(screen.getByRole("button", { name: "sign in with phone" }));
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/en/projects"));
+    } finally {
+      window.history.pushState({}, "", "/");
+    }
+  });
+
   it("falls back to the sign-in response user if the /auth/me refetch fails", async () => {
     mockVerifyOtpAction.mockResolvedValue({
       success: true,
@@ -127,5 +178,45 @@ describe("AuthContext.loginWithPhone", () => {
     await waitFor(() => {
       expect(screen.getByTestId("companies-count").textContent).toBe("0");
     });
+  });
+});
+
+function PermissionsProbe() {
+  const { user, refreshUser } = useAuth();
+  return (
+    <div>
+      <span data-testid="permissions">{user?.permissions?.join(",") ?? "none"}</span>
+      <button onClick={() => void refreshUser()}>refresh</button>
+    </div>
+  );
+}
+
+describe("AuthContext.refreshUser", () => {
+  beforeEach(() => {
+    mockGetCurrentUserAction.mockReset();
+  });
+
+  it("replaces the seeded user with the fresh /auth/me one (e.g. after switching the primary company)", async () => {
+    mockGetCurrentUserAction.mockResolvedValue({ id: "u1", email: "a@b.c", permissions: ["bibliotheque:manage"] });
+    render(
+      <AuthProvider initialUser={{ id: "u1", email: "a@b.c", permissions: ["project:read"] } as never}>
+        <PermissionsProbe />
+      </AuthProvider>
+    );
+    expect(screen.getByTestId("permissions")).toHaveTextContent("project:read");
+    await userEvent.click(screen.getByRole("button", { name: "refresh" }));
+    await waitFor(() => expect(screen.getByTestId("permissions")).toHaveTextContent("bibliotheque:manage"));
+  });
+
+  it("keeps the current user when the refetch fails", async () => {
+    mockGetCurrentUserAction.mockRejectedValue(new Error("offline"));
+    render(
+      <AuthProvider initialUser={{ id: "u1", email: "a@b.c", permissions: ["project:read"] } as never}>
+        <PermissionsProbe />
+      </AuthProvider>
+    );
+    await userEvent.click(screen.getByRole("button", { name: "refresh" }));
+    await waitFor(() => expect(mockGetCurrentUserAction).toHaveBeenCalled());
+    expect(screen.getByTestId("permissions")).toHaveTextContent("project:read");
   });
 });

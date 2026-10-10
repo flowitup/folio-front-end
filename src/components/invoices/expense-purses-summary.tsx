@@ -17,6 +17,7 @@ import {
   isCompanyPaidExpense,
   isCompanyRefundOwed,
   isPersonalExpense,
+  roundCents,
 } from "@/lib/dashboard/overview-metrics";
 
 /**
@@ -93,6 +94,9 @@ const REFUNDABLE_BANK_ON_DARK = "#9dc9e8";
 // wash out. Mirrors what `.stamp.accent` does for the company channel.
 const REFUNDABLE_BANK_INK = "#3d7ea6";
 
+/** Most month bars in the spend timeline (5 years); older months are left out. */
+const MAX_MONTH_BARS = 60;
+
 /** First day of the month for a "YYYY-MM" key — numeric args avoid the
  * UTC-midnight day-shift of parsing date-only strings. */
 function monthDate(key: string): Date {
@@ -167,6 +171,9 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
     if (!minDate || inv.issue_date < minDate) minDate = inv.issue_date;
     if (!maxDate || inv.issue_date > maxDate) maxDate = inv.issue_date;
   }
+  // Snap float drift before the whole-euro display rounds it the wrong way.
+  refundableTotal = roundCents(refundableTotal);
+  bankOutstandingTotal = roundCents(bankOutstandingTotal);
   const expenseCount = company.count + personal.count + unassigned.count;
 
   // ── Net refunds into the purses ───────────────────────────────────────────
@@ -204,6 +211,16 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
       outstandingAvoirsTotal += ref.total_amount;
     }
   }
+  // Snap every summed figure to the cent before the whole-euro display rounds
+  // it: 100,10 + 100,10 + 33,30 sums to 233.4999… and showed 233 € here while
+  // the Overview, which snaps its sums the same way, showed 234 €.
+  for (const purse of [company, personal, unassigned]) {
+    purse.spent = roundCents(purse.spent);
+    purse.returnsTotal = roundCents(purse.returnsTotal);
+    for (const type of EXPENSE_TYPES) purse.types[type].total = roundCents(purse.types[type].total);
+  }
+  for (const month of Object.values(monthlySpend)) month.total = roundCents(month.total);
+  outstandingAvoirsTotal = roundCents(outstandingAvoirsTotal);
 
   // ── Meta figures (purse headers) + client expense total (dark card) ───────
   const releasedTotal = meta.fundsReleasedTotal;
@@ -213,15 +230,23 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   // Company purse spend = company-paid expenses + cash handed out to people. The
   // handover left the company's hands, so it is spent from the purse's point of
   // view even though the expenses it pays for are booked elsewhere when paid.
-  const companySpent = meta.companySpentTotal + cashAdvanced;
-  const spentTotal = company.spent + personal.spent + unassigned.spent;
+  const companySpent = roundCents(meta.companySpentTotal + cashAdvanced);
+  const spentTotal = roundCents(company.spent + personal.spent + unassigned.spent);
 
   // ── Month series from the first to the last active month, gaps filled ─────
+  // Capped to the last MAX_MONTH_BARS months: a mistyped 1900 or 9999 date
+  // once drew ~97,000 bars and took the page 17 s to render.
   const monthKeys = Object.keys(monthlySpend).sort();
   const monthSeries: { key: string; total: number; count: number }[] = [];
   if (monthKeys.length > 0) {
     let [y, m] = monthKeys[0].split("-").map(Number);
     const [endY, endM] = monthKeys[monthKeys.length - 1].split("-").map(Number);
+    const endIndex = endY * 12 + endM - 1;
+    if (endIndex - (y * 12 + m - 1) >= MAX_MONTH_BARS) {
+      const startIndex = endIndex - MAX_MONTH_BARS + 1;
+      y = Math.floor(startIndex / 12);
+      m = (startIndex % 12) + 1;
+    }
     while (y < endY || (y === endY && m <= endM)) {
       const key = `${y}-${String(m).padStart(2, "0")}`;
       monthSeries.push({ key, ...(monthlySpend[key] ?? { total: 0, count: 0 }) });
@@ -260,7 +285,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
     cashAdvancedPart: number,
     borderColor?: string
   ) => {
-    const left = released - spent;
+    const left = roundCents(released - spent);
     const pct = released > 0 ? Math.min(100, (spent / released) * 100) : 0;
     // Bar scale for the breakdown rows: the purse's expenses plus the cash handed out.
     const barScale = breakdown.spent + cashAdvancedPart;
@@ -321,8 +346,9 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
             return (
               <div key={type} className="flex items-center gap-2.5">
                 <span
-                  className="w-24 flex-none truncate text-[11.5px]"
+                  className="w-32 flex-none truncate text-[11.5px]"
                   style={{ color: "var(--muted)" }}
+                  title={t(`types.${type}`)}
                 >
                   {t(`types.${type}`)}
                 </span>
@@ -348,8 +374,9 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
           {cashAdvancedPart > 0 && (
             <div className="flex items-center gap-2.5" data-testid={`purse-cash-row-${purseKey}`}>
               <span
-                className="w-24 flex-none truncate text-[11.5px]"
+                className="w-32 flex-none truncate text-[11.5px]"
                 style={{ color: "var(--muted)" }}
+                title={t("summary.cash")}
               >
                 {t("summary.cash")}
               </span>

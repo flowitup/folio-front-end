@@ -6,7 +6,7 @@
  * poste — a new room added here shows up under Peinture and Sol too.
  */
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, ChevronDown, Plus } from "lucide-react";
 
@@ -16,17 +16,29 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { ChiffrageRoom } from "@/lib/api/chiffrage";
 
 interface Props {
+  /** The trigger's id, so the field's <Label htmlFor> focuses it. */
+  id?: string;
+  /** The field label's id: the trigger is named by it plus the shown room. */
+  labelledBy?: string;
   value: string | null;
   rooms: ChiffrageRoom[];
   onChange: (roomId: string | null) => void;
   onCreateRoom: (name: string) => Promise<ChiffrageRoom | null>;
 }
 
-export function RoomSelect({ value, rooms, onChange, onCreateRoom }: Props) {
+export function RoomSelect({
+  id,
+  labelledBy,
+  value,
+  rooms,
+  onChange,
+  onCreateRoom,
+}: Props) {
   const t = useTranslations("chiffrage");
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState("");
   const [busy, setBusy] = useState(false);
+  const valueId = useId();
 
   const selected = rooms.find((r) => r.id === value) ?? null;
 
@@ -47,18 +59,23 @@ export function RoomSelect({ value, rooms, onChange, onCreateRoom }: Props) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           type="button"
           variant="outline"
+          aria-labelledby={labelledBy ? `${labelledBy} ${valueId}` : undefined}
           className="w-full justify-between font-normal"
           data-testid="room-select-trigger"
         >
-          <span className={selected ? "" : "text-muted-foreground"}>
+          <span id={valueId} className={selected ? "" : "text-muted-foreground"}>
             {selected ? selected.name : t("noRoom")}
           </span>
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-1" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] min-w-[200px] p-1"
+        align="start"
+      >
         <div className="max-h-56 overflow-y-auto">
           <button
             type="button"

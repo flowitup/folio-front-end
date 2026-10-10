@@ -30,15 +30,21 @@ import {
   setPrimaryCompanyAction,
   detachCompanyAction,
 } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
+import { useOptionalAuth } from "@/context/AuthContext";
 import type { MyCompany } from "@/types/companies";
 
 interface MyCompanyCardProps {
   company: MyCompany;
   onMutated: () => void;
+  /** Called instead of onMutated once the caller has left this company, with the toast it showed. */
+  onDetached?: (message: string) => void;
 }
 
-export function MyCompanyCard({ company, onMutated }: MyCompanyCardProps) {
+export function MyCompanyCard({ company, onMutated, onDetached }: MyCompanyCardProps) {
   const t = useTranslations("companies");
+  // The primary company decides the signed-in user's permissions (library,
+  // inventory), so re-read them once it changes.
+  const refreshUser = useOptionalAuth()?.refreshUser;
 
   const [detachOpen, setDetachOpen] = useState(false);
   const [isSettingPrimary, setIsSettingPrimary] = useState(false);
@@ -58,6 +64,7 @@ export function MyCompanyCard({ company, onMutated }: MyCompanyCardProps) {
         return;
       }
       onMutated();
+      void refreshUser?.();
     } catch {
       toast.error(t("form.errors.generic"));
     } finally {
@@ -76,8 +83,12 @@ export function MyCompanyCard({ company, onMutated }: MyCompanyCardProps) {
         toast.error(result.error.message);
         return;
       }
+      const message = t("my.card.detached", { name: company.legal_name });
+      toast.success(message);
       setDetachOpen(false);
-      onMutated();
+      if (onDetached) onDetached(message);
+      else onMutated();
+      void refreshUser?.();
     } catch {
       toast.error(t("form.errors.generic"));
     } finally {
@@ -125,7 +136,7 @@ export function MyCompanyCard({ company, onMutated }: MyCompanyCardProps) {
           </div>
         </div>
 
-        {/* Sensitive fields (always masked for non-admin callers) */}
+        {/* Sensitive fields (masked for everyone except platform ops) */}
         <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-[12px]">
           {[
             { label: t("form.fields.siret.label"), value: company.siret },

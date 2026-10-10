@@ -35,6 +35,8 @@ import {
 } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import type { BillingDocumentKind, BillingDocumentTemplate } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { formatBillingVatRate } from "@/lib/billing/vat-rate";
+import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -83,6 +85,8 @@ export function ApplyTemplateDialog({
   const tToast = useTranslations("billing.form.toast");
   const tApply = useTranslations("billing.form.applyTemplate");
   const tKind = useTranslations("billing.templates.form");
+  const tCard = useTranslations("billing.templates.list.card");
+  const errorMessage = useBillingErrorMessage("template");
 
   const [templates, setTemplates] = useState<BillingDocumentTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -115,7 +119,7 @@ export function ApplyTemplateDialog({
     try {
       const result = await listBillingTemplatesAction(kind);
       if (!result.ok) {
-        setLoadError(result.error.message);
+        setLoadError(errorMessage(result.error, tErrors("templatesLoadFailed")));
         return;
       }
       setTemplates(result.data);
@@ -151,7 +155,7 @@ export function ApplyTemplateDialog({
         recipient_siret: recipient.recipient_siret.trim() || null,
       });
       if (!result.ok) {
-        toast.error(result.error.message);
+        toast.error(errorMessage(result.error, tErrors("createFromTemplateFailed")));
         return;
       }
       toast.success(tToast("createdFromTemplate"));
@@ -234,10 +238,9 @@ export function ApplyTemplateDialog({
                         className="text-[12px]"
                         style={{ color: "var(--muted)" }}
                       >
-                        {tpl.items.length} line item
-                        {tpl.items.length !== 1 ? "s" : ""}
+                        {tCard("items", { n: tpl.items.length })}
                         {tpl.default_vat_rate
-                          ? ` · ${tpl.default_vat_rate}% default VAT`
+                          ? ` · ${tCard("vatRate", { rate: formatBillingVatRate(tpl.default_vat_rate, locale) })}`
                           : ""}
                       </p>
                     </div>

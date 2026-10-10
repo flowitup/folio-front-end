@@ -1,6 +1,6 @@
 /**
  * Pure-function tests for createdBucket() and buildSections()
- * All dates use UTC to avoid DST gotchas.
+ * Dates are built on the local calendar, as the buckets are.
  */
 
 import { describe, it, expect } from "vitest";
@@ -27,22 +27,28 @@ function makeNote(
   };
 }
 
-/** Returns a UTC Date for YYYY-MM-DD at noon */
-function utcDate(dateStr: string): Date {
+/** Local noon of YYYY-MM-DD: buckets follow the viewer's calendar, not UTC. */
+function localDate(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d, 12, 0, 0, 0));
+  return new Date(y, m - 1, d, 12, 0, 0, 0);
 }
 
-const TODAY_STR = "2024-06-15";
-const todayDate = utcDate(TODAY_STR);
+/** ISO timestamp (as the API sends it) of a LOCAL date and hour. */
+function localIso(dateStr: string, hour = 10, minute = 0): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d, hour, minute).toISOString();
+}
+
+const TODAY_STR = "2024-06-15"; // a Saturday; its week starts Monday 2024-06-10
+const todayDate = localDate(TODAY_STR);
 
 // ISO timestamps for each bucket
-const NOW_ISO       = "2024-06-15T10:00:00Z"; // today
-const YESTERDAY_ISO = "2024-06-14T10:00:00Z"; // yesterday
-const WEEK_ISO      = "2024-06-10T10:00:00Z"; // within last 7 days (today-5)
-const WEEK_EDGE_ISO = "2024-06-08T10:00:00Z"; // today-7, still "week"
-const EARLIER_ISO   = "2024-06-07T10:00:00Z"; // today-8, "earlier"
-const OLD_ISO       = "2024-01-01T10:00:00Z"; // much older
+const NOW_ISO       = localIso("2024-06-15"); // today
+const YESTERDAY_ISO = localIso("2024-06-14"); // yesterday
+const WEEK_ISO      = localIso("2024-06-12"); // earlier this week (Wednesday)
+const WEEK_EDGE_ISO = localIso("2024-06-10", 0, 5); // this week's Monday, just after midnight
+const EARLIER_ISO   = localIso("2024-06-09", 23, 55); // last Sunday, "earlier"
+const OLD_ISO       = localIso("2024-01-01"); // much older
 
 // ---- createdBucket ----
 
@@ -55,32 +61,48 @@ describe("createdBucket — bucket assignment", () => {
     expect(createdBucket(YESTERDAY_ISO, todayDate)).toBe("yesterday");
   });
 
-  it("within last 7 days (today-5) → week", () => {
+  it("earlier this week (Wednesday) → week", () => {
     expect(createdBucket(WEEK_ISO, todayDate)).toBe("week");
   });
 
-  it("today-7 (lower boundary) → week", () => {
+  it("this week's Monday (lower boundary) → week", () => {
     expect(createdBucket(WEEK_EDGE_ISO, todayDate)).toBe("week");
   });
 
-  it("today-8 → earlier", () => {
+  it("last week's Sunday → earlier, though within the last 7 days", () => {
     expect(createdBucket(EARLIER_ISO, todayDate)).toBe("earlier");
+  });
+
+  it("on a Wednesday, last Friday is not 'earlier this week'", () => {
+    const wednesday = localDate("2026-10-14");
+    expect(createdBucket(localIso("2026-10-09", 20, 58), wednesday)).toBe("earlier");
+    expect(createdBucket(localIso("2026-10-12", 9), wednesday)).toBe("week");
+  });
+
+  it("on a Monday, nothing is 'earlier this week'", () => {
+    const monday = localDate("2026-10-12");
+    expect(createdBucket(localIso("2026-10-11"), monday)).toBe("yesterday");
+    expect(createdBucket(localIso("2026-10-10"), monday)).toBe("earlier");
   });
 
   it("very old note → earlier", () => {
     expect(createdBucket(OLD_ISO, todayDate)).toBe("earlier");
   });
 
-  it("uses UTC dates — immune to DST (2024-03-10 US DST boundary)", () => {
-    const dstToday = utcDate("2024-03-10");
-    const yesterdayDst = "2024-03-09T12:00:00Z";
-    expect(createdBucket(yesterdayDst, dstToday)).toBe("yesterday");
+  it("uses the local day, not the UTC one, just after local midnight", () => {
+    // 00:30 local on the 10th is still the 9th in UTC east of Greenwich
+    // (and 10:00 the 9th is the 9th everywhere): today vs yesterday.
+    const justAfterMidnight = new Date(2026, 9, 10, 0, 30);
+    expect(createdBucket(localIso("2026-10-09", 20, 58), justAfterMidnight)).toBe("yesterday");
+    expect(createdBucket(localIso("2026-10-10", 0, 10), justAfterMidnight)).toBe("today");
+  });
+
+  it("handles a DST change (2024-03-31 in Europe)", () => {
+    expect(createdBucket(localIso("2024-03-30", 12), localDate("2024-03-31"))).toBe("yesterday");
   });
 
   it("handles year-end boundary (2024-12-31 → yesterday = 2024-12-30)", () => {
-    const yearEnd = utcDate("2024-12-31");
-    const dec30 = "2024-12-30T12:00:00Z";
-    expect(createdBucket(dec30, yearEnd)).toBe("yesterday");
+    expect(createdBucket(localIso("2024-12-30", 12), localDate("2024-12-31"))).toBe("yesterday");
   });
 });
 
@@ -122,8 +144,8 @@ describe("buildSections — date grouping", () => {
   });
 
   it("items within a section are sorted created_at DESC", () => {
-    const earlier = makeNote("e", "2024-06-08T08:00:00Z");
-    const later   = makeNote("l", "2024-06-08T18:00:00Z");
+    const earlier = makeNote("e", localIso("2024-06-11", 8));
+    const later   = makeNote("l", localIso("2024-06-11", 18));
     const sections = buildSections([earlier, later], "date", todayDate);
     expect(sections[0].key).toBe("week");
     expect(sections[0].items[0].id).toBe("l");

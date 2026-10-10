@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { updateInvoicePrefix } from "./actions";
 import { BankCreditCard } from "./bank-credit-card";
 import { useAuth } from "@/context/AuthContext";
+import { useOptionalProject } from "@/context/ProjectContext";
 import { can } from "@/lib/auth/permissions";
 import type { Project } from "@/types/project";
 
@@ -30,6 +31,9 @@ export function ProjectSettingsClient({ project }: Props) {
   // rather than a Save that fails with "please try again".
   const canEdit = can("project:update", user?.permissions, project.my_permissions);
   const router = useRouter();
+  // The global settings page reads the prefix from the cached project list,
+  // which router.refresh() does not reload.
+  const refetchProjects = useOptionalProject()?.refetch;
   const [prefix, setPrefix] = useState(project.invoice_prefix ?? "");
   // What the server holds now: the prop is only the value at page load, so
   // after a save Save stayed enabled and typing the old value disabled it.
@@ -47,23 +51,31 @@ export function ProjectSettingsClient({ project }: Props) {
 
   const handleSave = async () => {
     setSaving(true);
-    const result = await updateInvoicePrefix(project.id, prefix);
-    setSaving(false);
-    if (result.ok) {
-      setSavedPrefix(prefix.trim().toUpperCase());
-      router.refresh();
-      toast.success(t("settingsSaved"));
-    } else if (result.error === "validation") {
-      toast.error(t("invoicePrefixInvalid"));
-    } else {
+    try {
+      const result = await updateInvoicePrefix(project.id, prefix);
+      if (result.ok) {
+        setSavedPrefix(prefix.trim().toUpperCase());
+        router.refresh();
+        void refetchProjects?.();
+        toast.success(t("settingsSaved"));
+      } else if (result.error === "validation") {
+        toast.error(t("invoicePrefixInvalid"));
+      } else {
+        toast.error(t("settingsSaveError"));
+      }
+    } catch {
+      // The action call itself failed (offline): Save must not stay on "Saving…".
       toast.error(t("settingsSaveError"));
+    } finally {
+      setSaving(false);
     }
   };
 
   const isDirty = prefix !== savedPrefix;
 
   return (
-    <div className="space-y-6">
+    // Same gutters as the other project pages: the (app) <main> adds none.
+    <div className="fade-up space-y-6 px-4 pb-12 lg:px-8" data-testid="project-settings">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Settings size={20} style={{ color: "var(--accent)" }} />

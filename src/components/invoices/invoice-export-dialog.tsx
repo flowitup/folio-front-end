@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { fetchInvoiceExport } from "@/lib/api/invoice-api";
+import { ApiError } from "@/lib/api/http";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import type { InvoiceExportFormat, InvoiceType } from "@/types/invoice";
 
@@ -62,6 +63,13 @@ export function InvoiceExportDialog({
   const [format, setFormat] = useState<InvoiceExportFormat>("xlsx");
   const [typeValue, setTypeValue] = useState<InvoiceType | "all">(startType);
   const [submitting, setSubmitting] = useState(false);
+  // The dialog stays mounted between opens, so each open picks up the list's
+  // active tab again (state adjusted during render when `open` flips).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setTypeValue(startType);
+  }
 
   const monthSpan = useMemo(() => computeMonthSpan(from, to), [from, to]);
   const rangeInvalid = !from || !to || from > to || monthSpan > 24;
@@ -100,8 +108,9 @@ export function InvoiceExportDialog({
       toast.success(t("downloaded"), { id: toastId });
       handleClose();
     } catch (err) {
+      // Never the raw error text ("Export failed: 403" is English-only).
       toast.error(
-        err instanceof Error ? err.message : t("errorGeneric"),
+        err instanceof ApiError && err.status === 403 ? t("errorForbidden") : t("errorGeneric"),
         { id: toastId },
       );
     } finally {

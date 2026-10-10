@@ -3,8 +3,8 @@
 import { initialsOf, senderColor } from "@/lib/chat/sender-color";
 
 /**
- * Initials disc coloured by user id; `size` in px. `userId` is `null` for the assistant
- * sender (no member id), which still gets a stable colour keyed off its fixed name.
+ * Initials disc coloured by user id; `size` in px. `userId` may be `null` for a legacy
+ * sender with no member id, which still gets a stable colour keyed off its name.
  */
 export function ChatAvatar({
   userId,

@@ -9,7 +9,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
   useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
-  useLocale: () => "en",
 }));
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
@@ -29,15 +28,9 @@ vi.mock("@/context/ChatContext", () => ({
   useChat: () => mockUseChat(),
 }));
 
-const mockUseAssistantFeature = vi.fn();
-vi.mock("@/hooks/use-chat-feature", () => ({
-  useAssistantFeature: () => mockUseAssistantFeature(),
-}));
-
 const listChatMessages = vi.fn();
 const markChatChannelRead = vi.fn();
 const sendChatMessage = vi.fn();
-const submitAssistantAction = vi.fn();
 vi.mock("@/lib/api/chat-client", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api/chat-client")>("@/lib/api/chat-client");
   return {
@@ -45,7 +38,6 @@ vi.mock("@/lib/api/chat-client", async () => {
     listChatMessages: (...args: unknown[]) => listChatMessages(...args),
     markChatChannelRead: (...args: unknown[]) => markChatChannelRead(...args),
     sendChatMessage: (...args: unknown[]) => sendChatMessage(...args),
-    submitAssistantAction: (...args: unknown[]) => submitAssistantAction(...args),
     fetchChatAttachmentBlob: vi.fn(),
   };
 });
@@ -75,7 +67,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockUseAuth.mockReturnValue({ user: { id: "me", email: "me@example.com", permissions: [] } });
   mockUseProject.mockReturnValue({ selectedProjectId: "p1" });
-  mockUseAssistantFeature.mockReturnValue(true);
   listChatMessages.mockResolvedValue({
     items: [
       { id: "m1", channel_key: "project:p1", sender_id: "alice", sender_name: "Alice", body: "Bonjour", attachment: null, created_at: "2026-09-08T08:00:00Z", mine: false },
@@ -167,7 +158,7 @@ describe("ChatPanel", () => {
     });
 
     await waitFor(() =>
-      expect(sendChatMessage).toHaveBeenCalledWith("project:p1", { body: "On arrive", file: null, lang: "en" })
+      expect(sendChatMessage).toHaveBeenCalledWith("project:p1", { body: "On arrive", file: null })
     );
     await waitFor(() => expect(listChatMessages.mock.calls.length).toBeGreaterThan(callsBefore));
     expect(refreshChannels).toHaveBeenCalled();
@@ -230,126 +221,5 @@ describe("ChatPanel", () => {
     setChat({ channels: [], unread: 0 });
     render(<ChatPanel />);
     expect(screen.getByTestId("chat-no-channels")).toBeInTheDocument();
-  });
-});
-
-describe("ChatPanel assistant choice actions", () => {
-  const choiceMessage = (payload: Record<string, unknown> = {}) => ({
-    id: "choice-1",
-    channel_key: "project:p1",
-    sender_id: null,
-    sender_name: "Folio",
-    sender_type: "assistant" as const,
-    content_type: "choice" as const,
-    body: "Log today for Alice? 1. Yes 2. No",
-    payload: {
-      prompt: "Log today for Alice?",
-      options: [
-        { label: "Yes", action: "confirm_bulk_attendance", payload: { worker_ids: ["w1"] } },
-        { label: "No", action: "cancel_bulk_attendance", payload: {} },
-      ],
-      answered: null,
-      addressed_to: "me",
-      ...payload,
-    },
-    attachment: null,
-    created_at: "2026-09-08T08:00:00Z",
-    mine: false,
-  });
-
-  it("sends the exact request body the backend expects for the tapped option", async () => {
-    setChat();
-    listChatMessages.mockResolvedValue({ items: [choiceMessage()], members: [] });
-    submitAssistantAction.mockResolvedValue({ accepted: true });
-    render(<ChatPanel layout="split" />);
-    await waitFor(() =>
-      expect(screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance")).toBeInTheDocument()
-    );
-    fireEvent.click(screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance"));
-    await waitFor(() =>
-      expect(submitAssistantAction).toHaveBeenCalledWith({
-        action: "confirm_bulk_attendance",
-        payload: { worker_ids: ["w1"] },
-        reply_to_id: "choice-1",
-      })
-    );
-  });
-
-  it("disables the option so a second click before the first settles sends only once", async () => {
-    setChat();
-    listChatMessages.mockResolvedValue({ items: [choiceMessage()], members: [] });
-    let resolveAction: ((value: { accepted: boolean }) => void) | undefined;
-    submitAssistantAction.mockReturnValue(
-      new Promise((resolve) => {
-        resolveAction = resolve;
-      })
-    );
-    render(<ChatPanel layout="split" />);
-    await waitFor(() =>
-      expect(screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance")).toBeInTheDocument()
-    );
-    const button = screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance");
-    fireEvent.click(button);
-    fireEvent.click(button);
-    await act(async () => {
-      resolveAction?.({ accepted: true });
-    });
-    expect(submitAssistantAction).toHaveBeenCalledTimes(1);
-  });
-
-  it("rolls back the optimistic answer, refetches and toasts a retryable message on a 503", async () => {
-    const { toast } = await import("sonner");
-    const { ChatApiError } = await import("@/lib/api/chat-client");
-    setChat();
-    listChatMessages.mockResolvedValueOnce({ items: [choiceMessage()], members: [] });
-    submitAssistantAction.mockRejectedValueOnce(new ChatApiError(503, { error: "AssistantUnavailable" }));
-    // The server resets the choice to unanswered on a 503, so the refetch after the
-    // failure sees it still open — the rollback plus refetch should leave it answerable.
-    listChatMessages.mockResolvedValueOnce({ items: [choiceMessage()], members: [] });
-    render(<ChatPanel layout="split" />);
-    await waitFor(() =>
-      expect(screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance")).toBeInTheDocument()
-    );
-    fireEvent.click(screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance"));
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("chat.assistant.actionQueueUnavailable"));
-    const button = screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance");
-    expect(button).toBeInTheDocument();
-    expect(button).not.toBeDisabled();
-  });
-
-  it("toasts distinct copy for a 403 (not addressed) and a 409 (already answered)", async () => {
-    const { toast } = await import("sonner");
-    const { ChatApiError } = await import("@/lib/api/chat-client");
-    setChat();
-    listChatMessages.mockResolvedValue({ items: [choiceMessage()], members: [] });
-    submitAssistantAction.mockRejectedValueOnce(new ChatApiError(403, { error: "NotAddressed" }));
-    render(<ChatPanel layout="split" />);
-    await waitFor(() =>
-      expect(screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance")).toBeInTheDocument()
-    );
-    fireEvent.click(screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance"));
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("chat.assistant.actionNotAddressed"));
-
-    submitAssistantAction.mockRejectedValueOnce(new ChatApiError(409, { error: "AlreadyAnswered" }));
-    fireEvent.click(screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance"));
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("chat.assistant.actionAlreadyAnswered"));
-  });
-
-  it("hides the choice buttons for anyone the choice was not addressed to", async () => {
-    mockUseAuth.mockReturnValue({ user: { id: "someone-else", email: "x@example.com", permissions: [] } });
-    setChat();
-    listChatMessages.mockResolvedValue({ items: [choiceMessage()], members: [] });
-    render(<ChatPanel layout="split" />);
-    await waitFor(() => expect(screen.getByTestId("chat-assistant-choice-readonly")).toBeInTheDocument());
-    expect(screen.queryByTestId("chat-assistant-choice-buttons")).not.toBeInTheDocument();
-  });
-
-  it("hides the choice buttons when the assistant feature is off", async () => {
-    mockUseAssistantFeature.mockReturnValue(false);
-    setChat();
-    listChatMessages.mockResolvedValue({ items: [choiceMessage()], members: [] });
-    render(<ChatPanel layout="split" />);
-    await waitFor(() => expect(screen.getByTestId("chat-assistant-choice-readonly")).toBeInTheDocument());
-    expect(screen.queryByTestId("chat-assistant-choice-buttons")).not.toBeInTheDocument();
   });
 });

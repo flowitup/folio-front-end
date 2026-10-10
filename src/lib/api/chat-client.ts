@@ -9,15 +9,13 @@
  * the 1 MB action body cap). Mirrors `project-photo-blob.ts`: retry once after a 401
  * by refreshing the access cookie.
  *
- * Contract (backend `app/api/v1/chat/routes.py`, assistant actions in
- * `app/api/v1/assistant/routes.py`):
- *   GET  /features                              → { chat: boolean, assistant: boolean }
+ * Contract (backend `app/api/v1/chat/routes.py`):
+ *   GET  /features                              → { chat: boolean }
  *   GET  /chat/channels                         → { items: ChatChannel[] }
  *   GET  /chat/channels/<key>/messages?limit=N  → { items: ChatMessage[] (oldest first), members }
  *   POST /chat/channels/<key>/messages          → 201 ChatMessage (JSON {body} or multipart body+file)
  *   POST /chat/channels/<key>/read              → 204
  *   GET  /chat/messages/<id>/attachment         → image bytes
- *   POST /assistant/actions                     → 202 { accepted: boolean } (tapped choice option)
  */
 
 import { getCsrfHeader } from "@/lib/api/http";
@@ -28,7 +26,6 @@ import { env } from "@/lib/config/env";
 
 export interface ChatFeatures {
   chat: boolean;
-  assistant: boolean;
 }
 
 export type ChatChannelKind = "company" | "project" | "admin";
@@ -54,22 +51,15 @@ export interface ChatAttachment {
 export interface ChatMessage {
   id: string;
   channel_key: string;
-  /** `null` for an assistant reply (the assistant is not a channel member). */
+  /** `null` for a legacy non-member sender (e.g. old assistant messages). */
   sender_id: string | null;
   sender_name: string;
-  /** Present once the backend ships assistant messages; absent means "user" for older data. */
+  /** Legacy data may carry non-user senders; the web renders them as plain text messages. */
   sender_type?: "user" | "assistant" | "system";
-  /** Web only renders `text`; other kinds still show `body`/`attachment` as a plain fallback. */
+  /** Web renders every kind as plain text: `text`, and legacy kinds still show `body`/`attachment` as a plain fallback. */
   content_type?: "text" | "photo" | "card" | "choice" | "job_status";
   payload?: Record<string, unknown> | null;
   reply_to_id?: string | null;
-  /**
-   * Whether this message addressed the assistant (`@folio` in the body, or a reply to one of
-   * its messages) — the trigger the backend dispatches on. Absent on older data; treat as
-   * `false` (the web never reads this to change layout today, only to keep the wire type
-   * accurate for the audit page and future mobile-parity work).
-   */
-  mentions_assistant?: boolean;
   body: string | null;
   attachment: ChatAttachment | null;
   created_at: string;
@@ -204,15 +194,10 @@ export function listChatMessages(
 /**
  * Send text and/or one image. Text-only goes as JSON; with a file the request is
  * multipart/form-data (`body` part optional). The backend rejects an empty message.
- *
- * `lang` is the sender's next-intl locale (`vi`/`fr`/`en`), forwarded so the assistant's
- * reply lands in the reader's language instead of falling back to the backend's body-text
- * language sniff — most needed exactly when the body is empty or short, e.g. a photo
- * sent with just `@folio`.
- */
+  */
 export async function sendChatMessage(
   channelKey: string,
-  input: { body: string; file?: File | null; lang?: string }
+  input: { body: string; file?: File | null }
 ): Promise<ChatMessage> {
   const path = `/chat/channels/${encodeURIComponent(channelKey)}/messages`;
   const text = input.body.trim();
@@ -221,47 +206,16 @@ export async function sendChatMessage(
     const form = new FormData();
     form.append("file", input.file, input.file.name);
     if (text) form.append("body", text);
-    if (input.lang) form.append("lang", input.lang);
     // No Content-Type header: the browser sets multipart/form-data with the boundary.
     res = await chatFetch(path, { method: "POST", body: form });
   } else {
     res = await chatFetch(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body: text, ...(input.lang ? { lang: input.lang } : {}) }),
+      body: JSON.stringify({ body: text }),
     });
   }
   return (await res.json()) as ChatMessage;
-}
-
-export interface AssistantActionRequest {
-  action: string;
-  payload?: Record<string, unknown>;
-  reply_to_id: string;
-}
-
-export interface AssistantActionResponse {
-  accepted: boolean;
-}
-
-/**
- * Answer an assistant `choice` message (tapped option) — `POST /assistant/actions`
- * (backend `app/api/v1/assistant/routes.py` + `schemas.py`). `action`/`payload` must be
- * byte-for-byte one of the options the server itself offered on this message
- * (`message.payload.options`); anything else 404s as `NotFound`. Other error statuses the
- * caller distinguishes on: 403 `NotAddressed` (not the user this choice was addressed to),
- * 409 `AlreadyAnswered` (raced or re-tapped), 503 `AssistantUnavailable` (could not enqueue
- * for processing — retryable, the choice is reset to unanswered server-side).
- */
-export async function submitAssistantAction(
-  input: AssistantActionRequest
-): Promise<AssistantActionResponse> {
-  const res = await chatFetch("/assistant/actions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  return (await res.json()) as AssistantActionResponse;
 }
 
 /** Move the caller's read marker of a channel to now. */

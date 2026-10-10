@@ -2968,8 +2968,7 @@
       "multipleCandidates": "Several people match this phone number.",
       "phoneAlreadyInCompany": "This phone number is already in your company.",
       "invalidPhone": "Enter a French phone number (+33… or 0…)."
-    },
-    "assistantAuditLink": "Assistant audit"
+    }
   },
   "chat": {
     "title": "Team chat",
@@ -3006,54 +3005,13 @@
     },
     "voiceNote": "Voice message",
     "voiceLoading": "Loading the recording…",
-    "voiceLoadFailed": "This voice message could not be loaded.",
-    "assistant": {
-      "answered": "Answered",
-      "actionFailed": "The action could not be sent.",
-      "actionNotAddressed": "This choice was not addressed to you.",
-      "actionAlreadyAnswered": "This choice has already been answered.",
-      "actionQueueUnavailable": "Folio is busy right now. Try again in a moment."
-    }
+    "voiceLoadFailed": "This voice message could not be loaded."
   },
   "help": {
     "loading": "Loading the guide…",
     "aria": {
       "open": "Open the workflow guide"
     }
-  },
-  "assistantAudit": {
-    "title": "Assistant audit",
-    "description": "Every @folio mention the assistant answered in this company, newest first.",
-    "columns": {
-      "date": "Date",
-      "channel": "Channel",
-      "user": "User",
-      "intent": "Intent",
-      "feature": "Feature",
-      "outcome": "Outcome",
-      "refusedReason": "Refused reason",
-      "cost": "Cost"
-    },
-    "filters": {
-      "from": "From",
-      "to": "To",
-      "company": "Company",
-      "user": "User",
-      "userAll": "All users",
-      "userIdLabel": "User ID",
-      "userIdPlaceholder": "Paste a user ID",
-      "apply": "Apply"
-    },
-    "empty": "No assistant activity in this period.",
-    "limitNotice": "Showing the latest {limit} — narrow the date range.",
-    "loadError": "Could not load the assistant audit log.",
-    "outcomes": {
-      "answered": "Answered",
-      "refused": "Refused",
-      "error": "Error"
-    },
-    "noCost": "—",
-    "disabled": "The assistant is not enabled, so there is nothing to review."
   },
   "personsMerge": {
     "title": "Merge persons",

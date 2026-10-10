@@ -16,7 +16,7 @@ export interface SeenMember {
 interface SeenMessage {
   id: string;
   created_at: string;
-  /** `null` for an assistant message; never equals a real member id, so it never hides a seen mark. */
+  /** `null` for a legacy message with no member sender; never equals a real member id, so it never hides a seen mark. */
   sender_id: string | null;
 }
 

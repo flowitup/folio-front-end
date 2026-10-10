@@ -2968,8 +2968,7 @@
       "multipleCandidates": "Plusieurs personnes correspondent à ce numéro.",
       "phoneAlreadyInCompany": "Ce numéro de téléphone est déjà dans votre entreprise.",
       "invalidPhone": "Saisissez un numéro de téléphone français (+33… ou 0…)."
-    },
-    "assistantAuditLink": "Audit de l'assistant"
+    }
   },
   "chat": {
     "title": "Discussion d'équipe",
@@ -3006,54 +3005,13 @@
     },
     "voiceNote": "Message vocal",
     "voiceLoading": "Chargement de l'enregistrement…",
-    "voiceLoadFailed": "Ce message vocal n'a pas pu être chargé.",
-    "assistant": {
-      "answered": "Répondu",
-      "actionFailed": "L'action n'a pas pu être envoyée.",
-      "actionNotAddressed": "Ce choix ne vous était pas destiné.",
-      "actionAlreadyAnswered": "Ce choix a déjà reçu une réponse.",
-      "actionQueueUnavailable": "Folio est occupé pour le moment. Réessayez dans un instant."
-    }
+    "voiceLoadFailed": "Ce message vocal n'a pas pu être chargé."
   },
   "help": {
     "loading": "Chargement du guide…",
     "aria": {
       "open": "Ouvrir le guide des processus"
     }
-  },
-  "assistantAudit": {
-    "title": "Audit de l'assistant",
-    "description": "Chaque mention @folio à laquelle l'assistant a répondu dans cette entreprise, du plus récent au plus ancien.",
-    "columns": {
-      "date": "Date",
-      "channel": "Canal",
-      "user": "Utilisateur",
-      "intent": "Intention",
-      "feature": "Fonctionnalité",
-      "outcome": "Résultat",
-      "refusedReason": "Motif de refus",
-      "cost": "Coût"
-    },
-    "filters": {
-      "from": "Du",
-      "to": "Au",
-      "company": "Entreprise",
-      "user": "Utilisateur",
-      "userAll": "Tous les utilisateurs",
-      "userIdLabel": "ID utilisateur",
-      "userIdPlaceholder": "Coller un ID utilisateur",
-      "apply": "Appliquer"
-    },
-    "empty": "Aucune activité de l'assistant sur cette période.",
-    "limitNotice": "Affichage des {limit} dernières lignes — réduisez la période.",
-    "loadError": "Impossible de charger le journal d'audit de l'assistant.",
-    "outcomes": {
-      "answered": "Répondu",
-      "refused": "Refusé",
-      "error": "Erreur"
-    },
-    "noCost": "—",
-    "disabled": "L'assistant n'est pas activé : il n'y a rien à consulter."
   },
   "personsMerge": {
     "title": "Fusionner des personnes",

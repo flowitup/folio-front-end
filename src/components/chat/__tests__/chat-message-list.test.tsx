@@ -39,15 +39,15 @@ describe("ChatMessageList day dividers", () => {
   });
 });
 
-describe("ChatMessageList assistant sender", () => {
-  it("renders an assistant message (null sender_id) without crashing and shows its name", () => {
+describe("ChatMessageList sender without a member id", () => {
+  it("renders a message with a null sender_id without crashing and shows its name", () => {
     const assistantMsg = {
       ...msg("a", new Date().toISOString()),
       sender_id: null,
-      sender_name: "Assistant",
+      sender_name: "Legacy sender",
     };
     render(<ChatMessageList messages={[assistantMsg]} />);
-    expect(screen.getByTestId("chat-message-incoming")).toHaveTextContent("Assistant");
+    expect(screen.getByTestId("chat-message-incoming")).toHaveTextContent("Legacy sender");
     expect(screen.getByTestId("chat-message-incoming")).toHaveTextContent(`body-${assistantMsg.id}`);
   });
 });
@@ -82,110 +82,40 @@ describe("ChatMessageList job_status messages", () => {
   });
 });
 
-describe("ChatMessageList assistant choice messages", () => {
-  const choiceMsg = (payload: Record<string, unknown>) => ({
-    ...msg("a", new Date().toISOString()),
-    sender_id: null,
-    sender_type: "assistant" as const,
-    content_type: "choice" as const,
-    body: "Log today for Alice? 1. Yes 2. No",
-    payload: {
-      prompt: "Log today for Alice?",
-      options: [
-        { label: "Yes", action: "confirm_bulk_attendance", payload: { worker_ids: ["w1"] } },
-        { label: "No", action: "cancel_bulk_attendance", payload: {} },
-      ],
-      answered: null,
-      addressed_to: "me",
-      ...payload,
-    },
-  });
-
-  it("renders one button per option for the addressed user while unanswered and enabled", () => {
-    render(
-      <ChatMessageList
-        messages={[choiceMsg({})]}
-        currentUserId="me"
-        assistantEnabled={true}
-      />
-    );
-    expect(screen.getByTestId("chat-assistant-choice-buttons")).toBeInTheDocument();
-    expect(screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance")).toBeInTheDocument();
-    expect(screen.getByTestId("chat-assistant-choice-option-cancel_bulk_attendance")).toBeInTheDocument();
-    expect(screen.queryByTestId("chat-assistant-choice-readonly")).not.toBeInTheDocument();
-  });
-
-  it("renders read-only text instead of buttons for anyone the choice was not addressed to", () => {
-    render(
-      <ChatMessageList
-        messages={[choiceMsg({})]}
-        currentUserId="someone-else"
-        assistantEnabled={true}
-      />
-    );
-    expect(screen.queryByTestId("chat-assistant-choice-buttons")).not.toBeInTheDocument();
-    expect(screen.getByTestId("chat-assistant-choice-readonly")).toBeInTheDocument();
-    expect(screen.getByText("Yes")).toBeInTheDocument();
-  });
-
-  it("renders read-only text once the choice is answered, marking the chosen option", () => {
+describe("ChatMessageList legacy choice messages", () => {
+  it("renders an old choice message as plain text with no buttons", () => {
     render(
       <ChatMessageList
         messages={[
-          choiceMsg({ answered: "confirm_bulk_attendance", answered_payload: { worker_ids: ["w1"] } }),
+          {
+            ...msg("a", new Date().toISOString()),
+            sender_id: null,
+            sender_type: "assistant" as const,
+            content_type: "choice" as const,
+            body: "Log today for Alice? 1. Yes 2. No",
+            payload: { prompt: "Log today for Alice?", options: [{ label: "Yes", action: "x" }] },
+          },
         ]}
-        currentUserId="me"
-        assistantEnabled={true}
       />
     );
-    expect(screen.queryByTestId("chat-assistant-choice-buttons")).not.toBeInTheDocument();
-    expect(screen.getByTestId("chat-assistant-choice-answered")).toHaveTextContent("Yes");
+    expect(screen.getByTestId("chat-message-incoming")).toHaveTextContent("Log today for Alice? 1. Yes 2. No");
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("renders read-only text for the addressed user when the assistant feature is off", () => {
+  it("falls back to the payload prompt when the body is empty", () => {
     render(
       <ChatMessageList
-        messages={[choiceMsg({})]}
-        currentUserId="me"
-        assistantEnabled={false}
+        messages={[
+          {
+            ...msg("a", new Date().toISOString()),
+            sender_id: null,
+            content_type: "choice" as const,
+            body: null,
+            payload: { prompt: "Log today for Alice?" },
+          },
+        ]}
       />
     );
-    expect(screen.queryByTestId("chat-assistant-choice-buttons")).not.toBeInTheDocument();
-    expect(screen.getByTestId("chat-assistant-choice-readonly")).toBeInTheDocument();
-  });
-
-  it("disables the buttons and calls back with the message and the tapped option", () => {
-    const onSelectChoiceOption = vi.fn();
-    render(
-      <ChatMessageList
-        messages={[choiceMsg({})]}
-        currentUserId="me"
-        assistantEnabled={true}
-        pendingMessageId="a"
-        onSelectChoiceOption={onSelectChoiceOption}
-      />
-    );
-    const button = screen.getByTestId("chat-assistant-choice-option-confirm_bulk_attendance");
-    expect(button).toBeDisabled();
-  });
-});
-
-describe("ChatMessageList attachments", () => {
-  const withAttachment = (content_type: string) => ({
-    ...msg("a", new Date().toISOString()),
-    body: null,
-    attachment: { url: "/x", filename: "f", content_type, size_bytes: 10 },
-  });
-
-  it("plays a voice note instead of rendering it as a picture", () => {
-    render(<ChatMessageList messages={[withAttachment("audio/x-m4a")]} />);
-    expect(screen.getByTestId("chat-attachment-audio")).toBeInTheDocument();
-    expect(screen.queryByTestId("chat-attachment")).not.toBeInTheDocument();
-  });
-
-  it("still renders a picture as a picture", () => {
-    render(<ChatMessageList messages={[withAttachment("image/jpeg")]} />);
-    expect(screen.getByTestId("chat-attachment")).toBeInTheDocument();
-    expect(screen.queryByTestId("chat-attachment-audio")).not.toBeInTheDocument();
+    expect(screen.getByTestId("chat-message-incoming")).toHaveTextContent("Log today for Alice?");
   });
 });

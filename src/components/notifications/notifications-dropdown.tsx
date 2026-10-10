@@ -11,7 +11,13 @@ import { useTranslations } from "next-intl";
 import { AttendancePendingRow } from "@/components/notifications/attendance-pending-row";
 import { NotificationRow } from "@/components/notifications/notification-row";
 import { CompanyEventRow } from "@/components/notifications/company-event-row";
-import type { AttendancePending, CompanyEvent, DueNotification } from "@/lib/api/notifications";
+import { ActivityEventRow } from "@/components/notifications/activity-event-row";
+import type {
+  ActivityEvent,
+  AttendancePending,
+  CompanyEvent,
+  DueNotification,
+} from "@/lib/api/notifications";
 
 interface NotificationsDropdownProps {
   items: DueNotification[];
@@ -19,8 +25,12 @@ interface NotificationsDropdownProps {
   attendance?: AttendancePending[];
   /** Members who joined a company the caller admins without a project assignment yet. */
   companyEvents?: CompanyEvent[];
+  /** Chat, task, billing and membership activity, newest first. Defaults to none. */
+  events?: ActivityEvent[];
   isLoading: boolean;
   onDismiss: (noteId: string) => void;
+  onOpenEvent?: (item: ActivityEvent) => void;
+  onMarkAllRead?: () => void;
   onValidate?: (item: AttendancePending) => void;
   onReject?: (item: AttendancePending) => void;
   /** Entry ids whose validate/reject request is in flight (buttons disabled). */
@@ -64,15 +74,20 @@ export function NotificationsDropdown({
   items,
   attendance = [],
   companyEvents = [],
+  events = [],
   isLoading,
   onDismiss,
+  onOpenEvent,
+  onMarkAllRead,
   onValidate,
   onReject,
   settlingIds,
   onClickRow,
 }: NotificationsDropdownProps) {
   const t = useTranslations("notifications");
-  const isEmpty = items.length === 0 && attendance.length === 0 && companyEvents.length === 0;
+  const isEmpty =
+    items.length === 0 && attendance.length === 0 && companyEvents.length === 0 && events.length === 0;
+  const hasUnreadEvents = events.some((e) => !e.read);
   return (
     <div className="flex flex-col">
       {/* Header */}
@@ -128,6 +143,31 @@ export function NotificationsDropdown({
                     key={item.note.id}
                     item={item}
                     onDismiss={onDismiss}
+                    onNavigate={onClickRow}
+                  />
+                ))}
+              </section>
+            )}
+            {events.length > 0 && (
+              <section aria-label={t("activity.title")}>
+                <div className="flex items-center justify-between pr-2">
+                  <SectionLabel>{t("activity.title")}</SectionLabel>
+                  {hasUnreadEvents && onMarkAllRead && (
+                    <button
+                      type="button"
+                      onClick={onMarkAllRead}
+                      className="text-[11px] underline-offset-2 hover:underline"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      {t("activity.markAllRead")}
+                    </button>
+                  )}
+                </div>
+                {events.map((event) => (
+                  <ActivityEventRow
+                    key={event.id}
+                    item={event}
+                    onOpen={onOpenEvent ?? (() => {})}
                     onNavigate={onClickRow}
                   />
                 ))}

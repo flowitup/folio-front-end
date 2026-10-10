@@ -1348,6 +1348,10 @@
       "changeApplied": "Đã áp dụng yêu cầu sửa của {worker}",
       "changeRefused": "Đã từ chối yêu cầu sửa của {worker}"
     },
+    "activity": {
+      "title": "Hoạt động",
+      "markAllRead": "Đánh dấu đã đọc"
+    },
     "companyEvents": {
       "title": "Thành viên mới",
       "joined": "{name} đã tham gia công ty của bạn",

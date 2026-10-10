@@ -14,6 +14,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/lib/api/notifications", () => ({
   listDueNotifications: vi.fn(),
   dismissNotification: vi.fn(),
+  markActivityRead: vi.fn(),
+}));
+
+vi.mock("next-intl/server", () => ({
+  getLocale: vi.fn().mockResolvedValue("fr"),
 }));
 
 // Session guard mocked as authenticated by default; unauthenticated
@@ -28,8 +33,9 @@ vi.mock("@/lib/auth/session", () => ({
 
 // ---- Imports after mocks ----
 
-const { fetchNotificationsFeedAction, dismissNotificationAction } = await import("../actions");
-const { listDueNotifications, dismissNotification } = await import("@/lib/api/notifications");
+const { fetchNotificationsFeedAction, dismissNotificationAction, markActivityReadAction } = await import("../actions");
+const { listDueNotifications, dismissNotification, markActivityRead } = await import("@/lib/api/notifications");
+const mockMarkRead = vi.mocked(markActivityRead);
 const mockList = vi.mocked(listDueNotifications);
 const mockDismiss = vi.mocked(dismissNotification);
 
@@ -88,7 +94,7 @@ describe("fetchNotificationsFeedAction — happy path", () => {
   it("returns an empty feed when listDueNotifications returns empty", async () => {
     mockList.mockResolvedValueOnce({ items: [], count: 0 });
     const result = await fetchNotificationsFeedAction();
-    expect(result).toEqual({ items: [], attendance: [], companyEvents: [] });
+    expect(result).toEqual({ items: [], attendance: [], companyEvents: [], events: [] });
   });
 });
 
@@ -197,5 +203,58 @@ describe("dismissNotificationAction — happy path", () => {
     const result = await dismissNotificationAction(NOTE_ID);
     expect(mockDismiss).toHaveBeenCalledWith(NOTE_ID);
     expect(result).toEqual({ success: true });
+  });
+});
+
+describe("activity feed", () => {
+  const EVENT = {
+    id: "22222222-2222-2222-2222-222222222222",
+    category: "tasks",
+    kind: "task_moved",
+    title: "Tâche déplacée",
+    body: "Dalle béton",
+    data: { kind: "task_moved", project_id: "p1" },
+    created_at: "2026-10-10T10:00:00Z",
+    read: false,
+  };
+
+  beforeEach(() => {
+    mockList.mockReset();
+    mockMarkRead.mockReset();
+  });
+
+  it("asks the back end for the viewer's language and returns the events", async () => {
+    mockList.mockResolvedValue({ items: [], count: 1, events: [EVENT], events_unread: 1 });
+    const feed = await fetchNotificationsFeedAction();
+    expect(mockList).toHaveBeenCalledWith("fr");
+    expect(feed?.events).toEqual([EVENT]);
+  });
+
+  it("treats a back end without events as an empty feed", async () => {
+    mockList.mockResolvedValue({ items: [], count: 0 });
+    const feed = await fetchNotificationsFeedAction();
+    expect(feed?.events).toEqual([]);
+  });
+
+  it("marks the listed entries read", async () => {
+    mockMarkRead.mockResolvedValue(undefined);
+    expect(await markActivityReadAction([EVENT.id])).toEqual({ success: true });
+    expect(mockMarkRead).toHaveBeenCalledWith([EVENT.id]);
+  });
+
+  it("marks everything read when no ids are given", async () => {
+    mockMarkRead.mockResolvedValue(undefined);
+    expect(await markActivityReadAction()).toEqual({ success: true });
+    expect(mockMarkRead).toHaveBeenCalledWith(undefined);
+  });
+
+  it("rejects a malformed id without calling the back end", async () => {
+    expect(await markActivityReadAction(["nope"])).toEqual({ success: false });
+    expect(mockMarkRead).not.toHaveBeenCalled();
+  });
+
+  it("reports failure when the call fails", async () => {
+    mockMarkRead.mockRejectedValue(new Error("boom"));
+    expect(await markActivityReadAction([EVENT.id])).toEqual({ success: false });
   });
 });

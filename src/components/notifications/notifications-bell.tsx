@@ -4,7 +4,7 @@
  * NotificationsBell — entry component for the notifications system.
  * Wraps shadcn Popover around a bell button with badge.
  * Polls via useNotificationsPoll; optimistic dismiss / validate / reject with rollback on error.
- * Badge = note reminders + attendance entries awaiting this user's validation.
+ * Badge = note reminders + attendance entries awaiting this user's validation + unread activity.
  */
 
 import { useState, useCallback } from "react";
@@ -14,7 +14,7 @@ import { useTranslations } from "next-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { useNotificationsPoll } from "@/components/notifications/use-notifications-poll";
-import { dismissNotificationAction } from "@/components/notifications/actions";
+import { dismissNotificationAction, markActivityReadAction } from "@/components/notifications/actions";
 import {
   approveAttendanceChange,
   rejectAttendance,
@@ -22,6 +22,7 @@ import {
   validateAttendance,
 } from "@/lib/api/labor";
 import type {
+  ActivityEvent,
   AttendancePending,
   CompanyEvent,
   DueNotification,
@@ -39,6 +40,7 @@ export function NotificationsBell() {
   const [items, setItems] = useState<DueNotification[]>([]);
   const [attendance, setAttendance] = useState<AttendancePending[]>([]);
   const [companyEvents, setCompanyEvents] = useState<CompanyEvent[]>([]);
+  const [events, setEvents] = useState<ActivityEvent[]>([]);
   // Entry ids with a validate/reject request in flight — their buttons are disabled
   // so a double-click cannot fire twice (a second reject would 404 and toast an error).
   const [settlingIds, setSettlingIds] = useState<ReadonlySet<string>>(() => new Set());
@@ -51,6 +53,7 @@ export function NotificationsBell() {
       setItems(feed.items);
       setAttendance(feed.attendance);
       setCompanyEvents(feed.companyEvents ?? []);
+      setEvents(feed.events ?? []);
     }
     setHasLoaded(true);
   }, []);
@@ -76,6 +79,31 @@ export function NotificationsBell() {
     },
     [items, t]
   );
+
+  // Reading is optimistic: the entry turns read at once and goes back to unread if the call fails.
+  const markRead = useCallback(
+    async (ids: string[] | undefined) => {
+      const target = ids ? new Set(ids) : null;
+      const changed = events.filter((e) => !e.read && (!target || target.has(e.id))).map((e) => e.id);
+      if (changed.length === 0) return;
+      const changedSet = new Set(changed);
+      setEvents((current) => current.map((e) => (changedSet.has(e.id) ? { ...e, read: true } : e)));
+      const result = await markActivityReadAction(ids);
+      if (!result.success) {
+        setEvents((current) => current.map((e) => (changedSet.has(e.id) ? { ...e, read: false } : e)));
+      }
+    },
+    [events]
+  );
+
+  const handleOpenEvent = useCallback(
+    (event: ActivityEvent) => {
+      if (!event.read) void markRead([event.id]);
+    },
+    [markRead]
+  );
+
+  const handleMarkAllRead = useCallback(() => void markRead(undefined), [markRead]);
 
   // Validate / reject share the same optimistic-remove + rollback shape. Both the
   // removal and the restore are functional updates so a poll tick landing mid-flight
@@ -136,7 +164,8 @@ export function NotificationsBell() {
 
   // company_events deliberately excluded from the badge count — matches the
   // backend's own "count" field semantics (see notifications routes.py).
-  const badge = getBadgeLabel(items.length + attendance.length);
+  const unreadEvents = events.filter((e) => !e.read).length;
+  const badge = getBadgeLabel(items.length + attendance.length + unreadEvents);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -170,6 +199,9 @@ export function NotificationsBell() {
           items={items}
           attendance={attendance}
           companyEvents={companyEvents}
+          events={events}
+          onOpenEvent={handleOpenEvent}
+          onMarkAllRead={handleMarkAllRead}
           isLoading={!hasLoaded}
           onDismiss={handleDismiss}
           onValidate={handleValidate}

@@ -48,6 +48,7 @@ import { useAssistantFeature } from "@/hooks/use-chat-feature";
 import { useOptionalProject } from "@/context/ProjectContext";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import type { CompanyRole, MyCompany } from "@/types/companies";
+import { queueFlashToast } from "@/lib/flash-toast";
 
 /** Role chip copy — reuses the labels already shown in the members table. */
 const ROLE_LABEL_KEY: Record<CompanyRole, string> = {
@@ -120,9 +121,11 @@ export function CompanySettingsSection() {
   // is refetched. Someone left with no company at all goes to the dashboard,
   // whose gate offers onboarding; the full load also drops every bit of
   // client state that belonged to the company they left.
-  const handleDetached = async () => {
+  const handleDetached = async (message: string) => {
     const remaining = await load();
     if (remaining?.length === 0) {
+      // The full load clears the toast already on screen: show it again on the next page.
+      queueFlashToast(message);
       window.location.assign(`/${locale}/dashboard`);
       return;
     }
@@ -261,7 +264,7 @@ export function CompanySettingsSection() {
           <MyCompanyCard
             company={selectedCompany}
             onMutated={() => void load()}
-            onDetached={() => void handleDetached()}
+            onDetached={(message) => void handleDetached(message)}
           />
 
           {/* Admin half — company-admin self-service for the selected company. */}

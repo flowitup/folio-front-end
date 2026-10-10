@@ -100,6 +100,20 @@ describe("BillingTemplateForm — default VAT rate", () => {
     expect(screen.queryByPlaceholderText("e.g. 8.5")).toBeNull();
   });
 
+  it("keeps a template without a default VAT at none when saved unchanged", async () => {
+    vi.clearAllMocks();
+    mockUpdate.mockResolvedValueOnce({ ok: true, data: TEMPLATE });
+    render(<BillingTemplateForm mode="edit" template={{ ...TEMPLATE, default_vat_rate: null }} />);
+
+    expect(screen.getByText("No default VAT")).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+    });
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledOnce());
+    expect(mockUpdate.mock.calls[0][1].default_vat_rate).toBeNull();
+  });
+
   it("labels the create button Create", () => {
     render(<BillingTemplateForm mode="create" />);
 

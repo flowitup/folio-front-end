@@ -1400,6 +1400,7 @@
         "namePlaceholder": "e.g. Standard web project",
         "defaultVatRate": "Default VAT rate",
         "vatRateCustom": "Custom…",
+        "vatRateNone": "No default VAT",
         "notes": "Notes",
         "notesPlaceholder": "Printed on the document (PDF and Excel)",
         "terms": "General terms (CGV)",

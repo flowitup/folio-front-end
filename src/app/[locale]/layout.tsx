@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { AuthErrorBoundary } from "@/context/AuthErrorBoundary";
 import { getCurrentUser } from "@/lib/auth/session";
 import { Toaster } from "@/components/ui/sonner";
+import { FlashToast } from "@/components/flash-toast";
 import { AgentationWrapper } from "@/components/dev/agentation-wrapper";
 
 const inter = Inter({
@@ -70,6 +71,7 @@ export default async function LocaleLayout({
           </AuthErrorBoundary>
           {/* Inside the provider: it names its landmark in the page's language. */}
           <Toaster />
+          <FlashToast />
         </NextIntlClientProvider>
         <AgentationWrapper />
       </body>

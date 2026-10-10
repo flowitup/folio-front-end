@@ -111,6 +111,16 @@ describe("BillingDocumentItemsEditor — rendering", () => {
     expect(inputs.length).toBeGreaterThanOrEqual(2);
   });
 
+  it("names the section and description comboboxes on desktop and on the mobile card", () => {
+    renderEditor([makeItem()], vi.fn());
+    const desktop = screen.getByTestId("billing-items-desktop");
+    expect(within(desktop).getByRole("combobox", { name: "Section" })).toBeDefined();
+    expect(within(desktop).getByRole("combobox", { name: "Description" })).toBeDefined();
+    // The mobile card's visible labels point at their comboboxes.
+    expect(screen.getAllByRole("combobox", { name: "Section" })).toHaveLength(2);
+    expect(screen.getAllByRole("combobox", { name: "Description" })).toHaveLength(2);
+  });
+
   it("hides totals card when showTotals=false", () => {
     renderEditor([makeItem()], vi.fn(), { showTotals: false });
     expect(screen.queryByText("Total (incl. VAT)")).toBeNull();

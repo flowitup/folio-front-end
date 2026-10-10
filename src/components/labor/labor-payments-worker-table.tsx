@@ -9,10 +9,11 @@
  */
 
 import { useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Calendar, ChevronDown, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatEUR } from "@/lib/api/labor";
+import { formatDays } from "@/components/labor/format-days";
 import { LaborPaymentRow } from "@/components/labor/labor-payment-row";
 import { PaidSplitCaption } from "@/components/labor/paid-split-caption";
 import type { WorkerPaymentRow } from "@/components/labor/labor-payments-tab-state";
@@ -60,6 +61,7 @@ export function LaborPaymentsWorkerTable({
 }: LaborPaymentsWorkerTableProps) {
   const t = useTranslations("labor.payments");
   const tLabor = useTranslations("labor");
+  const locale = useLocale();
   const monthInputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -149,7 +151,7 @@ export function LaborPaymentsWorkerTable({
                 <tr style={{ background: "var(--paper-2)" }}>
                   <td className="font-medium">{tLabor("grandTotal")}</td>
                   <td className="num font-medium" style={{ textAlign: "right" }}>
-                    {totals.days}
+                    {formatDays(totals.days, locale)}
                   </td>
                   <td className="num font-medium" style={{ textAlign: "right" }}>
                     {formatEUR(totals.owed)}

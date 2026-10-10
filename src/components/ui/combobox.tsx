@@ -61,6 +61,10 @@ export interface ComboboxProps {
   className?: string;
   /** Optional heading rendered above the options group. */
   groupHeading?: string;
+  /** Id of the trigger, so a `<label htmlFor>` can name it. */
+  id?: string;
+  /** Accessible name when no visible label points at the trigger. */
+  "aria-label"?: string;
 }
 
 const TABBABLE =
@@ -91,6 +95,8 @@ export function Combobox({
   disabled = false,
   className,
   groupHeading,
+  id,
+  "aria-label": ariaLabel,
 }: ComboboxProps) {
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
@@ -245,6 +251,8 @@ export function Combobox({
       <PopoverTrigger asChild>
         <button
           ref={triggerRef}
+          id={id}
+          aria-label={ariaLabel}
           type="button"
           role="combobox"
           aria-expanded={open}

@@ -73,6 +73,8 @@ import type {
 // ---------------------------------------------------------------------------
 
 const TEMPLATES_PATH = "/billing/templates";
+// Select value for "no default VAT"; sent to the API as null.
+const NO_VAT_RATE = "__none__";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -118,7 +120,10 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
   const savedVatRate = template?.default_vat_rate
     ? normalizeVatRate(template.default_vat_rate)
     : null;
-  const [defaultVatRate, setDefaultVatRate] = useState<string>(savedVatRate ?? "20");
+  // An existing template without a default VAT keeps "none" instead of turning into 20 %.
+  const [defaultVatRate, setDefaultVatRate] = useState<string>(
+    savedVatRate ?? (isEdit ? NO_VAT_RATE : "20")
+  );
   const [customVatRate, setCustomVatRate] = useState<string>(
     savedVatRate && !isPresetVatRate(savedVatRate) ? savedVatRate : ""
   );
@@ -139,7 +144,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
   // Computed
   // ---------------------------------------------------------------------------
 
-  const effectiveVatRate = isCustomVat ? customVatRate : defaultVatRate;
+  const effectiveVatRate = isCustomVat ? customVatRate : defaultVatRate === NO_VAT_RATE ? "" : defaultVatRate;
   const listPath = `/${locale}${TEMPLATES_PATH}`;
 
   // ---------------------------------------------------------------------------
@@ -348,6 +353,7 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
                 {PRESET_VAT_RATES.map((r) => (
                   <SelectItem key={r} value={r}>{formatBillingVatRate(r, locale)}</SelectItem>
                 ))}
+                <SelectItem value={NO_VAT_RATE}>{tForm("vatRateNone")}</SelectItem>
                 <SelectItem value="__custom__">{tForm("vatRateCustom")}</SelectItem>
               </SelectContent>
             </Select>

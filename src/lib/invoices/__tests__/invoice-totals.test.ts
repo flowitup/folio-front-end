@@ -25,6 +25,10 @@ describe("invoiceTotals", () => {
     expect(totalHt).toBe(50.28);
   });
 
+  it("keeps a quantity's 4th decimal", () => {
+    expect(invoiceTotals([{ quantity: 0.0005, unit_price: 100 }], 0.05).totalHt).toBe(0.05);
+  });
+
   it("handles credit lines", () => {
     expect(invoiceTotals([{ quantity: 1, unit_price: -43.1 }], -43.1).totalHt).toBe(-43.1);
   });

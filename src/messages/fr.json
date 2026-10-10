@@ -260,9 +260,9 @@
       "description": "L'administrateur de votre entreprise ne vous a pas encore ajouté à un chantier."
     },
     "noCompany": {
-      "title": "Vous n'appartenez à aucune société",
-      "description": "Créez votre société ou rejoignez-en une avec un code pour commencer.",
-      "cta": "Créer ou rejoindre une société"
+      "title": "Vous n'appartenez à aucune entreprise",
+      "description": "Créez votre entreprise ou rejoignez-en une avec un code pour commencer.",
+      "cta": "Créer ou rejoindre une entreprise"
     },
     "settingsReadOnly": "Seuls les administrateurs et managers de ce projet peuvent modifier ses paramètres.",
     "teamSize": "{n, plural, one {# membre} other {# membres}}",
@@ -377,7 +377,7 @@
   },
   "paymentMethods": {
     "title": "Moyens de paiement",
-    "description": "Gérez comment les factures peuvent être payées pour cette société. Les moyens intégrés ne peuvent pas être supprimés mais peuvent être renommés.",
+    "description": "Gérez comment les factures peuvent être payées pour cette entreprise. Les moyens intégrés ne peuvent pas être supprimés mais peuvent être renommés.",
     "addPlaceholder": "ex. Wise, Stripe…",
     "addButton": "Ajouter",
     "builtin": "Intégré",
@@ -394,7 +394,7 @@
       "duplicate_label": "Un moyen de paiement avec ce nom existe déjà.",
       "builtin_protected": "Les moyens intégrés ne peuvent pas être supprimés.",
       "not_found": "Moyen de paiement introuvable.",
-      "permission_denied": "Vous n'avez pas la permission de gérer les moyens de paiement pour cette société.",
+      "permission_denied": "Vous n'avez pas la permission de gérer les moyens de paiement pour cette entreprise.",
       "label_required": "Le nom est requis.",
       "label_too_long": "Le nom est trop long (max 120 caractères).",
       "unauthorized": "Votre session a expiré. Veuillez vous reconnecter.",
@@ -584,7 +584,7 @@
     "appliedTo": "Imputé sur {number}",
     "errorRefundExceedsSource": "L'avoir dépasse le montant restant ({remaining}) pour cette facture.",
     "errorAppliedExceedsTarget": "Le montant de l'avoir dépasse le total de la facture visée.",
-    "errorCompanyPaidRefundTracked": "Cette dépense est suivie pour remboursement : elle ne peut pas passer sur un moyen de paiement de la société. Effacez d'abord son statut de remboursement.",
+    "errorCompanyPaidRefundTracked": "Cette dépense est suivie pour remboursement : elle ne peut pas passer sur un moyen de paiement de l'entreprise. Effacez d'abord son statut de remboursement.",
     "errorUnlinkAvoirsFirst": "Des avoirs sont imputés sur cette facture. Détachez-les avant d'en faire un avoir ou des fonds débloqués.",
     "errorRefundedLocked": "Cette dépense a été remboursée : elle est verrouillée. Effacez d'abord son statut de remboursement pour la modifier ou la supprimer.",
     "errorReturnTotalPositive": "Le total d'un avoir doit être nul ou négatif. Saisissez ses lignes en montants négatifs.",
@@ -1035,7 +1035,7 @@
       "statusColumn": "Statut",
       "owed": "Dû",
       "paid": "Payé",
-      "companyShare": "Société {amount}",
+      "companyShare": "Entreprise {amount}",
       "personalShare": "Personnel {amount}",
       "balance": "Solde",
       "status": {
@@ -1400,6 +1400,7 @@
         "namePlaceholder": "ex. Projet web standard",
         "defaultVatRate": "Taux de TVA par défaut",
         "vatRateCustom": "Personnalisé…",
+        "vatRateNone": "Pas de TVA par défaut",
         "notes": "Notes",
         "notesPlaceholder": "Imprimées sur le document (PDF et Excel)",
         "terms": "Conditions générales (CGV)",
@@ -1626,7 +1627,7 @@
         "pdfDownloaded": "PDF téléchargé.",
         "xlsxDownloaded": "XLSX téléchargé.",
         "devisConverted": "Devis converti en facture.",
-        "companyNoLongerAttached": "Votre accès à cette société a été révoqué. Veuillez en sélectionner une autre.",
+        "companyNoLongerAttached": "Votre accès à cette entreprise a été révoqué. Veuillez en sélectionner une autre.",
         "statusUpdated": "Statut mis à jour : {status}.",
         "createdFromTemplate": "Document créé à partir du modèle."
       },
@@ -1697,9 +1698,9 @@
       "action": {
         "remove": "Retirer",
         "changeStatus": "Changer le statut",
-        "refundedByCompany": "Remboursé par la société",
+        "refundedByCompany": "Remboursé par l'entreprise",
         "refundedByBank": "Remboursé par la banque",
-        "refundedByBoth": "Remboursé par la société + la banque"
+        "refundedByBoth": "Remboursé par l'entreprise + la banque"
       },
       "dialog": {
         "title": "Ajouter une dépense remboursable",
@@ -1710,10 +1711,10 @@
       },
       "summary": {
         "refundedTotal": "Total remboursé",
-        "refundedByCompany": "Remboursé par la société",
+        "refundedByCompany": "Remboursé par l'entreprise",
         "refundedByBank": "Remboursé par la banque",
         "refundable": "À rembourser",
-        "companyShare": "{percent}% société",
+        "companyShare": "{percent}% entreprise",
         "bothShare": "{percent}% les deux",
         "bankShare": "{percent}% banque"
       },
@@ -1791,12 +1792,12 @@
       },
       "failures": {
         "validation": "Refusé par le serveur ({detail})",
-        "forbidden": "Vous n'êtes pas autorisé à importer pour cette société",
+        "forbidden": "Vous n'êtes pas autorisé à importer pour cette entreprise",
         "unauthorized": "Votre session a expiré, reconnectez-vous",
-        "company_no_longer_attached": "Vous n'êtes plus rattaché à cette société",
-        "company_profile_missing": "Le profil de la société est incomplet",
+        "company_no_longer_attached": "Vous n'êtes plus rattaché à cette entreprise",
+        "company_profile_missing": "Le profil de l'entreprise est incomplet",
         "rate_limited": "Le serveur est toujours occupé, réessayez dans une minute",
-        "not_found": "Société introuvable",
+        "not_found": "Entreprise introuvable",
         "generic": "Erreur inattendue, réessayez"
       }
     },
@@ -2125,35 +2126,35 @@
       "tooltip": "Masqué pour des raisons de sécurité. Saisissez une nouvelle valeur dans le profil de l'entreprise pour le remplacer."
     },
     "my": {
-      "addCta": "Ajouter une société",
+      "addCta": "Ajouter une entreprise",
       "empty": {
-        "title": "Aucune société rattachée",
-        "cta": "Utilisez un code société de votre administrateur pour rattacher votre première société."
+        "title": "Aucune entreprise rattachée",
+        "cta": "Utilisez un code entreprise de votre administrateur pour rattacher votre première entreprise."
       },
       "card": {
         "primaryBadge": "Principale",
         "setPrimary": "Définir comme principale",
         "detach": "Détacher",
-        "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un code société de votre administrateur pour vous rattacher.",
+        "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un code entreprise de votre administrateur pour vous rattacher.",
         "detached": "Vous avez quitté « {name} »."
       }
     },
     "invite": {
-      "dialogTitle": "Rattacher une société",
-      "inputLabel": "Code société",
-      "inputPlaceholder": "Saisissez le code société à 8 caractères…",
+      "dialogTitle": "Rattacher une entreprise",
+      "inputLabel": "Code entreprise",
+      "inputPlaceholder": "Saisissez le code entreprise à 8 caractères…",
       "attachCta": "Rattacher",
-      "successToast": "Société rattachée avec succès.",
-      "tokenInvalidError": "Ce code société est invalide ou a été révoqué."
+      "successToast": "Entreprise rattachée avec succès.",
+      "tokenInvalidError": "Ce code entreprise est invalide ou a été révoqué."
     },
     "admin": {
-      "title": "Toutes les sociétés",
+      "title": "Toutes les entreprises",
       "description": "Vue administrateur — valeurs complètes des champs sensibles visibles.",
-      "newCompany": "Nouvelle société",
-      "createSuccessToast": "Société créée.",
+      "newCompany": "Nouvelle entreprise",
+      "createSuccessToast": "Entreprise créée.",
       "empty": {
-        "title": "Aucune société pour le moment",
-        "description": "Créez votre première société pour commencer."
+        "title": "Aucune entreprise pour le moment",
+        "description": "Créez votre première entreprise pour commencer."
       },
       "table": {
         "createdAt": "Créée le",
@@ -2163,14 +2164,14 @@
         "title": "Gérer",
         "tabs": {
           "edit": "Modifier",
-          "code": "Code société",
+          "code": "Code entreprise",
           "users": "Utilisateurs rattachés",
           "delete": "Supprimer",
           "payments": "Moyens de paiement"
         },
         "edit": {
           "save": "Enregistrer les modifications",
-          "savedToast": "Société enregistrée."
+          "savedToast": "Entreprise enregistrée."
         },
         "attached": {
           "nameEmail": "Nom / E-mail",
@@ -2178,8 +2179,8 @@
           "attachedAt": "Rattaché le",
           "primaryBadge": "Principale",
           "boot": "Retirer l'utilisateur",
-          "bootConfirm": "Retirer {name} de cette société ? Il perdra l'accès immédiatement.",
-          "empty": "Aucun utilisateur rattaché à cette société pour le moment.",
+          "bootConfirm": "Retirer {name} de cette entreprise ? Il perdra l'accès immédiatement.",
+          "empty": "Aucun utilisateur rattaché à cette entreprise pour le moment.",
           "countSingular": "utilisateur",
           "countPlural": "utilisateurs",
           "roleColumn": "Rôle",
@@ -2191,27 +2192,27 @@
           "roleManager": "Manager"
         },
         "delete": {
-          "title": "Supprimer la société",
-          "body": "Suppression définitive de cette société. Tous les utilisateurs rattachés perdront l'accès. Les instantanés de documents existants sont conservés. Cette action est irréversible.",
-          "confirm": "Supprimer la société",
-          "deletedToast": "Société supprimée."
+          "title": "Supprimer l'entreprise",
+          "body": "Suppression définitive de cette entreprise. Tous les utilisateurs rattachés perdront l'accès. Les instantanés de documents existants sont conservés. Cette action est irréversible.",
+          "confirm": "Supprimer l'entreprise",
+          "deletedToast": "Entreprise supprimée."
         },
         "paymentsLoading": "Chargement des moyens de paiement…",
         "paymentsLoadError": "Échec du chargement des moyens de paiement",
         "joinCode": {
-          "title": "Code société",
-          "description": "Code réutilisable que les membres saisissent dans l'application mobile Folio (« Rejoindre une société ») après s'être inscrits avec leur numéro de téléphone. Ils rejoignent en tant que membres.",
-          "none": "Aucun code actif. Créez-en un pour permettre de rejoindre la société depuis l'application mobile.",
+          "title": "Code entreprise",
+          "description": "Code réutilisable que les membres saisissent dans l'application mobile Folio (« Rejoindre une entreprise ») après s'être inscrits avec leur numéro de téléphone. Ils rejoignent en tant que membres.",
+          "none": "Aucun code actif. Créez-en un pour permettre de rejoindre l'entreprise depuis l'application mobile.",
           "create": "Créer un code",
           "renew": "Nouveau code",
           "revoke": "Révoquer le code",
           "copy": "Copier",
           "copied": "Copié",
           "renewConfirm": "Le code actuel cessera de fonctionner immédiatement ; les personnes déjà rattachées gardent leur accès. Continuer ?",
-          "revokeConfirm": "Plus personne ne pourra rejoindre la société avec ce code ; les personnes déjà rattachées gardent leur accès.",
-          "createdToast": "Code société créé.",
-          "renewedToast": "Nouveau code société créé.",
-          "revokedToast": "Code société révoqué.",
+          "revokeConfirm": "Plus personne ne pourra rejoindre l'entreprise avec ce code ; les personnes déjà rattachées gardent leur accès.",
+          "createdToast": "Code entreprise créé.",
+          "renewedToast": "Nouveau code entreprise créé.",
+          "revokedToast": "Code entreprise révoqué.",
           "copiedToast": "Code copié dans le presse-papiers.",
           "copyFailed": "Impossible de copier le code.",
           "genericError": "Une erreur inattendue s'est produite.",
@@ -2285,24 +2286,24 @@
     },
     "picker": {
       "label": "Émis par",
-      "placeholder": "Sélectionner une société",
+      "placeholder": "Sélectionner une entreprise",
       "primaryBadge": "Principale",
-      "noCompaniesCalloutTitle": "Aucune société rattachée",
-      "noCompaniesCalloutBody": "Ajoutez une société dans les Paramètres pour commencer à créer des devis et des factures.",
+      "noCompaniesCalloutTitle": "Aucune entreprise rattachée",
+      "noCompaniesCalloutBody": "Ajoutez une entreprise dans les Paramètres pour commencer à créer des devis et des factures.",
       "noCompaniesCalloutCta": "Ouvrir les paramètres",
-      "detachedDuringEditError": "La société sélectionnée n'est plus rattachée à votre compte. Veuillez actualiser la page."
+      "detachedDuringEditError": "L'entreprise sélectionnée n'est plus rattachée à votre compte. Veuillez actualiser la page."
     },
     "errors": {
       "forbiddenAdminRequired": "Accès administrateur requis.",
-      "companyAlreadyAttached": "Vous êtes déjà rattaché·e à cette société.",
-      "lastAdmin": "La société doit garder au moins un administrateur. Nommez d'abord un autre membre administrateur.",
+      "companyAlreadyAttached": "Vous êtes déjà rattaché·e à cette entreprise.",
+      "lastAdmin": "L'entreprise doit garder au moins un administrateur. Nommez d'abord un autre membre administrateur.",
       "conflict": "Un conflit est survenu.",
       "validation": "Erreur de validation.",
       "unauthorized": "Session expirée. Veuillez vous reconnecter.",
       "notFound": "La ressource demandée est introuvable.",
       "rateLimited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
       "generic": "Une erreur inattendue est survenue.",
-      "invalidJoinCode": "Code société invalide ou révoqué."
+      "invalidJoinCode": "Code entreprise invalide ou révoqué."
     }
   },
   "bibliotheque": {
@@ -2427,7 +2428,7 @@
       "title": "Importer des achats",
       "description": "Ajoutez à la bibliothèque les lignes d'un export d'achats fournisseur. Les lignes déjà importées sont ignorées : le même fichier peut être réimporté sans risque.",
       "dropzone": "Choisissez un fichier JSON, ou déposez-le ici",
-      "company": "Société",
+      "company": "Entreprise",
       "formatHint": "Format attendu : supplier_name, supplier_slug et records, chaque ligne avec supplier_reference, product_name, quantity, unit_price, purchased_at, source_document_ref, source_document_type (ticket ou commande) et line_index. Un fichier peut contenir plusieurs fournisseurs.",
       "reading": "Lecture du fichier…",
       "preview": "{count, plural, one {# ligne d'achat} other {# lignes d'achat}} de {suppliers}",
@@ -2847,28 +2848,28 @@
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",
-    "subtitle": "Créez votre société ou rejoignez-en une avec un code pour commencer.",
-    "createCompanyCta": "Créer une société",
+    "subtitle": "Créez votre entreprise ou rejoignez-en une avec un code pour commencer.",
+    "createCompanyCta": "Créer une entreprise",
     "createCompanyHint": "Démarrez de zéro — vous serez l'administrateur.",
-    "joinCompanyCta": "Saisir un code société",
+    "joinCompanyCta": "Saisir un code entreprise",
     "joinCompanyHint": "Votre administrateur peut vous donner un code à 8 caractères.",
     "back": "Retour",
     "create": {
-      "legalNameLabel": "Nom de la société",
+      "legalNameLabel": "Nom de l'entreprise",
       "addressLabel": "Adresse",
-      "submit": "Créer la société",
-      "successToast": "Société créée."
+      "submit": "Créer l'entreprise",
+      "successToast": "Entreprise créée."
     },
     "join": {
-      "codeLabel": "Code société",
+      "codeLabel": "Code entreprise",
       "codePlaceholder": "ex. AB12CD34",
       "submit": "Rejoindre",
       "successToast": "Vous avez rejoint {company}."
     }
   },
   "companySettings": {
-    "description": "Les sociétés auxquelles vous êtes rattaché, et les outils de celles que vous administrez.",
-    "loadError": "Impossible de charger vos sociétés. Veuillez réessayer.",
+    "description": "Les entreprises auxquelles vous êtes rattaché, et les outils de celles que vous administrez.",
+    "loadError": "Impossible de charger vos entreprises. Veuillez réessayer.",
     "retry": "Réessayer",
     "companyPicker": {
       "label": "Entreprise"
@@ -2902,7 +2903,7 @@
       "projectsPickerEmpty": "Aucun projet dans cette entreprise pour l'instant",
       "cancel": "Annuler",
       "bootAction": "Retirer de l'entreprise",
-      "bootConfirmDescription": "Retirer {member} de {company} ? Cela supprime immédiatement ses affectations de projet et son profil d'annuaire là-bas, et renouvelle le code société.",
+      "bootConfirmDescription": "Retirer {member} de {company} ? Cela supprime immédiatement ses affectations de projet et son profil d'annuaire là-bas, et renouvelle le code entreprise.",
       "cancelInvitation": "Annuler l'invitation",
       "cancelInvitationConfirmDescription": "Annuler l'invitation de {member} ? S'inscrire avec ce numéro de téléphone ne l'ajoutera plus à l'entreprise.",
       "keepInvitation": "Conserver l'invitation",
@@ -2979,12 +2980,12 @@
     "unread": "{count, plural, one {# non lu} other {# non lus}}",
     "channels": "Canaux",
     "kind": {
-      "company": "Société",
+      "company": "Entreprise",
       "project": "Chantier",
       "admin": "Administration"
     },
     "membersCount": "{count, plural, one {# membre} other {# membres}}",
-    "adminSubtitle": "Confidentiel — réservé aux administrateurs de la société",
+    "adminSubtitle": "Confidentiel — réservé aux administrateurs de l'entreprise",
     "placeholder": "Message…",
     "send": "Envoyer",
     "attachImage": "Ajouter une photo",
@@ -3022,7 +3023,7 @@
   },
   "assistantAudit": {
     "title": "Audit de l'assistant",
-    "description": "Chaque mention @folio à laquelle l'assistant a répondu dans cette société, du plus récent au plus ancien.",
+    "description": "Chaque mention @folio à laquelle l'assistant a répondu dans cette entreprise, du plus récent au plus ancien.",
     "columns": {
       "date": "Date",
       "channel": "Canal",
@@ -3036,7 +3037,7 @@
     "filters": {
       "from": "Du",
       "to": "Au",
-      "company": "Société",
+      "company": "Entreprise",
       "user": "Utilisateur",
       "userAll": "Tous les utilisateurs",
       "userIdLabel": "ID utilisateur",

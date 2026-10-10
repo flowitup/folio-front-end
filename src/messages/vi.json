@@ -1400,6 +1400,7 @@
         "namePlaceholder": "vd. Dự án web tiêu chuẩn",
         "defaultVatRate": "Tỉ lệ VAT mặc định",
         "vatRateCustom": "Tùy chỉnh…",
+        "vatRateNone": "Không có VAT mặc định",
         "notes": "Ghi chú",
         "notesPlaceholder": "In trên báo giá/hóa đơn (PDF và Excel)",
         "terms": "Điều khoản chung",

@@ -75,7 +75,7 @@ describe("InvoiceForm — decimal line figures", () => {
 
   it.each([
     [0, "1e3", "errorQuantityInvalid"],
-    [0, "2,3755", "errorQuantityInvalid"],
+    [0, "2,37555", "errorQuantityInvalid"],
     [1, "1,85912", "errorUnitPriceInvalid"],
     [1, "abc", "errorUnitPriceInvalid"],
     [2, "5,555", "errorVatRateInvalid"],
@@ -91,12 +91,12 @@ describe("InvoiceForm — decimal line figures", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it("accepts 3-decimal quantities, 4-decimal prices and a comma VAT (no browser step check)", async () => {
+  it("accepts 4-decimal quantities, 4-decimal prices and a comma VAT (no browser step check)", async () => {
     const { onSubmit, submit } = renderForm();
     const [qty, price, vat] = figures();
     expect(price).not.toHaveAttribute("step");
 
-    await retype(qty, "2,375");
+    await retype(qty, "2,3755");
     await retype(price, "1.859");
     await retype(vat, "5,5");
 
@@ -104,7 +104,7 @@ describe("InvoiceForm — decimal line figures", () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
     expect(onSubmit.mock.calls[0][0].items[0]).toEqual({
       description: "Gasoil",
-      quantity: 2.375,
+      quantity: 2.3755,
       unit_price: 1.859,
       vat_rate: 5.5,
     });

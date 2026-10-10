@@ -442,6 +442,7 @@ function ItemRow({
             placeholder={t("categoryPlaceholder")}
             emptyText={t("categoryNoMatches")}
             allowFreeText
+            aria-label={t("categoryLabel")}
           />
         )}
       </td>
@@ -452,6 +453,7 @@ function ItemRow({
           <span className="text-sm">{item.description}</span>
         ) : (
           <Combobox
+            aria-label={t("description")}
             value={item.description}
             onChange={handleDescSelect}
             options={descOptions}
@@ -622,7 +624,11 @@ function MobileItemCard({
     <div className="folio-card p-3 space-y-2">
       {/* Category — full width */}
       <div>
-        <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+        <label
+          htmlFor={readOnly ? undefined : `${fieldId}-category`}
+          className="block text-xs font-medium mb-0.5"
+          style={{ color: "var(--muted)" }}
+        >
           {t("categoryLabel")}
         </label>
         {readOnly ? (
@@ -635,19 +641,25 @@ function MobileItemCard({
             placeholder={t("categoryPlaceholder")}
             emptyText={t("categoryNoMatches")}
             allowFreeText
+            id={`${fieldId}-category`}
           />
         )}
       </div>
 
       {/* Description — full width */}
       <div>
-        <label className="block text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>
+        <label
+          htmlFor={readOnly ? undefined : `${fieldId}-description`}
+          className="block text-xs font-medium mb-0.5"
+          style={{ color: "var(--muted)" }}
+        >
           {t("description")}
         </label>
         {readOnly ? (
           <span className="text-sm">{item.description}</span>
         ) : (
           <Combobox
+            id={`${fieldId}-description`}
             value={item.description}
             onChange={handleDescSelect}
             options={descOptions}

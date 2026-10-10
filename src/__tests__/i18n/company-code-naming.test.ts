@@ -13,7 +13,7 @@ import { helpCatalogueVi } from "@/content/help/vi";
 
 const CASES = [
   { messages: en, help: helpCatalogueEn, name: /company code/i, other: /join code/i },
-  { messages: fr, help: helpCatalogueFr, name: /code société/i, other: /code d'adhésion|code entreprise/i },
+  { messages: fr, help: helpCatalogueFr, name: /code entreprise/i, other: /code d'adhésion|code société/i },
   { messages: vi, help: helpCatalogueVi, name: /mã công ty/i, other: /mã tham gia/i },
 ];
 
@@ -27,9 +27,8 @@ describe("company code naming", () => {
     expect(JSON.stringify(help)).not.toMatch(other);
   });
 
-  it("onboarding speaks of a 'société' in French, as the attach flow does", () => {
-    expect(JSON.stringify(fr.onboarding)).not.toMatch(/entreprise/i);
-    // The empty projects page that leads into onboarding says the same.
-    expect(JSON.stringify(fr.projects.noCompany)).not.toMatch(/entreprise/i);
+  it("French calls a company an 'entreprise' everywhere, never a 'société'", () => {
+    expect(JSON.stringify(fr)).not.toMatch(/société/i);
+    expect(JSON.stringify(helpCatalogueFr)).not.toMatch(/société/i);
   });
 });

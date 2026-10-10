@@ -9,7 +9,7 @@
  * the VAT is then TTC − HT so the three rows add up (and 0 % lines carry none).
  */
 
-const QTY_SCALE = BigInt(1_000); // quantities carry up to 3 decimals
+const QTY_SCALE = BigInt(10_000); // quantities carry up to 4 decimals
 const PRICE_SCALE = BigInt(10_000); // unit prices up to 4 decimals
 
 function scaled(value: number, scale: bigint): bigint {

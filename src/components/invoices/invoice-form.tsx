@@ -39,7 +39,7 @@ interface LineItem {
 }
 
 /** Decimals kept per figure — the precision the totals and the API handle exactly. */
-const QUANTITY_DECIMALS = 3;
+const QUANTITY_DECIMALS = 4;
 const UNIT_PRICE_DECIMALS = 4;
 const VAT_RATE_DECIMALS = 2;
 

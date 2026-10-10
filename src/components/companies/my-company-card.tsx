@@ -36,8 +36,8 @@ import type { MyCompany } from "@/types/companies";
 interface MyCompanyCardProps {
   company: MyCompany;
   onMutated: () => void;
-  /** Called instead of onMutated once the caller has left this company. */
-  onDetached?: () => void;
+  /** Called instead of onMutated once the caller has left this company, with the toast it showed. */
+  onDetached?: (message: string) => void;
 }
 
 export function MyCompanyCard({ company, onMutated, onDetached }: MyCompanyCardProps) {
@@ -83,9 +83,11 @@ export function MyCompanyCard({ company, onMutated, onDetached }: MyCompanyCardP
         toast.error(result.error.message);
         return;
       }
-      toast.success(t("my.card.detached", { name: company.legal_name }));
+      const message = t("my.card.detached", { name: company.legal_name });
+      toast.success(message);
       setDetachOpen(false);
-      (onDetached ?? onMutated)();
+      if (onDetached) onDetached(message);
+      else onMutated();
       void refreshUser?.();
     } catch {
       toast.error(t("form.errors.generic"));

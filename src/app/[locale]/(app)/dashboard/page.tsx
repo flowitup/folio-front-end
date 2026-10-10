@@ -173,13 +173,10 @@ export default function DashboardPage() {
     () => (monthlySeries.length > 0 ? computeMonthDelta(monthlySeries) : EMPTY_MONTH_DELTA),
     [monthlySeries]
   );
-  // With a credit set, remaining = credit − funds released. Without one it is the funds
-  // released minus every purse's spend (company incl. cash advanced, plus personal).
-  const purseSpent =
-    activeMeta.companySpentTotal + (activeMeta.companyCashAdvancedTotal ?? 0) + activeMeta.personalSpentTotal;
+  // Remaining = credit (or funds released without one) minus the total expenses.
   const budgetMetrics = useMemo(
-    () => computeBudgetMetrics(selectedProject?.budget, purseSpent, activeMeta.fundsReleasedTotal),
-    [selectedProject?.budget, purseSpent, activeMeta.fundsReleasedTotal]
+    () => computeBudgetMetrics(selectedProject?.budget, spentTotal, activeMeta.fundsReleasedTotal),
+    [selectedProject?.budget, spentTotal, activeMeta.fundsReleasedTotal]
   );
   const pendingRefunds = useMemo(() => computePendingRefunds(activeInvoices), [activeInvoices]);
   const bankOutstanding = useMemo(() => computeBankOutstanding(activeInvoices), [activeInvoices]);

@@ -250,14 +250,11 @@ export interface BudgetMetrics {
    * no credit has been recorded). */
   denominator: number;
   usesBudget: boolean;
-  /** What is measured against the denominator: the funds drawn (released) out
-   * of the credit when a credit is set, else every expense against the funds
-   * released. */
+  /** Every expense (net of returns), measured against the denominator. */
   spent: number;
-  /** denominator − spent: the credit not yet released, or without a credit the
-   * released funds not yet spent. Negative when over. */
+  /** denominator − spent. Negative when over. */
   left: number;
-  /** Rounded percent of the denominator used, unclamped (may exceed 100). */
+  /** Rounded percent spent, unclamped (may exceed 100 when over budget). */
   pct: number;
   /** Same percent, clamped 0–100 for a progress-bar width. */
   pctClamped: number;
@@ -267,11 +264,8 @@ export interface BudgetMetrics {
   hasBaseline: boolean;
 }
 
-/**
- * With a credit set, "remaining" is the credit minus the funds already released
- * out of it. Without one, it is the funds released minus `spentTotal` (every
- * purse's spend).
- */
+/** "Remaining" is the credit total (or, without one, the funds released) minus the total
+ * expenses — the same figure the Expense page adds up. */
 export function computeBudgetMetrics(
   budget: number | null | undefined,
   spentTotal: number,
@@ -279,13 +273,12 @@ export function computeBudgetMetrics(
 ): BudgetMetrics {
   const usesBudget = typeof budget === "number" && budget > 0;
   const denominator = usesBudget ? budget : fundsReleasedTotal;
-  const spent = usesBudget ? fundsReleasedTotal : spentTotal;
-  const left = denominator - spent;
-  const pct = denominator > 0 ? Math.round((spent / denominator) * 100) : 0;
+  const left = denominator - spentTotal;
+  const pct = denominator > 0 ? Math.round((spentTotal / denominator) * 100) : 0;
   return {
     denominator,
     usesBudget,
-    spent,
+    spent: spentTotal,
     left,
     pct,
     pctClamped: Math.min(Math.max(pct, 0), 100),

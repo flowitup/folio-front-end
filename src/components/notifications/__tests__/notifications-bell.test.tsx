@@ -21,7 +21,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { NotificationsBell } from "../notifications-bell";
-import type { DueNotification } from "@/lib/api/notifications";
+import type { ActivityEvent, DueNotification } from "@/lib/api/notifications";
 
 // ---- Mocks ----
 
@@ -61,11 +61,12 @@ vi.mock("@/lib/api/labor", () => ({
 vi.mock("../actions", () => ({
   fetchNotificationsFeedAction: vi.fn(),
   dismissNotificationAction: vi.fn(),
+  markActivityReadAction: vi.fn(),
 }));
 
 // ---- Imports after mocks ----
 
-const { fetchNotificationsFeedAction, dismissNotificationAction } = await import("../actions");
+const { fetchNotificationsFeedAction, dismissNotificationAction, markActivityReadAction } = await import("../actions");
 const { validateAttendance, rejectAttendance, approveAttendanceChange, rejectAttendanceChange } =
   await import("@/lib/api/labor");
 const mockValidate = vi.mocked(validateAttendance);
@@ -74,6 +75,7 @@ const mockApproveChange = vi.mocked(approveAttendanceChange);
 const mockRejectChange = vi.mocked(rejectAttendanceChange);
 const mockFetch = vi.mocked(fetchNotificationsFeedAction);
 const mockDismiss = vi.mocked(dismissNotificationAction);
+const mockMarkRead = vi.mocked(markActivityReadAction);
 
 const { toast } = await import("sonner");
 const mockToast = toast as unknown as { error: ReturnType<typeof vi.fn> };
@@ -501,5 +503,85 @@ describe("NotificationsBell — failed poll", () => {
     fireEvent.click(screen.getByRole("button", { name: /notifications\.aria\.bell/i }));
 
     expect(screen.getByText("notifications.empty")).toBeDefined();
+  });
+});
+
+describe("NotificationsBell — activity feed", () => {
+  const event = (id: string, read: boolean): ActivityEvent => ({
+    id,
+    category: "tasks",
+    kind: "task_moved",
+    title: `Event ${id}`,
+    body: "",
+    data: { kind: "task_moved", project_id: "proj-1" },
+    created_at: "2026-10-10T10:00:00Z",
+    read,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("counts unread activity in the badge, not read entries", async () => {
+    mockFetch.mockResolvedValue({
+      items: [],
+      attendance: [],
+      events: [event("e1", false), event("e2", false), event("e3", true)],
+    });
+    render(<NotificationsBell />);
+    await flushTick();
+    expect(screen.getByText("2")).toBeDefined();
+  });
+
+  it("marks an entry read when it is opened and drops it from the badge", async () => {
+    mockMarkRead.mockResolvedValue({ success: true });
+    mockFetch.mockResolvedValue({ items: [], attendance: [], events: [event("e1", false)] });
+    render(<NotificationsBell />);
+    await flushTick();
+    fireEvent.click(screen.getByRole("button", { name: "notifications.aria.bell" }));
+    await flushTick();
+    await act(async () => {
+      fireEvent.click(screen.getByText("Event e1"));
+    });
+    expect(mockMarkRead).toHaveBeenCalledWith(["e1"]);
+    expect(screen.queryByText("1")).toBeNull();
+  });
+
+  it("puts the entry back to unread when marking fails", async () => {
+    mockMarkRead.mockResolvedValue({ success: false });
+    mockFetch.mockResolvedValue({ items: [], attendance: [], events: [event("e1", false)] });
+    render(<NotificationsBell />);
+    await flushTick();
+    fireEvent.click(screen.getByRole("button", { name: "notifications.aria.bell" }));
+    await flushTick();
+    await act(async () => {
+      fireEvent.click(screen.getByText("Event e1"));
+    });
+    expect(screen.getAllByText("1").length).toBeGreaterThan(0);
+  });
+
+  it("marks all read from the section header", async () => {
+    mockMarkRead.mockResolvedValue({ success: true });
+    mockFetch.mockResolvedValue({
+      items: [],
+      attendance: [],
+      events: [event("e1", false), event("e2", false)],
+    });
+    render(<NotificationsBell />);
+    await flushTick();
+    fireEvent.click(screen.getByRole("button", { name: "notifications.aria.bell" }));
+    await flushTick();
+    await act(async () => {
+      fireEvent.click(screen.getByText("notifications.activity.markAllRead"));
+    });
+    expect(mockMarkRead).toHaveBeenCalledWith(undefined);
   });
 });

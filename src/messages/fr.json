@@ -1348,6 +1348,10 @@
       "changeApplied": "Modification de {worker} appliquée",
       "changeRefused": "Modification de {worker} refusée"
     },
+    "activity": {
+      "title": "Activité",
+      "markAllRead": "Tout marquer comme lu"
+    },
     "companyEvents": {
       "title": "Nouveaux membres",
       "joined": "{name} a rejoint votre entreprise",

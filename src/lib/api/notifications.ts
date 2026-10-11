@@ -57,12 +57,33 @@ export interface CompanyEvent {
   attached_at: string;
 }
 
+/**
+ * One entry of the activity feed: something that happened (a chat message, a task moved, an
+ * invoice status change, a membership change) kept so it can be read after the push is gone.
+ * `title` / `body` are already in the requested language; `data` is the push payload
+ * (`kind` plus ids such as `project_id`, `task_id`, `invoice_id`).
+ */
+export interface ActivityEvent {
+  id: string;
+  category: string;
+  kind: string;
+  title: string;
+  body: string;
+  data: Record<string, string>;
+  created_at: string;
+  read: boolean;
+}
+
 export interface NotificationsListResult {
   items: DueNotification[];
   /** Absent on older backends — treat as empty. */
   attendance_pending?: AttendancePending[];
   /** Absent on older backends — treat as empty. Admins only. */
   company_events?: CompanyEvent[];
+  /** Absent on older backends — treat as empty. Newest first. */
+  events?: ActivityEvent[];
+  /** Absent on older backends — treat as 0. */
+  events_unread?: number;
   count: number;
 }
 
@@ -72,6 +93,8 @@ export interface NotificationsFeed {
   attendance: AttendancePending[];
   /** Optional so existing feed literals (tests, older callers) stay valid — treat as empty. */
   companyEvents?: CompanyEvent[];
+  /** Chat, task, billing and membership activity, newest first. Treat absent as empty. */
+  events?: ActivityEvent[];
 }
 
 // ---- Error helper ----
@@ -101,11 +124,12 @@ async function buildHttpError(
  * List due notifications for the current user.
  * Returns up to 100 items.
  */
-export async function listDueNotifications(): Promise<NotificationsListResult> {
+export async function listDueNotifications(locale?: string): Promise<NotificationsListResult> {
   const authHeaders = await sessionAuthHeader();
+  const query = locale ? `?locale=${encodeURIComponent(locale)}` : "";
   let response: Response;
   try {
-    response = await fetch(`${env.apiBaseUrl}/notifications`, {
+    response = await fetch(`${env.apiBaseUrl}/notifications${query}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -148,6 +172,28 @@ export async function dismissNotification(noteId: string): Promise<void> {
   }
   if (!response.ok) {
     throw await buildHttpError(response, "Failed to dismiss notification");
+  }
+}
+
+/**
+ * Mark activity entries read: the listed ids, or every entry when `ids` is omitted.
+ * Returns 204 No Content on success.
+ */
+export async function markActivityRead(ids?: string[]): Promise<void> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiBaseUrl}/notifications/events/read`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-cache", ...authHeaders },
+      body: JSON.stringify(ids ? { ids } : {}),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new Error(`Network error marking activity read: ${String(err)}`);
+  }
+  if (!response.ok) {
+    throw await buildHttpError(response, "Failed to mark activity read");
   }
 }
 

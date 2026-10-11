@@ -7,7 +7,8 @@
  * dismissNotificationAction maps backend errors for optimistic-rollback handling.
  */
 
-import { listDueNotifications, dismissNotification } from "@/lib/api/notifications";
+import { getLocale } from "next-intl/server";
+import { listDueNotifications, dismissNotification, markActivityRead } from "@/lib/api/notifications";
 import { getSession } from "@/lib/auth/session";
 import type { NotificationsFeed } from "@/lib/api/notifications";
 
@@ -45,11 +46,12 @@ function classifyBackendError(err: unknown): string {
  */
 export async function fetchNotificationsFeedAction(): Promise<NotificationsFeed | null> {
   try {
-    const result = await listDueNotifications();
+    const result = await listDueNotifications(await getLocale());
     return {
       items: result.items,
       attendance: result.attendance_pending ?? [],
       companyEvents: result.company_events ?? [],
+      events: result.events ?? [],
     };
   } catch {
     return null;
@@ -76,5 +78,21 @@ export async function dismissNotificationAction(
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: classifyBackendError(err) };
+  }
+}
+
+/**
+ * Mark activity entries read (the given ids, or all of them when omitted).
+ * Returns { success: false } on any failure; the bell then keeps them unread.
+ */
+export async function markActivityReadAction(ids?: string[]): Promise<{ success: boolean }> {
+  const session = await getSession();
+  if (!session?.accessToken) return { success: false };
+  if (ids && !ids.every(isUuid)) return { success: false };
+  try {
+    await markActivityRead(ids);
+    return { success: true };
+  } catch {
+    return { success: false };
   }
 }

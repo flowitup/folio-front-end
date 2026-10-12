@@ -4,8 +4,11 @@
  * Thread body: messages under day dividers, oldest first (the parent scrolls to the end).
  * Incoming = avatar + name + card bubble; mine = positive bubble on the right.
  * `seen` maps a message id to the members whose read marker lands on it (see `seenByMessage`).
+ * Clicking a member's message (its text bubble, or its time for a bubble-less attachment)
+ * opens a popover with the reaction picker, who reacted, and who has read up to it.
  */
 
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { isVoiceNote, type ChatMember, type ChatMessage } from "@/lib/api/chat-client";
 import {
@@ -17,6 +20,12 @@ import {
 import { ChatAvatar } from "@/components/chat/chat-avatar";
 import { ChatAttachmentImage } from "@/components/chat/chat-attachment-image";
 import { ChatAttachmentAudio } from "@/components/chat/chat-attachment-audio";
+import {
+  ChatMessageDetails,
+  ChatReactionChips,
+  type ToggleReaction,
+} from "@/components/chat/chat-message-reactions";
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /**
  * A `job_status` message's `body` is fixed at the text from when the job was queued
@@ -62,17 +71,110 @@ function SeenBy({ members, mine }: { members: ChatMember[]; mine: boolean }) {
   );
 }
 
+/** Only members' messages take reactions; legacy assistant/system ones stay plain. */
+function isReactable(message: ChatMessage): boolean {
+  return (message.sender_type ?? "user") === "user";
+}
+
+interface ReactionProps {
+  members: ChatMember[];
+  viewerId: string | null | undefined;
+  onToggleReaction?: ToggleReaction;
+}
+
 function MessageRow({
   message,
   showSender,
   seenBy,
+  members,
+  viewerId,
+  onToggleReaction,
 }: {
   message: ChatMessage;
   showSender: boolean;
   seenBy: ChatMember[] | undefined;
-}) {
+} & ReactionProps) {
+  const t = useTranslations("chat");
+  const bodyId = useId();
+  const [open, setOpen] = useState(false);
   const mine = message.mine;
   const body = displayBody(message);
+  const reactable = isReactable(message);
+
+  const bubbleClass = "whitespace-pre-wrap break-words px-3 py-[9px] text-[14px] leading-5";
+  const bubbleStyle = {
+    background: mine ? "var(--positive)" : "var(--card)",
+    color: mine ? "#fff" : "var(--ink)",
+    border: mine ? "none" : "1px solid var(--line)",
+    borderRadius: mine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+  };
+  const time = timeOf(message.created_at);
+  const timeClass = "px-1 text-[10px]";
+
+  const handleToggle: ToggleReaction = (messageId, emoji) => {
+    setOpen(false);
+    onToggleReaction?.(messageId, emoji);
+  };
+
+  const column = (
+    <div className={`flex max-w-[76%] flex-col gap-[3px] ${mine ? "items-end" : "items-start"}`}>
+      {showSender ? (
+        <span className="pl-1 text-[11px]" style={{ color: "var(--muted)" }}>
+          {message.sender_name}
+        </span>
+      ) : null}
+      {body ? (
+        reactable ? (
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={`${bubbleClass} cursor-pointer text-left focus-visible:outline-2`}
+              style={bubbleStyle}
+              aria-label={t("messageDetails")}
+              aria-describedby={bodyId}
+              data-testid="chat-message-bubble"
+            >
+              <span id={bodyId}>{body}</span>
+            </button>
+          </PopoverTrigger>
+        ) : (
+          <div className={bubbleClass} style={bubbleStyle}>
+            {body}
+          </div>
+        )
+      ) : null}
+      {message.attachment ? (
+        isVoiceNote(message.attachment.content_type) ? (
+          <ChatAttachmentAudio messageId={message.id} attachment={message.attachment} />
+        ) : (
+          <ChatAttachmentImage messageId={message.id} attachment={message.attachment} />
+        )
+      ) : null}
+      {reactable ? (
+        <ChatReactionChips message={message} viewerId={viewerId} onToggle={onToggleReaction} />
+      ) : null}
+      {reactable && !body ? (
+        // An attachment carries its own controls (link, player), so its time opens the details.
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className={`${timeClass} cursor-pointer underline-offset-2 hover:underline focus-visible:outline-2`}
+            style={{ color: "var(--muted-2)" }}
+            aria-label={t("messageDetails")}
+            data-testid="chat-message-bubble"
+          >
+            {time}
+          </button>
+        </PopoverTrigger>
+      ) : (
+        <span className={timeClass} style={{ color: "var(--muted-2)" }}>
+          {time}
+        </span>
+      )}
+      {seenBy && seenBy.length > 0 ? <SeenBy members={seenBy} mine={mine} /> : null}
+    </div>
+  );
+
   return (
     <div
       className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}
@@ -85,37 +187,25 @@ function MessageRow({
           ) : null}
         </div>
       ) : null}
-      <div className={`flex max-w-[76%] flex-col gap-[3px] ${mine ? "items-end" : "items-start"}`}>
-        {showSender ? (
-          <span className="pl-1 text-[11px]" style={{ color: "var(--muted)" }}>
-            {message.sender_name}
-          </span>
-        ) : null}
-        {body ? (
-          <div
-            className="whitespace-pre-wrap break-words px-3 py-[9px] text-[14px] leading-5"
-            style={{
-              background: mine ? "var(--positive)" : "var(--card)",
-              color: mine ? "#fff" : "var(--ink)",
-              border: mine ? "none" : "1px solid var(--line)",
-              borderRadius: mine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-            }}
+      {reactable ? (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverAnchor asChild>{column}</PopoverAnchor>
+          <PopoverContent
+            align={mine ? "end" : "start"}
+            className="z-[80] w-72 p-3"
+            aria-label={t("messageDetails")}
           >
-            {body}
-          </div>
-        ) : null}
-        {message.attachment ? (
-          isVoiceNote(message.attachment.content_type) ? (
-            <ChatAttachmentAudio messageId={message.id} attachment={message.attachment} />
-          ) : (
-            <ChatAttachmentImage messageId={message.id} attachment={message.attachment} />
-          )
-        ) : null}
-        <span className="px-1 text-[10px]" style={{ color: "var(--muted-2)" }}>
-          {timeOf(message.created_at)}
-        </span>
-        {seenBy && seenBy.length > 0 ? <SeenBy members={seenBy} mine={mine} /> : null}
-      </div>
+            <ChatMessageDetails
+              message={message}
+              members={members}
+              viewerId={viewerId}
+              onToggle={handleToggle}
+            />
+          </PopoverContent>
+        </Popover>
+      ) : (
+        column
+      )}
     </div>
   );
 }
@@ -123,9 +213,17 @@ function MessageRow({
 export function ChatMessageList({
   messages,
   seen,
+  members = [],
+  viewerId,
+  onToggleReaction,
 }: {
   messages: ChatMessage[];
   seen?: Map<string, ChatMember[]>;
+  /** Channel members: names for reactions and read times for "seen by". */
+  members?: ChatMember[];
+  /** Current user id (highlights their own reaction). */
+  viewerId?: string | null;
+  onToggleReaction?: ToggleReaction;
 }) {
   const t = useTranslations("chat");
   const groups = groupMessagesByDay(messages);
@@ -150,6 +248,9 @@ export function ChatMessageList({
                 message={message}
                 showSender={showsSender(group.messages, index)}
                 seenBy={seen?.get(message.id)}
+                members={members}
+                viewerId={viewerId}
+                onToggleReaction={onToggleReaction}
               />
             ))}
           </div>

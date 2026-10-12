@@ -6,6 +6,10 @@
  * with the floating button). `layout="split"`: channel list left, thread right (expanded
  * drawer). `layout="stack"`: channel chips above the thread, like the phone app.
  *
+ * Reactions update the open page optimistically, then take the server's list for that
+ * message; on failure a toast shows and the thread is refetched. Others' reactions
+ * arrive with the poll.
+ *
  * Default channel: `initialChannelKey` (deep link), else the selected project's channel,
  * else the first channel (company channels come first from the backend).
  */
@@ -20,11 +24,15 @@ import { useProject } from "@/context/ProjectContext";
 import { useVisiblePoll } from "@/hooks/use-visible-poll";
 import {
   ChatApiError,
+  clearChatReaction,
   listChatMessages,
   markChatChannelRead,
   sendChatMessage,
+  setChatReaction,
   type ChatMessagePage,
+  type ChatReaction,
 } from "@/lib/api/chat-client";
+import { toggleReaction, type ReactionEmoji } from "@/lib/chat/reactions";
 import { seenByMessage } from "@/lib/chat/seen-by";
 import { ChatChannelChips, ChatChannelList } from "@/components/chat/chat-channel-list";
 import { ChatComposer, type ComposerRejection } from "@/components/chat/chat-composer";
@@ -40,6 +48,19 @@ function sendErrorKey(error: unknown): string {
     if (error.status === 403) return "errors.forbidden";
   }
   return "errors.sendFailed";
+}
+
+/** Replace one message's reactions in a page (no-op once the page moved to another channel). */
+function withReactions(
+  page: ChatMessagePage | null,
+  messageId: string,
+  reactions: ChatReaction[]
+): ChatMessagePage | null {
+  if (!page || !page.items.some((m) => m.id === messageId)) return page;
+  return {
+    ...page,
+    items: page.items.map((m) => (m.id === messageId ? { ...m, reactions } : m)),
+  };
 }
 
 export type ChatPanelLayout = "split" | "stack";
@@ -159,6 +180,28 @@ export function ChatPanel({
     [channelKey, refreshMessages, refreshChannels, t]
   );
 
+  const viewerId = user?.id ?? null;
+  const handleToggleReaction = useCallback(
+    async (messageId: string, emoji: ReactionEmoji) => {
+      const message = page?.items.find((m) => m.id === messageId);
+      if (!viewerId || !message) return;
+      const next = toggleReaction(message.reactions ?? [], viewerId, emoji);
+      setPage((current) => withReactions(current, messageId, next.reactions));
+      try {
+        const reactions = next.remove
+          ? await clearChatReaction(messageId)
+          : await setChatReaction(messageId, emoji);
+        setPage((current) => withReactions(current, messageId, reactions));
+      } catch (error) {
+        toast.error(
+          t(error instanceof ChatApiError && error.status === 403 ? "errors.forbidden" : "errors.reactFailed")
+        );
+        await refreshMessages();
+      }
+    },
+    [page, viewerId, refreshMessages, t]
+  );
+
   const handleReject = useCallback(
     (reason: ComposerRejection) => toast.error(t(`errors.${reason}`)),
     [t]
@@ -235,6 +278,9 @@ export function ChatPanel({
               <ChatMessageList
                 messages={items}
                 seen={seen}
+                members={members}
+                viewerId={viewerId}
+                onToggleReaction={(messageId, emoji) => void handleToggleReaction(messageId, emoji)}
               />
             ) : null}
           </div>

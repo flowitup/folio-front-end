@@ -16,6 +16,8 @@
  *   POST /chat/channels/<key>/messages          → 201 ChatMessage (JSON {body} or multipart body+file)
  *   POST /chat/channels/<key>/read              → 204
  *   GET  /chat/messages/<id>/attachment         → image bytes
+ *   PUT  /chat/messages/<id>/reaction           → { reactions } (body {emoji}; one per member)
+ *   DELETE /chat/messages/<id>/reaction         → { reactions } (idempotent)
  */
 
 import { getCsrfHeader } from "@/lib/api/http";
@@ -48,6 +50,12 @@ export interface ChatAttachment {
   size_bytes: number;
 }
 
+export interface ChatReaction {
+  user_id: string;
+  emoji: string;
+  created_at: string;
+}
+
 export interface ChatMessage {
   id: string;
   channel_key: string;
@@ -64,6 +72,8 @@ export interface ChatMessage {
   attachment: ChatAttachment | null;
   created_at: string;
   mine: boolean;
+  /** One entry per reacting member. Always sent by the backend; optional so older payloads still type. */
+  reactions?: ChatReaction[];
 }
 
 export interface ChatMember {
@@ -132,7 +142,7 @@ export class ChatApiError extends Error {
 
 async function chatFetch(
   path: string,
-  init: RequestInit & { method: "GET" | "POST" },
+  init: RequestInit & { method: "GET" | "POST" | "PUT" | "DELETE" },
   signal?: AbortSignal
 ): Promise<Response> {
   const url = `${env.apiBaseUrl}${path}`;
@@ -221,6 +231,24 @@ export async function sendChatMessage(
 /** Move the caller's read marker of a channel to now. */
 export async function markChatChannelRead(channelKey: string): Promise<void> {
   await chatFetch(`/chat/channels/${encodeURIComponent(channelKey)}/read`, { method: "POST" });
+}
+
+/** Set (or replace) the caller's reaction on a message; returns every reaction of that message. */
+export async function setChatReaction(messageId: string, emoji: string): Promise<ChatReaction[]> {
+  const res = await chatFetch(`/chat/messages/${encodeURIComponent(messageId)}/reaction`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ emoji }),
+  });
+  return ((await res.json()) as { reactions: ChatReaction[] }).reactions;
+}
+
+/** Remove the caller's reaction on a message (idempotent); returns the remaining reactions. */
+export async function clearChatReaction(messageId: string): Promise<ChatReaction[]> {
+  const res = await chatFetch(`/chat/messages/${encodeURIComponent(messageId)}/reaction`, {
+    method: "DELETE",
+  });
+  return ((await res.json()) as { reactions: ChatReaction[] }).reactions;
 }
 
 export interface ChatBlob {

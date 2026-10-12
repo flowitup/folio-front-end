@@ -3001,11 +3001,20 @@
     "loadError": "Impossible de charger les messages.",
     "retry": "Réessayer",
     "seenBy": "Vu par {names}",
+    "seenByTitle": "Vu par",
+    "seenByNobody": "Personne ne l'a encore vu.",
+    "reactionsTitle": "Réactions",
+    "messageDetails": "Réactions et lecteurs",
+    "react": "Réagir avec {emoji}",
+    "removeReaction": "Retirer votre réaction {emoji}",
+    "reactionCount": "{emoji} : {count, plural, one {# réaction} other {# réactions}}",
+    "unknownMember": "Ancien membre",
     "errors": {
       "sendFailed": "Envoi impossible. Réessayez.",
       "tooLarge": "Photo trop lourde (10 Mo max).",
       "unsupportedType": "Seules les photos JPEG, PNG et WebP sont acceptées.",
-      "forbidden": "Vous n'êtes pas membre de ce canal."
+      "forbidden": "Vous n'êtes pas membre de ce canal.",
+      "reactFailed": "Impossible d'enregistrer votre réaction. Réessayez."
     },
     "voiceNote": "Message vocal",
     "voiceLoading": "Chargement de l'enregistrement…",

@@ -3001,11 +3001,20 @@
     "loadError": "Couldn't load messages.",
     "retry": "Retry",
     "seenBy": "Seen by {names}",
+    "seenByTitle": "Seen by",
+    "seenByNobody": "Nobody has seen it yet.",
+    "reactionsTitle": "Reactions",
+    "messageDetails": "Reactions and readers",
+    "react": "React with {emoji}",
+    "removeReaction": "Remove your {emoji} reaction",
+    "reactionCount": "{emoji}: {count, plural, one {# reaction} other {# reactions}}",
+    "unknownMember": "Former member",
     "errors": {
       "sendFailed": "Couldn't send. Try again.",
       "tooLarge": "Photo is too large (10 MB max).",
       "unsupportedType": "Only JPEG, PNG and WebP photos are supported.",
-      "forbidden": "You are not a member of this channel."
+      "forbidden": "You are not a member of this channel.",
+      "reactFailed": "Couldn't save your reaction. Try again."
     },
     "voiceNote": "Voice message",
     "voiceLoading": "Loading the recording…",

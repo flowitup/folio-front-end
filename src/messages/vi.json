@@ -3001,11 +3001,20 @@
     "loadError": "Không tải được tin nhắn.",
     "retry": "Thử lại",
     "seenBy": "{names} đã xem",
+    "seenByTitle": "Đã xem bởi",
+    "seenByNobody": "Chưa ai xem.",
+    "reactionsTitle": "Cảm xúc",
+    "messageDetails": "Cảm xúc và người đã xem",
+    "react": "Bày tỏ cảm xúc {emoji}",
+    "removeReaction": "Gỡ cảm xúc {emoji} của bạn",
+    "reactionCount": "{emoji}: {count} lượt bày tỏ cảm xúc",
+    "unknownMember": "Thành viên cũ",
     "errors": {
       "sendFailed": "Gửi không thành công. Thử lại.",
       "tooLarge": "Ảnh quá lớn (tối đa 10 MB).",
       "unsupportedType": "Chỉ hỗ trợ ảnh JPEG, PNG và WebP.",
-      "forbidden": "Bạn không phải thành viên của kênh này."
+      "forbidden": "Bạn không phải thành viên của kênh này.",
+      "reactFailed": "Không lưu được cảm xúc của bạn. Vui lòng thử lại."
     },
     "voiceNote": "Tin nhắn thoại",
     "voiceLoading": "Đang tải bản ghi…",

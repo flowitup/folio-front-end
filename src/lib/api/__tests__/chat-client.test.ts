@@ -16,6 +16,7 @@ vi.mock("@/lib/config/env", () => ({
 
 import {
   ChatApiError,
+  clearChatReaction,
   fetchChatAttachmentBlob,
   fetchChatFeatures,
   isVoiceNote,
@@ -24,6 +25,7 @@ import {
   markChatChannelRead,
   playableAttachmentType,
   sendChatMessage,
+  setChatReaction,
 } from "@/lib/api/chat-client";
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -146,6 +148,34 @@ describe("chat-client", () => {
   it("recognises a voice note whatever case the recorder used", () => {
     expect(isVoiceNote("AUDIO/X-M4A")).toBe(true);
     expect(isVoiceNote("image/jpeg")).toBe(false);
+  });
+
+  it("puts a reaction as JSON with the CSRF header and returns the message reactions", async () => {
+    const reactions = [{ user_id: "me", emoji: "👍", created_at: "2026-10-12T09:00:00Z" }];
+    fetchMock.mockResolvedValueOnce(jsonResponse({ reactions }));
+    await expect(setChatReaction("m/1", "👍")).resolves.toEqual(reactions);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://api.test/api/v1/chat/messages/m%2F1/reaction");
+    expect(init?.method).toBe("PUT");
+    expect(init?.credentials).toBe("include");
+    expect(init?.body).toBe(JSON.stringify({ emoji: "👍" }));
+    const headers = init?.headers as Record<string, string>;
+    expect(headers["Content-Type"]).toBe("application/json");
+    expect(headers["X-CSRF-TOKEN"]).toBe("csrf-123");
+  });
+
+  it("deletes the caller's reaction with the CSRF header", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ reactions: [] }));
+    await expect(clearChatReaction("m1")).resolves.toEqual([]);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://api.test/api/v1/chat/messages/m1/reaction");
+    expect(init?.method).toBe("DELETE");
+    expect((init?.headers as Record<string, string>)["X-CSRF-TOKEN"]).toBe("csrf-123");
+  });
+
+  it("surfaces a rejected reaction as a ChatApiError", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: "InvalidInput" }, 422));
+    await expect(setChatReaction("m1", "x")).rejects.toMatchObject({ status: 422 });
   });
 
   it("throws a ChatApiError carrying status and body on failure", async () => {

@@ -31,6 +31,8 @@ vi.mock("@/context/ChatContext", () => ({
 const listChatMessages = vi.fn();
 const markChatChannelRead = vi.fn();
 const sendChatMessage = vi.fn();
+const setChatReaction = vi.fn();
+const clearChatReaction = vi.fn();
 vi.mock("@/lib/api/chat-client", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api/chat-client")>("@/lib/api/chat-client");
   return {
@@ -38,11 +40,14 @@ vi.mock("@/lib/api/chat-client", async () => {
     listChatMessages: (...args: unknown[]) => listChatMessages(...args),
     markChatChannelRead: (...args: unknown[]) => markChatChannelRead(...args),
     sendChatMessage: (...args: unknown[]) => sendChatMessage(...args),
+    setChatReaction: (...args: unknown[]) => setChatReaction(...args),
+    clearChatReaction: (...args: unknown[]) => clearChatReaction(...args),
     fetchChatAttachmentBlob: vi.fn(),
   };
 });
 
 import { ChatPanel } from "@/components/chat/chat-panel";
+import { REACTION_EMOJIS } from "@/lib/chat/reactions";
 
 const channels = [
   { key: "company:c1", kind: "company", id: "c1", name: "Chung", member_count: 5, unread_count: 3, last_message_at: null },
@@ -221,5 +226,76 @@ describe("ChatPanel", () => {
     setChat({ channels: [], unread: 0 });
     render(<ChatPanel />);
     expect(screen.getByTestId("chat-no-channels")).toBeInTheDocument();
+  });
+
+  describe("reactions", () => {
+    const [THUMBS, HEART] = REACTION_EMOJIS;
+    const chipTexts = () => screen.queryAllByTestId("chat-reaction-chip").map((c) => c.textContent);
+
+    async function pick(index: number) {
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("chat-message-bubble"));
+      });
+      await act(async () => {
+        fireEvent.click(screen.getAllByTestId("chat-reaction-pick")[index]);
+      });
+    }
+
+    it("shows the reaction at once, then keeps the server's list for that message", async () => {
+      let resolve: (value: unknown) => void = () => {};
+      setChatReaction.mockReturnValueOnce(new Promise((r) => (resolve = r)));
+      setChat();
+      render(<ChatPanel />);
+      await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
+
+      await pick(0);
+      expect(setChatReaction).toHaveBeenCalledWith("m1", THUMBS);
+      expect(chipTexts()).toEqual([`${THUMBS}1`]);
+      expect(screen.getByTestId("chat-reaction-chip")).toHaveAttribute("aria-pressed", "true");
+
+      await act(async () => {
+        resolve([
+          { user_id: "me", emoji: THUMBS, created_at: "2026-09-08T09:00:00Z" },
+          { user_id: "alice", emoji: THUMBS, created_at: "2026-09-08T09:01:00Z" },
+        ]);
+      });
+      expect(chipTexts()).toEqual([`${THUMBS}2`]);
+    });
+
+    it("removes the viewer's reaction when the same chip is clicked", async () => {
+      listChatMessages.mockResolvedValue({
+        items: [
+          { id: "m1", channel_key: "project:p1", sender_id: "alice", sender_name: "Alice", body: "Bonjour", attachment: null, created_at: "2026-09-08T08:00:00Z", mine: false, reactions: [{ user_id: "me", emoji: HEART, created_at: "2026-09-08T08:05:00Z" }] },
+        ],
+        members: [{ id: "alice", name: "Alice", last_read_at: null }],
+      });
+      clearChatReaction.mockResolvedValueOnce([]);
+      setChat();
+      render(<ChatPanel />);
+      await waitFor(() => expect(chipTexts()).toEqual([`${HEART}1`]));
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("chat-reaction-chip"));
+      });
+      expect(clearChatReaction).toHaveBeenCalledWith("m1");
+      expect(setChatReaction).not.toHaveBeenCalled();
+      expect(chipTexts()).toEqual([]);
+    });
+
+    it("toasts and refetches the thread when saving a reaction fails", async () => {
+      const { toast } = await import("sonner");
+      const { ChatApiError } = await import("@/lib/api/chat-client");
+      setChatReaction.mockRejectedValueOnce(new ChatApiError(500, null));
+      setChat();
+      render(<ChatPanel />);
+      await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
+      const callsBefore = listChatMessages.mock.calls.length;
+
+      await pick(1);
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith("chat.errors.reactFailed"));
+      await waitFor(() => expect(listChatMessages.mock.calls.length).toBeGreaterThan(callsBefore));
+      // The refetched thread (no reactions on the server) replaces the optimistic chip.
+      await waitFor(() => expect(chipTexts()).toEqual([]));
+    });
   });
 });

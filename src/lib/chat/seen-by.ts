@@ -45,3 +45,21 @@ export function seenByMessage<M extends SeenMember, T extends SeenMessage>(
   }
   return result;
 }
+
+/**
+ * Everyone who has read up to `message` (read marker at or after its creation), excluding the
+ * sender, earliest reader first. Feeds the "Seen by" details of one message, unlike
+ * `seenByMessage`, which places each member only under the newest message they reached.
+ */
+export function readersOfMessage<M extends SeenMember>(
+  message: SeenMessage,
+  members: M[]
+): M[] {
+  const createdAt = Date.parse(message.created_at);
+  if (Number.isNaN(createdAt)) return [];
+  return members
+    .map((member) => ({ member, readAt: member.last_read_at ? Date.parse(member.last_read_at) : NaN }))
+    .filter(({ member, readAt }) => member.id !== message.sender_id && readAt >= createdAt)
+    .sort((a, b) => a.readAt - b.readAt)
+    .map(({ member }) => member);
+}

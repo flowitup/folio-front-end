@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { seenByMessage } from "@/lib/chat/seen-by";
+import { readersOfMessage, seenByMessage } from "@/lib/chat/seen-by";
 
 const msg = (id: string, created_at: string, sender_id: string) => ({ id, created_at, sender_id });
 
@@ -32,5 +32,33 @@ describe("seenByMessage", () => {
 
   it("returns an empty map for an empty thread", () => {
     expect(seenByMessage([], [{ id: "a", name: "A", last_read_at: "2026-09-08T10:00:00Z" }], "me").size).toBe(0);
+  });
+});
+
+describe("readersOfMessage", () => {
+  const message = msg("m1", "2026-09-08T10:00:00Z", "alice");
+
+  it("lists members whose marker is at or after the message, earliest first, excluding the sender", () => {
+    const members = [
+      { id: "bob", name: "Bob", last_read_at: "2026-09-08T10:30:00Z" },
+      { id: "alice", name: "Alice", last_read_at: "2026-09-08T11:00:00Z" },
+      { id: "me", name: "Me", last_read_at: "2026-09-08T10:00:00Z" },
+      { id: "carol", name: "Carol", last_read_at: "2026-09-08T09:59:59Z" },
+    ];
+    expect(readersOfMessage(message, members).map((m) => m.id)).toEqual(["me", "bob"]);
+  });
+
+  it("skips members without a marker or with an unparsable one", () => {
+    const members = [
+      { id: "bob", name: "Bob", last_read_at: null },
+      { id: "dan", name: "Dan" },
+      { id: "eve", name: "Eve", last_read_at: "not-a-date" },
+    ];
+    expect(readersOfMessage(message, members)).toEqual([]);
+  });
+
+  it("keeps everyone for a legacy message without a member sender", () => {
+    const members = [{ id: "bob", name: "Bob", last_read_at: "2026-09-08T10:00:01Z" }];
+    expect(readersOfMessage({ ...message, sender_id: null }, members)).toHaveLength(1);
   });
 });

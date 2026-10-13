@@ -2984,11 +2984,9 @@
     "channels": "Kênh",
     "kind": {
       "company": "Công ty",
-      "project": "Công trình",
-      "admin": "Quản trị"
+      "project": "Công trình"
     },
     "membersCount": "{count, plural, other {# thành viên}}",
-    "adminSubtitle": "Bảo mật — chỉ dành cho quản trị viên công ty",
     "placeholder": "Nhắn tin…",
     "send": "Gửi",
     "attachImage": "Thêm ảnh",
@@ -3018,7 +3016,24 @@
     },
     "voiceNote": "Tin nhắn thoại",
     "voiceLoading": "Đang tải bản ghi…",
-    "voiceLoadFailed": "Không tải được tin nhắn thoại này."
+    "voiceLoadFailed": "Không tải được tin nhắn thoại này.",
+    "moderation": {
+      "report": "Báo cáo tin nhắn",
+      "reportTitle": "Báo cáo tin nhắn này?",
+      "reportBody": "Tin nhắn sẽ được gửi cho quản trị viên công ty của bạn và đội ngũ Folio để xem xét.",
+      "reported": "Đã báo cáo. Cảm ơn bạn.",
+      "block": "Chặn {name}",
+      "blockTitle": "Chặn {name}?",
+      "blockBody": "Bạn sẽ không còn thấy tin nhắn hay nhận thông báo từ người này. Bạn có thể bỏ chặn bất cứ lúc nào trong phần chat.",
+      "blockConfirm": "Chặn",
+      "blocked": "Đã chặn người dùng.",
+      "manage": "Đã chặn ({count})",
+      "blockedTitle": "Người đã chặn",
+      "unblock": "Bỏ chặn",
+      "none": "Chưa chặn ai.",
+      "cancel": "Hủy",
+      "failed": "Không thực hiện được. Vui lòng thử lại."
+    }
   },
   "help": {
     "loading": "Đang tải hướng dẫn…",

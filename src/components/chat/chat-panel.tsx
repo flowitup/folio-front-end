@@ -24,16 +24,32 @@ import { useProject } from "@/context/ProjectContext";
 import { useVisiblePoll } from "@/hooks/use-visible-poll";
 import {
   ChatApiError,
+  blockChatUser,
   clearChatReaction,
+  listBlockedChatUsers,
   listChatMessages,
   markChatChannelRead,
+  reportChatMessage,
   sendChatMessage,
   setChatReaction,
+  unblockChatUser,
+  type BlockedUser,
+  type ChatMessage,
   type ChatMessagePage,
   type ChatReaction,
 } from "@/lib/api/chat-client";
 import { toggleReaction, type ReactionEmoji } from "@/lib/chat/reactions";
 import { seenByMessage } from "@/lib/chat/seen-by";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ChatBlockedDialog } from "@/components/chat/chat-blocked-dialog";
 import { ChatChannelChips, ChatChannelList } from "@/components/chat/chat-channel-list";
 import { ChatComposer, type ComposerRejection } from "@/components/chat/chat-composer";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
@@ -202,6 +218,54 @@ export function ChatPanel({
     [page, viewerId, refreshMessages, t]
   );
 
+  // ---- Report / block (App Store guideline 1.2) ----
+  const [pendingModeration, setPendingModeration] = useState<{
+    action: "report" | "block";
+    message: ChatMessage;
+  } | null>(null);
+  const [blocked, setBlocked] = useState<BlockedUser[]>([]);
+  const [blockedOpen, setBlockedOpen] = useState(false);
+  const refreshBlocked = useCallback(async () => {
+    try {
+      setBlocked(await listBlockedChatUsers());
+    } catch {
+      // The list is a convenience; the next block/unblock refreshes it again.
+    }
+  }, []);
+  useEffect(() => {
+    if (enabled === true) void refreshBlocked();
+  }, [enabled, refreshBlocked]);
+
+  const confirmModeration = useCallback(async () => {
+    const pending = pendingModeration;
+    setPendingModeration(null);
+    if (!pending) return;
+    try {
+      if (pending.action === "report") {
+        await reportChatMessage(pending.message.id);
+        toast.success(t("moderation.reported"));
+      } else if (pending.message.sender_id) {
+        await blockChatUser(pending.message.sender_id);
+        toast.success(t("moderation.blocked"));
+        await Promise.all([refreshBlocked(), refreshMessages(), refreshChannels()]);
+      }
+    } catch {
+      toast.error(t("moderation.failed"));
+    }
+  }, [pendingModeration, refreshBlocked, refreshMessages, refreshChannels, t]);
+
+  const handleUnblock = useCallback(
+    async (userId: string) => {
+      try {
+        await unblockChatUser(userId);
+        await Promise.all([refreshBlocked(), refreshMessages(), refreshChannels()]);
+      } catch {
+        toast.error(t("moderation.failed"));
+      }
+    },
+    [refreshBlocked, refreshMessages, refreshChannels, t]
+  );
+
   const handleReject = useCallback(
     (reason: ComposerRejection) => toast.error(t(`errors.${reason}`)),
     [t]
@@ -254,6 +318,20 @@ export function ChatPanel({
           </div>
         ) : null}
 
+        {blocked.length > 0 ? (
+          <div className="flex justify-end border-b px-4 py-1" style={{ borderColor: "var(--line)" }}>
+            <button
+              type="button"
+              className="text-[11.5px] underline-offset-2 hover:underline"
+              style={{ color: "var(--muted)" }}
+              data-testid="chat-blocked-open"
+              onClick={() => setBlockedOpen(true)}
+            >
+              {t("moderation.manage", { count: blocked.length })}
+            </button>
+          </div>
+        ) : null}
+
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto" data-testid="chat-scroll">
           <div className="flex min-h-full flex-col justify-end p-4">
             {!page && !loadFailed ? (
@@ -281,6 +359,7 @@ export function ChatPanel({
                 members={members}
                 viewerId={viewerId}
                 onToggleReaction={(messageId, emoji) => void handleToggleReaction(messageId, emoji)}
+                onModerate={(action, message) => setPendingModeration({ action, message })}
               />
             ) : null}
           </div>
@@ -293,6 +372,35 @@ export function ChatPanel({
           onReject={handleReject}
         />
       </section>
+
+      <ChatBlockedDialog
+        open={blockedOpen}
+        onOpenChange={setBlockedOpen}
+        users={blocked}
+        onUnblock={(userId) => void handleUnblock(userId)}
+      />
+      <AlertDialog open={pendingModeration !== null} onOpenChange={(o) => !o && setPendingModeration(null)}>
+        <AlertDialogContent className="z-[90] max-w-sm" overlayClassName="z-[90]" data-testid="chat-moderation-confirm">
+          <AlertDialogTitle>
+            {pendingModeration?.action === "block"
+              ? t("moderation.blockTitle", { name: pendingModeration.message.sender_name })
+              : t("moderation.reportTitle")}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {pendingModeration?.action === "block" ? t("moderation.blockBody") : t("moderation.reportBody")}
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("moderation.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void confirmModeration()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="chat-moderation-confirm-button"
+            >
+              {pendingModeration?.action === "block" ? t("moderation.blockConfirm") : t("moderation.report")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

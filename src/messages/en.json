@@ -2984,11 +2984,9 @@
     "channels": "Channels",
     "kind": {
       "company": "Company",
-      "project": "Project",
-      "admin": "Admin"
+      "project": "Project"
     },
     "membersCount": "{count, plural, one {# member} other {# members}}",
-    "adminSubtitle": "Confidential — company admins only",
     "placeholder": "Message…",
     "send": "Send",
     "attachImage": "Add a photo",
@@ -3018,7 +3016,24 @@
     },
     "voiceNote": "Voice message",
     "voiceLoading": "Loading the recording…",
-    "voiceLoadFailed": "This voice message could not be loaded."
+    "voiceLoadFailed": "This voice message could not be loaded.",
+    "moderation": {
+      "report": "Report message",
+      "reportTitle": "Report this message?",
+      "reportBody": "It will be sent to the moderators of your company and the Folio team for review.",
+      "reported": "Reported. Thank you.",
+      "block": "Block {name}",
+      "blockTitle": "Block {name}?",
+      "blockBody": "You will no longer see their messages or receive their notifications. You can unblock them any time from the chat.",
+      "blockConfirm": "Block",
+      "blocked": "User blocked.",
+      "manage": "Blocked ({count})",
+      "blockedTitle": "Blocked people",
+      "unblock": "Unblock",
+      "none": "Nobody is blocked.",
+      "cancel": "Cancel",
+      "failed": "That didn't work. Please try again."
+    }
   },
   "help": {
     "loading": "Loading the guide…",

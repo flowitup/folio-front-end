@@ -22,6 +22,8 @@ import {
 import { readersOfMessage } from "@/lib/chat/seen-by";
 
 export type ToggleReaction = (messageId: string, emoji: ReactionEmoji) => void;
+/** Asks the panel to confirm reporting a message or blocking its sender. */
+export type ModerateMessage = (action: "report" | "block", message: ChatMessage) => void;
 
 /** `HH:mm` today, `dd/mm HH:mm` on an earlier day. */
 function readTimeLabel(iso: string): string {
@@ -100,17 +102,21 @@ export function ChatMessageDetails({
   members,
   viewerId,
   onToggle,
+  onModerate,
 }: {
   message: ChatMessage;
   members: ChatMember[];
   viewerId: string | null | undefined;
   onToggle?: ToggleReaction;
+  /** With it, someone else's message offers Report / Block (App Store guideline 1.2). */
+  onModerate?: ModerateMessage;
 }) {
   const t = useTranslations("chat");
   const reactions = message.reactions ?? [];
   const current = reactionOf(reactions, viewerId);
   const nameOf = (id: string) => members.find((m) => m.id === id)?.name ?? t("unknownMember");
   const readers = readersOfMessage(message, members);
+  const canModerate = Boolean(onModerate) && !message.mine && Boolean(message.sender_id);
 
   return (
     <div className="flex flex-col gap-3 text-[13px]" data-testid="chat-message-details">
@@ -175,6 +181,28 @@ export function ChatMessageDetails({
           </ul>
         )}
       </section>
+
+      {canModerate ? (
+        <section className="flex flex-col gap-1 border-t pt-2" style={{ borderColor: "var(--line)" }}>
+          <button
+            type="button"
+            className="rounded px-1 py-1 text-left hover:bg-[var(--paper-2)] focus-visible:outline-2"
+            data-testid="chat-report"
+            onClick={() => onModerate?.("report", message)}
+          >
+            {t("moderation.report")}
+          </button>
+          <button
+            type="button"
+            className="rounded px-1 py-1 text-left hover:bg-[var(--paper-2)] focus-visible:outline-2"
+            style={{ color: "var(--negative, #b42318)" }}
+            data-testid="chat-block"
+            onClick={() => onModerate?.("block", message)}
+          >
+            {t("moderation.block", { name: message.sender_name })}
+          </button>
+        </section>
+      ) : null}
     </div>
   );
 }

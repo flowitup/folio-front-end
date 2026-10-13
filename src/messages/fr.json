@@ -2984,11 +2984,9 @@
     "channels": "Canaux",
     "kind": {
       "company": "Entreprise",
-      "project": "Chantier",
-      "admin": "Administration"
+      "project": "Chantier"
     },
     "membersCount": "{count, plural, one {# membre} other {# membres}}",
-    "adminSubtitle": "Confidentiel — réservé aux administrateurs de l'entreprise",
     "placeholder": "Message…",
     "send": "Envoyer",
     "attachImage": "Ajouter une photo",
@@ -3018,7 +3016,24 @@
     },
     "voiceNote": "Message vocal",
     "voiceLoading": "Chargement de l'enregistrement…",
-    "voiceLoadFailed": "Ce message vocal n'a pas pu être chargé."
+    "voiceLoadFailed": "Ce message vocal n'a pas pu être chargé.",
+    "moderation": {
+      "report": "Signaler le message",
+      "reportTitle": "Signaler ce message ?",
+      "reportBody": "Il sera transmis aux modérateurs de votre entreprise et à l'équipe Folio pour examen.",
+      "reported": "Signalé. Merci.",
+      "block": "Bloquer {name}",
+      "blockTitle": "Bloquer {name} ?",
+      "blockBody": "Vous ne verrez plus ses messages ni ses notifications. Vous pouvez le débloquer à tout moment depuis la messagerie.",
+      "blockConfirm": "Bloquer",
+      "blocked": "Utilisateur bloqué.",
+      "manage": "Bloqués ({count})",
+      "blockedTitle": "Personnes bloquées",
+      "unblock": "Débloquer",
+      "none": "Personne n'est bloqué.",
+      "cancel": "Annuler",
+      "failed": "L'opération a échoué. Veuillez réessayer."
+    }
   },
   "help": {
     "loading": "Chargement du guide…",

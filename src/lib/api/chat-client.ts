@@ -30,10 +30,10 @@ export interface ChatFeatures {
   chat: boolean;
 }
 
-export type ChatChannelKind = "company" | "project" | "admin";
+export type ChatChannelKind = "company" | "project";
 
 export interface ChatChannel {
-  /** `company:<uuid>`, `project:<uuid>` or `admin:<company_uuid>` (company admins only). */
+  /** `company:<uuid>` or `project:<uuid>`. */
   key: string;
   kind: ChatChannelKind;
   id: string;
@@ -249,6 +249,34 @@ export async function clearChatReaction(messageId: string): Promise<ChatReaction
     method: "DELETE",
   });
   return ((await res.json()) as { reactions: ChatReaction[] }).reactions;
+}
+
+export interface BlockedUser {
+  id: string;
+  name: string;
+}
+
+/** Report one message to the moderators (idempotent on the server). */
+export async function reportChatMessage(messageId: string): Promise<void> {
+  await chatFetch(`/chat/messages/${encodeURIComponent(messageId)}/report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({}),
+  });
+}
+
+/** People the caller blocked (their messages and pushes are hidden from the caller). */
+export async function listBlockedChatUsers(signal?: AbortSignal): Promise<BlockedUser[]> {
+  const page = await chatJson<{ items: BlockedUser[] }>("/chat/blocks", signal);
+  return page.items;
+}
+
+export async function blockChatUser(userId: string): Promise<void> {
+  await chatFetch(`/chat/blocks/${encodeURIComponent(userId)}`, { method: "PUT" });
+}
+
+export async function unblockChatUser(userId: string): Promise<void> {
+  await chatFetch(`/chat/blocks/${encodeURIComponent(userId)}`, { method: "DELETE" });
 }
 
 export interface ChatBlob {

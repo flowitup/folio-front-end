@@ -1,15 +1,7 @@
 "use client";
 
-/**
- * Thread header: channel name, member count and stacked member avatars.
- *
- * The admin channel gets its own confidentiality treatment: a lock icon and the
- * "Admin" label next to the name (the backend otherwise gives it the company's plain
- * legal name, indistinguishable from the company channel), plus a confidentiality
- * subtitle instead of the member count — mirrors the phone app's chat header.
- */
+/** Thread header: channel name, member count and stacked member avatars. */
 
-import { Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ChatChannel, ChatMember } from "@/lib/api/chat-client";
 import { ChatAvatar } from "@/components/chat/chat-avatar";
@@ -23,7 +15,6 @@ export function ChatThreadHeader({
 }) {
   const t = useTranslations("chat");
   const shown = members.slice(0, 3);
-  const isAdmin = channel?.kind === "admin";
   return (
     <div
       className="flex items-center gap-3 border-b px-4 py-3"
@@ -35,24 +26,10 @@ export function ChatThreadHeader({
           className="flex items-center gap-1.5 truncate text-[15px] font-semibold"
           data-testid="chat-title"
         >
-          {isAdmin ? <Lock size={13} aria-hidden="true" data-testid="chat-thread-admin-lock" /> : null}
           <span className="truncate">{channel?.name ?? t("title")}</span>
-          {isAdmin ? (
-            <span
-              className="flex-shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-              style={{ background: "var(--paper-2)", color: "var(--ink)" }}
-              data-testid="chat-thread-admin-label"
-            >
-              {t("kind.admin")}
-            </span>
-          ) : null}
         </div>
         <div className="text-[11.5px]" style={{ color: "var(--muted)" }}>
-          {isAdmin
-            ? t("adminSubtitle")
-            : channel
-              ? t("membersCount", { count: channel.member_count })
-              : ""}
+          {channel ? t("membersCount", { count: channel.member_count }) : ""}
         </div>
       </div>
       {shown.length > 0 ? (

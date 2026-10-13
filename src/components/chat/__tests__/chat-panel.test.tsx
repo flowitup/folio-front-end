@@ -11,7 +11,7 @@ vi.mock("next-intl", () => ({
   useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
 }));
 
-vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 const mockUseAuth = vi.fn();
 vi.mock("@/context/AuthContext", () => ({
@@ -33,6 +33,10 @@ const markChatChannelRead = vi.fn();
 const sendChatMessage = vi.fn();
 const setChatReaction = vi.fn();
 const clearChatReaction = vi.fn();
+const reportChatMessage = vi.fn();
+const blockChatUser = vi.fn();
+const unblockChatUser = vi.fn();
+const listBlockedChatUsers = vi.fn();
 vi.mock("@/lib/api/chat-client", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api/chat-client")>("@/lib/api/chat-client");
   return {
@@ -42,6 +46,10 @@ vi.mock("@/lib/api/chat-client", async () => {
     sendChatMessage: (...args: unknown[]) => sendChatMessage(...args),
     setChatReaction: (...args: unknown[]) => setChatReaction(...args),
     clearChatReaction: (...args: unknown[]) => clearChatReaction(...args),
+    reportChatMessage: (...args: unknown[]) => reportChatMessage(...args),
+    blockChatUser: (...args: unknown[]) => blockChatUser(...args),
+    unblockChatUser: (...args: unknown[]) => unblockChatUser(...args),
+    listBlockedChatUsers: (...args: unknown[]) => listBlockedChatUsers(...args),
     fetchChatAttachmentBlob: vi.fn(),
   };
 });
@@ -79,6 +87,10 @@ beforeEach(() => {
     members: [{ id: "alice", name: "Alice", last_read_at: null }],
   });
   markChatChannelRead.mockResolvedValue(undefined);
+  listBlockedChatUsers.mockResolvedValue([]);
+  reportChatMessage.mockResolvedValue(undefined);
+  blockChatUser.mockResolvedValue(undefined);
+  unblockChatUser.mockResolvedValue(undefined);
   sendChatMessage.mockResolvedValue({ id: "m2" });
   Object.defineProperty(HTMLElement.prototype, "scrollHeight", { configurable: true, value: 100 });
 });
@@ -96,47 +108,6 @@ describe("ChatPanel", () => {
     expect(markChatChannelRead).toHaveBeenCalledWith("project:p1");
     expect(screen.getByTestId("chat-title")).toHaveTextContent("Villa Bleue");
     expect(screen.getByTestId("chat-channel-project:p1")).toHaveAttribute("aria-selected", "true");
-  });
-
-  it("labels an admin channel with the Admin kind", async () => {
-    setChat({
-      channels: [
-        ...channels,
-        { key: "admin:c1", kind: "admin", id: "c1", name: "Chung", member_count: 2, unread_count: 0, last_message_at: null },
-      ],
-    });
-    render(<ChatPanel layout="split" />);
-    await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
-    expect(screen.getByTestId("chat-channel-admin:c1")).toHaveTextContent("chat.kind.admin");
-  });
-
-  it("labels the admin channel chip with a lock icon instead of the company's plain name (stacked layout)", async () => {
-    setChat({
-      channels: [
-        ...channels,
-        { key: "admin:c1", kind: "admin", id: "c1", name: "Chung", member_count: 2, unread_count: 0, last_message_at: null },
-      ],
-    });
-    render(<ChatPanel />);
-    await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
-    const chip = screen.getByTestId("chat-chip-admin:c1");
-    expect(chip).toHaveTextContent("chat.kind.admin");
-    expect(chip).not.toHaveTextContent("Chung");
-    expect(screen.getByTestId("chat-chip-admin:c1-lock")).toBeInTheDocument();
-  });
-
-  it("shows the lock icon, the Admin label and the confidentiality subtitle in the thread header for the admin channel", async () => {
-    setChat({
-      channels: [
-        { key: "admin:c1", kind: "admin", id: "c1", name: "Chung", member_count: 2, unread_count: 0, last_message_at: null },
-      ],
-    });
-    render(<ChatPanel initialChannelKey="admin:c1" />);
-    await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
-    expect(screen.getByTestId("chat-thread-admin-lock")).toBeInTheDocument();
-    expect(screen.getByTestId("chat-thread-admin-label")).toHaveTextContent("chat.kind.admin");
-    expect(screen.getByTestId("chat-thread-header")).toHaveTextContent("chat.adminSubtitle");
-    expect(screen.getByTestId("chat-thread-header")).not.toHaveTextContent("chat.membersCount");
   });
 
   it("honours a deep-linked channel and switches channels on click", async () => {
@@ -296,6 +267,81 @@ describe("ChatPanel", () => {
       await waitFor(() => expect(listChatMessages.mock.calls.length).toBeGreaterThan(callsBefore));
       // The refetched thread (no reactions on the server) replaces the optimistic chip.
       await waitFor(() => expect(chipTexts()).toEqual([]));
+    });
+  });
+
+  describe("report and block", () => {
+    async function openDetails() {
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("chat-message-bubble"));
+      });
+    }
+
+    it("reports someone else's message after a confirmation", async () => {
+      const { toast } = await import("sonner");
+      setChat();
+      render(<ChatPanel />);
+      await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
+      await openDetails();
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("chat-report"));
+      });
+      expect(reportChatMessage).not.toHaveBeenCalled();
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("chat-moderation-confirm-button"));
+      });
+      expect(reportChatMessage).toHaveBeenCalledWith("m1");
+      expect(toast.success).toHaveBeenCalledWith("chat.moderation.reported");
+    });
+
+    it("blocks the sender, then refreshes the thread and the blocked list", async () => {
+      setChat();
+      render(<ChatPanel />);
+      await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
+      const messagesBefore = listChatMessages.mock.calls.length;
+      listBlockedChatUsers.mockResolvedValue([{ id: "alice", name: "Alice" }]);
+      await openDetails();
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("chat-block"));
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("chat-moderation-confirm-button"));
+      });
+      expect(blockChatUser).toHaveBeenCalledWith("alice");
+      await waitFor(() => expect(listChatMessages.mock.calls.length).toBeGreaterThan(messagesBefore));
+      await waitFor(() => expect(screen.getByTestId("chat-blocked-open")).toBeInTheDocument());
+    });
+
+    it("lists blocked people and unblocks one", async () => {
+      listBlockedChatUsers.mockResolvedValue([{ id: "alice", name: "Alice" }]);
+      setChat();
+      render(<ChatPanel />);
+      await waitFor(() => expect(screen.getByTestId("chat-blocked-open")).toBeInTheDocument());
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("chat-blocked-open"));
+      });
+      listBlockedChatUsers.mockResolvedValue([]);
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("chat-unblock-alice"));
+      });
+      expect(unblockChatUser).toHaveBeenCalledWith("alice");
+      await waitFor(() => expect(screen.queryByTestId("chat-blocked-open")).not.toBeInTheDocument());
+    });
+
+    it("offers no report or block on the viewer's own messages", async () => {
+      listChatMessages.mockResolvedValue({
+        items: [
+          { id: "m9", channel_key: "project:p1", sender_id: "me", sender_name: "Me", sender_type: "user", body: "Salut", attachment: null, created_at: "2026-09-08T08:00:00Z", mine: true },
+        ],
+        members: [],
+      });
+      setChat();
+      render(<ChatPanel />);
+      await waitFor(() => expect(screen.getByText("Salut")).toBeInTheDocument());
+      await openDetails();
+      expect(screen.getByTestId("chat-message-details")).toBeInTheDocument();
+      expect(screen.queryByTestId("chat-report")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("chat-block")).not.toBeInTheDocument();
     });
   });
 });

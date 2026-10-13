@@ -47,13 +47,16 @@ function AlertDialogOverlay({
 function AlertDialogContent({
   className,
   size = "default",
+  overlayClassName,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
   size?: "default" | "sm"
+  /** Extra classes for the backdrop, e.g. a z-index above a fixed drawer. */
+  overlayClassName?: string
 }) {
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      <AlertDialogOverlay className={overlayClassName} />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         data-size={size}

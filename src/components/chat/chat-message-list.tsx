@@ -23,6 +23,7 @@ import { ChatAttachmentAudio } from "@/components/chat/chat-attachment-audio";
 import {
   ChatMessageDetails,
   ChatReactionChips,
+  type ModerateMessage,
   type ToggleReaction,
 } from "@/components/chat/chat-message-reactions";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -80,6 +81,7 @@ interface ReactionProps {
   members: ChatMember[];
   viewerId: string | null | undefined;
   onToggleReaction?: ToggleReaction;
+  onModerate?: ModerateMessage;
 }
 
 function MessageRow({
@@ -89,6 +91,7 @@ function MessageRow({
   members,
   viewerId,
   onToggleReaction,
+  onModerate,
 }: {
   message: ChatMessage;
   showSender: boolean;
@@ -110,6 +113,11 @@ function MessageRow({
   };
   const time = timeOf(message.created_at);
   const timeClass = "px-1 text-[10px]";
+
+  const handleModerate: ModerateMessage = (action, target) => {
+    setOpen(false);
+    onModerate?.(action, target);
+  };
 
   const handleToggle: ToggleReaction = (messageId, emoji) => {
     setOpen(false);
@@ -200,6 +208,7 @@ function MessageRow({
               members={members}
               viewerId={viewerId}
               onToggle={handleToggle}
+              onModerate={onModerate ? handleModerate : undefined}
             />
           </PopoverContent>
         </Popover>
@@ -216,6 +225,7 @@ export function ChatMessageList({
   members = [],
   viewerId,
   onToggleReaction,
+  onModerate,
 }: {
   messages: ChatMessage[];
   seen?: Map<string, ChatMember[]>;
@@ -224,6 +234,8 @@ export function ChatMessageList({
   /** Current user id (highlights their own reaction). */
   viewerId?: string | null;
   onToggleReaction?: ToggleReaction;
+  /** Report / Block entries in the message details of other people's messages. */
+  onModerate?: ModerateMessage;
 }) {
   const t = useTranslations("chat");
   const groups = groupMessagesByDay(messages);
@@ -251,6 +263,7 @@ export function ChatMessageList({
                 members={members}
                 viewerId={viewerId}
                 onToggleReaction={onToggleReaction}
+                onModerate={onModerate}
               />
             ))}
           </div>

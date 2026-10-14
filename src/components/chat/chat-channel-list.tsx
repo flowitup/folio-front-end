@@ -38,7 +38,6 @@ export function ChatChannelList({ channels, selectedKey, onSelect }: Props) {
             data-testid={`chat-channel-${channel.key}`}
             onClick={() => onSelect(channel.key)}
             className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-[var(--chat-input)]"
-            style={{ background: active ? "var(--chat-blue-tint)" : undefined }}
           >
             <ChatAvatar userId={channel.key} name={channel.name} size={44} />
             <span className="min-w-0 flex-1">

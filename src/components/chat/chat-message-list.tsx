@@ -62,8 +62,8 @@ function SeenBy({ members, mine }: { members: ChatMember[]; mine: boolean }) {
           key={member.id}
           userId={member.id}
           name={member.name}
-          size={14}
-          className={index === 0 ? "" : "-ml-1"}
+          size={16}
+          className={index === 0 ? "" : "ml-0.5"}
         />
       ))}
       {members.length > shown.length ? (

@@ -1,7 +1,6 @@
 /**
  * The chat drawer renders only while open, hosts the panel on the requested channel, is a
- * support-chat widget (no backdrop) by default on desktop, expands to a full-height split
- * drawer with a backdrop, is a full-screen sheet on narrow viewports, and closes on the X,
+ * support-chat widget (no backdrop) by default on desktop, is a full-screen sheet on narrow viewports, and closes on the X,
  * the backdrop and Escape.
  */
 
@@ -47,17 +46,14 @@ describe("ChatDrawer", () => {
     expect(panelProps).not.toHaveBeenCalled();
   });
 
-  it("opens as a widget (no backdrop) on the requested channel and expands to the split drawer", () => {
+  it("opens as a small widget (no backdrop, no expand toggle) on the requested channel", () => {
     render(<ChatDrawer />);
     const drawer = screen.getByTestId("chat-drawer");
     expect(drawer).toHaveAttribute("data-shape", "widget");
     expect(drawer).toHaveAttribute("aria-modal", "false");
     expect(screen.queryByTestId("chat-drawer-backdrop")).toBeNull();
     expect(panelProps).toHaveBeenLastCalledWith(expect.objectContaining({ initialChannelKey: "project:p1", layout: "stack" }));
-    fireEvent.click(screen.getByTestId("chat-drawer-expand"));
-    expect(screen.getByTestId("chat-drawer")).toHaveAttribute("data-shape", "drawer");
-    expect(screen.getByTestId("chat-drawer-backdrop")).toBeInTheDocument();
-    expect(panelProps).toHaveBeenLastCalledWith(expect.objectContaining({ layout: "split" }));
+    expect(screen.queryByTestId("chat-drawer-expand")).toBeNull();
   });
 
   it("is a full-screen sheet on narrow viewports, without the expand toggle", () => {
@@ -69,11 +65,11 @@ describe("ChatDrawer", () => {
     expect(panelProps).toHaveBeenLastCalledWith(expect.objectContaining({ layout: "stack" }));
   });
 
-  it("closes on the X button, Escape, and the backdrop once expanded", () => {
+  it("closes on the X button, Escape and the backdrop of the narrow sheet", () => {
+    mockDesktop = false;
     render(<ChatDrawer />);
     fireEvent.click(screen.getByTestId("chat-drawer-close"));
     fireEvent.keyDown(document, { key: "Escape" });
-    fireEvent.click(screen.getByTestId("chat-drawer-expand"));
     fireEvent.click(screen.getByTestId("chat-drawer-backdrop"));
     expect(mockClose).toHaveBeenCalledTimes(3);
   });

@@ -2978,8 +2978,6 @@
     "title": "Trò chuyện nhóm",
     "open": "Mở trò chuyện",
     "close": "Đóng trò chuyện",
-    "expand": "Mở rộng",
-    "collapse": "Thu gọn",
     "unread": "{count, plural, other {# chưa đọc}}",
     "back": "Quay lại",
     "channels": "Kênh",

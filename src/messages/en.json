@@ -2978,8 +2978,6 @@
     "title": "Team chat",
     "open": "Open chat",
     "close": "Close chat",
-    "expand": "Expand",
-    "collapse": "Collapse",
     "unread": "{count, plural, one {# unread} other {# unread}}",
     "back": "Back",
     "channels": "Channels",

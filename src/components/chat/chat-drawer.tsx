@@ -3,12 +3,10 @@
 /**
  * Chat drawer — the chat surface opened by the floating button, never a full page.
  *
- * Three shapes:
- *   - widget (desktop default): a support-chat style card, 380 × 600 px, anchored above the
+ * Two shapes:
+ *   - widget (desktop): a small Messenger-style window, 380 × 600 px, anchored above the
  *     floating button at the bottom right; no backdrop, the page stays usable; the button
  *     becomes the close toggle.
- *   - drawer (desktop, "Expand"): full-height panel on the right, 860 px, channel list +
- *     thread, with a backdrop.
  *   - sheet (narrow viewports): full-screen.
  * Escape and the X close it in every shape; the panel unmounts on close so its 5 s thread
  * poll stops.
@@ -17,27 +15,25 @@
  * it rescale) and above the mobile bottom nav (z-50).
  */
 
-import { useEffect, useState } from "react";
-import { Maximize2, Minimize2, X } from "lucide-react";
+import { useEffect } from "react";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useChat } from "@/context/ChatContext";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
 
-export type ChatDrawerShape = "widget" | "drawer" | "sheet";
+export type ChatDrawerShape = "widget" | "sheet";
 
 const SHAPE_CLASS: Record<ChatDrawerShape, string> = {
   // Above the 52 px button (24 px margin + 52 px + 12 px gap = 88 px), capped by the viewport.
   widget:
     "fixed right-6 bottom-[88px] z-[70] flex w-[380px] max-w-[calc(100vw-48px)] h-[600px] max-h-[calc(100vh-112px)] flex-col overflow-hidden rounded-2xl border shadow-2xl",
-  drawer: "fixed inset-y-0 right-0 z-[70] flex w-[860px] max-w-full flex-col border-l shadow-2xl",
   sheet: "fixed inset-0 z-[70] flex w-full flex-col",
 };
 
 export function ChatDrawer() {
   const t = useTranslations("chat");
   const { isOpen, requestedChannelKey, closeChat } = useChat();
-  const [expanded, setExpanded] = useState(false);
   const isDesktop = useIsDesktop();
 
   useEffect(() => {
@@ -50,7 +46,7 @@ export function ChatDrawer() {
   }, [isOpen, closeChat]);
 
   if (!isOpen) return null;
-  const shape: ChatDrawerShape = !isDesktop ? "sheet" : expanded ? "drawer" : "widget";
+  const shape: ChatDrawerShape = isDesktop ? "widget" : "sheet";
 
   return (
     <>
@@ -76,18 +72,6 @@ export function ChatDrawer() {
           style={{ borderColor: "var(--line)" }}
         >
           <span className="label-cap flex-1 px-1">{t("title")}</span>
-          {isDesktop ? (
-            <button
-              type="button"
-              className="btn btn-quiet"
-              aria-label={expanded ? t("collapse") : t("expand")}
-              aria-pressed={expanded}
-              onClick={() => setExpanded((value) => !value)}
-              data-testid="chat-drawer-expand"
-            >
-              {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-            </button>
-          ) : null}
           <button
             type="button"
             className="btn btn-quiet"
@@ -101,7 +85,7 @@ export function ChatDrawer() {
         <div className="min-h-0 flex-1">
           <ChatPanel
             initialChannelKey={requestedChannelKey}
-            layout={shape === "drawer" ? "split" : "stack"}
+            layout="stack"
           />
         </div>
       </aside>

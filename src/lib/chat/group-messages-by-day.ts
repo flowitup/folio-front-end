@@ -69,3 +69,16 @@ export function showsSender<T extends { sender_id: string | null; mine: boolean 
   const previous = messages[index - 1];
   return !previous || previous.sender_id !== current.sender_id;
 }
+
+/**
+ * Whether a message is the last of a run from one sender (its avatar and time sit here,
+ * Messenger style). The next message from someone else, or the end of the day, closes the run.
+ */
+export function endsRun<T extends { sender_id: string | null; mine: boolean }>(
+  messages: T[],
+  index: number
+): boolean {
+  const current = messages[index];
+  const next = messages[index + 1];
+  return !next || next.mine !== current.mine || next.sender_id !== current.sender_id;
+}

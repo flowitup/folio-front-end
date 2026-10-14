@@ -31,6 +31,12 @@
   --negative: #b3543d;
   --negative-tint: #f3dccf;
 
+  /* chat (Messenger look) */
+  --chat-blue: #0084ff;
+  --chat-blue-tint: #e5f1ff;
+  --chat-bubble: #e9eaee;
+  --chat-input: #eef0f3;
+
   /* shape */
   --radius: 14px;
   --radius-sm-token: 10px;

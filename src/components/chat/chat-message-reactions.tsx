@@ -46,14 +46,14 @@ export function ChatReactionChips({
   if (counts.length === 0) return null;
   return (
     <div
-      className={`flex flex-wrap gap-1 px-1 ${message.mine ? "justify-end" : "justify-start"}`}
+      className={`relative z-[1] -mt-2 flex flex-wrap gap-1 px-2 ${message.mine ? "justify-end" : "justify-start"}`}
       data-testid="chat-reaction-chips"
     >
       {counts.map(({ emoji, count, mine }) => {
         const label = t("reactionCount", { emoji, count });
         const chipStyle = {
-          background: mine ? "var(--positive-tint)" : "var(--card)",
-          borderColor: mine ? "var(--positive)" : "var(--line)",
+          background: mine ? "var(--chat-blue-tint)" : "var(--card)",
+          borderColor: mine ? "var(--chat-blue)" : "var(--line)",
           color: "var(--ink)",
         };
         const content = (

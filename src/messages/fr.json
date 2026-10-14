@@ -2978,9 +2978,8 @@
     "title": "Discussion d'équipe",
     "open": "Ouvrir la discussion",
     "close": "Fermer la discussion",
-    "expand": "Agrandir",
-    "collapse": "Réduire",
     "unread": "{count, plural, one {# non lu} other {# non lus}}",
+    "back": "Retour",
     "channels": "Canaux",
     "kind": {
       "company": "Entreprise",

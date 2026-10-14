@@ -121,6 +121,20 @@ describe("ChatPanel", () => {
     await waitFor(() => expect(markChatChannelRead).toHaveBeenCalledWith("project:p1"));
   });
 
+  it("follows a new requested channel while open and refetches a list that lacks it", async () => {
+    setChat();
+    const { rerender } = render(<ChatPanel initialChannelKey="company:c1" layout="split" />);
+    await waitFor(() => expect(screen.getByTestId("chat-title")).toHaveTextContent("Chung"));
+
+    rerender(<ChatPanel initialChannelKey="project:p1" layout="split" />);
+    await waitFor(() => expect(screen.getByTestId("chat-title")).toHaveTextContent("Villa Bleue"));
+
+    // A channel newer than the polled list: ask for a fresh list at once.
+    refreshChannels.mockClear();
+    rerender(<ChatPanel initialChannelKey="project:new" layout="split" />);
+    await waitFor(() => expect(refreshChannels).toHaveBeenCalled());
+  });
+
   it("sends a text message on Enter, then refreshes the thread and the channel list", async () => {
     setChat();
     render(<ChatPanel />);

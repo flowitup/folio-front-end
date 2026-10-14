@@ -108,9 +108,9 @@
     "loadError": "Impossible de charger les données de l'aperçu",
     "money": {
       "spentThisMonth": "Dépensé ce mois-ci",
-      "pctSpent": "{pct} dépensé · {spent}",
+      "pctSpent": "{pct} dépensé · {spent} (entreprise + perso)",
       "purseSpent": "dépensé",
-      "pctCreditDrawn": "{pct} du crédit utilisé · {spent}",
+      "pctCreditDrawn": "{pct} du crédit dépensé · {spent} (entreprise + perso)",
       "unassigned": "{n, plural, =1 {1 dépense} other {# dépenses}} · {amount} sans moyen de paiement entreprise ou personnel — dans aucune bourse"
     },
     "spendByType": {
@@ -654,7 +654,7 @@
       "sumOfTypes": "Total",
       "sharedScaleTo": "échelle commune jusqu'à {amount}",
       "cash": "Espèces",
-      "cashAdvance": "dont {amount} en espèces",
+      "cashAdvance": "après déduction de {amount} d'avance en espèces",
       "noPurse": "Aucune caisse",
       "noPurseSpend": "{n, plural, one {# dépense} other {# dépenses}} dans aucune caisse (sans moyen de paiement entreprise ou personnel) · {amount}"
     },

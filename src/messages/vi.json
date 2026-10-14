@@ -108,9 +108,9 @@
     "loadError": "Không thể tải dữ liệu tổng quan",
     "money": {
       "spentThisMonth": "Đã chi tháng này",
-      "pctSpent": "{pct} đã chi · {spent}",
+      "pctSpent": "{pct} đã chi · {spent} (công ty + cá nhân)",
       "purseSpent": "đã chi",
-      "pctCreditDrawn": "Đã dùng {pct} tín dụng · {spent}",
+      "pctCreditDrawn": "Đã chi {pct} tín dụng · {spent} (công ty + cá nhân)",
       "unassigned": "{n} khoản chi · {amount} không có phương thức thanh toán công ty hoặc cá nhân — không thuộc ví nào"
     },
     "spendByType": {
@@ -654,7 +654,7 @@
       "sumOfTypes": "Tổng",
       "sharedScaleTo": "thang chung đến {amount}",
       "cash": "Tiền mặt",
-      "cashAdvance": "gồm {amount} tiền mặt",
+      "cashAdvance": "đã trừ {amount} tiền mặt ứng trước",
       "noPurse": "Không thuộc quỹ nào",
       "noPurseSpend": "{n} khoản chi không thuộc quỹ nào (không có phương thức thanh toán của công ty hoặc cá nhân) · {amount}"
     },

@@ -333,7 +333,9 @@ export default function ProjectsPage() {
             const hasBreakdown = breakdownRows.length > 0 || laborUnpaid > 0;
             const isBreakdownOpen = openBreakdownId === project.id;
             const isSelected = selectedProjectId === project.id;
-            const userCount = project.user_count ?? 0;
+            // The team list is the fresher source once loaded: the list payload's count can
+            // predate people added since (e.g. admins auto-added to a new project).
+            const userCount = users.length > 0 ? users.length : (project.user_count ?? 0);
 
             return (
               <article

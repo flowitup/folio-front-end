@@ -2,7 +2,9 @@
 
 /**
  * Thread body: messages under day dividers, oldest first (the parent scrolls to the end).
- * Incoming = avatar + name + card bubble; mine = positive bubble on the right.
+ * Messenger look: mine = blue bubble on the right, incoming = grey bubble on the left with the
+ * sender's avatar beside the last bubble of a run and their name above the first. Bubbles of one
+ * run sit close together with a tight corner on the sender's side; the time shows under the last.
  * `seen` maps a message id to the members whose read marker lands on it (see `seenByMessage`).
  * Clicking a member's message (its text bubble, or its time for a bubble-less attachment)
  * opens a popover with the reaction picker, who reacted, and who has read up to it.
@@ -13,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { isVoiceNote, type ChatMember, type ChatMessage } from "@/lib/api/chat-client";
 import {
   dayDividerLabel,
+  endsRun,
   groupMessagesByDay,
   showsSender,
   timeOf,
@@ -87,6 +90,8 @@ interface ReactionProps {
 function MessageRow({
   message,
   showSender,
+  lastOfRun,
+  gapBefore,
   seenBy,
   members,
   viewerId,
@@ -95,6 +100,8 @@ function MessageRow({
 }: {
   message: ChatMessage;
   showSender: boolean;
+  lastOfRun: boolean;
+  gapBefore: boolean;
   seenBy: ChatMember[] | undefined;
 } & ReactionProps) {
   const t = useTranslations("chat");
@@ -104,12 +111,16 @@ function MessageRow({
   const body = displayBody(message);
   const reactable = isReactable(message);
 
-  const bubbleClass = "whitespace-pre-wrap break-words px-3 py-[9px] text-[14px] leading-5";
+  const bubbleClass = "whitespace-pre-wrap break-words px-3.5 py-2 text-[14.5px] leading-[1.35]";
+  // 18px bubbles; inside a run the corners on the sender's side tighten to 4px.
+  const tightTop = !showSender;
+  const tightBottom = !lastOfRun;
   const bubbleStyle = {
-    background: mine ? "var(--positive)" : "var(--card)",
+    background: mine ? "var(--chat-blue)" : "var(--chat-bubble)",
     color: mine ? "#fff" : "var(--ink)",
-    border: mine ? "none" : "1px solid var(--line)",
-    borderRadius: mine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+    borderRadius: mine
+      ? `18px ${tightTop ? 4 : 18}px ${tightBottom ? 4 : 18}px 18px`
+      : `${tightTop ? 4 : 18}px 18px 18px ${tightBottom ? 4 : 18}px`,
   };
   const time = timeOf(message.created_at);
   const timeClass = "px-1 text-[10px]";
@@ -125,9 +136,9 @@ function MessageRow({
   };
 
   const column = (
-    <div className={`flex max-w-[76%] flex-col gap-[3px] ${mine ? "items-end" : "items-start"}`}>
+    <div className={`flex max-w-[76%] flex-col gap-[2px] ${mine ? "items-end" : "items-start"}`}>
       {showSender ? (
-        <span className="pl-1 text-[11px]" style={{ color: "var(--muted)" }}>
+        <span className="pl-3 text-[11px]" style={{ color: "var(--muted)" }}>
           {message.sender_name}
         </span>
       ) : null}
@@ -174,23 +185,23 @@ function MessageRow({
             {time}
           </button>
         </PopoverTrigger>
-      ) : (
+      ) : lastOfRun ? (
         <span className={timeClass} style={{ color: "var(--muted-2)" }}>
           {time}
         </span>
-      )}
+      ) : null}
       {seenBy && seenBy.length > 0 ? <SeenBy members={seenBy} mine={mine} /> : null}
     </div>
   );
 
   return (
     <div
-      className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}
+      className={`flex items-end gap-2 ${gapBefore ? "mt-2" : ""} ${mine ? "justify-end" : "justify-start"}`}
       data-testid={mine ? "chat-message-mine" : "chat-message-incoming"}
     >
       {!mine ? (
         <div className="w-7 flex-shrink-0">
-          {showSender ? (
+          {lastOfRun ? (
             <ChatAvatar userId={message.sender_id} name={message.sender_name} size={28} />
           ) : null}
         </div>
@@ -240,13 +251,13 @@ export function ChatMessageList({
   const t = useTranslations("chat");
   const groups = groupMessagesByDay(messages);
   return (
-    <div className="flex flex-col gap-2.5" data-testid="chat-message-list">
+    <div className="flex flex-col gap-2" data-testid="chat-message-list">
       {groups.map((group) => {
         const label = dayDividerLabel(group.dayKey);
         return (
-          <div key={group.dayKey} className="flex flex-col gap-2.5">
+          <div key={group.dayKey} className="flex flex-col gap-[3px]">
             <div
-              className="mb-1 text-center text-[11px]"
+              className="my-2 text-center text-[11px] font-medium"
               style={{ color: "var(--muted)" }}
               data-testid="chat-day-divider"
             >
@@ -259,6 +270,8 @@ export function ChatMessageList({
                 key={message.id}
                 message={message}
                 showSender={showsSender(group.messages, index)}
+                lastOfRun={endsRun(group.messages, index)}
+                gapBefore={index > 0 && endsRun(group.messages, index - 1)}
                 seenBy={seen?.get(message.id)}
                 members={members}
                 viewerId={viewerId}

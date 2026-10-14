@@ -70,7 +70,7 @@ export function ChatComposer({
   }
 
   return (
-    <div className="border-t" style={{ borderColor: "var(--line)", background: "var(--paper)" }}>
+    <div className="border-t" style={{ borderColor: "var(--line)", background: "var(--card)" }}>
       {file ? (
         <div
           className="flex items-center gap-2 border-b px-4 py-2 text-[12px]"
@@ -91,7 +91,7 @@ export function ChatComposer({
           </button>
         </div>
       ) : null}
-      <div className="flex items-center gap-2 px-3 py-2.5">
+      <div className="flex items-center gap-1 px-2 py-2">
         <input
           ref={fileInputRef}
           type="file"
@@ -105,7 +105,8 @@ export function ChatComposer({
         />
         <button
           type="button"
-          className="btn btn-quiet"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-[var(--chat-input)] disabled:opacity-50"
+          style={{ color: "var(--chat-blue)" }}
           aria-label={t("attachImage")}
           disabled={disabled || sending}
           onClick={() => fileInputRef.current?.click()}
@@ -123,19 +124,19 @@ export function ChatComposer({
           onKeyDown={onKeyDown}
           maxLength={4000}
           data-testid="chat-input"
-          className="h-[42px] min-w-0 flex-1 rounded-full border px-4 text-[14px] outline-none focus:shadow-[var(--shadow-focus)]"
-          style={{ background: "var(--card)", borderColor: "var(--line-2)", color: "var(--ink)" }}
+          className="h-[38px] min-w-0 flex-1 rounded-full border-0 px-4 text-[14.5px] outline-none placeholder:text-[var(--muted)]"
+          style={{ background: "var(--chat-input)", color: "var(--ink)" }}
         />
         <button
           type="button"
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-white transition-opacity disabled:opacity-50"
-          style={{ background: "var(--positive)" }}
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-40"
+          style={{ color: "var(--chat-blue)" }}
           aria-label={t("send")}
           disabled={!canSend}
           onClick={() => void submit()}
           data-testid="chat-send"
         >
-          {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+          {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={20} fill="currentColor" />}
         </button>
       </div>
     </div>

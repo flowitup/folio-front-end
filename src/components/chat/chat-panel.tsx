@@ -332,7 +332,12 @@ export function ChatPanel({
           </div>
         ) : null}
 
-        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto" data-testid="chat-scroll">
+        <div
+          ref={scrollRef}
+          className="min-h-0 flex-1 overflow-y-auto"
+          style={{ background: "var(--card)" }}
+          data-testid="chat-scroll"
+        >
           <div className="flex min-h-full flex-col justify-end p-4">
             {!page && !loadFailed ? (
               <div className="my-6 flex justify-center" style={{ color: "var(--muted)" }}>

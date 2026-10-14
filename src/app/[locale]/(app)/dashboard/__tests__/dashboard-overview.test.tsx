@@ -506,7 +506,7 @@ describe("DashboardPage — remaining is the credit minus total expenses", () =>
     await waitFor(() =>
       expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(6500))
     );
-    expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toBe(`35% of credit drawn · ${eur(3500)}`);
+    expect(norm(moneyPanel.getByText(/of credit spent/).textContent)).toBe(`35% of credit spent · ${eur(3500)} (company + personal)`);
   });
 
   it("shows a whole-euro remaining that adds up with the whole-euro spent and credit", async () => {
@@ -528,7 +528,7 @@ describe("DashboardPage — remaining is the credit minus total expenses", () =>
     await waitFor(() =>
       expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(1631))
     );
-    expect(norm(moneyPanel.getByText(/of credit drawn/).textContent)).toContain(eur(3369));
+    expect(norm(moneyPanel.getByText(/of credit spent/).textContent)).toContain(eur(3369));
   });
 });
 

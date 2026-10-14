@@ -654,7 +654,7 @@
       "sumOfTypes": "Tổng",
       "sharedScaleTo": "thang chung đến {amount}",
       "cash": "Tiền mặt",
-      "cashAdvance": "gồm {amount} tiền mặt",
+      "cashAdvance": "đã trừ {amount} tiền mặt ứng trước",
       "noPurse": "Không thuộc quỹ nào",
       "noPurseSpend": "{n} khoản chi không thuộc quỹ nào (không có phương thức thanh toán của công ty hoặc cá nhân) · {amount}"
     },

@@ -180,7 +180,7 @@ describe("DashboardPage — company purse cash", () => {
     renderDashboard();
     const line = await screen.findByTestId("overview-purse-cash-company");
     const norm = (s: string | null) => (s ?? "").replace(/\s/g, " ");
-    await waitFor(() => expect(norm(line.textContent)).toBe(norm(`incl. ${eur(3000)} cash`)));
+    await waitFor(() => expect(norm(line.textContent)).toBe(norm(`after ${eur(3000)} cash advance deducted`)));
     expect(screen.queryByTestId("overview-purse-cash-personal")).toBeNull();
   });
 

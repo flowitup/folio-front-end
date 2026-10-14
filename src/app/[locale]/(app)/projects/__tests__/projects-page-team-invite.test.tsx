@@ -141,6 +141,24 @@ describe("ProjectsPage card labels", () => {
   });
 });
 
+describe("ProjectsPage team size", () => {
+  it("follows the loaded team list when the list payload count is stale", async () => {
+    vi.mocked(fetchProjectUsers).mockResolvedValueOnce({
+      users: [
+        { id: "u-a", email: "a@example.com", display_name: "A", role_name: "admin" },
+        { id: "u-b", email: "b@example.com", display_name: "B", role_name: "admin" },
+        { id: "u-c", email: "c@example.com", display_name: "C", role_name: "admin" },
+      ],
+      total: 3,
+    });
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });
+    renderPage();
+    expect(screen.getByTestId("project-team-size")).toHaveTextContent("1 member");
+    await openTeam();
+    await waitFor(() => expect(screen.getByTestId("project-team-size")).toHaveTextContent("3 members"));
+  });
+});
+
 describe("ProjectsPage card layout", () => {
   it("keeps an unbroken title inside the card", () => {
     mockUseAuth.mockReturnValue({ user: { permissions: ["project:read"], companies: [] } });

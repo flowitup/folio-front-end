@@ -2981,6 +2981,7 @@
     "expand": "Mở rộng",
     "collapse": "Thu gọn",
     "unread": "{count, plural, other {# chưa đọc}}",
+    "back": "Quay lại",
     "channels": "Kênh",
     "kind": {
       "company": "Công ty",

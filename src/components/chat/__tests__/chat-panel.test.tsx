@@ -171,12 +171,15 @@ describe("ChatPanel", () => {
     expect(markChatChannelRead).toHaveBeenCalledTimes(1);
   });
 
-  it("renders channel chips instead of the list in the stacked (compact) layout", async () => {
+  it("opens the thread with a back arrow instead of the list in the stacked (compact) layout", async () => {
     setChat();
     render(<ChatPanel />);
     await waitFor(() => expect(screen.getByText("Bonjour")).toBeInTheDocument());
     expect(screen.queryByTestId("chat-channel-list")).toBeNull();
-    expect(screen.getByTestId("chat-chip-project:p1")).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByTestId("chat-back")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("chat-back"));
+    expect(screen.getByTestId("chat-list-screen")).toBeInTheDocument();
+    expect(screen.getByTestId("chat-channel-list")).toBeInTheDocument();
   });
 
   it("offers a retry when the channel list cannot be loaded", () => {

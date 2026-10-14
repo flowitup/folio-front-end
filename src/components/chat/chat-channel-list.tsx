@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Channel picker. Desktop: vertical list (name, kind, unread pill). Mobile widths: a
- * horizontal chip row, the way the phone app draws it.
+ * Conversation list (Messenger style): avatar, name, kind and members, bold with an unread pill
+ * when there is something new. Used as the left column of the expanded drawer and as the
+ * start screen of the compact widget and the phone sheet.
  */
 
 import { useTranslations } from "next-intl";
@@ -46,47 +47,15 @@ export function ChatChannelList({ channels, selectedKey, onSelect }: Props) {
               >
                 {channel.name}
               </span>
-              <span className="block truncate text-[12px]" style={{ color: "var(--muted)" }}>
-                {t(`kind.${channel.kind}`)} · {t("membersCount", { count: channel.member_count })}
+              <span
+                className="block truncate text-[12px]"
+                style={{ color: "var(--muted)" }}
+              >
+                {t(`kind.${channel.kind}`)} ·{" "}
+                {t("membersCount", { count: channel.member_count })}
               </span>
             </span>
             {unread ? <ChatUnreadBadge count={channel.unread_count} /> : null}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-export function ChatChannelChips({ channels, selectedKey, onSelect }: Props) {
-  const t = useTranslations("chat");
-  return (
-    <div
-      role="tablist"
-      aria-label={t("channels")}
-      className="flex items-center gap-1.5 overflow-x-auto px-4 py-2.5"
-      data-testid="chat-channel-chips"
-    >
-      {channels.map((channel) => {
-        const active = channel.key === selectedKey;
-        return (
-          <button
-            key={channel.key}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            data-testid={`chat-chip-${channel.key}`}
-            onClick={() => onSelect(channel.key)}
-            className="flex h-8 flex-shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition-colors"
-            style={{
-              background: active ? "var(--chat-blue-tint)" : "var(--chat-input)",
-              color: active ? "var(--chat-blue)" : "var(--ink)",
-            }}
-          >
-            <span className="max-w-[160px] truncate">{channel.name}</span>
-            {channel.unread_count > 0 && !active ? (
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--chat-blue)" }} />
-            ) : null}
           </button>
         );
       })}

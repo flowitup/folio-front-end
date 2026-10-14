@@ -50,7 +50,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ChatBlockedDialog } from "@/components/chat/chat-blocked-dialog";
-import { ChatChannelChips, ChatChannelList } from "@/components/chat/chat-channel-list";
+import { ChatChannelList } from "@/components/chat/chat-channel-list";
 import { ChatComposer, type ComposerRejection } from "@/components/chat/chat-composer";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ChatThreadHeader } from "@/components/chat/chat-thread-header";
@@ -94,6 +94,8 @@ export function ChatPanel({
   const { enabled, channels, channelsLoaded, channelsError, refreshChannels } = useChat();
 
   const [selected, setSelected] = useState<string | null>(initialChannelKey ?? null);
+  // Compact layouts: the conversation list is a screen of its own, reached with the back arrow.
+  const [showList, setShowList] = useState(false);
   const channelKey = useMemo(() => {
     const has = (key: string | null) => Boolean(key) && channels.some((c) => c.key === key);
     if (has(selected)) return selected;
@@ -305,18 +307,32 @@ export function ChatPanel({
           className="flex w-[240px] flex-shrink-0 flex-col overflow-y-auto border-r p-3"
           style={{ borderColor: "var(--line)" }}
         >
-          <div className="label-cap px-3 pb-2 pt-1">{t("channels")}</div>
+          <div className="px-2.5 pb-2 pt-1 text-[20px] font-bold">{t("channels")}</div>
           <ChatChannelList channels={channels} selectedKey={channelKey} onSelect={setSelected} />
         </aside>
       ) : null}
 
-      <section className="flex min-w-0 flex-1 flex-col">
-        <ChatThreadHeader channel={channel} members={members} />
-        {layout === "stack" ? (
-          <div className="border-b" style={{ borderColor: "var(--line)" }}>
-            <ChatChannelChips channels={channels} selectedKey={channelKey} onSelect={setSelected} />
+      {layout === "stack" && showList ? (
+        <section className="flex min-w-0 flex-1 flex-col" data-testid="chat-list-screen">
+          <div className="px-4 pb-2 pt-3 text-[22px] font-bold">{t("title")}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+            <ChatChannelList
+              channels={channels}
+              selectedKey={channelKey}
+              onSelect={(key) => {
+                setSelected(key);
+                setShowList(false);
+              }}
+            />
           </div>
-        ) : null}
+        </section>
+      ) : (
+      <section className="flex min-w-0 flex-1 flex-col">
+        <ChatThreadHeader
+          channel={channel}
+          members={members}
+          onBack={layout === "stack" ? () => setShowList(true) : undefined}
+        />
 
         {blocked.length > 0 ? (
           <div className="flex justify-end border-b px-4 py-1" style={{ borderColor: "var(--line)" }}>
@@ -377,6 +393,7 @@ export function ChatPanel({
           onReject={handleReject}
         />
       </section>
+      )}
 
       <ChatBlockedDialog
         open={blockedOpen}

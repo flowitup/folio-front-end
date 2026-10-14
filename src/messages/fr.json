@@ -2981,6 +2981,7 @@
     "expand": "Agrandir",
     "collapse": "Réduire",
     "unread": "{count, plural, one {# non lu} other {# non lus}}",
+    "back": "Retour",
     "channels": "Canaux",
     "kind": {
       "company": "Entreprise",

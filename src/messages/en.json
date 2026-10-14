@@ -2981,6 +2981,7 @@
     "expand": "Expand",
     "collapse": "Collapse",
     "unread": "{count, plural, one {# unread} other {# unread}}",
+    "back": "Back",
     "channels": "Channels",
     "kind": {
       "company": "Company",

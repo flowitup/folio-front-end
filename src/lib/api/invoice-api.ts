@@ -59,35 +59,35 @@ export const fetchInvoicesWithMeta = (
   if (workerId) params.set("worker_id", workerId);
   const qs = params.toString();
   return api.get<InvoiceListResponse>(
-    `/projects/${projectId}/invoices${qs ? `?${qs}` : ""}`
+    `/projects/${encodeURIComponent(projectId)}/invoices${qs ? `?${qs}` : ""}`
   );
 };
 
 export const fetchInvoice =(projectId: string, invoiceId: string): Promise<Invoice> =>
-  api.get<Invoice>(`/projects/${projectId}/invoices/${invoiceId}`);
+  api.get<Invoice>(`/projects/${encodeURIComponent(projectId)}/invoices/${encodeURIComponent(invoiceId)}`);
 
 export const createInvoice = (
   projectId: string,
   payload: CreateInvoicePayload
 ): Promise<Invoice> =>
-  api.post<Invoice, CreateInvoicePayload>(`/projects/${projectId}/invoices`, payload);
+  api.post<Invoice, CreateInvoicePayload>(`/projects/${encodeURIComponent(projectId)}/invoices`, payload);
 
 export const updateInvoice = (
   projectId: string,
   invoiceId: string,
   payload: UpdateInvoicePayload
 ): Promise<Invoice> =>
-  api.put<Invoice, UpdateInvoicePayload>(`/projects/${projectId}/invoices/${invoiceId}`, payload);
+  api.put<Invoice, UpdateInvoicePayload>(`/projects/${encodeURIComponent(projectId)}/invoices/${encodeURIComponent(invoiceId)}`, payload);
 
 export const deleteInvoice = (projectId: string, invoiceId: string): Promise<void> =>
-  api.delete<void>(`/projects/${projectId}/invoices/${invoiceId}`);
+  api.delete<void>(`/projects/${encodeURIComponent(projectId)}/invoices/${encodeURIComponent(invoiceId)}`);
 
 // ---------------------------------------------------------------------------
 // Attachments
 // ---------------------------------------------------------------------------
 
 export const fetchAttachments = (projectId: string, invoiceId: string): Promise<InvoiceAttachment[]> =>
-  api.get<InvoiceAttachment[]>(`/projects/${projectId}/invoices/${invoiceId}/attachments`);
+  api.get<InvoiceAttachment[]>(`/projects/${encodeURIComponent(projectId)}/invoices/${encodeURIComponent(invoiceId)}/attachments`);
 
 export const uploadAttachment = async (
   projectId: string,
@@ -99,7 +99,7 @@ export const uploadAttachment = async (
   const send = () => {
     const formData = new FormData();
     formData.append("file", file);
-    return fetch(`${env.apiBaseUrl}/projects/${projectId}/invoices/${invoiceId}/attachments`, {
+    return fetch(`${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/invoices/${encodeURIComponent(invoiceId)}/attachments`, {
       method: "POST",
       headers: {
         ...getCsrfHeader("POST"),
@@ -125,20 +125,20 @@ export const uploadAttachment = async (
 };
 
 export const deleteAttachment = (attachmentId: string): Promise<void> =>
-  api.delete<void>(`/attachments/${attachmentId}`);
+  api.delete<void>(`/attachments/${encodeURIComponent(attachmentId)}`);
 
 /**
  * Rename an attachment's display filename. The extension must be preserved
  * (the backend rejects an extension change). Returns the updated metadata.
  */
 export const renameAttachment = (attachmentId: string, filename: string): Promise<InvoiceAttachment> =>
-  api.patch<InvoiceAttachment, { filename: string }>(`/attachments/${attachmentId}/rename`, { filename });
+  api.patch<InvoiceAttachment, { filename: string }>(`/attachments/${encodeURIComponent(attachmentId)}/rename`, { filename });
 
 /**
  * Fetch attachment as a raw Blob.
  */
 export const fetchAttachmentBlob = async (attachmentId: string): Promise<Blob> => {
-  const response = await fetchWithRefresh(`${env.apiBaseUrl}/attachments/${attachmentId}/download`);
+  const response = await fetchWithRefresh(`${env.apiBaseUrl}/attachments/${encodeURIComponent(attachmentId)}/download`);
   if (!response.ok) {
     throw new ApiError(`Download failed: ${response.status}`, response.status);
   }

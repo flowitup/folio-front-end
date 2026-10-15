@@ -23,8 +23,8 @@ import type { ChiffrageImageRef } from "@/lib/api/chiffrage";
 
 function endpointFor(projectId: string, ref: ChiffrageImageRef): string {
   return ref.kind === "article"
-    ? `${env.apiBaseUrl}/projects/${projectId}/chiffrage/articles/${ref.id}/image`
-    : `${env.apiBaseUrl}/bibliotheque/products/${ref.id}/image`;
+    ? `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/chiffrage/articles/${encodeURIComponent(ref.id)}/image`
+    : `${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(ref.id)}/image`;
 }
 
 interface Props {

@@ -217,7 +217,7 @@ async function request<T>(
   return (await response.json()) as T;
 }
 
-const base = (projectId: string) => `/projects/${projectId}/chiffrage`;
+const base = (projectId: string) => `/projects/${encodeURIComponent(projectId)}/chiffrage`;
 
 // ---------------------------------------------------------------------------
 // Tree + units
@@ -236,7 +236,7 @@ export async function createUnit(projectId: string, symbol: string): Promise<Chi
 }
 
 export async function deleteUnit(projectId: string, unitId: string): Promise<void> {
-  return request<void>(`${base(projectId)}/units/${unitId}`, { method: "DELETE" }, "Failed to delete unit");
+  return request<void>(`${base(projectId)}/units/${encodeURIComponent(unitId)}`, { method: "DELETE" }, "Failed to delete unit");
 }
 
 // ---------------------------------------------------------------------------
@@ -253,14 +253,14 @@ export async function updatePoste(
   payload: PostePayload
 ): Promise<ChiffragePoste> {
   return request<ChiffragePoste>(
-    `${base(projectId)}/postes/${posteId}`,
+    `${base(projectId)}/postes/${encodeURIComponent(posteId)}`,
     { method: "PATCH", body: payload },
     "Failed to update poste"
   );
 }
 
 export async function deletePoste(projectId: string, posteId: string): Promise<void> {
-  return request<void>(`${base(projectId)}/postes/${posteId}`, { method: "DELETE" }, "Failed to delete poste");
+  return request<void>(`${base(projectId)}/postes/${encodeURIComponent(posteId)}`, { method: "DELETE" }, "Failed to delete poste");
 }
 
 export async function reorderPoste(
@@ -269,7 +269,7 @@ export async function reorderPoste(
   payload: ReorderPayload
 ): Promise<ChiffragePoste> {
   return request<ChiffragePoste>(
-    `${base(projectId)}/postes/${posteId}/reorder`,
+    `${base(projectId)}/postes/${encodeURIComponent(posteId)}/reorder`,
     { method: "POST", body: payload },
     "Failed to reorder poste"
   );
@@ -284,7 +284,7 @@ export async function uploadArticleImage(projectId: string, articleId: string, f
   form.append("image", file);
 
   const response = await fetch(
-    `${env.apiBaseUrl}/projects/${projectId}/chiffrage/articles/${articleId}/image`,
+    `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/chiffrage/articles/${encodeURIComponent(articleId)}/image`,
     {
       // No Content-Type — fetch sets the multipart boundary itself.
       method: "POST",
@@ -302,7 +302,7 @@ export async function setArticleImageFromUrl(
   url: string
 ): Promise<void> {
   return request<void>(
-    `${base(projectId)}/articles/${articleId}/image-from-url`,
+    `${base(projectId)}/articles/${encodeURIComponent(articleId)}/image-from-url`,
     { method: "POST", body: { url } },
     "Failed to fetch the image"
   );
@@ -310,7 +310,7 @@ export async function setArticleImageFromUrl(
 
 export async function deleteArticleImage(projectId: string, articleId: string): Promise<void> {
   return request<void>(
-    `${base(projectId)}/articles/${articleId}/image`,
+    `${base(projectId)}/articles/${encodeURIComponent(articleId)}/image`,
     { method: "DELETE" },
     "Failed to remove the image"
   );
@@ -338,7 +338,7 @@ export async function updateRoom(
   name: string
 ): Promise<ChiffrageRoom> {
   return request<ChiffrageRoom>(
-    `${base(projectId)}/rooms/${roomId}`,
+    `${base(projectId)}/rooms/${encodeURIComponent(roomId)}`,
     { method: "PATCH", body: { name } },
     "Failed to rename the room"
   );
@@ -346,7 +346,7 @@ export async function updateRoom(
 
 export async function deleteRoom(projectId: string, roomId: string): Promise<void> {
   return request<void>(
-    `${base(projectId)}/rooms/${roomId}`,
+    `${base(projectId)}/rooms/${encodeURIComponent(roomId)}`,
     { method: "DELETE" },
     "Failed to delete the room"
   );
@@ -359,7 +359,7 @@ export async function reorderRoom(
   payload: ReorderPayload
 ): Promise<ChiffrageRoom> {
   return request<ChiffrageRoom>(
-    `${base(projectId)}/rooms/${roomId}/reorder`,
+    `${base(projectId)}/rooms/${encodeURIComponent(roomId)}/reorder`,
     { method: "POST", body: payload },
     "Failed to reorder the room"
   );
@@ -386,14 +386,14 @@ export async function updateStore(
   payload: StorePayload
 ): Promise<ChiffrageStore> {
   return request<ChiffrageStore>(
-    `${base(projectId)}/stores/${storeId}`,
+    `${base(projectId)}/stores/${encodeURIComponent(storeId)}`,
     { method: "PATCH", body: payload },
     "Failed to update store"
   );
 }
 
 export async function deleteStore(projectId: string, storeId: string): Promise<void> {
-  return request<void>(`${base(projectId)}/stores/${storeId}`, { method: "DELETE" }, "Failed to delete store");
+  return request<void>(`${base(projectId)}/stores/${encodeURIComponent(storeId)}`, { method: "DELETE" }, "Failed to delete store");
 }
 
 // ---------------------------------------------------------------------------
@@ -406,7 +406,7 @@ export async function createArticle(
   payload: ArticlePayload
 ): Promise<ChiffrageArticle> {
   return request<ChiffrageArticle>(
-    `${base(projectId)}/postes/${posteId}/articles`,
+    `${base(projectId)}/postes/${encodeURIComponent(posteId)}/articles`,
     { method: "POST", body: payload },
     "Failed to create article"
   );
@@ -418,14 +418,14 @@ export async function updateArticle(
   payload: ArticlePayload
 ): Promise<ChiffrageArticle> {
   return request<ChiffrageArticle>(
-    `${base(projectId)}/articles/${articleId}`,
+    `${base(projectId)}/articles/${encodeURIComponent(articleId)}`,
     { method: "PATCH", body: payload },
     "Failed to update article"
   );
 }
 
 export async function deleteArticle(projectId: string, articleId: string): Promise<void> {
-  return request<void>(`${base(projectId)}/articles/${articleId}`, { method: "DELETE" }, "Failed to delete article");
+  return request<void>(`${base(projectId)}/articles/${encodeURIComponent(articleId)}`, { method: "DELETE" }, "Failed to delete article");
 }
 
 export async function reorderArticle(
@@ -434,7 +434,7 @@ export async function reorderArticle(
   payload: ReorderPayload
 ): Promise<ChiffrageArticle> {
   return request<ChiffrageArticle>(
-    `${base(projectId)}/articles/${articleId}/reorder`,
+    `${base(projectId)}/articles/${encodeURIComponent(articleId)}/reorder`,
     { method: "POST", body: payload },
     "Failed to reorder article"
   );
@@ -450,7 +450,7 @@ export async function createQuote(
   payload: QuotePayload
 ): Promise<ChiffrageQuote> {
   return request<ChiffrageQuote>(
-    `${base(projectId)}/articles/${articleId}/quotes`,
+    `${base(projectId)}/articles/${encodeURIComponent(articleId)}/quotes`,
     { method: "POST", body: payload },
     "Failed to create quote"
   );
@@ -462,19 +462,19 @@ export async function updateQuote(
   payload: QuotePayload
 ): Promise<ChiffrageQuote> {
   return request<ChiffrageQuote>(
-    `${base(projectId)}/quotes/${quoteId}`,
+    `${base(projectId)}/quotes/${encodeURIComponent(quoteId)}`,
     { method: "PATCH", body: payload },
     "Failed to update quote"
   );
 }
 
 export async function deleteQuote(projectId: string, quoteId: string): Promise<void> {
-  return request<void>(`${base(projectId)}/quotes/${quoteId}`, { method: "DELETE" }, "Failed to delete quote");
+  return request<void>(`${base(projectId)}/quotes/${encodeURIComponent(quoteId)}`, { method: "DELETE" }, "Failed to delete quote");
 }
 
 export async function selectQuote(projectId: string, quoteId: string): Promise<ChiffrageQuote> {
   return request<ChiffrageQuote>(
-    `${base(projectId)}/quotes/${quoteId}/select`,
+    `${base(projectId)}/quotes/${encodeURIComponent(quoteId)}/select`,
     { method: "POST", body: {} },
     "Failed to select quote"
   );
@@ -483,7 +483,7 @@ export async function selectQuote(projectId: string, quoteId: string): Promise<C
 /** Stop retaining a quote: its article falls back to the cheapest price again. */
 export async function unselectQuote(projectId: string, quoteId: string): Promise<ChiffrageQuote> {
   return request<ChiffrageQuote>(
-    `${base(projectId)}/quotes/${quoteId}/select`,
+    `${base(projectId)}/quotes/${encodeURIComponent(quoteId)}/select`,
     { method: "DELETE" },
     "Failed to unselect quote"
   );

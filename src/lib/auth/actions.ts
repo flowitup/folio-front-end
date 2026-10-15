@@ -6,7 +6,12 @@ import { getLocale } from "next-intl/server";
 import { env } from "@/lib/config/env";
 import { clientIpHeader } from "@/lib/api/client-ip";
 import type { User, AcceptInvitePayload, RequestInviteCodePayload } from "./types";
-import { acceptInvite, acceptInviteAsMe, requestInviteCode } from "@/lib/api/invitations";
+import {
+  acceptInvite,
+  acceptInviteAsMe,
+  requestInviteCode,
+  type AcceptedUser,
+} from "@/lib/api/invitations";
 import { setForwardedCookies } from "./forward-cookies";
 import { getCurrentUser, getSession } from "./session";
 import { isTokenValid, REFRESH_TOKEN_COOKIE } from "./proxy-session";
@@ -196,7 +201,7 @@ export async function acceptInviteAction(
   name: string,
   phone: string,
   code: string
-): Promise<{ success: boolean; error?: InviteFlowError; user?: User }> {
+): Promise<{ success: boolean; error?: InviteFlowError; user?: AcceptedUser }> {
   // Server-side input validation (don't trust client)
   if (!token || typeof token !== "string" || token.trim().length === 0) {
     return { success: false, error: "not_found" };

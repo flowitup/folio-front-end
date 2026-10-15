@@ -25,7 +25,6 @@ type VerifyOtpResult = {
   success: boolean;
   error?: VerifyOtpError;
   user?: User;
-  accessToken?: string;
 };
 
 /**
@@ -128,7 +127,6 @@ export async function verifyOtpAction(phone: string, code: string): Promise<Veri
     return {
       success: true,
       user: data.user,
-      accessToken: data.access_token,
     };
   } catch (error) {
     console.error("verifyOtpAction error:", error instanceof Error ? error.message : "unknown");

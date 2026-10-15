@@ -179,14 +179,19 @@ export async function verifyInvite(
   return data;
 }
 
+/** What the accept response tells the caller about the account; no tokens. */
+export type AcceptedUser = Pick<User, "id" | "email" | "display_name">;
+
 /**
  * Accept an invitation.
  * Returns the created user plus raw Set-Cookie headers for the server action to forward.
+ * The backend body also carries the session tokens (for the mobile app); they are
+ * dropped here so they never reach page JavaScript, which only gets the cookies.
  * Throws on any non-2xx response.
  */
 export async function acceptInvite(
   payload: AcceptInvitePayload
-): Promise<{ user: User; setCookieHeaders: string[] }> {
+): Promise<{ user: AcceptedUser; setCookieHeaders: string[] }> {
   let response: Response;
   try {
     response = await fetch(`${env.apiBaseUrl}/invitations/accept`, {
@@ -217,8 +222,13 @@ export async function acceptInvite(
     throw err;
   }
 
-  const user: User = await response.json();
+  const body = await response.json();
   const setCookieHeaders = response.headers.getSetCookie?.() ?? [];
+  const user: AcceptedUser = {
+    id: body?.user?.id,
+    email: body?.user?.email,
+    display_name: body?.user?.display_name ?? null,
+  };
 
   return { user, setCookieHeaders };
 }

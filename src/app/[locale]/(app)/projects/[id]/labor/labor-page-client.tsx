@@ -117,7 +117,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const isMemberPersona = !canManageLabor && !canViewPay && !canManageInvoices;
   // Creating, renaming or deleting a labor role is a company-level write
   // (admin or manager of the company whose roles `/labor/roles` lists — the
-  // primary one), not a project permission.
+  // current one), not a project permission.
   const canEditLaborRoles = canManageLaborRoles(user?.permissions, user?.companies);
 
   // State. `activeTab` is seeded with a placeholder and corrected by the

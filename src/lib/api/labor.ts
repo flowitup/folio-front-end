@@ -58,7 +58,7 @@ export async function fetchWorkers(
   options?: { includeInactive?: boolean }
 ): Promise<Worker[]> {
   const query = options?.includeInactive ? "?include_inactive=true" : "";
-  const data = await api.get<WorkerListResponse>(`/projects/${projectId}/workers${query}`);
+  const data = await api.get<WorkerListResponse>(`/projects/${encodeURIComponent(projectId)}/workers${query}`);
   return data.workers;
 }
 
@@ -67,20 +67,20 @@ export async function reactivateWorker(projectId: string, workerId: string): Pro
 }
 
 export async function createWorker(projectId: string, payload: CreateWorkerPayload): Promise<Worker> {
-  return api.post<Worker>(`/projects/${projectId}/workers`, payload);
+  return api.post<Worker>(`/projects/${encodeURIComponent(projectId)}/workers`, payload);
 }
 
 export async function updateWorker(projectId: string, workerId: string, payload: UpdateWorkerPayload): Promise<Worker> {
-  return api.put<Worker>(`/projects/${projectId}/workers/${workerId}`, payload);
+  return api.put<Worker>(`/projects/${encodeURIComponent(projectId)}/workers/${encodeURIComponent(workerId)}`, payload);
 }
 
 export async function deleteWorker(projectId: string, workerId: string): Promise<void> {
-  await api.delete(`/projects/${projectId}/workers/${workerId}`);
+  await api.delete(`/projects/${encodeURIComponent(projectId)}/workers/${encodeURIComponent(workerId)}`);
 }
 
 // Labor Entry API
 export async function fetchLaborEntries(projectId: string, params?: LaborEntryParams): Promise<LaborEntry[]> {
-  const url = buildUrl(`/projects/${projectId}/labor-entries`, {
+  const url = buildUrl(`/projects/${encodeURIComponent(projectId)}/labor-entries`, {
     from: params?.from,
     to: params?.to,
     worker_id: params?.worker_id,
@@ -100,7 +100,7 @@ export async function logAttendance(projectId: string, payload: LogAttendancePay
   if ((payload.shift_type == null) && payload.amount_override != null) {
     throw new Error('amount_override requires a shift_type');
   }
-  return api.post<LaborEntry>(`/projects/${projectId}/labor-entries`, payload);
+  return api.post<LaborEntry>(`/projects/${encodeURIComponent(projectId)}/labor-entries`, payload);
 }
 
 /**
@@ -116,7 +116,7 @@ export async function bulkLogAttendance(
   payload: BulkLogPayload,
 ): Promise<BulkLogResponse> {
   return api.post<BulkLogResponse>(
-    `/projects/${projectId}/labor-entries/bulk`,
+    `/projects/${encodeURIComponent(projectId)}/labor-entries/bulk`,
     payload,
   );
 }
@@ -139,7 +139,7 @@ export async function fetchCrossProjectConflicts(
     params.person_ids = personIds.join(",");
   }
   const url = buildUrl(
-    `/projects/${projectId}/labor-entries/conflicts`,
+    `/projects/${encodeURIComponent(projectId)}/labor-entries/conflicts`,
     params,
   );
   return api.get<ConflictsResponse>(url);
@@ -150,21 +150,21 @@ export async function updateAttendance(projectId: string, entryId: string, paylo
   if (hours !== undefined && (!Number.isInteger(hours) || hours < 0 || hours > 12)) {
     throw new Error('supplement_hours must be an integer in [0, 12]');
   }
-  return api.put<LaborEntry>(`/projects/${projectId}/labor-entries/${entryId}`, payload);
+  return api.put<LaborEntry>(`/projects/${encodeURIComponent(projectId)}/labor-entries/${encodeURIComponent(entryId)}`, payload);
 }
 
 export async function deleteAttendance(projectId: string, entryId: string): Promise<void> {
-  await api.delete(`/projects/${projectId}/labor-entries/${entryId}`);
+  await api.delete(`/projects/${encodeURIComponent(projectId)}/labor-entries/${encodeURIComponent(entryId)}`);
 }
 
 /** Manager: validate a worker-submitted (pending) entry so it becomes priced. Idempotent. */
 export async function validateAttendance(projectId: string, entryId: string): Promise<void> {
-  await api.post(`/projects/${projectId}/labor-entries/${entryId}/validate`, {});
+  await api.post(`/projects/${encodeURIComponent(projectId)}/labor-entries/${encodeURIComponent(entryId)}/validate`, {});
 }
 
 /** Manager: reject a pending entry — the row is deleted so the worker can log the day again. */
 export async function rejectAttendance(projectId: string, entryId: string): Promise<void> {
-  await api.post(`/projects/${projectId}/labor-entries/${entryId}/reject`, {});
+  await api.post(`/projects/${encodeURIComponent(projectId)}/labor-entries/${encodeURIComponent(entryId)}/reject`, {});
 }
 
 /**
@@ -173,17 +173,17 @@ export async function rejectAttendance(projectId: string, entryId: string): Prom
  * request is open any more).
  */
 export async function approveAttendanceChange(projectId: string, entryId: string): Promise<void> {
-  await api.post(`/projects/${projectId}/labor-entries/${entryId}/change/validate`, {});
+  await api.post(`/projects/${encodeURIComponent(projectId)}/labor-entries/${encodeURIComponent(entryId)}/change/validate`, {});
 }
 
 /** Manager: drop a worker's change request — the validated day stays as it is (409 when none is open). */
 export async function rejectAttendanceChange(projectId: string, entryId: string): Promise<void> {
-  await api.post(`/projects/${projectId}/labor-entries/${entryId}/change/reject`, {});
+  await api.post(`/projects/${encodeURIComponent(projectId)}/labor-entries/${encodeURIComponent(entryId)}/change/reject`, {});
 }
 
 // Summary API
 export async function fetchLaborSummary(projectId: string, params?: SummaryParams): Promise<LaborSummaryResponse> {
-  const url = buildUrl(`/projects/${projectId}/labor-summary`, {
+  const url = buildUrl(`/projects/${encodeURIComponent(projectId)}/labor-summary`, {
     from: params?.from,
     to: params?.to,
   });
@@ -200,7 +200,7 @@ export async function fetchLaborMonthlySummary(
   projectId: string,
 ): Promise<LaborMonthlySummaryResponse> {
   return api.get<LaborMonthlySummaryResponse>(
-    `/projects/${projectId}/labor-monthly-summary`,
+    `/projects/${encodeURIComponent(projectId)}/labor-monthly-summary`,
   );
 }
 
@@ -213,7 +213,7 @@ export async function fetchLaborPaymentsSummary(
   projectId: string,
 ): Promise<LaborPaymentsSummaryResponse> {
   return api.get<LaborPaymentsSummaryResponse>(
-    `/projects/${projectId}/labor-payments-summary`,
+    `/projects/${encodeURIComponent(projectId)}/labor-payments-summary`,
   );
 }
 
@@ -227,7 +227,7 @@ export async function fetchLaborActivities(
   projectId: string,
   params?: { from?: string; to?: string },
 ): Promise<LaborActivity[]> {
-  const url = buildUrl(`/projects/${projectId}/labor-activities`, {
+  const url = buildUrl(`/projects/${encodeURIComponent(projectId)}/labor-activities`, {
     from: params?.from,
     to: params?.to,
   });
@@ -239,7 +239,7 @@ export async function createLaborActivity(
   projectId: string,
   payload: CreateLaborActivityPayload,
 ): Promise<LaborActivity> {
-  return api.post<LaborActivity>(`/projects/${projectId}/labor-activities`, payload);
+  return api.post<LaborActivity>(`/projects/${encodeURIComponent(projectId)}/labor-activities`, payload);
 }
 
 export async function updateLaborActivity(
@@ -247,14 +247,14 @@ export async function updateLaborActivity(
   activityId: string,
   payload: UpdateLaborActivityPayload,
 ): Promise<LaborActivity> {
-  return api.put<LaborActivity>(`/projects/${projectId}/labor-activities/${activityId}`, payload);
+  return api.put<LaborActivity>(`/projects/${encodeURIComponent(projectId)}/labor-activities/${encodeURIComponent(activityId)}`, payload);
 }
 
 export async function deleteLaborActivity(
   projectId: string,
   activityId: string,
 ): Promise<void> {
-  await api.delete(`/projects/${projectId}/labor-activities/${activityId}`);
+  await api.delete(`/projects/${encodeURIComponent(projectId)}/labor-activities/${encodeURIComponent(activityId)}`);
 }
 
 // ─── Labor day descriptions ──────────────────────────────────────────────────
@@ -263,7 +263,7 @@ export async function fetchLaborDayDescriptions(
   projectId: string,
   params?: { from?: string; to?: string },
 ): Promise<LaborDayDescription[]> {
-  const url = buildUrl(`/projects/${projectId}/labor-day-descriptions`, {
+  const url = buildUrl(`/projects/${encodeURIComponent(projectId)}/labor-day-descriptions`, {
     from: params?.from,
     to: params?.to,
   });
@@ -275,7 +275,7 @@ export async function setLaborDayDescription(
   projectId: string,
   payload: { date: string; description: string },
 ): Promise<void> {
-  await api.put<unknown>(`/projects/${projectId}/labor-day-descriptions`, payload);
+  await api.put<unknown>(`/projects/${encodeURIComponent(projectId)}/labor-day-descriptions`, payload);
 }
 
 // ─── Labor payment notes ─────────────────────────────────────────────────────
@@ -284,7 +284,7 @@ export async function fetchLaborPaymentNotes(
   projectId: string,
   month: string,
 ): Promise<LaborPaymentNote[]> {
-  const url = buildUrl(`/projects/${projectId}/labor-payment-notes`, { month });
+  const url = buildUrl(`/projects/${encodeURIComponent(projectId)}/labor-payment-notes`, { month });
   const data = await api.get<LaborPaymentNoteListResponse>(url);
   return data.notes;
 }
@@ -294,7 +294,7 @@ export async function setLaborPaymentNote(
   projectId: string,
   payload: { worker_id: string; month: string; note: string },
 ): Promise<void> {
-  await api.put<unknown>(`/projects/${projectId}/labor-payment-notes`, payload);
+  await api.put<unknown>(`/projects/${encodeURIComponent(projectId)}/labor-payment-notes`, payload);
 }
 
 // ─── Worker rate changes ─────────────────────────────────────────────────────
@@ -304,7 +304,7 @@ export async function fetchWorkerRateChanges(
   workerId: string,
 ): Promise<WorkerRateChange[]> {
   const data = await api.get<WorkerRateChangeListResponse>(
-    `/projects/${projectId}/workers/${workerId}/rate-changes`,
+    `/projects/${encodeURIComponent(projectId)}/workers/${encodeURIComponent(workerId)}/rate-changes`,
   );
   return data.rate_changes;
 }
@@ -315,7 +315,7 @@ export async function createWorkerRateChange(
   payload: CreateRateChangePayload,
 ): Promise<WorkerRateChange> {
   return api.post<WorkerRateChange>(
-    `/projects/${projectId}/workers/${workerId}/rate-changes`,
+    `/projects/${encodeURIComponent(projectId)}/workers/${encodeURIComponent(workerId)}/rate-changes`,
     payload,
   );
 }
@@ -326,7 +326,7 @@ export async function deleteWorkerRateChange(
   rcId: string,
 ): Promise<void> {
   await api.delete(
-    `/projects/${projectId}/workers/${workerId}/rate-changes/${rcId}`,
+    `/projects/${encodeURIComponent(projectId)}/workers/${encodeURIComponent(workerId)}/rate-changes/${encodeURIComponent(rcId)}`,
   );
 }
 

@@ -11,7 +11,10 @@ import {
 } from "@/lib/auth/middleware";
 import {
   applySessionCookies,
+  expireSessionCookies,
   forwardRequestHeader,
+  forwardWithoutSessionCookies,
+  hasDuplicateSessionCookie,
   isTokenValid,
   refreshSession,
 } from "@/lib/auth/proxy-session";
@@ -53,11 +56,16 @@ export async function proxy(request: NextRequest) {
   // Check for access token cookie and validate expiry. An expired or missing
   // access token is renewed with the refresh cookie before anything decides
   // the user is signed out: the refresh token outlives it by days.
-  let accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  //
+  // A doubled access or refresh cookie (one planted from a sibling host) is
+  // not trusted: the request counts as signed out and the cookies are dropped,
+  // which leaves the user at /login (never redirected from there) to sign in.
+  const duplicated = hasDuplicateSessionCookie(request);
+  let accessToken = duplicated ? undefined : request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
   const needsSession =
     isProtectedRoute(pathnameWithoutLocale) || isAuthRoute(pathnameWithoutLocale);
   const refreshed =
-    needsSession && !isTokenValid(accessToken) ? await refreshSession(request) : [];
+    needsSession && !duplicated && !isTokenValid(accessToken) ? await refreshSession(request) : [];
   accessToken = refreshed.find((c) => c.name === ACCESS_TOKEN_COOKIE)?.value ?? accessToken;
   const isAuthenticated = isTokenValid(accessToken);
 
@@ -76,7 +84,9 @@ export async function proxy(request: NextRequest) {
   if (!isAuthenticated && isProtectedRoute(pathnameWithoutLocale)) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
     loginUrl.searchParams.set("callbackUrl", `${pathname}${request.nextUrl.search}`);
-    return NextResponse.redirect(loginUrl);
+    const redirect = NextResponse.redirect(loginUrl);
+    if (duplicated && request.method === "GET") expireSessionCookies(request, redirect);
+    return redirect;
   }
 
   // An unexpired token the API refuses (revoked by a sign-out or a phone
@@ -85,6 +95,11 @@ export async function proxy(request: NextRequest) {
   // a client-sent value never reaches the render.
   if (isProtectedRoute(pathnameWithoutLocale)) {
     forwardRequestHeader(request, response, REQUEST_PATH_HEADER, `${pathname}${request.nextUrl.search}`);
+  }
+  if (duplicated) {
+    // Not on a POST: a sign-in action sets its own cookies in this response.
+    if (request.method === "GET") expireSessionCookies(request, response);
+    forwardWithoutSessionCookies(request, response);
   }
   applySessionCookies(request, response, refreshed);
   return response;

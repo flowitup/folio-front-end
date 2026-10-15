@@ -32,7 +32,7 @@ import { PdfCanvasViewer } from "../pdf-canvas-viewer";
 describe("PdfCanvasViewer", () => {
   it("loads the PDF through the legacy PDF.js build and its worker", async () => {
     getDocument.mockReturnValue({
-      promise: Promise.resolve({ numPages: 0, destroy: vi.fn() }),
+      promise: Promise.resolve({ numPages: 0, loadingTask: { destroy: vi.fn() } }),
     });
 
     render(<PdfCanvasViewer src="https://files.example/plan.pdf" />);
@@ -42,6 +42,21 @@ describe("PdfCanvasViewer", () => {
       url: "https://files.example/plan.pdf",
     });
     expect(GlobalWorkerOptions.workerSrc).toBe("/pdf.worker.min.mjs");
+  });
+
+  it("releases the document through its loading task when unmounted", async () => {
+    const destroy = vi.fn();
+    getDocument.mockReturnValue({
+      promise: Promise.resolve({ numPages: 0, loadingTask: { destroy } }),
+    });
+
+    const { unmount } = render(<PdfCanvasViewer src="https://files.example/plan.pdf" />);
+    await waitFor(() => expect(getDocument).toHaveBeenCalled());
+    await getDocument.mock.results[0].value.promise;
+    await Promise.resolve();
+    unmount();
+
+    expect(destroy).toHaveBeenCalled();
   });
 
   it("copies the worker from the legacy build so both sides carry the polyfills", () => {

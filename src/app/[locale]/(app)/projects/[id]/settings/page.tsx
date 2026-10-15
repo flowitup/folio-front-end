@@ -14,7 +14,7 @@ interface PageProps {
 async function fetchProject(projectId: string): Promise<Project | null> {
   const authHeaders = await sessionAuthHeader();
   try {
-    const res = await fetch(`${env.apiBaseUrl}/projects/${projectId}`, {
+    const res = await fetch(`${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}`, {
       headers: { "Content-Type": "application/json", ...authHeaders },
       cache: "no-store",
     });

@@ -26,7 +26,7 @@ export async function updateInvoicePrefix(
   }
 
   const authHeaders = await sessionAuthHeader();
-  const response = await fetch(`${env.apiBaseUrl}/projects/${projectId}`, {
+  const response = await fetch(`${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", ...authHeaders },
     // "" clears the prefix (back to INV): the backend reads null as "leave

@@ -47,6 +47,8 @@ interface CreateState {
   dueDate: string | null;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface KanbanBoardProps {
   projectId: string;
 }
@@ -64,7 +66,9 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const selectedTaskId = searchParams.get("task");
+  // Only a task UUID selects a task: `?task=` ends up in an API path.
+  const taskParam = searchParams.get("task");
+  const selectedTaskId = taskParam && UUID_RE.test(taskParam) ? taskParam : null;
   const view: PlanningView = searchParams.get("view") === "week" ? "week" : "board";
   const weekOffset = weekOffsetFromParam(searchParams.get("week"));
 

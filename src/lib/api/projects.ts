@@ -39,15 +39,15 @@ export async function updateProject(
   id: string,
   payload: UpdateProjectPayload,
 ): Promise<Project> {
-  return api.put<Project, UpdateProjectPayload>(`/projects/${id}`, payload);
+  return api.put<Project, UpdateProjectPayload>(`/projects/${encodeURIComponent(id)}`, payload);
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  await api.delete(`/projects/${id}`);
+  await api.delete(`/projects/${encodeURIComponent(id)}`);
 }
 
 export async function fetchProjectById(id: string): Promise<Project> {
-  return api.get<Project>(`/projects/${id}`);
+  return api.get<Project>(`/projects/${encodeURIComponent(id)}`);
 }
 
 /** People on a project with their company role — read from /members, which
@@ -62,7 +62,7 @@ export async function fetchProjectUsers(projectId: string): Promise<ProjectUsers
       role_name: ProjectUser["role_name"];
     }[];
     total: number;
-  }>(`/projects/${projectId}/members`);
+  }>(`/projects/${encodeURIComponent(projectId)}/members`);
   return {
     users: res.members.map((m) => ({
       id: m.user_id,

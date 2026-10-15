@@ -47,7 +47,7 @@ export async function mergePersons(
   payload: MergePersonsPayload,
 ): Promise<MergePersonsResponse> {
   return api.post<MergePersonsResponse>(
-    `/persons/${sourcePersonId}/merge`,
+    `/persons/${encodeURIComponent(sourcePersonId)}/merge`,
     payload,
   );
 }

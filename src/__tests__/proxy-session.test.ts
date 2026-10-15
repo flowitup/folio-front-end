@@ -106,6 +106,25 @@ describe("applySessionCookies", () => {
     expect(res.cookies.get("access_token_cookie")?.value).toBe("new");
   });
 
+  it("keeps the incoming Cookie header as is and survives a hostile cookie value", () => {
+    const req = new NextRequest(new URL("/en/projects", "http://localhost:3000"), {
+      headers: {
+        cookie:
+          "junk=a%0D%0Ab; nul=a%00b; access_token_cookie=stale; refresh_token_cookie=r; access_token_cookie=stale2",
+      },
+    });
+    const res = NextResponse.next();
+    expect(() =>
+      applySessionCookies(req, res, [
+        { name: "access_token_cookie", value: "new", httpOnly: true, secure: false },
+      ])
+    ).not.toThrow();
+    // Both stale copies are dropped, the fresh one wins, the rest is untouched.
+    expect(res.headers.get("x-middleware-request-cookie")).toBe(
+      "junk=a%0D%0Ab; nul=a%00b; refresh_token_cookie=r; access_token_cookie=new"
+    );
+  });
+
   it("forwards every request header when no override exists yet", () => {
     const req = request("/en/projects", { refresh_token_cookie: "r" });
     const res = NextResponse.next();
@@ -172,6 +191,18 @@ describe("proxy session handling", () => {
     );
   });
 
+  it("renews the session of a request that carries a hostile cookie", async () => {
+    fetchMock.mockResolvedValue(refreshOk());
+    const req = new NextRequest(new URL("/en/login", "http://localhost:3000"), {
+      headers: { cookie: `junk=a%0D%0Ab; access_token_cookie=${jwt(-60)}; refresh_token_cookie=r` },
+    });
+    const res = await proxy(req);
+    expect(res.status).toBe(200);
+    const forwarded = res.headers.get("x-middleware-request-cookie") ?? "";
+    expect(forwarded).toContain(`access_token_cookie=${NEW_ACCESS}`);
+    expect(forwarded).not.toMatch(/[\r\n\0]/);
+  });
+
   it("does not forward the path on public pages", async () => {
     const res = await proxy(request("/en/login", {}));
     expect(res.headers.get("x-middleware-request-x-folio-path")).toBeNull();
@@ -183,3 +214,54 @@ describe("proxy session handling", () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe("proxy duplicate session cookies", () => {
+  const doubled = (extra = "") =>
+    new NextRequest(new URL("/en/projects", "http://localhost:3000"), {
+      headers: {
+        cookie: `access_token_cookie=${jwt(600)}; refresh_token_cookie=r; access_token_cookie=${jwt(600)}${extra}`,
+      },
+    });
+
+  it("treats a doubled access cookie as signed out, without trying to refresh", async () => {
+    const res = await proxy(doubled());
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(res.headers.get("location")).toBe(
+      "http://localhost:3000/en/login?callbackUrl=%2Fen%2Fprojects"
+    );
+    const cleared = res.headers.getSetCookie().join("\n");
+    expect(cleared).toContain("access_token_cookie=;");
+    expect(cleared).toContain("refresh_token_cookie=;");
+  });
+
+  it("clears the cookies on the parent domains too", async () => {
+    const req = new NextRequest(new URL("/en/projects", "https://folio.example.test"), {
+      headers: { cookie: `access_token_cookie=a; access_token_cookie=b` },
+    });
+    const cleared = (await proxy(req)).headers.getSetCookie().join("\n");
+    expect(cleared).toMatch(/access_token_cookie=;.*Domain=folio\.example\.test/i);
+    expect(cleared).toMatch(/access_token_cookie=;.*Domain=example\.test/i);
+    expect(cleared).not.toMatch(/Domain=test(;|$)/im);
+  });
+
+  it("renders /login without a redirect and hands it no session cookies", async () => {
+    const req = new NextRequest(new URL("/en/login", "http://localhost:3000"), {
+      headers: { cookie: `access_token_cookie=${jwt(600)}; refresh_token_cookie=r; refresh_token_cookie=r2; theme=dark` },
+    });
+    const res = await proxy(req);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+    expect(res.headers.get("x-middleware-request-cookie")).toBe("theme=dark");
+    expect(res.headers.getSetCookie().join("\n")).toContain("access_token_cookie=;");
+  });
+
+  it("leaves a single copy of each cookie alone", async () => {
+    const res = await proxy(
+      request("/en/projects", { access_token_cookie: jwt(600), refresh_token_cookie: "r" })
+    );
+    expect(res.headers.get("location")).toBeNull();
+    expect(res.headers.getSetCookie()).toEqual([]);
+  });
+});
+

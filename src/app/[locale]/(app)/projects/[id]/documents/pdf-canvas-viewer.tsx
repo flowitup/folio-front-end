@@ -156,7 +156,7 @@ export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasView
         const loadingTask = pdfjs.getDocument(docParams);
         const doc = await loadingTask.promise;
         if (cancelled) {
-          doc.destroy();
+          doc.loadingTask.destroy();
           return;
         }
 
@@ -191,7 +191,7 @@ export function PdfCanvasViewer({ src, data, label, onLoadError }: PdfCanvasView
     return () => {
       cancelled = true;
       if (pdfDocRef.current) {
-        pdfDocRef.current.destroy();
+        pdfDocRef.current.loadingTask.destroy();
         pdfDocRef.current = null;
       }
     };

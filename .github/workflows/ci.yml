@@ -59,12 +59,14 @@ jobs:
         id: get-labels
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Label names are free text: pass them through the environment, never
+          # into the script text.
+          EVENT_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
         run: |
           PR_NUMBER="${{ github.event.pull_request.number }}"
           echo "PR Number: $PR_NUMBER"
 
           # Get labels from event payload first (more reliable)
-          EVENT_LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
           echo "Labels from event: $EVENT_LABELS"
 
           # Fallback to gh CLI if event labels empty
@@ -170,7 +172,7 @@ jobs:
         if: steps.compute-version.outputs.version_bumped == 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Update package.json
         if: steps.compute-version.outputs.version_bumped == 'true'
@@ -180,6 +182,8 @@ jobs:
 
       - name: Commit version bump to PR
         if: steps.compute-version.outputs.version_bumped == 'true'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           NEW_VERSION="${{ steps.compute-version.outputs.new_version }}"
           git config user.name "github-actions[bot]"
@@ -187,7 +191,7 @@ jobs:
           if ! git diff --quiet package.json package-lock.json; then
             git add package.json package-lock.json
             git commit -m "chore: bump version to $NEW_VERSION"
-            git push origin ${{ github.head_ref }}
+            git push origin "$HEAD_REF"
           else
             echo "package.json already has version $NEW_VERSION"
           fi
@@ -206,12 +210,14 @@ jobs:
 
       - name: Pull latest changes
         if: github.event_name == 'pull_request'
-        run: git pull origin ${{ github.head_ref }} || true
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: git pull origin "$HEAD_REF" || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -234,12 +240,14 @@ jobs:
 
       - name: Pull latest changes
         if: github.event_name == 'pull_request'
-        run: git pull origin ${{ github.head_ref }} || true
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: git pull origin "$HEAD_REF" || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -270,12 +278,14 @@ jobs:
 
       - name: Pull latest changes
         if: github.event_name == 'pull_request'
-        run: git pull origin ${{ github.head_ref }} || true
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: git pull origin "$HEAD_REF" || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -298,12 +308,14 @@ jobs:
 
       - name: Pull latest changes
         if: github.event_name == 'pull_request'
-        run: git pull origin ${{ github.head_ref }} || true
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: git pull origin "$HEAD_REF" || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies

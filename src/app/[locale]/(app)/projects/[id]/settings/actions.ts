@@ -29,7 +29,7 @@ export async function updateInvoicePrefix(
   const authHeaders = await sessionAuthHeader();
   let response: Response;
   try {
-    response = await fetch(`${env.apiBaseUrl}/projects/${projectId}`, {
+    response = await fetch(`${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ invoice_prefix: cleaned === "" ? null : cleaned }),
@@ -80,7 +80,7 @@ export async function updateBankCredit(
   const authHeaders = await sessionAuthHeader();
   let response: Response;
   try {
-    response = await fetch(`${env.apiBaseUrl}/projects/${projectId}`, {
+    response = await fetch(`${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({

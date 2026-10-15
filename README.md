@@ -87,7 +87,7 @@ A separate, company-wide document generator for the paperwork you issue to your 
 A public landing page for people clicking an invitation email. The invitee enters their name and phone number and verifies it with an SMS code to create their account — the email is shown read-only, just to confirm which invitation they're accepting, since sign-in itself is phone-only. If that number already has an account, the page asks them to sign in instead and the invitation is not applied. Every other state is handled too: already accepted, expired, revoked, invalid token, or "you're signed in as someone else."
 
 ### Team chat
-- A floating chat button opens a drawer with one channel per company you belong to and one per project, plus a private admin channel for company admins. Send text or a photo; see who's read up to your latest message.
+- A floating chat button opens a drawer with one channel per company you belong to and one per project. Send text or a photo; see who's read up to your latest message.
 
 ### Notifications
 The bell in the top bar shows attendance days waiting for a manager's validation (validate or reject inline) and, for company admins, new members who joined without a project assignment yet, linking to Settings to place them. The badge (capped at "9+") counts what needs action; new-member events aren't counted. Reminders on notes written before notes became a journal still show up there too.
@@ -99,7 +99,7 @@ A question-mark icon next to the bell opens an in-app guide to the main workflow
 Every tab here opens something real — there are no "coming soon" placeholders.
 - **Profile** — display name and phone. The phone is your sign-in number, so changing it changes how you sign in. Email is shown read-only; only an administrator can change it.
 - **Project** — the invoice-number prefix (up to 8 letters/digits) for the project you have selected. Only appears once a project is selected.
-- **Company** — every company you belong to: identity card, set-as-primary, detach, attach-by-code. Administering the selected company also adds its join code, a member table with roles and custom per-project or company-wide permission grants, add-by-phone, importing members from another company you admin, payment methods, and the Assistant audit link.
+- **Company** — every company you belong to: identity card, set-as-primary, detach, attach-by-code. Administering the selected company also adds its join code, a member table with roles and custom per-project or company-wide permission grants, add-by-phone, importing members from another company you admin, and payment methods.
 - **Notifications** — per-category switches (team chat, attendance, tasks, team & access, money) for push notifications to the Folio mobile app; they don't affect the web bell.
 - **API Keys** — every signed-in user can generate personal API keys to call the Folio API from scripts. A key acts with your permissions (it can't manage your account or other keys) and never expires until you revoke it; it is shown once, and revoking it stops it immediately.
 - **Users & Roles** — Folio's support team only: attach an existing account to one or more projects at once. It doesn't set roles — those come from the person's company role and the per-project grants under Company.

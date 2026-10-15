@@ -96,6 +96,22 @@ export function ChatPanel({
   const [selected, setSelected] = useState<string | null>(initialChannelKey ?? null);
   // Compact layouts: the conversation list is a screen of its own, reached with the back arrow.
   const [showList, setShowList] = useState(false);
+  // Opened again on another channel (the bell) while the drawer is already open: follow it.
+  const [seenInitial, setSeenInitial] = useState(initialChannelKey);
+  if (initialChannelKey !== seenInitial) {
+    setSeenInitial(initialChannelKey);
+    if (initialChannelKey) {
+      setSelected(initialChannelKey);
+      setShowList(false);
+    }
+  }
+  // The requested channel can be newer than the polled list (a project the user was just added
+  // to): fetch the list now instead of showing a default channel until the next 30 s poll.
+  useEffect(() => {
+    if (selected && channelsLoaded && !channels.some((c) => c.key === selected)) void refreshChannels();
+    // Only when the requested channel changes; a refreshed list that still lacks it must not loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, channelsLoaded]);
   const channelKey = useMemo(() => {
     const has = (key: string | null) => Boolean(key) && channels.some((c) => c.key === key);
     if (has(selected)) return selected;

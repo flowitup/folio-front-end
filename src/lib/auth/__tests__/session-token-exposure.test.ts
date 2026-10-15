@@ -62,6 +62,36 @@ describe("verifyOtpAction", () => {
       expect.objectContaining({ httpOnly: true }),
     );
   });
+
+  it("passes on only the whitelisted user fields", async () => {
+    respond({
+      access_token: ACCESS,
+      user: {
+        id: "u1",
+        email: "a@example.test",
+        permissions: ["p"],
+        display_name: "Ann",
+        refresh_token: REFRESH,
+        csrf: "fake-csrf",
+      },
+    });
+
+    const result = await verifyOtpAction("0612345678", "123456");
+
+    expect(result.user).toEqual({
+      id: "u1",
+      email: "a@example.test",
+      permissions: ["p"],
+      display_name: "Ann",
+    });
+    expect(JSON.stringify(result)).not.toContain(REFRESH);
+  });
+
+  it("returns no user when the body has none", async () => {
+    respond({ access_token: ACCESS });
+    const result = await verifyOtpAction("0612345678", "123456");
+    expect(result.user).toBeUndefined();
+  });
 });
 
 describe("acceptInviteAction", () => {
@@ -85,5 +115,14 @@ describe("acceptInviteAction", () => {
       "fake-cookie-value",
       expect.objectContaining({ httpOnly: true }),
     );
+  });
+
+  it("leaves the user out, but still forwards the cookies, when the body has none", async () => {
+    respond({ access_token: ACCESS });
+
+    const result = await acceptInviteAction("tok", "Bea", "+33612345678", "123456");
+
+    expect(result).toEqual({ success: true, user: undefined });
+    expect(cookieSet).toHaveBeenCalled();
   });
 });

@@ -2,6 +2,9 @@
   "name": "construction-front-end",
   "version": "0.2.17",
   "private": true,
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "predev": "cp node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs public/pdf.worker.min.mjs",
     "dev": "next dev",

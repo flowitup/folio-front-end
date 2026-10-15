@@ -27,6 +27,19 @@ type VerifyOtpResult = {
   user?: User;
 };
 
+/** The fields of the sign-in response's user the client keeps; nothing else is passed through. */
+function whitelistedUser(user: User | undefined): User | undefined {
+  if (!user || typeof user !== "object") return undefined;
+  return {
+    id: user.id,
+    email: user.email,
+    permissions: Array.isArray(user.permissions) ? user.permissions : [],
+    ...(user.display_name !== undefined ? { display_name: user.display_name } : {}),
+    ...(user.phone !== undefined ? { phone: user.phone } : {}),
+    ...(user.companies !== undefined ? { companies: user.companies } : {}),
+  };
+}
+
 /**
  * Ask the backend to text a 6-digit sign-in code to `phone`.
  * `POST /auth/otp/request` always answers 202 for a well-formed number
@@ -126,7 +139,7 @@ export async function verifyOtpAction(phone: string, code: string): Promise<Veri
 
     return {
       success: true,
-      user: data.user,
+      user: whitelistedUser(data.user),
     };
   } catch (error) {
     console.error("verifyOtpAction error:", error instanceof Error ? error.message : "unknown");

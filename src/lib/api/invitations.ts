@@ -184,14 +184,14 @@ export type AcceptedUser = Pick<User, "id" | "email" | "display_name">;
 
 /**
  * Accept an invitation.
- * Returns the created user plus raw Set-Cookie headers for the server action to forward.
+ * Returns the created user (absent when the body carries none) plus raw Set-Cookie headers for the server action to forward.
  * The backend body also carries the session tokens (for the mobile app); they are
  * dropped here so they never reach page JavaScript, which only gets the cookies.
  * Throws on any non-2xx response.
  */
 export async function acceptInvite(
   payload: AcceptInvitePayload
-): Promise<{ user: AcceptedUser; setCookieHeaders: string[] }> {
+): Promise<{ user?: AcceptedUser; setCookieHeaders: string[] }> {
   let response: Response;
   try {
     response = await fetch(`${env.apiBaseUrl}/invitations/accept`, {
@@ -224,11 +224,15 @@ export async function acceptInvite(
 
   const body = await response.json();
   const setCookieHeaders = response.headers.getSetCookie?.() ?? [];
-  const user: AcceptedUser = {
-    id: body?.user?.id,
-    email: body?.user?.email,
-    display_name: body?.user?.display_name ?? null,
-  };
+  // The account exists and its cookies are set by now: a body without a user
+  // is not an error, the field is just left out.
+  const user: AcceptedUser | undefined = body?.user?.id
+    ? {
+        id: body.user.id,
+        email: body.user.email,
+        display_name: body.user.display_name ?? null,
+      }
+    : undefined;
 
   return { user, setCookieHeaders };
 }

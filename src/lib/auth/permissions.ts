@@ -37,6 +37,19 @@ export interface UserCompanySummary {
 const SUPERADMIN_WILDCARD = "*:*";
 
 /**
+ * The company a request without an explicit company id is scoped to, as the
+ * backend resolves it: the one marked `is_primary`, else the only company
+ * when the user has exactly one (accounts attached by someone else — add by
+ * phone, import, invitation — are never marked primary), else `undefined`.
+ */
+export function pickCurrentCompany<T extends { is_primary: boolean }>(
+  companies: readonly T[] | undefined | null
+): T | undefined {
+  const list = companies ?? [];
+  return list.find((c) => c.is_primary) ?? (list.length === 1 ? list[0] : undefined);
+}
+
+/**
  * Core permission check: does `permission` appear (exact, resource wildcard,
  * or global `*:*`) in the caller's effective permissions?
  *
@@ -125,9 +138,9 @@ export function canCreateProject(
  * roles — broader than `isCompanyAdmin`, since crews are run by managers.
  *
  * Pass `companyId` when the roles shown belong to a specific company (e.g.
- * Settings › Company); omit it for surfaces that list the caller's PRIMARY
- * company's roles, which is what `/labor/roles` answers without a
- * `company_id` (e.g. the role picker on the labor page).
+ * Settings › Company); omit it for surfaces that list the caller's current
+ * company's roles (`pickCurrentCompany`), which is what `/labor/roles`
+ * answers without a `company_id` (e.g. the role picker on the labor page).
  */
 export function canManageLaborRoles(
   permissions: string[] | undefined | null,
@@ -135,8 +148,8 @@ export function canManageLaborRoles(
   companyId?: string | null
 ): boolean {
   if (isPlatformOps(permissions)) return true;
-  const company = (companies ?? []).find((c) =>
-    companyId ? c.id === companyId : c.is_primary
-  );
+  const company = companyId
+    ? (companies ?? []).find((c) => c.id === companyId)
+    : pickCurrentCompany(companies);
   return company?.role === "admin" || company?.role === "manager";
 }

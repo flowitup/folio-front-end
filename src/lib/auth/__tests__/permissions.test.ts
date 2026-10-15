@@ -5,6 +5,7 @@ import {
   isCompanyAdmin,
   canCreateProject,
   canManageLaborRoles,
+  pickCurrentCompany,
 } from "../permissions";
 import type { UserCompanySummary } from "../permissions";
 
@@ -146,8 +147,33 @@ describe("canManageLaborRoles", () => {
     expect(canManageLaborRoles(["*:*"], [])).toBe(true);
   });
 
-  it("refuses when there is no primary company to scope to", () => {
-    expect(canManageLaborRoles([], [otherAdmin])).toBe(false);
+  it("falls back to the only company when none is marked primary", () => {
+    expect(canManageLaborRoles([], [otherAdmin])).toBe(true);
+    expect(canManageLaborRoles([], [{ ...otherAdmin, role: "manager" }])).toBe(true);
+    expect(canManageLaborRoles([], [{ ...otherAdmin, role: "member" }])).toBe(false);
+  });
+
+  it("refuses when several companies and none is primary to scope to", () => {
+    expect(canManageLaborRoles([], [otherAdmin, { ...otherAdmin, id: "c3" }])).toBe(false);
     expect(canManageLaborRoles(undefined, undefined)).toBe(false);
+  });
+});
+
+describe("pickCurrentCompany", () => {
+  const a: UserCompanySummary = { id: "c1", legal_name: "Alpha", role: "member", is_primary: false };
+  const b: UserCompanySummary = { id: "c2", legal_name: "Beta", role: "admin", is_primary: false };
+
+  it("returns the company marked primary", () => {
+    expect(pickCurrentCompany([a, { ...b, is_primary: true }])?.id).toBe("c2");
+  });
+
+  it("returns the only company when none is marked primary", () => {
+    expect(pickCurrentCompany([a])).toBe(a);
+  });
+
+  it("returns undefined for several non-primary companies, none or nothing", () => {
+    expect(pickCurrentCompany([a, b])).toBeUndefined();
+    expect(pickCurrentCompany([])).toBeUndefined();
+    expect(pickCurrentCompany(undefined)).toBeUndefined();
   });
 });

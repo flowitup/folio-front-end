@@ -24,9 +24,7 @@ import {
   deleteQuote,
   deleteRoom,
   deleteStore,
-  deleteUnit,
   getChiffrage,
-  listUnits,
   reorderArticle,
   reorderPoste,
   reorderRoom,
@@ -111,18 +109,10 @@ export async function getChiffrageAction(projectId: string): Promise<Result<Chif
   return run(projectId, () => getChiffrage(projectId), false);
 }
 
-export async function listUnitsAction(projectId: string): Promise<Result<ChiffrageUnit[]>> {
-  return run(projectId, () => listUnits(projectId), false);
-}
-
 // --- units -----------------------------------------------------------------
 
 export async function createUnitAction(projectId: string, symbol: string): Promise<Result<ChiffrageUnit>> {
   return run(projectId, () => createUnit(projectId, symbol));
-}
-
-export async function deleteUnitAction(projectId: string, unitId: string): Promise<Result<void>> {
-  return run(projectId, () => deleteUnit(projectId, unitId));
 }
 
 // --- postes ----------------------------------------------------------------

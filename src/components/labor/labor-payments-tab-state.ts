@@ -98,16 +98,6 @@ export function findMonthBucket(
   );
 }
 
-/** The special "no service_month" bucket, or null if absent. */
-export function findNoMonthBucket(
-  paymentsSummary: LaborPaymentsSummaryResponse | null,
-): LaborPaymentsMonthBucket | null {
-  return (
-    paymentsSummary?.months.find((b) => b.year === null && b.month === null) ??
-    null
-  );
-}
-
 /** Parse "YYYY-MM" into a `{from, to}` day range, or null on bad input. */
 export function monthToDateRange(
   month: string,

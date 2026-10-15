@@ -22,7 +22,6 @@ const api = {
   getChiffrage: vi.fn(),
   listUnits: vi.fn(),
   createUnit: vi.fn(),
-  deleteUnit: vi.fn(),
   createPoste: vi.fn(),
   updatePoste: vi.fn(),
   deletePoste: vi.fn(),

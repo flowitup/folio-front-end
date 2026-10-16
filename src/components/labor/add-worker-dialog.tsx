@@ -24,6 +24,7 @@ import type { LaborRole } from "@/types/labor-role";
 import { RoleSelectWithCreate } from "./role-select-with-create";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 import { ApiError } from "@/lib/api/http";
+import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
 
 interface AddWorkerDialogProps {
   open: boolean;
@@ -76,6 +77,7 @@ export function AddWorkerDialog({
   existingPersonIds,
 }: AddWorkerDialogProps) {
   const t = useTranslations("labor");
+  const tCommon = useTranslations("common");
 
   // Create-flow state
   const [selectedPerson, setSelectedPerson] = useState<PersonSummary | null>(
@@ -144,7 +146,7 @@ export function AddWorkerDialog({
         handleClose();
       } catch (err) {
         if (isInvalidPhoneError(err)) setPhoneInvalid(true);
-        else setError(t("errors.saveWorkerFailed"));
+        else setError(rateLimitErrorMessage(err, tCommon) ?? t("errors.saveWorkerFailed"));
       } finally {
         setIsSaving(false);
       }
@@ -182,7 +184,7 @@ export function AddWorkerDialog({
         const inactive = (err.data as { is_active?: boolean } | undefined)?.is_active === false;
         setError(t(inactive ? "errors.workerAlreadyOnProjectInactive" : "errors.workerAlreadyOnProject"));
       } else {
-        setError(t("errors.saveWorkerFailed"));
+        setError(rateLimitErrorMessage(err, tCommon) ?? t("errors.saveWorkerFailed"));
       }
     } finally {
       setIsSaving(false);

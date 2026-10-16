@@ -442,6 +442,11 @@
       "body": "Vui lòng tải lại trang. Nếu sự cố vẫn tiếp diễn, hãy đăng nhập lại.",
       "refresh": "Tải lại",
       "login": "Đến trang đăng nhập"
+    },
+    "unavailable": {
+      "title": "Folio đang bận trong giây lát",
+      "body": "Dịch vụ chưa thể phản hồi. Bạn vẫn đang đăng nhập: hãy thử lại sau vài giây.",
+      "retry": "Thử lại"
     }
   },
   "invoices": {
@@ -1166,7 +1171,10 @@
       "typeToSearch": "Nhập ít nhất 2 ký tự để tìm",
       "existing": "Đã có",
       "create": "Tạo “{name}”",
-      "alreadyOnProject": "Đã có trong dự án này"
+      "alreadyOnProject": "Đã có trong dự án này",
+      "searchFailed": "Không thể tìm kiếm — hãy thử lại.",
+      "createFailed": "Không thể tạo người này. Hãy thử lại.",
+      "retrySearch": "Thử lại"
     }
   },
   "acceptInvite": {
@@ -2637,7 +2645,7 @@
     "subtitle": "Ảnh và video tiến độ thi công của dự án.",
     "addPhotos": "Thêm phương tiện",
     "uploading": "Đang tải lên",
-    "uploadSuccess": "Đã tải ảnh lên thành công",
+    "uploadSuccess": "Đã tải lên {count} ảnh",
     "empty": {
       "title": "Chưa có phương tiện nào",
       "description": "Tải ảnh và video lên để theo dõi quá trình xây dựng bằng hình ảnh."
@@ -2680,7 +2688,11 @@
     "saved": "Đã lưu thay đổi",
     "deleted": "Đã xóa ảnh",
     "close": "Đóng",
-    "retryThumbnail": "Tải lại ảnh xem trước"
+    "retryThumbnail": "Tải lại ảnh xem trước",
+    "uploadSummary": "Đã tải lên {done}/{total} — {failed} lỗi",
+    "uploadSummaryMore": "và {count} tệp khác",
+    "retryFailed": "Thử lại",
+    "uploadPaused": "đã đạt giới hạn tải lên, tiếp tục sau {seconds} giây"
   },
   "chiffrage": {
     "actions": "Thao tác",

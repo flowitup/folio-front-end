@@ -50,6 +50,7 @@ import {
   setLaborDayDescription,
 } from "@/lib/api/labor";
 import { ApiError } from "@/lib/api/http";
+import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
 import {
   applyLastDayTemplate,
   buildBulkPayload,
@@ -109,6 +110,7 @@ export function LogDayDialog({
   const t = useTranslations("labor.logDayDialog");
   const tLabor = useTranslations("labor");
   const tConflict = useTranslations("labor.conflict");
+  const tCommon = useTranslations("common");
   const [date, setDate] = useState<string>(initialDate || todayKey());
   // Day-level description for the picked date (separate from per-worker notes).
   // Seeded from the backend whenever the dialog opens or the date changes, and
@@ -379,7 +381,11 @@ export function LogDayDialog({
       // Never the raw "HTTP 400: BAD REQUEST": the fields are checked before
       // sending, so what is left is a server-side refusal or a network error.
       const code = err instanceof ApiError ? (err.data as { error?: string } | undefined)?.error : undefined;
-      setError(code === "AttendanceDateOutOfRange" ? tLabor("errors.dateOutOfRange") : t("saveFailed"));
+      setError(
+        code === "AttendanceDateOutOfRange"
+          ? tLabor("errors.dateOutOfRange")
+          : (rateLimitErrorMessage(err, tCommon) ?? t("saveFailed")),
+      );
     } finally {
       setIsSaving(false);
     }

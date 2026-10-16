@@ -141,9 +141,11 @@ export async function uploadProjectPhoto(
     const err = new Error(`upload_failed:${res.status}`) as Error & {
       status: number;
       body: { error?: string; message?: string } | null;
+      retryAfter: number | null;
     };
     err.status = res.status;
     err.body = body;
+    err.retryAfter = res.status === 429 ? retryAfterOfResponse(res, body) : null;
     throw err;
   }
 

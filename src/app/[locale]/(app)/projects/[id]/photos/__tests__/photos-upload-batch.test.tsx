@@ -5,7 +5,10 @@ import { uploadProjectPhoto } from "@/lib/api/project-photo-blob";
 import { PhotosUpload } from "../photos-upload";
 
 vi.mock("@/lib/api/project-photo-blob", () => ({ uploadProjectPhoto: vi.fn() }));
-vi.mock("next-intl", () => ({ useTranslations: (ns: string) => (key: string) => `${ns}.${key}` }));
+vi.mock("next-intl", () => ({
+  useTranslations: (ns: string) => (key: string, values?: Record<string, unknown>) =>
+    values ? `${ns}.${key}:${JSON.stringify(values)}` : `${ns}.${key}`,
+}));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
@@ -116,5 +119,49 @@ describe("PhotosUpload batch validation", () => {
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith("photos.errors.validation", { description: "ok.jpg" }),
     );
+  });
+
+  it("pauses for Retry-After on a 429 and sends the same file again", async () => {
+    const limited = Object.assign(new Error("upload_failed:429"), { status: 429, body: null, retryAfter: 7 });
+    vi.mocked(uploadProjectPhoto)
+      .mockRejectedValueOnce(limited)
+      .mockResolvedValue({ id: "p1" } as never);
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    const onUploaded = vi.fn();
+    const { container } = render(<PhotosUpload projectId={PROJECT_ID} onUploaded={onUploaded} sleep={sleep} />);
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [new File(["x"], "a.jpg", { type: "image/jpeg" })] } });
+
+    await waitFor(() => expect(onUploaded).toHaveBeenCalledTimes(1));
+    expect(sleep).toHaveBeenCalledWith(7000);
+    expect(uploadProjectPhoto).toHaveBeenCalledTimes(2);
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(toast.success).toHaveBeenCalledWith('photos.uploadSuccess:{"count":1}');
+  });
+
+  it("ends with one summary naming the files still refused, with a retry", async () => {
+    const limited = Object.assign(new Error("upload_failed:429"), { status: 429, body: null, retryAfter: 5 });
+    vi.mocked(uploadProjectPhoto).mockImplementation(async (_p, file) => {
+      if ((file as File).name === "b.jpg") throw limited;
+      return { id: "p" } as never;
+    });
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    const { container } = render(<PhotosUpload projectId={PROJECT_ID} onUploaded={vi.fn()} sleep={sleep} />);
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: {
+        files: [
+          new File(["x"], "a.jpg", { type: "image/jpeg" }),
+          new File(["x"], "b.jpg", { type: "image/jpeg" }),
+        ],
+      },
+    });
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledTimes(1));
+    const [message, options] = vi.mocked(toast.error).mock.calls[0] as [string, { description: string; action: unknown }];
+    expect(message).toBe('photos.uploadSummary:{"done":1,"total":2,"failed":1}');
+    expect(options.description).toBe("b.jpg");
+    expect(options.action).toBeDefined();
+    expect(toast.success).not.toHaveBeenCalled();
   });
 });

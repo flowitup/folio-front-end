@@ -63,3 +63,11 @@ export function rateLimitMessage(tCommon: CommonTranslator, seconds: number | nu
   if (seconds < 90) return tCommon("rateLimit.seconds", { seconds: Math.ceil(seconds) });
   return tCommon("rateLimit.minutes", { minutes: Math.ceil(seconds / 60) });
 }
+
+/**
+ * The localized wait sentence when `err` is a 429, else null — for catch
+ * blocks: `setError(rateLimitErrorMessage(err, tCommon) ?? t("saveFailed"))`.
+ */
+export function rateLimitErrorMessage(err: unknown, tCommon: CommonTranslator): string | null {
+  return isRateLimitError(err) ? rateLimitMessage(tCommon, retryAfterOf(err)) : null;
+}

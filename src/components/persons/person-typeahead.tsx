@@ -29,6 +29,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { createPerson, fetchPersons } from "@/lib/api/persons";
+import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
 import type { PersonSummary } from "@/types/person";
 
 // ---------------------------------------------------------------------------
@@ -46,7 +47,7 @@ export interface PersonTypeaheadProps {
   disabled?: boolean;
   /** Optional className passed through to the trigger button. */
   className?: string;
-  /** Debounce delay in ms for server-side search. Default 200. */
+  /** Debounce delay in ms for server-side search. Default 350. */
   debounceMs?: number;
   /** Result page size (max 100 per backend cap). Default 20. */
   limit?: number;
@@ -71,18 +72,27 @@ export function PersonTypeahead({
   placeholder,
   disabled = false,
   className,
-  debounceMs = 200,
+  debounceMs = 350,
   limit = 20,
   allowCreate = true,
   excludeIds,
 }: PersonTypeaheadProps) {
   const t = useTranslations("labor.typeahead");
+  const tCommon = useTranslations("common");
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [fetchedResults, setResults] = React.useState<PersonSummary[]>([]);
   const [fetching, setLoading] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
+  // The query the shown results answer, and why the last search or create
+  // failed: "Create …" is only offered once a search has answered for
+  // exactly the typed text, so a refused search (429) can no longer lead to
+  // a duplicate person.
+  const [answeredQuery, setAnsweredQuery] = React.useState<string | null>(null);
+  const [searchError, setSearchError] = React.useState<string | null>(null);
+  const [createError, setCreateError] = React.useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = React.useState(0);
 
   // Debounced server search. We track the latest request ID to discard
   // out-of-order responses (slow networks + fast typing).
@@ -100,16 +110,21 @@ export function PersonTypeahead({
         const rows = await fetchPersons({ q, limit });
         if (seq === requestSeqRef.current) {
           setResults(rows);
+          setAnsweredQuery(q);
+          setSearchError(null);
         }
-      } catch {
-        // Keep previous results visible — searching shouldn't blow up the UI.
-        if (seq === requestSeqRef.current) setResults([]);
+      } catch (err) {
+        if (seq === requestSeqRef.current) {
+          setResults([]);
+          setAnsweredQuery(null);
+          setSearchError(rateLimitErrorMessage(err, tCommon) ?? t("searchFailed"));
+        }
       } finally {
         if (seq === requestSeqRef.current) setLoading(false);
       }
     }, debounceMs);
     return () => window.clearTimeout(handle);
-  }, [query, open, debounceMs, limit]);
+  }, [query, open, debounceMs, limit, retryNonce, t, tCommon]);
 
   // Show "Create new" only when (a) there's a trimmed query, and (b) no
   // existing person has that exact normalized name.
@@ -118,10 +133,12 @@ export function PersonTypeahead({
   const searchable = trimmed.length >= MIN_QUERY_LENGTH;
   const results = searchable ? fetchedResults : [];
   const loading = searchable && fetching;
+  const answered = !searchable || (answeredQuery === trimmed && !loading);
+  const failed = searchable && !!searchError && !loading;
   const exactMatch =
     trimmed.length > 0 &&
     results.some((p) => p.name.trim().toLowerCase() === trimmed.toLowerCase());
-  const showCreate = allowCreate && trimmed.length > 0 && !exactMatch && !creating;
+  const showCreate = allowCreate && trimmed.length > 0 && !exactMatch && !creating && answered && !failed;
   const excluded = React.useMemo(() => new Set(excludeIds ?? []), [excludeIds]);
 
   async function handleSelect(person: PersonSummary) {
@@ -133,6 +150,7 @@ export function PersonTypeahead({
   async function handleCreateNew() {
     if (!trimmed) return;
     setCreating(true);
+    setCreateError(null);
     try {
       const created = await createPerson({ name: trimmed });
       // Created Person has full fields — narrow to the summary shape the
@@ -145,9 +163,9 @@ export function PersonTypeahead({
       onChange(summary);
       setOpen(false);
       setQuery("");
-    } catch {
-      // Surface failure subtly — leave the typeahead open so user can retry.
-      // A toast at the parent level would be ideal once we adopt Sonner here.
+    } catch (err) {
+      // Leave the typeahead open so the user can retry, and say why.
+      setCreateError(rateLimitErrorMessage(err, tCommon) ?? t("createFailed"));
     } finally {
       setCreating(false);
     }
@@ -191,11 +209,31 @@ export function PersonTypeahead({
           <CommandInput
             placeholder={placeholder ?? t("placeholder")}
             value={query}
-            onValueChange={setQuery}
+            onValueChange={(next) => {
+              setQuery(next);
+              setCreateError(null);
+            }}
             data-testid="person-typeahead-input"
           />
           <CommandList id={listId}>
-            {results.length === 0 && !showCreate && !loading && (
+            {failed && (
+              <div role="alert" className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                <span className="text-destructive">{searchError}</span>
+                <button
+                  type="button"
+                  className="text-primary shrink-0 text-xs font-medium underline-offset-2 hover:underline"
+                  onClick={() => setRetryNonce((n) => n + 1)}
+                >
+                  {t("retrySearch")}
+                </button>
+              </div>
+            )}
+            {createError && (
+              <div role="alert" className="text-destructive px-3 py-2 text-sm">
+                {createError}
+              </div>
+            )}
+            {results.length === 0 && !showCreate && !loading && !failed && answered && (
               <CommandEmpty>
                 {searchable ? t("noMatches") : t("typeToSearch")}
               </CommandEmpty>

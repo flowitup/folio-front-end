@@ -442,6 +442,11 @@
       "body": "Veuillez actualiser la page. Si le problème persiste, reconnectez-vous.",
       "refresh": "Actualiser",
       "login": "Aller à la connexion"
+    },
+    "unavailable": {
+      "title": "Folio est momentanément occupé",
+      "body": "Le service n'a pas pu répondre. Vous êtes toujours connecté : réessayez dans quelques secondes.",
+      "retry": "Réessayer"
     }
   },
   "invoices": {
@@ -1166,7 +1171,10 @@
       "typeToSearch": "Tapez au moins 2 caractères pour rechercher",
       "existing": "Existants",
       "create": "Créer « {name} »",
-      "alreadyOnProject": "Déjà sur ce chantier"
+      "alreadyOnProject": "Déjà sur ce chantier",
+      "searchFailed": "Recherche indisponible — réessayez.",
+      "createFailed": "Impossible de créer cette personne. Réessayez.",
+      "retrySearch": "Réessayer"
     }
   },
   "acceptInvite": {
@@ -2637,7 +2645,7 @@
     "subtitle": "Photos et vidéos de l'avancement du chantier pour ce projet.",
     "addPhotos": "Ajouter des médias",
     "uploading": "Téléversement",
-    "uploadSuccess": "Photos téléversées",
+    "uploadSuccess": "{count, plural, one {# photo téléversée} other {# photos téléversées}}",
     "empty": {
       "title": "Aucun média pour l'instant",
       "description": "Ajoutez des photos et des vidéos pour suivre visuellement l'avancement du chantier."
@@ -2680,7 +2688,11 @@
     "saved": "Modifications enregistrées",
     "deleted": "Photo supprimée",
     "close": "Fermer",
-    "retryThumbnail": "Recharger l’aperçu"
+    "retryThumbnail": "Recharger l’aperçu",
+    "uploadSummary": "{done} sur {total} téléversées — {failed} en échec",
+    "uploadSummaryMore": "et {count} autres",
+    "retryFailed": "Réessayer",
+    "uploadPaused": "limite d'envoi atteinte, reprise dans {seconds} s"
   },
   "chiffrage": {
     "actions": "Actions",

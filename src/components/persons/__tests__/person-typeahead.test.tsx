@@ -22,7 +22,7 @@ afterEach(() => vi.useRealTimers());
 async function type(value: string) {
   fireEvent.change(screen.getByTestId("person-typeahead-input"), { target: { value } });
   await act(async () => {
-    vi.advanceTimersByTime(300);
+    vi.advanceTimersByTime(400);
   });
 }
 
@@ -31,7 +31,7 @@ describe("PersonTypeahead", () => {
     render(<PersonTypeahead value={null} onChange={vi.fn()} />);
     fireEvent.click(screen.getByRole("combobox"));
     await act(async () => {
-      vi.advanceTimersByTime(300);
+      vi.advanceTimersByTime(400);
     });
     expect(fetchPersons).not.toHaveBeenCalled();
     expect(screen.getByText("labor.typeahead.typeToSearch")).toBeInTheDocument();
@@ -71,5 +71,23 @@ describe("PersonTypeahead — people already on the project", () => {
 
     fireEvent.click(screen.getByText("Alpha Bravo"));
     expect(onChange).toHaveBeenCalledWith({ id: "p-free", name: "Alpha Bravo", phone: null });
+  });
+});
+
+describe("PersonTypeahead — refused search", () => {
+  it("shows the wait and hides Create when the search is rate limited", async () => {
+    vi.mocked(fetchPersons).mockRejectedValue(Object.assign(new Error("429"), { status: 429, retryAfter: 12 }));
+    render(<PersonTypeahead value={null} onChange={vi.fn()} />);
+    fireEvent.click(screen.getByRole("combobox"));
+    await type("Phạm Đức");
+    expect(screen.getByRole("alert").textContent).toContain("common.rateLimit.seconds");
+    expect(screen.queryByText(/labor\.typeahead\.create/)).toBeNull();
+
+    vi.mocked(fetchPersons).mockResolvedValue([]);
+    fireEvent.click(screen.getByText("labor.typeahead.retrySearch"));
+    await act(async () => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(screen.getByText("labor.typeahead.create")).toBeInTheDocument();
   });
 });

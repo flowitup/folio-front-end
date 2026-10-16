@@ -442,6 +442,11 @@
       "body": "Please refresh the page. If the problem persists, sign in again.",
       "refresh": "Refresh",
       "login": "Go to login"
+    },
+    "unavailable": {
+      "title": "Folio is busy for a moment",
+      "body": "The service could not answer. You are still signed in: try again in a few seconds.",
+      "retry": "Try again"
     }
   },
   "invoices": {
@@ -1166,7 +1171,10 @@
       "typeToSearch": "Type at least 2 characters to search",
       "existing": "Existing",
       "create": "Create “{name}”",
-      "alreadyOnProject": "Already on this project"
+      "alreadyOnProject": "Already on this project",
+      "searchFailed": "Search unavailable — try again.",
+      "createFailed": "Could not create this person. Try again.",
+      "retrySearch": "Retry"
     }
   },
   "acceptInvite": {
@@ -2637,7 +2645,7 @@
     "subtitle": "Construction progress photos and videos for this project.",
     "addPhotos": "Add media",
     "uploading": "Uploading",
-    "uploadSuccess": "Photos uploaded",
+    "uploadSuccess": "{count, plural, one {# photo uploaded} other {# photos uploaded}}",
     "empty": {
       "title": "No media yet",
       "description": "Upload photos and videos to track the build visually."
@@ -2680,7 +2688,11 @@
     "saved": "Changes saved",
     "deleted": "Photo deleted",
     "close": "Close",
-    "retryThumbnail": "Reload preview"
+    "retryThumbnail": "Reload preview",
+    "uploadSummary": "{done} of {total} uploaded — {failed} failed",
+    "uploadSummaryMore": "and {count} more",
+    "retryFailed": "Retry",
+    "uploadPaused": "upload limit reached, resuming in {seconds} s"
   },
   "chiffrage": {
     "actions": "Actions",

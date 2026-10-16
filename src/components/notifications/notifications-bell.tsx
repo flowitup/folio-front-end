@@ -21,6 +21,7 @@ import {
   rejectAttendanceChange,
   validateAttendance,
 } from "@/lib/api/labor";
+import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
 import type {
   ActivityEvent,
   AttendancePending,
@@ -37,6 +38,7 @@ function getBadgeLabel(count: number): string | null {
 
 export function NotificationsBell() {
   const t = useTranslations("notifications");
+  const tCommon = useTranslations("common");
   const [items, setItems] = useState<DueNotification[]>([]);
   const [attendance, setAttendance] = useState<AttendancePending[]>([]);
   const [companyEvents, setCompanyEvents] = useState<CompanyEvent[]>([]);
@@ -128,11 +130,11 @@ export function NotificationsBell() {
       try {
         await action(item.project_id, item.entry_id);
         toast.success(t(successKey, { worker: item.worker_name }));
-      } catch {
+      } catch (err) {
         setAttendance((current) =>
           current.some((a) => a.entry_id === item.entry_id) ? current : [item, ...current]
         );
-        toast.error(t(errorKey));
+        toast.error(rateLimitErrorMessage(err, tCommon) ?? t(errorKey));
       } finally {
         setSettlingIds((current) => {
           const next = new Set(current);
@@ -141,7 +143,7 @@ export function NotificationsBell() {
         });
       }
     },
-    [t]
+    [t, tCommon]
   );
 
   // A change request on a validated day goes through the change routes: validating

@@ -413,7 +413,7 @@ describe("CompanyMembersTable — role changes, removal and pending rows", () =>
     expect(mockSetRole).not.toHaveBeenCalled();
     expect(dialog).toHaveTextContent("Carla will no longer be an admin");
     expect(screen.getByTestId("role-confirm-projects")).toHaveTextContent("Chantier A");
-    expect(screen.getByTestId("role-confirm-projects")).toHaveTextContent("5 rue du Chantier B");
+    expect(screen.getByTestId("role-confirm-projects")).toHaveTextContent("Chantier B"); // name first, not the address
 
     await user.click(screen.getByRole("button", { name: "Make Member" }));
     await waitFor(() => expect(mockSetRole).toHaveBeenCalledWith("co-1", "user-3", "member"));

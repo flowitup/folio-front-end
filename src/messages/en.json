@@ -131,7 +131,7 @@
     },
     "memberFinances": {
       "title": "Project finances are visible to managers",
-      "body": "Your own days and pay are on the Labor page.",
+      "body": "The Labor page shows the team's attendance for the day.",
       "link": "Open Labor"
     }
   },

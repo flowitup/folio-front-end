@@ -131,7 +131,7 @@
     },
     "memberFinances": {
       "title": "Les finances du projet sont visibles par les responsables",
-      "body": "Vos journées et votre paie sont sur la page Main-d’œuvre.",
+      "body": "La page Main-d’œuvre affiche les présences du jour de l’équipe.",
       "link": "Ouvrir Main-d’œuvre"
     }
   },
@@ -805,10 +805,10 @@
     "delete": "Supprimer",
     "active": "Actif",
     "inactive": "Inactif",
-    "shiftType": "Vacation",
+    "shiftType": "Type de journée",
     "shiftFull": "Journée complète",
     "shiftHalf": "Demi-journée",
-    "shiftOvertime": "Heures sup.",
+    "shiftOvertime": "Journée majorée (×1,5)",
     "totalLaborCost": "Coût total main-d'œuvre",
     "workerDays": "Jours-ouvriers",
     "onSiteToday": "Sur site aujourd'hui",
@@ -875,9 +875,9 @@
       "none": "(aucun)"
     },
     "supplement": {
-      "fieldLabel": "Heures supplémentaires",
+      "fieldLabel": "Heures en banque",
       "fieldHelp": "Cumulées vers des jours bonus. Non facturées aujourd'hui.",
-      "badgeTooltip": "Heures supplémentaires (cumulées, non facturées aujourd'hui)",
+      "badgeTooltip": "Heures en banque (cumulées en jours bonus, non facturées aujourd'hui)",
       "banner": "Cumulé {banked}h → {count, plural, one {{bonusDays} jour bonus} other {{bonusDays} jours bonus}} ({bonusCost})",
       "bonusCost": "Coût bonus",
       "bonusDays": "Jours bonus",
@@ -1083,7 +1083,7 @@
     },
     "summaryUnpaidWarning": "{amount} impayé",
     "summaryUnpaidWarningTitle": "Les charges de main-d'œuvre de ce mois ne sont pas entièrement payées",
-    "summaryOverpaidWarning": "{amount} trop-payé",
+    "summaryOverpaidWarning": "{amount} trop-perçu",
     "summaryOverpaidWarningTitle": "Les paiements enregistrés pour ce mois dépassent les charges de main-d'œuvre",
     "validate": "Valider",
     "reject": "Refuser",

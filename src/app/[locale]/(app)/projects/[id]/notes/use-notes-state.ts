@@ -189,12 +189,17 @@ export function useNotesState(
       const result = await updateNoteAction(projectId, noteId, { status: nextStatus });
       if (result.success) {
         setNotes((prev) => prev.map((n) => (n.id === noteId ? result.note : n)));
+      } else if (result.error === "notFound") {
+        // Deleted elsewhere (another device or person): drop the card instead
+        // of rolling back a tick that can never be saved.
+        setNotes((prev) => prev.filter((n) => n.id !== noteId));
+        toast.error(t("errors.notFound"));
       } else {
         // Rollback
         setNotes((prev) =>
           prev.map((n) => (n.id === noteId ? { ...n, status: target.status } : n))
         );
-        toast.error(t("errors.saveFailed"));
+        toast.error(t(saveErrorKey(result.error) as Parameters<typeof t>[0]));
       }
     },
     [notes, projectId, t]

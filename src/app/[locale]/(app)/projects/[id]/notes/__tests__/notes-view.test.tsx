@@ -321,3 +321,25 @@ describe("NotesView — update note", () => {
     });
   }, 15000);
 });
+
+describe("NotesView — accent-insensitive search", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("finds accented notes without the accents", () => {
+    render(
+      <NotesView
+        projectId={PROJECT_ID}
+        initialNotes={[
+          makeNote("a", { title: "Livraison", description: "Reçu par Éloïse" }),
+          makeNote("b", { title: "Quyết định: đổi gạch" }),
+        ]}
+        canEdit
+      />
+    );
+    const search = screen.getByPlaceholderText("notes.search.placeholder");
+    fireEvent.change(search, { target: { value: "eloise" } });
+    expect(screen.getByText("Livraison")).toBeDefined();
+    fireEvent.change(search, { target: { value: "quyet dinh" } });
+    expect(screen.getByText("Quyết định: đổi gạch")).toBeDefined();
+  });
+});

@@ -12,12 +12,15 @@
  * Contract (backend `app/api/v1/chat/routes.py`):
  *   GET  /features                              → { chat: boolean }
  *   GET  /chat/channels                         → { items: ChatChannel[] }
- *   GET  /chat/channels/<key>/messages?limit=N  → { items: ChatMessage[] (oldest first), members }
+ *   GET  /chat/channels/<key>/messages?limit=N[&before=ISO] → { items: ChatMessage[] (oldest first), members }
  *   POST /chat/channels/<key>/messages          → 201 ChatMessage (JSON {body} or multipart body+file)
  *   POST /chat/channels/<key>/read              → 204
  *   GET  /chat/messages/<id>/attachment         → image bytes
  *   PUT  /chat/messages/<id>/reaction           → { reactions } (body {emoji}; one per member)
  *   DELETE /chat/messages/<id>/reaction         → { reactions } (idempotent)
+ *   POST /chat/messages/<id>/report             → 204 (body {reason?}; 400 on one's own message)
+ *   GET  /chat/reports?company_id=<id>          → { items: ChatReport[] } (company admins)
+ *   POST /chat/reports/<id>/resolve             → 204 (body {action: "dismiss" | "delete_message"})
  */
 
 import { getCsrfHeader } from "@/lib/api/http";
@@ -55,7 +58,12 @@ export interface ChatReaction {
   user_id: string;
   emoji: string;
   created_at: string;
+  /** The reactor's name, sent also for someone no longer in the channel (older servers omit it). */
+  user_name?: string | null;
 }
+
+/** Set when a name is a server placeholder the apps translate ("Deleted account", "Unnamed member"). */
+export type ChatAccountState = "deleted" | "unnamed";
 
 export interface ChatMessage {
   id: string;
@@ -75,6 +83,7 @@ export interface ChatMessage {
   mine: boolean;
   /** One entry per reacting member. Always sent by the backend; optional so older payloads still type. */
   reactions?: ChatReaction[];
+  sender_state?: ChatAccountState | null;
 }
 
 export interface ChatMember {
@@ -82,6 +91,7 @@ export interface ChatMember {
   name: string;
   /** Read marker of the member (null until they open the channel); drives "seen" avatars. */
   last_read_at?: string | null;
+  state?: ChatAccountState | null;
 }
 
 export interface ChatMessagePage {
@@ -128,6 +138,10 @@ export function playableAttachmentType(served: string): string {
 export const CHAT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 /** Newest messages loaded per thread (backend caps at 200). */
 export const CHAT_PAGE_SIZE = 100;
+/** Older messages fetched per "load earlier" step. */
+export const CHAT_OLDER_PAGE_SIZE = 50;
+/** Backend `SendMessageBody.body` max length. */
+export const CHAT_MAX_BODY_LENGTH = 4000;
 
 export class ChatApiError extends Error {
   constructor(
@@ -189,15 +203,19 @@ export async function listChatChannels(signal?: AbortSignal): Promise<ChatChanne
   return page.items;
 }
 
-/** Newest `limit` messages of a channel (oldest first) plus its members. */
+/**
+ * Newest `limit` messages of a channel (oldest first) plus its members; with `before` (a
+ * message's `created_at`), the `limit` messages just older than it — how a thread pages back.
+ */
 export function listChatMessages(
   channelKey: string,
-  opts: { limit?: number } = {},
+  opts: { limit?: number; before?: string } = {},
   signal?: AbortSignal
 ): Promise<ChatMessagePage> {
-  const limit = opts.limit ?? CHAT_PAGE_SIZE;
+  const params = new URLSearchParams({ limit: String(opts.limit ?? CHAT_PAGE_SIZE) });
+  if (opts.before) params.set("before", opts.before);
   return chatJson<ChatMessagePage>(
-    `/chat/channels/${encodeURIComponent(channelKey)}/messages?limit=${limit}`,
+    `/chat/channels/${encodeURIComponent(channelKey)}/messages?${params.toString()}`,
     signal
   );
 }
@@ -259,12 +277,44 @@ export interface BlockedUser {
   name: string;
 }
 
-/** Report one message to the moderators (idempotent on the server). */
-export async function reportChatMessage(messageId: string): Promise<void> {
+/** Report someone else's message to the company's admins (idempotent on the server). */
+export async function reportChatMessage(messageId: string, reason?: string): Promise<void> {
+  const cleaned = reason?.trim();
   await chatFetch(`/chat/messages/${encodeURIComponent(messageId)}/report`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
+    body: JSON.stringify(cleaned ? { reason: cleaned.slice(0, 500) } : {}),
+  });
+}
+
+export interface ChatReport {
+  id: string;
+  message: ChatMessage;
+  channel_name: string;
+  reporter_id: string;
+  reporter_name: string;
+  reason: string | null;
+  created_at: string;
+}
+
+/** Open reports on the messages of a company's channels (company admins only). */
+export async function listChatReports(companyId: string, signal?: AbortSignal): Promise<ChatReport[]> {
+  const page = await chatJson<{ items: ChatReport[] }>(
+    `/chat/reports?company_id=${encodeURIComponent(companyId)}`,
+    signal
+  );
+  return page.items;
+}
+
+/** Close a report: keep the message (`dismiss`) or remove it for everyone (`delete_message`). */
+export async function resolveChatReport(
+  reportId: string,
+  action: "dismiss" | "delete_message"
+): Promise<void> {
+  await chatFetch(`/chat/reports/${encodeURIComponent(reportId)}/resolve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action }),
   });
 }
 

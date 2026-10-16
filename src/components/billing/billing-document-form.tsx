@@ -171,8 +171,18 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   // ---------------------------------------------------------------------------
 
   // Create mode: selectedCompanyId is set by the picker; null until picker resolves default.
+  // A copy or a template starts on the company of its source / template (not the
+  // primary or last-used one) when the user may issue from it.
   // Edit mode: issuer is snapshotted at creation time — only issuer_legal_name is available.
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const sourceCompanyId =
+    props.mode === "create"
+      ? (props.initialFromSource?.company_id ?? props.initialFromTemplate?.company_id ?? null)
+      : null;
+  const sourceCompanyIssuable =
+    !!sourceCompanyId && props.attachedCompanies.some((c) => c.id === sourceCompanyId);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+    sourceCompanyIssuable ? sourceCompanyId : null
+  );
 
   // ---------------------------------------------------------------------------
   // Project picker state
@@ -182,6 +192,17 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const PROJECT_NONE = "__none__";
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     seed?.project_id ?? null
+  );
+
+  // Only the issuer's projects (plus the one already linked, so an edit never
+  // silently drops it): the API refuses another company's project.
+  const issuerCompanyId = props.mode === "edit" ? props.document.company_id ?? null : selectedCompanyId;
+  const projectOptions = (props.projects ?? []).filter(
+    (p) =>
+      !issuerCompanyId ||
+      !p.company_id ||
+      p.company_id === issuerCompanyId ||
+      p.id === (seed?.project_id ?? null)
   );
 
   // Runtime-refetchable attached companies (reset when company_no_longer_attached).
@@ -346,6 +367,9 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
 
   function handleCompanyChange(companyId: string) {
     setSelectedCompanyId(companyId);
+    // A document stays on its issuer's projects: drop a project of another company.
+    const project = (props.projects ?? []).find((p) => p.id === selectedProjectId);
+    if (project?.company_id && project.company_id !== companyId) setSelectedProjectId(null);
     if (kind !== "facture" || termsTouchedRef.current) return;
     const company = attachedCompanies.find((c) => c.id === companyId);
     setPaymentTerms(company?.default_payment_terms ?? "");
@@ -638,12 +662,19 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         )
       ) : (
         /* Create mode: company picker */
-        <CompanyPickerSelect
-          kind={kind}
-          attachedCompanies={attachedCompanies}
-          value={selectedCompanyId}
-          onChange={handleCompanyChange}
-        />
+        <>
+          <CompanyPickerSelect
+            kind={kind}
+            attachedCompanies={attachedCompanies}
+            value={selectedCompanyId}
+            onChange={handleCompanyChange}
+          />
+          {sourceCompanyId && !sourceCompanyIssuable && (
+            <p className="text-[12px]" style={{ color: "var(--muted)" }}>
+              {tForm("issuer.sourceCompanyNotIssuable")}
+            </p>
+          )}
+        </>
       )}
 
       {/* 3. Mode picker (create, no pre-fill) */}
@@ -842,7 +873,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
               <SelectItem value={PROJECT_NONE}>
                 {tForm("details.projectNone")}
               </SelectItem>
-              {(props.projects ?? []).map((p) => (
+              {projectOptions.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {projectDisplayName(p)}
                 </SelectItem>
@@ -958,6 +989,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         open={fromTemplateOpen}
         onOpenChange={setFromTemplateOpen}
         kind={kind}
+        companyId={selectedCompanyId}
       />
       {liveDoc && (
         <BillingDeleteDialog

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { DisabledReason } from "@/components/ui/disabled-reason";
 import { toast } from "sonner";
 import { UserPlus, Users } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
@@ -111,8 +112,13 @@ export function MembersTable({
   const canRemove = (member: ProjectMember) =>
     member.user_id !== currentUserId && (callerIsCompanyAdmin || member.role_name === "member");
   // Why Remove is greyed out on someone else's row (it used to stay active and 403).
+  // Your own row says why too (it used to be greyed out with no reason).
   const removeBlockedReason = (member: ProjectMember) =>
-    member.user_id !== currentUserId && !canRemove(member) ? t("edit.removeOnlyAdmin") : undefined;
+    member.user_id === currentUserId
+      ? t("edit.removeSelf")
+      : !canRemove(member)
+        ? t("edit.removeOnlyAdmin")
+        : undefined;
 
   const handleRevoke = async (invitationId: string) => {
     setRevokingId(invitationId);
@@ -237,17 +243,18 @@ export function MembersTable({
                           {t("edit.button")}
                         </Button>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 flex-1"
-                        style={{ color: "var(--negative)" }}
-                        disabled={removingId === member.user_id || !canRemove(member)}
-                        title={removeBlockedReason(member)}
-                        onClick={() => setPendingRemove(member)}
-                      >
-                        {t("edit.remove")}
-                      </Button>
+                      <DisabledReason reason={removeBlockedReason(member)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 flex-1"
+                          style={{ color: "var(--negative)" }}
+                          disabled={removingId === member.user_id || !canRemove(member)}
+                          onClick={() => setPendingRemove(member)}
+                        >
+                          {t("edit.remove")}
+                        </Button>
+                      </DisabledReason>
                     </div>
                   )}
                 </div>
@@ -310,17 +317,18 @@ export function MembersTable({
                               {t("edit.button")}
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-[12px]"
-                            style={{ color: "var(--negative)" }}
-                            disabled={removingId === member.user_id || !canRemove(member)}
-                            title={removeBlockedReason(member)}
-                            onClick={() => setPendingRemove(member)}
-                          >
-                            {t("edit.remove")}
-                          </Button>
+                          <DisabledReason reason={removeBlockedReason(member)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-[12px]"
+                              style={{ color: "var(--negative)" }}
+                              disabled={removingId === member.user_id || !canRemove(member)}
+                              onClick={() => setPendingRemove(member)}
+                            >
+                              {t("edit.remove")}
+                            </Button>
+                          </DisabledReason>
                         </div>
                       </TableCell>
                     )}

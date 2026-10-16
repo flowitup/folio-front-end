@@ -141,6 +141,11 @@ vi.mock("@/components/companies/join-company-dialog", () => ({
   JoinCompanyDialog: () => <div data-testid="join-company-dialog" />,
 }));
 
+vi.mock("@/components/companies/company-create-dialog", () => ({
+  CompanyCreateDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="company-create-dialog" /> : null,
+}));
+
 import { CompanySettingsSection } from "@/components/companies/company-settings-section";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 
@@ -394,6 +399,17 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     expect(await screen.findByText("No companies attached yet")).toBeDefined();
     expect(screen.getByRole("button", { name: /Add company/i })).toBeDefined();
     expect(screen.queryByTestId("members-table")).toBeNull();
+  });
+
+  it("lets the user create a company of their own, not only join one with a code", async () => {
+    resolveWith([makeCompany()]);
+    render(<CompanySettingsSection />);
+
+    const add = await screen.findByRole("button", { name: /Add company/i });
+    fireEvent.pointerDown(add, { button: 0, ctrlKey: false, pointerType: "mouse" });
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Create a company" }));
+
+    expect(await screen.findByTestId("company-create-dialog")).toBeDefined();
   });
 
   it("reports a failed load instead of claiming the caller has no company", async () => {

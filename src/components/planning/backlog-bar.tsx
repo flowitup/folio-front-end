@@ -8,16 +8,9 @@ import { CSS } from "@dnd-kit/utilities";
 import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Task, TaskPriority } from "@/types/task";
+import { PRIORITY_DOT_CLASS } from "@/lib/planning/priority";
+import type { Task } from "@/types/task";
 
-// Folio status-dot variants (globals.css): escalate from neutral → accent →
-// warning → negative as priority rises.
-const PRIORITY_DOT: Record<TaskPriority, string> = {
-  low: "dot",
-  medium: "dot accent",
-  high: "dot warning",
-  urgent: "dot negative",
-};
 
 interface BacklogBarProps {
   tasks: Task[];
@@ -131,7 +124,7 @@ function BacklogCard({ task, assigneeName, onClick }: BacklogCardProps) {
     >
       <div className="flex items-center gap-2">
         <span
-          className={`${PRIORITY_DOT[task.priority]} flex-shrink-0`}
+          className={`dot ${PRIORITY_DOT_CLASS[task.priority]} flex-shrink-0`}
           title={t(`priority.${task.priority}`)}
           role="img"
           aria-label={t(`priority.${task.priority}`)}

@@ -49,6 +49,12 @@ describe("targetForActivity", () => {
     expect(pathForActivity(make("task_assigned", { project_id: "p1" }), "en")).toBe("/en/projects/p1/planning");
   });
 
+  it("opens the task itself when the event names it", () => {
+    expect(pathForActivity(make("task_moved", { project_id: "p1", task_id: "t 1" }), "fr")).toBe(
+      "/fr/projects/p1/planning?task=t%201"
+    );
+  });
+
   it("opens the expense, or the expense list when it was deleted", () => {
     expect(pathForActivity(make("refund_requested", { project_id: "p1", invoice_id: "i1" }), "fr")).toBe(
       "/fr/projects/p1/invoices/i1"

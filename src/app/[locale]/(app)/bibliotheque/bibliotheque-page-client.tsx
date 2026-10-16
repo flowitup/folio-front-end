@@ -33,6 +33,8 @@ import { LibraryPagination } from "@/components/bibliotheque/library-pagination"
 import { LibraryImportDialog } from "@/components/bibliotheque/library-import-dialog";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/auth/permissions";
+import { CompanyScopePicker } from "@/components/companies/company-scope-picker";
+import type { PageCompany } from "@/lib/companies/page-company";
 import {
   listSuppliersAction,
   listCategoriesAction,
@@ -45,17 +47,26 @@ const MAX_COMPARE = 4; // side-by-side columns that fit the compare dialog
 
 interface Props {
   companyId: string;
+  /** The user's companies (picker); the one shown is `companyId`. */
+  companies?: PageCompany[];
 }
 
-export function BibliothequePageClient({ companyId }: Props) {
+export function BibliothequePageClient({ companyId, companies = [] }: Props) {
   const t = useTranslations("bibliotheque");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuth();
   // Creating, editing, deleting and importing products all need
-  // bibliotheque:manage (the API answers 403 otherwise): a member browses only.
-  const canManage = can("bibliotheque:manage", user?.permissions);
+  // bibliotheque:manage IN THE COMPANY SHOWN (the API answers 403 otherwise): a
+  // member browses only. The session's permissions describe the primary company.
+  const shownCompany = companies.find((c) => c.id === companyId);
+  const canManage = can("bibliotheque:manage", user?.permissions, shownCompany?.permissions);
+  // Import targets: only the companies whose library the user may manage.
+  const importCompanies = (user?.companies ?? []).filter((c) => {
+    const perms = companies.find((pc) => pc.id === c.id)?.permissions;
+    return perms === undefined ? true : can("bibliotheque:manage", user?.permissions, perms);
+  });
   const canImport = canManage;
 
   // Filters
@@ -242,6 +253,7 @@ export function BibliothequePageClient({ companyId }: Props) {
           <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
             {t("subtitle")}
           </p>
+          <CompanyScopePicker companies={companies} value={companyId} />
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {canImport && (
@@ -391,10 +403,13 @@ export function BibliothequePageClient({ companyId }: Props) {
           open={importOpen}
           onOpenChange={setImportOpen}
           companyId={companyId}
-          companies={user?.companies ?? []}
+          companies={importCompanies}
           onImported={(importedInto) => {
-            // Another company's library is not the one on screen.
-            if (importedInto !== companyId) return;
+            // Another company's library: open it, so the import is visible.
+            if (importedInto !== companyId) {
+              router.replace(`${pathname}?company=${encodeURIComponent(importedInto)}`);
+              return;
+            }
             // New suppliers and categories may arrive with the imported lines.
             reloadMeta();
             reload();

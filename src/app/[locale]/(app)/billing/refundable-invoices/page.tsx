@@ -23,6 +23,17 @@ import { RefundableSummaryCards } from "@/components/billing/refundable-summary-
 import { formatDate, formatEUR } from "@/lib/utils/formatters";
 import { RefundSourceIndicator } from "@/components/invoices/refund-source-indicator";
 import type { RefundableExpense, RefundableSummary } from "@/types/invoice";
+import { useOptionalAuth } from "@/context/AuthContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+/** Company filter value for "every administered company". */
+const ALL_COMPANIES = "all";
 
 /** Who refunded the expense, plus the FR number of a bank refund's funds release. */
 function RefundSourceCell({
@@ -66,6 +77,17 @@ export default function RefundableInvoicesPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  // Each company owes its own people: with several administered companies the
+  // page can be narrowed to one, and every row names its company.
+  const companies = useOptionalAuth()?.user?.companies;
+  const adminCompanies = (companies ?? []).filter((c) => c.role === "admin");
+  const multiCompany = adminCompanies.length > 1;
+  const [companyFilter, setCompanyFilter] = useState<string>(ALL_COMPANIES);
+  const companyId = companyFilter === ALL_COMPANIES ? undefined : companyFilter;
+  const companyName = (expense: RefundableExpense) =>
+    expense.company_name ??
+    adminCompanies.find((c) => c.id === expense.company_id)?.legal_name ??
+    "";
   // Rows on screen: a reload after a status change fetches as many pages
   // again, instead of folding the list back to the first one.
   const loadedRef = useRef(0);
@@ -80,10 +102,10 @@ export default function RefundableInvoicesPage() {
     setLoading(true);
     setError(null);
     try {
-      let result = await fetchRefundableExpenses();
+      let result = await fetchRefundableExpenses({ companyId });
       let rows = result.items;
       while (rows.length < loadedRef.current && rows.length < result.total && result.items.length > 0) {
-        result = await fetchRefundableExpenses({ offset: rows.length });
+        result = await fetchRefundableExpenses({ offset: rows.length, companyId });
         rows = [...rows, ...result.items];
       }
       loadedRef.current = rows.length;
@@ -95,13 +117,13 @@ export default function RefundableInvoicesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [companyId]);
 
   // Next page (the API sends at most 200 rows at a time), appended.
   const loadMore = async () => {
     setLoadingMore(true);
     try {
-      const result = await fetchRefundableExpenses({ offset: items.length });
+      const result = await fetchRefundableExpenses({ offset: items.length, companyId });
       const seen = new Set(items.map((i) => i.id));
       const next = [...items, ...result.items.filter((i) => !seen.has(i.id))];
       loadedRef.current = next.length;
@@ -132,6 +154,31 @@ export default function RefundableInvoicesPage() {
         </Button>
       </div>
 
+      {multiCompany && (
+        <div className="flex flex-wrap items-center gap-2" data-testid="refundable-company-filter">
+          <span className="text-sm text-muted-foreground">{t("companyFilter.label")}</span>
+          <Select
+            value={companyFilter}
+            onValueChange={(value) => {
+              loadedRef.current = 0;
+              setCompanyFilter(value);
+            }}
+          >
+            <SelectTrigger className="h-8 w-auto min-w-[200px] max-w-full" aria-label={t("companyFilter.label")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_COMPANIES}>{t("companyFilter.all")}</SelectItem>
+              {adminCompanies.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.legal_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <RefundableSummaryCards summary={summary} />
 
       {/* Table */}
@@ -153,6 +200,11 @@ export default function RefundableInvoicesPage() {
                     {expense.invoice_number}
                   </span>
                 </div>
+                {multiCompany && (
+                  <div className="truncate text-xs text-muted-foreground" data-testid="refundable-card-company">
+                    {companyName(expense)}
+                  </div>
+                )}
                 <div className="truncate">{expense.recipient_name}</div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="tabular-nums text-muted-foreground">
@@ -174,6 +226,7 @@ export default function RefundableInvoicesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
+                {multiCompany && <th className="pb-2 pr-4 font-medium">{t("columns.company")}</th>}
                 <th className="pb-2 pr-4 font-medium">{t("columns.project")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("columns.invoiceNumber")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("columns.recipient")}</th>
@@ -188,6 +241,11 @@ export default function RefundableInvoicesPage() {
             <tbody>
               {items.map((expense) => (
                 <tr key={expense.id} className="border-b last:border-0">
+                  {multiCompany && (
+                    <td className="py-3 pr-4" data-testid="refundable-row-company">
+                      {companyName(expense)}
+                    </td>
+                  )}
                   <td className="py-3 pr-4">{expense.project_name}</td>
                   <td className="whitespace-nowrap py-3 pr-4 font-mono text-xs">
                     {expense.invoice_number}
@@ -232,6 +290,7 @@ export default function RefundableInvoicesPage() {
       <AddRefundableExpenseDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
+        companyId={companyId}
         onAdded={() => {
           setDialogOpen(false);
           void load();

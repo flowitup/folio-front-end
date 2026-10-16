@@ -14,9 +14,14 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 vi.mock("@/lib/api/projects-server", () => ({ getProjectById: vi.fn() }));
+vi.mock("@/lib/auth/session", () => ({ getSession: vi.fn() }));
+vi.mock("@/components/projects/project-section-guard", () => ({
+  ProjectSectionGuard: ({ children }: { children: React.ReactNode }) => children,
+}));
 
 import { notFound } from "next/navigation";
 import { getProjectById } from "@/lib/api/projects-server";
+import { getSession } from "@/lib/auth/session";
 import ProjectLayout from "../layout";
 
 const PID = "11111111-1111-4111-8111-111111111111";
@@ -49,5 +54,21 @@ describe("ProjectLayout", () => {
     vi.mocked(getProjectById).mockRejectedValue(err);
     await ProjectLayout({ children: child, params });
     expect(notFound).not.toHaveBeenCalled();
+  });
+
+  it("passes the sections the project's company hides to the guard", async () => {
+    vi.mocked(getProjectById).mockResolvedValue({ id: PID, company_id: "co-b" } as never);
+    vi.mocked(getSession).mockResolvedValue({
+      user: {
+        companies: [
+          { id: "co-a", hidden_sections: ["notes"] },
+          { id: "co-b", hidden_sections: ["photos"] },
+        ],
+      },
+    } as never);
+    const el = await ProjectLayout({ children: child, params });
+    const props = (el as { props: { hiddenSections: string[]; children: unknown } }).props;
+    expect(props.hiddenSections).toEqual(["photos"]);
+    expect(props.children).toBe(child);
   });
 });

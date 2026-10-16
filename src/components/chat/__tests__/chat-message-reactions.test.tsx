@@ -54,9 +54,10 @@ function openDetails() {
 describe("Chat message details popover", () => {
   it("opens from the bubble with the six-emoji picker and the readers excluding the sender", () => {
     render(<ChatMessageList messages={[message()]} members={members} viewerId="me" />);
-    const bubble = screen.getByTestId("chat-message-bubble");
-    expect(bubble).toHaveAttribute("aria-label", "chat.messageDetails");
-    expect(bubble).toHaveAttribute("aria-expanded", "false");
+    // The bubble opens the details on click; the keyboard reaches them through the "…" button.
+    const trigger = screen.getByTestId("chat-message-details-open");
+    expect(trigger).toHaveAttribute("aria-label", "chat.messageDetails");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
 
     const details = openDetails();
     expect(screen.getByRole("dialog")).toHaveAttribute("aria-label", "chat.messageDetails");
@@ -68,7 +69,8 @@ describe("Chat message details popover", () => {
     expect(within(readers).getAllByRole("listitem").map((li) => li.textContent?.replace(/\d.*/, ""))).toEqual([
       "Bob",
     ]);
-    expect(readers).toHaveTextContent(/\d{2}\/\d{2} \d{2}:\d{2}|\d{2}:\d{2}/);
+    // A member's last read time is not when they read THIS message, so no time is shown.
+    expect(readers).not.toHaveTextContent(/\d{2}:\d{2}/);
     expect(within(details).queryByTestId("chat-reactors")).toBeNull();
   });
 
@@ -117,7 +119,7 @@ describe("Chat message details popover", () => {
     expect(screen.queryByTestId("chat-message-details")).toBeNull();
   });
 
-  it("moves focus into the picker on open, closes with Escape and returns focus to the bubble", async () => {
+  it("moves focus into the picker on open, closes with Escape and returns focus to its button", async () => {
     render(<ChatMessageList messages={[message()]} members={members} viewerId="me" />);
     const details = openDetails();
     await waitFor(() => expect(within(details).getAllByTestId("chat-reaction-pick")[0]).toHaveFocus());
@@ -126,7 +128,8 @@ describe("Chat message details popover", () => {
     });
     expect(screen.queryByTestId("chat-message-details")).toBeNull();
     // Radix restores focus on the next tick after the content unmounts.
-    await waitFor(() => expect(screen.getByTestId("chat-message-bubble")).toHaveFocus());
+    // The bubble is no longer a button (its links must stay clickable): the "…" button is the trigger.
+    await waitFor(() => expect(screen.getByTestId("chat-message-details-open")).toHaveFocus());
   });
 
   it("opens from the time of an attachment-only message", () => {

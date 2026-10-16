@@ -10,4 +10,7 @@ export const routing = defineRouting({
   locales,
   defaultLocale,
   localePrefix: 'always',
+  // Remember the chosen language for a year. Without maxAge next-intl writes a
+  // session cookie, so the choice was lost whenever the browser was closed.
+  localeCookie: { maxAge: 60 * 60 * 24 * 365 },
 });

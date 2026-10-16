@@ -78,6 +78,7 @@ export function targetForActivity(event: ActivityEvent, locale: string): Activit
     return { type: "path", path: `/${locale}/settings#company` };
   }
   if (kind === "task_assigned" || kind === "task_moved") {
+    // ?task= opens that task's drawer on the board, not just the board.
     return project(data.task_id ? `/planning?task=${encodeURIComponent(data.task_id)}` : "/planning");
   }
   if (kind === "refund_requested" || kind === "refund_completed") {

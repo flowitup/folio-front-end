@@ -46,6 +46,8 @@ interface AddRefundableExpenseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdded: () => void;
+  /** Only this company's expenses (the page's company filter); all administered companies when unset. */
+  companyId?: string;
 }
 
 /** Wait after the last keystroke before searching on the server. */
@@ -55,6 +57,7 @@ export function AddRefundableExpenseDialog({
   open,
   onOpenChange,
   onAdded,
+  companyId,
 }: AddRefundableExpenseDialogProps) {
   const t = useTranslations("billing.refundable");
 
@@ -89,7 +92,7 @@ export function AddRefundableExpenseDialog({
     const request = ++requestRef.current;
     if (offset === 0) queryRef.current = q;
     try {
-      const res = await fetchRefundableCandidates({ q, offset: offset || undefined });
+      const res = await fetchRefundableCandidates({ q, offset: offset || undefined, companyId });
       if (request !== requestRef.current) return;
       for (const c of res.items) numbersRef.current.set(c.id, c.invoice_number);
       setCandidates((prev) => {
@@ -105,7 +108,7 @@ export function AddRefundableExpenseDialog({
       if (offset === 0) queryRef.current = null;
       setError(tRef.current("loadError"));
     }
-  }, []);
+  }, [companyId]);
 
   // Fetch candidates each time the dialog opens.
   useEffect(() => {

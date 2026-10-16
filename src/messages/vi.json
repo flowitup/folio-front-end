@@ -33,7 +33,8 @@
     "more": "Thêm",
     "chiffrage": "Hạch toán",
     "close": "Đóng",
-    "homeLink": "Folio — trang chủ"
+    "homeLink": "Folio — trang chủ",
+    "skipToContent": "Bỏ qua điều hướng"
   },
   "auth": {
     "welcomeBack": "Chào mừng trở lại",
@@ -269,7 +270,12 @@
     "projectCreated": "Đã tạo dự án",
     "projectDeleted": "Đã xóa dự án",
     "projectUpdated": "Đã cập nhật dự án",
-    "settingsForbidden": "Bạn không có quyền thay đổi cài đặt của dự án này."
+    "settingsForbidden": "Bạn không có quyền thay đổi cài đặt của dự án này.",
+    "hiddenSection": {
+      "title": "Mục đã ẩn",
+      "body": "Công ty của công trình này đã ẩn mục này với các thành viên.",
+      "back": "Quay lại công trình"
+    }
   },
   "settings": {
     "profile": "Hồ sơ",
@@ -729,7 +735,8 @@
       "unscheduled": "Chưa lên lịch",
       "noTasksDay": "—",
       "addOnDay": "Thêm công việc ngày {day}",
-      "addUnscheduled": "Thêm công việc chưa lên lịch"
+      "addUnscheduled": "Thêm công việc chưa lên lịch",
+      "overdue": "Quá hạn"
     },
     "column": {
       "todo": "Cần làm",
@@ -750,7 +757,8 @@
       "invalid": "Một số thông tin không được chấp nhận. Kiểm tra tiêu đề (tối đa 255 ký tự), mô tả (tối đa 5.000 ký tự) và nhãn (tối đa 20 nhãn, mỗi nhãn 50 ký tự) rồi thử lại.",
       "create": "Không thể tạo công việc. Vui lòng thử lại.",
       "save": "Không thể lưu công việc. Vui lòng thử lại.",
-      "delete": "Không thể xóa công việc. Vui lòng thử lại."
+      "delete": "Không thể xóa công việc. Vui lòng thử lại.",
+      "dueDate": "Hạn chót phải nằm trong khoảng từ 01/01/2000 đến 31/12/2100. Vui lòng kiểm tra lại năm."
     },
     "statusLabel": "Trạng thái",
     "close": "Đóng",
@@ -766,7 +774,9 @@
     "unassigned": "Chưa giao",
     "assigneeOther": "Một người ngoài nhóm dự án",
     "assignedTo": "Giao cho {name}",
-    "discardChanges": "Bỏ các thay đổi chưa lưu của công việc này?"
+    "discardChanges": "Bỏ các thay đổi chưa lưu của công việc này?",
+    "overdue": "Quá hạn",
+    "statusSaved": "Đã lưu trạng thái"
   },
   "labor": {
     "title": "Nhân công",
@@ -897,6 +907,7 @@
       "deactivateWorkerFailed": "Không vô hiệu hóa được thợ.",
       "deleteEntryFailed": "Không xóa được chấm công.",
       "saveWorkerFailed": "Không lưu được thợ.",
+      "roleUnavailable": "Vai trò này không còn dùng được cho công ty của công trình này. Hãy chọn vai trò khác hoặc không chọn vai trò.",
       "invalidPhone": "Nhập số điện thoại hợp lệ, ví dụ 06 12 34 56 78 hoặc +84 912 345 678.",
       "workerNameRequired": "Bắt buộc nhập tên thợ.",
       "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0.",
@@ -1273,7 +1284,8 @@
     },
     "editor": {
       "placeholderTitle": "Tiêu đề ghi chú",
-      "placeholderBody": "Viết xuống đây…"
+      "placeholderBody": "Viết xuống đây…",
+      "titleRequired": "Hãy đặt tiêu đề cho ghi chú để lưu."
     },
     "categoryLabel": "Danh mục",
     "filterAll": "Tất cả",
@@ -1304,7 +1316,7 @@
     "errors": {
       "saveFailed": "Không thể lưu ghi chú. Vui lòng thử lại.",
       "deleteFailed": "Không thể xóa ghi chú. Vui lòng thử lại.",
-      "validation": "Một số trường không hợp lệ.",
+      "validation": "Kiểm tra ghi chú: cần có tiêu đề (tối đa 200 ký tự), nội dung tối đa 2.000 ký tự.",
       "forbidden": "Bạn không có quyền truy cập dự án này.",
       "notFound": "Ghi chú này không còn tồn tại.",
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
@@ -1312,7 +1324,14 @@
     },
     "addedOn": "Đã thêm ngày {date}",
     "addedToday": "Đã thêm hôm nay",
-    "addedYesterday": "Đã thêm hôm qua"
+    "addedYesterday": "Đã thêm hôm qua",
+    "showMore": "Xem thêm",
+    "showLess": "Thu gọn",
+    "loadError": {
+      "title": "Không thể tải ghi chú",
+      "body": "Ghi chú của bạn chưa bị xóa: chỉ là tải dữ liệu thất bại. Vui lòng thử lại sau giây lát.",
+      "retry": "Thử lại"
+    }
   },
   "notifications": {
     "aria": {
@@ -1508,12 +1527,15 @@
         "recipient": "Khách hàng",
         "status": "Trạng thái",
         "totalTtc": "Tổng (gồm VAT)",
-        "actions": "Thao tác"
+        "actions": "Thao tác",
+        "issuer": "Bên phát hành"
       },
       "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại.",
       "loadFailed": "Không thể tải danh sách tài liệu.",
       "retry": "Thử lại",
-      "noFilterResults": "Không có tài liệu nào ở trạng thái này."
+      "noFilterResults": "Không có tài liệu nào ở trạng thái này.",
+      "companyFilter": "Công ty phát hành",
+      "allCompanies": "Tất cả công ty"
     },
     "form": {
       "modes": {
@@ -1640,7 +1662,8 @@
       },
       "issuer": {
         "issuedFrom": "Phát hành từ",
-        "locked": "đã khóa"
+        "locked": "đã khóa",
+        "sourceCompanyNotIssuable": "Công ty gốc không có trong danh sách vì bạn không phải quản trị viên của công ty đó. Hãy kiểm tra công ty phát hành đã chọn."
       },
       "deleteDialog": {
         "title": "Xóa tài liệu?",
@@ -1691,7 +1714,8 @@
         "invoice": "Hóa đơn",
         "refundedBy": "Được hoàn bởi",
         "status": "Trạng thái",
-        "actions": "Thao tác"
+        "actions": "Thao tác",
+        "company": "Công ty"
       },
       "attachments": {
         "count": "{n} tệp",
@@ -1732,6 +1756,10 @@
         "body": "{number} sẽ không còn được theo dõi hoàn tiền và trạng thái hoàn tiền sẽ bị xóa.",
         "fundsRelease": "Khoản giải ngân liên kết {number} cũng sẽ bị xóa, làm giảm tổng giải ngân của dự án.",
         "cancel": "Hủy"
+      },
+      "companyFilter": {
+        "label": "Công ty",
+        "all": "Tất cả công ty"
       }
     },
     "import": {
@@ -2105,7 +2133,8 @@
         "forbidden": "Bạn không có quyền thực hiện điều này",
         "removeFailed": "Không thể xóa thành viên này. Vui lòng thử lại.",
         "saveFailed": "Không thể lưu thay đổi. Vui lòng thử lại."
-      }
+      },
+      "removeSelf": "Bạn không thể tự rời khỏi dự án: hãy nhờ quản trị viên thực hiện."
     },
     "assign": {
       "button": "Thêm thành viên vào dự án",
@@ -2144,7 +2173,9 @@
         "detach": "Rời công ty",
         "detachConfirm": "Xóa bạn khỏi \"{name}\"? Bạn sẽ mất quyền truy cập và cần mã công ty từ quản trị viên để liên kết lại.",
         "detached": "Bạn đã rời khỏi \"{name}\"."
-      }
+      },
+      "createCta": "Tạo công ty",
+      "joinCta": "Tham gia bằng mã"
     },
     "invite": {
       "dialogTitle": "Liên kết công ty",
@@ -2311,6 +2342,20 @@
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
       "generic": "Đã xảy ra lỗi không mong muốn.",
       "invalidJoinCode": "Mã công ty không hợp lệ hoặc đã bị thu hồi."
+    },
+    "scopePicker": {
+      "label": "Công ty đang xem",
+      "primary": "Chính"
+    },
+    "hiddenSections": {
+      "title": "Ẩn mục",
+      "description": "Tắt những mục {company} không dùng. Mục bị tắt sẽ biến mất khỏi menu của mọi thành viên trong công ty, trên web và trong ứng dụng di động.",
+      "companyAreas": "Khu vực công ty",
+      "projectSections": "Mục của công trình",
+      "mobileOnly": "ứng dụng di động",
+      "saved": "Đã cập nhật các mục.",
+      "error": "Không lưu được các mục.",
+      "sections": {"billing": "Báo giá & hóa đơn", "library": "Thư viện sản phẩm", "inventory": "Kho thiết bị", "documents": "Tài liệu", "photos": "Ảnh", "notes": "Ghi chú", "salaries": "Lương", "chiffrage": "Hoạch toán", "analyses": "Phân tích"}
     }
   },
   "bibliotheque": {
@@ -3014,7 +3059,8 @@
       "tooLarge": "Ảnh quá lớn (tối đa 10 MB).",
       "unsupportedType": "Chỉ hỗ trợ ảnh JPEG, PNG và WebP.",
       "forbidden": "Bạn không phải thành viên của kênh này.",
-      "reactFailed": "Không lưu được cảm xúc của bạn. Vui lòng thử lại."
+      "reactFailed": "Không lưu được cảm xúc của bạn. Vui lòng thử lại.",
+      "bodyTooLong": "Tin nhắn quá dài (tối đa 4.000 ký tự)."
     },
     "voiceNote": "Tin nhắn thoại",
     "voiceLoading": "Đang tải bản ghi…",
@@ -3022,7 +3068,7 @@
     "moderation": {
       "report": "Báo cáo tin nhắn",
       "reportTitle": "Báo cáo tin nhắn này?",
-      "reportBody": "Tin nhắn sẽ được gửi cho quản trị viên công ty của bạn và đội ngũ Folio để xem xét.",
+      "reportBody": "Quản trị viên công ty của bạn sẽ được thông báo và có thể gỡ tin nhắn.",
       "reported": "Đã báo cáo. Cảm ơn bạn.",
       "block": "Chặn {name}",
       "blockTitle": "Chặn {name}?",
@@ -3034,7 +3080,38 @@
       "unblock": "Bỏ chặn",
       "none": "Chưa chặn ai.",
       "cancel": "Hủy",
-      "failed": "Không thực hiện được. Vui lòng thử lại."
+      "failed": "Không thực hiện được. Vui lòng thử lại.",
+      "reasonLabel": "Lý do (không bắt buộc)",
+      "reasonPlaceholder": "VD: lời lẽ xúc phạm"
+    },
+    "deletedAccount": "Tài khoản đã xoá",
+    "unnamedMember": "Thành viên chưa đặt tên",
+    "formerMember": "{name} (thành viên cũ)",
+    "loadOlder": "Tải tin nhắn cũ hơn",
+    "historyStart": "Bắt đầu cuộc trò chuyện",
+    "newMessages": "Tin nhắn mới",
+    "noLongerAvailable": "Bạn không còn quyền truy cập cuộc trò chuyện này.",
+    "newMessageFrom": "{name}: {text}",
+    "attachment": "Tệp đính kèm",
+    "openImage": "Mở ảnh {name}",
+    "downloadImage": "Tải xuống",
+    "reports": {
+      "title": "Tin nhắn bị báo cáo",
+      "description": "Các tin nhắn mà thành viên đã báo cáo trong các cuộc trò chuyện của công ty. Gỡ tin nhắn cho mọi người, hoặc bỏ qua báo cáo nếu không cần xử lý.",
+      "empty": "Không có báo cáo nào đang chờ.",
+      "loadError": "Không tải được danh sách báo cáo.",
+      "retry": "Thử lại",
+      "reportedBy": "Được báo cáo bởi {name}",
+      "reason": "Lý do: {reason}",
+      "from": "Tin nhắn của {name}",
+      "dismiss": "Bỏ qua",
+      "deleteMessage": "Gỡ tin nhắn",
+      "deleteTitle": "Gỡ tin nhắn này?",
+      "deleteBody": "Tin nhắn sẽ biến mất khỏi cuộc trò chuyện với mọi người. Không thể hoàn tác.",
+      "cancel": "Huỷ",
+      "dismissed": "Đã bỏ qua báo cáo.",
+      "deleted": "Đã gỡ tin nhắn.",
+      "failed": "Thao tác không thành công. Vui lòng thử lại."
     }
   },
   "help": {

@@ -57,6 +57,25 @@ describe("CategoryMenu", () => {
     expect(screen.queryByRole("listbox")).toBeNull();
   });
 
+  it("stays open when a text field next to it scrolls (a long title losing focus)", () => {
+    render(
+      <div>
+        <input aria-label="title" defaultValue={"x".repeat(200)} />
+        <CategoryMenu value="general" onChange={vi.fn()} />
+      </div>
+    );
+    fireEvent.click(screen.getByRole("button", { name: /notes\.categories\./i }));
+    fireEvent.scroll(screen.getByLabelText("title"));
+    expect(screen.getByRole("listbox")).toBeDefined();
+  });
+
+  it("closes when the page scrolls", () => {
+    render(<CategoryMenu value="general" onChange={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: /notes\.categories\./i }));
+    fireEvent.scroll(document);
+    expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
   it("does not open when disabled", () => {
     const onChange = vi.fn();
     render(<CategoryMenu value="general" onChange={onChange} disabled />);

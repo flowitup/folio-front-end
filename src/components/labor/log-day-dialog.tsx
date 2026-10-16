@@ -32,6 +32,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { DisabledReason } from "@/components/ui/disabled-reason";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -443,19 +444,21 @@ export function LogDayDialog({
             min={EARLIEST_ATTENDANCE_DATE}
             max={todayKey()}
           />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSameAsLastDay}
-            disabled={!canUseLastDay}
-            title={
-              canUseLastDay && lastDay.date
-                ? t("sameAsLastDayHint", { date: formatDate(lastDay.date) })
-                : t("noPreviousDay")
-            }
-          >
-            {t("sameAsLastDay")}
-          </Button>
+          <DisabledReason reason={canUseLastDay ? undefined : t("noPreviousDay")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSameAsLastDay}
+              disabled={!canUseLastDay}
+              title={
+                canUseLastDay && lastDay.date
+                  ? t("sameAsLastDayHint", { date: formatDate(lastDay.date) })
+                  : undefined
+              }
+            >
+              {t("sameAsLastDay")}
+            </Button>
+          </DisabledReason>
         </div>
 
         <div className="relative">

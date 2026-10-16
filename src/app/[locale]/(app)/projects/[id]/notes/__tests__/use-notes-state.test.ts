@@ -124,6 +124,20 @@ describe("useNotesState — handleToggleDone", () => {
     expect(mockToastError).toHaveBeenCalled();
   });
 
+  it("drops a note deleted elsewhere and says so, instead of rolling back", async () => {
+    const note = makeNote({ status: "open" });
+    mockUpdate.mockResolvedValueOnce({ success: false, error: "notFound" });
+
+    const { result } = renderHook(() => useNotesState(PROJECT_ID, [note]));
+
+    await act(async () => {
+      await result.current.handleToggleDone(NOTE_ID);
+    });
+
+    expect(result.current.notes).toHaveLength(0);
+    expect(mockToastError).toHaveBeenCalledWith("errors.notFound");
+  });
+
   it("does nothing when noteId is not found", async () => {
     const note = makeNote({ status: "open" });
 

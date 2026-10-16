@@ -53,7 +53,10 @@ export interface CreateCompanyPayload {
   prefix_override?: string | null;
 }
 
-export type UpdateCompanyPayload = Partial<CreateCompanyPayload>;
+export type UpdateCompanyPayload = Partial<CreateCompanyPayload> & {
+  /** Full list of hidden sections (replaces the stored one). */
+  hidden_sections?: string[];
+};
 
 // ---------------------------------------------------------------------------
 // API wrappers

@@ -269,7 +269,12 @@
     "projectCreated": "Đã tạo dự án",
     "projectDeleted": "Đã xóa dự án",
     "projectUpdated": "Đã cập nhật dự án",
-    "settingsForbidden": "Bạn không có quyền thay đổi cài đặt của dự án này."
+    "settingsForbidden": "Bạn không có quyền thay đổi cài đặt của dự án này.",
+    "hiddenSection": {
+      "title": "Mục đã ẩn",
+      "body": "Công ty của công trình này đã ẩn mục này với các thành viên.",
+      "back": "Quay lại công trình"
+    }
   },
   "settings": {
     "profile": "Hồ sơ",
@@ -2316,6 +2321,16 @@
     "scopePicker": {
       "label": "Công ty đang xem",
       "primary": "Chính"
+    },
+    "hiddenSections": {
+      "title": "Ẩn mục",
+      "description": "Tắt những mục {company} không dùng. Mục bị tắt sẽ biến mất khỏi menu của mọi thành viên trong công ty, trên web và trong ứng dụng di động.",
+      "companyAreas": "Khu vực công ty",
+      "projectSections": "Mục của công trình",
+      "mobileOnly": "ứng dụng di động",
+      "saved": "Đã cập nhật các mục.",
+      "error": "Không lưu được các mục.",
+      "sections": {"billing": "Báo giá & hóa đơn", "library": "Thư viện sản phẩm", "inventory": "Kho thiết bị", "documents": "Tài liệu", "photos": "Ảnh", "notes": "Ghi chú", "salaries": "Lương", "chiffrage": "Hoạch toán", "analyses": "Phân tích"}
     }
   },
   "bibliotheque": {

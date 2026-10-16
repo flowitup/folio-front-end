@@ -27,7 +27,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { projectSwitchPath } from "@/lib/projects/project-switch-path";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
-import { can, canCreateProject } from "@/lib/auth/permissions";
+import { can, canCreateProject, isCompanyAdmin } from "@/lib/auth/permissions";
 import { FolioLogo } from "@/components/folio-logo";
 import {
   DropdownMenu,
@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarBillingGroup } from "@/components/layout/sidebar-billing-group";
+import { hiddenCompanyAreas, hiddenProjectSections } from "@/lib/companies/hidden-sections";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -74,8 +75,18 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
     selectedProject?.my_permissions
   );
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
+  // Sections a company turned off (Settings › Company): project sections follow
+  // the selected project's company, company-wide areas every company of the user.
+  const hiddenAreas = hiddenCompanyAreas(user?.companies);
+  const hiddenOnProject = hiddenProjectSections(user?.companies, selectedProject?.company_id);
+  const projectBillingVisible =
+    canViewBilling &&
+    !hiddenOnProject.has("billing") &&
+    // The project's quotes & invoices are its company's: admins of that company only.
+    (!selectedProject?.company_id ||
+      isCompanyAdmin(user?.companies, selectedProject.company_id, user?.permissions));
 
-  const projectNav = [
+  const allProjectNav = [
     { key: "dashboard", href: "/dashboard", icon: Home },
     { key: "projects", href: "/projects", icon: FolderOpen },
     { key: "bibliotheque", href: "/bibliotheque", icon: Library },
@@ -87,7 +98,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
           { key: "invoices", href: `/projects/${selectedProjectId}/invoices`, icon: Receipt },
           // The project's quotes & invoices link into /billing, so the entry
           // follows the same company-admin gate as the Billing group below.
-          ...(canViewBilling
+          ...(projectBillingVisible
             ? [
                 {
                   key: "quotesInvoices",
@@ -106,6 +117,16 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
         ]
       : []),
   ];
+
+  const NAV_SECTION: Record<string, string> = {
+    bibliotheque: "library",
+    inventory: "inventory",
+  };
+  const projectNav = allProjectNav.filter((item) => {
+    const area = NAV_SECTION[item.key];
+    if (area) return !hiddenAreas.has(area);
+    return !hiddenOnProject.has(item.key);
+  });
 
   const settingsItem = { key: "settings", href: "/settings", icon: Settings };
 
@@ -256,7 +277,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
 
         {/* Billing group — after project-scoped nav, before Settings.
             Only rendered for users who can access billing (company admins / superadmin). */}
-        {canViewBilling && <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />}
+        {canViewBilling && !hiddenAreas.has("billing") && <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />}
 
         {/* Settings — always last */}
         {(() => {

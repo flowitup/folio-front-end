@@ -269,7 +269,12 @@
     "projectCreated": "Projet créé",
     "projectDeleted": "Projet supprimé",
     "projectUpdated": "Projet mis à jour",
-    "settingsForbidden": "Vous n'avez pas le droit de modifier les paramètres de ce projet."
+    "settingsForbidden": "Vous n'avez pas le droit de modifier les paramètres de ce projet.",
+    "hiddenSection": {
+      "title": "Section masquée",
+      "body": "L'entreprise de ce chantier a masqué cette section pour ses membres.",
+      "back": "Retour au chantier"
+    }
   },
   "settings": {
     "profile": "Profil",
@@ -2316,6 +2321,16 @@
     "scopePicker": {
       "label": "Entreprise affichée",
       "primary": "Principale"
+    },
+    "hiddenSections": {
+      "title": "Sections masquées",
+      "description": "Désactivez les sections que {company} n'utilise pas. Une section désactivée disparaît du menu de tous les membres de l'entreprise, sur le web et dans l'application mobile.",
+      "companyAreas": "Espaces de l'entreprise",
+      "projectSections": "Sections des chantiers",
+      "mobileOnly": "application mobile",
+      "saved": "Sections mises à jour.",
+      "error": "Impossible d'enregistrer les sections.",
+      "sections": {"billing": "Devis & factures", "library": "Bibliothèque de produits", "inventory": "Inventaire du matériel", "documents": "Documents", "photos": "Photos", "notes": "Notes", "salaries": "Salaires", "chiffrage": "Chiffrage", "analyses": "Analyses"}
     }
   },
   "bibliotheque": {

@@ -269,7 +269,12 @@
     "projectCreated": "Project created",
     "projectDeleted": "Project deleted",
     "projectUpdated": "Project updated",
-    "settingsForbidden": "You don't have permission to change this project's settings."
+    "settingsForbidden": "You don't have permission to change this project's settings.",
+    "hiddenSection": {
+      "title": "Hidden section",
+      "body": "This project's company has hidden this section from its members.",
+      "back": "Back to the project"
+    }
   },
   "settings": {
     "profile": "Profile",
@@ -2316,6 +2321,16 @@
     "scopePicker": {
       "label": "Company shown",
       "primary": "Primary"
+    },
+    "hiddenSections": {
+      "title": "Hidden sections",
+      "description": "Switch off the sections {company} does not use. A switched-off section disappears from the menu of every member of the company, on the web and in the mobile app.",
+      "companyAreas": "Company areas",
+      "projectSections": "Project sections",
+      "mobileOnly": "mobile app",
+      "saved": "Sections updated.",
+      "error": "Could not save the sections.",
+      "sections": {"billing": "Quotes & invoices", "library": "Product library", "inventory": "Equipment inventory", "documents": "Documents", "photos": "Photos", "notes": "Notes", "salaries": "Salaries", "chiffrage": "Cost planning", "analyses": "Analyses"}
     }
   },
   "bibliotheque": {

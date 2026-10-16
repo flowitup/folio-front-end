@@ -23,6 +23,8 @@ export interface Company {
    * Present only for superadmins (stripped for everyone else); null when none is active.
    */
   join_code?: string | null;
+  /** Sections the company hides from every member's navigation (see lib/companies/hidden-sections). */
+  hidden_sections?: string[];
   created_by: string;
   created_at: string;
   updated_at: string;

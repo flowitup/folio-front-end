@@ -49,6 +49,7 @@ import { JoinCompanyDialog } from "@/components/companies/join-company-dialog";
 // caller's own company id instead of an arbitrary one.
 import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-card";
 import { CompanyMembersTable } from "@/components/companies/company-members-table";
+import { CompanyHiddenSectionsCard } from "@/components/companies/company-hidden-sections-card";
 import { CompanyPaymentMethodsCard } from "@/components/companies/company-payment-methods-card";
 import { CompanyLaborRolesCard } from "@/components/companies/company-labor-roles-card";
 import { CompanyProfileForm } from "@/components/companies/company-profile-form";
@@ -323,6 +324,19 @@ export function CompanySettingsSection() {
               <CompanyPaymentMethodsCard
                 key={`payment-methods-${selectedCompany.id}`}
                 companyId={selectedCompany.id}
+              />
+
+              {/* Sections the company does not use, hidden from every
+                  member's navigation (web and mobile). */}
+              <CompanyHiddenSectionsCard
+                key={`hidden-sections-${selectedCompany.id}`}
+                companyId={selectedCompany.id}
+                companyName={selectedCompany.legal_name}
+                initialHidden={selectedCompany.hidden_sections ?? []}
+                onSaved={() => {
+                  void load({ silent: true });
+                  void refreshUser?.();
+                }}
               />
             </>
           )}

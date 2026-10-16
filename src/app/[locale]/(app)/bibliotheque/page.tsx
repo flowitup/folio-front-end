@@ -15,6 +15,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirectToOnboardingIfNeeded } from "@/lib/auth/onboarding-redirect";
 import { pageTitle } from "@/lib/i18n/page-title";
 import { pickPageCompany, toPageCompanies, type PageCompany } from "@/lib/companies/page-company";
+import { companiesShowingArea } from "@/lib/companies/hidden-sections";
+import { redirect } from "next/navigation";
 
 export const generateMetadata = pageTitle("navigation.bibliotheque");
 
@@ -29,15 +31,22 @@ export default async function BibliothequePage({ searchParams }: PageProps) {
 
   let companyId: string | null = null;
   let companies: PageCompany[] = [];
+  let areaHidden = false;
 
   try {
     // ?company= (the picker), else the primary company, else the oldest attachment.
+    // Companies that turned this area off (Settings › Company › Hidden
+    // sections) are left out; when every company did, the page is hidden.
     const mine = await fetchMyCompanies();
-    companyId = pickPageCompany(mine, (await searchParams)?.company)?.id ?? null;
-    companies = toPageCompanies(mine);
+    const showing = companiesShowingArea(mine, "library");
+    areaHidden = mine.length > 0 && showing.length === 0;
+    companyId = pickPageCompany(showing, (await searchParams)?.company)?.id ?? null;
+    companies = toPageCompanies(showing);
   } catch (err) {
     console.error("[BibliothequePage] Could not fetch attached companies.", err);
   }
+
+  if (areaHidden) redirect(`/${await getLocale()}/dashboard`);
 
   if (!companyId) {
     const t = await getTranslations("bibliotheque");

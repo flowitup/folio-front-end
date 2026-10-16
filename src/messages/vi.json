@@ -934,7 +934,8 @@
         "noteLabel": "Ghi chú",
         "notePlaceholder": "Tùy chọn"
       },
-      "noWorkers": "Không có công nhân nào."
+      "noWorkers": "Không có công nhân nào.",
+      "addWorkersFirst": "Hãy thêm công nhân trước: sau đó bạn có thể chấm công cho họ."
     },
     "editEntry": {
       "title": "Sửa chấm công"
@@ -1160,7 +1161,8 @@
       "alreadyOnProject": "Đã có trong dự án này",
       "createWithPhone": "Người mới với số {phone}"
     },
-    "newPersonHint": "Người mới: sẽ được tạo cùng công nhân khi bạn lưu."
+    "newPersonHint": "Người mới: sẽ được tạo cùng công nhân khi bạn lưu.",
+    "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại."
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

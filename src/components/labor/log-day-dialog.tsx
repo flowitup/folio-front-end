@@ -95,6 +95,8 @@ interface LogDayDialogProps {
   onLogNextDay?: (date: string) => void;
   /** Re-fetch parent entries after a successful save. */
   onSaved: () => void;
+  /** No worker yet: offer to add one (opens the add-worker dialog). */
+  onAddWorker?: () => void;
 }
 
 export function LogDayDialog({
@@ -106,6 +108,7 @@ export function LogDayDialog({
   initialDate,
   onLogNextDay,
   onSaved,
+  onAddWorker,
 }: LogDayDialogProps) {
   const t = useTranslations("labor.logDayDialog");
   const tLabor = useTranslations("labor");
@@ -450,6 +453,24 @@ export function LogDayDialog({
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
+
+        {workers.length === 0 && (
+          <div className="bg-muted/40 flex flex-col items-start gap-2 rounded-md border border-dashed p-3 text-sm">
+            <p>{t("addWorkersFirst")}</p>
+            {onAddWorker && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onAddWorker();
+                }}
+              >
+                {tLabor("addWorker")}
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
           <DatePickerWithArrows

@@ -194,3 +194,38 @@ export function RefuseChangeDialog({ request, busy, onConfirm, onCancel }: Refus
     </AlertDialog>
   );
 }
+
+interface RejectEntryDialogProps {
+  /** The pending (self-logged) day being refused; null keeps the dialog closed. */
+  entry: { worker_name: string } | null;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+/** In-app confirmation before a worker's self-logged day is refused (no native confirm()). */
+export function RejectEntryDialog({ entry, onConfirm, onCancel }: RejectEntryDialogProps) {
+  const t = useTranslations("labor");
+  return (
+    <AlertDialog
+      open={entry !== null}
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+    >
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t("reject")}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {entry ? t("status.confirmReject", { worker: entry.worker_name }) : null}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+          <Button variant="destructive" onClick={onConfirm}>
+            {t("reject")}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}

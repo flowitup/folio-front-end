@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Pencil, UserX, UserCheck, Download, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -105,12 +105,15 @@ export function WorkerList({
             // Prefer the joined Person identity once cook 1c backfill
             // links workers to persons; fall back to legacy fields.
             const displayName = worker.person_name ?? worker.name;
+            // The tile opens the worker (edit) when it can be edited; otherwise it
+            // does not pretend to be clickable.
+            const opensEdit = canManage && worker.is_active;
             return (
               <Card
                 key={worker.id}
                 className={cn(
                   "group relative flex aspect-square flex-col items-center justify-center gap-2 p-4 text-center transition",
-                  "hover:border-primary/60 hover:shadow-md",
+                  opensEdit && "hover:border-primary/60 hover:shadow-md",
                   !worker.is_active && "opacity-60",
                 )}
               >
@@ -124,6 +127,12 @@ export function WorkerList({
                   aria-label={worker.is_active ? t("active") : t("inactive")}
                 />
 
+                {/* Avatar + identity: a button opening the worker when editable. */}
+                <TileIdentity
+                  opensEdit={opensEdit}
+                  label={t("editWorker")}
+                  onOpen={() => onEdit(worker)}
+                >
                 {/* Avatar — colored initials (color = role_color or hash) */}
                 <WorkerAvatar
                   initials={personInitials(displayName)}
@@ -153,6 +162,7 @@ export function WorkerList({
                     </span>
                   )}
                 </div>
+                </TileIdentity>
 
                 {/* Action bar — revealed on hover or focus-within; always
                     shown on touch devices (see .hover-reveal). */}
@@ -261,8 +271,10 @@ export function WorkerList({
             <AlertDialogTitle className="text-center">
               {t("confirmDeactivate")}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmDeactivate?.person_name ?? confirmDeactivate?.name}
+            <AlertDialogDescription className="text-center">
+              {t("confirmDeactivateBody", {
+                name: confirmDeactivate?.person_name ?? confirmDeactivate?.name ?? "",
+              })}
             </AlertDialogDescription>
           </div>
           <AlertDialogFooter className="sm:justify-center gap-2">
@@ -282,5 +294,32 @@ export function WorkerList({
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+/** The tile's avatar and name: a button that opens the worker when it can be edited. */
+function TileIdentity({
+  opensEdit,
+  label,
+  onOpen,
+  children,
+}: {
+  opensEdit: boolean;
+  label: string;
+  onOpen: () => void;
+  children: ReactNode;
+}) {
+  if (!opensEdit) {
+    return <div className="flex w-full min-w-0 flex-col items-center gap-2">{children}</div>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      title={label}
+      className="flex w-full min-w-0 cursor-pointer flex-col items-center gap-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {children}
+    </button>
   );
 }

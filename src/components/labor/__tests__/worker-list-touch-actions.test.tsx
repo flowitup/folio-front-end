@@ -47,3 +47,25 @@ describe("WorkerList action bar", () => {
     expect(css).toMatch(/@media \(hover: hover\) \{\s*\.hover-reveal \{\s*opacity: 0;/);
   });
 });
+
+describe("WorkerList tile", () => {
+  it("opens the worker when clicked, and is not a fake card when it cannot be edited", async () => {
+    const { fireEvent } = await import("@testing-library/react");
+    const onEdit = vi.fn();
+    const { rerender } = render(
+      <NextIntlClientProvider locale="en" messages={enMessages}>
+        <WorkerList workers={[WORKER]} canManage projectId="p1" onAdd={vi.fn()} onEdit={onEdit} onDeactivate={vi.fn()} />
+      </NextIntlClientProvider>,
+    );
+    fireEvent.click(screen.getByText("Karim"));
+    expect(onEdit).toHaveBeenCalledWith(WORKER);
+
+    rerender(
+      <NextIntlClientProvider locale="en" messages={enMessages}>
+        <WorkerList workers={[WORKER]} canManage={false} projectId="p1" onAdd={vi.fn()} onEdit={onEdit} onDeactivate={vi.fn()} />
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByText("Karim").closest("button")).toBeNull();
+    expect(screen.getByText("Karim").closest("[class*='hover:shadow-md']")).toBeNull();
+  });
+});

@@ -934,7 +934,8 @@
         "noteLabel": "Note",
         "notePlaceholder": "Facultatif"
       },
-      "noWorkers": "Aucun ouvrier."
+      "noWorkers": "Aucun ouvrier.",
+      "addWorkersFirst": "Ajoutez d'abord vos ouvriers : vous pourrez ensuite pointer leurs journées."
     },
     "editEntry": {
       "title": "Modifier le pointage"
@@ -1160,7 +1161,8 @@
       "alreadyOnProject": "Déjà sur ce chantier",
       "createWithPhone": "Nouvelle personne avec le numéro {phone}"
     },
-    "newPersonHint": "Nouvelle personne : elle sera créée avec l'ouvrier, une fois enregistré."
+    "newPersonHint": "Nouvelle personne : elle sera créée avec l'ouvrier, une fois enregistré.",
+    "confirmDeactivateBody": "{name} sera arrêté(e) sur tous les chantiers de l'entreprise que vous gérez et ne pourra plus y pointer. Ses journées et ce qui lui reste dû restent visibles et payables ; vous pourrez le/la réactiver."
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",

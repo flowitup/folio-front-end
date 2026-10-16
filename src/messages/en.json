@@ -934,7 +934,8 @@
         "noteLabel": "Note",
         "notePlaceholder": "Optional"
       },
-      "noWorkers": "No workers."
+      "noWorkers": "No workers.",
+      "addWorkersFirst": "Add your workers first: you can then log their days."
     },
     "editEntry": {
       "title": "Edit attendance"
@@ -1160,7 +1161,8 @@
       "alreadyOnProject": "Already on this project",
       "createWithPhone": "New person with number {phone}"
     },
-    "newPersonHint": "New person: created together with the worker when you save."
+    "newPersonHint": "New person: created together with the worker when you save.",
+    "confirmDeactivateBody": "{name} will be stopped on every site of the company that you manage and can no longer log time there. Their days and what they are still owed stay visible and payable; you can reactivate them."
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

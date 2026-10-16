@@ -24,7 +24,7 @@ import { LaborPaymentsTab } from "@/components/labor/labor-payments-tab";
 import { ActivityDialog } from "@/components/labor/activity-dialog";
 import { ConfirmDeleteDialog } from "@/components/labor/confirm-delete-dialog";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
-import { ChangeRequestsPanel, RefuseChangeDialog } from "@/components/labor/change-requests-panel";
+import { ChangeRequestsPanel, RefuseChangeDialog, RejectEntryDialog } from "@/components/labor/change-requests-panel";
 import type { ChangeRequestActions } from "@/components/labor/labor-entry-card";
 
 import type { Worker, LaborEntry, LaborActivity, LaborDayDescription, LaborSummaryResponse, LaborMonthlySummaryResponse, LaborPaymentsSummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
@@ -146,6 +146,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
 
   // Workers state
   const [workers, setWorkers] = useState<Worker[]>([]);
+  // Set after the first successful worker load: "no workers yet" is never shown while loading.
+  const [workersLoaded, setWorkersLoaded] = useState(false);
   const [showAddWorker, setShowAddWorker] = useState(false);
   const [editWorker, setEditWorker] = useState<Worker | null>(null);
 
@@ -245,6 +247,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       // deactivated worker can still be owed pay (Summary, Payments, export).
       const data = await fetchWorkers(projectId, { includeInactive: true });
       setWorkers(data);
+      setWorkersLoaded(true);
     } catch {
       setError(t("errors.loadWorkersFailed"));
     }
@@ -517,9 +520,15 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     }
   };
 
+  // Refusing a self-logged day asks first, in an in-app dialog.
+  const [rejectingEntry, setRejectingEntry] = useState<LaborEntry | null>(null);
   const handleRejectEntry = async (entry: LaborEntry) => {
     if (settlingEntryIds.current.has(entry.id)) return;
-    if (!window.confirm(t("status.confirmReject", { worker: entry.worker_name }))) return;
+    setRejectingEntry(entry);
+  };
+  const confirmRejectEntry = async (entry: LaborEntry) => {
+    setRejectingEntry(null);
+    if (settlingEntryIds.current.has(entry.id)) return;
     settlingEntryIds.current.add(entry.id);
     try {
       await rejectAttendance(projectId, entry.id);
@@ -653,6 +662,17 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       {!showContent && (
         <div className="folio-card flex items-center justify-center p-12">
           <Loader2 size={20} className="animate-spin" style={{ color: "var(--muted)" }} />
+        </div>
+      )}
+
+      {/* A new project's first site: nothing can be logged or summed before workers exist. */}
+      {showContent && !isMemberPersona && canManageLabor && workersLoaded && workers.length === 0 && activeTab !== "workers" && (
+        <div className="folio-card flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
+          <p>{t("logDayDialog.addWorkersFirst")}</p>
+          <Button size="sm" onClick={() => setShowAddWorker(true)}>
+            <Plus className="mr-1 h-4 w-4" />
+            {t("addWorker")}
+          </Button>
         </div>
       )}
 
@@ -863,6 +883,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         initialDate={logDayDate}
         onLogNextDay={(next) => handleOpenLogDay(next)}
         onSaved={loadEntries}
+        onAddWorker={canManageLabor ? () => setShowAddWorker(true) : undefined}
       />
 
       <EditAttendanceDialog
@@ -872,6 +893,12 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         }}
         entry={editEntry}
         onSave={handleUpdateAttendance}
+      />
+
+      <RejectEntryDialog
+        entry={rejectingEntry}
+        onConfirm={() => rejectingEntry && void confirmRejectEntry(rejectingEntry)}
+        onCancel={() => setRejectingEntry(null)}
       />
 
       <RefuseChangeDialog

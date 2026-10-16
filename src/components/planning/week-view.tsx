@@ -285,7 +285,7 @@ function WeekTaskChip({ task, statusLabel, assigneeName, onClick }: WeekTaskChip
           onClick();
         }
       }}
-      className="task-card focus:outline-none"
+      className="task-card focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
       style={{ padding: "6px 8px" }}
     >
       <div className="flex items-start gap-1.5">

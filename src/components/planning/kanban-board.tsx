@@ -365,7 +365,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
           </div>
 
           {/* Drag overlay — floating card while dragging. Portaled to <body>:
-              inside the app's zoom:0.8 content and the page's transformed
+              inside the app's zoomed (--app-zoom) content and the page's transformed
               .fade-up wrapper, its position:fixed viewport coordinates would
               be rescaled/re-anchored and the card would drift away from the
               pointer. The inner zoom keeps it the size of the zoomed board.
@@ -374,7 +374,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
             createPortal(
               <DragOverlay>
                 {activeTask && (
-                  <div style={{ zoom: 0.8 }}>
+                  <div className="app-zoom">
                     <TaskCard
                       task={activeTask}
                       assigneeName={activeTask.assignee_id ? assigneeNames.get(activeTask.assignee_id) : null}

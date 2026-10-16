@@ -45,7 +45,7 @@
   /* shadows (very soft) */
   --shadow-card: 0 1px 0 rgba(26, 26, 26, 0.02), 0 8px 24px -16px rgba(26, 26, 26, 0.08);
   --shadow-task: 0 4px 12px -6px rgba(0, 0, 0, 0.12);
-  --shadow-focus: 0 0 0 3px rgba(26, 26, 26, 0.06);
+  --shadow-focus: 0 0 0 3px rgba(26, 26, 26, 0.35);
 
   /* transitions */
   --transition-fast: 140ms ease;
@@ -154,9 +154,12 @@ body {
     background-color: var(--accent-tint);
     color: var(--ink);
   }
+  /* Keyboard focus must be visible: the former 6%-ink halo was ~1.1:1 against
+     the cream paper. Components with their own ring (shadcn Button/Input use
+     outline-none + ring utilities) keep it, since utilities win over base. */
   :focus-visible {
-    outline: none;
-    box-shadow: var(--shadow-focus);
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
   }
   html {
     scroll-behavior: smooth;
@@ -191,6 +194,24 @@ body {
   height: 1px;
   background: linear-gradient(to right, transparent, var(--line-2) 12%, var(--line-2) 88%, transparent);
 }
+
+/* App shell content scale: none on phones and tablets (small text, iOS
+   focus-zoom on inputs), 0.8 on desktop so less scrolling is needed. Used by
+   the (app) layout and by overlays that must match the scaled content. */
+:root { --app-zoom: 1; }
+@media (min-width: 1024px) {
+  :root { --app-zoom: 0.8; }
+}
+.app-zoom { zoom: var(--app-zoom); }
+
+/* "Skip to content": the first thing Tab reaches, visible only when focused. */
+.skip-link {
+  position: fixed; left: 12px; top: -48px; z-index: 100;
+  padding: 8px 14px; border-radius: 8px;
+  background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 600;
+  transition: top var(--transition-fast);
+}
+.skip-link:focus { top: 12px; }
 
 /* ─── Folio component primitives ─── */
 @layer components {

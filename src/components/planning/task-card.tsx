@@ -53,7 +53,7 @@ export function TaskCard({ task, assigneeName, onClick }: TaskCardProps) {
       }}
       role="button"
       tabIndex={0}
-      className="task-card focus:outline-none"
+      className="task-card focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
     >
       <div className="mb-2 flex items-start gap-2">
         <span

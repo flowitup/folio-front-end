@@ -130,6 +130,8 @@ const analysisReportHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Do not advertise the framework (X-Powered-By: Next.js).
+  poweredByHeader: false,
   // The app version, read here at build time and inlined as a bare string.
   // Importing package.json from a client component instead would ship the
   // whole manifest — every dependency and its version range — into a public

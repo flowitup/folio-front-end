@@ -45,6 +45,14 @@ export function InventorySummaryTiles({ summary }: { summary: Summary }) {
       />
       <Tile label={t("location.warehouse")} value={summary.inWarehouse} testId="inventory-summary-warehouse" />
       <Tile label={t("location.site")} value={summary.onSite} testId="inventory-summary-site" />
+      {summary.unknownLocation > 0 && (
+        <Tile
+          label={t("unknownLocation")}
+          value={summary.unknownLocation}
+          tone="negative"
+          testId="inventory-summary-unknown"
+        />
+      )}
     </div>
   );
 }

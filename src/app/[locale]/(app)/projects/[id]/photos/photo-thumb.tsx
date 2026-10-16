@@ -30,7 +30,6 @@ export function PhotoThumb({ projectId, photo, onClick }: Props) {
   useEffect(() => {
     let cancelled = false;
     const controller = new AbortController();
-    setError(false);
 
     fetchProjectPhotoBlob(projectId, photo.id, "thumbnail", controller.signal)
       .then((blob) => {
@@ -71,7 +70,10 @@ export function PhotoThumb({ projectId, photo, onClick }: Props) {
         </button>
         <button
           type="button"
-          onClick={() => setAttempt((n) => n + 1)}
+          onClick={() => {
+            setError(false);
+            setAttempt((n) => n + 1);
+          }}
           aria-label={t("retryThumbnail")}
           title={t("retryThumbnail")}
           className="absolute left-1/2 top-1/2 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-sm hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"

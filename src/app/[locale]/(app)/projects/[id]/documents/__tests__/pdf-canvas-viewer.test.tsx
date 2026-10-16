@@ -106,7 +106,8 @@ describe("PdfCanvasViewer", () => {
     await waitFor(() => expect(render1).toHaveBeenCalledTimes(1));
     const canvas = container.querySelector("canvas");
     expect(canvas).not.toBeNull();
-    expect(render1.mock.calls[0][0]).toMatchObject({ canvas });
+    // Identity, not deep equality: a DOM node is a huge cyclic object
+    expect((render1.mock.calls[0] as unknown as [{ canvas: unknown }])[0].canvas).toBe(canvas);
     expect(onLoadError).not.toHaveBeenCalled();
     expect(screen.getByText("pageOf")).toBeInTheDocument();
   });
@@ -115,6 +116,7 @@ describe("PdfCanvasViewer", () => {
     let onPassword: ((update: (p: string) => void, reason: number) => void) | undefined;
     const task = {
       promise: new Promise(() => {}),
+      destroy: vi.fn(),
       set onPassword(fn: (update: (p: string) => void, reason: number) => void) {
         onPassword = fn;
         fn(vi.fn(), 1);
@@ -133,7 +135,10 @@ describe("PdfCanvasViewer", () => {
   });
 
   it("reports a document that cannot be loaded and offers a retry", async () => {
-    getDocument.mockReturnValue({ promise: Promise.reject(new Error("Invalid PDF structure")) });
+    getDocument.mockReturnValue({
+      promise: Promise.reject(new Error("Invalid PDF structure")),
+      destroy: vi.fn(),
+    });
     const onLoadError = vi.fn();
 
     render(<PdfCanvasViewer src="https://files.example/broken.pdf" onLoadError={onLoadError} />);

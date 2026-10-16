@@ -356,7 +356,9 @@
         "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
         "rate_limited": "Quá nhiều lần thử. Vui lòng đợi một lát rồi thử lại.",
         "unknown": "Đã xảy ra lỗi. Vui lòng thử lại."
-      }
+      },
+      "invalidBadge": "Không còn hoạt động",
+      "invalidHint": "Được tạo trước khi bạn đổi số điện thoại: khóa này không còn đăng nhập được. Hãy thu hồi và tạo khóa mới."
     },
     "errorInvalidProfile": "Kiểm tra tên của bạn: tên tối đa 255 ký tự.",
     "changePhone": {
@@ -377,7 +379,8 @@
       "errorHourlyLimit": "Đã yêu cầu quá nhiều mã cho số này. Vui lòng thử lại sau {minutes} phút.",
       "errorSmsFailed": "Không thể gửi SMS. Vui lòng thử lại sau.",
       "errorInvalidCode": "Mã không đúng hoặc đã hết hạn",
-      "errorFailed": "Không thể đổi số điện thoại. Vui lòng thử lại."
+      "errorFailed": "Không thể đổi số điện thoại. Vui lòng thử lại.",
+      "apiKeysWarning": "Các khóa API của bạn sẽ ngừng hoạt động sau khi đổi số: hãy tạo khóa mới sau đó."
     }
   },
   "paymentMethods": {

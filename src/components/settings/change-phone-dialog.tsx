@@ -199,6 +199,9 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
               <p className="mt-0.5 text-[12px]" style={{ color: "var(--muted)" }}>
                 {tAuth("phoneHint")}
               </p>
+              <p className="mt-1 text-[12px]" data-testid="change-phone-keys-warning" style={{ color: "var(--muted)" }}>
+                {t("apiKeysWarning")}
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-1">

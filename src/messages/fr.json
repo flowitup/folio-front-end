@@ -356,7 +356,9 @@
         "unauthorized": "Votre session a expiré. Veuillez vous reconnecter.",
         "rate_limited": "Trop de tentatives. Patientez un instant, puis réessayez.",
         "unknown": "Une erreur est survenue. Veuillez réessayer."
-      }
+      },
+      "invalidBadge": "Ne fonctionne plus",
+      "invalidHint": "Créée avant votre changement de numéro : cette clé ne permet plus de se connecter. Révoquez-la et créez-en une nouvelle."
     },
     "errorInvalidProfile": "Vérifiez votre nom : il peut compter jusqu'à 255 caractères.",
     "changePhone": {
@@ -377,7 +379,8 @@
       "errorHourlyLimit": "Trop de codes ont été demandés pour ce numéro. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
       "errorSmsFailed": "Le SMS n'a pas pu être envoyé. Réessayez plus tard.",
       "errorInvalidCode": "Code incorrect ou expiré",
-      "errorFailed": "Impossible de changer votre numéro de téléphone. Veuillez réessayer."
+      "errorFailed": "Impossible de changer votre numéro de téléphone. Veuillez réessayer.",
+      "apiKeysWarning": "Vos clés API cesseront de fonctionner après le changement : créez-en de nouvelles ensuite."
     }
   },
   "paymentMethods": {

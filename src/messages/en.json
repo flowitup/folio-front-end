@@ -356,7 +356,9 @@
         "unauthorized": "Your session has expired. Please sign in again.",
         "rate_limited": "Too many attempts. Please wait a moment and try again.",
         "unknown": "Something went wrong. Please try again."
-      }
+      },
+      "invalidBadge": "No longer works",
+      "invalidHint": "Created before your phone number changed: this key can no longer sign in. Revoke it and create a new one."
     },
     "errorInvalidProfile": "Check your name: it can be up to 255 characters.",
     "changePhone": {
@@ -377,7 +379,8 @@
       "errorHourlyLimit": "Too many codes were requested for this number. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
       "errorSmsFailed": "The SMS could not be sent. Try again later.",
       "errorInvalidCode": "Wrong or expired code",
-      "errorFailed": "Couldn't change your phone number. Please try again."
+      "errorFailed": "Couldn't change your phone number. Please try again.",
+      "apiKeysWarning": "Your API keys will stop working after the change: create new ones afterwards."
     }
   },
   "paymentMethods": {

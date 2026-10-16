@@ -32,7 +32,19 @@ export function ApiKeyRow({ apiKey, onRevokeRequest }: ApiKeyRowProps) {
   return (
     <li className="flex items-center gap-3 py-3">
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-medium truncate">{apiKey.name}</p>
+        <p className="flex items-center gap-2 text-[14px] font-medium">
+          <span className="truncate">{apiKey.name}</span>
+          {!apiKey.valid && (
+            <span className="stamp negative shrink-0" data-testid="api-key-invalid">
+              {t("invalidBadge")}
+            </span>
+          )}
+        </p>
+        {!apiKey.valid && (
+          <p className="mt-0.5 text-[12px]" style={{ color: "var(--negative)" }}>
+            {t("invalidHint")}
+          </p>
+        )}
         <div
           className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px]"
           style={{ color: "var(--muted)" }}

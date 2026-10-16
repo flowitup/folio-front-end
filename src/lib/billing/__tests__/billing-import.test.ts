@@ -306,3 +306,23 @@ describe("buildBillingImportTemplate", () => {
     expect(result.ok && result.documents.map((d) => d.document_number)).toEqual(["DEV-7"]);
   });
 });
+
+describe("parseBillingImportFile — SIRET length", () => {
+  it("sets aside a document whose SIRET is longer than the API's 32 characters", () => {
+    const header = `${HEADER};recipient_siret`;
+    const result = parseBillingImportFile(
+      [
+        header,
+        "FAC-2024-090;sent;2024-03-14;Dupont SARL;;Pose;1;10;20;;SIRET 552 100 554 00025 - siège social Paris",
+        "FAC-2024-091;sent;2024-03-14;Martin;;Pose;1;10;20;;552 100 554 00025",
+      ].join("\n"),
+      "export.csv",
+      "facture",
+      "sent"
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.issues[0]).toMatchObject({ code: "tooLong", params: { field: "recipient_siret", max: 32 } });
+    expect(result.documents.map((d) => d.document_number)).toEqual(["FAC-2024-091"]);
+  });
+});

@@ -2361,7 +2361,7 @@
       "mobileOnly": "ứng dụng di động",
       "saved": "Đã cập nhật các mục.",
       "error": "Không lưu được các mục.",
-      "sections": {"billing": "Báo giá & hóa đơn", "library": "Thư viện sản phẩm", "inventory": "Kho thiết bị", "documents": "Tài liệu", "photos": "Ảnh", "notes": "Ghi chú", "salaries": "Lương", "chiffrage": "Hoạch toán", "analyses": "Phân tích"}
+      "sections": {"billing": "Báo giá & hóa đơn", "library": "Thư viện sản phẩm", "inventory": "Kho thiết bị", "documents": "Tài liệu", "photos": "Ảnh", "notes": "Ghi chú", "salaries": "Lương", "chiffrage": "Dự toán", "analyses": "Phân tích"}
     }
   },
   "bibliotheque": {
@@ -2905,7 +2905,7 @@
     "productUrlInvalid": "Nhập một địa chỉ web, vd. www.castorama.fr/…"
   },
   "onboarding": {
-    "removedFrom": "Bạn đã bị xoá khỏi công ty {company}. Để quay lại các công trình, hãy xin quản trị viên mã công ty, hoặc tham gia một công ty khác.",
+    "removedFrom": "Bạn đã bị xóa khỏi công ty {company}. Để quay lại các công trình, hãy xin quản trị viên mã công ty, hoặc tham gia một công ty khác.",
     "removedFromJoin": "Nhập mã công ty",
     "title": "Chào mừng đến với Folio",
     "subtitle": "Tạo công ty của bạn hoặc nhập mã để tham gia một công ty có sẵn.",
@@ -3107,7 +3107,7 @@
       "reasonLabel": "Lý do (không bắt buộc)",
       "reasonPlaceholder": "VD: lời lẽ xúc phạm"
     },
-    "deletedAccount": "Tài khoản đã xoá",
+    "deletedAccount": "Tài khoản đã xóa",
     "unnamedMember": "Thành viên chưa đặt tên",
     "formerMember": "{name} (thành viên cũ)",
     "loadOlder": "Tải tin nhắn cũ hơn",
@@ -3131,7 +3131,7 @@
       "deleteMessage": "Gỡ tin nhắn",
       "deleteTitle": "Gỡ tin nhắn này?",
       "deleteBody": "Tin nhắn sẽ biến mất khỏi cuộc trò chuyện với mọi người. Không thể hoàn tác.",
-      "cancel": "Huỷ",
+      "cancel": "Hủy",
       "dismissed": "Đã bỏ qua báo cáo.",
       "deleted": "Đã gỡ tin nhắn.",
       "failed": "Thao tác không thành công. Vui lòng thử lại."

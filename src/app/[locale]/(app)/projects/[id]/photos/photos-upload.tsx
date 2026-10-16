@@ -88,7 +88,8 @@ function classifyError(err: unknown, kind: "image" | "video" | null): string {
  * Photo batch upload control.
  * Validates files client-side (size + MIME), then POSTs each directly to the
  * BE API from the browser — no bytes pass through the Next server. A shared
- * caption and captured date are applied to the entire batch.
+ * caption is applied to the entire batch; the date is optional — left empty,
+ * each file keeps its own (EXIF / video metadata, read by the API).
  */
 export function PhotosUpload({ projectId, onUploaded }: Props) {
   const t = useTranslations("photos");
@@ -183,7 +184,11 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
             value={capturedAt}
             onChange={(e) => setCapturedAt(e.target.value)}
             disabled={uploading}
+            aria-describedby="upload-captured-at-hint"
           />
+          <p id="upload-captured-at-hint" className="text-xs text-muted-foreground">
+            {t("capturedAt.batchHint")}
+          </p>
         </div>
       </div>
 

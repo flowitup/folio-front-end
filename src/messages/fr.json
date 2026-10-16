@@ -1916,7 +1916,7 @@
     },
     "delete": {
       "title": "Supprimer le document ?",
-      "body": "Êtes-vous sûr de vouloir supprimer « {filename} » ? Cette action est irréversible depuis l'interface.",
+      "body": "Supprimer « {filename} » ? Le document est retiré du projet, conservé 30 jours, puis effacé définitivement ; il ne peut pas être restauré depuis l'application.",
       "cancel": "Annuler",
       "confirm": "Supprimer",
       "confirming": "Suppression…",
@@ -2017,7 +2017,7 @@
     "delete": {
       "trigger": "Supprimer",
       "confirmTitle": "Supprimer l'analyse ?",
-      "confirmBody": "Voulez-vous vraiment supprimer « {title} » ? Cette action est irréversible depuis l'interface.",
+      "confirmBody": "Supprimer « {title} » ? L'analyse est retirée du projet, conservée 30 jours, puis effacée définitivement ; elle ne peut pas être restaurée depuis l'application.",
       "cancel": "Annuler",
       "confirm": "Supprimer",
       "confirming": "Suppression…",
@@ -2629,7 +2629,7 @@
     "subtitle": "Photos et vidéos de l'avancement du chantier pour ce projet.",
     "addPhotos": "Ajouter des médias",
     "uploading": "Téléversement",
-    "uploadSuccess": "Photos téléversées",
+    "uploadSuccess": "{count, plural, one {# fichier téléversé} other {# fichiers téléversés}}",
     "empty": {
       "title": "Aucun média pour l'instant",
       "description": "Ajoutez des photos et des vidéos pour suivre visuellement l'avancement du chantier."
@@ -2639,15 +2639,16 @@
       "placeholder": "Décrivez ce qui est visible…"
     },
     "capturedAt": {
-      "label": "Date de prise de vue"
+      "label": "Date de prise de vue",
+      "batchHint": "Facultatif : laissez vide pour garder la date de prise de vue de chaque fichier."
     },
     "edit": "Modifier",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "deleteConfirm": {
-      "title": "Supprimer la photo ?",
-      "description": "Cette photo sera définitivement supprimée. Cette action est irréversible."
+      "title": "{kind, select, video {Supprimer la vidéo ?} other {Supprimer la photo ?}}",
+      "description": "{kind, select, video {Cette vidéo sera retirée du projet. Elle est conservée 30 jours, puis effacée définitivement ; elle ne peut pas être restaurée depuis l'application.} other {Cette photo sera retirée du projet. Elle est conservée 30 jours, puis effacée définitivement ; elle ne peut pas être restaurée depuis l'application.}}"
     },
     "errors": {
       "oversize": "Fichier trop volumineux (max 25 Mo)",
@@ -2657,10 +2658,10 @@
       "rateLimited": "Trop d'envois — veuillez ralentir",
       "server": "Échec du téléversement — veuillez réessayer",
       "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
-      "invalidImage": "Image invalide — le fichier n'a pas pu être traité",
+      "invalidImage": "Fichier invalide — la photo ou la vidéo n'a pas pu être traitée",
       "updateFailed": "Impossible d'enregistrer les modifications — veuillez réessayer",
-      "deleteFailed": "Impossible de supprimer la photo — veuillez réessayer",
-      "notFound": "Cette photo n'existe plus",
+      "deleteFailed": "{kind, select, video {Impossible de supprimer la vidéo — veuillez réessayer} other {Impossible de supprimer la photo — veuillez réessayer}}",
+      "notFound": "{kind, select, video {Cette vidéo n'existe plus} other {Cette photo n'existe plus}}",
       "validation": "Vérifiez la légende et la date, puis réessayez"
     },
     "loadError": {
@@ -2670,7 +2671,7 @@
     },
     "loadMore": "Charger plus",
     "saved": "Modifications enregistrées",
-    "deleted": "Photo supprimée",
+    "deleted": "{kind, select, video {Vidéo supprimée} other {Photo supprimée}}",
     "close": "Fermer"
   },
   "chiffrage": {

@@ -1916,7 +1916,7 @@
     },
     "delete": {
       "title": "Xóa tài liệu?",
-      "body": "Bạn chắc chắn muốn xóa \"{filename}\"? Không thể khôi phục từ giao diện.",
+      "body": "Xóa \"{filename}\"? Tài liệu sẽ bị gỡ khỏi dự án, được giữ 30 ngày rồi bị xóa vĩnh viễn; không thể khôi phục từ ứng dụng.",
       "cancel": "Hủy",
       "confirm": "Xóa",
       "confirming": "Đang xóa…",
@@ -2017,7 +2017,7 @@
     "delete": {
       "trigger": "Xóa",
       "confirmTitle": "Xóa phân tích?",
-      "confirmBody": "Bạn có chắc chắn muốn xóa \"{title}\" không? Hành động này không thể hoàn tác từ giao diện.",
+      "confirmBody": "Xóa \"{title}\"? Phân tích sẽ bị gỡ khỏi dự án, được giữ 30 ngày rồi bị xóa vĩnh viễn; không thể khôi phục từ ứng dụng.",
       "cancel": "Hủy",
       "confirm": "Xóa",
       "confirming": "Đang xóa…",
@@ -2629,7 +2629,7 @@
     "subtitle": "Ảnh và video tiến độ thi công của dự án.",
     "addPhotos": "Thêm phương tiện",
     "uploading": "Đang tải lên",
-    "uploadSuccess": "Đã tải ảnh lên thành công",
+    "uploadSuccess": "Đã tải lên {count} tệp",
     "empty": {
       "title": "Chưa có phương tiện nào",
       "description": "Tải ảnh và video lên để theo dõi quá trình xây dựng bằng hình ảnh."
@@ -2639,15 +2639,16 @@
       "placeholder": "Mô tả nội dung ảnh…"
     },
     "capturedAt": {
-      "label": "Ngày chụp"
+      "label": "Ngày chụp",
+      "batchHint": "Không bắt buộc: để trống để giữ ngày chụp riêng của từng tệp."
     },
     "edit": "Chỉnh sửa",
     "save": "Lưu",
     "cancel": "Hủy",
     "delete": "Xóa",
     "deleteConfirm": {
-      "title": "Xóa ảnh?",
-      "description": "Ảnh này sẽ bị xóa vĩnh viễn. Thao tác này không thể hoàn tác."
+      "title": "{kind, select, video {Xóa video?} other {Xóa ảnh?}}",
+      "description": "{kind, select, video {Video này sẽ bị gỡ khỏi dự án. Video được giữ 30 ngày rồi bị xóa vĩnh viễn; không thể khôi phục từ ứng dụng.} other {Ảnh này sẽ bị gỡ khỏi dự án. Ảnh được giữ 30 ngày rồi bị xóa vĩnh viễn; không thể khôi phục từ ứng dụng.}}"
     },
     "errors": {
       "oversize": "Tệp quá lớn (tối đa 25 MB)",
@@ -2657,10 +2658,10 @@
       "rateLimited": "Tải lên quá nhiều — vui lòng chờ một lúc",
       "server": "Tải lên thất bại — vui lòng thử lại",
       "forbidden": "Bạn không có quyền thực hiện thao tác này",
-      "invalidImage": "Ảnh không hợp lệ — tệp không thể được xử lý",
+      "invalidImage": "Tệp không hợp lệ — không thể xử lý ảnh hoặc video",
       "updateFailed": "Không thể lưu thay đổi — vui lòng thử lại",
-      "deleteFailed": "Không thể xóa ảnh — vui lòng thử lại",
-      "notFound": "Ảnh này không còn tồn tại",
+      "deleteFailed": "{kind, select, video {Không thể xóa video — vui lòng thử lại} other {Không thể xóa ảnh — vui lòng thử lại}}",
+      "notFound": "{kind, select, video {Video này không còn tồn tại} other {Ảnh này không còn tồn tại}}",
       "validation": "Hãy kiểm tra chú thích và ngày, rồi thử lại"
     },
     "loadError": {
@@ -2670,7 +2671,7 @@
     },
     "loadMore": "Tải thêm",
     "saved": "Đã lưu thay đổi",
-    "deleted": "Đã xóa ảnh",
+    "deleted": "{kind, select, video {Đã xóa video} other {Đã xóa ảnh}}",
     "close": "Đóng"
   },
   "chiffrage": {

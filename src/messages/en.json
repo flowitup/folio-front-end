@@ -1916,7 +1916,7 @@
     },
     "delete": {
       "title": "Delete document?",
-      "body": "Are you sure you want to delete \"{filename}\"? This cannot be undone from the UI.",
+      "body": "Delete \"{filename}\"? The document is removed from the project, kept for 30 days, then permanently erased; it cannot be restored from the app.",
       "cancel": "Cancel",
       "confirm": "Delete",
       "confirming": "Deleting…",
@@ -2017,7 +2017,7 @@
     "delete": {
       "trigger": "Delete",
       "confirmTitle": "Delete analysis?",
-      "confirmBody": "Are you sure you want to delete \"{title}\"? This cannot be undone from the UI.",
+      "confirmBody": "Delete \"{title}\"? The analysis is removed from the project, kept for 30 days, then permanently erased; it cannot be restored from the app.",
       "cancel": "Cancel",
       "confirm": "Delete",
       "confirming": "Deleting…",
@@ -2629,7 +2629,7 @@
     "subtitle": "Construction progress photos and videos for this project.",
     "addPhotos": "Add media",
     "uploading": "Uploading",
-    "uploadSuccess": "Photos uploaded",
+    "uploadSuccess": "{count, plural, one {# file uploaded} other {# files uploaded}}",
     "empty": {
       "title": "No media yet",
       "description": "Upload photos and videos to track the build visually."
@@ -2639,15 +2639,16 @@
       "placeholder": "Describe what's shown…"
     },
     "capturedAt": {
-      "label": "Date taken"
+      "label": "Date taken",
+      "batchHint": "Optional: leave empty to keep each file's own capture date."
     },
     "edit": "Edit",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
     "deleteConfirm": {
-      "title": "Delete photo?",
-      "description": "This photo will be permanently deleted. This cannot be undone."
+      "title": "{kind, select, video {Delete video?} other {Delete photo?}}",
+      "description": "{kind, select, video {This video will be removed from the project. It is kept for 30 days, then permanently erased; it cannot be restored from the app.} other {This photo will be removed from the project. It is kept for 30 days, then permanently erased; it cannot be restored from the app.}}"
     },
     "errors": {
       "oversize": "File too large (max 25 MB)",
@@ -2657,10 +2658,10 @@
       "rateLimited": "Too many uploads — please slow down",
       "server": "Upload failed — please try again",
       "forbidden": "You do not have permission to perform this action",
-      "invalidImage": "Invalid image — the file could not be processed",
+      "invalidImage": "Invalid file — the photo or video could not be processed",
       "updateFailed": "Couldn't save the changes — please try again",
-      "deleteFailed": "Couldn't delete the photo — please try again",
-      "notFound": "This photo no longer exists",
+      "deleteFailed": "{kind, select, video {Couldn't delete the video — please try again} other {Couldn't delete the photo — please try again}}",
+      "notFound": "{kind, select, video {This video no longer exists} other {This photo no longer exists}}",
       "validation": "Check the caption and date, then try again"
     },
     "loadError": {
@@ -2670,7 +2671,7 @@
     },
     "loadMore": "Load more",
     "saved": "Changes saved",
-    "deleted": "Photo deleted",
+    "deleted": "{kind, select, video {Video deleted} other {Photo deleted}}",
     "close": "Close"
   },
   "chiffrage": {

@@ -41,7 +41,8 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
   function handleClickThrough() {
     // Keep the breadcrumb and project switcher on the note's project.
     selectProject(note.project_id);
-    router.push(`/${locale}/projects/${note.project_id}/notes`);
+    // ?note= scrolls the journal to this note and outlines it.
+    router.push(`/${locale}/projects/${note.project_id}/notes?note=${encodeURIComponent(note.id)}`);
     onNavigate();
   }
 
@@ -64,13 +65,14 @@ export function NotificationRow({ item, onDismiss, onNavigate }: NotificationRow
           style={{ color: "var(--foreground)" }}
         >
           {note.title}
-          {project && (
-            <span className="font-normal" style={{ color: "var(--muted-foreground)" }}>
-              {" · "}
-              {projectDisplayName(project)}
-            </span>
-          )}
         </p>
+        {/* Its own line: a long title must not push the project out of view, or two
+            reminders with the same title on two sites look identical. */}
+        {project && (
+          <p className="truncate text-xs" style={{ color: "var(--muted-foreground)" }}>
+            {projectDisplayName(project)}
+          </p>
+        )}
         {note.due_date && (
           <p
             className="num mt-0.5 text-xs"

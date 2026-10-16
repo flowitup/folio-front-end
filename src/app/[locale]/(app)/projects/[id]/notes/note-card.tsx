@@ -68,7 +68,7 @@ export function NoteCard({
 
   if (isEditing && canEdit) {
     return (
-      <div className="grid-item">
+      <div className="grid-item" data-note-id={note.id}>
         <NoteEditor
           note={note}
           isSaving={isSaving}
@@ -88,7 +88,7 @@ export function NoteCard({
   }
 
   return (
-    <div className="grid-item">
+    <div className="grid-item" data-note-id={note.id}>
       <article
         className={"note-card" + (isDone ? " done" : "") + (canEdit ? "" : " read-only")}
         onClick={(e) => {

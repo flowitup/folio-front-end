@@ -10,6 +10,7 @@
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import type { CompanyEvent } from "@/lib/api/notifications";
+import { pushPath } from "@/lib/navigation/push-path";
 
 interface CompanyEventRowProps {
   item: CompanyEvent;
@@ -22,7 +23,8 @@ export function CompanyEventRow({ item, onNavigate }: CompanyEventRowProps) {
   const locale = useLocale();
 
   function handleClick() {
-    router.push(`/${locale}/settings#company`);
+    // pushPath: from Settings itself a plain push only changes the hash and the tab stays.
+    pushPath(router, `/${locale}/settings#company`);
     onNavigate();
   }
 

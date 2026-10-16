@@ -23,6 +23,7 @@
 import { getCsrfHeader } from "@/lib/api/http";
 import { refreshAccessTokenViaCookie } from "@/lib/api/refresh";
 import { env } from "@/lib/config/env";
+import { requestBellRefresh } from "@/lib/notifications/bell-refresh";
 
 // ---- Types (snake_case, as sent by the backend) ----
 
@@ -231,6 +232,8 @@ export async function sendChatMessage(
 /** Move the caller's read marker of a channel to now. */
 export async function markChatChannelRead(channelKey: string): Promise<void> {
   await chatFetch(`/chat/channels/${encodeURIComponent(channelKey)}/read`, { method: "POST" });
+  // The server read that channel's bell entries too: let the bell badge follow now.
+  requestBellRefresh();
 }
 
 /** Set (or replace) the caller's reaction on a message; returns every reaction of that message. */

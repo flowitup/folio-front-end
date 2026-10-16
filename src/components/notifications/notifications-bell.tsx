@@ -4,7 +4,8 @@
  * NotificationsBell — entry component for the notifications system.
  * Wraps shadcn Popover around a bell button with badge.
  * Polls via useNotificationsPoll; optimistic dismiss / validate / reject with rollback on error.
- * Badge = note reminders + attendance entries awaiting this user's validation + unread activity.
+ * Badge = note reminders + attendance awaiting this user's validation + new members waiting
+ * for a project + unread activity (the server's count, the events page being capped).
  */
 
 import { useState, useCallback } from "react";
@@ -41,6 +42,8 @@ export function NotificationsBell() {
   const [attendance, setAttendance] = useState<AttendancePending[]>([]);
   const [companyEvents, setCompanyEvents] = useState<CompanyEvent[]>([]);
   const [events, setEvents] = useState<ActivityEvent[]>([]);
+  // Unread activity beyond the loaded page (the feed returns at most 50 entries).
+  const [unreadBeyondPage, setUnreadBeyondPage] = useState(0);
   // Entry ids with a validate/reject request in flight — their buttons are disabled
   // so a double-click cannot fire twice (a second reject would 404 and toast an error).
   const [settlingIds, setSettlingIds] = useState<ReadonlySet<string>>(() => new Set());
@@ -53,7 +56,10 @@ export function NotificationsBell() {
       setItems(feed.items);
       setAttendance(feed.attendance);
       setCompanyEvents(feed.companyEvents ?? []);
-      setEvents(feed.events ?? []);
+      const page = feed.events ?? [];
+      setEvents(page);
+      const pageUnread = page.filter((e) => !e.read).length;
+      setUnreadBeyondPage(Math.max(0, (feed.eventsUnread ?? pageUnread) - pageUnread));
     }
     setHasLoaded(true);
   }, []);
@@ -85,15 +91,19 @@ export function NotificationsBell() {
     async (ids: string[] | undefined) => {
       const target = ids ? new Set(ids) : null;
       const changed = events.filter((e) => !e.read && (!target || target.has(e.id))).map((e) => e.id);
-      if (changed.length === 0) return;
+      if (changed.length === 0 && (ids || unreadBeyondPage === 0)) return;
       const changedSet = new Set(changed);
       setEvents((current) => current.map((e) => (changedSet.has(e.id) ? { ...e, read: true } : e)));
+      // "Mark all read" reads the entries beyond the loaded page too.
+      const beyond = unreadBeyondPage;
+      if (!ids) setUnreadBeyondPage(0);
       const result = await markActivityReadAction(ids);
       if (!result.success) {
         setEvents((current) => current.map((e) => (changedSet.has(e.id) ? { ...e, read: false } : e)));
+        if (!ids) setUnreadBeyondPage(beyond);
       }
     },
-    [events]
+    [events, unreadBeyondPage]
   );
 
   const handleOpenEvent = useCallback(
@@ -162,10 +172,9 @@ export function NotificationsBell() {
     [settleAttendance]
   );
 
-  // company_events deliberately excluded from the badge count — matches the
-  // backend's own "count" field semantics (see notifications routes.py).
-  const unreadEvents = events.filter((e) => !e.read).length;
-  const badge = getBadgeLabel(items.length + attendance.length + unreadEvents);
+  // Same total as the server's `count`: new members waiting for a project count too.
+  const unreadEvents = events.filter((e) => !e.read).length + unreadBeyondPage;
+  const badge = getBadgeLabel(items.length + attendance.length + companyEvents.length + unreadEvents);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -202,6 +211,7 @@ export function NotificationsBell() {
           events={events}
           onOpenEvent={handleOpenEvent}
           onMarkAllRead={handleMarkAllRead}
+          unreadEvents={unreadEvents}
           isLoading={!hasLoaded}
           onDismiss={handleDismiss}
           onValidate={handleValidate}

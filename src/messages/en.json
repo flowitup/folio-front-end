@@ -242,7 +242,7 @@
     "editProjectAddressRequired": "Address is required",
     "deleteProjectTitle": "Delete project?",
     "deleteProjectIrreversible": "This action cannot be undone.",
-    "deleteProjectCascade": "All workers, labor entries, tasks, expenses, notes, invitations, and project memberships will be permanently deleted.",
+    "deleteProjectCascade": "Everything recorded on this project will be permanently deleted: workers, labor entries and payment notes, tasks, expenses and their attachments, notes, photos, documents, analyses, estimates (chiffrage), chat messages, invitations and project memberships. Equipment on this site moves to an unknown location. Export what you need first.",
     "deleteProjectBillingNote": "Quotes and invoices (billing documents) linked to this project will be unlinked but kept.",
     "deleteProjectTypeToConfirm": "To confirm, type the text shown in bold below:",
     "deleteProjectTypePlaceholder": "Type the text shown above to confirm",
@@ -1320,8 +1320,9 @@
       "goToNote": "Go to note: {title}",
       "goToAttendance": "Go to attendance: {worker}"
     },
+    "panelTitle": "Notifications",
     "title": "Reminders",
-    "empty": "No reminders right now",
+    "empty": "Nothing new right now",
     "dismissButton": "Dismiss",
     "due": "Due {date}",
     "errors": {
@@ -1332,7 +1333,7 @@
       "refuseChangeFailed": "Couldn't refuse the change. Try again."
     },
     "skeleton": {
-      "loading": "Loading reminders..."
+      "loading": "Loading notifications..."
     },
     "attendance": {
       "title": "Attendance to validate",
@@ -1350,7 +1351,9 @@
     },
     "activity": {
       "title": "Activity",
-      "markAllRead": "Mark all read"
+      "markAllRead": "Mark all read",
+      "markRead": "Mark as read",
+      "noAccess": "You no longer have access to this project"
     },
     "companyEvents": {
       "title": "New members",

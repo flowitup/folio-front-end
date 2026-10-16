@@ -64,7 +64,7 @@ describe("NotificationRow", () => {
     render(<NotificationRow item={note("p-b")} onDismiss={vi.fn()} onNavigate={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "notifications.aria.goToNote" }));
     expect(selectProject).toHaveBeenCalledWith("p-b");
-    expect(push).toHaveBeenCalledWith("/fr/projects/p-b/notes");
+    expect(push).toHaveBeenCalledWith("/fr/projects/p-b/notes?note=n-b");
   });
 
   it("shows when the reminder is due, in red once it is overdue", () => {

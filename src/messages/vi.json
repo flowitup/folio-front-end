@@ -242,7 +242,7 @@
     "editProjectAddressRequired": "Địa chỉ là bắt buộc",
     "deleteProjectTitle": "Xóa dự án?",
     "deleteProjectIrreversible": "Hành động này không thể hoàn tác.",
-    "deleteProjectCascade": "Toàn bộ thợ, chấm công, tác vụ, chi phí, ghi chú, lời mời và quyền truy cập dự án sẽ bị xóa vĩnh viễn.",
+    "deleteProjectCascade": "Mọi dữ liệu của công trình này sẽ bị xóa vĩnh viễn: thợ, chấm công và ghi chú thanh toán, tác vụ, chi phí và tệp đính kèm, ghi chú, ảnh, tài liệu, phân tích, dự toán, tin nhắn trò chuyện, lời mời và quyền truy cập dự án. Thiết bị tại công trình này chuyển sang vị trí không xác định. Hãy xuất những gì bạn cần trước.",
     "deleteProjectBillingNote": "Báo giá và hóa đơn (tài liệu thanh toán) liên kết với dự án này sẽ được tách ra nhưng vẫn giữ lại.",
     "deleteProjectTypeToConfirm": "Để xác nhận, hãy nhập đúng chữ in đậm bên dưới:",
     "deleteProjectTypePlaceholder": "Nhập đúng chữ bên trên để xác nhận",
@@ -1320,8 +1320,9 @@
       "goToNote": "Đi đến ghi chú: {title}",
       "goToAttendance": "Xem chấm công: {worker}"
     },
+    "panelTitle": "Thông báo",
     "title": "Nhắc nhở",
-    "empty": "Không có nhắc nhở nào lúc này",
+    "empty": "Chưa có gì mới",
     "dismissButton": "Bỏ qua",
     "due": "Đến hạn {date}",
     "errors": {
@@ -1332,7 +1333,7 @@
       "refuseChangeFailed": "Không từ chối được yêu cầu sửa. Thử lại."
     },
     "skeleton": {
-      "loading": "Đang tải nhắc nhở..."
+      "loading": "Đang tải thông báo..."
     },
     "attendance": {
       "title": "Chấm công chờ duyệt",
@@ -1350,7 +1351,9 @@
     },
     "activity": {
       "title": "Hoạt động",
-      "markAllRead": "Đánh dấu đã đọc"
+      "markAllRead": "Đánh dấu tất cả là đã đọc",
+      "markRead": "Đánh dấu đã đọc",
+      "noAccess": "Bạn không còn quyền truy cập công trình này"
     },
     "companyEvents": {
       "title": "Thành viên mới",

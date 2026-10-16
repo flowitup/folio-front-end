@@ -3011,7 +3011,8 @@
       "tooLarge": "Ảnh quá lớn (tối đa 10 MB).",
       "unsupportedType": "Chỉ hỗ trợ ảnh JPEG, PNG và WebP.",
       "forbidden": "Bạn không phải thành viên của kênh này.",
-      "reactFailed": "Không lưu được cảm xúc của bạn. Vui lòng thử lại."
+      "reactFailed": "Không lưu được cảm xúc của bạn. Vui lòng thử lại.",
+      "bodyTooLong": "Tin nhắn quá dài (tối đa 4.000 ký tự)."
     },
     "voiceNote": "Tin nhắn thoại",
     "voiceLoading": "Đang tải bản ghi…",
@@ -3019,7 +3020,7 @@
     "moderation": {
       "report": "Báo cáo tin nhắn",
       "reportTitle": "Báo cáo tin nhắn này?",
-      "reportBody": "Tin nhắn sẽ được gửi cho quản trị viên công ty của bạn và đội ngũ Folio để xem xét.",
+      "reportBody": "Quản trị viên công ty của bạn sẽ được thông báo và có thể gỡ tin nhắn.",
       "reported": "Đã báo cáo. Cảm ơn bạn.",
       "block": "Chặn {name}",
       "blockTitle": "Chặn {name}?",
@@ -3031,7 +3032,38 @@
       "unblock": "Bỏ chặn",
       "none": "Chưa chặn ai.",
       "cancel": "Hủy",
-      "failed": "Không thực hiện được. Vui lòng thử lại."
+      "failed": "Không thực hiện được. Vui lòng thử lại.",
+      "reasonLabel": "Lý do (không bắt buộc)",
+      "reasonPlaceholder": "VD: lời lẽ xúc phạm"
+    },
+    "deletedAccount": "Tài khoản đã xoá",
+    "unnamedMember": "Thành viên chưa đặt tên",
+    "formerMember": "{name} (thành viên cũ)",
+    "loadOlder": "Tải tin nhắn cũ hơn",
+    "historyStart": "Bắt đầu cuộc trò chuyện",
+    "newMessages": "Tin nhắn mới",
+    "noLongerAvailable": "Bạn không còn quyền truy cập cuộc trò chuyện này.",
+    "newMessageFrom": "{name}: {text}",
+    "attachment": "Tệp đính kèm",
+    "openImage": "Mở ảnh {name}",
+    "downloadImage": "Tải xuống",
+    "reports": {
+      "title": "Tin nhắn bị báo cáo",
+      "description": "Các tin nhắn mà thành viên đã báo cáo trong các cuộc trò chuyện của công ty. Gỡ tin nhắn cho mọi người, hoặc bỏ qua báo cáo nếu không cần xử lý.",
+      "empty": "Không có báo cáo nào đang chờ.",
+      "loadError": "Không tải được danh sách báo cáo.",
+      "retry": "Thử lại",
+      "reportedBy": "Được báo cáo bởi {name}",
+      "reason": "Lý do: {reason}",
+      "from": "Tin nhắn của {name}",
+      "dismiss": "Bỏ qua",
+      "deleteMessage": "Gỡ tin nhắn",
+      "deleteTitle": "Gỡ tin nhắn này?",
+      "deleteBody": "Tin nhắn sẽ biến mất khỏi cuộc trò chuyện với mọi người. Không thể hoàn tác.",
+      "cancel": "Huỷ",
+      "dismissed": "Đã bỏ qua báo cáo.",
+      "deleted": "Đã gỡ tin nhắn.",
+      "failed": "Thao tác không thành công. Vui lòng thử lại."
     }
   },
   "help": {

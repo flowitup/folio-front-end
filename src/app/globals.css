@@ -35,6 +35,9 @@
   --chat-blue: #0084ff;
   --chat-blue-tint: #e5f1ff;
   --chat-bubble: #e9eaee;
+  /* own bubbles carry white text: #0068d6 keeps it above 4.5:1 (WCAG AA); #0084ff stays for icons */
+  --chat-bubble-mine: #0068d6;
+  --chat-link: #0057b8;
   --chat-input: #eef0f3;
 
   /* shape */

@@ -10,6 +10,7 @@ import {
   projectMatchesSearch,
   projectSecondaryLabel,
 } from "@/lib/projects/project-display-name";
+import { projectCompanyLabel } from "@/lib/companies/page-company";
 import { useAuth } from "@/context/AuthContext";
 import {
   Plus,
@@ -414,6 +415,18 @@ export default function ProjectsPage() {
                             {projectSecondaryLabel(project)}
                           </p>
                         )}
+                        {(() => {
+                          const companyName = projectCompanyLabel(user?.companies, project.company_id);
+                          return companyName ? (
+                            <div
+                              className="mt-1 flex items-center gap-1 text-[12px]"
+                              style={{ color: "var(--muted)" }}
+                              data-testid="project-card-company"
+                            >
+                              <Building2 size={12} aria-hidden /> {companyName}
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

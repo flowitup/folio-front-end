@@ -42,7 +42,13 @@ import type { MyCompany } from "@/types/companies";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { formatDate } from "@/lib/utils/formatters";
 import { toIsoDate } from "@/lib/billing/document-payload";
-import { parsePage, parseQuery, parseStatus, statusesFor } from "./billing-list-params";
+import {
+  parsePage,
+  parseProjectId,
+  parseQuery,
+  parseStatus,
+  statusesFor,
+} from "./billing-list-params";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -97,6 +103,11 @@ export function BillingDocumentList({
   // new searchParams, keeping URL as the single source of truth for the filter.
   // An unknown ?status= is ignored (the server page does the same).
   const statusFilter = parseStatus(kind, searchParams.get("status")) ?? "all";
+  // Users issuing for several companies see each document's issuer and may
+  // narrow the list to one company (?company_id=, applied by the API): two
+  // companies can both have a FAC-2026-001.
+  const multiCompany = issuerCompanies.length > 1;
+  const companyFilter = parseProjectId(searchParams.get("company_id")) ?? "all";
 
   // Search — applied by the API through ?q=, so older documents are found too.
   const search = parseQuery(searchParams.get("q"));
@@ -159,6 +170,14 @@ export function BillingDocumentList({
     router.push(`${pathname}?${params.toString()}`);
   }
 
+  function handleCompanyChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") params.delete("company_id");
+    else params.set("company_id", value);
+    params.delete("page");
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
   function handleLoadMore() {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(currentPage + 1));
@@ -218,7 +237,11 @@ export function BillingDocumentList({
 
   // Both views return [page, importDialog] so the dialog keeps its state (and
   // its summary) when a first import turns the empty state into the list.
-  const narrowed = statusFilter !== "all" || search !== "" || searchParams.has("project_id");
+  const narrowed =
+    statusFilter !== "all" ||
+    search !== "" ||
+    searchParams.has("project_id") ||
+    companyFilter !== "all";
   if (!listLoadError && initialTotal === 0 && !narrowed) {
     return (
       <>
@@ -292,6 +315,21 @@ export function BillingDocumentList({
               ))}
             </SelectContent>
           </Select>
+          {multiCompany && (
+            <Select value={companyFilter} onValueChange={handleCompanyChange}>
+              <SelectTrigger className="sm:w-56" aria-label={t("list.companyFilter")}>
+                <SelectValue placeholder={t("list.allCompanies")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("list.allCompanies")}</SelectItem>
+                {issuerCompanies.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.legal_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {listLoadError ? (
@@ -328,6 +366,15 @@ export function BillingDocumentList({
                   </div>
                   {/* Row 2: recipient */}
                   <div className="mt-1.5 text-[13px]">{doc.recipient_name}</div>
+                  {multiCompany && (
+                    <div
+                      className="mt-0.5 truncate text-[12px]"
+                      style={{ color: "var(--muted)" }}
+                      data-testid="billing-card-issuer"
+                    >
+                      {doc.issuer_legal_name}
+                    </div>
+                  )}
                   {/* Row 3: date + total + actions */}
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
@@ -361,6 +408,7 @@ export function BillingDocumentList({
                       <th>{t("list.columns.number")}</th>
                       <th>{t("list.columns.date")}</th>
                       <th>{t("list.columns.recipient")}</th>
+                      {multiCompany && <th>{t("list.columns.issuer")}</th>}
                       <th>{t("list.columns.status")}</th>
                       <th style={{ textAlign: "right" }}>{t("list.columns.totalTtc")}</th>
                       <th style={{ textAlign: "right" }}>{t("list.columns.actions")}</th>
@@ -376,6 +424,11 @@ export function BillingDocumentList({
                           {formatDate(toIsoDate(doc.issue_date) ?? doc.issue_date)}
                         </td>
                         <td>{doc.recipient_name}</td>
+                        {multiCompany && (
+                          <td style={{ color: "var(--muted)" }} data-testid="billing-row-issuer">
+                            {doc.issuer_legal_name}
+                          </td>
+                        )}
                         <td>
                           <BillingStatusBadge
                             status={doc.status}

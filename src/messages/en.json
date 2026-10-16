@@ -270,7 +270,12 @@
     "projectCreated": "Project created",
     "projectDeleted": "Project deleted",
     "projectUpdated": "Project updated",
-    "settingsForbidden": "You don't have permission to change this project's settings."
+    "settingsForbidden": "You don't have permission to change this project's settings.",
+    "hiddenSection": {
+      "title": "Hidden section",
+      "body": "This project's company has hidden this section from its members.",
+      "back": "Back to the project"
+    }
   },
   "settings": {
     "profile": "Profile",
@@ -848,8 +853,8 @@
       "updated": "Role updated.",
       "deleted": "Role deleted.",
       "defaults": {
-        "masterCraftsman": "Master craftsman",
-        "assistant": "Assistant"
+        "masterCraftsman": "Lead worker",
+        "assistant": "Assistant worker"
       },
       "searchRoles": "Search roles…",
       "noMatchingRoles": "No matching roles",
@@ -902,6 +907,7 @@
       "deactivateWorkerFailed": "Failed to deactivate worker.",
       "deleteEntryFailed": "Failed to delete entry.",
       "saveWorkerFailed": "Failed to save worker.",
+      "roleUnavailable": "This role is no longer available for this project's company. Choose another role or no role.",
       "invalidPhone": "Enter a valid phone number, e.g. 06 12 34 56 78 or +84 912 345 678.",
       "workerNameRequired": "Worker name is required.",
       "dailyRatePositive": "Daily rate must be greater than 0.",
@@ -1518,12 +1524,15 @@
         "recipient": "Recipient",
         "status": "Status",
         "totalTtc": "Total (incl. VAT)",
-        "actions": "Actions"
+        "actions": "Actions",
+        "issuer": "Issuer"
       },
       "loadMoreFailed": "Failed to load more documents. Please try again.",
       "loadFailed": "The documents couldn't be loaded.",
       "retry": "Try again",
-      "noFilterResults": "No documents with this status."
+      "noFilterResults": "No documents with this status.",
+      "companyFilter": "Issuing company",
+      "allCompanies": "All companies"
     },
     "form": {
       "modes": {
@@ -1650,7 +1659,8 @@
       },
       "issuer": {
         "issuedFrom": "Issued from",
-        "locked": "locked"
+        "locked": "locked",
+        "sourceCompanyNotIssuable": "The original company is not offered because you are not one of its admins. Check the issuer selected."
       },
       "deleteDialog": {
         "title": "Delete document?",
@@ -1701,7 +1711,8 @@
         "invoice": "Invoice",
         "refundedBy": "Refunded by",
         "status": "Status",
-        "actions": "Actions"
+        "actions": "Actions",
+        "company": "Company"
       },
       "attachments": {
         "count": "{n} files",
@@ -1742,6 +1753,10 @@
         "body": "{number} will no longer be tracked for reimbursement and its refund status will be cleared.",
         "fundsRelease": "The linked funds release {number} will also be deleted, which lowers the project's released total.",
         "cancel": "Cancel"
+      },
+      "companyFilter": {
+        "label": "Company",
+        "all": "All companies"
       }
     },
     "import": {
@@ -2155,7 +2170,9 @@
         "detach": "Detach",
         "detachConfirm": "Remove yourself from \"{name}\"? You will lose access and will need a company code from your admin to re-attach.",
         "detached": "You left \"{name}\"."
-      }
+      },
+      "createCta": "Create a company",
+      "joinCta": "Join with a code"
     },
     "invite": {
       "dialogTitle": "Attach a company",
@@ -2322,6 +2339,20 @@
       "rateLimited": "Too many requests. Please wait and try again.",
       "generic": "An unexpected error occurred.",
       "invalidJoinCode": "Invalid or revoked company code."
+    },
+    "scopePicker": {
+      "label": "Company shown",
+      "primary": "Primary"
+    },
+    "hiddenSections": {
+      "title": "Hidden sections",
+      "description": "Switch off the sections {company} does not use. A switched-off section disappears from the menu of every member of the company, on the web and in the mobile app.",
+      "companyAreas": "Company areas",
+      "projectSections": "Project sections",
+      "mobileOnly": "mobile app",
+      "saved": "Sections updated.",
+      "error": "Could not save the sections.",
+      "sections": {"billing": "Quotes & invoices", "library": "Product library", "inventory": "Equipment inventory", "documents": "Documents", "photos": "Photos", "notes": "Notes", "salaries": "Salaries", "chiffrage": "Cost planning", "analyses": "Analyses"}
     }
   },
   "bibliotheque": {

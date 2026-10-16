@@ -270,7 +270,12 @@
     "projectCreated": "Đã tạo dự án",
     "projectDeleted": "Đã xóa dự án",
     "projectUpdated": "Đã cập nhật dự án",
-    "settingsForbidden": "Bạn không có quyền thay đổi cài đặt của dự án này."
+    "settingsForbidden": "Bạn không có quyền thay đổi cài đặt của dự án này.",
+    "hiddenSection": {
+      "title": "Mục đã ẩn",
+      "body": "Công ty của công trình này đã ẩn mục này với các thành viên.",
+      "back": "Quay lại công trình"
+    }
   },
   "settings": {
     "profile": "Hồ sơ",
@@ -902,6 +907,7 @@
       "deactivateWorkerFailed": "Không vô hiệu hóa được thợ.",
       "deleteEntryFailed": "Không xóa được chấm công.",
       "saveWorkerFailed": "Không lưu được thợ.",
+      "roleUnavailable": "Vai trò này không còn dùng được cho công ty của công trình này. Hãy chọn vai trò khác hoặc không chọn vai trò.",
       "invalidPhone": "Nhập số điện thoại hợp lệ, ví dụ 06 12 34 56 78 hoặc +84 912 345 678.",
       "workerNameRequired": "Bắt buộc nhập tên thợ.",
       "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0.",
@@ -1518,12 +1524,15 @@
         "recipient": "Khách hàng",
         "status": "Trạng thái",
         "totalTtc": "Tổng (gồm VAT)",
-        "actions": "Thao tác"
+        "actions": "Thao tác",
+        "issuer": "Bên phát hành"
       },
       "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại.",
       "loadFailed": "Không thể tải danh sách tài liệu.",
       "retry": "Thử lại",
-      "noFilterResults": "Không có tài liệu nào ở trạng thái này."
+      "noFilterResults": "Không có tài liệu nào ở trạng thái này.",
+      "companyFilter": "Công ty phát hành",
+      "allCompanies": "Tất cả công ty"
     },
     "form": {
       "modes": {
@@ -1650,7 +1659,8 @@
       },
       "issuer": {
         "issuedFrom": "Phát hành từ",
-        "locked": "đã khóa"
+        "locked": "đã khóa",
+        "sourceCompanyNotIssuable": "Công ty gốc không có trong danh sách vì bạn không phải quản trị viên của công ty đó. Hãy kiểm tra công ty phát hành đã chọn."
       },
       "deleteDialog": {
         "title": "Xóa tài liệu?",
@@ -1701,7 +1711,8 @@
         "invoice": "Hóa đơn",
         "refundedBy": "Được hoàn bởi",
         "status": "Trạng thái",
-        "actions": "Thao tác"
+        "actions": "Thao tác",
+        "company": "Công ty"
       },
       "attachments": {
         "count": "{n} tệp",
@@ -1742,6 +1753,10 @@
         "body": "{number} sẽ không còn được theo dõi hoàn tiền và trạng thái hoàn tiền sẽ bị xóa.",
         "fundsRelease": "Khoản giải ngân liên kết {number} cũng sẽ bị xóa, làm giảm tổng giải ngân của dự án.",
         "cancel": "Hủy"
+      },
+      "companyFilter": {
+        "label": "Công ty",
+        "all": "Tất cả công ty"
       }
     },
     "import": {
@@ -2155,7 +2170,9 @@
         "detach": "Hủy liên kết",
         "detachConfirm": "Xóa bạn khỏi \"{name}\"? Bạn sẽ mất quyền truy cập và cần mã công ty từ quản trị viên để liên kết lại.",
         "detached": "Bạn đã rời khỏi \"{name}\"."
-      }
+      },
+      "createCta": "Tạo công ty",
+      "joinCta": "Tham gia bằng mã"
     },
     "invite": {
       "dialogTitle": "Liên kết công ty",
@@ -2322,6 +2339,20 @@
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
       "generic": "Đã xảy ra lỗi không mong muốn.",
       "invalidJoinCode": "Mã công ty không hợp lệ hoặc đã bị thu hồi."
+    },
+    "scopePicker": {
+      "label": "Công ty đang xem",
+      "primary": "Chính"
+    },
+    "hiddenSections": {
+      "title": "Ẩn mục",
+      "description": "Tắt những mục {company} không dùng. Mục bị tắt sẽ biến mất khỏi menu của mọi thành viên trong công ty, trên web và trong ứng dụng di động.",
+      "companyAreas": "Khu vực công ty",
+      "projectSections": "Mục của công trình",
+      "mobileOnly": "ứng dụng di động",
+      "saved": "Đã cập nhật các mục.",
+      "error": "Không lưu được các mục.",
+      "sections": {"billing": "Báo giá & hóa đơn", "library": "Thư viện sản phẩm", "inventory": "Kho thiết bị", "documents": "Tài liệu", "photos": "Ảnh", "notes": "Ghi chú", "salaries": "Lương", "chiffrage": "Hoạch toán", "analyses": "Phân tích"}
     }
   },
   "bibliotheque": {

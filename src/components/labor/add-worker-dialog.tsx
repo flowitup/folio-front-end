@@ -40,6 +40,21 @@ interface AddWorkerDialogProps {
   /** People who already have a worker row on this project: the picker shows
    * them as unavailable (one person, one row per project). */
   existingPersonIds?: string[];
+  /** The project's company: its roles are listed, and inline "Create" adds there. */
+  companyId?: string | null;
+  /**
+   * Reload the company's roles from the server and return them. Called each
+   * time the dialog opens (roles added or deleted elsewhere must not go
+   * stale) and after the API refuses the chosen role.
+   */
+  onRefreshRoles?: () => Promise<LaborRole[] | null>;
+}
+
+/** The API refused the role: deleted, or not the project's company (400 InvalidLaborRole). */
+function isInvalidRoleError(err: unknown): boolean {
+  if (!(err instanceof ApiError) || err.status !== 400) return false;
+  const data = err.data as { error?: string; message?: string } | undefined;
+  return data?.error === "InvalidLaborRole" || data?.message === "Labor role not found";
 }
 
 /** The API refused the worker's phone as not a phone number (400 InvalidPhone). */
@@ -74,6 +89,8 @@ export function AddWorkerDialog({
   onRoleUpdated,
   onRoleDeleted,
   existingPersonIds,
+  companyId,
+  onRefreshRoles,
 }: AddWorkerDialogProps) {
   const t = useTranslations("labor");
 
@@ -93,6 +110,8 @@ export function AddWorkerDialog({
   const [error, setError] = useState<string | null>(null);
   // The API refused the phone ("hello world"): shown under the phone field.
   const [phoneInvalid, setPhoneInvalid] = useState(false);
+  // The API refused the role (deleted elsewhere, or another company's): shown under the role field.
+  const [roleUnavailable, setRoleUnavailable] = useState(false);
 
   const isEdit = !!editWorker;
 
@@ -110,6 +129,20 @@ export function AddWorkerDialog({
     }
   }, [open, editWorker]);
 
+  // Roles change elsewhere (Settings, another tab, a colleague): reload them
+  // every time the dialog opens instead of trusting the list the page loaded.
+  useEffect(() => {
+    if (open) void onRefreshRoles?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on opening; a new callback identity must not refetch
+  }, [open]);
+
+  /** The chosen role is gone or foreign: clear it, reload the list and say so under the field. */
+  const handleRoleRefused = () => {
+    setRoleId(null);
+    setRoleUnavailable(true);
+    void onRefreshRoles?.();
+  };
+
   const handleClose = () => {
     setSelectedPerson(null);
     setName("");
@@ -118,6 +151,7 @@ export function AddWorkerDialog({
     setRoleId(null);
     setError(null);
     setPhoneInvalid(false);
+    setRoleUnavailable(false);
     onOpenChange(false);
   };
 
@@ -125,6 +159,7 @@ export function AddWorkerDialog({
     e.preventDefault();
     setError(null);
     setPhoneInvalid(false);
+    setRoleUnavailable(false);
 
     if (isEdit) {
       // Edit path: name/phone/role only — rate changes go through AdjustRateDialog.
@@ -144,6 +179,7 @@ export function AddWorkerDialog({
         handleClose();
       } catch (err) {
         if (isInvalidPhoneError(err)) setPhoneInvalid(true);
+        else if (isInvalidRoleError(err)) handleRoleRefused();
         else setError(t("errors.saveWorkerFailed"));
       } finally {
         setIsSaving(false);
@@ -181,6 +217,8 @@ export function AddWorkerDialog({
       if (err instanceof ApiError && err.status === 409) {
         const inactive = (err.data as { is_active?: boolean } | undefined)?.is_active === false;
         setError(t(inactive ? "errors.workerAlreadyOnProjectInactive" : "errors.workerAlreadyOnProject"));
+      } else if (isInvalidRoleError(err)) {
+        handleRoleRefused();
       } else {
         setError(t("errors.saveWorkerFailed"));
       }
@@ -261,7 +299,21 @@ export function AddWorkerDialog({
                 roles={roles}
                 palette={palette}
                 value={roleId}
-                onChange={setRoleId}
+                onChange={(next) => {
+                  setRoleId(next);
+                  setRoleUnavailable(false);
+                }}
+                companyId={companyId}
+                onRefreshRoles={onRefreshRoles}
+                selectedFallback={
+                  editWorker && roleId === editWorker.role_id && editWorker.role_name
+                    ? {
+                        name: editWorker.role_name,
+                        color: editWorker.role_color ?? "#94A3B8",
+                        slug: editWorker.role_slug,
+                      }
+                    : undefined
+                }
                 onRoleCreated={(role) => {
                   onRoleCreated?.(role);
                 }}
@@ -269,6 +321,11 @@ export function AddWorkerDialog({
                 onRoleUpdated={onRoleUpdated}
                 onRoleDeleted={onRoleDeleted}
               />
+              {roleUnavailable && (
+                <p role="alert" className="text-destructive text-sm">
+                  {t("errors.roleUnavailable")}
+                </p>
+              )}
             </div>
           )}
 

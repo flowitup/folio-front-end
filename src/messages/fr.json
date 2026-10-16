@@ -270,7 +270,12 @@
     "projectCreated": "Projet créé",
     "projectDeleted": "Projet supprimé",
     "projectUpdated": "Projet mis à jour",
-    "settingsForbidden": "Vous n'avez pas le droit de modifier les paramètres de ce projet."
+    "settingsForbidden": "Vous n'avez pas le droit de modifier les paramètres de ce projet.",
+    "hiddenSection": {
+      "title": "Section masquée",
+      "body": "L'entreprise de ce chantier a masqué cette section pour ses membres.",
+      "back": "Retour au chantier"
+    }
   },
   "settings": {
     "profile": "Profil",
@@ -902,6 +907,7 @@
       "deactivateWorkerFailed": "Échec de la désactivation de l'ouvrier.",
       "deleteEntryFailed": "Échec de la suppression de la présence.",
       "saveWorkerFailed": "Échec de l'enregistrement de l'ouvrier.",
+      "roleUnavailable": "Ce rôle n'est plus disponible pour l'entreprise de ce chantier. Choisissez un autre rôle ou aucun rôle.",
       "invalidPhone": "Saisissez un numéro de téléphone valide, par ex. 06 12 34 56 78 ou +84 912 345 678.",
       "workerNameRequired": "Le nom de l'ouvrier est obligatoire.",
       "dailyRatePositive": "Le tarif journalier doit être supérieur à 0.",
@@ -1518,12 +1524,15 @@
         "recipient": "Destinataire",
         "status": "Statut",
         "totalTtc": "Total TTC",
-        "actions": "Actions"
+        "actions": "Actions",
+        "issuer": "Émetteur"
       },
       "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer.",
       "loadFailed": "Impossible de charger les documents.",
       "retry": "Réessayer",
-      "noFilterResults": "Aucun document avec ce statut."
+      "noFilterResults": "Aucun document avec ce statut.",
+      "companyFilter": "Entreprise émettrice",
+      "allCompanies": "Toutes les entreprises"
     },
     "form": {
       "modes": {
@@ -1650,7 +1659,8 @@
       },
       "issuer": {
         "issuedFrom": "Émis par",
-        "locked": "verrouillé"
+        "locked": "verrouillé",
+        "sourceCompanyNotIssuable": "L'entreprise d'origine n'est pas proposée : vous n'en êtes pas administrateur. Vérifiez l'émetteur choisi."
       },
       "deleteDialog": {
         "title": "Supprimer le document ?",
@@ -1701,7 +1711,8 @@
         "invoice": "Facture",
         "refundedBy": "Remboursé par",
         "status": "Statut",
-        "actions": "Actions"
+        "actions": "Actions",
+        "company": "Entreprise"
       },
       "attachments": {
         "count": "{n} fichiers",
@@ -1742,6 +1753,10 @@
         "body": "{number} ne sera plus suivie pour remboursement et son statut de remboursement sera effacé.",
         "fundsRelease": "Le déblocage de fonds lié {number} sera aussi supprimé, ce qui réduit le total débloqué du projet.",
         "cancel": "Annuler"
+      },
+      "companyFilter": {
+        "label": "Entreprise",
+        "all": "Toutes les entreprises"
       }
     },
     "import": {
@@ -2155,7 +2170,9 @@
         "detach": "Détacher",
         "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un code entreprise de votre administrateur pour vous rattacher.",
         "detached": "Vous avez quitté « {name} »."
-      }
+      },
+      "createCta": "Créer une entreprise",
+      "joinCta": "Rejoindre avec un code"
     },
     "invite": {
       "dialogTitle": "Rattacher une entreprise",
@@ -2322,6 +2339,20 @@
       "rateLimited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
       "generic": "Une erreur inattendue est survenue.",
       "invalidJoinCode": "Code entreprise invalide ou révoqué."
+    },
+    "scopePicker": {
+      "label": "Entreprise affichée",
+      "primary": "Principale"
+    },
+    "hiddenSections": {
+      "title": "Sections masquées",
+      "description": "Désactivez les sections que {company} n'utilise pas. Une section désactivée disparaît du menu de tous les membres de l'entreprise, sur le web et dans l'application mobile.",
+      "companyAreas": "Espaces de l'entreprise",
+      "projectSections": "Sections des chantiers",
+      "mobileOnly": "application mobile",
+      "saved": "Sections mises à jour.",
+      "error": "Impossible d'enregistrer les sections.",
+      "sections": {"billing": "Devis & factures", "library": "Bibliothèque de produits", "inventory": "Inventaire du matériel", "documents": "Documents", "photos": "Photos", "notes": "Notes", "salaries": "Salaires", "chiffrage": "Chiffrage", "analyses": "Analyses"}
     }
   },
   "bibliotheque": {

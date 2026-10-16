@@ -17,7 +17,7 @@ export async function BillingListPage({
   kind: BillingDocumentKind;
   searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const { page, status, q, projectId } = parseBillingListParams(kind, searchParams);
+  const { page, status, q, projectId, companyId } = parseBillingListParams(kind, searchParams);
 
   let initialDocuments: BillingDocument[] = [];
   let initialTotal = 0;
@@ -32,6 +32,7 @@ export async function BillingListPage({
       status,
       q: q || undefined,
       project_id: projectId,
+      company_id: companyId,
       limit: BILLING_LIST_PAGE_SIZE * page, // accumulate pages so load-more shows all loaded docs
       offset: 0,
     });

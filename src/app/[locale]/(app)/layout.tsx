@@ -69,6 +69,11 @@ export default async function AppLayout({
                   equals pb-16, so an h-full page still fits without scrolling. */}
               <div aria-hidden className="h-20 lg:hidden" />
             </div>
+
+            {/* Desktop: the floating chat button (52px, 24px from the corner) covers the
+                last 76px of the screen; this unzoomed spacer lets the end of a long page
+                (the last row's delete button) scroll clear of it. */}
+            <div aria-hidden className="hidden h-[88px] lg:block" />
           </main>
         </div>
         <MobileBottomNav />

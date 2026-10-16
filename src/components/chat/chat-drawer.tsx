@@ -9,7 +9,9 @@
  *     becomes the close toggle.
  *   - sheet (narrow viewports): full-screen.
  * Escape and the X close it in every shape; the panel unmounts on close so its 5 s thread
- * poll stops.
+ * poll stops (the unsent draft is kept per channel in ChatContext). An Escape that a layer
+ * inside the chat already handled (a message popover, a confirmation, the blocked-people
+ * dialog: Radix marks it defaultPrevented) closes only that layer.
  *
  * Mounted in the (app) layout outside the zoom:0.8 content wrapper (fixed offsets inside
  * it rescale) and above the mobile bottom nav (z-50).
@@ -39,7 +41,8 @@ export function ChatDrawer() {
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeChat();
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      closeChat();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);

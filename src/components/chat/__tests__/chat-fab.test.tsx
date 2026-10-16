@@ -10,6 +10,12 @@ import { ChatFab } from "@/components/chat/chat-fab";
 
 vi.mock("next-intl", () => ({
   useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
+  useLocale: () => "fr",
+}));
+
+let mockPathname = "/fr/dashboard";
+vi.mock("next/navigation", () => ({
+  usePathname: () => mockPathname,
 }));
 
 const mockOpenChat = vi.fn();
@@ -31,10 +37,22 @@ function chat(overrides: Record<string, unknown>) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockPathname = "/fr/dashboard";
   mockUseProject.mockReturnValue({ selectedProjectId: "p-1" });
 });
 
 describe("ChatFab", () => {
+  it("is hidden on onboarding, where the user has no company and no conversation yet", () => {
+    mockUseChat.mockReturnValue(chat({ enabled: true, unread: 0 }));
+    mockPathname = "/fr/onboarding";
+    const { unmount } = render(<ChatFab />);
+    expect(screen.queryByTestId("chat-fab")).toBeNull();
+    unmount();
+    mockPathname = "/fr/onboarding-tips";
+    render(<ChatFab />);
+    expect(screen.getByTestId("chat-fab")).toBeInTheDocument();
+  });
+
   it("renders nothing while the feature is unknown or off", () => {
     mockUseChat.mockReturnValue(chat({ enabled: null, unread: 0 }));
     const { unmount } = render(<ChatFab />);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { shouldRedirectToOnboarding } from "../onboarding-gate";
+import { isOnboardingPath, shouldRedirectToOnboarding } from "../onboarding-gate";
 
 describe("shouldRedirectToOnboarding", () => {
   it("redirects a user with zero companies and no visible projects", () => {
@@ -40,5 +40,15 @@ describe("shouldRedirectToOnboarding", () => {
         hasVisibleProjects: false,
       })
     ).toBe(false);
+  });
+});
+
+describe("isOnboardingPath", () => {
+  it("matches the onboarding screen and its sub-paths only", () => {
+    expect(isOnboardingPath("/onboarding")).toBe(true);
+    expect(isOnboardingPath("/onboarding/join")).toBe(true);
+    expect(isOnboardingPath("/onboarding-tips")).toBe(false);
+    expect(isOnboardingPath("/dashboard")).toBe(false);
+    expect(isOnboardingPath("/")).toBe(false);
   });
 });

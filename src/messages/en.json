@@ -3011,7 +3011,8 @@
       "tooLarge": "Photo is too large (10 MB max).",
       "unsupportedType": "Only JPEG, PNG and WebP photos are supported.",
       "forbidden": "You are not a member of this channel.",
-      "reactFailed": "Couldn't save your reaction. Try again."
+      "reactFailed": "Couldn't save your reaction. Try again.",
+      "bodyTooLong": "Message too long (4,000 characters max)."
     },
     "voiceNote": "Voice message",
     "voiceLoading": "Loading the recording…",
@@ -3019,7 +3020,7 @@
     "moderation": {
       "report": "Report message",
       "reportTitle": "Report this message?",
-      "reportBody": "It will be sent to the moderators of your company and the Folio team for review.",
+      "reportBody": "Your company's admins will be notified and can remove the message.",
       "reported": "Reported. Thank you.",
       "block": "Block {name}",
       "blockTitle": "Block {name}?",
@@ -3031,7 +3032,38 @@
       "unblock": "Unblock",
       "none": "Nobody is blocked.",
       "cancel": "Cancel",
-      "failed": "That didn't work. Please try again."
+      "failed": "That didn't work. Please try again.",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "e.g. insulting language"
+    },
+    "deletedAccount": "Deleted account",
+    "unnamedMember": "Unnamed member",
+    "formerMember": "{name} (former member)",
+    "loadOlder": "Load earlier messages",
+    "historyStart": "Start of the conversation",
+    "newMessages": "New messages",
+    "noLongerAvailable": "You no longer have access to this conversation.",
+    "newMessageFrom": "{name}: {text}",
+    "attachment": "Attachment",
+    "openImage": "Open photo {name}",
+    "downloadImage": "Download",
+    "reports": {
+      "title": "Reported messages",
+      "description": "Messages that members reported in the company's conversations. Remove the message for everyone, or dismiss the report if nothing needs doing.",
+      "empty": "No reports waiting.",
+      "loadError": "Couldn't load the reports.",
+      "retry": "Retry",
+      "reportedBy": "Reported by {name}",
+      "reason": "Reason: {reason}",
+      "from": "Message from {name}",
+      "dismiss": "Dismiss",
+      "deleteMessage": "Remove message",
+      "deleteTitle": "Remove this message?",
+      "deleteBody": "It will disappear from the conversation for everyone. This cannot be undone.",
+      "cancel": "Cancel",
+      "dismissed": "Report dismissed.",
+      "deleted": "Message removed.",
+      "failed": "Something went wrong. Please try again."
     }
   },
   "help": {

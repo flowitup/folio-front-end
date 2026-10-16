@@ -12,17 +12,23 @@
  */
 
 import { MessageCircle, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import { useChat } from "@/context/ChatContext";
 import { useProject } from "@/context/ProjectContext";
 import { ChatUnreadBadge } from "@/components/chat/chat-unread-badge";
+import { isOnboardingPath } from "@/lib/auth/onboarding-gate";
 
 export function ChatFab() {
   const t = useTranslations("chat");
   const { enabled, unread, isOpen, openChat, closeChat } = useChat();
   const { selectedProjectId } = useProject();
+  const pathname = usePathname() ?? "";
+  const locale = useLocale();
 
   if (enabled !== true) return null;
+  // No company yet, so no conversation: onboarding shows only its own choices.
+  if (isOnboardingPath(pathname.replace(new RegExp(`^/${locale}`), "") || "/")) return null;
 
   return (
     <button

@@ -43,6 +43,7 @@ import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-ca
 import { CompanyMembersTable } from "@/components/companies/company-members-table";
 import { CompanyPaymentMethodsCard } from "@/components/companies/company-payment-methods-card";
 import { CompanyLaborRolesCard } from "@/components/companies/company-labor-roles-card";
+import { ChatReportsCard } from "@/components/chat/chat-reports-card";
 import { CompanyProfileForm } from "@/components/companies/company-profile-form";
 import { useOptionalProject } from "@/context/ProjectContext";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
@@ -298,6 +299,9 @@ export function CompanySettingsSection() {
                 key={`payment-methods-${selectedCompany.id}`}
                 companyId={selectedCompany.id}
               />
+
+              {/* Chat messages members reported: the admins are the moderators. */}
+              <ChatReportsCard key={`chat-reports-${selectedCompany.id}`} companyId={selectedCompany.id} />
             </>
           )}
 

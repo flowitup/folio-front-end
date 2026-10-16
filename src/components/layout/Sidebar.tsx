@@ -28,6 +28,7 @@ import { useProject } from "@/context/ProjectContext";
 import { projectSwitchPath } from "@/lib/projects/project-switch-path";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { can, canCreateProject } from "@/lib/auth/permissions";
+import { isOnboardingPath } from "@/lib/auth/onboarding-gate";
 import { FolioLogo } from "@/components/folio-logo";
 import {
   DropdownMenu,
@@ -129,6 +130,10 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
       router.push(switchPath);
     }
   };
+
+  // Onboarding (no company yet): every link would bounce straight back; sign-out and
+  // language stay in the top bar.
+  if (isOnboardingPath(pathWithoutLocale)) return null;
 
   return (
     <aside

@@ -55,6 +55,7 @@ vi.mock("@/lib/api/chat-client", async () => {
 });
 
 import { ChatPanel } from "@/components/chat/chat-panel";
+import { ChatApiError } from "@/lib/api/chat-client";
 import { REACTION_EMOJIS } from "@/lib/chat/reactions";
 
 const channels = [
@@ -63,6 +64,12 @@ const channels = [
 ];
 
 const refreshChannels = vi.fn().mockResolvedValue(undefined);
+const drafts = new Map<string, string>();
+const getDraft = (key: string) => drafts.get(key) ?? "";
+const setDraft = (key: string, text: string) => {
+  if (text) drafts.set(key, text);
+  else drafts.delete(key);
+};
 
 function setChat(overrides: Partial<ReturnType<typeof mockUseChat>> = {}) {
   mockUseChat.mockReturnValue({
@@ -72,12 +79,15 @@ function setChat(overrides: Partial<ReturnType<typeof mockUseChat>> = {}) {
     channelsError: false,
     unread: 3,
     refreshChannels,
+    getDraft,
+    setDraft,
     ...overrides,
   });
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  drafts.clear();
   mockUseAuth.mockReturnValue({ user: { id: "me", email: "me@example.com", permissions: [] } });
   mockUseProject.mockReturnValue({ selectedProjectId: "p1" });
   listChatMessages.mockResolvedValue({
@@ -194,6 +204,39 @@ describe("ChatPanel", () => {
     fireEvent.click(screen.getByTestId("chat-back"));
     expect(screen.getByTestId("chat-list-screen")).toBeInTheDocument();
     expect(screen.getByTestId("chat-channel-list")).toBeInTheDocument();
+  });
+
+  it("pages back past the newest 100 messages and says where the history starts", async () => {
+    setChat();
+    const page = Array.from({ length: 100 }, (_, i) => ({
+      id: `n${i}`, channel_key: "project:p1", sender_id: "alice", sender_name: "Alice", body: `Msg ${i}`,
+      attachment: null, created_at: new Date(Date.UTC(2026, 8, 8, 8, i)).toISOString(), mine: false,
+    }));
+    listChatMessages.mockImplementation((_key: string, opts: { before?: string }) =>
+      Promise.resolve(
+        opts?.before
+          ? { items: [{ ...page[0], id: "old1", body: "Plus ancien", created_at: "2026-09-01T08:00:00.000Z" }], members: [] }
+          : { items: page, members: [{ id: "alice", name: "Alice", last_read_at: null }] }
+      )
+    );
+    render(<ChatPanel layout="split" />);
+    fireEvent.click(await screen.findByTestId("chat-load-older"));
+    await waitFor(() => expect(screen.getByText("Plus ancien")).toBeInTheDocument());
+    expect(listChatMessages).toHaveBeenCalledWith("project:p1", { limit: 50, before: page[0].created_at });
+    expect(screen.getByText("Msg 99")).toBeInTheDocument();
+    // Fewer than a page came back: the start of the conversation is reached.
+    expect(screen.queryByTestId("chat-load-older")).toBeNull();
+    expect(screen.getByTestId("chat-history-start")).toBeInTheDocument();
+  });
+
+  it("drops a channel the viewer lost access to instead of retrying it forever", async () => {
+    const { toast } = await import("sonner");
+    setChat();
+    listChatMessages.mockRejectedValue(new ChatApiError(403, { error: "Forbidden" }));
+    render(<ChatPanel layout="split" />);
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("chat.noLongerAvailable"));
+    await waitFor(() => expect(screen.queryByTestId("chat-channel-project:p1")).toBeNull());
+    expect(markChatChannelRead).not.toHaveBeenCalledWith("project:p1");
   });
 
   it("offers a retry when the channel list cannot be loaded", () => {

@@ -13,7 +13,12 @@
     "signIn": "Đăng nhập",
     "quotes": "Báo giá",
     "invoices": "Hóa đơn",
-    "onboarding": "Bắt đầu"
+    "onboarding": "Bắt đầu",
+    "newQuote": "Báo giá mới",
+    "newInvoice": "Hóa đơn mới",
+    "newTemplate": "Mẫu mới",
+    "template": "Mẫu",
+    "newExpense": "Khoản chi mới"
   },
   "navigation": {
     "dashboard": "Tổng quan",
@@ -31,7 +36,7 @@
     "projectSettings": "Cài đặt",
     "settings": "Cài đặt",
     "more": "Thêm",
-    "chiffrage": "Hạch toán",
+    "chiffrage": "Dự toán",
     "close": "Đóng",
     "homeLink": "Folio — trang chủ",
     "skipToContent": "Bỏ qua điều hướng"
@@ -705,7 +710,9 @@
       "cash": "Tiền mặt",
       "cashAdvance": "trong đó {amount} tiền mặt ứng trước",
       "noPurse": "Không thuộc quỹ nào",
-      "noPurseSpend": "{n} khoản chi không thuộc quỹ nào (không có phương thức thanh toán của công ty hoặc cá nhân) · {amount}"
+      "noPurseSpend": "{n} khoản chi không thuộc quỹ nào (không có phương thức thanh toán của công ty hoặc cá nhân) · {amount}",
+      "refundableCountCompany": "{n, plural, other {# khoản chờ hoàn · công ty}}",
+      "refundableCountBank": "{n, plural, other {# khoản chờ hoàn · ngân hàng}}"
     },
     "byWorker": {
       "totalPaid": "Tổng đã trả",
@@ -1314,7 +1321,8 @@
       "switchAccount": "Dùng tài khoản khác"
     },
     "codeRecentlySent": "Một mã đã được gửi tới số này chưa đầy một phút trước: hãy nhập mã bên dưới.",
-    "joinedToast": "Bạn đã tham gia {projectName}"
+    "joinedToast": "Bạn đã tham gia {projectName}",
+    "pageTitle": "Lời mời"
   },
   "admin": {
     "bulkAdd": {
@@ -1518,7 +1526,7 @@
         "kindFacture": "Hóa đơn",
         "kindImmutableNote": "Không thể thay đổi loại sau khi tạo.",
         "name": "Tên mẫu",
-        "namePlaceholder": "vd. Dự án web tiêu chuẩn",
+        "namePlaceholder": "vd. Cải tạo phòng tắm",
         "defaultVatRate": "Tỉ lệ VAT mặc định",
         "vatRateCustom": "Tùy chỉnh…",
         "vatRateNone": "Không có VAT mặc định",
@@ -1573,7 +1581,10 @@
         "sent": "Đã gửi",
         "accepted": "Đã chấp nhận",
         "rejected": "Đã từ chối",
-        "expired": "Hết hạn"
+        "expired": "Hết hạn",
+        "paid": "Đã thanh toán",
+        "overdue": "Quá hạn",
+        "cancelled": "Đã hủy"
       },
       "transitions": {
         "markAsSent": "Đánh dấu đã gửi",
@@ -1612,7 +1623,7 @@
       }
     },
     "list": {
-      "searchPlaceholder": "Tìm theo số hoặc khách hàng…",
+      "searchPlaceholder": "Số, khách hàng hoặc dự án…",
       "allStatuses": "Tất cả trạng thái",
       "noResults": "Không có tài liệu nào phù hợp.",
       "loadMore": "Tải thêm",
@@ -1674,7 +1685,7 @@
         "removeLine": "Xóa dòng",
         "categoryLabel": "Mục",
         "categoryPlaceholder": "ví dụ Toiture, Plomberie",
-        "descriptionSuggestionsHeading": "Từ các hóa đơn trước",
+        "descriptionSuggestionsHeading": "Từ các báo giá và hóa đơn trước",
         "noSuggestions": "Không có gợi ý — văn bản của bạn sẽ được dùng",
         "categoryNoMatches": "Chưa có mục nào — văn bản của bạn sẽ được dùng",
         "vatCustom": "Tùy chỉnh…",
@@ -1703,19 +1714,22 @@
         "downloadXlsx": "Tải XLSX",
         "convertToFacture": "Chuyển thành hóa đơn",
         "changeStatus": "Đổi trạng thái",
-        "cloneSelected": "Nhân bản đã chọn",
+        "cloneSelected": "Nhân bản tài liệu này",
         "createFromTemplate": "Tạo từ mẫu",
         "sendStatus": "Đánh dấu đã gửi",
         "edit": "Chỉnh sửa",
         "previewPdf": "Xem trước PDF",
         "openMenu": "Mở thao tác",
         "openFacture": "Mở hóa đơn",
-        "backToList": "Quay lại danh sách"
+        "backToList": "Quay lại danh sách",
+        "deleteLockedHint": "Đã chuyển thành hóa đơn: hãy hủy hóa đơn để xóa báo giá này.",
+        "duplicate": "Nhân bản"
       },
       "errors": {
         "recipientRequired": "Tên khách hàng là bắt buộc.",
         "atLeastOneItem": "Cần ít nhất một dòng dịch vụ.",
         "itemDescriptionRequired": "Tất cả các mục phải có mô tả.",
+        "itemNumberInvalid": "Số lượng hoặc đơn giá không phải là số. Hãy nhập chữ số, dùng dấu phẩy hoặc dấu chấm cho phần thập phân (vd: 2,5 hoặc 18,90).",
         "itemQuantityPositive": "Số lượng phải lớn hơn 0.",
         "itemUnitPricePositive": "Đơn giá không được âm.",
         "itemVatRatePositive": "Tỉ lệ VAT không được âm.",
@@ -1768,13 +1782,35 @@
       "applyTemplate": {
         "title": "Áp dụng mẫu",
         "description": "Chọn một mẫu đã lưu. Các dòng, ghi chú và điều khoản sẽ được sao chép. Nhập thông tin người nhận bên dưới trước khi tạo.",
-        "empty": "Chưa có mẫu {kind} nào được lưu."
+        "empty": "Chưa có mẫu {kind} nào được lưu.",
+        "createTemplate": "Tạo mẫu"
       },
       "fromExisting": {
         "description": "Chọn một tài liệu làm điểm bắt đầu cho <strong>{kind}</strong> mới. Các dòng, người nhận, ghi chú và điều khoản sẽ được sao chép; ngày và số sẽ được đặt lại.",
         "createAs": "Tạo dưới dạng:",
         "crossKindWarning": "Đổi loại sẽ đặt lại vòng đời tài liệu. {kind} được sao chép sẽ bắt đầu ở trạng thái <strong>{draft}</strong>.",
-        "empty": "Không tìm thấy tài liệu nào."
+        "empty": "Không tìm thấy tài liệu nào.",
+        "search": "Tìm: số, khách hàng hoặc dự án…",
+        "noResults": "Không có tài liệu nào khớp với tìm kiếm.",
+        "loadMore": "Hiện thêm tài liệu"
+      },
+      "confirmStatus": {
+        "title": "Chuyển sang trạng thái “{status}”?",
+        "paid": "Nếu hóa đơn gắn với một dự án, một khoản chi “Giải ngân” với số tiền này sẽ được ghi vào dự án đó. Sau đó, hóa đơn chỉ có thể bị hủy.",
+        "factureCancelled": "Đây là trạng thái cuối cùng: hóa đơn đã hủy sẽ không thể đổi trạng thái nữa.",
+        "devisExpired": "Đây là trạng thái cuối cùng: báo giá hết hạn sẽ không thể đổi trạng thái nữa.",
+        "devisRejected": "Báo giá sẽ được đánh dấu là bị từ chối. Bạn có thể mở lại dưới dạng bản nháp sau.",
+        "confirm": "Xác nhận",
+        "cancel": "Hủy"
+      },
+      "issuerProfile": {
+        "missing": "Hồ sơ của {company} còn thiếu: {fields}. Các thông tin này được in trên báo giá và hóa đơn (SIRET là bắt buộc trên hóa đơn tại Pháp).",
+        "complete": "Bổ sung hồ sơ công ty",
+        "fields": {
+          "siret": "SIRET",
+          "tvaNumber": "mã số VAT",
+          "iban": "IBAN"
+        }
       }
     },
     "editPage": {
@@ -1817,7 +1853,8 @@
         "refundedBy": "Được hoàn bởi",
         "status": "Trạng thái",
         "actions": "Thao tác",
-        "company": "Công ty"
+        "company": "Công ty",
+        "paidBy": "Người trả"
       },
       "attachments": {
         "count": "{n} tệp",
@@ -1862,6 +1899,13 @@
         "fundsRelease": "Khoản giải ngân liên kết {number} cũng sẽ bị xóa, làm giảm tổng giải ngân của dự án.",
         "cancel": "Hủy"
       },
+      "paidByLine": "Người trả: {payer}",
+      "filters": {
+        "search": "Số hóa đơn, nhà cung cấp, công trình, người trả…",
+        "allStatuses": "Tất cả trạng thái",
+        "allProjects": "Tất cả công trình",
+        "noResults": "Không có khoản chi nào khớp với bộ lọc."
+      },
       "companyFilter": {
         "label": "Công ty",
         "all": "Tất cả công ty"
@@ -1875,7 +1919,7 @@
       },
       "dropzone": "Chọn tệp CSV hoặc JSON, hoặc thả tệp vào đây",
       "csvHint": "CSV: mỗi dòng là một hạng mục; các dòng có cùng document_number tạo thành một tài liệu. Cột bắt buộc: {columns}. Ngày theo dạng YYYY-MM-DD hoặc DD/MM/YYYY.",
-      "jsonHint": "JSON: danh sách tài liệu dùng tên trường của API, giống tệp xuất từ plugin Folio.",
+      "jsonHint": "JSON: danh sách tài liệu dùng tên trường của API, giống một tệp xuất JSON của Folio.",
       "projectHint": "Liên kết dự án không được nhập: hãy gắn tài liệu vào dự án từ trang của tài liệu sau khi nhập.",
       "downloadTemplate": "Tải mẫu CSV",
       "defaultStatus": "Trạng thái cho các dòng không ghi trạng thái",
@@ -1961,7 +2005,8 @@
         "forbidden": "Bạn không có quyền xem báo giá và hóa đơn của công trình này."
       },
       "retry": "Thử lại"
-    }
+    },
+    "unknownStatus": "Trạng thái không xác định"
   },
   "documents": {
     "title": "Tài liệu",
@@ -2651,7 +2696,19 @@
         "forbidden": "Bạn không có quyền quản lý thư viện.",
         "unauthorized": "Phiên đăng nhập đã hết hạn, hãy đăng nhập lại.",
         "rate_limited": "Máy chủ vẫn đang bận, hãy thử lại sau một phút.",
-        "generic": "Lỗi không mong muốn, hãy thử lại."
+        "generic": "Lỗi không mong muốn, hãy thử lại.",
+        "validationLine": "Máy chủ từ chối: dòng {line}, {field} không hợp lệ"
+      },
+      "fields": {
+        "productName": "tên sản phẩm",
+        "size": "kích thước",
+        "quantity": "số lượng",
+        "unitPrice": "đơn giá",
+        "purchasedAt": "ngày mua",
+        "reference": "mã tham chiếu",
+        "description": "mô tả",
+        "category": "danh mục",
+        "productUrl": "liên kết sản phẩm"
       }
     },
     "errors": {
@@ -2669,7 +2726,9 @@
       "imageLinkNotImage": "Liên kết không phải là ảnh JPG, PNG hoặc WebP."
     },
     "selectSupplier": "Chọn nhà cung cấp",
-    "imagePreviewAlt": "Xem trước ảnh đã chọn"
+    "imagePreviewAlt": "Xem trước ảnh đã chọn",
+    "removeImage": "Gỡ ảnh",
+    "imageRemoved": "Đã gỡ ảnh."
   },
   "inventory": {
     "title": "Kho thiết bị",
@@ -2885,7 +2944,7 @@
     "editQuote": "Sửa báo giá",
     "editStore": "Sửa cửa hàng",
     "emptyHint": "Tạo một hạng mục như Đèn chiếu sáng, rồi liệt kê những thứ cần mua.",
-    "emptyTitle": "Chưa hạch toán gì",
+    "emptyTitle": "Chưa có dự toán nào",
     "estimatedTotal": "Số tiền cần dự trù",
     "excludingTax": "chưa thuế",
     "expandQuotes": "Xem các báo giá",
@@ -2963,7 +3022,7 @@
     "storedAsHt": "Lưu: {ht} chưa VAT · {ttc} gồm VAT",
     "subtitle": "Liệt kê những thứ cần mua, so sánh giá các nhà cung cấp và biết số tiền cần dự trù.",
     "supplier": "Nhà cung cấp",
-    "title": "Hạch toán vật tư",
+    "title": "Dự toán vật tư",
     "totalHt": "Tổng (chưa VAT)",
     "totalTtc": "Tổng (gồm VAT)",
     "ttcShort": "gồm VAT",
@@ -3026,7 +3085,16 @@
     "unitRouleau": "cuộn",
     "unitLot": "lô",
     "unitForfait": "trọn gói",
-    "productUrlInvalid": "Nhập một địa chỉ web, vd. www.castorama.fr/…"
+    "productUrlInvalid": "Nhập một địa chỉ web, vd. www.castorama.fr/…",
+    "compareTieBasket": "Bằng giá",
+    "errorUnitInUse": "Đơn vị này đang được các vật tư sử dụng: hãy đổi đơn vị của chúng trước khi xóa.",
+    "deleteUnit": "Xóa đơn vị {unit}",
+    "currentUnit": "Đơn vị hiện tại",
+    "readOnlyHint": "Chỉ xem: để sửa dự toán vật tư, hãy xin quản trị viên quyền “Quản lý hóa đơn và dự toán vật tư”.",
+    "confirmDeleteTitle": "Xác nhận xóa",
+    "confirmDeleteCancel": "Hủy",
+    "confirmDeleteAction": "Xóa",
+    "moveItem": "Di chuyển “{name}”"
   },
   "onboarding": {
     "removedFrom": "Bạn đã bị xóa khỏi công ty {company}. Để quay lại các công trình, hãy xin quản trị viên mã công ty, hoặc tham gia một công ty khác.",
@@ -3148,7 +3216,7 @@
         "project_invite": "Mời thành viên",
         "project_manage_users": "Quản lý thành viên",
         "project_manage_labor": "Quản lý nhân công",
-        "project_manage_invoices": "Quản lý hóa đơn",
+        "project_manage_invoices": "Quản lý hóa đơn và dự toán vật tư",
         "project_log_own_attendance": "Chấm công cho bản thân",
         "bibliotheque_manage": "Quản lý thư viện",
         "inventory_manage": "Quản lý kho thiết bị",

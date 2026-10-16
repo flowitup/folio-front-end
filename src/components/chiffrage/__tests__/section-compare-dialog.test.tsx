@@ -165,6 +165,20 @@ describe("SectionCompareDialog", () => {
     expect(cards[1].textContent).toContain("compareMissingItems(1)");
   });
 
+  it("calls two complete baskets at the same cent a tie, not one of them the cheapest", () => {
+    const tied = poste();
+    tied.store_baskets = tied.store_baskets.map((b) => ({
+      ...b,
+      basket_ht: 134.88,
+      priced_article_count: 2,
+      missing_article_ids: [],
+      covers_all: true,
+    }));
+    render(<SectionCompareDialog open poste={tied} stores={[ALPHA, BRAVO]} onOpenChange={() => {}} />);
+    expect(screen.queryByTestId("cheapest-basket")).toBeNull();
+    expect(screen.getAllByTestId("tied-basket")).toHaveLength(2);
+  });
+
   it("says 'no quote' where a shop has no price, never a zero", () => {
     renderDialog();
     const rows = screen.getAllByTestId("section-compare-row");

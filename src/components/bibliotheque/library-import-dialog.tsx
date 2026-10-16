@@ -85,6 +85,19 @@ export interface LibraryImportDialogProps {
   onImported: (companyId: string) => void;
 }
 
+/** API record fields named in the user's language when a line is refused. */
+const VALIDATION_FIELDS: Record<string, string> = {
+  product_name: "productName",
+  size: "size",
+  quantity: "quantity",
+  unit_price: "unitPrice",
+  purchased_at: "purchasedAt",
+  supplier_reference: "reference",
+  description: "description",
+  category: "category",
+  product_url: "productUrl",
+};
+
 export function LibraryImportDialog({
   open,
   onOpenChange,
@@ -147,6 +160,16 @@ export function LibraryImportDialog({
   }
 
   function failureReason(code: ImportPurchasesErrorCode, detail: string): string {
+    // The API's validation text is English ("records.3.size: String should
+    // have at most 100 characters"): name the line and the field instead.
+    const field = code === "validation" ? /records\.(\d+)\.(\w+)/.exec(detail) : null;
+    if (field) {
+      const key = VALIDATION_FIELDS[field[2]];
+      return t("import.failures.validationLine", {
+        line: Number(field[1]) + 1,
+        field: key ? t(`import.fields.${key}`) : field[2],
+      });
+    }
     return t(`import.failures.${code}`, { detail: clipDetail(detail) });
   }
 

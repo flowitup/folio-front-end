@@ -8,7 +8,7 @@
  * and remount BillingTemplatesList (keyed by company id) on switch.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -40,17 +40,27 @@ export function BillingTemplatesCompanyScope({ adminCompanies, initialTemplates,
   const [templates, setTemplates] = useState(initialTemplates);
   const [isLoading, setIsLoading] = useState(false);
 
+  // The server rendered the initial company's list; every later switch,
+  // including back to that company, loads the selected company's own list.
+  const firstRender = useRef(true);
+
   useEffect(() => {
-    if (companyId === initialCompanyId) return; // Already have the initial fetch's data.
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
     let cancelled = false;
     setIsLoading(true);
     void listBillingTemplatesAction(undefined, companyId ?? undefined).then((result) => {
+      // A slower answer for a company no longer selected is dropped.
       if (cancelled) return;
       if (result.ok) {
         setTemplates(result.data);
       } else {
         // Surface the failure — an empty list otherwise reads as "no
         // templates in this company", not "couldn't load templates".
+        // Never leave the previous company's templates under this one.
+        setTemplates(companyId === initialCompanyId ? initialTemplates : []);
         toast.error(errorMessage(result.error, tErrors("templatesLoadFailed")));
       }
       setIsLoading(false);

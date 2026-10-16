@@ -24,6 +24,7 @@ import { projectBackQuery } from "@/lib/billing/back-target";
 import { ApiError } from "@/lib/api/http";
 import { fetchProjectBillingDocuments } from "@/lib/api/billing/project-billing-documents";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { billingStatusLabel } from "@/lib/billing/status-label";
 import { formatDate, formatEUR } from "@/lib/utils/formatters";
 import type { ProjectBillingDocumentSummary } from "@/types/billing";
 
@@ -69,7 +70,7 @@ export function ProjectBillingPanel({ projectId }: ProjectBillingPanelProps) {
 
   const kindLabel = (doc: ProjectBillingDocumentSummary) => t(`project.kind.${doc.kind}`);
   const statusLabel = (doc: ProjectBillingDocumentSummary) =>
-    t(`${doc.kind}.status.${doc.status}`);
+    billingStatusLabel(t, doc.kind, doc.status);
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">

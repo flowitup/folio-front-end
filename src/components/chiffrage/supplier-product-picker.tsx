@@ -22,6 +22,7 @@ import {
   listSuppliersAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import type { LibraryProduct, Supplier } from "@/lib/api/bibliotheque";
+import { displayedSupplierReference } from "@/lib/bibliotheque/supplier-reference";
 
 export interface PickedProduct {
   supplierId: string | null;
@@ -150,8 +151,12 @@ export function SupplierProductPicker({ companyId, onPick }: Props) {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm">{p.name}</span>
                   <span className="block truncate text-xs text-muted-foreground">
-                    {p.supplier_reference}
-                    {p.last_unit_price ? ` · ${money(Number(p.last_unit_price))}` : ""}
+                    {[
+                      displayedSupplierReference(p.supplier_reference),
+                      p.last_unit_price ? money(Number(p.last_unit_price)) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 </span>
               </Button>

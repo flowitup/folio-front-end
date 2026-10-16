@@ -1,4 +1,4 @@
-/** Vietnamese: one spelling of "hạch toán" and one name for the tax (VAT). */
+/** Vietnamese: cost planning is "Dự toán" (an estimate, not "hạch toán" accounting) and the tax is VAT. */
 import { describe, it, expect } from "vitest";
 import vi from "@/messages/vi.json";
 import { helpCatalogueVi, helpChromeVi } from "@/content/help/vi";
@@ -10,11 +10,11 @@ function strings(obj: unknown, out: string[] = []): string[] {
 }
 
 describe("vi wording", () => {
-  it("spells 'Hạch toán' correctly", () => {
-    expect(vi.navigation.chiffrage).toBe("Hạch toán");
-    expect(strings(vi).some((s) => /oạch toán/i.test(s))).toBe(false);
+  it("names cost planning 'Dự toán', never 'hạch toán' (accounting)", () => {
+    expect(vi.navigation.chiffrage).toBe("Dự toán");
+    expect(strings(vi).some((s) => /ạch toán/i.test(s))).toBe(false);
     // The help names the section as the sidebar does.
-    expect(strings([helpCatalogueVi, helpChromeVi]).some((s) => /oạch toán/i.test(s))).toBe(false);
+    expect(strings([helpCatalogueVi, helpChromeVi]).some((s) => /ạch toán/i.test(s))).toBe(false);
   });
 
   it("uses one tone-mark style (Hủy, Xóa, hóa, tùy), so neighbouring buttons match", () => {

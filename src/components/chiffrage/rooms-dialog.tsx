@@ -11,10 +11,12 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useConfirmDialog } from "@/components/chiffrage/use-confirm-dialog";
 import {
   DndContext,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -72,6 +74,7 @@ export function RoomsDialog({
   onReorder,
 }: Props) {
   const t = useTranslations("chiffrage");
+  const { ask, dialog: confirmDialog } = useConfirmDialog();
   const [pending, setPending] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(
@@ -82,7 +85,11 @@ export function RoomsDialog({
   // Same sensors as the poste and item lists: the distance keeps a click on a
   // row button from starting a drag.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    // Mouse and touch separately (as on the planning board): PointerSensor
+    // never started on a phone, the browser took the gesture for scrolling.
+    // A short press picks a row up on touch, so a plain swipe still scrolls.
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
@@ -118,7 +125,7 @@ export function RoomsDialog({
   };
 
   const remove = async (room: ChiffrageRoom) => {
-    if (!confirm(t("confirmDeleteRoom", { name: room.name }))) return;
+    if (!(await ask(t("confirmDeleteRoom", { name: room.name })))) return;
     if ((await run(() => onDelete(room))) && editing?.id === room.id) {
       setEditing(null);
     }
@@ -329,6 +336,7 @@ export function RoomsDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      {confirmDialog}
     </Dialog>
   );
 }

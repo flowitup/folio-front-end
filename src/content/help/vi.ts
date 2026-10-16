@@ -31,7 +31,7 @@ export const helpCatalogueVi: HelpCatalogue = [
     steps: [
       "Chọn công trình đang làm ở bộ chọn dự án trên đầu thanh bên. Trên màn hình hẹp, bộ chọn nằm ở thanh trên cùng.",
       "Nhóm đầu tiên của thanh bên dùng chung cho cả ứng dụng: “Tổng quan”, “Dự án” và “Thư viện”.",
-      "Khi đã chọn một dự án, thanh bên hiện thêm các mục: “Kế hoạch”, “Nhân công”, “Chi phí”, “Hạch toán”, “Ghi chú”, “Tài liệu” và “Phân tích”.",
+      "Khi đã chọn một dự án, thanh bên hiện thêm các mục: “Kế hoạch”, “Nhân công”, “Chi phí”, “Dự toán”, “Ghi chú”, “Tài liệu” và “Phân tích”.",
       "Quản trị viên công ty còn thấy nhóm “Lập hóa đơn”: “Báo giá”, “Hóa đơn”, “Mẫu tài liệu” và “Hoàn tiền”.",
       "Thanh trên cùng chứa thao tác chính của trang, dấu trợ giúp, chuông thông báo, bộ chọn ngôn ngữ và menu tài khoản của bạn.",
     ],
@@ -139,7 +139,7 @@ export const helpCatalogueVi: HelpCatalogue = [
   },
   {
     id: "chiffrage",
-    title: "Hạch toán vật tư",
+    title: "Dự toán vật tư",
     purpose:
       "Lên danh sách những thứ cần mua cho công trình — các hạng mục gồm nhiều vật tư kèm số lượng — ghi giá của từng cửa hàng cho mỗi vật tư, và biết số tiền cần dự trù.",
     steps: [

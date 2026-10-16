@@ -54,7 +54,7 @@ export default function InvoicePrintPage() {
         .page { max-width: 800px; margin: 0 auto; padding: 2rem; }
         .header { border-bottom: 2px solid #111; padding-bottom: 1rem; margin-bottom: 1.5rem; }
         .company-name { font-size: 20pt; font-weight: 700; letter-spacing: -0.5px; }
-        .invoice-title { font-size: 16pt; font-weight: 600; margin-top: 0.5rem; }
+        .invoice-title { font-size: 16pt; font-weight: 600; margin: 0.5rem 0 0; }
         .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
         .meta-table td { padding: 4px 8px 4px 0; font-size: 10pt; vertical-align: top; }
         .meta-table td:first-child { font-weight: 600; color: #555; width: 140px; }
@@ -99,7 +99,7 @@ export default function InvoicePrintPage() {
         {/* Header */}
         <div className="header">
           <div className="company-name">Folio</div>
-          <div className="invoice-title">{t("print.heading")}</div>
+          <h1 className="invoice-title">{t("print.heading")}</h1>
         </div>
 
         {/* Invoice meta */}

@@ -56,7 +56,7 @@ export function InvoiceHighlightPicker({ invoice, onUpdated }: InvoiceHighlightP
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0"
+          className="h-7 w-7 cursor-pointer p-0"
           style={{ color: current ? highlightSwatch(current) : "var(--muted)" }}
           aria-label={t("highlight.label")}
           title={t("highlight.label")}

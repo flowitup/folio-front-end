@@ -15,12 +15,13 @@
  *       dialog is opened on demand; acceptable latency).
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Loader2, FileText, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -37,10 +38,14 @@ import {
 } from "@/components/ui/select";
 import { BillingStatusBadge } from "@/components/billing/billing-status-badge";
 import { listBillingDocumentsAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
-import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
+import type { BillingDocument, BillingDocumentKind } from "@/types/billing";
+import { billingStatusLabel } from "@/lib/billing/status-label";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { formatDate } from "@/lib/utils/formatters";
 import { toIsoDate } from "@/lib/billing/document-payload";
+
+/** Documents of each kind fetched per page. */
+const PAGE_SIZE = 25;
 
 function formatTTC(value: string): string {
   const n = Number(value);
@@ -73,31 +78,26 @@ export function CreateFromExistingDialog({
 }: CreateFromExistingDialogProps) {
   const router = useRouter();
   const locale = useLocale();
-  const tDevisStatus = useTranslations("billing.devis.status");
-  const tFactureStatus = useTranslations("billing.facture.status");
   const tActions = useTranslations("billing.form.actions");
   const tErrors = useTranslations("billing.form.errors");
   const tFromExisting = useTranslations("billing.form.fromExisting");
   const tKind = useTranslations("billing.templates.form");
 
-  /** Locale-aware status label — devis-specific statuses take priority; rest fall back to facture. */
-  function statusLabel(status: BillingDocumentStatus): string {
-    const devisStatuses = new Set<BillingDocumentStatus>(["draft", "sent", "accepted", "rejected", "expired"]);
-    const factureOnlyStatuses = new Set<BillingDocumentStatus>(["paid", "overdue", "cancelled"]);
-    if (devisStatuses.has(status)) {
-      return tDevisStatus(status as "draft" | "sent" | "accepted" | "rejected" | "expired");
-    }
-    if (factureOnlyStatuses.has(status)) {
-      return tFactureStatus(status as "paid" | "overdue" | "cancelled");
-    }
-    return status;
-  }
+  const tBilling = useTranslations("billing");
 
   const [documents, setDocuments] = useState<BillingDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [targetKind, setTargetKind] = useState<BillingDocumentKind>(kind);
+  // Search (number, recipient or project, server-side) and paging per kind:
+  // every document the user can see can be found, not just the 25 latest.
+  const [searchText, setSearchText] = useState("");
+  const [search, setSearch] = useState("");
+  const [loaded, setLoaded] = useState({ devis: 0, facture: 0 });
+  const [totals, setTotals] = useState({ devis: 0, facture: 0 });
+  const requestId = useRef(0);
 
   // Reset when dialog re-opens
   useEffect(() => {
@@ -105,41 +105,91 @@ export function CreateFromExistingDialog({
       setSelectedId(null);
       setTargetKind(kind);
       setLoadError(null);
-      loadDocuments();
+      setSearchText("");
+      setSearch("");
+      void loadDocuments("", false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  async function loadDocuments() {
-    setIsLoading(true);
+  // Debounced search: reload from the first page.
+  useEffect(() => {
+    if (!open) return;
+    const next = searchText.trim();
+    if (next === search) return;
+    const id = setTimeout(() => {
+      setSearch(next);
+      void loadDocuments(next, false);
+    }, 300);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
+
+  /** Newest issue first, then the higher number (the API's own order). */
+  function byIssueDate(a: BillingDocument, b: BillingDocument): number {
+    const d = new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime();
+    return d !== 0 ? d : b.document_number.localeCompare(a.document_number);
+  }
+
+  async function loadDocuments(q: string, more: boolean) {
+    const id = ++requestId.current;
+    if (more) setIsLoadingMore(true);
+    else setIsLoading(true);
     setLoadError(null);
+    const offsets = more ? loaded : { devis: 0, facture: 0 };
+    const wants = {
+      devis: !more || offsets.devis < totals.devis,
+      facture: !more || offsets.facture < totals.facture,
+    };
     try {
-      // Fetch both kinds via two parallel server action calls, merge, sort by date desc.
       const [devisResult, factureResult] = await Promise.all([
-        listBillingDocumentsAction("devis", 25),
-        listBillingDocumentsAction("facture", 25),
+        wants.devis
+          ? listBillingDocumentsAction("devis", PAGE_SIZE, { offset: offsets.devis, q })
+          : null,
+        wants.facture
+          ? listBillingDocumentsAction("facture", PAGE_SIZE, { offset: offsets.facture, q })
+          : null,
       ]);
-      const combined: BillingDocument[] = [];
-      if (devisResult.ok) combined.push(...devisResult.data.items);
-      if (factureResult.ok) combined.push(...factureResult.data.items);
+      if (id !== requestId.current) return; // a newer search answered first
+      const fresh: BillingDocument[] = [];
+      const nextLoaded = { ...offsets };
+      const nextTotals = more ? { ...totals } : { devis: 0, facture: 0 };
+      if (devisResult?.ok) {
+        fresh.push(...devisResult.data.items);
+        nextLoaded.devis += devisResult.data.items.length;
+        nextTotals.devis = devisResult.data.total;
+      }
+      if (factureResult?.ok) {
+        fresh.push(...factureResult.data.items);
+        nextLoaded.facture += factureResult.data.items.length;
+        nextTotals.facture = factureResult.data.total;
+      }
       // Both failed → surface error
-      if (!devisResult.ok && !factureResult.ok) {
+      if (devisResult && !devisResult.ok && factureResult && !factureResult.ok) {
         setLoadError(tErrors("documentsLoadFailed"));
-        setDocuments([]);
+        if (!more) setDocuments([]);
         return;
       }
-      combined.sort(
-        (a, b) =>
-          new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime()
-      );
-      setDocuments(combined.slice(0, 50));
+      setLoaded(nextLoaded);
+      setTotals(nextTotals);
+      setDocuments((prev) => {
+        const base = more ? prev : [];
+        const seen = new Set(base.map((d) => d.id));
+        return [...base, ...fresh.filter((d) => !seen.has(d.id))].sort(byIssueDate);
+      });
     } catch {
+      if (id !== requestId.current) return;
       setLoadError(tErrors("documentsLoadFailed"));
       toast.error(tErrors("documentsLoadFailed"));
     } finally {
-      setIsLoading(false);
+      if (id === requestId.current) {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
     }
   }
+
+  const hasMore = loaded.devis < totals.devis || loaded.facture < totals.facture;
 
   function handleSelect(id: string) {
     setSelectedId((prev) => (prev === id ? null : id));
@@ -193,12 +243,20 @@ export function CreateFromExistingDialog({
             <span>
               {tFromExisting.rich("crossKindWarning", {
                 kind: targetKindLabel,
-                draft: tDevisStatus("draft"),
+                draft: billingStatusLabel(tBilling, "devis", "draft"),
                 strong: (chunks) => <strong>{chunks}</strong>,
               })}
             </span>
           </div>
         )}
+
+        <Input
+          type="search"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder={tFromExisting("search")}
+          aria-label={tFromExisting("search")}
+        />
 
         {/* Document list */}
         <div className="max-h-80 overflow-y-auto rounded-md border" style={{ borderColor: "var(--border)" }}>
@@ -214,7 +272,7 @@ export function CreateFromExistingDialog({
             <div className="flex flex-col items-center justify-center gap-2 py-12">
               <FileText size={20} style={{ color: "var(--muted)" }} />
               <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-                {tFromExisting("empty")}
+                {search ? tFromExisting("noResults") : tFromExisting("empty")}
               </p>
             </div>
           ) : (
@@ -250,7 +308,7 @@ export function CreateFromExistingDialog({
                       </span>
                       <BillingStatusBadge
                         status={doc.status}
-                        label={statusLabel(doc.status)}
+                        label={billingStatusLabel(tBilling, doc.kind, doc.status)}
                       />
                       <span
                         className="text-[11px] uppercase tracking-wide"
@@ -262,6 +320,19 @@ export function CreateFromExistingDialog({
                   </div>
                 </button>
               ))}
+              {hasMore && (
+                <div className="flex justify-center p-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void loadDocuments(search, true)}
+                    disabled={isLoadingMore}
+                  >
+                    {isLoadingMore && <Loader2 size={13} className="mr-2 animate-spin" />}
+                    {tFromExisting("loadMore")}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

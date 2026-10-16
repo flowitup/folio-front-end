@@ -11,6 +11,9 @@
 import { notFound } from "next/navigation";
 import { fetchBillingTemplate } from "@/lib/api/billing/templates";
 import { BillingTemplateForm } from "@/components/billing/billing-template-form";
+import { billingTemplateTitle } from "@/lib/billing/billing-page-title";
+
+export const generateMetadata = billingTemplateTitle;
 
 interface EditTemplatePageProps {
   params: Promise<{ id: string }>;

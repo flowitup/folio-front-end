@@ -30,13 +30,14 @@ import {
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, Loader2, Download, Eye, FileSpreadsheet, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Eye, FileSpreadsheet, ArrowRightLeft, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { IssuerProfileWarning } from "@/components/billing/issuer-profile-warning";
 import {
   Select,
   SelectContent,
@@ -83,6 +84,12 @@ import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog"
 
 // Loose shape check; the API does the strict one.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** True when a line's quantity or price text is a plain number ("2.5"). */
+function isNumberText(value: string | number | null | undefined): boolean {
+  const text = String(value ?? "").trim();
+  return text !== "" && Number.isFinite(Number(text));
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -310,6 +317,11 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     if (tooLong) return tForm("errors.textTooLong", { field: tooLong.label, max: tooLong.max });
     for (const item of items) {
       if (!item.description.trim()) return tForm("errors.itemDescriptionRequired");
+      // A field left as unreadable text ("2,5,1", "abc") or empty must not
+      // reach the API as NaN or "".
+      if (!isNumberText(item.quantity) || !isNumberText(item.unit_price)) {
+        return tForm("errors.itemNumberInvalid");
+      }
       if (Number(item.quantity) <= 0) return tForm("errors.itemQuantityPositive");
       if (Number(item.quantity) > MAX_LINE_QUANTITY) {
         return tForm("errors.itemQuantityTooLarge", { max: MAX_LINE_QUANTITY });
@@ -570,11 +582,11 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="font-display text-xl font-medium">
+        <h1 className="font-display text-xl font-medium">
           {isEdit
             ? (liveDoc?.document_number ?? kindLabel)
             : newLabel}
-        </h2>
+        </h1>
 
         {isEdit && liveDoc && (
           <>
@@ -606,6 +618,19 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
                     <ArrowRightLeft size={13} className="mr-2" />
                   )}
                   {tForm("actions.convertToFacture")}
+                </Button>
+              )}
+              {liveDoc && (
+                // Starts a new document of the same kind from this one (the ?from= flow).
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    router.push(`/${locale}/billing/${kindToSegment(kind)}/new?from=${liveDoc.id}`)
+                  }
+                >
+                  <Copy size={13} className="mr-2" />
+                  {tForm("actions.duplicate")}
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
@@ -715,6 +740,14 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           </div>
         )}
 
+      {/* The issuer's missing legal mentions, before the first devis or facture. */}
+      {!isEdit && (
+        <IssuerProfileWarning company={attachedCompanies.find((c) => c.id === selectedCompanyId)} />
+      )}
+
+      {/* A devis locked by its facture is shown read-only: every field below
+          is disabled, not just Save (billing-13). */}
+      <fieldset disabled={lockedByFacture} className="contents">
       {/* 4. Recipient block */}
       <div className="folio-card space-y-4 p-5">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
@@ -898,6 +931,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           items={items}
           onChange={setItems}
           defaultVatRate={templateVatRate}
+          readOnly={lockedByFacture}
         />
       </div>
 
@@ -943,6 +977,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           />
         </div>
       </div>
+      </fieldset>
 
       {/* Error banner */}
       {formError && (
@@ -978,7 +1013,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
             variant="outline"
             className="ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => setDeleteOpen(true)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || lockedByFacture}
           >
             {tForm("actions.delete")}
           </Button>

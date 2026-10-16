@@ -221,6 +221,18 @@ export function ApplyTemplateDialog({
                   kind: kind === "devis" ? tKind("kindDevis") : tKind("kindFacture"),
                 })}
               </p>
+              {/* Not a dead end: create the first template, in the issuer company. */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  const query = companyId ? `?company_id=${encodeURIComponent(companyId)}` : "";
+                  router.push(`/${locale}/billing/templates/new${query}`);
+                }}
+              >
+                {tApply("createTemplate")}
+              </Button>
             </div>
           ) : (
             <div

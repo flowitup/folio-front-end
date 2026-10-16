@@ -13,7 +13,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { unitLabel } from "@/components/chiffrage/format";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,9 +30,11 @@ interface Props {
   units: ChiffrageUnit[];
   onChange: (symbol: string | null) => void;
   onCreateUnit: (symbol: string) => Promise<ChiffrageUnit | null>;
+  /** Remove a custom unit; resolves false when it was refused (still in use). */
+  onDeleteUnit?: (unit: ChiffrageUnit) => Promise<boolean>;
 }
 
-export function UnitSelect({ value, units, onChange, onCreateUnit }: Props) {
+export function UnitSelect({ value, units, onChange, onCreateUnit, onDeleteUnit }: Props) {
   const t = useTranslations("chiffrage");
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -41,6 +43,20 @@ export function UnitSelect({ value, units, onChange, onCreateUnit }: Props) {
 
   const presets = units.filter((u) => u.is_preset);
   const custom = units.filter((u) => !u.is_preset);
+  // An article keeps its unit even when that unit is no longer offered (an
+  // older custom unit): show it so the form never reads as "no unit".
+  const current: ChiffrageUnit[] =
+    value && !units.some((u) => u.symbol === value)
+      ? [{ id: null, symbol: value, is_preset: false }]
+      : [];
+
+  const remove = async (unit: ChiffrageUnit) => {
+    if (!onDeleteUnit || busy) return;
+    setBusy(true);
+    const removed = await onDeleteUnit(unit);
+    setBusy(false);
+    if (removed && unit.symbol === value) onChange(null);
+  };
 
   const pick = (symbol: string) => {
     onChange(symbol === value ? null : symbol);
@@ -69,17 +85,32 @@ export function UnitSelect({ value, units, onChange, onCreateUnit }: Props) {
         </p>
         <div className="flex flex-wrap gap-1 px-1">
           {list.map((u) => (
-            <Button
-              key={u.symbol}
-              type="button"
-              size="sm"
-              variant={u.symbol === value ? "default" : "outline"}
-              className="h-7"
-              onClick={() => pick(u.symbol)}
-            >
-              {unitLabel(u.symbol, t)}
-              {u.symbol === value ? <Check className="ml-1 h-3 w-3" /> : null}
-            </Button>
+            <span key={u.symbol} className="inline-flex items-center">
+              <Button
+                type="button"
+                size="sm"
+                variant={u.symbol === value ? "default" : "outline"}
+                className="h-7"
+                onClick={() => pick(u.symbol)}
+              >
+                {unitLabel(u.symbol, t)}
+                {u.symbol === value ? <Check className="ml-1 h-3 w-3" /> : null}
+              </Button>
+              {onDeleteUnit && !u.is_preset && u.id ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0 text-muted-foreground"
+                  aria-label={t("deleteUnit", { unit: u.symbol })}
+                  title={t("deleteUnit", { unit: u.symbol })}
+                  disabled={busy}
+                  onClick={() => void remove(u)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              ) : null}
+            </span>
           ))}
         </div>
       </div>
@@ -104,6 +135,7 @@ export function UnitSelect({ value, units, onChange, onCreateUnit }: Props) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-2" align="start">
+        {renderGroup(t("currentUnit"), current)}
         {renderGroup(t("presetUnits"), presets)}
         {renderGroup(t("customUnits"), custom)}
 

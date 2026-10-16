@@ -100,7 +100,7 @@ export default function NewInvoicePage() {
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
         </Button>
-        <h2 className="text-xl font-semibold tracking-tight">{t("newInvoice")}</h2>
+        <h1 className="text-xl font-semibold tracking-tight">{t("newInvoice")}</h1>
         {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
       </div>
 

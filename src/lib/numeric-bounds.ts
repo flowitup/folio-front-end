@@ -11,10 +11,10 @@ export const MAX_DAILY_AMOUNT = 99_999_999.99;
 export const MAX_BUDGET = 9_999_999_999.99;
 /** Inventory counts — Postgres INTEGER. */
 export const MAX_INT_QUANTITY = 2_147_483_647;
-/** Chiffrage article quantity — Numeric(12, 3). */
-export const MAX_ARTICLE_QUANTITY = 999_999_999.999;
-/** Chiffrage quote unit price — Numeric(12, 4). */
-export const MAX_QUOTE_UNIT_PRICE = 99_999_999.9999;
+/** Chiffrage article quantity — kept low enough that line and project totals stay exact to the cent. */
+export const MAX_ARTICLE_QUANTITY = 999_999.999;
+/** Chiffrage quote unit price — same reason as MAX_ARTICLE_QUANTITY. */
+export const MAX_QUOTE_UNIT_PRICE = 9_999_999.9999;
 /** Bibliotheque purchase quantity and unit price — Numeric(18, 4). */
 export const MAX_LIBRARY_AMOUNT = 99_999_999_999_999.9999;
 /** Expense and billing document line quantity. */

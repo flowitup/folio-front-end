@@ -651,3 +651,35 @@ describe("RefundableInvoicesPage — drill-down from the dashboard", () => {
     mockSearch = "";
   });
 });
+
+describe("RefundableInvoicesPage — payer and filters (QA3 expenses-invoices-07)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows who paid and the project by its name (address on hover)", async () => {
+    mockFetch.mockResolvedValue({
+      items: [
+        makeExpense({
+          payment_method_label: "Carte perso François",
+          project_address: "12 rue des Lilas",
+        }),
+      ],
+      total: 1,
+      summary: null,
+    });
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => table().getByText("Carte perso François"));
+    expect(table().getByText("Paid by")).toBeDefined();
+    // Name first, as everywhere (planning-shell); the address is the cell's tooltip.
+    expect(table().getByText("Tower Block").getAttribute("title")).toBe("12 rue des Lilas");
+  });
+
+  it("sends the search to the API", async () => {
+    mockFetch.mockResolvedValue({ items: [makeExpense()], total: 1, summary: null });
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => table().getByText("INV-2026-001"));
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "lilas" } });
+    await waitFor(() => expect(mockFetch).toHaveBeenLastCalledWith({ q: "lilas" }));
+  });
+});

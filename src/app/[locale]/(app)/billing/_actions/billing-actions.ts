@@ -244,12 +244,14 @@ export async function createBillingDocumentFromTemplateAction(
 
 export async function listBillingDocumentsAction(
   kind: BillingDocumentKind,
-  limit = 25
+  limit = 25,
+  options: { offset?: number; q?: string } = {}
 ): Promise<ActionResult<{ items: BillingDocument[]; total: number }>> {
   const auth = await requireSession();
   if (!auth.ok) return auth;
   try {
-    const data = await fetchBillingDocuments({ kind, limit, offset: 0 });
+    const q = options.q?.trim() || undefined;
+    const data = await fetchBillingDocuments({ kind, limit, offset: options.offset ?? 0, q });
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: classifyBackendError(err) };

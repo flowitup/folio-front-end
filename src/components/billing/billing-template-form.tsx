@@ -27,6 +27,7 @@ import { ArrowLeft, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/ui/decimal-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -266,9 +267,9 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="font-display text-xl font-medium">
+        <h1 className="font-display text-xl font-medium">
           {isEdit ? tForm("titleEdit") : tForm("titleCreate")}
-        </h2>
+        </h1>
       </div>
 
       {/* 2. Core fields */}
@@ -323,14 +324,11 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
           <Label htmlFor="tpl-vat" className="text-[12px]">{tForm("defaultVatRate")}</Label>
           {isCustomVat ? (
             <div className="flex items-center gap-2">
-              <Input
+              <DecimalInput
                 id="tpl-vat"
-                type="number"
-                min="0"
-                max="100"
-                step="any"
+                maxDecimals={2}
                 value={customVatRate}
-                onChange={(e) => setCustomVatRate(e.target.value)}
+                onValueChange={setCustomVatRate}
                 className="w-28"
                 placeholder={tForm("vatCustomPlaceholder")}
               />

@@ -13,7 +13,12 @@
     "signIn": "Connexion",
     "quotes": "Devis",
     "invoices": "Factures",
-    "onboarding": "Premiers pas"
+    "onboarding": "Premiers pas",
+    "newQuote": "Nouveau devis",
+    "newInvoice": "Nouvelle facture",
+    "newTemplate": "Nouveau modèle",
+    "template": "Modèle",
+    "newExpense": "Nouvelle dépense"
   },
   "navigation": {
     "dashboard": "Aperçu",
@@ -705,7 +710,9 @@
       "cash": "Espèces",
       "cashAdvance": "dont {amount} d'avance en espèces",
       "noPurse": "Aucune caisse",
-      "noPurseSpend": "{n, plural, one {# dépense} other {# dépenses}} dans aucune caisse (sans moyen de paiement entreprise ou personnel) · {amount}"
+      "noPurseSpend": "{n, plural, one {# dépense} other {# dépenses}} dans aucune caisse (sans moyen de paiement entreprise ou personnel) · {amount}",
+      "refundableCountCompany": "{n, plural, =1 {1 remboursable · entreprise} other {# remboursables · entreprise}}",
+      "refundableCountBank": "{n, plural, =1 {1 remboursable · banque} other {# remboursables · banque}}"
     },
     "byWorker": {
       "totalPaid": "Total payé",
@@ -1314,7 +1321,8 @@
       "switchAccount": "Utiliser un autre compte"
     },
     "codeRecentlySent": "Un code a été envoyé à ce numéro il y a moins d'une minute : saisissez-le ci-dessous.",
-    "joinedToast": "Vous avez rejoint {projectName}"
+    "joinedToast": "Vous avez rejoint {projectName}",
+    "pageTitle": "Invitation"
   },
   "admin": {
     "bulkAdd": {
@@ -1518,7 +1526,7 @@
         "kindFacture": "Facture",
         "kindImmutableNote": "Le type ne peut pas être modifié après la création.",
         "name": "Nom du modèle",
-        "namePlaceholder": "ex. Projet web standard",
+        "namePlaceholder": "ex. Rénovation salle de bain",
         "defaultVatRate": "Taux de TVA par défaut",
         "vatRateCustom": "Personnalisé…",
         "vatRateNone": "Pas de TVA par défaut",
@@ -1573,7 +1581,10 @@
         "sent": "Envoyé",
         "accepted": "Accepté",
         "rejected": "Refusé",
-        "expired": "Expiré"
+        "expired": "Expiré",
+        "paid": "Payé",
+        "overdue": "En retard",
+        "cancelled": "Annulé"
       },
       "transitions": {
         "markAsSent": "Marquer comme envoyé",
@@ -1612,7 +1623,7 @@
       }
     },
     "list": {
-      "searchPlaceholder": "Rechercher par numéro ou destinataire…",
+      "searchPlaceholder": "N°, client ou projet…",
       "allStatuses": "Tous les statuts",
       "noResults": "Aucun document ne correspond à votre recherche.",
       "loadMore": "Charger plus",
@@ -1674,7 +1685,7 @@
         "removeLine": "Supprimer la ligne",
         "categoryLabel": "Section",
         "categoryPlaceholder": "ex. Toiture, Plomberie",
-        "descriptionSuggestionsHeading": "Depuis vos factures précédentes",
+        "descriptionSuggestionsHeading": "Depuis vos devis et factures précédents",
         "noSuggestions": "Aucune correspondance — votre texte sera utilisé",
         "categoryNoMatches": "Aucune section enregistrée — votre texte sera utilisé",
         "vatCustom": "Personnalisé…",
@@ -1703,19 +1714,22 @@
         "downloadXlsx": "Télécharger XLSX",
         "convertToFacture": "Convertir en facture",
         "changeStatus": "Changer le statut",
-        "cloneSelected": "Dupliquer le sélectionné",
+        "cloneSelected": "Dupliquer ce document",
         "createFromTemplate": "Créer depuis un modèle",
         "sendStatus": "Marquer comme envoyé",
         "edit": "Modifier",
         "previewPdf": "Aperçu PDF",
         "openMenu": "Ouvrir les actions",
         "openFacture": "Ouvrir la facture",
-        "backToList": "Retour à la liste"
+        "backToList": "Retour à la liste",
+        "deleteLockedHint": "Converti en facture : annulez la facture pour le supprimer.",
+        "duplicate": "Dupliquer"
       },
       "errors": {
         "recipientRequired": "Le nom du destinataire est obligatoire.",
         "atLeastOneItem": "Au moins une ligne est obligatoire.",
         "itemDescriptionRequired": "Tous les articles doivent avoir une description.",
+        "itemNumberInvalid": "Une quantité ou un prix unitaire n’est pas un nombre. Saisissez des chiffres, avec une virgule ou un point pour les décimales (ex. 2,5 ou 18,90).",
         "itemQuantityPositive": "La quantité doit être supérieure à 0.",
         "itemUnitPricePositive": "Le prix unitaire ne peut pas être négatif.",
         "itemVatRatePositive": "Le taux de TVA ne peut pas être négatif.",
@@ -1768,13 +1782,35 @@
       "applyTemplate": {
         "title": "Appliquer un modèle",
         "description": "Choisissez un modèle enregistré. Les lignes, notes et conditions seront copiées. Saisissez les informations du destinataire ci-dessous avant de créer.",
-        "empty": "Aucun modèle de {kind} enregistré pour le moment."
+        "empty": "Aucun modèle de {kind} enregistré pour le moment.",
+        "createTemplate": "Créer un modèle"
       },
       "fromExisting": {
         "description": "Sélectionnez un document comme point de départ de votre nouveau <strong>{kind}</strong>. Les lignes, le destinataire, les notes et les conditions seront copiés ; les dates et le numéro seront réinitialisés.",
         "createAs": "Créer en tant que :",
         "crossKindWarning": "Changer de type réinitialise le cycle de vie du document. Le {kind} cloné démarrera en <strong>{draft}</strong>.",
-        "empty": "Aucun document existant."
+        "empty": "Aucun document existant.",
+        "search": "Rechercher : n°, client ou projet…",
+        "noResults": "Aucun document ne correspond à cette recherche.",
+        "loadMore": "Afficher plus de documents"
+      },
+      "confirmStatus": {
+        "title": "Passer au statut « {status} » ?",
+        "paid": "Si la facture est liée à un projet, une dépense « Fonds débloqués » de ce montant y sera enregistrée. Ensuite, la facture ne pourra plus qu'être annulée.",
+        "factureCancelled": "C'est un statut définitif : la facture annulée ne pourra plus changer de statut.",
+        "devisExpired": "C'est un statut définitif : le devis expiré ne pourra plus changer de statut.",
+        "devisRejected": "Le devis sera marqué comme refusé. Vous pourrez le rouvrir en brouillon.",
+        "confirm": "Confirmer",
+        "cancel": "Annuler"
+      },
+      "issuerProfile": {
+        "missing": "La fiche de {company} n'a pas encore : {fields}. Ces mentions figurent sur vos devis et factures (le SIRET est obligatoire sur une facture).",
+        "complete": "Compléter la fiche entreprise",
+        "fields": {
+          "siret": "SIRET",
+          "tvaNumber": "n° de TVA",
+          "iban": "IBAN"
+        }
       }
     },
     "editPage": {
@@ -1817,7 +1853,8 @@
         "refundedBy": "Remboursé par",
         "status": "Statut",
         "actions": "Actions",
-        "company": "Entreprise"
+        "company": "Entreprise",
+        "paidBy": "Payé par"
       },
       "attachments": {
         "count": "{n} fichiers",
@@ -1862,6 +1899,13 @@
         "fundsRelease": "Le déblocage de fonds lié {number} sera aussi supprimé, ce qui réduit le total débloqué du projet.",
         "cancel": "Annuler"
       },
+      "paidByLine": "Payé par {payer}",
+      "filters": {
+        "search": "N° de facture, fournisseur, chantier, payeur…",
+        "allStatuses": "Tous les statuts",
+        "allProjects": "Tous les chantiers",
+        "noResults": "Aucune dépense ne correspond à ces filtres."
+      },
       "companyFilter": {
         "label": "Entreprise",
         "all": "Toutes les entreprises"
@@ -1875,7 +1919,7 @@
       },
       "dropzone": "Choisissez un fichier CSV ou JSON, ou déposez-le ici",
       "csvHint": "CSV : une ligne par ligne de prestation ; les lignes qui partagent le même document_number forment un document. Colonnes obligatoires : {columns}. Dates au format AAAA-MM-JJ ou JJ/MM/AAAA.",
-      "jsonHint": "JSON : une liste de documents avec les noms de champs de l'API, tels que les exporte le plugin Folio.",
+      "jsonHint": "JSON : une liste de documents avec les noms de champs de l'API, comme dans un export JSON de Folio.",
       "projectHint": "Les liens vers un projet ne sont pas importés : rattachez chaque document à son projet depuis sa page, après l'import.",
       "downloadTemplate": "Télécharger le modèle CSV",
       "defaultStatus": "Statut des lignes qui n'en indiquent pas",
@@ -1961,7 +2005,8 @@
         "forbidden": "Vous n'avez pas accès aux devis et factures de ce chantier."
       },
       "retry": "Réessayer"
-    }
+    },
+    "unknownStatus": "Statut inconnu"
   },
   "documents": {
     "title": "Documents",
@@ -2651,7 +2696,19 @@
         "forbidden": "Vous n'avez pas la permission de gérer la bibliothèque.",
         "unauthorized": "Votre session a expiré, reconnectez-vous.",
         "rate_limited": "Le serveur est toujours occupé, réessayez dans une minute.",
-        "generic": "Erreur inattendue, réessayez."
+        "generic": "Erreur inattendue, réessayez.",
+        "validationLine": "Refusé par le serveur : ligne {line}, {field} invalide"
+      },
+      "fields": {
+        "productName": "nom du produit",
+        "size": "taille",
+        "quantity": "quantité",
+        "unitPrice": "prix unitaire",
+        "purchasedAt": "date d'achat",
+        "reference": "référence",
+        "description": "description",
+        "category": "catégorie",
+        "productUrl": "lien du produit"
       }
     },
     "errors": {
@@ -2669,7 +2726,9 @@
       "imageLinkNotImage": "Le lien ne pointe pas vers une image JPG, PNG ou WebP."
     },
     "selectSupplier": "Choisir un fournisseur",
-    "imagePreviewAlt": "Aperçu de l'image choisie"
+    "imagePreviewAlt": "Aperçu de l'image choisie",
+    "removeImage": "Retirer l'image",
+    "imageRemoved": "Image retirée."
   },
   "inventory": {
     "title": "Inventaire du matériel",
@@ -3007,7 +3066,7 @@
     "loadFailedTitle": "Le chiffrage n'a pas pu être chargé",
     "loadFailedHint": "Rien n'a été perdu. Vérifiez votre connexion et réessayez.",
     "retry": "Réessayer",
-    "emptyHintReadOnly": "Aucune section n'a encore été prévue pour ce projet.",
+    "emptyHintReadOnly": "Aucun poste n'a encore été prévu pour ce projet.",
     "quantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
     "quantityInvalid": "Saisissez une quantité supérieure ou égale à 0, avec 3 décimales au plus (par exemple 2,5).",
     "priceTooLarge": "Le prix unitaire HT ne peut pas dépasser {max, number}.",
@@ -3026,7 +3085,16 @@
     "unitRouleau": "rouleau",
     "unitLot": "lot",
     "unitForfait": "forfait",
-    "productUrlInvalid": "Saisissez une adresse web, ex. www.castorama.fr/…"
+    "productUrlInvalid": "Saisissez une adresse web, ex. www.castorama.fr/…",
+    "compareTieBasket": "Égalité",
+    "errorUnitInUse": "Cette unité est utilisée par des articles : changez-leur d'unité avant de la supprimer.",
+    "deleteUnit": "Supprimer l'unité {unit}",
+    "currentUnit": "Unité actuelle",
+    "readOnlyHint": "Lecture seule : pour modifier le chiffrage, demandez à un administrateur la permission « Gérer les factures et le chiffrage ».",
+    "confirmDeleteTitle": "Confirmer la suppression",
+    "confirmDeleteCancel": "Annuler",
+    "confirmDeleteAction": "Supprimer",
+    "moveItem": "Déplacer « {name} »"
   },
   "onboarding": {
     "removedFrom": "Vous avez été retiré(e) de l’entreprise {company}. Pour retrouver vos chantiers, demandez un code entreprise à son administrateur, ou rejoignez une autre entreprise.",
@@ -3148,7 +3216,7 @@
         "project_invite": "Inviter des membres",
         "project_manage_users": "Gérer les membres",
         "project_manage_labor": "Gérer la main-d'œuvre",
-        "project_manage_invoices": "Gérer les factures",
+        "project_manage_invoices": "Gérer les factures et le chiffrage",
         "project_log_own_attendance": "Pointer ses propres présences",
         "bibliotheque_manage": "Gérer la bibliothèque",
         "inventory_manage": "Gérer l'inventaire",

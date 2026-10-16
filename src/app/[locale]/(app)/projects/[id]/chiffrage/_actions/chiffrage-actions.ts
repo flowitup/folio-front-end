@@ -24,6 +24,7 @@ import {
   deleteQuote,
   deleteRoom,
   deleteStore,
+  deleteUnit,
   getChiffrage,
   reorderArticle,
   reorderPoste,
@@ -113,6 +114,21 @@ export async function getChiffrageAction(projectId: string): Promise<Result<Chif
 
 export async function createUnitAction(projectId: string, symbol: string): Promise<Result<ChiffrageUnit>> {
   return run(projectId, () => createUnit(projectId, symbol));
+}
+
+export async function deleteUnitAction(projectId: string, unitId: string): Promise<Result<void>> {
+  try {
+    await deleteUnit(projectId, unitId);
+    revalidate(projectId);
+    return { ok: true, data: undefined };
+  } catch (err) {
+    // 409 here means articles still use the unit, not a duplicate name.
+    if ((err as { status?: number })?.status === 409) {
+      const t = await getTranslations("chiffrage");
+      return { ok: false, error: t("errorUnitInUse") };
+    }
+    return { ok: false, error: await classifyBackendError(err) };
+  }
 }
 
 // --- postes ----------------------------------------------------------------

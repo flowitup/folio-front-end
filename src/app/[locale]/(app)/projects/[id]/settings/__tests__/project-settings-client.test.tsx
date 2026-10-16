@@ -38,7 +38,7 @@ describe("ProjectSettingsClient — who may edit", () => {
     renderClient();
     expect(screen.getByLabelText(en.projects.invoicePrefix)).toBeDisabled();
     expect(screen.queryByRole("button", { name: en.projects.save })).toBeNull();
-    expect(screen.getByTestId("settings-read-only")).toHaveTextContent(en.projects.settingsReadOnly);
+    expect(screen.getByTestId("settings-read-only")).toHaveTextContent(en.projects.settingsNoPermission);
   });
 
   it("lets a manager edit and save", () => {

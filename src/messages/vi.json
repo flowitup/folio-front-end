@@ -75,6 +75,8 @@
     "codeExpired": "Mã đã hết hạn — hãy nhận mã mới"
   },
   "topbar": {
+    "projectSettingsTitle": "Cài đặt dự án",
+    "projectMembersTitle": "Thành viên dự án",
     "viewNotifications": "Xem thông báo",
     "signOut": "Đăng xuất",
     "overviewTitle": "Tổng quan",
@@ -136,6 +138,8 @@
     }
   },
   "projects": {
+    "projectLoadError": "Hiện không thể tải dự án này. Hãy kiểm tra kết nối rồi thử lại.",
+    "settingsNoPermission": "Bạn không có quyền thay đổi cài đặt của dự án này.",
     "title": "Dự án",
     "description": "Mọi công trình bạn đang quản lý, song song với nhau.",
     "selectProject": "Chọn dự án",
@@ -2028,6 +2032,7 @@
     }
   },
   "members": {
+    "allProjectsAccess": "truy cập mọi dự án",
     "title": "Thành viên",
     "subtitle": "Quản lý quyền truy cập vào dự án này",
     "tab": {
@@ -2080,6 +2085,7 @@
       "pending": "Không có lời mời nào đang chờ"
     },
     "edit": {
+      "removeCompanyAdmin": "Quản trị viên công ty có quyền truy cập mọi dự án của công ty nên không thể bị xóa khỏi riêng một dự án.",
       "button": "Sửa",
       "remove": "Xóa",
       "removeConfirm": "Xóa {name} khỏi dự án này?",

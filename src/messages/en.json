@@ -75,6 +75,8 @@
     "codeExpired": "Code expired — ask for a new one"
   },
   "topbar": {
+    "projectSettingsTitle": "Project settings",
+    "projectMembersTitle": "Project members",
     "viewNotifications": "View notifications",
     "signOut": "Sign out",
     "overviewTitle": "Overview",
@@ -136,6 +138,8 @@
     }
   },
   "projects": {
+    "projectLoadError": "This project could not be loaded right now. Check your connection and try again.",
+    "settingsNoPermission": "You do not have permission to change this project’s settings.",
     "title": "Projects",
     "description": "Every build you're running, side by side.",
     "selectProject": "Select project",
@@ -2028,6 +2032,7 @@
     }
   },
   "members": {
+    "allProjectsAccess": "access to every project",
     "title": "Members",
     "subtitle": "Manage who has access to this project",
     "tab": {
@@ -2080,6 +2085,7 @@
       "pending": "No pending invitations"
     },
     "edit": {
+      "removeCompanyAdmin": "A company admin has access to every project of the company and cannot be removed from just one.",
       "button": "Edit",
       "remove": "Remove",
       "removeConfirm": "Remove {name} from this project?",

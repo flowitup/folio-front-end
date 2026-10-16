@@ -75,6 +75,8 @@
     "codeExpired": "Code expiré — demandez-en un nouveau"
   },
   "topbar": {
+    "projectSettingsTitle": "Paramètres du projet",
+    "projectMembersTitle": "Membres du projet",
     "viewNotifications": "Voir les notifications",
     "signOut": "Déconnexion",
     "overviewTitle": "Aperçu",
@@ -136,6 +138,8 @@
     }
   },
   "projects": {
+    "projectLoadError": "Impossible de charger ce projet pour le moment. Vérifiez votre connexion puis réessayez.",
+    "settingsNoPermission": "Vous n’avez pas la permission de modifier les paramètres de ce projet.",
     "title": "Projets",
     "description": "Tous vos chantiers, côte à côte.",
     "selectProject": "Sélectionner un projet",
@@ -2028,6 +2032,7 @@
     }
   },
   "members": {
+    "allProjectsAccess": "accès à tous les projets",
     "title": "Membres",
     "subtitle": "Gérez qui a accès à ce projet",
     "tab": {
@@ -2080,6 +2085,7 @@
       "pending": "Aucune invitation en attente"
     },
     "edit": {
+      "removeCompanyAdmin": "Un administrateur de l’entreprise a accès à tous ses projets : il ne peut pas être retiré d’un seul projet.",
       "button": "Modifier",
       "remove": "Retirer",
       "removeConfirm": "Retirer {name} de ce projet ?",

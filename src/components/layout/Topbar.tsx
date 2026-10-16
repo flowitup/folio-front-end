@@ -23,7 +23,7 @@ import { userContact, userDisplayName, userInitial } from "@/lib/auth/user-displ
 
 // Page meta keys reference message keys in `topbar.*` (title/subtitle) and
 // `projects/planning/labor/invoices.newProject|newTask|logDay|newInvoice` for actions.
-type PageKey = "dashboard" | "projects" | "settings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents" | "analyses" | "billing";
+type PageKey = "dashboard" | "projects" | "settings" | "projectSettings" | "planning" | "labor" | "invoices" | "notes" | "members" | "documents" | "analyses" | "billing";
 
 const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; actionKey?: string }> = {
   dashboard: {
@@ -37,6 +37,8 @@ const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; acti
     actionKey: "projects.newProject",
   },
   settings: { titleKey: "topbar.settingsTitle", subtitleKey: "topbar.settingsSubtitle" },
+  // /projects/<id>/settings — not the app's own Settings page.
+  projectSettings: { titleKey: "topbar.projectSettingsTitle", subtitleKey: "topbar.settingsSubtitle" },
   planning: {
     titleKey: "topbar.planningTitle",
     subtitleKey: "topbar.planningSubtitle",
@@ -58,7 +60,7 @@ const TOPBAR_KEYS: Record<PageKey, { titleKey: string; subtitleKey: string; acti
     // No topbar action — Add Note lives inline in the notes agenda
   },
   members: {
-    titleKey: "topbar.membersTitle",
+    titleKey: "topbar.projectMembersTitle",
     subtitleKey: "topbar.membersSubtitle",
     // No topbar action — Invite Member lives inline in the members table
   },
@@ -108,7 +110,9 @@ export function Topbar() {
     // Only the section root (/projects/<id>/invoices), not its sub-pages
     // (/invoices/new, /invoices/<id>), which render their own header.
     const projectMatch = pathWithoutLocale.match(/^\/projects\/[^/]+\/([^/]+)\/?$/);
-    if (projectMatch && (projectMatch[1] in TOPBAR_KEYS)) {
+    if (projectMatch && projectMatch[1] === "settings") {
+      pageKey = "projectSettings";
+    } else if (projectMatch && (projectMatch[1] in TOPBAR_KEYS)) {
       pageKey = projectMatch[1] as PageKey;
     }
   }

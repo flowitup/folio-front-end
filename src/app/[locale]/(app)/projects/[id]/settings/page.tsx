@@ -1,28 +1,13 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
-import { env } from "@/lib/config/env";
-import { sessionAuthHeader } from "@/lib/api/auth-header";
+import { loadProjectForPage } from "@/lib/api/project-load";
+import { ProjectLoadError } from "@/components/projects/project-load-error";
 import { ProjectSettingsClient } from "./project-settings-client";
-import type { Project } from "@/types/project";
 import { pageTitle } from "@/lib/i18n/page-title";
 
 interface PageProps {
   params: Promise<{ id: string }>;
-}
-
-async function fetchProject(projectId: string): Promise<Project | null> {
-  const authHeaders = await sessionAuthHeader();
-  try {
-    const res = await fetch(`${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}`, {
-      headers: { "Content-Type": "application/json", ...authHeaders },
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as Project;
-  } catch {
-    return null;
-  }
 }
 
 export const generateMetadata = pageTitle("navigation.projectSettings");
@@ -36,10 +21,13 @@ export default async function ProjectSettingsPage({ params }: PageProps) {
     redirect(`/${locale}/login`);
   }
 
-  const project = await fetchProject(projectId);
-  if (!project) {
-    redirect(`/${locale}/projects`);
-  }
+  // Only "no access / no such project" is a not-found page and an expired
+  // session goes to sign-in; an outage or a timeout says so with a retry and
+  // keeps the URL, instead of silently landing on the projects list.
+  const load = await loadProjectForPage(projectId);
+  if (load.kind === "unauthenticated") redirect(`/${locale}/login`);
+  if (load.kind === "notFound") notFound();
+  if (load.kind === "error") return <ProjectLoadError />;
 
-  return <ProjectSettingsClient project={project} />;
+  return <ProjectSettingsClient project={load.project} />;
 }

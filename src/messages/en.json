@@ -2141,7 +2141,7 @@
       "card": {
         "primaryBadge": "Primary",
         "setPrimary": "Set as primary",
-        "detach": "Detach",
+        "detach": "Leave company",
         "detachConfirm": "Remove yourself from \"{name}\"? You will lose access and will need a company code from your admin to re-attach.",
         "detached": "You left \"{name}\"."
       }
@@ -2208,8 +2208,8 @@
         "paymentsLoadError": "Failed to load payment methods",
         "joinCode": {
           "title": "Company code",
-          "description": "Reusable code members type in the Folio mobile app (\"Join a company\") after signing up with their phone number. They join as members.",
-          "none": "No active code. Create one to let people join from the mobile app.",
+          "description": "Reusable code members type in Folio (\"Join a company\", on the web or in the mobile app) once signed in to their account. They join as members.",
+          "none": "No active code. Create one to let people join the company.",
           "create": "Create code",
           "renew": "New code",
           "revoke": "Revoke code",

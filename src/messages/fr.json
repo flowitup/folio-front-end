@@ -2141,7 +2141,7 @@
       "card": {
         "primaryBadge": "Principale",
         "setPrimary": "Définir comme principale",
-        "detach": "Détacher",
+        "detach": "Quitter l'entreprise",
         "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un code entreprise de votre administrateur pour vous rattacher.",
         "detached": "Vous avez quitté « {name} »."
       }
@@ -2208,8 +2208,8 @@
         "paymentsLoadError": "Échec du chargement des moyens de paiement",
         "joinCode": {
           "title": "Code entreprise",
-          "description": "Code réutilisable que les membres saisissent dans l'application mobile Folio (« Rejoindre une entreprise ») après s'être inscrits avec leur numéro de téléphone. Ils rejoignent en tant que membres.",
-          "none": "Aucun code actif. Créez-en un pour permettre de rejoindre l'entreprise depuis l'application mobile.",
+          "description": "Code réutilisable que les membres saisissent dans Folio (« Rejoindre une entreprise », sur le web ou l'application mobile) une fois connectés à leur compte. Ils rejoignent en tant que membres.",
+          "none": "Aucun code actif. Créez-en un pour permettre de rejoindre l'entreprise.",
           "create": "Créer un code",
           "renew": "Nouveau code",
           "revoke": "Révoquer le code",

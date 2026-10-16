@@ -2141,7 +2141,7 @@
       "card": {
         "primaryBadge": "Chính",
         "setPrimary": "Đặt làm chính",
-        "detach": "Hủy liên kết",
+        "detach": "Rời công ty",
         "detachConfirm": "Xóa bạn khỏi \"{name}\"? Bạn sẽ mất quyền truy cập và cần mã công ty từ quản trị viên để liên kết lại.",
         "detached": "Bạn đã rời khỏi \"{name}\"."
       }
@@ -2208,8 +2208,8 @@
         "paymentsLoadError": "Không tải được phương thức thanh toán",
         "joinCode": {
           "title": "Mã công ty",
-          "description": "Mã dùng lại được, thành viên nhập trong app Folio trên điện thoại (\"Tham gia vào công ty\") sau khi tạo tài khoản bằng số điện thoại. Họ tham gia với vai trò thành viên.",
-          "none": "Chưa có mã. Tạo mã để mọi người tham gia từ app điện thoại.",
+          "description": "Mã dùng lại được, thành viên nhập trong Folio (\"Tham gia vào công ty\", trên web hoặc app điện thoại) sau khi đăng nhập tài khoản. Họ tham gia với vai trò thành viên.",
+          "none": "Chưa có mã. Tạo mã để mọi người tham gia vào công ty.",
           "create": "Tạo mã",
           "renew": "Mã mới",
           "revoke": "Thu hồi mã",

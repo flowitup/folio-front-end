@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PersonTypeahead } from "@/components/persons/person-typeahead";
 import { mergePersons } from "@/lib/api/persons";
+import { ApiError } from "@/lib/api/http";
 import type { PersonSummary } from "@/types/person";
 
 export function PersonMergeForm() {
@@ -50,13 +51,23 @@ export function PersonMergeForm() {
         target_person_id: target.id,
       });
       toast.success(t("merged", { source: source.name, target: target.name }), {
-        description: t("mergedDetail", { n: result.workers_reassigned }),
+        description: [
+          t("mergedDetail", { n: result.workers_reassigned }),
+          t("mergedProfiles", {
+            moved: result.profiles_moved ?? 0,
+            merged: result.profiles_merged ?? 0,
+          }),
+          result.account_linked ? t("mergedAccount") : null,
+        ]
+          .filter(Boolean)
+          .join(" "),
       });
       setSource(null);
       setTarget(null);
-    } catch {
-      // Never the raw "HTTP 403: FORBIDDEN" text.
-      toast.error(t("failed"));
+    } catch (err) {
+      // Never the raw "HTTP 403: FORBIDDEN" text. A 409: two different sign-in
+      // accounts cannot be the same person.
+      toast.error(err instanceof ApiError && err.status === 409 ? t("conflictAccounts") : t("failed"));
     } finally {
       setMerging(false);
       setConfirmOpen(false);

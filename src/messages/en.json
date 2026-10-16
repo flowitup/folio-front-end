@@ -364,7 +364,7 @@
         "unknown": "Something went wrong. Please try again."
       }
     },
-    "errorInvalidProfile": "Check your name: it can be up to 255 characters.",
+    "errorInvalidProfile": "Check your name: it can be up to 80 characters.",
     "changePhone": {
       "action": "Change number",
       "title": "Change your phone number",
@@ -383,8 +383,13 @@
       "errorHourlyLimit": "Too many codes were requested for this number. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
       "errorSmsFailed": "The SMS could not be sent. Try again later.",
       "errorInvalidCode": "Wrong or expired code",
-      "errorFailed": "Couldn't change your phone number. Please try again."
-    }
+      "errorFailed": "Couldn't change your phone number. Please try again.",
+      "errorSessionExpired": "Your session has expired.",
+      "signInAgain": "Sign in again"
+    },
+    "errorNameRequired": "Your name cannot be empty.",
+    "errorSessionExpired": "Your session has expired. Sign in again to save.",
+    "signInAgain": "Sign in again"
   },
   "paymentMethods": {
     "title": "Payment methods",
@@ -412,7 +417,9 @@
       "validation": "Invalid input. Please check your entry and try again.",
       "conflict": "A conflict occurred. Please try again.",
       "rate_limited": "Too many requests. Please wait and try again.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "builtin_company_flag": "The company's built-in method always stays paid by the company.",
+      "refund_tracked_expenses": "{count, plural, one {# expense paid with this method is tracked for refund} other {# expenses paid with this method are tracked for refund}}: clear their refund tracking before marking it paid by the company."
     },
     "toasts": {
       "created": "Payment method added",
@@ -425,7 +432,8 @@
     "paidByCompany": "Paid by the company",
     "personalPayment": "Personal payment",
     "loadError": "Could not load payment methods. Please try again.",
-    "saveEditAria": "Save changes"
+    "saveEditAria": "Save changes",
+    "confirmPurseChange": "{count, plural, one {# past expense paid with this method will move to the other purse.} other {# past expenses paid with this method will move to the other purse.}} Continue?"
   },
   "errors": {
     "unauthorized": "Unauthorized",
@@ -439,7 +447,8 @@
       "title": "Something went wrong",
       "body": "Please refresh the page. If the problem persists, sign in again.",
       "refresh": "Refresh",
-      "login": "Go to login"
+      "login": "Go to login",
+      "retry": "Try again"
     }
   },
   "invoices": {
@@ -1651,7 +1660,8 @@
         "dueBeforeIssue": "The payment due date cannot be before the issue date.",
         "forbidden": "You do not have permission to perform this action.",
         "companyProfileMissing": "Complete the company profile before creating billing documents.",
-        "textTooLong": "{field} must be {max} characters or fewer."
+        "textTooLong": "{field} must be {max} characters or fewer.",
+        "issueDateYear": "The issue date must stay in {year}, the year of the document number."
       },
       "toast": {
         "documentSaved": "Document saved.",
@@ -1899,7 +1909,8 @@
         "delete": "Delete",
         "downloadError": "Download failed — please try again",
         "rename": "Rename"
-      }
+      },
+      "retry": "Retry"
     },
     "kinds": {
       "pdf": "PDF",
@@ -1927,7 +1938,17 @@
       "anyUploader": "Anyone",
       "formerMember": "Former member",
       "uploader": "Uploaded by",
-      "reset": "Reset"
+      "reset": "Reset",
+      "sortLabel": "Sort by",
+      "sortOptions": {
+        "newest": "Newest first",
+        "oldest": "Oldest first",
+        "nameAsc": "Name (A → Z)",
+        "nameDesc": "Name (Z → A)",
+        "sizeDesc": "Largest first",
+        "sizeAsc": "Smallest first",
+        "uploaderAsc": "Uploaded by"
+      }
     },
     "preview": {
       "fallback": "Preview not available for this file type. Download to view.",
@@ -1939,7 +1960,7 @@
     },
     "delete": {
       "title": "Delete document?",
-      "body": "Are you sure you want to delete \"{filename}\"? This cannot be undone from the UI.",
+      "body": "Delete \"{filename}\"? The document is removed from the project, kept for 30 days, then permanently erased; it cannot be restored from the app.",
       "cancel": "Cancel",
       "confirm": "Delete",
       "confirming": "Deleting…",
@@ -1968,7 +1989,8 @@
       "errorForbidden": "You don't have permission to rename documents in this project",
       "errorServer": "Failed to rename",
       "errorExtension": "The extension must remain {extension}",
-      "errorInvalid": "This name can't be used. Check it and try again."
+      "errorInvalid": "This name can't be used. Check it and try again.",
+      "errorDuplicate": "Another document already has this name. Choose a different name."
     },
     "restricted": {
       "title": "Documents are not available for your role",
@@ -1985,7 +2007,8 @@
       "uploadedByLabel": "Uploaded by",
       "addedLabel": "Added",
       "sourceLabel": "Source",
-      "inThisLibrary": "In this library"
+      "inThisLibrary": "In this library",
+      "openFullScreen": "Open full screen"
     },
     "empty": {
       "title": "No analysis reports yet",
@@ -2005,7 +2028,8 @@
       "cancel": "Cancel",
       "success": "Analysis uploaded",
       "tooLarge": "Too large (max 2 MB)",
-      "invalidFile": "Unsupported file — pick an .html report"
+      "invalidFile": "Unsupported file — pick an .html report",
+      "removeTag": "Remove tag {tag}"
     },
     "search": {
       "placeholder": "Search analyses…"
@@ -2031,12 +2055,13 @@
       "cancel": "Cancel",
       "save": "Save",
       "saving": "Saving…",
-      "success": "Analysis updated"
+      "success": "Analysis updated",
+      "removeTag": "Remove tag {tag}"
     },
     "delete": {
       "trigger": "Delete",
       "confirmTitle": "Delete analysis?",
-      "confirmBody": "Are you sure you want to delete \"{title}\"? This cannot be undone from the UI.",
+      "confirmBody": "Delete \"{title}\"? The analysis is removed from the project, kept for 30 days, then permanently erased; it cannot be restored from the app.",
       "cancel": "Cancel",
       "confirm": "Delete",
       "confirming": "Deleting…",
@@ -2052,7 +2077,8 @@
       "generic": "Something went wrong — try again",
       "invalidSourceUrl": "The source link must start with http:// or https://",
       "tooManyTags": "An analysis can have at most 20 tags",
-      "tagTooLong": "A tag can be at most 100 characters long"
+      "tagTooLong": "A tag can be at most 100 characters long",
+      "invalidEncoding": "The report's text encoding was not recognised — save it as UTF-8 and try again"
     },
     "toast": {
       "listLoadError": "Failed to load analyses"
@@ -2060,7 +2086,8 @@
     "pagination": {
       "prev": "Prev",
       "next": "Next"
-    }
+    },
+    "loadErrorRetry": "Retry"
   },
   "members": {
     "allProjectsAccess": "access to every project",
@@ -2320,7 +2347,10 @@
         "tvaInvalid": "TVA number must be 2 to 16 letters or digits, e.g. FR40552100554.",
         "ibanInvalid": "This IBAN is not valid. Check the country code, the check digits and the length.",
         "bicInvalid": "BIC / SWIFT must be 8 or 11 letters or digits.",
-        "generic": "An unexpected error occurred. Please try again."
+        "generic": "An unexpected error occurred. Please try again.",
+        "legalNameTooLong": "The legal name can be up to {max} characters.",
+        "addressTooLong": "The address can be up to {max} characters.",
+        "paymentTermsTooLong": "The payment terms can be up to {max} characters."
       },
       "maskedFieldHint": "Stored and hidden. Type a new value to replace it; leave empty to keep it.",
       "removeStoredValue": "Remove",
@@ -2665,7 +2695,7 @@
     "subtitle": "Construction progress photos and videos for this project.",
     "addPhotos": "Add media",
     "uploading": "Uploading",
-    "uploadSuccess": "Photos uploaded",
+    "uploadSuccess": "{count, plural, one {# file uploaded} other {# files uploaded}}",
     "empty": {
       "title": "No media yet",
       "description": "Upload photos and videos to track the build visually."
@@ -2675,15 +2705,16 @@
       "placeholder": "Describe what's shown…"
     },
     "capturedAt": {
-      "label": "Date taken"
+      "label": "Date taken",
+      "batchHint": "Optional: leave empty to keep each file's own capture date."
     },
     "edit": "Edit",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
     "deleteConfirm": {
-      "title": "Delete photo?",
-      "description": "This photo will be permanently deleted. This cannot be undone."
+      "title": "{kind, select, video {Delete video?} other {Delete photo?}}",
+      "description": "{kind, select, video {This video will be removed from the project. It is kept for 30 days, then permanently erased; it cannot be restored from the app.} other {This photo will be removed from the project. It is kept for 30 days, then permanently erased; it cannot be restored from the app.}}"
     },
     "errors": {
       "oversize": "File too large (max 25 MB)",
@@ -2693,10 +2724,10 @@
       "rateLimited": "Too many uploads — please slow down",
       "server": "Upload failed — please try again",
       "forbidden": "You do not have permission to perform this action",
-      "invalidImage": "Invalid image — the file could not be processed",
+      "invalidImage": "Invalid file — the photo or video could not be processed",
       "updateFailed": "Couldn't save the changes — please try again",
-      "deleteFailed": "Couldn't delete the photo — please try again",
-      "notFound": "This photo no longer exists",
+      "deleteFailed": "{kind, select, video {Couldn't delete the video — please try again} other {Couldn't delete the photo — please try again}}",
+      "notFound": "{kind, select, video {This video no longer exists} other {This photo no longer exists}}",
       "validation": "Check the caption and date, then try again"
     },
     "loadError": {
@@ -2706,7 +2737,7 @@
     },
     "loadMore": "Load more",
     "saved": "Changes saved",
-    "deleted": "Photo deleted",
+    "deleted": "{kind, select, video {Video deleted} other {Photo deleted}}",
     "close": "Close"
   },
   "chiffrage": {
@@ -3160,6 +3191,9 @@
     "confirmBody": "Every worker pointing at {source} moves to {target}, and {source} is permanently deleted. This cannot be undone.",
     "merged": "Merged “{source}” into “{target}”.",
     "mergedDetail": "{n, plural, one {# worker} other {# workers}} reassigned. Source deleted.",
-    "failed": "The merge failed. Please try again."
+    "failed": "The merge failed. Please try again.",
+    "mergedProfiles": "Company profiles: {moved} moved, {merged} merged.",
+    "mergedAccount": "The sign-in account is now linked to the target.",
+    "conflictAccounts": "These two records are linked to two different accounts: they are not the same person."
   }
 }

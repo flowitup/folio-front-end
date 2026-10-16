@@ -160,7 +160,8 @@ describe("DocumentsList", () => {
       // Check for MB formatted size - 2048000 / (1024*1024) ≈ 1.95 MB -> displays as 2.0 MB
       expect(within(desktop).getByText(/2\.0.*MB/)).toBeDefined();
       expect(within(desktop).getByText("Alice Brown")).toBeDefined();
-      expect(within(desktop).getByText("20/03/2024")).toBeDefined();
+      // Date and time (local timezone), so same-day uploads stay distinguishable.
+      expect(within(desktop).getByText(/^20\/03\/2024 \d{2}:\d{2}$/)).toBeDefined();
     });
 
     it("formats sizes correctly (B, KB, MB, GB)", () => {

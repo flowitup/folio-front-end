@@ -151,6 +151,39 @@ describe("ProfileForm — submit", () => {
   });
 });
 
+describe("ProfileForm — QA3 name rules and expired session", () => {
+  it("refuses an empty name without calling the API", async () => {
+    const { toast } = await import("sonner");
+    render(<ProfileForm />);
+    fireEvent.change(screen.getByLabelText(/display name/i), { target: { value: "   " } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+    });
+    expect(toast.error).toHaveBeenCalledWith("Your name cannot be empty.");
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("caps the name at 80 characters", () => {
+    render(<ProfileForm />);
+    expect(screen.getByLabelText(/display name/i)).toHaveAttribute("maxLength", "80");
+  });
+
+  it("says the session expired and offers to sign in again", async () => {
+    mockUpdate.mockResolvedValueOnce({ success: false, error: "unauthorized" });
+    const { toast } = await import("sonner");
+    render(<ProfileForm />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+    });
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "Your session has expired. Sign in again to save.",
+        expect.objectContaining({ action: expect.objectContaining({ label: "Sign in again" }) })
+      )
+    );
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Change number
 // ---------------------------------------------------------------------------

@@ -14,7 +14,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Search } from "lucide-react";
+import { AlertCircle, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AnalysisCard } from "./analysis-card";
@@ -39,6 +39,8 @@ type Props = {
   members: Member[];
   /** Write rights (effective `project:update`) — hides the upload control. */
   canManage: boolean;
+  /** The server could not read the list: show an error with a retry, not "no analyses yet". */
+  initialLoadFailed?: boolean;
 };
 
 // ---- Helpers ----
@@ -57,6 +59,7 @@ export function AnalysesPanel({
   availableTags: serverTags,
   members,
   canManage,
+  initialLoadFailed = false,
 }: Props) {
   const t = useTranslations("analyses");
 
@@ -65,6 +68,9 @@ export function AnalysesPanel({
   const [total, setTotal] = useState(initialTotal);
   const [page, setPage] = useState(1);
   const perPage = 24;
+  const [loadFailed, setLoadFailed] = useState(initialLoadFailed);
+  // Bumped by "Retry" to run the list request again with the same filters.
+  const [reloadKey, setReloadKey] = useState(0);
 
   // ---- Search/filter state ----
   const [searchInput, setSearchInput] = useState("");
@@ -109,7 +115,9 @@ export function AnalysesPanel({
       if (result.ok) {
         setList(result.data.items);
         setTotal(result.data.total);
+        setLoadFailed(false);
       } else {
+        setLoadFailed(true);
         toast.error(t("toast.listLoadError"));
       }
     }
@@ -120,7 +128,7 @@ export function AnalysesPanel({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, debouncedQuery, selectedTags, page]);
+  }, [projectId, debouncedQuery, selectedTags, page, reloadKey]);
 
   // ---- Available tags ----
   // The project's full vocabulary comes from the server, unioned with tags on
@@ -228,8 +236,17 @@ export function AnalysesPanel({
         </div>
       </div>
 
-      {/* Grid / empty state */}
-      {list.length === 0 ? (
+      {/* Grid / load error / empty state. A list that could not be read is
+          not an empty library. */}
+      {loadFailed && list.length === 0 ? (
+        <div role="alert" className="flex flex-col items-center gap-3 py-16 text-center">
+          <AlertCircle className="size-10 text-muted-foreground/40" aria-hidden />
+          <p className="text-sm font-medium">{t("toast.listLoadError")}</p>
+          <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
+            {t("loadErrorRetry")}
+          </Button>
+        </div>
+      ) : list.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-16 text-center">
           <p className="text-sm font-medium">{t("empty.title")}</p>
           <p className="text-sm text-muted-foreground">{t("empty.body")}</p>

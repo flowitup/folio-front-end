@@ -224,7 +224,7 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
           autoComplete="name"
           required
           minLength={1}
-          maxLength={100}
+          maxLength={80}
           value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={isSendingCode}

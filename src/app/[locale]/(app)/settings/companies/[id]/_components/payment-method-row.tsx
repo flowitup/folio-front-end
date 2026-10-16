@@ -99,6 +99,15 @@ export function PaymentMethodRow({
       setIsEditing(false);
       return;
     }
+    // Changing the purse re-files every past expense paid with this method:
+    // say how many before doing it.
+    if (
+      (companyPaymentChanged || personalPaymentChanged) &&
+      method.usageCount > 0 &&
+      !window.confirm(t("confirmPurseChange", { count: method.usageCount }))
+    ) {
+      return;
+    }
     savingRef.current = true;
     setIsSaving(true);
     try {

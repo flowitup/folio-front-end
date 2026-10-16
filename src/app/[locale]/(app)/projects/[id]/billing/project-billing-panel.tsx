@@ -20,6 +20,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BillingStatusBadge } from "@/components/billing/billing-status-badge";
+import { projectBackQuery } from "@/lib/billing/back-target";
 import { ApiError } from "@/lib/api/http";
 import { fetchProjectBillingDocuments } from "@/lib/api/billing/project-billing-documents";
 import { kindToSegment } from "@/lib/billing/url-helpers";
@@ -31,8 +32,9 @@ type LoadState =
   | { status: "error"; reason: "load" | "forbidden" }
   | { status: "ready"; documents: ProjectBillingDocumentSummary[] };
 
-function documentHref(doc: ProjectBillingDocumentSummary): string {
-  return `/billing/${kindToSegment(doc.kind)}/${doc.id}`;
+// The document's back arrow returns to this tab, not the company-wide list.
+function documentHrefFor(doc: ProjectBillingDocumentSummary, projectId: string): string {
+  return `/billing/${kindToSegment(doc.kind)}/${doc.id}?${projectBackQuery(projectId)}`;
 }
 
 interface ProjectBillingPanelProps {
@@ -44,6 +46,7 @@ export function ProjectBillingPanel({ projectId }: ProjectBillingPanelProps) {
   const [state, setState] = useState<LoadState>({ status: "loading" });
   // Bumped by "Try again" to re-run the fetch effect.
   const [attempt, setAttempt] = useState(0);
+  const documentHref = (doc: ProjectBillingDocumentSummary) => documentHrefFor(doc, projectId);
 
   useEffect(() => {
     const controller = new AbortController();

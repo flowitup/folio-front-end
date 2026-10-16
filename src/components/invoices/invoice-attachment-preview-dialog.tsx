@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useEffectEvent, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Download, Loader2 } from "lucide-react";
 import {
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { fetchAttachmentBlob, fetchAttachmentBlobUrl } from "@/lib/api/invoice-api";
 import type { InvoiceAttachment } from "@/types/invoice";
 import { PdfCanvasViewer } from "@/app/[locale]/(app)/projects/[id]/documents/pdf-canvas-viewer";
+import { ApiError } from "@/lib/api/http";
 import {
   ResizableDialogHandles,
   type DialogBounds,
@@ -28,6 +29,12 @@ export type PreviewableAttachment = Pick<InvoiceAttachment, "id" | "filename" | 
 type Props = {
   attachment: PreviewableAttachment | null;
   onClose: () => void;
+  /**
+   * The file no longer exists (404, deleted elsewhere). The dialog closes
+   * itself; the caller says so and refreshes its list. Without it, the dialog
+   * still closes and shows a toast.
+   */
+  onGone?: (attachment: PreviewableAttachment) => void;
 };
 
 function isPdf(mime: string): boolean {
@@ -38,8 +45,16 @@ function isImage(mime: string): boolean {
   return mime.startsWith("image/");
 }
 
-export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
+export function InvoiceAttachmentPreviewDialog({ attachment, onClose, onGone }: Props) {
   const t = useTranslations("invoices.attachmentPreview");
+  // The image the browser could not decode (e.g. HEIC outside Safari): the
+  // "no preview — download" panel is shown instead of an empty area.
+  const [undecodableId, setUndecodableId] = useState<string | null>(null);
+  // Reads the latest callbacks without making them load dependencies.
+  const handleGone = useEffectEvent((gone: PreviewableAttachment) => {
+    onGone?.(gone);
+    onClose();
+  });
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
@@ -78,6 +93,11 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
         }
       } catch (err: unknown) {
         if (controller.signal.aborted) return;
+        // Gone (deleted elsewhere): nothing left to show or download.
+        if (err instanceof ApiError && err.status === 404) {
+          handleGone(attachment!);
+          return;
+        }
         const msg = err instanceof Error ? err.message : String(err);
         setError(msg);
       } finally {
@@ -123,7 +143,7 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
 
   const mime = attachment?.mime_type ?? "";
   const showPdf = pdfData && isPdf(mime);
-  const showImage = blobUrl && isImage(mime);
+  const showImage = blobUrl && isImage(mime) && undecodableId !== attachment?.id;
 
   const resizeStyle: CSSProperties | undefined = bounds
     ? { top: bounds.y, left: bounds.x, width: bounds.w, height: bounds.h, transform: "none", translate: "none", maxWidth: "none" }
@@ -183,6 +203,7 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
               src={blobUrl}
               alt={attachment?.filename ?? ""}
               className="max-h-full max-w-full mx-auto rounded object-contain"
+              onError={() => setUndecodableId(attachment?.id ?? null)}
             />
           )}
 

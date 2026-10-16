@@ -62,6 +62,8 @@ export function PhotoLightbox({
 }: Props) {
   const t = useTranslations("photos");
   const format = useFormatter();
+  // "video" or "photo": the copy names what is actually open.
+  const kind = isVideo(photo?.contentType) ? "video" : "photo";
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const revokeRef = useRef<(() => void) | null>(null);
@@ -164,8 +166,14 @@ export function PhotoLightbox({
       onUpdated(result.data);
       setEditing(false);
       toast.success(t("saved"));
+    } else if (result.error === "notFound") {
+      // Deleted by someone else meanwhile: take it out of the gallery too.
+      setEditing(false);
+      onDeleted(photo.id);
+      onClose();
+      toast.info(t("errors.notFound", { kind }));
     } else {
-      toast.error(t(`errors.${errorKeys[result.error] ?? "updateFailed"}`));
+      toast.error(t(`errors.${errorKeys[result.error] ?? "updateFailed"}`, { kind }));
     }
   }
 
@@ -174,13 +182,16 @@ export function PhotoLightbox({
     setDeleting(true);
     const result = await deletePhotoAction(projectId, photo.id);
     setDeleting(false);
-    if (result.ok) {
+    if (result.ok || result.error === "notFound") {
+      // Already deleted by someone else: the outcome is the same, so the
+      // lightbox closes and the tile leaves the gallery either way.
       setDeleteOpen(false);
       onDeleted(photo.id);
       onClose();
-      toast.success(t("deleted"));
+      if (result.ok) toast.success(t("deleted", { kind }));
+      else toast.info(t("errors.notFound", { kind }));
     } else {
-      toast.error(t(`errors.${errorKeys[result.error] ?? "deleteFailed"}`));
+      toast.error(t(`errors.${errorKeys[result.error] ?? "deleteFailed"}`, { kind }));
     }
   }
 
@@ -341,9 +352,9 @@ export function PhotoLightbox({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("deleteConfirm.title")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteConfirm.title", { kind })}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("deleteConfirm.description")}
+              {t("deleteConfirm.description", { kind })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

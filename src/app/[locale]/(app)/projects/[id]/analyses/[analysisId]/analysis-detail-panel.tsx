@@ -3,8 +3,8 @@
 /**
  * AnalysisDetailPanel — "reading room" layout: the sandboxed viewer reads
  * full-height on the left, while title, summary, tags, uploader, source and
- * the edit/delete actions live in a meta rail on the right (stacked above the
- * viewer on small screens).
+ * the edit/delete actions live in a meta rail on the right. Below lg the
+ * report comes first, sized to the screen, and the rail follows it.
  */
 
 import { useState } from "react";
@@ -59,26 +59,43 @@ export function AnalysisDetailPanel({
   const resolvedUploader = uploaderName || t("card.unknownUploader");
 
   function handleDeleted() {
-    router.push(`/projects/${projectId}/analyses`);
+    // replace, not push: Back must not return to the deleted analysis' URL.
+    router.replace(`/projects/${projectId}/analyses`);
   }
+
+  const reportUrl = `/analysis-report/${encodeURIComponent(projectId)}/${encodeURIComponent(analysis.id)}`;
 
   return (
     <>
-      <Link
-        prefetch={false}
-        href={`/projects/${projectId}/analyses`}
-        className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        {t("title")}
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          prefetch={false}
+          href={`/projects/${projectId}/analyses`}
+          className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" aria-hidden />
+          {t("title")}
+        </Link>
+        {/* The report alone in its own tab: no nested scrolling on phones. */}
+        <a
+          href={reportUrl}
+          target="_blank"
+          rel="noopener"
+          className="inline-flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ExternalLink className="size-4 shrink-0" aria-hidden />
+          <span className="truncate">{t("detail.openFullScreen")}</span>
+        </a>
+      </div>
 
-      {/* Reader + meta rail. On small screens the rail stacks above the
-          viewer so the report's identity is visible before the long iframe. */}
+      {/* Reader + meta rail. Below lg the report comes first, sized to the
+          screen, so it is readable without scrolling past the metadata; the
+          title is shown above it and the rail follows. */}
+      <h1 className="font-display text-lg font-medium leading-snug lg:sr-only">{analysis.title}</h1>
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
         {/* Viewer — keyed by analysis id so switching analyses remounts it
             cleanly (see the AnalysisViewer doc comment). */}
-        <div className="order-2 min-h-[500px] flex-1 lg:order-1">
+        <div className="h-[calc(100dvh-14rem)] min-h-[420px] lg:h-auto lg:min-h-[500px] lg:flex-1">
           <AnalysisViewer
             key={analysis.id}
             projectId={projectId}
@@ -88,9 +105,12 @@ export function AnalysisDetailPanel({
         </div>
 
         {/* Meta rail */}
-        <div className="order-1 flex shrink-0 flex-col gap-3 lg:order-2 lg:w-[300px] lg:overflow-y-auto">
+        <div className="flex shrink-0 flex-col gap-3 lg:w-[300px] lg:overflow-y-auto">
           <div className="flex flex-col gap-2.5 rounded-[var(--radius)] border bg-card p-4 shadow-sm">
-            <h1 className="font-display text-lg font-medium leading-snug">{analysis.title}</h1>
+            {/* Visual copy of the h1 above, which is screen-reader only on lg. */}
+            <p aria-hidden className="hidden font-display text-lg font-medium leading-snug lg:block">
+              {analysis.title}
+            </p>
             {analysis.summary && (
               <p className="text-xs leading-relaxed text-muted-foreground">{analysis.summary}</p>
             )}

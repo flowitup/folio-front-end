@@ -74,6 +74,7 @@ import type { ProjectSummary } from "@/lib/api/projects-server";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { isDevisLockedByFacture } from "@/lib/billing/devis-lock";
+import { useBillingBackPath } from "@/lib/billing/back-target";
 import { addDaysToDayKey, parisDayKey } from "@/lib/utils/paris-day";
 import { toIsoDate, toItemPayload } from "@/lib/billing/document-payload";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
@@ -327,7 +328,11 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
 
   /** Translated message for a failed save — never the API's raw (English,
    * field-path) validation text. */
-  function saveErrorMessage(error: { code: string }): string {
+  function saveErrorMessage(error: { code: string; message?: string }): string {
+    // An imported document's issue date must stay in its number's year: say
+    // so instead of the generic "some fields are invalid".
+    const numberYear = /issue_date must (?:stay|be) in (\d{4})/.exec(error.message ?? "")?.[1];
+    if (numberYear) return tForm("errors.issueDateYear", { year: numberYear });
     if (error.code === "validation") return tForm("errors.invalidInput");
     if (error.code === "forbidden") return tForm("errors.forbidden");
     if (error.code === "company_profile_missing") return tForm("errors.companyProfileMissing");
@@ -543,7 +548,8 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
 
   const kindLabel = tBilling(`${kind}.list.title`);
   const newLabel = tBilling(`${kind}.list.new`);
-  const listPath = `/${locale}/billing/${kindToSegment(kind)}`;
+  // Back and Cancel return to the project's Facturation tab when opened from it.
+  const listPath = useBillingBackPath(`/${locale}/billing/${kindToSegment(kind)}`, locale);
 
   // Edit mode: issuer is snapshotted at creation — use the stored issuer_legal_name directly.
   const editIssuerName = isEdit ? (props.document.issuer_legal_name ?? null) : null;

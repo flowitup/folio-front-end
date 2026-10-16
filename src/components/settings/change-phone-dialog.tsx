@@ -23,6 +23,7 @@ import { CodeBoxes, CODE_LENGTH } from "@/components/auth/CodeBoxes";
 import { FrenchPhoneInput } from "@/components/auth/FrenchPhoneInput";
 import { formatFrenchPhone, normalizeFrenchPhone } from "@/lib/auth/phone-number";
 import type { User } from "@/lib/auth/types";
+import { signInAgain } from "@/lib/auth/sign-in-again";
 import {
   confirmPhoneChangeAction,
   requestPhoneChangeCodeAction,
@@ -51,6 +52,8 @@ function errorKeyFor(error: RequestPhoneChangeError | ConfirmPhoneChangeError): 
       return "errorSmsFailed";
     case "invalid_code":
       return "errorInvalidCode";
+    case "unauthorized":
+      return "errorSessionExpired";
     default:
       return "errorFailed";
   }
@@ -205,7 +208,21 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
               }}
             >
               <AlertCircle size={14} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
-              <span>{t(errorKey, { minutes: retryAfterMinutes })}</span>
+              <span>
+                {t(errorKey, { minutes: retryAfterMinutes })}
+                {errorKey === "errorSessionExpired" && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      className="font-medium underline"
+                      onClick={() => signInAgain("/settings")}
+                    >
+                      {t("signInAgain")}
+                    </button>
+                  </>
+                )}
+              </span>
             </div>
           )}
 

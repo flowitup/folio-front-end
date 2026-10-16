@@ -364,7 +364,7 @@
         "unknown": "Đã xảy ra lỗi. Vui lòng thử lại."
       }
     },
-    "errorInvalidProfile": "Kiểm tra tên của bạn: tên tối đa 255 ký tự.",
+    "errorInvalidProfile": "Kiểm tra lại tên: tối đa 80 ký tự.",
     "changePhone": {
       "action": "Đổi số điện thoại",
       "title": "Đổi số điện thoại",
@@ -383,8 +383,13 @@
       "errorHourlyLimit": "Đã yêu cầu quá nhiều mã cho số này. Vui lòng thử lại sau {minutes} phút.",
       "errorSmsFailed": "Không thể gửi SMS. Vui lòng thử lại sau.",
       "errorInvalidCode": "Mã không đúng hoặc đã hết hạn",
-      "errorFailed": "Không thể đổi số điện thoại. Vui lòng thử lại."
-    }
+      "errorFailed": "Không thể đổi số điện thoại. Vui lòng thử lại.",
+      "errorSessionExpired": "Phiên đăng nhập đã hết hạn.",
+      "signInAgain": "Đăng nhập lại"
+    },
+    "errorNameRequired": "Tên của bạn không được để trống.",
+    "errorSessionExpired": "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để lưu.",
+    "signInAgain": "Đăng nhập lại"
   },
   "paymentMethods": {
     "title": "Phương thức thanh toán",
@@ -412,7 +417,9 @@
       "validation": "Dữ liệu không hợp lệ. Vui lòng kiểm tra và thử lại.",
       "conflict": "Đã xảy ra xung đột. Vui lòng thử lại.",
       "rate_limited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
-      "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+      "builtin_company_flag": "Phương thức mặc định của doanh nghiệp luôn do doanh nghiệp chi trả.",
+      "refund_tracked_expenses": "Có {count} khoản chi trả bằng phương thức này đang được theo dõi hoàn tiền: hãy bỏ theo dõi hoàn tiền trước khi đánh dấu do doanh nghiệp chi trả."
     },
     "toasts": {
       "created": "Đã thêm phương thức thanh toán",
@@ -425,7 +432,8 @@
     "paidByCompany": "Công ty thanh toán",
     "personalPayment": "Thanh toán cá nhân",
     "loadError": "Không tải được phương thức thanh toán. Vui lòng thử lại.",
-    "saveEditAria": "Lưu thay đổi"
+    "saveEditAria": "Lưu thay đổi",
+    "confirmPurseChange": "{count} khoản chi trước đây trả bằng phương thức này sẽ chuyển sang quỹ khác. Tiếp tục?"
   },
   "errors": {
     "unauthorized": "Không được phép",
@@ -439,7 +447,8 @@
       "title": "Đã xảy ra lỗi",
       "body": "Vui lòng tải lại trang. Nếu sự cố vẫn tiếp diễn, hãy đăng nhập lại.",
       "refresh": "Tải lại",
-      "login": "Đến trang đăng nhập"
+      "login": "Đến trang đăng nhập",
+      "retry": "Thử lại"
     }
   },
   "invoices": {
@@ -1651,7 +1660,8 @@
         "dueBeforeIssue": "Hạn thanh toán không được trước ngày phát hành.",
         "forbidden": "Bạn không có quyền thực hiện thao tác này.",
         "companyProfileMissing": "Hãy hoàn thiện hồ sơ công ty trước khi tạo chứng từ thanh toán.",
-        "textTooLong": "Trường “{field}” không được vượt quá {max} ký tự."
+        "textTooLong": "Trường “{field}” không được vượt quá {max} ký tự.",
+        "issueDateYear": "Ngày phát hành phải nằm trong năm {year}, năm của số chứng từ."
       },
       "toast": {
         "documentSaved": "Đã lưu tài liệu.",
@@ -1899,7 +1909,8 @@
         "delete": "Xóa",
         "downloadError": "Tải xuống thất bại — vui lòng thử lại",
         "rename": "Đổi tên"
-      }
+      },
+      "retry": "Thử lại"
     },
     "kinds": {
       "pdf": "PDF",
@@ -1927,7 +1938,17 @@
       "anyUploader": "Bất kỳ ai",
       "formerMember": "Thành viên cũ",
       "uploader": "Người tải lên",
-      "reset": "Đặt lại"
+      "reset": "Đặt lại",
+      "sortLabel": "Sắp xếp theo",
+      "sortOptions": {
+        "newest": "Mới nhất",
+        "oldest": "Cũ nhất",
+        "nameAsc": "Tên (A → Z)",
+        "nameDesc": "Tên (Z → A)",
+        "sizeDesc": "Lớn nhất",
+        "sizeAsc": "Nhỏ nhất",
+        "uploaderAsc": "Người tải lên"
+      }
     },
     "preview": {
       "fallback": "Không thể xem trước loại tệp này. Hãy tải xuống để xem.",
@@ -1939,7 +1960,7 @@
     },
     "delete": {
       "title": "Xóa tài liệu?",
-      "body": "Bạn chắc chắn muốn xóa \"{filename}\"? Không thể khôi phục từ giao diện.",
+      "body": "Xóa \"{filename}\"? Tài liệu sẽ bị gỡ khỏi dự án, được giữ 30 ngày rồi bị xóa vĩnh viễn; không thể khôi phục từ ứng dụng.",
       "cancel": "Hủy",
       "confirm": "Xóa",
       "confirming": "Đang xóa…",
@@ -1968,7 +1989,8 @@
       "errorForbidden": "Bạn không có quyền đổi tên tài liệu trong dự án này",
       "errorServer": "Đổi tên thất bại",
       "errorExtension": "Phần mở rộng phải giữ nguyên là {extension}",
-      "errorInvalid": "Không thể dùng tên này. Hãy kiểm tra và thử lại."
+      "errorInvalid": "Không thể dùng tên này. Hãy kiểm tra và thử lại.",
+      "errorDuplicate": "Đã có tài liệu khác mang tên này. Hãy chọn tên khác."
     },
     "restricted": {
       "title": "Vai trò của bạn không truy cập được tài liệu",
@@ -1985,7 +2007,8 @@
       "uploadedByLabel": "Người tải lên",
       "addedLabel": "Ngày thêm",
       "sourceLabel": "Nguồn",
-      "inThisLibrary": "Trong thư viện này"
+      "inThisLibrary": "Trong thư viện này",
+      "openFullScreen": "Mở toàn màn hình"
     },
     "empty": {
       "title": "Chưa có báo cáo phân tích nào",
@@ -2005,7 +2028,8 @@
       "cancel": "Hủy",
       "success": "Đã tải lên phân tích",
       "tooLarge": "Tệp quá lớn (tối đa 2 MB)",
-      "invalidFile": "Tệp không được hỗ trợ — chọn một báo cáo .html"
+      "invalidFile": "Tệp không được hỗ trợ — chọn một báo cáo .html",
+      "removeTag": "Gỡ nhãn {tag}"
     },
     "search": {
       "placeholder": "Tìm kiếm phân tích…"
@@ -2031,12 +2055,13 @@
       "cancel": "Hủy",
       "save": "Lưu",
       "saving": "Đang lưu…",
-      "success": "Đã cập nhật phân tích"
+      "success": "Đã cập nhật phân tích",
+      "removeTag": "Gỡ nhãn {tag}"
     },
     "delete": {
       "trigger": "Xóa",
       "confirmTitle": "Xóa phân tích?",
-      "confirmBody": "Bạn có chắc chắn muốn xóa \"{title}\" không? Hành động này không thể hoàn tác từ giao diện.",
+      "confirmBody": "Xóa \"{title}\"? Phân tích sẽ bị gỡ khỏi dự án, được giữ 30 ngày rồi bị xóa vĩnh viễn; không thể khôi phục từ ứng dụng.",
       "cancel": "Hủy",
       "confirm": "Xóa",
       "confirming": "Đang xóa…",
@@ -2052,7 +2077,8 @@
       "generic": "Đã xảy ra lỗi — vui lòng thử lại",
       "invalidSourceUrl": "Liên kết nguồn phải bắt đầu bằng http:// hoặc https://",
       "tooManyTags": "Mỗi phân tích chỉ có tối đa 20 nhãn",
-      "tagTooLong": "Mỗi nhãn chỉ dài tối đa 100 ký tự"
+      "tagTooLong": "Mỗi nhãn chỉ dài tối đa 100 ký tự",
+      "invalidEncoding": "Không nhận diện được bảng mã của báo cáo — hãy lưu lại ở dạng UTF-8 rồi thử lại"
     },
     "toast": {
       "listLoadError": "Không tải được danh sách phân tích"
@@ -2060,7 +2086,8 @@
     "pagination": {
       "prev": "Trước",
       "next": "Tiếp"
-    }
+    },
+    "loadErrorRetry": "Thử lại"
   },
   "members": {
     "allProjectsAccess": "truy cập mọi dự án",
@@ -2320,7 +2347,10 @@
         "tvaInvalid": "Mã số thuế GTGT phải gồm 2 đến 16 chữ cái hoặc chữ số, ví dụ FR40552100554.",
         "ibanInvalid": "Số IBAN không hợp lệ. Hãy kiểm tra mã quốc gia, chữ số kiểm tra và độ dài.",
         "bicInvalid": "Mã BIC / SWIFT phải gồm 8 hoặc 11 chữ cái hoặc chữ số.",
-        "generic": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
+        "generic": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.",
+        "legalNameTooLong": "Tên pháp lý tối đa {max} ký tự.",
+        "addressTooLong": "Địa chỉ tối đa {max} ký tự.",
+        "paymentTermsTooLong": "Điều khoản thanh toán tối đa {max} ký tự."
       },
       "maskedFieldHint": "Đã lưu và được ẩn. Nhập giá trị mới để thay thế; để trống để giữ nguyên.",
       "removeStoredValue": "Xóa",
@@ -2665,7 +2695,7 @@
     "subtitle": "Ảnh và video tiến độ thi công của dự án.",
     "addPhotos": "Thêm phương tiện",
     "uploading": "Đang tải lên",
-    "uploadSuccess": "Đã tải ảnh lên thành công",
+    "uploadSuccess": "Đã tải lên {count} tệp",
     "empty": {
       "title": "Chưa có phương tiện nào",
       "description": "Tải ảnh và video lên để theo dõi quá trình xây dựng bằng hình ảnh."
@@ -2675,15 +2705,16 @@
       "placeholder": "Mô tả nội dung ảnh…"
     },
     "capturedAt": {
-      "label": "Ngày chụp"
+      "label": "Ngày chụp",
+      "batchHint": "Không bắt buộc: để trống để giữ ngày chụp riêng của từng tệp."
     },
     "edit": "Chỉnh sửa",
     "save": "Lưu",
     "cancel": "Hủy",
     "delete": "Xóa",
     "deleteConfirm": {
-      "title": "Xóa ảnh?",
-      "description": "Ảnh này sẽ bị xóa vĩnh viễn. Thao tác này không thể hoàn tác."
+      "title": "{kind, select, video {Xóa video?} other {Xóa ảnh?}}",
+      "description": "{kind, select, video {Video này sẽ bị gỡ khỏi dự án. Video được giữ 30 ngày rồi bị xóa vĩnh viễn; không thể khôi phục từ ứng dụng.} other {Ảnh này sẽ bị gỡ khỏi dự án. Ảnh được giữ 30 ngày rồi bị xóa vĩnh viễn; không thể khôi phục từ ứng dụng.}}"
     },
     "errors": {
       "oversize": "Tệp quá lớn (tối đa 25 MB)",
@@ -2693,10 +2724,10 @@
       "rateLimited": "Tải lên quá nhiều — vui lòng chờ một lúc",
       "server": "Tải lên thất bại — vui lòng thử lại",
       "forbidden": "Bạn không có quyền thực hiện thao tác này",
-      "invalidImage": "Ảnh không hợp lệ — tệp không thể được xử lý",
+      "invalidImage": "Tệp không hợp lệ — không thể xử lý ảnh hoặc video",
       "updateFailed": "Không thể lưu thay đổi — vui lòng thử lại",
-      "deleteFailed": "Không thể xóa ảnh — vui lòng thử lại",
-      "notFound": "Ảnh này không còn tồn tại",
+      "deleteFailed": "{kind, select, video {Không thể xóa video — vui lòng thử lại} other {Không thể xóa ảnh — vui lòng thử lại}}",
+      "notFound": "{kind, select, video {Video này không còn tồn tại} other {Ảnh này không còn tồn tại}}",
       "validation": "Hãy kiểm tra chú thích và ngày, rồi thử lại"
     },
     "loadError": {
@@ -2706,7 +2737,7 @@
     },
     "loadMore": "Tải thêm",
     "saved": "Đã lưu thay đổi",
-    "deleted": "Đã xóa ảnh",
+    "deleted": "{kind, select, video {Đã xóa video} other {Đã xóa ảnh}}",
     "close": "Đóng"
   },
   "chiffrage": {
@@ -3160,6 +3191,9 @@
     "confirmBody": "Mọi công nhân gắn với {source} chuyển sang {target}, và {source} bị xóa vĩnh viễn. Không thể hoàn tác.",
     "merged": "Đã gộp “{source}” vào “{target}”.",
     "mergedDetail": "Đã chuyển {n} công nhân. Đã xóa nguồn.",
-    "failed": "Gộp thất bại. Vui lòng thử lại."
+    "failed": "Gộp thất bại. Vui lòng thử lại.",
+    "mergedProfiles": "Hồ sơ doanh nghiệp: chuyển {moved}, gộp {merged}.",
+    "mergedAccount": "Tài khoản đăng nhập giờ đã liên kết với hồ sơ đích.",
+    "conflictAccounts": "Hai hồ sơ này liên kết với hai tài khoản khác nhau: không phải cùng một người."
   }
 }

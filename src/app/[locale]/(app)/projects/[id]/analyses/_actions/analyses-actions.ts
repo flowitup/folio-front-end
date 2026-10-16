@@ -59,6 +59,7 @@ function classifyBackendError(err: unknown): string {
     // Only a file problem is a file error; a metadata refusal (BadRequest)
     // is told apart from its message, also in the Edit dialog.
     const code = e.body?.error;
+    if (code === "InvalidEncoding") return "invalidEncoding";
     if (code === "InvalidFile" || code === "MissingFile") return "invalidFile";
     const message = e.body?.message ?? "";
     if (/source_url/i.test(message)) return "invalidSourceUrl";

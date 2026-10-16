@@ -91,11 +91,11 @@ describe("requestPhoneChangeCodeAction", () => {
     });
   });
 
-  it("fails without a session", async () => {
+  it("fails without a session, as an expired session", async () => {
     mockAuthHeader.mockResolvedValueOnce({});
     await expect(requestPhoneChangeCodeAction("0698765432")).resolves.toEqual({
       success: false,
-      error: "unknown",
+      error: "unauthorized",
     });
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -149,7 +149,8 @@ describe("confirmPhoneChangeAction", () => {
     [400, { error: "ValidationError" }, "invalid_phone"],
     [409, {}, "phone_taken"],
     [429, {}, "throttled"],
-    [401, {}, "unknown"],
+    // An expired session is said as such (QA3 auth-onboarding-11), not "try again".
+    [401, {}, "unauthorized"],
     [500, {}, "unknown"],
   ])("maps %i %j to %s", async (status, body, error) => {
     respond(status, body);

@@ -30,6 +30,7 @@ vi.mock("next-intl", () => ({
         editLabelAria: 'Edit "{name}"',
         deleteLabelAria: 'Delete "{name}"',
         deleteConfirmCta: "Remove",
+        confirmPurseChange: "{count} past expenses will move. Continue?",
       },
       "paymentMethods.builtins": {
         cash: "Cash",
@@ -97,6 +98,24 @@ describe("PaymentMethodRow — paidByCompany badge", () => {
   it("does NOT render paidByCompany badge when isCompanyPayment=false", () => {
     renderRow(makeMethod({ isCompanyPayment: false }));
     expect(screen.queryByText("Paid by the company")).toBeNull();
+  });
+});
+
+describe("PaymentMethodRow — purse change on a used method", () => {
+  it("asks before re-filing past expenses, and saves nothing when declined", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const onRename = vi.fn().mockResolvedValue(true);
+    renderRow(makeMethod({ usageCount: 3 }), onRename);
+    fireEvent.click(screen.getByRole("button", { name: /Edit "Wise"/i }));
+    fireEvent.click(await screen.findByLabelText("Paid by the company"));
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining("3 past expenses"));
+    expect(onRename).not.toHaveBeenCalled();
+
+    confirmSpy.mockReturnValue(true);
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(onRename).toHaveBeenCalled());
+    confirmSpy.mockRestore();
   });
 });
 

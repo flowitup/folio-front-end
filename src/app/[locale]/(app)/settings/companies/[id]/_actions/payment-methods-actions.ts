@@ -112,6 +112,15 @@ async function classifyBackendError(err: unknown): Promise<{ code: string; messa
     if (reason === "duplicate") {
       return { code: "duplicate_label", message: t("duplicate_label") };
     }
+    // The built-in company method always stays company-paid.
+    if (reason === "company_flag") {
+      return { code: "builtin_company_flag", message: t("builtin_company_flag") };
+    }
+    // Company-paid would leave refund-tracked expenses "refundable".
+    if (body["error"] === "refund_tracked_expenses") {
+      const count = typeof body["count"] === "number" ? body["count"] : 0;
+      return { code: "refund_tracked_expenses", message: t("refund_tracked_expenses", { count }) };
+    }
     return { code: "conflict", message: t("conflict") };
   }
   if (status === 400 || status === 422) {

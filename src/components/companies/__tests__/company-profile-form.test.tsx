@@ -121,6 +121,22 @@ describe("CompanyProfileForm", () => {
     expect(screen.getByText(/This IBAN is not valid/)).toBeInTheDocument();
   });
 
+  it("caps legal name, address and terms, and names an over-long field the API refused", async () => {
+    mockUpdate.mockResolvedValue({
+      ok: false,
+      error: { code: "validation", message: "Validation error.", fields: ["legal_name", "default_payment_terms"] },
+    });
+    render(<CompanyProfileForm company={makeCompany()} />);
+    const legalName = screen.getByRole("textbox", { name: /legal name/i });
+    expect(legalName).toHaveAttribute("maxLength", "255");
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    // (This mock does not fill {max}.)
+    expect(await screen.findByText(/^The legal name can be up to/)).toBeInTheDocument();
+    expect(screen.getByText(/^The payment terms can be up to/)).toBeInTheDocument();
+    expect(legalName).toHaveAttribute("aria-invalid", "true");
+  });
+
   it("removes a stored (masked) value on save, and Undo keeps it", async () => {
     render(<CompanyProfileForm company={makeCompany()} />);
 

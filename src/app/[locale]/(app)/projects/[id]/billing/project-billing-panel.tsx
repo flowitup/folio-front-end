@@ -20,10 +20,10 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BillingStatusBadge } from "@/components/billing/billing-status-badge";
+import { projectBackQuery } from "@/lib/billing/back-target";
 import { ApiError } from "@/lib/api/http";
 import { fetchProjectBillingDocuments } from "@/lib/api/billing/project-billing-documents";
 import { kindToSegment } from "@/lib/billing/url-helpers";
-import { projectBackQuery } from "@/lib/billing/back-target";
 import { formatDate, formatEUR } from "@/lib/utils/formatters";
 import type { ProjectBillingDocumentSummary } from "@/types/billing";
 

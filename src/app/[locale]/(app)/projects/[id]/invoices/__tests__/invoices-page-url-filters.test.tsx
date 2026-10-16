@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, within, fireEvent } from "@testing-library/react";
 import type { Invoice } from "@/types/invoice";
@@ -60,7 +59,6 @@ vi.mock("@/components/invoices/invoice-mobile-card", () => ({
 import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
-import { formatEUR } from "@/lib/utils/formatters";
 import { toast } from "sonner";
 import InvoicesPage from "../page";
 

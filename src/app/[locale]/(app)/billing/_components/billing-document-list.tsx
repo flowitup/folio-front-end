@@ -40,7 +40,7 @@ import { BillingImportDialog } from "@/components/billing/billing-import-dialog"
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
 import type { MyCompany } from "@/types/companies";
 import { kindToSegment } from "@/lib/billing/url-helpers";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 import { billingStatusLabel } from "@/lib/billing/status-label";
 import { formatDate } from "@/lib/utils/formatters";
 import { toIsoDate } from "@/lib/billing/document-payload";
@@ -160,7 +160,7 @@ export function BillingDocumentList({
 
   const numberLink = (doc: BillingDocument) => (
     <Link
-      href={`/billing/${kindToSegment(kind)}/${doc.id}`}
+      href={documentPath(doc)}
       className="hover:underline focus-visible:underline"
     >
       {doc.document_number}

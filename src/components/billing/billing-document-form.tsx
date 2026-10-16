@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { IssuerProfileWarning } from "@/components/billing/issuer-profile-warning";
 import {
   Select,
   SelectContent,
@@ -701,6 +702,11 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
             </Button>
           </div>
         )}
+
+      {/* The issuer's missing legal mentions, before the first devis or facture. */}
+      {!isEdit && (
+        <IssuerProfileWarning company={attachedCompanies.find((c) => c.id === selectedCompanyId)} />
+      )}
 
       {/* A devis locked by its facture is shown read-only: every field below
           is disabled, not just Save (billing-13). */}

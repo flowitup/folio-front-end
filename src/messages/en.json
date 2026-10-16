@@ -1674,6 +1674,15 @@
         "devisRejected": "The quote will be marked as rejected. You can reopen it as a draft later.",
         "confirm": "Confirm",
         "cancel": "Cancel"
+      },
+      "issuerProfile": {
+        "missing": "{company}'s profile is missing: {fields}. These details are printed on your quotes and invoices (a SIRET is mandatory on a French invoice).",
+        "complete": "Complete the company profile",
+        "fields": {
+          "siret": "SIRET",
+          "tvaNumber": "VAT number",
+          "iban": "IBAN"
+        }
       }
     },
     "editPage": {

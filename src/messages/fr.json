@@ -1674,6 +1674,15 @@
         "devisRejected": "Le devis sera marqué comme refusé. Vous pourrez le rouvrir en brouillon.",
         "confirm": "Confirmer",
         "cancel": "Annuler"
+      },
+      "issuerProfile": {
+        "missing": "La fiche de {company} n'a pas encore : {fields}. Ces mentions figurent sur vos devis et factures (le SIRET est obligatoire sur une facture).",
+        "complete": "Compléter la fiche entreprise",
+        "fields": {
+          "siret": "SIRET",
+          "tvaNumber": "n° de TVA",
+          "iban": "IBAN"
+        }
       }
     },
     "editPage": {

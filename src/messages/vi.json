@@ -1674,6 +1674,15 @@
         "devisRejected": "Báo giá sẽ được đánh dấu là bị từ chối. Bạn có thể mở lại dưới dạng bản nháp sau.",
         "confirm": "Xác nhận",
         "cancel": "Hủy"
+      },
+      "issuerProfile": {
+        "missing": "Hồ sơ của {company} còn thiếu: {fields}. Các thông tin này được in trên báo giá và hóa đơn (SIRET là bắt buộc trên hóa đơn tại Pháp).",
+        "complete": "Bổ sung hồ sơ công ty",
+        "fields": {
+          "siret": "SIRET",
+          "tvaNumber": "mã số VAT",
+          "iban": "IBAN"
+        }
       }
     },
     "editPage": {

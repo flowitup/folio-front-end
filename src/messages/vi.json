@@ -427,7 +427,7 @@
     "notFound": {
       "title": "Không tìm thấy trang",
       "body": "Trang này không tồn tại, đã bị xóa hoặc bạn không có quyền truy cập.",
-      "back": "Quay lại bảng điều khiển"
+      "back": "Về Tổng quan"
     },
     "boundary": {
       "title": "Đã xảy ra lỗi",

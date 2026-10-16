@@ -427,7 +427,7 @@
     "notFound": {
       "title": "Page not found",
       "body": "This page doesn't exist, was deleted, or you don't have access to it.",
-      "back": "Back to dashboard"
+      "back": "Back to overview"
     },
     "boundary": {
       "title": "Something went wrong",

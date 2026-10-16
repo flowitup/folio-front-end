@@ -6,12 +6,13 @@
  * `ChatReactionChips`: counts under the bubble (emoji + count); the viewer's own reaction is
  * highlighted and clicking a chip toggles the viewer's reaction to that emoji.
  * `ChatMessageDetails`: body of the popover opened from a bubble — the six-emoji picker,
- * who reacted with what, and who has read up to the message (with their read time).
+ * who reacted with what, and who has read up to the message. No time is printed next to a
+ * reader: the server only knows each member's latest visit, not when they saw this message.
  */
 
 import { useTranslations } from "next-intl";
-import type { ChatMember, ChatMessage } from "@/lib/api/chat-client";
-import { dayKeyOf, timeOf, toLocalDayKey } from "@/lib/chat/group-messages-by-day";
+import type { ChatMember, ChatMessage, ChatReaction } from "@/lib/api/chat-client";
+import { chatPersonName } from "@/lib/chat/person-name";
 import {
   aggregateReactions,
   isReactionEmoji,
@@ -24,13 +25,6 @@ import { readersOfMessage } from "@/lib/chat/seen-by";
 export type ToggleReaction = (messageId: string, emoji: ReactionEmoji) => void;
 /** Asks the panel to confirm reporting a message or blocking its sender. */
 export type ModerateMessage = (action: "report" | "block", message: ChatMessage) => void;
-
-/** `HH:mm` today, `dd/mm HH:mm` on an earlier day. */
-function readTimeLabel(iso: string): string {
-  const dayKey = dayKeyOf(iso);
-  if (dayKey === toLocalDayKey(new Date())) return timeOf(iso);
-  return `${dayKey.slice(8, 10)}/${dayKey.slice(5, 7)} ${timeOf(iso)}`;
-}
 
 export function ChatReactionChips({
   message,
@@ -114,9 +108,19 @@ export function ChatMessageDetails({
   const t = useTranslations("chat");
   const reactions = message.reactions ?? [];
   const current = reactionOf(reactions, viewerId);
-  const nameOf = (id: string) => members.find((m) => m.id === id)?.name ?? t("unknownMember");
-  const readers = readersOfMessage(message, members);
-  const canModerate = Boolean(onModerate) && !message.mine && Boolean(message.sender_id);
+  // The server names every reactor, also one who left the channel since; members are the
+  // fallback for an older server.
+  const nameOf = (reaction: ChatReaction) => {
+    const member = members.find((m) => m.id === reaction.user_id);
+    if (member) return chatPersonName(member.name, member.state, t);
+    if (reaction.user_name) return t("formerMember", { name: reaction.user_name });
+    return t("unknownMember");
+  };
+  const readers = readersOfMessage(message, members, viewerId);
+  // An erased account has nobody left to block or report.
+  const canModerate =
+    Boolean(onModerate) && !message.mine && Boolean(message.sender_id) && message.sender_state !== "deleted";
+  const senderName = chatPersonName(message.sender_name, message.sender_state, t);
 
   return (
     <div className="flex flex-col gap-3 text-[13px]" data-testid="chat-message-details">
@@ -149,7 +153,7 @@ export function ChatMessageDetails({
             {reactions.map((reaction) => (
               <li key={reaction.user_id} className="flex items-center justify-between gap-2">
                 <span className="truncate" style={{ color: "var(--ink)" }}>
-                  {nameOf(reaction.user_id)}
+                  {nameOf(reaction)}
                 </span>
                 <span>{reaction.emoji}</span>
               </li>
@@ -169,13 +173,8 @@ export function ChatMessageDetails({
         ) : (
           <ul className="flex flex-col gap-1" data-testid="chat-readers">
             {readers.map((member) => (
-              <li key={member.id} className="flex items-center justify-between gap-2">
-                <span className="truncate" style={{ color: "var(--ink)" }}>
-                  {member.name || t("unknownMember")}
-                </span>
-                <span className="num text-[11px]" style={{ color: "var(--muted)" }}>
-                  {member.last_read_at ? readTimeLabel(member.last_read_at) : null}
-                </span>
+              <li key={member.id} className="truncate" style={{ color: "var(--ink)" }}>
+                {chatPersonName(member.name, member.state, t) || t("unknownMember")}
               </li>
             ))}
           </ul>
@@ -199,7 +198,7 @@ export function ChatMessageDetails({
             data-testid="chat-block"
             onClick={() => onModerate?.("block", message)}
           >
-            {t("moderation.block", { name: message.sender_name })}
+            {t("moderation.block", { name: senderName })}
           </button>
         </section>
       ) : null}

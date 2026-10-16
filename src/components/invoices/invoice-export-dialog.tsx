@@ -12,7 +12,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { MonthField, isMonthValue } from "@/components/ui/month-picker";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { fetchInvoiceExport } from "@/lib/api/invoice-api";
 import { ApiError } from "@/lib/api/http";
+import { rateLimitMessage, retryAfterOf } from "@/lib/api/rate-limit";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import type { InvoiceExportFormat, InvoiceType } from "@/types/invoice";
 
@@ -40,8 +41,14 @@ interface InvoiceExportDialogProps {
   canViewBudget?: boolean;
 }
 
+/** The current month, "YYYY-MM": the export period defaults to it. */
+function thisMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function computeMonthSpan(from: string, to: string): number {
-  if (!from || !to) return 0;
+  if (!isMonthValue(from) || !isMonthValue(to)) return 0;
   const [fy, fm] = from.split("-").map(Number);
   const [ty, tm] = to.split("-").map(Number);
   return (ty - fy) * 12 + (tm - fm) + 1;
@@ -57,9 +64,10 @@ export function InvoiceExportDialog({
   // A released-funds filter the caller cannot export falls back to all types.
   const startType = !canViewBudget && initialType === "released_funds" ? "all" : initialType;
   const t = useTranslations("invoices.export");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
-  const [from, setFrom] = useState<string>("");
-  const [to, setTo] = useState<string>("");
+  const [from, setFrom] = useState<string>(thisMonth);
+  const [to, setTo] = useState<string>(thisMonth);
   const [format, setFormat] = useState<InvoiceExportFormat>("xlsx");
   const [typeValue, setTypeValue] = useState<InvoiceType | "all">(startType);
   const [submitting, setSubmitting] = useState(false);
@@ -72,11 +80,13 @@ export function InvoiceExportDialog({
   }
 
   const monthSpan = useMemo(() => computeMonthSpan(from, to), [from, to]);
-  const rangeInvalid = !from || !to || from > to || monthSpan > 24;
+  const formatInvalid = (!!from && !isMonthValue(from)) || (!!to && !isMonthValue(to));
+  const rangeInvalid = !from || !to || formatInvalid || from > to || monthSpan > 24;
   const canSubmit = !rangeInvalid && !submitting;
 
-  const rangeError: string | null =
-    from && to && from > to
+  const rangeError: string | null = formatInvalid
+    ? tCommon("monthPicker.formatError")
+    : from && to && from > to
       ? t("errorRangeInvalid")
       : monthSpan > 24
         ? t("errorRangeTooLarge")
@@ -84,8 +94,8 @@ export function InvoiceExportDialog({
 
   const handleClose = () => {
     if (submitting) return;
-    setFrom("");
-    setTo("");
+    setFrom(thisMonth());
+    setTo(thisMonth());
     setFormat("xlsx");
     setTypeValue(startType);
     onOpenChange(false);
@@ -110,7 +120,11 @@ export function InvoiceExportDialog({
     } catch (err) {
       // Never the raw error text ("Export failed: 403" is English-only).
       toast.error(
-        err instanceof ApiError && err.status === 403 ? t("errorForbidden") : t("errorGeneric"),
+        err instanceof ApiError && err.status === 403
+          ? t("errorForbidden")
+          : err instanceof ApiError && err.status === 429
+            ? rateLimitMessage(tCommon, retryAfterOf(err))
+            : t("errorGeneric"),
         { id: toastId },
       );
     } finally {
@@ -131,20 +145,20 @@ export function InvoiceExportDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="invoice-export-from">{t("from")}</Label>
-              <Input
+              <MonthField
                 id="invoice-export-from"
-                type="month"
                 value={from}
-                onChange={(e) => setFrom(e.target.value)}
+                onChange={setFrom}
+                aria-invalid={!!from && !isMonthValue(from)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="invoice-export-to">{t("to")}</Label>
-              <Input
+              <MonthField
                 id="invoice-export-to"
-                type="month"
                 value={to}
-                onChange={(e) => setTo(e.target.value)}
+                onChange={setTo}
+                aria-invalid={!!to && !isMonthValue(to)}
               />
             </div>
           </div>
@@ -194,6 +208,7 @@ export function InvoiceExportDialog({
                 type="button"
                 variant={format === "xlsx" ? "default" : "outline"}
                 size="sm"
+                aria-pressed={format === "xlsx"}
                 onClick={() => setFormat("xlsx")}
               >
                 {t("xlsx")}
@@ -202,6 +217,7 @@ export function InvoiceExportDialog({
                 type="button"
                 variant={format === "pdf" ? "default" : "outline"}
                 size="sm"
+                aria-pressed={format === "pdf"}
                 onClick={() => setFormat("pdf")}
               >
                 {t("pdf")}

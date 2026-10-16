@@ -15,6 +15,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { MyCompany } from "@/types/companies";
 
 // ---------------------------------------------------------------------------
@@ -138,7 +139,16 @@ vi.mock("@/components/companies/company-labor-roles-card", () => ({
 }));
 
 vi.mock("@/components/companies/join-company-dialog", () => ({
-  JoinCompanyDialog: () => <div data-testid="join-company-dialog" />,
+  JoinCompanyDialog: ({ open }: { open: boolean }) => (
+    <div data-testid="join-company-dialog" data-open={String(open)} />
+  ),
+}));
+vi.mock("@/components/companies/company-create-dialog", () => ({
+  CompanyCreateDialog: ({ open }: { open: boolean }) => (
+    <div data-testid="create-company-dialog" data-open={String(open)}>
+      {open ? <div data-testid="company-create-dialog" /> : null}
+    </div>
+  ),
 }));
 
 import { CompanySettingsSection } from "@/components/companies/company-settings-section";
@@ -201,7 +211,7 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     // Named once, by the card: a single attachment needs no picker echoing it.
     expect(screen.getAllByText("Maison Lavandou")).toHaveLength(1);
     expect(screen.getByRole("button", { name: /Set as primary/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /Detach/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Leave company/i })).toBeDefined();
 
     // Admin half.
     expect(screen.getByTestId("join-code-card")).toBeDefined();
@@ -210,13 +220,27 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     expect(screen.getByTestId("labor-roles-card").getAttribute("data-company")).toBe("c1");
   });
 
+  it("offers to create a company as well as to join one", async () => {
+    resolveWith([makeCompany({ role: "member" })]);
+    const user = userEvent.setup();
+    render(<CompanySettingsSection />);
+
+    await user.click(await screen.findByTestId("add-company"));
+    await user.click(await screen.findByRole("menuitem", { name: "Create a company" }));
+    expect(screen.getByTestId("create-company-dialog").getAttribute("data-open")).toBe("true");
+
+    await user.click(screen.getByTestId("add-company"));
+    await user.click(await screen.findByRole("menuitem", { name: "Join with a code" }));
+    expect(screen.getByTestId("join-company-dialog").getAttribute("data-open")).toBe("true");
+  });
+
   it("hides the admin tools when the caller is only a member of the company", async () => {
     resolveWith([makeCompany({ role: "member" })]);
     render(<CompanySettingsSection />);
 
     // Attachment half still renders — this is the caller's own company.
     expect(await screen.findByText("Maison Lavandou")).toBeDefined();
-    expect(screen.getByRole("button", { name: /Detach/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Leave company/i })).toBeDefined();
 
     // Admin half must not: those endpoints would 403 for a member.
     expect(screen.queryByTestId("join-code-card")).toBeNull();
@@ -394,6 +418,17 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     expect(await screen.findByText("No companies attached yet")).toBeDefined();
     expect(screen.getByRole("button", { name: /Add company/i })).toBeDefined();
     expect(screen.queryByTestId("members-table")).toBeNull();
+  });
+
+  it("lets the user create a company of their own, not only join one with a code", async () => {
+    resolveWith([makeCompany()]);
+    render(<CompanySettingsSection />);
+
+    const add = await screen.findByRole("button", { name: /Add company/i });
+    fireEvent.pointerDown(add, { button: 0, ctrlKey: false, pointerType: "mouse" });
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Create a company" }));
+
+    expect(await screen.findByTestId("company-create-dialog")).toBeDefined();
   });
 
   it("reports a failed load instead of claiming the caller has no company", async () => {

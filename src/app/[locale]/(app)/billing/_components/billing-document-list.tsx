@@ -40,9 +40,17 @@ import { BillingImportDialog } from "@/components/billing/billing-import-dialog"
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
 import type { MyCompany } from "@/types/companies";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import Link from "next/link";
+import { billingStatusLabel } from "@/lib/billing/status-label";
 import { formatDate } from "@/lib/utils/formatters";
 import { toIsoDate } from "@/lib/billing/document-payload";
-import { parsePage, parseQuery, parseStatus, statusesFor } from "./billing-list-params";
+import {
+  parsePage,
+  parseProjectId,
+  parseQuery,
+  parseStatus,
+  statusesFor,
+} from "./billing-list-params";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -97,6 +105,11 @@ export function BillingDocumentList({
   // new searchParams, keeping URL as the single source of truth for the filter.
   // An unknown ?status= is ignored (the server page does the same).
   const statusFilter = parseStatus(kind, searchParams.get("status")) ?? "all";
+  // Users issuing for several companies see each document's issuer and may
+  // narrow the list to one company (?company_id=, applied by the API): two
+  // companies can both have a FAC-2026-001.
+  const multiCompany = issuerCompanies.length > 1;
+  const companyFilter = parseProjectId(searchParams.get("company_id")) ?? "all";
 
   // Search — applied by the API through ?q=, so older documents are found too.
   const search = parseQuery(searchParams.get("q"));
@@ -133,17 +146,37 @@ export function BillingDocumentList({
   const documentPath = (doc: BillingDocument) =>
     `/${locale}/billing/${kindToSegment(kind)}/${doc.id}`;
 
-  // A row opens its document; the actions cell stops the click itself.
+  // The document number is a real link (new tab, copy link, keyboard);
+  // a click anywhere else on the row opens the document too, in a new tab
+  // with Ctrl/Cmd or the middle button.
   const rowLinkProps = (doc: BillingDocument) => ({
-    role: "link" as const,
-    tabIndex: 0,
-    "aria-label": doc.document_number,
     className: "cursor-pointer",
-    onClick: () => router.push(documentPath(doc)),
-    onKeyDown: (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && e.target === e.currentTarget) router.push(documentPath(doc));
+    onClick: (e: React.MouseEvent) => {
+      if ((e.target as HTMLElement).closest("a")) return; // the link handles itself
+      if (e.metaKey || e.ctrlKey) window.open(documentPath(doc), "_blank", "noopener");
+      else router.push(documentPath(doc));
+    },
+    onAuxClick: (e: React.MouseEvent) => {
+      if (e.button !== 1 || (e.target as HTMLElement).closest("a")) return;
+      window.open(documentPath(doc), "_blank", "noopener");
     },
   });
+
+  // The actions cell: a click on its empty area opens the row like any other
+  // cell; a click on its button, or inside the menu and dialogs it opens
+  // (portals bubble through React), stays there.
+  const stopUnlessCell = (e: React.MouseEvent) => {
+    if (e.target !== e.currentTarget) e.stopPropagation();
+  };
+
+  const numberLink = (doc: BillingDocument) => (
+    <Link
+      href={documentPath(doc)}
+      className="hover:underline focus-visible:underline"
+    >
+      {doc.document_number}
+    </Link>
+  );
 
   // ---------------------------------------------------------------------------
   // Handlers
@@ -156,6 +189,14 @@ export function BillingDocumentList({
     if (next === "all") params.delete("status");
     else params.set("status", next);
     params.delete("page"); // reset to page 1 on filter change
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function handleCompanyChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") params.delete("company_id");
+    else params.set("company_id", value);
+    params.delete("page");
     router.push(`${pathname}?${params.toString()}`);
   }
 
@@ -218,7 +259,11 @@ export function BillingDocumentList({
 
   // Both views return [page, importDialog] so the dialog keeps its state (and
   // its summary) when a first import turns the empty state into the list.
-  const narrowed = statusFilter !== "all" || search !== "" || searchParams.has("project_id");
+  const narrowed =
+    statusFilter !== "all" ||
+    search !== "" ||
+    searchParams.has("project_id") ||
+    companyFilter !== "all";
   if (!listLoadError && initialTotal === 0 && !narrowed) {
     return (
       <>
@@ -274,6 +319,7 @@ export function BillingDocumentList({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Input
             placeholder={t("list.searchPlaceholder")}
+            aria-label={t("list.searchPlaceholder")}
             value={searchRaw}
             onChange={(e) => setSearchRaw(e.target.value)}
             maxLength={100}
@@ -292,6 +338,21 @@ export function BillingDocumentList({
               ))}
             </SelectContent>
           </Select>
+          {multiCompany && (
+            <Select value={companyFilter} onValueChange={handleCompanyChange}>
+              <SelectTrigger className="sm:w-56" aria-label={t("list.companyFilter")}>
+                <SelectValue placeholder={t("list.allCompanies")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("list.allCompanies")}</SelectItem>
+                {issuerCompanies.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.legal_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {listLoadError ? (
@@ -319,15 +380,24 @@ export function BillingDocumentList({
                   {/* Row 1: document number + status badge */}
                   <div className="flex items-center justify-between gap-2">
                     <span className="num text-[12.5px] font-medium">
-                      {doc.document_number}
+                      {numberLink(doc)}
                     </span>
                     <BillingStatusBadge
                       status={doc.status}
-                      label={t(`${kind}.status.${doc.status}`)}
+                      label={billingStatusLabel(t, kind, doc.status)}
                     />
                   </div>
                   {/* Row 2: recipient */}
                   <div className="mt-1.5 text-[13px]">{doc.recipient_name}</div>
+                  {multiCompany && (
+                    <div
+                      className="mt-0.5 truncate text-[12px]"
+                      style={{ color: "var(--muted)" }}
+                      data-testid="billing-card-issuer"
+                    >
+                      {doc.issuer_legal_name}
+                    </div>
+                  )}
                   {/* Row 3: date + total + actions */}
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
@@ -341,7 +411,7 @@ export function BillingDocumentList({
                         {formatTTC(doc.total_ttc)}
                       </span>
                     </div>
-                    <div onClick={(e) => e.stopPropagation()}>
+                    <div onClick={stopUnlessCell}>
                       <BillingActionsMenu
                         document={doc}
                         onMutated={handleMutated}
@@ -361,6 +431,7 @@ export function BillingDocumentList({
                       <th>{t("list.columns.number")}</th>
                       <th>{t("list.columns.date")}</th>
                       <th>{t("list.columns.recipient")}</th>
+                      {multiCompany && <th>{t("list.columns.issuer")}</th>}
                       <th>{t("list.columns.status")}</th>
                       <th style={{ textAlign: "right" }}>{t("list.columns.totalTtc")}</th>
                       <th style={{ textAlign: "right" }}>{t("list.columns.actions")}</th>
@@ -370,25 +441,27 @@ export function BillingDocumentList({
                     {filtered.map((doc) => (
                       <tr key={doc.id} {...rowLinkProps(doc)}>
                         <td className="num text-[12.5px] font-medium">
-                          {doc.document_number}
+                          {numberLink(doc)}
                         </td>
                         <td className="num" style={{ color: "var(--muted)" }}>
                           {formatDate(toIsoDate(doc.issue_date) ?? doc.issue_date)}
                         </td>
                         <td>{doc.recipient_name}</td>
+                        {multiCompany && (
+                          <td style={{ color: "var(--muted)" }} data-testid="billing-row-issuer">
+                            {doc.issuer_legal_name}
+                          </td>
+                        )}
                         <td>
                           <BillingStatusBadge
                             status={doc.status}
-                            label={t(`${kind}.status.${doc.status}`)}
+                            label={billingStatusLabel(t, kind, doc.status)}
                           />
                         </td>
                         <td className="num font-medium" style={{ textAlign: "right" }}>
                           {formatTTC(doc.total_ttc)}
                         </td>
-                        <td
-                          style={{ textAlign: "right" }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <td style={{ textAlign: "right" }} onClick={stopUnlessCell}>
                           <BillingActionsMenu
                             document={doc}
                             onMutated={handleMutated}

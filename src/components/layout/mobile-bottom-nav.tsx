@@ -13,20 +13,31 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
+import { useAuth } from "@/context/AuthContext";
+import { isWithoutWorkspace } from "@/lib/auth/onboarding-gate";
 import { MobileMoreSheet } from "@/components/layout/mobile-more-sheet";
+import { isOnboardingPath } from "@/lib/auth/onboarding-gate";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("navigation");
-  const { selectedProjectId } = useProject();
+  const { selectedProjectId, projects } = useProject();
+  const { user } = useAuth();
+  // No company yet (or removed from the only one): Overview and Projects would
+  // only bounce back to /onboarding, so the bar keeps just "More".
+  const withoutWorkspace = isWithoutWorkspace(user, projects.length);
   const pathWithoutLocale =
     pathname.replace(new RegExp(`^/${locale}`), "") || "/";
   const [moreOpen, setMoreOpen] = useState(false);
 
   const items = [
-    { key: "dashboard", href: "/dashboard", icon: Home },
-    { key: "projects", href: "/projects", icon: FolderOpen },
+    ...(withoutWorkspace
+      ? []
+      : [
+          { key: "dashboard", href: "/dashboard", icon: Home },
+          { key: "projects", href: "/projects", icon: FolderOpen },
+        ]),
     ...(selectedProjectId
       ? [
           {
@@ -58,6 +69,9 @@ export function MobileBottomNav() {
         pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/photos`)
       : false);
 
+  // Onboarding (no company yet): every destination would bounce straight back.
+  if (isOnboardingPath(pathWithoutLocale)) return null;
+
   return (
     <>
       <nav
@@ -85,7 +99,7 @@ export function MobileBottomNav() {
                 className={cn(
                   "flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-1 text-[10px] font-medium transition-colors",
                   isActive
-                    ? "text-[var(--accent)]"
+                    ? "text-[var(--accent-ink)]"
                     : "text-[var(--muted)] active:text-[var(--ink)]",
                 )}
               >
@@ -101,7 +115,7 @@ export function MobileBottomNav() {
             className={cn(
               "flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-1 text-[10px] font-medium transition-colors",
               moreIsActive
-                ? "text-[var(--accent)]"
+                ? "text-[var(--accent-ink)]"
                 : "text-[var(--muted)] active:text-[var(--ink)]",
             )}
           >

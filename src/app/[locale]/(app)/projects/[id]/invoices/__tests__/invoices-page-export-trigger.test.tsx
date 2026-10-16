@@ -150,6 +150,17 @@ describe("InvoicesPage — export range trigger button", () => {
     expect(screen.queryByText("export.trigger")).toBeNull();
   });
 
+  it("gives a plain member a 'my payments' view with no category tabs", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseAuth.mockReturnValue({ user: { permissions: [] } } as any);
+    render(<InvoicesPage />);
+
+    await waitFor(() => expect(screen.getByText("memberView.empty")).toBeDefined());
+    expect(screen.getByText("memberView.title")).toBeDefined();
+    expect(screen.queryByText("noInvoices")).toBeNull();
+    expect(screen.queryByText("types.materials_services")).toBeNull();
+  });
+
   it("shows the trigger to a pay viewer (project:view_pay)", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockUseAuth.mockReturnValue({ user: { permissions: ["project:view_pay"] } } as any);

@@ -10,6 +10,7 @@
 
 import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
+import { rateLimitMessage, retryAfterOf } from "@/lib/api/rate-limit";
 import {
   fetchCompanyDirectory,
   addMemberByPhone,
@@ -82,7 +83,12 @@ async function classifyError(err: unknown): Promise<{ code: string; message: str
   if (status === 400 || status === 422) return { code: "validation", message: t("validation") };
   if (status === 401) return { code: "unauthorized", message: t("unauthorized") };
   if (status === 409) return { code: "conflict", message: t("conflict") };
-  if (status === 429) return { code: "rateLimited", message: t("rateLimited") };
+  if (status === 429) {
+    // Name the wait (adding a crew by phone is capped per hour).
+    const tCommon = await getTranslations("common");
+    const seconds = retryAfterOf(err);
+    return { code: "rateLimited", message: seconds ? rateLimitMessage(tCommon, seconds) : t("rateLimited") };
+  }
   return { code: "generic", message: t("generic") };
 }
 

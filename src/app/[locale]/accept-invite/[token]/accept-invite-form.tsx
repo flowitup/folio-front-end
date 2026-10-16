@@ -8,12 +8,18 @@ import {
   requestInviteCodeAction,
   type InviteFlowError,
 } from "@/lib/auth/actions";
-import { normalizeFrenchPhone } from "@/lib/auth/phone-number";
+import { formatFrenchPhone, normalizeFrenchPhone } from "@/lib/auth/phone-number";
+import { LegalLinks } from "@/components/legal-links";
+import { queueFlashToast } from "@/lib/flash-toast";
+import { rememberSelectedProject } from "@/lib/selected-project";
 import type { VerifyInviteResponse } from "@/lib/auth/types";
 
 // Matches the backend's resend-throttle window, so the countdown never lets the
 // invitee tap "Resend" before the server would accept another request anyway.
 const RESEND_COOLDOWN_SECONDS = 60;
+
+// The backend refuses a code after this many wrong tries, even the right one.
+const MAX_CODE_ATTEMPTS = 5;
 
 interface AcceptInviteFormProps {
   token: string;
@@ -42,6 +48,8 @@ export function errorMessageKey(error: InviteFlowError): string {
       return "errors.expired";
     case "revoked":
       return "errors.revoked";
+    case "superseded":
+      return "errors.superseded";
     case "accepted":
       return "errors.accepted";
     case "not_found":
@@ -75,6 +83,9 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
   // Last number a code went to. The server throttles resends per number, so
   // the countdown belongs to it and survives "Change number".
   const [sentTo, setSentTo] = useState("");
+  // Wrong codes refused for the code now in use; past the limit only a new code helps.
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const codeLocked = failedAttempts >= MAX_CODE_ATTEMPTS;
 
   // Countdown ticker for the "Resend in {n}s" button label.
   useEffect(() => {
@@ -88,13 +99,23 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
   const sendCode = async (e164: string): Promise<boolean> => {
     setIsSendingCode(true);
     try {
-      const result = await requestInviteCodeAction(token, e164);
+      const result = await requestInviteCodeAction(token, e164, locale);
       if (!result.success) {
+        if (result.error === "throttled" && e164 !== sentTo) {
+          // A code went to this number less than a minute ago (before a
+          // reload): it is still good, so go and type it.
+          setCooldown(RESEND_COOLDOWN_SECONDS);
+          setSentTo(e164);
+          setFailedAttempts(0);
+          setError(t("codeRecentlySent"));
+          return true;
+        }
         setError(t(errorMessageKey(result.error ?? "unknown"), { minutes: result.retryAfterMinutes ?? 0 }));
         return false;
       }
       setCooldown(RESEND_COOLDOWN_SECONDS);
       setSentTo(e164);
+      setFailedAttempts(0);
       return true;
     } finally {
       setIsSendingCode(false);
@@ -162,13 +183,27 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
       return;
     }
 
+    if (codeLocked) {
+      setError(t("errors.codeLocked"));
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const result = await acceptInviteAction(token, name.trim(), normalizedPhone, trimmedCode);
       if (!result.success) {
+        if (result.error === "invalid_code") {
+          const failed = failedAttempts + 1;
+          setFailedAttempts(failed);
+          setError(t(failed >= MAX_CODE_ATTEMPTS ? "errors.codeLocked" : "errors.invalidCode"));
+          return;
+        }
         setError(t(errorMessageKey(result.error ?? "unknown")));
         return;
       }
+      // Open on the project just joined, not the one this browser viewed last.
+      rememberSelectedProject(result.projectId);
+      queueFlashToast(t("joinedToast", { projectName: verified.project_name }));
       // Cookies are set server-side; a full navigation triggers fresh SSR with auth context.
       window.location.href = `/${locale}/dashboard`;
     } catch {
@@ -224,7 +259,7 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
           autoComplete="name"
           required
           minLength={1}
-          maxLength={100}
+          maxLength={80}
           value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={isSendingCode}
@@ -279,7 +314,7 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
       {errorBanner}
 
       <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-        {t("codeSentTo", { phone: normalizedPhone })}
+        {t("codeSentTo", { phone: formatFrenchPhone(normalizedPhone) })}
       </p>
 
       <div>
@@ -303,7 +338,7 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
 
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || codeLocked}
         className="btn btn-primary w-full"
         style={{ padding: "12px 16px", fontSize: 14 }}
       >
@@ -404,6 +439,7 @@ function Shell({ locale, verified, t, children }: ShellProps) {
               {t("backToLogin")}
             </a>
           </p>
+          <LegalLinks locale={locale} className="mt-3" />
         </div>
       </div>
 

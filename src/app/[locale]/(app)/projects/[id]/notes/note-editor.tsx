@@ -12,6 +12,7 @@ import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CategoryMenu } from "./category-menu";
 import type { Note, NoteCategory } from "@/lib/api/notes";
+import { NOTE_BODY_MAX, NOTE_TITLE_MAX, noteCharCount } from "@/lib/notes/limits";
 
 export interface NoteSavePayload {
   title: string;
@@ -42,11 +43,19 @@ export function NoteEditor({ note, onSave, onCancel, onDelete, isSaving = false 
   // The parent unmounts/remounts this editor (via key prop) on rollback, so no
   // sync effect is needed — avoids cascading render lint warning.
 
+  // An empty title is never saved, but never silently dropped either: the
+  // editor stays open with an inline error so the edited text is not lost.
+  const [titleError, setTitleError] = useState(false);
+
   const save = useCallback(async () => {
     const trimmed = title.trim();
-    if (!trimmed) { onCancel(); return; }
+    if (!trimmed) {
+      setTitleError(true);
+      titleRef.current?.focus();
+      return;
+    }
     await onSave({ title: trimmed, description: description.trim() || null, category });
-  }, [title, description, category, onSave, onCancel]);
+  }, [title, description, category, onSave]);
 
   function onKey(e: React.KeyboardEvent) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void save(); }
@@ -60,6 +69,8 @@ export function NoteEditor({ note, onSave, onCancel, onDelete, isSaving = false 
     if (containerRef.current && related && containerRef.current.contains(related)) return;
     // Skip if focus moved to a popover portal outside the container (category menu)
     if (related && (related as Element).closest?.('[role="listbox"]')) return;
+    // Leaving with an empty title: keep the editor (and the text) and say why.
+    if (!title.trim()) { setTitleError(true); return; }
     void save();
   }
 
@@ -79,12 +90,33 @@ export function NoteEditor({ note, onSave, onCancel, onDelete, isSaving = false 
         ref={titleRef}
         className="editor-title"
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => {
+          setTitle(e.target.value);
+          if (e.target.value.trim()) setTitleError(false);
+        }}
         onBlur={handleBlur}
         placeholder={t("editor.placeholderTitle")}
         aria-label={t("editor.placeholderTitle")}
+        aria-invalid={titleError || undefined}
+        aria-describedby={titleError ? `note-title-error-${note.id}` : undefined}
+        maxLength={NOTE_TITLE_MAX}
         disabled={isSaving}
       />
+      {titleError && (
+        <p
+          id={`note-title-error-${note.id}`}
+          role="alert"
+          className="text-[12px]"
+          style={{ color: "var(--negative)" }}
+        >
+          {t("editor.titleRequired")}
+        </p>
+      )}
+      {noteCharCount(title.length, NOTE_TITLE_MAX) && (
+        <div className="num text-right text-[11px]" style={{ color: "var(--muted)" }} aria-live="polite">
+          {noteCharCount(title.length, NOTE_TITLE_MAX)}
+        </div>
+      )}
       <textarea
         className="editor-desc"
         value={description}
@@ -93,8 +125,14 @@ export function NoteEditor({ note, onSave, onCancel, onDelete, isSaving = false 
         placeholder={t("editor.placeholderBody")}
         aria-label={t("editor.placeholderBody")}
         rows={4}
+        maxLength={NOTE_BODY_MAX}
         disabled={isSaving}
       />
+      {noteCharCount(description.length, NOTE_BODY_MAX) && (
+        <div className="num text-right text-[11px]" style={{ color: "var(--muted)" }} aria-live="polite">
+          {noteCharCount(description.length, NOTE_BODY_MAX)}
+        </div>
+      )}
       <div className="editor-actions">
         <button
           type="button"

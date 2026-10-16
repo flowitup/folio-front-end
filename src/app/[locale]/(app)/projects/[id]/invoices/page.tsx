@@ -6,7 +6,8 @@ import { useParams, useRouter, useSearchParams, usePathname } from "next/navigat
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { can, isCompanyAdmin } from "@/lib/auth/permissions";
-import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
+import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiError } from "@/lib/api/http";
@@ -38,6 +39,10 @@ import {
   monthKeyForInvoice,
 } from "@/lib/invoices/group-invoices-by-month";
 import { invoiceTotals } from "@/lib/invoices/invoice-totals";
+import {
+  matchesExpenseFilters,
+  readExpenseListFilters,
+} from "@/lib/invoices/expense-filters";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 
 type TabType = "all" | InvoiceType;
@@ -150,7 +155,39 @@ export default function InvoicesPage() {
     can("project:manage_labor", user?.permissions, projectPerms) ||
     can("project:view_pay", user?.permissions, projectPerms);
 
-  const [activeTab, setActiveTab] = useState<TabType>("all");
+  // A plain member (no labor, pay, budget or invoice rights) only gets their
+  // own labor payments from the API, so the category tabs could only ever be
+  // empty: show a "my payments" view instead.
+  const isRestrictedMember = !canExport && !canViewBudget && !canManageInvoices;
+
+  // Filters a chart or a summary figure opened the list with (?type=, ?month=,
+  // ?purse=). The tab follows ?type= when the URL changes (a new drill-down);
+  // a tab click writes it back, so the URL always says what is shown.
+  const urlFilters = readExpenseListFilters(searchParams);
+  const urlTab: TabType =
+    urlFilters.type && (urlFilters.type !== "released_funds" || canViewBudget) ? urlFilters.type : "all";
+  const [activeTab, setActiveTabState] = useState<TabType>(urlTab);
+  const [tabFromUrl, setTabFromUrl] = useState<TabType>(urlTab);
+  if (urlTab !== tabFromUrl) {
+    setTabFromUrl(urlTab);
+    setActiveTabState(urlTab);
+  }
+  const replaceQuery = (update: (params: URLSearchParams) => void) => {
+    const next = new URLSearchParams(searchParams.toString());
+    update(next);
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+  const setActiveTab = (tab: TabType) => {
+    setActiveTabState(tab);
+    replaceQuery((p) => (tab === "all" ? p.delete("type") : p.set("type", tab)));
+  };
+  const clearFilters = () =>
+    replaceQuery((p) => {
+      p.delete("month");
+      p.delete("purse");
+    });
+  const hasRowFilter = Boolean(urlFilters.month || urlFilters.purse);
   const [exportOpen, setExportOpen] = useState(false);
   // Collapsed month sections on the "all" tab (keys "YYYY-MM"). Default empty
   // = every month expanded; collapsing is opt-in, session-only state.
@@ -163,10 +200,13 @@ export default function InvoicesPage() {
   // never refetches and a slow response can never land under the wrong tab. Tabs
   // filter by ledger category: a cash advance is stored as released_funds but
   // listed under "Others".
+  const filterMonth = urlFilters.month;
+  const filterPurse = urlFilters.purse;
   const invoices = useMemo(() => {
     const all = summary?.invoices ?? [];
-    return activeTab === "all" ? all : all.filter((inv) => ledgerTypeOf(inv) === activeTab);
-  }, [summary, activeTab]);
+    const byTab = activeTab === "all" ? all : all.filter((inv) => ledgerTypeOf(inv) === activeTab);
+    return byTab.filter((inv) => matchesExpenseFilters(inv, { month: filterMonth, purse: filterPurse }));
+  }, [summary, activeTab, filterMonth, filterPurse]);
 
   const toggleMonth = (monthKey: string) => {
     const isCollapsing = !collapsedMonths.has(monthKey);
@@ -186,6 +226,8 @@ export default function InvoicesPage() {
     }
   };
   const [companyName, setCompanyName] = useState<string | null>(null);
+  // A member without expense rights gets only their own payments.
+  const [restricted, setRestricted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -198,6 +240,7 @@ export default function InvoicesPage() {
       // cash advance under the wrong tab.
       const sum = await fetchInvoicesWithMeta(projectId);
       setCompanyName(sum.company_name ?? null);
+      setRestricted(sum.restricted === true);
       setSummary({
         invoices: sum.invoices,
         meta: {
@@ -242,6 +285,46 @@ export default function InvoicesPage() {
       return next;
     });
   }, [selectedInvoiceId, invoices]);
+
+  // A deep link to an expense (?invoice=<id>, from a chart, a notification or
+  // an e-mail) opens it in place: bring its row into view once the list is in,
+  // or say it is gone rather than showing the top of the list.
+  const listLoaded = summary !== null;
+  // A chart or a summary figure opened the list on a month or a purse: bring the
+  // filtered rows into view instead of leaving them below the summary cards.
+  const rowFilterKey = hasRowFilter ? `${urlFilters.month ?? ""}|${urlFilters.purse ?? ""}` : null;
+  useEffect(() => {
+    if (!rowFilterKey || !listLoaded || selectedInvoiceId) return;
+    document
+      .querySelector('[data-testid="expense-filter-chips"]')
+      ?.scrollIntoView?.({ block: "start", behavior: "smooth" });
+  }, [rowFilterKey, listLoaded, selectedInvoiceId]);
+  useEffect(() => {
+    if (!selectedInvoiceId || !summary) return;
+    if (!summary.invoices.some((inv) => inv.id === selectedInvoiceId)) {
+      toast.error(t("invoiceNotFound"));
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("invoice");
+      const qs = next.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      return;
+    }
+    const frame = requestAnimationFrame(() => {
+      const target = [
+        document.getElementById(`invoice-detail-${selectedInvoiceId}`),
+        document.getElementById(`invoice-detail-mobile-${selectedInvoiceId}`),
+      ].find((el) => el && el.offsetParent !== null);
+      if (!target) return;
+      // A row opened by a click is already on screen: only a link scrolls.
+      const { top, bottom } = target.getBoundingClientRect();
+      if (top < 0 || bottom > window.innerHeight) {
+        target.scrollIntoView?.({ block: "center", behavior: "smooth" });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+    // Once per opened id and loaded list; a refetch must not scroll again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedInvoiceId, listLoaded]);
 
   const handleDelete = async (invoice: Invoice) => {
     if (!confirm(t("deleteConfirm"))) return;
@@ -295,7 +378,12 @@ export default function InvoicesPage() {
       {/* "Two purses" summary (design Expense Dataviz 1b) — project-level,
           fed by an unfiltered fetch so tab/tag filters below never change it. */}
       {summary && canViewBudget && (
-        <ExpensePursesSummary invoices={summary.invoices} meta={summary.meta} />
+        <ExpensePursesSummary
+          invoices={summary.invoices}
+          meta={summary.meta}
+          listHref={`/${locale}/projects/${projectId}/invoices`}
+          refundableHref={`/${locale}/billing/refundable-invoices?project=${projectId}`}
+        />
       )}
 
       {/* Bank draw-down — what the bank still holds of the project's credit.
@@ -306,12 +394,19 @@ export default function InvoicesPage() {
           releasedTotal={summary.meta.fundsReleasedTotal}
           invoices={summary.invoices}
           settingsHref={`/${locale}/projects/${projectId}/settings`}
+          expensesHref={`/${locale}/projects/${projectId}/invoices`}
         />
       )}
 
       {/* Tabs, export and list need a loaded list: after a failed first load
           the error alert below is the whole page, not an empty ledger. */}
-      {(isLoading || summary) && (
+      {isRestrictedMember && (isLoading || summary) && (
+        <div data-testid="member-payments-heading">
+          <h2 className="text-[17px] font-semibold">{t("memberView.title")}</h2>
+        </div>
+      )}
+
+      {!isRestrictedMember && (isLoading || summary) && (
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="seg">
           {tabs.map((tab) => (
@@ -336,6 +431,22 @@ export default function InvoicesPage() {
       </div>
       )}
 
+      {/* What a chart or a summary figure opened the list on, and a way back to everything. */}
+      {summary && hasRowFilter && (
+        <div className="flex flex-wrap items-center gap-2 text-[12.5px]" data-testid="expense-filter-chips">
+          <span style={{ color: "var(--muted)" }}>{t("filters.label")}</span>
+          {urlFilters.month && <span className="stamp">{formatMonthYear(urlFilters.month, locale)}</span>}
+          {urlFilters.purse && <span className="stamp">{t(`filters.purse.${urlFilters.purse}`)}</span>}
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="inline-flex items-center gap-1 font-medium hover:underline"
+          >
+            <X size={12} aria-hidden /> {t("filters.clear")}
+          </button>
+        </div>
+      )}
+
       {canExport && (
         <InvoiceExportDialog
           projectId={projectId}
@@ -358,6 +469,18 @@ export default function InvoicesPage() {
         </div>
       )}
 
+      {/* The server says the list is scoped to the caller's own payments. A plain
+          member already has the "My payments" view above, which says the same. */}
+      {!isLoading && summary && restricted && !isRestrictedMember && (
+        <div
+          className="rounded-[10px] px-4 py-3 text-[13px]"
+          style={{ background: "var(--paper-2)", color: "var(--ink-2)" }}
+          data-testid="restricted-expenses-banner"
+        >
+          {t("restricted.banner")}
+        </div>
+      )}
+
       {!isLoading && summary && (
         <>
         {invoices.length === 0 ? (
@@ -366,7 +489,13 @@ export default function InvoicesPage() {
               className="flex items-center justify-center py-12 text-[13px]"
               style={{ color: "var(--muted)" }}
             >
-              {t("noInvoices")}
+              {hasRowFilter
+                ? t("filters.empty")
+                : isRestrictedMember
+                  ? t("memberView.empty")
+                  : restricted
+                    ? t("restricted.empty")
+                    : t("noInvoices")}
             </div>
           </div>
         ) : (
@@ -658,7 +787,7 @@ export default function InvoicesPage() {
                                         style={{ fontSize: 10, verticalAlign: "middle" }}
                                         data-testid="cash-advance-badge-desktop"
                                       >
-                                        {t("cashAdvance.badge")}
+                                        {t("cashAdvance.badgeOutsideTotal")}
                                       </span>
                                     )}
                                     {/* On the month-grouped all tab a labor row can sit under a
@@ -764,7 +893,15 @@ export default function InvoicesPage() {
                                   </td>
                                   <td
                                     style={{ textAlign: "right" }}
-                                    onClick={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                      // The cell's empty area opens the row like any
+                                      // other cell; its buttons (and the popovers and
+                                      // dialogs they open) keep their clicks.
+                                      const el = e.target as HTMLElement;
+                                      if (el !== e.currentTarget && el.parentElement !== e.currentTarget) {
+                                        e.stopPropagation();
+                                      }
+                                    }}
                                   >
                                     <div className="flex items-center justify-end gap-1">
                                       {canManageInvoices && !invoice.is_auto_generated && (
@@ -776,6 +913,8 @@ export default function InvoicesPage() {
                                       {canTransferToCompany &&
                                         invoice.type === "materials_services" &&
                                         invoice.refundable_status == null &&
+                                        // Only a positive purchase can be paid back (the API refuses the rest).
+                                        invoice.total_amount > 0 &&
                                         !invoice.paid_by_company && (
                                           <TransferToCompanyPaymentAction
                                             invoiceId={invoice.id}

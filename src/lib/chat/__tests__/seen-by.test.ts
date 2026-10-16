@@ -48,6 +48,14 @@ describe("readersOfMessage", () => {
     expect(readersOfMessage(message, members).map((m) => m.id)).toEqual(["me", "bob"]);
   });
 
+  it("never lists the viewer themself", () => {
+    const members = [
+      { id: "bob", name: "Bob", last_read_at: "2026-09-08T10:30:00Z" },
+      { id: "me", name: "Me", last_read_at: "2026-09-08T10:00:00Z" },
+    ];
+    expect(readersOfMessage(message, members, "me").map((m) => m.id)).toEqual(["bob"]);
+  });
+
   it("skips members without a marker or with an unparsable one", () => {
     const members = [
       { id: "bob", name: "Bob", last_read_at: null },

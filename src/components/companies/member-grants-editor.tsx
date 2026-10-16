@@ -70,7 +70,7 @@ const LABELED_PERMISSIONS = new Set([
 
 export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Props) {
   const t = useTranslations("companySettings.grants");
-  const { projects: allProjects } = useProject();
+  const { projects: allProjects, refetch: refetchProjects } = useProject();
   // Project-scoped grants must only offer projects belonging to THIS
   // company — useProject() returns every project visible to the caller
   // (all their companies). `company_id` on the list payload is optional
@@ -117,6 +117,12 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
     if (open) void load();
   }, [open, load]);
 
+  // The scope picker offers the shared project list: refresh it when the editor opens, so a
+  // project created elsewhere since the page loaded can be picked.
+  useEffect(() => {
+    if (open) void refetchProjects({ silent: true });
+  }, [open, refetchProjects]);
+
   function projectName(id: string | null): string {
     if (!id) return t("scopeCompanyWide");
     const project = projects.find((p) => p.id === id);
@@ -133,6 +139,11 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
     const effect = row.effect === "deny" ? t("effectDeny") : t("effectGrant");
     return `${effect}: ${permissionLabel(row.permission)} · ${projectName(row.project_id)}`;
   }
+
+  // A pay deny also takes labor management away (it shows every rate): say so.
+  const showViewPayDenyHint =
+    (newPermission === "project:view_pay" && newEffect === "deny") ||
+    grants.some((row) => row.permission === "project:view_pay" && row.effect === "deny");
 
   async function handleAdd() {
     if (!newPermission || isMutating) return;
@@ -261,6 +272,11 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
                   {t("add")}
                 </Button>
               </div>
+              {showViewPayDenyHint && (
+                <p className="text-[12px]" style={{ color: "var(--muted)" }} role="note">
+                  {t("viewPayDenyHint")}
+                </p>
+              )}
             </div>
           </div>
         )}

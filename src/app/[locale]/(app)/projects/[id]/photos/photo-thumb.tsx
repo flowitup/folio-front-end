@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Play } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Play, RefreshCw } from "lucide-react";
 import { fetchProjectPhotoBlob } from "@/lib/api/project-photo-blob";
 import type { ProjectPhoto } from "@/lib/api/project-photos";
 import { isVideo } from "@/lib/media/is-video";
@@ -20,7 +21,10 @@ interface Props {
  */
 export function PhotoThumb({ projectId, photo, onClick }: Props) {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const t = useTranslations("photos");
   const [error, setError] = useState(false);
+  // Bumped by the retry button to load the thumbnail again
+  const [attempt, setAttempt] = useState(0);
   const revokeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -47,20 +51,36 @@ export function PhotoThumb({ projectId, photo, onClick }: Props) {
       revokeRef.current?.();
       revokeRef.current = null;
     };
-  }, [projectId, photo.id]);
+  }, [projectId, photo.id, attempt]);
 
   const label = photo.caption ?? photo.filename;
 
   if (error) {
+    // A thumbnail that failed (network, rate limit) can be loaded again in place;
+    // the photo itself still opens from the tile.
     return (
-      <button
-        type="button"
-        onClick={onClick}
-        aria-label={label}
-        className="relative aspect-square w-full overflow-hidden rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground"
-      >
-        <span>!</span>
-      </button>
+      <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted">
+        <button
+          type="button"
+          onClick={onClick}
+          aria-label={label}
+          className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground"
+        >
+          <span className="sr-only">{label}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setError(false);
+            setAttempt((n) => n + 1);
+          }}
+          aria-label={t("retryThumbnail")}
+          title={t("retryThumbnail")}
+          className="absolute left-1/2 top-1/2 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-sm hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <RefreshCw className="size-4" aria-hidden />
+        </button>
+      </div>
     );
   }
 

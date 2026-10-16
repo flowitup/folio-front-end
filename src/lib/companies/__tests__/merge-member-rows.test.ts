@@ -37,14 +37,15 @@ function makeDirectoryEntry(overrides: Partial<CompanyDirectoryEntry> = {}): Com
 }
 
 describe("mergeMemberRows", () => {
-  it("merges an attached user with its matching directory entry: directory wins name/phone, attached wins role/companies/projects", () => {
+  it("merges an attached user with its matching directory entry: the account's own name, directory phone, attached role/companies/projects", () => {
     const rows = mergeMemberRows([makeAttachedUser()], [makeDirectoryEntry()]);
 
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       key: "user-1",
       userId: "user-1",
-      name: "Alice Dupont", // from directory, not attached-user display_name
+      // The name the account chose (same as mobile), not the label typed on the shared profile.
+      name: "Alice",
       phone: "+33612345678",
       role: "admin", // from attached user
       companies: [{ id: "co-1", legal_name: "Maison Lavandou" }],
@@ -52,6 +53,33 @@ describe("mergeMemberRows", () => {
       pending: false,
     });
     expect(rows[0].attachedUser).not.toBeNull();
+  });
+
+  it("falls back to the directory name when the account has no name of its own", () => {
+    const rows = mergeMemberRows([makeAttachedUser({ display_name: null })], [makeDirectoryEntry()]);
+    expect(rows[0].name).toBe("Alice Dupont");
+  });
+
+  it("carries a pending invitation's role and expiry", () => {
+    const rows = mergeMemberRows(
+      [],
+      [
+        makeDirectoryEntry({
+          person_id: "p-pending",
+          linked_user_id: null,
+          pending: true,
+          is_active: true,
+          pending_role: "manager",
+          pending_expires_at: "2026-11-14T10:00:00+00:00",
+        }),
+      ]
+    );
+    expect(rows[0]).toMatchObject({
+      pending: true,
+      role: null,
+      pendingRole: "manager",
+      pendingExpiresAt: "2026-11-14T10:00:00+00:00",
+    });
   });
 
   it("gives a legacy attached user (no directory profile) a fallback row instead of dropping them", () => {

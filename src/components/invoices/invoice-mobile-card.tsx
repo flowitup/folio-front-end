@@ -91,7 +91,7 @@ export function InvoiceMobileCard({
             )}
             {invoice.type === "released_funds" && invoice.is_cash_advance && (
               <span className="stamp accent" data-testid="cash-advance-badge">
-                {t("cashAdvance.badge")}
+                {t("cashAdvance.badgeOutsideTotal")}
               </span>
             )}
             {invoice.type === "return" && invoice.refunds_invoice_number && (

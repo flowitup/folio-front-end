@@ -14,6 +14,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,7 @@ interface Props {
 
 export function RefundableExpenseAttachmentsCell({ attachments }: Props) {
   const t = useTranslations("billing.refundable");
+  const tInvoices = useTranslations("invoices");
   // The currently previewed attachment; null means dialog is closed.
   const [selected, setSelected] = useState<RefundableExpenseAttachment | null>(null);
 
@@ -92,6 +94,8 @@ export function RefundableExpenseAttachmentsCell({ attachments }: Props) {
       <InvoiceAttachmentPreviewDialog
         attachment={selected}
         onClose={() => setSelected(null)}
+        // Deleted elsewhere: the dialog closes, and this says why.
+        onGone={(att) => toast.error(tInvoices("attachmentGone", { name: att.filename }))}
       />
     </>
   );

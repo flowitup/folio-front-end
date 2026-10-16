@@ -6,12 +6,14 @@
  * Optimistic CRUD delegated to useNotesState hook.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { buildSections, type NoteSection } from "@/lib/notes/grouping";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { CATEGORY_ORDER } from "@/lib/notes/categories";
+import { searchIncludes } from "@/lib/utils/fold-for-search";
 import { QuickAdd } from "./quick-add";
 import { NotesToolbar } from "./notes-toolbar";
 import { NoteCard } from "./note-card";
@@ -44,11 +46,15 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
     CATEGORY_ORDER.map((k) => [k, notes.filter((n) => n.category === k).length])
   ) as Record<NoteCategory, number>;
 
-  const q = query.trim().toLowerCase();
+  // A category whose last note was moved or deleted has no chip any more:
+  // fall back to "all" instead of an empty list with nothing selected.
+  const effectiveCat: ActiveCat =
+    activeCat !== "all" && counts[activeCat] === 0 ? "all" : activeCat;
+
+  // Accent-insensitive: "eloise" finds "Éloïse", "quyet dinh" finds "Quyết định".
   const filtered = notes.filter((n) => {
-    if (activeCat !== "all" && n.category !== activeCat) return false;
-    if (!q) return true;
-    return (n.title + " " + (n.description ?? "")).toLowerCase().includes(q);
+    if (effectiveCat !== "all" && n.category !== effectiveCat) return false;
+    return searchIncludes(n.title + " " + (n.description ?? ""), query);
   });
 
   // Day sections follow the viewer's calendar, which the server lacks: until
@@ -61,6 +67,25 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
       : [];
   const isEmpty = notes.length === 0;
 
+  // A reminder in the bell links here with ?note=<id>: bring that note into view and
+  // outline it for a moment, so it is found without scanning the whole wall.
+  // Null outside the app router (unit tests render the view on its own).
+  const focusNoteId = useSearchParams()?.get("note") ?? null;
+  useEffect(() => {
+    if (!hydrated || !focusNoteId) return;
+    const card = document.querySelector<HTMLElement>(`[data-note-id="${CSS.escape(focusNoteId)}"]`);
+    if (!card) return;
+    card.scrollIntoView({ block: "center", behavior: "smooth" });
+    card.style.outline = "2px solid var(--accent)";
+    card.style.outlineOffset = "4px";
+    card.style.borderRadius = "12px";
+    const timer = setTimeout(() => {
+      card.style.outline = "";
+      card.style.outlineOffset = "";
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [hydrated, focusNoteId]);
+
   // ---- Render ----
 
   return (
@@ -70,7 +95,7 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
       {!isEmpty && (
         <NotesToolbar
           counts={counts}
-          activeCat={activeCat}
+          activeCat={effectiveCat}
           onPickCat={setActiveCat}
           query={query}
           onQueryChange={setQuery}
@@ -81,7 +106,7 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
         <div className="empty-state">
           <div className="empty-glyph"><FileText size={28} /></div>
           <h3 className="font-display">{t("empty.title")}</h3>
-          <p>{t("empty.body")}</p>
+          <p>{t(canEdit ? "empty.body" : "empty.bodyReadOnly")}</p>
         </div>
       ) : sections.length === 0 ? (
         <div className="empty-state">

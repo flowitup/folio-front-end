@@ -1,4 +1,6 @@
 import { env } from "@/lib/config/env";
+import { retryAfterOfResponse } from "@/lib/api/rate-limit";
+import { emitSessionEvent } from "@/lib/auth/session-events";
 
 /**
  * Browser API client.
@@ -71,7 +73,9 @@ export class ApiError extends Error {
     constructor(
         message: string,
         public status: number,
-        public data?: unknown
+        public data?: unknown,
+        /** Seconds to wait before retrying (from a 429's Retry-After), when known. */
+        public retryAfter: number | null = null
     ) {
         super(message);
         this.name = "ApiError";
@@ -90,9 +94,16 @@ interface RequestOptions<TBody = unknown> {
 }
 
 /**
+ * What a refresh attempt established. `"rejected"`: the API refused the refresh token itself
+ * (401/422: revoked, expired, account deactivated), so the session is over. `"unavailable"`:
+ * nothing was decided about it (offline, a 429 or a 5xx during a deploy).
+ */
+type RefreshOutcome = "ok" | "rejected" | "unavailable";
+
+/**
  * Refresh the access token using the refresh token cookie
  */
-async function refreshAccessToken(): Promise<boolean> {
+async function refreshAccessToken(): Promise<RefreshOutcome> {
     try {
         // Flask-JWT-Extended's refresh endpoint requires the refresh-token CSRF
         // header in production (JWT_COOKIE_CSRF_PROTECT=True). Without it,
@@ -109,9 +120,10 @@ async function refreshAccessToken(): Promise<boolean> {
             credentials: "include",
             headers,
         });
-        return response.ok;
+        if (response.ok) return "ok";
+        return response.status === 401 || response.status === 422 ? "rejected" : "unavailable";
     } catch {
-        return false;
+        return "unavailable";
     }
 }
 
@@ -126,8 +138,10 @@ async function http<TResponse, TBody = unknown>(
 
     const url = `${env.apiBaseUrl}${endpoint}`;
 
+    // Content-Type only when there is a body: a GET with it is not a "simple"
+    // request, so the browser sent a CORS preflight before every read.
     const defaultHeaders: Record<string, string> = {
-        "Content-Type": "application/json",
+        ...(body ? { "Content-Type": "application/json" } : {}),
         ...getCsrfHeader(method),
     };
 
@@ -142,11 +156,18 @@ async function http<TResponse, TBody = unknown>(
     // Handle 401 - try to refresh token once
     if (response.status === 401 && !_isRetry) {
         const refreshed = await refreshAccessToken();
-        if (refreshed) {
+        if (refreshed === "ok") {
             // Retry the original request
             return http<TResponse, TBody>(endpoint, { ...options, _isRetry: true });
         }
+        // The session is over (account deactivated, session revoked): the app layout signs
+        // the user out with an explanation instead of leaving pages failing to load.
+        if (refreshed === "rejected") emitSessionEvent("session-ended");
     }
+
+    // Permissions or project membership changed since the page loaded (another admin's
+    // action): the app layout re-reads the user and the project list.
+    if (response.status === 403) emitSessionEvent("access-denied");
 
     // Handle non-2xx responses
     if (!response.ok) {
@@ -160,7 +181,8 @@ async function http<TResponse, TBody = unknown>(
         throw new ApiError(
             `HTTP ${response.status}: ${response.statusText}`,
             response.status,
-            errorData
+            errorData,
+            response.status === 429 ? retryAfterOfResponse(response, errorData) : null
         );
     }
 

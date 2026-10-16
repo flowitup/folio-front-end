@@ -1,15 +1,28 @@
 "use client";
 
 /**
- * Composer: photo picker (JPEG/PNG/WebP ≤ 10 MB, one at a time), single-line input
- * (Enter sends), send button. Client-side validation mirrors the backend limits so a
- * bad pick is refused before any upload.
+ * Composer: photo picker (JPEG/PNG/WebP ≤ 10 MB, one at a time), a text area that grows with
+ * its content (Enter sends, Shift+Enter starts a new line, 4 000 characters like the server),
+ * send button. Client-side validation mirrors the backend limits so a bad pick is refused
+ * before any upload.
+ *
+ * The draft lives in ChatContext per channel (`channelKey`): closing the chat window or
+ * switching channels keeps it, and it never moves to another channel. The panel keys this
+ * component by channel, so a channel switch remounts it with that channel's own draft.
  */
 
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ImagePlus, Loader2, Send, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { CHAT_ATTACHMENT_TYPES, CHAT_MAX_ATTACHMENT_BYTES } from "@/lib/api/chat-client";
+import { useChat } from "@/context/ChatContext";
+import {
+  CHAT_ATTACHMENT_TYPES,
+  CHAT_MAX_ATTACHMENT_BYTES,
+  CHAT_MAX_BODY_LENGTH,
+} from "@/lib/api/chat-client";
+
+/** Tallest the text area grows before it scrolls (about six lines). */
+const MAX_INPUT_HEIGHT = 140;
 import { withInferredContentType } from "@/lib/media/infer-content-type";
 
 export type ComposerRejection = "tooLarge" | "unsupportedType";
@@ -23,20 +36,43 @@ export function rejectAttachment(file: File): ComposerRejection | null {
 }
 
 export function ChatComposer({
+  channelKey,
   disabled,
   sending,
+  autoFocus = false,
   onSend,
   onReject,
 }: {
+  channelKey: string | null;
   disabled: boolean;
   sending: boolean;
+  /** Focus the text area on mount (desktop: opening the chat lands in the composer). */
+  autoFocus?: boolean;
   onSend: (input: { body: string; file: File | null }) => Promise<boolean>;
   onReject: (reason: ComposerRejection) => void;
 }) {
   const t = useTranslations("chat");
-  const [draft, setDraft] = useState("");
+  const { getDraft, setDraft: storeDraft } = useChat();
+  const [draft, setDraftState] = useState(() => (channelKey ? getDraft(channelKey) : ""));
+  const setDraft = (text: string) => {
+    setDraftState(text);
+    if (channelKey) storeDraft(channelKey, text);
+  };
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
+
+  // Grow with the text up to MAX_INPUT_HEIGHT, then scroll.
+  useLayoutEffect(() => {
+    const node = textRef.current;
+    if (!node) return;
+    node.style.height = "auto";
+    node.style.height = `${Math.min(node.scrollHeight, MAX_INPUT_HEIGHT)}px`;
+  }, [draft]);
+
+  useEffect(() => {
+    if (autoFocus && !disabled) textRef.current?.focus();
+  }, [autoFocus, disabled]);
 
   const canSend = !disabled && !sending && (draft.trim().length > 0 || file !== null);
 
@@ -49,7 +85,7 @@ export function ChatComposer({
     }
   }
 
-  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+  function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       void submit();
@@ -91,7 +127,7 @@ export function ChatComposer({
           </button>
         </div>
       ) : null}
-      <div className="flex items-center gap-1 px-2 py-2">
+      <div className="flex items-end gap-1 px-2 py-2">
         <input
           ref={fileInputRef}
           type="file"
@@ -114,17 +150,18 @@ export function ChatComposer({
         >
           <ImagePlus size={18} />
         </button>
-        <input
-          type="text"
+        <textarea
+          ref={textRef}
+          rows={1}
           value={draft}
           disabled={disabled}
           placeholder={t("placeholder")}
           aria-label={t("placeholder")}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
-          maxLength={4000}
+          maxLength={CHAT_MAX_BODY_LENGTH}
           data-testid="chat-input"
-          className="h-[38px] min-w-0 flex-1 rounded-full border-0 px-4 text-[14.5px] outline-none placeholder:text-[var(--muted)]"
+          className="block max-h-[140px] min-h-[38px] min-w-0 flex-1 resize-none rounded-[19px] border-0 px-4 py-[9px] text-[14.5px] leading-5 outline-none placeholder:text-[var(--muted)]"
           style={{ background: "var(--chat-input)", color: "var(--ink)" }}
         />
         <button

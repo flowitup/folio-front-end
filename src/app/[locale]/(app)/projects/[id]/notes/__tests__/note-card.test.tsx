@@ -414,3 +414,42 @@ describe("NoteCard — year of an older note", () => {
     expect(addedText(new Date(2026, 9, 9, 12).toISOString())).not.toContain("2026");
   });
 });
+
+describe("NoteCard — long notes", () => {
+  const originalRO = globalThis.ResizeObserver;
+  afterEach(() => {
+    globalThis.ResizeObserver = originalRO;
+    vi.restoreAllMocks();
+  });
+
+  it("offers 'show more' to a read-only member when the text is clamped, without opening an editor", () => {
+    // jsdom has no layout: report a body taller than its clamped box.
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(416);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(187);
+    globalThis.ResizeObserver = class {
+      constructor(private cb: ResizeObserverCallback) {}
+      observe() {
+        this.cb([], this as unknown as ResizeObserver);
+      }
+      disconnect() {}
+      unobserve() {}
+    } as unknown as typeof ResizeObserver;
+    const onStartEdit = vi.fn();
+    const { container } = render(
+      <NoteCard
+        note={makeNote({ description: "1)\n2)\n3)\n4)\n5)\n6)\n7)\n8)\n9)\n10)\n11)" })}
+        isEditing={false}
+        onStartEdit={onStartEdit}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleDone={vi.fn()}
+        canEdit={false}
+      />
+    );
+    fireEvent.click(screen.getByRole("button", { name: "notes.showMore" }));
+    expect(container.querySelector(".nc-body")?.classList.contains("expanded")).toBe(true);
+    expect(screen.getByRole("button", { name: "notes.showLess" })).toBeDefined();
+    expect(onStartEdit).not.toHaveBeenCalled();
+  });
+});

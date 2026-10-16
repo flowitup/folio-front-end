@@ -25,8 +25,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Building2, Loader2, Plus, RefreshCw, TriangleAlert } from "lucide-react";
+import { Building2, KeyRound, Loader2, Plus, RefreshCw, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CompanyCreateDialog } from "@/components/companies/company-create-dialog";
+import { useOptionalAuth } from "@/context/AuthContext";
 import {
   Select,
   SelectContent,
@@ -41,8 +49,10 @@ import { JoinCompanyDialog } from "@/components/companies/join-company-dialog";
 // caller's own company id instead of an arbitrary one.
 import { CompanyJoinCodeCard } from "@/components/companies/company-join-code-card";
 import { CompanyMembersTable } from "@/components/companies/company-members-table";
+import { CompanyHiddenSectionsCard } from "@/components/companies/company-hidden-sections-card";
 import { CompanyPaymentMethodsCard } from "@/components/companies/company-payment-methods-card";
 import { CompanyLaborRolesCard } from "@/components/companies/company-labor-roles-card";
+import { ChatReportsCard } from "@/components/chat/chat-reports-card";
 import { CompanyProfileForm } from "@/components/companies/company-profile-form";
 import { useOptionalProject } from "@/context/ProjectContext";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
@@ -68,6 +78,8 @@ export function CompanySettingsSection() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [redeemOpen, setRedeemOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const refreshUser = useOptionalAuth()?.refreshUser;
   const [refreshToken, setRefreshToken] = useState(0);
 
   const fetchingRef = useRef(false);
@@ -164,10 +176,26 @@ export function CompanySettingsSection() {
               {t("description")}
             </p>
           </div>
-          <Button size="sm" onClick={() => setRedeemOpen(true)}>
-            <Plus size={14} className="mr-1.5" />
-            {tc("my.addCta")}
-          </Button>
+          {/* Create a company of one's own, or join one with a code (mobile has
+              always offered both; the web only joined). */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" data-testid="add-company">
+                <Plus size={14} className="mr-1.5" />
+                {tc("my.addCta")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => setCreateOpen(true)}>
+                <Building2 size={14} className="mr-2" />
+                {tc("my.createCta")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setRedeemOpen(true)}>
+                <KeyRound size={14} className="mr-2" />
+                {tc("my.joinCta")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="ink-divider my-5" />
@@ -298,6 +326,22 @@ export function CompanySettingsSection() {
                 key={`payment-methods-${selectedCompany.id}`}
                 companyId={selectedCompany.id}
               />
+
+              {/* Chat messages members reported: the admins are the moderators. */}
+              <ChatReportsCard key={`chat-reports-${selectedCompany.id}`} companyId={selectedCompany.id} />
+
+              {/* Sections the company does not use, hidden from every
+                  member's navigation (web and mobile). */}
+              <CompanyHiddenSectionsCard
+                key={`hidden-sections-${selectedCompany.id}`}
+                companyId={selectedCompany.id}
+                companyName={selectedCompany.legal_name}
+                initialHidden={selectedCompany.hidden_sections ?? []}
+                onSaved={() => {
+                  void load({ silent: true });
+                  void refreshUser?.();
+                }}
+              />
             </>
           )}
 
@@ -311,6 +355,19 @@ export function CompanySettingsSection() {
           )}
         </>
       )}
+
+      <CompanyCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={(company) => {
+          // Show the new company straight away (its roles, members, payment
+          // methods), and refresh the session's company list everywhere else.
+          setSelectedId(company.id);
+          void load({ silent: true });
+          void refreshUser?.();
+          void refetchProjects?.();
+        }}
+      />
 
       <JoinCompanyDialog
         open={redeemOpen}

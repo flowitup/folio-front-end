@@ -9,7 +9,7 @@
  */
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,7 @@ import { SupplierProductPicker } from "@/components/chiffrage/supplier-product-p
 import type { ChiffrageQuote, ChiffrageStore } from "@/lib/api/chiffrage";
 import { MAX_QUOTE_UNIT_PRICE } from "@/lib/numeric-bounds";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { formatDecimalForInput } from "@/components/ui/decimal-input";
 
 const TVA_PRESETS = ["20", "10", "5.5"];
 // Width of the quote's supplier_name column (the API refuses anything longer).
@@ -90,12 +91,16 @@ export function QuoteFormDialog({
   onCreateStore,
 }: Props) {
   const t = useTranslations("chiffrage");
+  const locale = useLocale();
   // Mounted only while open (see the page shell), so initialisers are the reset.
   // Editing always starts on the HT tab because HT is what is stored.
+  // Prefilled with the locale's decimal mark ("20,75" and "5,5" in French).
+  const initialPrice = quote ? formatDecimalForInput(String(quote.unit_price_ht), locale) : "";
+  const initialTva = quote ? formatDecimalForInput(String(quote.tva_rate), locale) : "20";
   const [storeId, setStoreId] = useState<string | null>(quote?.store_id ?? null);
   const [mode, setMode] = useState<"ht" | "ttc">("ht");
-  const [price, setPrice] = useState(quote ? String(quote.unit_price_ht) : "");
-  const [tva, setTva] = useState(quote ? String(quote.tva_rate) : "20");
+  const [price, setPrice] = useState(initialPrice);
+  const [tva, setTva] = useState(initialTva);
   const [url, setUrl] = useState(quote?.product_url ?? "");
   const [note, setNote] = useState(quote?.note ?? "");
   const [supplierId, setSupplierId] = useState<string | null>(quote?.supplier_id ?? null);
@@ -117,7 +122,10 @@ export function QuoteFormDialog({
     price.trim() !== "" && !Number.isNaN(priceNum) && priceNum >= 0;
   const tvaValid = !Number.isNaN(tvaNum) && tvaNum >= 0 && tvaNum <= 100;
   // The shop is what makes the price comparable, so it is what is required.
-  const storeValid = storeId !== null;
+  // A price whose shop was deleted keeps its shop name: it can still be
+  // edited without picking another shop.
+  const orphanName = quote && quote.store_id === null ? quote.supplier_name?.trim() || null : null;
+  const storeValid = storeId !== null || orphanName !== null;
   const converts = priceValid && tvaValid;
 
   // What actually gets stored, whichever way the user typed it.
@@ -161,15 +169,17 @@ export function QuoteFormDialog({
     const priceUnchanged =
       quote !== null &&
       mode === "ht" &&
-      price === String(quote.unit_price_ht) &&
-      tva === String(quote.tva_rate);
+      price === initialPrice &&
+      tva === initialTva;
     onSubmit({
       store_id: storeId,
       // A readable snapshot of the shop, kept so deleting the shop later never
       // blanks the row out. The link, not this string, drives the comparison.
       // Shop names run to 160 characters, the snapshot column to 120.
       supplier_name:
-        stores.find((s) => s.id === storeId)?.name.slice(0, SUPPLIER_NAME_MAX) ?? null,
+        storeId === null
+          ? orphanName
+          : (stores.find((s) => s.id === storeId)?.name.slice(0, SUPPLIER_NAME_MAX) ?? null),
       supplier_id: supplierId,
       library_product_id: productId,
       ...(priceUnchanged ? {} : { unit_price_ht: htValue.toFixed(4), tva_rate: String(tvaNum) }),
@@ -314,9 +324,10 @@ export function QuoteFormDialog({
                       key={rate}
                       type="button"
                       size="sm"
-                      variant={tva === rate ? "secondary" : "ghost"}
+                      // Compared as numbers: a typed "5,5" is the 5,5 % preset.
+                      variant={tvaNum === Number(rate) ? "secondary" : "ghost"}
                       className="h-7 px-2"
-                      onClick={() => setTva(rate)}
+                      onClick={() => setTva(formatDecimalForInput(rate, locale))}
                     >
                       {percent(Number(rate))}
                     </Button>

@@ -14,6 +14,9 @@ import { listProjects } from "@/lib/api/projects-server";
 import { BillingDocumentForm } from "@/components/billing/billing-document-form";
 import type { MyCompany } from "@/types/companies";
 import type { ProjectSummary } from "@/lib/api/projects-server";
+import { billingDocumentTitle } from "@/lib/billing/billing-page-title";
+
+export const generateMetadata = billingDocumentTitle("meta.invoices");
 
 interface EditFacturePageProps {
   params: Promise<{ id: string }>;

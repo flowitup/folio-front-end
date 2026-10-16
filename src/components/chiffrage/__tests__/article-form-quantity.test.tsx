@@ -14,6 +14,7 @@ import userEvent from "@testing-library/user-event";
 import { ArticleFormDialog } from "../article-form-dialog";
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "fr",
   useTranslations: () => (key: string) => key,
 }));
 

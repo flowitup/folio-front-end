@@ -13,9 +13,6 @@ import {
   it,
   expect,
   vi,
-  beforeEach,
-  afterEach,
-  type MockInstance,
 } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -56,16 +53,6 @@ function renderDialog(
 const rows = () => screen.getAllByTestId("room-row");
 
 describe("RoomsDialog", () => {
-  let confirmSpy: MockInstance<(message?: string) => boolean>;
-
-  beforeEach(() => {
-    confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
-  });
-
-  afterEach(() => {
-    confirmSpy.mockRestore();
-  });
-
   it("lists the rooms in the order the project holds them", () => {
     renderDialog();
     expect(rows().map((r) => r.textContent)).toEqual([
@@ -184,14 +171,18 @@ describe("RoomsDialog", () => {
     const { onDelete } = renderDialog();
     await userEvent.click(within(rows()[1]).getByLabelText("deleteRoom"));
 
-    expect(confirmSpy).toHaveBeenCalledWith("confirmDeleteRoom:Cuisine");
+    const alert = await screen.findByRole("alertdialog");
+    expect(alert.textContent).toContain("confirmDeleteRoom:Cuisine");
+    await userEvent.click(within(alert).getByRole("button", { name: "confirmDeleteAction" }));
     expect(onDelete).toHaveBeenCalledWith(ROOMS[1]);
   });
 
   it("deletes nothing when the confirmation is declined", async () => {
-    confirmSpy.mockReturnValue(false);
     const { onDelete } = renderDialog();
     await userEvent.click(within(rows()[1]).getByLabelText("deleteRoom"));
+    await userEvent.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "confirmDeleteCancel" })
+    );
     expect(onDelete).not.toHaveBeenCalled();
   });
 

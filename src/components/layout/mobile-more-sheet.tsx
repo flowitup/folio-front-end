@@ -19,8 +19,10 @@ import {
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
+import { isWithoutWorkspace } from "@/lib/auth/onboarding-gate";
 import { can, isCompanyAdmin } from "@/lib/auth/permissions";
 import { BILLING_NAV } from "@/components/layout/sidebar-billing-group";
+import { hiddenCompanyAreas, hiddenProjectSections } from "@/lib/companies/hidden-sections";
 
 interface MobileMoreSheetProps {
   open: boolean;
@@ -32,7 +34,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
   const locale = useLocale();
   const t = useTranslations("navigation");
   const tBilling = useTranslations("sidebar.billing");
-  const { selectedProjectId, selectedProject } = useProject();
+  const { selectedProjectId, selectedProject, projects } = useProject();
   const { user } = useAuth();
   // Mirror of the desktop sidebar gate: documents need effective
   // project:update, so members never get the entry point.
@@ -46,11 +48,19 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
   const canViewBilling = isCompanyAdmin(user?.companies, null, user?.permissions);
   const pathWithoutLocale =
     pathname.replace(new RegExp(`^/${locale}`), "") || "/";
+  // Sections a company turned off, as in the desktop sidebar.
+  const hiddenAreas = hiddenCompanyAreas(user?.companies);
+  const hiddenOnProject = hiddenProjectSections(user?.companies, selectedProject?.company_id);
+  const projectBillingVisible =
+    canViewBilling &&
+    !hiddenOnProject.has("billing") &&
+    (!selectedProject?.company_id ||
+      isCompanyAdmin(user?.companies, selectedProject.company_id, user?.permissions));
 
-  const projectItems = selectedProjectId
+  const allProjectItems = selectedProjectId
     ? [
         { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
-        ...(canViewBilling
+        ...(projectBillingVisible
           ? [
               {
                 key: "quotesInvoices",
@@ -68,16 +78,22 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
         { key: "photos", href: `/projects/${selectedProjectId}/photos`, icon: Images },
       ]
     : [];
+  const projectItems = allProjectItems.filter((item) => !hiddenOnProject.has(item.key));
 
   // Company-wide pages, as in the desktop sidebar.
-  const companyItems = [
-    { key: "bibliotheque", href: "/bibliotheque", icon: Library },
-    { key: "inventory", href: "/inventory", icon: Wrench },
+  // Library and inventory belong to a company: not offered before joining one.
+  const companyItems = isWithoutWorkspace(user, projects.length) ? [] : [
+    ...(hiddenAreas.has("library")
+      ? []
+      : [{ key: "bibliotheque", href: "/bibliotheque", icon: Library }]),
+    ...(hiddenAreas.has("inventory")
+      ? []
+      : [{ key: "inventory", href: "/inventory", icon: Wrench }]),
   ];
 
   // Same entries and gate as the desktop sidebar's Billing group: company
   // admins only (anyone else is redirected away from /billing).
-  const billingItems = canViewBilling
+  const billingItems = canViewBilling && !hiddenAreas.has("billing")
     ? BILLING_NAV.map((item) => ({ ...item, label: tBilling(item.key) }))
     : [];
 
@@ -131,7 +147,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
                     className={cn(
                       "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium transition-colors",
                       active
-                        ? "bg-[var(--paper-2)] text-[var(--accent)]"
+                        ? "bg-[var(--paper-2)] text-[var(--accent-ink)]"
                         : "text-[var(--ink)] active:bg-[var(--paper-2)]",
                     )}
                   >
@@ -159,7 +175,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
                   className={cn(
                     "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium transition-colors",
                     active
-                      ? "bg-[var(--paper-2)] text-[var(--accent)]"
+                      ? "bg-[var(--paper-2)] text-[var(--accent-ink)]"
                       : "text-[var(--ink)] active:bg-[var(--paper-2)]",
                   )}
                 >
@@ -190,7 +206,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
                   className={cn(
                     "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium transition-colors",
                     active
-                      ? "bg-[var(--paper-2)] text-[var(--accent)]"
+                      ? "bg-[var(--paper-2)] text-[var(--accent-ink)]"
                       : "text-[var(--ink)] active:bg-[var(--paper-2)]",
                   )}
                 >
@@ -210,7 +226,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
             className={cn(
               "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium transition-colors",
               isActive(settingsItem.href)
-                ? "bg-[var(--paper-2)] text-[var(--accent)]"
+                ? "bg-[var(--paper-2)] text-[var(--accent-ink)]"
                 : "text-[var(--ink)] active:bg-[var(--paper-2)]",
             )}
           >

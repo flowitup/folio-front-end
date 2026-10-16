@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ChevronsUpDown, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -27,7 +27,10 @@ import {
   deleteLaborRoleAction,
   updateLaborRoleAction,
 } from "./labor-role-actions";
-import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
+import {
+  laborRoleDisplayName,
+  sortRolesByLabel,
+} from "@/lib/utils/default-role-names";
 import type { LaborRole } from "@/types/labor-role";
 
 interface RoleSelectWithCreateProps {
@@ -45,6 +48,26 @@ interface RoleSelectWithCreateProps {
   canManage?: boolean;
   onRoleUpdated?: (role: LaborRole) => void;
   onRoleDeleted?: (roleId: string) => void;
+  /**
+   * The company whose roles these are (the project's company). Inline "Create"
+   * adds the role there; without it the backend would pick the caller's
+   * default company, which a worker of this project cannot use.
+   */
+  companyId?: string | null;
+  /**
+   * Reload the role list from the server and return it. Used when "Create"
+   * answers that the name already exists (someone added it elsewhere since
+   * the list was loaded): the existing role is then selected instead.
+   */
+  onRefreshRoles?: () => Promise<LaborRole[] | null>;
+  /**
+   * What the selected role looks like when it is not (or not yet) in `roles`
+   * — the worker's own role_name / role_color — so an edit dialog never shows
+   * "Select a role" for a worker who has one.
+   */
+  selectedFallback?: Pick<LaborRole, "name" | "color"> & { slug?: string | null };
+  /** Id of the trigger, so a <Label htmlFor> names the field. */
+  id?: string;
 }
 
 /**
@@ -93,8 +116,13 @@ export function RoleSelectWithCreate({
   canManage = false,
   onRoleUpdated,
   onRoleDeleted,
+  companyId,
+  onRefreshRoles,
+  selectedFallback,
+  id,
 }: RoleSelectWithCreateProps) {
   const tRole = useTranslations("labor.role.defaults");
+  const locale = useLocale();
   const t = useTranslations("labor.role");
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
@@ -110,23 +138,28 @@ export function RoleSelectWithCreate({
   const trashRef = React.useRef<HTMLButtonElement>(null);
   const refocusTrashRef = React.useRef(false);
 
-  const selectedRole = value ? roles.find((r) => r.id === value) : null;
   const roleName = React.useCallback(
-    (role: LaborRole) => {
-      const key = resolveDefaultRoleI18nKey(role);
-      return key ? tRole(key) : role.name;
-    },
+    (role: Pick<LaborRole, "name"> & { id?: string; slug?: string | null }) =>
+      laborRoleDisplayName(role, tRole),
     [tRole],
   );
+  const selectedRole: (Pick<LaborRole, "name" | "color"> & { slug?: string | null }) | null =
+    (value ? roles.find((r) => r.id === value) : null) ?? (value ? selectedFallback ?? null : null);
 
   const trimmed = query.trim();
 
+  // Sorted by what the viewer reads: default roles are stored in Vietnamese.
+  const sortedRoles = React.useMemo(
+    () => sortRolesByLabel(roles, tRole, locale),
+    [roles, tRole, locale],
+  );
+
   // Filter roles by search query (client-side — list is small).
   const filteredRoles = React.useMemo(() => {
-    if (!trimmed) return roles;
+    if (!trimmed) return sortedRoles;
     const lower = trimmed.toLowerCase();
-    return roles.filter((r) => roleName(r).toLowerCase().includes(lower));
-  }, [roles, trimmed, roleName]);
+    return sortedRoles.filter((r) => roleName(r).toLowerCase().includes(lower));
+  }, [sortedRoles, trimmed, roleName]);
 
   const exactMatch =
     trimmed.length > 0 &&
@@ -200,8 +233,25 @@ export function RoleSelectWithCreate({
 
   function handleCreate(values: { name: string; color: string }) {
     void runRequest("createFailed", async () => {
-      const result = await createLaborRoleAction(values);
+      const result = await createLaborRoleAction(values, companyId ?? undefined);
       if (!result.success) {
+        // Created elsewhere since this list was loaded: reload and pick it.
+        if (result.error === "duplicate" && onRefreshRoles) {
+          const fresh = await onRefreshRoles();
+          const wanted = values.name.trim().toLocaleLowerCase();
+          const existing = fresh?.find(
+            (r) =>
+              r.name.trim().toLocaleLowerCase() === wanted ||
+              roleName(r).trim().toLocaleLowerCase() === wanted,
+          );
+          if (existing) {
+            onChange(existing.id);
+            setOpen(false);
+            setQuery("");
+            setPanel({ kind: "none" });
+            return;
+          }
+        }
         setPanelError(laborRoleErrorMessage(t, result, "create"));
         return;
       }
@@ -259,6 +309,7 @@ export function RoleSelectWithCreate({
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
+          id={id}
           type="button"
           role="combobox"
           aria-expanded={open}

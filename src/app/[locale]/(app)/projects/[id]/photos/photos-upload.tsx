@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { parisDayKey } from "@/lib/utils/paris-day";
+import { retryAfterOf } from "@/lib/api/rate-limit";
+import { abortableSleep } from "@/lib/import/rate-limit-retry";
 
 // ---- Constants ----
 
@@ -42,6 +44,14 @@ export function mediaKind(file: File): "image" | "video" | null {
   if (ALLOWED_VIDEO_EXT.has(ext) && (ALLOWED_VIDEO_MIME.has(type) || genericMime)) return "video";
   return null;
 }
+
+/** Retries of one file after a 429, each after the API's Retry-After. */
+const RATE_LIMIT_RETRIES = 3;
+/** Wait used when a 429 carries no Retry-After; longer waits are capped. */
+const DEFAULT_PAUSE_SECONDS = 20;
+const MAX_PAUSE_SECONDS = 65;
+/** Failed file names listed in the end-of-batch summary. */
+const SUMMARY_NAMES = 5;
 
 // ---- Types ----
 
@@ -88,9 +98,13 @@ function classifyError(err: unknown, kind: "image" | "video" | null): string {
  * Photo batch upload control.
  * Validates files client-side (size + MIME), then POSTs each directly to the
  * BE API from the browser — no bytes pass through the Next server. A shared
- * caption and captured date are applied to the entire batch.
+ * caption is applied to the entire batch; the date is optional — left empty,
+ * each file keeps its own (EXIF / video metadata, read by the API).
  */
-export function PhotosUpload({ projectId, onUploaded }: Props) {
+export function PhotosUpload({ projectId, onUploaded, sleep = abortableSleep }: Props & {
+  /** Injected for tests. */
+  sleep?: (ms: number) => Promise<void>;
+}) {
   const t = useTranslations("photos");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -98,6 +112,7 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
   const [capturedAt, setCapturedAt] = useState("");
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [pausedFor, setPausedFor] = useState<number | null>(null);
 
   async function handleFiles(files: File[]) {
     if (files.length === 0) return;
@@ -127,19 +142,39 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
     setProgress({ done: 0, total: valid.length });
 
     let successCount = 0;
+    const failed: File[] = [];
+    let rateLimitedCount = 0;
 
     for (const file of valid) {
-      try {
-        const photo = await uploadProjectPhoto(projectId, file, {
-          caption: caption.trim() || undefined,
-          capturedAt: capturedAt || undefined,
-        });
-        onUploaded(photo);
-        successCount++;
-      } catch (err: unknown) {
-        const errorKey = classifyError(err, mediaKind(file));
-        const msgKey = `errors.${errorKey}` as Parameters<typeof t>[0];
-        toast.error(t(msgKey), { description: file.name });
+      // Uploads go one after another; a 429 (upload limit per minute) pauses
+      // for the API's Retry-After and sends the same file again, so a big
+      // end-of-day batch slows down instead of dropping its tail.
+      for (let attempt = 0; ; attempt++) {
+        try {
+          const photo = await uploadProjectPhoto(projectId, file, {
+            caption: caption.trim() || undefined,
+            capturedAt: capturedAt || undefined,
+          });
+          onUploaded(photo);
+          successCount++;
+        } catch (err: unknown) {
+          const errorKey = classifyError(err, mediaKind(file));
+          if (errorKey === "rateLimited" && attempt < RATE_LIMIT_RETRIES) {
+            const seconds = Math.min(retryAfterOf(err) ?? DEFAULT_PAUSE_SECONDS, MAX_PAUSE_SECONDS);
+            setPausedFor(seconds);
+            await sleep(seconds * 1000);
+            setPausedFor(null);
+            continue;
+          }
+          failed.push(file);
+          // Rate-limited files are only named in the summary below.
+          if (errorKey === "rateLimited") rateLimitedCount++;
+          else {
+            const msgKey = `errors.${errorKey}` as Parameters<typeof t>[0];
+            toast.error(t(msgKey), { description: file.name });
+          }
+        }
+        break;
       }
 
       setProgress((prev) => prev ? { ...prev, done: prev.done + 1 } : null);
@@ -147,8 +182,18 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
 
     setUploading(false);
     setProgress(null);
+    setPausedFor(null);
 
-    if (successCount > 0) {
+    if (failed.length > 0 && (successCount > 0 || rateLimitedCount > 0)) {
+      // One summary for the whole batch ("34 sur 36 téléversées"), naming the
+      // files that did not go through, with a button to send just those again.
+      const names = failed.slice(0, SUMMARY_NAMES).map((f) => f.name).join(", ");
+      const more = failed.length - SUMMARY_NAMES;
+      toast.error(t("uploadSummary", { done: successCount, total: valid.length, failed: failed.length }), {
+        description: more > 0 ? `${names} ${t("uploadSummaryMore", { count: more })}` : names,
+        action: { label: t("retryFailed"), onClick: () => void handleFiles(failed) },
+      });
+    } else if (successCount > 0 && failed.length === 0) {
       toast.success(t("uploadSuccess", { count: successCount }));
       // Reset shared fields after a successful batch
       setCaption("");
@@ -183,7 +228,11 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
             value={capturedAt}
             onChange={(e) => setCapturedAt(e.target.value)}
             disabled={uploading}
+            aria-describedby="upload-captured-at-hint"
           />
+          <p id="upload-captured-at-hint" className="text-xs text-muted-foreground">
+            {t("capturedAt.batchHint")}
+          </p>
         </div>
       </div>
 
@@ -205,6 +254,7 @@ export function PhotosUpload({ projectId, onUploaded }: Props) {
           <span className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" aria-hidden />
             {t("uploading")} {progress.done}/{progress.total}
+            {pausedFor !== null && <span>· {t("uploadPaused", { seconds: pausedFor })}</span>}
           </span>
         )}
       </div>

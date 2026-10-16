@@ -138,13 +138,23 @@ export function formatGapPercent(pct: number): string {
  * quote, which a user may have pinned to a dearer one.
  */
 export function bestMixHt(articles: ChiffrageArticle[]): number {
-  let total = 0;
+  let cents = 0;
   for (const article of articles) {
     if (article.quotes.length === 0) continue;
     const cheapest = Math.min(...article.quotes.map((q) => q.unit_price_ht));
-    total += cheapest * article.quantity;
+    // Each line rounded to the cent like the API's baskets (half up), so an
+    // equal basket compares equal instead of "+0,00 €" off.
+    cents += lineCents(cheapest * article.quantity);
   }
-  return total;
+  return cents / 100;
+}
+
+/** An amount in whole cents, half up (the API's ROUND_HALF_UP). */
+export function lineCents(amount: number): number {
+  // toFixed(6) first: 6.5 × 20.75 is 134.875 exactly, but other products
+  // land a hair under the half (…4999999) in binary.
+  const sign = amount < 0 ? -1 : 1;
+  return sign * Math.round(Number(Math.abs(amount).toFixed(6)) * 100);
 }
 
 /**
@@ -154,5 +164,6 @@ export function bestMixHt(articles: ChiffrageArticle[]): number {
  * gives the compare dialog something to show.
  */
 export function hasComparablePrices(poste: { store_baskets: { priced_article_count: number }[] }): boolean {
-  return poste.store_baskets.some((b) => b.priced_article_count > 0);
+  // Comparing needs two shops with a price: one shop alone has nothing to beat.
+  return poste.store_baskets.filter((b) => b.priced_article_count > 0).length >= 2;
 }

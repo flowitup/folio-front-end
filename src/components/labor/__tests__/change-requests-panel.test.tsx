@@ -8,7 +8,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 
 import enMessages from "@/messages/en.json";
-import { ChangeRequestsPanel, RefuseChangeDialog } from "../change-requests-panel";
+import { ChangeRequestsPanel, RefuseChangeDialog, RejectEntryDialog } from "../change-requests-panel";
 import type { AttendanceChangeRequest } from "@/types/labor";
 
 const REQUEST: AttendanceChangeRequest = {
@@ -114,5 +114,24 @@ describe("RefuseChangeDialog", () => {
     render(withIntl(<RefuseChangeDialog request={REQUEST} busy onConfirm={vi.fn()} onCancel={vi.fn()} />));
     expect(screen.getByRole("button", { name: "Refuse" })).toHaveProperty("disabled", true);
     expect(screen.getByRole("button", { name: "Cancel" })).toHaveProperty("disabled", true);
+  });
+});
+
+describe("RejectEntryDialog", () => {
+  it("asks in-app before refusing a self-logged day", () => {
+    const onConfirm = vi.fn();
+    const onCancel = vi.fn();
+    render(withIntl(<RejectEntryDialog entry={{ worker_name: "Karim" }} onConfirm={onConfirm} onCancel={onCancel} />));
+    const dialog = screen.getByRole("alertdialog");
+    expect(within(dialog).getByText(/Karim/)).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole("button", { name: enMessages.labor.reject }));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    fireEvent.click(within(dialog).getByRole("button", { name: enMessages.labor.cancel }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays closed without an entry", () => {
+    render(withIntl(<RejectEntryDialog entry={null} onConfirm={vi.fn()} onCancel={vi.fn()} />));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 });

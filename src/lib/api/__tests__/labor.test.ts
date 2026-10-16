@@ -8,7 +8,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { logAttendance, updateAttendance, fetchLaborEntries, fetchLaborExport } from "../labor";
+import {
+  logAttendance,
+  updateAttendance,
+  fetchLaborEntries,
+  fetchLaborExport,
+  crossProjectConflictsOf,
+} from "../labor";
 import { ApiError } from "../http";
 
 // Mock the http module — keep ApiError + CSRF helpers real; stub api methods
@@ -169,6 +175,41 @@ describe("logAttendance — supplement_hours guard", () => {
 
     const [, bodyArg] = vi.mocked(api.post).mock.calls[0];
     expect((bodyArg as Record<string, unknown>).supplement_hours).toBe(7);
+  });
+});
+
+describe("logAttendance — cross-site double-booking check", () => {
+  beforeEach(() => {
+    vi.mocked(api.post).mockResolvedValue(STUB_ENTRY);
+  });
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("asks the server to check conflicts by default", async () => {
+    await logAttendance("proj-1", { ...BASE_PAYLOAD, shift_type: "full" });
+    const [, bodyArg] = vi.mocked(api.post).mock.calls[0];
+    expect(bodyArg).toMatchObject({ check_conflicts: true, worker_id: "worker-1" });
+  });
+
+  it("passes the user's acknowledgement through", async () => {
+    await logAttendance("proj-1", { ...BASE_PAYLOAD, shift_type: "full", acknowledge_conflicts: true });
+    const [, bodyArg] = vi.mocked(api.post).mock.calls[0];
+    expect(bodyArg).toMatchObject({ check_conflicts: true, acknowledge_conflicts: true });
+  });
+
+  it("reads the conflicts of a cross-site 409 and nothing else", () => {
+    const conflicts = [{ person_id: "p1", person_name: "Hugo", entries: [] }];
+    const conflict = new ApiError("Conflict", 409, {
+      error: "Conflict",
+      reason: "cross_project_conflict",
+      message: "Cross-project conflicts exist",
+      conflicts,
+    });
+    expect(crossProjectConflictsOf(conflict)).toEqual(conflicts);
+    expect(crossProjectConflictsOf(new ApiError("Conflict", 409, { error: "Conflict" }))).toBeNull();
+    expect(crossProjectConflictsOf(new ApiError("Bad", 400, { conflicts }))).toBeNull();
+    expect(crossProjectConflictsOf(new Error("network"))).toBeNull();
   });
 });
 

@@ -23,6 +23,8 @@ export interface Worker {
   role_id?: string | null;
   role_name?: string | null;
   role_color?: string | null;
+  /** Slug of a default role ("tho_chinh" / "tho_phu"), to translate role_name. */
+  role_slug?: string | null;
   // Rate in effect today: latest rate_change with effective_date <= today,
   // else the base daily_rate. Optional for back-compat with older API responses.
   current_daily_rate?: number;
@@ -126,6 +128,12 @@ export interface LogAttendancePayload {
   note?: string;
   shift_type?: ShiftType | null;
   supplement_hours?: number;
+  /** Ask the server to refuse (409) a worker already logged on another of
+   *  the company's projects that day. `logAttendance` sends true by default;
+   *  the server keeps it opt-in for older clients. */
+  check_conflicts?: boolean;
+  /** The user saw the 409's conflicts and logs anyway. */
+  acknowledge_conflicts?: boolean;
 }
 
 export interface UpdateAttendancePayload {
@@ -185,9 +193,11 @@ export interface ConflictsResponse {
   conflicts: ConflictGroup[];
 }
 
-/** Server payload on 409 from bulk endpoint. */
+/** Server payload on 409 from the bulk and single-entry endpoints. */
 export interface BulkConflictError {
   error: "Conflict";
+  /** Set on the single-entry 409 so it reads apart from a duplicate entry. */
+  reason?: "cross_project_conflict";
   message: string;
   conflicts: ConflictGroup[];
 }

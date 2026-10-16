@@ -243,6 +243,9 @@ export interface RefundableExpense {
   id: string;
   project_id: string;
   project_name: string;
+  /** Company the expense belongs to (owes the refund); absent on older APIs. */
+  company_id?: string;
+  company_name?: string;
   invoice_number: string;
   recipient_name: string;
   /** Issue date in YYYY-MM-DD format. */
@@ -268,6 +271,11 @@ export interface RefundableExpense {
   funds_release_number?: string | null;
   /** Invoice files attached to this expense, ordered by upload time. */
   attachments: RefundableExpenseAttachment[];
+  /** Payment method the expense was paid with (who to pay back); absent on older APIs. */
+  payment_method_id?: string | null;
+  payment_method_label?: string | null;
+  /** Site address of the project, shown in place of its name (projectDisplayName). */
+  project_address?: string | null;
 }
 
 /**
@@ -283,4 +291,6 @@ export interface RefundableSummary {
   refunded_by_bank: number;
   /** Overlap: expenses refunded by both sides (already included in each figure above). */
   refunded_by_both: number;
+  /** What the bank channel still owes (the dashboard's "remboursable · banque"). Older APIs omit it. */
+  bank_outstanding?: number;
 }

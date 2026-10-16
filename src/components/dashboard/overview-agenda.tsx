@@ -111,6 +111,20 @@ export function OverviewAgenda({ groups, planningHref, loading = false }: Overvi
                 {t(GROUP_LABEL_KEY[key])}
               </div>
               {group.tasks.map((task) => row(task, key === "overdue"))}
+              {group.hidden > 0 &&
+                (planningHref ? (
+                  <Link
+                    href={planningHref}
+                    className="block py-1 text-[12px] font-medium"
+                    data-testid={`agenda-more-${key}`}
+                  >
+                    {t("agenda.more", { n: group.hidden })}
+                  </Link>
+                ) : (
+                  <div className="py-1 text-[12px]" style={{ color: "var(--muted)" }} data-testid={`agenda-more-${key}`}>
+                    {t("agenda.more", { n: group.hidden })}
+                  </div>
+                ))}
             </div>
           );
         })

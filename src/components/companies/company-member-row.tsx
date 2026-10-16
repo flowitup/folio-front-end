@@ -12,7 +12,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import { SlidersHorizontal, UserX } from "lucide-react";
+import { SlidersHorizontal, UserMinus, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import {
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { MemberPickerDropdown, type MemberPickerOption } from "@/components/companies/member-picker-dropdown";
 import { formatFrenchPhone } from "@/lib/auth/phone-number";
+import { formatDate } from "@/lib/utils/formatters";
 import type { MemberRow } from "@/lib/companies/merge-member-rows";
 import type { AttachedUser, CompanyRole } from "@/types/companies";
 
@@ -41,6 +42,8 @@ interface Props {
   onProjectToggle: (row: MemberRow, option: MemberPickerOption, checked: boolean) => void;
   onOpenGrants: (target: AttachedUser) => void;
   onCancelInvitation: (row: MemberRow) => void;
+  /** Remove this person from the company (confirmed first). Absent: no Remove action (own row). */
+  onRemove?: (row: MemberRow) => void;
 }
 
 export function CompanyMemberRow({
@@ -55,6 +58,7 @@ export function CompanyMemberRow({
   onProjectToggle,
   onOpenGrants,
   onCancelInvitation,
+  onRemove,
 }: Props) {
   const t = useTranslations("companySettings.members");
   const userId = row.userId;
@@ -78,6 +82,11 @@ export function CompanyMemberRow({
             </span>
           )}
         </div>
+        {row.pending && row.pendingExpiresAt && (
+          <div className="mt-0.5 text-[11px]" style={{ color: "var(--muted)" }}>
+            {t("pendingExpires", { date: formatDate(row.pendingExpiresAt) })}
+          </div>
+        )}
       </TableCell>
       <TableCell className="text-[13px]" style={{ color: "var(--muted)" }}>
         {row.phone ? formatFrenchPhone(row.phone) : "—"}
@@ -100,13 +109,19 @@ export function CompanyMemberRow({
               ))}
             </SelectContent>
           </Select>
+        ) : row.pending && row.pendingRole ? (
+          // The role they get when they sign up; it cannot change before then.
+          <span className="text-[12px]" style={{ color: "var(--muted)" }} title={t("availableAfterSignup")}>
+            {roleLabel(row.pendingRole)}
+          </span>
         ) : (
           <span className="text-[12px]" style={{ color: "var(--muted)" }}>
             —
           </span>
         )}
       </TableCell>
-      <TableCell>
+      {/* A pending person has no account yet: company and project access key on it. */}
+      <TableCell title={row.pending ? t("availableAfterSignup") : undefined}>
         <MemberPickerDropdown
           options={companyOptions}
           selectedIds={row.companies.map((c) => c.id)}
@@ -117,31 +132,51 @@ export function CompanyMemberRow({
           onToggle={(option, checked) => onCompanyToggle(row, option, checked)}
         />
       </TableCell>
-      <TableCell>
-        <MemberPickerDropdown
-          options={projectOptions}
-          selectedIds={row.assignedProjectIds}
-          disabled={row.pending}
-          isMutating={isProjectMutating}
-          placeholder={t("projectsPickerPlaceholder")}
-          emptyText={t("projectsPickerEmpty")}
-          onToggle={(option, checked) => onProjectToggle(row, option, checked)}
-        />
+      <TableCell title={row.pending ? t("availableAfterSignup") : undefined}>
+        {row.role === "admin" ? (
+          // A company admin reaches every project of the company: nothing to assign.
+          <span className="text-[12px]" style={{ color: "var(--muted)" }}>
+            {t("allProjects")}
+          </span>
+        ) : (
+          <MemberPickerDropdown
+            options={projectOptions}
+            selectedIds={row.assignedProjectIds}
+            disabled={row.pending}
+            isMutating={isProjectMutating}
+            placeholder={t("projectsPickerPlaceholder")}
+            emptyText={t("projectsPickerEmpty")}
+            onToggle={(option, checked) => onProjectToggle(row, option, checked)}
+          />
+        )}
       </TableCell>
-      <TableCell>
+      <TableCell className="whitespace-nowrap">
         {attachedUser && row.role !== "admin" && (
           <Button
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-[12px]"
             onClick={() => onOpenGrants(attachedUser)}
-            // Icon-only below xl: the full label pushed the column out of the
-            // settings card at 1366px, where it scrolled out of sight.
+            // Icon-only (named by aria-label and title): with its label the
+            // column left the settings card at every width up to 1440px.
             aria-label={t("customPermissions")}
             title={t("customPermissions")}
           >
-            <SlidersHorizontal size={12} className="xl:mr-1" aria-hidden="true" />
-            <span className="hidden xl:inline">{t("customPermissions")}</span>
+            <SlidersHorizontal size={14} aria-hidden="true" />
+          </Button>
+        )}
+        {userId && onRemove && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-[12px]"
+            style={{ color: "var(--negative)" }}
+            onClick={() => onRemove(row)}
+            aria-label={t("bootAction")}
+            title={t("bootAction")}
+          >
+            <UserMinus size={12} className="xl:mr-1" aria-hidden="true" />
+            <span className="hidden xl:inline">{t("bootAction")}</span>
           </Button>
         )}
         {row.pending && row.personId && (
@@ -153,8 +188,7 @@ export function CompanyMemberRow({
             aria-label={t("cancelInvitation")}
             title={t("cancelInvitation")}
           >
-            <UserX size={12} className="xl:mr-1" aria-hidden="true" />
-            <span className="hidden xl:inline">{t("cancelInvitation")}</span>
+            <UserX size={14} aria-hidden="true" />
           </Button>
         )}
       </TableCell>

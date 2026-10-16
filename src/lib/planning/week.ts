@@ -59,3 +59,15 @@ export function weekOffsetFromParam(param: string | null): number {
   const n = Number.parseInt(param, 10);
   return Number.isFinite(n) ? n : 0;
 }
+
+/**
+ * A task is overdue when it is not done and its due date is before today
+ * (`todayKey` = the viewer's local `YYYY-MM-DD`). Same rule as the dashboard
+ * agenda's "En retard" stamp.
+ */
+export function isTaskOverdue(
+  task: { due_date?: string | null; status: string },
+  todayKey: string,
+): boolean {
+  return !!task.due_date && task.status !== "done" && task.due_date < todayKey;
+}

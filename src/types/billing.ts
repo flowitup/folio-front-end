@@ -58,6 +58,8 @@ export interface BillingDocument {
   issuer_iban: string | null;
   issuer_bic: string | null;
   issuer_logo_url: string | null;
+  /** The issuing company (always sent by the API). */
+  company_id?: string | null;
   source_devis_id: string | null;
   /** Set on a devis once it has been converted: the facture it became. */
   converted_to_facture_id?: string | null;
@@ -80,6 +82,8 @@ export interface BillingDocumentTemplate {
   terms: string | null;
   default_vat_rate: string | null;
   items: BillingDocumentItem[];
+  /** The company the template belongs to (templates are company-wide). */
+  company_id?: string | null;
   created_at: string;
   updated_at: string;
 }

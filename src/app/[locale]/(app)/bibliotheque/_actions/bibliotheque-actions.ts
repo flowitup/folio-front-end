@@ -17,6 +17,7 @@ import {
   deleteProduct,
   uploadProductImage,
   setProductImageFromUrl,
+  deleteProductImage,
   importPurchases,
   type ProductListResult,
   type ProductDetailResult,
@@ -136,6 +137,17 @@ export async function deleteProductAction(
     return { ok: true };
   } catch (err) {
     return { ok: false, ...(await classifyBackendError(err)) };
+  }
+}
+
+export async function deleteProductImageAction(
+  productId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await deleteProductImage(productId);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: await errorText(err) };
   }
 }
 

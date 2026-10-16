@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { DisabledReason } from "@/components/ui/disabled-reason";
 import { toast } from "sonner";
 import { UserPlus, Users } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
@@ -108,11 +109,25 @@ export function MembersTable({
 
   // Same rule as the API (DELETE /assignments): a company admin may remove
   // anyone, a manager only a company `member`; nobody removes themselves here.
+  // A company admin is on every project of the company: the API refuses (409) to
+  // remove them from one, so their row never offers Remove.
   const canRemove = (member: ProjectMember) =>
-    member.user_id !== currentUserId && (callerIsCompanyAdmin || member.role_name === "member");
+    member.user_id !== currentUserId &&
+    member.role_name !== "admin" &&
+    (callerIsCompanyAdmin || member.role_name === "member");
   // Why Remove is greyed out on someone else's row (it used to stay active and 403).
-  const removeBlockedReason = (member: ProjectMember) =>
-    member.user_id !== currentUserId && !canRemove(member) ? t("edit.removeOnlyAdmin") : undefined;
+  // Your own row says why too (it used to be greyed out with no reason).
+  const removeBlockedReason = (member: ProjectMember) => {
+    if (member.user_id === currentUserId) return t("edit.removeSelf");
+    if (canRemove(member)) return undefined;
+    return member.role_name === "admin" ? t("edit.removeCompanyAdmin") : t("edit.removeOnlyAdmin");
+  };
+  const roleLabel = (member: ProjectMember) =>
+    member.role_name === "admin"
+      ? `${t("roles.admin")} · ${t("allProjectsAccess")}`
+      : member.role_name
+        ? t(`roles.${member.role_name}`)
+        : null;
 
   const handleRevoke = async (invitationId: string) => {
     setRevokingId(invitationId);
@@ -137,7 +152,11 @@ export function MembersTable({
       const result = await removeMemberAction(projectId, member.user_id);
       if (!result.ok) {
         toast.error(
-          result.status === 403 ? t("edit.toast.forbidden") : t("edit.toast.removeFailed")
+          result.status === 403
+            ? t("edit.toast.forbidden")
+            : result.status === 409
+              ? t("edit.removeCompanyAdmin")
+              : t("edit.toast.removeFailed")
         );
         return;
       }
@@ -153,8 +172,8 @@ export function MembersTable({
   return (
     <div className="fade-up space-y-8 px-4 pb-12 lg:px-8">
       {/* Page header — wraps on phones, where fr/vi button labels are long. */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2" data-testid="members-header">
-        <h1 className="font-display text-[22px] font-semibold">{t("title")}</h1>
+      {/* The topbar holds the page title; this row only carries the actions. */}
+      <div className="flex flex-wrap items-center justify-end gap-3 pt-2" data-testid="members-header">
         <div className="flex flex-wrap gap-2">
           {canAssignMembers && companyId && (
             <Button
@@ -210,9 +229,9 @@ export function MembersTable({
                       <div className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
                         {userContact(member)}
                       </div>
-                      {member.role_name && (
+                      {roleLabel(member) && (
                         <div className="text-[12px]" style={{ color: "var(--muted)" }}>
-                          {t(`roles.${member.role_name}`)}
+                          {roleLabel(member)}
                         </div>
                       )}
                     </div>
@@ -237,17 +256,18 @@ export function MembersTable({
                           {t("edit.button")}
                         </Button>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 flex-1"
-                        style={{ color: "var(--negative)" }}
-                        disabled={removingId === member.user_id || !canRemove(member)}
-                        title={removeBlockedReason(member)}
-                        onClick={() => setPendingRemove(member)}
-                      >
-                        {t("edit.remove")}
-                      </Button>
+                      <DisabledReason reason={removeBlockedReason(member)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 flex-1"
+                          style={{ color: "var(--negative)" }}
+                          disabled={removingId === member.user_id || !canRemove(member)}
+                          onClick={() => setPendingRemove(member)}
+                        >
+                          {t("edit.remove")}
+                        </Button>
+                      </DisabledReason>
                     </div>
                   )}
                 </div>
@@ -261,7 +281,7 @@ export function MembersTable({
                 <TableRow>
                   <TableHead style={{ width: 40 }} />
                   <TableHead>{t("col.name")}</TableHead>
-                  <TableHead>{t("col.email")}</TableHead>
+                  <TableHead>{t("col.contact")}</TableHead>
                   <TableHead>{t("col.role")}</TableHead>
                   <TableHead>{t("col.joined")}</TableHead>
                   {canManageMembers && (
@@ -292,7 +312,7 @@ export function MembersTable({
                       {userContact(member) || "—"}
                     </TableCell>
                     <TableCell style={{ color: "var(--muted)" }}>
-                      {member.role_name ? t(`roles.${member.role_name}`) : "—"}
+                      {roleLabel(member) ?? "—"}
                     </TableCell>
                     <TableCell className="num" style={{ color: "var(--muted)" }}>
                       {formatDate(member.joined_at)}
@@ -310,17 +330,18 @@ export function MembersTable({
                               {t("edit.button")}
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-[12px]"
-                            style={{ color: "var(--negative)" }}
-                            disabled={removingId === member.user_id || !canRemove(member)}
-                            title={removeBlockedReason(member)}
-                            onClick={() => setPendingRemove(member)}
-                          >
-                            {t("edit.remove")}
-                          </Button>
+                          <DisabledReason reason={removeBlockedReason(member)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-[12px]"
+                              style={{ color: "var(--negative)" }}
+                              disabled={removingId === member.user_id || !canRemove(member)}
+                              onClick={() => setPendingRemove(member)}
+                            >
+                              {t("edit.remove")}
+                            </Button>
+                          </DisabledReason>
                         </div>
                       </TableCell>
                     )}

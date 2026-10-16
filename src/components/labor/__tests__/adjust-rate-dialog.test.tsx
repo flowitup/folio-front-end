@@ -101,6 +101,12 @@ const DEFAULT_PROPS: DialogProps = {
   onOpenChange: vi.fn(),
 };
 
+/** Deleting a rate change asks first: confirm in the alert dialog. */
+async function confirmDelete() {
+  const confirm = await screen.findByRole("button", { name: "delete" });
+  fireEvent.click(confirm);
+}
+
 function renderDialog(props: Partial<DialogProps> = {}) {
   return render(<AdjustRateDialog {...DEFAULT_PROPS} {...props} />);
 }
@@ -372,6 +378,20 @@ describe("AdjustRateDialog — delete", () => {
     vi.mocked(deleteWorkerRateChange).mockResolvedValue(undefined);
   });
 
+  it("asks before deleting and says which rate the days go back to", async () => {
+    renderDialog();
+    await waitFor(() => {
+      expect(document.querySelector("[data-testid='delete-rate-change-rc-uuid-1']")).toBeTruthy();
+    });
+    fireEvent.click(document.querySelector("[data-testid='delete-rate-change-rc-uuid-1']") as HTMLButtonElement);
+
+    expect(await screen.findByText("rateChange.confirmDeleteTitle")).toBeInTheDocument();
+    expect(deleteWorkerRateChange).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "cancel" }));
+    await waitFor(() => expect(screen.queryByText("rateChange.confirmDeleteTitle")).toBeNull());
+    expect(deleteWorkerRateChange).not.toHaveBeenCalled();
+  });
+
   it("calls deleteWorkerRateChange with correct ids", async () => {
     renderDialog();
 
@@ -385,6 +405,7 @@ describe("AdjustRateDialog — delete", () => {
       "[data-testid='delete-rate-change-rc-uuid-1']",
     ) as HTMLButtonElement;
     fireEvent.click(deleteBtn);
+    await confirmDelete();
 
     await waitFor(() => {
       expect(deleteWorkerRateChange).toHaveBeenCalledWith(
@@ -407,6 +428,7 @@ describe("AdjustRateDialog — delete", () => {
     fireEvent.click(
       document.querySelector("[data-testid='delete-rate-change-rc-uuid-1']") as HTMLButtonElement,
     );
+    await confirmDelete();
 
     await waitFor(() => {
       expect(mockToast.success).toHaveBeenCalledWith("rateChange.deletedToast");
@@ -425,6 +447,7 @@ describe("AdjustRateDialog — delete", () => {
     fireEvent.click(
       document.querySelector("[data-testid='delete-rate-change-rc-uuid-1']") as HTMLButtonElement,
     );
+    await confirmDelete();
 
     await waitFor(() => {
       // Initial load + re-fetch after delete = 2 calls
@@ -445,6 +468,7 @@ describe("AdjustRateDialog — delete", () => {
     fireEvent.click(
       document.querySelector("[data-testid='delete-rate-change-rc-uuid-1']") as HTMLButtonElement,
     );
+    await confirmDelete();
 
     await waitFor(() => {
       expect(onChanged).toHaveBeenCalledTimes(1);
@@ -515,6 +539,7 @@ describe("AdjustRateDialog — effective date and API errors", () => {
     });
 
     fireEvent.click(document.querySelector("[data-testid='delete-rate-change-rc-uuid-1']") as HTMLButtonElement);
+    await confirmDelete();
 
     await waitFor(() => {
       expect(screen.getByRole("alert").textContent).toBe("rateChange.errorGeneric");

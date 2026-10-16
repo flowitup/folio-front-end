@@ -3,9 +3,11 @@
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { formatEURWhole } from "@/lib/utils/formatters";
+import { formatEURWhole, formatEURCompact } from "@/lib/utils/formatters";
 import { formatPercent } from "@/lib/utils/format-percent";
 import { useDataTip } from "@/components/invoices/data-tip";
+import { useChartLink } from "@/components/dashboard/use-chart-link";
+import { expenseListHref } from "@/lib/invoices/expense-filters";
 import {
   monthKeyToDate,
   roundPartsToTotal,
@@ -53,7 +55,8 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
   const monthFmt = new Intl.DateTimeFormat(locale, { month: "short" });
   // Same delegated hover tooltip the Expense summary uses on its month bars.
   const monthYearFmt = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" });
-  const { onMouseMove, onMouseLeave, overlay } = useDataTip();
+  const { tipHandlers, overlay } = useDataTip();
+  const chartLink = useChartLink();
   // Axis ticks sit 34 units apart: vi's short month ("Tháng 4") is too wide,
   // so each locale picks a compact tick ("T4" in vi).
   const monthTick = (key: string) => {
@@ -72,8 +75,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
     <div
       className="folio-card flex flex-col p-6"
       data-testid="overview-type-minis"
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
+      {...tipHandlers}
     >
       {/* Wraps the range and the link to their own lines on narrow screens
           rather than squeezing the title onto three lines ("Chi / phí →"). */}
@@ -118,28 +120,48 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                   className="h-[9px] w-[9px] flex-none rounded-[3px]"
                   style={{ background: TYPE_COLOR[bucket.type] }}
                 />
-                <span className="text-[12.5px] font-semibold">{tInvoices(`types.${bucket.type}`)}</span>
+                {viewExpenseHref ? (
+                  <Link
+                    href={expenseListHref(viewExpenseHref, { type: bucket.type })}
+                    className="text-[12.5px] font-semibold hover:underline"
+                    data-testid={`overview-type-link-${bucket.type}`}
+                  >
+                    {tInvoices(`types.${bucket.type}`)}
+                  </Link>
+                ) : (
+                  <span className="text-[12.5px] font-semibold">{tInvoices(`types.${bucket.type}`)}</span>
+                )}
               </div>
               <div className="num my-1.5 text-[18px] font-medium" style={{ letterSpacing: "-.02em" }}>
                 {unavailable ? "—" : formatEURWhole(shownTotals[bucketIdx])}
               </div>
               <div className="mb-2 text-[11px]" style={{ color: "var(--muted)" }}>
                 {unavailable ? "\u00a0" : tInvoices("invoiceCount", { n: bucket.count })}
-                {bucket.deltaPct !== null && (
+                {/* Neutral, and named: less labor this month can be unpaid
+                    work, not a saving. While the month runs, both months are
+                    cut at today's day. */}
+                {!unavailable && bucket.deltaPct !== null && lastIdx > 0 && (
                   <>
                     {" · "}
-                    <span
-                      className="num font-medium"
-                      style={{ color: bucket.deltaPct > 0 ? "var(--negative)" : "var(--positive)" }}
-                    >
-                      {formatPercent(locale, bucket.deltaPct, true)}
+                    <span className="num" data-testid={`overview-type-delta-${bucket.type}`}>
+                      {bucket.toDay
+                        ? t("money.vsMonthToDate", {
+                            delta: formatPercent(locale, bucket.deltaPct, true),
+                            day: bucket.toDay,
+                            month: monthFmt.format(monthKeyToDate(bucket.monthly[lastIdx - 1].key)),
+                          })
+                        : tInvoices("summary.vsMonth", {
+                            delta: formatPercent(locale, bucket.deltaPct, true),
+                            month: monthFmt.format(monthKeyToDate(bucket.monthly[lastIdx - 1].key)),
+                          })}
                     </span>
                   </>
                 )}
               </div>
               <svg
                 viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-                aria-hidden="true"
+                role="group"
+                aria-label={tInvoices(`types.${bucket.type}`)}
                 className="block h-auto w-full"
                 style={{ maxWidth: CHART_W }}
               >
@@ -157,10 +179,28 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                   />
                 ))}
                 {bucket.monthly.map((p, i) => (
-                  <text key={`${p.key}-lbl`} x={midX(i)} y={114} textAnchor="middle" fontSize={10} fill="var(--muted-2)">
+                  <text key={`${p.key}-lbl`} x={midX(i)} y={114} textAnchor="middle" fontSize={10} fill="var(--muted)">
                     {monthTick(p.key)}
                   </text>
                 ))}
+                {/* The value of each month, readable without hovering. */}
+                {!unavailable &&
+                  bucket.monthly.map((p, i) =>
+                    p.total !== 0 ? (
+                      <text
+                        key={`${p.key}-val`}
+                        x={midX(i)}
+                        y={Math.max(BASELINE_Y - heights[i] - 5, 20).toFixed(1)}
+                        textAnchor="middle"
+                        fontSize={8.5}
+                        fill="var(--muted)"
+                        aria-hidden="true"
+                        data-testid={`overview-type-value-${bucket.type}-${p.key}`}
+                      >
+                        {formatEURCompact(locale, p.total)}
+                      </text>
+                    ) : null
+                  )}
                 <polyline
                   points={trendPoints}
                   fill="none"
@@ -174,20 +214,29 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                   <circle key={`${bucket.monthly[i].key}-dot`} cx={midX(i)} cy={(BASELINE_Y - h).toFixed(1)} r={2.75} fill="var(--ink)" stroke="var(--card-paper)" strokeWidth={1.5} />
                 ))}
                 {/* Invisible per-month hit areas (painted last = on top) so the
-                    hover target is the full column, not just the thin bar. */}
-                {bucket.monthly.map((p, i) => (
-                  <rect
-                    key={`${p.key}-hit`}
-                    x={barX(i) - 5}
-                    y={BASELINE_Y - PLOT_H - 6}
-                    width={34}
-                    height={PLOT_H + 24}
-                    fill="transparent"
-                    data-tip={`${monthYearFmt.format(monthKeyToDate(p.key))}|${formatEURWhole(
-                      p.total
-                    )}|${tInvoices("invoiceCount", { n: p.count })}`}
-                  />
-                ))}
+                    target is the full column, not just the thin bar. Each opens
+                    that type's expenses of that month. */}
+                {bucket.monthly.map((p, i) => {
+                  const tip = `${monthYearFmt.format(monthKeyToDate(p.key))}|${formatEURWhole(
+                    p.total
+                  )}|${tInvoices("invoiceCount", { n: p.count })}`;
+                  return (
+                    <rect
+                      key={`${p.key}-hit`}
+                      x={barX(i) - 5}
+                      y={BASELINE_Y - PLOT_H - 6}
+                      width={34}
+                      height={PLOT_H + 24}
+                      fill="transparent"
+                      data-tip={tip}
+                      data-testid={`overview-type-bar-${bucket.type}-${p.key}`}
+                      {...chartLink(
+                        viewExpenseHref ? expenseListHref(viewExpenseHref, { type: bucket.type, month: p.key }) : null,
+                        `${tInvoices(`types.${bucket.type}`)} · ${tip.split("|").join(" · ")}`
+                      )}
+                    />
+                  );
+                })}
                 {/* Return markers, painted after the column hit areas so the
                     marker's own (smaller) hit area wins the hover and shows
                     the credit rather than the month's net total. */}
@@ -216,8 +265,7 @@ export function OverviewTypeMinis({ buckets, viewExpenseHref, unavailable = fals
                   ) : null
                 )}
               </svg>
-              {/* The chart is aria-hidden and its figures live in hover tips:
-                  screen readers get the same months as a table. */}
+              {/* Screen readers also get the months as a table. */}
               {!unavailable && (
                 <table className="sr-only">
                   <caption>{tInvoices(`types.${bucket.type}`)}</caption>

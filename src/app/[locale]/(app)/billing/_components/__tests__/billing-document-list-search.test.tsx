@@ -109,7 +109,14 @@ describe("BillingDocumentList rows", () => {
   it("opens the document when its row is clicked", () => {
     renderList();
 
-    fireEvent.click(screen.getAllByRole("link", { name: "DEV-2026-070" })[0]);
+    // The number is a real link (new tab, copy link) to the document…
+    expect(screen.getAllByRole("link", { name: "DEV-2026-070" })[0]).toHaveAttribute(
+      "href",
+      "/en/billing/devis/doc-1"
+    );
+    // …and a click elsewhere on the row opens it too.
+    const row = screen.getAllByRole("link", { name: "DEV-2026-070" })[0].closest("tr, .folio-card")!;
+    fireEvent.click(row);
 
     expect(mockPush).toHaveBeenCalledWith("/en/billing/devis/doc-1");
   });

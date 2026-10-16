@@ -62,5 +62,7 @@ export interface AcceptInvitePayload {
 export interface RequestInviteCodePayload {
   token: string;
   phone: string;
+  /** Language the SMS is written in: the page's. */
+  locale?: "en" | "fr" | "vi";
 }
 

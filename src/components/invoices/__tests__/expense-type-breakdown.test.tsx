@@ -295,3 +295,18 @@ describe("ExpenseTypeBreakdown — axis labels", () => {
     expect(screen.queryByText("2K")).toBeNull();
   });
 });
+
+describe("ExpenseTypeBreakdown — whole-euro totals add up (expenses-invoices-21)", () => {
+  it("rounds the rows like the Overview so they sum to the total", () => {
+    render(
+      <ExpenseTypeBreakdown
+        company={breakdown({ others: [28.64, 1], materials_services: [346.75, 2] })}
+        personal={emptyBreakdown()}
+      />
+    );
+    const txt = (id: string) => screen.getByTestId(id).textContent!.replace(/\s/g, "");
+    expect(txt("type-total-others")).toBe("28€");
+    expect(txt("type-total-materials_services")).toBe("347€");
+    expect(txt("type-breakdown-total")).toContain("375€");
+  });
+});

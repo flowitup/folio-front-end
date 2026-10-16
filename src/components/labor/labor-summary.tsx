@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { formatBonusDays, formatDays } from "@/components/labor/format-days";
 import { personInitials } from "@/lib/utils/person-color";
 import { Calendar, ChevronRight, ChevronDown, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MonthPickerPopover } from "@/components/ui/month-picker";
 import type {
   LaborSummaryResponse,
   LaborMonthlySummaryResponse,
@@ -123,10 +124,6 @@ export function LaborSummary({
   // Year filter — null = "All years". Only meaningful when month filter
   // is unset (we're in the all-history monthly-rollup view).
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
-  // Ref to the hidden native <input type="month">. The Folio-styled
-  // trigger button calls showPicker() on it so users get the native OS
-  // month picker without the browser UA chrome.
-  const monthInputRef = useRef<HTMLInputElement>(null);
 
   // month === "" → unbounded "all history" summary. Switch labels + headers
   // to a localized "All history" string and hide the Clear button.
@@ -279,12 +276,33 @@ export function LaborSummary({
   // bonus-inclusive Total would produce a figure that doesn't reconcile —
   // Balance only appears in single-month mode, where both sides are scoped
   // to the same worker+month.
+  // Labor payments no visible month row can show: the no-service-month
+  // bucket (all history only) and months paid without any attendance. They
+  // get their own line so the grand total matches labor_paid elsewhere.
+  const paidOutsideMonths = useMemo(() => {
+    const visible = new Set(
+      filteredMonthlyRows.map((r) => `${r.year}-${String(r.month).padStart(2, "0")}`),
+    );
+    const acc = { total: 0, company: 0, personal: 0 };
+    for (const b of paymentsSummary?.months ?? []) {
+      if (b.year == null || b.month == null) {
+        if (selectedYear != null) continue;
+      } else {
+        if (selectedYear != null && b.year !== selectedYear) continue;
+        if (visible.has(`${b.year}-${String(b.month).padStart(2, "0")}`)) continue;
+      }
+      acc.total += b.total_paid;
+      acc.company += b.company_paid ?? 0;
+      acc.personal += b.personal_paid ?? 0;
+    }
+    return acc;
+  }, [filteredMonthlyRows, paymentsSummary, selectedYear]);
   const totalPaidAllHistory = useMemo(() => {
     return filteredMonthlyRows.reduce((sum, r) => {
       const ym = `${r.year}-${String(r.month).padStart(2, "0")}`;
       return sum + (bucketByMonthKey.get(ym)?.total_paid ?? 0);
-    }, 0);
-  }, [filteredMonthlyRows, bucketByMonthKey]);
+    }, paidOutsideMonths.total);
+  }, [filteredMonthlyRows, bucketByMonthKey, paidOutsideMonths]);
   // Company/personal split of totalPaidAllHistory — same visible-month scope,
   // so the footer caption always reconciles with the rows above it.
   const totalSplitAllHistory = useMemo(() => {
@@ -296,9 +314,9 @@ export function LaborSummary({
         acc.personal += bucket?.personal_paid ?? 0;
         return acc;
       },
-      { company: 0, personal: 0 },
+      { company: paidOutsideMonths.company, personal: paidOutsideMonths.personal },
     );
-  }, [filteredMonthlyRows, bucketByMonthKey]);
+  }, [filteredMonthlyRows, bucketByMonthKey, paidOutsideMonths]);
 
   if (isLoading) {
     return (
@@ -320,6 +338,9 @@ export function LaborSummary({
               count: totalBonusDays,
               bonusCost: formatEUR(totalBonusCost),
             })}
+          </p>
+          <p className="mt-1 text-[12px]" style={{ color: "var(--ink-2)" }} data-testid="supplement-banner-rule">
+            {t("supplement.bannerRule")}
           </p>
         </div>
       )}
@@ -360,7 +381,7 @@ export function LaborSummary({
           <div className="label-cap">{t("supplement.bonusCost")}</div>
           <div
             className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
-            style={{ color: "var(--accent)" }}
+            style={{ color: "var(--accent-ink)" }}
           >
             {formatEUR(totalBonusCost)}
           </div>
@@ -416,24 +437,10 @@ export function LaborSummary({
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <button
-                type="button"
-                className="folio-month-picker"
-                onClick={() => {
-                  const el = monthInputRef.current;
-                  if (!el) return;
-                  // showPicker() is preferred (Chrome/Safari/FF modern). Focus
-                  // is the fallback when the API isn't available — at minimum
-                  // the user can type a value.
-                  if (typeof el.showPicker === "function") {
-                    el.showPicker();
-                  } else {
-                    el.focus();
-                  }
-                }}
-                aria-label={t("filterMonth")}
-              >
+            {/* The app's own month picker: the hidden <input type="month"> +
+                showPicker() did nothing in Firefox and Safari on macOS. */}
+            <MonthPickerPopover value={month} onChange={onMonthChange}>
+              <button type="button" className="folio-month-picker" aria-label={t("filterMonth")}>
                 <Calendar size={14} aria-hidden="true" />
                 <span className="num">
                   {isAllHistory ? t("summaryMonthPickerAll") : periodLabel}
@@ -444,23 +451,7 @@ export function LaborSummary({
                   style={{ color: "var(--muted)", marginLeft: 2 }}
                 />
               </button>
-              <input
-                ref={monthInputRef}
-                type="month"
-                value={month}
-                onChange={(e) => onMonthChange(e.target.value)}
-                aria-hidden="true"
-                tabIndex={-1}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  opacity: 0,
-                  pointerEvents: "none",
-                }}
-              />
-            </div>
+            </MonthPickerPopover>
             {!isAllHistory && (
               <Button
                 type="button"
@@ -579,7 +570,21 @@ export function LaborSummary({
                           </button>
                         </td>
                         <td className="font-display text-[14px] font-semibold tracking-tight">
-                          {formatYearMonthLabel(row, locale)}
+                          {/* The row opens the month on click; this button
+                              gives keyboard and screen-reader users the same. */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onMonthChange(ym);
+                            }}
+                            title={t("summaryDrillDown")}
+                            data-testid={`month-open-${ym}`}
+                            className="rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            style={{ color: "inherit", font: "inherit", cursor: "pointer" }}
+                          >
+                            {formatYearMonthLabel(row, locale)}
+                          </button>
                           {(showUnpaidWarning || showOverpaidWarning) && (
                             // Under the month on a phone, beside it from sm up; a stamp
                             // never wraps inside its pill.
@@ -766,6 +771,19 @@ export function LaborSummary({
                               style={{ textAlign: "right", border: "none", paddingTop: 6, paddingBottom: 6 }}
                             >
                               {formatEUR(w.total_cost)}
+                              {(w.bonus_cost ?? 0) > 0 && (
+                                <div
+                                  className="text-[10.5px] font-normal"
+                                  style={{ color: "var(--muted)" }}
+                                  data-testid={`worker-subrow-bonus-${ym}-${w.worker_id}`}
+                                >
+                                  {t("supplement.bonusLine", {
+                                    cost: formatEUR(w.bonus_cost ?? 0),
+                                    days: formatBonusDays(w.bonus_days ?? 0, locale),
+                                    hours: w.banked_hours ?? 0,
+                                  })}
+                                </div>
+                              )}
                             </td>
                             <td
                               className="num text-[12.5px] font-medium tabular-nums"
@@ -783,6 +801,19 @@ export function LaborSummary({
                     }
                     return rows;
                   })}
+                  {paidOutsideMonths.total > 0.004 && (
+                    <tr data-testid="labor-paid-outside-months-row">
+                      <td />
+                      <td style={{ color: "var(--muted)" }}>{t("summaryPaidOutsideMonths")}</td>
+                      <td />
+                      <td />
+                      <td />
+                      <td />
+                      <td className="num tabular-nums" style={{ textAlign: "right" }}>
+                        {formatEUR(paidOutsideMonths.total)}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
                 <tfoot>
                   <tr style={{ background: "var(--paper-2)" }}>
@@ -843,7 +874,7 @@ export function LaborSummary({
                   // the locale map, custom roles display their DB name.
                   const rowWorker = workerById.get(row.worker_id);
                   const rowRoleKey = rowWorker
-                    ? resolveDefaultRoleI18nKey({ id: rowWorker.role_id, name: rowWorker.role_name })
+                    ? resolveDefaultRoleI18nKey({ id: rowWorker.role_id, name: rowWorker.role_name, slug: rowWorker.role_slug })
                     : null;
                   const roleName = rowRoleKey ? tRole(rowRoleKey) : rowWorker?.role_name;
                   // Paid matched by worker_id within the viewed month's

@@ -37,7 +37,7 @@ describe("ProfileForm", () => {
     expect(document.body.textContent).not.toContain("no-email");
     expect(screen.queryByLabelText(en.settings.email)).toBeNull();
     expect(screen.queryByText(en.settings.emailReadOnlyHint)).toBeNull();
-    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("+336 99 27 10 01");
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("+33 6 99 27 10 01");
   });
 
   it("shows a real e-mail read-only", () => {

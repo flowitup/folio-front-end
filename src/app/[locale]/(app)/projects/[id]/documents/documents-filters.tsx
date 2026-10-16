@@ -22,7 +22,24 @@ type Props = {
   /** Who actually has documents here (from the backend), not the project assignments. */
   uploaders: DocumentUploader[];
   onChange: (next: { kinds: ProjectDocumentKind[]; tags: string[]; uploaderId: string | null }) => void;
+  /** Active sort. Below lg there are no column headers, so a select sets it. */
+  sort?: DocumentSort;
+  order?: "asc" | "desc";
+  onSortSelect?: (sort: DocumentSort, order: "asc" | "desc") => void;
 };
+
+export type DocumentSort = "name" | "size" | "created_at" | "uploader";
+
+// The sort choices offered by the select shown below lg.
+const SORT_OPTIONS: { value: string; key: string }[] = [
+  { value: "created_at:desc", key: "newest" },
+  { value: "created_at:asc", key: "oldest" },
+  { value: "name:asc", key: "nameAsc" },
+  { value: "name:desc", key: "nameDesc" },
+  { value: "size:desc", key: "sizeDesc" },
+  { value: "size:asc", key: "sizeAsc" },
+  { value: "uploader:asc", key: "uploaderAsc" },
+];
 
 // ---- Kind chip options ----
 
@@ -33,12 +50,23 @@ const ALL_KINDS: ProjectDocumentKind[] = [
   "doc",
   "cad",
   "text",
-  "other",
+  // No "other": every accepted extension maps to one of the kinds above, so
+  // that chip could only ever list nothing.
 ];
 
 // ---- Component ----
 
-export function DocumentsFilters({ kinds, selectedTags, availableTags, uploaderId, uploaders, onChange }: Props) {
+export function DocumentsFilters({
+  kinds,
+  selectedTags,
+  availableTags,
+  uploaderId,
+  uploaders,
+  onChange,
+  sort,
+  order,
+  onSortSelect,
+}: Props) {
   const t = useTranslations("documents.filter");
   const tKinds = useTranslations("documents.kinds");
 
@@ -133,6 +161,33 @@ export function DocumentsFilters({ kinds, selectedTags, availableTags, uploaderI
             ))}
           </SelectContent>
         </Select>
+
+        {/* Sort — below lg only: the desktop table sorts from its headers. */}
+        {onSortSelect && sort && order && (
+          <div className="lg:hidden">
+            <Select
+              value={`${sort}:${order}`}
+              onValueChange={(value) => {
+                const [nextSort, nextOrder] = value.split(":") as [DocumentSort, "asc" | "desc"];
+                onSortSelect(nextSort, nextOrder);
+              }}
+            >
+              <SelectTrigger size="sm" className="w-auto min-w-[160px]" aria-label={t("sortLabel")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.some((o) => o.value === `${sort}:${order}`) ? null : (
+                  <SelectItem value={`${sort}:${order}`}>{t("sortLabel")}</SelectItem>
+                )}
+                {SORT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {t(`sortOptions.${option.key}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Reset */}
         {hasFilters && (

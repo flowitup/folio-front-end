@@ -120,6 +120,7 @@ import {
 import { toast } from "sonner";
 import type { MyCompany } from "@/types/companies";
 
+
 const mockCreate = vi.mocked(createBillingDocumentAction);
 const mockUpdate = vi.mocked(updateBillingDocumentAction);
 const mockDelete = vi.mocked(deleteBillingDocumentAction);
@@ -231,11 +232,9 @@ async function fillAndSubmitCreateForm(recipientName = "Test Client") {
     fireEvent.change(cmdInputs[0], { target: { value: "Dev work" } });
   });
 
-  // Fill unit price (first spinbutton for that row is qty, second is unit_price)
-  const spinButtons = screen.getAllByRole("spinbutton");
-  // spinbuttons: [qty, unit_price] for the item row
-  fireEvent.change(spinButtons[0], { target: { value: "1" } }); // qty
-  fireEvent.change(spinButtons[1], { target: { value: "500" } }); // unit_price
+  // Quantity and unit price are decimal text fields (comma or point).
+  fireEvent.change(screen.getAllByRole("textbox", { name: "Qty" })[0], { target: { value: "1" } });
+  fireEvent.change(screen.getAllByRole("textbox", { name: /unit price/i })[0], { target: { value: "500" } });
 
   // Submit
   await act(async () => {

@@ -35,9 +35,17 @@ export interface MergePersonsPayload {
 export interface MergePersonsResponse {
   target_person_id: string;
   workers_reassigned: number;
+  /** The source's company profiles moved over (the target had none in that company). */
+  profiles_moved?: number;
+  /** The source's company profiles folded into the target's (target values kept, blanks filled). */
+  profiles_merged?: number;
+  /** The source's sign-in account now belongs to the target. */
+  account_linked?: boolean;
 }
 
 export interface PersonSearchParams {
   q?: string;
   limit?: number;
+  /** Search only this company's directory (sent as company_id). */
+  companyId?: string;
 }

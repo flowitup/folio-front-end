@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -16,7 +16,9 @@ import { updateProject } from "@/lib/api/projects";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/auth/permissions";
 import type { Project } from "@/types/project";
-import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { MAX_BUDGET } from "@/lib/numeric-bounds";
+import { formatEUR } from "@/lib/utils/formatters";
 
 interface EditProjectDialogProps {
   project: Project | null;
@@ -52,6 +54,7 @@ export function EditProjectDialog({
   const canViewBudget = can("project:view_budget", user?.permissions, project?.my_permissions);
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
+  const locale = useLocale();
   const [budget, setBudget] = useState("");
   const [budgetSource, setBudgetSource] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,7 +67,8 @@ export function EditProjectDialog({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(customLabel(project));
       setAddress(project.address ?? "");
-      setBudget(project.budget != null ? String(project.budget) : "");
+      // In the viewer's notation ("12500,50" in French), never "12500.5".
+      setBudget(formatMoneyInput(project.budget, locale, { minDecimals: 2, maxDecimals: 2 }));
       setBudgetSource(project.budget_source ?? "");
       setError(null);
       setIsSubmitting(false);
@@ -102,6 +106,10 @@ export function EditProjectDialog({
       const parsed = parseMoneyInput(trimmedBudgetStr);
       if (parsed === null) {
         setError(t("budgetInvalid"));
+        return;
+      }
+      if (Math.abs(parsed) > MAX_BUDGET) {
+        setError(t("budgetTooLarge", { max: formatEUR(MAX_BUDGET) }));
         return;
       }
       budgetValue = parsed;

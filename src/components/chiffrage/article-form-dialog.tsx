@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ import { RoomSelect } from "@/components/chiffrage/room-select";
 import type { ChiffrageArticle, ChiffrageRoom, ChiffrageUnit } from "@/lib/api/chiffrage";
 import { MAX_ARTICLE_QUANTITY } from "@/lib/numeric-bounds";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { formatDecimalForInput } from "@/components/ui/decimal-input";
 
 interface Props {
   open: boolean;
@@ -36,6 +37,8 @@ interface Props {
     room_id: string | null;
   }) => void;
   onCreateUnit: (symbol: string) => Promise<ChiffrageUnit | null>;
+  /** Remove a custom unit (refused while articles use it). */
+  onDeleteUnit?: (unit: ChiffrageUnit) => Promise<boolean>;
   onCreateRoom: (name: string) => Promise<ChiffrageRoom | null>;
 }
 
@@ -48,12 +51,16 @@ export function ArticleFormDialog({
   onOpenChange,
   onSubmit,
   onCreateUnit,
+  onDeleteUnit,
   onCreateRoom,
 }: Props) {
   const t = useTranslations("chiffrage");
+  const locale = useLocale();
   // Mounted only while open (see the page shell), so initialisers are the reset.
   const [name, setName] = useState(article?.name ?? "");
-  const [qty, setQty] = useState(article ? String(article.quantity) : "1");
+  const [qty, setQty] = useState(
+    article ? formatDecimalForInput(String(article.quantity), locale) : "1"
+  );
   const [unit, setUnit] = useState<string | null>(article?.unit ?? null);
   const [note, setNote] = useState(article?.note ?? "");
   const [roomId, setRoomId] = useState<string | null>(article?.room_id ?? null);
@@ -63,7 +70,7 @@ export function ArticleFormDialog({
   // A text field, not type="number": Chrome reads a number field in the OS
   // language, so in an English browser "2,5" became 25 without a word. Here
   // "," and "." both work (3 decimals, as stored) and anything else is refused.
-  const qtyNum = parseMoneyInput(qty, { maxDecimals: 3 });
+  const qtyNum = parseMoneyInput(qty, { maxDecimals: 3, ambiguousGrouping: "decimal" });
   const qtyTooLarge = qtyNum !== null && qtyNum > MAX_ARTICLE_QUANTITY;
   const qtyInvalid = qty.trim() !== "" && qtyNum === null && qtyTouched;
   const qtyValid = qtyNum !== null && !qtyTooLarge;
@@ -144,6 +151,7 @@ export function ArticleFormDialog({
                   units={units}
                   onChange={setUnit}
                   onCreateUnit={onCreateUnit}
+                  onDeleteUnit={onDeleteUnit}
                 />
               </div>
             </div>

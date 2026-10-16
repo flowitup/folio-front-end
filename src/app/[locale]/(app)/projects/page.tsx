@@ -5,7 +5,12 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
-import { projectDisplayName, projectMatchesSearch } from "@/lib/projects/project-display-name";
+import {
+  projectDisplayName,
+  projectMatchesSearch,
+  projectSecondaryLabel,
+} from "@/lib/projects/project-display-name";
+import { projectCompanyLabel } from "@/lib/companies/page-company";
 import { useAuth } from "@/context/AuthContext";
 import {
   Plus,
@@ -48,7 +53,8 @@ import { EditProjectDialog } from "@/components/project/edit-project-dialog";
 import { DeleteProjectDialog } from "@/components/project/delete-project-dialog";
 import type { Project, ProjectUser } from "@/types/project";
 import { fmtEUR, computeBudgetMeta, personalSpendRows } from "@/lib/projects/budget-display";
-import { userContact, userInitial } from "@/lib/auth/user-display";
+import { formatShare } from "@/lib/utils/format-percent";
+import { userContact, userDisplayName, userInitial } from "@/lib/auth/user-display";
 import { toast } from "sonner";
 
 const COVER_GRADIENTS = [
@@ -117,6 +123,12 @@ export default function ProjectsPage() {
   const canDeleteProject = (project: Project) =>
     can("project:delete", user?.permissions, project.my_permissions);
 
+  // The list is loaded once per session: an expense added since (same tab,
+  // client navigation) would leave the money figures stale. Refresh quietly.
+  useEffect(() => {
+    void refetch({ silent: true });
+  }, [refetch]);
+
   const canCreate = canCreateProject(user?.permissions, user?.companies);
   // No company at all (e.g. they just left their only one): nobody can assign
   // them, so point to onboarding rather than "waiting to be assigned".
@@ -155,16 +167,18 @@ export default function ProjectsPage() {
     can("project:manage_users", user?.permissions, project.my_permissions);
   // Same rule as the API (DELETE /assignments) and the members page: a company
   // admin may remove anyone, a manager only a company `member`, nobody themselves.
+  // A company admin is on every project of the company and is never removed from one (409).
   const canRemoveFromTeam = (project: Project, member: ProjectUser) =>
     member.id !== user?.id &&
+    member.role_name !== "admin" &&
     (isCompanyAdmin(user?.companies, project.company_id ?? null, user?.permissions) ||
       member.role_name === "member");
   // Adding people happens on the project's members page, which holds both
   // flows: e-mail invitation (project:invite) and assigning an existing company
-  // member (project:update, PUT /assignments — company-scoped search).
+  // member (project:manage_users, PUT /assignments — company-scoped search).
   const canAddMembers = (project: Project) =>
     can("project:invite", user?.permissions, project.my_permissions) ||
-    can("project:update", user?.permissions, project.my_permissions);
+    can("project:manage_users", user?.permissions, project.my_permissions);
 
   const adminCompanies = (user?.companies ?? []).filter((c) => c.role === "admin");
 
@@ -182,8 +196,10 @@ export default function ProjectsPage() {
     await loadProjectUsers(projectId);
   };
 
-  const loadProjectUsers = async (projectId: string) => {
-    if (projectUsers[projectId]) return;
+  // `force` refetches even when a list is cached: after a removal the cached
+  // list in this render's closure is stale, so skipping would leave it empty.
+  const loadProjectUsers = async (projectId: string, force = false) => {
+    if (!force && projectUsers[projectId]) return;
     setLoadingUsers(projectId);
     try {
       const response = await fetchProjectUsers(projectId);
@@ -203,16 +219,23 @@ export default function ProjectsPage() {
         toast.error(
           result.status === 403
             ? tMembers("edit.toast.forbidden")
-            : tMembers("edit.toast.removeFailed")
+            : result.status === 409
+              ? tMembers("edit.removeCompanyAdmin")
+              : tMembers("edit.toast.removeFailed")
         );
         return;
       }
+      // Drop the removed person at once, then refetch the real list.
       setProjectUsers((prev) => {
-
-        const { [removeMember.projectId]: _, ...rest } = prev;
-        return rest;
+        const current = prev[removeMember.projectId];
+        if (!current) return prev;
+        return {
+          ...prev,
+          [removeMember.projectId]: current.filter((u) => u.id !== removeMember.userId),
+        };
       });
-      await loadProjectUsers(removeMember.projectId);
+      toast.success(tMembers("edit.toast.removed"));
+      await loadProjectUsers(removeMember.projectId, true);
       refetch();
     } catch {
       toast.error(tMembers("edit.toast.removeFailed"));
@@ -261,6 +284,7 @@ export default function ProjectsPage() {
             <input
               className="folio-input num w-full sm:w-60"
               placeholder={t("searchProjects")}
+              aria-label={t("searchProjects")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ paddingLeft: 30 }}
@@ -301,13 +325,19 @@ export default function ProjectsPage() {
               creditTotal,
               spentByCredits,
               spentPersonal,
+              spentUnassigned,
               remaining,
               isOverBudget,
               progress,
+              progressPct,
             } = computeBudgetMeta(
               project.budget ?? 0,
               project.spent_personal ?? 0,
               project.spent_by_credits ?? 0,
+              // Same definition as the Overview: credit − every expense, net of returns.
+              project.spent_invoiced ??
+                (project.spent_personal ?? 0) + (project.spent_by_credits ?? 0) + (project.spent_unassigned ?? 0),
+              project.spent_unassigned ?? 0,
             );
             // Financing side of this project: the backend nulls `budget` without
             // `project:view_budget`, so the credit/remaining columns and the
@@ -322,12 +352,15 @@ export default function ProjectsPage() {
             const canViewSpend =
               can("project:manage_labor", user?.permissions, project.my_permissions) ||
               can("project:view_pay", user?.permissions, project.my_permissions);
-            const moneyColumns = (canViewBudget ? 2 : 0) + (canViewSpend ? 2 : 0);
+            // Remaining and the share spent need both: without the spend (zeroed by
+            // the API) they would claim the whole credit is left.
+            const canViewRemaining = canViewBudget && canViewSpend;
+            const moneyColumns = (canViewBudget ? 1 : 0) + (canViewSpend ? 2 : 0) + (canViewRemaining ? 1 : 0);
             // Grid rows of each shown figure (see MONEY_CELL_ROWS), by its position.
             const creditCell = MONEY_CELL_ROWS[0];
             const byCreditsCell = MONEY_CELL_ROWS[canViewBudget ? 1 : 0];
             const personalCell = MONEY_CELL_ROWS[canViewBudget ? 2 : 1];
-            const remainingCell = MONEY_CELL_ROWS[canViewSpend ? 3 : 1];
+            const remainingCell = MONEY_CELL_ROWS[3];
             const breakdownRows = personalSpendRows(project.personal_by_type);
             const laborUnpaid = project.labor_unpaid ?? 0;
             const hasBreakdown = breakdownRows.length > 0 || laborUnpaid > 0;
@@ -385,12 +418,36 @@ export default function ProjectsPage() {
                   <div className="flex min-w-0 flex-col p-6">
                     <div className="mb-3 flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
+                        {/* Clamped: a 500-character name or address used to make the
+                            card ~900px tall. The full text stays in the tooltip. */}
                         <h3
-                          className="font-display text-[26px] font-medium leading-tight tracking-tight [overflow-wrap:anywhere]"
+                          className="font-display line-clamp-3 text-[26px] font-medium leading-tight tracking-tight [overflow-wrap:anywhere]"
                           data-testid="project-card-title"
+                          title={projectDisplayName(project)}
                         >
                           {projectDisplayName(project)}
                         </h3>
+                        {projectSecondaryLabel(project) && (
+                          <p
+                            className="mt-1 line-clamp-2 text-[13px] text-[var(--muted)] [overflow-wrap:anywhere]"
+                            data-testid="project-card-address"
+                            title={projectSecondaryLabel(project) ?? undefined}
+                          >
+                            {projectSecondaryLabel(project)}
+                          </p>
+                        )}
+                        {(() => {
+                          const companyName = projectCompanyLabel(user?.companies, project.company_id);
+                          return companyName ? (
+                            <div
+                              className="mt-1 flex items-center gap-1 text-[12px]"
+                              style={{ color: "var(--muted)" }}
+                              data-testid="project-card-company"
+                            >
+                              <Building2 size={12} aria-hidden /> {companyName}
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -424,12 +481,12 @@ export default function ProjectsPage() {
                       </DropdownMenu>
                     </div>
 
-                    {/* Progress — drawdown of the credit, so budget-gated. */}
-                    {canViewBudget && (
+                    {/* Share of the credit spent (all expenses, as on the Overview). */}
+                    {canViewRemaining && (
                       <div className="mb-4">
                         <div className="mb-1.5 flex items-center justify-between text-[12px]">
                           <span style={{ color: "var(--muted)" }}>{t("progress")}</span>
-                          <span className="num font-medium">{Math.round(progress * 100)}%</span>
+                          <span className="num font-medium">{formatShare(locale, progressPct)}</span>
                         </div>
                         <div className="progress-track">
                           <div
@@ -509,9 +566,9 @@ export default function ProjectsPage() {
                               )}
                             </>
                           )}
-                          {canViewBudget && (
+                          {canViewRemaining && (
                             <>
-                              <div className={`label-cap min-w-0 ${remainingCell.label}`}>{t("remaining")}</div>
+                              <div className={`label-cap min-w-0 ${remainingCell.label}`}>{t("remainingToSpend")}</div>
                               <div
                                 className={`font-display num min-w-0 text-[15px] [overflow-wrap:anywhere] ${remainingCell.value}`}
                                 style={isOverBudget ? { color: "var(--negative)" } : undefined}
@@ -525,6 +582,19 @@ export default function ProjectsPage() {
                             </>
                           )}
                         </div>
+                      )}
+
+                      {/* Spend in no purse: not personal, not company. Said once,
+                          with a way to the expenses concerned. */}
+                      {canViewSpend && spentUnassigned !== 0 && (
+                        <Link
+                          href={`/${locale}/projects/${project.id}/invoices?purse=none`}
+                          className="mb-3 block text-[12px] hover:underline"
+                          style={{ color: "var(--muted)" }}
+                          data-testid="project-unassigned-spend"
+                        >
+                          {t("spentUnassigned", { amount: fmtEUR(spentUnassigned) })}
+                        </Link>
                       )}
 
                       {/* Personal spend breakdown — collapsed by default. Unpaid labor is
@@ -640,9 +710,15 @@ export default function ProjectsPage() {
                               {userInitial(member)}
                             </div>
                             <div className="min-w-0">
+                              {/* The name first: a list of phone numbers made the wrong person easy to remove. */}
                               <div className="truncate text-[13px] font-medium">
-                                {userContact(member)}
+                                {userDisplayName(member)}
                               </div>
+                              {member.display_name?.trim() && userContact(member) && (
+                                <div className="truncate text-[11px]" style={{ color: "var(--muted)" }}>
+                                  {userContact(member)}
+                                </div>
+                              )}
                               {member.role_name && (
                                 <div className="text-[11px]" style={{ color: "var(--muted)" }}>
                                   {tMembers(`roles.${member.role_name}`)}
@@ -656,11 +732,13 @@ export default function ProjectsPage() {
                                   setRemoveMember({
                                     projectId: project.id,
                                     userId: member.id,
-                                    email: userContact(member),
+                                    email: member.display_name?.trim()
+                                      ? `${userDisplayName(member)} (${userContact(member)})`
+                                      : userContact(member),
                                   })
                                 }
                                 className="btn btn-quiet shrink-0"
-                                aria-label={tMembers("edit.removeAria", { name: userContact(member) })}
+                                aria-label={tMembers("edit.removeAria", { name: userDisplayName(member) })}
                               >
                                 <Trash2 size={14} style={{ color: "var(--negative)" }} />
                               </button>

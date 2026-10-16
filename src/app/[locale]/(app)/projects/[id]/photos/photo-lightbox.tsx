@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchProjectPhotoBlob } from "@/lib/api/project-photo-blob";
 import { updatePhotoAction, deletePhotoAction } from "./actions";
@@ -46,6 +46,9 @@ interface Props {
   onClose: () => void;
   onDeleted: (photoId: string) => void;
   onUpdated: (photo: ProjectPhoto) => void;
+  /** Show the previous / next photo of the gallery (absent at either end). */
+  onPrevious?: () => void;
+  onNext?: () => void;
 }
 
 /**
@@ -59,11 +62,17 @@ export function PhotoLightbox({
   onClose,
   onDeleted,
   onUpdated,
+  onPrevious,
+  onNext,
 }: Props) {
   const t = useTranslations("photos");
   const format = useFormatter();
+  // "video" or "photo": the copy names what is actually open.
+  const kind = isVideo(photo?.contentType) ? "video" : "photo";
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
+  // The id of a photo/video the browser could not show (e.g. HEVC .mov).
+  const [mediaErrorId, setMediaErrorId] = useState<string | null>(null);
   const revokeRef = useRef<(() => void) | null>(null);
 
   // Edit state
@@ -164,8 +173,14 @@ export function PhotoLightbox({
       onUpdated(result.data);
       setEditing(false);
       toast.success(t("saved"));
+    } else if (result.error === "notFound") {
+      // Deleted by someone else meanwhile: take it out of the gallery too.
+      setEditing(false);
+      onDeleted(photo.id);
+      onClose();
+      toast.info(t("errors.notFound", { kind }));
     } else {
-      toast.error(t(`errors.${errorKeys[result.error] ?? "updateFailed"}`));
+      toast.error(t(`errors.${errorKeys[result.error] ?? "updateFailed"}`, { kind }));
     }
   }
 
@@ -174,13 +189,16 @@ export function PhotoLightbox({
     setDeleting(true);
     const result = await deletePhotoAction(projectId, photo.id);
     setDeleting(false);
-    if (result.ok) {
+    if (result.ok || result.error === "notFound") {
+      // Already deleted by someone else: the outcome is the same, so the
+      // lightbox closes and the tile leaves the gallery either way.
       setDeleteOpen(false);
       onDeleted(photo.id);
       onClose();
-      toast.success(t("deleted"));
+      if (result.ok) toast.success(t("deleted", { kind }));
+      else toast.info(t("errors.notFound", { kind }));
     } else {
-      toast.error(t(`errors.${errorKeys[result.error] ?? "deleteFailed"}`));
+      toast.error(t(`errors.${errorKeys[result.error] ?? "deleteFailed"}`, { kind }));
     }
   }
 
@@ -195,6 +213,35 @@ export function PhotoLightbox({
   };
 
   const open = photo !== null;
+  const mediaError = !!photo && mediaErrorId === photo.id;
+
+  /** Save the original under its own file name (the blob is already loaded). */
+  function handleDownload() {
+    if (!objectUrl || !photo) return;
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = photo.filename || "photo";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  // ArrowLeft / ArrowRight browse the gallery, except while typing.
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (editing) return;
+    const target = e.target as HTMLElement;
+    if (target.closest("input, textarea, select, [contenteditable=true]")) return;
+    if (e.key === "ArrowLeft" && onPrevious) {
+      e.preventDefault();
+      onPrevious();
+    } else if (e.key === "ArrowRight" && onNext) {
+      e.preventDefault();
+      onNext();
+    }
+  }
+
+  // Swipe left / right on touch screens.
+  const touchStartX = useRef<number | null>(null);
 
   // Format date for display
   // Format date for display: the app's language, the gallery's (Paris) day
@@ -210,34 +257,84 @@ export function PhotoLightbox({
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="max-w-3xl w-full p-0 overflow-hidden" aria-describedby={undefined}>
+        <DialogContent
+          className="max-w-3xl w-full p-0 overflow-hidden *:data-[slot=dialog-close]:rounded-full *:data-[slot=dialog-close]:bg-black/60 *:data-[slot=dialog-close]:p-1.5 *:data-[slot=dialog-close]:text-white! *:data-[slot=dialog-close]:opacity-100 *:data-[slot=dialog-close]:focus-visible:ring-2 *:data-[slot=dialog-close]:focus-visible:ring-white"
+          aria-describedby={undefined}
+          onKeyDown={handleKeyDown}
+        >
           <DialogHeader className="sr-only">
             <DialogTitle>{photo?.caption ?? photo?.filename ?? t("title")}</DialogTitle>
           </DialogHeader>
 
           {/* Image area */}
-          <div className="relative flex items-center justify-center bg-black min-h-[300px] max-h-[60vh]">
+          <div
+            className="relative flex items-center justify-center bg-black min-h-[300px] max-h-[60vh]"
+            onTouchStart={(e) => {
+              touchStartX.current = e.touches[0]?.clientX ?? null;
+            }}
+            onTouchEnd={(e) => {
+              const start = touchStartX.current;
+              touchStartX.current = null;
+              const end = e.changedTouches[0]?.clientX;
+              if (start === null || end === undefined || editing) return;
+              if (end - start > 50) onPrevious?.();
+              else if (start - end > 50) onNext?.();
+            }}
+          >
             {!objectUrl && !loadError && (
               <Loader2 className="size-8 animate-spin text-white/60" />
             )}
             {loadError && (
               <p className="text-sm text-white/60">{t("errors.network")}</p>
             )}
-            {objectUrl && isVideo(photo?.contentType) && (
+            {objectUrl && mediaError && (
+              <div role="alert" className="flex flex-col items-center gap-3 px-6 text-center">
+                <p className="text-sm text-white/80">
+                  {t(isVideo(photo?.contentType) ? "cannotPlayVideo" : "cannotShowImage")}
+                </p>
+                <Button type="button" size="sm" variant="secondary" onClick={handleDownload}>
+                  <Download className="size-4" aria-hidden />
+                  {t("download")}
+                </Button>
+              </div>
+            )}
+            {objectUrl && !mediaError && isVideo(photo?.contentType) && (
               <video
                 src={objectUrl}
                 controls
                 autoPlay
                 playsInline
+                onError={() => photo && setMediaErrorId(photo.id)}
                 className="max-h-[60vh] max-w-full object-contain"
               />
             )}
-            {objectUrl && !isVideo(photo?.contentType) && (
+            {objectUrl && !mediaError && !isVideo(photo?.contentType) && (
               <img
                 src={objectUrl}
                 alt={photo?.caption ?? photo?.filename ?? ""}
+                onError={() => photo && setMediaErrorId(photo.id)}
                 className="max-h-[60vh] max-w-full object-contain"
               />
+            )}
+            {onPrevious && (
+              <button
+                type="button"
+                onClick={onPrevious}
+                aria-label={t("previousPhoto")}
+                className="absolute left-2 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <ChevronLeft className="size-5" aria-hidden />
+              </button>
+            )}
+            {onNext && (
+              <button
+                type="button"
+                onClick={onNext}
+                aria-label={t("nextPhoto")}
+                className="absolute right-2 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <ChevronRight className="size-5" aria-hidden />
+              </button>
             )}
           </div>
 
@@ -275,10 +372,20 @@ export function PhotoLightbox({
                   )}
                   <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownload}
+                    disabled={!objectUrl}
+                    className="ml-auto"
+                  >
+                    <Download className="size-4" aria-hidden />
+                    {t("download")}
+                  </Button>
+                  <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={onClose}
-                    className="ml-auto"
                   >
                     {t("close")}
                   </Button>
@@ -341,9 +448,9 @@ export function PhotoLightbox({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("deleteConfirm.title")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteConfirm.title", { kind })}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("deleteConfirm.description")}
+              {t("deleteConfirm.description", { kind })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

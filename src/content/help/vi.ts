@@ -31,7 +31,7 @@ export const helpCatalogueVi: HelpCatalogue = [
     steps: [
       "Chọn công trình đang làm ở bộ chọn dự án trên đầu thanh bên. Trên màn hình hẹp, bộ chọn nằm ở thanh trên cùng.",
       "Nhóm đầu tiên của thanh bên dùng chung cho cả ứng dụng: “Tổng quan”, “Dự án” và “Thư viện”.",
-      "Khi đã chọn một dự án, thanh bên hiện thêm các mục: “Kế hoạch”, “Nhân công”, “Chi phí”, “Hạch toán”, “Ghi chú”, “Tài liệu” và “Phân tích”.",
+      "Khi đã chọn một dự án, thanh bên hiện thêm các mục: “Kế hoạch”, “Nhân công”, “Chi phí”, “Dự toán”, “Ghi chú”, “Tài liệu” và “Phân tích”.",
       "Quản trị viên công ty còn thấy nhóm “Lập hóa đơn”: “Báo giá”, “Hóa đơn”, “Mẫu tài liệu” và “Hoàn tiền”.",
       "Thanh trên cùng chứa thao tác chính của trang, dấu trợ giúp, chuông thông báo, bộ chọn ngôn ngữ và menu tài khoản của bạn.",
     ],
@@ -85,7 +85,7 @@ export const helpCatalogueVi: HelpCatalogue = [
     steps: [
       "Chuyển giữa “Bảng” và “Tuần” bằng nút gạt ở trên cùng.",
       "Trên bảng, làm việc với dải “Việc tồn đọng” và các cột “Cần làm”, “Đang làm”, “Bị chặn” và “Xong”.",
-      "Bấm nút “+” (“Thêm công việc”) trong cột nào để tạo việc ngay ở đó: tiêu đề, mô tả, độ ưu tiên, hạn và các nhãn cách nhau bằng dấu phẩy.",
+      "Bấm nút “+” (“Thêm công việc”) trong cột nào để tạo việc ngay ở đó: tiêu đề, mô tả, độ ưu tiên, hạn, các nhãn cách nhau bằng dấu phẩy và người được giao. Người được giao nhận thông báo (chuông và đẩy) khi được giao việc hoặc khi việc chuyển sang cột khác.",
       "Kéo thẻ từ cột này sang cột khác để đổi trạng thái.",
       "Bấm vào một thẻ để mở bảng chi tiết, sửa ngay tại chỗ, hoặc xóa.",
       "Ở chế độ xem tuần, chuyển qua lại giữa các tuần và dùng nút “+” trên một ngày để tạo việc đến hạn ngày đó, hoặc nút “+” ở “Chưa lên lịch” cho việc chưa có hạn.",
@@ -131,7 +131,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Xuất một khoảng tháng, lọc theo loại, ra xlsx hoặc pdf; và tô màu đánh dấu cho các dòng để gom nhóm bằng mắt.",
     ],
     whoCanDoIt:
-      "Ai ở trong dự án cũng đọc và xuất được danh sách. Sửa, xóa, tô màu và mọi thứ bên trong một dòng đã mở rộng đều cần quyền quản lý hóa đơn. Không có quyền xem ngân sách thì hai túi tiền và biểu đồ ngân hàng bị ẩn, còn thẻ vốn giải ngân biến mất.",
+      "Có quyền quản lý hóa đơn thì bạn thấy mọi khoản chi, xuất được một khoảng thời gian, sửa, xóa, tô màu và dùng mọi thứ bên trong một dòng đã mở rộng; không có quyền đó thì bạn chỉ thấy các khoản trả cho chính mình và không có nút xuất. Không có quyền xem ngân sách thì hai túi tiền và biểu đồ ngân hàng bị ẩn, còn thẻ vốn giải ngân biến mất.",
     gotchas: [
       "Một khoản vốn giải ngân được đánh dấu là tạm ứng tiền mặt của công ty thì cố ý không tính vào vốn đã giải ngân. Những gì bạn mua bằng số tiền mặt đó phải ghi theo phương thức tiền mặt của bạn, nếu không sẽ bị tính hai lần.",
       "Những dòng do Folio tự sinh ra thì không bao giờ sửa hay xóa được.",
@@ -139,7 +139,7 @@ export const helpCatalogueVi: HelpCatalogue = [
   },
   {
     id: "chiffrage",
-    title: "Hạch toán vật tư",
+    title: "Dự toán vật tư",
     purpose:
       "Lên danh sách những thứ cần mua cho công trình — các hạng mục gồm nhiều vật tư kèm số lượng — ghi giá của từng cửa hàng cho mỗi vật tư, và biết số tiền cần dự trù.",
     steps: [
@@ -238,7 +238,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Bấm “So sánh”, tích tối đa bốn sản phẩm, rồi đặt chúng cạnh nhau.",
     ],
     whoCanDoIt:
-      "Ai liên kết với một công ty cũng đọc được. Các nút thêm, sửa và xóa luôn hiện, nhưng máy chủ sẽ từ chối thay đổi nếu bạn không có quyền quản lý thư viện, và nó báo cho bạn biết.",
+      "Ai liên kết với một công ty cũng đọc được. Không có quyền quản lý thư viện thì các nút thêm, sửa và xóa không hiện.",
     gotchas: [
       "Thư viện thuộc về một công ty — công ty chính của bạn — và không có bộ chọn công ty.",
     ],
@@ -256,7 +256,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Bấm biểu tượng bút chì trên một dòng để sửa bất cứ gì — đánh dấu hỏng sau khi đồ bị hư, chuyển từ kho ra công trường, chỉnh lại số lượng — và biểu tượng thùng rác để xóa.",
     ],
     whoCanDoIt:
-      "Ai liên kết với một công ty cũng đọc được. Các nút thêm, sửa và xóa luôn hiện, nhưng máy chủ sẽ từ chối thay đổi nếu bạn không có quyền quản lý kho thiết bị, và nó báo cho bạn biết.",
+      "Ai liên kết với một công ty cũng đọc được. Không có quyền quản lý kho thiết bị thì các nút thêm, sửa và xóa không hiện.",
     gotchas: [
       "Một dòng là một lô đồ giống nhau, cùng một chỗ và cùng một tình trạng: ba máy khoan dùng được ở kho và một máy khoan hỏng ở công trường là hai dòng.",
       "Kho thiết bị thuộc về một công ty — công ty chính của bạn — và không có bộ chọn công ty.",
@@ -379,17 +379,19 @@ export const helpCatalogueVi: HelpCatalogue = [
     id: "notifications",
     title: "Chuông thông báo",
     purpose:
-      "Một dòng tin ngắn và luôn cập nhật về những gì cần bạn để ý: nhắc nhở từ ghi chú đã tới hạn, ngày công do công nhân tự chấm đang chờ duyệt, và những người vừa tham gia công ty.",
+      "Thông báo: những gì cần bạn để ý và những gì đã xảy ra khi bạn vắng mặt. Ngày công do công nhân tự chấm đang chờ bạn duyệt, nhắc nhở từ ghi chú đã tới hạn, hoạt động (tin nhắn trò chuyện, công việc được giao cho bạn hoặc được chuyển cột, chi phí, chấm công, báo giá và hóa đơn, thay đổi về đội ngũ và vai trò) và những người vừa tham gia công ty.",
     steps: [
-      "Bấm chuông trên thanh trên cùng. Con số trên chuông đếm nhắc nhở và mục chấm công, quá chín thì hiện “9+”.",
+      "Bấm chuông trên thanh trên cùng. Con số trên chuông đếm mọi thứ đang chờ: chấm công chờ duyệt, nhắc nhở, thành viên mới và hoạt động chưa đọc, quá chín thì hiện “9+”.",
       "Trong “Chấm công chờ duyệt”, bấm “Duyệt” hoặc “Từ chối” cho từng ngày công nhân đã khai.",
-      "Bấm một nhắc nhở để nhảy tới ghi chú của dự án đó, hoặc bỏ qua bằng dấu ✕.",
+      "Bấm một nhắc nhở để mở đúng ghi chú đó trong nhật ký công trình, hoặc bỏ qua bằng dấu ✕.",
+      "Trong “Hoạt động”, bấm một dòng để mở đúng nội dung: công việc, khoản chi, chấm công, báo giá hoặc hóa đơn, hay cuộc trò chuyện. Dòng đó được đánh dấu đã đọc. “Đánh dấu tất cả là đã đọc” xóa cả danh sách.",
       "“Thành viên mới” liệt kê những người vừa tham gia công ty, kèm liên kết tới trang cài đặt để bạn xếp họ vào dự án.",
     ],
     whoCanDoIt:
-      "Ai cũng thấy chuông. Nội dung bên trong thì tùy từng người: các dòng chấm công chỉ đến với những ai có quyền duyệt.",
+      "Ai cũng thấy chuông. Nội dung bên trong thì tùy từng người: các dòng chấm công chỉ đến với những ai có quyền duyệt, còn hoạt động của công ty đến với quản trị viên.",
     gotchas: [
-      "Sự kiện thành viên mới không được tính vào con số trên chuông, nên bảng thông báo có thể có nội dung trong khi chuông trông như không có gì.",
+      "Hoạt động đã đọc sẽ rời khỏi danh sách. Đọc một cuộc trò chuyện cũng đánh dấu các dòng trò chuyện của nó trong chuông là đã đọc.",
+      "Các dòng về công trình mà bạn đã bị gỡ khỏi sẽ bị ẩn; riêng thông báo bị gỡ vẫn còn cho tới khi bạn đánh dấu đã đọc.",
       "Dòng tin làm mới khoảng mỗi phút một lần chứ không phải ngay lập tức.",
     ],
   },
@@ -399,10 +401,12 @@ export const helpCatalogueVi: HelpCatalogue = [
     purpose:
       "Nơi trao đổi với công ty và với đội của từng công trình, mỗi công ty và mỗi công trình một kênh.",
     steps: [
-      "Mở trò chuyện từ nút ở góc cửa sổ.",
+      "Mở trò chuyện từ nút ở góc cửa sổ, hoặc từ một dòng trò chuyện trong chuông.",
       "Chọn một kênh trong danh sách; kênh có tin chưa đọc được đánh dấu.",
       "Viết tin nhắn rồi gửi.",
       "Đính kèm ảnh vào tin nhắn khi một tấm hình nói nhanh hơn lời.",
+      "Bấm vào một tin nhắn để thả cảm xúc bằng emoji và xem ai đã đọc.",
+      "Cũng trong menu đó, báo cáo một tin nhắn vi phạm, hoặc chặn người gửi: bạn không còn thấy tin nhắn của họ và không nhận thông báo từ họ nữa. Bỏ chặn từ danh sách người đã chặn.",
       "Ảnh đại diện dưới tin nhắn mới nhất cho biết ai đã đọc tới đó.",
     ],
     whoCanDoIt:

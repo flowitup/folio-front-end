@@ -31,10 +31,10 @@ function tipEl(): HTMLElement {
 describe("useDataTip placement", () => {
   it("anchors above the mark's top-center when there is headroom", () => {
     render(<Host />);
-    fireEvent.mouseMove(markWithRect({ top: 300, bottom: 320 }));
+    fireEvent.mouseMove(markWithRect({ left: 300, top: 300, bottom: 320 }));
 
     const tip = tipEl();
-    expect(tip.style.left).toBe("125px");
+    expect(tip.style.left).toBe("325px");
     expect(tip.style.top).toBe("300px");
     expect(tip.style.transform).toContain("-130%");
     expect(tip.textContent).toContain("1 234 €");
@@ -58,5 +58,42 @@ describe("useDataTip placement", () => {
 
     fireEvent.mouseLeave(mark.parentElement!);
     expect(document.body.querySelector(":scope > .fixed.z-50")).toBeNull();
+  });
+});
+
+function FocusHost() {
+  const { tipHandlers, overlay } = useDataTip();
+  return (
+    <div {...tipHandlers}>
+      <a href="#m" data-tip="Mark|1 234 €|meta" data-testid="mark">
+        mark
+      </a>
+      {overlay}
+    </div>
+  );
+}
+
+describe("useDataTip on touch and keyboard", () => {
+  it("shows the tip while a mark has keyboard focus", () => {
+    render(<FocusHost />);
+    const mark = markWithRect({});
+    fireEvent.focus(mark);
+    expect(tipEl().textContent).toContain("1 234 €");
+    fireEvent.blur(mark);
+    expect(document.body.querySelector(":scope > .fixed.z-50")).toBeNull();
+  });
+
+  it("closes a tapped tip on scroll instead of leaving it stuck", () => {
+    render(<Host />);
+    fireEvent.mouseMove(markWithRect({}));
+    expect(document.body.querySelector(":scope > .fixed.z-50")).not.toBeNull();
+    fireEvent.scroll(window);
+    expect(document.body.querySelector(":scope > .fixed.z-50")).toBeNull();
+  });
+
+  it("keeps the tip inside the viewport for a mark at the left edge", () => {
+    render(<Host />);
+    fireEvent.mouseMove(markWithRect({ left: 0, width: 4 }));
+    expect(parseFloat(tipEl().style.left)).toBeGreaterThanOrEqual(128);
   });
 });

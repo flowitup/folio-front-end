@@ -113,15 +113,15 @@ describe("AttachedUsersTable — list render", () => {
     renderTable([named, nameless]);
 
     expect(screen.getByText("Owner")).toBeDefined();
-    expect(screen.getByText("+336 21 30 00 01")).toBeDefined();
-    expect(screen.getByText("+336 21 30 00 02")).toBeDefined();
+    expect(screen.getByText("+33 6 21 30 00 01")).toBeDefined();
+    expect(screen.getByText("+33 6 21 30 00 02")).toBeDefined();
     expect(screen.queryByText(/no-email\.folio\.flowitup\.com/)).toBeNull();
 
     // The boot dialog names them the same way.
     await act(async () => {
       fireEvent.click(screen.getAllByTitle(/boot|remove/i)[1]);
     });
-    await waitFor(() => expect(screen.getAllByText(/\+336 21 30 00 02/).length).toBeGreaterThan(1));
+    await waitFor(() => expect(screen.getAllByText(/\+33 6 21 30 00 02/).length).toBeGreaterThan(1));
     expect(screen.queryByText(/no-email\.folio\.flowitup\.com/)).toBeNull();
   });
 

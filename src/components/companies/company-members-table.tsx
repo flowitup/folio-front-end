@@ -28,8 +28,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Loader2, Phone, Users as UsersIcon } from "lucide-react";
+import { Loader2, Phone, Search, Users as UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   AlertDialog,
@@ -63,7 +64,13 @@ import {
   CompanyMemberBootConfirmDialog,
   type CompanyMemberBootTarget,
 } from "@/components/companies/company-member-boot-confirm-dialog";
+import {
+  CompanyMemberRoleConfirmDialog,
+  roleChangeNeedsConfirmation,
+  type CompanyMemberRoleChange,
+} from "@/components/companies/company-member-role-confirm-dialog";
 import type { MemberPickerOption } from "@/components/companies/member-picker-dropdown";
+import { useOptionalAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { mergeMemberRows, type MemberRow } from "@/lib/companies/merge-member-rows";
 import type { AttachedUser, CompanyRole, MyCompany } from "@/types/companies";
@@ -77,7 +84,8 @@ interface Props {
 
 export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanies, onMutated }: Props) {
   const t = useTranslations("companySettings.members");
-  const { projects: allProjects } = useProject();
+  const { projects: allProjects, refetch: refetchProjects } = useProject();
+  const currentUserId = useOptionalAuth()?.user?.id ?? null;
 
   const [rows, setRows] = useState<MemberRow[]>([]);
   const [adminCompanies, setAdminCompanies] = useState<MyCompany[]>([]);
@@ -91,6 +99,8 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
   const [bootTarget, setBootTarget] = useState<CompanyMemberBootTarget | null>(null);
   const [isBooting, setIsBooting] = useState(false);
   const bootingRef = useRef(false);
+  const [roleChange, setRoleChange] = useState<CompanyMemberRoleChange | null>(null);
+  const [search, setSearch] = useState("");
   const [cancelTarget, setCancelTarget] = useState<MemberRow | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const cancellingRef = useRef(false);
@@ -139,6 +149,12 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
     void load();
   }, [load]);
 
+  // The Projects column offers the shared project list, loaded once per session: a project
+  // created or assigned elsewhere since (another device, another admin) must be offered too.
+  useEffect(() => {
+    void refetchProjects({ silent: true });
+  }, [companyId, refetchProjects]);
+
   // This company's projects — Projects column options. D3: every attached
   // member is assignable, always as "member"; Role is the only path to manager.
   const projectOptions: MemberPickerOption[] = useMemo(
@@ -155,22 +171,65 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
     [adminCompanies]
   );
 
-  async function handleRoleChange(userId: string, role: CompanyRole) {
+  const roleLabel = (role: CompanyRole) =>
+    role === "admin" ? t("roleAdmin") : role === "manager" ? t("roleManager") : t("roleMember");
+
+  // People whose name or phone contains the search text (accents and case ignored).
+  const visibleRows = useMemo(() => {
+    const fold = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const q = fold(search.trim());
+    if (!q) return rows;
+    const digits = q.replace(/\D/g, "");
+    return rows.filter(
+      (r) =>
+        fold(r.name).includes(q) ||
+        (digits.length >= 2 && (r.phone ?? "").replace(/\D/g, "").includes(digits.replace(/^0/, "")))
+    );
+  }, [rows, search]);
+
+  async function applyRoleChange(userId: string, memberName: string, role: CompanyRole): Promise<boolean> {
     setPendingRoleUserId(userId);
     try {
       const result = await setMemberRoleAction(companyId, userId, role);
       if (!result.ok) {
         toast.error(result.error.message);
-        return;
+        return false;
       }
-      toast.success(t("roleUpdatedToast"));
+      toast.success(t("roleUpdatedNamedToast", { member: memberName, role: roleLabel(role) }));
       // onMutated() bumps the parent's refreshToken, which remounts this
       // table (new key) and its own effect refetches — an explicit load()
       // here too would be a redundant second fetch of the same data.
       onMutated();
+      return true;
     } finally {
       setPendingRoleUserId(null);
     }
+  }
+
+  function handleRoleChange(userId: string, role: CompanyRole) {
+    const row = rows.find((r) => r.userId === userId);
+    if (!row?.role || row.role === role) return;
+    // To or from Admin: full control of the company, or the loss of every project
+    // they reached as an admin (and of their assignments) — say so first.
+    if (roleChangeNeedsConfirmation(row.role, role)) {
+      setRoleChange({
+        userId,
+        memberName: row.name,
+        from: row.role,
+        to: role,
+        assignedProjects: projectOptions
+          .filter((p) => row.assignedProjectIds.includes(p.id))
+          .map((p) => p.label),
+      });
+      return;
+    }
+    void applyRoleChange(userId, row.name, role);
+  }
+
+  async function handleConfirmRoleChange() {
+    if (!roleChange || pendingRoleUserId) return;
+    const ok = await applyRoleChange(roleChange.userId, roleChange.memberName, roleChange.to);
+    if (ok) setRoleChange(null);
   }
 
   async function handleCompanyToggle(row: MemberRow, option: MemberPickerOption, checked: boolean) {
@@ -204,12 +263,26 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
         toast.error(result.error.message);
         return;
       }
+      toast.success(
+        t("removedFromCompanyToast", { member: bootTarget.memberName, company: bootTarget.companyName })
+      );
       setBootTarget(null);
       onMutated();
     } finally {
       setIsBooting(false);
       bootingRef.current = false;
     }
+  }
+
+  // The row's own "Remove from the company" action: same confirmation as unticking
+  // this company in the Company column.
+  function handleRemoveRow(row: MemberRow) {
+    if (!row.userId) return;
+    const companyName =
+      adminCompanies.find((c) => c.id === companyId)?.legal_name ??
+      row.companies.find((c) => c.id === companyId)?.legal_name ??
+      "";
+    setBootTarget({ userId: row.userId, memberName: row.name, companyId, companyName });
   }
 
   async function handleConfirmCancelInvitation() {
@@ -233,17 +306,36 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
   }
 
   async function handleProjectToggle(row: MemberRow, option: MemberPickerOption, checked: boolean) {
-    if (!row.userId) return;
-    setPendingProjectUserId(row.userId);
+    const userId = row.userId;
+    if (!userId) return;
+    setPendingProjectUserId(userId);
     try {
       const result = checked
-        ? await assignProjectMemberAction(option.id, row.userId, "member")
-        : await unassignProjectMemberAction(option.id, row.userId);
+        ? await assignProjectMemberAction(option.id, userId, "member")
+        : await unassignProjectMemberAction(option.id, userId);
       if (!result.ok) {
         toast.error(result.error.message);
         return;
       }
-      onMutated();
+      // Update this row in place: remounting the whole table (onMutated) closed the
+      // picker and reloaded every row after each tick.
+      setRows((prev) =>
+        prev.map((r) =>
+          r.userId === userId
+            ? {
+                ...r,
+                assignedProjectIds: checked
+                  ? Array.from(new Set([...r.assignedProjectIds, option.id]))
+                  : r.assignedProjectIds.filter((id) => id !== option.id),
+              }
+            : r
+        )
+      );
+      toast.success(
+        checked
+          ? t("projectAssignedToast", { member: row.name, project: option.label })
+          : t("projectUnassignedToast", { member: row.name, project: option.label })
+      );
     } finally {
       setPendingProjectUserId(null);
     }
@@ -274,6 +366,26 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
 
       <div className="ink-divider my-5" />
 
+      {!isLoading && rows.length > 8 && (
+        <div className="relative mb-4 max-w-[320px]">
+          <Search
+            size={14}
+            className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2"
+            style={{ color: "var(--muted)" }}
+            aria-hidden="true"
+          />
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("searchPlaceholder")}
+            aria-label={t("searchPlaceholder")}
+            className="h-8 pl-8 text-[13px]"
+            data-testid="company-members-search"
+          />
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex items-center justify-center py-10">
           <Loader2 size={20} className="animate-spin" style={{ color: "var(--muted)" }} />
@@ -281,6 +393,10 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
       ) : rows.length === 0 ? (
         <p className="py-10 text-center text-[13px]" style={{ color: "var(--muted)" }}>
           {t("empty")}
+        </p>
+      ) : visibleRows.length === 0 ? (
+        <p className="py-10 text-center text-[13px]" style={{ color: "var(--muted)" }}>
+          {t("searchEmpty", { query: search.trim() })}
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -292,11 +408,11 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
                 <TableHead>{t("col.role")}</TableHead>
                 <TableHead>{t("col.company")}</TableHead>
                 <TableHead>{t("col.projects")}</TableHead>
-                <TableHead className="w-[100px]" />
+                <TableHead className="w-[72px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row) => (
+              {visibleRows.map((row) => (
                 <CompanyMemberRow
                   key={row.key}
                   row={row}
@@ -310,6 +426,8 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
                   onProjectToggle={handleProjectToggle}
                   onOpenGrants={setGrantsTarget}
                   onCancelInvitation={setCancelTarget}
+                  // Leaving the company yourself goes through "Leave" on your own card.
+                  onRemove={row.userId && row.userId !== currentUserId ? handleRemoveRow : undefined}
                 />
               ))}
             </TableBody>
@@ -346,6 +464,14 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
           target={grantsTarget}
         />
       )}
+
+      <CompanyMemberRoleConfirmDialog
+        change={roleChange}
+        isSaving={pendingRoleUserId !== null}
+        roleLabel={roleLabel}
+        onOpenChange={(open) => !open && setRoleChange(null)}
+        onConfirm={() => void handleConfirmRoleChange()}
+      />
 
       <CompanyMemberBootConfirmDialog
         target={bootTarget}

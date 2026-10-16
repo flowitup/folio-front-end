@@ -35,11 +35,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { deleteBillingDocumentAction, convertDevisToFactureAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
-import { env } from "@/lib/config/env";
-import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
-import { fetchWithRefresh } from "@/lib/api/refresh";
+import {
+  BillingFileError,
+  billingFileBlob,
+  fetchBillingFile,
+} from "@/lib/api/billing/billing-file-client";
+import { rateLimitMessage } from "@/lib/api/rate-limit";
 import type { BillingDocument } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { isDevisLockedByFacture } from "@/lib/billing/devis-lock";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
 import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
 import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
@@ -54,6 +58,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
   const locale = useLocale();
   const tActions = useTranslations("billing.form.actions");
   const tErrors = useTranslations("billing.form.errors");
+  const tCommon = useTranslations("common");
   const tToast = useTranslations("billing.form.toast");
   const errorMessage = useBillingErrorMessage();
 
@@ -72,29 +77,28 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
   const editPath = `/${locale}/billing/${kindToSegment(document.kind)}/${document.id}`;
 
   const convertedFactureId = document.converted_to_facture_id ?? null;
+  // The API refuses to delete a devis its live facture comes from (409).
+  const deleteLocked = isDevisLockedByFacture(document);
   const showConvertToFacture =
     document.kind === "devis" && document.status === "accepted" && !convertedFactureId;
+
+  // One shared, cached download per document version (see billing-file-client):
+  // the preview and these menu items reuse each other's bytes.
+  function downloadErrorText(err: unknown, fallback: string): string {
+    return err instanceof BillingFileError && err.status === 429
+      ? rateLimitMessage(tCommon, err.retryAfter)
+      : fallback;
+  }
 
   async function handleDownloadPdf() {
     if (pdfLoadingRef.current) return;
     pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
-      const response = await fetchWithRefresh(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/pdf`
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const cd = response.headers.get("Content-Disposition");
-      const filename = parseFilenameFromContentDisposition(
-        cd,
-        `${document.document_number}.pdf`
-      );
-      const blob = await response.blob();
-      triggerBrowserDownload(blob, filename);
-    } catch {
-      toast.error(tErrors("pdfFailed"));
+      const file = await fetchBillingFile(document, "pdf");
+      triggerBrowserDownload(billingFileBlob(file, "pdf"), file.filename);
+    } catch (err) {
+      toast.error(downloadErrorText(err, tErrors("pdfFailed")));
     } finally {
       setIsPdfLoading(false);
       pdfLoadingRef.current = false;
@@ -106,21 +110,10 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
     xlsxLoadingRef.current = true;
     setIsXlsxLoading(true);
     try {
-      const response = await fetchWithRefresh(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(document.id)}/xlsx`
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const cd = response.headers.get("Content-Disposition");
-      const filename = parseFilenameFromContentDisposition(
-        cd,
-        `${document.document_number}.xlsx`
-      );
-      const blob = await response.blob();
-      triggerBrowserDownload(blob, filename);
-    } catch {
-      toast.error(tErrors("xlsxFailed"));
+      const file = await fetchBillingFile(document, "xlsx");
+      triggerBrowserDownload(billingFileBlob(file, "xlsx"), file.filename);
+    } catch (err) {
+      toast.error(downloadErrorText(err, tErrors("xlsxFailed")));
     } finally {
       setIsXlsxLoading(false);
       xlsxLoadingRef.current = false;
@@ -178,7 +171,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0"
+            className="h-8 w-8 cursor-pointer p-0"
             style={{ color: "var(--muted)" }}
             disabled={isPdfLoading || isXlsxLoading || isConverting}
           >
@@ -233,10 +226,20 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setDeleteOpen(true)}
+            disabled={deleteLocked}
             className="text-destructive focus:text-destructive"
           >
-            <Trash2 size={13} className="mr-2" />
-            {tActions("delete")}
+            <Trash2 size={13} className="mr-2 shrink-0" />
+            {deleteLocked ? (
+              <span className="flex flex-col">
+                <span>{tActions("delete")}</span>
+                <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+                  {tActions("deleteLockedHint")}
+                </span>
+              </span>
+            ) : (
+              tActions("delete")
+            )}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -10,15 +10,22 @@ export const generateMetadata = pageTitle("meta.signIn");
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string | string[] }>;
+  searchParams: Promise<{ callbackUrl?: string | string[]; reason?: string | string[] }>;
 }) {
   const session = await getSession();
   const locale = await getLocale();
+  const { callbackUrl, reason } = await searchParams;
 
   if (session) {
-    const { callbackUrl } = await searchParams;
     redirect(postLoginPath(typeof callbackUrl === "string" ? callbackUrl : null, locale));
   }
 
-  return <LoginStage />;
+  // The proxy dropped a doubled session cookie, or the app found the session ended under the
+  // user (deactivated account): tell them why they are here.
+  return (
+    <LoginStage
+      sessionReset={reason === "session_reset"}
+      sessionEnded={reason === "session_ended"}
+    />
+  );
 }

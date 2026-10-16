@@ -24,7 +24,7 @@ import { LaborPaymentsTab } from "@/components/labor/labor-payments-tab";
 import { ActivityDialog } from "@/components/labor/activity-dialog";
 import { ConfirmDeleteDialog } from "@/components/labor/confirm-delete-dialog";
 import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
-import { ChangeRequestsPanel, RefuseChangeDialog } from "@/components/labor/change-requests-panel";
+import { ChangeRequestsPanel, RefuseChangeDialog, RejectEntryDialog } from "@/components/labor/change-requests-panel";
 import type { ChangeRequestActions } from "@/components/labor/labor-entry-card";
 
 import type { Worker, LaborEntry, LaborActivity, LaborDayDescription, LaborSummaryResponse, LaborMonthlySummaryResponse, LaborPaymentsSummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
@@ -51,6 +51,7 @@ import {
   setLaborDayDescription,
 } from "@/lib/api/labor";
 import { toDateKey } from "@/lib/utils/calendar-month";
+import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
 import { fetchProjectById } from "@/lib/api/projects";
 import { fetchLaborRolesAction } from "@/components/labor/labor-role-actions";
 import { upsertLaborRole } from "@/components/labor/labor-role-helpers";
@@ -84,6 +85,7 @@ interface LaborPageClientProps {
 
 export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const t = useTranslations("labor");
+  const tCommon = useTranslations("common");
   const params = useParams();
   const projectId = params.id as string;
   const router = useRouter();
@@ -115,10 +117,6 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // no view_pay): they were explicitly granted invoice rights and still need
   // the Payments tab, even without labor visibility.
   const isMemberPersona = !canManageLabor && !canViewPay && !canManageInvoices;
-  // Creating, renaming or deleting a labor role is a company-level write
-  // (admin or manager of the company whose roles `/labor/roles` lists — the
-  // current one), not a project permission.
-  const canEditLaborRoles = canManageLaborRoles(user?.permissions, user?.companies);
 
   // State. `activeTab` is seeded with a placeholder and corrected by the
   // persona effect below the FIRST time ProjectContext resolves — never
@@ -146,6 +144,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
 
   // Workers state
   const [workers, setWorkers] = useState<Worker[]>([]);
+  // Set after the first successful worker load: "no workers yet" is never shown while loading.
+  const [workersLoaded, setWorkersLoaded] = useState(false);
   const [showAddWorker, setShowAddWorker] = useState(false);
   const [editWorker, setEditWorker] = useState<Worker | null>(null);
 
@@ -153,24 +153,51 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // Payments tab's record dialog (methods are company-scoped). The projects
   // LIST doesn't carry company_id, so resolve it from the single-project GET
   // (same precedent as invoices/new). Non-fatal: null just hides the picker.
-  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [fetchedCompanyId, setFetchedCompanyId] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     fetchProjectById(projectId)
       .then((p) => {
-        if (!cancelled) setCompanyId(p.company_id ?? null);
+        if (!cancelled) setFetchedCompanyId(p.company_id ?? null);
       })
       .catch(() => {
-        if (!cancelled) setCompanyId(null);
+        if (!cancelled) setFetchedCompanyId(null);
       });
     return () => {
       cancelled = true;
     };
   }, [projectId]);
+  const companyId =
+    projects.find((p) => p.id === projectId)?.company_id ?? fetchedCompanyId ?? null;
 
-  // Roles state
+  // Creating, renaming or deleting a labor role is a company-level write:
+  // admin or manager of THIS project's company (whose roles are listed here),
+  // not of the user's primary company, and not a project permission.
+  const canEditLaborRoles =
+    companyId !== null && canManageLaborRoles(user?.permissions, user?.companies, companyId);
+
+  // Roles state — always the project's company's roles: a worker of this
+  // project only accepts a role of its company (the primary company's roles
+  // look identical, "Ouvrier principal", but every save with one fails).
   const [roles, setRoles] = useState<LaborRole[]>([]);
   const [palette, setPalette] = useState<string[]>([]);
+  const companyIdRef = useRef<string | null>(null);
+  companyIdRef.current = companyId;
+  const refreshRoles = useCallback(async (): Promise<LaborRole[] | null> => {
+    const forCompany = companyIdRef.current;
+    if (!forCompany) return null;
+    const result = await fetchLaborRolesAction(forCompany);
+    // A late answer for a company the page no longer shows must not land.
+    if (!result.success || companyIdRef.current !== forCompany) return null;
+    setRoles(result.data.roles);
+    setPalette(result.data.palette);
+    return result.data.roles;
+  }, []);
+  useEffect(() => {
+    if (isProjectContextLoading || isMemberPersona || !companyId) return;
+    // Non-fatal: roles are enhancement only; missing roles doesn't prevent the page from loading.
+    void refreshRoles();
+  }, [companyId, isProjectContextLoading, isMemberPersona, refreshRoles]);
 
   // Only active workers can be logged for a day.
   const activeWorkers = useMemo(() => workers.filter((w) => w.is_active), [workers]);
@@ -245,6 +272,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       // deactivated worker can still be owed pay (Summary, Payments, export).
       const data = await fetchWorkers(projectId, { includeInactive: true });
       setWorkers(data);
+      setWorkersLoaded(true);
     } catch {
       setError(t("errors.loadWorkersFailed"));
     }
@@ -345,14 +373,6 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
           // Non-fatal: the Paid/Balance columns and the Payments tab's
           // default-month pick degrade gracefully (dashes / current month)
           // when this fails; the rest of the page still loads.
-        }),
-        fetchLaborRolesAction().then((result) => {
-          if (result.success) {
-            setRoles(result.data.roles);
-            setPalette(result.data.palette);
-          }
-          // Non-fatal: roles are enhancement only; missing roles doesn't
-          // prevent the page from loading.
         }),
       ]);
       setIsLoading(false);
@@ -510,23 +530,29 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       await validateAttendance(projectId, entry.id);
       toast.success(t("status.validated", { worker: entry.worker_name }));
       await loadEntries();
-    } catch {
-      toast.error(t("status.validateFailed"));
+    } catch (err) {
+      toast.error(rateLimitErrorMessage(err, tCommon) ?? t("status.validateFailed"));
     } finally {
       settlingEntryIds.current.delete(entry.id);
     }
   };
 
+  // Refusing a self-logged day asks first, in an in-app dialog.
+  const [rejectingEntry, setRejectingEntry] = useState<LaborEntry | null>(null);
   const handleRejectEntry = async (entry: LaborEntry) => {
     if (settlingEntryIds.current.has(entry.id)) return;
-    if (!window.confirm(t("status.confirmReject", { worker: entry.worker_name }))) return;
+    setRejectingEntry(entry);
+  };
+  const confirmRejectEntry = async (entry: LaborEntry) => {
+    setRejectingEntry(null);
+    if (settlingEntryIds.current.has(entry.id)) return;
     settlingEntryIds.current.add(entry.id);
     try {
       await rejectAttendance(projectId, entry.id);
       toast.success(t("status.rejected", { worker: entry.worker_name }));
       await loadEntries();
-    } catch {
-      toast.error(t("status.rejectFailed"));
+    } catch (err) {
+      toast.error(rateLimitErrorMessage(err, tCommon) ?? t("status.rejectFailed"));
     } finally {
       settlingEntryIds.current.delete(entry.id);
     }
@@ -653,6 +679,17 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       {!showContent && (
         <div className="folio-card flex items-center justify-center p-12">
           <Loader2 size={20} className="animate-spin" style={{ color: "var(--muted)" }} />
+        </div>
+      )}
+
+      {/* A new project's first site: nothing can be logged or summed before workers exist. */}
+      {showContent && !isMemberPersona && canManageLabor && workersLoaded && workers.length === 0 && activeTab !== "workers" && (
+        <div className="folio-card flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
+          <p>{t("logDayDialog.addWorkersFirst")}</p>
+          <Button size="sm" onClick={() => setShowAddWorker(true)}>
+            <Plus className="mr-1 h-4 w-4" />
+            {t("addWorker")}
+          </Button>
         </div>
       )}
 
@@ -836,6 +873,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         canManageRoles={canEditLaborRoles}
         onRoleUpdated={handleRoleUpdated}
         onRoleDeleted={handleRoleDeleted}
+        companyId={companyId}
+        onRefreshRoles={refreshRoles}
       />
 
       <AddWorkerDialog
@@ -849,6 +888,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         canManageRoles={canEditLaborRoles}
         onRoleUpdated={handleRoleUpdated}
         onRoleDeleted={handleRoleDeleted}
+        companyId={companyId}
+        onRefreshRoles={refreshRoles}
       />
 
       <LogDayDialog
@@ -863,6 +904,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         initialDate={logDayDate}
         onLogNextDay={(next) => handleOpenLogDay(next)}
         onSaved={loadEntries}
+        onAddWorker={canManageLabor ? () => setShowAddWorker(true) : undefined}
       />
 
       <EditAttendanceDialog
@@ -872,6 +914,12 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         }}
         entry={editEntry}
         onSave={handleUpdateAttendance}
+      />
+
+      <RejectEntryDialog
+        entry={rejectingEntry}
+        onConfirm={() => rejectingEntry && void confirmRejectEntry(rejectingEntry)}
+        onCancel={() => setRejectingEntry(null)}
       />
 
       <RefuseChangeDialog

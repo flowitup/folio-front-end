@@ -5,14 +5,10 @@ import { CSS } from "@dnd-kit/utilities";
 import { Calendar, AlertCircle, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { formatDate } from "@/lib/utils/formatters";
-import type { Task, TaskPriority } from "@/types/task";
-
-const PRIORITY_DOT_CLASS: Record<TaskPriority, string> = {
-  low: "",
-  medium: "accent",
-  high: "warning",
-  urgent: "negative",
-};
+import { PRIORITY_DOT_CLASS, showsPriorityTag } from "@/lib/planning/priority";
+import { isTaskOverdue, toDateKey } from "@/lib/planning/week";
+import { useHydrated } from "@/hooks/use-hydrated";
+import type { Task } from "@/types/task";
 
 interface TaskCardProps {
   task: Task;
@@ -23,6 +19,9 @@ interface TaskCardProps {
 
 export function TaskCard({ task, assigneeName, onClick }: TaskCardProps) {
   const t = useTranslations("planning");
+  // "Overdue" depends on the viewer's calendar day, which the server lacks.
+  const hydrated = useHydrated();
+  const overdue = hydrated && isTaskOverdue(task, toDateKey(new Date()));
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: { type: "task", task },
@@ -54,7 +53,7 @@ export function TaskCard({ task, assigneeName, onClick }: TaskCardProps) {
       }}
       role="button"
       tabIndex={0}
-      className="task-card focus:outline-none"
+      className="task-card focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
     >
       <div className="mb-2 flex items-start gap-2">
         <span
@@ -63,7 +62,19 @@ export function TaskCard({ task, assigneeName, onClick }: TaskCardProps) {
           role="img"
           aria-label={t(`priority.${task.priority}`)}
         />
-        <p className="min-w-0 text-[13.5px] font-medium leading-snug [overflow-wrap:anywhere]">{task.title}</p>
+        <p className="min-w-0 flex-1 text-[13.5px] font-medium leading-snug [overflow-wrap:anywhere]">{task.title}</p>
+        {showsPriorityTag(task.priority) && (
+          <span
+            className="flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+            style={{
+              color: task.priority === "urgent" ? "var(--negative)" : "var(--ink-2)",
+              border: `1px solid ${task.priority === "urgent" ? "var(--negative)" : "var(--line-2)"}`,
+            }}
+            aria-hidden
+          >
+            {t(`priority.${task.priority}`)}
+          </span>
+        )}
       </div>
 
       {task.labels.length > 0 && (
@@ -90,9 +101,14 @@ export function TaskCard({ task, assigneeName, onClick }: TaskCardProps) {
         style={{ color: "var(--muted)" }}
       >
         {task.due_date ? (
-          <span className="num flex flex-shrink-0 items-center gap-1">
+          <span
+            className="num flex flex-shrink-0 items-center gap-1"
+            style={overdue ? { color: "var(--negative)", fontWeight: 600 } : undefined}
+            title={overdue ? t("overdue") : undefined}
+          >
             <Calendar size={12} />
             {formatDate(task.due_date)}
+            {overdue && <span className="sr-only"> · {t("overdue")}</span>}
           </span>
         ) : (
           <span />

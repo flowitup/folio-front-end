@@ -15,6 +15,7 @@ import { QuoteFormDialog } from "../quote-form-dialog";
 import { ttcToHt, htToTtc } from "../format";
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "fr",
   useTranslations: () => (key: string, opts?: Record<string, unknown>) =>
     key === "storedAsHt" ? `stored ${opts?.ht} / ${opts?.ttc}` : key,
 }));
@@ -272,6 +273,32 @@ describe("QuoteFormDialog edit keeps the stored price", () => {
     expect(values.note).toBe("delivered Friday");
   });
 
+  it("saves a price whose shop was deleted, keeping its shop name", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <QuoteFormDialog
+        open
+        quote={{ ...QUOTE, store_id: null, supplier_name: "Ancien magasin" }}
+        submitting={false}
+        companyId={null}
+        stores={SHOPS}
+        onOpenChange={() => {}}
+        onSubmit={onSubmit}
+        onCreateStore={vi.fn()}
+      />
+    );
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("noteOptional"), "x");
+    await user.click(screen.getByRole("button", { name: "save" }));
+    expect(onSubmit).toHaveBeenCalledOnce();
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ store_id: null, supplier_name: "Ancien magasin" });
+  });
+
+  it("prefills the stored price with the French decimal mark", () => {
+    renderEdit();
+    expect(screen.getByLabelText("unitPrice")).toHaveValue("9,99");
+  });
+
   it("sends the price once the user changes it", async () => {
     const { onSubmit, user } = renderEdit();
     const price = screen.getByLabelText("unitPrice");
@@ -360,6 +387,15 @@ describe("QuoteFormDialog shop field and VAT presets", () => {
     // The label opens the picker, like a click on the field itself.
     const popover = screen.getByText("Point P").closest("[role='dialog']");
     expect(popover?.className).toContain("w-[var(--radix-popover-trigger-width)]");
+  });
+
+  it("highlights the 5,5 % preset when the rate is typed with a comma", async () => {
+    const { user } = renderDialog();
+    const tva = screen.getByLabelText("tvaRate");
+    await user.clear(tva);
+    await user.type(tva, "5,5");
+    expect(screen.getByRole("button", { name: /^5,5\s%$/ }).getAttribute("data-variant") ??
+      screen.getByRole("button", { name: /^5,5\s%$/ }).className).toMatch(/secondary/);
   });
 
   it("labels the VAT presets in French notation and still sends the plain rate", async () => {

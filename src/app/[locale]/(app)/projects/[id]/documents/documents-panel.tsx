@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { AlertCircle } from "lucide-react";
 import { DocumentsList } from "./documents-list";
 import { DocumentsFilters } from "./documents-filters";
 import { DocumentsUpload } from "./documents-upload";
@@ -57,6 +58,8 @@ type Props = {
   members: Member[];
   currentUserId: string;
   isAdminOrOwner: boolean;
+  /** The server could not read the list: show an error with a retry, not "no documents yet". */
+  initialLoadFailed?: boolean;
 };
 
 // ---- Component ----
@@ -70,6 +73,7 @@ export function DocumentsPanel({
   members,
   currentUserId,
   isAdminOrOwner,
+  initialLoadFailed = false,
 }: Props) {
   const t = useTranslations("documents");
 
@@ -81,6 +85,7 @@ export function DocumentsPanel({
   // Bumped to re-read the current page after a delete, so the rows of the
   // next page move up and an emptied last page steps back.
   const [reloadCount, setReloadCount] = useState(0);
+  const [loadFailed, setLoadFailed] = useState(initialLoadFailed);
 
   // ---- Sort/filter state ----
   const [sort, setSort] = useState<SortColumn>("created_at");
@@ -157,7 +162,9 @@ export function DocumentsPanel({
         }
         setList(result.data.items);
         setTotal(result.data.total);
+        setLoadFailed(false);
       } else {
+        setLoadFailed(true);
         toast.error(t("toast.listLoadError"));
       }
       setLoadedKey(requestKey);
@@ -203,23 +210,17 @@ export function DocumentsPanel({
 
   const handleUploaded = useCallback(
     (doc: ProjectDocument) => {
-      // Only show the new file where the active filters would list it: a
-      // fresh upload has no tags yet, and it belongs to its own uploader.
-      const matchesFilters =
-        (kinds.length === 0 || kinds.includes(doc.kind)) &&
-        selectedTags.length === 0 &&
-        (uploaderId === null || doc.uploader_id === uploaderId);
-      if (matchesFilters) {
-        setList((prev) => [doc, ...prev]);
-        setTotal((prev) => prev + 1);
-      }
+      // Re-read the current page with the active sort, filters and page: the
+      // new file lands where that order puts it (or on another page), instead
+      // of always on top.
+      setReloadCount((n) => n + 1);
       toast.success(t("toast.uploadSuccess", { filename: doc.filename }));
       // A first upload makes its author a filterable uploader.
       if (!uploaders.some((u) => u.user_id === doc.uploader_id)) {
         void refreshUploaders();
       }
     },
-    [t, kinds, selectedTags, uploaderId, uploaders, refreshUploaders]
+    [t, uploaders, refreshUploaders]
   );
 
   const handleSortChange = useCallback(
@@ -235,6 +236,12 @@ export function DocumentsPanel({
     },
     [sort]
   );
+
+  const handleSortSelect = useCallback((col: SortColumn, nextOrder: "asc" | "desc") => {
+    setSort(col);
+    setOrder(nextOrder);
+    setPage(1);
+  }, []);
 
   const handleFiltersChange = useCallback(
     (next: { kinds: ProjectDocumentKind[]; tags: string[]; uploaderId: string | null }) => {
@@ -299,6 +306,9 @@ export function DocumentsPanel({
       } else if (result.error === "forbidden") {
         toast.error(t("rename.errorForbidden"));
         setRenameDoc(null);
+      } else if (result.code === "DUPLICATE_NAME") {
+        // Another document already has this name: keep the dialog open.
+        toast.error(t("rename.errorDuplicate"));
       } else if (result.error === "validation") {
         // Keep the dialog open with what was typed so it can be corrected.
         toast.error(t("rename.errorInvalid"));
@@ -361,6 +371,9 @@ export function DocumentsPanel({
         uploaderId={uploaderId}
         uploaders={uploaders}
         onChange={handleFiltersChange}
+        sort={sort}
+        order={order}
+        onSortSelect={handleSortSelect}
       />
 
       <div
@@ -368,22 +381,32 @@ export function DocumentsPanel({
         data-testid="documents-list-region"
         className={cn("transition-opacity", loading && "opacity-60")}
       >
-        <DocumentsList
-          documents={list}
-          projectId={projectId}
-          currentUserId={currentUserId}
-          isAdminOrOwner={isAdminOrOwner}
-          members={people}
-          sort={sort}
-          order={order}
-          availableTags={availableTags}
-          filtered={hasFilters}
-          onSortChange={handleSortChange}
-          onPreview={setPreviewDoc}
-          onRename={setRenameDoc}
-          onDelete={setDeleteDoc}
-          onTagsUpdate={handleTagsUpdate}
-        />
+        {loadFailed && list.length === 0 ? (
+          <div role="alert" className="flex flex-col items-center gap-3 py-16 text-center">
+            <AlertCircle className="size-10 text-muted-foreground/40" aria-hidden />
+            <p className="text-sm font-medium">{t("toast.listLoadError")}</p>
+            <Button variant="outline" size="sm" onClick={() => setReloadCount((n) => n + 1)}>
+              {t("list.retry")}
+            </Button>
+          </div>
+        ) : (
+          <DocumentsList
+            documents={list}
+            projectId={projectId}
+            currentUserId={currentUserId}
+            isAdminOrOwner={isAdminOrOwner}
+            members={people}
+            sort={sort}
+            order={order}
+            availableTags={availableTags}
+            filtered={hasFilters}
+            onSortChange={handleSortChange}
+            onPreview={setPreviewDoc}
+            onRename={setRenameDoc}
+            onDelete={setDeleteDoc}
+            onTagsUpdate={handleTagsUpdate}
+          />
+        )}
       </div>
 
       {/* Pagination controls */}

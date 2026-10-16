@@ -16,9 +16,14 @@ import { Building2, Landmark } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatEUR } from "@/lib/utils/formatters";
 import type { RefundableSummary } from "@/types/invoice";
+import type { RefundChannel } from "@/lib/api/billing/refundable-invoices";
 
 interface RefundableSummaryCardsProps {
   summary: RefundableSummary | null;
+  /** The channel the list is filtered on (its card reads as pressed). */
+  activeChannel?: RefundChannel | null;
+  /** Makes the two "still owed" cards filter the list (null clears). */
+  onSelectChannel?: (channel: RefundChannel | null) => void;
 }
 
 /** Round part/whole to a whole display percent (0 when whole is 0). */
@@ -27,7 +32,11 @@ function toPercent(part: number, whole: number): number {
   return Math.round((part / whole) * 100);
 }
 
-export function RefundableSummaryCards({ summary }: RefundableSummaryCardsProps) {
+export function RefundableSummaryCards({
+  summary,
+  activeChannel = null,
+  onSelectChannel,
+}: RefundableSummaryCardsProps) {
   const t = useTranslations("billing.refundable");
 
   if (!summary) return null;
@@ -38,7 +47,39 @@ export function RefundableSummaryCards({ summary }: RefundableSummaryCardsProps)
     refunded_by_company,
     refunded_by_bank,
     refunded_by_both = 0,
+    bank_outstanding,
   } = summary;
+  // A "still owed" card is a filter of the list: pressing it again clears it.
+  const owedCard = (
+    channel: RefundChannel,
+    label: string,
+    hint: string,
+    amount: number,
+    color: string,
+    testId: string
+  ) => {
+    const body = (
+      <Card data-testid={testId} className={activeChannel === channel ? "ring-2 ring-[var(--accent)]" : undefined}>
+        <CardContent className="space-y-1">
+          <p className="text-xs uppercase text-muted-foreground">{label}</p>
+          <p className={`tabular-nums font-semibold text-lg ${color}`}>{formatEUR(amount)}</p>
+        </CardContent>
+      </Card>
+    );
+    if (!onSelectChannel) return <div title={hint}>{body}</div>;
+    return (
+      <button
+        type="button"
+        className="block w-full cursor-pointer rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-2"
+        title={hint}
+        aria-pressed={activeChannel === channel}
+        data-testid={`${testId}-filter`}
+        onClick={() => onSelectChannel(activeChannel === channel ? null : channel)}
+      >
+        {body}
+      </button>
+    );
+  };
   // The company/bank cards are INVOLVEMENT figures: an expense refunded by
   // both sides counts in full in each. The "Total refunded" card is the sum
   // of the two — the total of reimbursement FLOWS — so a both-refunded
@@ -56,7 +97,7 @@ export function RefundableSummaryCards({ summary }: RefundableSummaryCardsProps)
 
   return (
     <div data-testid="refundable-summary-cards">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className={`grid grid-cols-2 gap-3 ${bank_outstanding !== undefined ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
         <Card data-testid="summary-card-refunded-total">
           <CardContent className="space-y-1">
             <p className="text-xs uppercase text-muted-foreground">{t("summary.refundedTotal")}</p>
@@ -88,14 +129,23 @@ export function RefundableSummaryCards({ summary }: RefundableSummaryCardsProps)
           </CardContent>
         </Card>
 
-        <Card data-testid="summary-card-refundable">
-          <CardContent className="space-y-1">
-            <p className="text-xs uppercase text-muted-foreground">{t("summary.refundable")}</p>
-            <p className="tabular-nums font-semibold text-lg text-amber-600">
-              {formatEUR(refundable_amount)}
-            </p>
-          </CardContent>
-        </Card>
+        {owedCard(
+          "company",
+          t("summary.refundable"),
+          t("summary.refundableHint"),
+          refundable_amount,
+          "text-amber-700",
+          "summary-card-refundable"
+        )}
+        {bank_outstanding !== undefined &&
+          owedCard(
+            "bank",
+            t("summary.bankOutstanding"),
+            t("summary.bankOutstandingHint"),
+            bank_outstanding,
+            "text-sky-700",
+            "summary-card-bank-outstanding"
+          )}
       </div>
 
       {refunded_total !== 0 && (

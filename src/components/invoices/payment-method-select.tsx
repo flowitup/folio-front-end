@@ -6,8 +6,9 @@
  * Behaviour:
  *  - Lazy-fetches the list on first open (not on mount) to avoid eager fetches.
  *  - Refetches on every open so the list stays fresh after Settings edits.
- *  - If `allowCreate` is true (default: company admins), a "+ Add …" footer item lets the user
- *    POST a new method inline, then auto-selects the new entry.
+ *  - If `allowCreate` is true (default: company admins), "+ Add …" footer items let the user
+ *    POST a new method inline in the personal or the company purse, then auto-select it.
+ *  - Each option carries its purse, so the user sees where the expense will count.
  *  - Selecting the "(None)" sentinel clears the value (calls onChange(null)).
  */
 
@@ -33,7 +34,7 @@ import {
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { useOptionalAuth } from "@/context/AuthContext";
 import { isCompanyAdmin } from "@/lib/auth/permissions";
-import type { PaymentMethod } from "@/lib/api/payment-methods-api";
+import type { PaymentMethod, PaymentPurse } from "@/lib/api/payment-methods-api";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -141,11 +142,11 @@ export function PaymentMethodSelect({
   // Inline create
   // -------------------------------------------------------------------------
 
-  async function handleCreate(label: string) {
+  async function handleCreate(label: string, purse: PaymentPurse) {
     if (!label.trim()) return;
     setCreating(true);
     try {
-      const result = await createPaymentMethodAction(companyId, label.trim());
+      const result = await createPaymentMethodAction(companyId, label.trim(), purse);
       if (result.ok) {
         setMethods(result.data);
         // Find the newly created method (matches label, pick last created)
@@ -291,7 +292,19 @@ export function PaymentMethodSelect({
                         setOpen(false);
                       }}
                     >
-                      {localizeMethodLabel(m.label, tBuiltins)}
+                      <span className="truncate">{localizeMethodLabel(m.label, tBuiltins)}</span>
+                      <span
+                        className={cn(
+                          "ml-auto shrink-0 text-[11px]",
+                          m.isCompanyPayment || m.isPersonalPayment ? "text-muted-foreground" : "text-amber-700 dark:text-amber-400"
+                        )}
+                      >
+                        {m.isCompanyPayment
+                          ? t("badgeCompany")
+                          : m.isPersonalPayment
+                            ? t("badgePersonal")
+                            : t("badgeNone")}
+                      </span>
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -300,14 +313,22 @@ export function PaymentMethodSelect({
                   <>
                     <CommandSeparator />
                     <CommandGroup>
-                      <CommandItem
-                        value={`__create__${query}`}
-                        onSelect={() => handleCreate(query)}
-                        className="text-primary font-medium"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        {t("addInline", { name: query.trim() })}
-                      </CommandItem>
+                      {/* A new method goes in a purse, personal first (the usual
+                          case: a card or cash of one's own), so its expenses
+                          never fall in no purse. */}
+                      {(["personal", "company"] as const).map((purse) => (
+                        <CommandItem
+                          key={purse}
+                          value={`__create_${purse}__${query}`}
+                          onSelect={() => handleCreate(query, purse)}
+                          className="text-primary font-medium"
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          {t(purse === "personal" ? "addInlinePersonal" : "addInlineCompany", {
+                            name: query.trim(),
+                          })}
+                        </CommandItem>
+                      ))}
                     </CommandGroup>
                   </>
                 )}

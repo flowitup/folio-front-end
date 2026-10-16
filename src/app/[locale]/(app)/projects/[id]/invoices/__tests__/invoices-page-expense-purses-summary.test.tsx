@@ -244,7 +244,7 @@ describe("InvoicesPage — personal purse card", () => {
     render(<InvoicesPage />);
 
     const card = await findPurseCard("invoices.summary.personalPurse");
-    expect(card.textContent).toContain('invoices.summary.refundableCount({"n":2})');
+    expect(card.textContent).toContain('invoices.summary.refundableCountCompany({"n":2})');
   });
 });
 

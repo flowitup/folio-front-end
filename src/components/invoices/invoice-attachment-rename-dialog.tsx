@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { InvoiceAttachment } from "@/types/invoice";
+import { isRefundedLockError } from "./refunded-lock";
 
 type Props = {
   attachment: InvoiceAttachment | null;
@@ -32,6 +33,7 @@ function fileExtension(name: string): string {
 
 export function InvoiceAttachmentRenameDialog({ attachment, onCancel, onConfirm }: Props) {
   const t = useTranslations("invoices.attachmentRename");
+  const tInvoices = useTranslations("invoices");
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,8 +61,9 @@ export function InvoiceAttachmentRenameDialog({ attachment, onCancel, onConfirm 
     setError(null);
     try {
       await onConfirm(value.trim());
-    } catch {
-      setError(t("error"));
+    } catch (err) {
+      // A refunded expense is locked: retrying can never work, so say why.
+      setError(isRefundedLockError(err) ? tInvoices("errorRefundedLocked") : t("error"));
     } finally {
       setLoading(false);
     }

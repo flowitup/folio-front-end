@@ -7,11 +7,17 @@
  * each page improvising: an empty notebook with a quick-add, an empty board
  * with "+" buttons, a full new-expense form, or a silent bounce to the list.
  * Any other failure (expired session, outage) is left to the page itself.
+ *
+ * It also hides the sections the project's company turned off (Settings ›
+ * Company › Hidden sections): opening one by URL shows a short notice instead.
  */
 
 import { notFound } from "next/navigation";
 import { ApiError } from "@/lib/api/http";
 import { getProjectById } from "@/lib/api/projects-server";
+import { getSession } from "@/lib/auth/session";
+import { hiddenProjectSections } from "@/lib/companies/hidden-sections";
+import { ProjectSectionGuard } from "@/components/projects/project-section-guard";
 
 export default async function ProjectLayout({
   children,
@@ -22,11 +28,22 @@ export default async function ProjectLayout({
 }) {
   const { id } = await params;
 
-  const noAccess = await getProjectById(id).then(
-    () => false,
-    (err: unknown) => err instanceof ApiError && (err.status === 403 || err.status === 404),
+  const access = await getProjectById(id).then(
+    (project) => ({ noAccess: false, companyId: project?.company_id ?? null }),
+    (err: unknown) => ({
+      noAccess: err instanceof ApiError && (err.status === 403 || err.status === 404),
+      companyId: null,
+    }),
   );
-  if (noAccess) notFound();
+  if (access.noAccess) notFound();
+  const companyId = access.companyId;
 
-  return <>{children}</>;
+  const session = companyId ? await getSession().catch(() => null) : null;
+  const hidden = companyId ? [...hiddenProjectSections(session?.user.companies, companyId)] : [];
+
+  return (
+    <ProjectSectionGuard projectId={id} hiddenSections={hidden}>
+      {children}
+    </ProjectSectionGuard>
+  );
 }

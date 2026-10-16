@@ -22,7 +22,7 @@ import { useId, useEffect, useRef, useState, useCallback } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DecimalInput, formatDecimalForDisplay } from "@/components/ui/decimal-input";
 import {
   Select,
   SelectContent,
@@ -35,7 +35,6 @@ import { BillingTotalsCard, computeTotals, lineTotalHt } from "@/components/bill
 import { getActivitySuggestionsAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import type { BillingDocumentItem } from "@/types/billing";
 import type { ActivitySuggestion, ActivityCategory } from "@/lib/api/billing/documents";
-import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
 import { formatBillingVatRate } from "@/lib/billing/vat-rate";
 
 // ---------------------------------------------------------------------------
@@ -470,15 +469,12 @@ function ItemRow({
       {/* Quantity */}
       <td className="text-right">
         {readOnly ? (
-          <span className="num text-sm">{item.quantity}</span>
+          <span className="num text-sm">{formatDecimalForDisplay(item.quantity, locale, 3)}</span>
         ) : (
-          <Input
-            type="number"
-            min="0"
-            max={MAX_LINE_QUANTITY}
-            step="any"
+          <DecimalInput
+            maxDecimals={3}
             value={item.quantity}
-            onChange={(e) => onUpdate({ quantity: e.target.value })}
+            onValueChange={(v) => onUpdate({ quantity: v })}
             className="h-7 border-0 bg-transparent px-0 text-right text-sm shadow-none focus-visible:ring-0 num"
             aria-label={t("quantity")}
           />
@@ -488,15 +484,12 @@ function ItemRow({
       {/* Unit price */}
       <td className="text-right">
         {readOnly ? (
-          <span className="num text-sm">{item.unit_price}</span>
+          <span className="num text-sm">{formatDecimalForDisplay(item.unit_price, locale, 4)}</span>
         ) : (
-          <Input
-            type="number"
-            min="0"
-            max={MAX_LINE_UNIT_PRICE}
-            step="any"
+          <DecimalInput
+            maxDecimals={4}
             value={item.unit_price}
-            onChange={(e) => onUpdate({ unit_price: e.target.value })}
+            onValueChange={(v) => onUpdate({ unit_price: v })}
             className="h-7 border-0 bg-transparent px-0 text-right text-sm shadow-none focus-visible:ring-0 num"
             aria-label={t("unitPrice")}
           />
@@ -684,16 +677,13 @@ function MobileItemCard({
             {t("quantity")}
           </label>
           {readOnly ? (
-            <span className="num text-sm">{item.quantity}</span>
+            <span className="num text-sm">{formatDecimalForDisplay(item.quantity, locale, 3)}</span>
           ) : (
-            <Input
+            <DecimalInput
               id={`${fieldId}-quantity`}
-              type="number"
-              min="0"
-              max={MAX_LINE_QUANTITY}
-              step="any"
+              maxDecimals={3}
               value={item.quantity}
-              onChange={(e) => onUpdate({ quantity: e.target.value })}
+              onValueChange={(v) => onUpdate({ quantity: v })}
               className="h-8 text-sm num"
             />
           )}
@@ -707,16 +697,13 @@ function MobileItemCard({
             {t("unitPrice")}
           </label>
           {readOnly ? (
-            <span className="num text-sm">{item.unit_price}</span>
+            <span className="num text-sm">{formatDecimalForDisplay(item.unit_price, locale, 4)}</span>
           ) : (
-            <Input
+            <DecimalInput
               id={`${fieldId}-unit-price`}
-              type="number"
-              min="0"
-              max={MAX_LINE_UNIT_PRICE}
-              step="any"
+              maxDecimals={4}
               value={item.unit_price}
-              onChange={(e) => onUpdate({ unit_price: e.target.value })}
+              onValueChange={(v) => onUpdate({ unit_price: v })}
               className="h-8 text-sm num"
             />
           )}
@@ -793,15 +780,12 @@ function VatRateCell({ value, onChange }: VatRateCellProps) {
   if (showInput) {
     return (
       <div className="flex items-center gap-1">
-        <Input
-          type="number"
-          min="0"
-          max="100"
-          step="any"
+        <DecimalInput
+          maxDecimals={2}
           value={value}
-          onChange={(e) => {
+          onValueChange={(v) => {
             setCustomMode(true);
-            onChange(e.target.value);
+            onChange(v);
           }}
           className="h-7 w-16 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 num"
           aria-label={t("vatRate")}

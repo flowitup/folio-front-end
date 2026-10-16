@@ -17,12 +17,14 @@ vi.mock("@/lib/auth/session", () => ({ getSession: vi.fn() }));
 vi.mock("@/lib/api/projects-server", () => ({ getProjectById: vi.fn() }));
 vi.mock("@/lib/api/notes", () => ({ listProjectNotes: vi.fn() }));
 vi.mock("../notes-view", () => ({ NotesView: () => null }));
+vi.mock("../notes-load-error", () => ({ NotesLoadError: () => null }));
 
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { getProjectById } from "@/lib/api/projects-server";
 import { listProjectNotes } from "@/lib/api/notes";
 import NotesPage from "../page";
+import { NotesLoadError } from "../notes-load-error";
 
 const PID = "11111111-1111-4111-8111-111111111111";
 const params = Promise.resolve({ id: PID });
@@ -68,5 +70,12 @@ describe("NotesPage", () => {
     const props = viewProps(await NotesPage({ params }));
     expect(redirect).not.toHaveBeenCalled();
     expect(props.canEdit).toBe(false);
+  });
+
+  it("shows a load error, not an empty notebook, when the notes fail to load", async () => {
+    vi.mocked(getProjectById).mockResolvedValue({ id: PID, my_permissions: ["project:read"] } as never);
+    vi.mocked(listProjectNotes).mockRejectedValue(new Error("500"));
+    const el = (await NotesPage({ params })) as { props: { children: { type: unknown } } };
+    expect(el.props.children.type).toBe(NotesLoadError);
   });
 });

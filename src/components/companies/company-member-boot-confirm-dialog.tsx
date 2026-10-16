@@ -58,7 +58,12 @@ export function CompanyMemberBootConfirmDialog({ target, isBooting, onOpenChange
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isBooting}>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={(e) => {
+              // Radix closes the dialog on click: keep it open, with its spinner, until the
+              // request settles (an error leaves it open so the admin can retry or cancel).
+              e.preventDefault();
+              onConfirm();
+            }}
             disabled={isBooting}
             className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
           >

@@ -17,6 +17,7 @@ import {
   hasDuplicateSessionCookie,
   isTokenValid,
   refreshSession,
+  shouldRenewToken,
 } from "@/lib/auth/proxy-session";
 
 // Create the next-intl middleware
@@ -54,8 +55,9 @@ export async function proxy(request: NextRequest) {
     pathname.replace(new RegExp(`^/(${locales.join("|")})(?=/|$)`), "") || "/";
 
   // Check for access token cookie and validate expiry. An expired or missing
-  // access token is renewed with the refresh cookie before anything decides
-  // the user is signed out: the refresh token outlives it by days.
+  // access token, or one past half its life, is renewed with the refresh
+  // cookie before anything decides the user is signed out; the API rotates
+  // the refresh token as it does, so an active session keeps sliding.
   //
   // A doubled access or refresh cookie (one planted from a sibling host) is
   // not trusted: the request counts as signed out and the cookies are dropped,
@@ -65,7 +67,7 @@ export async function proxy(request: NextRequest) {
   const needsSession =
     isProtectedRoute(pathnameWithoutLocale) || isAuthRoute(pathnameWithoutLocale);
   const refreshed =
-    needsSession && !duplicated && !isTokenValid(accessToken) ? await refreshSession(request) : [];
+    needsSession && !duplicated && shouldRenewToken(accessToken) ? await refreshSession(request) : [];
   accessToken = refreshed.find((c) => c.name === ACCESS_TOKEN_COOKIE)?.value ?? accessToken;
   const isAuthenticated = isTokenValid(accessToken);
 
@@ -84,6 +86,8 @@ export async function proxy(request: NextRequest) {
   if (!isAuthenticated && isProtectedRoute(pathnameWithoutLocale)) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
     loginUrl.searchParams.set("callbackUrl", `${pathname}${request.nextUrl.search}`);
+    // Say why a signed-in user is suddenly asked to sign in again.
+    if (duplicated) loginUrl.searchParams.set("reason", "session_reset");
     const redirect = NextResponse.redirect(loginUrl);
     if (duplicated && request.method === "GET") expireSessionCookies(request, redirect);
     return redirect;

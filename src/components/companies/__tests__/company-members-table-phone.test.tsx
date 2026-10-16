@@ -45,7 +45,7 @@ vi.mock("sonner", () => ({
 // stub the hook directly rather than rendering the real provider (which
 // would fetch projects over the network).
 vi.mock("@/context/ProjectContext", () => ({
-  useProject: () => ({ projects: [] }),
+  useProject: () => ({ projects: [], refetch: async () => {} }),
 }));
 
 vi.mock("@/app/[locale]/(app)/settings/_actions/companies-actions", () => ({
@@ -133,7 +133,7 @@ describe("CompanyMembersTable — phone column", () => {
   it("renders a French E.164 phone formatted as +33X XX XX XX XX", async () => {
     renderTable([WITH_PHONE]);
     await waitFor(() => screen.getByText("Alice"));
-    expect(screen.getByText("+336 12 34 56 78")).toBeDefined();
+    expect(screen.getByText("+33 6 12 34 56 78")).toBeDefined();
     expect(screen.queryByText("+33612345678")).toBeNull();
   });
 

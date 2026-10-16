@@ -18,7 +18,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CompanyMembersTable } from "@/components/companies/company-members-table";
 import type { AttachedUser, MyCompany } from "@/types/companies";
@@ -68,7 +68,7 @@ const FIXTURE_PROJECTS: Project[] = [
   {
     id: "proj-2",
     name: "Chantier B",
-    // Labelled by its address, as everywhere else in the app.
+    // Labelled by its name first, as everywhere else in the app.
     address: "5 rue du Chantier B",
     owner_id: "owner-1",
     user_count: 1,
@@ -87,7 +87,7 @@ const FIXTURE_PROJECTS: Project[] = [
 ];
 
 vi.mock("@/context/ProjectContext", () => ({
-  useProject: () => ({ projects: FIXTURE_PROJECTS }),
+  useProject: () => ({ projects: FIXTURE_PROJECTS, refetch: async () => {} }),
 }));
 
 vi.mock("@/app/[locale]/(app)/settings/_actions/companies-actions", () => ({
@@ -118,6 +118,7 @@ import {
   fetchAttachedUsersAction,
   fetchMyCompaniesAction,
   bootAttachedUserAction,
+  setMemberRoleAction,
 } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import {
   fetchCompanyDirectoryAction,
@@ -130,6 +131,7 @@ const mockFetchUsers = vi.mocked(fetchAttachedUsersAction);
 const mockFetchCompanies = vi.mocked(fetchMyCompaniesAction);
 const mockFetchDirectory = vi.mocked(fetchCompanyDirectoryAction);
 const mockBoot = vi.mocked(bootAttachedUserAction);
+const mockSetRole = vi.mocked(setMemberRoleAction);
 const mockAttachCompany = vi.mocked(attachUserToCompanyAction);
 const mockAssignProject = vi.mocked(assignProjectMemberAction);
 const mockUnassignProject = vi.mocked(unassignProjectMemberAction);
@@ -336,7 +338,7 @@ describe("CompanyMembersTable — Projects column", () => {
 
     const items = await openPicker(user, "Chantier A");
     const labels = items.map((el) => el.textContent);
-    expect(labels).toEqual(["Chantier A", "5 rue du Chantier B"]); // never "Other Company Project"
+    expect(labels).toEqual(["Chantier A", "Chantier B"]); // never "Other Company Project"
     expect(findItem(items, /Chantier A/).getAttribute("data-state")).toBe("checked");
     expect(findItem(items, /Chantier B/).getAttribute("data-state")).toBe("unchecked");
   });
@@ -353,7 +355,9 @@ describe("CompanyMembersTable — Projects column", () => {
     await waitFor(() => {
       expect(mockAssignProject).toHaveBeenCalledWith("proj-2", "user-3", "member");
     });
-    await waitFor(() => expect(onMutated).toHaveBeenCalled());
+    // The row updates in place and the picker stays open for the next tick: no table reload.
+    await waitFor(() => expect(findItem(Array.from(document.querySelectorAll("[role='menuitemcheckbox']")), /Chantier B/).getAttribute("data-state")).toBe("checked"));
+    expect(onMutated).not.toHaveBeenCalled();
   });
 
   it("unticking an assigned project unassigns it, with no confirm dialog", async () => {
@@ -369,7 +373,8 @@ describe("CompanyMembersTable — Projects column", () => {
       expect(mockUnassignProject).toHaveBeenCalledWith("proj-1", "user-3");
     });
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    await waitFor(() => expect(onMutated).toHaveBeenCalled());
+    await waitFor(() => expect(findItem(Array.from(document.querySelectorAll("[role='menuitemcheckbox']")), /Chantier A/).getAttribute("data-state")).toBe("unchecked"));
+    expect(onMutated).not.toHaveBeenCalled();
   });
 });
 
@@ -387,5 +392,72 @@ describe("CompanyMembersTable — pending rows", () => {
     expect(screen.getByText("—")).toBeDefined();
     expect(screen.getByRole("button", { name: "Add company" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Assign project" })).toBeDisabled();
+  });
+});
+
+describe("CompanyMembersTable — role changes, removal and pending rows", () => {
+  const ADMIN_CARLA: AttachedUser = { ...CARLA, role: "admin" };
+
+  it("asks before demoting an admin and lists the projects they lose", async () => {
+    const user = userEvent.setup();
+    mockSetRole.mockResolvedValueOnce({ ok: true, data: undefined });
+    const onMutated = renderTable([ADMIN_CARLA], [{ ...CARLA_DIRECTORY, assigned_project_ids: ["proj-1", "proj-2"] }]);
+    await waitFor(() => screen.getByText("Carla"));
+    // An admin reaches every project: no project picker on their row.
+    expect(screen.getByText("Every project")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("combobox"));
+    await user.click(await screen.findByRole("option", { name: "Member" }));
+
+    const dialog = await screen.findByRole("alertdialog");
+    expect(mockSetRole).not.toHaveBeenCalled();
+    expect(dialog).toHaveTextContent("Carla will no longer be an admin");
+    expect(screen.getByTestId("role-confirm-projects")).toHaveTextContent("Chantier A");
+    expect(screen.getByTestId("role-confirm-projects")).toHaveTextContent("Chantier B"); // name first, not the address
+
+    await user.click(screen.getByRole("button", { name: "Make Member" }));
+    await waitFor(() => expect(mockSetRole).toHaveBeenCalledWith("co-1", "user-3", "member"));
+    await waitFor(() => expect(onMutated).toHaveBeenCalled());
+  });
+
+  it("changes manager/member at once, without a dialog", async () => {
+    const user = userEvent.setup();
+    mockSetRole.mockResolvedValueOnce({ ok: true, data: undefined });
+    renderTable([CARLA], [CARLA_DIRECTORY]);
+    await waitFor(() => screen.getByText("Carla"));
+
+    await user.click(screen.getByRole("combobox"));
+    await user.click(await screen.findByRole("option", { name: "Manager" }));
+
+    await waitFor(() => expect(mockSetRole).toHaveBeenCalledWith("co-1", "user-3", "manager"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+  });
+
+  it("offers Remove from company on the row and keeps the dialog open until the request settles", async () => {
+    const user = userEvent.setup();
+    let settle: (v: { ok: true; data: undefined }) => void = () => {};
+    mockBoot.mockReturnValueOnce(new Promise((resolve) => (settle = resolve)));
+    const onMutated = renderTable([CARLA], [CARLA_DIRECTORY]);
+    await waitFor(() => screen.getByText("Carla"));
+
+    await user.click(screen.getByRole("button", { name: "Remove from company" }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Remove from company" }));
+
+    expect(mockBoot).toHaveBeenCalledWith("co-1", "user-3");
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    settle({ ok: true, data: undefined });
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    expect(onMutated).toHaveBeenCalled();
+  });
+
+  it("shows a pending invitee's chosen role and expiry date", async () => {
+    renderTable(
+      [],
+      [{ ...PENDING_ENTRY, pending_role: "manager", pending_expires_at: "2026-11-14T10:00:00Z" }]
+    );
+    await waitFor(() => screen.getByText("Dylan"));
+    expect(screen.getByText("Manager")).toBeInTheDocument();
+    expect(screen.getByText("Invitation valid until 14/11/2026")).toBeInTheDocument();
   });
 });

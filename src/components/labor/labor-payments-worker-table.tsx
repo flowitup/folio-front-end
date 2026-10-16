@@ -8,7 +8,7 @@
  * data orchestration (CLAUDE.md's 200-line modularization guidance).
  */
 
-import { useRef } from "react";
+import { MonthPickerPopover } from "@/components/ui/month-picker";
 import { useLocale, useTranslations } from "next-intl";
 import { Calendar, ChevronDown, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,6 @@ export function LaborPaymentsWorkerTable({
   const t = useTranslations("labor.payments");
   const tLabor = useTranslations("labor");
   const locale = useLocale();
-  const monthInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="folio-card overflow-hidden">
@@ -72,32 +71,15 @@ export function LaborPaymentsWorkerTable({
       >
         <h3 className="font-display text-[18px] font-medium tracking-tight">{t("tab")}</h3>
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <button
-              type="button"
-              className="folio-month-picker"
-              onClick={() => {
-                const el = monthInputRef.current;
-                if (!el) return;
-                if (typeof el.showPicker === "function") el.showPicker();
-                else el.focus();
-              }}
-              aria-label={tLabor("filterMonth")}
-            >
+          {/* The app's own month picker (the hidden <input type="month"> +
+              showPicker() did nothing in Firefox and Safari on macOS). */}
+          <MonthPickerPopover value={month} onChange={(v) => v && onMonthChange(v)}>
+            <button type="button" className="folio-month-picker" aria-label={tLabor("filterMonth")}>
               <Calendar size={14} aria-hidden="true" />
               <span className="num">{periodLabel}</span>
               <ChevronDown size={14} aria-hidden="true" style={{ color: "var(--muted)", marginLeft: 2 }} />
             </button>
-            <input
-              ref={monthInputRef}
-              type="month"
-              value={month}
-              onChange={(e) => e.target.value && onMonthChange(e.target.value)}
-              aria-hidden="true"
-              tabIndex={-1}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, pointerEvents: "none" }}
-            />
-          </div>
+          </MonthPickerPopover>
           {canManage && (
             <Button type="button" size="sm" onClick={onOpenRecordDialog}>
               <Plus className="h-4 w-4" />

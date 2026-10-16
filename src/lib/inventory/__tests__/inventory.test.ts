@@ -55,7 +55,21 @@ describe("summarizeInventory", () => {
       damaged: 1,
       inWarehouse: 4,
       onSite: 3,
+      unknownLocation: 0,
     });
+  });
+
+  it("does not count a site row whose project was deleted as on site", () => {
+    const orphan = item({ id: "e", quantity: 5, location_type: "site", warehouse_id: null, project_id: null });
+    const summary = summarizeInventory([...ITEMS, orphan]);
+    expect(summary.quantity).toBe(12);
+    expect(summary.onSite).toBe(3);
+    expect(summary.inWarehouse).toBe(4);
+  });
+
+  it("counts equipment whose project was deleted as unknown, not on site", () => {
+    const orphan = item({ id: "o", quantity: 2, location_type: "site", warehouse_id: null, project_id: null });
+    expect(summarizeInventory([...ITEMS, orphan])).toMatchObject({ onSite: 3, unknownLocation: 2 });
   });
 });
 

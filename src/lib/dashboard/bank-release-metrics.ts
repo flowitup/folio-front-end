@@ -38,7 +38,8 @@ export function computeBankReleaseMetrics(
   return {
     credit: creditValue,
     released: releasedTotal,
-    remaining: creditValue - releasedTotal,
+    // On the cent, so the shown remaining + released add up to the credit.
+    remaining: Math.round((creditValue - releasedTotal) * 100) / 100,
     hasCredit,
     pct,
     pctClamped: Math.min(Math.max(pct, 0), 100),

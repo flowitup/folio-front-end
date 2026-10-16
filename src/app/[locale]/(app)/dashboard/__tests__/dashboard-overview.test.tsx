@@ -138,6 +138,17 @@ describe("DashboardPage — no project selected", () => {
     expect(screen.queryByRole("link")).toBeNull();
   });
 
+  it("names the company a member waits in", () => {
+    mockUseProject.mockReturnValue({ selectedProject: null, isLoading: false });
+    mockUser = {
+      permissions: [],
+      companies: [{ id: "c-1", role: "member", legal_name: "Bâti Sud", is_primary: true }],
+    };
+    renderDashboard();
+
+    expect(screen.getByTestId("overview-waiting-company")).toHaveTextContent("Bâti Sud");
+  });
+
   it("shows nothing final while the projects are still loading", () => {
     mockUseProject.mockReturnValue({ selectedProject: null, isLoading: true });
     renderDashboard();
@@ -180,7 +191,7 @@ describe("DashboardPage — company purse cash", () => {
     renderDashboard();
     const line = await screen.findByTestId("overview-purse-cash-company");
     const norm = (s: string | null) => (s ?? "").replace(/\s/g, " ");
-    await waitFor(() => expect(norm(line.textContent)).toBe(norm(`after ${eur(3000)} cash advance deducted`)));
+    await waitFor(() => expect(norm(line.textContent)).toBe(norm(`including ${eur(3000)} cash advance`)));
     expect(screen.queryByTestId("overview-purse-cash-personal")).toBeNull();
   });
 
@@ -506,10 +517,10 @@ describe("DashboardPage — remaining is the credit minus total expenses", () =>
     await waitFor(() =>
       expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(6500))
     );
-    expect(norm(moneyPanel.getByText(/of credit spent/).textContent)).toBe(`35% of credit spent · ${eur(3500)} (company + personal)`);
+    expect(norm(moneyPanel.getByText(/of credit spent/).textContent)).toBe(`35% of credit spent · ${eur(3500)} (all expenses)`);
   });
 
-  it("shows a whole-euro remaining that adds up with the whole-euro spent and credit", async () => {
+  it("shows a remaining that adds up with the spent and credit, to the cent", async () => {
     mockUseProject.mockReturnValue({
       selectedProject: { id: "p-1", name: "Villa", budget: 5000, spent_by_credits: 3368.5 },
     });
@@ -524,11 +535,12 @@ describe("DashboardPage — remaining is the credit minus total expenses", () =>
 
     const moneyPanel = within(await screen.findByTestId("overview-money-panel"));
     const norm = (v: string | null | undefined) => (v ?? "").replace(/[\u202f\u00a0]/g, " ");
-    // 5 000 € − 3 369 € = 1 631 €, not a separately rounded 1 632 €.
+    // 5 000 € − 3 368,50 € = 1 631,50 €, to the cent: never a rounded 1 632 €
+    // (or a rounded-up credit).
     await waitFor(() =>
-      expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe(eur(1631))
+      expect(norm(moneyPanel.getByText("Remaining to spend").nextElementSibling?.textContent)).toBe("1 631,50 €")
     );
-    expect(norm(moneyPanel.getByText(/of credit spent/).textContent)).toContain(eur(3369));
+    expect(norm(moneyPanel.getByText(/of credit spent/).textContent)).toContain("3 368,50 €");
   });
 });
 

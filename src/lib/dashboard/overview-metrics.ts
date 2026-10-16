@@ -110,6 +110,11 @@ function monthKeyOf(inv: Invoice): string {
   return (inv.service_month ?? inv.issue_date).slice(0, 7);
 }
 
+/** Day of the month an expense was issued — labor paid for a month counts on its payment day. */
+function dayOf(inv: Invoice): number {
+  return Number(inv.issue_date.slice(8, 10)) || 1;
+}
+
 function ymKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
@@ -126,6 +131,8 @@ export interface ReturnCredit {
   type: ExpenseType;
   /** "YYYY-MM" the credit landed in — the return's own month. */
   monthKey: string;
+  /** Day of the month it was issued (1–31), for month-to-date comparisons. */
+  day: number;
   /** Negative, straight from the return invoice. */
   amount: number;
 }
@@ -140,10 +147,13 @@ export function buildReturnCredits(invoices: Invoice[]): ReturnCredit[] {
   const credits: ReturnCredit[] = [];
   for (const inv of invoices) {
     if (inv.type !== "return") continue;
-    const sourceType = inv.refunds_invoice_id ? typeById.get(inv.refunds_invoice_id) : undefined;
+    // An avoir applied to an expense (no refunds link) reduces that expense's type.
+    const sourceId = inv.refunds_invoice_id ?? inv.applied_to_invoice_id;
+    const sourceType = sourceId ? typeById.get(sourceId) : undefined;
     credits.push({
       type: isExpenseType(sourceType) ? sourceType : "materials_services",
       monthKey: monthKeyOf(inv),
+      day: dayOf(inv),
       amount: inv.total_amount,
     });
   }
@@ -231,6 +241,11 @@ export interface MonthDelta {
   /** Percent change vs previous month, rounded. Null when there's no prior
    * point or it had zero spend (avoids a divide-by-zero / infinite delta). */
   deltaPct: number | null;
+  /**
+   * Set when the current month is still running: `deltaPct` then compares
+   * days 1–`toDay` of both months, not a half month with a full one.
+   */
+  toDay?: number | null;
 }
 
 /** Delta of the last point in a monthly series vs the one before it. */
@@ -242,6 +257,44 @@ export function computeMonthDelta(series: MonthlySpendPoint[]): MonthDelta {
       ? Math.round(((current.total - previous.total) / previous.total) * 100)
       : null;
   return { current, previous, deltaPct };
+}
+
+/**
+ * Current month vs the previous one, both cut at the reference day while the
+ * current month is still running ("1–15 oct." vs "1–15 sept."): comparing a
+ * half month with a whole one read as a −43 % drop on the 15th.
+ * `filter` narrows the expenses (one type); `credits` are the returns to net.
+ */
+export function computeMonthToDateDelta(
+  invoices: Invoice[],
+  referenceDate: Date,
+  credits: ReturnCredit[] = buildReturnCredits(invoices)
+): { deltaPct: number | null; toDay: number | null } {
+  const year = referenceDate.getFullYear();
+  const month = referenceDate.getMonth();
+  const today = referenceDate.getDate();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const running = today < daysInMonth;
+  const currentKey = ymKey(new Date(year, month, 1));
+  const previousKey = ymKey(new Date(year, month - 1, 1));
+  const lastDay = running ? today : 31;
+  let current = 0;
+  let previous = 0;
+  const add = (key: string, day: number, amount: number) => {
+    if (day > lastDay) return;
+    if (key === currentKey) current += amount;
+    else if (key === previousKey) previous += amount;
+  };
+  for (const inv of invoices) {
+    if (isSpendInvoice(inv)) add(monthKeyOf(inv), dayOf(inv), inv.total_amount);
+  }
+  for (const c of credits) add(c.monthKey, c.day, c.amount);
+  previous = roundCents(previous);
+  current = roundCents(current);
+  return {
+    deltaPct: previous > 0 ? Math.round(((current - previous) / previous) * 100) : null,
+    toDay: running ? today : null,
+  };
 }
 
 export interface BudgetMetrics {
@@ -256,6 +309,8 @@ export interface BudgetMetrics {
   left: number;
   /** Rounded percent spent, unclamped (may exceed 100 when over budget). */
   pct: number;
+  /** The same share unrounded, for a label that keeps a decimal below 1 %. */
+  pctExact: number;
   /** Same percent, clamped 0–100 for a progress-bar width. */
   pctClamped: number;
   /** False when there is nothing to measure against (no credit set and no
@@ -273,14 +328,18 @@ export function computeBudgetMetrics(
 ): BudgetMetrics {
   const usesBudget = typeof budget === "number" && budget > 0;
   const denominator = usesBudget ? budget : fundsReleasedTotal;
-  const left = denominator - spentTotal;
-  const pct = denominator > 0 ? Math.round((spentTotal / denominator) * 100) : 0;
+  // On cents, before any rounding for display: 150 000,50 − 4 199,40 is
+  // 145 801,10, never 150 001 − 4 199.
+  const left = roundCents(denominator - spentTotal);
+  const pctExact = denominator > 0 ? (spentTotal / denominator) * 100 : 0;
+  const pct = Math.round(pctExact);
   return {
     denominator,
     usesBudget,
     spent: spentTotal,
     left,
     pct,
+    pctExact,
     pctClamped: Math.min(Math.max(pct, 0), 100),
     hasBaseline: denominator > 0,
   };
@@ -388,11 +447,17 @@ export function buildPurseViews(invoices: Invoice[], meta: InvoiceMetaLike): Mon
 }
 
 /** Expenses paid with no company- or personal-flagged method (no payment
- * method, or an unflagged one): they count in neither purse. */
+ * method, or an unflagged one): they count in neither purse. Net of the
+ * returns received in neither purse, as on the Expense page; the count stays
+ * expenses only. */
 export function computeUnassignedSpend(invoices: Invoice[]): PendingRefunds {
   let count = 0;
   let total = 0;
   for (const inv of invoices) {
+    if (inv.type === "return") {
+      if (!isPersonalExpense(inv) && !isCompanyPaidExpense(inv)) total += inv.total_amount;
+      continue;
+    }
     if (!isSpendInvoice(inv)) continue;
     if (isPersonalExpense(inv) || isCompanyPaidExpense(inv)) continue;
     count += 1;
@@ -407,7 +472,10 @@ export interface TypeMonthlyBucket {
   monthly: MonthlySpendPoint[];
   total: number;
   count: number;
+  /** Current month vs the previous one (month to date while it runs). */
   deltaPct: number | null;
+  /** Day both months are cut at while the current one runs; null for whole months. */
+  toDay?: number | null;
 }
 
 /** Per-type 6-month buckets for the "Monthly spend by type" small multiples,
@@ -427,8 +495,12 @@ export function buildTypeMonthlyBuckets(
     );
     const total = roundCents(monthly.reduce((s, m) => s + m.total, 0));
     const count = monthly.reduce((s, m) => s + m.count, 0);
-    const { deltaPct } = computeMonthDelta(monthly);
-    return { type, monthly, total, count, deltaPct };
+    const { deltaPct, toDay } = computeMonthToDateDelta(
+      invoices.filter((i) => i.type === type),
+      referenceDate,
+      credits.filter((c) => c.type === type)
+    );
+    return { type, monthly, total, count, deltaPct, toDay };
   });
 }
 

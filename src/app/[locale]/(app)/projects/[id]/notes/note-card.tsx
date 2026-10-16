@@ -7,7 +7,7 @@
  * Click → switches to inline NoteEditor.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pencil, Trash2, Clock, Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { CATEGORY_MAP } from "@/lib/notes/categories";
@@ -63,12 +63,30 @@ export function NoteCard({
   // The footer depends on the browser's time zone, which the server lacks.
   const hydrated = useHydrated();
 
+  // A body longer than the 9-line clamp gets a "Show more" toggle, so every
+  // role (members cannot open the editor) can read a long site report.
+  const bodyRef = useRef<HTMLParagraphElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [overflowing, setOverflowing] = useState(false);
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const measure = () => {
+      if (!el.classList.contains("expanded")) {
+        setOverflowing(el.scrollHeight > el.clientHeight + 1);
+      }
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [note.description, isEditing]);
+
   const cat = CATEGORY_MAP[note.category] ?? CATEGORY_MAP.general;
   const isDone = note.status === "done";
 
   if (isEditing && canEdit) {
     return (
-      <div className="grid-item">
+      <div className="grid-item" data-note-id={note.id}>
         <NoteEditor
           note={note}
           isSaving={isSaving}
@@ -88,12 +106,12 @@ export function NoteCard({
   }
 
   return (
-    <div className="grid-item">
+    <div className="grid-item" data-note-id={note.id}>
       <article
         className={"note-card" + (isDone ? " done" : "") + (canEdit ? "" : " read-only")}
         onClick={(e) => {
           if (!canEdit) return;
-          if (!(e.target as Element).closest(".nc-actions")) onStartEdit();
+          if (!(e.target as Element).closest(".nc-actions, .nc-more")) onStartEdit();
         }}
       >
         <div className="nc-head">
@@ -142,7 +160,22 @@ export function NoteCard({
 
         <h3 className="nc-title font-display">{note.title}</h3>
         {note.description && (
-          <p className="nc-body">{note.description}</p>
+          <p ref={bodyRef} className={"nc-body" + (expanded ? " expanded" : "")}>
+            {note.description}
+          </p>
+        )}
+        {note.description && (overflowing || expanded) && (
+          <button
+            type="button"
+            className="nc-more"
+            aria-expanded={expanded}
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded((v) => !v);
+            }}
+          >
+            {expanded ? t("showLess") : t("showMore")}
+          </button>
         )}
         <div className="nc-foot">
           <Clock size={12} />

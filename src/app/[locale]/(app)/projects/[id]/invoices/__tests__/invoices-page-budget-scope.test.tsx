@@ -145,7 +145,8 @@ describe("InvoicesPage — financing side without project:view_budget", () => {
   });
 
   it("offers no released-funds tab", async () => {
-    setupMocks([]);
+    // A pay viewer: sees the spend tabs, but not the financing side.
+    setupMocks(["project:view_pay"]);
     render(<InvoicesPage />);
 
     await waitFor(() => expect(mockFetchInvoicesWithMeta).toHaveBeenCalled());

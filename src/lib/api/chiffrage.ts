@@ -235,6 +235,11 @@ export async function createUnit(projectId: string, symbol: string): Promise<Chi
   return request<ChiffrageUnit>(`${base(projectId)}/units`, { method: "POST", body: { symbol } }, "Failed to add unit");
 }
 
+/** Remove a custom unit; 409 while articles still use it. */
+export async function deleteUnit(projectId: string, unitId: string): Promise<void> {
+  return request<void>(`${base(projectId)}/units/${encodeURIComponent(unitId)}`, { method: "DELETE" }, "Failed to delete unit");
+}
+
 // ---------------------------------------------------------------------------
 // Postes
 // ---------------------------------------------------------------------------

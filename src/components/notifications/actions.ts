@@ -52,6 +52,8 @@ export async function fetchNotificationsFeedAction(): Promise<NotificationsFeed 
       attendance: result.attendance_pending ?? [],
       companyEvents: result.company_events ?? [],
       events: result.events ?? [],
+      // The events page is capped at 50: the server count says how many are really unread.
+      eventsUnread: result.events_unread,
     };
   } catch {
     return null;

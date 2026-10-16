@@ -10,7 +10,7 @@
  * renderable in isolation (tests, storybook-style previews).
  */
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import { listChatChannels, type ChatChannel } from "@/lib/api/chat-client";
 import { useChatFeature } from "@/hooks/use-chat-feature";
 import { useVisiblePoll } from "@/hooks/use-visible-poll";
@@ -36,6 +36,10 @@ interface ChatContextValue {
   requestedChannelKey: string | null;
   openChat: (channelKey?: string | null) => void;
   closeChat: () => void;
+  /** Unsent text per channel, kept while the tab lives: closing the window or switching
+   *  channels never loses it, and a draft can never follow the user into another channel. */
+  getDraft: (channelKey: string) => string;
+  setDraft: (channelKey: string, text: string) => void;
 }
 
 const OFF: ChatContextValue = {
@@ -49,6 +53,8 @@ const OFF: ChatContextValue = {
   requestedChannelKey: null,
   openChat: () => {},
   closeChat: () => {},
+  getDraft: () => "",
+  setDraft: () => {},
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -72,6 +78,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setIsOpen(true);
   }, []);
   const closeChat = useCallback(() => setIsOpen(false), []);
+  // A ref, not state: typing must not re-render every consumer of the context.
+  const draftsRef = useRef(new Map<string, string>());
+  const getDraft = useCallback((channelKey: string) => draftsRef.current.get(channelKey) ?? "", []);
+  const setDraft = useCallback((channelKey: string, text: string) => {
+    if (text) draftsRef.current.set(channelKey, text);
+    else draftsRef.current.delete(channelKey);
+  }, []);
 
   const { refresh } = useVisiblePoll({
     enabled: enabled === true,
@@ -94,8 +107,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       requestedChannelKey,
       openChat,
       closeChat,
+      getDraft,
+      setDraft,
     }),
-    [enabled, channels, channelsLoaded, channelsError, refresh, isOpen, requestedChannelKey, openChat, closeChat]
+    [
+      enabled,
+      channels,
+      channelsLoaded,
+      channelsError,
+      refresh,
+      isOpen,
+      requestedChannelKey,
+      openChat,
+      closeChat,
+      getDraft,
+      setDraft,
+    ]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

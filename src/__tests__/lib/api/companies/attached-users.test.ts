@@ -52,8 +52,25 @@ describe("fetchAttachedUsers", () => {
       string,
       RequestInit
     ];
-    expect(url).toBe(`${BASE}/companies/co-1/attached-users`);
+    expect(url).toBe(`${BASE}/companies/co-1/attached-users?limit=200&offset=0`);
     expect(init.method).toBe("GET");
+  });
+
+  it("follows `total` page after page, so members past the first page are listed", async () => {
+    const page1 = Array.from({ length: 200 }, (_, i) => ({ ...SAMPLE_USER, user_id: `u-${i}` }));
+    const page2 = Array.from({ length: 5 }, (_, i) => ({ ...SAMPLE_USER, user_id: `u-${200 + i}` }));
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce(makeJsonResponse({ items: page1, total: 205 }))
+      .mockResolvedValueOnce(makeJsonResponse({ items: page2, total: 205 }));
+
+    const result = await fetchAttachedUsers("co-1");
+    expect(result).toHaveLength(205);
+    const urls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0]);
+    expect(urls).toEqual([
+      `${BASE}/companies/co-1/attached-users?limit=200&offset=0`,
+      `${BASE}/companies/co-1/attached-users?limit=200&offset=200`,
+    ]);
   });
 
   it("throws on 403 (non-admin)", async () => {

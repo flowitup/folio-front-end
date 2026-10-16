@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * NotificationsDropdown — popover content for the notifications bell.
- * Shows skeleton on first load, empty state when nothing is due, otherwise the
- * attendance-to-validate section (managers) followed by note reminders.
+ * NotificationsDropdown — popover content for the notifications bell ("Notifications").
+ * Shows skeleton on first load, empty state when nothing is new, otherwise the
+ * attendance-to-validate section (managers), note reminders, the activity feed and
+ * new company members.
  */
 
 import { BellOff } from "lucide-react";
@@ -31,6 +32,8 @@ interface NotificationsDropdownProps {
   onDismiss: (noteId: string) => void;
   onOpenEvent?: (item: ActivityEvent) => void;
   onMarkAllRead?: () => void;
+  /** Unread activity on the server, which may exceed the loaded page. Defaults to the page's. */
+  unreadEvents?: number;
   onValidate?: (item: AttendancePending) => void;
   onReject?: (item: AttendancePending) => void;
   /** Entry ids whose validate/reject request is in flight (buttons disabled). */
@@ -79,6 +82,7 @@ export function NotificationsDropdown({
   onDismiss,
   onOpenEvent,
   onMarkAllRead,
+  unreadEvents,
   onValidate,
   onReject,
   settlingIds,
@@ -87,7 +91,7 @@ export function NotificationsDropdown({
   const t = useTranslations("notifications");
   const isEmpty =
     items.length === 0 && attendance.length === 0 && companyEvents.length === 0 && events.length === 0;
-  const hasUnreadEvents = events.some((e) => !e.read);
+  const hasUnreadEvents = (unreadEvents ?? 0) > 0 || events.some((e) => !e.read);
   return (
     <div className="flex flex-col">
       {/* Header */}
@@ -96,7 +100,7 @@ export function NotificationsDropdown({
         style={{ borderColor: "var(--border)" }}
       >
         <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-          {t("title")}
+          {t("panelTitle")}
         </p>
       </div>
 
@@ -137,7 +141,9 @@ export function NotificationsDropdown({
             )}
             {items.length > 0 && (
               <section aria-label={t("title")}>
-                {attendance.length > 0 && <SectionLabel>{t("title")}</SectionLabel>}
+                {(attendance.length > 0 || events.length > 0 || companyEvents.length > 0) && (
+                  <SectionLabel>{t("title")}</SectionLabel>
+                )}
                 {items.map((item) => (
                   <NotificationRow
                     key={item.note.id}

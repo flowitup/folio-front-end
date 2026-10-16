@@ -51,11 +51,23 @@ describe("NewInvoicePage — project access", () => {
     expect(screen.queryByText("loadForbidden")).toBeNull();
   });
 
-  it("renders the form for a project the caller can open", async () => {
-    mockFetchProject.mockResolvedValue({ id: "proj-1", company_id: "c-1", my_permissions: [] } as never);
+  it("renders the form for a project the caller can add expenses to", async () => {
+    mockFetchProject.mockResolvedValue({
+      id: "proj-1",
+      company_id: "c-1",
+      my_permissions: ["project:read", "project:manage_invoices"],
+    } as never);
     render(<NewInvoicePage />);
 
     await waitFor(() => expect(mockFetchProject).toHaveBeenCalled());
     expect(screen.getByTestId("invoice-form")).toBeInTheDocument();
+  });
+
+  it("says the caller cannot add expenses instead of a form that can only be refused", async () => {
+    mockFetchProject.mockResolvedValue({ id: "proj-1", company_id: "c-1", my_permissions: ["project:read"] } as never);
+    render(<NewInvoicePage />);
+
+    await waitFor(() => expect(screen.getByText("createForbidden")).toBeInTheDocument());
+    expect(screen.queryByTestId("invoice-form")).toBeNull();
   });
 });

@@ -100,12 +100,12 @@ type TextField =
   | "signature_block_text"
   | "payment_terms";
 
-/** Maximum lengths the API enforces (email and SIRET have none of their own). */
+/** Maximum lengths the API enforces (an email is checked by its own format). */
 const TEXT_LIMITS: Record<TextField, number> = {
   recipient_name: 255,
   recipient_address: 500,
   recipient_email: Number.POSITIVE_INFINITY,
-  recipient_siret: Number.POSITIVE_INFINITY,
+  recipient_siret: 32,
   notes: 2000,
   terms: 2000,
   signature_block_text: 500,

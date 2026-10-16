@@ -15,18 +15,20 @@ import {
 import { ApiError } from "@/lib/api/http";
 import type { Invoice, InvoiceAttachment } from "@/types/invoice";
 import { InvoiceAttachmentPreviewDialog } from "./invoice-attachment-preview-dialog";
+import { isRefundedLockError } from "./refunded-lock";
 import { InvoiceAttachmentRenameDialog } from "./invoice-attachment-rename-dialog";
 import { formatDate } from "@/lib/utils/formatters";
 import { formatBytes } from "@/app/[locale]/(app)/projects/[id]/documents/format-bytes";
 
+// No HEIC/HEIF: most browsers cannot display it (blank thumbnail and
+// preview). iOS Safari converts a picked HEIC photo to JPEG for this list.
 const ALLOWED_MIME = [
   "application/pdf",
   "image/jpeg",
   "image/png",
   "image/webp",
-  "image/heic",
-  "image/heif",
 ];
+
 const MAX_BYTES = 10 * 1024 * 1024;
 
 interface InvoiceAttachmentsProps {
@@ -38,8 +40,12 @@ function isImageMime(mime: string): boolean {
   return mime.startsWith("image/");
 }
 
-export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsProps) {
+export function InvoiceAttachments({ invoice, canManage: canManageInvoice }: InvoiceAttachmentsProps) {
   const t = useTranslations("invoices");
+  // A refunded expense is locked, its receipts included: preview and download
+  // stay, upload, rename and delete are not offered (the API refuses them).
+  const refundedLocked = invoice.refundable_status === "refunded";
+  const canManage = canManageInvoice && !refundedLocked;
   const [attachments, setAttachments] = useState<InvoiceAttachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -86,8 +92,8 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
       setUploading(true);
       try {
         await uploadAttachment(invoice.project_id, invoice.id, file);
-      } catch {
-        setError(t("uploadFailed", { name: file.name }));
+      } catch (err) {
+        setError(isRefundedLockError(err) ? t("errorRefundedLocked") : t("uploadFailed", { name: file.name }));
       } finally {
         setUploading(false);
       }
@@ -109,8 +115,8 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
     try {
       await deleteAttachment(attachmentId);
       await reload();
-    } catch {
-      setError(t("deleteFailed"));
+    } catch (err) {
+      setError(isRefundedLockError(err) ? t("errorRefundedLocked") : t("deleteFailed"));
     }
   };
 
@@ -168,6 +174,12 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
           </div>
         )}
 
+        {canManageInvoice && refundedLocked && (
+          <div className="px-4 py-1.5 text-xs text-muted-foreground" data-testid="attachments-refunded-locked">
+            {t("errorRefundedLocked")}
+          </div>
+        )}
+
         {error && <div className="px-4 py-1.5 text-xs text-destructive">{error}</div>}
 
         {/* List */}
@@ -196,6 +208,7 @@ export function InvoiceAttachments({ invoice, canManage }: InvoiceAttachmentsPro
       <InvoiceAttachmentPreviewDialog
         attachment={previewAttachment}
         onClose={() => setPreviewAttachment(null)}
+        onGone={(att) => handleDownloadFailed(att.filename, true)}
       />
       <InvoiceAttachmentRenameDialog
         attachment={renameTarget}
@@ -220,6 +233,9 @@ function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview, o
   const t = useTranslations("invoices");
   const locale = useLocale();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // The browser could not decode the image (e.g. an older HEIC upload): show
+  // the image icon instead of a broken thumbnail.
+  const [thumbFailed, setThumbFailed] = useState(false);
   const isImage = isImageMime(attachment.mime_type);
 
   // Lazy-load image preview as a blob URL (auth header is required for download)
@@ -261,12 +277,13 @@ function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview, o
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPreview(); } }}
     >
       <div className="shrink-0">
-        {isImage && previewUrl ? (
+        {isImage && previewUrl && !thumbFailed ? (
           /* eslint-disable-next-line @next/next/no-img-element -- presigned S3 URL; next/image requires remotePatterns config */
           <img
             src={previewUrl}
             alt={attachment.filename}
             className="h-9 w-9 rounded object-cover border"
+            onError={() => setThumbFailed(true)}
           />
         ) : isImage ? (
           <ImageIcon className="h-9 w-9 text-muted-foreground p-1.5" />
@@ -282,10 +299,10 @@ function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview, o
         </p>
       </div>
 
-      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onPreview(); }} title={t("attachmentPreview.preview")}>
+      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onPreview(); }} title={t("attachmentPreview.preview")} aria-label={t("attachmentPreview.preview")}>
         <Eye className="h-4 w-4" />
       </Button>
-      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownload(); }} title={t("openAttachment")}>
+      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownload(); }} title={t("attachmentPreview.download")} aria-label={t("attachmentPreview.download")}>
         <Download className="h-4 w-4" />
       </Button>
       {canManage && (
@@ -294,6 +311,7 @@ function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview, o
           size="sm"
           onClick={(e) => { e.stopPropagation(); onRename(); }}
           title={t("rename")}
+          aria-label={t("rename")}
         >
           <Pencil className="h-4 w-4" />
         </Button>
@@ -305,6 +323,7 @@ function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview, o
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
           className="text-muted-foreground hover:text-destructive"
           title={t("delete")}
+          aria-label={t("delete")}
         >
           <X className="h-4 w-4" />
         </Button>

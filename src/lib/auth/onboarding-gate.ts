@@ -1,3 +1,5 @@
+import { isPlatformOps } from "@/lib/auth/permissions";
+
 /**
  * Pure predicate for the /dashboard onboarding gate.
  *
@@ -23,4 +25,30 @@ export function shouldRedirectToOnboarding({
   hasVisibleProjects,
 }: OnboardingGateInput): boolean {
   return !isPlatformOps && companiesCount === 0 && !hasVisibleProjects;
+}
+
+/**
+ * True on the onboarding screen (path without its locale prefix). The app shell hides
+ * its navigation and the floating chat there: a user with no company would only be
+ * bounced back to onboarding by every destination, and has no conversation yet.
+ */
+export function isOnboardingPath(pathWithoutLocale: string): boolean {
+  return pathWithoutLocale === "/onboarding" || pathWithoutLocale.startsWith("/onboarding/");
+}
+
+/**
+ * Client-side twin of the gate for the app's navigation: true when every
+ * company-bound section (dashboard, projects, library, inventory) would only
+ * bounce this user back to /onboarding, so the sidebar should not offer them.
+ */
+export function isWithoutWorkspace(
+  user: { permissions?: string[] | null; companies?: unknown[] | null } | null | undefined,
+  visibleProjectsCount: number
+): boolean {
+  if (!user) return false;
+  return shouldRedirectToOnboarding({
+    isPlatformOps: isPlatformOps(user.permissions),
+    companiesCount: (user.companies ?? []).length,
+    hasVisibleProjects: visibleProjectsCount > 0,
+  });
 }

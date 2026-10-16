@@ -160,7 +160,7 @@ describe("createPaymentMethodAction", () => {
     const result = await createPaymentMethodAction(COMPANY_ID, "Bank Transfer");
 
     expect(result).toEqual({ ok: true, data: METHODS_LIST });
-    expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "Bank Transfer");
+    expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "Bank Transfer", "none");
     // Should refetch the full list after creation
     expect(mockFetch).toHaveBeenCalledWith(COMPANY_ID);
   });
@@ -207,7 +207,16 @@ describe("createPaymentMethodAction", () => {
     mockFetch.mockResolvedValueOnce(METHODS_LIST);
     const result = await createPaymentMethodAction(COMPANY_ID, "x".repeat(120));
     expect(result.ok).toBe(true);
-    expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "x".repeat(120));
+    expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "x".repeat(120), "none");
+  });
+
+  it("passes the chosen purse and refuses an unknown one", async () => {
+    mockCreate.mockResolvedValue({} as never);
+    mockFetch.mockResolvedValue(METHODS_LIST);
+    expect((await createPaymentMethodAction(COMPANY_ID, "Carte", "personal")).ok).toBe(true);
+    expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "Carte", "personal");
+    const refused = await createPaymentMethodAction(COMPANY_ID, "Carte", "both" as never);
+    expect(refused.ok).toBe(false);
   });
 
   it("rejects a blank label with label_required", async () => {
@@ -269,6 +278,16 @@ describe("updatePaymentMethodAction", () => {
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("duplicate_label");
+  });
+
+  it("409 refund_tracked_expenses and builtin company flag get their own codes", async () => {
+    mockUpdate.mockRejectedValueOnce(httpError(409, { error: "refund_tracked_expenses", count: 2 }));
+    const tracked = await updatePaymentMethodAction(COMPANY_ID, PM_ID, { isCompanyPayment: true });
+    expect(tracked.ok === false && tracked.error.code).toBe("refund_tracked_expenses");
+
+    mockUpdate.mockRejectedValueOnce(httpError(409, { error: "builtin_protected", reason: "company_flag" }));
+    const builtin = await updatePaymentMethodAction(COMPANY_ID, PM_ID, { isCompanyPayment: false });
+    expect(builtin.ok === false && builtin.error.code).toBe("builtin_company_flag");
   });
 
   it("404 → not_found", async () => {

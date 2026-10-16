@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { useProject } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/auth/permissions";
+import { CompanyScopePicker } from "@/components/companies/company-scope-picker";
+import type { PageCompany } from "@/lib/companies/page-company";
 import {
   listInventoryItemsAction,
   listWarehousesAction,
@@ -39,14 +41,22 @@ import { WarehousesDialog } from "@/components/inventory/warehouses-dialog";
 
 interface Props {
   companyId: string;
+  /** The user's companies (picker); the one shown is `companyId`. */
+  companies?: PageCompany[];
 }
 
-export function InventoryPageClient({ companyId }: Props) {
+export function InventoryPageClient({ companyId, companies = [] }: Props) {
   const t = useTranslations("inventory");
   const { user } = useAuth();
-  // Every inventory and warehouse write needs inventory:manage (403 otherwise).
-  const canManage = can("inventory:manage", user?.permissions);
-  const { projects } = useProject();
+  // Every inventory and warehouse write needs inventory:manage (403 otherwise) IN
+  // THE COMPANY SHOWN: the session's permissions describe the primary company only.
+  const shownCompany = companies.find((c) => c.id === companyId);
+  const canManage = can("inventory:manage", user?.permissions, shownCompany?.permissions);
+  const { projects, refetch: refetchProjects } = useProject();
+  // Sites come from the shared project list: pick up a project created elsewhere since.
+  useEffect(() => {
+    void refetchProjects({ silent: true });
+  }, [refetchProjects]);
 
   // Filters — applied locally on the loaded list.
   const [location, setLocation] = useState<LocationFilter>("");
@@ -155,6 +165,7 @@ export function InventoryPageClient({ companyId }: Props) {
           <p className="mt-1 text-[13px]" style={{ color: "var(--muted)" }}>
             {t("subtitle")}
           </p>
+          <CompanyScopePicker companies={companies} value={companyId} />
         </div>
         <div className="flex shrink-0 gap-2">
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setWarehousesOpen(true)}>

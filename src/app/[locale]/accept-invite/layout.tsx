@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { pageTitle } from "@/lib/i18n/page-title";
+
+/** "Invitation · Folio", not the generic app title. */
+export const generateMetadata = pageTitle("acceptInvite.pageTitle");
 
 /**
  * The invitee is signed out and has no topbar yet, so the language control

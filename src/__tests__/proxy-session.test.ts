@@ -1,7 +1,8 @@
 /**
  * The proxy renews an expired access token with the refresh cookie before it
  * treats anyone as signed out, and never bounces /login on a cookie alone:
- * - a 30-minute access token must not end a 7-day session on the next page load;
+ * - an expired access token must not end a session on the next page load, and
+ *   one past half its life is renewed early so the session keeps sliding;
  * - an unexpired token the API refuses must not loop /login <-> /dashboard.
  */
 
@@ -33,6 +34,13 @@ function request(path: string, cookies: Record<string, string>): NextRequest {
   return new NextRequest(new URL(path, "http://localhost:3000"), {
     headers: cookie ? { cookie, "x-forwarded-for": "203.0.113.7" } : {},
   });
+}
+
+/** A token issued `ageSeconds` ago that lives `lifeSeconds`. */
+function jwtWithIat(ageSeconds: number, lifeSeconds: number): string {
+  const iat = Math.floor(Date.now() / 1000) - ageSeconds;
+  const payload = Buffer.from(JSON.stringify({ iat, exp: iat + lifeSeconds })).toString("base64url");
+  return `h.${payload}.s`;
 }
 
 const NEW_ACCESS = jwt(1800);
@@ -179,6 +187,32 @@ describe("proxy session handling", () => {
     expect(res.headers.get("location")).toBeNull();
   });
 
+  it("renews a token past half its life, ahead of its expiry", async () => {
+    fetchMock.mockResolvedValue(refreshOk());
+    const week = 7 * 24 * 3600;
+    const res = await proxy(
+      request("/en/projects", { access_token_cookie: jwtWithIat(5 * 24 * 3600, week), refresh_token_cookie: "r" })
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(res.headers.get("location")).toBeNull();
+    expect(res.headers.get("x-middleware-request-cookie")).toContain(`access_token_cookie=${NEW_ACCESS}`);
+  });
+
+  it("keeps a token past half its life when the refresh is refused", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 401 }));
+    const week = 7 * 24 * 3600;
+    const res = await proxy(
+      request("/en/projects", { access_token_cookie: jwtWithIat(5 * 24 * 3600, week), refresh_token_cookie: "r" })
+    );
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("does not refresh a token in the first half of its life", async () => {
+    const week = 7 * 24 * 3600;
+    await proxy(request("/en/projects", { access_token_cookie: jwtWithIat(3600, week), refresh_token_cookie: "r" }));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("hands the requested page to the render, for the layout's own redirect to /login", async () => {
     // An unexpired but revoked token passes the proxy; the (app) layout then
     // redirects and needs the page to keep it as callbackUrl.
@@ -227,7 +261,7 @@ describe("proxy duplicate session cookies", () => {
     const res = await proxy(doubled());
     expect(fetchMock).not.toHaveBeenCalled();
     expect(res.headers.get("location")).toBe(
-      "http://localhost:3000/en/login?callbackUrl=%2Fen%2Fprojects"
+      "http://localhost:3000/en/login?callbackUrl=%2Fen%2Fprojects&reason=session_reset"
     );
     const cleared = res.headers.getSetCookie().join("\n");
     expect(cleared).toContain("access_token_cookie=;");
@@ -254,6 +288,16 @@ describe("proxy duplicate session cookies", () => {
     expect(res.headers.get("location")).toBeNull();
     expect(res.headers.get("x-middleware-request-cookie")).toBe("theme=dark");
     expect(res.headers.getSetCookie().join("\n")).toContain("access_token_cookie=;");
+  });
+
+  it("clears a copy planted on a sub-path of the request too", async () => {
+    const req = new NextRequest(new URL("/fr/dashboard", "http://localhost:3000"), {
+      headers: { cookie: `access_token_cookie=a; access_token_cookie=b` },
+    });
+    const cleared = (await proxy(req)).headers.getSetCookie();
+    for (const path of ["/", "/fr", "/fr/", "/fr/dashboard"]) {
+      expect(cleared).toContain(`access_token_cookie=; Path=${path}; Max-Age=0`);
+    }
   });
 
   it("leaves a single copy of each cookie alone", async () => {

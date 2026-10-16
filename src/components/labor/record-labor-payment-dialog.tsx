@@ -38,6 +38,7 @@ import type { Worker } from "@/types/labor";
 import type { CreateInvoicePayload } from "@/types/invoice";
 import { MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
 import { ApiError } from "@/lib/api/http";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 
 /** The API's limit on an invoice line description. */
 const DESCRIPTION_MAX_LENGTH = 500;
@@ -111,7 +112,9 @@ export function RecordLaborPaymentDialog({
       setError(t("errorWorkerRequired"));
       return;
     }
-    const numericAmount = Number(amount);
+    // "1000,50" and "1 000,50" read as 1000.5: Number() would refuse the comma
+    // and a number input would drop it (100050).
+    const numericAmount = parseMoneyInput(amount) ?? Number.NaN;
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       setError(t("errorAmountPositive"));
       return;
@@ -221,10 +224,10 @@ export function RecordLaborPaymentDialog({
             </label>
             <input
               id={amountFieldId}
-              type="number"
-              min="0.01"
-              max={MAX_LINE_UNIT_PRICE}
-              step="0.01"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder={locale === "en" ? "0.00" : "0,00"}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"

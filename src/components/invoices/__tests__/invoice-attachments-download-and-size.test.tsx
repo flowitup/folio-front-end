@@ -78,7 +78,7 @@ describe("InvoiceAttachments download failure", () => {
     await screen.findByText(PDF.filename);
 
     vi.mocked(fetchAttachments).mockResolvedValue([]);
-    fireEvent.click(screen.getByTitle("Ouvrir"));
+    fireEvent.click(screen.getByTitle("Télécharger"));
 
     expect(await screen.findByText("qa-dl-gone.pdf n'est plus disponible")).toBeTruthy();
     await waitFor(() => expect(screen.getByText("Aucune pièce jointe")).toBeTruthy());
@@ -90,7 +90,7 @@ describe("InvoiceAttachments download failure", () => {
     renderIn("en");
     await screen.findByText(PDF.filename);
 
-    fireEvent.click(screen.getByTitle("Open"));
+    fireEvent.click(screen.getByTitle("Download"));
 
     expect(await screen.findByText("Failed to download qa-dl-gone.pdf")).toBeTruthy();
     expect(screen.getByText(PDF.filename)).toBeTruthy();

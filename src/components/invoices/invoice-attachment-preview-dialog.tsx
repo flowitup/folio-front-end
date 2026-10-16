@@ -1,7 +1,8 @@
 "use client";
 
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useEffectEvent, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Download, Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -11,9 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { fetchAttachmentBlob, fetchAttachmentBlobUrl } from "@/lib/api/invoice-api";
+import { fetchAttachmentBlob } from "@/lib/api/invoice-api";
+import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import type { InvoiceAttachment } from "@/types/invoice";
 import { PdfCanvasViewer } from "@/app/[locale]/(app)/projects/[id]/documents/pdf-canvas-viewer";
+import { ApiError } from "@/lib/api/http";
 import {
   ResizableDialogHandles,
   type DialogBounds,
@@ -28,6 +31,12 @@ export type PreviewableAttachment = Pick<InvoiceAttachment, "id" | "filename" | 
 type Props = {
   attachment: PreviewableAttachment | null;
   onClose: () => void;
+  /**
+   * The file no longer exists (404, deleted elsewhere). The dialog closes
+   * itself; the caller says so and refreshes its list. Without it, the dialog
+   * still closes and shows a toast.
+   */
+  onGone?: (attachment: PreviewableAttachment) => void;
 };
 
 function isPdf(mime: string): boolean {
@@ -38,10 +47,20 @@ function isImage(mime: string): boolean {
   return mime.startsWith("image/");
 }
 
-export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
+export function InvoiceAttachmentPreviewDialog({ attachment, onClose, onGone }: Props) {
   const t = useTranslations("invoices.attachmentPreview");
+  // The image the browser could not decode (e.g. HEIC outside Safari): the
+  // "no preview — download" panel is shown instead of an empty area.
+  const [undecodableId, setUndecodableId] = useState<string | null>(null);
+  // Reads the latest callbacks without making them load dependencies.
+  const handleGone = useEffectEvent((gone: PreviewableAttachment) => {
+    onGone?.(gone);
+    onClose();
+  });
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  // The bytes the preview loaded: Download saves them instead of fetching again
+  const [loadedBlob, setLoadedBlob] = useState<Blob | null>(null);
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +74,7 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
       revokeRef.current = null;
     }
     setBlobUrl(null);
+    setLoadedBlob(null);
     setPdfData(null);
     setError(null);
     setBounds(null);
@@ -72,12 +92,18 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
         const url = URL.createObjectURL(blob);
         revokeRef.current = url;
         setBlobUrl(url);
+        setLoadedBlob(blob);
 
         if (isPdf(attachment!.mime_type)) {
           setPdfData(await blob.arrayBuffer());
         }
       } catch (err: unknown) {
         if (controller.signal.aborted) return;
+        // Gone (deleted elsewhere): nothing left to show or download.
+        if (err instanceof ApiError && err.status === 404) {
+          handleGone(attachment!);
+          return;
+        }
         const msg = err instanceof Error ? err.message : String(err);
         setError(msg);
       } finally {
@@ -103,19 +129,16 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
 
   async function handleDownload() {
     if (!attachment) return;
+    if (loadedBlob) {
+      triggerBrowserDownload(loadedBlob, attachment.filename);
+      return;
+    }
     setDownloading(true);
     try {
-      const url = await fetchAttachmentBlobUrl(attachment.id);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = attachment.filename;
-      a.rel = "noopener";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      const blob = await fetchAttachmentBlob(attachment.id);
+      triggerBrowserDownload(blob, attachment.filename);
     } catch {
-      // Download errors are silent — the save dialog simply won't appear
+      toast.error(t("downloadError"));
     } finally {
       setDownloading(false);
     }
@@ -123,7 +146,7 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
 
   const mime = attachment?.mime_type ?? "";
   const showPdf = pdfData && isPdf(mime);
-  const showImage = blobUrl && isImage(mime);
+  const showImage = blobUrl && isImage(mime) && undecodableId !== attachment?.id;
 
   const resizeStyle: CSSProperties | undefined = bounds
     ? { top: bounds.y, left: bounds.x, width: bounds.w, height: bounds.h, transform: "none", translate: "none", maxWidth: "none" }
@@ -132,20 +155,20 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
   return (
     <Dialog open={attachment !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="sm:max-w-4xl w-full h-[85vh] max-h-[95vh] grid-rows-[auto_1fr_auto] overflow-hidden"
+        className="sm:max-w-4xl w-full h-[85vh] max-h-[95vh] grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr_auto] overflow-hidden"
         style={resizeStyle}
         showCloseButton
         // The file itself is the content; there is no description to point at.
         aria-describedby={undefined}
       >
         <ResizableDialogHandles onResize={setBounds} />
-        <DialogHeader>
-          <DialogTitle className="truncate pr-8">
+        <DialogHeader className="min-w-0">
+          <DialogTitle className="truncate pr-8" title={attachment?.filename}>
             {attachment?.filename ?? ""}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-auto">
+        <div className="min-h-0 min-w-0 overflow-auto">
           {loading && (
             <div className="flex flex-col items-center justify-center gap-3 h-full text-center">
               <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden />
@@ -183,6 +206,7 @@ export function InvoiceAttachmentPreviewDialog({ attachment, onClose }: Props) {
               src={blobUrl}
               alt={attachment?.filename ?? ""}
               className="max-h-full max-w-full mx-auto rounded object-contain"
+              onError={() => setUndecodableId(attachment?.id ?? null)}
             />
           )}
 

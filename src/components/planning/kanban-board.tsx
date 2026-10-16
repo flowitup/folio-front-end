@@ -33,6 +33,7 @@ import { weekOffsetFromParam } from "@/lib/planning/week";
 import { pointerFirstCollision } from "@/lib/planning/collision";
 import { dropNeighbours } from "@/lib/planning/drop";
 import { taskErrorKey } from "@/lib/planning/task-error";
+import { assigneeNamesWithFallback } from "@/lib/planning/assignee-names";
 import { BOARD_COLUMNS } from "@/types/task";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
@@ -83,6 +84,8 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   // People a task can be assigned to (the project team); the cards show
   // their names. Without the list the board still works, nameless.
   const [assignees, setAssignees] = useState<TaskAssignee[]>([]);
+  // Only a team that actually loaded can say an assignee is not on it.
+  const [assigneesLoaded, setAssigneesLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,14 +93,21 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       .then(({ users }) => {
         if (cancelled) return;
         setAssignees(users.map((u) => ({ id: u.id, name: userDisplayName(u) || u.email })));
+        setAssigneesLoaded(true);
       })
       .catch(() => {
-        if (!cancelled) setAssignees([]);
+        if (!cancelled) {
+          setAssignees([]);
+          setAssigneesLoaded(false);
+        }
       });
     return () => { cancelled = true; };
   }, [projectId]);
 
-  const assigneeNames = useMemo(() => new Map(assignees.map((a) => [a.id, a.name])), [assignees]);
+  const assigneeNames = useMemo(() => {
+    const names = new Map(assignees.map((a) => [a.id, a.name]));
+    return assigneesLoaded ? assigneeNamesWithFallback(names, t("assigneeOtherShort")) : names;
+  }, [assignees, assigneesLoaded, t]);
 
   // Deleting a task needs project write access (members may edit, not delete).
   const { user } = useAuth();
@@ -145,7 +155,9 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   // strip the param so refresh / back-button doesn't re-open it.
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
-    setCreateState({ status: "backlog", dueDate: null });
+    // The dialog's Status field shows (and lets the user change) the lane;
+    // "À faire" puts it on the board, where the user expects to find it.
+    setCreateState({ status: "todo", dueDate: null });
     const params = new URLSearchParams(searchParams.toString());
     params.delete("new");
     const qs = params.toString();
@@ -363,7 +375,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
           </div>
 
           {/* Drag overlay — floating card while dragging. Portaled to <body>:
-              inside the app's zoom:0.8 content and the page's transformed
+              inside the app's zoomed (--app-zoom) content and the page's transformed
               .fade-up wrapper, its position:fixed viewport coordinates would
               be rescaled/re-anchored and the card would drift away from the
               pointer. The inner zoom keeps it the size of the zoomed board.
@@ -372,7 +384,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
             createPortal(
               <DragOverlay>
                 {activeTask && (
-                  <div style={{ zoom: 0.8 }}>
+                  <div className="app-zoom">
                     <TaskCard
                       task={activeTask}
                       assigneeName={activeTask.assignee_id ? assigneeNames.get(activeTask.assignee_id) : null}

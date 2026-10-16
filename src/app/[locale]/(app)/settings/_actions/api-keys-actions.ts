@@ -12,6 +12,7 @@ import type { ApiKey, CreatedApiKey } from "@/lib/api/api-keys";
 
 export type ApiKeyError =
   | "unauthorized"
+  | "forbidden"
   | "invalid_name"
   | "limit_reached"
   | "not_found"
@@ -35,6 +36,9 @@ function classify(err: unknown): ApiKeyError {
   switch (status) {
     case 401:
       return "unauthorized";
+    case 403:
+      // Platform accounts may not hold API keys; say so instead of "something went wrong".
+      return "forbidden";
     case 400:
     case 422:
       return "invalid_name";

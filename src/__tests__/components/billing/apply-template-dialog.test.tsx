@@ -164,7 +164,8 @@ describe("test_apply_template_dialog_lists_filtered_by_kind_and_creates_doc", ()
     renderDialog("devis");
 
     await waitFor(() => {
-      expect(mockListAction).toHaveBeenCalledWith("devis");
+      // No issuer picked yet: no company filter (the API lists every administered company).
+      expect(mockListAction).toHaveBeenCalledWith("devis", undefined);
     });
   });
 
@@ -269,6 +270,26 @@ describe("test_apply_template_dialog_lists_filtered_by_kind_and_creates_doc", ()
         expect.objectContaining({ recipient_name: "Client X" })
       );
     });
+  });
+
+  it("lists and issues from the company picked in the form", async () => {
+    mockListAction.mockResolvedValueOnce({ ok: true, data: [DEVIS_TEMPLATE] });
+    mockCreateAction.mockResolvedValueOnce({ ok: true, data: makeCreatedDoc("devis") });
+
+    render(<ApplyTemplateDialog open onOpenChange={vi.fn()} kind="devis" companyId="company-b" />);
+    await waitFor(() => expect(mockListAction).toHaveBeenCalledWith("devis", "company-b"));
+    await waitFor(() => screen.getByText("Standard Consulting Devis"));
+    fireEvent.click(screen.getByText("Standard Consulting Devis"));
+    await waitFor(() => screen.getByLabelText(/name \*/i));
+    fireEvent.change(screen.getByLabelText(/name \*/i), { target: { value: "Client X" } });
+    fireEvent.click(screen.getByRole("button", { name: /create from template/i }));
+
+    await waitFor(() =>
+      expect(mockCreateAction).toHaveBeenCalledWith(
+        "tpl-devis-1",
+        expect.objectContaining({ company_id: "company-b" })
+      )
+    );
   });
 
   it("redirects to /billing/<kind>/<doc-id> on success", async () => {

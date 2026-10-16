@@ -150,6 +150,11 @@ describe("bestMixHt", () => {
     ];
     expect(bestMixHt(articles)).toBe(8 * 2 + 5 * 3);
   });
+
+  it("rounds each line to the cent half up, like the API's baskets", () => {
+    // 6.5 × 20.75 = 134.875 → 134.88, the basket_ht the API sends.
+    expect(bestMixHt([article("a", 1, [quote("q1", "A", 20.75)], 6.5)])).toBe(134.88);
+  });
 });
 
 describe("formatGapPercent", () => {
@@ -180,8 +185,12 @@ describe("hasComparablePrices", () => {
     expect(
       hasComparablePrices({ store_baskets: [{ priced_article_count: 0 }, { priced_article_count: 0 }] })
     ).toBe(false);
+    // One shop with prices has nothing to be compared with.
     expect(
       hasComparablePrices({ store_baskets: [{ priced_article_count: 0 }, { priced_article_count: 2 }] })
+    ).toBe(false);
+    expect(
+      hasComparablePrices({ store_baskets: [{ priced_article_count: 1 }, { priced_article_count: 2 }] })
     ).toBe(true);
   });
 });

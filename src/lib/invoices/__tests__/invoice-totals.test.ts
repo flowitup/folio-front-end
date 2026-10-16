@@ -47,6 +47,8 @@ describe("formatQuantity / formatVatRate", () => {
   it("use the app language", () => {
     expect(formatQuantity(1.5, "fr")).toBe("1,5");
     expect(formatQuantity(1.5, "en")).toBe("1.5");
+    expect(formatQuantity(1.2345, "fr")).toBe("1,2345");
+    expect(formatQuantity(0.0005, "fr")).toBe("0,0005");
     expect(formatVatRate(5.5, "fr")).toMatch(/^5,5\s%$/);
     expect(formatVatRate(20, "en")).toBe("20%");
   });

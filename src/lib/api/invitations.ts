@@ -8,6 +8,7 @@
 import { env } from "@/lib/config/env";
 import { sessionAuthHeader } from "@/lib/api/auth-header";
 import { clientIpHeader } from "@/lib/api/client-ip";
+import { retryAfterOfResponse } from "@/lib/api/rate-limit";
 import type { User } from "@/lib/auth/types";
 import type {
   VerifyInviteResponse,
@@ -92,14 +93,17 @@ export async function createInvitation(
     const err = new Error(`Failed to create invitation (HTTP ${response.status})`) as Error & {
       status: number;
       reason?: string;
+      retryAfter?: number | null;
     };
     err.status = response.status;
+    let body: { reason?: unknown } | null = null;
     try {
-      const body = await response.json();
+      body = await response.json();
       if (typeof body?.reason === "string") err.reason = body.reason;
     } catch {
       // ignore parse error
     }
+    if (response.status === 429) err.retryAfter = retryAfterOfResponse(response, body);
     throw err;
   }
   return response.json();
@@ -129,7 +133,7 @@ export async function revokeInvitation(invitationId: string): Promise<void> {
   }
 }
 
-export type InviteErrorReason = "expired" | "revoked" | "accepted" | "not_found";
+export type InviteErrorReason = "expired" | "revoked" | "superseded" | "accepted" | "not_found";
 
 /**
  * Verify an invitation token.
@@ -162,7 +166,7 @@ export async function verifyInvite(
     try {
       const body = await response.json();
       const reason = body?.reason as InviteErrorReason | undefined;
-      if (reason === "expired" || reason === "revoked" || reason === "accepted") {
+      if (reason === "expired" || reason === "revoked" || reason === "superseded" || reason === "accepted") {
         return { error: reason };
       }
     } catch {
@@ -191,7 +195,7 @@ export type AcceptedUser = Pick<User, "id" | "email" | "display_name">;
  */
 export async function acceptInvite(
   payload: AcceptInvitePayload
-): Promise<{ user?: AcceptedUser; setCookieHeaders: string[] }> {
+): Promise<{ user?: AcceptedUser; projectId?: string; setCookieHeaders: string[] }> {
   let response: Response;
   try {
     response = await fetch(`${env.apiBaseUrl}/invitations/accept`, {
@@ -233,8 +237,9 @@ export async function acceptInvite(
         display_name: body.user.display_name ?? null,
       }
     : undefined;
+  const projectId = typeof body?.project_id === "string" ? body.project_id : undefined;
 
-  return { user, setCookieHeaders };
+  return { user, projectId, setCookieHeaders };
 }
 
 /**

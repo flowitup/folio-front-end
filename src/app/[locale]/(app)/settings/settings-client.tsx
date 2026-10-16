@@ -1,7 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { LegalLinks } from "@/components/legal-links";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { UsersSection } from "./users/users-section";
@@ -75,11 +76,15 @@ function sectionFromHash(hash: string, isOps: boolean): SectionKey {
   // "users" is platform-ops only. For anyone else the nav no longer offers it,
   // so a stale #users link lands on Profile rather than on an orphan tab.
   if (hash === "users" && !isOps) return "profile";
+  // Platform accounts cannot hold API keys (the backend refuses them), so the
+  // tab is not offered to them and its hash leads back to Profile.
+  if (hash === "apiKeys" && isOps) return "profile";
   return ALL_VALID_KEYS.includes(hash) ? (hash as SectionKey) : "profile";
 }
 
 export function SettingsClient({ projects }: Props) {
   const t = useTranslations("settings");
+  const locale = useLocale();
   const { user } = useAuth();
   const { selectedProject } = useProject();
 
@@ -109,9 +114,9 @@ export function SettingsClient({ projects }: Props) {
     // admin only, that company's self-service tools.
     "company",
     "notifications",
-    // Personal automation tokens — no permission gate, every signed-in user
-    // manages their own keys.
-    "apiKeys",
+    // Personal automation tokens — every signed-in user manages their own,
+    // except platform accounts, which the backend never lets hold one.
+    ...(isSuperadmin ? [] : ["apiKeys" as const]),
     // Platform ops only: for everyone else this tab's entire content was a
     // permission-denied panel, so it is no longer offered at all.
     ...(isSuperadmin ? ["users" as const] : []),
@@ -180,11 +185,14 @@ export function SettingsClient({ projects }: Props) {
           </section>
         )}
 
-        {APP_VERSION && (
-          <p className="pt-1 text-[11px]" style={{ color: "var(--muted)" }}>
-            Folio v{APP_VERSION}
-          </p>
-        )}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
+          <LegalLinks locale={locale} />
+          {APP_VERSION && (
+            <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+              Folio v{APP_VERSION}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

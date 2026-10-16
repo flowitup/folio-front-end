@@ -14,6 +14,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useConfirmDialog } from "@/components/chiffrage/use-confirm-dialog";
 import { Globe, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -67,11 +68,12 @@ export function StoresDialog({
   onDelete,
 }: Props) {
   const t = useTranslations("chiffrage");
+  const { ask, dialog: confirmDialog } = useConfirmDialog();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const busy = deletingId !== null;
 
   const remove = async (store: ChiffrageStore) => {
-    if (!confirm(t("confirmDeleteStore", { name: store.name }))) return;
+    if (!(await ask(t("confirmDeleteStore", { name: store.name })))) return;
     setDeletingId(store.id);
     try {
       await onDelete(store);
@@ -187,6 +189,7 @@ export function StoresDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      {confirmDialog}
     </Dialog>
   );
 }

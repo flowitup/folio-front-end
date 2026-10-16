@@ -1,12 +1,17 @@
 /**
  * Server-side session renewal for the proxy (src/proxy.ts).
  *
- * The access token lives 30 minutes and the refresh token 7 days. Without a
- * renewal on page loads, a full navigation, reload or new tab after 30 minutes
- * sent a signed-in user to /login although the refresh cookie was still good:
- * only client-side API calls ever refreshed. The proxy now refreshes with the
- * refresh cookie first, sets the new cookies on the browser and hands them to
- * the render of the same request.
+ * Both tokens are issued at sign-in with the lifetimes the API is configured
+ * with (7 days each by default). Without a renewal on page loads, a full
+ * navigation, reload or new tab after the access token expired sent a
+ * signed-in user to /login although the refresh cookie was still good. The
+ * proxy refreshes with the refresh cookie, sets the new cookies on the browser
+ * and hands them to the render of the same request.
+ *
+ * It does so once the access token is past half its life, not only once it has
+ * expired: by then the refresh token issued with it has expired too. The API
+ * rotates the refresh token on every refresh, so a user who keeps coming back
+ * keeps a sliding session instead of being signed out 7 days after sign-in.
  *
  * Cookie names and paths are Flask-JWT-Extended's defaults as configured in
  * folio-back-end (config/__init__.py sets no *_COOKIE_NAME / *_COOKIE_PATH),
@@ -39,6 +44,23 @@ export function isTokenValid(token: string | undefined): boolean {
     return payload.exp * 1000 > Date.now();
   } catch {
     return false;
+  }
+}
+
+/**
+ * True when the access token should be renewed now: missing, unreadable,
+ * expired, or past half of its lifetime (its `iat`..`exp` span). A token with
+ * no `iat` is renewed only once it has expired.
+ */
+export function shouldRenewToken(token: string | undefined, now: number = Date.now()): boolean {
+  if (!isTokenValid(token)) return true;
+  try {
+    const payload = JSON.parse(atob((token as string).split(".")[1]));
+    if (typeof payload.exp !== "number" || typeof payload.iat !== "number") return false;
+    const halfLife = ((payload.exp - payload.iat) * 1000) / 2;
+    return payload.exp * 1000 - now < halfLife;
+  } catch {
+    return true;
   }
 }
 
@@ -99,22 +121,38 @@ const SESSION_COOKIES = [
 
 /**
  * Tell the browser to drop the session cookies, host-only and (for a planted
- * copy) on every parent domain, so a user whose cookies were doubled lands on
- * /login and can sign in again.
+ * copy) on every parent domain and on every path the request URL sits under
+ * (a copy planted with Path=/fr is only removed by an expiry with that path),
+ * so a user whose cookies were doubled lands on /login and can sign in again.
  */
 export function expireSessionCookies(request: NextRequest, response: NextResponse): void {
   const host = request.nextUrl.hostname;
   const labels = /^[\d.]+$/.test(host) ? [] : host.split(".");
   const domains = [undefined, ...labels.slice(0, -1).map((_, i) => labels.slice(i).join("."))];
   for (const name of SESSION_COOKIES) {
-    for (const domain of domains) {
-      // Appended as raw headers: `response.cookies` keeps one cookie per name.
-      response.headers.append(
-        "set-cookie",
-        `${name}=; Path=/; Max-Age=0${domain ? `; Domain=${domain}` : ""}`
-      );
+    for (const path of cookiePathsOf(request.nextUrl.pathname)) {
+      for (const domain of domains) {
+        // Appended as raw headers: `response.cookies` keeps one cookie per name.
+        response.headers.append(
+          "set-cookie",
+          `${name}=; Path=${path}; Max-Age=0${domain ? `; Domain=${domain}` : ""}`
+        );
+      }
     }
   }
+}
+
+/** "/", then each prefix of `pathname` with and without its trailing slash: the paths a cookie sent to it can have. */
+export function cookiePathsOf(pathname: string): string[] {
+  const paths = ["/"];
+  const segments = pathname.split("/").filter(Boolean).slice(0, 6);
+  let prefix = "";
+  for (const segment of segments) {
+    if (/[;,\s]/.test(segment)) break;
+    prefix += `/${segment}`;
+    paths.push(prefix, `${prefix}/`);
+  }
+  return paths;
 }
 
 /** Make the render of this request see no session cookies. */

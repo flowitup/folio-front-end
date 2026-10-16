@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { EditProjectDialog } from "../edit-project-dialog";
 import type { Project } from "@/types/project";
@@ -24,6 +24,7 @@ vi.mock("@/context/AuthContext", () => ({
 }));
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "fr",
   useTranslations: () => (key: string) => {
     const t: Record<string, string> = {
       editProjectTitle: "Edit project",
@@ -478,5 +479,26 @@ describe("EditProjectDialog", () => {
 
     // Resolve the promise
     resolver.resolve?.({ ...FAKE_PROJECT, name: "New" });
+  });
+
+  it("prefills a budget with cents in French notation", () => {
+    render(
+      <EditProjectDialog
+        project={{ ...FAKE_PROJECT_WITH_BUDGET, budget: 12500.5 }}
+        open={true}
+        onOpenChange={vi.fn()}
+      />
+    );
+    expect((screen.getByLabelText("Budget (€)") as HTMLInputElement).value).toBe("12500,50");
+  });
+
+  it("refuses a budget above the API maximum before sending it", async () => {
+    render(
+      <EditProjectDialog project={FAKE_PROJECT_WITH_BUDGET} open={true} onOpenChange={vi.fn()} />
+    );
+    fireEvent.change(screen.getByLabelText("Budget (€)"), { target: { value: "12000000000" } });
+    fireEvent.submit(screen.getByLabelText("Budget (€)").closest("form")!);
+    expect(await screen.findByText("budgetTooLarge")).toBeInTheDocument();
+    expect(mockUpdateProject).not.toHaveBeenCalled();
   });
 });

@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { listMembers } from "@/lib/api/members";
 import { listInvitations } from "@/lib/api/invitations";
-import { getProjectById } from "@/lib/api/projects-server";
+import { loadProjectForPage } from "@/lib/api/project-load";
+import { ProjectLoadError } from "@/components/projects/project-load-error";
 import { can, isCompanyAdmin, isPlatformOps } from "@/lib/auth/permissions";
 import { MembersTable } from "./members-table";
 import { pageTitle } from "@/lib/i18n/page-title";
@@ -26,10 +27,12 @@ export default async function MembersPage({ params }: PageProps) {
   // The project decides everything below: a foreign, unassigned or invalid id
   // must not fall back to the caller's company-wide permissions and draw an
   // empty page with live Invite and Assign buttons.
-  const project = await getProjectById(projectId).catch(() => null);
-  if (!project) {
-    redirect(`/${locale}/projects`);
-  }
+  // An outage or a timeout says so with a retry instead of bouncing to the list.
+  const load = await loadProjectForPage(projectId);
+  if (load.kind === "unauthenticated") redirect(`/${locale}/login`);
+  if (load.kind === "notFound") notFound();
+  if (load.kind === "error") return <ProjectLoadError />;
+  const project = load.project;
 
   // Server-side permission check (authoritative). Invite + manage-members honor
   // the caller's EFFECTIVE per-project permissions (global role UNION the
@@ -42,10 +45,10 @@ export default async function MembersPage({ params }: PageProps) {
   const canInvite = can("project:invite", perms, projectPerms);
   const canManageMembers = can("project:manage_users", perms, projectPerms);
   // The assign flow calls PUT /projects/<id>/assignments/<userId>, which the
-  // backend gates with require_project_access(write=True) — i.e. project:update,
-  // not project:manage_users. Gate the button/dialog on the matching permission
-  // so it never renders a control that would 403.
-  const canAssignMembers = can("project:update", perms, projectPerms);
+  // backend gates with require_project_access(write=True,
+  // permission="project:manage_users") — the same permission as removing.
+  // Gate the button/dialog on it so it renders exactly when the call can work.
+  const canAssignMembers = can("project:manage_users", perms, projectPerms);
   // Manager is an admin-only role to hand out (assignments.ts: "admin may
   // assign any role; manager may only assign member") — derived from the
   // caller's per-company role, not a project permission.

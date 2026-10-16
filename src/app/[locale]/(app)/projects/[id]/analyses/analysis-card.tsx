@@ -124,9 +124,10 @@ export function AnalysisCard({ analysis, projectId, uploaderName }: Props) {
             >
               {nameInitials(uploaderName)}
             </span>
-            <span className="min-w-0 flex-1 truncate">
-              {t("card.uploadedBy", { name: uploaderName })} ·{" "}
-              {relativeDate(analysis.created_at, locale)}
+            {/* Only the name is truncated: the date always stays visible. */}
+            <span className="min-w-0 truncate">{t("card.uploadedBy", { name: uploaderName })}</span>
+            <span className="flex-1 shrink-0 whitespace-nowrap">
+              · {relativeDate(analysis.created_at, locale)}
             </span>
             <ChevronRight
               className="size-3.5 shrink-0 text-[var(--muted-2)] transition-colors group-hover:text-[var(--accent)]"

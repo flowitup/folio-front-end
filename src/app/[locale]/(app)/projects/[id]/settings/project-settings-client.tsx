@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Settings, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,17 +76,10 @@ export function ProjectSettingsClient({ project }: Props) {
   return (
     // Same gutters as the other project pages: the (app) <main> adds none.
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8" data-testid="project-settings">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Settings size={20} style={{ color: "var(--accent)" }} />
-        <h2 className="font-display text-xl font-semibold tracking-tight">
-          {t("settingsTitle")}
-        </h2>
-      </div>
-
+      {/* The topbar carries the page title ("Project settings"). */}
       {/* Bank credit card — initial credit granted by the bank; funds
           releases are deducted from it on the Overview/Expense charts. */}
-      {canViewBudget && <BankCreditCard project={project} />}
+      {canViewBudget && <BankCreditCard project={project} canEdit={canEdit} />}
 
       {/* Invoice prefix card */}
       <div className="folio-card p-7">
@@ -149,7 +142,7 @@ export function ProjectSettingsClient({ project }: Props) {
             </div>
           ) : (
             <p className="text-[12px]" style={{ color: "var(--muted)" }} data-testid="settings-read-only">
-              {t("settingsReadOnly")}
+              {t("settingsNoPermission")}
             </p>
           )}
         </div>

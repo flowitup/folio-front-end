@@ -23,6 +23,8 @@ export interface Company {
    * Present only for superadmins (stripped for everyone else); null when none is active.
    */
   join_code?: string | null;
+  /** Sections the company hides from every member's navigation (see lib/companies/hidden-sections). */
+  hidden_sections?: string[];
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -42,6 +44,13 @@ export interface MyCompany extends Company {
   attached_at: string;
   /** Caller's role in this company. Only "admin" may see/manage its billing. */
   role: CompanyRole;
+  /**
+   * What the caller may do in THIS company (role + grants), from GET /companies.
+   * Gate company-scoped actions (library, inventory) on it, not on the session's
+   * global `permissions`, which describe the primary company only (or the union of
+   * every company when there is none).
+   */
+  permissions?: string[];
 }
 
 /** User attached to a company (returned by GET /companies/<id>/attached-users). */

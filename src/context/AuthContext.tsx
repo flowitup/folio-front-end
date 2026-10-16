@@ -15,14 +15,14 @@ import {
   getCurrentUserAction,
 } from "@/lib/auth/actions";
 import { verifyOtpAction } from "@/lib/auth/otp-actions";
-import { postLoginPath } from "@/lib/auth/callback-url";
+import { isAcceptInvitePath, postLoginPath } from "@/lib/auth/callback-url";
 import { isPlatformOps } from "@/lib/auth/permissions";
 
 interface AuthContextType extends AuthState {
   loginWithPhone: (
     phone: string,
     code: string
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; retryAfterMinutes?: number }>;
   logout: () => void;
   /** Merge saved profile fields into the signed-in user, so the header and
    * avatar follow a profile save without a full reload (the provider is
@@ -30,7 +30,9 @@ interface AuthContextType extends AuthState {
   updateUser: (patch: Partial<User>) => void;
   /** Re-read the signed-in user from /auth/me after an action that changes
    * their companies or permissions (switching the primary company, leaving
-   * or joining one), so permission gates follow without a full reload. */
+   * or joining one), so permission gates follow without a full reload. The
+   * app layout also calls it on window focus and navigation, so a change made
+   * by another admin shows up too (see SessionFreshness). */
   refreshUser: () => Promise<void>;
 }
 
@@ -98,12 +100,15 @@ export function AuthProvider({
       // Return to the page the proxy sent the visitor away from, if any —
       // except for someone with no company: the onboarding gate lives in the
       // /dashboard layout, so they go through it (a deep link would skip it).
+      // An invitation link is the exception to the exception: accepting it is
+      // how a company-less person gets a company, so it is never skipped.
       const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
       const companyLess =
         Array.isArray(freshUser?.companies) &&
         freshUser.companies.length === 0 &&
         !isPlatformOps(freshUser.permissions);
-      router.push(companyLess ? `/${locale}/dashboard` : postLoginPath(callbackUrl, locale));
+      const target = postLoginPath(callbackUrl, locale);
+      router.push(companyLess && !isAcceptInvitePath(target) ? `/${locale}/dashboard` : target);
     },
     [router, locale]
   );
@@ -120,7 +125,7 @@ export function AuthProvider({
       }
 
       setState((prev) => ({ ...prev, isLoading: false }));
-      return { success: false, error: result.error };
+      return { success: false, error: result.error, retryAfterMinutes: result.retryAfterMinutes };
     },
     [completeLogin]
   );
@@ -151,7 +156,13 @@ export function AuthProvider({
       // Keep the current user; the next full load re-seeds it.
     }
     if (!fresh) return;
-    setState((prev) => (prev.user ? { ...prev, user: fresh } : prev));
+    // Also re-read on focus and navigation (SessionFreshness): an unchanged answer keeps
+    // the same object, so nothing reading the user re-renders for nothing.
+    setState((prev) =>
+      !prev.user || JSON.stringify(prev.user) === JSON.stringify(fresh)
+        ? prev
+        : { ...prev, user: fresh }
+    );
   }, []);
 
   return (

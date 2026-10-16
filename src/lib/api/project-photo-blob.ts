@@ -8,6 +8,8 @@
 
 import { getCsrfToken } from "@/lib/api/http";
 import { refreshAccessTokenViaCookie } from "@/lib/api/refresh";
+import { retryAfterOfResponse } from "@/lib/api/rate-limit";
+import { abortableSleep } from "@/lib/import/rate-limit-retry";
 import { env } from "@/lib/config/env";
 import { withInferredContentType } from "@/lib/media/infer-content-type";
 
@@ -139,9 +141,11 @@ export async function uploadProjectPhoto(
     const err = new Error(`upload_failed:${res.status}`) as Error & {
       status: number;
       body: { error?: string; message?: string } | null;
+      retryAfter: number | null;
     };
     err.status = res.status;
     err.body = body;
+    err.retryAfter = res.status === 429 ? retryAfterOfResponse(res, body) : null;
     throw err;
   }
 
@@ -155,35 +159,38 @@ export async function uploadProjectPhoto(
  * Caller is responsible for calling revoke() when the URL is no longer needed
  * to prevent memory leaks.
  */
+const PHOTO_429_RETRIES = 2;
+const PHOTO_429_MAX_WAIT_SECONDS = 30;
+
 export async function fetchProjectPhotoBlob(
   projectId: string,
   photoId: string,
   variant: "thumbnail" | "original",
   signal?: AbortSignal
 ): Promise<PhotoBlob> {
-  const csrf = getCsrfToken();
   const url = `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/photos/${encodeURIComponent(photoId)}/${variant}`;
 
-  const headers: Record<string, string> = {};
-  if (csrf) headers["X-CSRF-TOKEN"] = csrf;
+  // A GET needs no CSRF header (the API only checks it on writes), and sending
+  // one made every thumbnail a non-simple request with its own CORS preflight.
+  const get = () => fetch(url, { method: "GET", credentials: "include", signal });
 
-  let res = await fetch(url, {
-    method: "GET",
-    headers,
-    credentials: "include",
-    signal,
-  });
+  let res = await get();
 
   if (res.status === 401) {
     const refreshed = await refreshAccessTokenViaCookie();
     if (refreshed) {
-      res = await fetch(url, {
-        method: "GET",
-        headers,
-        credentials: "include",
-        signal,
-      });
+      res = await get();
     }
+  }
+
+  // A burst of thumbnails can hit the rate limit: wait as long as the API says
+  // (a short wait only) and try again, instead of leaving a broken tile.
+  for (let attempt = 0; res.status === 429 && attempt < PHOTO_429_RETRIES; attempt++) {
+    const wait = retryAfterOfResponse(res) ?? 2;
+    if (wait > PHOTO_429_MAX_WAIT_SECONDS) break;
+    await abortableSleep(wait * 1000, signal);
+    if (signal?.aborted) break;
+    res = await get();
   }
 
   if (!res.ok) {

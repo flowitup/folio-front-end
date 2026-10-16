@@ -169,7 +169,7 @@ describe("test_create_from_existing_dialog_lists_recent_docs_and_navigates", () 
     fireEvent.click(screen.getByText("DOC-d-1"));
 
     // Click confirm
-    fireEvent.click(screen.getByRole("button", { name: /clone selected/i }));
+    fireEvent.click(screen.getByRole("button", { name: /duplicate this document/i }));
 
     await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -182,7 +182,7 @@ describe("test_create_from_existing_dialog_lists_recent_docs_and_navigates", () 
   it("Confirm button is disabled when no doc selected", async () => {
     renderDialog("devis");
     await waitFor(() => screen.getByText("DOC-d-1"));
-    const confirmBtn = screen.getByRole("button", { name: /clone selected/i });
+    const confirmBtn = screen.getByRole("button", { name: /duplicate this document/i });
     expect(confirmBtn).toBeDisabled();
   });
 
@@ -208,12 +208,12 @@ describe("test_create_from_existing_dialog_lists_recent_docs_and_navigates", () 
 
     // Select
     fireEvent.click(screen.getByText("DOC-d-1"));
-    const confirmBtnAfterSelect = screen.getByRole("button", { name: /clone selected/i });
+    const confirmBtnAfterSelect = screen.getByRole("button", { name: /duplicate this document/i });
     expect(confirmBtnAfterSelect).not.toBeDisabled();
 
     // Deselect
     fireEvent.click(screen.getByText("DOC-d-1"));
-    const confirmBtnAfterDeselect = screen.getByRole("button", { name: /clone selected/i });
+    const confirmBtnAfterDeselect = screen.getByRole("button", { name: /duplicate this document/i });
     expect(confirmBtnAfterDeselect).toBeDisabled();
   });
 });
@@ -257,7 +257,7 @@ describe("CreateFromExistingDialog — cross-kind toggle", () => {
     // The component renders a Select with value=targetKind
     // We can't easily open Radix Select without pointer events, so we verify
     // the default navigation is correct and the select element is present.
-    const confirmBtn = screen.getByRole("button", { name: /clone selected/i });
+    const confirmBtn = screen.getByRole("button", { name: /duplicate this document/i });
     expect(confirmBtn).not.toBeDisabled();
 
     fireEvent.click(confirmBtn);

@@ -12,7 +12,7 @@
  * - 'forbidden_admin_required'    — admin-only endpoint called by non-admin (403)
  */
 
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   fetchMyCompanies,
   fetchAllCompanies,
@@ -180,7 +180,9 @@ export async function createCompanyAction(
   const auth = await requireSession();
   if (!auth.ok) return auth;
   try {
-    const data = await createCompany(payload);
+    // The UI language names the company's default labor roles.
+    const locale = await getLocale().catch(() => undefined);
+    const data = await createCompany(payload, locale);
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: await classifyBackendError(err) };
@@ -278,6 +280,11 @@ export async function joinCompanyByCodeAction(code: string): Promise<ActionResul
   const auth = await requireSession();
   if (!auth.ok) return auth;
   const normalized = typeof code === "string" ? normalizeJoinCode(code) : "";
+  if (normalized.length > 0 && normalized.length < 8) {
+    // Company codes are 8 characters: say so, not "validation error".
+    const t = await getTranslations("companies.errors");
+    return { ok: false, error: { code: "code_length", message: t("joinCodeLength") } };
+  }
   if (normalized.length < 4 || normalized.length > 32) return invalid();
   try {
     const data = await joinCompanyByCode(normalized);

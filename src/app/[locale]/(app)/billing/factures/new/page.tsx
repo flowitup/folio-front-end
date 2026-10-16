@@ -20,6 +20,9 @@ import { NoAttachedCompaniesCallout } from "@/components/billing/no-attached-com
 import type { BillingDocument, BillingDocumentTemplate } from "@/types/billing";
 import type { MyCompany } from "@/types/companies";
 import type { ProjectSummary } from "@/lib/api/projects-server";
+import { pageTitle } from "@/lib/i18n/page-title";
+
+export const generateMetadata = pageTitle("meta.newInvoice");
 
 interface NewFacturePageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

@@ -5,25 +5,29 @@ import { clientIpHeader } from "@/lib/api/client-ip";
 import type { AuthTokenResponse, User } from "./types";
 import { setForwardedCookies } from "./forward-cookies";
 import { normalizeFrenchPhone } from "./phone-number";
-import { hourlyLimitMinutesOf } from "./otp-throttle";
+import { codeLimitOf } from "./otp-throttle";
 
 export type RequestOtpError =
   | "invalid_phone"
   | "throttled"
   | "hourly_limit"
+  | "network_limit"
+  | "sms_busy"
   | "sms_failed"
   | "unavailable"
   | "unknown";
-export type VerifyOtpError = "invalid_code" | "throttled" | "unavailable" | "unknown";
+export type VerifyOtpError = "invalid_code" | "throttled" | "network_limit" | "unavailable" | "unknown";
 
 type RequestOtpResult =
   | { success: true; expiresIn: number }
-  // `retryAfterMinutes` comes with "hourly_limit": how long the number stays capped.
+  // `retryAfterMinutes` comes with "hourly_limit" (how long the number stays
+  // capped), "network_limit" and "sms_busy".
   | { success: false; error: RequestOtpError; retryAfterMinutes?: number };
 
 type VerifyOtpResult = {
   success: boolean;
   error?: VerifyOtpError;
+  retryAfterMinutes?: number;
   user?: User;
 };
 
@@ -40,13 +44,18 @@ function whitelistedUser(user: User | undefined): User | undefined {
   };
 }
 
+/** The SMS languages the backend writes codes in; anything else is left to its default. */
+function smsLocale(locale: string | undefined): "fr" | "en" | "vi" | null {
+  return locale === "fr" || locale === "en" || locale === "vi" ? locale : null;
+}
+
 /**
  * Ask the backend to text a 6-digit sign-in code to `phone`.
  * `POST /auth/otp/request` always answers 202 for a well-formed number
  * (whether or not an account has it), so a 400 here means the number itself
  * is malformed, not "unknown account".
  */
-export async function requestOtpAction(phone: string): Promise<RequestOtpResult> {
+export async function requestOtpAction(phone: string, locale?: string): Promise<RequestOtpResult> {
   // Server-side input validation (don't trust client): reject before ever
   // hitting the network so an empty/whitespace phone never reaches the BE.
   const trimmedPhone = typeof phone === "string" ? phone.trim() : "";
@@ -64,7 +73,8 @@ export async function requestOtpAction(phone: string): Promise<RequestOtpResult>
     const response = await fetch(`${env.apiBaseUrl}/auth/otp/request`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(await clientIpHeader()) },
-      body: JSON.stringify({ phone: frenchPhone }),
+      // The SMS is written in the language the page is in.
+      body: JSON.stringify({ phone: frenchPhone, ...(smsLocale(locale) ? { locale: smsLocale(locale) } : {}) }),
     });
 
     if (response.status === 202) {
@@ -74,10 +84,11 @@ export async function requestOtpAction(phone: string): Promise<RequestOtpResult>
 
     if (response.status === 400) return { success: false, error: "invalid_phone" };
     if (response.status === 429) {
-      const minutes = await hourlyLimitMinutesOf(response);
-      return minutes === null
-        ? { success: false, error: "throttled" }
-        : { success: false, error: "hourly_limit", retryAfterMinutes: minutes };
+      const limit = await codeLimitOf(response);
+      if (limit.kind === "number") return { success: false, error: "hourly_limit", retryAfterMinutes: limit.minutes };
+      if (limit.kind === "network") return { success: false, error: "network_limit", retryAfterMinutes: limit.minutes };
+      if (limit.kind === "service") return { success: false, error: "sms_busy", retryAfterMinutes: limit.minutes };
+      return { success: false, error: "throttled" };
     }
     if (response.status === 503) return { success: false, error: "sms_failed" };
     if (response.status === 404) return { success: false, error: "unavailable" };
@@ -121,7 +132,12 @@ export async function verifyOtpAction(phone: string, code: string): Promise<Veri
     });
 
     if (!response.ok) {
-      if (response.status === 429) return { success: false, error: "throttled" };
+      if (response.status === 429) {
+        const limit = await codeLimitOf(response);
+        return limit.kind === "network"
+          ? { success: false, error: "network_limit", retryAfterMinutes: limit.minutes }
+          : { success: false, error: "throttled" };
+      }
       if (response.status === 404) return { success: false, error: "unavailable" };
       if (response.status === 401 || response.status === 400) {
         return { success: false, error: "invalid_code" };

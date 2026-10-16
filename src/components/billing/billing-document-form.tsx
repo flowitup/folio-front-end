@@ -30,13 +30,14 @@ import {
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, Loader2, Download, Eye, FileSpreadsheet, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Eye, FileSpreadsheet, ArrowRightLeft, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { IssuerProfileWarning } from "@/components/billing/issuer-profile-warning";
 import {
   Select,
   SelectContent,
@@ -60,9 +61,12 @@ import {
 } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
-import { env } from "@/lib/config/env";
-import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
-import { fetchWithRefresh } from "@/lib/api/refresh";
+import {
+  BillingFileError,
+  billingFileBlob,
+  fetchBillingFile,
+} from "@/lib/api/billing/billing-file-client";
+import { rateLimitMessage } from "@/lib/api/rate-limit";
 import type {
   BillingDocument,
   BillingDocumentKind,
@@ -74,6 +78,7 @@ import type { ProjectSummary } from "@/lib/api/projects-server";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { isDevisLockedByFacture } from "@/lib/billing/devis-lock";
+import { useBillingBackPath } from "@/lib/billing/back-target";
 import { addDaysToDayKey, parisDayKey } from "@/lib/utils/paris-day";
 import { toIsoDate, toItemPayload } from "@/lib/billing/document-payload";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
@@ -82,6 +87,12 @@ import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog"
 
 // Loose shape check; the API does the strict one.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** True when a line's quantity or price text is a plain number ("2.5"). */
+function isNumberText(value: string | number | null | undefined): boolean {
+  const text = String(value ?? "").trim();
+  return text !== "" && Number.isFinite(Number(text));
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -153,6 +164,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const router = useRouter();
   const locale = useLocale();
   const tForm = useTranslations("billing.form");
+  const tCommon = useTranslations("common");
   const tBilling = useTranslations("billing");
   const errorMessage = useBillingErrorMessage();
   const isEdit = props.mode === "edit";
@@ -171,8 +183,18 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   // ---------------------------------------------------------------------------
 
   // Create mode: selectedCompanyId is set by the picker; null until picker resolves default.
+  // A copy or a template starts on the company of its source / template (not the
+  // primary or last-used one) when the user may issue from it.
   // Edit mode: issuer is snapshotted at creation time — only issuer_legal_name is available.
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const sourceCompanyId =
+    props.mode === "create"
+      ? (props.initialFromSource?.company_id ?? props.initialFromTemplate?.company_id ?? null)
+      : null;
+  const sourceCompanyIssuable =
+    !!sourceCompanyId && props.attachedCompanies.some((c) => c.id === sourceCompanyId);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+    sourceCompanyIssuable ? sourceCompanyId : null
+  );
 
   // ---------------------------------------------------------------------------
   // Project picker state
@@ -182,6 +204,17 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const PROJECT_NONE = "__none__";
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     seed?.project_id ?? null
+  );
+
+  // Only the issuer's projects (plus the one already linked, so an edit never
+  // silently drops it): the API refuses another company's project.
+  const issuerCompanyId = props.mode === "edit" ? props.document.company_id ?? null : selectedCompanyId;
+  const projectOptions = (props.projects ?? []).filter(
+    (p) =>
+      !issuerCompanyId ||
+      !p.company_id ||
+      p.company_id === issuerCompanyId ||
+      p.id === (seed?.project_id ?? null)
   );
 
   // Runtime-refetchable attached companies (reset when company_no_longer_attached).
@@ -288,11 +321,16 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     if (tooLong) return tForm("errors.textTooLong", { field: tooLong.label, max: tooLong.max });
     for (const item of items) {
       if (!item.description.trim()) return tForm("errors.itemDescriptionRequired");
+      // A field left as unreadable text ("2,5,1", "abc") or empty must not
+      // reach the API as NaN or "".
+      if (!isNumberText(item.quantity) || !isNumberText(item.unit_price)) {
+        return tForm("errors.itemNumberInvalid");
+      }
       if (Number(item.quantity) <= 0) return tForm("errors.itemQuantityPositive");
       if (Number(item.quantity) > MAX_LINE_QUANTITY) {
         return tForm("errors.itemQuantityTooLarge", { max: MAX_LINE_QUANTITY });
       }
-      if (Number(item.unit_price) < 0) return tForm("errors.itemUnitPricePositive");
+      if (!(Number(item.unit_price) >= 0)) return tForm("errors.itemUnitPricePositive");
       if (Number(item.unit_price) > MAX_LINE_UNIT_PRICE) {
         return tForm("errors.itemUnitPriceTooLarge", { max: MAX_LINE_UNIT_PRICE });
       }
@@ -306,7 +344,11 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
 
   /** Translated message for a failed save — never the API's raw (English,
    * field-path) validation text. */
-  function saveErrorMessage(error: { code: string }): string {
+  function saveErrorMessage(error: { code: string; message?: string }): string {
+    // An imported document's issue date must stay in its number's year: say
+    // so instead of the generic "some fields are invalid".
+    const numberYear = /issue_date must (?:stay|be) in (\d{4})/.exec(error.message ?? "")?.[1];
+    if (numberYear) return tForm("errors.issueDateYear", { year: numberYear });
     if (error.code === "validation") return tForm("errors.invalidInput");
     if (error.code === "forbidden") return tForm("errors.forbidden");
     if (error.code === "company_profile_missing") return tForm("errors.companyProfileMissing");
@@ -346,6 +388,9 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
 
   function handleCompanyChange(companyId: string) {
     setSelectedCompanyId(companyId);
+    // A document stays on its issuer's projects: drop a project of another company.
+    const project = (props.projects ?? []).find((p) => p.id === selectedProjectId);
+    if (project?.company_id && project.company_id !== companyId) setSelectedProjectId(null);
     if (kind !== "facture" || termsTouchedRef.current) return;
     const company = attachedCompanies.find((c) => c.id === companyId);
     setPaymentTerms(company?.default_payment_terms ?? "");
@@ -436,17 +481,16 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
-      const response = await fetchWithRefresh(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/pdf`
-      );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const cd = response.headers.get("Content-Disposition");
-      const filename = parseFilenameFromContentDisposition(cd, `${liveDoc.document_number}.pdf`);
-      const blob = await response.blob();
-      triggerBrowserDownload(blob, filename);
+      // Shared, cached per document version: reuses the preview's bytes.
+      const file = await fetchBillingFile(liveDoc, "pdf");
+      triggerBrowserDownload(billingFileBlob(file, "pdf"), file.filename);
       toast.success(tForm("toast.pdfDownloaded"));
-    } catch {
-      toast.error(tForm("errors.pdfFailed"));
+    } catch (err) {
+      toast.error(
+        err instanceof BillingFileError && err.status === 429
+          ? rateLimitMessage(tCommon, err.retryAfter)
+          : tForm("errors.pdfFailed"),
+      );
     } finally {
       setIsPdfLoading(false);
       pdfLoadingRef.current = false;
@@ -459,17 +503,15 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     xlsxLoadingRef.current = true;
     setIsXlsxLoading(true);
     try {
-      const response = await fetchWithRefresh(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/xlsx`
-      );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const cd = response.headers.get("Content-Disposition");
-      const filename = parseFilenameFromContentDisposition(cd, `${liveDoc.document_number}.xlsx`);
-      const blob = await response.blob();
-      triggerBrowserDownload(blob, filename);
+      const file = await fetchBillingFile(liveDoc, "xlsx");
+      triggerBrowserDownload(billingFileBlob(file, "xlsx"), file.filename);
       toast.success(tForm("toast.xlsxDownloaded"));
-    } catch {
-      toast.error(tForm("errors.xlsxFailed"));
+    } catch (err) {
+      toast.error(
+        err instanceof BillingFileError && err.status === 429
+          ? rateLimitMessage(tCommon, err.retryAfter)
+          : tForm("errors.xlsxFailed"),
+      );
     } finally {
       setIsXlsxLoading(false);
       xlsxLoadingRef.current = false;
@@ -519,7 +561,8 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
 
   const kindLabel = tBilling(`${kind}.list.title`);
   const newLabel = tBilling(`${kind}.list.new`);
-  const listPath = `/${locale}/billing/${kindToSegment(kind)}`;
+  // Back and Cancel return to the project's Facturation tab when opened from it.
+  const listPath = useBillingBackPath(`/${locale}/billing/${kindToSegment(kind)}`, locale);
 
   // Edit mode: issuer is snapshotted at creation — use the stored issuer_legal_name directly.
   const editIssuerName = isEdit ? (props.document.issuer_legal_name ?? null) : null;
@@ -540,11 +583,11 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="font-display text-xl font-medium">
+        <h1 className="font-display text-xl font-medium">
           {isEdit
             ? (liveDoc?.document_number ?? kindLabel)
             : newLabel}
-        </h2>
+        </h1>
 
         {isEdit && liveDoc && (
           <>
@@ -576,6 +619,19 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
                     <ArrowRightLeft size={13} className="mr-2" />
                   )}
                   {tForm("actions.convertToFacture")}
+                </Button>
+              )}
+              {liveDoc && (
+                // Starts a new document of the same kind from this one (the ?from= flow).
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    router.push(`/${locale}/billing/${kindToSegment(kind)}/new?from=${liveDoc.id}`)
+                  }
+                >
+                  <Copy size={13} className="mr-2" />
+                  {tForm("actions.duplicate")}
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
@@ -638,12 +694,19 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         )
       ) : (
         /* Create mode: company picker */
-        <CompanyPickerSelect
-          kind={kind}
-          attachedCompanies={attachedCompanies}
-          value={selectedCompanyId}
-          onChange={handleCompanyChange}
-        />
+        <>
+          <CompanyPickerSelect
+            kind={kind}
+            attachedCompanies={attachedCompanies}
+            value={selectedCompanyId}
+            onChange={handleCompanyChange}
+          />
+          {sourceCompanyId && !sourceCompanyIssuable && (
+            <p className="text-[12px]" style={{ color: "var(--muted)" }}>
+              {tForm("issuer.sourceCompanyNotIssuable")}
+            </p>
+          )}
+        </>
       )}
 
       {/* 3. Mode picker (create, no pre-fill) */}
@@ -678,6 +741,14 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           </div>
         )}
 
+      {/* The issuer's missing legal mentions, before the first devis or facture. */}
+      {!isEdit && (
+        <IssuerProfileWarning company={attachedCompanies.find((c) => c.id === selectedCompanyId)} />
+      )}
+
+      {/* A devis locked by its facture is shown read-only: every field below
+          is disabled, not just Save (billing-13). */}
+      <fieldset disabled={lockedByFacture} className="contents">
       {/* 4. Recipient block */}
       <div className="folio-card space-y-4 p-5">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
@@ -842,7 +913,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
               <SelectItem value={PROJECT_NONE}>
                 {tForm("details.projectNone")}
               </SelectItem>
-              {(props.projects ?? []).map((p) => (
+              {projectOptions.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {projectDisplayName(p)}
                 </SelectItem>
@@ -861,6 +932,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           items={items}
           onChange={setItems}
           defaultVatRate={templateVatRate}
+          readOnly={lockedByFacture}
         />
       </div>
 
@@ -906,6 +978,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           />
         </div>
       </div>
+      </fieldset>
 
       {/* Error banner */}
       {formError && (
@@ -941,7 +1014,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
             variant="outline"
             className="ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => setDeleteOpen(true)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || lockedByFacture}
           >
             {tForm("actions.delete")}
           </Button>
@@ -958,6 +1031,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         open={fromTemplateOpen}
         onOpenChange={setFromTemplateOpen}
         kind={kind}
+        companyId={selectedCompanyId}
       />
       {liveDoc && (
         <BillingDeleteDialog

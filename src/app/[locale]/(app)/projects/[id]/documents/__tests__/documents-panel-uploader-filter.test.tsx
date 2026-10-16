@@ -168,7 +168,11 @@ function renderPanel(initialUploaders: DocumentUploader[] | null = UPLOADERS) {
 }
 
 function uploaderSelect() {
-  return screen.getByLabelText("uploader") as HTMLSelectElement;
+  // The mocked Select labels every select "uploader"; the sort select (shown
+  // below lg) has no "Anyone" option.
+  return screen
+    .getAllByLabelText("uploader")
+    .find((el) => el.querySelector('option[value="__anyone__"]')) as HTMLSelectElement;
 }
 
 function lastListCall() {
@@ -228,7 +232,7 @@ describe("DocumentsPanel — uploader filter options", () => {
       "documents.filter.anyUploader",
       "Alice Martin",
       "Bob Former",
-      "+336 20 15 90 09",
+      "+33 6 20 15 90 09",
       "documents.filter.formerMember",
     ]);
     // The list gets no name for the erased account, so it says "(former member)".

@@ -46,6 +46,8 @@ export interface InventorySummary {
   damaged: number;
   inWarehouse: number;
   onSite: number;
+  /** Units whose place is gone (its project or warehouse was deleted). */
+  unknownLocation: number;
 }
 
 export function summarizeInventory(items: readonly InventoryItem[]): InventorySummary {
@@ -56,14 +58,20 @@ export function summarizeInventory(items: readonly InventoryItem[]): InventorySu
     damaged: 0,
     inWarehouse: 0,
     onSite: 0,
+    unknownLocation: 0,
   };
   for (const item of items) {
     const q = units(item);
     summary.quantity += q;
     if (item.condition === "damaged") summary.damaged += q;
     else summary.working += q;
-    if (item.location_type === "warehouse") summary.inWarehouse += q;
-    else summary.onSite += q;
+    // A row whose project or warehouse was deleted is listed under "unknown
+    // location": it is not counted as on site (or in a warehouse) either.
+    if (item.location_type === "warehouse") {
+      if (item.warehouse_id) summary.inWarehouse += q;
+      else summary.unknownLocation += q;
+    } else if (item.project_id) summary.onSite += q;
+    else summary.unknownLocation += q;
   }
   return summary;
 }

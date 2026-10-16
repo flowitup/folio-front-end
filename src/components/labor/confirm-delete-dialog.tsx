@@ -15,12 +15,14 @@ import {
 interface ConfirmDeleteDialogProps {
   open: boolean;
   title: string;
+  /** What deleting changes, shown under the title (otherwise read to screen readers only). */
+  description?: string;
   onCancel: () => void;
   onConfirm: () => void;
 }
 
 /** "Delete this …?" confirmation shared by the labor list and calendar views. */
-export function ConfirmDeleteDialog({ open, title, onCancel, onConfirm }: ConfirmDeleteDialogProps) {
+export function ConfirmDeleteDialog({ open, title, description, onCancel, onConfirm }: ConfirmDeleteDialogProps) {
   const t = useTranslations("labor");
   return (
     <AlertDialog open={open} onOpenChange={(o) => !o && onCancel()}>
@@ -30,7 +32,11 @@ export function ConfirmDeleteDialog({ open, title, onCancel, onConfirm }: Confir
             <Trash2 className="h-6 w-6 text-destructive" />
           </div>
           <AlertDialogTitle className="text-center">{title}</AlertDialogTitle>
-          <AlertDialogDescription className="sr-only">{t("deleteIrreversible")}</AlertDialogDescription>
+          {description ? (
+            <AlertDialogDescription className="text-center">{description}</AlertDialogDescription>
+          ) : (
+            <AlertDialogDescription className="sr-only">{t("deleteIrreversible")}</AlertDialogDescription>
+          )}
         </div>
         <AlertDialogFooter className="sm:justify-center gap-2">
           <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>

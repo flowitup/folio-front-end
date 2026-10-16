@@ -145,6 +145,13 @@ describe("AnalysisViewer", () => {
       expect(loader).toBeDefined();
     });
 
+    it("the loading layer never blocks scrolling or clicks on the report", () => {
+      const { getByText } = render(
+        <AnalysisViewer projectId={PROJECT_ID} analysisId={ANALYSIS_ID} title="Report" />
+      );
+      expect(getByText("Loading report…").className).toContain("pointer-events-none");
+    });
+
     it("hides loading indicator on iframe load", async () => {
       const { container, rerender } = render(
         <AnalysisViewer projectId={PROJECT_ID} analysisId={ANALYSIS_ID} title="Report" />

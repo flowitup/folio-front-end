@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { shouldRedirectToOnboarding } from "../onboarding-gate";
+import { isOnboardingPath, isWithoutWorkspace, shouldRedirectToOnboarding } from "../onboarding-gate";
 
 describe("shouldRedirectToOnboarding", () => {
   it("redirects a user with zero companies and no visible projects", () => {
@@ -40,5 +40,28 @@ describe("shouldRedirectToOnboarding", () => {
         hasVisibleProjects: false,
       })
     ).toBe(false);
+  });
+});
+
+describe("isOnboardingPath", () => {
+  it("matches the onboarding screen and its sub-paths only", () => {
+    expect(isOnboardingPath("/onboarding")).toBe(true);
+    expect(isOnboardingPath("/onboarding/join")).toBe(true);
+    expect(isOnboardingPath("/onboarding-tips")).toBe(false);
+    expect(isOnboardingPath("/dashboard")).toBe(false);
+    expect(isOnboardingPath("/")).toBe(false);
+  });
+});
+
+describe("isWithoutWorkspace", () => {
+  it("is true for a user with no company and no visible project", () => {
+    expect(isWithoutWorkspace({ permissions: [], companies: [] }, 0)).toBe(true);
+  });
+
+  it("is false with a company, a visible project, for platform ops, or before the user is known", () => {
+    expect(isWithoutWorkspace({ permissions: [], companies: [{}] }, 0)).toBe(false);
+    expect(isWithoutWorkspace({ permissions: [], companies: [] }, 1)).toBe(false);
+    expect(isWithoutWorkspace({ permissions: ["*:*"], companies: [] }, 0)).toBe(false);
+    expect(isWithoutWorkspace(null, 0)).toBe(false);
   });
 });

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { formatPercent } from "@/lib/utils/format-percent";
 import { Upload, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -216,12 +217,22 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
     });
   }
 
-  async function uploadViaPresigned(file: File, jobId: string): Promise<boolean> {
+  /**
+   * "fallback" only when the file never reached storage (presign or PUT
+   * failed): the multipart route then sends it once. A failed confirm leaves
+   * the job failed instead — the file is already stored, and uploading it a
+   * second time would only orphan the first copy.
+   */
+  async function uploadViaPresigned(
+    file: File,
+    jobId: string,
+  ): Promise<"done" | "fallback" | "failed"> {
+    let presign: Awaited<ReturnType<typeof requestPresignedUrl>>;
     try {
       updateJob(jobId, { status: "uploading", progress: 0 });
 
       // Step A: get presigned PUT URL (tiny JSON through CF)
-      const presign = await requestPresignedUrl(projectId, file);
+      presign = await requestPresignedUrl(projectId, file);
 
       // Step B: PUT file directly to S3/MinIO (bypasses CF entirely)
       await putToPresignedUrl(
@@ -230,25 +241,45 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
         file.type || "application/octet-stream",
         (progress) => updateJob(jobId, { status: "uploading", progress }),
       );
+    } catch {
+      // Presigned path unavailable — caller falls back to multipart
+      return "fallback";
+    }
 
-      // Step C: confirm upload (tiny JSON through CF)
+    try {
+      // Step C: confirm upload (tiny JSON through CF; retried once after a 401)
       updateJob(jobId, { progress: 0.95 });
       const doc = await confirmUpload(projectId, presign, file);
 
       updateJob(jobId, { status: "done", progress: 1, doc });
       onUploaded(doc);
       scheduleDoneCleanup(jobId);
-      return true;
-    } catch {
-      // Presigned path failed — caller should fall back to multipart
-      return false;
+      return "done";
+    } catch (err) {
+      const status = Number(/^confirm:(\d+)$/.exec((err as Error)?.message ?? "")?.[1]);
+      updateJob(jobId, {
+        status: "failed",
+        error:
+          status === 401 || status === 403
+            ? { kind: "forbidden" }
+            : status === 413
+              ? { kind: "oversize" }
+              : status === 415
+                ? { kind: "unsupported" }
+                : status === 429
+                  ? { kind: "rateLimited" }
+                  : Number.isNaN(status)
+                    ? { kind: "network" }
+                    : { kind: "server", message: `HTTP ${status}` },
+      });
+      return "failed";
     }
   }
 
   async function uploadOne(file: File, jobId: string) {
     // Try presigned URL path first (bypasses CF 100 MB limit)
-    const presignedOk = await uploadViaPresigned(file, jobId);
-    if (presignedOk) return;
+    const presigned = await uploadViaPresigned(file, jobId);
+    if (presigned !== "fallback") return;
 
     // Fall back to multipart POST through Cloudflare
     const outcome = await sendXhr(file, jobId);
@@ -440,7 +471,7 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {job.status === "queued" && t("queued")}
                   {job.status === "uploading" &&
-                    `${t("uploading")} ${Math.round(job.progress * 100)}%`}
+                    `${t("uploading")} ${formatPercent(locale, job.progress * 100)}`}
                   {job.status === "done" && t("done")}
                   {job.status === "failed" &&
                     job.error &&

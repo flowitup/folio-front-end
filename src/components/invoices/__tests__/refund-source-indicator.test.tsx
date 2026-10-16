@@ -61,4 +61,14 @@ describe("RefundSourceIndicator", () => {
     expect(screen.getByTestId("refund-source-company")).toBeDefined();
     expect(screen.queryByTestId("refund-source-bank")).toBeNull();
   });
+
+  it("refunded by the bank alone → says the company still owes it", () => {
+    render(<RefundSourceIndicator refundable_status="refunded" has_bank_refund={true} refunded_by="bank" />);
+    expect(screen.getByTestId("refund-source-company-owed")).toBeDefined();
+  });
+
+  it("refunded by the company → no 'still owed' line", () => {
+    render(<RefundSourceIndicator refundable_status="refunded" has_bank_refund={false} refunded_by="company" />);
+    expect(screen.queryByTestId("refund-source-company-owed")).toBeNull();
+  });
 });

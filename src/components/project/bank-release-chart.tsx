@@ -3,8 +3,10 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { formatDate, formatEURWhole } from "@/lib/utils/formatters";
+import { formatDate, formatEURExact } from "@/lib/utils/formatters";
 import { useDataTip } from "@/components/invoices/data-tip";
+import { useChartLink } from "@/components/dashboard/use-chart-link";
+import { expenseListHref } from "@/lib/invoices/expense-filters";
 import {
   computeBankReleaseMetrics,
   buildDrawSeries,
@@ -38,6 +40,8 @@ interface BankReleaseChartProps {
   settingsHref?: string | null;
   /** True while the invoices fetch hasn't settled — figures aren't real yet. */
   loading?: boolean;
+  /** The project's expense list: each draw opens its release there. */
+  expensesHref?: string | null;
 }
 
 const PLACEHOLDER = "—";
@@ -52,10 +56,14 @@ export function BankReleaseChart({
   invoices,
   settingsHref,
   loading = false,
+  expensesHref = null,
 }: BankReleaseChartProps) {
   const t = useTranslations("projects.bankRelease");
   const locale = useLocale();
-  const { onMouseMove, onMouseLeave, overlay } = useDataTip();
+  const { tipHandlers, overlay } = useDataTip();
+  const chartLink = useChartLink();
+  const releaseHref = (id: string) =>
+    expensesHref ? `${expensesHref}${expensesHref.includes("?") ? "&" : "?"}invoice=${encodeURIComponent(id)}` : null;
 
   const metrics = computeBankReleaseMetrics(credit, releasedTotal);
   // Memoized: the data-tip hook re-renders the card on every mousemove.
@@ -85,8 +93,7 @@ export function BankReleaseChart({
   return (
     <div
       className="folio-card p-6"
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
+      {...tipHandlers}
       data-testid="bank-release-chart"
     >
       <div className="flex items-center justify-between gap-3">
@@ -116,13 +123,13 @@ export function BankReleaseChart({
               }}
               data-testid="bank-release-remaining"
             >
-              {fig(formatEURWhole(Math.abs(metrics.remaining)))}
+              {fig(formatEURExact(Math.abs(metrics.remaining)))}
             </span>
             <span className="text-[13px]" style={{ color: "var(--muted)" }}>
               {/* Over-drawn, the figure is the overrun: "remaining of" would
                   contradict the "Over-drawn by" label above it. */}
               {t.rich(overDrawn && !loading ? "headlineMetaOver" : "headlineMeta", {
-                credit: fig(formatEURWhole(metrics.credit)),
+                credit: fig(formatEURExact(metrics.credit)),
                 pct: fig(pctFmt.format(metrics.pct / 100)),
                 c: (chunks) => (
                   <span className="num" style={{ color: "var(--ink-2)" }}>
@@ -149,18 +156,25 @@ export function BankReleaseChart({
                   <span
                     key={draw.id}
                     className="flex-none"
-                    data-tip={`${draw.number} · ${formatDate(draw.date)}|${formatEURWhole(
+                    data-tip={`${draw.number} · ${formatDate(draw.date)}|${formatEURExact(
                       draw.amount
                     )}`}
-                    // The tip is hover-only; screen readers read each draw.
+                    data-testid={`bank-release-draw-${draw.id}`}
+                    // Screen readers read each draw; it opens that release.
                     role="img"
-                    aria-label={`${draw.number} · ${formatDate(draw.date)} · ${formatEURWhole(draw.amount)}`}
+                    aria-label={`${draw.number} · ${formatDate(draw.date)} · ${formatEURExact(draw.amount)}`}
+                    {...chartLink(
+                      releaseHref(draw.id),
+                      `${draw.number} · ${formatDate(draw.date)} · ${formatEURExact(draw.amount)}`
+                    )}
                     // Each segment gives back its 2px flex gap so the hatched
                     // tail keeps its exact remaining share — otherwise the
                     // shrinkable tail absorbs all N gaps and vanishes while
                     // the headline still shows money left at the bank.
                     style={{
+                      // A small draw keeps a visible, tappable sliver.
                       width: `calc(${segmentPct(draw.amount)}% - 2px)`,
+                      minWidth: 6,
                       background: i % 2 === 1 ? SEGMENT_ALT : "var(--ink-2)",
                     }}
                   />
@@ -174,7 +188,7 @@ export function BankReleaseChart({
                       className="num whitespace-nowrap text-[11px] font-semibold"
                       style={{ color: "var(--accent-ink)" }}
                     >
-                      {t("leftLabel", { amount: formatEURWhole(metrics.remaining) })}
+                      {t("leftLabel", { amount: formatEURExact(metrics.remaining) })}
                     </span>
                   </span>
                 ) : null}
@@ -183,9 +197,15 @@ export function BankReleaseChart({
                 className="mt-1.5 flex justify-between gap-3 text-[10.5px]"
                 style={{ color: "var(--muted)" }}
               >
-                <span>
+                <span
+                  {...chartLink(
+                    expensesHref ? expenseListHref(expensesHref, { type: "released_funds" }) : null,
+                    t.markup("segmentHint", { amount: formatEURExact(series.totalDrawn), a: (chunks) => chunks })
+                  )}
+                  data-testid="bank-release-drawn"
+                >
                   {t.rich("segmentHint", {
-                    amount: formatEURWhole(series.totalDrawn),
+                    amount: formatEURExact(series.totalDrawn),
                     a: (chunks) => (
                       <span className="num" style={{ color: "var(--ink-2)" }}>
                         {chunks}
@@ -195,7 +215,7 @@ export function BankReleaseChart({
                 </span>
                 <span>
                   {t.rich("creditLabel", {
-                    amount: formatEURWhole(metrics.credit),
+                    amount: formatEURExact(metrics.credit),
                     a: (chunks) => (
                       <span className="num" style={{ color: "var(--ink-2)" }}>
                         {chunks}
@@ -221,7 +241,7 @@ export function BankReleaseChart({
             <Link
               href={settingsHref}
               className="mt-1.5 inline-block underline"
-              style={{ color: "var(--accent)" }}
+              style={{ color: "var(--accent-ink)" }}
             >
               {t("openSettings")}
             </Link>
@@ -252,7 +272,7 @@ export function BankReleaseChart({
               {t("largestDraw")}
             </div>
             <div className="mt-[3px] text-[14px] font-medium">
-              <span className="num">{formatEURWhole(series.largest.amount)}</span>{" "}
+              <span className="num">{formatEURExact(series.largest.amount)}</span>{" "}
               <span className="text-[11px]" style={{ color: "var(--muted)" }}>
                 {monthYear.format(monthDate(series.largest.date))}
               </span>
@@ -266,7 +286,7 @@ export function BankReleaseChart({
               {t("lastDraw")}
             </div>
             <div className="mt-[3px] text-[14px] font-medium">
-              <span className="num">{formatEURWhole(series.last.amount)}</span>{" "}
+              <span className="num">{formatEURExact(series.last.amount)}</span>{" "}
               <span className="text-[11px]" style={{ color: "var(--muted)" }}>
                 {formatDate(series.last.date)}
               </span>

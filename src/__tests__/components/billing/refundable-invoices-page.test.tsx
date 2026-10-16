@@ -57,6 +57,15 @@ vi.mock("next-intl", () => {
   };
 });
 
+// The drill-down filters live in the URL (?project=, ?channel=).
+let mockSearch = "";
+const mockReplace = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: vi.fn() }),
+  usePathname: () => "/en/billing/refundable-invoices",
+  useSearchParams: () => new URLSearchParams(mockSearch),
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
@@ -605,5 +614,72 @@ describe("RefundableInvoicesPage — more than one page", () => {
     expect(mockFetch).toHaveBeenLastCalledWith({ offset: 1 });
     await waitFor(() => table().getByText("INV-P2"));
     expect(table().getByText("INV-P1")).toBeDefined();
+  });
+});
+
+describe("RefundableInvoicesPage — drill-down from the dashboard", () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    mockReplace.mockReset();
+  });
+
+  it("loads only what the linked channel still owes on the linked project", async () => {
+    mockSearch = "project=p1&channel=bank";
+    mockFetch.mockResolvedValue({
+      items: [],
+      total: 0,
+      summary: {
+        refundable_amount: 10,
+        refunded_total: 0,
+        refunded_by_company: 0,
+        refunded_by_bank: 0,
+        refunded_by_both: 0,
+        bank_outstanding: 1061,
+      },
+    });
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith({ channel: "bank", projectId: "p1" }));
+    expect(await screen.findByTestId("refundable-drill-chip")).toHaveTextContent("Owed by the bank");
+    const bankCard = screen.getByTestId("summary-card-bank-outstanding-filter");
+    expect(bankCard).toHaveAttribute("aria-pressed", "true");
+    expect(bankCard.textContent!.replace(/\s/g, "")).toContain("1061,00€");
+    // Pressing the company card switches the channel, keeping the project.
+    fireEvent.click(screen.getByTestId("summary-card-refundable-filter"));
+    expect(mockReplace).toHaveBeenCalledWith("/en/billing/refundable-invoices?project=p1&channel=company", {
+      scroll: false,
+    });
+    mockSearch = "";
+  });
+});
+
+describe("RefundableInvoicesPage — payer and filters (QA3 expenses-invoices-07)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows who paid and the project by its name (address on hover)", async () => {
+    mockFetch.mockResolvedValue({
+      items: [
+        makeExpense({
+          payment_method_label: "Carte perso François",
+          project_address: "12 rue des Lilas",
+        }),
+      ],
+      total: 1,
+      summary: null,
+    });
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => table().getByText("Carte perso François"));
+    expect(table().getByText("Paid by")).toBeDefined();
+    // Name first, as everywhere (planning-shell); the address is the cell's tooltip.
+    expect(table().getByText("Tower Block").getAttribute("title")).toBe("12 rue des Lilas");
+  });
+
+  it("sends the search to the API", async () => {
+    mockFetch.mockResolvedValue({ items: [makeExpense()], total: 1, summary: null });
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => table().getByText("INV-2026-001"));
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "lilas" } });
+    await waitFor(() => expect(mockFetch).toHaveBeenLastCalledWith({ q: "lilas" }));
   });
 });

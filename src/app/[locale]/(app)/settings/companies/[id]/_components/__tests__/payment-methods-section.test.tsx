@@ -229,7 +229,7 @@ describe("PaymentMethodsSection — inline add", () => {
       });
 
       await waitFor(() => {
-        expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "Stripe");
+        expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "Stripe", "personal");
         expect(mockToast.success).toHaveBeenCalled();
         expect(screen.getByText("Stripe")).toBeDefined();
       });

@@ -1,20 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { MonthField, isMonthValue } from "@/components/ui/month-picker";
 import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
 import { LaborWorkerSelect } from "@/components/invoices/labor-worker-select";
 import { parisDayKey } from "@/lib/utils/paris-day";
 import { fetchInvoicesWithMeta } from "@/lib/api/invoice-api";
 import type { CreateInvoicePayload, Invoice, InvoiceType, SettledVia } from "@/types/invoice";
 import { formatEUR } from "@/lib/utils/formatters";
-import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import {
+  formatMoneyInput,
+  parseMoneyInputDetailed,
+  type ParsedMoneyInput,
+} from "@/lib/utils/parse-money-input";
+import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { invoiceTotalTtc, lineTotalTtc } from "@/lib/invoices/invoice-totals";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
-import { MAX_LINE_QUANTITY, MAX_LINE_UNIT_PRICE, MAX_VAT_RATE } from "@/lib/numeric-bounds";
+import {
+  MAX_BUDGET,
+  MAX_LINE_QUANTITY,
+  MAX_LINE_TOTAL,
+  MAX_LINE_UNIT_PRICE,
+  MAX_VAT_RATE,
+} from "@/lib/numeric-bounds";
 import {
   MAX_BUSINESS_DATE,
   MAX_BUSINESS_MONTH,
@@ -43,20 +55,42 @@ const QUANTITY_DECIMALS = 4;
 const UNIT_PRICE_DECIMALS = 4;
 const VAT_RATE_DECIMALS = 2;
 
+/** Longest texts the API stores (app/api/v1/invoices/schemas.py). */
+const MAX_RECIPIENT_LENGTH = 255;
+const MAX_ADDRESS_LENGTH = 2000;
+const MAX_NOTES_LENGTH = 20000;
+const MAX_DESCRIPTION_LENGTH = 500;
+
 /**
- * A line's figures read in any of the app's locales ("45,90" or "45.90"), each
- * null when it cannot be read. Signs are read here and checked by the caller.
+ * A line's figures read in any of the app's locales ("45,90" or "45.90"), with
+ * why one cannot be read. Signs are read here and checked by the caller. An
+ * ambiguous "1,500" is refused rather than guessed (see parseMoneyInput).
  */
-function parseLine(item: LineItem) {
+function parseLineDetailed(item: LineItem): Record<"quantity" | "unit_price" | "vat_rate", ParsedMoneyInput> {
   return {
-    quantity: parseMoneyInput(item.quantity, { maxDecimals: QUANTITY_DECIMALS, allowNegative: true }),
-    unit_price: parseMoneyInput(item.unit_price, { maxDecimals: UNIT_PRICE_DECIMALS, allowNegative: true }),
+    quantity: parseMoneyInputDetailed(item.quantity, { maxDecimals: QUANTITY_DECIMALS, allowNegative: true }),
+    unit_price: parseMoneyInputDetailed(item.unit_price, { maxDecimals: UNIT_PRICE_DECIMALS, allowNegative: true }),
     // An emptied VAT field means no VAT, like a legacy line without a rate.
     vat_rate: item.vat_rate.trim()
-      ? parseMoneyInput(item.vat_rate, { maxDecimals: VAT_RATE_DECIMALS, allowNegative: true })
-      : 0,
+      ? parseMoneyInputDetailed(item.vat_rate, { maxDecimals: VAT_RATE_DECIMALS, allowNegative: true })
+      : { value: 0, error: null },
   };
 }
+
+/** A line's figures, each null when it cannot be read. */
+function parseLine(item: LineItem) {
+  const { quantity, unit_price, vat_rate } = parseLineDetailed(item);
+  return { quantity: quantity.value, unit_price: unit_price.value, vat_rate: vat_rate.value };
+}
+
+/**
+ * Field errors keyed by field: "issueDate", "recipient", "serviceMonth",
+ * "total", and "items.<index>.<description|quantity|unit_price|vat_rate>".
+ * Each input carries the same key in `data-field`, so a failed submit can
+ * scroll to and focus the first one.
+ */
+type FieldErrors = Record<string, string>;
+const LINE_FIELDS = ["description", "quantity", "unit_price", "vat_rate"] as const;
 
 /** The line as the live totals read it: a figure still being typed counts as 0. */
 function lineForTotals(item: LineItem) {
@@ -95,6 +129,11 @@ interface InvoiceFormProps {
    * method is no longer in the active list (deactivated since).
    */
   paymentMethodLabel?: string | null;
+  /**
+   * UI locale ("fr", "en", "vi"): saved figures are pre-filled with its
+   * decimal mark ("8,45" in French). Callers pass `useLocale()`.
+   */
+  locale?: string;
 }
 
 const INVOICE_TYPES: InvoiceType[] = [
@@ -129,9 +168,13 @@ export function InvoiceForm({
   editingInvoiceId,
   canRecordReleases = true,
   paymentMethodLabel,
+  locale = "en",
 }: InvoiceFormProps) {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
+  const isDesktop = useIsDesktop();
+  const formRef = useRef<HTMLFormElement>(null);
+  const tCommonMonth = useTranslations("common.monthPicker");
 
   // Default to materials_services — the everyday expense type. released_funds
   // stays selectable but must never be the default: those invoices are
@@ -172,13 +215,26 @@ export function InvoiceForm({
     initialValues?.items && initialValues.items.length > 0
       ? initialValues.items.map((i) => ({
           description: i.description,
-          quantity: String(i.quantity),
-          unit_price: String(i.unit_price),
-          vat_rate: String(i.vat_rate ?? 0),
+          // In the UI's decimal mark ("8,45" in French), never a dot the
+          // French reader takes for a thousands separator. A legacy VAT with
+          // more than 2 decimals is shown as saved and flagged on submit,
+          // never silently rounded.
+          quantity: formatMoneyInput(i.quantity, locale, { maxDecimals: QUANTITY_DECIMALS }),
+          unit_price: formatMoneyInput(i.unit_price, locale, { minDecimals: 2, maxDecimals: UNIT_PRICE_DECIMALS }),
+          vat_rate: formatMoneyInput(i.vat_rate ?? 0, locale, { maxDecimals: 4 }),
         }))
       : [emptyItem()]
   );
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  /** Drops the error of a field once it is edited. */
+  const clearFieldError = (...keys: string[]) =>
+    setFieldErrors((prev) => {
+      if (!keys.some((k) => k in prev)) return prev;
+      const next = { ...prev };
+      for (const k of keys) delete next[k];
+      return next;
+    });
 
   // refunds_invoice_id: the M&S invoice this refund is linked to (null = none)
   const [refundsInvoiceId, setRefundsInvoiceId] = useState<string | null>(
@@ -290,18 +346,69 @@ export function InvoiceForm({
   // rounded exactly like the API so the preview matches the saved amount.
   const grandTotal = invoiceTotalTtc(items.map(lineForTotals));
 
+  // An avoir applied to an expense is paid like that expense: the API takes
+  // the target's payment method and ignores any other, so it is not offered.
+  const methodFollowsTarget = type === "return" && settledVia === "avoir" && !!appliedToInvoiceId;
+
   const updateItem = (index: number, field: keyof LineItem, value: string) => {
     setItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
+    clearFieldError(`items.${index}.${field}`, "total");
   };
 
   const addItem = () => setItems((prev) => [...prev, emptyItem()]);
 
-  const removeItem = (index: number) =>
+  const removeItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
+    // Line errors are keyed by index, which shifts: drop them all.
+    setFieldErrors((prev) =>
+      Object.fromEntries(Object.entries(prev).filter(([k]) => !k.startsWith("items.") && k !== "total"))
+    );
+  };
 
-  const validate = (): string | null => {
+  /** Props shared by every input of a field: its key, error state and description. */
+  const fieldProps = (key: string, idSuffix: string) => ({
+    "data-field": key,
+    "aria-invalid": fieldErrors[key] ? true : undefined,
+    "aria-describedby": fieldErrors[key] ? `invoice-error-${idSuffix}` : undefined,
+  });
+  /** Mobile line inputs: described by their error only while that layout is the one shown. */
+  const mobileFieldProps = (index: number, field: (typeof LINE_FIELDS)[number]) =>
+    isDesktop
+      ? { "data-field": `items.${index}.${field}` }
+      : fieldProps(`items.${index}.${field}`, `${index}-${field}`);
+  const errorBorder = (key: string) => (fieldErrors[key] ? " border-destructive" : "");
+  const fieldError = (field: string, idSuffix: string) =>
+    fieldErrors[field] ? (
+      <p id={`invoice-error-${idSuffix}`} className="mt-1 text-xs text-destructive">
+        {fieldErrors[field]}
+      </p>
+    ) : null;
+
+  /** The error for a figure that does not read: the ambiguity explained, else `invalid`. */
+  const figureError = (raw: string, parsed: ParsedMoneyInput, invalid: string) =>
+    parsed.error === "ambiguous" && parsed.suggestion !== undefined
+      ? t("errorAmountAmbiguous", {
+          typed: raw.trim(),
+          grouped: formatMoneyInput(parsed.suggestion, locale),
+          decimal: formatMoneyInput(parsed.suggestion / 1000, locale),
+        })
+      : invalid;
+
+  /** Scrolls to and focuses the first field in error, in page order. */
+  const focusFirstError = (errs: FieldErrors) => {
+    const fields = Array.from(formRef.current?.querySelectorAll<HTMLElement>("[data-field]") ?? []).filter(
+      (el) => errs[el.dataset.field ?? ""]
+    );
+    // Both line layouts are in the page; take the one on screen.
+    const target = fields.find((el) => el.offsetParent !== null) ?? fields[0];
+    if (!target) return;
+    target.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    target.focus({ preventScroll: true });
+  };
+
+  const validate = (): FieldErrors => {
     // Labor type replaces the recipient text input with the worker picker
     // when a worker is linked (server snapshots recipient_name from the
     // worker record) or when editing a legacy/existing row (kept as-is,
@@ -310,47 +417,77 @@ export function InvoiceForm({
     // below) and recipient_name is required there too — the backend rejects
     // an empty recipient_name regardless of type.
     // The API refuses a date outside these years; "0026" for "2026" is the usual typo.
+    const errs: FieldErrors = {};
     const dateRange = { min: String(MIN_BUSINESS_YEAR), max: String(MAX_BUSINESS_YEAR) };
-    if (!issueDate) return t("errorIssueDateRequired");
-    if (!isBusinessDate(issueDate)) return t("errorDateOutOfRange", dateRange);
-    if (recipientNameRequired && !recipientName.trim()) return t("errorRecipientRequired");
+    if (!issueDate) errs.issueDate = t("errorIssueDateRequired");
+    else if (!isBusinessDate(issueDate)) errs.issueDate = t("errorDateOutOfRange", dateRange);
+    if (recipientNameRequired && !recipientName.trim()) errs.recipient = t("errorRecipientRequired");
     // service_month is required for NEW labor invoices only — editing a
     // legacy row that predates this field must not be blocked by it.
     if (type === "labor" && !editingInvoiceId && !serviceMonth) {
-      return t("serviceMonthRequired");
+      errs.serviceMonth = t("serviceMonthRequired");
+    } else if (type === "labor" && serviceMonth && !isMonthValue(serviceMonth)) {
+      errs.serviceMonth = tCommonMonth("formatError");
+    } else if (type === "labor" && serviceMonth && !isBusinessDate(serviceMonth)) {
+      errs.serviceMonth = t("errorDateOutOfRange", dateRange);
     }
-    if (type === "labor" && serviceMonth && !isBusinessDate(serviceMonth)) {
-      return t("errorDateOutOfRange", dateRange);
+    if (items.length === 0) errs.total = t("errorAtLeastOneItem");
+    items.forEach((item, index) => {
+      const key = (field: (typeof LINE_FIELDS)[number]) => `items.${index}.${field}`;
+      if (!item.description.trim()) errs[key("description")] = t("errorDescriptionRequired");
+      const parsed = parseLineDetailed(item);
+      const quantity = parsed.quantity.value;
+      if (quantity === null) {
+        errs[key("quantity")] = figureError(
+          item.quantity,
+          parsed.quantity,
+          t("errorQuantityInvalid", { decimals: QUANTITY_DECIMALS })
+        );
+      } else if (quantity <= 0) {
+        errs[key("quantity")] = t("errorQuantityPositive");
+      } else if (quantity > MAX_LINE_QUANTITY) {
+        errs[key("quantity")] = t("errorQuantityTooLarge", { max: MAX_LINE_QUANTITY });
+      }
+      const unitPrice = parsed.unit_price.value;
+      if (unitPrice === null) {
+        errs[key("unit_price")] = figureError(
+          item.unit_price,
+          parsed.unit_price,
+          t("errorUnitPriceInvalid", { decimals: UNIT_PRICE_DECIMALS })
+        );
+      } else if (unitPrice < 0 && !MIXED_SIGN_TYPES.has(type)) {
+        // Negative lines (credits) are only for the mixed-sign types.
+        errs[key("unit_price")] = t("errorUnitPriceNegative");
+      } else if (Math.abs(unitPrice) > MAX_LINE_UNIT_PRICE) {
+        errs[key("unit_price")] = t("errorUnitPriceTooLarge", { max: MAX_LINE_UNIT_PRICE });
+      }
+      const vatRate = parsed.vat_rate.value;
+      if (vatRate === null || vatRate < 0 || vatRate > MAX_VAT_RATE) {
+        // "5,555" is no valid rate either way, so no ambiguity to explain.
+        errs[key("vat_rate")] = t("errorVatRateInvalid", { decimals: VAT_RATE_DECIMALS });
+      }
+      const lineOk = LINE_FIELDS.every((f) => !errs[key(f)]);
+      if (lineOk && Math.abs(lineTotalTtc(lineForTotals(item))) > MAX_LINE_TOTAL) {
+        errs[key("unit_price")] = t("errorLineTotalTooLarge", { max: formatEUR(MAX_LINE_TOTAL) });
+      }
+    });
+    if (Object.keys(errs).length === 0 && Math.abs(grandTotal) > MAX_BUDGET) {
+      errs.total = t("errorTotalTooLarge", { max: formatEUR(MAX_BUDGET) });
     }
-    if (items.length === 0) return t("errorAtLeastOneItem");
-    for (const item of items) {
-      if (!item.description.trim()) return t("errorDescriptionRequired");
-      const { quantity, unit_price, vat_rate } = parseLine(item);
-      if (quantity === null) return t("errorQuantityInvalid", { decimals: QUANTITY_DECIMALS });
-      if (quantity <= 0) return t("errorQuantityPositive");
-      if (quantity > MAX_LINE_QUANTITY) {
-        return t("errorQuantityTooLarge", { max: MAX_LINE_QUANTITY });
-      }
-      if (unit_price === null) return t("errorUnitPriceInvalid", { decimals: UNIT_PRICE_DECIMALS });
-      // Negative lines (credits) are only for the mixed-sign types.
-      if (unit_price < 0 && !MIXED_SIGN_TYPES.has(type)) return t("errorUnitPriceNegative");
-      if (Math.abs(unit_price) > MAX_LINE_UNIT_PRICE) {
-        return t("errorUnitPriceTooLarge", { max: MAX_LINE_UNIT_PRICE });
-      }
-      if (vat_rate === null || vat_rate < 0 || vat_rate > MAX_VAT_RATE) {
-        return t("errorVatRateInvalid", { decimals: VAT_RATE_DECIMALS });
-      }
-    }
-    return null;
+    return errs;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    const errs = validate();
+    setFieldErrors(errs);
+    const errorCount = Object.keys(errs).length;
+    if (errorCount > 0) {
+      // Each message sits under its field; the banner only says where to look.
+      setError(t("errorFixFields", { count: errorCount }));
+      focusFirstError(errs);
       return;
     }
 
@@ -370,8 +507,9 @@ export function InvoiceForm({
       // Include payment_method_id on create, and on edit only when it changed
       // (null explicitly clears it). Re-sending an unchanged method that has
       // since been deactivated would make every edit of the expense fail.
-      ...(!editingInvoiceId ||
-      paymentMethodId !== (initialValues?.payment_method_id ?? null)
+      // Never for an applied avoir: the API takes the target's method.
+      ...(!methodFollowsTarget &&
+      (!editingInvoiceId || paymentMethodId !== (initialValues?.payment_method_id ?? null))
         ? { payment_method_id: paymentMethodId }
         : {}),
       // Include refunds_invoice_id, settled_via, and applied_to_invoice_id only
@@ -408,15 +546,16 @@ export function InvoiceForm({
         t("errorWorkerLinkNotAllowed"),
         t("errorWorkerNotInProject"),
         t("errorPaymentMethodInactive"),
-        invoiceValidationMessages(t)
+        invoiceValidationMessages(t),
+        { forbidden: t("errorForbiddenSave"), fallback: t("errorSaveFailed") }
       ));
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-3">
       {error && (
-        <div className="rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
+        <div role="alert" className="rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
           {error}
         </div>
       )}
@@ -464,10 +603,15 @@ export function InvoiceForm({
                 min={MIN_BUSINESS_DATE}
                 max={MAX_BUSINESS_DATE}
                 value={issueDate}
-                onChange={(e) => setIssueDate(e.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                onChange={(e) => {
+                  setIssueDate(e.target.value);
+                  clearFieldError("issueDate");
+                }}
+                className={`w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder("issueDate")}`}
                 disabled={isLoading}
+                {...fieldProps("issueDate", "issue-date")}
               />
+              {fieldError("issueDate", "issue-date")}
             </div>
 
             {/* Recipient: worker picker for labor, free-text for other types */}
@@ -499,12 +643,18 @@ export function InvoiceForm({
                   id="invoice-recipient"
                   type="text"
                   value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
+                  onChange={(e) => {
+                    setRecipientName(e.target.value);
+                    clearFieldError("recipient");
+                  }}
                   placeholder={t("recipient")}
-                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  maxLength={MAX_RECIPIENT_LENGTH}
+                  className={`w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder("recipient")}`}
                   disabled={isLoading}
                   required
+                  {...fieldProps("recipient", "recipient")}
                 />
+                {fieldError("recipient", "recipient")}
               </div>
             )}
 
@@ -522,13 +672,19 @@ export function InvoiceForm({
                   id="invoice-unlinked-recipient"
                   type="text"
                   value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
+                  onChange={(e) => {
+                    setRecipientName(e.target.value);
+                    clearFieldError("recipient");
+                  }}
                   placeholder={t("recipient")}
-                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  maxLength={MAX_RECIPIENT_LENGTH}
+                  className={`w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder("recipient")}`}
                   disabled={isLoading}
                   required
                   data-testid="unlinked-labor-recipient-input"
+                  {...fieldProps("recipient", "recipient")}
                 />
+                {fieldError("recipient", "recipient")}
               </div>
             )}
 
@@ -543,13 +699,18 @@ export function InvoiceForm({
                   companyId={companyId}
                   value={paymentMethodId}
                   onChange={setPaymentMethodId}
-                  disabled={isLoading}
+                  disabled={isLoading || methodFollowsTarget}
                   fallbackSelectedLabel={
                     paymentMethodId && paymentMethodId === (initialValues?.payment_method_id ?? null)
                       ? paymentMethodLabel
                       : null
                   }
                 />
+                {methodFollowsTarget && (
+                  <p className="mt-1 text-xs text-muted-foreground" data-testid="method-follows-target">
+                    {t("appliedToMethodHint")}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -563,6 +724,7 @@ export function InvoiceForm({
               id="invoice-recipient-address"
               value={recipientAddress}
               onChange={(e) => setRecipientAddress(e.target.value)}
+              maxLength={MAX_ADDRESS_LENGTH}
               rows={1}
               className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               disabled={isLoading}
@@ -576,6 +738,7 @@ export function InvoiceForm({
               id="invoice-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              maxLength={MAX_NOTES_LENGTH}
               rows={3}
               className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y"
               disabled={isLoading}
@@ -689,18 +852,22 @@ export function InvoiceForm({
                 {t("serviceMonth")}
                 {!editingInvoiceId && <span className="text-destructive"> *</span>}
               </label>
-              <input
+              <MonthField
                 id="invoice-service-month"
-                type="month"
                 min={MIN_BUSINESS_MONTH}
                 max={MAX_BUSINESS_MONTH}
                 value={serviceMonth}
-                onChange={(e) => setServiceMonth(e.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:w-1/2"
+                onChange={(next) => {
+                  setServiceMonth(next);
+                  clearFieldError("serviceMonth");
+                }}
+                className="w-full sm:w-1/2"
                 disabled={isLoading}
                 required={!editingInvoiceId}
                 data-testid="service-month-input"
+                {...fieldProps("serviceMonth", "service-month")}
               />
+              {fieldError("serviceMonth", "service-month")}
             </div>
           )}
 
@@ -767,9 +934,11 @@ export function InvoiceForm({
                         value={item.description}
                         onChange={(e) => updateItem(index, "description", e.target.value)}
                         placeholder={t("description")}
-                        className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        maxLength={MAX_DESCRIPTION_LENGTH}
+                        className={`w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder(`items.${index}.description`)}`}
                         disabled={isLoading}
                         aria-label={t("description")}
+                        {...(isDesktop ? fieldProps(`items.${index}.description`, `${index}-description`) : { "data-field": `items.${index}.description` })}
                       />
                     </div>
                     <div className="col-span-2">
@@ -778,9 +947,10 @@ export function InvoiceForm({
                         inputMode="decimal"
                         value={item.quantity}
                         onChange={(e) => updateItem(index, "quantity", e.target.value)}
-                        className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        className={`w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder(`items.${index}.quantity`)}`}
                         disabled={isLoading}
                         aria-label={t("quantity")}
+                        {...(isDesktop ? fieldProps(`items.${index}.quantity`, `${index}-quantity`) : { "data-field": `items.${index}.quantity` })}
                       />
                     </div>
                     <div className="col-span-2">
@@ -789,9 +959,10 @@ export function InvoiceForm({
                         inputMode="decimal"
                         value={item.unit_price}
                         onChange={(e) => updateItem(index, "unit_price", e.target.value)}
-                        className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        className={`w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder(`items.${index}.unit_price`)}`}
                         disabled={isLoading}
                         aria-label={t("unitPrice")}
+                        {...(isDesktop ? fieldProps(`items.${index}.unit_price`, `${index}-unit_price`) : { "data-field": `items.${index}.unit_price` })}
                       />
                     </div>
                     <div className="col-span-2">
@@ -800,9 +971,10 @@ export function InvoiceForm({
                         inputMode="decimal"
                         value={item.vat_rate}
                         onChange={(e) => updateItem(index, "vat_rate", e.target.value)}
-                        className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        className={`w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder(`items.${index}.vat_rate`)}`}
                         disabled={isLoading}
                         aria-label={t("vatRate")}
+                        {...(isDesktop ? fieldProps(`items.${index}.vat_rate`, `${index}-vat_rate`) : { "data-field": `items.${index}.vat_rate` })}
                       />
                     </div>
                     <div className="col-span-1 text-right text-sm font-medium">
@@ -822,6 +994,12 @@ export function InvoiceForm({
                         <Trash2 className="h-3.5 w-3.5" aria-hidden />
                       </Button>
                     </div>
+                    {isDesktop &&
+                      LINE_FIELDS.map((field) => (
+                        <div key={field} className="col-span-12 -mt-1">
+                          {fieldError(`items.${index}.${field}`, `${index}-${field}`)}
+                        </div>
+                      ))}
                   </div>
                 );
               })}
@@ -837,15 +1015,20 @@ export function InvoiceForm({
                   {/* Mobile card layout (< lg) */}
                   <div className="lg:hidden rounded-md border bg-background p-2 space-y-2">
                     {/* Description — full width */}
-                    <input
-                      type="text"
-                      value={item.description}
-                      onChange={(e) => updateItem(index, "description", e.target.value)}
-                      placeholder={t("description")}
-                      className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      disabled={isLoading}
-                      aria-label={t("description")}
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        value={item.description}
+                        onChange={(e) => updateItem(index, "description", e.target.value)}
+                        placeholder={t("description")}
+                        maxLength={MAX_DESCRIPTION_LENGTH}
+                        className={`w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder(`items.${index}.description`)}`}
+                        disabled={isLoading}
+                        aria-label={t("description")}
+                        {...mobileFieldProps(index, "description")}
+                      />
+                      {!isDesktop && fieldError(`items.${index}.description`, `${index}-description`)}
+                    </div>
                     {/* Qty + Unit Price — 2-col row */}
                     <div className="grid grid-cols-2 gap-2">
                       <div>
@@ -861,9 +1044,11 @@ export function InvoiceForm({
                           inputMode="decimal"
                           value={item.quantity}
                           onChange={(e) => updateItem(index, "quantity", e.target.value)}
-                          className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          className={`w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder(`items.${index}.quantity`)}`}
                           disabled={isLoading}
+                          {...mobileFieldProps(index, "quantity")}
                         />
+                        {!isDesktop && fieldError(`items.${index}.quantity`, `${index}-quantity`)}
                       </div>
                       <div>
                         <label
@@ -878,9 +1063,11 @@ export function InvoiceForm({
                           inputMode="decimal"
                           value={item.unit_price}
                           onChange={(e) => updateItem(index, "unit_price", e.target.value)}
-                          className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          className={`w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder(`items.${index}.unit_price`)}`}
                           disabled={isLoading}
+                          {...mobileFieldProps(index, "unit_price")}
                         />
+                        {!isDesktop && fieldError(`items.${index}.unit_price`, `${index}-unit_price`)}
                       </div>
                     </div>
                     {/* TVA % — full width below qty/price */}
@@ -897,9 +1084,11 @@ export function InvoiceForm({
                         inputMode="decimal"
                         value={item.vat_rate}
                         onChange={(e) => updateItem(index, "vat_rate", e.target.value)}
-                        className="w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        className={`w-full rounded-md border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring${errorBorder(`items.${index}.vat_rate`)}`}
                         disabled={isLoading}
+                        {...mobileFieldProps(index, "vat_rate")}
                       />
+                      {!isDesktop && fieldError(`items.${index}.vat_rate`, `${index}-vat_rate`)}
                     </div>
                     {/* Total (right) + Delete (right) */}
                     <div className="flex items-center justify-between">
@@ -927,10 +1116,11 @@ export function InvoiceForm({
             </div>
 
             {/* Grand Total */}
-            <div className="flex justify-end border-t pt-2">
+            <div className="flex flex-col items-end border-t pt-2" data-field="total" tabIndex={-1}>
               <span className={`text-sm font-semibold${grandTotal < 0 ? " text-destructive" : ""}`}>
                 {t("totalAmount")}: {formatEUR(grandTotal)}
               </span>
+              {fieldError("total", "total")}
             </div>
           </div>
         </CardContent>
@@ -965,7 +1155,9 @@ export function InvoiceForm({
  * backend's `worker_not_in_project` (worker_id references another project).
  * `validationMessages` pairs a pattern on a `ValidationError` message with the
  * translated text to show instead (see `invoiceValidationMessages`).
- * Falls back to the raw error message, then a generic fallback.
+ * `messages.forbidden` replaces a 403 ("Missing permission: …") and
+ * `messages.fallback` any other refusal, so the API's English never shows;
+ * without them it falls back to the raw error message, then a generic text.
  */
 export function classifySubmitError(
   err: unknown,
@@ -975,7 +1167,8 @@ export function classifySubmitError(
   workerLinkNotAllowedMessage?: string,
   workerNotInProjectMessage?: string,
   paymentMethodInactiveMessage?: string,
-  validationMessages: ReadonlyArray<readonly [RegExp, string]> = []
+  validationMessages: ReadonlyArray<readonly [RegExp, string]> = [],
+  messages: { forbidden?: string; fallback?: string } = {}
 ): string {
   if (err && typeof err === "object") {
     const e = err as Record<string, unknown>;
@@ -1027,36 +1220,55 @@ export function classifySubmitError(
       return paymentMethodInactiveMessage;
     }
 
-    if (code === "ValidationError" && typeof message === "string") {
+    if ((code === "ValidationError" || code === "validation_error") && typeof message === "string") {
       const known = validationMessages.find(([pattern]) => pattern.test(message));
       if (known) return known[1];
     }
 
+    if (messages.forbidden && (e.status === 403 || code === "Forbidden")) return messages.forbidden;
+    if (messages.fallback) return messages.fallback;
+
     if (typeof message === "string" && message.trim()) return message;
   }
+  if (messages.fallback) return messages.fallback;
   return err instanceof Error ? err.message : "Failed to save invoice";
 }
+
+type InvoiceValidationKey =
+  | "errorCompanyPaidRefundTracked"
+  | "errorUnlinkAvoirsFirst"
+  | "errorUnlinkAvoirsBeforeDelete"
+  | "errorRefundedLocked"
+  | "errorReturnTotalPositive"
+  | "errorUnlinkReturnsFirst"
+  | "errorTextTooLong"
+  | "errorQuantityInvalid"
+  | "errorUnitPriceInvalid"
+  | "errorVatRateInvalid"
+  | "errorLineTotalTooLarge"
+  | "errorTotalTooLarge";
 
 /**
  * Translations for the refusals the API words in English only: moving a
  * refund-tracked expense onto a company payment method, turning an invoice
  * that avoirs are applied to into a return or a funds release, touching a
- * refunded expense, saving a return with a positive total, and deleting or
- * retyping a purchase that returns are linked to.
+ * refunded expense, saving a return with a positive total, deleting or
+ * retyping a purchase that returns are linked to, deleting an expense avoirs
+ * are applied to, and the line limits (text length, decimals, amounts).
  */
 export function invoiceValidationMessages(
-  t: (
-    key:
-      | "errorCompanyPaidRefundTracked"
-      | "errorUnlinkAvoirsFirst"
-      | "errorRefundedLocked"
-      | "errorReturnTotalPositive"
-      | "errorUnlinkReturnsFirst"
-  ) => string
+  t: (key: InvoiceValidationKey, values?: Record<string, string | number>) => string
 ): ReadonlyArray<readonly [RegExp, string]> {
   return [
     [/already paid by the company/i, t("errorCompanyPaidRefundTracked")],
+    [/avoirs applied to this invoice before deleting/i, t("errorUnlinkAvoirsBeforeDelete")],
     [/unlink the avoirs applied/i, t("errorUnlinkAvoirsFirst")],
+    [/at most \d+ characters/i, t("errorTextTooLong")],
+    [/quantity:.*at most 4 decimals/i, t("errorQuantityInvalid", { decimals: 4 })],
+    [/unit_price:.*at most 4 decimals/i, t("errorUnitPriceInvalid", { decimals: 4 })],
+    [/VAT rate allows at most 2 decimals/i, t("errorVatRateInvalid", { decimals: 2 })],
+    [/Line amount exceeds the maximum/i, t("errorLineTotalTooLarge", { max: formatEUR(MAX_LINE_TOTAL) })],
+    [/Expense total exceeds the maximum/i, t("errorTotalTooLarge", { max: formatEUR(MAX_BUDGET) })],
     [/refunded expenses are locked/i, t("errorRefundedLocked")],
     [/return's total must be zero or negative/i, t("errorReturnTotalPositive")],
     [/unlink (or delete )?this invoice's returns/i, t("errorUnlinkReturnsFirst")],

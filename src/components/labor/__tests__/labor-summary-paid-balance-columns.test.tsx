@@ -331,6 +331,55 @@ describe("LaborSummary — Paid column (all-history mode)", () => {
     const footerRow = screen.getByText("grandTotal").closest("tr")!;
     expect(footerRow.textContent).toContain("€700.00");
   });
+
+  it("shows each worker's banked-hours bonus under their month total", () => {
+    const withBonus: LaborMonthlySummaryResponse = {
+      rows: [
+        {
+          ...monthlySummary.rows[1],
+          total_cost: 650,
+          total_bonus_cost: 150,
+          total_banked_hours: 12,
+          total_bonus_days: 1.5,
+          workers: [
+            { worker_id: "w1", worker_name: "Alice", days_worked: 5, total_cost: 650, bonus_cost: 150, bonus_days: 1.5, banked_hours: 12 },
+          ],
+        },
+      ],
+    };
+    render(
+      <LaborSummary {...baseProps} summary={null} monthlySummary={withBonus} month="" paymentsSummary={paymentsSummary} />,
+    );
+    const line = screen.getByTestId("worker-subrow-bonus-2026-06-w1");
+    expect(line.textContent).toContain("supplement.bonusLine");
+    expect(line.textContent).toContain('"hours":12');
+    expect(screen.getByTestId("supplement-banner-rule").textContent).toBe("supplement.bannerRule");
+  });
+
+  it("adds payments with no service month or no logged month on their own line and in the footer", () => {
+    const withOrphans: LaborPaymentsSummaryResponse = {
+      months: [
+        ...paymentsSummary.months,
+        { year: 2026, month: 5, total_paid: 30, workers: [], unassigned_paid: 30, unassigned_count: 1, company_paid: 30 },
+        { year: null, month: null, total_paid: 50, workers: [], unassigned_paid: 50, unassigned_count: 1 },
+      ],
+    };
+    render(
+      <LaborSummary
+        {...baseProps}
+        summary={null}
+        monthlySummary={monthlySummary}
+        month=""
+        paymentsSummary={withOrphans}
+      />,
+    );
+    const orphanRow = screen.getByTestId("labor-paid-outside-months-row");
+    expect(orphanRow.textContent).toContain("summaryPaidOutsideMonths");
+    expect(orphanRow.textContent).toContain("€80.00");
+    expect(orphanRow.children).toHaveLength(7);
+    const footerRow = screen.getByText("grandTotal").closest("tr")!;
+    expect(footerRow.textContent).toContain("€780.00");
+  });
 });
 
 describe("LaborSummary — past-month unpaid warning (all-history mode)", () => {

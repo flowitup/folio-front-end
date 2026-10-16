@@ -8,13 +8,13 @@ describe("legal pages", () => {
   it("shows the English privacy policy, dated in English, to a Vietnamese reader", async () => {
     render(await PrivacyPage({ params: Promise.resolve({ locale: "vi" }) }));
     expect(screen.getByRole("heading", { level: 1 }).textContent).not.toMatch(/confidentialité/);
-    expect(screen.getByText(/Last updated: September 14, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Last updated: October 16, 2026/)).toBeInTheDocument();
   });
 
   it("keeps the French text for French readers", async () => {
     render(await PrivacyPage({ params: Promise.resolve({ locale: "fr" }) }));
     expect(screen.getByText("Politique de confidentialité")).toBeInTheDocument();
-    expect(screen.getByText(/14 septembre 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/16 octobre 2026/)).toBeInTheDocument();
   });
 
   it("titles the privacy page in the reader's language", async () => {

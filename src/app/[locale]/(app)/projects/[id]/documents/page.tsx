@@ -77,12 +77,9 @@ export default async function DocumentsPage({ params }: PageProps) {
   // the panel the list could not be read so it retries on the client.
   const [members, docsResult, tags, uploaders] = await Promise.all([
     listMembers(projectId).catch(() => []),
-    listProjectDocuments(projectId).catch(() => ({
-      items: [],
-      total: 0,
-      page: 1,
-      per_page: 25,
-    })),
+    // null, not an empty page: the panel shows an error with a retry instead
+    // of "no documents yet".
+    listProjectDocuments(projectId).catch(() => null),
     listDocumentTags(projectId).catch(() => [] as string[]),
     listDocumentUploaders(projectId).catch(() => null),
   ]);
@@ -99,8 +96,9 @@ export default async function DocumentsPage({ params }: PageProps) {
     <div className="px-6 py-6">
       <DocumentsPanel
         projectId={projectId}
-        initialDocuments={docsResult.items}
-        initialTotal={docsResult.total}
+        initialDocuments={docsResult?.items ?? []}
+        initialTotal={docsResult?.total ?? 0}
+        initialLoadFailed={docsResult === null}
         initialTags={tags}
         initialUploaders={uploaders}
         members={adaptedMembers}

@@ -6,7 +6,12 @@
     "loading": "Chargement...",
     "language": "Langue",
     "close": "Fermer",
-    "notificationsRegion": "Notifications"
+    "notificationsRegion": "Notifications",
+    "rateLimit": {
+      "seconds": "Trop de demandes. Réessayez dans {seconds} s.",
+      "minutes": "Trop de demandes. Réessayez dans {minutes} min.",
+      "unknown": "Trop de demandes. Patientez un instant puis réessayez."
+    }
   },
   "meta": {
     "description": "Une application chaleureuse et humaine pour gérer la construction de votre propre maison.",
@@ -521,7 +526,8 @@
       "close": "Fermer",
       "download": "Télécharger",
       "error": "Aperçu impossible — téléchargez pour afficher le fichier",
-      "fallback": "Aperçu non disponible pour ce type de fichier. Téléchargez-le pour le consulter."
+      "fallback": "Aperçu non disponible pour ce type de fichier. Téléchargez-le pour le consulter.",
+      "downloadError": "Échec du téléchargement — le fichier a peut-être été supprimé"
     },
     "totalInvoiced": "Total dépenses",
     "fundsReleasedCompany": "Fonds débloqués — entreprise",
@@ -1900,7 +1906,19 @@
       "download": "Télécharger",
       "error": "Aperçu impossible — téléchargez pour afficher le fichier",
       "loading": "Chargement de l’aperçu…",
-      "downloadError": "Échec du téléchargement — le fichier a peut-être été supprimé"
+      "downloadError": "Échec du téléchargement — le fichier a peut-être été supprimé",
+      "retry": "Réessayer",
+      "toolbar": "Outils de l’aperçu",
+      "prevPage": "Page précédente",
+      "nextPage": "Page suivante",
+      "pageOf": "{page} / {count}",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière",
+      "fitWidth": "Ajuster à la largeur",
+      "passwordPrompt": "Ce PDF est protégé par un mot de passe.",
+      "passwordLabel": "Mot de passe du PDF",
+      "passwordSubmit": "Ouvrir",
+      "passwordIncorrect": "Mot de passe incorrect. Réessayez."
     },
     "delete": {
       "title": "Supprimer le document ?",
@@ -2653,7 +2671,8 @@
     "loadMore": "Charger plus",
     "saved": "Modifications enregistrées",
     "deleted": "Photo supprimée",
-    "close": "Fermer"
+    "close": "Fermer",
+    "retryThumbnail": "Recharger l’aperçu"
   },
   "chiffrage": {
     "actions": "Actions",

@@ -6,7 +6,12 @@
     "loading": "Đang tải...",
     "language": "Ngôn ngữ",
     "close": "Đóng",
-    "notificationsRegion": "Thông báo"
+    "notificationsRegion": "Thông báo",
+    "rateLimit": {
+      "seconds": "Quá nhiều yêu cầu. Vui lòng thử lại sau {seconds} giây.",
+      "minutes": "Quá nhiều yêu cầu. Vui lòng thử lại sau {minutes} phút.",
+      "unknown": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại."
+    }
   },
   "meta": {
     "description": "Một ứng dụng ấm áp, gần gũi để quản lý việc xây dựng ngôi nhà của chính bạn.",
@@ -521,7 +526,8 @@
       "close": "Đóng",
       "download": "Tải xuống",
       "error": "Xem trước thất bại — hãy tải xuống để xem tệp",
-      "fallback": "Không thể xem trước loại tệp này. Hãy tải xuống để xem."
+      "fallback": "Không thể xem trước loại tệp này. Hãy tải xuống để xem.",
+      "downloadError": "Tải xuống thất bại — tệp có thể đã bị xóa"
     },
     "totalInvoiced": "Tổng chi phí",
     "fundsReleasedCompany": "Quỹ đã giải ngân — công ty",
@@ -1900,7 +1906,19 @@
       "download": "Tải xuống",
       "error": "Xem trước thất bại — hãy tải xuống để xem tệp",
       "loading": "Đang tải xem trước…",
-      "downloadError": "Tải xuống thất bại — tệp có thể đã bị xóa"
+      "downloadError": "Tải xuống thất bại — tệp có thể đã bị xóa",
+      "retry": "Thử lại",
+      "toolbar": "Công cụ xem trước",
+      "prevPage": "Trang trước",
+      "nextPage": "Trang sau",
+      "pageOf": "{page} / {count}",
+      "zoomIn": "Phóng to",
+      "zoomOut": "Thu nhỏ",
+      "fitWidth": "Vừa chiều rộng",
+      "passwordPrompt": "Tệp PDF này được bảo vệ bằng mật khẩu.",
+      "passwordLabel": "Mật khẩu PDF",
+      "passwordSubmit": "Mở",
+      "passwordIncorrect": "Sai mật khẩu. Vui lòng thử lại."
     },
     "delete": {
       "title": "Xóa tài liệu?",
@@ -2653,7 +2671,8 @@
     "loadMore": "Tải thêm",
     "saved": "Đã lưu thay đổi",
     "deleted": "Đã xóa ảnh",
-    "close": "Đóng"
+    "close": "Đóng",
+    "retryThumbnail": "Tải lại ảnh xem trước"
   },
   "chiffrage": {
     "actions": "Thao tác",

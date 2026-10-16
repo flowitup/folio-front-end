@@ -166,20 +166,20 @@ export function DocumentsPreviewDialog({ doc, projectId, onClose }: Props) {
   return (
     <Dialog open={doc !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="sm:max-w-4xl w-full h-[85vh] max-h-[95vh] grid-rows-[auto_1fr_auto] overflow-hidden"
+        className="sm:max-w-4xl w-full h-[85vh] max-h-[95vh] grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr_auto] overflow-hidden"
         style={resizeStyle}
         showCloseButton
         aria-describedby={undefined}
       >
         <ResizableDialogHandles onResize={setBounds} />
-        <DialogHeader>
-          <DialogTitle className="truncate pr-8">
+        <DialogHeader className="min-w-0">
+          <DialogTitle className="truncate pr-8" title={doc?.filename}>
             {doc?.filename ?? ""}
           </DialogTitle>
         </DialogHeader>
 
         {/* Body — fills remaining grid space */}
-        <div className="min-h-0 overflow-auto">
+        <div className="min-h-0 min-w-0 overflow-auto">
           {loading && (
             <div className="flex flex-col items-center justify-center gap-3 h-full text-center">
               <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden />

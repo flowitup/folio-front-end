@@ -6,7 +6,12 @@
     "loading": "Loading...",
     "language": "Language",
     "close": "Close",
-    "notificationsRegion": "Notifications"
+    "notificationsRegion": "Notifications",
+    "rateLimit": {
+      "seconds": "Too many requests. Try again in {seconds} s.",
+      "minutes": "Too many requests. Try again in {minutes} min.",
+      "unknown": "Too many requests. Wait a moment and try again."
+    }
   },
   "meta": {
     "description": "A warm, human-feeling app for managing the construction of your own house.",
@@ -521,7 +526,8 @@
       "close": "Close",
       "download": "Download",
       "error": "Preview failed — download to view the file",
-      "fallback": "Preview not available for this file type. Download to view."
+      "fallback": "Preview not available for this file type. Download to view.",
+      "downloadError": "Download failed — the file may have been deleted"
     },
     "totalInvoiced": "Total expenses",
     "fundsReleasedCompany": "Funds released — company",
@@ -1900,7 +1906,19 @@
       "download": "Download",
       "error": "Preview failed — download to view the file",
       "loading": "Loading preview…",
-      "downloadError": "Download failed — the file may have been deleted"
+      "downloadError": "Download failed — the file may have been deleted",
+      "retry": "Retry",
+      "toolbar": "Preview tools",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "pageOf": "{page} / {count}",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fitWidth": "Fit to width",
+      "passwordPrompt": "This PDF is password-protected.",
+      "passwordLabel": "PDF password",
+      "passwordSubmit": "Open",
+      "passwordIncorrect": "Wrong password. Try again."
     },
     "delete": {
       "title": "Delete document?",
@@ -2653,7 +2671,8 @@
     "loadMore": "Load more",
     "saved": "Changes saved",
     "deleted": "Photo deleted",
-    "close": "Close"
+    "close": "Close",
+    "retryThumbnail": "Reload preview"
   },
   "chiffrage": {
     "actions": "Actions",

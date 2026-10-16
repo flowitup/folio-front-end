@@ -18,18 +18,24 @@
 import * as React from "react";
 import { useLocale } from "next-intl";
 import { Input } from "@/components/ui/input";
-import { parseMoneyInput, type ParseMoneyInputOptions } from "@/lib/utils/parse-money-input";
+import {
+  formatMoneyInput,
+  parseMoneyInput,
+  type ParseMoneyInputOptions,
+} from "@/lib/utils/parse-money-input";
 
-/** Locales whose decimal mark is a comma. */
-const COMMA_LOCALES = new Set(["fr", "vi"]);
-
-/** "2.5" → "2,5" in fr/vi; other values (empty, invalid text) pass through. */
+/**
+ * "2.5" → "2,5" in fr/vi, through the shared money-input formatter (no grouping,
+ * the API's trailing zeros dropped: "18.9000" → "18,9"); other values (empty,
+ * invalid text) pass through.
+ */
 export function formatDecimalForInput(value: string, locale: string): string {
   const trimmed = (value ?? "").trim();
   if (!/^-?\d+(\.\d+)?$/.test(trimmed)) return value ?? "";
-  // Drop the trailing zeros the API adds ("18.9000" → "18.9", "2.000" → "2").
-  const canonical = trimmed.includes(".") ? trimmed.replace(/\.?0+$/, "") : trimmed;
-  return COMMA_LOCALES.has(locale.split("-")[0]) ? canonical.replace(".", ",") : canonical;
+  // Every decimal the value has, and no padding: "2.375" stays "2,375" (DecimalInput
+  // reads that back as 2.375), "18.1234" keeps its four decimals.
+  const decimals = (trimmed.split(".")[1] ?? "").replace(/0+$/, "").length;
+  return formatMoneyInput(Number(trimmed), locale.split("-")[0], { maxDecimals: Math.max(3, decimals) });
 }
 
 /** A parsed number as a plain dot string, never in exponent form. */
@@ -70,8 +76,8 @@ export function DecimalInput({
   }, [value, locale]);
 
   // A quantity or unit price carries more than cents: "2,375" there is 2.375,
-  // not a grouped 2375 (ambiguousGrouping is read by the money-dash helper).
-  const parseOpts: ParseMoneyInputOptions & { ambiguousGrouping?: "decimal" } = {
+  // not a grouped 2375.
+  const parseOpts: ParseMoneyInputOptions = {
     maxDecimals,
     allowNegative,
     ...(maxDecimals >= 3 ? { ambiguousGrouping: "decimal" as const } : {}),

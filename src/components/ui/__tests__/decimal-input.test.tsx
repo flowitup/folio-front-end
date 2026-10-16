@@ -78,6 +78,10 @@ describe("DecimalInput", () => {
   it("formats for display and input", () => {
     expect(formatDecimalForInput("2.500", "vi")).toBe("2,5");
     expect(formatDecimalForInput("2.500", "en")).toBe("2.5");
+    // Same text as the shared money-input formatter: no grouping, no padding, every decimal kept.
+    expect(formatDecimalForInput("2.375", "fr")).toBe("2,375");
+    expect(formatDecimalForInput("18.1234", "fr")).toBe("18,1234");
+    expect(formatDecimalForInput("12500", "fr")).toBe("12500");
     expect(formatDecimalForDisplay("1234.5", "en", 3)).toBe("1,234.5");
   });
 });

@@ -36,6 +36,13 @@ import {
 } from "@/components/ui/select";
 import { MyCompanyCard } from "@/components/companies/my-company-card";
 import { JoinCompanyDialog } from "@/components/companies/join-company-dialog";
+import { CompanyCreateDialog } from "@/components/companies/company-create-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 // Reuses the existing ops join-code card (create/renew/revoke/copy) — same
 // component the platform-ops company-manage page mounts, just handed this
 // caller's own company id instead of an arbitrary one.
@@ -68,6 +75,8 @@ export function CompanySettingsSection() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [redeemOpen, setRedeemOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const tOnboarding = useTranslations("onboarding");
   const [refreshToken, setRefreshToken] = useState(0);
 
   const fetchingRef = useRef(false);
@@ -164,10 +173,23 @@ export function CompanySettingsSection() {
               {t("description")}
             </p>
           </div>
-          <Button size="sm" onClick={() => setRedeemOpen(true)}>
-            <Plus size={14} className="mr-1.5" />
-            {tc("my.addCta")}
-          </Button>
+          {/* Create one or join one: the web had only the second. */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" data-testid="add-company">
+                <Plus size={14} className="mr-1.5" />
+                {tc("my.addCta")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => setCreateOpen(true)}>
+                {tOnboarding("createCompanyCta")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setRedeemOpen(true)}>
+                {tOnboarding("joinCompanyCta")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="ink-divider my-5" />
@@ -316,6 +338,16 @@ export function CompanySettingsSection() {
         open={redeemOpen}
         onOpenChange={setRedeemOpen}
         onAttached={() => void load()}
+      />
+      <CompanyCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={(company) => {
+          // Show the new company, where its creator is admin.
+          setSelectedId(company.id);
+          void load();
+          void refetchProjects?.();
+        }}
       />
     </div>
   );

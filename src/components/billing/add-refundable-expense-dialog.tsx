@@ -213,6 +213,7 @@ export function AddRefundableExpenseDialog({
 
         <Input
           placeholder={t("dialog.search")}
+          aria-label={t("dialog.search")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="mb-3"

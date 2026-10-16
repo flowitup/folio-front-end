@@ -10,6 +10,7 @@
  * Plan: 260512-2341-labor-calendar-and-bulk-log → phase-03 (3c).
  */
 
+import { useId } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -54,9 +55,14 @@ export function DatePickerWithArrows({
   max,
 }: DatePickerWithArrowsProps) {
   const t = useTranslations("labor");
+  const inputId = useId();
   return (
     <div className="space-y-1">
-      {label && <Label className="text-xs">{label}</Label>}
+      {label && (
+        <Label htmlFor={inputId} className="text-xs">
+          {label}
+        </Label>
+      )}
       <div className="flex items-center gap-1">
         <Button
           type="button"
@@ -69,6 +75,7 @@ export function DatePickerWithArrows({
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <Input
+          id={inputId}
           type="date"
           value={value}
           onChange={(e) => onChange(e.target.value)}

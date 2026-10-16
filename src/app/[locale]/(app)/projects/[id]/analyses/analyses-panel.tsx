@@ -166,6 +166,7 @@ export function AnalysesPanel({
               setPage(1);
             }}
             placeholder={t("search.placeholder")}
+            aria-label={t("search.placeholder")}
             className="pl-8"
           />
         </div>

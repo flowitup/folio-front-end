@@ -464,6 +464,7 @@ export function LogDayDialog({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("searchPlaceholder")}
+            aria-label={t("searchPlaceholder")}
             className="pl-8"
           />
         </div>

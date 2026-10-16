@@ -274,6 +274,7 @@ export function BillingDocumentList({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Input
             placeholder={t("list.searchPlaceholder")}
+            aria-label={t("list.searchPlaceholder")}
             value={searchRaw}
             onChange={(e) => setSearchRaw(e.target.value)}
             maxLength={100}

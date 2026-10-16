@@ -2,6 +2,8 @@
   "common": {
     "appName": "Folio",
     "appTagline": "Journal de chantier",
+    "accessChanged": "Vos accès ont changé. L'affichage a été mis à jour.",
+    "projectAccessLost": "Vous n'avez plus accès à ce chantier.",
     "signOut": "Déconnexion",
     "loading": "Chargement...",
     "language": "Langue",
@@ -96,6 +98,7 @@
     "codeRecentlySent": "Un code a été envoyé à ce numéro il y a moins d'une minute : saisissez-le ci-dessous.",
     "codeHelp": "Pas reçu de SMS ? Vérifiez le numéro. Seuls les comptes Folio reçoivent un code : ils se créent dans l'application mobile Folio ou via l'invitation de votre entreprise. Accès désactivé ? Contactez l'administrateur de votre entreprise.",
     "sessionReset": "Votre session a été réinitialisée pour votre sécurité. Reconnectez-vous.",
+    "sessionEnded": "Votre session a pris fin : votre compte a peut-être été désactivé. Reconnectez-vous ou contactez l'administrateur de votre entreprise.",
     "errorNetworkLimit": "Trop de demandes de connexion depuis ce réseau. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
     "errorSmsBusy": "Le service d'envoi de SMS est momentanément saturé. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}."
   },

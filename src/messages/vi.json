@@ -2,6 +2,8 @@
   "common": {
     "appName": "Folio",
     "appTagline": "Nhật ký xây dựng",
+    "accessChanged": "Quyền truy cập của bạn đã thay đổi. Trang đã được cập nhật.",
+    "projectAccessLost": "Bạn không còn quyền truy cập dự án này.",
     "signOut": "Đăng xuất",
     "loading": "Đang tải...",
     "language": "Ngôn ngữ",
@@ -96,6 +98,7 @@
     "codeRecentlySent": "Một mã đã được gửi tới số này chưa đầy một phút trước: hãy nhập mã bên dưới.",
     "codeHelp": "Không nhận được SMS? Hãy kiểm tra số điện thoại. Chỉ tài khoản Folio mới nhận được mã: tài khoản được tạo trong ứng dụng Folio trên điện thoại hoặc qua lời mời của công ty bạn. Quyền truy cập bị vô hiệu hóa? Hãy liên hệ quản trị viên của công ty.",
     "sessionReset": "Phiên đăng nhập của bạn đã được đặt lại để bảo mật. Vui lòng đăng nhập lại.",
+    "sessionEnded": "Phiên đăng nhập của bạn đã kết thúc: tài khoản của bạn có thể đã bị vô hiệu hóa. Vui lòng đăng nhập lại hoặc liên hệ quản trị viên công ty.",
     "errorNetworkLimit": "Có quá nhiều yêu cầu đăng nhập từ mạng này. Hãy thử lại sau {minutes} phút.",
     "errorSmsBusy": "Dịch vụ gửi SMS đang quá tải. Hãy thử lại sau {minutes} phút."
   },

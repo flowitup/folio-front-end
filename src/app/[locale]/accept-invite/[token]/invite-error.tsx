@@ -10,6 +10,8 @@ interface InviteErrorProps {
 const reasonToKey: Record<InviteErrorReason, string> = {
   expired: "errors.expired",
   revoked: "errors.revoked",
+  // Revoked by a re-send: the latest e-mail carries the working link.
+  superseded: "errors.superseded",
   accepted: "errors.accepted",
   not_found: "errors.notFound",
 };

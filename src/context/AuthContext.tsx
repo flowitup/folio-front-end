@@ -15,7 +15,7 @@ import {
   getCurrentUserAction,
 } from "@/lib/auth/actions";
 import { verifyOtpAction } from "@/lib/auth/otp-actions";
-import { postLoginPath } from "@/lib/auth/callback-url";
+import { isAcceptInvitePath, postLoginPath } from "@/lib/auth/callback-url";
 import { isPlatformOps } from "@/lib/auth/permissions";
 
 interface AuthContextType extends AuthState {
@@ -98,12 +98,15 @@ export function AuthProvider({
       // Return to the page the proxy sent the visitor away from, if any —
       // except for someone with no company: the onboarding gate lives in the
       // /dashboard layout, so they go through it (a deep link would skip it).
+      // An invitation link is the exception to the exception: accepting it is
+      // how a company-less person gets a company, so it is never skipped.
       const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
       const companyLess =
         Array.isArray(freshUser?.companies) &&
         freshUser.companies.length === 0 &&
         !isPlatformOps(freshUser.permissions);
-      router.push(companyLess ? `/${locale}/dashboard` : postLoginPath(callbackUrl, locale));
+      const target = postLoginPath(callbackUrl, locale);
+      router.push(companyLess && !isAcceptInvitePath(target) ? `/${locale}/dashboard` : target);
     },
     [router, locale]
   );

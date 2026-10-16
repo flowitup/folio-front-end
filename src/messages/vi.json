@@ -1180,7 +1180,8 @@
       "title": "Lời mời không khả dụng",
       "nameRequired": "Vui lòng nhập tên của bạn",
       "accountExists": "Lời mời này dành cho một tài khoản Folio đã có. Hãy nhập số điện thoại của tài khoản đó, hoặc đăng nhập vào tài khoản đó trước.",
-      "wrongAccount": "Lời mời này đã được gửi đến một địa chỉ email khác."
+      "wrongAccount": "Lời mời này được gửi đến địa chỉ của một tài khoản Folio khác. Hãy dùng tài khoản đó để chấp nhận.",
+      "superseded": "Bạn đã được gửi một lời mời mới hơn: hãy dùng đường dẫn trong email gần nhất."
     },
     "loggedInOther": {
       "title": "Bạn đang đăng nhập bằng tài khoản khác",
@@ -1208,7 +1209,9 @@
       "title": "Tham gia {projectName}",
       "body": "Bạn đang đăng nhập bằng {currentUser}, đúng tài khoản được gửi lời mời này.",
       "submit": "Tham gia dự án",
-      "submitting": "Đang tham gia…"
+      "submitting": "Đang tham gia…",
+      "bodyOther": "Bạn đang đăng nhập bằng {currentUser}. Tham gia dự án bằng tài khoản này, hoặc dùng tài khoản khác.",
+      "switchAccount": "Dùng tài khoản khác"
     }
   },
   "admin": {
@@ -2047,7 +2050,7 @@
       "button": "Mời thành viên",
       "unavailable": "Tính năng mời tạm thời không khả dụng. Vui lòng thử lại sau.",
       "dialogTitle": "Mời thành viên mới",
-      "dialogDescription": "Thêm một người vào dự án này. Nếu họ đã có tài khoản Folio, họ sẽ được thêm trực tiếp. Nếu chưa, chúng tôi sẽ gửi link mời có hiệu lực 7 ngày qua email.",
+      "dialogDescription": "Thêm một người vào dự án này. Nếu email này thuộc một tài khoản Folio, họ sẽ được thêm trực tiếp. Nếu chưa, chúng tôi sẽ gửi qua email link mời có hiệu lực 7 ngày, họ có thể chấp nhận bằng số điện thoại, kể cả khi đã có tài khoản.",
       "emailLabel": "Địa chỉ email",
       "emailHint": "Chúng tôi sẽ gửi lời mời đến địa chỉ này",
       "roleLabel": "Vai trò",

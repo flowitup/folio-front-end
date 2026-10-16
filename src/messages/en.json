@@ -1180,7 +1180,8 @@
       "title": "Invitation unavailable",
       "nameRequired": "Please enter your name",
       "accountExists": "This invitation is for an existing Folio account. Enter that account's phone number, or sign in to it first.",
-      "wrongAccount": "This invitation was sent to another email address."
+      "wrongAccount": "This invitation was sent to the address of another Folio account. Use that account to accept it.",
+      "superseded": "A newer invitation was sent to you: use the link in the latest e-mail."
     },
     "loggedInOther": {
       "title": "You're signed in as someone else",
@@ -1208,7 +1209,9 @@
       "title": "Join {projectName}",
       "body": "You're signed in as {currentUser}, the account this invitation was sent to.",
       "submit": "Join the project",
-      "submitting": "Joining…"
+      "submitting": "Joining…",
+      "bodyOther": "You're signed in as {currentUser}. Join the project with this account, or use another one.",
+      "switchAccount": "Use another account"
     }
   },
   "admin": {
@@ -2047,7 +2050,7 @@
       "button": "Invite member",
       "unavailable": "Invites are temporarily unavailable. Please try again shortly.",
       "dialogTitle": "Invite a new member",
-      "dialogDescription": "Add someone to this project. If they already have a Folio account, they'll be added directly. Otherwise we'll email a 7-day invite link.",
+      "dialogDescription": "Add someone to this project. If this e-mail address belongs to a Folio account, they'll be added directly. Otherwise we'll e-mail a 7-day invite link they can accept with their phone number, even if they already have an account.",
       "emailLabel": "Email address",
       "emailHint": "We'll send the invite to this address",
       "roleLabel": "Role",

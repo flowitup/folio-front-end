@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
-import { acceptInviteAsMeAction } from "@/lib/auth/actions";
+import { AlertCircle, ArrowRight, Loader2, LogOut } from "lucide-react";
+import { acceptInviteAsMeAction, logout } from "@/lib/auth/actions";
 import { errorMessageKey } from "./accept-invite-form";
 
 interface JoinAsInviteeProps {
@@ -11,17 +11,44 @@ interface JoinAsInviteeProps {
   locale: string;
   projectName: string;
   currentUser: string;
+  /** The session's e-mail is the invited one (else: a phone-only or other account). */
+  isInvitee?: boolean;
+  /** This invitation's page, to come back to signed out ("use another account"). */
+  returnPath?: string;
 }
 
 /**
- * The signed-in account IS the one this invitation was sent to (typically a
- * second invitation sent before the first was accepted): join straight from
- * the session, no sign-out and no phone step.
+ * A signed-in visitor joins straight from the session, no sign-out and no
+ * phone step: the invitation token is the authorisation (it already lets an
+ * unknown phone create an account), so this works for the invited account and
+ * for anyone else signed in, typically a worker who signed up on mobile with a
+ * phone only. "Use another account" signs out and comes back to this link.
  */
-export function JoinAsInvitee({ token, locale, projectName, currentUser }: JoinAsInviteeProps) {
+export function JoinAsInvitee({
+  token,
+  locale,
+  projectName,
+  currentUser,
+  isInvitee = true,
+  returnPath,
+}: JoinAsInviteeProps) {
   const t = useTranslations("acceptInvite");
   const [isJoining, setIsJoining] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleSwitchAccount = async () => {
+    if (!returnPath) return;
+    setIsSigningOut(true);
+    try {
+      // Signed out, the server sends the browser back to this invitation, not to /login.
+      await logout(returnPath);
+    } catch {
+      // logout() ends in redirect(), which rejects here with NEXT_REDIRECT. Load
+      // the invitation in full either way so it renders for the signed-out visitor.
+      window.location.assign(returnPath);
+    }
+  };
 
   const handleJoin = async () => {
     setError(null);
@@ -52,7 +79,7 @@ export function JoinAsInvitee({ token, locale, projectName, currentUser }: JoinA
         </h1>
 
         <p className="text-[14px]" style={{ color: "var(--muted)" }}>
-          {t("joinAsMe.body", { currentUser })}
+          {isInvitee ? t("joinAsMe.body", { currentUser }) : t("joinAsMe.bodyOther", { currentUser })}
         </p>
 
         {error ? (
@@ -72,7 +99,7 @@ export function JoinAsInvitee({ token, locale, projectName, currentUser }: JoinA
 
         <button
           type="button"
-          disabled={isJoining}
+          disabled={isJoining || isSigningOut}
           onClick={handleJoin}
           className="btn btn-primary mx-auto flex items-center gap-2"
           style={{ padding: "12px 20px", fontSize: 14 }}
@@ -88,6 +115,19 @@ export function JoinAsInvitee({ token, locale, projectName, currentUser }: JoinA
             </>
           )}
         </button>
+
+        {returnPath ? (
+          <button
+            type="button"
+            disabled={isJoining || isSigningOut}
+            onClick={handleSwitchAccount}
+            className="mx-auto flex items-center gap-1.5 text-[13px] underline disabled:opacity-60"
+            style={{ color: "var(--muted)" }}
+          >
+            {isSigningOut ? <Loader2 size={13} className="animate-spin" /> : <LogOut size={13} />}
+            {t("joinAsMe.switchAccount")}
+          </button>
+        ) : null}
       </div>
     </div>
   );

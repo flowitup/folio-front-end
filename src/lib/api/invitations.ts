@@ -129,7 +129,7 @@ export async function revokeInvitation(invitationId: string): Promise<void> {
   }
 }
 
-export type InviteErrorReason = "expired" | "revoked" | "accepted" | "not_found";
+export type InviteErrorReason = "expired" | "revoked" | "superseded" | "accepted" | "not_found";
 
 /**
  * Verify an invitation token.
@@ -162,7 +162,7 @@ export async function verifyInvite(
     try {
       const body = await response.json();
       const reason = body?.reason as InviteErrorReason | undefined;
-      if (reason === "expired" || reason === "revoked" || reason === "accepted") {
+      if (reason === "expired" || reason === "revoked" || reason === "superseded" || reason === "accepted") {
         return { error: reason };
       }
     } catch {

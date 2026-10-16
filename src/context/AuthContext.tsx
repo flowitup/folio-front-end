@@ -22,7 +22,7 @@ interface AuthContextType extends AuthState {
   loginWithPhone: (
     phone: string,
     code: string
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; retryAfterMinutes?: number }>;
   logout: () => void;
   /** Merge saved profile fields into the signed-in user, so the header and
    * avatar follow a profile save without a full reload (the provider is
@@ -123,7 +123,7 @@ export function AuthProvider({
       }
 
       setState((prev) => ({ ...prev, isLoading: false }));
-      return { success: false, error: result.error };
+      return { success: false, error: result.error, retryAfterMinutes: result.retryAfterMinutes };
     },
     [completeLogin]
   );

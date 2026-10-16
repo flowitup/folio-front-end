@@ -51,6 +51,7 @@ import {
   setLaborDayDescription,
 } from "@/lib/api/labor";
 import { toDateKey } from "@/lib/utils/calendar-month";
+import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
 import { fetchProjectById } from "@/lib/api/projects";
 import { fetchLaborRolesAction } from "@/components/labor/labor-role-actions";
 import { upsertLaborRole } from "@/components/labor/labor-role-helpers";
@@ -84,6 +85,7 @@ interface LaborPageClientProps {
 
 export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const t = useTranslations("labor");
+  const tCommon = useTranslations("common");
   const params = useParams();
   const projectId = params.id as string;
   const router = useRouter();
@@ -528,8 +530,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       await validateAttendance(projectId, entry.id);
       toast.success(t("status.validated", { worker: entry.worker_name }));
       await loadEntries();
-    } catch {
-      toast.error(t("status.validateFailed"));
+    } catch (err) {
+      toast.error(rateLimitErrorMessage(err, tCommon) ?? t("status.validateFailed"));
     } finally {
       settlingEntryIds.current.delete(entry.id);
     }
@@ -549,8 +551,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
       await rejectAttendance(projectId, entry.id);
       toast.success(t("status.rejected", { worker: entry.worker_name }));
       await loadEntries();
-    } catch {
-      toast.error(t("status.rejectFailed"));
+    } catch (err) {
+      toast.error(rateLimitErrorMessage(err, tCommon) ?? t("status.rejectFailed"));
     } finally {
       settlingEntryIds.current.delete(entry.id);
     }

@@ -666,6 +666,13 @@ describe("LaborSummary — monthly rollup + year filter (all-history mode)", () 
     );
     fireEvent.click(screen.getByTestId("month-row-2026-04"));
     expect(onMonthChange).toHaveBeenCalledWith("2026-04");
+    // Keyboard and screen-reader users get a real button for the same action.
+    onMonthChange.mockClear();
+    const open = screen.getByTestId("month-open-2026-04");
+    expect(open.tagName).toBe("BUTTON");
+    fireEvent.click(open);
+    expect(onMonthChange).toHaveBeenCalledTimes(1);
+    expect(onMonthChange).toHaveBeenCalledWith("2026-04");
   });
 });
 

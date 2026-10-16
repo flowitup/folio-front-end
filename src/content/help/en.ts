@@ -133,7 +133,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Export a month range, filtered by type, as xlsx or pdf; and give rows a highlight colour to group them by eye.",
     ],
     whoCanDoIt:
-      "Anyone on the project can read the list and export it. Editing, deleting, highlighting and everything inside an expanded row needs invoice rights. Without budget-viewing rights the purses and the bank chart are hidden and the released-funds tab disappears.",
+      "With invoice rights you see every expense, export a period, edit, delete, highlight rows and use everything inside an expanded row; without them you see only your own pay rows, and there is no export. Without budget-viewing rights the purses and the bank chart are hidden and the released-funds tab disappears.",
     gotchas: [
       "A released-funds entry marked as a company cash advance is deliberately not counted as released funds. What you then buy with that cash must be recorded against your own cash method, or it is counted twice.",
       "Rows Folio generated itself can never be edited or deleted.",
@@ -240,7 +240,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Click “Compare”, tick up to four products, then compare them side by side.",
     ],
     whoCanDoIt:
-      "Anyone attached to a company can read it. The add, edit and delete controls are always shown, but the server refuses changes unless you hold the library-management permission and tells you so.",
+      "Anyone attached to a company can read it. Without the library-management permission the add, edit and delete buttons are not shown.",
     gotchas: [
       "The library belongs to one company — your primary one — and there is no company picker.",
     ],
@@ -258,7 +258,7 @@ export const helpCatalogueEn: HelpCatalogue = [
       "Use the pencil on a row to change anything about it — mark it damaged after it breaks, move it from the warehouse to a site, adjust the quantity — and the bin to remove it.",
     ],
     whoCanDoIt:
-      "Anyone attached to a company can read it. The add, edit and delete controls are always shown, but the server refuses changes unless you hold the inventory-management permission and tells you so.",
+      "Anyone attached to a company can read it. Without the inventory-management permission the add, edit and delete buttons are not shown.",
     gotchas: [
       "One row is one batch of identical things in one place and one condition: three working drills at the warehouse and one broken drill on a site are two rows.",
       "The inventory belongs to one company — your primary one — and there is no company picker.",

@@ -114,6 +114,7 @@ import {
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import { toast } from "sonner";
 
+
 const mockCreate = vi.mocked(createBillingDocumentAction);
 const mockFetchMyCompanies = vi.mocked(fetchMyCompaniesAction);
 const mockRouterPush = vi.fn();

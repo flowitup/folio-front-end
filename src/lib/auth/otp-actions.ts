@@ -5,25 +5,29 @@ import { clientIpHeader } from "@/lib/api/client-ip";
 import type { AuthTokenResponse, User } from "./types";
 import { setForwardedCookies } from "./forward-cookies";
 import { normalizeFrenchPhone } from "./phone-number";
-import { hourlyLimitMinutesOf } from "./otp-throttle";
+import { codeLimitOf } from "./otp-throttle";
 
 export type RequestOtpError =
   | "invalid_phone"
   | "throttled"
   | "hourly_limit"
+  | "network_limit"
+  | "sms_busy"
   | "sms_failed"
   | "unavailable"
   | "unknown";
-export type VerifyOtpError = "invalid_code" | "throttled" | "unavailable" | "unknown";
+export type VerifyOtpError = "invalid_code" | "throttled" | "network_limit" | "unavailable" | "unknown";
 
 type RequestOtpResult =
   | { success: true; expiresIn: number }
-  // `retryAfterMinutes` comes with "hourly_limit": how long the number stays capped.
+  // `retryAfterMinutes` comes with "hourly_limit" (how long the number stays
+  // capped), "network_limit" and "sms_busy".
   | { success: false; error: RequestOtpError; retryAfterMinutes?: number };
 
 type VerifyOtpResult = {
   success: boolean;
   error?: VerifyOtpError;
+  retryAfterMinutes?: number;
   user?: User;
 };
 
@@ -80,10 +84,11 @@ export async function requestOtpAction(phone: string, locale?: string): Promise<
 
     if (response.status === 400) return { success: false, error: "invalid_phone" };
     if (response.status === 429) {
-      const minutes = await hourlyLimitMinutesOf(response);
-      return minutes === null
-        ? { success: false, error: "throttled" }
-        : { success: false, error: "hourly_limit", retryAfterMinutes: minutes };
+      const limit = await codeLimitOf(response);
+      if (limit.kind === "number") return { success: false, error: "hourly_limit", retryAfterMinutes: limit.minutes };
+      if (limit.kind === "network") return { success: false, error: "network_limit", retryAfterMinutes: limit.minutes };
+      if (limit.kind === "service") return { success: false, error: "sms_busy", retryAfterMinutes: limit.minutes };
+      return { success: false, error: "throttled" };
     }
     if (response.status === 503) return { success: false, error: "sms_failed" };
     if (response.status === 404) return { success: false, error: "unavailable" };
@@ -127,7 +132,12 @@ export async function verifyOtpAction(phone: string, code: string): Promise<Veri
     });
 
     if (!response.ok) {
-      if (response.status === 429) return { success: false, error: "throttled" };
+      if (response.status === 429) {
+        const limit = await codeLimitOf(response);
+        return limit.kind === "network"
+          ? { success: false, error: "network_limit", retryAfterMinutes: limit.minutes }
+          : { success: false, error: "throttled" };
+      }
       if (response.status === 404) return { success: false, error: "unavailable" };
       if (response.status === 401 || response.status === 400) {
         return { success: false, error: "invalid_code" };

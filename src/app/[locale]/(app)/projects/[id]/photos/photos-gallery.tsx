@@ -153,6 +153,10 @@ export function PhotosGallery({
     return b.dateKey.localeCompare(a.dateKey);
   });
 
+  // Previous / next in the lightbox follow the order shown on screen.
+  const ordered = groups.flatMap((g) => g.photos);
+  const selectedIndex = selectedPhoto ? ordered.findIndex((p) => p.id === selectedPhoto.id) : -1;
+
   const isEmpty = photos.length === 0 && !loadFailed;
   const hasMore = photos.length < total;
 
@@ -279,6 +283,12 @@ export function PhotosGallery({
         onClose={() => setSelectedPhoto(null)}
         onDeleted={handleDeleted}
         onUpdated={handleUpdated}
+        onPrevious={selectedIndex > 0 ? () => setSelectedPhoto(ordered[selectedIndex - 1]) : undefined}
+        onNext={
+          selectedIndex >= 0 && selectedIndex < ordered.length - 1
+            ? () => setSelectedPhoto(ordered[selectedIndex + 1])
+            : undefined
+        }
       />
     </div>
   );

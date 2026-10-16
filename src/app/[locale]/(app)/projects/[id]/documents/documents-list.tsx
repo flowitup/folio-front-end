@@ -17,6 +17,7 @@ import {
   Trash2,
   Plus,
   X,
+  Loader2,
 } from "lucide-react";
 import {
   Table,
@@ -154,6 +155,24 @@ export function DocumentsList({
   // Date and time: two uploads of the same name on one day stay distinguishable.
   const uploadedOn = (iso: string) => (hydrated ? formatDateTime(iso) : "");
   const [editingTagsDocId, setEditingTagsDocId] = useState<string | null>(null);
+  // Documents being downloaded: the button is disabled and spins meanwhile,
+  // so a second click on a slow 40 MB file no longer saves it twice.
+  const [downloadingIds, setDownloadingIds] = useState<ReadonlySet<string>>(new Set());
+  const downloadingRef = useRef(new Set<string>());
+
+  async function handleDownload(doc: ProjectDocument) {
+    if (downloadingRef.current.has(doc.id)) return;
+    downloadingRef.current.add(doc.id);
+    setDownloadingIds(new Set(downloadingRef.current));
+    try {
+      await downloadProjectDocument(doc.project_id, doc.id, doc.filename);
+    } catch {
+      toast.error(t("actions.downloadError"));
+    } finally {
+      downloadingRef.current.delete(doc.id);
+      setDownloadingIds(new Set(downloadingRef.current));
+    }
+  }
   const [tagInput, setTagInput] = useState("");
   const tagInputRef = useRef<HTMLInputElement>(null);
 
@@ -210,13 +229,8 @@ export function DocumentsList({
             labelTagPlaceholder={tTags("placeholder")}
             labelTagDone={tTags("done")}
             onPreview={() => onPreview(doc)}
-            onDownload={async () => {
-              try {
-                await downloadProjectDocument(doc.project_id, doc.id, doc.filename);
-              } catch {
-                toast.error(t("actions.downloadError"));
-              }
-            }}
+            downloading={downloadingIds.has(doc.id)}
+            onDownload={() => void handleDownload(doc)}
             onRename={() => onRename(doc)}
             onDelete={() => onDelete(doc)}
             onTagsUpdate={(tags) => onTagsUpdate(doc.id, tags)}
@@ -286,7 +300,21 @@ export function DocumentsList({
                 <TableCell className="max-w-[240px]">
                   <div className="flex items-center gap-2 min-w-0">
                     <KindIcon kind={doc.kind} />
-                    <span className="truncate text-sm font-medium">{doc.filename}</span>
+                    {canPreview(doc) ? (
+                      // The name opens the preview, like the eye button.
+                      <button
+                        type="button"
+                        onClick={() => onPreview(doc)}
+                        title={doc.filename}
+                        className="truncate text-left text-sm font-medium hover:underline focus:outline-none focus-visible:underline focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                      >
+                        {doc.filename}
+                      </button>
+                    ) : (
+                      <span className="truncate text-sm font-medium" title={doc.filename}>
+                        {doc.filename}
+                      </span>
+                    )}
                   </div>
                 </TableCell>
 
@@ -422,15 +450,15 @@ export function DocumentsList({
                       size="icon-sm"
                       title={t("actions.download")}
                       aria-label={t("actions.download")}
-                      onClick={async () => {
-                        try {
-                          await downloadProjectDocument(doc.project_id, doc.id, doc.filename);
-                        } catch {
-                          toast.error(t("actions.downloadError"));
-                        }
-                      }}
+                      aria-busy={downloadingIds.has(doc.id)}
+                      disabled={downloadingIds.has(doc.id)}
+                      onClick={() => void handleDownload(doc)}
                     >
-                      <Download className="size-4" aria-hidden />
+                      {downloadingIds.has(doc.id) ? (
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                      ) : (
+                        <Download className="size-4" aria-hidden />
+                      )}
                     </Button>
                     {canRename(doc) && (
                       <Button

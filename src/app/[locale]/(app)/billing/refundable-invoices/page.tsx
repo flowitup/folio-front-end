@@ -423,6 +423,7 @@ export default function RefundableInvoicesPage() {
           setDialogOpen(false);
           void load();
         }}
+        onPartiallyAdded={() => void load()}
       />
     </div>
   );

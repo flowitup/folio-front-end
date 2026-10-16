@@ -6,7 +6,20 @@
     "loading": "Chargement...",
     "language": "Langue",
     "close": "Fermer",
-    "notificationsRegion": "Notifications"
+    "notificationsRegion": "Notifications",
+    "rateLimit": {
+      "seconds": "Trop de demandes. Réessayez dans {seconds} s.",
+      "minutes": "Trop de demandes. Réessayez dans {minutes} min.",
+      "unknown": "Trop de demandes. Patientez un instant puis réessayez."
+    },
+    "monthPicker": {
+      "previousYear": "Année précédente",
+      "nextYear": "Année suivante",
+      "open": "Choisir un mois",
+      "choose": "Choisir un mois",
+      "placeholder": "AAAA-MM",
+      "formatError": "Mois attendu au format AAAA-MM (par ex. 2026-09) ou MM/AAAA."
+    }
   },
   "meta": {
     "description": "Une application chaleureuse et humaine pour gérer la construction de votre propre maison.",
@@ -82,7 +95,9 @@
     "errorCodeLocked": "Trop d'essais : ce code ne fonctionne plus, même saisi correctement. Demandez un nouveau code.",
     "codeRecentlySent": "Un code a été envoyé à ce numéro il y a moins d'une minute : saisissez-le ci-dessous.",
     "codeHelp": "Pas reçu de SMS ? Vérifiez le numéro. Seuls les comptes Folio reçoivent un code : ils se créent dans l'application mobile Folio ou via l'invitation de votre entreprise. Accès désactivé ? Contactez l'administrateur de votre entreprise.",
-    "sessionReset": "Votre session a été réinitialisée pour votre sécurité. Reconnectez-vous."
+    "sessionReset": "Votre session a été réinitialisée pour votre sécurité. Reconnectez-vous.",
+    "errorNetworkLimit": "Trop de demandes de connexion depuis ce réseau. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
+    "errorSmsBusy": "Le service d'envoi de SMS est momentanément saturé. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}."
   },
   "topbar": {
     "projectSettingsTitle": "Paramètres du projet",
@@ -472,6 +487,11 @@
       "refresh": "Actualiser",
       "login": "Aller à la connexion",
       "retry": "Réessayer"
+    },
+    "unavailable": {
+      "title": "Folio est momentanément occupé",
+      "body": "Le service n'a pas pu répondre. Vous êtes toujours connecté : réessayez dans quelques secondes.",
+      "retry": "Réessayer"
     }
   },
   "invoices": {
@@ -564,7 +584,8 @@
       "close": "Fermer",
       "download": "Télécharger",
       "error": "Aperçu impossible — téléchargez pour afficher le fichier",
-      "fallback": "Aperçu non disponible pour ce type de fichier. Téléchargez-le pour le consulter."
+      "fallback": "Aperçu non disponible pour ce type de fichier. Téléchargez-le pour le consulter.",
+      "downloadError": "Échec du téléchargement — le fichier a peut-être été supprimé"
     },
     "totalInvoiced": "Total dépenses",
     "fundsReleasedCompany": "Fonds débloqués — entreprise",
@@ -730,7 +751,9 @@
       "heading": "Facture",
       "loading": "Chargement…",
       "loadError": "Impossible de charger la dépense : elle a peut-être été supprimée, ou vous n'y avez pas accès.",
-      "back": "Retour aux dépenses"
+      "back": "Retour aux dépenses",
+      "project": "Chantier",
+      "refund": "Remboursement"
     },
     "loadFailed": "Échec du chargement de la facture.",
     "loadListFailed": "Échec du chargement des dépenses.",
@@ -1255,7 +1278,10 @@
       "existing": "Existants",
       "create": "Créer « {name} »",
       "alreadyOnProject": "Déjà sur ce chantier",
-      "createWithPhone": "Nouvelle personne avec le numéro {phone}"
+      "createWithPhone": "Nouvelle personne avec le numéro {phone}",
+      "searchFailed": "Recherche indisponible — réessayez.",
+      "createFailed": "Impossible de créer cette personne. Réessayez.",
+      "retrySearch": "Réessayer"
     },
     "newPersonHint": "Nouvelle personne : elle sera créée avec l'ouvrier, une fois enregistré.",
     "confirmDeactivateBody": "{name} sera arrêté(e) sur tous les chantiers de l'entreprise que vous gérez et ne pourra plus y pointer. Ses journées et ce qui lui reste dû restent visibles et payables ; vous pourrez le/la réactiver.",
@@ -1909,7 +1935,8 @@
       "companyFilter": {
         "label": "Entreprise",
         "all": "Toutes les entreprises"
-      }
+      },
+      "failedExpenses": "Non ajoutées (toujours sélectionnées, réessayez) : {numbers}"
     },
     "import": {
       "button": "Importer",
@@ -2092,7 +2119,19 @@
       "download": "Télécharger",
       "error": "Aperçu impossible — téléchargez pour afficher le fichier",
       "loading": "Chargement de l’aperçu…",
-      "downloadError": "Échec du téléchargement — le fichier a peut-être été supprimé"
+      "downloadError": "Échec du téléchargement — le fichier a peut-être été supprimé",
+      "retry": "Réessayer",
+      "toolbar": "Outils de l’aperçu",
+      "prevPage": "Page précédente",
+      "nextPage": "Page suivante",
+      "pageOf": "{page} / {count}",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière",
+      "fitWidth": "Ajuster à la largeur",
+      "passwordPrompt": "Ce PDF est protégé par un mot de passe.",
+      "passwordLabel": "Mot de passe du PDF",
+      "passwordSubmit": "Ouvrir",
+      "passwordIncorrect": "Mot de passe incorrect. Réessayez."
     },
     "delete": {
       "title": "Supprimer le document ?",
@@ -2529,7 +2568,17 @@
       "mobileOnly": "application mobile",
       "saved": "Sections mises à jour.",
       "error": "Impossible d'enregistrer les sections.",
-      "sections": {"billing": "Devis & factures", "library": "Bibliothèque de produits", "inventory": "Inventaire du matériel", "documents": "Documents", "photos": "Photos", "notes": "Notes", "salaries": "Salaires", "chiffrage": "Chiffrage", "analyses": "Analyses"}
+      "sections": {
+        "billing": "Devis & factures",
+        "library": "Bibliothèque de produits",
+        "inventory": "Inventaire du matériel",
+        "documents": "Documents",
+        "photos": "Photos",
+        "notes": "Notes",
+        "salaries": "Salaires",
+        "chiffrage": "Chiffrage",
+        "analyses": "Analyses"
+      }
     }
   },
   "bibliotheque": {
@@ -2890,7 +2939,17 @@
     "loadMore": "Charger plus",
     "saved": "Modifications enregistrées",
     "deleted": "{kind, select, video {Vidéo supprimée} other {Photo supprimée}}",
-    "close": "Fermer"
+    "close": "Fermer",
+    "retryThumbnail": "Recharger l’aperçu",
+    "uploadSummary": "{done} sur {total} téléversées — {failed} en échec",
+    "uploadSummaryMore": "et {count} autres",
+    "retryFailed": "Réessayer",
+    "uploadPaused": "limite d'envoi atteinte, reprise dans {seconds} s",
+    "download": "Télécharger",
+    "previousPhoto": "Photo précédente",
+    "nextPhoto": "Photo suivante",
+    "cannotPlayVideo": "Cette vidéo ne peut pas être lue dans ce navigateur. Téléchargez-la pour l'ouvrir.",
+    "cannotShowImage": "Cette image ne peut pas être affichée dans ce navigateur. Téléchargez-la pour l'ouvrir."
   },
   "chiffrage": {
     "actions": "Actions",

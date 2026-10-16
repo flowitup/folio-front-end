@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { MonthField } from "@/components/ui/month-picker";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -85,11 +85,11 @@ export function AttendanceTable({
         <div className="space-y-1">
           <Label>{t("filterMonthOptional")}</Label>
           <div className="flex items-center gap-2">
-            <Input
-              type="month"
+            <MonthField
               value={month}
-              onChange={(e) => onMonthChange(e.target.value)}
+              onChange={onMonthChange}
               placeholder={t("filterMonthAll")}
+              aria-label={t("filterMonthOptional")}
             />
             {month && (
               <Button

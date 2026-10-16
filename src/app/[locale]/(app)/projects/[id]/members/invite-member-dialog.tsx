@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { inviteMemberAction } from "./actions";
+import { rateLimitMessage } from "@/lib/api/rate-limit";
 
 interface InviteMemberDialogProps {
   open: boolean;
@@ -41,6 +42,7 @@ export function InviteMemberDialog({
   projectId,
 }: InviteMemberDialogProps) {
   const t = useTranslations("members");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,7 +63,7 @@ export function InviteMemberDialog({
           // The address itself was refused: retrying the same one cannot help.
           toast.error(t("toast.invalidEmail", { email: email.trim() }));
         } else if (result.status === 429) {
-          toast.error(t("toast.rateLimited"));
+          toast.error(result.retryAfter ? rateLimitMessage(tCommon, result.retryAfter) : t("toast.rateLimited"));
         } else if (result.status === 403) {
           toast.error(t("edit.toast.forbidden"));
         } else {

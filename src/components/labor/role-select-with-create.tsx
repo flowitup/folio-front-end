@@ -66,6 +66,8 @@ interface RoleSelectWithCreateProps {
    * "Select a role" for a worker who has one.
    */
   selectedFallback?: Pick<LaborRole, "name" | "color"> & { slug?: string | null };
+  /** Id of the trigger, so a <Label htmlFor> names the field. */
+  id?: string;
 }
 
 /**
@@ -117,6 +119,7 @@ export function RoleSelectWithCreate({
   companyId,
   onRefreshRoles,
   selectedFallback,
+  id,
 }: RoleSelectWithCreateProps) {
   const tRole = useTranslations("labor.role.defaults");
   const locale = useLocale();
@@ -306,6 +309,7 @@ export function RoleSelectWithCreate({
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
+          id={id}
           type="button"
           role="combobox"
           aria-expanded={open}

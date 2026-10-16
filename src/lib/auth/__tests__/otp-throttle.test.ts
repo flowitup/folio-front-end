@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { hourlyLimitMinutes, hourlyLimitMinutesOf } from "../otp-throttle";
+import { codeLimitOf, hourlyLimitMinutes, hourlyLimitMinutesOf } from "../otp-throttle";
 
 describe("hourlyLimitMinutes", () => {
   it("rounds the Retry-After seconds up to whole minutes", () => {
@@ -41,5 +41,24 @@ describe("hourlyLimitMinutesOf", () => {
 
   it("is null when the body is not JSON", async () => {
     await expect(hourlyLimitMinutesOf(new Response("Too Many Requests", { status: 429 }))).resolves.toBeNull();
+  });
+});
+
+describe("codeLimitOf", () => {
+  const limited = (error: string, retryAfter?: string) =>
+    new Response(JSON.stringify({ error }), {
+      status: 429,
+      headers: retryAfter ? { "Retry-After": retryAfter } : {},
+    });
+
+  it("tells the number's cap, the network's cap, the SMS budget and the short gap apart", async () => {
+    await expect(codeLimitOf(limited("OtpHourlyLimit", "3290"))).resolves.toEqual({ kind: "number", minutes: 55 });
+    await expect(codeLimitOf(limited("NetworkThrottled", "1500"))).resolves.toEqual({ kind: "network", minutes: 25 });
+    await expect(codeLimitOf(limited("SmsServiceBusy", "600"))).resolves.toEqual({ kind: "service", minutes: 10 });
+    await expect(codeLimitOf(limited("TooManyRequests", "60"))).resolves.toEqual({ kind: "gap" });
+  });
+
+  it("assumes a one-minute wait when the network cap has no Retry-After", async () => {
+    await expect(codeLimitOf(limited("NetworkThrottled"))).resolves.toEqual({ kind: "network", minutes: 1 });
   });
 });

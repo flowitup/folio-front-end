@@ -1,4 +1,5 @@
 import { env } from "@/lib/config/env";
+import { retryAfterOfResponse } from "@/lib/api/rate-limit";
 
 /**
  * Browser API client.
@@ -71,7 +72,9 @@ export class ApiError extends Error {
     constructor(
         message: string,
         public status: number,
-        public data?: unknown
+        public data?: unknown,
+        /** Seconds to wait before retrying (from a 429's Retry-After), when known. */
+        public retryAfter: number | null = null
     ) {
         super(message);
         this.name = "ApiError";
@@ -126,8 +129,10 @@ async function http<TResponse, TBody = unknown>(
 
     const url = `${env.apiBaseUrl}${endpoint}`;
 
+    // Content-Type only when there is a body: a GET with it is not a "simple"
+    // request, so the browser sent a CORS preflight before every read.
     const defaultHeaders: Record<string, string> = {
-        "Content-Type": "application/json",
+        ...(body ? { "Content-Type": "application/json" } : {}),
         ...getCsrfHeader(method),
     };
 
@@ -160,7 +165,8 @@ async function http<TResponse, TBody = unknown>(
         throw new ApiError(
             `HTTP ${response.status}: ${response.statusText}`,
             response.status,
-            errorData
+            errorData,
+            response.status === 429 ? retryAfterOfResponse(response, errorData) : null
         );
     }
 

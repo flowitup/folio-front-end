@@ -1,4 +1,5 @@
 import { api, ApiError, getCsrfHeader } from "@/lib/api/http";
+import { retryAfterOfResponse } from "@/lib/api/rate-limit";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 import { fetchWithRefresh, refreshAccessTokenViaCookie } from "@/lib/api/refresh";
@@ -191,7 +192,12 @@ export async function fetchInvoiceExport(
   if (!res.ok) {
     let body: unknown;
     try { body = await res.json(); } catch { body = await res.text().catch(() => res.statusText); }
-    throw new ApiError(`Export failed: ${res.status}`, res.status, body);
+    throw new ApiError(
+      `Export failed: ${res.status}`,
+      res.status,
+      body,
+      res.status === 429 ? retryAfterOfResponse(res, body) : null,
+    );
   }
 
   const cd = res.headers.get("Content-Disposition");

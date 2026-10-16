@@ -41,6 +41,7 @@ import type { LaborEntry, ShiftType, UpdateAttendancePayload } from "@/types/lab
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 import { ApiError } from "@/lib/api/http";
 import { formatMoneyInputValue, readMoneyInput } from "./money-input";
+import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
 
 /** The API's limit on an attendance note. */
 export const NOTE_MAX_LENGTH = 500;
@@ -62,6 +63,7 @@ export function EditAttendanceDialog({
   onSave,
 }: EditAttendanceDialogProps) {
   const t = useTranslations("labor");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const [shiftType, setShiftType] = useState<ShiftType | null>(null);
   const [supplementHours, setSupplementHours] = useState(0);
@@ -129,7 +131,7 @@ export function EditAttendanceDialog({
       setError(
         err instanceof ApiError && err.status === 400 && /\bnote\b/.test(message ?? "")
           ? t("errors.noteTooLong", { max: NOTE_MAX_LENGTH })
-          : t("errors.updateFailed"),
+          : (rateLimitErrorMessage(err, tCommon) ?? t("errors.updateFailed")),
       );
     } finally {
       setIsSaving(false);

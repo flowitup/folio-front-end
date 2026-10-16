@@ -8,6 +8,7 @@
 import { env } from "@/lib/config/env";
 import { sessionAuthHeader } from "@/lib/api/auth-header";
 import { clientIpHeader } from "@/lib/api/client-ip";
+import { retryAfterOfResponse } from "@/lib/api/rate-limit";
 import type { User } from "@/lib/auth/types";
 import type {
   VerifyInviteResponse,
@@ -92,14 +93,17 @@ export async function createInvitation(
     const err = new Error(`Failed to create invitation (HTTP ${response.status})`) as Error & {
       status: number;
       reason?: string;
+      retryAfter?: number | null;
     };
     err.status = response.status;
+    let body: { reason?: unknown } | null = null;
     try {
-      const body = await response.json();
+      body = await response.json();
       if (typeof body?.reason === "string") err.reason = body.reason;
     } catch {
       // ignore parse error
     }
+    if (response.status === 429) err.retryAfter = retryAfterOfResponse(response, body);
     throw err;
   }
   return response.json();

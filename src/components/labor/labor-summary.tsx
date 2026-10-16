@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { formatBonusDays, formatDays } from "@/components/labor/format-days";
 import { personInitials } from "@/lib/utils/person-color";
 import { Calendar, ChevronRight, ChevronDown, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MonthPickerPopover } from "@/components/ui/month-picker";
 import type {
   LaborSummaryResponse,
   LaborMonthlySummaryResponse,
@@ -123,10 +124,6 @@ export function LaborSummary({
   // Year filter — null = "All years". Only meaningful when month filter
   // is unset (we're in the all-history monthly-rollup view).
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
-  // Ref to the hidden native <input type="month">. The Folio-styled
-  // trigger button calls showPicker() on it so users get the native OS
-  // month picker without the browser UA chrome.
-  const monthInputRef = useRef<HTMLInputElement>(null);
 
   // month === "" → unbounded "all history" summary. Switch labels + headers
   // to a localized "All history" string and hide the Clear button.
@@ -440,24 +437,10 @@ export function LaborSummary({
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <button
-                type="button"
-                className="folio-month-picker"
-                onClick={() => {
-                  const el = monthInputRef.current;
-                  if (!el) return;
-                  // showPicker() is preferred (Chrome/Safari/FF modern). Focus
-                  // is the fallback when the API isn't available — at minimum
-                  // the user can type a value.
-                  if (typeof el.showPicker === "function") {
-                    el.showPicker();
-                  } else {
-                    el.focus();
-                  }
-                }}
-                aria-label={t("filterMonth")}
-              >
+            {/* The app's own month picker: the hidden <input type="month"> +
+                showPicker() did nothing in Firefox and Safari on macOS. */}
+            <MonthPickerPopover value={month} onChange={onMonthChange}>
+              <button type="button" className="folio-month-picker" aria-label={t("filterMonth")}>
                 <Calendar size={14} aria-hidden="true" />
                 <span className="num">
                   {isAllHistory ? t("summaryMonthPickerAll") : periodLabel}
@@ -468,23 +451,7 @@ export function LaborSummary({
                   style={{ color: "var(--muted)", marginLeft: 2 }}
                 />
               </button>
-              <input
-                ref={monthInputRef}
-                type="month"
-                value={month}
-                onChange={(e) => onMonthChange(e.target.value)}
-                aria-hidden="true"
-                tabIndex={-1}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  opacity: 0,
-                  pointerEvents: "none",
-                }}
-              />
-            </div>
+            </MonthPickerPopover>
             {!isAllHistory && (
               <Button
                 type="button"
@@ -603,7 +570,21 @@ export function LaborSummary({
                           </button>
                         </td>
                         <td className="font-display text-[14px] font-semibold tracking-tight">
-                          {formatYearMonthLabel(row, locale)}
+                          {/* The row opens the month on click; this button
+                              gives keyboard and screen-reader users the same. */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onMonthChange(ym);
+                            }}
+                            title={t("summaryDrillDown")}
+                            data-testid={`month-open-${ym}`}
+                            className="rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            style={{ color: "inherit", font: "inherit", cursor: "pointer" }}
+                          >
+                            {formatYearMonthLabel(row, locale)}
+                          </button>
                           {(showUnpaidWarning || showOverpaidWarning) && (
                             // Under the month on a phone, beside it from sm up; a stamp
                             // never wraps inside its pill.

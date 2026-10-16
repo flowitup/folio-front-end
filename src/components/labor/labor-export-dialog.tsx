@@ -18,11 +18,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { MonthField, isMonthValue } from "@/components/ui/month-picker";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { fetchLaborExport, fetchWorkerLaborExport, formatEUR } from "@/lib/api/labor";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
+import { ApiError } from "@/lib/api/http";
+import { rateLimitMessage, retryAfterOf } from "@/lib/api/rate-limit";
 import type { Worker } from "@/types/labor";
 import type { LaborExportFormat } from "@/types/labor";
 
@@ -57,8 +59,14 @@ function formatMonth(ym: string, locale: string): string {
   }
 }
 
+/** The current month, "YYYY-MM": the default export period. */
+function thisMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function computeMonthSpan(from: string, to: string): number {
-  if (!from || !to) return 0;
+  if (!isMonthValue(from) || !isMonthValue(to)) return 0;
   const [fy, fm] = from.split("-").map(Number);
   const [ty, tm] = to.split("-").map(Number);
   return (ty - fy) * 12 + (tm - fm) + 1;
@@ -76,6 +84,7 @@ export function LaborExportDialog({
   initialFormat,
 }: LaborExportDialogProps) {
   const t = useTranslations("labor.export");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
@@ -90,15 +99,17 @@ export function LaborExportDialog({
   // Seed state from pre-fill props each time the dialog opens.
   useEffect(() => {
     if (open) {
-      setFrom(initialFrom ?? "");
-      setTo(initialTo ?? "");
+      // Without a pre-fill, the period is the current month (never two empty fields).
+      setFrom(initialFrom || thisMonth());
+      setTo(initialTo || thisMonth());
       setFormat(initialFormat ?? "xlsx");
       setSelectedWorkerId(initialWorkerId ?? "");
     }
   }, [open, initialFrom, initialTo, initialFormat, initialWorkerId]);
 
   const monthSpan = useMemo(() => computeMonthSpan(from, to), [from, to]);
-  const rangeInvalid = !from || !to || from > to || monthSpan > 24;
+  const formatInvalid = (!!from && !isMonthValue(from)) || (!!to && !isMonthValue(to));
+  const rangeInvalid = !from || !to || formatInvalid || from > to || monthSpan > 24;
 
   // Resolve the worker the export will target across all three modes.
   const pickedWorker = pickerMode
@@ -109,8 +120,9 @@ export function LaborExportDialog({
   const needsWorker = pickerMode || worker !== undefined;
   const canSubmit = !rangeInvalid && !submitting && (needsWorker ? !!effectiveWorkerId : true);
 
-  const rangeError: string | null =
-    from && to && from > to
+  const rangeError: string | null = formatInvalid
+    ? tCommon("monthPicker.formatError")
+    : from && to && from > to
       ? t("errorRangeInvalid")
       : monthSpan > 24
         ? t("errorRangeTooLarge")
@@ -153,11 +165,16 @@ export function LaborExportDialog({
         toast.success(t("downloaded"), { id: toastId });
       }
       handleClose();
-    } catch {
-      // Translated, never ApiError's raw "Export failed: 403".
-      toast.error(needsWorker ? t("workerToastError") : t("errorGeneric"), {
-        id: toastId,
-      });
+    } catch (err) {
+      // Translated, never ApiError's raw "Export failed: 403"; a 429 says how long to wait.
+      toast.error(
+        err instanceof ApiError && err.status === 429
+          ? rateLimitMessage(tCommon, retryAfterOf(err))
+          : needsWorker
+            ? t("workerToastError")
+            : t("errorGeneric"),
+        { id: toastId },
+      );
     } finally {
       setSubmitting(false);
     }
@@ -226,20 +243,20 @@ export function LaborExportDialog({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor={fromId}>{t("from")}</Label>
-                  <Input
+                  <MonthField
                     id={fromId}
-                    type="month"
                     value={from}
-                    onChange={(e) => setFrom(e.target.value)}
+                    onChange={setFrom}
+                    aria-invalid={!!from && !isMonthValue(from)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={toId}>{t("to")}</Label>
-                  <Input
+                  <MonthField
                     id={toId}
-                    type="month"
                     value={to}
-                    onChange={(e) => setTo(e.target.value)}
+                    onChange={setTo}
+                    aria-invalid={!!to && !isMonthValue(to)}
                   />
                 </div>
               </div>
@@ -268,6 +285,7 @@ export function LaborExportDialog({
                 type="button"
                 variant={format === "xlsx" ? "default" : "outline"}
                 size="sm"
+                aria-pressed={format === "xlsx"}
                 onClick={() => setFormat("xlsx")}
               >
                 {t("xlsx")}
@@ -276,6 +294,7 @@ export function LaborExportDialog({
                 type="button"
                 variant={format === "pdf" ? "default" : "outline"}
                 size="sm"
+                aria-pressed={format === "pdf"}
                 onClick={() => setFormat("pdf")}
               >
                 {t("pdf")}

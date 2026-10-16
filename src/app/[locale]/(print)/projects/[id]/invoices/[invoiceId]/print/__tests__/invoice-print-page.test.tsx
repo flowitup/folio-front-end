@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import frMessages from "@/messages/fr.json";
 import type { Invoice } from "@/types/invoice";
@@ -16,6 +16,8 @@ vi.mock("next/navigation", () => ({
 
 const fetchInvoice = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/api/invoice-api", () => ({ fetchInvoice }));
+const fetchProjectById = vi.hoisted(() => vi.fn((): Promise<unknown> => Promise.reject(new Error("no project"))));
+vi.mock("@/lib/api/projects", () => ({ fetchProjectById }));
 
 const invoice = {
   id: "i1",
@@ -40,6 +42,22 @@ function renderFr() {
 }
 
 describe("InvoicePrintPage", () => {
+  it("titles the tab after the expense and prints project, payment method and refund", async () => {
+    fetchProjectById.mockResolvedValueOnce({ id: "p1", name: "QA3 interne", address: "12 rue des Lilas" });
+    fetchInvoice.mockResolvedValueOnce({
+      ...invoice,
+      payment_method_label: "Carte Pro",
+      refundable_status: "refund_pending",
+    });
+    renderFr();
+
+    expect(await screen.findByText("12 rue des Lilas")).toBeDefined();
+    await waitFor(() => expect(document.title).toBe("F-001 – Jean Dupont"));
+    expect(screen.getByText(frMessages.invoices.print.project)).toBeDefined();
+    expect(screen.getByText("Carte Pro")).toBeDefined();
+    expect(screen.getByText(frMessages.invoices.refund.status.refundPending)).toBeDefined();
+  });
+
   it("renders labels, type and service month in the active locale", async () => {
     fetchInvoice.mockResolvedValueOnce(invoice);
     renderFr();

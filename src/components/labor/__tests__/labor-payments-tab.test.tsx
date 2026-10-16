@@ -18,14 +18,26 @@ import { LaborPaymentsTab } from "../labor-payments-tab";
 import type { Worker } from "@/types/labor";
 import type { WorkerPaymentRow } from "../labor-payments-tab-state";
 
-vi.mock("next-intl", () => ({
-  useTranslations: (ns?: string) => (key: string, params?: Record<string, unknown>) => {
-    const full = ns ? `${ns}.${key}` : key;
-    if (!params) return full;
-    return Object.entries(params).reduce((acc, [k, v]) => acc.replace(`{${k}}`, String(v)), full);
-  },
-  useLocale: () => "en",
-}));
+vi.mock("next-intl", () => {
+  // Stable translator per namespace, as next-intl's own: the data hooks list
+  // `t` in effect dependencies, so a new function on every render re-runs
+  // their fetches in a loop.
+  const translators = new Map<string, (key: string, params?: Record<string, unknown>) => string>();
+  return {
+    useTranslations: (ns?: string) => {
+      const name = ns ?? "";
+      if (!translators.has(name)) {
+        translators.set(name, (key: string, params?: Record<string, unknown>) => {
+          const full = ns ? `${ns}.${key}` : key;
+          if (!params) return full;
+          return Object.entries(params).reduce((acc, [k, v]) => acc.replace(`{${k}}`, String(v)), full);
+        });
+      }
+      return translators.get(name)!;
+    },
+    useLocale: () => "en",
+  };
+});
 
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },

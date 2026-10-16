@@ -24,6 +24,7 @@ import { RoleSelectWithCreate } from "./role-select-with-create";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 import { ApiError } from "@/lib/api/http";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
 
 interface AddWorkerDialogProps {
   open: boolean;
@@ -94,6 +95,7 @@ export function AddWorkerDialog({
 }: AddWorkerDialogProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
+  const tCommon = useTranslations("common");
 
   // Create-flow state
   const [selectedPerson, setSelectedPerson] = useState<PersonChoice | null>(
@@ -196,7 +198,7 @@ export function AddWorkerDialog({
         if (isInvalidPhoneError(err)) setPhoneInvalid(true);
         else if (isInvalidRoleError(err)) handleRoleRefused();
         else if (err instanceof ApiError && err.status === 409) setError(t("errors.sharedPersonEdit"));
-        else setError(t("errors.saveWorkerFailed"));
+        else setError(rateLimitErrorMessage(err, tCommon) ?? t("errors.saveWorkerFailed"));
       } finally {
         setIsSaving(false);
       }
@@ -250,7 +252,7 @@ export function AddWorkerDialog({
       } else if (isInvalidRoleError(err)) {
         handleRoleRefused();
       } else {
-        setError(t("errors.saveWorkerFailed"));
+        setError(rateLimitErrorMessage(err, tCommon) ?? t("errors.saveWorkerFailed"));
       }
     } finally {
       setIsSaving(false);
@@ -362,8 +364,9 @@ export function AddWorkerDialog({
           {/* Role selection — shown in both create and edit flows when roles exist */}
           {(roles.length > 0 || palette.length > 0) && (
             <div className="space-y-2">
-              <Label>{t("role.label")}</Label>
+              <Label htmlFor="worker-role">{t("role.label")}</Label>
               <RoleSelectWithCreate
+                id="worker-role"
                 roles={roles}
                 palette={palette}
                 value={roleId}

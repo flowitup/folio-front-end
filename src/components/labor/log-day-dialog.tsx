@@ -51,6 +51,7 @@ import {
   setLaborDayDescription,
 } from "@/lib/api/labor";
 import { ApiError } from "@/lib/api/http";
+import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
 import {
   applyLastDayTemplate,
   buildBulkPayload,
@@ -114,6 +115,7 @@ export function LogDayDialog({
   const t = useTranslations("labor.logDayDialog");
   const tLabor = useTranslations("labor");
   const tConflict = useTranslations("labor.conflict");
+  const tCommon = useTranslations("common");
   const [date, setDate] = useState<string>(initialDate || todayKey());
   // Day-level description for the picked date (separate from per-worker notes).
   // Seeded from the backend whenever the dialog opens or the date changes, and
@@ -390,7 +392,7 @@ export function LogDayDialog({
           ? tLabor("errors.dateOutOfRange")
           : /\bnote\b/.test(message ?? "")
             ? tLabor("errors.noteTooLong", { max: NOTE_MAX_LENGTH })
-            : t("saveFailed")
+            : (rateLimitErrorMessage(err, tCommon) ?? t("saveFailed"))
       );
     } finally {
       setIsSaving(false);

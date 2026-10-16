@@ -34,6 +34,8 @@ import type { RefundableExpense } from "@/types/invoice";
 import { ApiError } from "@/lib/api/http";
 import { formatEUR } from "@/lib/utils/formatters";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
+import { isRateLimitError, retryAfterOf } from "@/lib/api/rate-limit";
+import { abortableSleep } from "@/lib/import/rate-limit-retry";
 
 /** The API's 400 for an expense already paid with a company payment method. */
 function isCompanyPaidRejection(reason: unknown): boolean {
@@ -46,10 +48,19 @@ function isCompanyPaidRejection(reason: unknown): boolean {
 interface AddRefundableExpenseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Every selected expense was added (callers close the dialog). */
   onAdded: () => void;
   /** Only this company's expenses (the page's company filter); all administered companies when unset. */
   companyId?: string;
+  /** Some were added and some failed: refresh the list, keep the dialog open. */
+  onPartiallyAdded?: () => void;
+  /** Injected for tests. */
+  sleep?: (ms: number) => Promise<void>;
 }
+
+/** Retries of one expense after a 429, each after the API's Retry-After. */
+const RATE_LIMIT_RETRIES = 2;
+const MAX_PAUSE_SECONDS = 65;
 
 /** Wait after the last keystroke before searching on the server. */
 const SEARCH_DEBOUNCE_MS = 300;
@@ -59,6 +70,8 @@ export function AddRefundableExpenseDialog({
   onOpenChange,
   onAdded,
   companyId,
+  onPartiallyAdded,
+  sleep = abortableSleep,
 }: AddRefundableExpenseDialogProps) {
   const t = useTranslations("billing.refundable");
 
@@ -72,6 +85,8 @@ export function AddRefundableExpenseDialog({
   const [loadedQuery, setLoadedQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
+  // Invoice numbers of the expenses the last confirm could not add.
+  const [failedNumbers, setFailedNumbers] = useState<string | null>(null);
 
   // Keep t in a ref so the effect can access the latest value without
   // listing t as a dep (avoids infinite re-render when test mocks return
@@ -118,6 +133,7 @@ export function AddRefundableExpenseDialog({
     setLoadedQuery("");
     setSelected(new Set());
     setError(null);
+    setFailedNumbers(null);
     setLoading(true);
     void fetchPage("", 0).finally(() => setLoading(false));
   }, [open, fetchPage]);
@@ -167,11 +183,28 @@ export function AddRefundableExpenseDialog({
   async function handleConfirm() {
     if (selected.size === 0) return;
     setSubmitting(true);
+    setFailedNumbers(null);
     try {
       const ids = [...selected];
-      const results = await Promise.allSettled(
-        ids.map((id) => setRefundableStatus(id, "refundable"))
-      );
+      // One after another (a big selection used to fire every PATCH at once
+      // and hit the per-minute limit); a 429 waits for Retry-After and tries
+      // the same expense again.
+      const results: PromiseSettledResult<void>[] = [];
+      for (const id of ids) {
+        for (let attempt = 0; ; attempt++) {
+          try {
+            await setRefundableStatus(id, "refundable");
+            results.push({ status: "fulfilled", value: undefined });
+          } catch (reason) {
+            if (isRateLimitError(reason) && attempt < RATE_LIMIT_RETRIES) {
+              await sleep(Math.min(retryAfterOf(reason) ?? 20, MAX_PAUSE_SECONDS) * 1000);
+              continue;
+            }
+            results.push({ status: "rejected", reason });
+          }
+          break;
+        }
+      }
 
       // An expense paid with a company payment method can never be tracked
       // for refund: drop it from the picker and say why, instead of asking
@@ -194,16 +227,24 @@ export function AddRefundableExpenseDialog({
         setSelected((prev) => new Set([...prev].filter((id) => !companyPaidIds.includes(id))));
       }
 
-      // Always call onAdded if at least one succeeded, so the parent list
-      // refetches the items that were successfully marked (callers close the
-      // dialog then). When all failed the dialog stays open.
-      if (succeeded.length > 0) {
-        onAdded();
+      if (otherFailures === 0) {
+        // Everything selected went through (callers close the dialog).
+        if (succeeded.length > 0) onAdded();
+        return;
       }
 
-      if (otherFailures > 0) {
-        toast.error(tRef.current("partialAddError"));
-      }
+      // Some failed: keep the dialog open with just the failed expenses
+      // still selected and named, so one more click retries them.
+      const addedIds = ids.filter((_, i) => results[i].status === "fulfilled");
+      const failedIds = ids.filter(
+        (id, i) => results[i].status === "rejected" && !companyPaidIds.includes(id)
+      );
+      setCandidates((prev) => prev.filter((c) => !addedIds.includes(c.id)));
+      setSelected(new Set(failedIds));
+      const numbers = failedIds.map((id) => numbersRef.current.get(id) ?? id).join(", ");
+      setFailedNumbers(numbers);
+      toast.error(tRef.current("partialAddError"));
+      if (succeeded.length > 0) onPartiallyAdded?.();
     } finally {
       setSubmitting(false);
     }
@@ -298,6 +339,12 @@ export function AddRefundableExpenseDialog({
               </div>
             )}
           </div>
+        )}
+
+        {failedNumbers && (
+          <p role="alert" className="text-sm text-destructive">
+            {t("failedExpenses", { numbers: failedNumbers })}
+          </p>
         )}
 
         <DialogFooter>

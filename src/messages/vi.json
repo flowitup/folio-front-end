@@ -6,7 +6,20 @@
     "loading": "Đang tải...",
     "language": "Ngôn ngữ",
     "close": "Đóng",
-    "notificationsRegion": "Thông báo"
+    "notificationsRegion": "Thông báo",
+    "rateLimit": {
+      "seconds": "Quá nhiều yêu cầu. Vui lòng thử lại sau {seconds} giây.",
+      "minutes": "Quá nhiều yêu cầu. Vui lòng thử lại sau {minutes} phút.",
+      "unknown": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại."
+    },
+    "monthPicker": {
+      "previousYear": "Năm trước",
+      "nextYear": "Năm sau",
+      "open": "Chọn tháng",
+      "choose": "Chọn tháng",
+      "placeholder": "YYYY-MM",
+      "formatError": "Nhập tháng theo dạng YYYY-MM (ví dụ 2026-09) hoặc MM/YYYY."
+    }
   },
   "meta": {
     "description": "Một ứng dụng ấm áp, gần gũi để quản lý việc xây dựng ngôi nhà của chính bạn.",
@@ -82,7 +95,9 @@
     "errorCodeLocked": "Nhập sai quá nhiều lần: mã này không còn dùng được, kể cả khi nhập đúng. Hãy yêu cầu mã mới.",
     "codeRecentlySent": "Một mã đã được gửi tới số này chưa đầy một phút trước: hãy nhập mã bên dưới.",
     "codeHelp": "Không nhận được SMS? Hãy kiểm tra số điện thoại. Chỉ tài khoản Folio mới nhận được mã: tài khoản được tạo trong ứng dụng Folio trên điện thoại hoặc qua lời mời của công ty bạn. Quyền truy cập bị vô hiệu hóa? Hãy liên hệ quản trị viên của công ty.",
-    "sessionReset": "Phiên đăng nhập của bạn đã được đặt lại để bảo mật. Vui lòng đăng nhập lại."
+    "sessionReset": "Phiên đăng nhập của bạn đã được đặt lại để bảo mật. Vui lòng đăng nhập lại.",
+    "errorNetworkLimit": "Có quá nhiều yêu cầu đăng nhập từ mạng này. Hãy thử lại sau {minutes} phút.",
+    "errorSmsBusy": "Dịch vụ gửi SMS đang quá tải. Hãy thử lại sau {minutes} phút."
   },
   "topbar": {
     "projectSettingsTitle": "Cài đặt dự án",
@@ -472,6 +487,11 @@
       "refresh": "Tải lại",
       "login": "Đến trang đăng nhập",
       "retry": "Thử lại"
+    },
+    "unavailable": {
+      "title": "Folio đang bận trong giây lát",
+      "body": "Dịch vụ chưa thể phản hồi. Bạn vẫn đang đăng nhập: hãy thử lại sau vài giây.",
+      "retry": "Thử lại"
     }
   },
   "invoices": {
@@ -564,7 +584,8 @@
       "close": "Đóng",
       "download": "Tải xuống",
       "error": "Xem trước thất bại — hãy tải xuống để xem tệp",
-      "fallback": "Không thể xem trước loại tệp này. Hãy tải xuống để xem."
+      "fallback": "Không thể xem trước loại tệp này. Hãy tải xuống để xem.",
+      "downloadError": "Tải xuống thất bại — tệp có thể đã bị xóa"
     },
     "totalInvoiced": "Tổng chi phí",
     "fundsReleasedCompany": "Quỹ đã giải ngân — công ty",
@@ -730,7 +751,9 @@
       "heading": "Hóa đơn",
       "loading": "Đang tải…",
       "loadError": "Không tải được chi phí: có thể đã bị xóa hoặc bạn không có quyền xem.",
-      "back": "Quay lại chi phí"
+      "back": "Quay lại chi phí",
+      "project": "Công trình",
+      "refund": "Hoàn tiền"
     },
     "loadFailed": "Không tải được hóa đơn.",
     "loadListFailed": "Không tải được danh sách chi phí.",
@@ -1255,7 +1278,10 @@
       "existing": "Đã có",
       "create": "Tạo “{name}”",
       "alreadyOnProject": "Đã có trong dự án này",
-      "createWithPhone": "Người mới với số {phone}"
+      "createWithPhone": "Người mới với số {phone}",
+      "searchFailed": "Không thể tìm kiếm — hãy thử lại.",
+      "createFailed": "Không thể tạo người này. Hãy thử lại.",
+      "retrySearch": "Thử lại"
     },
     "newPersonHint": "Người mới: sẽ được tạo cùng công nhân khi bạn lưu.",
     "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại.",
@@ -1909,7 +1935,8 @@
       "companyFilter": {
         "label": "Công ty",
         "all": "Tất cả công ty"
-      }
+      },
+      "failedExpenses": "Chưa thêm được (vẫn đang chọn, hãy thử lại): {numbers}"
     },
     "import": {
       "button": "Nhập",
@@ -2092,7 +2119,19 @@
       "download": "Tải xuống",
       "error": "Xem trước thất bại — hãy tải xuống để xem tệp",
       "loading": "Đang tải xem trước…",
-      "downloadError": "Tải xuống thất bại — tệp có thể đã bị xóa"
+      "downloadError": "Tải xuống thất bại — tệp có thể đã bị xóa",
+      "retry": "Thử lại",
+      "toolbar": "Công cụ xem trước",
+      "prevPage": "Trang trước",
+      "nextPage": "Trang sau",
+      "pageOf": "{page} / {count}",
+      "zoomIn": "Phóng to",
+      "zoomOut": "Thu nhỏ",
+      "fitWidth": "Vừa chiều rộng",
+      "passwordPrompt": "Tệp PDF này được bảo vệ bằng mật khẩu.",
+      "passwordLabel": "Mật khẩu PDF",
+      "passwordSubmit": "Mở",
+      "passwordIncorrect": "Sai mật khẩu. Vui lòng thử lại."
     },
     "delete": {
       "title": "Xóa tài liệu?",
@@ -2529,7 +2568,17 @@
       "mobileOnly": "ứng dụng di động",
       "saved": "Đã cập nhật các mục.",
       "error": "Không lưu được các mục.",
-      "sections": {"billing": "Báo giá & hóa đơn", "library": "Thư viện sản phẩm", "inventory": "Kho thiết bị", "documents": "Tài liệu", "photos": "Ảnh", "notes": "Ghi chú", "salaries": "Lương", "chiffrage": "Dự toán", "analyses": "Phân tích"}
+      "sections": {
+        "billing": "Báo giá & hóa đơn",
+        "library": "Thư viện sản phẩm",
+        "inventory": "Kho thiết bị",
+        "documents": "Tài liệu",
+        "photos": "Ảnh",
+        "notes": "Ghi chú",
+        "salaries": "Lương",
+        "chiffrage": "Dự toán",
+        "analyses": "Phân tích"
+      }
     }
   },
   "bibliotheque": {
@@ -2890,7 +2939,17 @@
     "loadMore": "Tải thêm",
     "saved": "Đã lưu thay đổi",
     "deleted": "{kind, select, video {Đã xóa video} other {Đã xóa ảnh}}",
-    "close": "Đóng"
+    "close": "Đóng",
+    "retryThumbnail": "Tải lại ảnh xem trước",
+    "uploadSummary": "Đã tải lên {done}/{total} — {failed} lỗi",
+    "uploadSummaryMore": "và {count} tệp khác",
+    "retryFailed": "Thử lại",
+    "uploadPaused": "đã đạt giới hạn tải lên, tiếp tục sau {seconds} giây",
+    "download": "Tải xuống",
+    "previousPhoto": "Ảnh trước",
+    "nextPhoto": "Ảnh tiếp theo",
+    "cannotPlayVideo": "Không thể phát video này trên trình duyệt. Hãy tải xuống để mở.",
+    "cannotShowImage": "Không thể hiển thị ảnh này trên trình duyệt. Hãy tải xuống để mở."
   },
   "chiffrage": {
     "actions": "Thao tác",

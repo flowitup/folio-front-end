@@ -6,7 +6,20 @@
     "loading": "Loading...",
     "language": "Language",
     "close": "Close",
-    "notificationsRegion": "Notifications"
+    "notificationsRegion": "Notifications",
+    "rateLimit": {
+      "seconds": "Too many requests. Try again in {seconds} s.",
+      "minutes": "Too many requests. Try again in {minutes} min.",
+      "unknown": "Too many requests. Wait a moment and try again."
+    },
+    "monthPicker": {
+      "previousYear": "Previous year",
+      "nextYear": "Next year",
+      "open": "Pick a month",
+      "choose": "Pick a month",
+      "placeholder": "YYYY-MM",
+      "formatError": "Enter the month as YYYY-MM (e.g. 2026-09) or MM/YYYY."
+    }
   },
   "meta": {
     "description": "A warm, human-feeling app for managing the construction of your own house.",
@@ -82,7 +95,9 @@
     "errorCodeLocked": "Too many tries: this code no longer works, even typed correctly. Ask for a new code.",
     "codeRecentlySent": "A code was sent to this number less than a minute ago: type it below.",
     "codeHelp": "No SMS? Check the number. Only Folio accounts receive a code: they are created in the Folio mobile app or through your company's invitation. Access deactivated? Contact your company's administrator.",
-    "sessionReset": "Your session was reset for your security. Please sign in again."
+    "sessionReset": "Your session was reset for your security. Please sign in again.",
+    "errorNetworkLimit": "Too many sign-in requests from this network. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+    "errorSmsBusy": "The text message service is busy. Try again in {minutes, plural, one {# minute} other {# minutes}}."
   },
   "topbar": {
     "projectSettingsTitle": "Project settings",
@@ -472,6 +487,11 @@
       "refresh": "Refresh",
       "login": "Go to login",
       "retry": "Try again"
+    },
+    "unavailable": {
+      "title": "Folio is busy for a moment",
+      "body": "The service could not answer. You are still signed in: try again in a few seconds.",
+      "retry": "Try again"
     }
   },
   "invoices": {
@@ -564,7 +584,8 @@
       "close": "Close",
       "download": "Download",
       "error": "Preview failed — download to view the file",
-      "fallback": "Preview not available for this file type. Download to view."
+      "fallback": "Preview not available for this file type. Download to view.",
+      "downloadError": "Download failed — the file may have been deleted"
     },
     "totalInvoiced": "Total expenses",
     "fundsReleasedCompany": "Funds released — company",
@@ -730,7 +751,9 @@
       "heading": "Invoice",
       "loading": "Loading…",
       "loadError": "This expense could not be loaded: it may have been deleted, or you may not have access to it.",
-      "back": "Back to expenses"
+      "back": "Back to expenses",
+      "project": "Project",
+      "refund": "Refund"
     },
     "loadFailed": "Failed to load invoice.",
     "loadListFailed": "Failed to load invoices.",
@@ -1255,7 +1278,10 @@
       "existing": "Existing",
       "create": "Create “{name}”",
       "alreadyOnProject": "Already on this project",
-      "createWithPhone": "New person with number {phone}"
+      "createWithPhone": "New person with number {phone}",
+      "searchFailed": "Search unavailable — try again.",
+      "createFailed": "Could not create this person. Try again.",
+      "retrySearch": "Retry"
     },
     "newPersonHint": "New person: created together with the worker when you save.",
     "confirmDeactivateBody": "{name} will be stopped on every site of the company that you manage and can no longer log time there. Their days and what they are still owed stay visible and payable; you can reactivate them.",
@@ -1909,7 +1935,8 @@
       "companyFilter": {
         "label": "Company",
         "all": "All companies"
-      }
+      },
+      "failedExpenses": "Not added (still selected, try again): {numbers}"
     },
     "import": {
       "button": "Import",
@@ -2092,7 +2119,19 @@
       "download": "Download",
       "error": "Preview failed — download to view the file",
       "loading": "Loading preview…",
-      "downloadError": "Download failed — the file may have been deleted"
+      "downloadError": "Download failed — the file may have been deleted",
+      "retry": "Retry",
+      "toolbar": "Preview tools",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "pageOf": "{page} / {count}",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fitWidth": "Fit to width",
+      "passwordPrompt": "This PDF is password-protected.",
+      "passwordLabel": "PDF password",
+      "passwordSubmit": "Open",
+      "passwordIncorrect": "Wrong password. Try again."
     },
     "delete": {
       "title": "Delete document?",
@@ -2529,7 +2568,17 @@
       "mobileOnly": "mobile app",
       "saved": "Sections updated.",
       "error": "Could not save the sections.",
-      "sections": {"billing": "Quotes & invoices", "library": "Product library", "inventory": "Equipment inventory", "documents": "Documents", "photos": "Photos", "notes": "Notes", "salaries": "Salaries", "chiffrage": "Cost planning", "analyses": "Analyses"}
+      "sections": {
+        "billing": "Quotes & invoices",
+        "library": "Product library",
+        "inventory": "Equipment inventory",
+        "documents": "Documents",
+        "photos": "Photos",
+        "notes": "Notes",
+        "salaries": "Salaries",
+        "chiffrage": "Cost planning",
+        "analyses": "Analyses"
+      }
     }
   },
   "bibliotheque": {
@@ -2890,7 +2939,17 @@
     "loadMore": "Load more",
     "saved": "Changes saved",
     "deleted": "{kind, select, video {Video deleted} other {Photo deleted}}",
-    "close": "Close"
+    "close": "Close",
+    "retryThumbnail": "Reload preview",
+    "uploadSummary": "{done} of {total} uploaded — {failed} failed",
+    "uploadSummaryMore": "and {count} more",
+    "retryFailed": "Retry",
+    "uploadPaused": "upload limit reached, resuming in {seconds} s",
+    "download": "Download",
+    "previousPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
+    "cannotPlayVideo": "This video cannot be played in this browser. Download it to open it.",
+    "cannotShowImage": "This image cannot be shown in this browser. Download it to open it."
   },
   "chiffrage": {
     "actions": "Actions",

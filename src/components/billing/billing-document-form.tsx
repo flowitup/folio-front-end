@@ -61,9 +61,12 @@ import {
 } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
-import { env } from "@/lib/config/env";
-import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
-import { fetchWithRefresh } from "@/lib/api/refresh";
+import {
+  BillingFileError,
+  billingFileBlob,
+  fetchBillingFile,
+} from "@/lib/api/billing/billing-file-client";
+import { rateLimitMessage } from "@/lib/api/rate-limit";
 import type {
   BillingDocument,
   BillingDocumentKind,
@@ -161,6 +164,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const router = useRouter();
   const locale = useLocale();
   const tForm = useTranslations("billing.form");
+  const tCommon = useTranslations("common");
   const tBilling = useTranslations("billing");
   const errorMessage = useBillingErrorMessage();
   const isEdit = props.mode === "edit";
@@ -326,7 +330,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
       if (Number(item.quantity) > MAX_LINE_QUANTITY) {
         return tForm("errors.itemQuantityTooLarge", { max: MAX_LINE_QUANTITY });
       }
-      if (Number(item.unit_price) < 0) return tForm("errors.itemUnitPricePositive");
+      if (!(Number(item.unit_price) >= 0)) return tForm("errors.itemUnitPricePositive");
       if (Number(item.unit_price) > MAX_LINE_UNIT_PRICE) {
         return tForm("errors.itemUnitPriceTooLarge", { max: MAX_LINE_UNIT_PRICE });
       }
@@ -477,17 +481,16 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     pdfLoadingRef.current = true;
     setIsPdfLoading(true);
     try {
-      const response = await fetchWithRefresh(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/pdf`
-      );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const cd = response.headers.get("Content-Disposition");
-      const filename = parseFilenameFromContentDisposition(cd, `${liveDoc.document_number}.pdf`);
-      const blob = await response.blob();
-      triggerBrowserDownload(blob, filename);
+      // Shared, cached per document version: reuses the preview's bytes.
+      const file = await fetchBillingFile(liveDoc, "pdf");
+      triggerBrowserDownload(billingFileBlob(file, "pdf"), file.filename);
       toast.success(tForm("toast.pdfDownloaded"));
-    } catch {
-      toast.error(tForm("errors.pdfFailed"));
+    } catch (err) {
+      toast.error(
+        err instanceof BillingFileError && err.status === 429
+          ? rateLimitMessage(tCommon, err.retryAfter)
+          : tForm("errors.pdfFailed"),
+      );
     } finally {
       setIsPdfLoading(false);
       pdfLoadingRef.current = false;
@@ -500,17 +503,15 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     xlsxLoadingRef.current = true;
     setIsXlsxLoading(true);
     try {
-      const response = await fetchWithRefresh(
-        `${env.apiBaseUrl}/billing-documents/${encodeURIComponent(liveDoc.id)}/xlsx`
-      );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const cd = response.headers.get("Content-Disposition");
-      const filename = parseFilenameFromContentDisposition(cd, `${liveDoc.document_number}.xlsx`);
-      const blob = await response.blob();
-      triggerBrowserDownload(blob, filename);
+      const file = await fetchBillingFile(liveDoc, "xlsx");
+      triggerBrowserDownload(billingFileBlob(file, "xlsx"), file.filename);
       toast.success(tForm("toast.xlsxDownloaded"));
-    } catch {
-      toast.error(tForm("errors.xlsxFailed"));
+    } catch (err) {
+      toast.error(
+        err instanceof BillingFileError && err.status === 429
+          ? rateLimitMessage(tCommon, err.retryAfter)
+          : tForm("errors.xlsxFailed"),
+      );
     } finally {
       setIsXlsxLoading(false);
       xlsxLoadingRef.current = false;

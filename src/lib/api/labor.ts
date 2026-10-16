@@ -35,6 +35,7 @@ import { api, ApiError } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
 import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-disposition";
 import { fetchWithRefresh } from "@/lib/api/refresh";
+import { retryAfterOfResponse } from "@/lib/api/rate-limit";
 
 // Build URL with optional query params
 function buildUrl(basePath: string, params?: Record<string, string | undefined>): string {
@@ -368,7 +369,12 @@ async function fetchExportFile(
   if (!response.ok) {
     let body: unknown;
     try { body = await response.json(); } catch { body = await response.text().catch(() => response.statusText); }
-    throw new ApiError(`Export failed: ${response.status}`, response.status, body);
+    throw new ApiError(
+      `Export failed: ${response.status}`,
+      response.status,
+      body,
+      response.status === 429 ? retryAfterOfResponse(response, body) : null,
+    );
   }
 
   const cd = response.headers.get('Content-Disposition');

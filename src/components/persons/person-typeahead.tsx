@@ -29,6 +29,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { fetchPersons } from "@/lib/api/persons";
+import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
 import type { PersonSummary } from "@/types/person";
 
 /**
@@ -60,7 +61,7 @@ export interface PersonTypeaheadProps {
   disabled?: boolean;
   /** Optional className passed through to the trigger button. */
   className?: string;
-  /** Debounce delay in ms for server-side search. Default 200. */
+  /** Debounce delay in ms for server-side search. Default 350. */
   debounceMs?: number;
   /** Result page size (max 100 per backend cap). Default 20. */
   limit?: number;
@@ -87,20 +88,26 @@ export function PersonTypeahead({
   placeholder,
   disabled = false,
   className,
-  debounceMs = 200,
+  debounceMs = 350,
   limit = 20,
   allowCreate = true,
   excludeIds,
   companyId,
 }: PersonTypeaheadProps) {
   const t = useTranslations("labor.typeahead");
+  const tCommon = useTranslations("common");
   const listId = React.useId();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [fetchedResults, setResults] = React.useState<PersonSummary[]>([]);
   const [fetching, setLoading] = React.useState(false);
-  // The query the current results answer: "Create" for a phone waits for it.
-  const [searchedQuery, setSearchedQuery] = React.useState<string | null>(null);
+  // The query the shown results answer, and why the last search failed:
+  // "Create …" is only offered once a search has answered for exactly the
+  // typed text, so a refused search (429) can no longer lead to a duplicate
+  // person — and a number typed in another format is found before it is added.
+  const [answeredQuery, setAnsweredQuery] = React.useState<string | null>(null);
+  const [searchError, setSearchError] = React.useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = React.useState(0);
 
   // Debounced server search. We track the latest request ID to discard
   // out-of-order responses (slow networks + fast typing).
@@ -118,20 +125,21 @@ export function PersonTypeahead({
         const rows = await fetchPersons(companyId ? { q, limit, companyId } : { q, limit });
         if (seq === requestSeqRef.current) {
           setResults(rows);
-          setSearchedQuery(q);
+          setAnsweredQuery(q);
+          setSearchError(null);
         }
-      } catch {
-        // Keep previous results visible — searching shouldn't blow up the UI.
+      } catch (err) {
         if (seq === requestSeqRef.current) {
           setResults([]);
-          setSearchedQuery(q);
+          setAnsweredQuery(null);
+          setSearchError(rateLimitErrorMessage(err, tCommon) ?? t("searchFailed"));
         }
       } finally {
         if (seq === requestSeqRef.current) setLoading(false);
       }
     }, debounceMs);
     return () => window.clearTimeout(handle);
-  }, [query, open, debounceMs, limit, companyId]);
+  }, [query, open, debounceMs, limit, companyId, retryNonce, t, tCommon]);
 
   // Show "Create new" only when (a) there's a trimmed query, and (b) no
   // existing person has that exact normalized name.
@@ -140,15 +148,16 @@ export function PersonTypeahead({
   const searchable = trimmed.length >= MIN_QUERY_LENGTH;
   const results = searchable ? fetchedResults : [];
   const loading = searchable && fetching;
+  const answered = !searchable || (answeredQuery === trimmed && !loading);
+  const failed = searchable && !!searchError && !loading;
   const exactMatch =
     trimmed.length > 0 &&
     results.some((p) => p.name.trim().toLowerCase() === trimmed.toLowerCase());
   // A number typed in another format ("06 20 30 00 04" vs "+33620300004") is
-  // the same person: never offer to create one before the search has answered,
-  // nor next to a person it found.
+  // the same person: never offer to create one next to a person the search found.
   const isPhone = looksLikePhone(trimmed);
-  const phoneSettled = !isPhone || (!loading && searchedQuery === trimmed && results.length === 0);
-  const showCreate = allowCreate && trimmed.length > 0 && !exactMatch && phoneSettled;
+  const showCreate =
+    allowCreate && trimmed.length > 0 && !exactMatch && answered && !failed && (!isPhone || results.length === 0);
   const excluded = React.useMemo(() => new Set(excludeIds ?? []), [excludeIds]);
 
   function handleSelect(person: PersonSummary) {
@@ -211,7 +220,19 @@ export function PersonTypeahead({
             data-testid="person-typeahead-input"
           />
           <CommandList id={listId}>
-            {results.length === 0 && !showCreate && !loading && (
+            {failed && (
+              <div role="alert" className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                <span className="text-destructive">{searchError}</span>
+                <button
+                  type="button"
+                  className="text-primary shrink-0 text-xs font-medium underline-offset-2 hover:underline"
+                  onClick={() => setRetryNonce((n) => n + 1)}
+                >
+                  {t("retrySearch")}
+                </button>
+              </div>
+            )}
+            {results.length === 0 && !showCreate && !loading && !failed && answered && (
               <CommandEmpty>
                 {searchable ? t("noMatches") : t("typeToSearch")}
               </CommandEmpty>

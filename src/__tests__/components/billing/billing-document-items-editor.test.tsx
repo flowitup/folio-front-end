@@ -12,6 +12,7 @@ import { render, screen, fireEvent, act, within } from "@testing-library/react";
 import { BillingDocumentItemsEditor } from "@/components/billing/billing-document-items-editor";
 import type { BillingDocumentItem } from "@/types/billing";
 
+
 // ---------------------------------------------------------------------------
 // Mocks — server action must be declared before component imports resolve
 // ---------------------------------------------------------------------------
@@ -373,5 +374,20 @@ describe("BillingDocumentItemsEditor — deleting a line", () => {
     const [qtyAfter] = within(desktop).getAllByRole("textbox", { name: "Qty" });
     expect(qtyAfter).toBe(qty);
     expect(document.activeElement).toBe(qty);
+  });
+});
+
+describe("BillingDocumentItemsEditor — decimal comma in any browser language", () => {
+  it("reads 18,5 and 45,90 as 18.5 and 45.9, not 185 and 4590", () => {
+    const onChange = vi.fn();
+    renderEditor([makeItem({ quantity: "1", unit_price: "0" })], onChange);
+    const desktop = screen.getByTestId("billing-items-desktop");
+    const [qty] = within(desktop).getAllByRole("textbox", { name: "Qty" });
+    fireEvent.change(qty, { target: { value: "18,5" } });
+    expect((onChange.mock.calls.at(-1) as [BillingDocumentItem[]])[0][0].quantity).toBe("18.5");
+
+    const [price] = within(desktop).getAllByRole("textbox", { name: "Unit price (excl. VAT)" });
+    fireEvent.change(price, { target: { value: "45,90" } });
+    expect((onChange.mock.calls.at(-1) as [BillingDocumentItem[]])[0][0].unit_price).toBe("45.9");
   });
 });

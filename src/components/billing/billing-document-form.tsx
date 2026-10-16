@@ -307,7 +307,11 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
 
   /** Translated message for a failed save — never the API's raw (English,
    * field-path) validation text. */
-  function saveErrorMessage(error: { code: string }): string {
+  function saveErrorMessage(error: { code: string; message?: string }): string {
+    // An imported document's issue date must stay in its number's year: say
+    // so instead of the generic "some fields are invalid".
+    const numberYear = /issue_date must (?:stay|be) in (\d{4})/.exec(error.message ?? "")?.[1];
+    if (numberYear) return tForm("errors.issueDateYear", { year: numberYear });
     if (error.code === "validation") return tForm("errors.invalidInput");
     if (error.code === "forbidden") return tForm("errors.forbidden");
     if (error.code === "company_profile_missing") return tForm("errors.companyProfileMissing");

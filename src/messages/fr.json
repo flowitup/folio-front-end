@@ -1623,7 +1623,8 @@
         "dueBeforeIssue": "L'échéance de paiement ne peut pas être antérieure à la date d'émission.",
         "forbidden": "Vous n'avez pas l'autorisation d'effectuer cette action.",
         "companyProfileMissing": "Complétez le profil de l'entreprise avant de créer des documents de facturation.",
-        "textTooLong": "Le champ « {field} » doit comporter {max} caractères au maximum."
+        "textTooLong": "Le champ « {field} » doit comporter {max} caractères au maximum.",
+        "issueDateYear": "La date d'émission doit rester en {year}, l'année du numéro du document."
       },
       "toast": {
         "documentSaved": "Document enregistré.",

@@ -1623,7 +1623,8 @@
         "dueBeforeIssue": "The payment due date cannot be before the issue date.",
         "forbidden": "You do not have permission to perform this action.",
         "companyProfileMissing": "Complete the company profile before creating billing documents.",
-        "textTooLong": "{field} must be {max} characters or fewer."
+        "textTooLong": "{field} must be {max} characters or fewer.",
+        "issueDateYear": "The issue date must stay in {year}, the year of the document number."
       },
       "toast": {
         "documentSaved": "Document saved.",

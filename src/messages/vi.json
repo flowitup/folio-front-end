@@ -1623,7 +1623,8 @@
         "dueBeforeIssue": "Hạn thanh toán không được trước ngày phát hành.",
         "forbidden": "Bạn không có quyền thực hiện thao tác này.",
         "companyProfileMissing": "Hãy hoàn thiện hồ sơ công ty trước khi tạo chứng từ thanh toán.",
-        "textTooLong": "Trường “{field}” không được vượt quá {max} ký tự."
+        "textTooLong": "Trường “{field}” không được vượt quá {max} ký tự.",
+        "issueDateYear": "Ngày phát hành phải nằm trong năm {year}, năm của số chứng từ."
       },
       "toast": {
         "documentSaved": "Đã lưu tài liệu.",

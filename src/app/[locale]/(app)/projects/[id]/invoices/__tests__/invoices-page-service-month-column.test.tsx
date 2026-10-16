@@ -101,7 +101,7 @@ function setupMocks(invoices: Invoice[]) {
   );
   mockUsePathname.mockReturnValue("/en/projects/proj-sm-1/invoices");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mockUseAuth.mockReturnValue({ user: { permissions: [] } } as any);
+  mockUseAuth.mockReturnValue({ user: { permissions: ["project:view_pay"] } } as any);
   mockFetchInvoicesWithMeta.mockResolvedValue({
     invoices,
     total: invoices.length,

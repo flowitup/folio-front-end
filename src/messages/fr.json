@@ -690,7 +690,11 @@
     "bankRefundLine": "Remboursement banque — {number}",
     "deleteExpense": "Supprimer la dépense {number}",
     "removeLine": "Supprimer la ligne",
-    "backToExpenses": "Retour aux dépenses"
+    "backToExpenses": "Retour aux dépenses",
+    "memberView": {
+      "title": "Mes paiements",
+      "empty": "Aucun paiement enregistré pour vous sur ce projet. Les autres dépenses du projet sont visibles par les responsables."
+    }
   },
   "planning": {
     "title": "Planification",

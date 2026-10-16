@@ -690,7 +690,11 @@
     "bankRefundLine": "Bank refund — {number}",
     "deleteExpense": "Delete expense {number}",
     "removeLine": "Remove line",
-    "backToExpenses": "Back to expenses"
+    "backToExpenses": "Back to expenses",
+    "memberView": {
+      "title": "My payments",
+      "empty": "No payment recorded for you on this project yet. The project's other expenses are visible to managers."
+    }
   },
   "planning": {
     "title": "Planning",

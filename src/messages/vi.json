@@ -690,7 +690,11 @@
     "bankRefundLine": "Ngân hàng hoàn tiền — {number}",
     "deleteExpense": "Xóa chi phí {number}",
     "removeLine": "Xóa dòng",
-    "backToExpenses": "Quay lại danh sách chi phí"
+    "backToExpenses": "Quay lại danh sách chi phí",
+    "memberView": {
+      "title": "Tiền công của tôi",
+      "empty": "Chưa có khoản trả nào cho bạn trong dự án này. Các chi phí khác của dự án chỉ quản lý mới xem được."
+    }
   },
   "planning": {
     "title": "Kế hoạch",

@@ -150,6 +150,11 @@ export default function InvoicesPage() {
     can("project:manage_labor", user?.permissions, projectPerms) ||
     can("project:view_pay", user?.permissions, projectPerms);
 
+  // A plain member (no labor, pay, budget or invoice rights) only gets their
+  // own labor payments from the API, so the category tabs could only ever be
+  // empty: show a "my payments" view instead.
+  const isRestrictedMember = !canExport && !canViewBudget && !canManageInvoices;
+
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [exportOpen, setExportOpen] = useState(false);
   // Collapsed month sections on the "all" tab (keys "YYYY-MM"). Default empty
@@ -311,7 +316,13 @@ export default function InvoicesPage() {
 
       {/* Tabs, export and list need a loaded list: after a failed first load
           the error alert below is the whole page, not an empty ledger. */}
-      {(isLoading || summary) && (
+      {isRestrictedMember && (isLoading || summary) && (
+        <div data-testid="member-payments-heading">
+          <h2 className="text-[17px] font-semibold">{t("memberView.title")}</h2>
+        </div>
+      )}
+
+      {!isRestrictedMember && (isLoading || summary) && (
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="seg">
           {tabs.map((tab) => (
@@ -366,7 +377,7 @@ export default function InvoicesPage() {
               className="flex items-center justify-center py-12 text-[13px]"
               style={{ color: "var(--muted)" }}
             >
-              {t("noInvoices")}
+              {isRestrictedMember ? t("memberView.empty") : t("noInvoices")}
             </div>
           </div>
         ) : (

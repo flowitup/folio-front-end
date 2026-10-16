@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Landmark, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { formatEUR } from "@/lib/utils/formatters";
 import { updateBankCredit } from "./actions";
 import type { Project } from "@/types/project";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { formatMoneyInput } from "@/lib/utils/format-money-input";
 import { useOptionalProject } from "@/context/ProjectContext";
 
 /**
@@ -34,9 +35,10 @@ const AMOUNT_RE = /^[\d\s\u00a0\u202f.,]*$/;
 
 export function BankCreditCard({ project }: Props) {
   const t = useTranslations("projects");
-  const [amount, setAmount] = useState(
-    project.budget != null ? String(project.budget) : ""
-  );
+  const locale = useLocale();
+  // In the reader's format ("1 234 567,89"), as the page shows it elsewhere.
+  const initialAmount = project.budget != null ? formatMoneyInput(project.budget, locale) : "";
+  const [amount, setAmount] = useState(initialAmount);
   const [source, setSource] = useState(project.budget_source ?? "");
   const [saving, setSaving] = useState(false);
   const router = useRouter();
@@ -45,11 +47,12 @@ export function BankCreditCard({ project }: Props) {
   const refetchProjects = useOptionalProject()?.refetch;
   // The values the server holds now (the props only reflect page load).
   const [saved, setSaved] = useState({
-    amount: project.budget != null ? String(project.budget) : "",
+    amount: initialAmount,
     source: project.budget_source ?? "",
   });
 
-  const isDirty = amount !== saved.amount || source !== saved.source;
+  // Compared as amounts: "10000" typed over "10 000" is no change.
+  const isDirty = parseMoneyInput(amount) !== parseMoneyInput(saved.amount) || source !== saved.source;
   const parsed = parseMoneyInput(amount);
   // Cents shown: the preview confirms what was typed, "50 000,5" included.
   const preview = parsed != null ? formatEUR(parsed) : null;

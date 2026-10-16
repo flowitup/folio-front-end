@@ -23,6 +23,18 @@ function renderCard() {
 }
 
 describe("BankCreditCard", () => {
+  it("starts from the saved credit in the reader's number format", () => {
+    render(
+      <NextIntlClientProvider locale="fr" messages={en}>
+        <BankCreditCard project={{ ...PROJECT, budget: 1234567.89 } as Project} />
+      </NextIntlClientProvider>
+    );
+    expect(screen.getByLabelText(en.projects.budgetLabel)).toHaveValue("1\u202f234\u202f567,89");
+    // Re-typing the same amount without spaces is no change.
+    fireEvent.change(screen.getByLabelText(en.projects.budgetLabel), { target: { value: "1234567,89" } });
+    expect(screen.getByRole("button", { name: en.projects.save })).toBeDisabled();
+  });
+
   it("previews the typed amount with its cents", () => {
     renderCard();
     fireEvent.change(screen.getByLabelText(en.projects.budgetLabel), { target: { value: "50000,5" } });

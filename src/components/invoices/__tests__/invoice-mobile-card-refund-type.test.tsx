@@ -162,7 +162,7 @@ describe("InvoiceMobileCard — cash advance badge", () => {
         formatAmount={formatAmount}
       />,
     );
-    expect(screen.getByTestId("cash-advance-badge").textContent).toBe("invoices.cashAdvance.badge");
+    expect(screen.getByTestId("cash-advance-badge").textContent).toBe("invoices.cashAdvance.badgeOutsideTotal");
   });
 
   it("shows no badge on an ordinary release", () => {

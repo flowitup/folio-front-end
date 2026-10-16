@@ -15,6 +15,7 @@ import {
   sharedMonthlyMax,
   buildReturnCredits,
   roundPartsToTotal,
+  computeMonthToDateDelta,
 } from "@/lib/dashboard/overview-metrics";
 
 let seq = 0;
@@ -382,6 +383,15 @@ describe("company purse count vs unassigned expenses", () => {
   it("reports the expenses in neither purse", () => {
     expect(computeUnassignedSpend(invoices)).toEqual({ count: 2, total: 3000 });
   });
+
+  it("nets the returns received in neither purse, like the Expense page", () => {
+    const withReturns = [
+      ...invoices,
+      { ...invoices[0], id: "ret-none", type: "return" as const, total_amount: -128, paid_by_company: false, paid_by_personal: false },
+      { ...invoices[0], id: "ret-co", type: "return" as const, total_amount: -50, paid_by_company: true, paid_by_personal: false },
+    ];
+    expect(computeUnassignedSpend(withReturns)).toEqual({ count: 2, total: 2872 });
+  });
 });
 
 describe("buildTypeMonthlyBuckets / sharedMonthlyMax", () => {
@@ -423,7 +433,7 @@ describe("buildReturnCredits", () => {
         refunds_invoice_id: labor.id,
       }),
     ]);
-    expect(credits).toEqual([{ type: "labor", monthKey: "2026-06", amount: -100 }]);
+    expect(credits).toEqual([{ type: "labor", monthKey: "2026-06", day: 11, amount: -100 }]);
   });
 
   it("falls back to materials_services for an unlinked return", () => {
@@ -534,5 +544,36 @@ describe("roundPartsToTotal", () => {
     expect(roundPartsToTotal([100, 200])).toEqual([100, 200]);
     const parts = roundPartsToTotal([-1000, 300.4, 50.7]);
     expect(parts.reduce((s, v) => s + v, 0)).toBe(Math.round(-1000 + 300.4 + 50.7));
+  });
+});
+
+describe("computeMonthToDateDelta", () => {
+  it("compares the same days of both months while the current one runs", () => {
+    const invoices = [
+      mkInvoice({ type: "others", issue_date: "2026-09-05", total_amount: 100 }),
+      mkInvoice({ type: "others", issue_date: "2026-09-25", total_amount: 900 }),
+      mkInvoice({ type: "others", issue_date: "2026-10-10", total_amount: 150 }),
+    ];
+    // On 15 Oct: 1–15 Oct (150) vs 1–15 Sept (100), not vs the whole of Sept (1 000).
+    expect(computeMonthToDateDelta(invoices, new Date(2026, 9, 15))).toEqual({ deltaPct: 50, toDay: 15 });
+  });
+
+  it("compares whole months on the last day", () => {
+    const invoices = [
+      mkInvoice({ type: "others", issue_date: "2026-09-25", total_amount: 100 }),
+      mkInvoice({ type: "others", issue_date: "2026-10-30", total_amount: 50 }),
+    ];
+    expect(computeMonthToDateDelta(invoices, new Date(2026, 9, 31))).toEqual({ deltaPct: -50, toDay: null });
+  });
+});
+
+describe("buildReturnCredits — applied avoirs", () => {
+  it("files an avoir applied to an expense under that expense's type", () => {
+    const labor = mkInvoice({ type: "labor", issue_date: "2026-05-02", total_amount: 900 });
+    const credits = buildReturnCredits([
+      labor,
+      mkInvoice({ type: "return", issue_date: "2026-06-03", total_amount: -40, applied_to_invoice_id: labor.id }),
+    ]);
+    expect(credits[0].type).toBe("labor");
   });
 });

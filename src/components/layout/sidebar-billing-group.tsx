@@ -67,7 +67,7 @@ export function SidebarBillingGroup({ pathWithoutLocale }: SidebarBillingGroupPr
         aria-expanded={open}
         className={cn(
           "nav-link w-full justify-between",
-          isAnyChildActive && "text-[var(--accent)]",
+          isAnyChildActive && "text-[var(--accent-ink)]",
         )}
       >
         <span className="flex items-center gap-2">

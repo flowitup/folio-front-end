@@ -32,7 +32,7 @@ import {
   deletePaymentMethod,
 } from "@/lib/api/payment-methods-api";
 import { getSession } from "@/lib/auth/session";
-import type { PaymentMethod } from "@/lib/api/payment-methods-api";
+import type { PaymentMethod, PaymentPurse } from "@/lib/api/payment-methods-api";
 
 // ---------------------------------------------------------------------------
 // Shared result type (re-exported so callers can type-narrow)
@@ -163,15 +163,17 @@ export async function listPaymentMethodsAction(
  */
 export async function createPaymentMethodAction(
   companyId: string,
-  label: string
+  label: string,
+  purse: PaymentPurse = "none"
 ): Promise<ActionResult<PaymentMethod[]>> {
   const auth = await requireSession();
   if (!auth.ok) return auth;
   if (!isUuid(companyId)) return invalid();
   const labelError = checkLabel(label);
   if (labelError) return labelError;
+  if (purse !== "company" && purse !== "personal" && purse !== "none") return invalid();
   try {
-    await createPaymentMethod(companyId, label);
+    await createPaymentMethod(companyId, label, purse);
     // Refetch to get accurate usage_count and server-ordered list
     const data = await fetchPaymentMethods(companyId);
     return { ok: true, data };

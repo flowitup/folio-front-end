@@ -115,10 +115,12 @@
     "loadError": "Impossible de charger les données de l'aperçu",
     "money": {
       "spentThisMonth": "Dépensé ce mois-ci",
-      "pctSpent": "{pct} dépensé · {spent} (entreprise + perso)",
+      "pctSpent": "{pct} dépensé · {spent} (toutes dépenses)",
       "purseSpent": "dépensé",
-      "pctCreditDrawn": "{pct} du crédit dépensé · {spent} (entreprise + perso)",
-      "unassigned": "{n, plural, =1 {1 dépense} other {# dépenses}} · {amount} sans moyen de paiement entreprise ou personnel — dans aucune bourse"
+      "pctCreditDrawn": "{pct} du crédit dépensé · {spent} (toutes dépenses)",
+      "unassigned": "{n, plural, =1 {1 dépense} other {# dépenses}} · {amount} sans moyen de paiement entreprise ou personnel — dans aucune caisse ›",
+      "vsMonthToDate": "{delta} vs 1–{day} {month}",
+      "openExpenses": "Voir les dépenses : {what}"
     },
     "spendByType": {
       "title": "Dépenses mensuelles par type",
@@ -132,6 +134,7 @@
       "title": "Cette semaine",
       "viewAll": "Agenda",
       "overdue": "En retard",
+      "more": "+{n, plural, one {# autre} other {# autres}} ›",
       "today": "Aujourd'hui",
       "thisWeek": "Cette semaine",
       "empty": "Rien à l'agenda cette semaine."
@@ -191,16 +194,17 @@
       "clear": "Effacer la recherche"
     },
     "projectStamp": "Projet",
-    "progress": "Avancement",
+    "progress": "Crédit consommé",
     "creditTotal": "Crédit total",
     "spentByCredits": "Dépensé sur crédit",
     "spentPersonal": "Dépensé perso",
+    "spentUnassigned": "{amount} payés sans caisse (aucun moyen de paiement entreprise ou perso) ›",
     "breakdownTitle": "Où est passé l'argent perso",
     "laborPaid": "Main-d'œuvre — payée",
     "laborUnpaid": "Main-d'œuvre — impayée",
     "laborUnpaidHint": "Dû aux ouvriers. Non compris dans le total ci-dessus.",
     "type": {
-      "materials_services": "Matériaux & services",
+      "materials_services": "Achats & prestations",
       "others": "Autres",
       "labor": "Main-d'œuvre",
       "released_funds": "Fonds débloqués",
@@ -213,6 +217,7 @@
     "budgetSourceLabelOptional": "Source de financement (facultatif)",
     "budgetSourcePlaceholder": "ex. Prêt bancaire BNP",
     "budgetInvalid": "Saisissez le crédit total sous forme de montant, par ex. 12500 ou 12 500,00",
+    "budgetTooLarge": "Le crédit total ne peut pas dépasser {max}.",
     "bankRelease": {
       "title": "Déblocage du crédit bancaire",
       "overDrawn": "Dépassement de",
@@ -401,14 +406,18 @@
   },
   "paymentMethods": {
     "title": "Moyens de paiement",
-    "description": "Gérez comment les factures peuvent être payées pour cette entreprise. Les moyens intégrés ne peuvent pas être supprimés mais peuvent être renommés.",
+    "description": "Gérez les moyens de paiement des dépenses de cette entreprise et la caisse où chacun compte. Les moyens intégrés ne peuvent pas être supprimés mais peuvent être renommés.",
     "addPlaceholder": "ex. Wise, Stripe…",
     "addButton": "Ajouter",
+    "purseLabel": "Caisse",
+    "purseCompany": "Caisse entreprise",
+    "pursePersonal": "Caisse personnelle",
+    "purseNone": "Aucune caisse",
     "builtin": "Intégré",
     "noMethods": "Aucun moyen de paiement. Ajoutez-en un ci-dessus.",
-    "usedInInvoices": "{count, plural, one {# facture} other {# factures}}",
+    "usedInInvoices": "{count, plural, one {# dépense} other {# dépenses}}",
     "deleteConfirmTitle": "Supprimer ce moyen de paiement ?",
-    "deleteConfirmBody": "Les factures existantes conservent leur libellé instantané. Les nouvelles factures ne pourront plus le sélectionner.",
+    "deleteConfirmBody": "Les dépenses existantes conservent leur libellé. Les nouvelles dépenses ne pourront plus le sélectionner.",
     "deleteConfirmCta": "Supprimer",
     "cancel": "Annuler",
     "cancelEditAria": "Annuler la modification",
@@ -432,6 +441,7 @@
     "toasts": {
       "created": "Moyen de paiement ajouté",
       "renamed": "Moyen de paiement renommé",
+      "updated": "Moyen de paiement mis à jour",
       "deleted": "Moyen de paiement supprimé"
     },
     "builtins": {
@@ -586,7 +596,7 @@
       "generating": "Génération…",
       "downloaded": "Export téléchargé",
       "summaryLine": "{count, plural, =1 {1 mois sélectionné} other {# mois sélectionnés}}",
-      "errorRangeInvalid": "« De » doit être antérieur ou égal à « À »",
+      "errorRangeInvalid": "Le mois de début doit précéder le mois de fin (ou être le même)",
       "errorRangeTooLarge": "La période ne peut pas dépasser 24 mois",
       "errorGeneric": "Échec de l'export des dépenses",
       "errorForbidden": "Vous n'avez pas l'autorisation d'exporter les dépenses de ce projet.",
@@ -597,6 +607,11 @@
       "placeholder": "Sélectionner un moyen de paiement…",
       "none": "—",
       "addInline": "+ Ajouter « {name} »",
+      "addInlinePersonal": "+ Ajouter « {name} » · caisse personnelle",
+      "addInlineCompany": "+ Ajouter « {name} » · caisse entreprise",
+      "badgeCompany": "Entreprise",
+      "badgePersonal": "Perso",
+      "badgeNone": "Aucune caisse",
       "failedToLoad": "Échec du chargement des moyens de paiement",
       "failedToLoadRetry": "Échec du chargement. Réessayez en rouvrant.",
       "noMethodsFound": "Aucun moyen trouvé.",
@@ -651,7 +666,8 @@
     "refundSource": {
       "company": "Remboursé par l'entreprise",
       "bank": "Remboursé par la banque",
-      "both": "Remboursé par l'entreprise et la banque"
+      "both": "Remboursé par l'entreprise et la banque",
+      "bankOnlyCompanyOwed": "Banque ✓ · entreprise : à rembourser"
     },
     "releaseAttribution": {
       "label": "Attribution du déblocage",
@@ -670,11 +686,16 @@
       "credit": "Crédit",
       "refundsReceived": "{n, plural, =1 {1 avoir reçu} other {# avoirs reçus}}",
       "returnsReceived": "Avoirs reçus ({n})",
+      "returnsIncluded": "dont {n, plural, one {# avoir reçu} other {# avoirs reçus}} (déjà déduit)",
+      "upcoming": "à venir",
+      "upcomingTip": "Date future · pas encore dans « ce mois-ci »",
+      "unfunded": "non financée",
       "outstandingAvoirs": "{n, plural, =1 {1 avoir en attente} other {# avoirs en attente}}",
       "pendingRefunds": "Remboursements en attente",
       "refundableByCompany": "Remboursable · entreprise",
       "refundableByBank": "Remboursable · banque",
       "vsMonth": "{delta} vs {month}",
+      "vsMonthToDate": "{delta} vs 1–{day} {month}",
       "byType": "Dépenses par type",
       "netOfReturns": "net des avoirs",
       "paidByCompany": "entreprise",
@@ -682,7 +703,7 @@
       "sumOfTypes": "Total",
       "sharedScaleTo": "échelle commune jusqu'à {amount}",
       "cash": "Espèces",
-      "cashAdvance": "après déduction de {amount} d'avance en espèces",
+      "cashAdvance": "dont {amount} d'avance en espèces",
       "noPurse": "Aucune caisse",
       "noPurseSpend": "{n, plural, one {# dépense} other {# dépenses}} dans aucune caisse (sans moyen de paiement entreprise ou personnel) · {amount}"
     },
@@ -694,12 +715,15 @@
     },
     "cashAdvance": {
       "label": "Avance en espèces de l'entreprise",
-      "hint": "Argent remis par l'entreprise (ex. espèces pour payer la main-d'œuvre). Non compté dans les fonds débloqués — affiché comme dépensé dans la bourse entreprise. Enregistrez ce que vous payez avec ces espèces sous votre propre moyen de paiement, pas celui de l'entreprise, pour ne pas compter deux fois.",
-      "badge": "Avance espèces"
+      "hint": "Argent remis par l'entreprise (ex. espèces pour payer la main-d'œuvre). Non compté dans les fonds débloqués — affiché comme dépensé dans la caisse entreprise. Enregistrez ce que vous payez avec ces espèces sous votre propre moyen de paiement, pas celui de l'entreprise, pour ne pas compter deux fois.",
+      "badge": "Avance espèces",
+      "badgeOutsideTotal": "Avance espèces · hors total"
     },
     "print": {
       "heading": "Facture",
-      "loading": "Chargement…"
+      "loading": "Chargement…",
+      "loadError": "Impossible de charger la dépense : elle a peut-être été supprimée, ou vous n'y avez pas accès.",
+      "back": "Retour aux dépenses"
     },
     "loadFailed": "Échec du chargement de la facture.",
     "loadListFailed": "Échec du chargement des dépenses.",
@@ -715,6 +739,30 @@
     "errorUnitPriceNegative": "Le prix unitaire ne peut pas être négatif pour ce type de dépense",
     "errorVatRateInvalid": "La TVA doit être un nombre entre 0 et 100 avec au plus {decimals} décimales",
     "errorDateOutOfRange": "Indiquez une date entre {min} et {max}",
+    "errorAmountAmbiguous": "« {typed} » est ambigu : tapez {grouped} pour un montant en milliers, ou {decimal} pour une décimale",
+    "errorLineTotalTooLarge": "Le montant de la ligne ne peut pas dépasser {max}",
+    "errorTotalTooLarge": "Le total de la dépense ne peut pas dépasser {max}",
+    "errorTextTooLong": "Un texte est trop long : 255 caractères au maximum pour le destinataire, 500 pour une description, 2 000 pour l'adresse et 20 000 pour les notes.",
+    "errorUnlinkAvoirsBeforeDelete": "Des avoirs sont imputés sur cette dépense. Détachez-les avant de la supprimer.",
+    "errorForbiddenSave": "Vous n'avez pas la permission d'ajouter ou de modifier des dépenses sur ce projet.",
+    "errorSaveFailed": "L'enregistrement de la dépense a échoué. Réessayez.",
+    "errorFixFields": "{count, plural, one {Un champ est à corriger} other {# champs sont à corriger}} ci-dessous.",
+    "createForbidden": "Vous n'avez pas la permission d'ajouter des dépenses à ce projet.",
+    "invoiceNotFound": "Cette dépense n'existe plus ou ne fait pas partie de ce projet.",
+    "restricted": {
+      "banner": "Les dépenses du chantier sont visibles par les responsables. Vous voyez ici vos propres paiements.",
+      "empty": "Aucun paiement à votre nom pour le moment."
+    },
+    "filters": {
+      "label": "Filtré :",
+      "clear": "Tout afficher",
+      "empty": "Aucune dépense ne correspond à ce filtre.",
+      "purse": {
+        "company": "Caisse entreprise",
+        "personal": "Caisse personnelle",
+        "none": "Aucune caisse"
+      }
+    },
     "bankRefundLine": "Remboursement banque — {number}",
     "deleteExpense": "Supprimer la dépense {number}",
     "removeLine": "Supprimer la ligne",
@@ -1743,7 +1791,13 @@
       "generic": "Une erreur inattendue s'est produite."
     },
     "refundable": {
-      "title": "Factures remboursables",
+      "title": "Dépenses remboursables",
+      "drill": {
+        "company": "Dû par l'entreprise",
+        "bank": "Dû par la banque",
+        "project": "Un seul projet",
+        "clear": "Tout afficher"
+      },
       "addButton": "Ajouter une dépense remboursable",
       "empty": "Aucune dépense remboursable pour le moment.",
       "loading": "Chargement...",
@@ -1792,7 +1846,10 @@
         "refundedTotal": "Total remboursé",
         "refundedByCompany": "Remboursé par l'entreprise",
         "refundedByBank": "Remboursé par la banque",
-        "refundable": "À rembourser",
+        "refundable": "À rembourser · entreprise",
+        "bankOutstanding": "À rembourser · banque",
+        "refundableHint": "Ce que l'entreprise doit encore, y compris une dépense déjà remboursée par la banque seule. Cliquez pour filtrer.",
+        "bankOutstandingHint": "Ce que la banque n'a pas encore remboursé. Une dépense peut être due par les deux : ne pas additionner. Cliquez pour filtrer.",
         "companyShare": "{percent}% entreprise",
         "bothShare": "{percent}% les deux",
         "bankShare": "{percent}% banque"

@@ -23,3 +23,5 @@ export const MAX_LINE_QUANTITY = 9_999_999;
 export const MAX_LINE_UNIT_PRICE = 999_999_999;
 /** VAT rate in percent. */
 export const MAX_VAT_RATE = 100;
+/** Expense line amount (TTC) and expense total — the budget column, Numeric(14, 2). */
+export const MAX_LINE_TOTAL = MAX_BUDGET;

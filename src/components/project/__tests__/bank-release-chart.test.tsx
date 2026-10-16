@@ -21,6 +21,7 @@ vi.mock("next-intl", () => ({
     // t.rich renders as the bare key — tag chunks are style-only here.
     return Object.assign(plain, {
       rich: (key: string) => (namespace ? `${namespace}.${key}` : key),
+      markup: (key: string) => (namespace ? `${namespace}.${key}` : key),
     });
   },
   useLocale: () => "en",
@@ -90,6 +91,8 @@ describe("BankReleaseChart", () => {
     expect(track.children).toHaveLength(3);
     expect((track.children[0] as HTMLElement).style.width).toBe("calc(20% - 2px)");
     expect((track.children[1] as HTMLElement).style.width).toBe("calc(10% - 2px)");
+    // A tiny draw keeps a visible, tappable sliver.
+    expect((track.children[1] as HTMLElement).style.minWidth).toBe("6px");
     // Each segment carries its draw's identity for the hover data-tip
     // (whitespace normalized — euro amounts use narrow no-break spaces).
     const tip = track.children[0].getAttribute("data-tip") ?? "";
@@ -200,5 +203,26 @@ describe("BankReleaseChart", () => {
     // Track is a full-width hatch: no draw segments, only the remaining tail.
     expect(screen.getByTestId("bank-release-track").children).toHaveLength(1);
     expect(screen.queryByTestId("bank-release-stats")).not.toBeInTheDocument();
+  });
+
+  it("opens each draw's release and the released list, and keeps cents so the parts add up", () => {
+    const a = makeRelease({ total_amount: 40000, issue_date: "2026-01-10" });
+    const b = makeRelease({ total_amount: 25000.5, issue_date: "2026-02-10" });
+    render(
+      <BankReleaseChart
+        credit={150000}
+        releasedTotal={65000.5}
+        invoices={[a, b]}
+        expensesHref="/en/projects/p1/invoices"
+      />
+    );
+    expect(screen.getByTestId(`bank-release-draw-${b.id}`).getAttribute("data-href")).toBe(
+      `/en/projects/p1/invoices?invoice=${b.id}`
+    );
+    expect(screen.getByTestId("bank-release-drawn").getAttribute("data-href")).toBe(
+      "/en/projects/p1/invoices?type=released_funds"
+    );
+    expect(screen.getByTestId("bank-release-remaining").textContent!.replace(/\s/g, "")).toBe("84999,50€");
+    expect(screen.getByTestId("bank-release-stats").textContent!.replace(/\s/g, "")).toContain("25000,50€");
   });
 });

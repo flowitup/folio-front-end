@@ -19,6 +19,9 @@ import { sessionAuthHeader } from "@/lib/api/auth-header";
 // Types
 // ---------------------------------------------------------------------------
 
+/** Where a method's expenses count: the company purse, the personal one, or neither. */
+export type PaymentPurse = "company" | "personal" | "none";
+
 export type PaymentMethod = {
   id: string;
   companyId: string;
@@ -127,7 +130,8 @@ export async function fetchPaymentMethods(
  */
 export async function createPaymentMethod(
   companyId: string,
-  label: string
+  label: string,
+  purse: PaymentPurse = "none"
 ): Promise<PaymentMethod> {
   const authHeaders = await sessionAuthHeader();
   let response: Response;
@@ -137,7 +141,12 @@ export async function createPaymentMethod(
       {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({ label }),
+        // The purse decides where its expenses count; "none" sends no flag.
+        body: JSON.stringify({
+          label,
+          ...(purse === "company" ? { is_company_payment: true } : {}),
+          ...(purse === "personal" ? { is_personal_payment: true } : {}),
+        }),
         cache: "no-store",
       }
     );

@@ -77,6 +77,9 @@ describe("InvoicePrintPage", () => {
     fetchInvoice.mockRejectedValueOnce(new Error("boom"));
     renderFr();
 
-    expect(await screen.findByText(frMessages.invoices.loadFailed)).toBeDefined();
+    expect(await screen.findByText(frMessages.invoices.print.loadError)).toBeDefined();
+    // Not a dead end: a way back to the project's expenses.
+    const back = screen.getByText(frMessages.invoices.print.back);
+    expect(back.getAttribute("href")).toMatch(/^\/fr\/projects\/[^/]+\/invoices$/);
   });
 });

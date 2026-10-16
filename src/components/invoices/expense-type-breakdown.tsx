@@ -2,7 +2,10 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { formatEURWhole } from "@/lib/utils/formatters";
-import { roundCents } from "@/lib/dashboard/overview-metrics";
+import Link from "next/link";
+import { roundCents, roundPartsToTotal } from "@/lib/dashboard/overview-metrics";
+import { useChartLink } from "@/components/dashboard/use-chart-link";
+import { expenseListHref, type PurseFilter } from "@/lib/invoices/expense-filters";
 
 /**
  * Type-first companion to the "two purses" summary.
@@ -96,6 +99,8 @@ interface ExpenseTypeBreakdownProps {
   personal: PurseBreakdown;
   /** Expenses in neither purse (no company- or personal-flagged method). */
   unassigned?: PurseBreakdown;
+  /** The expense list below: a type opens its tab, a segment adds its purse. */
+  listHref?: string | null;
 }
 
 interface TypeRow {
@@ -117,9 +122,11 @@ export function ExpenseTypeBreakdown({
   company,
   personal,
   unassigned = emptyBreakdown(),
+  listHref = null,
 }: ExpenseTypeBreakdownProps) {
   const t = useTranslations("invoices");
   const locale = useLocale();
+  const chartLink = useChartLink({ scroll: false });
 
   const rows: TypeRow[] = EXPENSE_TYPES.map((type) => {
     const c = company.types[type];
@@ -150,6 +157,10 @@ export function ExpenseTypeBreakdown({
   // that is what makes the rows comparable, and the axis what makes them legible.
   const scale = niceAxisMax(largest);
   const grandTotal = roundCents(rows.reduce((sum, r) => sum + r.total, 0));
+  // Whole-euro row figures that add up to the whole-euro total, rounded the
+  // way the Overview's type totals are (largest remainder).
+  const shownTotals = roundPartsToTotal(rows.map((r) => r.total));
+  const shownGrandTotal = shownTotals.reduce((sum, v) => sum + v, 0);
 
   /** Absolute amount → % of the shared scale. Over-refunded (negative)
    * categories collapse to 0 rather than rendering a backwards bar. */
@@ -210,13 +221,13 @@ export function ExpenseTypeBreakdown({
           <span />
         </div>
 
-        {rows.map((row) => {
+        {rows.map((row, rowIdx) => {
           const typeLabel = t(`types.${row.type}`);
           const sharePct = grandTotal > 0 ? Math.round((row.total / grandTotal) * 100) : 0;
           const segments = [
-            { key: "company", label: t("summary.companyPurse"), total: row.companyTotal, count: row.companyCount, color: COMPANY_COLOR },
-            { key: "personal", label: t("summary.personalPurse"), total: row.personalTotal, count: row.personalCount, color: PERSONAL_COLOR },
-            { key: "unassigned", label: t("summary.noPurse"), total: row.unassignedTotal, count: row.unassignedCount, color: UNASSIGNED_COLOR },
+            { key: "company", purse: "company" as PurseFilter, label: t("summary.companyPurse"), total: row.companyTotal, count: row.companyCount, color: COMPANY_COLOR },
+            { key: "personal", purse: "personal" as PurseFilter, label: t("summary.personalPurse"), total: row.personalTotal, count: row.personalCount, color: PERSONAL_COLOR },
+            { key: "unassigned", purse: "none" as PurseFilter, label: t("summary.noPurse"), total: row.unassignedTotal, count: row.unassignedCount, color: UNASSIGNED_COLOR },
           ].map((seg) => ({ ...seg, width: segmentWidth(seg.total) }));
           // Round the outer ends of the filled run only, so the bar reads as
           // one pill with straight seams inside it.
@@ -233,7 +244,18 @@ export function ExpenseTypeBreakdown({
               data-testid={`type-row-${row.type}`}
             >
               <span className="flex flex-col">
-                <span className="text-[13px] font-semibold leading-tight">{typeLabel}</span>
+                {listHref ? (
+                  <Link
+                    href={expenseListHref(listHref, { type: row.type })}
+                    scroll={false}
+                    className="text-[13px] font-semibold leading-tight hover:underline"
+                    data-testid={`type-link-${row.type}`}
+                  >
+                    {typeLabel}
+                  </Link>
+                ) : (
+                  <span className="text-[13px] font-semibold leading-tight">{typeLabel}</span>
+                )}
                 <span className="text-[11px] leading-tight" style={{ color: "var(--muted)" }}>
                   {t("invoiceCount", { n: row.count })}
                 </span>
@@ -257,22 +279,32 @@ export function ExpenseTypeBreakdown({
                 <span className="absolute inset-0 flex">
                   {segments
                     .filter((seg) => seg.key !== "unassigned" || seg.total !== 0 || seg.count > 0)
-                    .map((seg) => (
-                      <span
-                        key={seg.key}
-                        className="h-full"
-                        data-testid={`type-segment-${seg.key}-${row.type}`}
-                        data-tip={`${typeLabel} · ${seg.label}|${formatEURWhole(seg.total)}|${t(
-                          "invoiceCount",
-                          { n: seg.count }
-                        )}`}
-                        style={{
-                          width: `${seg.width}%`,
-                          background: seg.color,
-                          borderRadius: radiusOf(seg.key),
-                        }}
-                      />
-                    ))}
+                    .map((seg) => {
+                      const tip = `${typeLabel} · ${seg.label}|${formatEURWhole(seg.total)}|${t("invoiceCount", {
+                        n: seg.count,
+                      })}`;
+                      return (
+                        <span
+                          key={seg.key}
+                          className="h-full"
+                          data-testid={`type-segment-${seg.key}-${row.type}`}
+                          data-tip={tip}
+                          {...chartLink(
+                            listHref && seg.width > 0
+                              ? expenseListHref(listHref, { type: row.type, purse: seg.purse })
+                              : null,
+                            tip.split("|").join(" · ")
+                          )}
+                          style={{
+                            width: `${seg.width}%`,
+                            // A small part stays visible and tappable.
+                            minWidth: seg.width > 0 ? 6 : undefined,
+                            background: seg.color,
+                            borderRadius: radiusOf(seg.key),
+                          }}
+                        />
+                      );
+                    })}
                 </span>
               </span>
 
@@ -281,7 +313,7 @@ export function ExpenseTypeBreakdown({
                   className="num text-[15px] font-medium"
                   data-testid={`type-total-${row.type}`}
                 >
-                  {formatEURWhole(row.total)}
+                  {formatEURWhole(shownTotals[rowIdx])}
                 </span>
                 <span
                   className="num text-[11px]"
@@ -328,7 +360,7 @@ export function ExpenseTypeBreakdown({
         <span className="text-[11px]" style={{ color: "var(--muted)" }} data-testid="type-breakdown-total">
           {t("summary.sumOfTypes")}{" "}
           <span className="num text-[13px] font-medium" style={{ color: "var(--ink)" }}>
-            {formatEURWhole(grandTotal)}
+            {formatEURWhole(shownGrandTotal)}
           </span>
         </span>
       </div>

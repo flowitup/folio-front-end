@@ -206,7 +206,7 @@ describe("ProjectsPage money columns", () => {
       enMessages.projects.creditTotal,
       enMessages.projects.spentByCredits,
       enMessages.projects.spentPersonal,
-      enMessages.projects.remaining,
+      enMessages.projects.remainingToSpend,
     ]);
     expect(labels.map((el) => el.className.match(/(^|\s)(@lg:)?row-start-\d/g)?.join("").trim())).toEqual([
       "row-start-1",
@@ -233,6 +233,15 @@ describe("ProjectsPage money columns", () => {
       "row-start-1",
       "row-start-2",
     ]);
+  });
+  it("shows only the credit to someone who sees the budget but not the spend", () => {
+    // The API zeroes spend without labor or pay rights: a remaining figure or a
+    // share spent computed from those zeros would claim nothing was spent.
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:read", "project:view_budget"], companies: [] } });
+    renderPage();
+    expect(screen.getByText(enMessages.projects.creditTotal)).toBeInTheDocument();
+    expect(screen.queryByText(enMessages.projects.remainingToSpend)).toBeNull();
+    expect(screen.queryByText(enMessages.projects.progress)).toBeNull();
   });
 });
 

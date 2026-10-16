@@ -64,6 +64,13 @@ export function RefundSourceIndicator({
           data-testid="refund-source-bank"
         />
       )}
+      {/* Refunded by the bank alone: the status reads "refunded" but the
+          company still owes the person (two channels by design). */}
+      {refundable_status === "refunded" && refunded_by === "bank" && (
+        <span className="text-[11px] text-amber-700" data-testid="refund-source-company-owed">
+          {t("refundSource.bankOnlyCompanyOwed")}
+        </span>
+      )}
     </span>
   );
 }

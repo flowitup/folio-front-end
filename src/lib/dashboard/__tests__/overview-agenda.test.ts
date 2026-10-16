@@ -83,9 +83,27 @@ describe("groupAgendaTasks", () => {
     const todayGroup = groups.find((g) => g.key === "today")!;
     const thisWeekGroup = groups.find((g) => g.key === "thisWeek")!;
     expect(overdueGroup.tasks).toHaveLength(3);
-    expect(overdueGroup.tasks.map((t) => t.title)).toEqual(["o1", "o2", "o3"]);
+    // Same priority: the most recently due first; the rest are counted.
+    expect(overdueGroup.tasks.map((t) => t.title)).toEqual(["o5", "o4", "o3"]);
+    expect(overdueGroup.hidden).toBe(2);
     expect(todayGroup.tasks).toHaveLength(1);
     expect(thisWeekGroup.tasks).toHaveLength(1);
+  });
+
+  it("shows urgent and high overdue tasks before an older backlog", () => {
+    const groups = groupAgendaTasks(
+      [
+        mkTask({ title: "old1", due_date: "2026-07-01" }),
+        mkTask({ title: "old2", due_date: "2026-07-02" }),
+        mkTask({ title: "old3", due_date: "2026-07-03" }),
+        mkTask({ title: "high", due_date: "2026-08-03", priority: "high" }),
+        mkTask({ title: "urgent", due_date: "2026-08-02", priority: "urgent" }),
+      ],
+      REFERENCE
+    );
+    const overdue = groups.find((g) => g.key === "overdue")!;
+    expect(overdue.tasks.map((t) => t.title)).toEqual(["urgent", "high", "old3"]);
+    expect(overdue.hidden).toBe(2);
   });
 
   it("sorts within a group by due date ascending", () => {

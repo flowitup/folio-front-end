@@ -63,7 +63,7 @@ export function ArticleFormDialog({
   // A text field, not type="number": Chrome reads a number field in the OS
   // language, so in an English browser "2,5" became 25 without a word. Here
   // "," and "." both work (3 decimals, as stored) and anything else is refused.
-  const qtyNum = parseMoneyInput(qty, { maxDecimals: 3 });
+  const qtyNum = parseMoneyInput(qty, { maxDecimals: 3, ambiguousGrouping: "decimal" });
   const qtyTooLarge = qtyNum !== null && qtyNum > MAX_ARTICLE_QUANTITY;
   const qtyInvalid = qty.trim() !== "" && qtyNum === null && qtyTouched;
   const qtyValid = qtyNum !== null && !qtyTooLarge;

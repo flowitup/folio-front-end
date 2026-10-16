@@ -384,7 +384,7 @@ export function LaborSummary({
           <div className="label-cap">{t("supplement.bonusCost")}</div>
           <div
             className="font-display num mt-2 text-[22px] font-medium leading-none lg:text-[28px]"
-            style={{ color: "var(--accent)" }}
+            style={{ color: "var(--accent-ink)" }}
           >
             {formatEUR(totalBonusCost)}
           </div>

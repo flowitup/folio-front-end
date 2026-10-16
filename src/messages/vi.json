@@ -115,10 +115,12 @@
     "loadError": "Không thể tải dữ liệu tổng quan",
     "money": {
       "spentThisMonth": "Đã chi tháng này",
-      "pctSpent": "{pct} đã chi · {spent} (công ty + cá nhân)",
+      "pctSpent": "{pct} đã chi · {spent} (mọi khoản chi)",
       "purseSpent": "đã chi",
-      "pctCreditDrawn": "Đã chi {pct} tín dụng · {spent} (công ty + cá nhân)",
-      "unassigned": "{n} khoản chi · {amount} không có phương thức thanh toán công ty hoặc cá nhân — không thuộc ví nào"
+      "pctCreditDrawn": "Đã chi {pct} tín dụng · {spent} (mọi khoản chi)",
+      "unassigned": "{n} khoản chi · {amount} không có phương thức thanh toán công ty hoặc cá nhân — không thuộc quỹ nào ›",
+      "vsMonthToDate": "{delta} so với 1–{day} {month}",
+      "openExpenses": "Xem chi phí: {what}"
     },
     "spendByType": {
       "title": "Chi tiêu hàng tháng theo loại",
@@ -132,6 +134,7 @@
       "title": "Tuần này",
       "viewAll": "Lịch trình",
       "overdue": "Quá hạn",
+      "more": "+{n} việc khác ›",
       "today": "Hôm nay",
       "thisWeek": "Tuần này",
       "empty": "Không có việc gì trong tuần này."
@@ -191,10 +194,11 @@
       "clear": "Xóa tìm kiếm"
     },
     "projectStamp": "Dự án",
-    "progress": "Tiến độ",
+    "progress": "Đã dùng tín dụng",
     "creditTotal": "Tổng tín dụng",
     "spentByCredits": "Chi từ tín dụng",
     "spentPersonal": "Chi cá nhân",
+    "spentUnassigned": "{amount} chi không thuộc quỹ nào (không có phương thức thanh toán công ty hay cá nhân) ›",
     "breakdownTitle": "Tiền cá nhân đã chi vào đâu",
     "laborPaid": "Nhân công — đã trả",
     "laborUnpaid": "Nhân công — chưa trả",
@@ -213,6 +217,7 @@
     "budgetSourceLabelOptional": "Nguồn tài trợ (tùy chọn)",
     "budgetSourcePlaceholder": "vd. Vay ngân hàng BNP",
     "budgetInvalid": "Nhập tổng tín dụng dưới dạng số tiền, ví dụ 12500 hoặc 12.500,00",
+    "budgetTooLarge": "Tổng tín dụng không được vượt quá {max}.",
     "bankRelease": {
       "title": "Giải ngân tín dụng ngân hàng",
       "overDrawn": "Vượt quá",
@@ -401,14 +406,18 @@
   },
   "paymentMethods": {
     "title": "Phương thức thanh toán",
-    "description": "Quản lý cách hóa đơn được thanh toán cho công ty này. Phương thức mặc định không thể xóa nhưng có thể đổi tên.",
+    "description": "Quản lý phương thức thanh toán chi phí của công ty này và quỹ mà mỗi phương thức được tính vào. Phương thức mặc định không thể xóa nhưng có thể đổi tên.",
     "addPlaceholder": "ví dụ Wise, Stripe…",
     "addButton": "Thêm",
+    "purseLabel": "Quỹ",
+    "purseCompany": "Quỹ công ty",
+    "pursePersonal": "Quỹ cá nhân",
+    "purseNone": "Không quỹ nào",
     "builtin": "Mặc định",
     "noMethods": "Chưa có phương thức thanh toán. Thêm một phương thức ở trên.",
-    "usedInInvoices": "{count, plural, one {# hóa đơn} other {# hóa đơn}}",
+    "usedInInvoices": "{count, plural, other {# chi phí}}",
     "deleteConfirmTitle": "Xóa phương thức thanh toán này?",
-    "deleteConfirmBody": "Các hóa đơn hiện tại vẫn giữ nhãn đã chụp. Hóa đơn mới sẽ không thể chọn phương thức này.",
+    "deleteConfirmBody": "Các chi phí hiện có vẫn giữ nhãn. Chi phí mới sẽ không thể chọn phương thức này.",
     "deleteConfirmCta": "Xóa",
     "cancel": "Hủy",
     "cancelEditAria": "Hủy chỉnh sửa",
@@ -432,6 +441,7 @@
     "toasts": {
       "created": "Đã thêm phương thức thanh toán",
       "renamed": "Đã đổi tên phương thức thanh toán",
+      "updated": "Đã cập nhật phương thức thanh toán",
       "deleted": "Đã xóa phương thức thanh toán"
     },
     "builtins": {
@@ -586,7 +596,7 @@
       "generating": "Đang tạo…",
       "downloaded": "Đã tải xuống bản xuất",
       "summaryLine": "Đã chọn {count} tháng",
-      "errorRangeInvalid": "\"Từ\" phải trước hoặc bằng \"Đến\"",
+      "errorRangeInvalid": "Tháng bắt đầu phải trước hoặc trùng tháng kết thúc",
       "errorRangeTooLarge": "Khoảng thời gian không vượt quá 24 tháng",
       "errorGeneric": "Không thể xuất chi phí",
       "errorForbidden": "Bạn không có quyền xuất chi phí của dự án này.",
@@ -597,6 +607,11 @@
       "placeholder": "Chọn phương thức thanh toán…",
       "none": "—",
       "addInline": "+ Thêm \"{name}\"",
+      "addInlinePersonal": "+ Thêm \"{name}\" · quỹ cá nhân",
+      "addInlineCompany": "+ Thêm \"{name}\" · quỹ công ty",
+      "badgeCompany": "Công ty",
+      "badgePersonal": "Cá nhân",
+      "badgeNone": "Không quỹ nào",
       "failedToLoad": "Không thể tải phương thức thanh toán",
       "failedToLoadRetry": "Tải thất bại. Thử đóng và mở lại.",
       "noMethodsFound": "Không tìm thấy phương thức nào.",
@@ -651,7 +666,8 @@
     "refundSource": {
       "company": "Được hoàn bởi công ty",
       "bank": "Được hoàn bởi ngân hàng",
-      "both": "Được hoàn bởi công ty và ngân hàng"
+      "both": "Được hoàn bởi công ty và ngân hàng",
+      "bankOnlyCompanyOwed": "Ngân hàng ✓ · công ty: còn nợ"
     },
     "releaseAttribution": {
       "label": "Phân bổ giải ngân",
@@ -670,11 +686,16 @@
       "credit": "Ghi có",
       "refundsReceived": "{n, plural, other {Đã nhận # khoản trả hàng}}",
       "returnsReceived": "Đã nhận trả hàng ({n})",
+      "returnsIncluded": "gồm {n} khoản trả hàng đã nhận (đã trừ)",
+      "upcoming": "sắp tới",
+      "upcomingTip": "Ngày trong tương lai · chưa tính vào « tháng này »",
+      "unfunded": "chưa được cấp vốn",
       "outstandingAvoirs": "{n, plural, other {# avoir chưa áp dụng}}",
       "pendingRefunds": "Hoàn tiền đang chờ",
       "refundableByCompany": "Chờ hoàn · công ty",
       "refundableByBank": "Chờ hoàn · ngân hàng",
       "vsMonth": "{delta} so với {month}",
+      "vsMonthToDate": "{delta} so với 1–{day} {month}",
       "byType": "Chi phí theo loại",
       "netOfReturns": "đã trừ hoàn trả",
       "paidByCompany": "công ty",
@@ -682,7 +703,7 @@
       "sumOfTypes": "Tổng",
       "sharedScaleTo": "thang chung đến {amount}",
       "cash": "Tiền mặt",
-      "cashAdvance": "đã trừ {amount} tiền mặt ứng trước",
+      "cashAdvance": "trong đó {amount} tiền mặt ứng trước",
       "noPurse": "Không thuộc quỹ nào",
       "noPurseSpend": "{n} khoản chi không thuộc quỹ nào (không có phương thức thanh toán của công ty hoặc cá nhân) · {amount}"
     },
@@ -694,12 +715,15 @@
     },
     "cashAdvance": {
       "label": "Tạm ứng tiền mặt của công ty",
-      "hint": "Tiền công ty giao (vd. tiền mặt để trả nhân công). Không tính vào vốn giải ngân — hiển thị là đã chi trong túi tiền công ty. Ghi các khoản trả bằng tiền này theo phương thức tiền mặt của bạn, không dùng phương thức công ty, để tránh tính hai lần.",
-      "badge": "Tạm ứng"
+      "hint": "Tiền công ty giao (vd. tiền mặt để trả nhân công). Không tính vào vốn giải ngân — hiển thị là đã chi trong quỹ công ty. Ghi các khoản trả bằng tiền này theo phương thức tiền mặt của bạn, không dùng phương thức công ty, để tránh tính hai lần.",
+      "badge": "Tạm ứng",
+      "badgeOutsideTotal": "Tiền mặt ứng trước · ngoài tổng"
     },
     "print": {
       "heading": "Hóa đơn",
-      "loading": "Đang tải…"
+      "loading": "Đang tải…",
+      "loadError": "Không tải được chi phí: có thể đã bị xóa hoặc bạn không có quyền xem.",
+      "back": "Quay lại chi phí"
     },
     "loadFailed": "Không tải được hóa đơn.",
     "loadListFailed": "Không tải được danh sách chi phí.",
@@ -715,6 +739,30 @@
     "errorUnitPriceNegative": "Đơn giá không được âm đối với loại chi phí này",
     "errorVatRateInvalid": "VAT phải là một số từ 0 đến 100, tối đa {decimals} chữ số thập phân",
     "errorDateOutOfRange": "Vui lòng nhập ngày trong khoảng từ năm {min} đến năm {max}",
+    "errorAmountAmbiguous": "“{typed}” không rõ nghĩa: nhập {grouped} nếu là hàng nghìn, hoặc {decimal} nếu là số thập phân",
+    "errorLineTotalTooLarge": "Số tiền của dòng không được vượt quá {max}",
+    "errorTotalTooLarge": "Tổng chi phí không được vượt quá {max}",
+    "errorTextTooLong": "Văn bản quá dài: tối đa 255 ký tự cho người nhận, 500 cho mô tả, 2.000 cho địa chỉ và 20.000 cho ghi chú.",
+    "errorUnlinkAvoirsBeforeDelete": "Chi phí này đang được áp dụng avoir. Hãy gỡ liên kết các avoir trước khi xóa.",
+    "errorForbiddenSave": "Bạn không có quyền thêm hoặc sửa chi phí trong dự án này.",
+    "errorSaveFailed": "Không lưu được chi phí. Vui lòng thử lại.",
+    "errorFixFields": "Có {count} trường cần sửa bên dưới.",
+    "createForbidden": "Bạn không có quyền thêm chi phí vào dự án này.",
+    "invoiceNotFound": "Chi phí này không còn tồn tại hoặc không thuộc dự án này.",
+    "restricted": {
+      "banner": "Chi phí của công trình chỉ người quản lý xem được. Ở đây bạn thấy các khoản thanh toán của chính mình.",
+      "empty": "Chưa có khoản thanh toán nào đứng tên bạn."
+    },
+    "filters": {
+      "label": "Đang lọc:",
+      "clear": "Hiện tất cả",
+      "empty": "Không có chi phí nào khớp với bộ lọc này.",
+      "purse": {
+        "company": "Quỹ công ty",
+        "personal": "Quỹ cá nhân",
+        "none": "Không thuộc quỹ nào"
+      }
+    },
     "bankRefundLine": "Ngân hàng hoàn tiền — {number}",
     "deleteExpense": "Xóa chi phí {number}",
     "removeLine": "Xóa dòng",
@@ -1743,7 +1791,13 @@
       "generic": "Đã xảy ra lỗi không mong đợi."
     },
     "refundable": {
-      "title": "Hóa đơn hoàn tiền",
+      "title": "Chi phí được hoàn",
+      "drill": {
+        "company": "Công ty còn nợ",
+        "bank": "Ngân hàng còn nợ",
+        "project": "Một dự án",
+        "clear": "Hiện tất cả"
+      },
       "addButton": "Thêm chi phí hoàn tiền",
       "empty": "Chưa có chi phí hoàn tiền nào.",
       "loading": "Đang tải...",
@@ -1792,7 +1846,10 @@
         "refundedTotal": "Tổng đã hoàn",
         "refundedByCompany": "Công ty đã hoàn",
         "refundedByBank": "Ngân hàng đã hoàn",
-        "refundable": "Chờ hoàn tiền",
+        "refundable": "Chờ hoàn · công ty",
+        "bankOutstanding": "Chờ hoàn · ngân hàng",
+        "refundableHint": "Số công ty còn nợ, kể cả khoản chi chỉ mới được ngân hàng hoàn. Nhấn để lọc.",
+        "bankOutstandingHint": "Số ngân hàng chưa hoàn. Một khoản chi có thể được cả hai nợ: đừng cộng lại. Nhấn để lọc.",
         "companyShare": "{percent}% công ty",
         "bothShare": "{percent}% cả hai",
         "bankShare": "{percent}% ngân hàng"

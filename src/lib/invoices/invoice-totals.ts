@@ -106,9 +106,10 @@ export function invoiceTotalTtc(lines: InvoiceVatLineLike[]): number {
   return Number(cents) / 100;
 }
 
-/** A quantity in the app's language ("1,5" in French), up to 3 decimals. */
+/** A quantity in the app's language ("1,5" in French), up to 4 decimals. */
 export function formatQuantity(quantity: number, locale: string): string {
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: 3 }).format(quantity);
+  // 4 decimals, as the form and the API keep them (1,2345; 0,0005).
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 4 }).format(quantity);
 }
 
 /** A VAT rate in the app's language ("5,5 %" in French). */

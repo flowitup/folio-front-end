@@ -16,13 +16,16 @@
   --paper-2: #efe9de;
   --ink: #1a1a1a;
   --ink-2: #2c2a26;
-  --muted: #8a8479;
-  --muted-2: #b8b1a4;
+  /* Text tokens meet WCAG AA: --muted 4.9:1 on paper (was #8a8479, 3.3:1),
+     --muted-2 3.3:1 for chart ticks and secondary glyphs (was #b8b1a4, 1.9:1). */
+  --muted: #6b665d;
+  --muted-2: #8a8479;
   --line: #e3dccd;
   --line-2: #d6cdbb;
   --card-paper: #ffffff;
   --accent: #e8843c;
-  --accent-ink: #b96523;
+  /* Accent as text: 4.6:1 on paper (the fill #e8843c is 2.4:1, decoration only). */
+  --accent-ink: #a35a1f;
   --accent-tint: #fbe7d4;
   --positive: #5a7a4a;
   --positive-tint: #e6ecdc;
@@ -273,7 +276,8 @@ body {
 
   .btn-accent {
     background: var(--accent);
-    color: white;
+    /* Ink on the accent fill: 6.5:1 (white was 2.7:1). */
+    color: var(--ink);
   }
   .btn-accent:hover {
     background: var(--accent-ink);
@@ -731,7 +735,7 @@ body {
 .quickadd.focused { border-color: var(--line-2); box-shadow: var(--shadow-task); }
 .quickadd-top { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
 .quickadd-plus {
-  width: 30px; height: 30px; border-radius: 9px; background: var(--accent); color: #fff;
+  width: 30px; height: 30px; border-radius: 9px; background: var(--accent); color: var(--ink);
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
   transition: transform var(--transition-fast), background var(--transition-fast);
 }
@@ -940,3 +944,10 @@ body {
   margin: 0 0 6px; color: var(--ink);
 }
 .empty-state p { font-size: 13.5px; color: var(--muted); margin: 0; }
+
+/* ─── Clickable chart marks (useChartLink) ─── */
+[role="link"][data-href] { cursor: pointer; }
+[role="link"][data-href]:focus { outline: none; }
+[role="link"][data-href]:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+rect[role="link"][data-href]:hover,
+rect[role="link"][data-href]:focus-visible { fill: rgba(26, 26, 26, 0.06); }

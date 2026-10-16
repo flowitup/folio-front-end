@@ -30,7 +30,8 @@ vi.mock("next-intl", () => ({
       "label": "Payment method",
       "placeholder": "Select a payment method…",
       "none": "—",
-      "addInline": `+ Add "{name}"`,
+      "addInlinePersonal": `+ Add "{name}" · personal purse`,
+      "addInlineCompany": `+ Add "{name}" · company purse`,
       "failedToLoad": "Failed to load payment methods",
       "failedToLoadRetry": "Failed to load. Try reopening.",
       "noMethodsFound": "No methods found.",
@@ -344,8 +345,8 @@ describe("PaymentMethodSelect — inline create (+ Add affordance)", () => {
       fireEvent.change(searchInput, { target: { value: "Wise" } });
 
       await waitFor(() => {
-        // addInline key with name="Wise" → '+ Add "Wise"'
-        expect(screen.getByText(/Add "Wise"/i)).toBeDefined();
+        // addInlinePersonal key with name="Wise" → '+ Add "Wise" · personal purse'
+        expect(screen.getByText(/Add "Wise" · personal/i)).toBeDefined();
       });
     },
     15000
@@ -402,15 +403,15 @@ describe("PaymentMethodSelect — inline create (+ Add affordance)", () => {
       fireEvent.change(searchInput, { target: { value: "Wise" } });
 
       await waitFor(() => {
-        expect(screen.getByText(/Add "Wise"/i)).toBeDefined();
+        expect(screen.getByText(/Add "Wise" · personal/i)).toBeDefined();
       });
 
       await act(async () => {
-        fireEvent.click(screen.getByText(/Add "Wise"/i));
+        fireEvent.click(screen.getByText(/Add "Wise" · personal/i));
       });
 
       await waitFor(() => {
-        expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "Wise");
+        expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "Wise", "personal");
         // Should auto-select the newly created method
         expect(onChange).toHaveBeenCalledWith(newMethod.id);
         expect(mockToast.success).toHaveBeenCalled();
@@ -439,11 +440,11 @@ describe("PaymentMethodSelect — inline create (+ Add affordance)", () => {
       fireEvent.change(searchInput, { target: { value: "NewMethod" } });
 
       await waitFor(() => {
-        expect(screen.getByText(/Add "NewMethod"/i)).toBeDefined();
+        expect(screen.getByText(/Add "NewMethod" · personal/i)).toBeDefined();
       });
 
       await act(async () => {
-        fireEvent.click(screen.getByText(/Add "NewMethod"/i));
+        fireEvent.click(screen.getByText(/Add "NewMethod" · personal/i));
       });
 
       await waitFor(() => {
@@ -470,11 +471,11 @@ describe("PaymentMethodSelect — inline create (+ Add affordance)", () => {
       fireEvent.change(searchInput, { target: { value: "Stripe" } });
 
       await waitFor(() => {
-        expect(screen.getByText(/Add "Stripe"/i)).toBeDefined();
+        expect(screen.getByText(/Add "Stripe" · personal/i)).toBeDefined();
       });
 
       await act(async () => {
-        fireEvent.click(screen.getByText(/Add "Stripe"/i));
+        fireEvent.click(screen.getByText(/Add "Stripe" · personal/i));
       });
 
       await waitFor(() => {
@@ -518,7 +519,7 @@ describe("PaymentMethodSelect — inline create gating and errors", () => {
       fireEvent.change(screen.getByPlaceholderText(/Select a payment method/i), {
         target: { value: "NewMethod" },
       });
-      expect(screen.queryByText(/Add "NewMethod"/i)).toBeNull();
+      expect(screen.queryByText(/Add "NewMethod" · personal/i)).toBeNull();
     },
     15000
   );
@@ -538,9 +539,40 @@ describe("PaymentMethodSelect — inline create gating and errors", () => {
         target: { value: "NewMethod" },
       });
       await act(async () => {
-        fireEvent.click(await screen.findByText(/Add "NewMethod"/i));
+        fireEvent.click(await screen.findByText(/Add "NewMethod" · personal/i));
       });
       await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith("createForbidden"));
+    },
+    15000
+  );
+});
+
+describe("PaymentMethodSelect — purses", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it(
+    "shows each method's purse and creates a method in the company purse when asked",
+    async () => {
+      mockList.mockResolvedValueOnce({
+        ok: true,
+        data: [
+          { ...CASH, isPersonalPayment: true, isCompanyPayment: false },
+          { ...BANK_TRANSFER, isCompanyPayment: true, isPersonalPayment: false },
+        ],
+      });
+      mockCreate.mockResolvedValueOnce({ ok: true, data: METHODS });
+      renderSelect();
+      await openPopover();
+      await waitFor(() => expect(screen.getByText("badgePersonal")).toBeDefined());
+      expect(screen.getByText("badgeCompany")).toBeDefined();
+
+      fireEvent.change(screen.getByPlaceholderText(/Select a payment method/i), {
+        target: { value: "Carte Hélène" },
+      });
+      await act(async () => {
+        fireEvent.click(await screen.findByText(/Add "Carte Hélène" · company purse/i));
+      });
+      await waitFor(() => expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "Carte Hélène", "company"));
     },
     15000
   );

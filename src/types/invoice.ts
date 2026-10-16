@@ -286,4 +286,6 @@ export interface RefundableSummary {
   refunded_by_bank: number;
   /** Overlap: expenses refunded by both sides (already included in each figure above). */
   refunded_by_both: number;
+  /** What the bank channel still owes (the dashboard's "remboursable · banque"). Older APIs omit it. */
+  bank_outstanding?: number;
 }

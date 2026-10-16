@@ -115,10 +115,12 @@
     "loadError": "Failed to load overview data",
     "money": {
       "spentThisMonth": "Spent this month",
-      "pctSpent": "{pct} spent · {spent} (company + personal)",
+      "pctSpent": "{pct} spent · {spent} (all expenses)",
       "purseSpent": "spent",
-      "pctCreditDrawn": "{pct} of credit spent · {spent} (company + personal)",
-      "unassigned": "{n, plural, =1 {1 expense} other {# expenses}} · {amount} paid with no company or personal payment method — in neither purse"
+      "pctCreditDrawn": "{pct} of credit spent · {spent} (all expenses)",
+      "unassigned": "{n, plural, =1 {1 expense} other {# expenses}} · {amount} paid with no company or personal payment method — in neither purse ›",
+      "vsMonthToDate": "{delta} vs {month} 1–{day}",
+      "openExpenses": "Show expenses: {what}"
     },
     "spendByType": {
       "title": "Monthly spend by type",
@@ -132,6 +134,7 @@
       "title": "This week",
       "viewAll": "Agenda",
       "overdue": "Overdue",
+      "more": "+{n} more ›",
       "today": "Today",
       "thisWeek": "This week",
       "empty": "Nothing on the agenda this week."
@@ -191,10 +194,11 @@
       "clear": "Clear search"
     },
     "projectStamp": "Project",
-    "progress": "Progress",
+    "progress": "Credit used",
     "creditTotal": "Credit total",
     "spentByCredits": "Spent by credit",
     "spentPersonal": "Spent personal",
+    "spentUnassigned": "{amount} paid in no purse (no company or personal payment method) ›",
     "breakdownTitle": "Where personal money went",
     "laborPaid": "Labor — paid",
     "laborUnpaid": "Labor — unpaid",
@@ -213,6 +217,7 @@
     "budgetSourceLabelOptional": "Funding source (optional)",
     "budgetSourcePlaceholder": "e.g. Bank loan BNP",
     "budgetInvalid": "Enter the credit total as an amount, e.g. 12500 or 12,500.00",
+    "budgetTooLarge": "The total credit cannot exceed {max}.",
     "bankRelease": {
       "title": "Bank credit release",
       "overDrawn": "Over-drawn by",
@@ -401,14 +406,18 @@
   },
   "paymentMethods": {
     "title": "Payment methods",
-    "description": "Manage how invoices can be paid for this company. Built-in methods cannot be removed but can be renamed.",
+    "description": "Manage the payment methods of this company's expenses and the purse each one counts in. Built-in methods cannot be removed but can be renamed.",
     "addPlaceholder": "e.g. Wise, Stripe, …",
     "addButton": "Add",
+    "purseLabel": "Purse",
+    "purseCompany": "Company purse",
+    "pursePersonal": "Personal purse",
+    "purseNone": "No purse",
     "builtin": "Built-in",
     "noMethods": "No payment methods yet. Add one above.",
-    "usedInInvoices": "{count, plural, one {# invoice} other {# invoices}}",
+    "usedInInvoices": "{count, plural, one {# expense} other {# expenses}}",
     "deleteConfirmTitle": "Remove this payment method?",
-    "deleteConfirmBody": "Existing invoices keep their snapshot label. New invoices won't be able to select it.",
+    "deleteConfirmBody": "Existing expenses keep their label. New expenses won't be able to select it.",
     "deleteConfirmCta": "Remove",
     "cancel": "Cancel",
     "cancelEditAria": "Cancel edit",
@@ -432,6 +441,7 @@
     "toasts": {
       "created": "Payment method added",
       "renamed": "Payment method renamed",
+      "updated": "Payment method updated",
       "deleted": "Payment method removed"
     },
     "builtins": {
@@ -586,7 +596,7 @@
       "generating": "Generating…",
       "downloaded": "Export downloaded",
       "summaryLine": "{count, plural, =1 {1 month selected} other {# months selected}}",
-      "errorRangeInvalid": "\"From\" must be before or equal to \"To\"",
+      "errorRangeInvalid": "The start month must be on or before the end month",
       "errorRangeTooLarge": "Range cannot exceed 24 months",
       "errorGeneric": "Failed to export expenses",
       "errorForbidden": "You don't have permission to export this project's expenses.",
@@ -597,6 +607,11 @@
       "placeholder": "Select a payment method…",
       "none": "—",
       "addInline": "+ Add \"{name}\"",
+      "addInlinePersonal": "+ Add \"{name}\" · personal purse",
+      "addInlineCompany": "+ Add \"{name}\" · company purse",
+      "badgeCompany": "Company",
+      "badgePersonal": "Personal",
+      "badgeNone": "No purse",
       "failedToLoad": "Failed to load payment methods",
       "failedToLoadRetry": "Failed to load. Try reopening.",
       "noMethodsFound": "No methods found.",
@@ -651,7 +666,8 @@
     "refundSource": {
       "company": "Refunded by company",
       "bank": "Refunded by bank",
-      "both": "Refunded by company and bank"
+      "both": "Refunded by company and bank",
+      "bankOnlyCompanyOwed": "Bank ✓ · company: still owed"
     },
     "releaseAttribution": {
       "label": "Release attribution",
@@ -670,11 +686,16 @@
       "credit": "Credit",
       "refundsReceived": "{n, plural, =1 {1 return received} other {# returns received}}",
       "returnsReceived": "Returns received ({n})",
+      "returnsIncluded": "incl. {n, plural, one {# return received} other {# returns received}} (already deducted)",
+      "upcoming": "upcoming",
+      "upcomingTip": "Future date · not part of \"this month\" yet",
+      "unfunded": "not funded",
       "outstandingAvoirs": "{n, plural, =1 {1 outstanding avoir} other {# outstanding avoirs}}",
       "pendingRefunds": "Pending refunds",
       "refundableByCompany": "Refundable · company",
       "refundableByBank": "Refundable · bank",
       "vsMonth": "{delta} vs {month}",
+      "vsMonthToDate": "{delta} vs {month} 1–{day}",
       "byType": "Expenses by type",
       "netOfReturns": "net of returns",
       "paidByCompany": "company",
@@ -682,7 +703,7 @@
       "sumOfTypes": "Total",
       "sharedScaleTo": "shared scale to {amount}",
       "cash": "Cash",
-      "cashAdvance": "after {amount} cash advance deducted",
+      "cashAdvance": "including {amount} cash advance",
       "noPurse": "No purse",
       "noPurseSpend": "{n, plural, one {# expense} other {# expenses}} in neither purse (no company or personal payment method) · {amount}"
     },
@@ -695,11 +716,14 @@
     "cashAdvance": {
       "label": "Company cash advance",
       "hint": "Money the company handed over (e.g. cash to pay labor). Not counted as released funds — shown in the company purse as spent. Record what you pay with this cash under your own cash method, not a company method, so it is not counted twice.",
-      "badge": "Cash advance"
+      "badge": "Cash advance",
+      "badgeOutsideTotal": "Cash advance · not in total"
     },
     "print": {
       "heading": "Invoice",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "loadError": "This expense could not be loaded: it may have been deleted, or you may not have access to it.",
+      "back": "Back to expenses"
     },
     "loadFailed": "Failed to load invoice.",
     "loadListFailed": "Failed to load invoices.",
@@ -715,6 +739,30 @@
     "errorUnitPriceNegative": "Unit price cannot be negative for this type of expense",
     "errorVatRateInvalid": "VAT must be a number from 0 to 100 with at most {decimals} decimals",
     "errorDateOutOfRange": "Enter a date between {min} and {max}",
+    "errorAmountAmbiguous": "“{typed}” is ambiguous: type {grouped} for thousands, or {decimal} for a decimal",
+    "errorLineTotalTooLarge": "The line amount cannot exceed {max}",
+    "errorTotalTooLarge": "The expense total cannot exceed {max}",
+    "errorTextTooLong": "A text is too long: at most 255 characters for the recipient, 500 for a description, 2,000 for the address and 20,000 for the notes.",
+    "errorUnlinkAvoirsBeforeDelete": "Avoirs are applied to this expense. Unlink them before deleting it.",
+    "errorForbiddenSave": "You don’t have permission to add or edit expenses on this project.",
+    "errorSaveFailed": "The expense could not be saved. Please try again.",
+    "errorFixFields": "{count, plural, one {One field needs fixing} other {# fields need fixing}} below.",
+    "createForbidden": "You don’t have permission to add expenses to this project.",
+    "invoiceNotFound": "This expense no longer exists or is not part of this project.",
+    "restricted": {
+      "banner": "The project's expenses are visible to its managers. Here you see your own payments.",
+      "empty": "No payments in your name yet."
+    },
+    "filters": {
+      "label": "Filtered:",
+      "clear": "Show all",
+      "empty": "No expense matches this filter.",
+      "purse": {
+        "company": "Company purse",
+        "personal": "Personal purse",
+        "none": "No purse"
+      }
+    },
     "bankRefundLine": "Bank refund — {number}",
     "deleteExpense": "Delete expense {number}",
     "removeLine": "Remove line",
@@ -1743,7 +1791,13 @@
       "generic": "An unexpected error occurred."
     },
     "refundable": {
-      "title": "Refundable Invoices",
+      "title": "Refundable expenses",
+      "drill": {
+        "company": "Owed by the company",
+        "bank": "Owed by the bank",
+        "project": "One project",
+        "clear": "Show all"
+      },
       "addButton": "Add refundable expense",
       "empty": "No refundable expenses yet.",
       "loading": "Loading...",
@@ -1792,7 +1846,10 @@
         "refundedTotal": "Total refunded",
         "refundedByCompany": "Refunded by company",
         "refundedByBank": "Refunded by bank",
-        "refundable": "Refundable",
+        "refundable": "Refundable · company",
+        "bankOutstanding": "Refundable · bank",
+        "refundableHint": "What the company still owes, including an expense the bank alone has refunded. Click to filter.",
+        "bankOutstandingHint": "What the bank has not refunded yet. An expense can be owed by both: do not add them up. Click to filter.",
         "companyShare": "{percent}% company",
         "bothShare": "{percent}% both",
         "bankShare": "{percent}% bank"

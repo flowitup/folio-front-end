@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Landmark, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,8 @@ import { toast } from "sonner";
 import { formatEUR } from "@/lib/utils/formatters";
 import { updateBankCredit } from "./actions";
 import type { Project } from "@/types/project";
-import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { MAX_BUDGET } from "@/lib/numeric-bounds";
 import { useOptionalProject } from "@/context/ProjectContext";
 
 /**
@@ -25,6 +26,8 @@ import { useOptionalProject } from "@/context/ProjectContext";
  */
 interface Props {
   project: Project;
+  /** project:update — without it the card shows the figures only. */
+  canEdit?: boolean;
 }
 
 // Amount input accepts digits, digit-grouping spaces/dots/commas and an
@@ -32,11 +35,12 @@ interface Props {
 // server action re-parses it the same way before sending.
 const AMOUNT_RE = /^[\d\s\u00a0\u202f.,]*$/;
 
-export function BankCreditCard({ project }: Props) {
+export function BankCreditCard({ project, canEdit = true }: Props) {
   const t = useTranslations("projects");
-  const [amount, setAmount] = useState(
-    project.budget != null ? String(project.budget) : ""
-  );
+  const locale = useLocale();
+  // In the viewer's notation ("12500,50" in French), never "12500.5".
+  const initialAmount = formatMoneyInput(project.budget, locale, { minDecimals: 2, maxDecimals: 2 });
+  const [amount, setAmount] = useState(initialAmount);
   const [source, setSource] = useState(project.budget_source ?? "");
   const [saving, setSaving] = useState(false);
   const router = useRouter();
@@ -45,12 +49,15 @@ export function BankCreditCard({ project }: Props) {
   const refetchProjects = useOptionalProject()?.refetch;
   // The values the server holds now (the props only reflect page load).
   const [saved, setSaved] = useState({
-    amount: project.budget != null ? String(project.budget) : "",
+    amount: initialAmount,
     source: project.budget_source ?? "",
   });
 
-  const isDirty = amount !== saved.amount || source !== saved.source;
   const parsed = parseMoneyInput(amount);
+  // Dirty on the value, not the text: "12500,5" and "12500,50" are the same credit.
+  const amountChanged = amount.trim() === "" ? saved.amount.trim() !== "" : parsed !== parseMoneyInput(saved.amount);
+  const isDirty = amountChanged || source !== saved.source;
+  const tooLarge = parsed != null && Math.abs(parsed) > MAX_BUDGET;
   // Cents shown: the preview confirms what was typed, "50 000,5" included.
   const preview = parsed != null ? formatEUR(parsed) : null;
 
@@ -59,6 +66,10 @@ export function BankCreditCard({ project }: Props) {
   };
 
   const handleSave = async () => {
+    if (tooLarge) {
+      toast.error(t("budgetTooLarge", { max: formatEUR(MAX_BUDGET) }));
+      return;
+    }
     setSaving(true);
     try {
       const result = await updateBankCredit(project.id, amount, source);
@@ -69,6 +80,8 @@ export function BankCreditCard({ project }: Props) {
         toast.success(t("settingsSaved"));
       } else if (result.error === "validation") {
         toast.error(t("budgetInvalid"));
+      } else if (result.error === "forbidden") {
+        toast.error(t("settingsForbidden"));
       } else {
         toast.error(t("settingsSaveError"));
       }
@@ -102,12 +115,19 @@ export function BankCreditCard({ project }: Props) {
               value={amount}
               onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="0"
+              readOnly={!canEdit}
+              disabled={!canEdit}
+              aria-invalid={tooLarge || undefined}
             />
-            {preview && (
+            {tooLarge ? (
+              <p className="mt-1.5 text-[12px] text-destructive" data-testid="bank-credit-too-large">
+                {t("budgetTooLarge", { max: formatEUR(MAX_BUDGET) })}
+              </p>
+            ) : preview ? (
               <p className="num mt-1.5 text-[12px]" style={{ color: "var(--muted)" }}>
                 {preview}
               </p>
-            )}
+            ) : null}
           </div>
           <div>
             <Label htmlFor="bank-credit-source" className="label-cap">
@@ -120,6 +140,8 @@ export function BankCreditCard({ project }: Props) {
               onChange={(e) => setSource(e.target.value)}
               placeholder={t("budgetSourcePlaceholder")}
               maxLength={120}
+              readOnly={!canEdit}
+              disabled={!canEdit}
             />
           </div>
         </div>
@@ -128,12 +150,14 @@ export function BankCreditCard({ project }: Props) {
           {t("bankRelease.settingsCardHint")}
         </p>
 
-        <div className="flex items-center gap-3">
-          <Button onClick={handleSave} disabled={!isDirty || saving} size="sm">
-            {saving && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-            {saving ? t("saving") : t("save")}
-          </Button>
-        </div>
+        {canEdit && (
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} disabled={!isDirty || saving || tooLarge} size="sm">
+              {saving && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+              {saving ? t("saving") : t("save")}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

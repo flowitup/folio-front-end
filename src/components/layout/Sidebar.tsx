@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { formatShare } from "@/lib/utils/format-percent";
 import { Link, useRouter } from "@/i18n/navigation";
 import { usePathname } from "next/navigation";
 import {
@@ -210,7 +211,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
                   {selectedProject && (selectedPhase || selectedProgress > 0) && (
                     <div className="num text-[11px]" style={{ color: "var(--muted)" }}>
                       {selectedPhase || "—"}
-                      {selectedProgress > 0 ? ` · ${Math.round(selectedProgress * 100)}%` : ""}
+                      {selectedProgress > 0 ? ` · ${formatShare(locale, selectedProgress * 100)}` : ""}
                     </div>
                   )}
                   {selectedProject && projectCompanyLabel(user?.companies, selectedProject.company_id) && (

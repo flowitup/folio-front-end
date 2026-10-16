@@ -2307,7 +2307,10 @@
         "tvaInvalid": "Le numéro de TVA doit comporter de 2 à 16 lettres ou chiffres, par ex. FR40552100554.",
         "ibanInvalid": "Cet IBAN n'est pas valide. Vérifiez le code pays, la clé de contrôle et la longueur.",
         "bicInvalid": "Le BIC / SWIFT doit comporter 8 ou 11 lettres ou chiffres.",
-        "generic": "Une erreur inattendue s'est produite. Veuillez réessayer."
+        "generic": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+        "legalNameTooLong": "La raison sociale ne peut pas dépasser {max} caractères.",
+        "addressTooLong": "L'adresse ne peut pas dépasser {max} caractères.",
+        "paymentTermsTooLong": "Les conditions de paiement ne peuvent pas dépasser {max} caractères."
       },
       "maskedFieldHint": "Enregistré et masqué. Saisissez une nouvelle valeur pour le remplacer ; laissez vide pour le conserver.",
       "removeStoredValue": "Supprimer",

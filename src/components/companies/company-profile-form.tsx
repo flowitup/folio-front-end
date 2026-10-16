@@ -49,7 +49,13 @@ const SERVER_FIELD_ERRORS: Partial<Record<keyof CompanyProfileValues, string>> =
   iban: "form.errors.ibanInvalid",
   bic: "form.errors.bicInvalid",
   logo_url: "form.errors.logoUrlInvalidUrl",
+  legal_name: "form.errors.legalNameTooLong",
+  address: "form.errors.addressTooLong",
+  default_payment_terms: "form.errors.paymentTermsTooLong",
 };
+
+/** The API's length limits (companies schema): typed past them, a field says so. */
+const MAX_LENGTH = { legal_name: 255, address: 2000, default_payment_terms: 500 } as const;
 
 /** What the inputs start with: masked sensitive values start empty. */
 export function initialProfileValues(company: Company): CompanyProfileValues {
@@ -156,7 +162,7 @@ export function CompanyProfileForm({ company, onSaved }: CompanyProfileFormProps
         const errors: Record<string, string> = {};
         for (const field of result.error.fields ?? []) {
           const key = SERVER_FIELD_ERRORS[field as keyof CompanyProfileValues];
-          if (key) errors[field] = t(key);
+          if (key) errors[field] = t(key, { max: MAX_LENGTH[field as keyof typeof MAX_LENGTH] ?? 0 });
         }
         if (Object.keys(errors).length > 0) setFieldErrors(errors);
         toast.error(result.error.message);
@@ -247,9 +253,12 @@ export function CompanyProfileForm({ company, onSaved }: CompanyProfileFormProps
             value={values.legal_name}
             onChange={setField("legal_name")}
             disabled={isSaving}
+            maxLength={MAX_LENGTH.legal_name}
+            aria-invalid={fieldErrors.legal_name ? true : undefined}
+            aria-describedby={fieldErrors.legal_name ? "mp-legal-name-error" : undefined}
           />
           {fieldErrors.legal_name && (
-            <p className="text-[12px] text-destructive">{fieldErrors.legal_name}</p>
+            <p id="mp-legal-name-error" className="text-[12px] text-destructive">{fieldErrors.legal_name}</p>
           )}
         </div>
 
@@ -264,9 +273,12 @@ export function CompanyProfileForm({ company, onSaved }: CompanyProfileFormProps
             onChange={setField("address")}
             disabled={isSaving}
             rows={2}
+            maxLength={MAX_LENGTH.address}
+            aria-invalid={fieldErrors.address ? true : undefined}
+            aria-describedby={fieldErrors.address ? "mp-address-error" : undefined}
           />
           {fieldErrors.address && (
-            <p className="text-[12px] text-destructive">{fieldErrors.address}</p>
+            <p id="mp-address-error" className="text-[12px] text-destructive">{fieldErrors.address}</p>
           )}
         </div>
 
@@ -291,10 +303,19 @@ export function CompanyProfileForm({ company, onSaved }: CompanyProfileFormProps
             onChange={setField("default_payment_terms")}
             disabled={isSaving}
             rows={2}
+            maxLength={MAX_LENGTH.default_payment_terms}
+            aria-invalid={fieldErrors.default_payment_terms ? true : undefined}
+            aria-describedby={fieldErrors.default_payment_terms ? "mp-terms-error" : undefined}
           />
-          <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-            {t("form.fields.defaultPaymentTerms.help")}
-          </p>
+          {fieldErrors.default_payment_terms ? (
+            <p id="mp-terms-error" className="text-[12px] text-destructive">
+              {fieldErrors.default_payment_terms}
+            </p>
+          ) : (
+            <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+              {t("form.fields.defaultPaymentTerms.help")}
+            </p>
+          )}
         </div>
 
         <div className="space-y-1.5">

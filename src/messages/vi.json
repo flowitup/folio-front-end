@@ -2307,7 +2307,10 @@
         "tvaInvalid": "Mã số thuế GTGT phải gồm 2 đến 16 chữ cái hoặc chữ số, ví dụ FR40552100554.",
         "ibanInvalid": "Số IBAN không hợp lệ. Hãy kiểm tra mã quốc gia, chữ số kiểm tra và độ dài.",
         "bicInvalid": "Mã BIC / SWIFT phải gồm 8 hoặc 11 chữ cái hoặc chữ số.",
-        "generic": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
+        "generic": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.",
+        "legalNameTooLong": "Tên pháp lý tối đa {max} ký tự.",
+        "addressTooLong": "Địa chỉ tối đa {max} ký tự.",
+        "paymentTermsTooLong": "Điều khoản thanh toán tối đa {max} ký tự."
       },
       "maskedFieldHint": "Đã lưu và được ẩn. Nhập giá trị mới để thay thế; để trống để giữ nguyên.",
       "removeStoredValue": "Xóa",

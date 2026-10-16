@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 
 import {
@@ -24,6 +24,7 @@ import type { LaborRole } from "@/types/labor-role";
 import { RoleSelectWithCreate } from "./role-select-with-create";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 import { ApiError } from "@/lib/api/http";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 
 interface AddWorkerDialogProps {
   open: boolean;
@@ -76,6 +77,7 @@ export function AddWorkerDialog({
   existingPersonIds,
 }: AddWorkerDialogProps) {
   const t = useTranslations("labor");
+  const locale = useLocale();
 
   // Create-flow state
   const [selectedPerson, setSelectedPerson] = useState<PersonSummary | null>(
@@ -152,7 +154,8 @@ export function AddWorkerDialog({
     }
 
     // Create path — Person selection and rate are required.
-    const rate = parseFloat(dailyRate);
+    // "150,50" and "150.50" both read as 150.5 (a number input dropped the comma: 15050).
+    const rate = parseMoneyInput(dailyRate) ?? Number.NaN;
     if (isNaN(rate) || rate <= 0) {
       setError(t("errors.dailyRatePositive"));
       return;
@@ -277,18 +280,21 @@ export function AddWorkerDialog({
               <Label htmlFor="dailyRate">{t("dailyRate")} (EUR)</Label>
               <Input
                 id="dailyRate"
-                type="number"
-                step="0.01"
-                min="0"
-                max={MAX_DAILY_AMOUNT}
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
                 value={dailyRate}
                 onChange={(e) => setDailyRate(e.target.value)}
-                placeholder="100.00"
+                placeholder={locale === "en" ? "100.00" : "100,00"}
               />
             </div>
           )}
 
-          {error && <p className="text-destructive text-sm">{error}</p>}
+          {error && (
+            <p className="text-destructive text-sm" role="alert">
+              {error}
+            </p>
+          )}
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={handleClose}>

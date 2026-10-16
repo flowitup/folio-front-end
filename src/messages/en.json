@@ -904,7 +904,8 @@
       "amountTooLarge": "The amount cannot exceed {max, number}.",
       "overrideNegative": "The amount cannot be negative.",
       "dateOutOfRange": "Attendance can't be logged for a future day or a day before 2000.",
-      "noteTooLong": "The note can't be longer than {max, number} characters."
+      "noteTooLong": "The note can't be longer than {max, number} characters.",
+      "amountInvalid": "Invalid amount: type for example 150.50."
     },
     "logDayDialog": {
       "title": "Log day",
@@ -1028,7 +1029,10 @@
       "effectiveFrom": "From {date}",
       "errorRatePositive": "Rate must be greater than 0",
       "errorDateRequired": "Choose an effective date",
-      "errorGeneric": "An error occurred"
+      "errorGeneric": "An error occurred",
+      "thisSiteOnly": "Applies to this site. Sites created later take this rate.",
+      "confirmDeleteTitle": "Delete this rate change?",
+      "confirmDeleteBody": "Days since {date} go back to {rate} per day. The amounts owed for those months are recalculated, including months already paid."
     },
     "payments": {
       "tab": "Payments",
@@ -2959,7 +2963,8 @@
         "inventory_manage": "Manage inventory",
         "project_view_pay": "View pay",
         "project_view_budget": "View budget & released funds"
-      }
+      },
+      "viewPayDenyHint": "Denying “View pay” also removes “Manage labor”, which shows rates and costs: the person then only sees their own days."
     },
     "errors": {
       "unauthorized": "You need to be signed in.",

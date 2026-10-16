@@ -904,7 +904,8 @@
       "amountTooLarge": "Le montant ne peut pas dépasser {max, number}.",
       "overrideNegative": "Le montant ne peut pas être négatif.",
       "dateOutOfRange": "La présence ne peut pas être saisie pour un jour futur ni pour un jour antérieur à 2000.",
-      "noteTooLong": "La note ne doit pas dépasser {max, number} caractères."
+      "noteTooLong": "La note ne doit pas dépasser {max, number} caractères.",
+      "amountInvalid": "Montant invalide : saisissez par exemple 150,50."
     },
     "logDayDialog": {
       "title": "Pointer la journée",
@@ -1028,7 +1029,10 @@
       "effectiveFrom": "À partir du {date}",
       "errorRatePositive": "Le tarif doit être supérieur à 0",
       "errorDateRequired": "Choisissez une date d'effet",
-      "errorGeneric": "Une erreur est survenue"
+      "errorGeneric": "Une erreur est survenue",
+      "thisSiteOnly": "S'applique à ce chantier. Les chantiers créés ensuite reprennent ce tarif.",
+      "confirmDeleteTitle": "Supprimer ce changement de tarif ?",
+      "confirmDeleteBody": "Les jours depuis le {date} repasseront à {rate} par jour. Les montants dus de ces mois sont recalculés, y compris pour les mois déjà payés."
     },
     "payments": {
       "tab": "Paiements",
@@ -2959,7 +2963,8 @@
         "inventory_manage": "Gérer l'inventaire",
         "project_view_pay": "Voir la paie",
         "project_view_budget": "Voir le budget et les fonds débloqués"
-      }
+      },
+      "viewPayDenyHint": "Refuser « Voir la paie » retire aussi « Gérer la main-d'œuvre », qui affiche les tarifs et les coûts : la personne ne voit plus que ses propres journées."
     },
     "errors": {
       "unauthorized": "Vous devez être connecté.",

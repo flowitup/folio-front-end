@@ -154,6 +154,15 @@ describe("RecordLaborPaymentDialog — worker preselected (row trigger)", () => 
     expect(toast.success).toHaveBeenCalledWith("labor.payments.recordedToast");
   });
 
+  it("reads a decimal comma: 1000,50 is paid as 1000.50, never 100050", async () => {
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} />);
+    fireEvent.change(screen.getByTestId("record-payment-amount"), { target: { value: "1 000,50" } });
+    fireEvent.click(screen.getByText("invoices.save"));
+
+    await waitFor(() => expect(mockCreateInvoice).toHaveBeenCalledTimes(1));
+    expect(mockCreateInvoice.mock.calls[0][1].items[0].unit_price).toBe(1000.5);
+  });
+
   it("rejects a non-positive amount without calling createInvoice", async () => {
     render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} />);
     fireEvent.change(screen.getByTestId("record-payment-amount"), { target: { value: "0" } });

@@ -904,7 +904,8 @@
       "amountTooLarge": "Số tiền không được vượt quá {max, number}.",
       "overrideNegative": "Số tiền không được âm.",
       "dateOutOfRange": "Không thể chấm công cho một ngày trong tương lai hoặc trước năm 2000.",
-      "noteTooLong": "Ghi chú không được dài quá {max, number} ký tự."
+      "noteTooLong": "Ghi chú không được dài quá {max, number} ký tự.",
+      "amountInvalid": "Số tiền không hợp lệ: hãy nhập ví dụ 150,50."
     },
     "logDayDialog": {
       "title": "Chấm công ngày",
@@ -1028,7 +1029,10 @@
       "effectiveFrom": "Từ ngày {date}",
       "errorRatePositive": "Mức lương phải lớn hơn 0",
       "errorDateRequired": "Hãy chọn ngày có hiệu lực",
-      "errorGeneric": "Đã xảy ra lỗi"
+      "errorGeneric": "Đã xảy ra lỗi",
+      "thisSiteOnly": "Áp dụng cho công trình này. Các công trình tạo sau sẽ dùng mức lương này.",
+      "confirmDeleteTitle": "Xóa thay đổi mức lương này?",
+      "confirmDeleteBody": "Các ngày từ {date} sẽ trở về {rate} mỗi ngày. Số tiền phải trả của các tháng đó được tính lại, kể cả các tháng đã trả."
     },
     "payments": {
       "tab": "Thanh toán",
@@ -2959,7 +2963,8 @@
         "inventory_manage": "Quản lý kho thiết bị",
         "project_view_pay": "Xem lương",
         "project_view_budget": "Xem ngân sách & vốn giải ngân"
-      }
+      },
+      "viewPayDenyHint": "Từ chối « Xem lương » cũng gỡ « Quản lý nhân công », vì phần này hiển thị đơn giá và chi phí: người này chỉ còn thấy ngày công của chính mình."
     },
     "errors": {
       "unauthorized": "Bạn cần đăng nhập.",

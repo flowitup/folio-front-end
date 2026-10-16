@@ -39,6 +39,8 @@ import {
 import { personColor, personInitials } from "@/lib/utils/person-color";
 import type { ConflictGroup, ShiftType, Worker } from "@/types/labor";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
+import { MoneyInput } from "./money-input";
+import { NOTE_MAX_LENGTH } from "./edit-attendance-dialog";
 
 interface WorkerTileProps {
   worker: Worker;
@@ -192,18 +194,17 @@ export function WorkerTile({
               <Label className="text-[10px]" htmlFor={`override-${worker.id}`}>
                 {tTile("overrideLabel")}
               </Label>
-              <Input
+              <MoneyInput
                 id={`override-${worker.id}`}
-                type="number"
-                step="0.01"
-                min="0"
-                max={MAX_DAILY_AMOUNT}
-                value={amountOverride ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  onAmountOverrideChange?.(v === "" ? undefined : parseFloat(v));
-                }}
+                value={amountOverride}
+                onValueChange={(next) => onAmountOverrideChange?.(next)}
                 placeholder={tTile("overridePlaceholder")}
+                aria-invalid={
+                  amountOverride !== undefined &&
+                  (Number.isNaN(amountOverride) || amountOverride > MAX_DAILY_AMOUNT)
+                    ? true
+                    : undefined
+                }
                 className="h-8 text-xs"
               />
             </div>
@@ -232,6 +233,7 @@ export function WorkerTile({
             </Label>
             <Input
               id={`note-${worker.id}`}
+              maxLength={NOTE_MAX_LENGTH}
               value={note ?? ""}
               onChange={(e) => onNoteChange?.(e.target.value)}
               placeholder={tTile("notePlaceholder")}

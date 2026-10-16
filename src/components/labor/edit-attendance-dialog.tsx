@@ -40,9 +40,10 @@ import { formatWeekdayDate } from "@/lib/utils/formatters";
 import type { LaborEntry, ShiftType, UpdateAttendancePayload } from "@/types/labor";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 import { ApiError } from "@/lib/api/http";
+import { formatMoneyInputValue, readMoneyInput } from "./money-input";
 
 /** The API's limit on an attendance note. */
-const NOTE_MAX_LENGTH = 500;
+export const NOTE_MAX_LENGTH = 500;
 
 // Radix Select forbids value=""; sentinel maps to null shift_type.
 const SHIFT_NONE = "__none__";
@@ -74,17 +75,17 @@ export function EditAttendanceDialog({
     if (!open || !entry) return;
     setShiftType(entry.shift_type);
     setSupplementHours(entry.supplement_hours);
-    setAmountOverride(
-      entry.amount_override !== null ? String(entry.amount_override) : "",
-    );
+    setAmountOverride(formatMoneyInputValue(entry.amount_override, locale));
     setNote(entry.note ?? "");
     setError(null);
-  }, [open, entry]);
+  }, [open, entry, locale]);
 
   const isOutOfRange = supplementHours < 0 || supplementHours > 12;
   const isEmptyRow = shiftType === null && supplementHours === 0;
   const isOverrideWithoutShift =
-    shiftType === null && amountOverride !== "" && amountOverride !== null;
+    shiftType === null && amountOverride.trim() !== "";
+  // "150,50" and "150.50" both read as 150.5; anything else is refused with a message.
+  const parsedOverride = readMoneyInput(amountOverride);
   const canSubmit = !isEmptyRow && !isOutOfRange && !isOverrideWithoutShift;
 
   function handleShiftTypeChange(value: string) {
@@ -101,7 +102,11 @@ export function EditAttendanceDialog({
       return;
     }
     if (isEmptyRow || isOverrideWithoutShift) return;
-    if (amountOverride !== "" && parseFloat(amountOverride) > MAX_DAILY_AMOUNT) {
+    if (parsedOverride !== undefined && Number.isNaN(parsedOverride)) {
+      setError(t("errors.amountInvalid"));
+      return;
+    }
+    if (parsedOverride !== undefined && parsedOverride > MAX_DAILY_AMOUNT) {
       setError(t("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
       return;
     }
@@ -113,7 +118,7 @@ export function EditAttendanceDialog({
       await onSave({
         shift_type: shiftType,
         supplement_hours: supplementHours,
-        amount_override: amountOverride !== "" ? parseFloat(amountOverride) : null,
+        amount_override: parsedOverride ?? null,
         note: note.trim() || null,
       });
       onOpenChange(false);
@@ -201,10 +206,9 @@ export function EditAttendanceDialog({
               <Label htmlFor="override">{t("override")} (EUR)</Label>
               <Input
                 id="override"
-                type="number"
-                step="0.01"
-                min="0"
-                max={MAX_DAILY_AMOUNT}
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
                 value={amountOverride}
                 onChange={(e) => setAmountOverride(e.target.value)}
                 placeholder={t("overridePlaceholder")}

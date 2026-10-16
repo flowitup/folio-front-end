@@ -66,6 +66,7 @@ import type {
   Worker,
 } from "@/types/labor";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
+import { NOTE_MAX_LENGTH } from "./edit-attendance-dialog";
 import { formatDate } from "@/lib/utils/formatters";
 
 /** Days before the picked date read for "recent workers" and "Same as last day". */
@@ -379,7 +380,14 @@ export function LogDayDialog({
       // Never the raw "HTTP 400: BAD REQUEST": the fields are checked before
       // sending, so what is left is a server-side refusal or a network error.
       const code = err instanceof ApiError ? (err.data as { error?: string } | undefined)?.error : undefined;
-      setError(code === "AttendanceDateOutOfRange" ? tLabor("errors.dateOutOfRange") : t("saveFailed"));
+      const message = err instanceof ApiError ? (err.data as { message?: string } | undefined)?.message : undefined;
+      setError(
+        code === "AttendanceDateOutOfRange"
+          ? tLabor("errors.dateOutOfRange")
+          : /\bnote\b/.test(message ?? "")
+            ? tLabor("errors.noteTooLong", { max: NOTE_MAX_LENGTH })
+            : t("saveFailed")
+      );
     } finally {
       setIsSaving(false);
     }
@@ -407,6 +415,14 @@ export function LogDayDialog({
       )
     ) {
       setError(tLabor("errors.supplementOutOfRange"));
+      return;
+    }
+    if (toSave.some((s) => s.amount_override !== undefined && Number.isNaN(s.amount_override))) {
+      setError(tLabor("errors.amountInvalid"));
+      return;
+    }
+    if (toSave.some((s) => (s.note ?? "").trim().length > NOTE_MAX_LENGTH)) {
+      setError(tLabor("errors.noteTooLong", { max: NOTE_MAX_LENGTH }));
       return;
     }
     if (payload.some((e) => e.amount_override != null && e.amount_override < 0)) {

@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
+import { isWithoutWorkspace } from "@/lib/auth/onboarding-gate";
 import { projectSwitchPath } from "@/lib/projects/project-switch-path";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { can, canCreateProject } from "@/lib/auth/permissions";
@@ -130,6 +131,10 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
     }
   };
 
+  // Removed from their only company (or not in one yet): every section below
+  // would bounce back to /onboarding, so none is offered until they join one.
+  const navItems = isWithoutWorkspace(user, projects.length) ? [] : projectNav;
+
   return (
     <aside
       className="hidden w-[248px] border-r lg:flex lg:flex-col"
@@ -232,7 +237,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
 
       {/* Navigation */}
       <nav className="flex-1 space-y-0.5 px-3 scroll-area">
-        {projectNav.map((item) => {
+        {navItems.map((item) => {
           const isActive =
             item.key === "projects"
               ? pathWithoutLocale === item.href ||

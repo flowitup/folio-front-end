@@ -2860,6 +2860,8 @@
     "productUrlInvalid": "Saisissez une adresse web, ex. www.castorama.fr/…"
   },
   "onboarding": {
+    "removedFrom": "Vous avez été retiré(e) de l’entreprise {company}. Pour retrouver vos chantiers, demandez un code entreprise à son administrateur, ou rejoignez une autre entreprise.",
+    "removedFromJoin": "Saisir un code entreprise",
     "title": "Bienvenue sur Folio",
     "subtitle": "Créez votre entreprise ou rejoignez-en une avec un code pour commencer.",
     "createCompanyCta": "Créer une entreprise",

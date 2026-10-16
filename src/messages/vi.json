@@ -2860,6 +2860,8 @@
     "productUrlInvalid": "Nhập một địa chỉ web, vd. www.castorama.fr/…"
   },
   "onboarding": {
+    "removedFrom": "Bạn đã bị xoá khỏi công ty {company}. Để quay lại các công trình, hãy xin quản trị viên mã công ty, hoặc tham gia một công ty khác.",
+    "removedFromJoin": "Nhập mã công ty",
     "title": "Chào mừng đến với Folio",
     "subtitle": "Tạo công ty của bạn hoặc nhập mã để tham gia một công ty có sẵn.",
     "createCompanyCta": "Tạo công ty",

@@ -2860,6 +2860,8 @@
     "productUrlInvalid": "Enter a web address, e.g. www.castorama.fr/…"
   },
   "onboarding": {
+    "removedFrom": "You were removed from the company {company}. To get back to your projects, ask its admin for a company code, or join another company.",
+    "removedFromJoin": "Enter a company code",
     "title": "Welcome to Folio",
     "subtitle": "Create your company or join one with a code to get started.",
     "createCompanyCta": "Create a company",

@@ -13,20 +13,30 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
+import { useAuth } from "@/context/AuthContext";
+import { isWithoutWorkspace } from "@/lib/auth/onboarding-gate";
 import { MobileMoreSheet } from "@/components/layout/mobile-more-sheet";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("navigation");
-  const { selectedProjectId } = useProject();
+  const { selectedProjectId, projects } = useProject();
+  const { user } = useAuth();
+  // No company yet (or removed from the only one): Overview and Projects would
+  // only bounce back to /onboarding, so the bar keeps just "More".
+  const withoutWorkspace = isWithoutWorkspace(user, projects.length);
   const pathWithoutLocale =
     pathname.replace(new RegExp(`^/${locale}`), "") || "/";
   const [moreOpen, setMoreOpen] = useState(false);
 
   const items = [
-    { key: "dashboard", href: "/dashboard", icon: Home },
-    { key: "projects", href: "/projects", icon: FolderOpen },
+    ...(withoutWorkspace
+      ? []
+      : [
+          { key: "dashboard", href: "/dashboard", icon: Home },
+          { key: "projects", href: "/projects", icon: FolderOpen },
+        ]),
     ...(selectedProjectId
       ? [
           {

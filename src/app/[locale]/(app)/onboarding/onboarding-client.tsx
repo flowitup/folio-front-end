@@ -30,7 +30,12 @@ import {
 
 type Mode = "choose" | "create" | "join";
 
-export function OnboardingClient() {
+export function OnboardingClient({
+  removedFrom = null,
+}: {
+  /** The company an admin removed this user from, when that is why they are here. */
+  removedFrom?: string | null;
+} = {}) {
   const t = useTranslations("onboarding");
   const locale = useLocale();
   const [mode, setMode] = useState<Mode>("choose");
@@ -91,6 +96,19 @@ export function OnboardingClient() {
       <p className="mt-2 text-[14px]" style={{ color: "var(--muted)" }}>
         {t("subtitle")}
       </p>
+
+      {removedFrom && mode === "choose" && (
+        <div
+          role="status"
+          data-testid="onboarding-removed-banner"
+          className="folio-card mt-6 p-4 text-left text-[13.5px]"
+        >
+          <p>{t("removedFrom", { company: removedFrom })}</p>
+          <Button type="button" size="sm" className="mt-3" onClick={() => setMode("join")}>
+            {t("removedFromJoin")}
+          </Button>
+        </div>
+      )}
 
       {mode === "choose" && (
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">

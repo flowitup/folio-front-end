@@ -460,7 +460,9 @@ export default function InvoicesPage() {
         </div>
       )}
 
-      {!isLoading && summary && restricted && (
+      {/* The server says the list is scoped to the caller's own payments. A plain
+          member already has the "My payments" view above, which says the same. */}
+      {!isLoading && summary && restricted && !isRestrictedMember && (
         <div
           className="rounded-[10px] px-4 py-3 text-[13px]"
           style={{ background: "var(--paper-2)", color: "var(--ink-2)" }}

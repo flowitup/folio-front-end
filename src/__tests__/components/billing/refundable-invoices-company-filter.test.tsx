@@ -17,6 +17,13 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+// The page also reads the ?project= / ?channel= drill-down filters from the URL.
+const emptySearch = new URLSearchParams();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  usePathname: () => "/en/billing/refundable-invoices",
+  useSearchParams: () => emptySearch,
+}));
 const dialogProps = vi.fn();
 vi.mock("@/components/billing/add-refundable-expense-dialog", () => ({
   AddRefundableExpenseDialog: (props: { companyId?: string }) => {

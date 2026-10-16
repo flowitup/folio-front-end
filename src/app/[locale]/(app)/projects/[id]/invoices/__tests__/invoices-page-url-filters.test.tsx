@@ -167,6 +167,9 @@ describe("InvoicesPage — URL filters from charts", () => {
 
   it("writes a tab click back to the URL, keeping the other filters", async () => {
     setupMocks(fixture(), "month=2026-09");
+    // The category tabs are for someone with expense rights (a plain member gets "My payments").
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:manage_invoices"] } } as any);
     render(<InvoicesPage />);
     await waitFor(() => expect(within(desktop()).getByText("Perso Sept")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "invoices.types.labor" }));
@@ -184,6 +187,9 @@ describe("InvoicesPage — URL filters from charts", () => {
 
   it("tells a restricted member the list is their own payments", async () => {
     setupMocks([], "");
+    // Labor rights but no expense rights: the server scopes the list, the page says so.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseAuth.mockReturnValue({ user: { permissions: ["project:manage_labor"] } } as any);
     mockFetchInvoicesWithMeta.mockResolvedValue({
       invoices: [],
       total: 0,

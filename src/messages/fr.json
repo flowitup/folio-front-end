@@ -1596,6 +1596,7 @@
         "recipientRequired": "Le nom du destinataire est obligatoire.",
         "atLeastOneItem": "Au moins une ligne est obligatoire.",
         "itemDescriptionRequired": "Tous les articles doivent avoir une description.",
+        "itemNumberInvalid": "Une quantité ou un prix unitaire n’est pas un nombre. Saisissez des chiffres, avec une virgule ou un point pour les décimales (ex. 2,5 ou 18,90).",
         "itemQuantityPositive": "La quantité doit être supérieure à 0.",
         "itemUnitPricePositive": "Le prix unitaire ne peut pas être négatif.",
         "itemVatRatePositive": "Le taux de TVA ne peut pas être négatif.",

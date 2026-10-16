@@ -83,6 +83,12 @@ import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog"
 // Loose shape check; the API does the strict one.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** True when a line's quantity or price text is a plain number ("2.5"). */
+function isNumberText(value: string | number | null | undefined): boolean {
+  const text = String(value ?? "").trim();
+  return text !== "" && Number.isFinite(Number(text));
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -288,6 +294,11 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     if (tooLong) return tForm("errors.textTooLong", { field: tooLong.label, max: tooLong.max });
     for (const item of items) {
       if (!item.description.trim()) return tForm("errors.itemDescriptionRequired");
+      // A field left as unreadable text ("2,5,1", "abc") or empty must not
+      // reach the API as NaN or "".
+      if (!isNumberText(item.quantity) || !isNumberText(item.unit_price)) {
+        return tForm("errors.itemNumberInvalid");
+      }
       if (Number(item.quantity) <= 0) return tForm("errors.itemQuantityPositive");
       if (Number(item.quantity) > MAX_LINE_QUANTITY) {
         return tForm("errors.itemQuantityTooLarge", { max: MAX_LINE_QUANTITY });

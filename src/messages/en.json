@@ -1596,6 +1596,7 @@
         "recipientRequired": "Recipient name is required.",
         "atLeastOneItem": "At least one line item is required.",
         "itemDescriptionRequired": "All items must have a description.",
+        "itemNumberInvalid": "A quantity or unit price is not a number. Use digits with a comma or a point for decimals (e.g. 2,5 or 18.90).",
         "itemQuantityPositive": "Item quantity must be greater than 0.",
         "itemUnitPricePositive": "Item unit price cannot be negative.",
         "itemVatRatePositive": "Item VAT rate cannot be negative.",

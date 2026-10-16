@@ -1596,6 +1596,7 @@
         "recipientRequired": "Tên khách hàng là bắt buộc.",
         "atLeastOneItem": "Cần ít nhất một dòng dịch vụ.",
         "itemDescriptionRequired": "Tất cả các mục phải có mô tả.",
+        "itemNumberInvalid": "Số lượng hoặc đơn giá không phải là số. Hãy nhập chữ số, dùng dấu phẩy hoặc dấu chấm cho phần thập phân (vd: 2,5 hoặc 18,90).",
         "itemQuantityPositive": "Số lượng phải lớn hơn 0.",
         "itemUnitPricePositive": "Đơn giá không được âm.",
         "itemVatRatePositive": "Tỉ lệ VAT không được âm.",

@@ -108,10 +108,12 @@
     "loadError": "Failed to load overview data",
     "money": {
       "spentThisMonth": "Spent this month",
-      "pctSpent": "{pct} spent · {spent} (company + personal)",
+      "pctSpent": "{pct} spent · {spent} (all expenses)",
       "purseSpent": "spent",
-      "pctCreditDrawn": "{pct} of credit spent · {spent} (company + personal)",
-      "unassigned": "{n, plural, =1 {1 expense} other {# expenses}} · {amount} paid with no company or personal payment method — in neither purse"
+      "pctCreditDrawn": "{pct} of credit spent · {spent} (all expenses)",
+      "unassigned": "{n, plural, =1 {1 expense} other {# expenses}} · {amount} paid with no company or personal payment method — in neither purse ›",
+      "vsMonthToDate": "{delta} vs {month} 1–{day}",
+      "openExpenses": "Show expenses: {what}"
     },
     "spendByType": {
       "title": "Monthly spend by type",
@@ -665,7 +667,7 @@
       "sumOfTypes": "Total",
       "sharedScaleTo": "shared scale to {amount}",
       "cash": "Cash",
-      "cashAdvance": "after {amount} cash advance deducted",
+      "cashAdvance": "including {amount} cash advance",
       "noPurse": "No purse",
       "noPurseSpend": "{n, plural, one {# expense} other {# expenses}} in neither purse (no company or personal payment method) · {amount}"
     },

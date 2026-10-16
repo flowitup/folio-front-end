@@ -11,14 +11,23 @@ import { useRouter } from "next/navigation";
  *
  * Marks inside an SVG cannot hold a Next <Link>, hence router.push.
  */
+function useOptionalRouter() {
+  try {
+    return useRouter();
+  } catch {
+    // Rendered outside the app router (an isolated test): plain navigation.
+    return null;
+  }
+}
+
 export function useChartLink({ scroll = true }: { scroll?: boolean } = {}) {
-  const router = useRouter();
+  const router = useOptionalRouter();
   return useCallback(
     (href: string | null | undefined, label: string) => {
       if (!href) return {};
       // `scroll: false` for a filter of the page the chart is on (the Expense
       // page's summary): the list under it changes, the page stays put.
-      const open = () => router.push(href, { scroll });
+      const open = () => (router ? router.push(href, { scroll }) : window.location.assign(href));
       return {
         role: "link" as const,
         tabIndex: 0,

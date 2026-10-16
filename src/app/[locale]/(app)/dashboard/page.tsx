@@ -14,6 +14,7 @@ import {
   computeSpentTotal,
   buildMonthlySpendSeries,
   computeMonthDelta,
+  computeMonthToDateDelta,
   computeBudgetMetrics,
   computePendingRefunds,
   computeBankOutstanding,
@@ -33,6 +34,7 @@ import Link from "next/link";
 import { ArrowRight, Building2, Clock, Plus } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { can, canCreateProject } from "@/lib/auth/permissions";
+import { parisDayKey } from "@/lib/utils/paris-day";
 
 const MONTHS_BACK = 6;
 
@@ -96,8 +98,12 @@ export default function DashboardPage() {
   // identical to the server output (both render the date-free empty state).
   const [referenceDate, setReferenceDate] = useState<Date | null>(null);
   useEffect(() => {
+    // The Paris calendar day, as a local date: "this month" is the business's
+    // month, not the device's (a phone set to Vietnam time showed November
+    // on the evening of 31 October).
+    const [y, m, d] = parisDayKey().split("-").map(Number);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional client-only value: must render after mount to avoid SSR clock mismatch
-    setReferenceDate(new Date());
+    setReferenceDate(new Date(y, m - 1, d));
   }, []);
 
   useEffect(() => {
@@ -169,10 +175,12 @@ export default function DashboardPage() {
       referenceDate ? buildMonthlySpendSeries(activeInvoices, MONTHS_BACK, referenceDate) : EMPTY_MONTHLY_SERIES,
     [activeInvoices, referenceDate]
   );
-  const monthDelta = useMemo(
-    () => (monthlySeries.length > 0 ? computeMonthDelta(monthlySeries) : EMPTY_MONTH_DELTA),
-    [monthlySeries]
-  );
+  const monthDelta = useMemo(() => {
+    if (monthlySeries.length === 0 || !referenceDate) return EMPTY_MONTH_DELTA;
+    // While the month runs, compare the same days of both months.
+    const { deltaPct, toDay } = computeMonthToDateDelta(activeInvoices, referenceDate);
+    return { ...computeMonthDelta(monthlySeries), deltaPct, toDay };
+  }, [monthlySeries, activeInvoices, referenceDate]);
   // Remaining = credit (or funds released without one) minus the total expenses.
   const budgetMetrics = useMemo(
     () => computeBudgetMetrics(selectedProject?.budget, spentTotal, activeMeta.fundsReleasedTotal),
@@ -285,6 +293,8 @@ export default function DashboardPage() {
           loading={showLoading}
           canViewBudget={canViewBudget}
           settingsHref={projectSettingsHref}
+          expensesHref={viewExpenseHref}
+          refundableHref={projectId ? `/${locale}/billing/refundable-invoices?project=${projectId}` : null}
         />
       )}
 

@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
-import { formatEURWhole } from "@/lib/utils/formatters";
-import { formatPercent } from "@/lib/utils/format-percent";
+import { formatEURExact, formatEURWhole } from "@/lib/utils/formatters";
+import { formatPercent, formatShare } from "@/lib/utils/format-percent";
+import { useDataTip } from "@/components/invoices/data-tip";
+import { useChartLink } from "@/components/dashboard/use-chart-link";
+import { expenseListHref, type ExpenseListFilters } from "@/lib/invoices/expense-filters";
 import {
   monthKeyToDate,
   type BudgetMetrics,
@@ -16,7 +19,6 @@ import {
 // Dark-panel-only tints — no light-mode equivalent CSS var, kept literal
 // (design Canvas 3a "4b ink money panel").
 const NEGATIVE_ON_DARK = "#e8a58a";
-const POSITIVE_ON_DARK = "#a8c69a";
 const REFUND_PILL_BG = "rgba(232,132,60,0.16)";
 const REFUND_PILL_BORDER = "rgba(241,200,163,0.35)";
 const REFUND_PILL_TEXT = "#f1c8a3";
@@ -34,11 +36,27 @@ const DIAL_RADIUS = 24;
 const DIAL_STROKE = 7;
 const DIAL_CIRCUMFERENCE = 2 * Math.PI * DIAL_RADIUS;
 
-function PurseMiniDial({ percent, color }: { percent: number; color: string }) {
+/**
+ * Spend as a share of what was released into the purse. Nothing drawn at 0 %
+ * (a round line cap used to leave a dot that read as "a little spent"), and a
+ * purse that spent without any release gets a warning ring instead of an
+ * empty track that looked like "nothing to worry about".
+ */
+function PurseMiniDial({ percent, color, unfunded = false }: { percent: number; color: string; unfunded?: boolean }) {
   const filled = (DIAL_CIRCUMFERENCE * Math.min(100, Math.max(0, percent))) / 100;
   return (
     <svg width={DIAL_SIZE} height={DIAL_SIZE} viewBox={`0 0 ${DIAL_SIZE} ${DIAL_SIZE}`} aria-hidden="true" className="flex-none">
-      <circle cx={DIAL_SIZE / 2} cy={DIAL_SIZE / 2} r={DIAL_RADIUS} fill="none" stroke={DIAL_TRACK} strokeWidth={DIAL_STROKE} />
+      <circle
+        cx={DIAL_SIZE / 2}
+        cy={DIAL_SIZE / 2}
+        r={DIAL_RADIUS}
+        fill="none"
+        stroke={unfunded ? NEGATIVE_ON_DARK : DIAL_TRACK}
+        strokeWidth={DIAL_STROKE}
+        strokeDasharray={unfunded ? "4 4" : undefined}
+        data-testid={unfunded ? "purse-dial-unfunded" : undefined}
+      />
+      {filled > 0 && (
       <circle
         cx={DIAL_SIZE / 2}
         cy={DIAL_SIZE / 2}
@@ -50,6 +68,7 @@ function PurseMiniDial({ percent, color }: { percent: number; color: string }) {
         strokeDasharray={`${filled} ${DIAL_CIRCUMFERENCE}`}
         transform={`rotate(-90 ${DIAL_SIZE / 2} ${DIAL_SIZE / 2})`}
       />
+      )}
     </svg>
   );
 }
@@ -81,6 +100,10 @@ export interface OverviewMoneyPanelProps {
   canViewBudget?: boolean;
   /** Where the credit is set — linked when the project has no budget. */
   settingsHref?: string | null;
+  /** The project's Expense list: every figure opens the expenses it adds up. */
+  expensesHref?: string | null;
+  /** The refundable expenses list for this project (pills open it per channel). */
+  refundableHref?: string | null;
 }
 
 const PLACEHOLDER = "—";
@@ -100,6 +123,8 @@ export function OverviewMoneyPanel({
   loading = false,
   canViewBudget = true,
   settingsHref = null,
+  expensesHref = null,
+  refundableHref = null,
 }: OverviewMoneyPanelProps) {
   const t = useTranslations("dashboard");
   const tInvoices = useTranslations("invoices");
@@ -111,10 +136,26 @@ export function OverviewMoneyPanel({
   const locale = useLocale();
   const monthFmt = new Intl.DateTimeFormat(locale, { month: "short" });
   const fig = (value: string) => (loading ? PLACEHOLDER : value);
-  // Remaining is shown as whole euros beside the whole-euro spent and credit
-  // figures, so derive it from those: 5 000 € − 3 369 € reads 1 631 €, not a
-  // separately rounded 1 632 €.
-  const shownLeft = Math.round(budgetMetrics.denominator) - Math.round(budgetMetrics.spent);
+  // Remaining, credit and spent are subtracted on cents and shown to the cent
+  // when not whole: 150 000,50 − 4 199,40 reads 145 801,10 €, never 150 001 −
+  // 4 199 = 145 802 €.
+  const shownLeft = budgetMetrics.left;
+  const { tipHandlers, overlay } = useDataTip();
+  const chartLink = useChartLink();
+  const listHref = (filters: ExpenseListFilters) =>
+    expensesHref ? expenseListHref(expensesHref, filters) : null;
+  const refundHref = (channel: "company" | "bank") =>
+    refundableHref ? `${refundableHref}${refundableHref.includes("?") ? "&" : "?"}channel=${channel}` : null;
+  const monthYearFmt = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" });
+  /** A figure that opens its expenses when there is a list to open. */
+  const linked = (href: string | null, node: React.ReactNode, label?: string) =>
+    href && !loading ? (
+      <Link href={href} className="hover:underline underline-offset-2" aria-label={label}>
+        {node}
+      </Link>
+    ) : (
+      node
+    );
 
   const sparkMax = Math.max(...monthlySeries.map((p) => p.total), 1);
   const sparkX = (i: number) => 4 + i * 30;
@@ -144,12 +185,19 @@ export function OverviewMoneyPanel({
     // Nothing released into this purse: "left" would just be minus what was
     // spent, drawn as an overdraft. Show the spend instead.
     const hasReleased = purse.released > 0;
+    const href = listHref({ purse: purse.key });
     return (
-      <div className="flex items-center gap-4">
-        <PurseMiniDial percent={pct} color={dialColor} />
+      <div className="flex items-center gap-4" data-testid={`overview-purse-${purse.key}`}>
+        {href && !loading ? (
+          <Link href={href} aria-label={t("money.openExpenses", { what: title })} className="flex-none rounded-full">
+            <PurseMiniDial percent={pct} color={dialColor} unfunded={!hasReleased && purse.spent > 0} />
+          </Link>
+        ) : (
+          <PurseMiniDial percent={pct} color={dialColor} unfunded={!hasReleased && purse.spent > 0} />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-[12.5px] font-semibold">{title}</span>
+            <span className="text-[12.5px] font-semibold">{linked(href, title)}</span>
             <span className="text-[10.5px] uppercase tracking-[0.05em]" style={{ opacity: 0.55 }}>
               {loading ? PLACEHOLDER : stamp}
             </span>
@@ -205,7 +253,7 @@ export function OverviewMoneyPanel({
                   !loading && showRemaining && budgetMetrics.left < 0 ? NEGATIVE_ON_DARK : undefined,
               }}
             >
-              {fig(formatEURWhole(showRemaining ? shownLeft : spentTotal))}
+              {fig(formatEURExact(showRemaining ? shownLeft : spentTotal))}
             </div>
           </div>
           <div className="flex items-end gap-6" style={{ borderLeft: "1px solid rgba(245,241,234,0.14)", paddingLeft: 32 }}>
@@ -214,19 +262,30 @@ export function OverviewMoneyPanel({
                 {t("money.spentThisMonth")}
               </div>
               <div className="num mt-2.5 text-[24px] font-medium leading-none" style={{ letterSpacing: "-.02em" }}>
-                {fig(formatEURWhole(monthDelta.current.total))}
+                {linked(
+                  monthDelta.current.key ? listHref({ month: monthDelta.current.key }) : null,
+                  fig(formatEURWhole(monthDelta.current.total))
+                )}
               </div>
               <div className="mt-1.5 text-[11px]" style={{ opacity: 0.62 }}>
                 {loading ? (
                   PLACEHOLDER
                 ) : (
                   <>
+                    {/* Neutral: spending less is not good or bad by itself. While the
+                        month runs, both months are cut at today's day. */}
                     {monthDelta.deltaPct !== null && monthDelta.previous && (
-                      <span style={{ color: monthDelta.deltaPct < 0 ? POSITIVE_ON_DARK : undefined }}>
-                        {tInvoices("summary.vsMonth", {
-                          delta: formatPercent(locale, monthDelta.deltaPct, true),
-                          month: monthFmt.format(monthKeyToDate(monthDelta.previous.key)),
-                        })}
+                      <span>
+                        {monthDelta.toDay
+                          ? t("money.vsMonthToDate", {
+                              delta: formatPercent(locale, monthDelta.deltaPct, true),
+                              day: monthDelta.toDay,
+                              month: monthFmt.format(monthKeyToDate(monthDelta.previous.key)),
+                            })
+                          : tInvoices("summary.vsMonth", {
+                              delta: formatPercent(locale, monthDelta.deltaPct, true),
+                              month: monthFmt.format(monthKeyToDate(monthDelta.previous.key)),
+                            })}
                         {" · "}
                       </span>
                     )}
@@ -236,8 +295,8 @@ export function OverviewMoneyPanel({
               </div>
             </div>
             {!loading && sparkPts.length > 0 && (
-              <div>
-                <svg width={158} height={40} viewBox="0 0 158 40" aria-hidden="true">
+              <div {...tipHandlers}>
+                <svg width={158} height={40} viewBox="0 0 158 40" role="group" aria-label={t("money.spentThisMonth")}>
                   <path d={sparkArea} fill="rgba(232,132,60,0.14)" />
                   <polyline points={sparkLine} fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
                   {sparkPts.map((p, i) => (
@@ -251,6 +310,26 @@ export function OverviewMoneyPanel({
                       strokeWidth={i === lastIdx ? 1.5 : undefined}
                     />
                   ))}
+                  {/* One hit column per month: its amount on hover or focus, its expenses on click. */}
+                  {monthlySeries.map((p, i) => {
+                    const label = `${monthYearFmt.format(monthKeyToDate(p.key))}|${formatEURWhole(p.total)}|${tInvoices(
+                      "invoiceCount",
+                      { n: p.count }
+                    )}`;
+                    return (
+                      <rect
+                        key={`${p.key}-hit`}
+                        x={sparkX(i) - 15}
+                        y={0}
+                        width={30}
+                        height={40}
+                        fill="transparent"
+                        data-tip={label}
+                        data-testid={`overview-spark-${p.key}`}
+                        {...chartLink(listHref({ month: p.key }), label.split("|").join(" · "))}
+                      />
+                    );
+                  })}
                 </svg>
                 <div className="mt-0.5 flex justify-between text-[9.5px]" style={{ opacity: 0.5 }}>
                   <span>{monthFmt.format(monthKeyToDate(monthlySeries[0].key))}</span>
@@ -266,22 +345,22 @@ export function OverviewMoneyPanel({
         {!loading && (pendingRefunds.count > 0 || bankOutstanding.count > 0) && (
           <span className="flex flex-wrap items-center justify-end gap-1.5">
             {pendingRefunds.count > 0 && (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-medium uppercase tracking-[0.05em]"
+              <RefundPill
+                href={refundHref("company")}
                 style={{ background: REFUND_PILL_BG, border: `1px solid ${REFUND_PILL_BORDER}`, color: REFUND_PILL_TEXT }}
-                data-testid="dashboard-refundable-by-company"
+                testId="dashboard-refundable-by-company"
               >
                 {tInvoices("summary.refundableByCompany")} · {formatEURWhole(pendingRefunds.total)}
-              </span>
+              </RefundPill>
             )}
             {bankOutstanding.count > 0 && (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-medium uppercase tracking-[0.05em]"
+              <RefundPill
+                href={refundHref("bank")}
                 style={{ background: BANK_PILL_BG, border: `1px solid ${BANK_PILL_BORDER}`, color: BANK_PILL_TEXT }}
-                data-testid="dashboard-refundable-by-bank"
+                testId="dashboard-refundable-by-bank"
               >
                 {tInvoices("summary.refundableByBank")} · {formatEURWhole(bankOutstanding.total)}
-              </span>
+              </RefundPill>
             )}
           </span>
         )}
@@ -305,25 +384,35 @@ export function OverviewMoneyPanel({
 
       {canViewBudget && (loading || budgetMetrics.hasBaseline) && (
         <div className="mt-[18px]">
-          <div className="relative h-[10px] overflow-hidden rounded-full" style={{ background: TRACK_BG }}>
-            <span
-              className="absolute inset-y-0 left-0 rounded-full"
-              style={{ background: "var(--accent)", width: loading ? "0%" : `${budgetMetrics.pctClamped}%` }}
-            />
-          </div>
-          <div className="mt-2 flex justify-between text-[11px]" style={{ opacity: 0.62 }}>
-            <span>{formatEURWhole(0)}</span>
-            <span>
+          {linked(
+            listHref({}),
+            <div
+              className="relative h-[10px] overflow-hidden rounded-full"
+              style={{ background: TRACK_BG }}
+              data-testid="overview-credit-bar"
+            >
+              <span
+                className="absolute inset-y-0 left-0 rounded-full"
+                style={{ background: "var(--accent)", width: loading ? "0%" : `${budgetMetrics.pctClamped}%` }}
+              />
+            </div>,
+            t("money.openExpenses", { what: tInvoices("summary.spent") })
+          )}
+          {/* The caption gets its own line on a phone instead of running into
+              the two axis amounts ("0 €5 % du crédit…"). */}
+          <div className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-0.5 text-[11px]" style={{ opacity: 0.62 }}>
+            <span className="order-2 sm:order-1">{formatEURWhole(0)}</span>
+            <span className="order-1 w-full sm:order-2 sm:w-auto">
               <span className="num">
                 {loading
                   ? PLACEHOLDER
                   : t(budgetMetrics.usesBudget ? "money.pctCreditDrawn" : "money.pctSpent", {
-                      pct: formatPercent(locale, budgetMetrics.pct),
-                      spent: formatEURWhole(budgetMetrics.spent),
+                      pct: formatShare(locale, budgetMetrics.pctExact),
+                      spent: formatEURExact(budgetMetrics.spent),
                     })}
               </span>
             </span>
-            <span>{fig(formatEURWhole(budgetMetrics.denominator))}</span>
+            <span className="order-3">{fig(formatEURExact(budgetMetrics.denominator))}</span>
           </div>
         </div>
       )}
@@ -350,11 +439,40 @@ export function OverviewMoneyPanel({
               style={{ opacity: 0.62 }}
               data-testid="overview-unassigned-spend"
             >
-              {t("money.unassigned", { n: unassigned.count, amount: formatEURWhole(unassigned.total) })}
+              {linked(
+                listHref({ purse: "none" }),
+                t("money.unassigned", { n: unassigned.count, amount: formatEURWhole(unassigned.total) })
+              )}
             </div>
           )}
         </div>
       )}
+      {overlay}
     </div>
+  );
+}
+
+/** A refund balance; a link to those expenses when the refundable list is reachable. */
+function RefundPill({
+  href,
+  style,
+  testId,
+  children,
+}: {
+  href: string | null;
+  style: React.CSSProperties;
+  testId: string;
+  children: React.ReactNode;
+}) {
+  const className =
+    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-medium uppercase tracking-[0.05em]";
+  return href ? (
+    <Link href={href} className={`${className} hover:underline`} style={style} data-testid={testId}>
+      {children}
+    </Link>
+  ) : (
+    <span className={className} style={style} data-testid={testId}>
+      {children}
+    </span>
   );
 }

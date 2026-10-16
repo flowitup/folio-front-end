@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
 import { MobileMoreSheet } from "@/components/layout/mobile-more-sheet";
+import { isOnboardingPath } from "@/lib/auth/onboarding-gate";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -57,6 +58,9 @@ export function MobileBottomNav() {
         pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/chiffrage`) ||
         pathWithoutLocale.startsWith(`/projects/${selectedProjectId}/photos`)
       : false);
+
+  // Onboarding (no company yet): every destination would bounce straight back.
+  if (isOnboardingPath(pathWithoutLocale)) return null;
 
   return (
     <>

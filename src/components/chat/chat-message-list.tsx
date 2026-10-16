@@ -6,13 +6,17 @@
  * sender's avatar beside the last bubble of a run and their name above the first. Bubbles of one
  * run sit close together with a tight corner on the sender's side; the time shows under the last.
  * `seen` maps a message id to the members whose read marker lands on it (see `seenByMessage`).
- * Clicking a member's message (its text bubble, or its time for a bubble-less attachment)
- * opens a popover with the reaction picker, who reacted, and who has read up to it.
+ * Clicking a member's message (its text bubble, or its time for a bubble-less attachment), or the
+ * small "…" button beside it (the keyboard and screen-reader path), opens a popover with the
+ * reaction picker, who reacted, and who has read up to it. The bubble itself is text, not a
+ * button: screen readers read the message, and links in it are real links.
  */
 
-import { useId, useState } from "react";
+import { useState, type MouseEvent } from "react";
+import { MoreHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { isVoiceNote, type ChatMember, type ChatMessage } from "@/lib/api/chat-client";
+import { chatPersonName, splitLinks } from "@/lib/chat/person-name";
 import {
   dayDividerLabel,
   endsRun,
@@ -51,17 +55,18 @@ function displayBody(message: ChatMessage): string | null {
 function SeenBy({ members, mine }: { members: ChatMember[]; mine: boolean }) {
   const t = useTranslations("chat");
   const shown = members.slice(0, 4);
+  const nameOf = (member: ChatMember) => chatPersonName(member.name, member.state, t);
   return (
     <div
       data-testid="chat-seen-by"
       className={`flex items-center px-1 ${mine ? "justify-end" : "justify-start"}`}
-      title={t("seenBy", { names: members.map((m) => m.name).join(", ") })}
+      title={t("seenBy", { names: members.map(nameOf).join(", ") })}
     >
       {shown.map((member, index) => (
         <ChatAvatar
           key={member.id}
           userId={member.id}
-          name={member.name}
+          name={nameOf(member)}
           size={16}
           className={index === 0 ? "" : "ml-0.5"}
         />
@@ -72,6 +77,31 @@ function SeenBy({ members, mine }: { members: ChatMember[]; mine: boolean }) {
         </span>
       ) : null}
     </div>
+  );
+}
+
+/** Message text with http(s) links made clickable (new tab, no opener). */
+function MessageText({ text, mine }: { text: string; mine: boolean }) {
+  return (
+    <>
+      {splitLinks(text).map((part, index) =>
+        part.href ? (
+          <a
+            key={index}
+            href={part.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2"
+            style={{ color: mine ? "inherit" : "var(--chat-link)" }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            {part.text}
+          </a>
+        ) : (
+          <span key={index}>{part.text}</span>
+        )
+      )}
+    </>
   );
 }
 
@@ -105,18 +135,22 @@ function MessageRow({
   seenBy: ChatMember[] | undefined;
 } & ReactionProps) {
   const t = useTranslations("chat");
-  const bodyId = useId();
   const [open, setOpen] = useState(false);
   const mine = message.mine;
   const body = displayBody(message);
   const reactable = isReactable(message);
+  const senderName = chatPersonName(message.sender_name, message.sender_state, t);
 
-  const bubbleClass = "whitespace-pre-wrap break-words px-3.5 py-2 text-[14.5px] leading-[1.35]";
+  // min-w-0 + overflow-wrap:anywhere: a long URL or a word without spaces wraps inside the
+  // bubble instead of widening it (and the whole thread) past the column.
+  const bubbleClass =
+    "min-w-0 max-w-full whitespace-pre-wrap [overflow-wrap:anywhere] px-3.5 py-2 text-[14.5px] leading-[1.35]";
   // 18px bubbles; inside a run the corners on the sender's side tighten to 4px.
   const tightTop = !showSender;
   const tightBottom = !lastOfRun;
   const bubbleStyle = {
-    background: mine ? "var(--chat-blue)" : "var(--chat-bubble)",
+    // A darker blue than the icons' for text on it: white on #0084ff is only 3.7:1.
+    background: mine ? "var(--chat-bubble-mine)" : "var(--chat-bubble)",
     color: mine ? "#fff" : "var(--ink)",
     borderRadius: mine
       ? `18px ${tightTop ? 4 : 18}px ${tightBottom ? 4 : 18}px 18px`
@@ -135,32 +169,44 @@ function MessageRow({
     onToggleReaction?.(messageId, emoji);
   };
 
+  const openDetails = (event: MouseEvent) => {
+    // Selecting text to copy it is not a click on the message.
+    if (window.getSelection()?.toString()) return;
+    event.stopPropagation();
+    setOpen(true);
+  };
+
   const column = (
-    <div className={`flex max-w-[76%] flex-col gap-[2px] ${mine ? "items-end" : "items-start"}`}>
+    <div className={`flex min-w-0 max-w-[76%] flex-col gap-[2px] ${mine ? "items-end" : "items-start"}`}>
       {showSender ? (
         <span className="pl-3 text-[11px]" style={{ color: "var(--muted)" }}>
-          {message.sender_name}
+          {senderName}
         </span>
       ) : null}
       {body ? (
-        reactable ? (
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className={`${bubbleClass} cursor-pointer text-left focus-visible:outline-2`}
-              style={bubbleStyle}
-              aria-label={t("messageDetails")}
-              aria-describedby={bodyId}
-              data-testid="chat-message-bubble"
-            >
-              <span id={bodyId}>{body}</span>
-            </button>
-          </PopoverTrigger>
-        ) : (
-          <div className={bubbleClass} style={bubbleStyle}>
-            {body}
+        <div className={`flex max-w-full items-center gap-1 ${mine ? "flex-row-reverse" : ""}`}>
+          <div
+            className={`${bubbleClass} ${reactable ? "cursor-pointer" : ""}`}
+            style={bubbleStyle}
+            onClick={reactable ? openDetails : undefined}
+            data-testid={reactable ? "chat-message-bubble" : undefined}
+          >
+            <MessageText text={body} mine={mine} />
           </div>
-        )
+          {reactable ? (
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full opacity-0 transition-opacity hover:bg-[var(--paper-2)] focus-visible:opacity-100 focus-visible:outline-2 group-hover/message:opacity-100 data-[state=open]:opacity-100"
+                style={{ color: "var(--muted)" }}
+                aria-label={t("messageDetails")}
+                data-testid="chat-message-details-open"
+              >
+                <MoreHorizontal size={14} aria-hidden="true" />
+              </button>
+            </PopoverTrigger>
+          ) : null}
+        </div>
       ) : null}
       {message.attachment ? (
         isVoiceNote(message.attachment.content_type) ? (
@@ -173,13 +219,13 @@ function MessageRow({
         <ChatReactionChips message={message} viewerId={viewerId} onToggle={onToggleReaction} />
       ) : null}
       {reactable && !body ? (
-        // An attachment carries its own controls (link, player), so its time opens the details.
+        // An attachment carries its own controls (viewer, player), so its time opens the details.
         <PopoverTrigger asChild>
           <button
             type="button"
             className={`${timeClass} cursor-pointer underline-offset-2 hover:underline focus-visible:outline-2`}
             style={{ color: "var(--muted-2)" }}
-            aria-label={t("messageDetails")}
+            aria-label={`${t("messageDetails")} · ${time}`}
             data-testid="chat-message-bubble"
           >
             {time}
@@ -196,13 +242,13 @@ function MessageRow({
 
   return (
     <div
-      className={`flex items-end gap-2 ${gapBefore ? "mt-2" : ""} ${mine ? "justify-end" : "justify-start"}`}
+      className={`group/message flex items-end gap-2 ${gapBefore ? "mt-2" : ""} ${mine ? "justify-end" : "justify-start"}`}
       data-testid={mine ? "chat-message-mine" : "chat-message-incoming"}
     >
       {!mine ? (
         <div className="w-7 flex-shrink-0">
           {lastOfRun ? (
-            <ChatAvatar userId={message.sender_id} name={message.sender_name} size={28} />
+            <ChatAvatar userId={message.sender_id} name={senderName} size={28} />
           ) : null}
         </div>
       ) : null}

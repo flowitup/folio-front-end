@@ -33,7 +33,8 @@
     "more": "Plus",
     "chiffrage": "Chiffrage",
     "close": "Fermer",
-    "homeLink": "Folio — accueil"
+    "homeLink": "Folio — accueil",
+    "skipToContent": "Aller au contenu"
   },
   "auth": {
     "welcomeBack": "Bienvenue",
@@ -269,7 +270,12 @@
     "projectCreated": "Projet créé",
     "projectDeleted": "Projet supprimé",
     "projectUpdated": "Projet mis à jour",
-    "settingsForbidden": "Vous n'avez pas le droit de modifier les paramètres de ce projet."
+    "settingsForbidden": "Vous n'avez pas le droit de modifier les paramètres de ce projet.",
+    "hiddenSection": {
+      "title": "Section masquée",
+      "body": "L'entreprise de ce chantier a masqué cette section pour ses membres.",
+      "back": "Retour au chantier"
+    }
   },
   "settings": {
     "profile": "Profil",
@@ -738,7 +744,8 @@
       "unscheduled": "Non planifié",
       "noTasksDay": "—",
       "addOnDay": "Ajouter une tâche le {day}",
-      "addUnscheduled": "Ajouter une tâche non planifiée"
+      "addUnscheduled": "Ajouter une tâche non planifiée",
+      "overdue": "En retard"
     },
     "column": {
       "todo": "À faire",
@@ -759,7 +766,8 @@
       "invalid": "Certaines informations n’ont pas été acceptées. Vérifiez le titre (255 caractères maximum), la description (5 000 maximum) et les étiquettes (20 maximum, de 50 caractères chacune), puis réessayez.",
       "create": "Impossible de créer la tâche. Veuillez réessayer.",
       "save": "Impossible d’enregistrer la tâche. Veuillez réessayer.",
-      "delete": "Impossible de supprimer la tâche. Veuillez réessayer."
+      "delete": "Impossible de supprimer la tâche. Veuillez réessayer.",
+      "dueDate": "L’échéance doit être comprise entre le 01/01/2000 et le 31/12/2100. Vérifiez l’année."
     },
     "statusLabel": "Statut",
     "close": "Fermer",
@@ -775,7 +783,9 @@
     "unassigned": "Non assignée",
     "assigneeOther": "Une personne hors de l’équipe du projet",
     "assignedTo": "Assignée à {name}",
-    "discardChanges": "Abandonner les modifications non enregistrées de cette tâche ?"
+    "discardChanges": "Abandonner les modifications non enregistrées de cette tâche ?",
+    "overdue": "En retard",
+    "statusSaved": "Statut enregistré"
   },
   "labor": {
     "title": "Main-d'œuvre",
@@ -906,6 +916,7 @@
       "deactivateWorkerFailed": "Échec de la désactivation de l'ouvrier.",
       "deleteEntryFailed": "Échec de la suppression de la présence.",
       "saveWorkerFailed": "Échec de l'enregistrement de l'ouvrier.",
+      "roleUnavailable": "Ce rôle n'est plus disponible pour l'entreprise de ce chantier. Choisissez un autre rôle ou aucun rôle.",
       "invalidPhone": "Saisissez un numéro de téléphone valide, par ex. 06 12 34 56 78 ou +84 912 345 678.",
       "workerNameRequired": "Le nom de l'ouvrier est obligatoire.",
       "dailyRatePositive": "Le tarif journalier doit être supérieur à 0.",
@@ -1282,7 +1293,8 @@
     },
     "editor": {
       "placeholderTitle": "Titre de la note",
-      "placeholderBody": "Notez-le ici…"
+      "placeholderBody": "Notez-le ici…",
+      "titleRequired": "Donnez un titre à la note pour l’enregistrer."
     },
     "categoryLabel": "Catégorie",
     "filterAll": "Tout",
@@ -1313,7 +1325,7 @@
     "errors": {
       "saveFailed": "Impossible d'enregistrer la note. Réessayez.",
       "deleteFailed": "Impossible de supprimer la note. Réessayez.",
-      "validation": "Certains champs sont invalides.",
+      "validation": "Vérifiez la note : titre obligatoire de 200 caractères maximum, texte de 2 000 caractères maximum.",
       "forbidden": "Vous n'avez pas accès à ce projet.",
       "notFound": "Cette note n'existe plus.",
       "rateLimited": "Trop de requêtes. Réessayez dans un moment.",
@@ -1321,7 +1333,14 @@
     },
     "addedOn": "Ajoutée le {date}",
     "addedToday": "Ajoutée aujourd'hui",
-    "addedYesterday": "Ajoutée hier"
+    "addedYesterday": "Ajoutée hier",
+    "showMore": "Voir plus",
+    "showLess": "Voir moins",
+    "loadError": {
+      "title": "Impossible de charger les notes",
+      "body": "Vos notes n’ont pas été supprimées : le chargement a échoué. Réessayez dans un instant.",
+      "retry": "Réessayer"
+    }
   },
   "notifications": {
     "aria": {
@@ -1514,12 +1533,15 @@
         "recipient": "Destinataire",
         "status": "Statut",
         "totalTtc": "Total TTC",
-        "actions": "Actions"
+        "actions": "Actions",
+        "issuer": "Émetteur"
       },
       "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer.",
       "loadFailed": "Impossible de charger les documents.",
       "retry": "Réessayer",
-      "noFilterResults": "Aucun document avec ce statut."
+      "noFilterResults": "Aucun document avec ce statut.",
+      "companyFilter": "Entreprise émettrice",
+      "allCompanies": "Toutes les entreprises"
     },
     "form": {
       "modes": {
@@ -1647,7 +1669,8 @@
       },
       "issuer": {
         "issuedFrom": "Émis par",
-        "locked": "verrouillé"
+        "locked": "verrouillé",
+        "sourceCompanyNotIssuable": "L'entreprise d'origine n'est pas proposée : vous n'en êtes pas administrateur. Vérifiez l'émetteur choisi."
       },
       "deleteDialog": {
         "title": "Supprimer le document ?",
@@ -1698,7 +1721,8 @@
         "invoice": "Facture",
         "refundedBy": "Remboursé par",
         "status": "Statut",
-        "actions": "Actions"
+        "actions": "Actions",
+        "company": "Entreprise"
       },
       "attachments": {
         "count": "{n} fichiers",
@@ -1739,6 +1763,10 @@
         "body": "{number} ne sera plus suivie pour remboursement et son statut de remboursement sera effacé.",
         "fundsRelease": "Le déblocage de fonds lié {number} sera aussi supprimé, ce qui réduit le total débloqué du projet.",
         "cancel": "Annuler"
+      },
+      "companyFilter": {
+        "label": "Entreprise",
+        "all": "Toutes les entreprises"
       }
     },
     "import": {
@@ -2129,7 +2157,8 @@
         "forbidden": "Vous n'avez pas la permission de faire cela",
         "removeFailed": "Impossible de retirer ce membre. Veuillez réessayer.",
         "saveFailed": "Impossible d’enregistrer les modifications. Veuillez réessayer."
-      }
+      },
+      "removeSelf": "Vous ne pouvez pas vous retirer vous-même du projet : demandez-le à un administrateur."
     },
     "assign": {
       "button": "Assigner un membre",
@@ -2168,7 +2197,9 @@
         "detach": "Détacher",
         "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un code entreprise de votre administrateur pour vous rattacher.",
         "detached": "Vous avez quitté « {name} »."
-      }
+      },
+      "createCta": "Créer une entreprise",
+      "joinCta": "Rejoindre avec un code"
     },
     "invite": {
       "dialogTitle": "Rattacher une entreprise",
@@ -2338,6 +2369,20 @@
       "rateLimited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
       "generic": "Une erreur inattendue est survenue.",
       "invalidJoinCode": "Code entreprise invalide ou révoqué."
+    },
+    "scopePicker": {
+      "label": "Entreprise affichée",
+      "primary": "Principale"
+    },
+    "hiddenSections": {
+      "title": "Sections masquées",
+      "description": "Désactivez les sections que {company} n'utilise pas. Une section désactivée disparaît du menu de tous les membres de l'entreprise, sur le web et dans l'application mobile.",
+      "companyAreas": "Espaces de l'entreprise",
+      "projectSections": "Sections des chantiers",
+      "mobileOnly": "application mobile",
+      "saved": "Sections mises à jour.",
+      "error": "Impossible d'enregistrer les sections.",
+      "sections": {"billing": "Devis & factures", "library": "Bibliothèque de produits", "inventory": "Inventaire du matériel", "documents": "Documents", "photos": "Photos", "notes": "Notes", "salaries": "Salaires", "chiffrage": "Chiffrage", "analyses": "Analyses"}
     }
   },
   "bibliotheque": {
@@ -3042,7 +3087,8 @@
       "tooLarge": "Photo trop lourde (10 Mo max).",
       "unsupportedType": "Seules les photos JPEG, PNG et WebP sont acceptées.",
       "forbidden": "Vous n'êtes pas membre de ce canal.",
-      "reactFailed": "Impossible d'enregistrer votre réaction. Réessayez."
+      "reactFailed": "Impossible d'enregistrer votre réaction. Réessayez.",
+      "bodyTooLong": "Message trop long (4 000 caractères max)."
     },
     "voiceNote": "Message vocal",
     "voiceLoading": "Chargement de l'enregistrement…",
@@ -3050,7 +3096,7 @@
     "moderation": {
       "report": "Signaler le message",
       "reportTitle": "Signaler ce message ?",
-      "reportBody": "Il sera transmis aux modérateurs de votre entreprise et à l'équipe Folio pour examen.",
+      "reportBody": "Les administrateurs de votre entreprise seront prévenus et pourront retirer le message.",
       "reported": "Signalé. Merci.",
       "block": "Bloquer {name}",
       "blockTitle": "Bloquer {name} ?",
@@ -3062,6 +3108,37 @@
       "unblock": "Débloquer",
       "none": "Personne n'est bloqué.",
       "cancel": "Annuler",
+      "failed": "L'opération a échoué. Veuillez réessayer.",
+      "reasonLabel": "Motif (facultatif)",
+      "reasonPlaceholder": "Ex. : propos insultants"
+    },
+    "deletedAccount": "Compte supprimé",
+    "unnamedMember": "Membre sans nom",
+    "formerMember": "{name} (ancien membre)",
+    "loadOlder": "Charger les messages précédents",
+    "historyStart": "Début de la discussion",
+    "newMessages": "Nouveaux messages",
+    "noLongerAvailable": "Vous n'avez plus accès à cette discussion.",
+    "newMessageFrom": "{name} : {text}",
+    "attachment": "Pièce jointe",
+    "openImage": "Ouvrir la photo {name}",
+    "downloadImage": "Télécharger",
+    "reports": {
+      "title": "Messages signalés",
+      "description": "Messages que des membres ont signalés dans les discussions de l'entreprise. Retirez le message pour tout le monde, ou classez le signalement s'il n'y a rien à faire.",
+      "empty": "Aucun signalement en attente.",
+      "loadError": "Impossible de charger les signalements.",
+      "retry": "Réessayer",
+      "reportedBy": "Signalé par {name}",
+      "reason": "Motif : {reason}",
+      "from": "Message de {name}",
+      "dismiss": "Classer",
+      "deleteMessage": "Retirer le message",
+      "deleteTitle": "Retirer ce message ?",
+      "deleteBody": "Il disparaîtra de la discussion pour tout le monde. Cette action est définitive.",
+      "cancel": "Annuler",
+      "dismissed": "Signalement classé.",
+      "deleted": "Message retiré.",
       "failed": "L'opération a échoué. Veuillez réessayer."
     }
   },

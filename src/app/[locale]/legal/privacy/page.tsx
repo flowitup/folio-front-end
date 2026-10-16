@@ -19,7 +19,7 @@ export async function generateMetadata({
 
 const SUPPORT_EMAIL = "mt.bui.fr@gmail.com";
 /** Date of the last change to the text (YYYY-MM-DD), shown in each language. */
-const UPDATED = "2026-09-14";
+const UPDATED = "2026-10-16";
 
 function updatedLabel(locale: string): string {
   return new Intl.DateTimeFormat(locale, {
@@ -99,9 +99,12 @@ function French() {
         Vos données sont visibles des autres membres des projets et entreprises
         auxquels vous appartenez, selon leur rôle. Nous ne vendons aucune donnée
         et n&apos;affichons aucune publicité. Nous utilisons des sous-traitants
-        techniques pour l&apos;hébergement (Google Cloud, Union européenne),
-        l&apos;envoi de SMS et d&apos;e-mails, et les notifications push (Expo,
-        Apple, Google), chacun limité à sa fonction.
+        techniques, chacun limité à sa fonction : l&apos;hébergement des
+        serveurs et des fichiers (Hetzner, Union européenne), le réseau et la
+        protection du site (Cloudflare), l&apos;envoi des SMS de connexion, l&apos;envoi des e-mails (Resend) et les
+        notifications push (Expo, Apple, Google). Pour afficher la météo du
+        chantier, l&apos;application mobile envoie la ville du projet à
+        Open-Meteo, sans aucune donnée vous concernant.
       </p>
       <h2>Conservation</h2>
       <p>
@@ -174,9 +177,12 @@ function English() {
       <p>
         Your data is visible to other members of the projects and companies you
         belong to, according to their role. We do not sell data and show no
-        advertising. We rely on technical processors for hosting (Google Cloud,
-        European Union), SMS and e-mail delivery, and push notifications (Expo,
-        Apple, Google), each limited to its function.
+        advertising. We rely on technical processors, each limited to its
+        function: server and file hosting (Hetzner, European Union), network
+        and site protection (Cloudflare), delivery of sign-in SMS, e-mail
+        delivery (Resend) and push notifications (Expo, Apple, Google). To show
+        the site weather, the mobile app sends the project&apos;s city to
+        Open-Meteo, with no data about you.
       </p>
       <h2>Retention</h2>
       <p>

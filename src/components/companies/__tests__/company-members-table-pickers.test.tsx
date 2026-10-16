@@ -68,7 +68,7 @@ const FIXTURE_PROJECTS: Project[] = [
   {
     id: "proj-2",
     name: "Chantier B",
-    // Labelled by its address, as everywhere else in the app.
+    // Labelled by its name first, as everywhere else in the app.
     address: "5 rue du Chantier B",
     owner_id: "owner-1",
     user_count: 1,
@@ -336,7 +336,7 @@ describe("CompanyMembersTable — Projects column", () => {
 
     const items = await openPicker(user, "Chantier A");
     const labels = items.map((el) => el.textContent);
-    expect(labels).toEqual(["Chantier A", "5 rue du Chantier B"]); // never "Other Company Project"
+    expect(labels).toEqual(["Chantier A", "Chantier B"]); // never "Other Company Project"
     expect(findItem(items, /Chantier A/).getAttribute("data-state")).toBe("checked");
     expect(findItem(items, /Chantier B/).getAttribute("data-state")).toBe("unchecked");
   });

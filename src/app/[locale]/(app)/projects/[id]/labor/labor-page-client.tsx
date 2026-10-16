@@ -115,10 +115,6 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // no view_pay): they were explicitly granted invoice rights and still need
   // the Payments tab, even without labor visibility.
   const isMemberPersona = !canManageLabor && !canViewPay && !canManageInvoices;
-  // Creating, renaming or deleting a labor role is a company-level write
-  // (admin or manager of the company whose roles `/labor/roles` lists — the
-  // current one), not a project permission.
-  const canEditLaborRoles = canManageLaborRoles(user?.permissions, user?.companies);
 
   // State. `activeTab` is seeded with a placeholder and corrected by the
   // persona effect below the FIRST time ProjectContext resolves — never
@@ -153,24 +149,51 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // Payments tab's record dialog (methods are company-scoped). The projects
   // LIST doesn't carry company_id, so resolve it from the single-project GET
   // (same precedent as invoices/new). Non-fatal: null just hides the picker.
-  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [fetchedCompanyId, setFetchedCompanyId] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     fetchProjectById(projectId)
       .then((p) => {
-        if (!cancelled) setCompanyId(p.company_id ?? null);
+        if (!cancelled) setFetchedCompanyId(p.company_id ?? null);
       })
       .catch(() => {
-        if (!cancelled) setCompanyId(null);
+        if (!cancelled) setFetchedCompanyId(null);
       });
     return () => {
       cancelled = true;
     };
   }, [projectId]);
+  const companyId =
+    projects.find((p) => p.id === projectId)?.company_id ?? fetchedCompanyId ?? null;
 
-  // Roles state
+  // Creating, renaming or deleting a labor role is a company-level write:
+  // admin or manager of THIS project's company (whose roles are listed here),
+  // not of the user's primary company, and not a project permission.
+  const canEditLaborRoles =
+    companyId !== null && canManageLaborRoles(user?.permissions, user?.companies, companyId);
+
+  // Roles state — always the project's company's roles: a worker of this
+  // project only accepts a role of its company (the primary company's roles
+  // look identical, "Ouvrier principal", but every save with one fails).
   const [roles, setRoles] = useState<LaborRole[]>([]);
   const [palette, setPalette] = useState<string[]>([]);
+  const companyIdRef = useRef<string | null>(null);
+  companyIdRef.current = companyId;
+  const refreshRoles = useCallback(async (): Promise<LaborRole[] | null> => {
+    const forCompany = companyIdRef.current;
+    if (!forCompany) return null;
+    const result = await fetchLaborRolesAction(forCompany);
+    // A late answer for a company the page no longer shows must not land.
+    if (!result.success || companyIdRef.current !== forCompany) return null;
+    setRoles(result.data.roles);
+    setPalette(result.data.palette);
+    return result.data.roles;
+  }, []);
+  useEffect(() => {
+    if (isProjectContextLoading || isMemberPersona || !companyId) return;
+    // Non-fatal: roles are enhancement only; missing roles doesn't prevent the page from loading.
+    void refreshRoles();
+  }, [companyId, isProjectContextLoading, isMemberPersona, refreshRoles]);
 
   // Only active workers can be logged for a day.
   const activeWorkers = useMemo(() => workers.filter((w) => w.is_active), [workers]);
@@ -345,14 +368,6 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
           // Non-fatal: the Paid/Balance columns and the Payments tab's
           // default-month pick degrade gracefully (dashes / current month)
           // when this fails; the rest of the page still loads.
-        }),
-        fetchLaborRolesAction().then((result) => {
-          if (result.success) {
-            setRoles(result.data.roles);
-            setPalette(result.data.palette);
-          }
-          // Non-fatal: roles are enhancement only; missing roles doesn't
-          // prevent the page from loading.
         }),
       ]);
       setIsLoading(false);
@@ -836,6 +851,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         canManageRoles={canEditLaborRoles}
         onRoleUpdated={handleRoleUpdated}
         onRoleDeleted={handleRoleDeleted}
+        companyId={companyId}
+        onRefreshRoles={refreshRoles}
       />
 
       <AddWorkerDialog
@@ -849,6 +866,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         canManageRoles={canEditLaborRoles}
         onRoleUpdated={handleRoleUpdated}
         onRoleDeleted={handleRoleDeleted}
+        companyId={companyId}
+        onRefreshRoles={refreshRoles}
       />
 
       <LogDayDialog

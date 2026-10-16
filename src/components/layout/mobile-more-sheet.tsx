@@ -21,6 +21,7 @@ import { useProject } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
 import { can, isCompanyAdmin } from "@/lib/auth/permissions";
 import { BILLING_NAV } from "@/components/layout/sidebar-billing-group";
+import { hiddenCompanyAreas, hiddenProjectSections } from "@/lib/companies/hidden-sections";
 
 interface MobileMoreSheetProps {
   open: boolean;
@@ -46,11 +47,19 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
   const canViewBilling = isCompanyAdmin(user?.companies, null, user?.permissions);
   const pathWithoutLocale =
     pathname.replace(new RegExp(`^/${locale}`), "") || "/";
+  // Sections a company turned off, as in the desktop sidebar.
+  const hiddenAreas = hiddenCompanyAreas(user?.companies);
+  const hiddenOnProject = hiddenProjectSections(user?.companies, selectedProject?.company_id);
+  const projectBillingVisible =
+    canViewBilling &&
+    !hiddenOnProject.has("billing") &&
+    (!selectedProject?.company_id ||
+      isCompanyAdmin(user?.companies, selectedProject.company_id, user?.permissions));
 
-  const projectItems = selectedProjectId
+  const allProjectItems = selectedProjectId
     ? [
         { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
-        ...(canViewBilling
+        ...(projectBillingVisible
           ? [
               {
                 key: "quotesInvoices",
@@ -68,16 +77,21 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
         { key: "photos", href: `/projects/${selectedProjectId}/photos`, icon: Images },
       ]
     : [];
+  const projectItems = allProjectItems.filter((item) => !hiddenOnProject.has(item.key));
 
   // Company-wide pages, as in the desktop sidebar.
   const companyItems = [
-    { key: "bibliotheque", href: "/bibliotheque", icon: Library },
-    { key: "inventory", href: "/inventory", icon: Wrench },
+    ...(hiddenAreas.has("library")
+      ? []
+      : [{ key: "bibliotheque", href: "/bibliotheque", icon: Library }]),
+    ...(hiddenAreas.has("inventory")
+      ? []
+      : [{ key: "inventory", href: "/inventory", icon: Wrench }]),
   ];
 
   // Same entries and gate as the desktop sidebar's Billing group: company
   // admins only (anyone else is redirected away from /billing).
-  const billingItems = canViewBilling
+  const billingItems = canViewBilling && !hiddenAreas.has("billing")
     ? BILLING_NAV.map((item) => ({ ...item, label: tBilling(item.key) }))
     : [];
 

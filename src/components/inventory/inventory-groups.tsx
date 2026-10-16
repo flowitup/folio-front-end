@@ -55,7 +55,7 @@ export function InventoryGroups({ groups, onEdit, onDelete }: Props) {
                     <TableHead className="hidden md:table-cell">{t("fields.category")}</TableHead>
                     <TableHead className="hidden md:table-cell">{t("fields.reference")}</TableHead>
                     <TableHead>{t("fields.condition")}</TableHead>
-                    <TableHead className="w-24 text-right">
+                    <TableHead className="w-[76px] text-right">
                       <span className="sr-only">{t("actions.rowActions")}</span>
                     </TableHead>
                   </TableRow>
@@ -64,10 +64,12 @@ export function InventoryGroups({ groups, onEdit, onDelete }: Props) {
                   {group.items.map((item) => (
                     <TableRow key={item.id} data-testid={`inventory-item-${item.id}`}>
                       <TableCell className="num text-right text-[14px]">{item.quantity}</TableCell>
-                      <TableCell>
+                      {/* Names and descriptions wrap: a nowrap cell pushed the row actions past a
+                          390px screen into a sideways scroll nobody could see. */}
+                      <TableCell className="min-w-0 whitespace-normal [overflow-wrap:anywhere]">
                         <div className="font-medium">{item.name}</div>
                         {item.description && (
-                          <div className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
+                          <div className="line-clamp-2 text-[12px]" style={{ color: "var(--muted)" }}>
                             {item.description}
                           </div>
                         )}
@@ -86,12 +88,13 @@ export function InventoryGroups({ groups, onEdit, onDelete }: Props) {
                           {t(`condition.${item.condition}`)}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
+                      <TableCell className="px-1 text-right">
+                        <div className="flex justify-end gap-0.5">
                           {onEdit && (
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-8 w-8"
                               aria-label={t("actions.edit")}
                               onClick={() => onEdit(item)}
                             >
@@ -102,6 +105,7 @@ export function InventoryGroups({ groups, onEdit, onDelete }: Props) {
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-8 w-8"
                               aria-label={t("actions.delete")}
                               onClick={() => onDelete(item)}
                             >

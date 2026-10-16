@@ -53,7 +53,10 @@ export interface CreateCompanyPayload {
   prefix_override?: string | null;
 }
 
-export type UpdateCompanyPayload = Partial<CreateCompanyPayload>;
+export type UpdateCompanyPayload = Partial<CreateCompanyPayload> & {
+  /** Full list of hidden sections (replaces the stored one). */
+  hidden_sections?: string[];
+};
 
 // ---------------------------------------------------------------------------
 // API wrappers
@@ -93,15 +96,17 @@ function normalizeMyCompany(item: unknown): MyCompany {
     "company" in item &&
     "access" in item
   ) {
-    const { company, access } = item as {
+    const { company, access, permissions } = item as {
       company: Company;
       access: { is_primary: boolean; attached_at: string; role?: "admin" | "member" };
+      permissions?: string[];
     };
     return {
       ...company,
       is_primary: access.is_primary,
       attached_at: access.attached_at,
       role: access.role ?? "member",
+      ...(Array.isArray(permissions) ? { permissions } : {}),
     };
   }
   return item as MyCompany;
@@ -157,14 +162,21 @@ export async function fetchCompany(id: string): Promise<Company> {
 /**
  * Create a new company. Requires admin role (*:*).
  */
-export async function createCompany(payload: CreateCompanyPayload): Promise<Company> {
+/**
+ * `locale` (fr / en / vi) is the creator's UI language: the API names the new
+ * company's default labor roles in it ("Ouvrier principal" for a French user).
+ */
+export async function createCompany(
+  payload: CreateCompanyPayload,
+  locale?: string
+): Promise<Company> {
   const authHeaders = await sessionAuthHeader();
   let response: Response;
   try {
     response = await fetch(`${baseUrl()}/companies`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(locale ? { ...payload, locale } : payload),
       cache: "no-store",
     });
   } catch (err) {

@@ -15,6 +15,7 @@ import { useRef, useState } from "react";
 import { Loader2, Pencil, Trash2, Check, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { DisabledReason } from "@/components/ui/disabled-reason";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
@@ -242,18 +243,19 @@ export function PaymentMethodRow({
             >
               <Pencil size={13} />
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={() => onDeleteRequest(method)}
-              disabled={rowDisabled || method.isBuiltin}
-              aria-label={t("deleteLabelAria", { name: displayLabel })}
-              title={method.isBuiltin ? t("errors.builtin_protected") : undefined}
-            >
-              <Trash2 size={13} />
-            </Button>
+            <DisabledReason reason={method.isBuiltin ? t("errors.builtin_protected") : undefined}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => onDeleteRequest(method)}
+                disabled={rowDisabled || method.isBuiltin}
+                aria-label={t("deleteLabelAria", { name: displayLabel })}
+              >
+                <Trash2 size={13} />
+              </Button>
+            </DisabledReason>
           </>
         )}
       </div>

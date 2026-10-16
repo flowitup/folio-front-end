@@ -26,8 +26,9 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { projectSwitchPath } from "@/lib/projects/project-switch-path";
-import { projectDisplayName } from "@/lib/projects/project-display-name";
-import { can, canCreateProject } from "@/lib/auth/permissions";
+import { projectDisplayName, projectSecondaryLabel } from "@/lib/projects/project-display-name";
+import { can, canCreateProject, isCompanyAdmin } from "@/lib/auth/permissions";
+import { isOnboardingPath } from "@/lib/auth/onboarding-gate";
 import { FolioLogo } from "@/components/folio-logo";
 import {
   DropdownMenu,
@@ -37,6 +38,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarBillingGroup } from "@/components/layout/sidebar-billing-group";
+import { hiddenCompanyAreas, hiddenProjectSections } from "@/lib/companies/hidden-sections";
+import { projectCompanyLabel } from "@/lib/companies/page-company";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -74,8 +77,18 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
     selectedProject?.my_permissions
   );
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
+  // Sections a company turned off (Settings › Company): project sections follow
+  // the selected project's company, company-wide areas every company of the user.
+  const hiddenAreas = hiddenCompanyAreas(user?.companies);
+  const hiddenOnProject = hiddenProjectSections(user?.companies, selectedProject?.company_id);
+  const projectBillingVisible =
+    canViewBilling &&
+    !hiddenOnProject.has("billing") &&
+    // The project's quotes & invoices are its company's: admins of that company only.
+    (!selectedProject?.company_id ||
+      isCompanyAdmin(user?.companies, selectedProject.company_id, user?.permissions));
 
-  const projectNav = [
+  const allProjectNav = [
     { key: "dashboard", href: "/dashboard", icon: Home },
     { key: "projects", href: "/projects", icon: FolderOpen },
     { key: "bibliotheque", href: "/bibliotheque", icon: Library },
@@ -87,7 +100,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
           { key: "invoices", href: `/projects/${selectedProjectId}/invoices`, icon: Receipt },
           // The project's quotes & invoices link into /billing, so the entry
           // follows the same company-admin gate as the Billing group below.
-          ...(canViewBilling
+          ...(projectBillingVisible
             ? [
                 {
                   key: "quotesInvoices",
@@ -106,6 +119,16 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
         ]
       : []),
   ];
+
+  const NAV_SECTION: Record<string, string> = {
+    bibliotheque: "library",
+    inventory: "inventory",
+  };
+  const projectNav = allProjectNav.filter((item) => {
+    const area = NAV_SECTION[item.key];
+    if (area) return !hiddenAreas.has(area);
+    return !hiddenOnProject.has(item.key);
+  });
 
   const settingsItem = { key: "settings", href: "/settings", icon: Settings };
 
@@ -129,6 +152,10 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
       router.push(switchPath);
     }
   };
+
+  // Onboarding (no company yet): every link would bounce straight back; sign-out and
+  // language stay in the top bar.
+  if (isOnboardingPath(pathWithoutLocale)) return null;
 
   return (
     <aside
@@ -162,7 +189,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
               <button
                 type="button"
                 aria-label={tProjects("selectProject")}
-                className="card-paper-surface flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:border-[#c9bfa9] focus:outline-none"
+                className="card-paper-surface flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:border-[#c9bfa9] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
                 style={{ borderRadius: 12, cursor: "pointer" }}
               >
                 <div
@@ -180,6 +207,15 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
                     <div className="num text-[11px]" style={{ color: "var(--muted)" }}>
                       {selectedPhase || "—"}
                       {selectedProgress > 0 ? ` · ${Math.round(selectedProgress * 100)}%` : ""}
+                    </div>
+                  )}
+                  {selectedProject && projectCompanyLabel(user?.companies, selectedProject.company_id) && (
+                    <div
+                      className="truncate text-[11px]"
+                      style={{ color: "var(--muted)" }}
+                      data-testid="project-switcher-selected-company"
+                    >
+                      {projectCompanyLabel(user?.companies, selectedProject.company_id)}
                     </div>
                   )}
                 </div>
@@ -203,6 +239,20 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
                     />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[13px] font-medium">{projectDisplayName(p)}</div>
+                      {projectSecondaryLabel(p) && (
+                        <div className="truncate text-[11px]" style={{ color: "var(--muted)" }}>
+                          {projectSecondaryLabel(p)}
+                        </div>
+                      )}
+                      {projectCompanyLabel(user?.companies, p.company_id) && (
+                        <div
+                          className="truncate text-[11px]"
+                          style={{ color: "var(--muted)" }}
+                          data-testid="project-switcher-company"
+                        >
+                          {projectCompanyLabel(user?.companies, p.company_id)}
+                        </div>
+                      )}
                     </div>
                     {isActive && (
                       <Check
@@ -256,7 +306,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
 
         {/* Billing group — after project-scoped nav, before Settings.
             Only rendered for users who can access billing (company admins / superadmin). */}
-        {canViewBilling && <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />}
+        {canViewBilling && !hiddenAreas.has("billing") && <SidebarBillingGroup pathWithoutLocale={pathWithoutLocale} />}
 
         {/* Settings — always last */}
         {(() => {

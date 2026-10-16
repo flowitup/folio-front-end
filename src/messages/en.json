@@ -33,7 +33,8 @@
     "more": "More",
     "chiffrage": "Cost planning",
     "close": "Close",
-    "homeLink": "Folio — home"
+    "homeLink": "Folio — home",
+    "skipToContent": "Skip to content"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -269,7 +270,12 @@
     "projectCreated": "Project created",
     "projectDeleted": "Project deleted",
     "projectUpdated": "Project updated",
-    "settingsForbidden": "You don't have permission to change this project's settings."
+    "settingsForbidden": "You don't have permission to change this project's settings.",
+    "hiddenSection": {
+      "title": "Hidden section",
+      "body": "This project's company has hidden this section from its members.",
+      "back": "Back to the project"
+    }
   },
   "settings": {
     "profile": "Profile",
@@ -738,7 +744,8 @@
       "unscheduled": "Unscheduled",
       "noTasksDay": "—",
       "addOnDay": "Add task on {day}",
-      "addUnscheduled": "Add unscheduled task"
+      "addUnscheduled": "Add unscheduled task",
+      "overdue": "Overdue"
     },
     "column": {
       "todo": "To do",
@@ -759,7 +766,8 @@
       "invalid": "Some details were not accepted. Check the title (255 characters at most), the description (5,000 at most) and the labels (20 at most, 50 characters each), then try again.",
       "create": "Could not create the task. Please try again.",
       "save": "Could not save the task. Please try again.",
-      "delete": "Could not delete the task. Please try again."
+      "delete": "Could not delete the task. Please try again.",
+      "dueDate": "The due date must be between 01/01/2000 and 12/31/2100. Check the year."
     },
     "statusLabel": "Status",
     "close": "Close",
@@ -775,7 +783,9 @@
     "unassigned": "Unassigned",
     "assigneeOther": "Someone outside the project team",
     "assignedTo": "Assigned to {name}",
-    "discardChanges": "Discard your unsaved changes to this task?"
+    "discardChanges": "Discard your unsaved changes to this task?",
+    "overdue": "Overdue",
+    "statusSaved": "Status saved"
   },
   "labor": {
     "title": "Labor",
@@ -852,8 +862,8 @@
       "updated": "Role updated.",
       "deleted": "Role deleted.",
       "defaults": {
-        "masterCraftsman": "Master craftsman",
-        "assistant": "Assistant"
+        "masterCraftsman": "Lead worker",
+        "assistant": "Assistant worker"
       },
       "searchRoles": "Search roles…",
       "noMatchingRoles": "No matching roles",
@@ -906,6 +916,7 @@
       "deactivateWorkerFailed": "Failed to deactivate worker.",
       "deleteEntryFailed": "Failed to delete entry.",
       "saveWorkerFailed": "Failed to save worker.",
+      "roleUnavailable": "This role is no longer available for this project's company. Choose another role or no role.",
       "invalidPhone": "Enter a valid phone number, e.g. 06 12 34 56 78 or +84 912 345 678.",
       "workerNameRequired": "Worker name is required.",
       "dailyRatePositive": "Daily rate must be greater than 0.",
@@ -1282,7 +1293,8 @@
     },
     "editor": {
       "placeholderTitle": "Note title",
-      "placeholderBody": "Write it down…"
+      "placeholderBody": "Write it down…",
+      "titleRequired": "Give the note a title to save it."
     },
     "categoryLabel": "Category",
     "filterAll": "All",
@@ -1313,7 +1325,7 @@
     "errors": {
       "saveFailed": "Couldn’t save the note. Try again.",
       "deleteFailed": "Couldn’t delete the note. Try again.",
-      "validation": "Some fields are invalid.",
+      "validation": "Check the note: a title is required (200 characters max), and the text is limited to 2,000 characters.",
       "forbidden": "You don’t have access to this project.",
       "notFound": "This note doesn’t exist anymore.",
       "rateLimited": "Too many requests. Try again in a moment.",
@@ -1321,7 +1333,14 @@
     },
     "addedOn": "Added {date}",
     "addedToday": "Added today",
-    "addedYesterday": "Added yesterday"
+    "addedYesterday": "Added yesterday",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "loadError": {
+      "title": "Couldn’t load the notes",
+      "body": "Your notes have not been deleted: loading them failed. Try again in a moment.",
+      "retry": "Try again"
+    }
   },
   "notifications": {
     "aria": {
@@ -1514,12 +1533,15 @@
         "recipient": "Recipient",
         "status": "Status",
         "totalTtc": "Total (incl. VAT)",
-        "actions": "Actions"
+        "actions": "Actions",
+        "issuer": "Issuer"
       },
       "loadMoreFailed": "Failed to load more documents. Please try again.",
       "loadFailed": "The documents couldn't be loaded.",
       "retry": "Try again",
-      "noFilterResults": "No documents with this status."
+      "noFilterResults": "No documents with this status.",
+      "companyFilter": "Issuing company",
+      "allCompanies": "All companies"
     },
     "form": {
       "modes": {
@@ -1647,7 +1669,8 @@
       },
       "issuer": {
         "issuedFrom": "Issued from",
-        "locked": "locked"
+        "locked": "locked",
+        "sourceCompanyNotIssuable": "The original company is not offered because you are not one of its admins. Check the issuer selected."
       },
       "deleteDialog": {
         "title": "Delete document?",
@@ -1698,7 +1721,8 @@
         "invoice": "Invoice",
         "refundedBy": "Refunded by",
         "status": "Status",
-        "actions": "Actions"
+        "actions": "Actions",
+        "company": "Company"
       },
       "attachments": {
         "count": "{n} files",
@@ -1739,6 +1763,10 @@
         "body": "{number} will no longer be tracked for reimbursement and its refund status will be cleared.",
         "fundsRelease": "The linked funds release {number} will also be deleted, which lowers the project's released total.",
         "cancel": "Cancel"
+      },
+      "companyFilter": {
+        "label": "Company",
+        "all": "All companies"
       }
     },
     "import": {
@@ -2129,7 +2157,8 @@
         "forbidden": "You don't have permission to do that",
         "removeFailed": "Could not remove this member. Please try again.",
         "saveFailed": "Could not save the changes. Please try again."
-      }
+      },
+      "removeSelf": "You cannot remove yourself from the project: ask an admin to do it."
     },
     "assign": {
       "button": "Assign member",
@@ -2168,7 +2197,9 @@
         "detach": "Detach",
         "detachConfirm": "Remove yourself from \"{name}\"? You will lose access and will need a company code from your admin to re-attach.",
         "detached": "You left \"{name}\"."
-      }
+      },
+      "createCta": "Create a company",
+      "joinCta": "Join with a code"
     },
     "invite": {
       "dialogTitle": "Attach a company",
@@ -2338,6 +2369,20 @@
       "rateLimited": "Too many requests. Please wait and try again.",
       "generic": "An unexpected error occurred.",
       "invalidJoinCode": "Invalid or revoked company code."
+    },
+    "scopePicker": {
+      "label": "Company shown",
+      "primary": "Primary"
+    },
+    "hiddenSections": {
+      "title": "Hidden sections",
+      "description": "Switch off the sections {company} does not use. A switched-off section disappears from the menu of every member of the company, on the web and in the mobile app.",
+      "companyAreas": "Company areas",
+      "projectSections": "Project sections",
+      "mobileOnly": "mobile app",
+      "saved": "Sections updated.",
+      "error": "Could not save the sections.",
+      "sections": {"billing": "Quotes & invoices", "library": "Product library", "inventory": "Equipment inventory", "documents": "Documents", "photos": "Photos", "notes": "Notes", "salaries": "Salaries", "chiffrage": "Cost planning", "analyses": "Analyses"}
     }
   },
   "bibliotheque": {
@@ -3042,7 +3087,8 @@
       "tooLarge": "Photo is too large (10 MB max).",
       "unsupportedType": "Only JPEG, PNG and WebP photos are supported.",
       "forbidden": "You are not a member of this channel.",
-      "reactFailed": "Couldn't save your reaction. Try again."
+      "reactFailed": "Couldn't save your reaction. Try again.",
+      "bodyTooLong": "Message too long (4,000 characters max)."
     },
     "voiceNote": "Voice message",
     "voiceLoading": "Loading the recording…",
@@ -3050,7 +3096,7 @@
     "moderation": {
       "report": "Report message",
       "reportTitle": "Report this message?",
-      "reportBody": "It will be sent to the moderators of your company and the Folio team for review.",
+      "reportBody": "Your company's admins will be notified and can remove the message.",
       "reported": "Reported. Thank you.",
       "block": "Block {name}",
       "blockTitle": "Block {name}?",
@@ -3062,7 +3108,38 @@
       "unblock": "Unblock",
       "none": "Nobody is blocked.",
       "cancel": "Cancel",
-      "failed": "That didn't work. Please try again."
+      "failed": "That didn't work. Please try again.",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "e.g. insulting language"
+    },
+    "deletedAccount": "Deleted account",
+    "unnamedMember": "Unnamed member",
+    "formerMember": "{name} (former member)",
+    "loadOlder": "Load earlier messages",
+    "historyStart": "Start of the conversation",
+    "newMessages": "New messages",
+    "noLongerAvailable": "You no longer have access to this conversation.",
+    "newMessageFrom": "{name}: {text}",
+    "attachment": "Attachment",
+    "openImage": "Open photo {name}",
+    "downloadImage": "Download",
+    "reports": {
+      "title": "Reported messages",
+      "description": "Messages that members reported in the company's conversations. Remove the message for everyone, or dismiss the report if nothing needs doing.",
+      "empty": "No reports waiting.",
+      "loadError": "Couldn't load the reports.",
+      "retry": "Retry",
+      "reportedBy": "Reported by {name}",
+      "reason": "Reason: {reason}",
+      "from": "Message from {name}",
+      "dismiss": "Dismiss",
+      "deleteMessage": "Remove message",
+      "deleteTitle": "Remove this message?",
+      "deleteBody": "It will disappear from the conversation for everyone. This cannot be undone.",
+      "cancel": "Cancel",
+      "dismissed": "Report dismissed.",
+      "deleted": "Message removed.",
+      "failed": "Something went wrong. Please try again."
     }
   },
   "help": {

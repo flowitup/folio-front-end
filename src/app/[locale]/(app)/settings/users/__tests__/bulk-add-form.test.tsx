@@ -86,10 +86,10 @@ describe("BulkAddForm", () => {
   // ---------------------------------------------------------------------------
 
   describe("Project labels", () => {
-    it("labels a project by its address and hides the stored name", () => {
+    it("labels a project by its name, not its address", () => {
       renderForm([{ id: "proj-4", name: "Project Delta", address: "4 rue Delta, Arcueil" }]);
-      expect(screen.getByRole("checkbox", { name: "4 rue Delta, Arcueil" })).toBeDefined();
-      expect(screen.queryByText("Project Delta")).toBeNull();
+      expect(screen.getByRole("checkbox", { name: "Project Delta" })).toBeDefined();
+      expect(screen.queryByText("4 rue Delta, Arcueil")).toBeNull();
     });
   });
 

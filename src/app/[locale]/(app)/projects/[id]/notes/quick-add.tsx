@@ -12,6 +12,7 @@ import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CategoryMenu } from "./category-menu";
 import type { NoteCategory } from "@/lib/api/notes";
+import { NOTE_BODY_MAX, NOTE_TITLE_MAX, noteCharCount } from "@/lib/notes/limits";
 
 export interface QuickAddPayload {
   title: string;
@@ -100,8 +101,14 @@ export function QuickAdd({ onAdd, disabled = false }: QuickAddProps) {
           onKeyDown={onTitleKey}
           placeholder={t("quickAdd.placeholderTitle")}
           aria-label={t("quickAdd.placeholderTitle")}
+          maxLength={NOTE_TITLE_MAX}
           disabled={disabled}
         />
+        {noteCharCount(title.length, NOTE_TITLE_MAX) && (
+          <span className="num text-[11px]" style={{ color: "var(--muted)" }} aria-live="polite">
+            {noteCharCount(title.length, NOTE_TITLE_MAX)}
+          </span>
+        )}
         {!open && (
           <span className="quickadd-hint">{t("quickAdd.hint")}</span>
         )}
@@ -118,8 +125,14 @@ export function QuickAdd({ onAdd, disabled = false }: QuickAddProps) {
               placeholder={t("quickAdd.placeholderBody")}
               aria-label={t("quickAdd.placeholderBody")}
               rows={3}
+              maxLength={NOTE_BODY_MAX}
               disabled={disabled}
             />
+            {noteCharCount(body.length, NOTE_BODY_MAX) && (
+              <div className="num text-right text-[11px]" style={{ color: "var(--muted)" }} aria-live="polite">
+                {noteCharCount(body.length, NOTE_BODY_MAX)}
+              </div>
+            )}
             <div className="quickadd-controls">
               <CategoryMenu value={cat} onChange={setCat} disabled={disabled} />
               <button

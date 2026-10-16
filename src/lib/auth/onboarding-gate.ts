@@ -24,3 +24,12 @@ export function shouldRedirectToOnboarding({
 }: OnboardingGateInput): boolean {
   return !isPlatformOps && companiesCount === 0 && !hasVisibleProjects;
 }
+
+/**
+ * True on the onboarding screen (path without its locale prefix). The app shell hides
+ * its navigation and the floating chat there: a user with no company would only be
+ * bounced back to onboarding by every destination, and has no conversation yet.
+ */
+export function isOnboardingPath(pathWithoutLocale: string): boolean {
+  return pathWithoutLocale === "/onboarding" || pathWithoutLocale.startsWith("/onboarding/");
+}

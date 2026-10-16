@@ -32,6 +32,8 @@ export interface UserCompanySummary {
   legal_name: string;
   role: CompanyRole;
   is_primary: boolean;
+  /** Sections the company hides from its members' navigation (absent on older APIs). */
+  hidden_sections?: string[];
 }
 
 const SUPERADMIN_WILDCARD = "*:*";

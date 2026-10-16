@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Dialog,
@@ -43,11 +43,24 @@ export function TaskCreateDialog({
 }: TaskCreateDialogProps) {
   const t = useTranslations("planning");
   const [saving, setSaving] = useState(false);
+  // Whether anything was typed (reported by TaskForm): Escape, the backdrop
+  // and Cancel then ask before throwing it away, as the task drawer does.
+  const dirtyRef = useRef(false);
+  const onDirtyChange = useCallback((dirty: boolean) => {
+    dirtyRef.current = dirty;
+  }, []);
+
+  const requestOpenChange = (next: boolean) => {
+    if (!next && dirtyRef.current && !confirm(t("discardChanges"))) return;
+    if (!next) dirtyRef.current = false;
+    onOpenChange(next);
+  };
 
   const handleSubmit = async (payload: CreateTaskPayload) => {
     setSaving(true);
     try {
-      await createTask(projectId, { ...payload, status: defaultStatus });
+      await createTask(projectId, { ...payload, status: payload.status ?? defaultStatus });
+      dirtyRef.current = false;
       onCreated();
       onOpenChange(false);
     } catch (err) {
@@ -59,7 +72,7 @@ export function TaskCreateDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={requestOpenChange}>
       {/* The title says it all; no description (silences Radix's warning). */}
       <DialogContent className="max-w-md" aria-describedby={undefined}>
         <DialogHeader>
@@ -68,12 +81,14 @@ export function TaskCreateDialog({
         <TaskForm
           // Remount when the prefilled due date changes so the form re-seeds
           // (week view reuses the same dialog instance across different days).
-          key={defaultDueDate ?? "none"}
+          key={`${defaultDueDate ?? "none"}:${defaultStatus}`}
           defaultDueDate={defaultDueDate}
+          defaultStatus={defaultStatus}
           assignees={assignees}
           isSaving={saving}
           onSubmit={handleSubmit}
-          onCancel={() => onOpenChange(false)}
+          onCancel={() => requestOpenChange(false)}
+          onDirtyChange={onDirtyChange}
         />
       </DialogContent>
     </Dialog>

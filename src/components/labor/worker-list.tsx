@@ -147,7 +147,7 @@ export function WorkerList({
                         aria-hidden="true"
                       />
                       {(() => {
-                        const key = resolveDefaultRoleI18nKey({ id: worker.role_id, name: worker.role_name });
+                        const key = resolveDefaultRoleI18nKey({ id: worker.role_id, name: worker.role_name, slug: worker.role_slug });
                         return key ? tRole(key) : worker.role_name;
                       })()}
                     </span>

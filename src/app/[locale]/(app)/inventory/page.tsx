@@ -13,25 +13,39 @@ import { InventoryPageClient } from "./inventory-page-client";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirectToOnboardingIfNeeded } from "@/lib/auth/onboarding-redirect";
 import { pageTitle } from "@/lib/i18n/page-title";
+import { pickPageCompany, toPageCompanies, type PageCompany } from "@/lib/companies/page-company";
+import { companiesShowingArea } from "@/lib/companies/hidden-sections";
+import { redirect } from "next/navigation";
 
 export const generateMetadata = pageTitle("navigation.inventory");
 
-export default async function InventoryPage() {
+interface PageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function InventoryPage({ searchParams }: PageProps) {
   // Onboarding gate (as on /dashboard and /projects): a user with no company
   // is sent to create or join one rather than shown an empty page.
   await redirectToOnboardingIfNeeded(await getLocale());
 
   let companyId: string | null = null;
+  let companies: PageCompany[] = [];
+  let areaHidden = false;
 
   try {
-    const companies = await fetchMyCompanies();
-    if (companies.length > 0) {
-      const primary = companies.find((c) => c.is_primary);
-      companyId = (primary ?? companies[0]).id;
-    }
+    // ?company= (the picker), else the primary company, else the oldest attachment.
+    // Companies that turned this area off (Settings › Company › Hidden
+    // sections) are left out; when every company did, the page is hidden.
+    const mine = await fetchMyCompanies();
+    const showing = companiesShowingArea(mine, "inventory");
+    areaHidden = mine.length > 0 && showing.length === 0;
+    companyId = pickPageCompany(showing, (await searchParams)?.company)?.id ?? null;
+    companies = toPageCompanies(showing);
   } catch (err) {
     console.error("[InventoryPage] Could not fetch attached companies.", err);
   }
+
+  if (areaHidden) redirect(`/${await getLocale()}/dashboard`);
 
   if (!companyId) {
     const t = await getTranslations("inventory");
@@ -49,5 +63,5 @@ export default async function InventoryPage() {
     );
   }
 
-  return <InventoryPageClient companyId={companyId} />;
+  return <InventoryPageClient key={companyId} companyId={companyId} companies={companies} />;
 }

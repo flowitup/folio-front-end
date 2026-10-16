@@ -30,7 +30,7 @@ import {
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, Loader2, Download, Eye, FileSpreadsheet, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Eye, FileSpreadsheet, ArrowRightLeft, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -587,6 +587,19 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
                     <ArrowRightLeft size={13} className="mr-2" />
                   )}
                   {tForm("actions.convertToFacture")}
+                </Button>
+              )}
+              {liveDoc && (
+                // Starts a new document of the same kind from this one (the ?from= flow).
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    router.push(`/${locale}/billing/${kindToSegment(kind)}/new?from=${liveDoc.id}`)
+                  }
+                >
+                  <Copy size={13} className="mr-2" />
+                  {tForm("actions.duplicate")}
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>

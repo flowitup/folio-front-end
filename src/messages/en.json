@@ -1596,7 +1596,8 @@
         "openMenu": "Open actions",
         "openFacture": "Open invoice",
         "backToList": "Back to list",
-        "deleteLockedHint": "Converted to an invoice: cancel the invoice to delete it."
+        "deleteLockedHint": "Converted to an invoice: cancel the invoice to delete it.",
+        "duplicate": "Duplicate"
       },
       "errors": {
         "recipientRequired": "Recipient name is required.",
@@ -1653,13 +1654,17 @@
       "applyTemplate": {
         "title": "Apply a template",
         "description": "Choose a saved template. Items, notes and terms will be copied. Enter the recipient details below before creating.",
-        "empty": "No {kind} templates saved yet."
+        "empty": "No {kind} templates saved yet.",
+        "createTemplate": "Create a template"
       },
       "fromExisting": {
         "description": "Select a document to use as the starting point for your new <strong>{kind}</strong>. Items, recipient, notes and terms will be copied; dates and number will be reset.",
         "createAs": "Create as:",
         "crossKindWarning": "Switching kinds resets the document lifecycle. The cloned {kind} will start as <strong>{draft}</strong>.",
-        "empty": "No existing documents found."
+        "empty": "No existing documents found.",
+        "search": "Search: no., client or project…",
+        "noResults": "No document matches this search.",
+        "loadMore": "Show more documents"
       },
       "confirmStatus": {
         "title": "Change the status to “{status}”?",

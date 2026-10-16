@@ -14,6 +14,8 @@ export interface BillingTranslator {
 
 export function billingStatusLabel(t: BillingTranslator, kind: string, status: string): string {
   const own = `${kind}.status.${status}`;
+  // A bare translator without has() (some test doubles) just looks the key up.
+  if (typeof t.has !== "function") return t(own);
   if (t.has(own)) return t(own);
   const other = `${kind === "devis" ? "facture" : "devis"}.status.${status}`;
   if (t.has(other)) return t(other);

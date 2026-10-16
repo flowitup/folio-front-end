@@ -46,6 +46,13 @@ interface ApplyTemplateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   kind: BillingDocumentKind;
+  /**
+   * The issuer picked in the form. Its templates are listed and the new
+   * document is issued (and numbered) by it — never silently by the primary
+   * company. Without it the backend lists the templates of every company the
+   * user administers and issues from the template's own company.
+   */
+  companyId?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -76,6 +83,7 @@ export function ApplyTemplateDialog({
   open,
   onOpenChange,
   kind,
+  companyId,
 }: ApplyTemplateDialogProps) {
   const router = useRouter();
   const locale = useLocale();
@@ -207,6 +215,18 @@ export function ApplyTemplateDialog({
                   kind: kind === "devis" ? tKind("kindDevis") : tKind("kindFacture"),
                 })}
               </p>
+              {/* Not a dead end: create the first template, in the issuer company. */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  const query = companyId ? `?company_id=${encodeURIComponent(companyId)}` : "";
+                  router.push(`/${locale}/billing/templates/new${query}`);
+                }}
+              >
+                {tApply("createTemplate")}
+              </Button>
             </div>
           ) : (
             <div

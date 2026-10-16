@@ -1596,7 +1596,8 @@
         "openMenu": "Ouvrir les actions",
         "openFacture": "Ouvrir la facture",
         "backToList": "Retour à la liste",
-        "deleteLockedHint": "Converti en facture : annulez la facture pour le supprimer."
+        "deleteLockedHint": "Converti en facture : annulez la facture pour le supprimer.",
+        "duplicate": "Dupliquer"
       },
       "errors": {
         "recipientRequired": "Le nom du destinataire est obligatoire.",
@@ -1653,13 +1654,17 @@
       "applyTemplate": {
         "title": "Appliquer un modèle",
         "description": "Choisissez un modèle enregistré. Les lignes, notes et conditions seront copiées. Saisissez les informations du destinataire ci-dessous avant de créer.",
-        "empty": "Aucun modèle de {kind} enregistré pour le moment."
+        "empty": "Aucun modèle de {kind} enregistré pour le moment.",
+        "createTemplate": "Créer un modèle"
       },
       "fromExisting": {
         "description": "Sélectionnez un document comme point de départ de votre nouveau <strong>{kind}</strong>. Les lignes, le destinataire, les notes et les conditions seront copiés ; les dates et le numéro seront réinitialisés.",
         "createAs": "Créer en tant que :",
         "crossKindWarning": "Changer de type réinitialise le cycle de vie du document. Le {kind} cloné démarrera en <strong>{draft}</strong>.",
-        "empty": "Aucun document existant."
+        "empty": "Aucun document existant.",
+        "search": "Rechercher : n°, client ou projet…",
+        "noResults": "Aucun document ne correspond à cette recherche.",
+        "loadMore": "Afficher plus de documents"
       },
       "confirmStatus": {
         "title": "Passer au statut « {status} » ?",

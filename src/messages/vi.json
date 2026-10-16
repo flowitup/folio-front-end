@@ -1596,7 +1596,8 @@
         "openMenu": "Mở thao tác",
         "openFacture": "Mở hóa đơn",
         "backToList": "Quay lại danh sách",
-        "deleteLockedHint": "Đã chuyển thành hóa đơn: hãy hủy hóa đơn để xóa báo giá này."
+        "deleteLockedHint": "Đã chuyển thành hóa đơn: hãy hủy hóa đơn để xóa báo giá này.",
+        "duplicate": "Nhân bản"
       },
       "errors": {
         "recipientRequired": "Tên khách hàng là bắt buộc.",
@@ -1653,13 +1654,17 @@
       "applyTemplate": {
         "title": "Áp dụng mẫu",
         "description": "Chọn một mẫu đã lưu. Các dòng, ghi chú và điều khoản sẽ được sao chép. Nhập thông tin người nhận bên dưới trước khi tạo.",
-        "empty": "Chưa có mẫu {kind} nào được lưu."
+        "empty": "Chưa có mẫu {kind} nào được lưu.",
+        "createTemplate": "Tạo mẫu"
       },
       "fromExisting": {
         "description": "Chọn một tài liệu làm điểm bắt đầu cho <strong>{kind}</strong> mới. Các dòng, người nhận, ghi chú và điều khoản sẽ được sao chép; ngày và số sẽ được đặt lại.",
         "createAs": "Tạo dưới dạng:",
         "crossKindWarning": "Đổi loại sẽ đặt lại vòng đời tài liệu. {kind} được sao chép sẽ bắt đầu ở trạng thái <strong>{draft}</strong>.",
-        "empty": "Không tìm thấy tài liệu nào."
+        "empty": "Không tìm thấy tài liệu nào.",
+        "search": "Tìm: số, khách hàng hoặc dự án…",
+        "noResults": "Không có tài liệu nào khớp với tìm kiếm.",
+        "loadMore": "Hiện thêm tài liệu"
       },
       "confirmStatus": {
         "title": "Chuyển sang trạng thái “{status}”?",

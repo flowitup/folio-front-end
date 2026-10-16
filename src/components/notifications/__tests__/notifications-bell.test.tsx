@@ -342,7 +342,7 @@ describe("NotificationsBell — popover", () => {
     const bellBtn = screen.getByRole("button", { name: /notifications\.aria\.bell/i });
     fireEvent.click(bellBtn);
 
-    expect(screen.getByText("notifications.title")).toBeDefined();
+    expect(screen.getByText("notifications.panelTitle")).toBeDefined();
   });
 });
 
@@ -539,6 +539,20 @@ describe("NotificationsBell — activity feed", () => {
     render(<NotificationsBell />);
     await flushTick();
     expect(screen.getByText("2")).toBeDefined();
+  });
+
+  it("counts unread activity beyond the loaded page and new members", async () => {
+    mockFetch.mockResolvedValue({
+      items: [],
+      attendance: [],
+      companyEvents: [{ user_id: "u1", display_name: "Bích", company_id: "c1", attached_at: "2026-10-10T10:00:00Z" }],
+      events: [event("e1", false)],
+      eventsUnread: 3,
+    });
+    render(<NotificationsBell />);
+    await flushTick();
+    // 3 unread activity (only 1 loaded) + 1 new member.
+    expect(screen.getByText("4")).toBeDefined();
   });
 
   it("marks an entry read when it is opened and drops it from the badge", async () => {

@@ -2898,7 +2898,11 @@
     "errorUnitInUse": "Cette unité est utilisée par des articles : changez-leur d'unité avant de la supprimer.",
     "deleteUnit": "Supprimer l'unité {unit}",
     "currentUnit": "Unité actuelle",
-    "readOnlyHint": "Lecture seule : pour modifier le chiffrage, demandez à un administrateur la permission « Gérer les factures et le chiffrage »."
+    "readOnlyHint": "Lecture seule : pour modifier le chiffrage, demandez à un administrateur la permission « Gérer les factures et le chiffrage ».",
+    "confirmDeleteTitle": "Confirmer la suppression",
+    "confirmDeleteCancel": "Annuler",
+    "confirmDeleteAction": "Supprimer",
+    "moveItem": "Déplacer « {name} »"
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",

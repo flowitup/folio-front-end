@@ -199,7 +199,8 @@ export function DragHandle(props: React.HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
       {...props}
-      className="flex h-6 w-4 cursor-grab items-center justify-center text-muted-foreground active:cursor-grabbing"
+      // touch-none: the grip is for dragging, not for scrolling the page.
+      className="flex h-6 w-4 cursor-grab touch-none items-center justify-center text-muted-foreground active:cursor-grabbing"
     >
       <GripVertical className="h-4 w-4" />
     </span>

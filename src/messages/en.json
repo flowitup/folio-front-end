@@ -2898,7 +2898,11 @@
     "errorUnitInUse": "Articles still use this unit: give them another unit before deleting it.",
     "deleteUnit": "Delete the unit {unit}",
     "currentUnit": "Current unit",
-    "readOnlyHint": "Read only: to edit the cost planning, ask an administrator for the “Manage invoices and cost planning” permission."
+    "readOnlyHint": "Read only: to edit the cost planning, ask an administrator for the “Manage invoices and cost planning” permission.",
+    "confirmDeleteTitle": "Confirm deletion",
+    "confirmDeleteCancel": "Cancel",
+    "confirmDeleteAction": "Delete",
+    "moveItem": "Move “{name}”"
   },
   "onboarding": {
     "title": "Welcome to Folio",

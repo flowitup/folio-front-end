@@ -15,12 +15,14 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useConfirmDialog } from "@/components/chiffrage/use-confirm-dialog";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   DndContext,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -110,6 +112,7 @@ export function ChiffragePageClient({
   loadFailed = false,
 }: Props) {
   const t = useTranslations("chiffrage");
+  const { ask, dialog: confirmDialog } = useConfirmDialog();
   const router = useRouter();
   const [tree, setTree] = useState(initialTree);
   const [units, setUnits] = useState(initialUnits);
@@ -158,7 +161,11 @@ export function ChiffragePageClient({
   // dnd-kit's distance constraint is what keeps a click on a row button from
   // being swallowed as the start of a drag.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    // Mouse and touch separately (as on the planning board): PointerSensor
+    // never started on a phone, the browser took the gesture for scrolling.
+    // A short press picks a row up on touch, so a plain swipe still scrolls.
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
@@ -438,7 +445,11 @@ export function ChiffragePageClient({
           >
             <div className="space-y-4">
               {tree.postes.map((poste) => (
-                <SortableItem key={poste.id} id={poste.id}>
+                <SortableItem
+                  key={poste.id}
+                  id={poste.id}
+                  handleLabel={t("moveItem", { name: poste.name })}
+                >
                   {(handle) => (
                     <PosteCard
                       poste={poste}
@@ -451,9 +462,9 @@ export function ChiffragePageClient({
                         setCompareDialog({ open: true, poste })
                       }
                       onEdit={() => setPosteDialog({ open: true, poste })}
-                      onDelete={() => {
+                      onDelete={async () => {
                         if (
-                          confirm(t("confirmDeletePoste", { name: poste.name }))
+                          await ask(t("confirmDeletePoste", { name: poste.name }))
                         ) {
                           void mutate(() =>
                             deletePosteAction(projectId, poste.id),
@@ -490,7 +501,11 @@ export function ChiffragePageClient({
                                 )}
                               />
                             ) : (
-                            <SortableItem key={row.article.id} id={row.article.id}>
+                            <SortableItem
+                              key={row.article.id}
+                              id={row.article.id}
+                              handleLabel={t("moveItem", { name: row.article.name })}
+                            >
                               {(articleHandle) => {
                                 const article = row.article;
                                 return (
@@ -514,9 +529,9 @@ export function ChiffragePageClient({
                                       article,
                                     })
                                   }
-                                  onDelete={() => {
+                                  onDelete={async () => {
                                     if (
-                                      confirm(
+                                      await ask(
                                         t("confirmDeleteArticle", {
                                           name: article.name,
                                         }),
@@ -567,8 +582,8 @@ export function ChiffragePageClient({
                                       quote: q,
                                     })
                                   }
-                                  onDeleteQuote={(q) => {
-                                    if (confirm(t("confirmDeleteQuote"))) {
+                                  onDeleteQuote={async (q) => {
+                                    if (await ask(t("confirmDeleteQuote"))) {
                                       void mutate(() =>
                                         deleteQuoteAction(projectId, q.id),
                                       );
@@ -750,6 +765,7 @@ export function ChiffragePageClient({
           }}
         />
       ) : null}
+      {confirmDialog}
     </div>
   );
 }

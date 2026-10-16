@@ -2898,7 +2898,11 @@
     "errorUnitInUse": "Đơn vị này đang được các vật tư sử dụng: hãy đổi đơn vị của chúng trước khi xóa.",
     "deleteUnit": "Xóa đơn vị {unit}",
     "currentUnit": "Đơn vị hiện tại",
-    "readOnlyHint": "Chỉ xem: để sửa hạch toán vật tư, hãy xin quản trị viên quyền “Quản lý hóa đơn và hạch toán vật tư”."
+    "readOnlyHint": "Chỉ xem: để sửa hạch toán vật tư, hãy xin quản trị viên quyền “Quản lý hóa đơn và hạch toán vật tư”.",
+    "confirmDeleteTitle": "Xác nhận xóa",
+    "confirmDeleteCancel": "Hủy",
+    "confirmDeleteAction": "Xóa",
+    "moveItem": "Di chuyển “{name}”"
   },
   "onboarding": {
     "title": "Chào mừng đến với Folio",

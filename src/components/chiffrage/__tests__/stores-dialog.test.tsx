@@ -13,9 +13,6 @@ import {
   it,
   expect,
   vi,
-  beforeEach,
-  afterEach,
-  type MockInstance,
 } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -68,16 +65,6 @@ function renderDialog(
 const rows = () => screen.getAllByTestId("store-row");
 
 describe("StoresDialog", () => {
-  let confirmSpy: MockInstance<(message?: string) => boolean>;
-
-  beforeEach(() => {
-    confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
-  });
-
-  afterEach(() => {
-    confirmSpy.mockRestore();
-  });
-
   it("lists every shop of the project with its address", () => {
     renderDialog();
     expect(rows()).toHaveLength(2);
@@ -129,16 +116,18 @@ describe("StoresDialog", () => {
   it("asks before deleting a shop, naming it", async () => {
     const { onDelete } = renderDialog();
     await userEvent.click(within(rows()[0]).getByLabelText("deleteStore"));
-    expect(confirmSpy).toHaveBeenCalledWith(
-      "confirmDeleteStore:Leroy Merlin Ivry",
-    );
+    const alert = await screen.findByRole("alertdialog");
+    expect(alert.textContent).toContain("confirmDeleteStore:Leroy Merlin Ivry");
+    await userEvent.click(within(alert).getByRole("button", { name: "confirmDeleteAction" }));
     expect(onDelete).toHaveBeenCalledWith(STORES[0]);
   });
 
   it("deletes nothing when the confirmation is declined", async () => {
-    confirmSpy.mockReturnValue(false);
     const { onDelete } = renderDialog();
     await userEvent.click(within(rows()[0]).getByLabelText("deleteStore"));
+    await userEvent.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "confirmDeleteCancel" })
+    );
     expect(onDelete).not.toHaveBeenCalled();
   });
 
@@ -150,6 +139,9 @@ describe("StoresDialog", () => {
     renderDialog({ onDelete });
 
     await userEvent.click(within(rows()[0]).getByLabelText("deleteStore"));
+    await userEvent.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "confirmDeleteAction" })
+    );
     expect(within(rows()[1]).getByLabelText("deleteStore")).toBeDisabled();
     expect(within(rows()[1]).getByLabelText("editStore")).toBeDisabled();
     expect(screen.getByRole("button", { name: "addStore" })).toBeDisabled();

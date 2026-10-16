@@ -1222,7 +1222,8 @@
       "bodyOther": "Bạn đang đăng nhập bằng {currentUser}. Tham gia dự án bằng tài khoản này, hoặc dùng tài khoản khác.",
       "switchAccount": "Dùng tài khoản khác"
     },
-    "codeRecentlySent": "Một mã đã được gửi tới số này chưa đầy một phút trước: hãy nhập mã bên dưới."
+    "codeRecentlySent": "Một mã đã được gửi tới số này chưa đầy một phút trước: hãy nhập mã bên dưới.",
+    "joinedToast": "Bạn đã tham gia {projectName}"
   },
   "admin": {
     "bulkAdd": {

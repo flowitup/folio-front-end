@@ -25,6 +25,7 @@ const TRANSLATIONS: Record<string, string> = {
   "errors.generic": "Something went wrong. Please try again.",
   "errors.expired": "This invitation has expired.",
   "errors.wrongAccount": "This invitation was sent to another email address.",
+  joinedToast: "You joined {projectName}",
 };
 
 vi.mock("next-intl", () => ({
@@ -68,6 +69,9 @@ describe("JoinAsInvitee", () => {
 
     expect(mockJoin).toHaveBeenCalledWith("tok-2");
     expect(window.location.href).toBe("/fr/dashboard");
+    // The dashboard opens on the joined project, with a toast naming it.
+    expect(localStorage.getItem("selectedProjectId")).toBe("p-1");
+    expect(sessionStorage.getItem("folio:flash-toast")).toBe("You joined 1 rue Principale, Paris");
   });
 
   it("explains a refusal and stays on the page", async () => {

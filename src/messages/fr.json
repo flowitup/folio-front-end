@@ -1222,7 +1222,8 @@
       "bodyOther": "Vous êtes connecté en tant que {currentUser}. Rejoignez le projet avec ce compte, ou utilisez un autre compte.",
       "switchAccount": "Utiliser un autre compte"
     },
-    "codeRecentlySent": "Un code a été envoyé à ce numéro il y a moins d'une minute : saisissez-le ci-dessous."
+    "codeRecentlySent": "Un code a été envoyé à ce numéro il y a moins d'une minute : saisissez-le ci-dessous.",
+    "joinedToast": "Vous avez rejoint {projectName}"
   },
   "admin": {
     "bulkAdd": {

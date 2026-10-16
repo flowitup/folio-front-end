@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle, ArrowRight, Loader2, LogOut } from "lucide-react";
 import { acceptInviteAsMeAction, logout } from "@/lib/auth/actions";
+import { queueFlashToast } from "@/lib/flash-toast";
+import { rememberSelectedProject } from "@/lib/selected-project";
 import { errorMessageKey } from "./accept-invite-form";
 
 interface JoinAsInviteeProps {
@@ -60,6 +62,9 @@ export function JoinAsInvitee({
         setIsJoining(false);
         return;
       }
+      // Open on the project just joined, not the one this browser viewed last.
+      rememberSelectedProject(result.projectId);
+      queueFlashToast(t("joinedToast", { projectName }));
       // A full navigation so every server component re-reads the new membership.
       window.location.href = `/${locale}/dashboard`;
     } catch {

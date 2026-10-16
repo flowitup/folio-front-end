@@ -10,6 +10,8 @@ import {
 } from "@/lib/auth/actions";
 import { formatFrenchPhone, normalizeFrenchPhone } from "@/lib/auth/phone-number";
 import { LegalLinks } from "@/components/legal-links";
+import { queueFlashToast } from "@/lib/flash-toast";
+import { rememberSelectedProject } from "@/lib/selected-project";
 import type { VerifyInviteResponse } from "@/lib/auth/types";
 
 // Matches the backend's resend-throttle window, so the countdown never lets the
@@ -199,6 +201,9 @@ export function AcceptInviteForm({ token, locale, verified }: AcceptInviteFormPr
         setError(t(errorMessageKey(result.error ?? "unknown")));
         return;
       }
+      // Open on the project just joined, not the one this browser viewed last.
+      rememberSelectedProject(result.projectId);
+      queueFlashToast(t("joinedToast", { projectName: verified.project_name }));
       // Cookies are set server-side; a full navigation triggers fresh SSR with auth context.
       window.location.href = `/${locale}/dashboard`;
     } catch {

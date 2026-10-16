@@ -206,7 +206,7 @@ export async function acceptInviteAction(
   name: string,
   phone: string,
   code: string
-): Promise<{ success: boolean; error?: InviteFlowError; user?: AcceptedUser }> {
+): Promise<{ success: boolean; error?: InviteFlowError; user?: AcceptedUser; projectId?: string }> {
   // Server-side input validation (don't trust client)
   if (!token || typeof token !== "string" || token.trim().length === 0) {
     return { success: false, error: "not_found" };
@@ -228,11 +228,11 @@ export async function acceptInviteAction(
       phone,
       code: code.trim(),
     };
-    const { user, setCookieHeaders } = await acceptInvite(payload);
+    const { user, projectId, setCookieHeaders } = await acceptInvite(payload);
 
     await setForwardedCookies(setCookieHeaders);
 
-    return { success: true, user };
+    return { success: true, user, projectId };
   } catch (error) {
     console.error(
       "Accept invite error:",

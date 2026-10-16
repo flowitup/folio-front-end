@@ -199,7 +199,7 @@ describe("AcceptInviteForm", () => {
       renderForm();
       await reachCodeStep(user);
 
-      mockAccept.mockResolvedValue({ success: true });
+      mockAccept.mockResolvedValue({ success: true, projectId: "p-9" });
       await user.type(screen.getByLabelText("Code"), "123456");
       await user.click(screen.getByRole("button", { name: /Create account/i }));
 
@@ -212,6 +212,8 @@ describe("AcceptInviteForm", () => {
         );
       });
       await waitFor(() => expect(window.location.href).toBe("/en/dashboard"));
+      // The dashboard opens on the project just joined.
+      expect(localStorage.getItem("selectedProjectId")).toBe("p-9");
     });
 
     it("reports a wrong code and stays put", async () => {

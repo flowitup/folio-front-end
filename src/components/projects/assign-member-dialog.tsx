@@ -100,7 +100,7 @@ export function AssignMemberDialog({
   const excludeSet = useMemo(() => new Set(excludeUserIds), [excludeUserIds]);
   const options: ComboboxOption[] = entries
     .filter((e) => e.is_active && e.linked_user_id && !excludeSet.has(e.linked_user_id))
-    .map((e) => ({ value: e.linked_user_id as string, label: `${e.name} · ${e.phone}` }));
+    .map((e) => ({ value: e.linked_user_id as string, label: e.phone && e.phone !== e.name ? `${e.name} · ${e.phone}` : e.name }));
 
   function reset() {
     setSelectedUserId("");

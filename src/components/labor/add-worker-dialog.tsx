@@ -312,6 +312,7 @@ export function AddWorkerDialog({
                 onChange={handlePersonChange}
                 placeholder={t("workerName")}
                 excludeIds={existingPersonIds}
+                companyId={companyId ?? undefined}
               />
               {isDraft && (
                 <div className="space-y-3 rounded-md border border-dashed p-3">

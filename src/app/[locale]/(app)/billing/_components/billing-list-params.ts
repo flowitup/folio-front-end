@@ -1,5 +1,5 @@
 /**
- * Reading the devis / factures list URL (?page=, ?status=, ?q=, ?project_id=)
+ * Reading the devis / factures list URL (?page=, ?status=, ?q=, ?project_id=, ?company_id=)
  * the same way on the server page and in the client list. Bad values fall back
  * to their defaults instead of reaching the API (a NaN limit or an unknown
  * status is a 400, which used to show the "no documents yet" state).
@@ -68,5 +68,6 @@ export function parseBillingListParams(kind: BillingDocumentKind, params: RawPar
     status: parseStatus(kind, first(params.status)),
     q: parseQuery(first(params.q)),
     projectId: parseProjectId(first(params.project_id)),
+    companyId: parseProjectId(first(params.company_id)),
   };
 }

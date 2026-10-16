@@ -1511,12 +1511,15 @@
         "recipient": "Recipient",
         "status": "Status",
         "totalTtc": "Total (incl. VAT)",
-        "actions": "Actions"
+        "actions": "Actions",
+        "issuer": "Issuer"
       },
       "loadMoreFailed": "Failed to load more documents. Please try again.",
       "loadFailed": "The documents couldn't be loaded.",
       "retry": "Try again",
-      "noFilterResults": "No documents with this status."
+      "noFilterResults": "No documents with this status.",
+      "companyFilter": "Issuing company",
+      "allCompanies": "All companies"
     },
     "form": {
       "modes": {

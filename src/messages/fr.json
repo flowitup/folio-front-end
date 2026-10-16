@@ -1511,12 +1511,15 @@
         "recipient": "Destinataire",
         "status": "Statut",
         "totalTtc": "Total TTC",
-        "actions": "Actions"
+        "actions": "Actions",
+        "issuer": "Émetteur"
       },
       "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer.",
       "loadFailed": "Impossible de charger les documents.",
       "retry": "Réessayer",
-      "noFilterResults": "Aucun document avec ce statut."
+      "noFilterResults": "Aucun document avec ce statut.",
+      "companyFilter": "Entreprise émettrice",
+      "allCompanies": "Toutes les entreprises"
     },
     "form": {
       "modes": {

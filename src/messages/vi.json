@@ -1511,12 +1511,15 @@
         "recipient": "Khách hàng",
         "status": "Trạng thái",
         "totalTtc": "Tổng (gồm VAT)",
-        "actions": "Thao tác"
+        "actions": "Thao tác",
+        "issuer": "Bên phát hành"
       },
       "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại.",
       "loadFailed": "Không thể tải danh sách tài liệu.",
       "retry": "Thử lại",
-      "noFilterResults": "Không có tài liệu nào ở trạng thái này."
+      "noFilterResults": "Không có tài liệu nào ở trạng thái này.",
+      "companyFilter": "Công ty phát hành",
+      "allCompanies": "Tất cả công ty"
     },
     "form": {
       "modes": {

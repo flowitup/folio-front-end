@@ -87,7 +87,7 @@ export const helpCatalogueEn: HelpCatalogue = [
     steps: [
       "Switch between “Board” and “Week” with the toggle at the top.",
       "On the board, work across the backlog strip and the “To do”, “In progress”, “Blocked” and “Done” columns.",
-      "Click the “+” (“Add task”) in any column to create one there: a title, a description, a priority, a due date and comma-separated labels.",
+      "Click the “+” (“Add task”) in any column to create one there: a title, a description, a priority, a due date, comma-separated labels and the person it is assigned to. The assignee is notified (bell and push) when the task is given to them or moves to another column.",
       "Drag a card between columns to change its status.",
       "Click a card to open its detail panel, edit it inline, or delete it.",
       "In the week view, move between weeks and use the “+” on a day to create a task due that day, or the one on “Unscheduled” for a task with no date.",
@@ -381,17 +381,19 @@ export const helpCatalogueEn: HelpCatalogue = [
     id: "notifications",
     title: "The bell",
     purpose:
-      "A short live feed of what needs your attention: note reminders that have come due, days a worker logged that are waiting for validation, and people who just joined your company.",
+      "Notifications: what needs your attention and what happened while you were away. Days a worker logged that wait for your validation, note reminders that have come due, activity (chat messages, tasks given to you or moved, expenses, attendance, quotes and invoices, team and role changes) and people who just joined your company.",
     steps: [
-      "Click the bell in the top bar. Its badge counts reminders and attendance items, showing “9+” beyond nine.",
+      "Click the bell in the top bar. Its badge counts everything waiting: attendance to validate, reminders, new members and unread activity, showing “9+” beyond nine.",
       "Under “Attendance to validate”, use “Validate” or “Reject” on each day a worker declared.",
-      "Click a reminder to jump to that project's notes, or dismiss it with the ✕.",
+      "Click a reminder to open that note in the project's journal, or dismiss it with the ✕.",
+      "Under “Activity”, click an entry to open what it is about: the task, the expense, the attendance, the quote or invoice, or the chat conversation. It is then marked read. “Mark all read” clears the whole list.",
       "“New members” lists people who just joined your company, linking to the settings page where you can place them.",
     ],
     whoCanDoIt:
-      "Everyone sees the bell. What it contains is decided per person: attendance rows only reach the people who validate them.",
+      "Everyone sees the bell. What it contains is decided per person: attendance rows only reach the people who validate them, and company activity reaches the admins.",
     gotchas: [
-      "New-member events are left out of the badge count, so the popover can have content while the bell looks quiet.",
+      "Read activity leaves the list. Reading a conversation in the chat also reads its chat entries in the bell.",
+      "Entries about a project you were removed from are hidden; the removal notice itself stays until you mark it read.",
       "The feed refreshes about once a minute rather than instantly.",
     ],
   },
@@ -401,10 +403,12 @@ export const helpCatalogueEn: HelpCatalogue = [
     purpose:
       "A conversation with your company and your project teams, one channel per company and per project.",
     steps: [
-      "Open the chat from its button in the corner of the window.",
+      "Open the chat from its button in the corner of the window, or from a chat entry in the bell.",
       "Pick a channel from the list; unread ones are marked.",
       "Write your message and send it.",
       "Attach a photo to a message when a picture says it faster.",
+      "Click a message to react to it with an emoji and to see who has read it.",
+      "From the same menu, report a message that breaks the rules, or block its sender: you no longer see their messages and they are not pushed to you. Unblock people from the blocked list.",
       "Avatars under the latest message show who has read that far.",
     ],
     whoCanDoIt:

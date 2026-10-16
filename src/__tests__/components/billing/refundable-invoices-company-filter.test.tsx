@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, within, fireEvent, waitFor } from "@testing-library/react";
 
 vi.mock("@/lib/api/billing/refundable-invoices", () => ({
   fetchRefundableExpenses: vi.fn(),
@@ -107,7 +107,10 @@ describe("Refundable expenses — company filter", () => {
     ]);
     expect(fetchRefundableExpenses).toHaveBeenCalledWith({ companyId: undefined });
 
-    fireEvent.change(screen.getByTestId("company-select"), { target: { value: "co-b" } });
+    // The status and project filters are selects too: pick the company one.
+    fireEvent.change(within(screen.getByTestId("refundable-company-filter")).getByTestId("company-select"), {
+      target: { value: "co-b" },
+    });
     await waitFor(() =>
       expect(fetchRefundableExpenses).toHaveBeenLastCalledWith({ companyId: "co-b" }),
     );

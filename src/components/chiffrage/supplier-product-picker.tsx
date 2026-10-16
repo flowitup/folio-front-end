@@ -120,6 +120,7 @@ export function SupplierProductPicker({ companyId, onPick }: Props) {
         <Input
           value={query}
           placeholder={t("searchProducts")}
+          aria-label={t("searchProducts")}
           onChange={(e) => onQueryChange(e.target.value)}
           className="pl-8"
         />

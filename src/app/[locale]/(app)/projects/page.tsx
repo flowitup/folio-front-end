@@ -277,6 +277,7 @@ export default function ProjectsPage() {
             <input
               className="folio-input num w-full sm:w-60"
               placeholder={t("searchProjects")}
+              aria-label={t("searchProjects")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ paddingLeft: 30 }}

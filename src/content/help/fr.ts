@@ -89,7 +89,7 @@ export const helpCatalogueFr: HelpCatalogue = [
     steps: [
       "Basculez entre “Tableau” et “Semaine” avec le sélecteur en haut de la page.",
       "Sur le tableau, travaillez avec la bande “Backlog” et les colonnes “À faire”, “En cours”, “Bloqué” et “Terminé”.",
-      "Cliquez sur le “+” (“Ajouter une tâche”) d'une colonne pour en créer une à cet endroit : un titre, une description, une priorité, une échéance et des étiquettes séparées par des virgules.",
+      "Cliquez sur le “+” (“Ajouter une tâche”) d'une colonne pour en créer une à cet endroit : un titre, une description, une priorité, une échéance, des étiquettes séparées par des virgules et la personne à qui elle est confiée. Celle-ci est prévenue (cloche et notification) quand la tâche lui est confiée ou change de colonne.",
       "Glissez une carte d'une colonne à l'autre pour changer son statut.",
       "Cliquez sur une carte pour ouvrir son panneau de détail, la modifier sur place, ou la supprimer.",
       "Dans la vue semaine, passez d'une semaine à l'autre et utilisez le “+” d'un jour pour créer une tâche à échéance ce jour-là, ou celui de “Non planifié” pour une tâche sans date.",
@@ -383,17 +383,19 @@ export const helpCatalogueFr: HelpCatalogue = [
     id: "notifications",
     title: "La cloche",
     purpose:
-      "Un court fil en direct de ce qui demande votre attention : les rappels de notes arrivés à échéance, les journées pointées par un ouvrier qui attendent une validation, et les personnes qui viennent de rejoindre votre entreprise.",
+      "Les notifications : ce qui demande votre attention et ce qui s'est passé en votre absence. Les journées pointées par un ouvrier qui attendent votre validation, les rappels de notes arrivés à échéance, l'activité (messages du chat, tâches qui vous sont confiées ou déplacées, dépenses, pointages, devis et factures, changements d'équipe et de rôle) et les personnes qui viennent de rejoindre votre entreprise.",
     steps: [
-      "Cliquez sur la cloche dans la barre du haut. Sa pastille compte les rappels et les pointages, et affiche “9+” au-delà de neuf.",
+      "Cliquez sur la cloche dans la barre du haut. Sa pastille compte tout ce qui attend : pointages à valider, rappels, nouveaux membres et activité non lue, et affiche “9+” au-delà de neuf.",
       "Sous “Pointages à valider”, utilisez “Valider” ou “Refuser” sur chaque journée déclarée par un ouvrier.",
-      "Cliquez sur un rappel pour aller aux notes du projet concerné, ou écartez-le avec la croix ✕.",
+      "Cliquez sur un rappel pour ouvrir cette note dans le journal du chantier, ou écartez-le avec la croix ✕.",
+      "Sous “Activité”, cliquez sur une ligne pour ouvrir ce dont elle parle : la tâche, la dépense, le pointage, le devis ou la facture, ou la conversation. Elle est alors marquée comme lue. “Tout marquer comme lu” vide la liste.",
       "“Nouveaux membres” liste les personnes qui viennent de rejoindre votre entreprise, avec un lien vers la page de paramètres où les placer.",
     ],
     whoCanDoIt:
-      "Tout le monde voit la cloche. Son contenu se décide personne par personne : les lignes de pointage ne parviennent qu'à ceux qui les valident.",
+      "Tout le monde voit la cloche. Son contenu se décide personne par personne : les lignes de pointage ne parviennent qu'à ceux qui les valident, et l'activité de l'entreprise aux admins.",
     gotchas: [
-      "Les arrivées de nouveaux membres ne sont pas comptées dans la pastille : le panneau peut donc contenir quelque chose alors que la cloche paraît muette.",
+      "Une activité lue quitte la liste. Lire une conversation dans le chat lit aussi ses lignes dans la cloche.",
+      "Les lignes d'un chantier dont vous avez été retiré sont masquées ; l'avis de retrait reste jusqu'à ce que vous le marquiez comme lu.",
       "Le fil se rafraîchit environ une fois par minute, et non instantanément.",
     ],
   },
@@ -403,10 +405,12 @@ export const helpCatalogueFr: HelpCatalogue = [
     purpose:
       "Une conversation avec votre entreprise et vos équipes de chantier, un canal par entreprise et par chantier.",
     steps: [
-      "Ouvrez la discussion depuis son bouton, dans le coin de la fenêtre.",
+      "Ouvrez la discussion depuis son bouton, dans le coin de la fenêtre, ou depuis une ligne de discussion dans la cloche.",
       "Choisissez un canal dans la liste ; les canaux non lus sont signalés.",
       "Écrivez votre message et envoyez-le.",
       "Joignez une photo à un message quand une image va plus vite.",
+      "Cliquez sur un message pour y réagir avec un emoji et voir qui l'a lu.",
+      "Depuis le même menu, signalez un message qui enfreint les règles, ou bloquez son auteur : vous ne voyez plus ses messages et ils ne vous sont plus notifiés. Débloquez une personne depuis la liste des personnes bloquées.",
       "Les avatars sous le dernier message montrent qui a lu jusque-là.",
     ],
     whoCanDoIt:

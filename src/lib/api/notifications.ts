@@ -46,9 +46,7 @@ export interface AttendancePending {
 /**
  * A member joined a company the caller admins without being assigned to any
  * project yet — surfaced to admins only (Phase 2 onboarding, `list_new_members_usecase`).
- * Deliberately excluded from the badge `count` (no client has shipped UI for
- * this feed before now — bumping the badge would be a silent behavior change
- * for every existing admin session).
+ * Counted in the badge: it is the admin's only sign that someone joined.
  */
 export interface CompanyEvent {
   user_id: string;
@@ -95,6 +93,8 @@ export interface NotificationsFeed {
   companyEvents?: CompanyEvent[];
   /** Chat, task, billing and membership activity, newest first. Treat absent as empty. */
   events?: ActivityEvent[];
+  /** Unread activity on the server (the `events` page is capped). Absent on older backends. */
+  eventsUnread?: number;
 }
 
 // ---- Error helper ----

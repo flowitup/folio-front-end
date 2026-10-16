@@ -57,6 +57,14 @@ describe("summarizeInventory", () => {
       onSite: 3,
     });
   });
+
+  it("does not count a site row whose project was deleted as on site", () => {
+    const orphan = item({ id: "e", quantity: 5, location_type: "site", warehouse_id: null, project_id: null });
+    const summary = summarizeInventory([...ITEMS, orphan]);
+    expect(summary.quantity).toBe(12);
+    expect(summary.onSite).toBe(3);
+    expect(summary.inWarehouse).toBe(4);
+  });
 });
 
 describe("groupInventoryByLocation", () => {

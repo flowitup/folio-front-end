@@ -247,7 +247,7 @@
     "editProjectAddressRequired": "L'adresse est requise",
     "deleteProjectTitle": "Supprimer le projet ?",
     "deleteProjectIrreversible": "Cette action est irréversible.",
-    "deleteProjectCascade": "Tous les ouvriers, saisies de main-d'œuvre, tâches, dépenses, notes, invitations et appartenances au projet seront définitivement supprimés.",
+    "deleteProjectCascade": "Tout ce qui est enregistré sur ce chantier sera définitivement supprimé : ouvriers, saisies de main-d'œuvre et notes de paiement, tâches, dépenses et leurs pièces jointes, notes, photos, documents, analyses, chiffrages, messages du chat, invitations et appartenances au projet. Le matériel sur ce chantier passe en emplacement inconnu. Exportez d'abord ce dont vous avez besoin.",
     "deleteProjectBillingNote": "Les devis et factures (documents de facturation) liés à ce projet seront dissociés mais conservés.",
     "deleteProjectTypeToConfirm": "Pour confirmer, tapez le texte affiché en gras ci-dessous :",
     "deleteProjectTypePlaceholder": "Tapez le texte ci-dessus pour confirmer",
@@ -1372,8 +1372,9 @@
       "goToNote": "Aller à la note : {title}",
       "goToAttendance": "Voir les pointages : {worker}"
     },
+    "panelTitle": "Notifications",
     "title": "Rappels",
-    "empty": "Aucun rappel pour le moment",
+    "empty": "Rien de nouveau pour le moment",
     "dismissButton": "Ignorer",
     "due": "Échéance {date}",
     "errors": {
@@ -1384,7 +1385,7 @@
       "refuseChangeFailed": "Impossible de refuser la modification. Réessayez."
     },
     "skeleton": {
-      "loading": "Chargement des rappels..."
+      "loading": "Chargement des notifications..."
     },
     "attendance": {
       "title": "Pointages à valider",
@@ -1402,7 +1403,9 @@
     },
     "activity": {
       "title": "Activité",
-      "markAllRead": "Tout marquer comme lu"
+      "markAllRead": "Tout marquer comme lu",
+      "markRead": "Marquer comme lu",
+      "noAccess": "Vous n'avez plus accès à ce chantier"
     },
     "companyEvents": {
       "title": "Nouveaux membres",
@@ -2220,7 +2223,7 @@
       "card": {
         "primaryBadge": "Principale",
         "setPrimary": "Définir comme principale",
-        "detach": "Détacher",
+        "detach": "Quitter l'entreprise",
         "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un code entreprise de votre administrateur pour vous rattacher.",
         "detached": "Vous avez quitté « {name} »."
       },
@@ -2289,8 +2292,8 @@
         "paymentsLoadError": "Échec du chargement des moyens de paiement",
         "joinCode": {
           "title": "Code entreprise",
-          "description": "Code réutilisable que les membres saisissent dans l'application mobile Folio (« Rejoindre une entreprise ») après s'être inscrits avec leur numéro de téléphone. Ils rejoignent en tant que membres.",
-          "none": "Aucun code actif. Créez-en un pour permettre de rejoindre l'entreprise depuis l'application mobile.",
+          "description": "Code réutilisable que les membres saisissent dans Folio (« Rejoindre une entreprise », sur le web ou l'application mobile) une fois connectés à leur compte. Ils rejoignent en tant que membres.",
+          "none": "Aucun code actif. Créez-en un pour permettre de rejoindre l'entreprise.",
           "create": "Créer un code",
           "renew": "Nouveau code",
           "revoke": "Révoquer le code",

@@ -213,11 +213,11 @@ describe("MyCompanyCard — set-primary action", () => {
 describe("MyCompanyCard — detach confirm", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("opens detach confirm dialog on Detach click", async () => {
+  it("opens detach confirm dialog on Leave company click", async () => {
     render(<MyCompanyCard company={makeCompany()} onMutated={vi.fn()} />);
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /detach/i }));
+      fireEvent.click(screen.getByRole("button", { name: /leave company/i }));
     });
 
     await waitFor(() => {
@@ -233,14 +233,14 @@ describe("MyCompanyCard — detach confirm", () => {
     render(<MyCompanyCard company={makeCompany()} onMutated={onMutated} />);
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /detach/i }));
+      fireEvent.click(screen.getByRole("button", { name: /leave company/i }));
     });
 
     await waitFor(() => screen.getByRole("alertdialog"));
 
     // Click the confirm action inside the dialog
-    const actionButtons = screen.getAllByRole("button", { name: /detach/i });
-    // The last "Detach" button is the AlertDialogAction inside the dialog
+    const actionButtons = screen.getAllByRole("button", { name: /leave company/i });
+    // The last "Leave company" button is the AlertDialogAction inside the dialog
     const confirmBtn = actionButtons[actionButtons.length - 1];
     await act(async () => {
       fireEvent.click(confirmBtn);
@@ -261,10 +261,10 @@ describe("MyCompanyCard — detach confirm", () => {
     render(<MyCompanyCard company={makeCompany()} onMutated={onMutated} onDetached={onDetached} />);
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /detach/i }));
+      fireEvent.click(screen.getByRole("button", { name: /leave company/i }));
     });
     await waitFor(() => screen.getByRole("alertdialog"));
-    const actionButtons = screen.getAllByRole("button", { name: /detach/i });
+    const actionButtons = screen.getAllByRole("button", { name: /leave company/i });
     await act(async () => {
       fireEvent.click(actionButtons[actionButtons.length - 1]);
     });

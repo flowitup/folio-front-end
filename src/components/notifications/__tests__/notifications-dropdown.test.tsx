@@ -71,7 +71,7 @@ describe("NotificationsDropdown — loading skeleton", () => {
     // Skeleton uses animate-pulse divs; check that no empty-state text is shown
     expect(screen.queryByText("notifications.empty")).toBeNull();
     // Header always present
-    expect(screen.getByText("notifications.title")).toBeDefined();
+    expect(screen.getByText("notifications.panelTitle")).toBeDefined();
   });
 
   it("does not render notification rows during loading", () => {
@@ -141,7 +141,7 @@ describe("NotificationsDropdown — notification rows", () => {
         onClickRow={vi.fn()}
       />
     );
-    expect(screen.getByText("notifications.title")).toBeDefined();
+    expect(screen.getByText("notifications.panelTitle")).toBeDefined();
   });
 
   it("does not show empty state when items are present", () => {

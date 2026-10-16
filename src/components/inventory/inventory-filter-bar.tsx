@@ -84,6 +84,7 @@ export function InventoryFilterBar({
         <input
           className="folio-input w-full"
           placeholder={t("searchPlaceholder")}
+          aria-label={t("searchPlaceholder")}
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           style={{ paddingLeft: 30 }}

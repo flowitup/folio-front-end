@@ -6,8 +6,9 @@
  * Optimistic CRUD delegated to useNotesState hook.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { buildSections, type NoteSection } from "@/lib/notes/grouping";
 import { useHydrated } from "@/hooks/use-hydrated";
@@ -65,6 +66,25 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
       ? [{ key: "all", labelKey: "", items: [...filtered].sort((x, y) => y.created_at.localeCompare(x.created_at)) }]
       : [];
   const isEmpty = notes.length === 0;
+
+  // A reminder in the bell links here with ?note=<id>: bring that note into view and
+  // outline it for a moment, so it is found without scanning the whole wall.
+  // Null outside the app router (unit tests render the view on its own).
+  const focusNoteId = useSearchParams()?.get("note") ?? null;
+  useEffect(() => {
+    if (!hydrated || !focusNoteId) return;
+    const card = document.querySelector<HTMLElement>(`[data-note-id="${CSS.escape(focusNoteId)}"]`);
+    if (!card) return;
+    card.scrollIntoView({ block: "center", behavior: "smooth" });
+    card.style.outline = "2px solid var(--accent)";
+    card.style.outlineOffset = "4px";
+    card.style.borderRadius = "12px";
+    const timer = setTimeout(() => {
+      card.style.outline = "";
+      card.style.outlineOffset = "";
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [hydrated, focusNoteId]);
 
   // ---- Render ----
 

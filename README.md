@@ -87,10 +87,10 @@ A separate, company-wide document generator for the paperwork you issue to your 
 A public landing page for people clicking an invitation email. The invitee enters their name and phone number and verifies it with an SMS code to create their account — the email is shown read-only, just to confirm which invitation they're accepting, since sign-in itself is phone-only. If that number already has an account, the page asks them to sign in instead and the invitation is not applied. Every other state is handled too: already accepted, expired, revoked, invalid token, or "you're signed in as someone else."
 
 ### Team chat
-- A floating chat button opens a drawer with one channel per company you belong to and one per project. Send text or a photo; see who's read up to your latest message.
+- A floating chat button opens a drawer with one channel per company you belong to and one per project. Send text or a photo; see who's read up to your latest message. Click a message to react with an emoji, see who has read it, report it, or block its sender (blocked people are listed and can be unblocked).
 
 ### Notifications
-The bell in the top bar shows attendance days waiting for a manager's validation (validate or reject inline) and, for company admins, new members who joined without a project assignment yet, linking to Settings to place them. The badge (capped at "9+") counts what needs action; new-member events aren't counted. Reminders on notes written before notes became a journal still show up there too.
+The bell in the top bar ("Notifications") shows attendance days waiting for a manager's validation (validate or reject inline), note reminders, an **Activity** list (chat messages, tasks assigned or moved, expenses, attendance decisions, quote and invoice status, team and role changes) and, for company admins, new members who joined without a project assignment yet, linking to Settings to place them. Each activity entry opens what it is about and is then marked read ("Mark all read" clears them all); reading a chat conversation also reads its entries in the bell. The badge (capped at "9+") counts everything waiting: attendance, reminders, new members and unread activity.
 
 ### Help guide
 A question-mark icon next to the bell opens an in-app guide to the main workflows, explained step by step and filtered to what your role can reach, with its own language picker.
@@ -165,7 +165,7 @@ CI runs lint, type-check, test and build on every pull request; `test:e2e` isn't
 
 - Pick a project from the **sidebar's project switcher** first — Planning, Labor, Expense, Cost planning, Notes, Documents (with project-editing rights) and Analyses only appear in the sidebar once a project is active.
 - The **language switcher** is in the top bar; the URL changes to reflect your locale (e.g. `/en/dashboard` vs `/fr/dashboard`).
-- The **bell icon** is your attendance-validation and new-member inbox.
+- The **bell icon** is your inbox: attendance to validate, reminders, activity and new members.
 - Use the **download icon** on a worker row to grab a labor report scoped to just that person.
 - For a printable expense, expand its row in Expense and use the print button; it opens the chrome-free view at `/<locale>/projects/<project-id>/invoices/<expense-id>/print`.
 

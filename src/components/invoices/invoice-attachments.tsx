@@ -299,10 +299,10 @@ function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview, o
         </p>
       </div>
 
-      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onPreview(); }} title={t("attachmentPreview.preview")}>
+      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onPreview(); }} title={t("attachmentPreview.preview")} aria-label={t("attachmentPreview.preview")}>
         <Eye className="h-4 w-4" />
       </Button>
-      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownload(); }} title={t("openAttachment")}>
+      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDownload(); }} title={t("attachmentPreview.download")} aria-label={t("attachmentPreview.download")}>
         <Download className="h-4 w-4" />
       </Button>
       {canManage && (
@@ -311,6 +311,7 @@ function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview, o
           size="sm"
           onClick={(e) => { e.stopPropagation(); onRename(); }}
           title={t("rename")}
+          aria-label={t("rename")}
         >
           <Pencil className="h-4 w-4" />
         </Button>
@@ -322,6 +323,7 @@ function AttachmentRow({ attachment, canManage, onDelete, onRename, onPreview, o
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
           className="text-muted-foreground hover:text-destructive"
           title={t("delete")}
+          aria-label={t("delete")}
         >
           <X className="h-4 w-4" />
         </Button>

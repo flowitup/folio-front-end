@@ -249,7 +249,7 @@ export function BillingTemplatesList({ initialTemplates, companyId }: BillingTem
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="font-display text-xl font-medium">{tList("title")}</h2>
+          <h1 className="font-display text-xl font-medium">{tList("title")}</h1>
           <p className="text-[13px]" style={{ color: "var(--muted)" }}>
             {tList("subtitle")}
           </p>

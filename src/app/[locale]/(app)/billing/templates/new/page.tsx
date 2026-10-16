@@ -14,6 +14,9 @@
 
 import { BillingTemplateForm } from "@/components/billing/billing-template-form";
 import type { BillingDocumentKind } from "@/types/billing";
+import { pageTitle } from "@/lib/i18n/page-title";
+
+export const generateMetadata = pageTitle("meta.newTemplate");
 
 interface NewTemplatePageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

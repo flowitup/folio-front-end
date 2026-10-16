@@ -13,7 +13,12 @@ import { isPlatformOps } from "@/lib/auth/permissions";
 import { PersonMergeForm } from "@/components/persons/person-merge-form";
 import { pageTitle } from "@/lib/i18n/page-title";
 
-export const generateMetadata = pageTitle("personsMerge.title");
+/** Everyone but platform ops gets the 404, so the tab says so too. */
+export async function generateMetadata(props: { params: Promise<{ locale: string }> }) {
+  const session = await getSession();
+  const allowed = !!session && isPlatformOps(session.user.permissions);
+  return pageTitle(allowed ? "personsMerge.title" : "errors.notFound.title")(props);
+}
 
 export default async function PersonsMergePage() {
   const session = await getSession();

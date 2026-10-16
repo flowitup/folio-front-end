@@ -13,7 +13,12 @@
     "signIn": "Connexion",
     "quotes": "Devis",
     "invoices": "Factures",
-    "onboarding": "Premiers pas"
+    "onboarding": "Premiers pas",
+    "newQuote": "Nouveau devis",
+    "newInvoice": "Nouvelle facture",
+    "newTemplate": "Nouveau modèle",
+    "template": "Modèle",
+    "newExpense": "Nouvelle dépense"
   },
   "navigation": {
     "dashboard": "Aperçu",
@@ -1211,7 +1216,8 @@
       "body": "Vous êtes connecté en tant que {currentUser}, le compte auquel cette invitation a été envoyée.",
       "submit": "Rejoindre le projet",
       "submitting": "Connexion au projet…"
-    }
+    },
+    "pageTitle": "Invitation"
   },
   "admin": {
     "bulkAdd": {

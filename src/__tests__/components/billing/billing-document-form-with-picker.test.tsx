@@ -213,9 +213,9 @@ async function fillAndSubmit(recipientName = "Client Corp") {
     fireEvent.change(cmdInputs[0], { target: { value: "Consulting" } });
   });
 
-  const spinButtons = screen.getAllByRole("spinbutton");
-  fireEvent.change(spinButtons[0], { target: { value: "1" } });
-  fireEvent.change(spinButtons[1], { target: { value: "100" } });
+  // Quantity and unit price are decimal text fields (comma or point).
+  fireEvent.change(screen.getAllByRole("textbox", { name: "Qty" })[0], { target: { value: "1" } });
+  fireEvent.change(screen.getAllByRole("textbox", { name: /unit price/i })[0], { target: { value: "100" } });
 
   await act(async () => {
     fireEvent.click(screen.getByRole("button", { name: /^create$/i }));

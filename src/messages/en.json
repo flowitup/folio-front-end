@@ -13,7 +13,12 @@
     "signIn": "Sign in",
     "quotes": "Quotes",
     "invoices": "Invoices",
-    "onboarding": "Get started"
+    "onboarding": "Get started",
+    "newQuote": "New quote",
+    "newInvoice": "New invoice",
+    "newTemplate": "New template",
+    "template": "Template",
+    "newExpense": "New expense"
   },
   "navigation": {
     "dashboard": "Overview",
@@ -1211,7 +1216,8 @@
       "body": "You're signed in as {currentUser}, the account this invitation was sent to.",
       "submit": "Join the project",
       "submitting": "Joining…"
-    }
+    },
+    "pageTitle": "Invitation"
   },
   "admin": {
     "bulkAdd": {

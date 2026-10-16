@@ -267,9 +267,9 @@ export function BillingTemplateForm(props: BillingTemplateFormProps) {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="font-display text-xl font-medium">
+        <h1 className="font-display text-xl font-medium">
           {isEdit ? tForm("titleEdit") : tForm("titleCreate")}
-        </h2>
+        </h1>
       </div>
 
       {/* 2. Core fields */}

@@ -552,11 +552,11 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="font-display text-xl font-medium">
+        <h1 className="font-display text-xl font-medium">
           {isEdit
             ? (liveDoc?.document_number ?? kindLabel)
             : newLabel}
-        </h2>
+        </h1>
 
         {isEdit && liveDoc && (
           <>

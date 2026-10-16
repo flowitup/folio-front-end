@@ -13,7 +13,12 @@
     "signIn": "Đăng nhập",
     "quotes": "Báo giá",
     "invoices": "Hóa đơn",
-    "onboarding": "Bắt đầu"
+    "onboarding": "Bắt đầu",
+    "newQuote": "Báo giá mới",
+    "newInvoice": "Hóa đơn mới",
+    "newTemplate": "Mẫu mới",
+    "template": "Mẫu",
+    "newExpense": "Khoản chi mới"
   },
   "navigation": {
     "dashboard": "Tổng quan",
@@ -1211,7 +1216,8 @@
       "body": "Bạn đang đăng nhập bằng {currentUser}, đúng tài khoản được gửi lời mời này.",
       "submit": "Tham gia dự án",
       "submitting": "Đang tham gia…"
-    }
+    },
+    "pageTitle": "Lời mời"
   },
   "admin": {
     "bulkAdd": {

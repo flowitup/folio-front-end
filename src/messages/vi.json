@@ -897,6 +897,7 @@
       "deactivateWorkerFailed": "Không vô hiệu hóa được thợ.",
       "deleteEntryFailed": "Không xóa được chấm công.",
       "saveWorkerFailed": "Không lưu được thợ.",
+      "roleUnavailable": "Vai trò này không còn dùng được cho công ty của công trình này. Hãy chọn vai trò khác hoặc không chọn vai trò.",
       "invalidPhone": "Nhập số điện thoại hợp lệ, ví dụ 06 12 34 56 78 hoặc +84 912 345 678.",
       "workerNameRequired": "Bắt buộc nhập tên thợ.",
       "dailyRatePositive": "Đơn giá ngày phải lớn hơn 0.",

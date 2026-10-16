@@ -843,8 +843,8 @@
       "updated": "Role updated.",
       "deleted": "Role deleted.",
       "defaults": {
-        "masterCraftsman": "Master craftsman",
-        "assistant": "Assistant"
+        "masterCraftsman": "Lead worker",
+        "assistant": "Assistant worker"
       },
       "searchRoles": "Search roles…",
       "noMatchingRoles": "No matching roles",
@@ -897,6 +897,7 @@
       "deactivateWorkerFailed": "Failed to deactivate worker.",
       "deleteEntryFailed": "Failed to delete entry.",
       "saveWorkerFailed": "Failed to save worker.",
+      "roleUnavailable": "This role is no longer available for this project's company. Choose another role or no role.",
       "invalidPhone": "Enter a valid phone number, e.g. 06 12 34 56 78 or +84 912 345 678.",
       "workerNameRequired": "Worker name is required.",
       "dailyRatePositive": "Daily rate must be greater than 0.",

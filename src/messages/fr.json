@@ -897,6 +897,7 @@
       "deactivateWorkerFailed": "Échec de la désactivation de l'ouvrier.",
       "deleteEntryFailed": "Échec de la suppression de la présence.",
       "saveWorkerFailed": "Échec de l'enregistrement de l'ouvrier.",
+      "roleUnavailable": "Ce rôle n'est plus disponible pour l'entreprise de ce chantier. Choisissez un autre rôle ou aucun rôle.",
       "invalidPhone": "Saisissez un numéro de téléphone valide, par ex. 06 12 34 56 78 ou +84 912 345 678.",
       "workerNameRequired": "Le nom de l'ouvrier est obligatoire.",
       "dailyRatePositive": "Le tarif journalier doit être supérieur à 0.",

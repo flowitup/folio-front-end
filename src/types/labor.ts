@@ -23,6 +23,8 @@ export interface Worker {
   role_id?: string | null;
   role_name?: string | null;
   role_color?: string | null;
+  /** Slug of a default role ("tho_chinh" / "tho_phu"), to translate role_name. */
+  role_slug?: string | null;
   // Rate in effect today: latest rate_change with effective_date <= today,
   // else the base daily_rate. Optional for back-compat with older API responses.
   current_daily_rate?: number;

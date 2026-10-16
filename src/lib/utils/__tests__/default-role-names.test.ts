@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { resolveDefaultRoleI18nKey, DEFAULT_ROLE_I18N_KEYS } from "../default-role-names";
+import {
+  resolveDefaultRoleI18nKey,
+  DEFAULT_ROLE_I18N_KEYS,
+  laborRoleDisplayName,
+  sortRolesByLabel,
+} from "../default-role-names";
 
 describe("resolveDefaultRoleI18nKey", () => {
   it("resolves by slug when present", () => {
@@ -46,5 +51,37 @@ describe("resolveDefaultRoleI18nKey", () => {
 
   it("returns null with no identifying fields at all", () => {
     expect(resolveDefaultRoleI18nKey({})).toBeNull();
+  });
+
+  it("treats a default role seeded in French or English as not renamed", () => {
+    expect(resolveDefaultRoleI18nKey({ slug: "tho_chinh", name: "Ouvrier principal" })).toBe(
+      "masterCraftsman"
+    );
+    expect(resolveDefaultRoleI18nKey({ slug: "tho_phu", name: "Assistant worker" })).toBe(
+      "assistant"
+    );
+    expect(resolveDefaultRoleI18nKey({ name: "ouvrier auxiliaire" })).toBe("assistant");
+  });
+});
+
+describe("laborRoleDisplayName / sortRolesByLabel", () => {
+  const fr = (key: string) =>
+    ({ masterCraftsman: "Ouvrier principal", assistant: "Ouvrier auxiliaire" })[key] ?? key;
+
+  it("shows default roles translated and custom roles as stored", () => {
+    expect(laborRoleDisplayName({ slug: "tho_chinh", name: "Thợ chính" }, fr)).toBe(
+      "Ouvrier principal"
+    );
+    expect(laborRoleDisplayName({ name: "Carreleur" }, fr)).toBe("Carreleur");
+  });
+
+  it("sorts by the label the viewer sees, not the stored Vietnamese name", () => {
+    const roles = [
+      { id: "1", name: "Thợ chính", slug: "tho_chinh" },
+      { id: "2", name: "Thợ phụ", slug: "tho_phu" },
+      { id: "3", name: "Carreleur" },
+      { id: "4", name: "Plombier" },
+    ];
+    expect(sortRolesByLabel(roles, fr, "fr").map((r) => r.id)).toEqual(["3", "2", "1", "4"]);
   });
 });

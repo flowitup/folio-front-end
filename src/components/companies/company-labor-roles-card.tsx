@@ -22,7 +22,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 
@@ -58,7 +58,7 @@ import {
   updateLaborRoleAction,
   type RoleListActionResult,
 } from "@/components/labor/labor-role-actions";
-import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
+import { resolveDefaultRoleI18nKey, sortRolesByLabel } from "@/lib/utils/default-role-names";
 import type { LaborRole } from "@/types/labor-role";
 
 interface CompanyLaborRolesCardProps {
@@ -82,6 +82,7 @@ function toLoadState(result: RoleListActionResult): LoadState {
 export function CompanyLaborRolesCard({ companyId }: CompanyLaborRolesCardProps) {
   const t = useTranslations("labor.role");
   const tDefaults = useTranslations("labor.role.defaults");
+  const locale = useLocale();
 
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [editing, setEditing] = useState<Editing>(null);
@@ -292,7 +293,7 @@ export function CompanyLaborRolesCard({ companyId }: CompanyLaborRolesCardProps)
                 </p>
               ) : (
                 <ul className="space-y-1" aria-label={t("manageTitle")}>
-                  {state.roles.map((role) =>
+                  {sortRolesByLabel(state.roles, tDefaults, locale).map((role) =>
                     editing === role.id ? (
                       <li
                         key={role.id}

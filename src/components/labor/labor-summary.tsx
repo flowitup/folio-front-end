@@ -843,7 +843,7 @@ export function LaborSummary({
                   // the locale map, custom roles display their DB name.
                   const rowWorker = workerById.get(row.worker_id);
                   const rowRoleKey = rowWorker
-                    ? resolveDefaultRoleI18nKey({ id: rowWorker.role_id, name: rowWorker.role_name })
+                    ? resolveDefaultRoleI18nKey({ id: rowWorker.role_id, name: rowWorker.role_name, slug: rowWorker.role_slug })
                     : null;
                   const roleName = rowRoleKey ? tRole(rowRoleKey) : rowWorker?.role_name;
                   // Paid matched by worker_id within the viewed month's

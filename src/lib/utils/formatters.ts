@@ -67,6 +67,19 @@ export function formatEURWhole(amount: number): string {
 }
 
 /**
+ * A short chart value label in the viewer's locale ("4,3 k €", "4.3K €",
+ * "850 €"): small enough to sit above a bar.
+ */
+export function formatEURCompact(locale: string, amount: number): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'EUR',
+    notation: 'compact',
+    maximumFractionDigits: Math.abs(amount) < 1000 ? 0 : 1,
+  }).format(amount)
+}
+
+/**
  * Format a date as dd/mm/YYYY (locale-independent).
  * Uses local (browser-timezone) calendar fields, matching prior
  * toLocaleDateString behavior, with manual zero-padding to avoid

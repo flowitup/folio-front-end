@@ -82,3 +82,43 @@ describe("OverviewTypeMinis header at narrow widths", () => {
     expect(link.parentElement!.className).toContain("flex-wrap");
   });
 });
+
+describe("OverviewTypeMinis links and values", () => {
+  function withSpend(): TypeMonthlyBucket[] {
+    const b = buckets([1200, 0, 0]);
+    b[0].monthly[5] = { key: "2026-09", total: 1200, count: 2, credited: 0, creditCount: 0 };
+    b[0].count = 2;
+    b[0].deltaPct = -50;
+    b[0].toDay = 16;
+    return b;
+  }
+
+  it("opens the type's expenses of a month from its bar, and the type from its name", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={MESSAGES.en}>
+        <OverviewTypeMinis buckets={withSpend()} viewExpenseHref="/en/projects/p1/invoices" />
+      </NextIntlClientProvider>
+    );
+    const bar = screen.getByTestId("overview-type-bar-labor-2026-09");
+    expect(bar.getAttribute("data-href")).toBe("/en/projects/p1/invoices?type=labor&month=2026-09");
+    expect(bar.getAttribute("role")).toBe("link");
+    expect(bar.getAttribute("tabindex")).toBe("0");
+    expect(screen.getByTestId("overview-type-link-labor").getAttribute("href")).toBe(
+      "/en/projects/p1/invoices?type=labor"
+    );
+  });
+
+  it("prints each month's value and a neutral, named month-to-date delta", () => {
+    const { container } = render(
+      <NextIntlClientProvider locale="en" messages={MESSAGES.en}>
+        <OverviewTypeMinis buckets={withSpend()} viewExpenseHref={null} />
+      </NextIntlClientProvider>
+    );
+    expect(screen.getByTestId("overview-type-value-labor-2026-09").textContent).toMatch(/1\.2K/);
+    const delta = screen.getByTestId("overview-type-delta-labor");
+    expect(delta.textContent).toMatch(/Aug/);
+    expect(delta.textContent).toMatch(/16/);
+    expect(delta.getAttribute("style")).toBeNull();
+    expect(container.querySelector("[data-href]")).toBeNull();
+  });
+});

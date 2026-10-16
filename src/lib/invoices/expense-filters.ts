@@ -40,7 +40,7 @@ export function expenseListHref(base: string, filters: ExpenseListFilters): stri
   if (filters.month) params.set("month", filters.month);
   if (filters.purse) params.set("purse", filters.purse);
   const qs = params.toString();
-  return qs ? `${base}?${qs}` : base;
+  return qs ? `${base}${base.includes("?") ? "&" : "?"}${qs}` : base;
 }
 
 /** The valid filters in a query; anything unknown is ignored. */

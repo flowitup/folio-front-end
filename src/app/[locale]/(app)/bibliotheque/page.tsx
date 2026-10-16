@@ -14,22 +14,27 @@ import { BibliothequePageClient } from "./bibliotheque-page-client";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirectToOnboardingIfNeeded } from "@/lib/auth/onboarding-redirect";
 import { pageTitle } from "@/lib/i18n/page-title";
+import { pickPageCompany, toPageCompanies, type PageCompany } from "@/lib/companies/page-company";
 
 export const generateMetadata = pageTitle("navigation.bibliotheque");
 
-export default async function BibliothequePage() {
+interface PageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function BibliothequePage({ searchParams }: PageProps) {
   // Onboarding gate (as on /dashboard and /projects): a user with no company
   // is sent to create or join one rather than shown an empty page.
   await redirectToOnboardingIfNeeded(await getLocale());
 
   let companyId: string | null = null;
+  let companies: PageCompany[] = [];
 
   try {
-    const companies = await fetchMyCompanies();
-    if (companies.length > 0) {
-      const primary = companies.find((c) => c.is_primary);
-      companyId = (primary ?? companies[0]).id;
-    }
+    // ?company= (the picker), else the primary company, else the oldest attachment.
+    const mine = await fetchMyCompanies();
+    companyId = pickPageCompany(mine, (await searchParams)?.company)?.id ?? null;
+    companies = toPageCompanies(mine);
   } catch (err) {
     console.error("[BibliothequePage] Could not fetch attached companies.", err);
   }
@@ -50,5 +55,5 @@ export default async function BibliothequePage() {
     );
   }
 
-  return <BibliothequePageClient companyId={companyId} />;
+  return <BibliothequePageClient key={companyId} companyId={companyId} companies={companies} />;
 }

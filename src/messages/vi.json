@@ -2310,6 +2310,10 @@
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
       "generic": "Đã xảy ra lỗi không mong muốn.",
       "invalidJoinCode": "Mã công ty không hợp lệ hoặc đã bị thu hồi."
+    },
+    "scopePicker": {
+      "label": "Công ty đang xem",
+      "primary": "Chính"
     }
   },
   "bibliotheque": {

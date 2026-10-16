@@ -2310,6 +2310,10 @@
       "rateLimited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
       "generic": "Une erreur inattendue est survenue.",
       "invalidJoinCode": "Code entreprise invalide ou révoqué."
+    },
+    "scopePicker": {
+      "label": "Entreprise affichée",
+      "primary": "Principale"
     }
   },
   "bibliotheque": {

@@ -42,6 +42,13 @@ export interface MyCompany extends Company {
   attached_at: string;
   /** Caller's role in this company. Only "admin" may see/manage its billing. */
   role: CompanyRole;
+  /**
+   * What the caller may do in THIS company (role + grants), from GET /companies.
+   * Gate company-scoped actions (library, inventory) on it, not on the session's
+   * global `permissions`, which describe the primary company only (or the union of
+   * every company when there is none).
+   */
+  permissions?: string[];
 }
 
 /** User attached to a company (returned by GET /companies/<id>/attached-users). */

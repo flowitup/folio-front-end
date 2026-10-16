@@ -93,15 +93,17 @@ function normalizeMyCompany(item: unknown): MyCompany {
     "company" in item &&
     "access" in item
   ) {
-    const { company, access } = item as {
+    const { company, access, permissions } = item as {
       company: Company;
       access: { is_primary: boolean; attached_at: string; role?: "admin" | "member" };
+      permissions?: string[];
     };
     return {
       ...company,
       is_primary: access.is_primary,
       attached_at: access.attached_at,
       role: access.role ?? "member",
+      ...(Array.isArray(permissions) ? { permissions } : {}),
     };
   }
   return item as MyCompany;

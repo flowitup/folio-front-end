@@ -2310,6 +2310,10 @@
       "rateLimited": "Too many requests. Please wait and try again.",
       "generic": "An unexpected error occurred.",
       "invalidJoinCode": "Invalid or revoked company code."
+    },
+    "scopePicker": {
+      "label": "Company shown",
+      "primary": "Primary"
     }
   },
   "bibliotheque": {

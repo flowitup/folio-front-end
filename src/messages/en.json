@@ -1294,6 +1294,7 @@
       "edit": "Edit"
     },
     "empty": {
+      "bodyReadOnly": "The project’s notes will appear here. Only managers and admins can add them.",
       "title": "Your build notebook is empty",
       "body": "Jot down decisions, calls, and deliveries above — everything you want to keep about the build lives here."
     },

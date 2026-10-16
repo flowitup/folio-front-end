@@ -1294,6 +1294,7 @@
       "edit": "Modifier"
     },
     "empty": {
+      "bodyReadOnly": "Les notes du chantier apparaîtront ici. Seuls les responsables et les administrateurs peuvent en ajouter.",
       "title": "Votre carnet de chantier est vide",
       "body": "Notez décisions, appels et livraisons ci-dessus — tout ce que vous souhaitez conserver sur le chantier se retrouve ici."
     },

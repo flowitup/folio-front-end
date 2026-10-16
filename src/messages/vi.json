@@ -1294,6 +1294,7 @@
       "edit": "Sửa"
     },
     "empty": {
+      "bodyReadOnly": "Ghi chú của công trình sẽ hiển thị ở đây. Chỉ quản lý và quản trị viên mới có thể thêm.",
       "title": "Nhật ký công trình của bạn đang trống",
       "body": "Ghi lại các quyết định, cuộc gọi và giao hàng ở trên — mọi thứ bạn muốn lưu về công trình đều ở đây."
     },

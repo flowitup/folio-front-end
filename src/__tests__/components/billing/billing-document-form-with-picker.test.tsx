@@ -114,6 +114,12 @@ import {
 import { fetchMyCompaniesAction } from "@/app/[locale]/(app)/settings/_actions/companies-actions";
 import { toast } from "sonner";
 
+/** The decimal fields (quantity, unit price, custom VAT): text boxes with a decimal keypad. */
+function decimalFields(): HTMLElement[] {
+  return screen.getAllByRole("textbox").filter((el) => el.getAttribute("inputmode") === "decimal");
+}
+
+
 const mockCreate = vi.mocked(createBillingDocumentAction);
 const mockFetchMyCompanies = vi.mocked(fetchMyCompaniesAction);
 const mockRouterPush = vi.fn();
@@ -213,7 +219,7 @@ async function fillAndSubmit(recipientName = "Client Corp") {
     fireEvent.change(cmdInputs[0], { target: { value: "Consulting" } });
   });
 
-  const spinButtons = screen.getAllByRole("spinbutton");
+  const spinButtons = decimalFields();
   fireEvent.change(spinButtons[0], { target: { value: "1" } });
   fireEvent.change(spinButtons[1], { target: { value: "100" } });
 

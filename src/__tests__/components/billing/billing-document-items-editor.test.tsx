@@ -12,6 +12,12 @@ import { render, screen, fireEvent, act, within } from "@testing-library/react";
 import { BillingDocumentItemsEditor } from "@/components/billing/billing-document-items-editor";
 import type { BillingDocumentItem } from "@/types/billing";
 
+/** The decimal fields (quantity, unit price, custom VAT): text boxes with a decimal keypad. */
+function decimalFields(): HTMLElement[] {
+  return screen.getAllByRole("textbox").filter((el) => el.getAttribute("inputmode") === "decimal");
+}
+
+
 // ---------------------------------------------------------------------------
 // Mocks — server action must be declared before component imports resolve
 // ---------------------------------------------------------------------------
@@ -106,7 +112,7 @@ describe("BillingDocumentItemsEditor — rendering", () => {
 
   it("renders one row with correct inputs for a single item", () => {
     renderEditor([makeItem({ description: "Dev work", quantity: "3", unit_price: "200" })], vi.fn());
-    const inputs = screen.getAllByRole("spinbutton"); // type=number inputs
+    const inputs = decimalFields(); // type=number inputs
     // qty + unit_price inputs visible
     expect(inputs.length).toBeGreaterThanOrEqual(2);
   });
@@ -170,7 +176,7 @@ describe("BillingDocumentItemsEditor — add/remove rows", () => {
     // We verify the component renders the row without error, and that the
     // quantity input still triggers onChange (basic reactivity check).
     // The Combobox-specific interaction is covered in billing-document-form.test.tsx.
-    const spinButtons = screen.getAllByRole("spinbutton");
+    const spinButtons = decimalFields();
     // First spinbutton in a row is quantity
     fireEvent.change(spinButtons[0], { target: { value: "99" } });
     expect(onChange).toHaveBeenCalled();
@@ -185,7 +191,7 @@ describe("BillingDocumentItemsEditor — add/remove rows", () => {
     const onChange = vi.fn();
     renderEditor(items, onChange);
     // qty is first spinbutton
-    const qtyInput = screen.getAllByRole("spinbutton")[0];
+    const qtyInput = decimalFields()[0];
     fireEvent.change(qtyInput, { target: { value: "5" } });
     expect(onChange).toHaveBeenCalledOnce();
     const [newItems] = onChange.mock.calls[0] as [BillingDocumentItem[]];
@@ -328,11 +334,11 @@ describe("BillingDocumentItemsEditor — field names", () => {
     renderEditor([makeItem(), makeItem({ vat_rate: "8.5" })], vi.fn());
 
     const desktop = screen.getByTestId("billing-items-desktop");
-    expect(within(desktop).getAllByRole("spinbutton", { name: "Qty" })).toHaveLength(2);
-    expect(within(desktop).getAllByRole("spinbutton", { name: "Unit price (excl. VAT)" })).toHaveLength(2);
+    expect(within(desktop).getAllByRole("textbox", { name: "Qty" })).toHaveLength(2);
+    expect(within(desktop).getAllByRole("textbox", { name: "Unit price (excl. VAT)" })).toHaveLength(2);
     // A preset rate is a select, a custom one an input: both carry the column name.
     expect(within(desktop).getByRole("combobox", { name: "VAT %" })).toBeDefined();
-    expect(within(desktop).getByRole("spinbutton", { name: "VAT %" })).toBeDefined();
+    expect(within(desktop).getByRole("textbox", { name: "VAT %" })).toBeDefined();
 
     // The mobile card's visible labels are linked to their inputs.
     const mobile = screen.getByTestId("billing-items-mobile");
@@ -353,27 +359,42 @@ describe("BillingDocumentItemsEditor — deleting a line", () => {
       />
     );
     const desktop = screen.getByTestId("billing-items-desktop");
-    expect(within(desktop).getByRole("spinbutton", { name: "VAT %" })).toBeDefined();
+    expect(within(desktop).getByRole("textbox", { name: "VAT %" })).toBeDefined();
 
     fireEvent.click(within(desktop).getAllByRole("button", { name: /remove line/i })[0]);
 
     // Two lines left, both on the 20% preset: two selects and no free-text VAT box.
     expect(within(desktop).getAllByRole("combobox", { name: "VAT %" })).toHaveLength(2);
-    expect(within(desktop).queryByRole("spinbutton", { name: "VAT %" })).toBeNull();
-    const prices = within(desktop).getAllByRole("spinbutton", { name: "Unit price (excl. VAT)" });
+    expect(within(desktop).queryByRole("textbox", { name: "VAT %" })).toBeNull();
+    const prices = within(desktop).getAllByRole("textbox", { name: "Unit price (excl. VAT)" });
     expect(prices.map((el) => (el as HTMLInputElement).value)).toEqual(["20", "30"]);
   });
 
   it("keeps a line's row (and focus) while it is edited", () => {
     render(<StatefulEditor initial={[makeItem({ quantity: "1" }), makeItem({ quantity: "2" })]} />);
     const desktop = screen.getByTestId("billing-items-desktop");
-    const [qty] = within(desktop).getAllByRole("spinbutton", { name: "Qty" });
+    const [qty] = within(desktop).getAllByRole("textbox", { name: "Qty" });
     qty.focus();
 
     fireEvent.change(qty, { target: { value: "3" } });
 
-    const [qtyAfter] = within(desktop).getAllByRole("spinbutton", { name: "Qty" });
+    const [qtyAfter] = within(desktop).getAllByRole("textbox", { name: "Qty" });
     expect(qtyAfter).toBe(qty);
     expect(document.activeElement).toBe(qty);
+  });
+});
+
+describe("BillingDocumentItemsEditor — decimal comma in any browser language", () => {
+  it("reads 18,5 and 45,90 as 18.5 and 45.9, not 185 and 4590", () => {
+    const onChange = vi.fn();
+    renderEditor([makeItem({ quantity: "1", unit_price: "0" })], onChange);
+    const desktop = screen.getByTestId("billing-items-desktop");
+    const [qty] = within(desktop).getAllByRole("textbox", { name: "Qty" });
+    fireEvent.change(qty, { target: { value: "18,5" } });
+    expect((onChange.mock.calls.at(-1) as [BillingDocumentItem[]])[0][0].quantity).toBe("18.5");
+
+    const [price] = within(desktop).getAllByRole("textbox", { name: "Unit price (excl. VAT)" });
+    fireEvent.change(price, { target: { value: "45,90" } });
+    expect((onChange.mock.calls.at(-1) as [BillingDocumentItem[]])[0][0].unit_price).toBe("45.9");
   });
 });

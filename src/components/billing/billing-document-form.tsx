@@ -292,11 +292,12 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     if (tooLong) return tForm("errors.textTooLong", { field: tooLong.label, max: tooLong.max });
     for (const item of items) {
       if (!item.description.trim()) return tForm("errors.itemDescriptionRequired");
-      if (Number(item.quantity) <= 0) return tForm("errors.itemQuantityPositive");
+      // NaN (text that is not a number) fails these checks too.
+      if (!(Number(item.quantity) > 0)) return tForm("errors.itemQuantityPositive");
       if (Number(item.quantity) > MAX_LINE_QUANTITY) {
         return tForm("errors.itemQuantityTooLarge", { max: MAX_LINE_QUANTITY });
       }
-      if (Number(item.unit_price) < 0) return tForm("errors.itemUnitPricePositive");
+      if (!(Number(item.unit_price) >= 0)) return tForm("errors.itemUnitPricePositive");
       if (Number(item.unit_price) > MAX_LINE_UNIT_PRICE) {
         return tForm("errors.itemUnitPriceTooLarge", { max: MAX_LINE_UNIT_PRICE });
       }

@@ -120,6 +120,12 @@ import {
 import { toast } from "sonner";
 import type { MyCompany } from "@/types/companies";
 
+/** The decimal fields (quantity, unit price, custom VAT): text boxes with a decimal keypad. */
+function decimalFields(): HTMLElement[] {
+  return screen.getAllByRole("textbox").filter((el) => el.getAttribute("inputmode") === "decimal");
+}
+
+
 const mockCreate = vi.mocked(createBillingDocumentAction);
 const mockUpdate = vi.mocked(updateBillingDocumentAction);
 const mockDelete = vi.mocked(deleteBillingDocumentAction);
@@ -232,7 +238,7 @@ async function fillAndSubmitCreateForm(recipientName = "Test Client") {
   });
 
   // Fill unit price (first spinbutton for that row is qty, second is unit_price)
-  const spinButtons = screen.getAllByRole("spinbutton");
+  const spinButtons = decimalFields();
   // spinbuttons: [qty, unit_price] for the item row
   fireEvent.change(spinButtons[0], { target: { value: "1" } }); // qty
   fireEvent.change(spinButtons[1], { target: { value: "500" } }); // unit_price

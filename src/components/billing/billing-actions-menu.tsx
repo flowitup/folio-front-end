@@ -40,6 +40,7 @@ import { parseFilenameFromContentDisposition } from "@/lib/api/_helpers/content-
 import { fetchWithRefresh } from "@/lib/api/refresh";
 import type { BillingDocument } from "@/types/billing";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { isDevisLockedByFacture } from "@/lib/billing/devis-lock";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
 import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
 import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
@@ -72,6 +73,8 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
   const editPath = `/${locale}/billing/${kindToSegment(document.kind)}/${document.id}`;
 
   const convertedFactureId = document.converted_to_facture_id ?? null;
+  // The API refuses to delete a devis its live facture comes from (409).
+  const deleteLocked = isDevisLockedByFacture(document);
   const showConvertToFacture =
     document.kind === "devis" && document.status === "accepted" && !convertedFactureId;
 
@@ -233,10 +236,20 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setDeleteOpen(true)}
+            disabled={deleteLocked}
             className="text-destructive focus:text-destructive"
           >
-            <Trash2 size={13} className="mr-2" />
-            {tActions("delete")}
+            <Trash2 size={13} className="mr-2 shrink-0" />
+            {deleteLocked ? (
+              <span className="flex flex-col">
+                <span>{tActions("delete")}</span>
+                <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+                  {tActions("deleteLockedHint")}
+                </span>
+              </span>
+            ) : (
+              tActions("delete")
+            )}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

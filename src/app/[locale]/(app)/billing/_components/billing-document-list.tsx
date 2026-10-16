@@ -40,6 +40,7 @@ import { BillingImportDialog } from "@/components/billing/billing-import-dialog"
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
 import type { MyCompany } from "@/types/companies";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { billingStatusLabel } from "@/lib/billing/status-label";
 import { formatDate } from "@/lib/utils/formatters";
 import { toIsoDate } from "@/lib/billing/document-payload";
 import { parsePage, parseQuery, parseStatus, statusesFor } from "./billing-list-params";
@@ -323,7 +324,7 @@ export function BillingDocumentList({
                     </span>
                     <BillingStatusBadge
                       status={doc.status}
-                      label={t(`${kind}.status.${doc.status}`)}
+                      label={billingStatusLabel(t, kind, doc.status)}
                     />
                   </div>
                   {/* Row 2: recipient */}
@@ -379,7 +380,7 @@ export function BillingDocumentList({
                         <td>
                           <BillingStatusBadge
                             status={doc.status}
-                            label={t(`${kind}.status.${doc.status}`)}
+                            label={billingStatusLabel(t, kind, doc.status)}
                           />
                         </td>
                         <td className="num font-medium" style={{ textAlign: "right" }}>

@@ -689,6 +689,9 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           </div>
         )}
 
+      {/* A devis locked by its facture is shown read-only: every field below
+          is disabled, not just Save (billing-13). */}
+      <fieldset disabled={lockedByFacture} className="contents">
       {/* 4. Recipient block */}
       <div className="folio-card space-y-4 p-5">
         <p className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
@@ -872,6 +875,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           items={items}
           onChange={setItems}
           defaultVatRate={templateVatRate}
+          readOnly={lockedByFacture}
         />
       </div>
 
@@ -917,6 +921,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
           />
         </div>
       </div>
+      </fieldset>
 
       {/* Error banner */}
       {formError && (
@@ -952,7 +957,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
             variant="outline"
             className="ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => setDeleteOpen(true)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || lockedByFacture}
           >
             {tForm("actions.delete")}
           </Button>

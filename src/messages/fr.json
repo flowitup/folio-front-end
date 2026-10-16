@@ -1456,7 +1456,10 @@
         "sent": "Envoyé",
         "accepted": "Accepté",
         "rejected": "Refusé",
-        "expired": "Expiré"
+        "expired": "Expiré",
+        "paid": "Payé",
+        "overdue": "En retard",
+        "cancelled": "Annulé"
       },
       "transitions": {
         "markAsSent": "Marquer comme envoyé",
@@ -1590,7 +1593,8 @@
         "previewPdf": "Aperçu PDF",
         "openMenu": "Ouvrir les actions",
         "openFacture": "Ouvrir la facture",
-        "backToList": "Retour à la liste"
+        "backToList": "Retour à la liste",
+        "deleteLockedHint": "Converti en facture : annulez la facture pour le supprimer."
       },
       "errors": {
         "recipientRequired": "Le nom du destinataire est obligatoire.",
@@ -1654,6 +1658,15 @@
         "createAs": "Créer en tant que :",
         "crossKindWarning": "Changer de type réinitialise le cycle de vie du document. Le {kind} cloné démarrera en <strong>{draft}</strong>.",
         "empty": "Aucun document existant."
+      },
+      "confirmStatus": {
+        "title": "Passer au statut « {status} » ?",
+        "paid": "Si la facture est liée à un projet, une dépense « Fonds débloqués » de ce montant y sera enregistrée. Ensuite, la facture ne pourra plus qu'être annulée.",
+        "factureCancelled": "C'est un statut définitif : la facture annulée ne pourra plus changer de statut.",
+        "devisExpired": "C'est un statut définitif : le devis expiré ne pourra plus changer de statut.",
+        "devisRejected": "Le devis sera marqué comme refusé. Vous pourrez le rouvrir en brouillon.",
+        "confirm": "Confirmer",
+        "cancel": "Annuler"
       }
     },
     "editPage": {
@@ -1826,7 +1839,8 @@
         "forbidden": "Vous n'avez pas accès aux devis et factures de ce chantier."
       },
       "retry": "Réessayer"
-    }
+    },
+    "unknownStatus": "Statut inconnu"
   },
   "documents": {
     "title": "Documents",

@@ -1456,7 +1456,10 @@
         "sent": "Sent",
         "accepted": "Accepted",
         "rejected": "Rejected",
-        "expired": "Expired"
+        "expired": "Expired",
+        "paid": "Paid",
+        "overdue": "Overdue",
+        "cancelled": "Cancelled"
       },
       "transitions": {
         "markAsSent": "Mark as Sent",
@@ -1590,7 +1593,8 @@
         "previewPdf": "Preview PDF",
         "openMenu": "Open actions",
         "openFacture": "Open invoice",
-        "backToList": "Back to list"
+        "backToList": "Back to list",
+        "deleteLockedHint": "Converted to an invoice: cancel the invoice to delete it."
       },
       "errors": {
         "recipientRequired": "Recipient name is required.",
@@ -1654,6 +1658,15 @@
         "createAs": "Create as:",
         "crossKindWarning": "Switching kinds resets the document lifecycle. The cloned {kind} will start as <strong>{draft}</strong>.",
         "empty": "No existing documents found."
+      },
+      "confirmStatus": {
+        "title": "Change the status to “{status}”?",
+        "paid": "If the invoice is linked to a project, a “Funds released” expense for this amount will be recorded there. After that, the invoice can only be cancelled.",
+        "factureCancelled": "This is final: a cancelled invoice can no longer change status.",
+        "devisExpired": "This is final: an expired quote can no longer change status.",
+        "devisRejected": "The quote will be marked as rejected. You can reopen it as a draft later.",
+        "confirm": "Confirm",
+        "cancel": "Cancel"
       }
     },
     "editPage": {
@@ -1826,7 +1839,8 @@
         "forbidden": "You don't have access to this project's quotes and invoices."
       },
       "retry": "Try again"
-    }
+    },
+    "unknownStatus": "Unknown status"
   },
   "documents": {
     "title": "Documents",

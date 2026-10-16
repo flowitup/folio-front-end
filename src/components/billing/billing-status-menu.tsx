@@ -4,8 +4,13 @@
  * BillingStatusMenu — status transition menu for billing documents.
  *
  * Mirrors the server-side transition matrix exactly:
- *   Devis:   draft→sent, sent→accepted|rejected|expired, accepted↔sent, rejected→draft
+ *   Devis:   draft→sent, sent→accepted|rejected|expired, accepted↔sent, rejected→draft;
+ *            a devis left in a facture status by an old import (paid, overdue,
+ *            cancelled) can be put back to draft|sent|accepted|rejected
  *   Facture: draft→sent, sent→paid|overdue|cancelled, overdue→paid, paid→cancelled
+ *
+ * Transitions with a side effect or no way back (paid, cancelled, expired,
+ * rejected) ask for confirmation first.
  *
  * Terminal states (no outbound transitions) render the button disabled, and so
  * does a devis converted to a live facture (the API refuses any change to it).
@@ -23,7 +28,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { BillingStatusBadge } from "@/components/billing/billing-status-badge";
+import { billingStatusLabel } from "@/lib/billing/status-label";
 import { updateBillingDocumentStatusAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import { isDevisLockedByFacture } from "@/lib/billing/devis-lock";
 import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
@@ -35,6 +51,21 @@ import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from
 
 type Transition = { to: BillingDocumentStatus; labelKey: string };
 
+const DEVIS_REPAIR: Transition[] = [
+  { to: "draft",    labelKey: "reopen" },
+  { to: "sent",     labelKey: "markAsSent" },
+  { to: "accepted", labelKey: "markAsAccepted" },
+  { to: "rejected", labelKey: "markAsRejected" },
+];
+
+/** Targets that need a confirmation: a side effect or no easy way back. */
+const CONFIRM_TARGETS: ReadonlySet<BillingDocumentStatus> = new Set<BillingDocumentStatus>([
+  "paid",
+  "cancelled",
+  "expired",
+  "rejected",
+]);
+
 const DEVIS_TRANSITIONS: Record<BillingDocumentStatus, Transition[]> = {
   draft:     [{ to: "sent",     labelKey: "markAsSent" }],
   sent:      [
@@ -45,9 +76,11 @@ const DEVIS_TRANSITIONS: Record<BillingDocumentStatus, Transition[]> = {
   accepted:  [{ to: "sent",    labelKey: "revertToSent" }],
   rejected:  [{ to: "draft",   labelKey: "reopen" }],
   expired:   [], // terminal
-  paid:      [], // N/A for devis
-  overdue:   [], // N/A for devis
-  cancelled: [], // N/A for devis
+  // Not devis statuses: only reachable through an old import. The API lets
+  // such a devis go back to a real devis status (status.py _DEVIS_REPAIR).
+  paid:      DEVIS_REPAIR,
+  overdue:   DEVIS_REPAIR,
+  cancelled: DEVIS_REPAIR,
 };
 
 const FACTURE_TRANSITIONS: Record<BillingDocumentStatus, Transition[]> = {
@@ -91,8 +124,8 @@ export function BillingStatusMenu({
   document,
   onStatusChanged,
 }: BillingStatusMenuProps) {
-  const tDevisStatus = useTranslations("billing.devis.status");
-  const tFactureStatus = useTranslations("billing.facture.status");
+  const tBilling = useTranslations("billing");
+  const tConfirm = useTranslations("billing.form.confirmStatus");
   const tDevisTrans = useTranslations("billing.devis.transitions");
   const tFactureTrans = useTranslations("billing.facture.transitions");
   const tActions = useTranslations("billing.form.actions");
@@ -101,6 +134,8 @@ export function BillingStatusMenu({
   const errorMessage = useBillingErrorMessage();
 
   const [isUpdating, setIsUpdating] = useState(false);
+  // Transition waiting for the user's confirmation.
+  const [pending, setPending] = useState<Transition | null>(null);
   // Double-submit guard: synchronous check before React commit
   const updatingRef = useRef(false);
 
@@ -112,18 +147,23 @@ export function BillingStatusMenu({
 
   /** Locale-aware status label for the current document's kind. */
   function statusLabel(status: BillingDocumentStatus): string {
-    if (document.kind === "devis") {
-      // Devis statuses: draft, sent, accepted, rejected, expired
-      if (status in { draft: 1, sent: 1, accepted: 1, rejected: 1, expired: 1 }) {
-        return tDevisStatus(status as "draft" | "sent" | "accepted" | "rejected" | "expired");
-      }
-    } else {
-      // Facture statuses: draft, sent, paid, overdue, cancelled
-      if (status in { draft: 1, sent: 1, paid: 1, overdue: 1, cancelled: 1 }) {
-        return tFactureStatus(status as "draft" | "sent" | "paid" | "overdue" | "cancelled");
-      }
+    return billingStatusLabel(tBilling, document.kind, status);
+  }
+
+  /** What confirming this transition does, for the dialog. */
+  function confirmDescription(to: BillingDocumentStatus): string {
+    if (document.kind === "facture" && to === "paid") return tConfirm("paid");
+    if (document.kind === "facture" && to === "cancelled") return tConfirm("factureCancelled");
+    if (document.kind === "devis" && to === "expired") return tConfirm("devisExpired");
+    return tConfirm("devisRejected");
+  }
+
+  function requestTransition(transition: Transition) {
+    if (CONFIRM_TARGETS.has(transition.to)) {
+      setPending(transition);
+      return;
     }
-    return status;
+    void handleTransition(transition.to);
   }
 
   /** Locale-aware transition label. */
@@ -189,7 +229,7 @@ export function BillingStatusMenu({
             {transitions.map((t) => (
               <DropdownMenuItem
                 key={t.to}
-                onClick={() => handleTransition(t.to)}
+                onClick={() => requestTransition(t)}
               >
                 {transitionLabel(document.kind, t.labelKey)}
               </DropdownMenuItem>
@@ -197,6 +237,31 @@ export function BillingStatusMenu({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+
+      <AlertDialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pending ? tConfirm("title", { status: statusLabel(pending.to) }) : null}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pending ? confirmDescription(pending.to) : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tConfirm("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const target = pending;
+                setPending(null);
+                if (target) void handleTransition(target.to);
+              }}
+            >
+              {pending ? transitionLabel(document.kind, pending.labelKey) : tConfirm("confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

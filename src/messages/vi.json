@@ -1456,7 +1456,10 @@
         "sent": "Đã gửi",
         "accepted": "Đã chấp nhận",
         "rejected": "Đã từ chối",
-        "expired": "Hết hạn"
+        "expired": "Hết hạn",
+        "paid": "Đã thanh toán",
+        "overdue": "Quá hạn",
+        "cancelled": "Đã hủy"
       },
       "transitions": {
         "markAsSent": "Đánh dấu đã gửi",
@@ -1590,7 +1593,8 @@
         "previewPdf": "Xem trước PDF",
         "openMenu": "Mở thao tác",
         "openFacture": "Mở hóa đơn",
-        "backToList": "Quay lại danh sách"
+        "backToList": "Quay lại danh sách",
+        "deleteLockedHint": "Đã chuyển thành hóa đơn: hãy hủy hóa đơn để xóa báo giá này."
       },
       "errors": {
         "recipientRequired": "Tên khách hàng là bắt buộc.",
@@ -1654,6 +1658,15 @@
         "createAs": "Tạo dưới dạng:",
         "crossKindWarning": "Đổi loại sẽ đặt lại vòng đời tài liệu. {kind} được sao chép sẽ bắt đầu ở trạng thái <strong>{draft}</strong>.",
         "empty": "Không tìm thấy tài liệu nào."
+      },
+      "confirmStatus": {
+        "title": "Chuyển sang trạng thái “{status}”?",
+        "paid": "Nếu hóa đơn gắn với một dự án, một khoản chi “Giải ngân” với số tiền này sẽ được ghi vào dự án đó. Sau đó, hóa đơn chỉ có thể bị hủy.",
+        "factureCancelled": "Đây là trạng thái cuối cùng: hóa đơn đã hủy sẽ không thể đổi trạng thái nữa.",
+        "devisExpired": "Đây là trạng thái cuối cùng: báo giá hết hạn sẽ không thể đổi trạng thái nữa.",
+        "devisRejected": "Báo giá sẽ được đánh dấu là bị từ chối. Bạn có thể mở lại dưới dạng bản nháp sau.",
+        "confirm": "Xác nhận",
+        "cancel": "Hủy"
       }
     },
     "editPage": {
@@ -1826,7 +1839,8 @@
         "forbidden": "Bạn không có quyền xem báo giá và hóa đơn của công trình này."
       },
       "retry": "Thử lại"
-    }
+    },
+    "unknownStatus": "Trạng thái không xác định"
   },
   "documents": {
     "title": "Tài liệu",

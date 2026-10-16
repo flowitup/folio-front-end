@@ -372,6 +372,7 @@ export default function InvoicesPage() {
           releasedTotal={summary.meta.fundsReleasedTotal}
           invoices={summary.invoices}
           settingsHref={`/${locale}/projects/${projectId}/settings`}
+          expensesHref={`/${locale}/projects/${projectId}/invoices`}
         />
       )}
 

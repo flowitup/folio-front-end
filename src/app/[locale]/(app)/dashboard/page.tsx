@@ -305,6 +305,7 @@ export default function DashboardPage() {
           invoices={activeInvoices}
           settingsHref={projectSettingsHref}
           loading={showLoading}
+          expensesHref={viewExpenseHref}
         />
       )}
 

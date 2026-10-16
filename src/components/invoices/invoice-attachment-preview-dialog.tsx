@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { fetchAttachmentBlob, fetchAttachmentBlobUrl } from "@/lib/api/invoice-api";
-import { ApiError } from "@/lib/api/http";
 import type { InvoiceAttachment } from "@/types/invoice";
 import { PdfCanvasViewer } from "@/app/[locale]/(app)/projects/[id]/documents/pdf-canvas-viewer";
+import { ApiError } from "@/lib/api/http";
 import {
   ResizableDialogHandles,
   type DialogBounds,

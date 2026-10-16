@@ -237,13 +237,15 @@ describe("ProfileForm — change number", () => {
     expect(mockRefresh).not.toHaveBeenCalled();
   });
 
-  it("refuses a foreign number before asking the server", () => {
+  it("refuses a foreign number before asking the server, and says why", () => {
     render(<ProfileForm />);
     fireEvent.click(screen.getByRole("button", { name: "Change number" }));
     fireEvent.change(screen.getByTestId("change-phone-phone"), {
       target: { value: "+84912345678" },
     });
-    expect(screen.getByTestId("change-phone-send")).toBeDisabled();
+    // Send stays usable so the press can explain the refusal (as on sign-in).
+    fireEvent.click(screen.getByTestId("change-phone-send"));
+    expect(screen.getByTestId("change-phone-error")).toBeInTheDocument();
     expect(mockRequestCode).not.toHaveBeenCalled();
   });
 });

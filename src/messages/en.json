@@ -656,7 +656,9 @@
       "cash": "Cash",
       "cashAdvance": "after {amount} cash advance deducted",
       "noPurse": "No purse",
-      "noPurseSpend": "{n, plural, one {# expense} other {# expenses}} in neither purse (no company or personal payment method) · {amount}"
+      "noPurseSpend": "{n, plural, one {# expense} other {# expenses}} in neither purse (no company or personal payment method) · {amount}",
+      "refundableCountCompany": "{n, plural, =1 {1 refundable · company} other {# refundable · company}}",
+      "refundableCountBank": "{n, plural, =1 {1 refundable · bank} other {# refundable · bank}}"
     },
     "byWorker": {
       "totalPaid": "Total paid",

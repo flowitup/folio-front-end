@@ -556,7 +556,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
                   data-testid="personal-purse-refundable-company"
                 >
                   <Building2 size={11} aria-hidden />
-                  {t("summary.refundableCount", { n: refundableCount })}
+                  {t("summary.refundableCountCompany", { n: refundableCount })}
                   {" · "}
                   <span className="num">{formatEURWhole(refundableTotal)}</span>
                 </span>
@@ -569,7 +569,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
                   data-testid="personal-purse-refundable-bank"
                 >
                   <Landmark size={11} aria-hidden />
-                  {t("summary.refundableCount", { n: bankOutstandingCount })}
+                  {t("summary.refundableCountBank", { n: bankOutstandingCount })}
                   {" · "}
                   <span className="num">{formatEURWhole(bankOutstandingTotal)}</span>
                 </span>

@@ -656,7 +656,9 @@
       "cash": "Tiền mặt",
       "cashAdvance": "đã trừ {amount} tiền mặt ứng trước",
       "noPurse": "Không thuộc quỹ nào",
-      "noPurseSpend": "{n} khoản chi không thuộc quỹ nào (không có phương thức thanh toán của công ty hoặc cá nhân) · {amount}"
+      "noPurseSpend": "{n} khoản chi không thuộc quỹ nào (không có phương thức thanh toán của công ty hoặc cá nhân) · {amount}",
+      "refundableCountCompany": "{n, plural, other {# khoản chờ hoàn · công ty}}",
+      "refundableCountBank": "{n, plural, other {# khoản chờ hoàn · ngân hàng}}"
     },
     "byWorker": {
       "totalPaid": "Tổng đã trả",

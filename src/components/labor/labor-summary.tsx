@@ -546,7 +546,21 @@ export function LaborSummary({
                           </button>
                         </td>
                         <td className="font-display text-[14px] font-semibold tracking-tight">
-                          {formatYearMonthLabel(row, locale)}
+                          {/* The row opens the month on click; this button
+                              gives keyboard and screen-reader users the same. */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onMonthChange(ym);
+                            }}
+                            title={t("summaryDrillDown")}
+                            data-testid={`month-open-${ym}`}
+                            className="rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            style={{ color: "inherit", font: "inherit", cursor: "pointer" }}
+                          >
+                            {formatYearMonthLabel(row, locale)}
+                          </button>
                           {(showUnpaidWarning || showOverpaidWarning) && (
                             // Under the month on a phone, beside it from sm up; a stamp
                             // never wraps inside its pill.

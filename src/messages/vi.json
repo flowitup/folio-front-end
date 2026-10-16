@@ -692,7 +692,9 @@
     },
     "print": {
       "heading": "Hóa đơn",
-      "loading": "Đang tải…"
+      "loading": "Đang tải…",
+      "project": "Công trình",
+      "refund": "Hoàn tiền"
     },
     "loadFailed": "Không tải được hóa đơn.",
     "loadListFailed": "Không tải được danh sách chi phí.",
@@ -2695,7 +2697,12 @@
     "uploadSummary": "Đã tải lên {done}/{total} — {failed} lỗi",
     "uploadSummaryMore": "và {count} tệp khác",
     "retryFailed": "Thử lại",
-    "uploadPaused": "đã đạt giới hạn tải lên, tiếp tục sau {seconds} giây"
+    "uploadPaused": "đã đạt giới hạn tải lên, tiếp tục sau {seconds} giây",
+    "download": "Tải xuống",
+    "previousPhoto": "Ảnh trước",
+    "nextPhoto": "Ảnh tiếp theo",
+    "cannotPlayVideo": "Không thể phát video này trên trình duyệt. Hãy tải xuống để mở.",
+    "cannotShowImage": "Không thể hiển thị ảnh này trên trình duyệt. Hãy tải xuống để mở."
   },
   "chiffrage": {
     "actions": "Thao tác",

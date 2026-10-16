@@ -9,13 +9,19 @@ import { formatQuantity, formatVatRate, invoiceTotals } from "@/lib/invoices/inv
 import { invoiceItemLabel } from "@/lib/invoices/invoice-item-label";
 import type { Invoice } from "@/types/invoice";
 import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
+import { fetchProjectById } from "@/lib/api/projects";
+import { projectDisplayName } from "@/lib/projects/project-display-name";
+import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
+import { refundStatusI18nKey } from "@/lib/invoices/refundable-status-display";
 
 export default function InvoicePrintPage() {
   const params = useParams();
   const projectId = params.id as string;
   const invoiceId = params.invoiceId as string;
   const t = useTranslations("invoices");
+  const tBuiltins = useTranslations("paymentMethods.builtins");
   const locale = useLocale();
+  const [projectLabel, setProjectLabel] = useState<string | null>(null);
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [error, setError] = useState(false);
@@ -25,8 +31,21 @@ export default function InvoicePrintPage() {
     fetchInvoice(projectId, invoiceId)
       .then((data) => { if (!cancelled) setInvoice(data); })
       .catch(() => { if (!cancelled) setError(true); });
+    // The project is printed too; a failure only leaves its row out.
+    fetchProjectById(projectId)
+      .then((project) => { if (!cancelled) setProjectLabel(projectDisplayName(project)); })
+      .catch(() => {});
     return () => { cancelled = true; };
   }, [projectId, invoiceId]);
+
+  // "Save as PDF" proposes the tab title as the file name: one per expense
+  // ("FAC-2026-014 – Point P") instead of the app title for every one.
+  useEffect(() => {
+    if (!invoice) return;
+    const previous = document.title;
+    document.title = [invoice.invoice_number, invoice.recipient_name].filter(Boolean).join(" – ");
+    return () => { document.title = previous; };
+  }, [invoice]);
 
   if (error) {
     return (
@@ -103,6 +122,12 @@ export default function InvoicePrintPage() {
               <td>{t("invoiceNumber")}</td>
               <td>{invoice.invoice_number}</td>
             </tr>
+            {projectLabel && (
+              <tr>
+                <td>{t("print.project")}</td>
+                <td>{projectLabel}</td>
+              </tr>
+            )}
             <tr>
               <td>{t("type")}</td>
               {/* Same label as the xlsx/pdf export: a cash advance is listed under
@@ -130,6 +155,20 @@ export default function InvoicePrintPage() {
               <tr>
                 <td>{t("recipientAddress")}</td>
                 <td style={{ whiteSpace: "pre-line" }}>{invoice.recipient_address}</td>
+              </tr>
+            )}
+            <tr>
+              <td>{t("paymentMethod.label")}</td>
+              <td>
+                {invoice.payment_method_label
+                  ? localizeMethodLabel(invoice.payment_method_label, tBuiltins)
+                  : t("paymentMethod.none")}
+              </td>
+            </tr>
+            {invoice.refundable_status != null && (
+              <tr>
+                <td>{t("print.refund")}</td>
+                <td>{t(refundStatusI18nKey(invoice) ?? "refund.status.refundable")}</td>
               </tr>
             )}
             {invoice.type === "return" && invoice.settled_via && (

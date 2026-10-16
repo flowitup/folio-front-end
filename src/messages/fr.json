@@ -692,7 +692,9 @@
     },
     "print": {
       "heading": "Facture",
-      "loading": "Chargement…"
+      "loading": "Chargement…",
+      "project": "Chantier",
+      "refund": "Remboursement"
     },
     "loadFailed": "Échec du chargement de la facture.",
     "loadListFailed": "Échec du chargement des dépenses.",
@@ -2695,7 +2697,12 @@
     "uploadSummary": "{done} sur {total} téléversées — {failed} en échec",
     "uploadSummaryMore": "et {count} autres",
     "retryFailed": "Réessayer",
-    "uploadPaused": "limite d'envoi atteinte, reprise dans {seconds} s"
+    "uploadPaused": "limite d'envoi atteinte, reprise dans {seconds} s",
+    "download": "Télécharger",
+    "previousPhoto": "Photo précédente",
+    "nextPhoto": "Photo suivante",
+    "cannotPlayVideo": "Cette vidéo ne peut pas être lue dans ce navigateur. Téléchargez-la pour l'ouvrir.",
+    "cannotShowImage": "Cette image ne peut pas être affichée dans ce navigateur. Téléchargez-la pour l'ouvrir."
   },
   "chiffrage": {
     "actions": "Actions",

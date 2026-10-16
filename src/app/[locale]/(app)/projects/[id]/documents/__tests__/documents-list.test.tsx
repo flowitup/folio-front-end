@@ -408,7 +408,37 @@ describe("DocumentsList", () => {
     });
   });
 
+  describe("file name", () => {
+    it("opens the preview when the name of a previewable document is clicked", () => {
+      const onPreview = vi.fn();
+      const doc = makeDoc({ kind: "pdf", filename: "plan-rdc.pdf" });
+      render(<DocumentsList {...defaultProps} documents={[doc]} onPreview={onPreview} />);
+      const desktop = screen.getByTestId("documents-list-desktop");
+      fireEvent.click(within(desktop).getByRole("button", { name: "plan-rdc.pdf" }));
+      expect(onPreview).toHaveBeenCalledWith(doc);
+    });
+  });
+
   describe("download button", () => {
+    it("downloads once on a double click and is busy meanwhile", async () => {
+      const { downloadProjectDocument } = await import("@/lib/api/project-document-blob");
+      vi.mocked(downloadProjectDocument).mockClear();
+      let finish: () => void = () => {};
+      vi.mocked(downloadProjectDocument).mockImplementationOnce(
+        () => new Promise<void>((resolve) => { finish = resolve; }),
+      );
+      const doc = makeDoc({ id: "doc-big", filename: "gros-plan.pdf" });
+      render(<DocumentsList {...defaultProps} documents={[doc]} />);
+      const desktop = screen.getByTestId("documents-list-desktop");
+      const downloadBtn = within(desktop).getByTitle("Download");
+      fireEvent.click(downloadBtn);
+      fireEvent.click(downloadBtn);
+      await vi.waitFor(() => expect(downloadBtn).toBeDisabled());
+      expect(downloadProjectDocument).toHaveBeenCalledTimes(1);
+      finish();
+      await vi.waitFor(() => expect(downloadBtn).not.toBeDisabled());
+    });
+
     it("is rendered as a button (not a bare anchor)", () => {
       const doc = makeDoc({ id: "doc-abc", filename: "my-report.pdf" });
 

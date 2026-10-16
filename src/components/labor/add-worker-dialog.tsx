@@ -258,8 +258,9 @@ export function AddWorkerDialog({
           {/* Role selection — shown in both create and edit flows when roles exist */}
           {(roles.length > 0 || palette.length > 0) && (
             <div className="space-y-2">
-              <Label>{t("role.label")}</Label>
+              <Label htmlFor="worker-role">{t("role.label")}</Label>
               <RoleSelectWithCreate
+                id="worker-role"
                 roles={roles}
                 palette={palette}
                 value={roleId}

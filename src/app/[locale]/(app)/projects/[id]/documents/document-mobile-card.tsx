@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import type { ReactNode } from "react";
-import { Eye, Download, Pencil, Trash2, Plus, X } from "lucide-react";
+import { Eye, Download, Loader2, Pencil, Trash2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ProjectDocument } from "@/lib/api/project-documents";
 
@@ -39,6 +39,8 @@ export interface DocumentMobileCardProps {
   labelTagDone: string;
   onPreview: () => void;
   onDownload: () => void;
+  /** A download of this document is in progress. */
+  downloading?: boolean;
   onRename: () => void;
   onDelete: () => void;
   onTagsUpdate: (tags: string[]) => void;
@@ -70,6 +72,7 @@ export function DocumentMobileCard({
   labelTagDone,
   onPreview,
   onDownload,
+  downloading = false,
   onRename,
   onDelete,
   onTagsUpdate,
@@ -217,9 +220,15 @@ export function DocumentMobileCard({
           onClick={onDownload}
           title={labelDownload}
           aria-label={labelDownload}
+          aria-busy={downloading}
+          disabled={downloading}
           className="min-h-[40px] min-w-[40px]"
         >
-          <Download className="size-4" aria-hidden />
+          {downloading ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+          ) : (
+            <Download className="size-4" aria-hidden />
+          )}
         </Button>
         {canRename && (
           <Button

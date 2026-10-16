@@ -692,7 +692,9 @@
     },
     "print": {
       "heading": "Invoice",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "project": "Project",
+      "refund": "Refund"
     },
     "loadFailed": "Failed to load invoice.",
     "loadListFailed": "Failed to load invoices.",
@@ -2695,7 +2697,12 @@
     "uploadSummary": "{done} of {total} uploaded — {failed} failed",
     "uploadSummaryMore": "and {count} more",
     "retryFailed": "Retry",
-    "uploadPaused": "upload limit reached, resuming in {seconds} s"
+    "uploadPaused": "upload limit reached, resuming in {seconds} s",
+    "download": "Download",
+    "previousPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
+    "cannotPlayVideo": "This video cannot be played in this browser. Download it to open it.",
+    "cannotShowImage": "This image cannot be shown in this browser. Download it to open it."
   },
   "chiffrage": {
     "actions": "Actions",

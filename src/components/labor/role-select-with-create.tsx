@@ -45,6 +45,8 @@ interface RoleSelectWithCreateProps {
   canManage?: boolean;
   onRoleUpdated?: (role: LaborRole) => void;
   onRoleDeleted?: (roleId: string) => void;
+  /** Id of the trigger, so a <Label htmlFor> names the field. */
+  id?: string;
 }
 
 /**
@@ -93,6 +95,7 @@ export function RoleSelectWithCreate({
   canManage = false,
   onRoleUpdated,
   onRoleDeleted,
+  id,
 }: RoleSelectWithCreateProps) {
   const tRole = useTranslations("labor.role.defaults");
   const t = useTranslations("labor.role");
@@ -259,6 +262,7 @@ export function RoleSelectWithCreate({
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
+          id={id}
           type="button"
           role="combobox"
           aria-expanded={open}

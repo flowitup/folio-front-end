@@ -1273,7 +1273,8 @@
     },
     "editor": {
       "placeholderTitle": "Tiêu đề ghi chú",
-      "placeholderBody": "Viết xuống đây…"
+      "placeholderBody": "Viết xuống đây…",
+      "titleRequired": "Hãy đặt tiêu đề cho ghi chú để lưu."
     },
     "categoryLabel": "Danh mục",
     "filterAll": "Tất cả",
@@ -1304,7 +1305,7 @@
     "errors": {
       "saveFailed": "Không thể lưu ghi chú. Vui lòng thử lại.",
       "deleteFailed": "Không thể xóa ghi chú. Vui lòng thử lại.",
-      "validation": "Một số trường không hợp lệ.",
+      "validation": "Kiểm tra ghi chú: cần có tiêu đề (tối đa 200 ký tự), nội dung tối đa 2.000 ký tự.",
       "forbidden": "Bạn không có quyền truy cập dự án này.",
       "notFound": "Ghi chú này không còn tồn tại.",
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
@@ -1312,7 +1313,14 @@
     },
     "addedOn": "Đã thêm ngày {date}",
     "addedToday": "Đã thêm hôm nay",
-    "addedYesterday": "Đã thêm hôm qua"
+    "addedYesterday": "Đã thêm hôm qua",
+    "showMore": "Xem thêm",
+    "showLess": "Thu gọn",
+    "loadError": {
+      "title": "Không thể tải ghi chú",
+      "body": "Ghi chú của bạn chưa bị xóa: chỉ là tải dữ liệu thất bại. Vui lòng thử lại sau giây lát.",
+      "retry": "Thử lại"
+    }
   },
   "notifications": {
     "aria": {

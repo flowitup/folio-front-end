@@ -12,6 +12,7 @@ import { listProjectNotes } from "@/lib/api/notes";
 import { getProjectById } from "@/lib/api/projects-server";
 import { can, isPlatformOps } from "@/lib/auth/permissions";
 import { NotesView } from "./notes-view";
+import { NotesLoadError } from "./notes-load-error";
 import { pageTitle } from "@/lib/i18n/page-title";
 
 interface PageProps {
@@ -33,7 +34,8 @@ export default async function NotesPage({ params }: PageProps) {
   // Topbar renders page title/subtitle via TOPBAR_KEYS.notes; project name shown
   // in the breadcrumb via ProjectContext.
   const [notesResult, project] = await Promise.all([
-    listProjectNotes(projectId).catch(() => ({ items: [], count: 0 })),
+    // null = the notes could not be loaded: say so, never an empty notebook.
+    listProjectNotes(projectId).catch(() => null),
     getProjectById(projectId).catch(() => null),
   ]);
 
@@ -54,11 +56,15 @@ export default async function NotesPage({ params }: PageProps) {
 
   return (
     <div className="px-6 py-6">
-      <NotesView
-        projectId={projectId}
-        initialNotes={notesResult.items}
-        canEdit={canEdit}
-      />
+      {notesResult ? (
+        <NotesView
+          projectId={projectId}
+          initialNotes={notesResult.items}
+          canEdit={canEdit}
+        />
+      ) : (
+        <NotesLoadError />
+      )}
     </div>
   );
 }

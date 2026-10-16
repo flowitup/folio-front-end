@@ -1273,7 +1273,8 @@
     },
     "editor": {
       "placeholderTitle": "Titre de la note",
-      "placeholderBody": "Notez-le ici…"
+      "placeholderBody": "Notez-le ici…",
+      "titleRequired": "Donnez un titre à la note pour l’enregistrer."
     },
     "categoryLabel": "Catégorie",
     "filterAll": "Tout",
@@ -1304,7 +1305,7 @@
     "errors": {
       "saveFailed": "Impossible d'enregistrer la note. Réessayez.",
       "deleteFailed": "Impossible de supprimer la note. Réessayez.",
-      "validation": "Certains champs sont invalides.",
+      "validation": "Vérifiez la note : titre obligatoire de 200 caractères maximum, texte de 2 000 caractères maximum.",
       "forbidden": "Vous n'avez pas accès à ce projet.",
       "notFound": "Cette note n'existe plus.",
       "rateLimited": "Trop de requêtes. Réessayez dans un moment.",
@@ -1312,7 +1313,14 @@
     },
     "addedOn": "Ajoutée le {date}",
     "addedToday": "Ajoutée aujourd'hui",
-    "addedYesterday": "Ajoutée hier"
+    "addedYesterday": "Ajoutée hier",
+    "showMore": "Voir plus",
+    "showLess": "Voir moins",
+    "loadError": {
+      "title": "Impossible de charger les notes",
+      "body": "Vos notes n’ont pas été supprimées : le chargement a échoué. Réessayez dans un instant.",
+      "retry": "Réessayer"
+    }
   },
   "notifications": {
     "aria": {

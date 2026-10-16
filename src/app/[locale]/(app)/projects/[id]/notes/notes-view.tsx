@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { buildSections, type NoteSection } from "@/lib/notes/grouping";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { CATEGORY_ORDER } from "@/lib/notes/categories";
+import { searchIncludes } from "@/lib/utils/fold-for-search";
 import { QuickAdd } from "./quick-add";
 import { NotesToolbar } from "./notes-toolbar";
 import { NoteCard } from "./note-card";
@@ -44,11 +45,15 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
     CATEGORY_ORDER.map((k) => [k, notes.filter((n) => n.category === k).length])
   ) as Record<NoteCategory, number>;
 
-  const q = query.trim().toLowerCase();
+  // A category whose last note was moved or deleted has no chip any more:
+  // fall back to "all" instead of an empty list with nothing selected.
+  const effectiveCat: ActiveCat =
+    activeCat !== "all" && counts[activeCat] === 0 ? "all" : activeCat;
+
+  // Accent-insensitive: "eloise" finds "Éloïse", "quyet dinh" finds "Quyết định".
   const filtered = notes.filter((n) => {
-    if (activeCat !== "all" && n.category !== activeCat) return false;
-    if (!q) return true;
-    return (n.title + " " + (n.description ?? "")).toLowerCase().includes(q);
+    if (effectiveCat !== "all" && n.category !== effectiveCat) return false;
+    return searchIncludes(n.title + " " + (n.description ?? ""), query);
   });
 
   // Day sections follow the viewer's calendar, which the server lacks: until
@@ -70,7 +75,7 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
       {!isEmpty && (
         <NotesToolbar
           counts={counts}
-          activeCat={activeCat}
+          activeCat={effectiveCat}
           onPickCat={setActiveCat}
           query={query}
           onQueryChange={setQuery}

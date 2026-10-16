@@ -1695,7 +1695,8 @@
         "invoice": "Hóa đơn",
         "refundedBy": "Được hoàn bởi",
         "status": "Trạng thái",
-        "actions": "Thao tác"
+        "actions": "Thao tác",
+        "company": "Công ty"
       },
       "attachments": {
         "count": "{n} tệp",
@@ -1736,6 +1737,10 @@
         "body": "{number} sẽ không còn được theo dõi hoàn tiền và trạng thái hoàn tiền sẽ bị xóa.",
         "fundsRelease": "Khoản giải ngân liên kết {number} cũng sẽ bị xóa, làm giảm tổng giải ngân của dự án.",
         "cancel": "Hủy"
+      },
+      "companyFilter": {
+        "label": "Công ty",
+        "all": "Tất cả công ty"
       }
     },
     "import": {

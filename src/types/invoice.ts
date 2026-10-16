@@ -243,6 +243,9 @@ export interface RefundableExpense {
   id: string;
   project_id: string;
   project_name: string;
+  /** Company the expense belongs to (owes the refund); absent on older APIs. */
+  company_id?: string;
+  company_name?: string;
   invoice_number: string;
   recipient_name: string;
   /** Issue date in YYYY-MM-DD format. */

@@ -1695,7 +1695,8 @@
         "invoice": "Invoice",
         "refundedBy": "Refunded by",
         "status": "Status",
-        "actions": "Actions"
+        "actions": "Actions",
+        "company": "Company"
       },
       "attachments": {
         "count": "{n} files",
@@ -1736,6 +1737,10 @@
         "body": "{number} will no longer be tracked for reimbursement and its refund status will be cleared.",
         "fundsRelease": "The linked funds release {number} will also be deleted, which lowers the project's released total.",
         "cancel": "Cancel"
+      },
+      "companyFilter": {
+        "label": "Company",
+        "all": "All companies"
       }
     },
     "import": {

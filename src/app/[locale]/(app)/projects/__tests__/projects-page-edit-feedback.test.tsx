@@ -130,11 +130,11 @@ describe("ProjectsPage team panel — remove", () => {
     fireEvent.click(screen.getByRole("button", { name: new RegExp(frMessages.projects.showTeam) }));
 
     // Was a hard-coded English "Remove" on every row.
-    const removeDave = await screen.findByRole("button", { name: "Retirer dave@example.com" });
-    expect(screen.getByRole("button", { name: "Retirer eve@example.com" })).toBeInTheDocument();
+    const removeDave = await screen.findByRole("button", { name: "Retirer Dave" });
+    expect(screen.getByRole("button", { name: "Retirer Eve" })).toBeInTheDocument();
 
     fireEvent.click(removeDave);
     const dialog = await screen.findByRole("alertdialog");
-    expect(dialog).toHaveAccessibleDescription("dave@example.com");
+    expect(dialog).toHaveAccessibleDescription("Dave (dave@example.com)");
   });
 });

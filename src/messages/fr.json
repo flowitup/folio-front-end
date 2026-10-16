@@ -2051,7 +2051,8 @@
       "joined": "Rejoint le",
       "expires": "Expire dans",
       "invitedBy": "Invité par",
-      "actions": "Actions"
+      "actions": "Actions",
+      "contact": "Contact"
     },
     "invite": {
       "button": "Inviter un membre",

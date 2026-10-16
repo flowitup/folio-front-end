@@ -261,7 +261,7 @@ export function MembersTable({
                 <TableRow>
                   <TableHead style={{ width: 40 }} />
                   <TableHead>{t("col.name")}</TableHead>
-                  <TableHead>{t("col.email")}</TableHead>
+                  <TableHead>{t("col.contact")}</TableHead>
                   <TableHead>{t("col.role")}</TableHead>
                   <TableHead>{t("col.joined")}</TableHead>
                   {canManageMembers && (

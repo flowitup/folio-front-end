@@ -2051,7 +2051,8 @@
       "joined": "Tham gia",
       "expires": "Hết hạn sau",
       "invitedBy": "Được mời bởi",
-      "actions": "Thao tác"
+      "actions": "Thao tác",
+      "contact": "Liên hệ"
     },
     "invite": {
       "button": "Mời thành viên",

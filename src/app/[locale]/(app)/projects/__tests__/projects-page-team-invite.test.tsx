@@ -261,7 +261,7 @@ describe("ProjectsPage team panel — Remove", () => {
       permissions: ["project:read", "project:manage_users"],
       companies: [{ id: "co-1", name: "Co", role: "manager" }],
     });
-    expect(removeButtons()).toEqual(["Remove dave@example.com"]);
+    expect(removeButtons()).toEqual(["Remove Dave"]);
   });
 
   it("offers a company admin Remove on everyone else", async () => {
@@ -271,9 +271,9 @@ describe("ProjectsPage team panel — Remove", () => {
       companies: [{ id: "co-1", name: "Co", role: "admin" }],
     });
     expect(removeButtons()).toEqual([
-      "Remove dave@example.com",
-      "Remove bob@example.com",
-      "Remove ann@example.com",
+      "Remove Dave",
+      "Remove Bob",
+      "Remove Ann",
     ]);
   });
 });

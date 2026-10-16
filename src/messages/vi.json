@@ -568,7 +568,7 @@
       "generating": "Đang tạo…",
       "downloaded": "Đã tải xuống bản xuất",
       "summaryLine": "Đã chọn {count} tháng",
-      "errorRangeInvalid": "\"Từ\" phải trước hoặc bằng \"Đến\"",
+      "errorRangeInvalid": "Tháng bắt đầu phải trước hoặc trùng tháng kết thúc",
       "errorRangeTooLarge": "Khoảng thời gian không vượt quá 24 tháng",
       "errorGeneric": "Không thể xuất chi phí",
       "errorForbidden": "Bạn không có quyền xuất chi phí của dự án này.",
@@ -687,7 +687,7 @@
     },
     "cashAdvance": {
       "label": "Tạm ứng tiền mặt của công ty",
-      "hint": "Tiền công ty giao (vd. tiền mặt để trả nhân công). Không tính vào vốn giải ngân — hiển thị là đã chi trong túi tiền công ty. Ghi các khoản trả bằng tiền này theo phương thức tiền mặt của bạn, không dùng phương thức công ty, để tránh tính hai lần.",
+      "hint": "Tiền công ty giao (vd. tiền mặt để trả nhân công). Không tính vào vốn giải ngân — hiển thị là đã chi trong quỹ công ty. Ghi các khoản trả bằng tiền này theo phương thức tiền mặt của bạn, không dùng phương thức công ty, để tránh tính hai lần.",
       "badge": "Tạm ứng",
       "badgeOutsideTotal": "Tiền mặt ứng trước · ngoài tổng"
     },

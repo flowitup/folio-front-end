@@ -568,7 +568,7 @@
       "generating": "Generating…",
       "downloaded": "Export downloaded",
       "summaryLine": "{count, plural, =1 {1 month selected} other {# months selected}}",
-      "errorRangeInvalid": "\"From\" must be before or equal to \"To\"",
+      "errorRangeInvalid": "The start month must be on or before the end month",
       "errorRangeTooLarge": "Range cannot exceed 24 months",
       "errorGeneric": "Failed to export expenses",
       "errorForbidden": "You don't have permission to export this project's expenses.",

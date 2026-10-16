@@ -195,7 +195,7 @@
     "laborUnpaid": "Main-d'œuvre — impayée",
     "laborUnpaidHint": "Dû aux ouvriers. Non compris dans le total ci-dessus.",
     "type": {
-      "materials_services": "Matériaux & services",
+      "materials_services": "Achats & prestations",
       "others": "Autres",
       "labor": "Main-d'œuvre",
       "released_funds": "Fonds débloqués",
@@ -568,7 +568,7 @@
       "generating": "Génération…",
       "downloaded": "Export téléchargé",
       "summaryLine": "{count, plural, =1 {1 mois sélectionné} other {# mois sélectionnés}}",
-      "errorRangeInvalid": "« De » doit être antérieur ou égal à « À »",
+      "errorRangeInvalid": "Le mois de début doit précéder le mois de fin (ou être le même)",
       "errorRangeTooLarge": "La période ne peut pas dépasser 24 mois",
       "errorGeneric": "Échec de l'export des dépenses",
       "errorForbidden": "Vous n'avez pas l'autorisation d'exporter les dépenses de ce projet.",
@@ -687,7 +687,7 @@
     },
     "cashAdvance": {
       "label": "Avance en espèces de l'entreprise",
-      "hint": "Argent remis par l'entreprise (ex. espèces pour payer la main-d'œuvre). Non compté dans les fonds débloqués — affiché comme dépensé dans la bourse entreprise. Enregistrez ce que vous payez avec ces espèces sous votre propre moyen de paiement, pas celui de l'entreprise, pour ne pas compter deux fois.",
+      "hint": "Argent remis par l'entreprise (ex. espèces pour payer la main-d'œuvre). Non compté dans les fonds débloqués — affiché comme dépensé dans la caisse entreprise. Enregistrez ce que vous payez avec ces espèces sous votre propre moyen de paiement, pas celui de l'entreprise, pour ne pas compter deux fois.",
       "badge": "Avance espèces",
       "badgeOutsideTotal": "Avance espèces · hors total"
     },

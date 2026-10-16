@@ -120,7 +120,7 @@ export function ProductEditDialog({
 
   /** Remove the stored image (saved at once, like a fetched one). */
   const handleRemoveImage = async () => {
-    if (busy) return;
+    if (busy || !product) return;
     setIsRemovingImage(true);
     const result = await deleteProductImageAction(product.id);
     setIsRemovingImage(false);

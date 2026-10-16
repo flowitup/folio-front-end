@@ -45,7 +45,7 @@ import {
 } from "../_actions/payment-methods-actions";
 import { PaymentMethodRow } from "./payment-method-row";
 import { PaymentMethodAddForm } from "./payment-method-add-form";
-import type { PaymentMethod } from "@/lib/api/payment-methods-api";
+import type { PaymentMethod, PaymentPurse } from "@/lib/api/payment-methods-api";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -95,10 +95,10 @@ export function PaymentMethodsSection({
   // Handlers
   // ---------------------------------------------------------------------------
 
-  async function handleAdd(label: string): Promise<boolean> {
+  async function handleAdd(label: string, purse: PaymentPurse): Promise<boolean> {
     if (!startMutation()) return false;
     try {
-      const result = await createPaymentMethodAction(companyId, label);
+      const result = await createPaymentMethodAction(companyId, label, purse);
       if (!result.ok) {
         toast.error(result.error.message);
         return false;
@@ -121,6 +121,8 @@ export function PaymentMethodsSection({
     isPersonalPayment: boolean
   ): Promise<boolean> {
     if (!startMutation()) return false;
+    // Only the purse toggles changed: say "updated", not "renamed".
+    const renamed = methods.find((m) => m.id === id)?.label !== newLabel;
     try {
       const result = await updatePaymentMethodAction(companyId, id, {
         label: newLabel,
@@ -132,7 +134,7 @@ export function PaymentMethodsSection({
         return false;
       }
       setMethods(result.data);
-      toast.success(t("toasts.renamed"));
+      toast.success(t(renamed ? "toasts.renamed" : "toasts.updated"));
       return true;
     } catch {
       toast.error(t("errors.generic"));

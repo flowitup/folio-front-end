@@ -128,20 +128,19 @@ export function CompanyMemberRow({
           onToggle={(option, checked) => onProjectToggle(row, option, checked)}
         />
       </TableCell>
-      <TableCell>
+      <TableCell className="whitespace-nowrap">
         {attachedUser && row.role !== "admin" && (
           <Button
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-[12px]"
             onClick={() => onOpenGrants(attachedUser)}
-            // Icon-only below xl: the full label pushed the column out of the
-            // settings card at 1366px, where it scrolled out of sight.
+            // Icon-only (named by aria-label and title): with its label the
+            // column left the settings card at every width up to 1440px.
             aria-label={t("customPermissions")}
             title={t("customPermissions")}
           >
-            <SlidersHorizontal size={12} className="xl:mr-1" aria-hidden="true" />
-            <span className="hidden xl:inline">{t("customPermissions")}</span>
+            <SlidersHorizontal size={14} aria-hidden="true" />
           </Button>
         )}
         {row.pending && row.personId && (
@@ -153,8 +152,7 @@ export function CompanyMemberRow({
             aria-label={t("cancelInvitation")}
             title={t("cancelInvitation")}
           >
-            <UserX size={12} className="xl:mr-1" aria-hidden="true" />
-            <span className="hidden xl:inline">{t("cancelInvitation")}</span>
+            <UserX size={14} aria-hidden="true" />
           </Button>
         )}
       </TableCell>

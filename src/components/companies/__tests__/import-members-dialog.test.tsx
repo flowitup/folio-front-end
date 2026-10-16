@@ -46,6 +46,19 @@ describe("ImportMembersDialog", () => {
     expect(screen.queryByText("+33600000071")).toBeNull();
   });
 
+  it("marks a different entry whose phone is already in this company", async () => {
+    mockDirectory.mockImplementation(async (id: string) =>
+      id === "target"
+        ? { ok: true, data: [entry("p-9", "Ann B.", "+33600000071")] }
+        : { ok: true, data: [entry("p-1", "Ann", "+33600000071"), entry("p-2", "Bob", "+33600000072")] }
+    );
+    renderDialog();
+    expect(await screen.findByText(en.companySettings.import.alreadyMember)).toBeInTheDocument();
+    const [ann, bob] = screen.getAllByRole("checkbox");
+    expect(ann).toBeDisabled();
+    expect(bob).not.toBeDisabled();
+  });
+
   it("lets a removed member (inactive profile here) be imported again", async () => {
     mockDirectory.mockImplementation(async (id: string) =>
       id === "target"

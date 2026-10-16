@@ -224,8 +224,8 @@ describe("UserSearch", () => {
       await waitFor(() => {
         expect(screen.getByRole("option", { name: /Owner/ })).toBeDefined();
       });
-      expect(screen.getByText("+336 21 30 00 01")).toBeDefined();
-      expect(screen.getByRole("option", { name: "+336 21 30 00 02" })).toBeDefined();
+      expect(screen.getByText("+33 6 21 30 00 01")).toBeDefined();
+      expect(screen.getByRole("option", { name: "+33 6 21 30 00 02" })).toBeDefined();
       expect(screen.queryByText(/no-email\.folio\.flowitup\.com/)).toBeNull();
     });
   });

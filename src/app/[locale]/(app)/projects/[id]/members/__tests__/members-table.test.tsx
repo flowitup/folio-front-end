@@ -55,7 +55,7 @@ describe("MembersTable", () => {
       },
     ]);
     expect(document.body.textContent).not.toContain("no-email");
-    expect(screen.getAllByText("+336 00 00 00 97").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("+33 6 00 00 00 97").length).toBeGreaterThan(0);
     expect(screen.getAllByText("dave@example.com").length).toBeGreaterThan(0);
   });
 

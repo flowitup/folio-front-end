@@ -15,7 +15,7 @@ describe("uploaderLabel", () => {
 
   it("formats the phone a phone-only account with no name is labelled by", () => {
     expect(uploaderLabel({ user_id: "u3", display_name: "+33620159009", phone: "+33620159009" })).toBe(
-      "+336 20 15 90 09"
+      "+33 6 20 15 90 09"
     );
   });
 

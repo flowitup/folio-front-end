@@ -71,8 +71,8 @@ describe("ProfileForm header after save", () => {
         </AuthProvider>
       </NextIntlClientProvider>
     );
-    expect(screen.getByRole("heading", { name: "+336 20 15 00 07" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "+33 6 20 15 00 07" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "confirm-new-number" }));
-    await waitFor(() => expect(screen.getByRole("heading", { name: "+336 20 15 00 08" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("heading", { name: "+33 6 20 15 00 08" })).toBeInTheDocument());
   });
 });

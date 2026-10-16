@@ -228,7 +228,7 @@ describe("DocumentsPanel — uploader filter options", () => {
       "documents.filter.anyUploader",
       "Alice Martin",
       "Bob Former",
-      "+336 20 15 90 09",
+      "+33 6 20 15 90 09",
       "documents.filter.formerMember",
     ]);
     // The list gets no name for the erased account, so it says "(former member)".

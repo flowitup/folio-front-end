@@ -135,7 +135,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Exportez une plage de mois, filtrée par type, en xlsx ou en pdf ; et donnez aux lignes une couleur de surbrillance pour les regrouper à l'œil.",
     ],
     whoCanDoIt:
-      "Toute personne sur le projet peut lire la liste et l'exporter. Modifier, supprimer, surligner et tout ce qui se trouve dans une ligne dépliée demande le droit “Gérer les factures”. Sans le droit “Voir le budget et les fonds débloqués”, les caisses et le graphique bancaire sont masqués et l'onglet des fonds débloqués disparaît.",
+      "Avec le droit “Gérer les factures”, vous voyez toutes les dépenses, exportez une période, modifiez, supprimez, surlignez et utilisez tout ce qui se trouve dans une ligne dépliée ; sans ce droit, vous ne voyez que vos propres paiements, sans export. Sans le droit “Voir le budget et les fonds débloqués”, les caisses et le graphique bancaire sont masqués et l'onglet des fonds débloqués disparaît.",
     gotchas: [
       "Une écriture de fonds débloqués marquée “Avance en espèces de l'entreprise” n'est volontairement pas comptée dans les fonds débloqués. Ce que vous achetez ensuite avec ces espèces doit être enregistré sous votre propre moyen de paiement, sinon c'est compté deux fois.",
       "Les lignes que Folio a générées lui-même ne peuvent jamais être modifiées ni supprimées.",
@@ -242,7 +242,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Cliquez sur “Comparer”, cochez jusqu'à quatre produits, puis comparez-les côte à côte.",
     ],
     whoCanDoIt:
-      "Toute personne rattachée à une entreprise peut la consulter. Les boutons d'ajout, de modification et de suppression sont toujours affichés, mais le serveur refuse les changements si vous n'avez pas la permission “Gérer la bibliothèque”, et il vous le dit.",
+      "Toute personne rattachée à une entreprise peut la consulter. Sans la permission “Gérer la bibliothèque”, les boutons d'ajout, de modification et de suppression n'apparaissent pas.",
     gotchas: [
       "La bibliothèque appartient à une seule entreprise — votre entreprise principale — et il n'y a pas de sélecteur d'entreprise.",
     ],
@@ -260,7 +260,7 @@ export const helpCatalogueFr: HelpCatalogue = [
       "Le crayon d'une ligne permet de tout modifier — la passer hors service après une casse, la déplacer du dépôt vers un chantier, corriger la quantité — et la corbeille de la retirer.",
     ],
     whoCanDoIt:
-      "Toute personne rattachée à une entreprise peut le consulter. Les boutons d'ajout, de modification et de suppression sont toujours affichés, mais le serveur refuse les changements si vous n'avez pas la permission « Gérer l'inventaire », et il vous le dit.",
+      "Toute personne rattachée à une entreprise peut le consulter. Sans la permission « Gérer l'inventaire », les boutons d'ajout, de modification et de suppression n'apparaissent pas.",
     gotchas: [
       "Une ligne est un lot d'objets identiques, au même endroit et dans le même état : trois perceuses en état au dépôt et une perceuse cassée sur un chantier font deux lignes.",
       "L'inventaire appartient à une seule entreprise — votre entreprise principale — et il n'y a pas de sélecteur d'entreprise.",

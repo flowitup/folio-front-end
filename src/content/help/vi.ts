@@ -131,7 +131,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Xuất một khoảng tháng, lọc theo loại, ra xlsx hoặc pdf; và tô màu đánh dấu cho các dòng để gom nhóm bằng mắt.",
     ],
     whoCanDoIt:
-      "Ai ở trong dự án cũng đọc và xuất được danh sách. Sửa, xóa, tô màu và mọi thứ bên trong một dòng đã mở rộng đều cần quyền quản lý hóa đơn. Không có quyền xem ngân sách thì hai túi tiền và biểu đồ ngân hàng bị ẩn, còn thẻ vốn giải ngân biến mất.",
+      "Có quyền quản lý hóa đơn thì bạn thấy mọi khoản chi, xuất được một khoảng thời gian, sửa, xóa, tô màu và dùng mọi thứ bên trong một dòng đã mở rộng; không có quyền đó thì bạn chỉ thấy các khoản trả cho chính mình và không có nút xuất. Không có quyền xem ngân sách thì hai túi tiền và biểu đồ ngân hàng bị ẩn, còn thẻ vốn giải ngân biến mất.",
     gotchas: [
       "Một khoản vốn giải ngân được đánh dấu là tạm ứng tiền mặt của công ty thì cố ý không tính vào vốn đã giải ngân. Những gì bạn mua bằng số tiền mặt đó phải ghi theo phương thức tiền mặt của bạn, nếu không sẽ bị tính hai lần.",
       "Những dòng do Folio tự sinh ra thì không bao giờ sửa hay xóa được.",
@@ -238,7 +238,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Bấm “So sánh”, tích tối đa bốn sản phẩm, rồi đặt chúng cạnh nhau.",
     ],
     whoCanDoIt:
-      "Ai liên kết với một công ty cũng đọc được. Các nút thêm, sửa và xóa luôn hiện, nhưng máy chủ sẽ từ chối thay đổi nếu bạn không có quyền quản lý thư viện, và nó báo cho bạn biết.",
+      "Ai liên kết với một công ty cũng đọc được. Không có quyền quản lý thư viện thì các nút thêm, sửa và xóa không hiện.",
     gotchas: [
       "Thư viện thuộc về một công ty — công ty chính của bạn — và không có bộ chọn công ty.",
     ],
@@ -256,7 +256,7 @@ export const helpCatalogueVi: HelpCatalogue = [
       "Bấm biểu tượng bút chì trên một dòng để sửa bất cứ gì — đánh dấu hỏng sau khi đồ bị hư, chuyển từ kho ra công trường, chỉnh lại số lượng — và biểu tượng thùng rác để xóa.",
     ],
     whoCanDoIt:
-      "Ai liên kết với một công ty cũng đọc được. Các nút thêm, sửa và xóa luôn hiện, nhưng máy chủ sẽ từ chối thay đổi nếu bạn không có quyền quản lý kho thiết bị, và nó báo cho bạn biết.",
+      "Ai liên kết với một công ty cũng đọc được. Không có quyền quản lý kho thiết bị thì các nút thêm, sửa và xóa không hiện.",
     gotchas: [
       "Một dòng là một lô đồ giống nhau, cùng một chỗ và cùng một tình trạng: ba máy khoan dùng được ở kho và một máy khoan hỏng ở công trường là hai dòng.",
       "Kho thiết bị thuộc về một công ty — công ty chính của bạn — và không có bộ chọn công ty.",

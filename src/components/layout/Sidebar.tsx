@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarBillingGroup } from "@/components/layout/sidebar-billing-group";
 import { hiddenCompanyAreas, hiddenProjectSections } from "@/lib/companies/hidden-sections";
+import { projectCompanyLabel } from "@/lib/companies/page-company";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #d8b896 0%, #b8845f 60%, #8a5836 100%)",
@@ -203,6 +204,15 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
                       {selectedProgress > 0 ? ` · ${Math.round(selectedProgress * 100)}%` : ""}
                     </div>
                   )}
+                  {selectedProject && projectCompanyLabel(user?.companies, selectedProject.company_id) && (
+                    <div
+                      className="truncate text-[11px]"
+                      style={{ color: "var(--muted)" }}
+                      data-testid="project-switcher-selected-company"
+                    >
+                      {projectCompanyLabel(user?.companies, selectedProject.company_id)}
+                    </div>
+                  )}
                 </div>
                 <ChevronDown size={14} className="flex-shrink-0" style={{ color: "var(--muted)" }} />
               </button>
@@ -224,6 +234,15 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
                     />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[13px] font-medium">{projectDisplayName(p)}</div>
+                      {projectCompanyLabel(user?.companies, p.company_id) && (
+                        <div
+                          className="truncate text-[11px]"
+                          style={{ color: "var(--muted)" }}
+                          data-testid="project-switcher-company"
+                        >
+                          {projectCompanyLabel(user?.companies, p.company_id)}
+                        </div>
+                      )}
                     </div>
                     {isActive && (
                       <Check

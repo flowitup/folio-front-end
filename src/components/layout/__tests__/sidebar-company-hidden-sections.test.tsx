@@ -75,3 +75,11 @@ describe("Sidebar — company hidden sections", () => {
     expect(screen.getByText("navigation.quotesInvoices")).toBeInTheDocument();
   });
 });
+
+describe("Sidebar — project switcher company", () => {
+  it("names the selected project's company when the user has several", () => {
+    selectProject("co-b");
+    render(<Sidebar />);
+    expect(screen.getByTestId("project-switcher-selected-company")).toHaveTextContent("B");
+  });
+});

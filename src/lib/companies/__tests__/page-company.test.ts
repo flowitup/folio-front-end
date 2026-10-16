@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pickPageCompany, toPageCompanies } from "../page-company";
+import { pickPageCompany, projectCompanyLabel, toPageCompanies } from "../page-company";
 import type { MyCompany } from "@/types/companies";
 
 const company = (id: string, is_primary: boolean, attached_at: string, permissions?: string[]) =>
@@ -30,5 +30,18 @@ describe("pickPageCompany", () => {
     expect(toPageCompanies([company("a", true, "2026-01-01T00:00:00Z", ["bibliotheque:read"])])).toEqual([
       { id: "a", legal_name: "A", is_primary: true, permissions: ["bibliotheque:read"] },
     ]);
+  });
+});
+
+describe("projectCompanyLabel", () => {
+  const cos = [
+    { id: "a", legal_name: "Alpha" },
+    { id: "b", legal_name: "Beta" },
+  ];
+  it("names the project's company only for users in several companies", () => {
+    expect(projectCompanyLabel(cos, "b")).toBe("Beta");
+    expect(projectCompanyLabel([cos[0]], "a")).toBeNull();
+    expect(projectCompanyLabel(cos, null)).toBeNull();
+    expect(projectCompanyLabel(cos, "zz")).toBeNull();
   });
 });

@@ -45,3 +45,16 @@ export function toPageCompanies(companies: readonly MyCompany[]): PageCompany[] 
     ...(c.permissions ? { permissions: c.permissions } : {}),
   }));
 }
+
+/**
+ * Name of a project's company, shown next to the project only when the user
+ * belongs to several companies (otherwise every project is the same company's).
+ */
+export function projectCompanyLabel(
+  companies: readonly { id: string; legal_name: string }[] | null | undefined,
+  companyId: string | null | undefined,
+): string | null {
+  const list = companies ?? [];
+  if (list.length < 2 || !companyId) return null;
+  return list.find((c) => c.id === companyId)?.legal_name ?? null;
+}

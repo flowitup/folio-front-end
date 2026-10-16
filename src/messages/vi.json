@@ -75,7 +75,8 @@
     "codeExpired": "Mã đã hết hạn — hãy nhận mã mới",
     "errorCodeLocked": "Nhập sai quá nhiều lần: mã này không còn dùng được, kể cả khi nhập đúng. Hãy yêu cầu mã mới.",
     "codeRecentlySent": "Một mã đã được gửi tới số này chưa đầy một phút trước: hãy nhập mã bên dưới.",
-    "codeHelp": "Không nhận được SMS? Hãy kiểm tra số điện thoại. Chỉ tài khoản Folio mới nhận được mã: tài khoản được tạo trong ứng dụng Folio trên điện thoại hoặc qua lời mời của công ty bạn. Quyền truy cập bị vô hiệu hóa? Hãy liên hệ quản trị viên của công ty."
+    "codeHelp": "Không nhận được SMS? Hãy kiểm tra số điện thoại. Chỉ tài khoản Folio mới nhận được mã: tài khoản được tạo trong ứng dụng Folio trên điện thoại hoặc qua lời mời của công ty bạn. Quyền truy cập bị vô hiệu hóa? Hãy liên hệ quản trị viên của công ty.",
+    "sessionReset": "Phiên đăng nhập của bạn đã được đặt lại để bảo mật. Vui lòng đăng nhập lại."
   },
   "topbar": {
     "viewNotifications": "Xem thông báo",

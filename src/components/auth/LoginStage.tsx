@@ -22,7 +22,7 @@ const ON_INK = {
   rule: "#3d372f",
 } as const;
 
-export function LoginStage() {
+export function LoginStage({ sessionReset = false }: { sessionReset?: boolean } = {}) {
   const t = useTranslations("auth");
   const locale = useLocale();
   const flow = usePhoneLoginFlow();
@@ -157,6 +157,16 @@ export function LoginStage() {
           boxShadow: "0 24px 60px -30px rgba(0,0,0,0.6)",
         }}
       >
+        {sessionReset && flow.step === "phone" && (
+          <p
+            role="status"
+            data-testid="login-session-reset"
+            className="mb-4 rounded-[10px] p-3 text-[12.5px]"
+            style={{ background: "var(--paper-2)", color: "var(--ink)", border: "1px solid var(--border)" }}
+          >
+            {t("sessionReset")}
+          </p>
+        )}
         <PhoneLoginForm flow={flow} />
         <LegalLinks locale={locale} className="mt-5 justify-center" />
       </div>

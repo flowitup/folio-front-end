@@ -75,7 +75,8 @@
     "codeExpired": "Code expired — ask for a new one",
     "errorCodeLocked": "Too many tries: this code no longer works, even typed correctly. Ask for a new code.",
     "codeRecentlySent": "A code was sent to this number less than a minute ago: type it below.",
-    "codeHelp": "No SMS? Check the number. Only Folio accounts receive a code: they are created in the Folio mobile app or through your company's invitation. Access deactivated? Contact your company's administrator."
+    "codeHelp": "No SMS? Check the number. Only Folio accounts receive a code: they are created in the Folio mobile app or through your company's invitation. Access deactivated? Contact your company's administrator.",
+    "sessionReset": "Your session was reset for your security. Please sign in again."
   },
   "topbar": {
     "viewNotifications": "View notifications",

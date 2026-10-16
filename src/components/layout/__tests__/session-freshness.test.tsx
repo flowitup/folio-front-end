@@ -135,6 +135,7 @@ describe("SessionFreshness", () => {
     mockUser = member("admin");
     rerender(<SessionFreshness />);
     expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+    expect(mockRefetch).toHaveBeenCalledWith({ silent: true });
     expect(mockToast.info).not.toHaveBeenCalled();
   });
 

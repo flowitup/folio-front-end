@@ -109,8 +109,9 @@ export function SessionFreshness() {
     });
   }, [locale]);
 
-  // Access changed (role, grants, primary company, hidden sections): the sidebar's billing
-  // entry and the page gates are rendered on the server, so re-render them.
+  // Access changed (role, grants, primary company, hidden sections), by another admin or by
+  // the user's own action: the sidebar's billing entry and the page gates are rendered on the
+  // server, so re-render them.
   const signature = accessSignature(auth?.user);
   const previousSignature = useRef(signature);
   useEffect(() => {
@@ -119,6 +120,8 @@ export function SessionFreshness() {
     previousSignature.current = signature;
     if (!hadUser || !signature) return;
     router.refresh();
+    // Joining, leaving or switching company, or a new role, also changes the project list.
+    void refetchRef.current({ silent: true });
     // The user's own action (switching the primary company…) needs no explanation.
     if (Date.now() < autoChangeUntil.current) toast.info(t("accessChanged"));
   }, [signature, router, t]);

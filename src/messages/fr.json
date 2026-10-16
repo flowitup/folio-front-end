@@ -2893,7 +2893,8 @@
     "unitRouleau": "rouleau",
     "unitLot": "lot",
     "unitForfait": "forfait",
-    "productUrlInvalid": "Saisissez une adresse web, ex. www.castorama.fr/…"
+    "productUrlInvalid": "Saisissez une adresse web, ex. www.castorama.fr/…",
+    "compareTieBasket": "Égalité"
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",

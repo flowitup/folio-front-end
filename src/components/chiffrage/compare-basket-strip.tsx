@@ -14,6 +14,7 @@
 import { useTranslations } from "next-intl";
 
 import { money } from "@/components/chiffrage/format";
+import { lineCents } from "@/components/chiffrage/compare-lines";
 import type { ChiffrageStore, ChiffrageStoreBasket } from "@/lib/api/chiffrage";
 
 interface Props {
@@ -44,13 +45,30 @@ export function CompareBasketStrip({ baskets, stores, bestMixHt }: Props) {
   const partial = priced
     .filter((b) => !b.covers_all)
     .sort((a, b) => b.priced_article_count - a.priced_article_count);
-  const cheapestId = complete[0]?.store_id ?? null;
+  // "Le moins cher" only when strictly cheaper than the next complete basket;
+  // complete baskets at the same price to the cent are an "égalité".
+  const cents = (basket: ChiffrageStoreBasket) => lineCents(basket.basket_ht);
+  const cheapestId =
+    complete.length === 1 || (complete.length >= 2 && cents(complete[0]) < cents(complete[1]))
+      ? complete[0].store_id
+      : null;
+  const tiedIds = new Set(
+    complete.length >= 2 && cents(complete[0]) === cents(complete[1])
+      ? complete.filter((b) => cents(b) === cents(complete[0])).map((b) => b.store_id)
+      : []
+  );
 
   const chip = (basket: ChiffrageStoreBasket) => {
     if (basket.store_id === cheapestId)
       return (
         <span className={`${CHIP_BASE} ${CHIP_POSITIVE}`} data-testid="cheapest-basket">
           {t("cheapestBasket")}
+        </span>
+      );
+    if (tiedIds.has(basket.store_id))
+      return (
+        <span className={`${CHIP_BASE} ${CHIP_POSITIVE}`} data-testid="tied-basket">
+          {t("compareTieBasket")}
         </span>
       );
     if (basket.covers_all)
@@ -72,8 +90,9 @@ export function CompareBasketStrip({ baskets, stores, bestMixHt }: Props) {
       return t("compareMissingItems", {
         count: basket.total_article_count - basket.priced_article_count,
       });
-    const premium = basket.basket_ht - bestMixHt;
-    return premium > 0
+    const premiumCents = lineCents(basket.basket_ht) - lineCents(bestMixHt);
+    const premium = premiumCents / 100;
+    return premiumCents > 0
       ? t("compareVsBestMix", { amount: `+${money(premium)}` })
       : t("compareEqualsBestMix");
   };

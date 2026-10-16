@@ -91,6 +91,8 @@ export function ChatAttachmentImage({
             className="z-[90] flex max-h-[calc(100vh-2rem)] w-auto max-w-[calc(100vw-2rem)] flex-col gap-3 p-4 sm:max-w-[min(960px,calc(100vw-2rem))]"
             overlayClassName="z-[90]"
             data-testid="chat-image-viewer"
+            // The image and its file name say it all: no description to point at.
+            aria-describedby={undefined}
           >
             <DialogTitle className="truncate pr-8 text-[14px] font-medium">{attachment.filename}</DialogTitle>
             {/* eslint-disable-next-line @next/next/no-img-element -- blob: URL, not an optimisable asset */}

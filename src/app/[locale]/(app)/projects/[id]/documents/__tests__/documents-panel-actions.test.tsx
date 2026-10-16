@@ -234,6 +234,55 @@ describe("DocumentsPanel — rename errors", () => {
   });
 });
 
+describe("DocumentsPanel — QA3 duplicate names, load failure", () => {
+  it("keeps the rename dialog open and says the name is taken", async () => {
+    vi.mocked(listDocumentsAction).mockResolvedValue({
+      ok: true,
+      data: { items: [makeDoc(1)], total: 1, page: 1, per_page: 25 },
+    });
+    vi.mocked(renameDocumentAction).mockResolvedValue({
+      ok: false,
+      error: "generic",
+      code: "DUPLICATE_NAME",
+    });
+    renderPanel([makeDoc(1)]);
+
+    fireEvent.click(screen.getByRole("button", { name: "rename doc-1.pdf" }));
+    fireEvent.click(screen.getByRole("button", { name: "confirm rename" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("documents.rename.errorDuplicate")
+    );
+    expect(screen.getByTestId("rename-dialog")).toBeInTheDocument();
+  });
+
+  it("shows an error with a retry, not the empty state, when the list cannot be read", async () => {
+    vi.mocked(listDocumentsAction).mockResolvedValue({ ok: false, error: "generic" });
+    render(
+      <DocumentsPanel
+        projectId={PROJECT_ID}
+        initialDocuments={[]}
+        initialTotal={0}
+        initialTags={[]}
+        initialUploaders={[]}
+        members={[]}
+        currentUserId={USER}
+        isAdminOrOwner
+        initialLoadFailed
+      />
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent("documents.toast.listLoadError");
+    expect(screen.queryByText("empty")).toBeNull();
+
+    vi.mocked(listDocumentsAction).mockResolvedValue({
+      ok: true,
+      data: { items: [makeDoc(1)], total: 1, page: 1, per_page: 25 },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "documents.list.retry" }));
+    expect(await screen.findByRole("button", { name: "delete doc-1.pdf" })).toBeInTheDocument();
+  });
+});
+
 describe("DocumentsPanel — tag errors", () => {
   beforeEach(() => {
     vi.mocked(listDocumentsAction).mockResolvedValue({

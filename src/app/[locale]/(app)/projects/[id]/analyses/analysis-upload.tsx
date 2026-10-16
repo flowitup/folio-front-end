@@ -233,9 +233,11 @@ export function AnalysisUpload({ projectId, onUploaded }: Props) {
                     <button
                       type="button"
                       onClick={() => removeTag(tag)}
+                      aria-label={t("removeTag", { tag })}
+                      title={t("removeTag", { tag })}
                       className="ml-0.5 rounded-full hover:bg-[var(--accent)]/20"
                     >
-                      <X className="size-3" />
+                      <X className="size-3" aria-hidden />
                     </button>
                   </span>
                 ))}

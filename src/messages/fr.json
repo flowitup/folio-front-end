@@ -428,7 +428,8 @@
       "title": "Une erreur s'est produite",
       "body": "Veuillez actualiser la page. Si le problème persiste, reconnectez-vous.",
       "refresh": "Actualiser",
-      "login": "Aller à la connexion"
+      "login": "Aller à la connexion",
+      "retry": "Réessayer"
     }
   },
   "invoices": {
@@ -1864,7 +1865,8 @@
         "delete": "Supprimer",
         "downloadError": "Échec du téléchargement — veuillez réessayer",
         "rename": "Renommer"
-      }
+      },
+      "retry": "Réessayer"
     },
     "kinds": {
       "pdf": "PDF",
@@ -1892,7 +1894,17 @@
       "anyUploader": "N'importe qui",
       "formerMember": "Ancien membre",
       "uploader": "Déposé par",
-      "reset": "Réinitialiser"
+      "reset": "Réinitialiser",
+      "sortLabel": "Trier par",
+      "sortOptions": {
+        "newest": "Plus récents",
+        "oldest": "Plus anciens",
+        "nameAsc": "Nom (A → Z)",
+        "nameDesc": "Nom (Z → A)",
+        "sizeDesc": "Plus volumineux",
+        "sizeAsc": "Plus légers",
+        "uploaderAsc": "Déposé par"
+      }
     },
     "preview": {
       "fallback": "Aperçu non disponible pour ce type de fichier. Téléchargez-le pour le consulter.",
@@ -1933,7 +1945,8 @@
       "errorForbidden": "Vous n'avez pas la permission de renommer des documents dans ce projet",
       "errorServer": "Échec du renommage",
       "errorExtension": "L'extension doit rester {extension}",
-      "errorInvalid": "Ce nom ne peut pas être utilisé. Vérifiez-le et réessayez."
+      "errorInvalid": "Ce nom ne peut pas être utilisé. Vérifiez-le et réessayez.",
+      "errorDuplicate": "Un autre document porte déjà ce nom. Choisissez un autre nom."
     },
     "restricted": {
       "title": "Les documents ne sont pas accessibles avec votre rôle",
@@ -1950,7 +1963,8 @@
       "uploadedByLabel": "Ajouté par",
       "addedLabel": "Ajouté le",
       "sourceLabel": "Source",
-      "inThisLibrary": "Dans cette bibliothèque"
+      "inThisLibrary": "Dans cette bibliothèque",
+      "openFullScreen": "Ouvrir en plein écran"
     },
     "empty": {
       "title": "Aucun rapport d'analyse pour le moment",
@@ -1970,7 +1984,8 @@
       "cancel": "Annuler",
       "success": "Analyse téléversée",
       "tooLarge": "Trop volumineux (2 Mo maximum)",
-      "invalidFile": "Fichier non pris en charge — choisissez un rapport .html"
+      "invalidFile": "Fichier non pris en charge — choisissez un rapport .html",
+      "removeTag": "Retirer l'étiquette {tag}"
     },
     "search": {
       "placeholder": "Rechercher des analyses…"
@@ -1996,7 +2011,8 @@
       "cancel": "Annuler",
       "save": "Enregistrer",
       "saving": "Enregistrement…",
-      "success": "Analyse mise à jour"
+      "success": "Analyse mise à jour",
+      "removeTag": "Retirer l'étiquette {tag}"
     },
     "delete": {
       "trigger": "Supprimer",
@@ -2017,7 +2033,8 @@
       "generic": "Une erreur est survenue — réessayez",
       "invalidSourceUrl": "Le lien source doit commencer par http:// ou https://",
       "tooManyTags": "Une analyse peut avoir au plus 20 étiquettes",
-      "tagTooLong": "Une étiquette ne peut pas dépasser 100 caractères"
+      "tagTooLong": "Une étiquette ne peut pas dépasser 100 caractères",
+      "invalidEncoding": "Encodage du rapport non reconnu — enregistrez-le en UTF-8 et réessayez"
     },
     "toast": {
       "listLoadError": "Échec du chargement des analyses"
@@ -2025,7 +2042,8 @@
     "pagination": {
       "prev": "Précédent",
       "next": "Suivant"
-    }
+    },
+    "loadErrorRetry": "Réessayer"
   },
   "members": {
     "title": "Membres",

@@ -29,7 +29,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { ProjectDocument, ProjectDocumentKind } from "@/lib/api/project-documents";
 import { downloadProjectDocument } from "@/lib/api/project-document-blob";
-import { formatDate } from "@/lib/utils/formatters";
+import { formatDateTime } from "@/lib/utils/formatters";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { DocumentMobileCard } from "./document-mobile-card";
 import { formatBytes } from "./format-bytes";
@@ -151,7 +151,8 @@ export function DocumentsList({
   // The upload day depends on the browser's time zone: render it once hydrated,
   // or a file uploaded near midnight UTC shows another day on the server.
   const hydrated = useHydrated();
-  const uploadedOn = (iso: string) => (hydrated ? formatDate(iso) : "");
+  // Date and time: two uploads of the same name on one day stay distinguishable.
+  const uploadedOn = (iso: string) => (hydrated ? formatDateTime(iso) : "");
   const [editingTagsDocId, setEditingTagsDocId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const tagInputRef = useRef<HTMLInputElement>(null);
@@ -398,7 +399,7 @@ export function DocumentsList({
                 </TableCell>
 
                 {/* Uploaded at */}
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                   {uploadedOn(doc.uploaded_at)}
                 </TableCell>
 

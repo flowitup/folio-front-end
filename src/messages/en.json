@@ -428,7 +428,8 @@
       "title": "Something went wrong",
       "body": "Please refresh the page. If the problem persists, sign in again.",
       "refresh": "Refresh",
-      "login": "Go to login"
+      "login": "Go to login",
+      "retry": "Try again"
     }
   },
   "invoices": {
@@ -1864,7 +1865,8 @@
         "delete": "Delete",
         "downloadError": "Download failed — please try again",
         "rename": "Rename"
-      }
+      },
+      "retry": "Retry"
     },
     "kinds": {
       "pdf": "PDF",
@@ -1892,7 +1894,17 @@
       "anyUploader": "Anyone",
       "formerMember": "Former member",
       "uploader": "Uploaded by",
-      "reset": "Reset"
+      "reset": "Reset",
+      "sortLabel": "Sort by",
+      "sortOptions": {
+        "newest": "Newest first",
+        "oldest": "Oldest first",
+        "nameAsc": "Name (A → Z)",
+        "nameDesc": "Name (Z → A)",
+        "sizeDesc": "Largest first",
+        "sizeAsc": "Smallest first",
+        "uploaderAsc": "Uploaded by"
+      }
     },
     "preview": {
       "fallback": "Preview not available for this file type. Download to view.",
@@ -1933,7 +1945,8 @@
       "errorForbidden": "You don't have permission to rename documents in this project",
       "errorServer": "Failed to rename",
       "errorExtension": "The extension must remain {extension}",
-      "errorInvalid": "This name can't be used. Check it and try again."
+      "errorInvalid": "This name can't be used. Check it and try again.",
+      "errorDuplicate": "Another document already has this name. Choose a different name."
     },
     "restricted": {
       "title": "Documents are not available for your role",
@@ -1950,7 +1963,8 @@
       "uploadedByLabel": "Uploaded by",
       "addedLabel": "Added",
       "sourceLabel": "Source",
-      "inThisLibrary": "In this library"
+      "inThisLibrary": "In this library",
+      "openFullScreen": "Open full screen"
     },
     "empty": {
       "title": "No analysis reports yet",
@@ -1970,7 +1984,8 @@
       "cancel": "Cancel",
       "success": "Analysis uploaded",
       "tooLarge": "Too large (max 2 MB)",
-      "invalidFile": "Unsupported file — pick an .html report"
+      "invalidFile": "Unsupported file — pick an .html report",
+      "removeTag": "Remove tag {tag}"
     },
     "search": {
       "placeholder": "Search analyses…"
@@ -1996,7 +2011,8 @@
       "cancel": "Cancel",
       "save": "Save",
       "saving": "Saving…",
-      "success": "Analysis updated"
+      "success": "Analysis updated",
+      "removeTag": "Remove tag {tag}"
     },
     "delete": {
       "trigger": "Delete",
@@ -2017,7 +2033,8 @@
       "generic": "Something went wrong — try again",
       "invalidSourceUrl": "The source link must start with http:// or https://",
       "tooManyTags": "An analysis can have at most 20 tags",
-      "tagTooLong": "A tag can be at most 100 characters long"
+      "tagTooLong": "A tag can be at most 100 characters long",
+      "invalidEncoding": "The report's text encoding was not recognised — save it as UTF-8 and try again"
     },
     "toast": {
       "listLoadError": "Failed to load analyses"
@@ -2025,7 +2042,8 @@
     "pagination": {
       "prev": "Prev",
       "next": "Next"
-    }
+    },
+    "loadErrorRetry": "Retry"
   },
   "members": {
     "title": "Members",

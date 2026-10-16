@@ -3,7 +3,7 @@ import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { listMembers } from "@/lib/api/members";
 import { listInvitations } from "@/lib/api/invitations";
-import { getProjectById } from "@/lib/api/projects-server";
+import { getAccessibleProject } from "@/lib/api/project-access";
 import { can, isCompanyAdmin, isPlatformOps } from "@/lib/auth/permissions";
 import { MembersTable } from "./members-table";
 import { pageTitle } from "@/lib/i18n/page-title";
@@ -25,11 +25,9 @@ export default async function MembersPage({ params }: PageProps) {
 
   // The project decides everything below: a foreign, unassigned or invalid id
   // must not fall back to the caller's company-wide permissions and draw an
-  // empty page with live Invite and Assign buttons.
-  const project = await getProjectById(projectId).catch(() => null);
-  if (!project) {
-    redirect(`/${locale}/projects`);
-  }
+  // empty page with live Invite and Assign buttons. 403/404 show the
+  // not-found page; an outage goes to the error boundary with its retry.
+  const project = await getAccessibleProject(projectId, locale);
 
   // Server-side permission check (authoritative). Invite + manage-members honor
   // the caller's EFFECTIVE per-project permissions (global role UNION the

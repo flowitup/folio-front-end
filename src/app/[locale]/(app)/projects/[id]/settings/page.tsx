@@ -1,28 +1,12 @@
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
-import { env } from "@/lib/config/env";
-import { sessionAuthHeader } from "@/lib/api/auth-header";
+import { getAccessibleProject } from "@/lib/api/project-access";
 import { ProjectSettingsClient } from "./project-settings-client";
-import type { Project } from "@/types/project";
 import { pageTitle } from "@/lib/i18n/page-title";
 
 interface PageProps {
   params: Promise<{ id: string }>;
-}
-
-async function fetchProject(projectId: string): Promise<Project | null> {
-  const authHeaders = await sessionAuthHeader();
-  try {
-    const res = await fetch(`${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}`, {
-      headers: { "Content-Type": "application/json", ...authHeaders },
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as Project;
-  } catch {
-    return null;
-  }
 }
 
 export const generateMetadata = pageTitle("navigation.projectSettings");
@@ -36,10 +20,8 @@ export default async function ProjectSettingsPage({ params }: PageProps) {
     redirect(`/${locale}/login`);
   }
 
-  const project = await fetchProject(projectId);
-  if (!project) {
-    redirect(`/${locale}/projects`);
-  }
+  // 403/404 show the not-found page; an outage goes to the error boundary.
+  const project = await getAccessibleProject(projectId, locale);
 
   return <ProjectSettingsClient project={project} />;
 }

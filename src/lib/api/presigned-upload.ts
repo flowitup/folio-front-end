@@ -68,32 +68,44 @@ export async function requestPresignedUrl(
 
 /**
  * Confirm the presigned upload — backend verifies S3 object exists and
- * persists the DB row.
+ * persists the DB row. Retries once on 401 after refreshing the access token,
+ * like the presign request: the PUT may have taken longer than the token.
  */
 export async function confirmUpload(
   projectId: string,
   presign: PresignResponse,
   file: File,
 ): Promise<ProjectDocument> {
-  const csrf = getCsrfToken();
-  const res = await fetch(
-    `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents/confirm`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrf ? { "X-CSRF-TOKEN": csrf } : {}),
+  async function doRequest(): Promise<Response> {
+    const csrf = getCsrfToken();
+    return fetch(
+      `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/documents/confirm`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrf ? { "X-CSRF-TOKEN": csrf } : {}),
+        },
+        body: JSON.stringify({
+          doc_id: presign.doc_id,
+          storage_key: presign.storage_key,
+          filename: file.name,
+          content_type: file.type || "application/octet-stream",
+          size_bytes: file.size,
+        }),
       },
-      body: JSON.stringify({
-        doc_id: presign.doc_id,
-        storage_key: presign.storage_key,
-        filename: file.name,
-        content_type: file.type || "application/octet-stream",
-        size_bytes: file.size,
-      }),
-    },
-  );
+    );
+  }
+
+  let res = await doRequest();
+
+  if (res.status === 401) {
+    const refreshed = await refreshAccessTokenViaCookie();
+    if (refreshed) {
+      res = await doRequest();
+    }
+  }
 
   if (!res.ok) {
     throw new Error(`confirm:${res.status}`);

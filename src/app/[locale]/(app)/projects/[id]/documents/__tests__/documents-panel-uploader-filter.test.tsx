@@ -168,7 +168,11 @@ function renderPanel(initialUploaders: DocumentUploader[] | null = UPLOADERS) {
 }
 
 function uploaderSelect() {
-  return screen.getByLabelText("uploader") as HTMLSelectElement;
+  // The mocked Select labels every select "uploader"; the sort select (shown
+  // below lg) has no "Anyone" option.
+  return screen
+    .getAllByLabelText("uploader")
+    .find((el) => el.querySelector('option[value="__anyone__"]')) as HTMLSelectElement;
 }
 
 function lastListCall() {

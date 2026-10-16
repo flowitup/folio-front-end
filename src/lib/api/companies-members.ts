@@ -156,6 +156,10 @@ export interface CompanyDirectoryEntry {
   pending: boolean;
   labor_role_id: string | null;
   default_daily_rate: number | null;
+  /** Pending rows only: the company role granted at sign-up (older APIs omit it). */
+  pending_role?: "member" | "manager" | null;
+  /** Pending rows only: when the invitation window closes (ISO 8601). */
+  pending_expires_at?: string | null;
 }
 
 export async function fetchCompanyDirectory(companyId: string): Promise<CompanyDirectoryEntry[]> {

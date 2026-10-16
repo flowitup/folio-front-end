@@ -2889,6 +2889,20 @@
       "description": "Tên pháp lý, địa chỉ, mã định danh và thông tin ngân hàng in trên báo giá và hóa đơn của bạn."
     },
     "members": {
+      "roleConfirmTitle": "Đổi vai trò của {member} thành {role}?",
+      "roleConfirmPromote": "{member} sẽ có toàn quyền với công ty: thành viên và vai trò, hóa đơn, phương thức thanh toán và mọi dự án.",
+      "roleConfirmDemote": "{member} sẽ không còn là quản trị viên: người này mất quyền truy cập mọi dự án của công ty và mọi phân công dự án tại đây sẽ bị gỡ. Hãy phân công lại các dự án cần giữ.",
+      "roleConfirmProjectsLost": "Các dự án sẽ bị gỡ:",
+      "roleConfirmAction": "Đổi thành {role}",
+      "roleUpdatedNamedToast": "{member} giờ là {role}.",
+      "removedFromCompanyToast": "Đã xóa {member} khỏi {company}.",
+      "projectAssignedToast": "Đã phân công {member} vào {project}.",
+      "projectUnassignedToast": "Đã gỡ {member} khỏi {project}.",
+      "allProjects": "Mọi dự án",
+      "pendingExpires": "Lời mời có hiệu lực đến {date}",
+      "availableAfterSignup": "Khả dụng khi người này đã đăng ký Folio bằng số điện thoại này.",
+      "searchPlaceholder": "Tìm tên hoặc số điện thoại",
+      "searchEmpty": "Không có thành viên nào khớp với “{query}”.",
       "title": "Thành viên",
       "description": "Quản lý vai trò và quyền truy cập cho mọi người trong công ty của bạn.",
       "importFromCompany": "Nhập từ công ty khác",
@@ -2920,6 +2934,7 @@
       "invitationCancelledToast": "Đã hủy lời mời."
     },
     "addByPhone": {
+      "invitationHint": "Nếu người này chưa có tài khoản, họ sẽ hiển thị “Đang chờ”: họ sẽ vào công ty khi đăng ký ứng dụng Folio bằng số này trong vòng 30 ngày. Hãy báo cho họ vì Folio không gửi tin nhắn nào.",
       "dialogTitle": "Thêm thành viên bằng số điện thoại",
       "dialogDescription": "Thêm thợ hoặc quản lý bằng số điện thoại của họ.",
       "phoneLabel": "Số điện thoại",

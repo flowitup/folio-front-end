@@ -2889,6 +2889,20 @@
       "description": "Legal name, address, identifiers and bank details printed on your quotes and invoices."
     },
     "members": {
+      "roleConfirmTitle": "Make {member} {role}?",
+      "roleConfirmPromote": "{member} will get full control of the company: members and roles, billing, payment methods and every project.",
+      "roleConfirmDemote": "{member} will no longer be an admin: they lose access to every project of the company and all their project assignments here are removed. Assign them again to the projects they should keep.",
+      "roleConfirmProjectsLost": "Projects they will be removed from:",
+      "roleConfirmAction": "Make {role}",
+      "roleUpdatedNamedToast": "{member} is now {role}.",
+      "removedFromCompanyToast": "{member} was removed from {company}.",
+      "projectAssignedToast": "{member} assigned to {project}.",
+      "projectUnassignedToast": "{member} removed from {project}.",
+      "allProjects": "Every project",
+      "pendingExpires": "Invitation valid until {date}",
+      "availableAfterSignup": "Available once this person has signed up to Folio with this number.",
+      "searchPlaceholder": "Search a name or number",
+      "searchEmpty": "No member matches “{query}”.",
       "title": "Members",
       "description": "Manage roles and access for people in your company.",
       "importFromCompany": "Import from company",
@@ -2920,6 +2934,7 @@
       "invitationCancelledToast": "Invitation cancelled."
     },
     "addByPhone": {
+      "invitationHint": "If this person has no account yet, they show as “Pending”: they join the company by signing up in the Folio app with this number within 30 days. Let them know, as Folio does not message them.",
       "dialogTitle": "Add member by phone",
       "dialogDescription": "Onboard a worker or manager by their phone number.",
       "phoneLabel": "Phone number",

@@ -2889,6 +2889,20 @@
       "description": "Raison sociale, adresse, identifiants et coordonnées bancaires imprimés sur vos devis et factures."
     },
     "members": {
+      "roleConfirmTitle": "Passer {member} en {role} ?",
+      "roleConfirmPromote": "{member} aura le contrôle total de l’entreprise : membres et rôles, facturation, moyens de paiement et tous les projets.",
+      "roleConfirmDemote": "{member} ne sera plus administrateur : il perd l’accès à tous les projets de l’entreprise et toutes ses affectations de projet ici sont retirées. Réassignez-le ensuite aux projets qu’il doit garder.",
+      "roleConfirmProjectsLost": "Projets dont il sera retiré :",
+      "roleConfirmAction": "Passer en {role}",
+      "roleUpdatedNamedToast": "{member} : rôle {role}.",
+      "removedFromCompanyToast": "{member} a été retiré(e) de {company}.",
+      "projectAssignedToast": "{member} assigné(e) à {project}.",
+      "projectUnassignedToast": "{member} retiré(e) de {project}.",
+      "allProjects": "Tous les projets",
+      "pendingExpires": "Invitation valable jusqu’au {date}",
+      "availableAfterSignup": "Disponible quand la personne aura créé son compte Folio avec ce numéro.",
+      "searchPlaceholder": "Rechercher un nom ou un numéro",
+      "searchEmpty": "Aucun membre ne correspond à « {query} ».",
       "title": "Membres",
       "description": "Gérez les rôles et les accès des personnes de votre entreprise.",
       "importFromCompany": "Importer depuis une entreprise",
@@ -2920,6 +2934,7 @@
       "invitationCancelledToast": "Invitation annulée."
     },
     "addByPhone": {
+      "invitationHint": "Si cette personne n’a pas encore de compte, elle apparaîtra « En attente » : elle rejoindra l’entreprise en s’inscrivant sur l’application Folio avec ce numéro dans les 30 jours. Prévenez-la : Folio ne lui envoie aucun message.",
       "dialogTitle": "Ajouter un membre par téléphone",
       "dialogDescription": "Intégrez un ouvrier ou un manager avec son numéro de téléphone.",
       "phoneLabel": "Numéro de téléphone",

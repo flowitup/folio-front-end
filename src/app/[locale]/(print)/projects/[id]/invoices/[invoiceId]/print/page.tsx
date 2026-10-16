@@ -29,8 +29,14 @@ export default function InvoicePrintPage() {
   }, [projectId, invoiceId]);
 
   if (error) {
+    // Not a dead end: say what happened and lead back to the list.
     return (
-      <div style={{ padding: "2rem", color: "red" }}>{t("loadFailed")}</div>
+      <div style={{ padding: "2rem" }} data-testid="print-load-error">
+        <p style={{ color: "var(--negative, #b42318)" }}>{t("print.loadError")}</p>
+        <a href={`/${locale}/projects/${projectId}/invoices`} style={{ display: "inline-block", marginTop: "1rem", textDecoration: "underline" }}>
+          {t("print.back")}
+        </a>
+      </div>
     );
   }
 

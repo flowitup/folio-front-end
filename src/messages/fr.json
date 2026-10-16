@@ -127,6 +127,7 @@
       "title": "Cette semaine",
       "viewAll": "Agenda",
       "overdue": "En retard",
+      "more": "+{n, plural, one {# autre} other {# autres}} ›",
       "today": "Aujourd'hui",
       "thisWeek": "Cette semaine",
       "empty": "Rien à l'agenda cette semaine."
@@ -692,7 +693,9 @@
     },
     "print": {
       "heading": "Facture",
-      "loading": "Chargement…"
+      "loading": "Chargement…",
+      "loadError": "Impossible de charger la dépense : elle a peut-être été supprimée, ou vous n'y avez pas accès.",
+      "back": "Retour aux dépenses"
     },
     "loadFailed": "Échec du chargement de la facture.",
     "loadListFailed": "Échec du chargement des dépenses.",

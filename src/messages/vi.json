@@ -127,6 +127,7 @@
       "title": "Tuần này",
       "viewAll": "Lịch trình",
       "overdue": "Quá hạn",
+      "more": "+{n} việc khác ›",
       "today": "Hôm nay",
       "thisWeek": "Tuần này",
       "empty": "Không có việc gì trong tuần này."
@@ -692,7 +693,9 @@
     },
     "print": {
       "heading": "Hóa đơn",
-      "loading": "Đang tải…"
+      "loading": "Đang tải…",
+      "loadError": "Không tải được chi phí: có thể đã bị xóa hoặc bạn không có quyền xem.",
+      "back": "Quay lại chi phí"
     },
     "loadFailed": "Không tải được hóa đơn.",
     "loadListFailed": "Không tải được danh sách chi phí.",

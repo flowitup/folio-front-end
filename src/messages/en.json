@@ -127,6 +127,7 @@
       "title": "This week",
       "viewAll": "Agenda",
       "overdue": "Overdue",
+      "more": "+{n} more ›",
       "today": "Today",
       "thisWeek": "This week",
       "empty": "Nothing on the agenda this week."
@@ -692,7 +693,9 @@
     },
     "print": {
       "heading": "Invoice",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "loadError": "This expense could not be loaded: it may have been deleted, or you may not have access to it.",
+      "back": "Back to expenses"
     },
     "loadFailed": "Failed to load invoice.",
     "loadListFailed": "Failed to load invoices.",

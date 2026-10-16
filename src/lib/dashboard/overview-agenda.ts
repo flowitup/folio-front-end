@@ -16,7 +16,11 @@ const OVERDUE_GROUP_CAP = 3;
 export interface AgendaGroup {
   key: AgendaGroupKey;
   tasks: Task[];
+  /** Tasks of the group left out by the caps ("+N more"). */
+  hidden: number;
 }
+
+const PRIORITY_RANK: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 
 /**
  * Groups non-done tasks with a due date into Overdue / Today / This week
@@ -51,11 +55,19 @@ export function groupAgendaTasks(
   // week), then drop any group left empty by the cap. Overdue is additionally
   // capped at OVERDUE_GROUP_CAP so a long backlog can't consume the whole
   // budget and hide Today/This week.
+  // The overdue rows shown are the most pressing: urgent first, then high…,
+  // and the most recently due within a priority (an old backlog must not hide
+  // yesterday's urgent task).
+  byGroup.overdue.sort(
+    (a, b) =>
+      (PRIORITY_RANK[a.priority] ?? 2) - (PRIORITY_RANK[b.priority] ?? 2) ||
+      (a.due_date! < b.due_date! ? 1 : a.due_date! > b.due_date! ? -1 : 0)
+  );
   let remaining = maxItems;
   return AGENDA_GROUP_ORDER.map((key) => {
     const groupCap = key === "overdue" ? Math.min(OVERDUE_GROUP_CAP, remaining) : remaining;
     const capped = byGroup[key].slice(0, Math.max(groupCap, 0));
     remaining -= capped.length;
-    return { key, tasks: capped };
+    return { key, tasks: capped, hidden: byGroup[key].length - capped.length };
   }).filter((g) => g.tasks.length > 0);
 }

@@ -707,6 +707,17 @@
     "errorSaveFailed": "Không lưu được chi phí. Vui lòng thử lại.",
     "errorFixFields": "Có {count} trường cần sửa bên dưới.",
     "createForbidden": "Bạn không có quyền thêm chi phí vào dự án này.",
+    "invoiceNotFound": "Chi phí này không còn tồn tại hoặc không thuộc dự án này.",
+    "filters": {
+      "label": "Đang lọc:",
+      "clear": "Hiện tất cả",
+      "empty": "Không có chi phí nào khớp với bộ lọc này.",
+      "purse": {
+        "company": "Quỹ công ty",
+        "personal": "Quỹ cá nhân",
+        "none": "Không thuộc quỹ nào"
+      }
+    },
     "bankRefundLine": "Ngân hàng hoàn tiền — {number}",
     "deleteExpense": "Xóa chi phí {number}",
     "removeLine": "Xóa dòng",

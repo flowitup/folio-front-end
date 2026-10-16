@@ -707,6 +707,17 @@
     "errorSaveFailed": "L'enregistrement de la dépense a échoué. Réessayez.",
     "errorFixFields": "{count, plural, one {Un champ est à corriger} other {# champs sont à corriger}} ci-dessous.",
     "createForbidden": "Vous n'avez pas la permission d'ajouter des dépenses à ce projet.",
+    "invoiceNotFound": "Cette dépense n'existe plus ou ne fait pas partie de ce projet.",
+    "filters": {
+      "label": "Filtré :",
+      "clear": "Tout afficher",
+      "empty": "Aucune dépense ne correspond à ce filtre.",
+      "purse": {
+        "company": "Caisse entreprise",
+        "personal": "Caisse personnelle",
+        "none": "Aucune caisse"
+      }
+    },
     "bankRefundLine": "Remboursement banque — {number}",
     "deleteExpense": "Supprimer la dépense {number}",
     "removeLine": "Supprimer la ligne",

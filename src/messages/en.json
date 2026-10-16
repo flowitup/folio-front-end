@@ -707,6 +707,17 @@
     "errorSaveFailed": "The expense could not be saved. Please try again.",
     "errorFixFields": "{count, plural, one {One field needs fixing} other {# fields need fixing}} below.",
     "createForbidden": "You don’t have permission to add expenses to this project.",
+    "invoiceNotFound": "This expense no longer exists or is not part of this project.",
+    "filters": {
+      "label": "Filtered:",
+      "clear": "Show all",
+      "empty": "No expense matches this filter.",
+      "purse": {
+        "company": "Company purse",
+        "personal": "Personal purse",
+        "none": "No purse"
+      }
+    },
     "bankRefundLine": "Bank refund — {number}",
     "deleteExpense": "Delete expense {number}",
     "removeLine": "Remove line",

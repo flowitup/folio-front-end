@@ -6,7 +6,8 @@ import { useParams, useRouter, useSearchParams, usePathname } from "next/navigat
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { can, isCompanyAdmin } from "@/lib/auth/permissions";
-import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock } from "lucide-react";
+import { Loader2, Trash2, ChevronRight, ChevronDown, Download, Lock, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApiError } from "@/lib/api/http";
@@ -38,6 +39,10 @@ import {
   monthKeyForInvoice,
 } from "@/lib/invoices/group-invoices-by-month";
 import { invoiceTotals } from "@/lib/invoices/invoice-totals";
+import {
+  matchesExpenseFilters,
+  readExpenseListFilters,
+} from "@/lib/invoices/expense-filters";
 import { formatDate, formatEUR, formatMonthYear } from "@/lib/utils/formatters";
 
 type TabType = "all" | InvoiceType;
@@ -150,7 +155,34 @@ export default function InvoicesPage() {
     can("project:manage_labor", user?.permissions, projectPerms) ||
     can("project:view_pay", user?.permissions, projectPerms);
 
-  const [activeTab, setActiveTab] = useState<TabType>("all");
+  // Filters a chart or a summary figure opened the list with (?type=, ?month=,
+  // ?purse=). The tab follows ?type= when the URL changes (a new drill-down);
+  // a tab click writes it back, so the URL always says what is shown.
+  const urlFilters = readExpenseListFilters(searchParams);
+  const urlTab: TabType =
+    urlFilters.type && (urlFilters.type !== "released_funds" || canViewBudget) ? urlFilters.type : "all";
+  const [activeTab, setActiveTabState] = useState<TabType>(urlTab);
+  const [tabFromUrl, setTabFromUrl] = useState<TabType>(urlTab);
+  if (urlTab !== tabFromUrl) {
+    setTabFromUrl(urlTab);
+    setActiveTabState(urlTab);
+  }
+  const replaceQuery = (update: (params: URLSearchParams) => void) => {
+    const next = new URLSearchParams(searchParams.toString());
+    update(next);
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+  const setActiveTab = (tab: TabType) => {
+    setActiveTabState(tab);
+    replaceQuery((p) => (tab === "all" ? p.delete("type") : p.set("type", tab)));
+  };
+  const clearFilters = () =>
+    replaceQuery((p) => {
+      p.delete("month");
+      p.delete("purse");
+    });
+  const hasRowFilter = Boolean(urlFilters.month || urlFilters.purse);
   const [exportOpen, setExportOpen] = useState(false);
   // Collapsed month sections on the "all" tab (keys "YYYY-MM"). Default empty
   // = every month expanded; collapsing is opt-in, session-only state.
@@ -163,10 +195,13 @@ export default function InvoicesPage() {
   // never refetches and a slow response can never land under the wrong tab. Tabs
   // filter by ledger category: a cash advance is stored as released_funds but
   // listed under "Others".
+  const filterMonth = urlFilters.month;
+  const filterPurse = urlFilters.purse;
   const invoices = useMemo(() => {
     const all = summary?.invoices ?? [];
-    return activeTab === "all" ? all : all.filter((inv) => ledgerTypeOf(inv) === activeTab);
-  }, [summary, activeTab]);
+    const byTab = activeTab === "all" ? all : all.filter((inv) => ledgerTypeOf(inv) === activeTab);
+    return byTab.filter((inv) => matchesExpenseFilters(inv, { month: filterMonth, purse: filterPurse }));
+  }, [summary, activeTab, filterMonth, filterPurse]);
 
   const toggleMonth = (monthKey: string) => {
     const isCollapsing = !collapsedMonths.has(monthKey);
@@ -242,6 +277,37 @@ export default function InvoicesPage() {
       return next;
     });
   }, [selectedInvoiceId, invoices]);
+
+  // A deep link to an expense (?invoice=<id>, from a chart, a notification or
+  // an e-mail) opens it in place: bring its row into view once the list is in,
+  // or say it is gone rather than showing the top of the list.
+  const listLoaded = summary !== null;
+  useEffect(() => {
+    if (!selectedInvoiceId || !summary) return;
+    if (!summary.invoices.some((inv) => inv.id === selectedInvoiceId)) {
+      toast.error(t("invoiceNotFound"));
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("invoice");
+      const qs = next.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      return;
+    }
+    const frame = requestAnimationFrame(() => {
+      const target = [
+        document.getElementById(`invoice-detail-${selectedInvoiceId}`),
+        document.getElementById(`invoice-detail-mobile-${selectedInvoiceId}`),
+      ].find((el) => el && el.offsetParent !== null);
+      if (!target) return;
+      // A row opened by a click is already on screen: only a link scrolls.
+      const { top, bottom } = target.getBoundingClientRect();
+      if (top < 0 || bottom > window.innerHeight) {
+        target.scrollIntoView?.({ block: "center", behavior: "smooth" });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+    // Once per opened id and loaded list; a refetch must not scroll again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedInvoiceId, listLoaded]);
 
   const handleDelete = async (invoice: Invoice) => {
     if (!confirm(t("deleteConfirm"))) return;
@@ -336,6 +402,22 @@ export default function InvoicesPage() {
       </div>
       )}
 
+      {/* What a chart or a summary figure opened the list on, and a way back to everything. */}
+      {summary && hasRowFilter && (
+        <div className="flex flex-wrap items-center gap-2 text-[12.5px]" data-testid="expense-filter-chips">
+          <span style={{ color: "var(--muted)" }}>{t("filters.label")}</span>
+          {urlFilters.month && <span className="stamp">{formatMonthYear(urlFilters.month, locale)}</span>}
+          {urlFilters.purse && <span className="stamp">{t(`filters.purse.${urlFilters.purse}`)}</span>}
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="inline-flex items-center gap-1 font-medium hover:underline"
+          >
+            <X size={12} aria-hidden /> {t("filters.clear")}
+          </button>
+        </div>
+      )}
+
       {canExport && (
         <InvoiceExportDialog
           projectId={projectId}
@@ -366,7 +448,7 @@ export default function InvoicesPage() {
               className="flex items-center justify-center py-12 text-[13px]"
               style={{ color: "var(--muted)" }}
             >
-              {t("noInvoices")}
+              {hasRowFilter ? t("filters.empty") : t("noInvoices")}
             </div>
           </div>
         ) : (

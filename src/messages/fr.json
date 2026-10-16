@@ -261,7 +261,8 @@
     "invoicePrefixInvalid": "Le préfixe doit contenir uniquement des lettres majuscules et des chiffres (A-Z, 0-9), max 8 caractères.",
     "waitingForAssignment": {
       "title": "En attente d'affectation",
-      "description": "L'administrateur de votre entreprise ne vous a pas encore ajouté à un chantier."
+      "description": "L'administrateur de votre entreprise ne vous a pas encore ajouté à un chantier.",
+      "company": "Vous faites partie de l'entreprise {company}."
     },
     "noCompany": {
       "title": "Vous n'appartenez à aucune entreprise",
@@ -2316,7 +2317,8 @@
       "notFound": "La ressource demandée est introuvable.",
       "rateLimited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
       "generic": "Une erreur inattendue est survenue.",
-      "invalidJoinCode": "Code entreprise invalide ou révoqué."
+      "invalidJoinCode": "Code entreprise invalide ou révoqué.",
+      "joinCodeLength": "Un code entreprise fait 8 caractères (par exemple ABCD-2345)."
     }
   },
   "bibliotheque": {

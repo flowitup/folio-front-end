@@ -278,6 +278,11 @@ export async function joinCompanyByCodeAction(code: string): Promise<ActionResul
   const auth = await requireSession();
   if (!auth.ok) return auth;
   const normalized = typeof code === "string" ? normalizeJoinCode(code) : "";
+  if (normalized.length > 0 && normalized.length < 8) {
+    // Company codes are 8 characters: say so, not "validation error".
+    const t = await getTranslations("companies.errors");
+    return { ok: false, error: { code: "code_length", message: t("joinCodeLength") } };
+  }
   if (normalized.length < 4 || normalized.length > 32) return invalid();
   try {
     const data = await joinCompanyByCode(normalized);

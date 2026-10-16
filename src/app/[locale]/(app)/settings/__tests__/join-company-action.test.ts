@@ -24,6 +24,15 @@ describe("joinCompanyByCodeAction", () => {
     });
   });
 
+  it("says a company code has 8 characters when it is too short", async () => {
+    mockJoin.mockReset();
+    expect(await joinCompanyByCodeAction("abc")).toEqual({
+      ok: false,
+      error: { code: "code_length", message: en.companies.errors.joinCodeLength },
+    });
+    expect(mockJoin).not.toHaveBeenCalled();
+  });
+
   it("keeps other errors as they were", async () => {
     mockJoin.mockRejectedValue(Object.assign(new Error("HTTP 429"), { status: 429, body: null }));
     const result = await joinCompanyByCodeAction("ABCD1234");

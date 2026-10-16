@@ -18,6 +18,7 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { queueFlashToast } from "@/lib/flash-toast";
 import { Building2, KeyRound, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,7 +62,8 @@ export function OnboardingClient() {
         toast.error(result.error.message);
         return;
       }
-      toast.success(t("create.successToast"));
+      // Shown on the page the full navigation lands on: a toast fired here dies with this page.
+      queueFlashToast(t("create.successToast"));
       goToApp();
     } finally {
       setIsCreating(false);
@@ -78,7 +80,7 @@ export function OnboardingClient() {
         toast.error(result.error.message);
         return;
       }
-      toast.success(t("join.successToast", { company: result.data.legal_name }));
+      queueFlashToast(t("join.successToast", { company: result.data.legal_name }));
       goToApp();
     } finally {
       setIsJoining(false);

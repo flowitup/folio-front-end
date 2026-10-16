@@ -138,6 +138,17 @@ describe("DashboardPage — no project selected", () => {
     expect(screen.queryByRole("link")).toBeNull();
   });
 
+  it("names the company a member waits in", () => {
+    mockUseProject.mockReturnValue({ selectedProject: null, isLoading: false });
+    mockUser = {
+      permissions: [],
+      companies: [{ id: "c-1", role: "member", legal_name: "Bâti Sud", is_primary: true }],
+    };
+    renderDashboard();
+
+    expect(screen.getByTestId("overview-waiting-company")).toHaveTextContent("Bâti Sud");
+  });
+
   it("shows nothing final while the projects are still loading", () => {
     mockUseProject.mockReturnValue({ selectedProject: null, isLoading: true });
     renderDashboard();

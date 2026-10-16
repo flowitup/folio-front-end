@@ -261,7 +261,8 @@
     "invoicePrefixInvalid": "Tiền tố chỉ được chứa chữ in hoa và số (A-Z, 0-9), tối đa 8 ký tự.",
     "waitingForAssignment": {
       "title": "Chờ quản lý thêm bạn vào công trình",
-      "description": "Quản trị viên công ty sẽ thêm bạn vào một công trình khi sẵn sàng."
+      "description": "Quản trị viên công ty sẽ thêm bạn vào một công trình khi sẵn sàng.",
+      "company": "Bạn thuộc công ty {company}."
     },
     "noCompany": {
       "title": "Bạn chưa thuộc công ty nào",
@@ -2316,7 +2317,8 @@
       "notFound": "Không tìm thấy tài nguyên yêu cầu.",
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
       "generic": "Đã xảy ra lỗi không mong muốn.",
-      "invalidJoinCode": "Mã công ty không hợp lệ hoặc đã bị thu hồi."
+      "invalidJoinCode": "Mã công ty không hợp lệ hoặc đã bị thu hồi.",
+      "joinCodeLength": "Mã công ty gồm 8 ký tự (ví dụ ABCD-2345)."
     }
   },
   "bibliotheque": {

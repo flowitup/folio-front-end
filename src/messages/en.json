@@ -261,7 +261,8 @@
     "invoicePrefixInvalid": "Prefix must contain only uppercase letters and digits (A-Z, 0-9), max 8 characters.",
     "waitingForAssignment": {
       "title": "Waiting to be assigned",
-      "description": "Your company admin hasn't added you to a construction site yet."
+      "description": "Your company admin hasn't added you to a construction site yet.",
+      "company": "You are part of {company}."
     },
     "noCompany": {
       "title": "You don't belong to a company yet",
@@ -2316,7 +2317,8 @@
       "notFound": "The requested resource was not found.",
       "rateLimited": "Too many requests. Please wait and try again.",
       "generic": "An unexpected error occurred.",
-      "invalidJoinCode": "Invalid or revoked company code."
+      "invalidJoinCode": "Invalid or revoked company code.",
+      "joinCodeLength": "A company code has 8 characters (for example ABCD-2345)."
     }
   },
   "bibliotheque": {

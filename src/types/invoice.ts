@@ -268,6 +268,11 @@ export interface RefundableExpense {
   funds_release_number?: string | null;
   /** Invoice files attached to this expense, ordered by upload time. */
   attachments: RefundableExpenseAttachment[];
+  /** Payment method the expense was paid with (who to pay back); absent on older APIs. */
+  payment_method_id?: string | null;
+  payment_method_label?: string | null;
+  /** Site address of the project, shown in place of its name (projectDisplayName). */
+  project_address?: string | null;
 }
 
 /**

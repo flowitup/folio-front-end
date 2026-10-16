@@ -1702,7 +1702,8 @@
         "invoice": "Facture",
         "refundedBy": "Remboursé par",
         "status": "Statut",
-        "actions": "Actions"
+        "actions": "Actions",
+        "paidBy": "Payé par"
       },
       "attachments": {
         "count": "{n} fichiers",
@@ -1743,6 +1744,13 @@
         "body": "{number} ne sera plus suivie pour remboursement et son statut de remboursement sera effacé.",
         "fundsRelease": "Le déblocage de fonds lié {number} sera aussi supprimé, ce qui réduit le total débloqué du projet.",
         "cancel": "Annuler"
+      },
+      "paidByLine": "Payé par {payer}",
+      "filters": {
+        "search": "N° de facture, fournisseur, chantier, payeur…",
+        "allStatuses": "Tous les statuts",
+        "allProjects": "Tous les chantiers",
+        "noResults": "Aucune dépense ne correspond à ces filtres."
       }
     },
     "import": {

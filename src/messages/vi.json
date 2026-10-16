@@ -1702,7 +1702,8 @@
         "invoice": "Hóa đơn",
         "refundedBy": "Được hoàn bởi",
         "status": "Trạng thái",
-        "actions": "Thao tác"
+        "actions": "Thao tác",
+        "paidBy": "Người trả"
       },
       "attachments": {
         "count": "{n} tệp",
@@ -1743,6 +1744,13 @@
         "body": "{number} sẽ không còn được theo dõi hoàn tiền và trạng thái hoàn tiền sẽ bị xóa.",
         "fundsRelease": "Khoản giải ngân liên kết {number} cũng sẽ bị xóa, làm giảm tổng giải ngân của dự án.",
         "cancel": "Hủy"
+      },
+      "paidByLine": "Người trả: {payer}",
+      "filters": {
+        "search": "Số hóa đơn, nhà cung cấp, công trình, người trả…",
+        "allStatuses": "Tất cả trạng thái",
+        "allProjects": "Tất cả công trình",
+        "noResults": "Không có khoản chi nào khớp với bộ lọc."
       }
     },
     "import": {

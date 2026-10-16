@@ -103,9 +103,11 @@ function TemplateCard({ template, onDelete }: TemplateCardProps) {
     <div className="folio-card flex min-w-0 flex-col gap-3 p-5">
       {/* Top row: name + actions — the actions wrap under a long name on narrow cards */}
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-        <div className="flex min-w-0 flex-1 basis-40 items-center gap-2 sm:basis-24">
-          <FileText size={15} style={{ color: "var(--muted)", flexShrink: 0 }} />
-          <span className="truncate font-medium text-sm">{template.name}</span>
+        <div className="flex min-w-0 flex-1 basis-40 items-start gap-2 sm:basis-24">
+          <FileText size={15} className="mt-0.5" style={{ color: "var(--muted)", flexShrink: 0 }} />
+          <span className="line-clamp-2 break-words font-medium text-sm" title={template.name}>
+            {template.name}
+          </span>
         </div>
 
         {/* Actions */}

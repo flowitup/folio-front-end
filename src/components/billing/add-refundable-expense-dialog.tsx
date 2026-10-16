@@ -33,6 +33,7 @@ import {
 import type { RefundableExpense } from "@/types/invoice";
 import { ApiError } from "@/lib/api/http";
 import { formatEUR } from "@/lib/utils/formatters";
+import { projectDisplayName } from "@/lib/projects/project-display-name";
 
 /** The API's 400 for an expense already paid with a company payment method. */
 function isCompanyPaidRejection(reason: unknown): boolean {
@@ -145,6 +146,7 @@ export function AddRefundableExpenseDialog({
     return candidates.filter(
       (c) =>
         c.project_name.toLowerCase().includes(q) ||
+        (c.project_address ?? "").toLowerCase().includes(q) ||
         c.invoice_number.toLowerCase().includes(q) ||
         c.recipient_name.toLowerCase().includes(q)
     );
@@ -263,7 +265,7 @@ export function AddRefundableExpenseDialog({
                       />
                     </td>
                     <td className="p-2 truncate" title={expense.project_name}>
-                      {expense.project_name}
+                      {projectDisplayName({ name: expense.project_name, address: expense.project_address })}
                     </td>
                     <td className="p-2 truncate font-mono text-xs" title={expense.invoice_number}>
                       {expense.invoice_number}

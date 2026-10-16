@@ -607,3 +607,35 @@ describe("RefundableInvoicesPage — more than one page", () => {
     expect(table().getByText("INV-P1")).toBeDefined();
   });
 });
+
+describe("RefundableInvoicesPage — payer and filters (QA3 expenses-invoices-07)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows who paid and the project by its address", async () => {
+    mockFetch.mockResolvedValue({
+      items: [
+        makeExpense({
+          payment_method_label: "Carte perso François",
+          project_address: "12 rue des Lilas",
+        }),
+      ],
+      total: 1,
+      summary: null,
+    });
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => table().getByText("Carte perso François"));
+    expect(table().getByText("Paid by")).toBeDefined();
+    expect(table().getByText("12 rue des Lilas")).toBeDefined();
+    expect(table().queryByText("Tower Block")).toBeNull();
+  });
+
+  it("sends the search to the API", async () => {
+    mockFetch.mockResolvedValue({ items: [makeExpense()], total: 1, summary: null });
+    render(<RefundableInvoicesPage />);
+    await waitFor(() => table().getByText("INV-2026-001"));
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "lilas" } });
+    await waitFor(() => expect(mockFetch).toHaveBeenLastCalledWith({ q: "lilas" }));
+  });
+});

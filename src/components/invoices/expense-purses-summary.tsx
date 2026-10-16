@@ -325,7 +325,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
             {cashAdvancedPart > 0 && (
               <div
                 className="text-[11px]"
-                style={{ color: "var(--accent)" }}
+                style={{ color: "var(--accent-ink)" }}
                 data-testid={`purse-cash-advance-${purseKey}`}
                 data-tip={`${title}|${formatEURWhole(cashAdvancedPart)}|${t("cashAdvance.label")}`}
               >

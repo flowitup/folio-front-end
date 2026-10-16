@@ -177,7 +177,7 @@ export function ProjectBillingPanel({ projectId }: ProjectBillingPanelProps) {
                           prefetch={false}
                           href={documentHref(doc)}
                           className="underline-offset-2 hover:underline"
-                          style={{ color: "var(--accent)" }}
+                          style={{ color: "var(--accent-ink)" }}
                         >
                           {doc.document_number}
                         </Link>

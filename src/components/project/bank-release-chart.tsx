@@ -221,7 +221,7 @@ export function BankReleaseChart({
             <Link
               href={settingsHref}
               className="mt-1.5 inline-block underline"
-              style={{ color: "var(--accent)" }}
+              style={{ color: "var(--accent-ink)" }}
             >
               {t("openSettings")}
             </Link>

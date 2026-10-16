@@ -131,7 +131,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
                     className={cn(
                       "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium transition-colors",
                       active
-                        ? "bg-[var(--paper-2)] text-[var(--accent)]"
+                        ? "bg-[var(--paper-2)] text-[var(--accent-ink)]"
                         : "text-[var(--ink)] active:bg-[var(--paper-2)]",
                     )}
                   >
@@ -159,7 +159,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
                   className={cn(
                     "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium transition-colors",
                     active
-                      ? "bg-[var(--paper-2)] text-[var(--accent)]"
+                      ? "bg-[var(--paper-2)] text-[var(--accent-ink)]"
                       : "text-[var(--ink)] active:bg-[var(--paper-2)]",
                   )}
                 >
@@ -190,7 +190,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
                   className={cn(
                     "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium transition-colors",
                     active
-                      ? "bg-[var(--paper-2)] text-[var(--accent)]"
+                      ? "bg-[var(--paper-2)] text-[var(--accent-ink)]"
                       : "text-[var(--ink)] active:bg-[var(--paper-2)]",
                   )}
                 >
@@ -210,7 +210,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
             className={cn(
               "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium transition-colors",
               isActive(settingsItem.href)
-                ? "bg-[var(--paper-2)] text-[var(--accent)]"
+                ? "bg-[var(--paper-2)] text-[var(--accent-ink)]"
                 : "text-[var(--ink)] active:bg-[var(--paper-2)]",
             )}
           >

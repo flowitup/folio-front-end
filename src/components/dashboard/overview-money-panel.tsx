@@ -174,7 +174,7 @@ export function OverviewMoneyPanel({
           {purse.cashAdvanced > 0 && (
             <div
               className="mt-0.5 text-[11px]"
-              style={{ color: "var(--accent)" }}
+              style={{ color: "var(--accent-ink)" }}
               data-testid={`overview-purse-cash-${purse.key}`}
             >
               {tInvoices("summary.cashAdvance", { amount: fig(formatEURWhole(purse.cashAdvanced)) })}

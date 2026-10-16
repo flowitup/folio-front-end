@@ -177,7 +177,7 @@ export function AdminCompanyManagePage({
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-[13px] font-medium transition-colors border-b-2 -mb-px ${
               activeTab === tab.key
-                ? "border-[var(--accent)] text-[var(--accent)]"
+                ? "border-[var(--accent)] text-[var(--accent-ink)]"
                 : "border-transparent"
             } ${tab.key === "delete" ? "text-destructive ml-auto" : ""}`}
           >

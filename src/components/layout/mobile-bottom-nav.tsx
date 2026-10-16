@@ -85,7 +85,7 @@ export function MobileBottomNav() {
                 className={cn(
                   "flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-1 text-[10px] font-medium transition-colors",
                   isActive
-                    ? "text-[var(--accent)]"
+                    ? "text-[var(--accent-ink)]"
                     : "text-[var(--muted)] active:text-[var(--ink)]",
                 )}
               >
@@ -101,7 +101,7 @@ export function MobileBottomNav() {
             className={cn(
               "flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-1 text-[10px] font-medium transition-colors",
               moreIsActive
-                ? "text-[var(--accent)]"
+                ? "text-[var(--accent-ink)]"
                 : "text-[var(--muted)] active:text-[var(--ink)]",
             )}
           >

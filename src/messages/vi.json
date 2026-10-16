@@ -2894,7 +2894,11 @@
     "unitLot": "lô",
     "unitForfait": "trọn gói",
     "productUrlInvalid": "Nhập một địa chỉ web, vd. www.castorama.fr/…",
-    "compareTieBasket": "Bằng giá"
+    "compareTieBasket": "Bằng giá",
+    "errorUnitInUse": "Đơn vị này đang được các vật tư sử dụng: hãy đổi đơn vị của chúng trước khi xóa.",
+    "deleteUnit": "Xóa đơn vị {unit}",
+    "currentUnit": "Đơn vị hiện tại",
+    "readOnlyHint": "Chỉ xem: để sửa hạch toán vật tư, hãy xin quản trị viên quyền “Quản lý hóa đơn và hạch toán vật tư”."
   },
   "onboarding": {
     "title": "Chào mừng đến với Folio",
@@ -2999,7 +3003,7 @@
         "project_invite": "Mời thành viên",
         "project_manage_users": "Quản lý thành viên",
         "project_manage_labor": "Quản lý nhân công",
-        "project_manage_invoices": "Quản lý hóa đơn",
+        "project_manage_invoices": "Quản lý hóa đơn và hạch toán vật tư",
         "project_log_own_attendance": "Chấm công cho bản thân",
         "bibliotheque_manage": "Quản lý thư viện",
         "inventory_manage": "Quản lý kho thiết bị",

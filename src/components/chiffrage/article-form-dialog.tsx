@@ -37,6 +37,8 @@ interface Props {
     room_id: string | null;
   }) => void;
   onCreateUnit: (symbol: string) => Promise<ChiffrageUnit | null>;
+  /** Remove a custom unit (refused while articles use it). */
+  onDeleteUnit?: (unit: ChiffrageUnit) => Promise<boolean>;
   onCreateRoom: (name: string) => Promise<ChiffrageRoom | null>;
 }
 
@@ -49,6 +51,7 @@ export function ArticleFormDialog({
   onOpenChange,
   onSubmit,
   onCreateUnit,
+  onDeleteUnit,
   onCreateRoom,
 }: Props) {
   const t = useTranslations("chiffrage");
@@ -148,6 +151,7 @@ export function ArticleFormDialog({
                   units={units}
                   onChange={setUnit}
                   onCreateUnit={onCreateUnit}
+                  onDeleteUnit={onDeleteUnit}
                 />
               </div>
             </div>

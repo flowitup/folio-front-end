@@ -2894,7 +2894,11 @@
     "unitLot": "lot",
     "unitForfait": "lump sum",
     "productUrlInvalid": "Enter a web address, e.g. www.castorama.fr/…",
-    "compareTieBasket": "Tie"
+    "compareTieBasket": "Tie",
+    "errorUnitInUse": "Articles still use this unit: give them another unit before deleting it.",
+    "deleteUnit": "Delete the unit {unit}",
+    "currentUnit": "Current unit",
+    "readOnlyHint": "Read only: to edit the cost planning, ask an administrator for the “Manage invoices and cost planning” permission."
   },
   "onboarding": {
     "title": "Welcome to Folio",
@@ -2999,7 +3003,7 @@
         "project_invite": "Invite members",
         "project_manage_users": "Manage members",
         "project_manage_labor": "Manage labor",
-        "project_manage_invoices": "Manage invoices",
+        "project_manage_invoices": "Manage invoices and cost planning",
         "project_log_own_attendance": "Log own attendance",
         "bibliotheque_manage": "Manage library",
         "inventory_manage": "Manage inventory",

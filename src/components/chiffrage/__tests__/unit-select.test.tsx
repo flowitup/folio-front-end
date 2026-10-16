@@ -14,7 +14,8 @@ import { UnitSelect } from "../unit-select";
 import type { ChiffrageUnit } from "@/lib/api/chiffrage";
 
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string, params?: Record<string, unknown>) =>
+    params ? `${key}(${Object.values(params).join("|")})` : key,
 }));
 
 const UNITS: ChiffrageUnit[] = [
@@ -86,5 +87,32 @@ describe("UnitSelect", () => {
     // Closed: the trigger is the only control, and it is a button not an input.
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(screen.getByTestId("unit-select-trigger").tagName).toBe("BUTTON");
+  });
+
+  it("shows an article's unit even when it is no longer offered", async () => {
+    render(<UnitSelect value="old-unit" units={UNITS} onChange={() => {}} onCreateUnit={async () => null} />);
+    expect(screen.getByTestId("unit-select-trigger").textContent).toContain("old-unit");
+    await userEvent.click(screen.getByTestId("unit-select-trigger"));
+    expect(screen.getByText("currentUnit")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "old-unit" })).toBeInTheDocument();
+  });
+
+  it("deletes a custom unit, never a preset", async () => {
+    const onDeleteUnit = vi.fn(async () => true);
+    const onChange = vi.fn();
+    render(
+      <UnitSelect
+        value="sac 25kg"
+        units={UNITS}
+        onChange={onChange}
+        onCreateUnit={async () => null}
+        onDeleteUnit={onDeleteUnit}
+      />
+    );
+    await userEvent.click(screen.getByTestId("unit-select-trigger"));
+    expect(screen.queryByRole("button", { name: "deleteUnit(u)" })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "deleteUnit(sac 25kg)" }));
+    expect(onDeleteUnit).toHaveBeenCalledWith(UNITS[2]);
+    expect(onChange).toHaveBeenCalledWith(null);
   });
 });

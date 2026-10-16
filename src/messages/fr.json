@@ -2874,7 +2874,7 @@
     "loadFailedTitle": "Le chiffrage n'a pas pu être chargé",
     "loadFailedHint": "Rien n'a été perdu. Vérifiez votre connexion et réessayez.",
     "retry": "Réessayer",
-    "emptyHintReadOnly": "Aucune section n'a encore été prévue pour ce projet.",
+    "emptyHintReadOnly": "Aucun poste n'a encore été prévu pour ce projet.",
     "quantityTooLarge": "La quantité ne peut pas dépasser {max, number}.",
     "quantityInvalid": "Saisissez une quantité supérieure ou égale à 0, avec 3 décimales au plus (par exemple 2,5).",
     "priceTooLarge": "Le prix unitaire HT ne peut pas dépasser {max, number}.",
@@ -2894,7 +2894,11 @@
     "unitLot": "lot",
     "unitForfait": "forfait",
     "productUrlInvalid": "Saisissez une adresse web, ex. www.castorama.fr/…",
-    "compareTieBasket": "Égalité"
+    "compareTieBasket": "Égalité",
+    "errorUnitInUse": "Cette unité est utilisée par des articles : changez-leur d'unité avant de la supprimer.",
+    "deleteUnit": "Supprimer l'unité {unit}",
+    "currentUnit": "Unité actuelle",
+    "readOnlyHint": "Lecture seule : pour modifier le chiffrage, demandez à un administrateur la permission « Gérer les factures et le chiffrage »."
   },
   "onboarding": {
     "title": "Bienvenue sur Folio",
@@ -2999,7 +3003,7 @@
         "project_invite": "Inviter des membres",
         "project_manage_users": "Gérer les membres",
         "project_manage_labor": "Gérer la main-d'œuvre",
-        "project_manage_invoices": "Gérer les factures",
+        "project_manage_invoices": "Gérer les factures et le chiffrage",
         "project_log_own_attendance": "Pointer ses propres présences",
         "bibliotheque_manage": "Gérer la bibliothèque",
         "inventory_manage": "Gérer l'inventaire",

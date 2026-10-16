@@ -60,6 +60,7 @@ import {
   deleteArticleImageAction,
   createQuoteAction,
   createUnitAction,
+  deleteUnitAction,
   deleteArticleAction,
   deletePosteAction,
   deleteRoomAction,
@@ -265,6 +266,17 @@ export function ChiffragePageClient({
     return res.data;
   };
 
+  const removeUnit = async (unit: ChiffrageUnit): Promise<boolean> => {
+    if (!unit.id) return false;
+    const res = await deleteUnitAction(projectId, unit.id);
+    if (!res.ok) {
+      toast.error(res.error);
+      return false;
+    }
+    setUnits((prev) => prev.filter((u) => u.id !== unit.id));
+    return true;
+  };
+
   /**
    * Move a room into the slot another one holds. Optimistic, so the room
    * headings of every poste follow at once; on failure only the room order is
@@ -399,6 +411,13 @@ export function ChiffragePageClient({
       ) : (
         <ChiffrageTotals tree={tree} />
       )}
+
+      {/* Say why the page cannot be edited, and who can change that. */}
+      {!canManage && !loadFailed ? (
+        <p className="text-sm text-muted-foreground" data-testid="chiffrage-read-only">
+          {t("readOnlyHint")}
+        </p>
+      ) : null}
 
       {loadFailed ? null : tree.postes.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center">
@@ -685,6 +704,7 @@ export function ChiffragePageClient({
           onOpenChange={(open) => setArticleDialog((p) => ({ ...p, open }))}
           rooms={tree.rooms}
           onCreateUnit={addUnit}
+          onDeleteUnit={removeUnit}
           onCreateRoom={addRoom}
           onSubmit={async (values) => {
             const ok = await mutate(() =>

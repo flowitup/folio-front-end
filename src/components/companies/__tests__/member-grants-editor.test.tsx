@@ -11,7 +11,7 @@ vi.mock("@/app/[locale]/(app)/settings/_actions/company-settings-actions", () =>
   removeMemberGrantAction: vi.fn(),
 }));
 vi.mock("@/context/ProjectContext", () => ({
-  useProject: () => ({ projects: [{ id: "p-1", name: "Tower", company_id: "c-1" }] }),
+  useProject: () => ({ projects: [{ id: "p-1", name: "Tower", company_id: "c-1" }], refetch: async () => {} }),
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 

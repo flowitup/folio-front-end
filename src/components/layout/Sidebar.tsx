@@ -66,6 +66,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
     selectedProjectId,
     selectedProject,
     selectProject,
+    refetch: refetchProjects,
   } = useProject();
   const { user } = useAuth();
   const canShowNewProject = canCreateProject(user?.permissions, user?.companies);
@@ -189,7 +190,13 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
       {/* Project switcher pill */}
       {projects.length > 0 && (
         <div className="mb-3 px-4">
-          <DropdownMenu>
+          {/* Opening the switcher re-reads the list: a project assigned or created elsewhere
+              since the page loaded is offered (unchanged lists cost no re-render). */}
+          <DropdownMenu
+            onOpenChange={(open) => {
+              if (open) void refetchProjects?.({ silent: true });
+            }}
+          >
             <DropdownMenuTrigger asChild>
               <button
                 type="button"

@@ -45,7 +45,7 @@ vi.mock("sonner", () => ({
 // stub the hook directly rather than rendering the real provider (which
 // would fetch projects over the network).
 vi.mock("@/context/ProjectContext", () => ({
-  useProject: () => ({ projects: [] }),
+  useProject: () => ({ projects: [], refetch: async () => {} }),
 }));
 
 vi.mock("@/app/[locale]/(app)/settings/_actions/companies-actions", () => ({

@@ -30,7 +30,9 @@ interface AuthContextType extends AuthState {
   updateUser: (patch: Partial<User>) => void;
   /** Re-read the signed-in user from /auth/me after an action that changes
    * their companies or permissions (switching the primary company, leaving
-   * or joining one), so permission gates follow without a full reload. */
+   * or joining one), so permission gates follow without a full reload. The
+   * app layout also calls it on window focus and navigation, so a change made
+   * by another admin shows up too (see SessionFreshness). */
   refreshUser: () => Promise<void>;
 }
 
@@ -154,7 +156,13 @@ export function AuthProvider({
       // Keep the current user; the next full load re-seeds it.
     }
     if (!fresh) return;
-    setState((prev) => (prev.user ? { ...prev, user: fresh } : prev));
+    // Also re-read on focus and navigation (SessionFreshness): an unchanged answer keeps
+    // the same object, so nothing reading the user re-renders for nothing.
+    setState((prev) =>
+      !prev.user || JSON.stringify(prev.user) === JSON.stringify(fresh)
+        ? prev
+        : { ...prev, user: fresh }
+    );
   }, []);
 
   return (

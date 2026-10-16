@@ -2,6 +2,8 @@
   "common": {
     "appName": "Folio",
     "appTagline": "Build journal",
+    "accessChanged": "Your access has changed. The page has been updated.",
+    "projectAccessLost": "You no longer have access to this project.",
     "signOut": "Sign out",
     "loading": "Loading...",
     "language": "Language",
@@ -96,6 +98,7 @@
     "codeRecentlySent": "A code was sent to this number less than a minute ago: type it below.",
     "codeHelp": "No SMS? Check the number. Only Folio accounts receive a code: they are created in the Folio mobile app or through your company's invitation. Access deactivated? Contact your company's administrator.",
     "sessionReset": "Your session was reset for your security. Please sign in again.",
+    "sessionEnded": "Your session has ended: your account may have been deactivated. Sign in again or contact your company administrator.",
     "errorNetworkLimit": "Too many sign-in requests from this network. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
     "errorSmsBusy": "The text message service is busy. Try again in {minutes, plural, one {# minute} other {# minutes}}."
   },

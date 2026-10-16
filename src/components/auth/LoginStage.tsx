@@ -22,7 +22,14 @@ const ON_INK = {
   rule: "#3d372f",
 } as const;
 
-export function LoginStage({ sessionReset = false }: { sessionReset?: boolean } = {}) {
+export function LoginStage({
+  sessionReset = false,
+  sessionEnded = false,
+}: {
+  sessionReset?: boolean;
+  /** The open session was ended under the user (account deactivated, session revoked). */
+  sessionEnded?: boolean;
+} = {}) {
   const t = useTranslations("auth");
   const locale = useLocale();
   const flow = usePhoneLoginFlow();
@@ -165,6 +172,16 @@ export function LoginStage({ sessionReset = false }: { sessionReset?: boolean } 
             style={{ background: "var(--paper-2)", color: "var(--ink)", border: "1px solid var(--border)" }}
           >
             {t("sessionReset")}
+          </p>
+        )}
+        {sessionEnded && !sessionReset && flow.step === "phone" && (
+          <p
+            role="status"
+            data-testid="login-session-ended"
+            className="mb-4 rounded-[10px] p-3 text-[12.5px]"
+            style={{ background: "var(--paper-2)", color: "var(--ink)", border: "1px solid var(--border)" }}
+          >
+            {t("sessionEnded")}
           </p>
         )}
         <PhoneLoginForm flow={flow} />

@@ -20,6 +20,12 @@ export default async function LoginPage({
     redirect(postLoginPath(typeof callbackUrl === "string" ? callbackUrl : null, locale));
   }
 
-  // The proxy dropped a doubled session cookie: tell the user why they are here.
-  return <LoginStage sessionReset={reason === "session_reset"} />;
+  // The proxy dropped a doubled session cookie, or the app found the session ended under the
+  // user (deactivated account): tell them why they are here.
+  return (
+    <LoginStage
+      sessionReset={reason === "session_reset"}
+      sessionEnded={reason === "session_ended"}
+    />
+  );
 }

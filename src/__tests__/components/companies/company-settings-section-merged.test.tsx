@@ -145,13 +145,10 @@ vi.mock("@/components/companies/join-company-dialog", () => ({
 }));
 vi.mock("@/components/companies/company-create-dialog", () => ({
   CompanyCreateDialog: ({ open }: { open: boolean }) => (
-    <div data-testid="create-company-dialog" data-open={String(open)} />
+    <div data-testid="create-company-dialog" data-open={String(open)}>
+      {open ? <div data-testid="company-create-dialog" /> : null}
+    </div>
   ),
-}));
-
-vi.mock("@/components/companies/company-create-dialog", () => ({
-  CompanyCreateDialog: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="company-create-dialog" /> : null,
 }));
 
 import { CompanySettingsSection } from "@/components/companies/company-settings-section";
@@ -214,7 +211,7 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     // Named once, by the card: a single attachment needs no picker echoing it.
     expect(screen.getAllByText("Maison Lavandou")).toHaveLength(1);
     expect(screen.getByRole("button", { name: /Set as primary/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /Detach/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Leave company/i })).toBeDefined();
 
     // Admin half.
     expect(screen.getByTestId("join-code-card")).toBeDefined();
@@ -233,7 +230,7 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     expect(screen.getByTestId("create-company-dialog").getAttribute("data-open")).toBe("true");
 
     await user.click(screen.getByTestId("add-company"));
-    await user.click(await screen.findByRole("menuitem", { name: "Enter a company code" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Join with a code" }));
     expect(screen.getByTestId("join-company-dialog").getAttribute("data-open")).toBe("true");
   });
 
@@ -243,7 +240,7 @@ describe("CompanySettingsSection (merged Company tab)", () => {
 
     // Attachment half still renders — this is the caller's own company.
     expect(await screen.findByText("Maison Lavandou")).toBeDefined();
-    expect(screen.getByRole("button", { name: /Detach/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Leave company/i })).toBeDefined();
 
     // Admin half must not: those endpoints would 403 for a member.
     expect(screen.queryByTestId("join-code-card")).toBeNull();

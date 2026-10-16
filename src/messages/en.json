@@ -905,7 +905,8 @@
       "overrideNegative": "The amount cannot be negative.",
       "dateOutOfRange": "Attendance can't be logged for a future day or a day before 2000.",
       "noteTooLong": "The note can't be longer than {max, number} characters.",
-      "amountInvalid": "Invalid amount: type for example 150.50."
+      "amountInvalid": "Invalid amount: type for example 150.50.",
+      "sharedPersonEdit": "This person's name and phone can't be changed here: they have their own account or another company uses them too. The role can still be changed."
     },
     "logDayDialog": {
       "title": "Log day",
@@ -1156,8 +1157,10 @@
       "typeToSearch": "Type at least 2 characters to search",
       "existing": "Existing",
       "create": "Create “{name}”",
-      "alreadyOnProject": "Already on this project"
-    }
+      "alreadyOnProject": "Already on this project",
+      "createWithPhone": "New person with number {phone}"
+    },
+    "newPersonHint": "New person: created together with the worker when you save."
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

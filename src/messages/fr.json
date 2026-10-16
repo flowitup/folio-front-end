@@ -905,7 +905,8 @@
       "overrideNegative": "Le montant ne peut pas être négatif.",
       "dateOutOfRange": "La présence ne peut pas être saisie pour un jour futur ni pour un jour antérieur à 2000.",
       "noteTooLong": "La note ne doit pas dépasser {max, number} caractères.",
-      "amountInvalid": "Montant invalide : saisissez par exemple 150,50."
+      "amountInvalid": "Montant invalide : saisissez par exemple 150,50.",
+      "sharedPersonEdit": "Le nom et le téléphone de cette personne ne peuvent pas être modifiés ici : elle a son propre compte ou une autre entreprise l'utilise aussi. Le rôle reste modifiable."
     },
     "logDayDialog": {
       "title": "Pointer la journée",
@@ -1156,8 +1157,10 @@
       "typeToSearch": "Tapez au moins 2 caractères pour rechercher",
       "existing": "Existants",
       "create": "Créer « {name} »",
-      "alreadyOnProject": "Déjà sur ce chantier"
-    }
+      "alreadyOnProject": "Déjà sur ce chantier",
+      "createWithPhone": "Nouvelle personne avec le numéro {phone}"
+    },
+    "newPersonHint": "Nouvelle personne : elle sera créée avec l'ouvrier, une fois enregistré."
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",

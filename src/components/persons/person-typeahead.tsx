@@ -8,9 +8,9 @@
  *
  * Plan reference: 260512-2341-labor-calendar-and-bulk-log → phase-01 (1d-i).
  *
- * This component is intentionally NOT yet wired into AddWorkerDialog —
- * that integration lands in cook 1d-ii along with the WorkerResponse
- * serializer change that exposes person_name/person_phone joined fields.
+ * "Create" never saves a person by itself: it hands back a draft that the
+ * caller saves together with what it creates (a worker), so a cancelled or
+ * failed form leaves no orphan person.
  */
 
 import * as React from "react";
@@ -28,8 +28,22 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { createPerson, fetchPersons } from "@/lib/api/persons";
+import { fetchPersons } from "@/lib/api/persons";
 import type { PersonSummary } from "@/types/person";
+
+/**
+ * A pick from the typeahead. `draft` = a new person typed in the search, not
+ * saved yet (id ""): the caller creates it together with what it is for (the
+ * worker), so cancelling or a failed save leaves no orphan person behind.
+ * A draft typed as a phone number carries it as `phone` and an empty name.
+ */
+export type PersonChoice = PersonSummary & { draft?: boolean };
+
+/** "06 20 30 00 04", "0620300004", "+33 6 20…": a phone number, not a name. */
+export function looksLikePhone(text: string): boolean {
+  const trimmed = text.trim();
+  return /^\+?[\d\s.\-()/]+$/.test(trimmed) && trimmed.replace(/\D/g, "").length >= 9;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -37,9 +51,9 @@ import type { PersonSummary } from "@/types/person";
 
 export interface PersonTypeaheadProps {
   /** Currently selected Person (controlled). null = no selection yet. */
-  value: PersonSummary | null;
-  /** Fires when the user picks an existing or just-created Person. */
-  onChange: (person: PersonSummary) => void;
+  value: PersonChoice | null;
+  /** Fires when the user picks an existing Person or a new one (draft). */
+  onChange: (person: PersonChoice) => void;
   /** Visible placeholder when no Person is selected. */
   placeholder?: string;
   /** Disable the typeahead trigger. */
@@ -56,6 +70,8 @@ export interface PersonTypeaheadProps {
   /** People who cannot be picked here (e.g. already workers on the project):
    * listed but disabled, with an "Already on this project" note. */
   excludeIds?: string[];
+  /** Search only this company's directory (sent as company_id). */
+  companyId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -75,6 +91,7 @@ export function PersonTypeahead({
   limit = 20,
   allowCreate = true,
   excludeIds,
+  companyId,
 }: PersonTypeaheadProps) {
   const t = useTranslations("labor.typeahead");
   const listId = React.useId();
@@ -82,7 +99,8 @@ export function PersonTypeahead({
   const [query, setQuery] = React.useState("");
   const [fetchedResults, setResults] = React.useState<PersonSummary[]>([]);
   const [fetching, setLoading] = React.useState(false);
-  const [creating, setCreating] = React.useState(false);
+  // The query the current results answer: "Create" for a phone waits for it.
+  const [searchedQuery, setSearchedQuery] = React.useState<string | null>(null);
 
   // Debounced server search. We track the latest request ID to discard
   // out-of-order responses (slow networks + fast typing).
@@ -97,19 +115,23 @@ export function PersonTypeahead({
     const handle = window.setTimeout(async () => {
       setLoading(true);
       try {
-        const rows = await fetchPersons({ q, limit });
+        const rows = await fetchPersons(companyId ? { q, limit, companyId } : { q, limit });
         if (seq === requestSeqRef.current) {
           setResults(rows);
+          setSearchedQuery(q);
         }
       } catch {
         // Keep previous results visible — searching shouldn't blow up the UI.
-        if (seq === requestSeqRef.current) setResults([]);
+        if (seq === requestSeqRef.current) {
+          setResults([]);
+          setSearchedQuery(q);
+        }
       } finally {
         if (seq === requestSeqRef.current) setLoading(false);
       }
     }, debounceMs);
     return () => window.clearTimeout(handle);
-  }, [query, open, debounceMs, limit]);
+  }, [query, open, debounceMs, limit, companyId]);
 
   // Show "Create new" only when (a) there's a trimmed query, and (b) no
   // existing person has that exact normalized name.
@@ -121,39 +143,33 @@ export function PersonTypeahead({
   const exactMatch =
     trimmed.length > 0 &&
     results.some((p) => p.name.trim().toLowerCase() === trimmed.toLowerCase());
-  const showCreate = allowCreate && trimmed.length > 0 && !exactMatch && !creating;
+  // A number typed in another format ("06 20 30 00 04" vs "+33620300004") is
+  // the same person: never offer to create one before the search has answered,
+  // nor next to a person it found.
+  const isPhone = looksLikePhone(trimmed);
+  const phoneSettled = !isPhone || (!loading && searchedQuery === trimmed && results.length === 0);
+  const showCreate = allowCreate && trimmed.length > 0 && !exactMatch && phoneSettled;
   const excluded = React.useMemo(() => new Set(excludeIds ?? []), [excludeIds]);
 
-  async function handleSelect(person: PersonSummary) {
+  function handleSelect(person: PersonSummary) {
     onChange(person);
     setOpen(false);
     setQuery("");
   }
 
-  async function handleCreateNew() {
+  function handleCreateNew() {
     if (!trimmed) return;
-    setCreating(true);
-    try {
-      const created = await createPerson({ name: trimmed });
-      // Created Person has full fields — narrow to the summary shape the
-      // parent expects.
-      const summary: PersonSummary = {
-        id: created.id,
-        name: created.name,
-        phone: created.phone,
-      };
-      onChange(summary);
-      setOpen(false);
-      setQuery("");
-    } catch {
-      // Surface failure subtly — leave the typeahead open so user can retry.
-      // A toast at the parent level would be ideal once we adopt Sonner here.
-    } finally {
-      setCreating(false);
-    }
+    // Nothing is saved here: the parent creates the person with the worker.
+    onChange(
+      isPhone
+        ? { id: "", name: "", phone: trimmed, draft: true }
+        : { id: "", name: trimmed, phone: null, draft: true },
+    );
+    setOpen(false);
+    setQuery("");
   }
 
-  const displayLabel = value ? value.name : "";
+  const displayLabel = value ? value.name || value.phone || "" : "";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -234,12 +250,8 @@ export function PersonTypeahead({
                     onSelect={handleCreateNew}
                     className="text-primary flex items-center gap-2"
                   >
-                    {creating ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <UserPlus className="h-3.5 w-3.5" />
-                    )}
-                    {t("create", { name: trimmed })}
+                    <UserPlus className="h-3.5 w-3.5" />
+                    {isPhone ? t("createWithPhone", { phone: trimmed }) : t("create", { name: trimmed })}
                   </CommandItem>
                 </CommandGroup>
               </>

@@ -13,8 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { PersonTypeahead } from "@/components/persons/person-typeahead";
-import type { PersonSummary } from "@/types/person";
+import { PersonTypeahead, type PersonChoice } from "@/components/persons/person-typeahead";
 import type {
   Worker,
   CreateWorkerPayload,
@@ -80,9 +79,14 @@ export function AddWorkerDialog({
   const locale = useLocale();
 
   // Create-flow state
-  const [selectedPerson, setSelectedPerson] = useState<PersonSummary | null>(
+  const [selectedPerson, setSelectedPerson] = useState<PersonChoice | null>(
     null,
   );
+  // A new person (typed in the search) is only created with the worker:
+  // its name and phone are edited here until then.
+  const [draftName, setDraftName] = useState("");
+  const [draftPhone, setDraftPhone] = useState("");
+  const isDraft = !!selectedPerson?.draft;
 
   // Edit-flow state
   const [name, setName] = useState("");
@@ -112,8 +116,17 @@ export function AddWorkerDialog({
     }
   }, [open, editWorker]);
 
+  const handlePersonChange = (person: PersonChoice) => {
+    setSelectedPerson(person);
+    setDraftName(person.draft ? person.name : "");
+    setDraftPhone(person.draft ? (person.phone ?? "") : "");
+    setPhoneInvalid(false);
+  };
+
   const handleClose = () => {
     setSelectedPerson(null);
+    setDraftName("");
+    setDraftPhone("");
     setName("");
     setPhone("");
     setDailyRate("");
@@ -146,6 +159,7 @@ export function AddWorkerDialog({
         handleClose();
       } catch (err) {
         if (isInvalidPhoneError(err)) setPhoneInvalid(true);
+        else if (err instanceof ApiError && err.status === 409) setError(t("errors.sharedPersonEdit"));
         else setError(t("errors.saveWorkerFailed"));
       } finally {
         setIsSaving(false);
@@ -164,24 +178,37 @@ export function AddWorkerDialog({
       setError(t("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
       return;
     }
-    if (!selectedPerson) {
+    if (!selectedPerson || (isDraft && !draftName.trim())) {
       setError(t("errors.workerNameRequired"));
       return;
     }
     setIsSaving(true);
     try {
-      await onSave({
-        name: selectedPerson.name,
-        daily_rate: rate,
-        phone: selectedPerson.phone ?? undefined,
-        person_id: selectedPerson.id,
-        role_id: roleId ?? undefined,
-      });
+      await onSave(
+        isDraft
+          ? {
+              // New person: created by the server together with the worker
+              // (and matched to the directory by phone when one is given).
+              name: draftName.trim(),
+              daily_rate: rate,
+              phone: draftPhone.trim() || undefined,
+              role_id: roleId ?? undefined,
+            }
+          : {
+              name: selectedPerson.name,
+              daily_rate: rate,
+              phone: selectedPerson.phone ?? undefined,
+              person_id: selectedPerson.id,
+              role_id: roleId ?? undefined,
+            },
+      );
       handleClose();
     } catch (err) {
       // 409: the person already has a worker row here (the API names it and
       // whether it is deactivated, in which case it only needs reactivating).
-      if (err instanceof ApiError && err.status === 409) {
+      if (isInvalidPhoneError(err)) {
+        setPhoneInvalid(true);
+      } else if (err instanceof ApiError && err.status === 409) {
         const inactive = (err.data as { is_active?: boolean } | undefined)?.is_active === false;
         setError(t(inactive ? "errors.workerAlreadyOnProjectInactive" : "errors.workerAlreadyOnProject"));
       } else {
@@ -244,11 +271,48 @@ export function AddWorkerDialog({
               <Label>{t("workerName")}</Label>
               <PersonTypeahead
                 value={selectedPerson}
-                onChange={setSelectedPerson}
+                onChange={handlePersonChange}
                 placeholder={t("workerName")}
                 excludeIds={existingPersonIds}
               />
-              {selectedPerson?.phone && (
+              {isDraft && (
+                <div className="space-y-3 rounded-md border border-dashed p-3">
+                  <p className="text-muted-foreground text-xs">{t("newPersonHint")}</p>
+                  <div className="space-y-1">
+                    <Label htmlFor="draft-name">{t("workerName")}</Label>
+                    <Input
+                      id="draft-name"
+                      value={draftName}
+                      onChange={(e) => setDraftName(e.target.value)}
+                      maxLength={255}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="draft-phone">{t("workerPhone")}</Label>
+                    <Input
+                      id="draft-phone"
+                      type="tel"
+                      inputMode="tel"
+                      value={draftPhone}
+                      maxLength={50}
+                      onChange={(e) => {
+                        setDraftPhone(e.target.value);
+                        setPhoneInvalid(false);
+                      }}
+                      placeholder="+33 6 12 34 56 78"
+                      aria-invalid={phoneInvalid || undefined}
+                      aria-describedby={phoneInvalid ? "draft-phone-error" : undefined}
+                    />
+                    {phoneInvalid && (
+                      <p id="draft-phone-error" className="text-destructive text-sm" role="alert">
+                        {t("errors.invalidPhone")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {!isDraft && selectedPerson?.phone && (
                 <p className="text-muted-foreground font-mono text-xs">
                   {selectedPerson.phone}
                 </p>

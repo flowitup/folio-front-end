@@ -70,3 +70,19 @@ describe("NoteEditor Escape", () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("NoteEditor empty title", () => {
+  it("keeps the editor and the text open with an error instead of dropping the edits", async () => {
+    const { onCancel, onSave } = renderEditor();
+    const body = screen.getByLabelText("notes.editor.placeholderBody");
+    fireEvent.change(body, { target: { value: "Le client choisit le gris anthracite" } });
+    fireEvent.change(titleInput(), { target: { value: "  " } });
+
+    fireEvent.click(screen.getByRole("button", { name: "notes.actions.save" }));
+
+    expect(onSave).not.toHaveBeenCalled();
+    expect(onCancel).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent("notes.editor.titleRequired");
+    expect(body).toHaveValue("Le client choisit le gris anthracite");
+  });
+});

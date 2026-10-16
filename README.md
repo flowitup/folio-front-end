@@ -116,7 +116,7 @@ What you can see and do depends on your role in the company (Admin, Manager or M
 The web app needs the API. Run it from [folio-back-end](https://github.com/flowitup/folio-back-end) — its README covers Docker, migrations and creating a first local account; it listens on `http://localhost:5000` by default.
 
 ### Prerequisites
-- Node.js 20.19+ or 22.13+ (the Docker image uses Node 22; CI runs Node 20)
+- Node.js 22.13+ (`engines` in package.json; the Docker image and CI use Node 22)
 - npm
 
 ### Environment variables

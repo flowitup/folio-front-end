@@ -1,4 +1,4 @@
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
@@ -45,29 +45,36 @@ export default async function AppLayout({
   // Per-company admin gate: only show the billing nav to users who can access
   // billing (superadmin or admin of at least one company).
   const canViewBilling = await hasBillingAccess();
+  const tNav = await getTranslations("navigation");
 
   return (
     <ProjectProvider>
       {/* One channel poll per tab feeds the floating chat button badge and the /chat page. */}
       <ChatProvider>
       <div className="flex h-screen overflow-hidden" style={{ background: "var(--paper)" }}>
+        {/* First Tab stop: jump past the logo, switcher and sidebar links. */}
+        <a href="#main-content" className="skip-link">
+          {tNav("skipToContent")}
+        </a>
         <Sidebar canViewBilling={canViewBilling} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Topbar />
-          {/* Content scaled down so less scrolling is needed; zoom reflows
-              layout (shrinks scroll height) unlike transform: scale. Sidebar
-              and Topbar stay at 100%. The zoom div is h-full so pages can
-              opt into filling the visible scroll area with their own h-full
-              (percentages resolve across the zoom boundary; taller pages
-              simply overflow and scroll as before). */}
-          <main className="scroll-area flex-1 pb-16 lg:pb-0">
-            <div style={{ zoom: 0.8 }} className="h-full">
+          {/* On desktop (≥1024px) content is scaled down (--app-zoom, 0.8) so
+              less scrolling is needed; zoom reflows layout (shrinks scroll
+              height) unlike transform: scale. Sidebar and Topbar stay at 100%.
+              Phones and tablets are NOT scaled: there the zoom made text 8-10px
+              and inputs ~10px (which iOS zooms into on focus). The zoom div is
+              h-full so pages can opt into filling the visible scroll area with
+              their own h-full (percentages resolve across the zoom boundary;
+              taller pages simply overflow and scroll as before). */}
+          <main id="main-content" tabIndex={-1} className="scroll-area flex-1 pb-16 outline-none lg:pb-0">
+            <div className="app-zoom h-full">
               {children}
               {/* main's pb-16 only pads the h-full box, not a long page that
                   overflows it; this spacer keeps a long page's end (e.g. a
-                  pager) above the fixed mobile bottom nav. Its 80px × 0.8 zoom
-                  equals pb-16, so an h-full page still fits without scrolling. */}
-              <div aria-hidden className="h-20 lg:hidden" />
+                  pager) above the fixed mobile bottom nav. Below lg nothing is
+                  zoomed, so its 64px equals pb-16 and an h-full page still fits. */}
+              <div aria-hidden className="h-16 lg:hidden" />
             </div>
 
             {/* Desktop: the floating chat button (52px, 24px from the corner) covers the

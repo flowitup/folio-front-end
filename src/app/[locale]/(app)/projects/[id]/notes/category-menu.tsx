@@ -46,8 +46,15 @@ export function CategoryMenu({ value, onChange, disabled = false }: CategoryMenu
     function reposition() {
       if (triggerRef.current) setPos(computePos(triggerRef.current));
     }
-    function onScroll() {
-      // Close on scroll — simpler and avoids stale positioning in nested scrollers
+    function onScroll(e: Event) {
+      // Close only when a scroll actually moves the trigger (the page or a
+      // scroller around it) — simpler than tracking nested scrollers. A text
+      // field's own horizontal scroll (a long title losing focus resets it)
+      // fires here too and used to close the menu in the tick it opened.
+      const target = e.target;
+      const trigger = triggerRef.current;
+      if (!trigger) return;
+      if (target instanceof Node && target !== trigger && !target.contains(trigger)) return;
       close();
     }
 

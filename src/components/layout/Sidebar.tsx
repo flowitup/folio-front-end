@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { projectSwitchPath } from "@/lib/projects/project-switch-path";
-import { projectDisplayName } from "@/lib/projects/project-display-name";
+import { projectDisplayName, projectSecondaryLabel } from "@/lib/projects/project-display-name";
 import { can, canCreateProject } from "@/lib/auth/permissions";
 import { isOnboardingPath } from "@/lib/auth/onboarding-gate";
 import { FolioLogo } from "@/components/folio-logo";
@@ -167,7 +167,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
               <button
                 type="button"
                 aria-label={tProjects("selectProject")}
-                className="card-paper-surface flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:border-[#c9bfa9] focus:outline-none"
+                className="card-paper-surface flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:border-[#c9bfa9] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
                 style={{ borderRadius: 12, cursor: "pointer" }}
               >
                 <div
@@ -208,6 +208,11 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
                     />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[13px] font-medium">{projectDisplayName(p)}</div>
+                      {projectSecondaryLabel(p) && (
+                        <div className="truncate text-[11px]" style={{ color: "var(--muted)" }}>
+                          {projectSecondaryLabel(p)}
+                        </div>
+                      )}
                     </div>
                     {isActive && (
                       <Check

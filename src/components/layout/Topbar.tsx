@@ -8,7 +8,7 @@ import { NotificationsBell } from "@/components/notifications/notifications-bell
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/context/AuthContext";
 import { projectIdFromPath, useProject } from "@/context/ProjectContext";
-import { projectDisplayName } from "@/lib/projects/project-display-name";
+import { projectDisplayName, projectSecondaryLabel } from "@/lib/projects/project-display-name";
 import { projectSwitchPath } from "@/lib/projects/project-switch-path";
 import { can, canCreateProject } from "@/lib/auth/permissions";
 import { type Locale } from "@/i18n/config";
@@ -255,7 +255,14 @@ export function Topbar() {
                   >
                     {projectDisplayName(p).charAt(0).toUpperCase()}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-[13px]">{projectDisplayName(p)}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px]">{projectDisplayName(p)}</span>
+                    {projectSecondaryLabel(p) && (
+                      <span className="block truncate text-[11px]" style={{ color: "var(--muted)" }}>
+                        {projectSecondaryLabel(p)}
+                      </span>
+                    )}
+                  </span>
                   {p.id === selectedProjectId && (
                     <Check size={14} className="flex-shrink-0" style={{ color: "var(--accent)" }} />
                   )}

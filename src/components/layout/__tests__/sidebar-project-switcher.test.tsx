@@ -1,9 +1,9 @@
 /**
  * Tests for the Sidebar active-project switcher pill.
  *
- * Folio projects are named by their site address (e.g.
- * "14 Rue Florentin, 75008 Paris"). The collapsed switcher used to
- * hard-truncate the name to a single line, hiding the complete address.
+ * Folio projects are shown by their name first (a project created without a
+ * name is named after its address, e.g. "14 Rue Florentin, 75008 Paris"). The
+ * collapsed switcher used to hard-truncate the name to a single line.
  * The pill now wraps to two lines and exposes the full value via a
  * title tooltip — these tests pin that behavior.
  */
@@ -63,8 +63,8 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("Sidebar project switcher — address as the project label", () => {
-  it("shows the address instead of the name when the project has one", () => {
+describe("Sidebar project switcher — name first, address second", () => {
+  it("shows the name, not the address, as the project label", () => {
     mockUseProject.mockReturnValue({
       projects: [{ id: "p-1", name: "Villa Ngoc", address: "8 rue des Lilas, Arcueil" }],
       selectedProjectId: "p-1",
@@ -72,8 +72,8 @@ describe("Sidebar project switcher — address as the project label", () => {
       selectProject: vi.fn(),
     });
     render(<Sidebar />);
-    expect(screen.getByTitle("8 rue des Lilas, Arcueil")).toBeInTheDocument();
-    expect(screen.queryByText("Villa Ngoc")).not.toBeInTheDocument();
+    expect(screen.getByTitle("Villa Ngoc")).toBeInTheDocument();
+    expect(screen.queryByTitle("8 rue des Lilas, Arcueil")).not.toBeInTheDocument();
   });
 });
 

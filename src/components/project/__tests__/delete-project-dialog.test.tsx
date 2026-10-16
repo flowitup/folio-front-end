@@ -41,9 +41,9 @@ const mockDeleteProject = vi.mocked(deleteProject);
 
 const FAKE_PROJECT = {
   id: "p-1",
-  name: "Acme",
-  // Projects are labelled by address everywhere, so the confirmation text is the address too.
-  address: "12 rue X",
+  // Projects are labelled by their name first everywhere, so the confirmation text is the name.
+  name: "12 rue X",
+  address: "8 avenue Acme",
   owner_id: "u-1",
   user_count: 3,
   created_at: "2026-05-03T00:00:00Z",
@@ -415,24 +415,24 @@ describe("DeleteProjectDialog", () => {
     expect(newDeleteButton).toBeDisabled();
   });
 
-  it("rejects the stored name when the project is labelled by its address", async () => {
+  it("rejects the address: the project is labelled by its name", async () => {
     const user = userEvent.setup();
     render(<DeleteProjectDialog project={FAKE_PROJECT} open={true} onOpenChange={vi.fn()} />);
-    await user.type(screen.getByPlaceholderText("e.g. Acme"), "Acme");
+    await user.type(screen.getByPlaceholderText("e.g. Acme"), "8 avenue Acme");
     expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
   });
 
-  it("falls back to the name as the confirmation text when the project has no address", async () => {
+  it("falls back to the address as the confirmation text when the name is blank", async () => {
     const user = userEvent.setup();
     render(
       <DeleteProjectDialog
-        project={{ ...FAKE_PROJECT, address: null }}
+        project={{ ...FAKE_PROJECT, name: "  " }}
         open={true}
         onOpenChange={vi.fn()}
       />
     );
-    expect(screen.getAllByText("Acme")).toHaveLength(2);
-    await user.type(screen.getByPlaceholderText("e.g. Acme"), "Acme");
+    expect(screen.getAllByText("8 avenue Acme")).toHaveLength(2);
+    await user.type(screen.getByPlaceholderText("e.g. Acme"), "8 avenue Acme");
     expect(screen.getByRole("button", { name: "Delete" })).not.toBeDisabled();
   });
 });

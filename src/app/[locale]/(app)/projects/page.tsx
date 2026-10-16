@@ -5,7 +5,11 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
-import { projectDisplayName, projectMatchesSearch } from "@/lib/projects/project-display-name";
+import {
+  projectDisplayName,
+  projectMatchesSearch,
+  projectSecondaryLabel,
+} from "@/lib/projects/project-display-name";
 import { useAuth } from "@/context/AuthContext";
 import {
   Plus,
@@ -182,8 +186,10 @@ export default function ProjectsPage() {
     await loadProjectUsers(projectId);
   };
 
-  const loadProjectUsers = async (projectId: string) => {
-    if (projectUsers[projectId]) return;
+  // `force` refetches even when a list is cached: after a removal the cached
+  // list in this render's closure is stale, so skipping would leave it empty.
+  const loadProjectUsers = async (projectId: string, force = false) => {
+    if (!force && projectUsers[projectId]) return;
     setLoadingUsers(projectId);
     try {
       const response = await fetchProjectUsers(projectId);
@@ -207,12 +213,17 @@ export default function ProjectsPage() {
         );
         return;
       }
+      // Drop the removed person at once, then refetch the real list.
       setProjectUsers((prev) => {
-
-        const { [removeMember.projectId]: _, ...rest } = prev;
-        return rest;
+        const current = prev[removeMember.projectId];
+        if (!current) return prev;
+        return {
+          ...prev,
+          [removeMember.projectId]: current.filter((u) => u.id !== removeMember.userId),
+        };
       });
-      await loadProjectUsers(removeMember.projectId);
+      toast.success(tMembers("edit.toast.removed"));
+      await loadProjectUsers(removeMember.projectId, true);
       refetch();
     } catch {
       toast.error(tMembers("edit.toast.removeFailed"));
@@ -385,12 +396,24 @@ export default function ProjectsPage() {
                   <div className="flex min-w-0 flex-col p-6">
                     <div className="mb-3 flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
+                        {/* Clamped: a 500-character name or address used to make the
+                            card ~900px tall. The full text stays in the tooltip. */}
                         <h3
-                          className="font-display text-[26px] font-medium leading-tight tracking-tight [overflow-wrap:anywhere]"
+                          className="font-display line-clamp-3 text-[26px] font-medium leading-tight tracking-tight [overflow-wrap:anywhere]"
                           data-testid="project-card-title"
+                          title={projectDisplayName(project)}
                         >
                           {projectDisplayName(project)}
                         </h3>
+                        {projectSecondaryLabel(project) && (
+                          <p
+                            className="mt-1 line-clamp-2 text-[13px] text-[var(--muted)] [overflow-wrap:anywhere]"
+                            data-testid="project-card-address"
+                            title={projectSecondaryLabel(project) ?? undefined}
+                          >
+                            {projectSecondaryLabel(project)}
+                          </p>
+                        )}
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

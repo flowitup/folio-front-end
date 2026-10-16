@@ -77,7 +77,10 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
   const [isSending, setIsSending] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const [expiresInMinutes, setExpiresInMinutes] = useState(5);
+  // The code's deadline, ticked once a second on the code step like the sign-in card, so
+  // "Expires in N minutes" counts down and turns into "Code expired" instead of freezing.
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   // A rejected code is not re-sent unchanged: each try spends one of five attempts.
   const [lastSubmitted, setLastSubmitted] = useState<string | null>(null);
 
@@ -87,6 +90,17 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
     return () => clearInterval(timer);
   }, [cooldown]);
 
+  useEffect(() => {
+    if (step !== "code" || expiresAt === null) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [step, expiresAt]);
+
+  const remainingSeconds =
+    expiresAt === null ? 300 : Math.max(0, Math.ceil((expiresAt - now) / 1000));
+  const expiresInMinutes = Math.max(1, Math.ceil(remainingSeconds / 60));
+  const codeExpired = expiresAt !== null && remainingSeconds <= 0;
+
   const reset = () => {
     setStep("phone");
     setNationalNumber("");
@@ -94,6 +108,7 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
     setCode("");
     setErrorKey(null);
     setLastSubmitted(null);
+    setExpiresAt(null);
   };
 
   const handleOpenChange = (next: boolean) => {
@@ -102,8 +117,12 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
   };
 
   const target = normalizeFrenchPhone(nationalNumber);
-  const canSend = target !== null && !isSending && (cooldown === 0 || target !== sentTo);
-  const canConfirm = CODE_PATTERN.test(code) && !isConfirming && code !== lastSubmitted;
+  // Send stays enabled for anything typed: a number that is not French gets the
+  // "enter a French number" message on press rather than a silently greyed button.
+  const canSend =
+    nationalNumber.trim() !== "" && !isSending && (cooldown === 0 || target !== sentTo);
+  const canConfirm =
+    CODE_PATTERN.test(code) && !isConfirming && code !== lastSubmitted && !codeExpired;
 
   const sendCode = async (phone: string | null = target) => {
     if (!phone) {
@@ -122,7 +141,9 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
     setCode("");
     setLastSubmitted(null);
     setSentTo(phone);
-    setExpiresInMinutes(Math.max(1, Math.round(result.expiresIn / 60)));
+    const sentAt = Date.now();
+    setNow(sentAt);
+    setExpiresAt(sentAt + result.expiresIn * 1000);
     setCooldown(RESEND_COOLDOWN_SECONDS);
     setStep("code");
   };
@@ -130,7 +151,13 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
   const confirm = useCallback(
     async (explicitCode?: string) => {
       const submitted = (explicitCode ?? code).trim();
-      if (isConfirming || !CODE_PATTERN.test(submitted) || submitted === lastSubmitted) return;
+      if (
+        isConfirming ||
+        codeExpired ||
+        !CODE_PATTERN.test(submitted) ||
+        submitted === lastSubmitted
+      )
+        return;
       setLastSubmitted(submitted);
       setErrorKey(null);
       setIsConfirming(true);
@@ -144,7 +171,7 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
       onOpenChange(false);
       onChanged(result.user);
     },
-    [code, isConfirming, lastSubmitted, onChanged, onOpenChange, sentTo]
+    [code, codeExpired, isConfirming, lastSubmitted, onChanged, onOpenChange, sentTo]
   );
 
   const handleSubmit = async (event: FormEvent) => {
@@ -224,8 +251,13 @@ export function ChangePhoneDialog({ open, onOpenChange, onChanged }: ChangePhone
                 >
                   {cooldown > 0 ? tAuth("resendIn", { seconds: cooldown }) : tAuth("resendCode")}
                 </button>
-                <span style={{ color: "var(--muted)" }}>
-                  {tAuth("codeExpires", { minutes: expiresInMinutes })}
+                <span
+                  data-testid="change-phone-expiry"
+                  style={{ color: codeExpired ? "var(--negative)" : "var(--muted)" }}
+                >
+                  {codeExpired
+                    ? tAuth("codeExpired")
+                    : tAuth("codeExpires", { minutes: expiresInMinutes })}
                 </span>
               </div>
             </div>

@@ -76,6 +76,8 @@
     "codeExpired": "Code expired — ask for a new one"
   },
   "topbar": {
+    "projectSettingsTitle": "Project settings",
+    "projectMembersTitle": "Project members",
     "viewNotifications": "View notifications",
     "signOut": "Sign out",
     "overviewTitle": "Overview",
@@ -137,6 +139,8 @@
     }
   },
   "projects": {
+    "projectLoadError": "This project could not be loaded right now. Check your connection and try again.",
+    "settingsNoPermission": "You do not have permission to change this project’s settings.",
     "title": "Projects",
     "description": "Every build you're running, side by side.",
     "selectProject": "Select project",
@@ -351,6 +355,7 @@
         "revoked": "API key revoked"
       },
       "errors": {
+        "forbidden": "This account cannot hold API keys: platform accounts are excluded.",
         "invalid_name": "Please enter a name for this key.",
         "limit_reached": "You've reached the maximum number of API keys. Revoke one before creating another.",
         "not_found": "This API key no longer exists.",
@@ -699,6 +704,7 @@
     "backToExpenses": "Back to expenses"
   },
   "planning": {
+    "assigneeOtherShort": "Outside the team",
     "title": "Planning",
     "subtitle": "Tasks for the team — drag a card across the board to move it.",
     "backlog": "Backlog",
@@ -1302,6 +1308,7 @@
       "edit": "Edit"
     },
     "empty": {
+      "bodyReadOnly": "The project’s notes will appear here. Only managers and admins can add them.",
       "title": "Your build notebook is empty",
       "body": "Jot down decisions, calls, and deliveries above — everything you want to keep about the build lives here."
     },
@@ -2056,6 +2063,7 @@
     }
   },
   "members": {
+    "allProjectsAccess": "access to every project",
     "title": "Members",
     "subtitle": "Manage who has access to this project",
     "tab": {
@@ -2108,6 +2116,7 @@
       "pending": "No pending invitations"
     },
     "edit": {
+      "removeCompanyAdmin": "A company admin has access to every project of the company and cannot be removed from just one.",
       "button": "Edit",
       "remove": "Remove",
       "removeConfirm": "Remove {name} from this project?",
@@ -2896,6 +2905,8 @@
     "productUrlInvalid": "Enter a web address, e.g. www.castorama.fr/…"
   },
   "onboarding": {
+    "removedFrom": "You were removed from the company {company}. To get back to your projects, ask its admin for a company code, or join another company.",
+    "removedFromJoin": "Enter a company code",
     "title": "Welcome to Folio",
     "subtitle": "Create your company or join one with a code to get started.",
     "createCompanyCta": "Create a company",
@@ -2928,6 +2939,20 @@
       "description": "Legal name, address, identifiers and bank details printed on your quotes and invoices."
     },
     "members": {
+      "roleConfirmTitle": "Make {member} {role}?",
+      "roleConfirmPromote": "{member} will get full control of the company: members and roles, billing, payment methods and every project.",
+      "roleConfirmDemote": "{member} will no longer be an admin: they lose access to every project of the company and all their project assignments here are removed. Assign them again to the projects they should keep.",
+      "roleConfirmProjectsLost": "Projects they will be removed from:",
+      "roleConfirmAction": "Make {role}",
+      "roleUpdatedNamedToast": "{member} is now {role}.",
+      "removedFromCompanyToast": "{member} was removed from {company}.",
+      "projectAssignedToast": "{member} assigned to {project}.",
+      "projectUnassignedToast": "{member} removed from {project}.",
+      "allProjects": "Every project",
+      "pendingExpires": "Invitation valid until {date}",
+      "availableAfterSignup": "Available once this person has signed up to Folio with this number.",
+      "searchPlaceholder": "Search a name or number",
+      "searchEmpty": "No member matches “{query}”.",
       "title": "Members",
       "description": "Manage roles and access for people in your company.",
       "importFromCompany": "Import from company",
@@ -2959,6 +2984,7 @@
       "invitationCancelledToast": "Invitation cancelled."
     },
     "addByPhone": {
+      "invitationHint": "If this person has no account yet, they show as “Pending”: they join the company by signing up in the Folio app with this number within 30 days. Let them know, as Folio does not message them.",
       "dialogTitle": "Add member by phone",
       "dialogDescription": "Onboard a worker or manager by their phone number.",
       "phoneLabel": "Phone number",

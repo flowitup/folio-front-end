@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useProject } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
+import { isWithoutWorkspace } from "@/lib/auth/onboarding-gate";
 import { can, isCompanyAdmin } from "@/lib/auth/permissions";
 import { BILLING_NAV } from "@/components/layout/sidebar-billing-group";
 import { hiddenCompanyAreas, hiddenProjectSections } from "@/lib/companies/hidden-sections";
@@ -33,7 +34,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
   const locale = useLocale();
   const t = useTranslations("navigation");
   const tBilling = useTranslations("sidebar.billing");
-  const { selectedProjectId, selectedProject } = useProject();
+  const { selectedProjectId, selectedProject, projects } = useProject();
   const { user } = useAuth();
   // Mirror of the desktop sidebar gate: documents need effective
   // project:update, so members never get the entry point.
@@ -80,7 +81,8 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
   const projectItems = allProjectItems.filter((item) => !hiddenOnProject.has(item.key));
 
   // Company-wide pages, as in the desktop sidebar.
-  const companyItems = [
+  // Library and inventory belong to a company: not offered before joining one.
+  const companyItems = isWithoutWorkspace(user, projects.length) ? [] : [
     ...(hiddenAreas.has("library")
       ? []
       : [{ key: "bibliotheque", href: "/bibliotheque", icon: Library }]),

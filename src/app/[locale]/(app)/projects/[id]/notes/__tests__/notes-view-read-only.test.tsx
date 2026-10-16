@@ -56,6 +56,12 @@ beforeEach(() => vi.clearAllMocks());
 // ---- Tests ----
 
 describe("NotesView — member (canEdit=false)", () => {
+  it("tells a reader with no notes yet that managers add them, not to write 'above'", () => {
+    render(<NotesView projectId={PROJECT_ID} initialNotes={[]} canEdit={false} />);
+    expect(screen.getByText("notes.empty.bodyReadOnly")).toBeInTheDocument();
+    expect(screen.queryByText("notes.empty.body")).not.toBeInTheDocument();
+  });
+
   it("still renders the notes themselves", () => {
     render(
       <NotesView projectId={PROJECT_ID} initialNotes={[makeNote("n1")]} canEdit={false} />

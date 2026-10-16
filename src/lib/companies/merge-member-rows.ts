@@ -38,6 +38,10 @@ export interface MemberRow {
   assignedProjectIds: string[];
   /** True when there is no attached-user record to back Role/Company/Projects edits. */
   pending: boolean;
+  /** Pending rows: the role the person gets when they sign up. */
+  pendingRole?: CompanyRole | null;
+  /** Pending rows: when the invitation window closes (ISO 8601). */
+  pendingExpiresAt?: string | null;
 }
 
 export function mergeMemberRows(
@@ -58,7 +62,9 @@ export function mergeMemberRows(
       userId: u.user_id,
       personId: entry?.person_id ?? null,
       attachedUser: u,
-      name: entry?.name ?? u.display_name ?? u.phone ?? u.email,
+      // The name the account chose, the same on web and mobile — not the label the first
+      // admin typed on the directory profile (often the phone), shared by every company.
+      name: u.display_name || entry?.name || u.phone || u.email,
       phone: entry?.phone ?? u.phone,
       role: u.role,
       companies: u.companies ?? [],
@@ -92,6 +98,8 @@ export function mergeMemberRows(
       companies: [],
       assignedProjectIds: entry.assigned_project_ids,
       pending: true,
+      pendingRole: entry.pending_role ?? null,
+      pendingExpiresAt: entry.pending_expires_at ?? null,
     }));
 
   return [...attachedRows, ...pendingRows];

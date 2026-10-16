@@ -264,7 +264,7 @@ describe("ProjectsPage team panel — Remove", () => {
     expect(removeButtons()).toEqual(["Remove dave@example.com"]);
   });
 
-  it("offers a company admin Remove on everyone else", async () => {
+  it("offers a company admin Remove on everyone else but other company admins", async () => {
     await openTeamWith({
       id: "me",
       permissions: ["project:read", "project:manage_users"],
@@ -273,7 +273,6 @@ describe("ProjectsPage team panel — Remove", () => {
     expect(removeButtons()).toEqual([
       "Remove dave@example.com",
       "Remove bob@example.com",
-      "Remove ann@example.com",
     ]);
   });
 });

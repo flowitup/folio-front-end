@@ -76,6 +76,8 @@
     "codeExpired": "Code expiré — demandez-en un nouveau"
   },
   "topbar": {
+    "projectSettingsTitle": "Paramètres du projet",
+    "projectMembersTitle": "Membres du projet",
     "viewNotifications": "Voir les notifications",
     "signOut": "Déconnexion",
     "overviewTitle": "Aperçu",
@@ -137,6 +139,8 @@
     }
   },
   "projects": {
+    "projectLoadError": "Impossible de charger ce projet pour le moment. Vérifiez votre connexion puis réessayez.",
+    "settingsNoPermission": "Vous n’avez pas la permission de modifier les paramètres de ce projet.",
     "title": "Projets",
     "description": "Tous vos chantiers, côte à côte.",
     "selectProject": "Sélectionner un projet",
@@ -351,6 +355,7 @@
         "revoked": "Clé API révoquée"
       },
       "errors": {
+        "forbidden": "Ce compte ne peut pas avoir de clés API : les comptes de la plateforme en sont exclus.",
         "invalid_name": "Veuillez saisir un nom pour cette clé.",
         "limit_reached": "Vous avez atteint le nombre maximal de clés API. Révoquez-en une avant d'en créer une autre.",
         "not_found": "Cette clé API n'existe plus.",
@@ -699,6 +704,7 @@
     "backToExpenses": "Retour aux dépenses"
   },
   "planning": {
+    "assigneeOtherShort": "Hors équipe",
     "title": "Planification",
     "subtitle": "Tâches de l'équipe — glissez une carte sur le tableau pour la déplacer.",
     "backlog": "Backlog",
@@ -1302,6 +1308,7 @@
       "edit": "Modifier"
     },
     "empty": {
+      "bodyReadOnly": "Les notes du chantier apparaîtront ici. Seuls les responsables et les administrateurs peuvent en ajouter.",
       "title": "Votre carnet de chantier est vide",
       "body": "Notez décisions, appels et livraisons ci-dessus — tout ce que vous souhaitez conserver sur le chantier se retrouve ici."
     },
@@ -2056,6 +2063,7 @@
     }
   },
   "members": {
+    "allProjectsAccess": "accès à tous les projets",
     "title": "Membres",
     "subtitle": "Gérez qui a accès à ce projet",
     "tab": {
@@ -2108,6 +2116,7 @@
       "pending": "Aucune invitation en attente"
     },
     "edit": {
+      "removeCompanyAdmin": "Un administrateur de l’entreprise a accès à tous ses projets : il ne peut pas être retiré d’un seul projet.",
       "button": "Modifier",
       "remove": "Retirer",
       "removeConfirm": "Retirer {name} de ce projet ?",
@@ -2896,6 +2905,8 @@
     "productUrlInvalid": "Saisissez une adresse web, ex. www.castorama.fr/…"
   },
   "onboarding": {
+    "removedFrom": "Vous avez été retiré(e) de l’entreprise {company}. Pour retrouver vos chantiers, demandez un code entreprise à son administrateur, ou rejoignez une autre entreprise.",
+    "removedFromJoin": "Saisir un code entreprise",
     "title": "Bienvenue sur Folio",
     "subtitle": "Créez votre entreprise ou rejoignez-en une avec un code pour commencer.",
     "createCompanyCta": "Créer une entreprise",
@@ -2928,6 +2939,20 @@
       "description": "Raison sociale, adresse, identifiants et coordonnées bancaires imprimés sur vos devis et factures."
     },
     "members": {
+      "roleConfirmTitle": "Passer {member} en {role} ?",
+      "roleConfirmPromote": "{member} aura le contrôle total de l’entreprise : membres et rôles, facturation, moyens de paiement et tous les projets.",
+      "roleConfirmDemote": "{member} ne sera plus administrateur : il perd l’accès à tous les projets de l’entreprise et toutes ses affectations de projet ici sont retirées. Réassignez-le ensuite aux projets qu’il doit garder.",
+      "roleConfirmProjectsLost": "Projets dont il sera retiré :",
+      "roleConfirmAction": "Passer en {role}",
+      "roleUpdatedNamedToast": "{member} : rôle {role}.",
+      "removedFromCompanyToast": "{member} a été retiré(e) de {company}.",
+      "projectAssignedToast": "{member} assigné(e) à {project}.",
+      "projectUnassignedToast": "{member} retiré(e) de {project}.",
+      "allProjects": "Tous les projets",
+      "pendingExpires": "Invitation valable jusqu’au {date}",
+      "availableAfterSignup": "Disponible quand la personne aura créé son compte Folio avec ce numéro.",
+      "searchPlaceholder": "Rechercher un nom ou un numéro",
+      "searchEmpty": "Aucun membre ne correspond à « {query} ».",
       "title": "Membres",
       "description": "Gérez les rôles et les accès des personnes de votre entreprise.",
       "importFromCompany": "Importer depuis une entreprise",
@@ -2959,6 +2984,7 @@
       "invitationCancelledToast": "Invitation annulée."
     },
     "addByPhone": {
+      "invitationHint": "Si cette personne n’a pas encore de compte, elle apparaîtra « En attente » : elle rejoindra l’entreprise en s’inscrivant sur l’application Folio avec ce numéro dans les 30 jours. Prévenez-la : Folio ne lui envoie aucun message.",
       "dialogTitle": "Ajouter un membre par téléphone",
       "dialogDescription": "Intégrez un ouvrier ou un manager avec son numéro de téléphone.",
       "phoneLabel": "Numéro de téléphone",

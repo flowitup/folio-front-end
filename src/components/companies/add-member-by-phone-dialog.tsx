@@ -161,6 +161,12 @@ export function AddMemberByPhoneDialog({ open, onOpenChange, companyId, onAdded 
             </div>
           )}
 
+          {/* Someone without an account is only invited: say how they join, and that
+              Folio does not tell them (no SMS is sent). */}
+          <p className="text-[12px]" style={{ color: "var(--muted)" }} data-testid="add-by-phone-invitation-hint">
+            {t("invitationHint")}
+          </p>
+
           <DialogFooter className="gap-2 sm:gap-2">
             <Button
               type="button"

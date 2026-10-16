@@ -86,7 +86,7 @@ export function NotesView({ projectId, initialNotes, canEdit }: NotesViewProps) 
         <div className="empty-state">
           <div className="empty-glyph"><FileText size={28} /></div>
           <h3 className="font-display">{t("empty.title")}</h3>
-          <p>{t("empty.body")}</p>
+          <p>{t(canEdit ? "empty.body" : "empty.bodyReadOnly")}</p>
         </div>
       ) : sections.length === 0 ? (
         <div className="empty-state">

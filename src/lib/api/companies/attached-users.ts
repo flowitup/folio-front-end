@@ -40,29 +40,45 @@ function baseUrl(): string {
 // API wrappers
 // ---------------------------------------------------------------------------
 
+/** Largest page the API serves (`?limit` max). */
+const ATTACHED_USERS_PAGE = 200;
+/** Safety stop: never loop forever on a misbehaving `total`. */
+const ATTACHED_USERS_MAX_PAGES = 50;
+
 /**
- * List all users attached to a company.
- * GET /api/v1/companies/<companyId>/attached-users
+ * List ALL users attached to a company, page after page.
+ * GET /api/v1/companies/<companyId>/attached-users?limit=&offset=
  * Requires admin role (*:*).
+ *
+ * The API pages (default 50); reading only the first page left every member past
+ * the 50th unlisted and unmanageable, so this follows `total` to the end.
  */
 export async function fetchAttachedUsers(companyId: string): Promise<AttachedUser[]> {
   const authHeaders = await sessionAuthHeader();
-  let response: Response;
-  try {
-    response = await fetch(
-      `${baseUrl()}/companies/${encodeURIComponent(companyId)}/attached-users`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json", ...authHeaders },
-        cache: "no-store",
-      }
-    );
-  } catch (err) {
-    throw new Error(`Network error listing attached users: ${String(err)}`);
+  const all: AttachedUser[] = [];
+  for (let page = 0; page < ATTACHED_USERS_MAX_PAGES; page++) {
+    const offset = page * ATTACHED_USERS_PAGE;
+    let response: Response;
+    try {
+      response = await fetch(
+        `${baseUrl()}/companies/${encodeURIComponent(companyId)}/attached-users?limit=${ATTACHED_USERS_PAGE}&offset=${offset}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json", ...authHeaders },
+          cache: "no-store",
+        }
+      );
+    } catch (err) {
+      throw new Error(`Network error listing attached users: ${String(err)}`);
+    }
+    if (!response.ok) throw await buildHttpError(response, "Failed to list attached users");
+    const data = (await response.json()) as { items?: AttachedUser[]; total?: number };
+    const items = data.items ?? [];
+    all.push(...items);
+    const total = typeof data.total === "number" ? data.total : all.length;
+    if (items.length === 0 || all.length >= total) break;
   }
-  if (!response.ok) throw await buildHttpError(response, "Failed to list attached users");
-  const data = (await response.json()) as { items?: AttachedUser[] };
-  return data.items ?? [];
+  return all;
 }
 
 /**

@@ -75,6 +75,9 @@ function sectionFromHash(hash: string, isOps: boolean): SectionKey {
   // "users" is platform-ops only. For anyone else the nav no longer offers it,
   // so a stale #users link lands on Profile rather than on an orphan tab.
   if (hash === "users" && !isOps) return "profile";
+  // Platform accounts cannot hold API keys (the backend refuses them), so the
+  // tab is not offered to them and its hash leads back to Profile.
+  if (hash === "apiKeys" && isOps) return "profile";
   return ALL_VALID_KEYS.includes(hash) ? (hash as SectionKey) : "profile";
 }
 
@@ -109,9 +112,9 @@ export function SettingsClient({ projects }: Props) {
     // admin only, that company's self-service tools.
     "company",
     "notifications",
-    // Personal automation tokens — no permission gate, every signed-in user
-    // manages their own keys.
-    "apiKeys",
+    // Personal automation tokens — every signed-in user manages their own,
+    // except platform accounts, which the backend never lets hold one.
+    ...(isSuperadmin ? [] : ["apiKeys" as const]),
     // Platform ops only: for everyone else this tab's entire content was a
     // permission-denied panel, so it is no longer offered at all.
     ...(isSuperadmin ? ["users" as const] : []),

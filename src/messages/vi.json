@@ -76,6 +76,8 @@
     "codeExpired": "Mã đã hết hạn — hãy nhận mã mới"
   },
   "topbar": {
+    "projectSettingsTitle": "Cài đặt dự án",
+    "projectMembersTitle": "Thành viên dự án",
     "viewNotifications": "Xem thông báo",
     "signOut": "Đăng xuất",
     "overviewTitle": "Tổng quan",
@@ -137,6 +139,8 @@
     }
   },
   "projects": {
+    "projectLoadError": "Hiện không thể tải dự án này. Hãy kiểm tra kết nối rồi thử lại.",
+    "settingsNoPermission": "Bạn không có quyền thay đổi cài đặt của dự án này.",
     "title": "Dự án",
     "description": "Mọi công trình bạn đang quản lý, song song với nhau.",
     "selectProject": "Chọn dự án",
@@ -351,6 +355,7 @@
         "revoked": "Đã thu hồi khóa API"
       },
       "errors": {
+        "forbidden": "Tài khoản này không thể có khóa API: tài khoản nền tảng không được phép.",
         "invalid_name": "Vui lòng nhập tên cho khóa này.",
         "limit_reached": "Bạn đã đạt số lượng khóa API tối đa. Hãy thu hồi một khóa trước khi tạo thêm.",
         "not_found": "Khóa API này không còn tồn tại.",
@@ -699,6 +704,7 @@
     "backToExpenses": "Quay lại danh sách chi phí"
   },
   "planning": {
+    "assigneeOtherShort": "Ngoài nhóm",
     "title": "Kế hoạch",
     "subtitle": "Việc của đội — kéo thẻ trên bảng để di chuyển.",
     "backlog": "Việc tồn đọng",
@@ -1302,6 +1308,7 @@
       "edit": "Sửa"
     },
     "empty": {
+      "bodyReadOnly": "Ghi chú của công trình sẽ hiển thị ở đây. Chỉ quản lý và quản trị viên mới có thể thêm.",
       "title": "Nhật ký công trình của bạn đang trống",
       "body": "Ghi lại các quyết định, cuộc gọi và giao hàng ở trên — mọi thứ bạn muốn lưu về công trình đều ở đây."
     },
@@ -2056,6 +2063,7 @@
     }
   },
   "members": {
+    "allProjectsAccess": "truy cập mọi dự án",
     "title": "Thành viên",
     "subtitle": "Quản lý quyền truy cập vào dự án này",
     "tab": {
@@ -2108,6 +2116,7 @@
       "pending": "Không có lời mời nào đang chờ"
     },
     "edit": {
+      "removeCompanyAdmin": "Quản trị viên công ty có quyền truy cập mọi dự án của công ty nên không thể bị xóa khỏi riêng một dự án.",
       "button": "Sửa",
       "remove": "Xóa",
       "removeConfirm": "Xóa {name} khỏi dự án này?",
@@ -2896,6 +2905,8 @@
     "productUrlInvalid": "Nhập một địa chỉ web, vd. www.castorama.fr/…"
   },
   "onboarding": {
+    "removedFrom": "Bạn đã bị xoá khỏi công ty {company}. Để quay lại các công trình, hãy xin quản trị viên mã công ty, hoặc tham gia một công ty khác.",
+    "removedFromJoin": "Nhập mã công ty",
     "title": "Chào mừng đến với Folio",
     "subtitle": "Tạo công ty của bạn hoặc nhập mã để tham gia một công ty có sẵn.",
     "createCompanyCta": "Tạo công ty",
@@ -2928,6 +2939,20 @@
       "description": "Tên pháp lý, địa chỉ, mã định danh và thông tin ngân hàng in trên báo giá và hóa đơn của bạn."
     },
     "members": {
+      "roleConfirmTitle": "Đổi vai trò của {member} thành {role}?",
+      "roleConfirmPromote": "{member} sẽ có toàn quyền với công ty: thành viên và vai trò, hóa đơn, phương thức thanh toán và mọi dự án.",
+      "roleConfirmDemote": "{member} sẽ không còn là quản trị viên: người này mất quyền truy cập mọi dự án của công ty và mọi phân công dự án tại đây sẽ bị gỡ. Hãy phân công lại các dự án cần giữ.",
+      "roleConfirmProjectsLost": "Các dự án sẽ bị gỡ:",
+      "roleConfirmAction": "Đổi thành {role}",
+      "roleUpdatedNamedToast": "{member} giờ là {role}.",
+      "removedFromCompanyToast": "Đã xóa {member} khỏi {company}.",
+      "projectAssignedToast": "Đã phân công {member} vào {project}.",
+      "projectUnassignedToast": "Đã gỡ {member} khỏi {project}.",
+      "allProjects": "Mọi dự án",
+      "pendingExpires": "Lời mời có hiệu lực đến {date}",
+      "availableAfterSignup": "Khả dụng khi người này đã đăng ký Folio bằng số điện thoại này.",
+      "searchPlaceholder": "Tìm tên hoặc số điện thoại",
+      "searchEmpty": "Không có thành viên nào khớp với “{query}”.",
       "title": "Thành viên",
       "description": "Quản lý vai trò và quyền truy cập cho mọi người trong công ty của bạn.",
       "importFromCompany": "Nhập từ công ty khác",
@@ -2959,6 +2984,7 @@
       "invitationCancelledToast": "Đã hủy lời mời."
     },
     "addByPhone": {
+      "invitationHint": "Nếu người này chưa có tài khoản, họ sẽ hiển thị “Đang chờ”: họ sẽ vào công ty khi đăng ký ứng dụng Folio bằng số này trong vòng 30 ngày. Hãy báo cho họ vì Folio không gửi tin nhắn nào.",
       "dialogTitle": "Thêm thành viên bằng số điện thoại",
       "dialogDescription": "Thêm thợ hoặc quản lý bằng số điện thoại của họ.",
       "phoneLabel": "Số điện thoại",

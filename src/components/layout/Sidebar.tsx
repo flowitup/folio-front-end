@@ -28,7 +28,7 @@ import { useProject } from "@/context/ProjectContext";
 import { projectSwitchPath } from "@/lib/projects/project-switch-path";
 import { projectDisplayName, projectSecondaryLabel } from "@/lib/projects/project-display-name";
 import { can, canCreateProject, isCompanyAdmin } from "@/lib/auth/permissions";
-import { isOnboardingPath } from "@/lib/auth/onboarding-gate";
+import { isOnboardingPath, isWithoutWorkspace } from "@/lib/auth/onboarding-gate";
 import { FolioLogo } from "@/components/folio-logo";
 import {
   DropdownMenu,
@@ -152,6 +152,10 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
       router.push(switchPath);
     }
   };
+
+  // Removed from their only company (or not in one yet): every section below
+  // would bounce back to /onboarding, so none is offered until they join one.
+  const navItems = isWithoutWorkspace(user, projects.length) ? [] : projectNav;
 
   // Onboarding (no company yet): every link would bounce straight back; sign-out and
   // language stay in the top bar.
@@ -282,7 +286,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
 
       {/* Navigation */}
       <nav className="flex-1 space-y-0.5 px-3 scroll-area">
-        {projectNav.map((item) => {
+        {navItems.map((item) => {
           const isActive =
             item.key === "projects"
               ? pathWithoutLocale === item.href ||

@@ -12,6 +12,11 @@ describe("normalizeFrenchPhone", () => {
     // form without its trunk 0, so that form has to normalise too.
     ["6 12 34 56 78", "+33612345678"],
     ["612345678", "+33612345678"],
+    // The international notation that keeps the trunk 0 in brackets.
+    ["+33 (0)6 20 10 00 01", "+33620100001"],
+    ["+33(0)620100001", "+33620100001"],
+    ["0033 (0)6 20 10 00 01", "+33620100001"],
+    ["+330620100001", "+33620100001"],
   ])("normalises the French number %s", (raw, expected) => {
     expect(normalizeFrenchPhone(raw)).toBe(expected);
   });

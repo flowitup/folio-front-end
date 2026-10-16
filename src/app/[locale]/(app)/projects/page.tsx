@@ -160,16 +160,18 @@ export default function ProjectsPage() {
     can("project:manage_users", user?.permissions, project.my_permissions);
   // Same rule as the API (DELETE /assignments) and the members page: a company
   // admin may remove anyone, a manager only a company `member`, nobody themselves.
+  // A company admin is on every project of the company and is never removed from one (409).
   const canRemoveFromTeam = (project: Project, member: ProjectUser) =>
     member.id !== user?.id &&
+    member.role_name !== "admin" &&
     (isCompanyAdmin(user?.companies, project.company_id ?? null, user?.permissions) ||
       member.role_name === "member");
   // Adding people happens on the project's members page, which holds both
   // flows: e-mail invitation (project:invite) and assigning an existing company
-  // member (project:update, PUT /assignments — company-scoped search).
+  // member (project:manage_users, PUT /assignments — company-scoped search).
   const canAddMembers = (project: Project) =>
     can("project:invite", user?.permissions, project.my_permissions) ||
-    can("project:update", user?.permissions, project.my_permissions);
+    can("project:manage_users", user?.permissions, project.my_permissions);
 
   const adminCompanies = (user?.companies ?? []).filter((c) => c.role === "admin");
 
@@ -210,7 +212,9 @@ export default function ProjectsPage() {
         toast.error(
           result.status === 403
             ? tMembers("edit.toast.forbidden")
-            : tMembers("edit.toast.removeFailed")
+            : result.status === 409
+              ? tMembers("edit.removeCompanyAdmin")
+              : tMembers("edit.toast.removeFailed")
         );
         return;
       }

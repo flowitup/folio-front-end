@@ -354,6 +354,21 @@ export async function uploadProductImage(
  * supplier's server fails. Without opts.force the BE keeps an existing image
  * and returns its key unchanged — pass force:true to replace it.
  */
+/** Remove a product's image (DELETE …/image, 204). */
+export async function deleteProductImage(productId: string): Promise<void> {
+  const authHeaders = await sessionAuthHeader();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${env.apiBaseUrl}/bibliotheque/products/${encodeURIComponent(productId)}/image`,
+      { method: "DELETE", headers: { ...authHeaders }, cache: "no-store" }
+    );
+  } catch (err) {
+    throw new Error(`Network error removing product image: ${String(err)}`);
+  }
+  if (!response.ok) throw await buildHttpError(response, "Failed to remove product image");
+}
+
 export async function setProductImageFromUrl(
   productId: string,
   url: string,

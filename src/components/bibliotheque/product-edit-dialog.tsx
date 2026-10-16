@@ -46,6 +46,7 @@ import {
   setProductImageFromUrlAction,
   updateProductAction,
   uploadProductImageAction,
+  deleteProductImageAction,
 } from "@/app/[locale]/(app)/bibliotheque/_actions/bibliotheque-actions";
 import { LIBRARY_CATEGORY_SLUGS, localizeCategory } from "@/lib/bibliotheque/categories";
 import {
@@ -55,6 +56,7 @@ import {
 } from "@/lib/bibliotheque/image-url";
 import { ProductImage } from "@/components/bibliotheque/product-image";
 import type { LibraryProduct, UpdateProductPayload } from "@/lib/api/bibliotheque";
+import { displayedSupplierReference } from "@/lib/bibliotheque/supplier-reference";
 
 // Sentinel for "no category" in Select — shadcn does not allow value="".
 const NO_CATEGORY_SENTINEL = "__none__";
@@ -113,7 +115,24 @@ export function ProductEditDialog({
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const busy = isSubmitting || isFetchingUrl;
+  const [isRemovingImage, setIsRemovingImage] = useState(false);
+  const busy = isSubmitting || isFetchingUrl || isRemovingImage;
+
+  /** Remove the stored image (saved at once, like a fetched one). */
+  const handleRemoveImage = async () => {
+    if (busy) return;
+    setIsRemovingImage(true);
+    const result = await deleteProductImageAction(product.id);
+    setIsRemovingImage(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    setHasImage(false);
+    setImageVersion(String(Date.now()));
+    toast.success(t("imageRemoved"));
+    onImageChanged?.();
+  };
 
   // Hydrate form from product when dialog opens or when product changes
   useEffect(() => {
@@ -315,10 +334,14 @@ export function ProductEditDialog({
               <span style={{ color: "var(--muted)" }}>{t("supplier")}</span>
               <span className="font-medium">{supplierName ?? product.supplier_id}</span>
             </div>
-            <div className="flex gap-4">
-              <span style={{ color: "var(--muted)" }}>{t("fields.reference")}</span>
-              <span className="font-mono text-[12px]">{product.supplier_reference}</span>
-            </div>
+            {displayedSupplierReference(product.supplier_reference) && (
+              <div className="flex gap-4">
+                <span style={{ color: "var(--muted)" }}>{t("fields.reference")}</span>
+                <span className="font-mono text-[12px]">
+                  {displayedSupplierReference(product.supplier_reference)}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Product name */}
@@ -409,6 +432,17 @@ export function ProductEditDialog({
                 alt={product.name}
                 className="h-24 w-auto rounded-md object-contain"
               />
+            )}
+            {!imagePreviewUrl && hasImage && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void handleRemoveImage()}
+                disabled={busy}
+              >
+                {t("removeImage")}
+              </Button>
             )}
             <input
               ref={fileInputRef}

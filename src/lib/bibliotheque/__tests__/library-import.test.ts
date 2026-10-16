@@ -80,7 +80,7 @@ describe("parseLibraryImportFile", () => {
     // Longest values the API accepts, with accents: about 3 KB of JSON per line.
     const rich = (i: number) =>
       record(i, {
-        product_name: "Tuyau PER à sertir ".repeat(50).slice(0, 1000),
+        product_name: "Tuyau PER à sertir ".repeat(50).slice(0, 500),
         description: "Élément de plomberie, qualité supérieure. ".repeat(24).slice(0, 1000),
         product_url: `https://www.example.fr/${"p".repeat(470)}/${i}`,
         category: "Plomberie et sanitaire",
@@ -146,6 +146,28 @@ describe("parseLibraryImportFile", () => {
       { code: "invalidSupplier", supplier: "#2", lines: 2 },
       { code: "noRecords", supplier: "Brico", lines: 0 },
     ]);
+  });
+
+  it("sets aside lines over the API's limits: long name or size, far dates, huge amounts", () => {
+    const result = parseLibraryImportFile(
+      JSON.stringify([
+        {
+          ...SUPPLIER,
+          records: [
+            record(0),
+            record(1, { product_name: "x".repeat(501) }),
+            record(2, { size: "x".repeat(101) }),
+            record(3, { purchased_at: "2062-09-01T10:00:00" }),
+            record(4, { purchased_at: "1999-12-31T10:00:00" }),
+            record(5, { quantity: "200000000000000" }),
+          ],
+        },
+      ])
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.recordCount).toBe(1);
+    expect(result.rejectedCount).toBe(5);
   });
 
   it("tolerates curly quotes pasted through a mail client", () => {

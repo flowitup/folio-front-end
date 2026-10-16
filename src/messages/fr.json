@@ -2519,7 +2519,19 @@
         "forbidden": "Vous n'avez pas la permission de gérer la bibliothèque.",
         "unauthorized": "Votre session a expiré, reconnectez-vous.",
         "rate_limited": "Le serveur est toujours occupé, réessayez dans une minute.",
-        "generic": "Erreur inattendue, réessayez."
+        "generic": "Erreur inattendue, réessayez.",
+        "validationLine": "Refusé par le serveur : ligne {line}, {field} invalide"
+      },
+      "fields": {
+        "productName": "nom du produit",
+        "size": "taille",
+        "quantity": "quantité",
+        "unitPrice": "prix unitaire",
+        "purchasedAt": "date d'achat",
+        "reference": "référence",
+        "description": "description",
+        "category": "catégorie",
+        "productUrl": "lien du produit"
       }
     },
     "errors": {
@@ -2537,7 +2549,9 @@
       "imageLinkNotImage": "Le lien ne pointe pas vers une image JPG, PNG ou WebP."
     },
     "selectSupplier": "Choisir un fournisseur",
-    "imagePreviewAlt": "Aperçu de l'image choisie"
+    "imagePreviewAlt": "Aperçu de l'image choisie",
+    "removeImage": "Retirer l'image",
+    "imageRemoved": "Image retirée."
   },
   "inventory": {
     "title": "Inventaire du matériel",

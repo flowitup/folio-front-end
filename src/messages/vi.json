@@ -2519,7 +2519,19 @@
         "forbidden": "Bạn không có quyền quản lý thư viện.",
         "unauthorized": "Phiên đăng nhập đã hết hạn, hãy đăng nhập lại.",
         "rate_limited": "Máy chủ vẫn đang bận, hãy thử lại sau một phút.",
-        "generic": "Lỗi không mong muốn, hãy thử lại."
+        "generic": "Lỗi không mong muốn, hãy thử lại.",
+        "validationLine": "Máy chủ từ chối: dòng {line}, {field} không hợp lệ"
+      },
+      "fields": {
+        "productName": "tên sản phẩm",
+        "size": "kích thước",
+        "quantity": "số lượng",
+        "unitPrice": "đơn giá",
+        "purchasedAt": "ngày mua",
+        "reference": "mã tham chiếu",
+        "description": "mô tả",
+        "category": "danh mục",
+        "productUrl": "liên kết sản phẩm"
       }
     },
     "errors": {
@@ -2537,7 +2549,9 @@
       "imageLinkNotImage": "Liên kết không phải là ảnh JPG, PNG hoặc WebP."
     },
     "selectSupplier": "Chọn nhà cung cấp",
-    "imagePreviewAlt": "Xem trước ảnh đã chọn"
+    "imagePreviewAlt": "Xem trước ảnh đã chọn",
+    "removeImage": "Gỡ ảnh",
+    "imageRemoved": "Đã gỡ ảnh."
   },
   "inventory": {
     "title": "Kho thiết bị",

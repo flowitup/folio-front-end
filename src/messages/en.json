@@ -2519,7 +2519,19 @@
         "forbidden": "You don't have permission to manage the library.",
         "unauthorized": "Your session has expired, sign in again.",
         "rate_limited": "The server is still busy, try again in a minute.",
-        "generic": "Unexpected error, try again."
+        "generic": "Unexpected error, try again.",
+        "validationLine": "Refused by the server: line {line}, invalid {field}"
+      },
+      "fields": {
+        "productName": "product name",
+        "size": "size",
+        "quantity": "quantity",
+        "unitPrice": "unit price",
+        "purchasedAt": "purchase date",
+        "reference": "reference",
+        "description": "description",
+        "category": "category",
+        "productUrl": "product link"
       }
     },
     "errors": {
@@ -2537,7 +2549,9 @@
       "imageLinkNotImage": "The link is not a JPG, PNG or WebP image."
     },
     "selectSupplier": "Select a supplier",
-    "imagePreviewAlt": "Preview of the chosen image"
+    "imagePreviewAlt": "Preview of the chosen image",
+    "removeImage": "Remove image",
+    "imageRemoved": "Image removed."
   },
   "inventory": {
     "title": "Equipment inventory",

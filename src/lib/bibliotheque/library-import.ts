@@ -20,6 +20,7 @@ import {
   normalizeDecimal,
 } from "@/lib/import/normalize";
 import { MAX_ACTION_PAYLOAD_BYTES, jsonByteLength } from "@/lib/import/payload-size";
+import { MAX_LIBRARY_AMOUNT } from "@/lib/numeric-bounds";
 import type { ImportPurchaseRecord, ImportPurchasesPayload } from "@/lib/api/bibliotheque";
 
 export const MAX_RECORDS_PER_REQUEST = 1000;
@@ -27,7 +28,18 @@ export const MAX_RECORDS_PER_REQUEST = 1000;
 /** Room kept in each request for the company id and the JSON punctuation around the records. */
 const REQUEST_ENVELOPE_BYTES = 128;
 
-const OPTIONAL_LIMITS = { size: 200, category: 200, product_url: 500, description: 1000 } as const;
+// The API's own limits (bibliotheque/schemas.py ImportRecordSchema): a line
+// over them used to fail its whole supplier batch.
+const OPTIONAL_LIMITS = { size: 100, category: 200, product_url: 500, description: 1000 } as const;
+const PRODUCT_NAME_MAX = 500;
+/** Purchase dates the API accepts: 2000-01-01 up to a day ahead (time zones). */
+const EARLIEST_PURCHASE = Date.UTC(2000, 0, 1);
+const PURCHASE_LEEWAY_MS = 24 * 60 * 60 * 1000;
+
+function purchaseDateInRange(iso: string): boolean {
+  const at = Date.parse(iso);
+  return Number.isFinite(at) && at >= EARLIEST_PURCHASE && at <= Date.now() + PURCHASE_LEEWAY_MS;
+}
 
 export type LibraryImportIssueCode = "invalidSupplier" | "noRecords" | "invalidRecord";
 
@@ -93,16 +105,16 @@ function limited(value: unknown, max: number): string | null | false {
 function toRecord(value: unknown): ImportPurchaseRecord | null {
   if (!isRecord(value)) return null;
   const supplierReference = limited(value.supplier_reference, 200);
-  const productName = limited(value.product_name, 1000);
+  const productName = limited(value.product_name, PRODUCT_NAME_MAX);
   const sourceRef = limited(value.source_document_ref, 255);
   const quantity = normalizeDecimal(value.quantity);
   const unitPrice = normalizeDecimal(value.unit_price);
   const type = cleanText(value.source_document_type)?.toLowerCase();
   const lineIndex = typeof value.line_index === "string" ? Number(value.line_index) : value.line_index;
   if (!supplierReference || !productName || !sourceRef) return null;
-  if (quantity === null || Number(quantity) <= 0) return null;
-  if (unitPrice === null || Number(unitPrice) < 0) return null;
-  if (!isIsoDateTime(value.purchased_at)) return null;
+  if (quantity === null || Number(quantity) <= 0 || Number(quantity) > MAX_LIBRARY_AMOUNT) return null;
+  if (unitPrice === null || Number(unitPrice) < 0 || Number(unitPrice) > MAX_LIBRARY_AMOUNT) return null;
+  if (!isIsoDateTime(value.purchased_at) || !purchaseDateInRange(value.purchased_at)) return null;
   if (type !== "ticket" && type !== "commande") return null;
   if (typeof lineIndex !== "number" || !Number.isInteger(lineIndex) || lineIndex < 0) return null;
 

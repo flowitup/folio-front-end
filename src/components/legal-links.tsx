@@ -19,8 +19,8 @@ export function LegalLinks({ locale, tone = "paper", className }: LegalLinksProp
   const t = useTranslations("legalLinks");
   const color = tone === "ink" ? "#d9d2c5" : "var(--muted)";
   return (
-    <nav
-      aria-label={t("label")}
+    // Not a <nav>: pages that hold it keep their own navigation landmark.
+    <p
       className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] ${className ?? ""}`}
       style={{ color }}
       data-testid="legal-links"
@@ -32,6 +32,6 @@ export function LegalLinks({ locale, tone = "paper", className }: LegalLinksProp
       <a href={`/${locale}/legal/privacy`} className="underline underline-offset-2" style={{ color }}>
         {t("privacy")}
       </a>
-    </nav>
+    </p>
   );
 }

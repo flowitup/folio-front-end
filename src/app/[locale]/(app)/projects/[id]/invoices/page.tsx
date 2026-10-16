@@ -764,7 +764,15 @@ export default function InvoicesPage() {
                                   </td>
                                   <td
                                     style={{ textAlign: "right" }}
-                                    onClick={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                      // The cell's empty area opens the row like any
+                                      // other cell; its buttons (and the popovers and
+                                      // dialogs they open) keep their clicks.
+                                      const el = e.target as HTMLElement;
+                                      if (el !== e.currentTarget && el.parentElement !== e.currentTarget) {
+                                        e.stopPropagation();
+                                      }
+                                    }}
                                   >
                                     <div className="flex items-center justify-end gap-1">
                                       {canManageInvoices && !invoice.is_auto_generated && (
@@ -776,6 +784,8 @@ export default function InvoicesPage() {
                                       {canTransferToCompany &&
                                         invoice.type === "materials_services" &&
                                         invoice.refundable_status == null &&
+                                        // Only a positive purchase can be paid back (the API refuses the rest).
+                                        invoice.total_amount > 0 &&
                                         !invoice.paid_by_company && (
                                           <TransferToCompanyPaymentAction
                                             invoiceId={invoice.id}

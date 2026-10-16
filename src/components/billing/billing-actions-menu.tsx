@@ -181,7 +181,7 @@ export function BillingActionsMenu({ document, onMutated }: BillingActionsMenuPr
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0"
+            className="h-8 w-8 cursor-pointer p-0"
             style={{ color: "var(--muted)" }}
             disabled={isPdfLoading || isXlsxLoading || isConverting}
           >

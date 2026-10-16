@@ -40,6 +40,7 @@ import { BillingImportDialog } from "@/components/billing/billing-import-dialog"
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
 import type { MyCompany } from "@/types/companies";
 import { kindToSegment } from "@/lib/billing/url-helpers";
+import { Link } from "@/i18n/navigation";
 import { billingStatusLabel } from "@/lib/billing/status-label";
 import { formatDate } from "@/lib/utils/formatters";
 import { toIsoDate } from "@/lib/billing/document-payload";
@@ -134,17 +135,37 @@ export function BillingDocumentList({
   const documentPath = (doc: BillingDocument) =>
     `/${locale}/billing/${kindToSegment(kind)}/${doc.id}`;
 
-  // A row opens its document; the actions cell stops the click itself.
+  // The document number is a real link (new tab, copy link, keyboard);
+  // a click anywhere else on the row opens the document too, in a new tab
+  // with Ctrl/Cmd or the middle button.
   const rowLinkProps = (doc: BillingDocument) => ({
-    role: "link" as const,
-    tabIndex: 0,
-    "aria-label": doc.document_number,
     className: "cursor-pointer",
-    onClick: () => router.push(documentPath(doc)),
-    onKeyDown: (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && e.target === e.currentTarget) router.push(documentPath(doc));
+    onClick: (e: React.MouseEvent) => {
+      if ((e.target as HTMLElement).closest("a")) return; // the link handles itself
+      if (e.metaKey || e.ctrlKey) window.open(documentPath(doc), "_blank", "noopener");
+      else router.push(documentPath(doc));
+    },
+    onAuxClick: (e: React.MouseEvent) => {
+      if (e.button !== 1 || (e.target as HTMLElement).closest("a")) return;
+      window.open(documentPath(doc), "_blank", "noopener");
     },
   });
+
+  // The actions cell: a click on its empty area opens the row like any other
+  // cell; a click on its button, or inside the menu and dialogs it opens
+  // (portals bubble through React), stays there.
+  const stopUnlessCell = (e: React.MouseEvent) => {
+    if (e.target !== e.currentTarget) e.stopPropagation();
+  };
+
+  const numberLink = (doc: BillingDocument) => (
+    <Link
+      href={`/billing/${kindToSegment(kind)}/${doc.id}`}
+      className="hover:underline focus-visible:underline"
+    >
+      {doc.document_number}
+    </Link>
+  );
 
   // ---------------------------------------------------------------------------
   // Handlers
@@ -320,7 +341,7 @@ export function BillingDocumentList({
                   {/* Row 1: document number + status badge */}
                   <div className="flex items-center justify-between gap-2">
                     <span className="num text-[12.5px] font-medium">
-                      {doc.document_number}
+                      {numberLink(doc)}
                     </span>
                     <BillingStatusBadge
                       status={doc.status}
@@ -342,7 +363,7 @@ export function BillingDocumentList({
                         {formatTTC(doc.total_ttc)}
                       </span>
                     </div>
-                    <div onClick={(e) => e.stopPropagation()}>
+                    <div onClick={stopUnlessCell}>
                       <BillingActionsMenu
                         document={doc}
                         onMutated={handleMutated}
@@ -371,7 +392,7 @@ export function BillingDocumentList({
                     {filtered.map((doc) => (
                       <tr key={doc.id} {...rowLinkProps(doc)}>
                         <td className="num text-[12.5px] font-medium">
-                          {doc.document_number}
+                          {numberLink(doc)}
                         </td>
                         <td className="num" style={{ color: "var(--muted)" }}>
                           {formatDate(toIsoDate(doc.issue_date) ?? doc.issue_date)}
@@ -386,10 +407,7 @@ export function BillingDocumentList({
                         <td className="num font-medium" style={{ textAlign: "right" }}>
                           {formatTTC(doc.total_ttc)}
                         </td>
-                        <td
-                          style={{ textAlign: "right" }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <td style={{ textAlign: "right" }} onClick={stopUnlessCell}>
                           <BillingActionsMenu
                             document={doc}
                             onMutated={handleMutated}

@@ -300,7 +300,7 @@ describe("BillingDocumentForm — project picker", () => {
       expect(screen.getByText("Project Alpha")).toBeDefined();
     });
 
-    it("labels the selected project by its address when it has one", () => {
+    it("labels the selected project by its name even when it has an address", () => {
       render(
         <BillingDocumentForm
           mode="edit"
@@ -311,8 +311,9 @@ describe("BillingDocumentForm — project picker", () => {
         />
       );
 
-      expect(screen.getByText("10 quai Alpha, Lyon")).toBeDefined();
-      expect(screen.queryByText("Project Alpha")).toBeNull();
+      // Name first (planning-shell): the address is no longer the label.
+      expect(screen.getByText("Project Alpha")).toBeDefined();
+      expect(screen.queryByText("10 quai Alpha, Lyon")).toBeNull();
     });
 
     it("submitting always sends project_id in update payload", async () => {

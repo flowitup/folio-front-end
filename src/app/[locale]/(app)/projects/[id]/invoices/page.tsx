@@ -290,6 +290,15 @@ export default function InvoicesPage() {
   // an e-mail) opens it in place: bring its row into view once the list is in,
   // or say it is gone rather than showing the top of the list.
   const listLoaded = summary !== null;
+  // A chart or a summary figure opened the list on a month or a purse: bring the
+  // filtered rows into view instead of leaving them below the summary cards.
+  const rowFilterKey = hasRowFilter ? `${urlFilters.month ?? ""}|${urlFilters.purse ?? ""}` : null;
+  useEffect(() => {
+    if (!rowFilterKey || !listLoaded || selectedInvoiceId) return;
+    document
+      .querySelector('[data-testid="expense-filter-chips"]')
+      ?.scrollIntoView?.({ block: "start", behavior: "smooth" });
+  }, [rowFilterKey, listLoaded, selectedInvoiceId]);
   useEffect(() => {
     if (!selectedInvoiceId || !summary) return;
     if (!summary.invoices.some((inv) => inv.id === selectedInvoiceId)) {

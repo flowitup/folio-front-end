@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
 
 const fetchInvoice = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/api/invoice-api", () => ({ fetchInvoice }));
-const fetchProjectById = vi.hoisted(() => vi.fn(() => Promise.reject(new Error("no project"))));
+const fetchProjectById = vi.hoisted(() => vi.fn((): Promise<unknown> => Promise.reject(new Error("no project"))));
 vi.mock("@/lib/api/projects", () => ({ fetchProjectById }));
 
 const invoice = {

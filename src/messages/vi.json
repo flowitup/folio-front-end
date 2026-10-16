@@ -721,6 +721,10 @@
     "errorFixFields": "Có {count} trường cần sửa bên dưới.",
     "createForbidden": "Bạn không có quyền thêm chi phí vào dự án này.",
     "invoiceNotFound": "Chi phí này không còn tồn tại hoặc không thuộc dự án này.",
+    "restricted": {
+      "banner": "Chi phí của công trình chỉ người quản lý xem được. Ở đây bạn thấy các khoản thanh toán của chính mình.",
+      "empty": "Chưa có khoản thanh toán nào đứng tên bạn."
+    },
     "filters": {
       "label": "Đang lọc:",
       "clear": "Hiện tất cả",

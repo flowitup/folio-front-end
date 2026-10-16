@@ -181,4 +181,20 @@ describe("InvoicesPage — URL filters from charts", () => {
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("invoices.invoiceNotFound"));
     expect(routerReplace).toHaveBeenCalledWith("/en/projects/proj-mg-1/invoices", { scroll: false });
   });
+
+  it("tells a restricted member the list is their own payments", async () => {
+    setupMocks([], "");
+    mockFetchInvoicesWithMeta.mockResolvedValue({
+      invoices: [],
+      total: 0,
+      funds_released_total: 0,
+      company_spent_total: 0,
+      company_name: null,
+      restricted: true,
+    });
+    render(<InvoicesPage />);
+    expect(await screen.findByTestId("restricted-expenses-banner")).toHaveTextContent("invoices.restricted.banner");
+    expect(screen.getByText("invoices.restricted.empty")).toBeInTheDocument();
+    expect(screen.queryByText("invoices.noInvoices")).toBeNull();
+  });
 });

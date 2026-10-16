@@ -721,6 +721,10 @@
     "errorFixFields": "{count, plural, one {Un champ est à corriger} other {# champs sont à corriger}} ci-dessous.",
     "createForbidden": "Vous n'avez pas la permission d'ajouter des dépenses à ce projet.",
     "invoiceNotFound": "Cette dépense n'existe plus ou ne fait pas partie de ce projet.",
+    "restricted": {
+      "banner": "Les dépenses du chantier sont visibles par les responsables. Vous voyez ici vos propres paiements.",
+      "empty": "Aucun paiement à votre nom pour le moment."
+    },
     "filters": {
       "label": "Filtré :",
       "clear": "Tout afficher",

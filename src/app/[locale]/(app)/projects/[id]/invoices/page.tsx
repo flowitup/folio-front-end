@@ -221,6 +221,8 @@ export default function InvoicesPage() {
     }
   };
   const [companyName, setCompanyName] = useState<string | null>(null);
+  // A member without expense rights gets only their own payments.
+  const [restricted, setRestricted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -233,6 +235,7 @@ export default function InvoicesPage() {
       // cash advance under the wrong tab.
       const sum = await fetchInvoicesWithMeta(projectId);
       setCompanyName(sum.company_name ?? null);
+      setRestricted(sum.restricted === true);
       setSummary({
         invoices: sum.invoices,
         meta: {
@@ -446,6 +449,16 @@ export default function InvoicesPage() {
         </div>
       )}
 
+      {!isLoading && summary && restricted && (
+        <div
+          className="rounded-[10px] px-4 py-3 text-[13px]"
+          style={{ background: "var(--paper-2)", color: "var(--ink-2)" }}
+          data-testid="restricted-expenses-banner"
+        >
+          {t("restricted.banner")}
+        </div>
+      )}
+
       {!isLoading && summary && (
         <>
         {invoices.length === 0 ? (
@@ -454,7 +467,7 @@ export default function InvoicesPage() {
               className="flex items-center justify-center py-12 text-[13px]"
               style={{ color: "var(--muted)" }}
             >
-              {hasRowFilter ? t("filters.empty") : t("noInvoices")}
+              {hasRowFilter ? t("filters.empty") : restricted ? t("restricted.empty") : t("noInvoices")}
             </div>
           </div>
         ) : (

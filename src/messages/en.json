@@ -721,6 +721,10 @@
     "errorFixFields": "{count, plural, one {One field needs fixing} other {# fields need fixing}} below.",
     "createForbidden": "You don’t have permission to add expenses to this project.",
     "invoiceNotFound": "This expense no longer exists or is not part of this project.",
+    "restricted": {
+      "banner": "The project's expenses are visible to its managers. Here you see your own payments.",
+      "empty": "No payments in your name yet."
+    },
     "filters": {
       "label": "Filtered:",
       "clear": "Show all",

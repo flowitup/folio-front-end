@@ -43,6 +43,8 @@ export interface InvoiceListResponse {
   company_cash_advanced_total?: number;
   /** Name of the construction company associated with this project, if any. */
   company_name: string | null;
+  /** True when the list holds only the caller's own payments (a member without expense rights). */
+  restricted?: boolean;
 }
 
 export const fetchInvoicesWithMeta = (

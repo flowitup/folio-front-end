@@ -475,11 +475,11 @@ describe("ExpensePursesSummary — avoir returns (per-purse rows, strip split, o
     render(<ExpensePursesSummary invoices={invoices} meta={META} />);
 
     const companyRow = screen.getByTestId("purse-returns-row-company");
-    expect(companyRow.textContent).toContain('invoices.summary.returnsReceived({"n":1})');
+    expect(companyRow.textContent).toContain('invoices.summary.returnsIncluded({"n":1})');
     expect(companyRow.textContent).toMatch(/1[^\d]*500/);
 
     const personalRow = screen.getByTestId("purse-returns-row-personal");
-    expect(personalRow.textContent).toContain('invoices.summary.returnsReceived({"n":1})');
+    expect(personalRow.textContent).toContain('invoices.summary.returnsIncluded({"n":1})');
     expect(personalRow.textContent).toMatch(/2[^\d]*000/);
   });
 

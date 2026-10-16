@@ -6,6 +6,9 @@ import type { Invoice } from "@/types/invoice";
 import { formatEUR, formatEURWhole } from "@/lib/utils/formatters";
 import { PurseDial } from "./purse-dial";
 import { useDataTip } from "./data-tip";
+import { useChartLink } from "@/components/dashboard/use-chart-link";
+import { expenseListHref, type ExpenseListFilters } from "@/lib/invoices/expense-filters";
+import { parisDayKey } from "@/lib/utils/paris-day";
 import {
   EXPENSE_TYPES,
   ExpenseTypeBreakdown,
@@ -14,6 +17,7 @@ import {
   type PurseBreakdown,
 } from "./expense-type-breakdown";
 import {
+  computeMonthToDateDelta,
   isCompanyPaidExpense,
   isCompanyRefundOwed,
   isPersonalExpense,
@@ -75,6 +79,12 @@ interface ExpensePursesSummaryProps {
   /** Unfiltered project invoice list (all types). */
   invoices: Invoice[];
   meta: ExpenseSummaryMeta;
+  /** The expense list this summary sits on: each mark filters it (?type, ?month, ?purse). */
+  listHref?: string | null;
+  /** The project's refundable list; the refundable rows open it on their channel. */
+  refundableHref?: string | null;
+  /** "Today" (tests); defaults to the current Paris day. */
+  referenceDate?: Date;
 }
 
 const TYPE_BAR_COLOR: Record<ExpenseType, string> = {
@@ -104,10 +114,29 @@ function monthDate(key: string): Date {
   return new Date(y, m - 1, 1);
 }
 
-export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryProps) {
+export function ExpensePursesSummary({
+  invoices,
+  meta,
+  listHref = null,
+  refundableHref = null,
+  referenceDate,
+}: ExpensePursesSummaryProps) {
   const t = useTranslations("invoices");
   const locale = useLocale();
-  const { onMouseMove, onMouseLeave, overlay } = useDataTip();
+  const { tipHandlers, overlay } = useDataTip();
+  // A filter of the list below: the page stays where it is.
+  const chartLink = useChartLink({ scroll: false });
+  const filterHref = (filters: ExpenseListFilters) => (listHref ? expenseListHref(listHref, filters) : null);
+  const refundHref = (channel: "company" | "bank") =>
+    refundableHref ? `${refundableHref}${refundableHref.includes("?") ? "&" : "?"}channel=${channel}` : null;
+  // "This month" is the Paris month, as on the Overview: a future-dated
+  // expense must not become the highlighted month.
+  const today = (() => {
+    if (referenceDate) return referenceDate;
+    const [y, m, d] = parisDayKey().split("-").map(Number);
+    return new Date(y, m - 1, d);
+  })();
+  const currentKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 
   // ── Client-side attribution over the unfiltered list ──────────────────────
   const company = emptyBreakdown();
@@ -259,12 +288,24 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
     }
   }
   const maxMonthTotal = Math.max(...monthSeries.map((mo) => mo.total), 0);
-  const lastMonth = monthSeries[monthSeries.length - 1];
-  const prevMonth = monthSeries[monthSeries.length - 2];
-  const deltaPct =
-    lastMonth && prevMonth && prevMonth.total > 0
+  // The highlighted month is the current one (or the latest past one when
+  // the project has nothing this month); later months are "upcoming".
+  let lastIndex = -1;
+  monthSeries.forEach((mo, i) => {
+    if (mo.key <= currentKey) lastIndex = i;
+  });
+  const lastMonth = lastIndex >= 0 ? monthSeries[lastIndex] : undefined;
+  const prevMonth = lastIndex >= 1 ? monthSeries[lastIndex - 1] : undefined;
+  const isCurrent = lastMonth?.key === currentKey;
+  // Same reading as the Overview: while the month runs, both months are cut
+  // at today's day.
+  const mtd = isCurrent ? computeMonthToDateDelta(invoices, today) : null;
+  const deltaPct = mtd
+    ? mtd.deltaPct
+    : lastMonth && prevMonth && prevMonth.total > 0
       ? Math.round(((lastMonth.total - prevMonth.total) / prevMonth.total) * 100)
       : null;
+  const upcoming = monthSeries.filter((mo) => mo.key > currentKey && mo.count > 0);
 
   const monthYear = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" });
   const monthOnly = new Intl.DateTimeFormat(locale, { month: "short" });
@@ -287,6 +328,10 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   ) => {
     const left = roundCents(released - spent);
     const pct = released > 0 ? Math.min(100, (spent / released) * 100) : 0;
+    // Nothing released yet but money spent: say what was spent, as the
+    // Overview does, rather than a red "−X left".
+    const unfunded = released <= 0 && spent > 0;
+    const purseHref = filterHref({ purse: purseKey });
     // Bar scale for the breakdown rows: the purse's expenses plus the cash handed out.
     const barScale = breakdown.spent + cashAdvancedPart;
     return (
@@ -295,20 +340,44 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
         style={borderColor ? { borderColor } : undefined}
       >
         <div className="flex items-center justify-between">
-          <div className="text-[12.5px] font-semibold">{title}</div>
+          <div
+            className="text-[12.5px] font-semibold"
+            data-testid={`purse-title-${purseKey}`}
+            {...chartLink(purseHref, title)}
+          >
+            {title}
+          </div>
           {stamp}
         </div>
         <div className="flex items-center gap-4">
-          <PurseDial
-            percent={pct}
-            color={dialColor}
-            centerValue={formatEURWhole(left)}
-            centerValueColor={left < 0 ? "var(--negative)" : undefined}
-            centerLabel={t("summary.left")}
-            dataTip={`${title}|${formatEURWhole(left)}|${t("summary.ofReleased", {
-              amount: formatEURWhole(released),
-            })}`}
-          />
+          <div
+            className="flex-none rounded-full"
+            data-testid={`purse-dial-${purseKey}`}
+            {...chartLink(
+              purseHref,
+              `${title} · ${unfunded ? formatEURWhole(spent) : formatEURWhole(left)} ${
+                unfunded ? t("summary.spent") : t("summary.left")
+              }`
+            )}
+          >
+            <PurseDial
+              percent={pct}
+              color={dialColor}
+              unfunded={unfunded}
+              centerValue={formatEURWhole(unfunded ? spent : left)}
+              centerValueColor={!unfunded && left < 0 ? "var(--negative)" : undefined}
+              centerLabel={unfunded ? t("summary.spent") : t("summary.left")}
+              dataTip={
+                unfunded
+                  ? `${title}|${formatEURWhole(spent)}|${t("summary.unfunded")} · ${t("summary.ofReleased", {
+                      amount: formatEURWhole(released),
+                    })}`
+                  : `${title}|${formatEURWhole(left)}|${t("summary.ofReleased", {
+                      amount: formatEURWhole(released),
+                    })}`
+              }
+            />
+          </div>
           <div className="flex flex-col gap-1.5 text-[11.5px]" style={{ color: "var(--muted)" }}>
             <div>
               {t("summary.released")}{" "}
@@ -343,8 +412,17 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
             // The cash row below shares the scale, so bars stay comparable.
             const width =
               barScale > 0 ? Math.min(100, Math.max(0, (row.total / barScale) * 100)) : 0;
+            const tip = `${title} · ${t(`types.${type}`)}|${formatEURWhole(row.total)}|${t("invoiceCount", {
+              n: row.count,
+            })}`;
             return (
-              <div key={type} className="flex items-center gap-2.5">
+              <div
+                key={type}
+                className="flex items-center gap-2.5 rounded-sm"
+                data-tip={tip}
+                data-testid={`purse-type-row-${purseKey}-${type}`}
+                {...chartLink(filterHref({ purse: purseKey, type }), tip.split("|").join(" · "))}
+              >
                 <span
                   className="w-32 flex-none truncate text-[11.5px]"
                   style={{ color: "var(--muted)" }}
@@ -358,10 +436,6 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
                 >
                   <span
                     className="block h-full rounded-full"
-                    data-tip={`${title} · ${t(`types.${type}`)}|${formatEURWhole(row.total)}|${t(
-                      "invoiceCount",
-                      { n: row.count }
-                    )}`}
                     style={{ width: `${width}%`, background: TYPE_BAR_COLOR[type] }}
                   />
                 </span>
@@ -403,10 +477,11 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
               className="flex items-center justify-between text-[11.5px]"
               data-testid={`purse-returns-row-${purseKey}`}
             >
-              <span style={{ color: "var(--muted)" }}>
-                {t("summary.returnsReceived", { n: breakdown.returnsCount })}
+              {/* Already netted into the rows above: a "dont", not a term of the sum. */}
+              <span className="pl-3 italic" style={{ color: "var(--muted)" }}>
+                {t("summary.returnsIncluded", { n: breakdown.returnsCount })}
               </span>
-              <span className="num font-medium text-destructive">
+              <span className="num text-destructive" style={{ opacity: 0.8 }}>
                 {formatEURWhole(breakdown.returnsTotal)}
               </span>
             </div>
@@ -419,8 +494,7 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   return (
     <div
       className="flex flex-col gap-3.5"
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
+      {...tipHandlers}
       data-testid="expense-purses-summary"
     >
       <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[250px_1fr_1fr]">
@@ -454,6 +528,10 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
               data-tip={`${t("summary.refundableByCompany")}|${formatEURWhole(
                 refundableTotal
               )}|${t("summary.refundableCount", { n: refundableCount })}`}
+              {...chartLink(
+                refundHref("company"),
+                `${t("summary.refundableByCompany")} · ${formatEURWhole(refundableTotal)}`
+              )}
             >
               <span className="flex items-center gap-1.5" style={{ opacity: 0.72 }}>
                 <Building2 size={12} aria-hidden />
@@ -469,6 +547,10 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
               data-tip={`${t("summary.refundableByBank")}|${formatEURWhole(
                 bankOutstandingTotal
               )}|${t("summary.refundableCount", { n: bankOutstandingCount })}`}
+              {...chartLink(
+                refundHref("bank"),
+                `${t("summary.refundableByBank")} · ${formatEURWhole(bankOutstandingTotal)}`
+              )}
             >
               <span className="flex items-center gap-1.5" style={{ opacity: 0.72 }}>
                 <Landmark size={12} aria-hidden />
@@ -484,13 +566,20 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
                   className="flex h-[30px] items-end gap-[3px]"
                   data-testid="monthly-spend-bars"
                 >
-                  {monthSeries.map((mo, i) => (
+                  {monthSeries.map((mo, i) => {
+                    const future = mo.key > currentKey;
+                    const tip = `${monthYear.format(monthDate(mo.key))}|${formatEURWhole(mo.total)}|${t(
+                      "invoiceCount",
+                      { n: mo.count }
+                    )}${future ? ` · ${t("summary.upcoming")}` : ""}`;
+                    return (
                     <span
                       key={mo.key}
                       className="flex-1 rounded-[2px]"
-                      data-tip={`${monthYear.format(monthDate(mo.key))}|${formatEURWhole(
-                        mo.total
-                      )}|${t("invoiceCount", { n: mo.count })}`}
+                      data-tip={tip}
+                      data-testid={`monthly-spend-bar-${mo.key}`}
+                      data-current={i === lastIndex ? "true" : undefined}
+                      {...chartLink(filterHref({ month: mo.key }), tip.split("|").join(" · "))}
                       style={{
                         // 4% floor keeps zero/tiny months visible in the timeline.
                         height: `${
@@ -499,33 +588,50 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
                             : 4
                         }%`,
                         background:
-                          i === monthSeries.length - 1
+                          i === lastIndex
                             ? "var(--accent)"
-                            : "color-mix(in srgb, var(--paper) 32%, transparent)",
+                            : future
+                              ? "repeating-linear-gradient(-45deg, color-mix(in srgb, var(--paper) 40%, transparent) 0 2px, transparent 2px 4px)"
+                              : "color-mix(in srgb, var(--paper) 32%, transparent)",
                       }}
                     />
-                  ))}
+                    );
+                  })}
                 </div>
-                <div className="flex justify-between text-[11.5px]">
+                {lastMonth && (
+                <div className="flex justify-between text-[11.5px]" data-testid="monthly-spend-current">
                   <span style={{ opacity: 0.72 }}>{monthYear.format(monthDate(lastMonth.key))}</span>
                   <span>
                     <span className="num">{formatEURWhole(lastMonth.total)}</span>
-                    {deltaPct !== null && (
+                    {deltaPct !== null && prevMonth && (
                       <span style={{ opacity: 0.62 }}>
                         {" · "}
-                        {t("summary.vsMonth", {
+                        {(() => {
                           // Locale-aware: "+12 %" in French, "+12%" in English.
-                          delta: new Intl.NumberFormat(locale, {
+                          const delta = new Intl.NumberFormat(locale, {
                             style: "percent",
                             maximumFractionDigits: 0,
                             signDisplay: "exceptZero",
-                          }).format(deltaPct / 100),
-                          month: monthOnly.format(monthDate(prevMonth.key)),
-                        })}
+                          }).format(deltaPct / 100);
+                          const month = monthOnly.format(monthDate(prevMonth.key));
+                          return mtd?.toDay
+                            ? t("summary.vsMonthToDate", { delta, day: mtd.toDay, month })
+                            : t("summary.vsMonth", { delta, month });
+                        })()}
                       </span>
                     )}
                   </span>
                 </div>
+                )}
+                {upcoming.length > 0 && (
+                  <div className="text-[11px]" style={{ opacity: 0.62 }} data-testid="monthly-spend-upcoming">
+                    {t("summary.upcoming")}
+                    {" · "}
+                    {t("invoiceCount", { n: upcoming.reduce((s, mo) => s + mo.count, 0) })}
+                    {" · "}
+                    <span className="num">{formatEURWhole(roundCents(upcoming.reduce((s, mo) => s + mo.total, 0)))}</span>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -589,7 +695,15 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
       </div>
 
       {unassigned.count > 0 && (
-        <div className="text-[11.5px]" style={{ color: "var(--muted)" }} data-testid="purse-unassigned-spend">
+        <div
+          className="self-start text-[11.5px]"
+          style={{ color: "var(--muted)" }}
+          data-testid="purse-unassigned-spend"
+          {...chartLink(
+            filterHref({ purse: "none" }),
+            t("summary.noPurseSpend", { n: unassigned.count, amount: formatEURWhole(unassigned.spent) })
+          )}
+        >
           {t("summary.noPurseSpend", {
             n: unassigned.count,
             amount: formatEURWhole(unassigned.spent),
@@ -598,7 +712,12 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
       )}
 
       {/* Type-first companion to the purse cards — same figures, shared scale. */}
-      <ExpenseTypeBreakdown company={company} personal={personal} unassigned={unassigned} />
+      <ExpenseTypeBreakdown
+        company={company}
+        personal={personal}
+        unassigned={unassigned}
+        listHref={listHref}
+      />
 
       {refunds.length > 0 && (
         <div

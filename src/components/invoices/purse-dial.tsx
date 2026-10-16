@@ -18,6 +18,8 @@ interface PurseDialProps {
   centerValueColor?: string;
   /** Tooltip payload, "label|value|meta" (see useDataTip). */
   dataTip?: string;
+  /** Money spent with nothing released: a dashed warning ring instead of an empty one. */
+  unfunded?: boolean;
 }
 
 const SIZE = 104;
@@ -46,6 +48,7 @@ export function PurseDial({
   centerLabel,
   centerValueColor,
   dataTip,
+  unfunded = false,
 }: PurseDialProps) {
   const filled = (CIRCUMFERENCE * Math.min(100, Math.max(0, percent))) / 100;
   return (
@@ -56,9 +59,13 @@ export function PurseDial({
           cy={SIZE / 2}
           r={RADIUS}
           fill="none"
-          stroke="var(--paper-2)"
+          stroke={unfunded ? "var(--negative)" : "var(--paper-2)"}
           strokeWidth={STROKE}
+          strokeDasharray={unfunded ? "5 5" : undefined}
+          data-testid={unfunded ? "purse-dial-unfunded" : undefined}
         />
+        {/* No arc at 0 %: a round cap on a 0-length dash draws a dot. */}
+        {filled > 0 && (
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
@@ -69,7 +76,9 @@ export function PurseDial({
           strokeLinecap="round"
           strokeDasharray={`${filled} ${CIRCUMFERENCE}`}
           transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
+          data-testid="purse-dial-arc"
         />
+        )}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-[1px]">
         <div

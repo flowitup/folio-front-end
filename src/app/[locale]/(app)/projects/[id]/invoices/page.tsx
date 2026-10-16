@@ -361,7 +361,12 @@ export default function InvoicesPage() {
       {/* "Two purses" summary (design Expense Dataviz 1b) — project-level,
           fed by an unfiltered fetch so tab/tag filters below never change it. */}
       {summary && canViewBudget && (
-        <ExpensePursesSummary invoices={summary.invoices} meta={summary.meta} />
+        <ExpensePursesSummary
+          invoices={summary.invoices}
+          meta={summary.meta}
+          listHref={`/${locale}/projects/${projectId}/invoices`}
+          refundableHref={`/${locale}/billing/refundable-invoices?project=${projectId}`}
+        />
       )}
 
       {/* Bank draw-down — what the bank still holds of the project's credit.

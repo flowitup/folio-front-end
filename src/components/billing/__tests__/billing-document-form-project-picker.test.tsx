@@ -356,4 +356,58 @@ describe("BillingDocumentForm — project picker", () => {
       expect(screen.getByText("No project")).toBeDefined();
     });
   });
+
+  describe("several issuing companies", () => {
+    const COMPANY_2: MyCompany = { ...COMPANY, id: "company-2", legal_name: "Beta SAS", is_primary: false };
+    const TEMPLATE = {
+      id: "tpl-1",
+      user_id: "user-1",
+      kind: "devis" as const,
+      name: "Beta template",
+      notes: null,
+      terms: null,
+      default_vat_rate: null,
+      items: [{ description: "Item", quantity: "1", unit_price: "100", vat_rate: "20" }],
+      company_id: "company-2",
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    };
+
+    it("issues a document made from a template from the template's company, not the primary", async () => {
+      render(
+        <BillingDocumentForm
+          mode="create"
+          kind="devis"
+          attachedCompanies={[COMPANY, COMPANY_2]}
+          projects={[]}
+          initialFromTemplate={TEMPLATE}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText(/client or company name/i), {
+        target: { value: "Test Client" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /create/i }));
+
+      await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
+      expect(mockCreate.mock.calls[0][0].company_id).toBe("company-2");
+    });
+
+    it("offers only the issuer's projects", async () => {
+      render(
+        <BillingDocumentForm
+          mode="create"
+          kind="devis"
+          attachedCompanies={[COMPANY, COMPANY_2]}
+          projects={[
+            { ...PROJECT_A, company_id: "company-1" },
+            { ...PROJECT_B, company_id: "company-2" },
+          ]}
+          initialFromTemplate={TEMPLATE}
+        />
+      );
+      fireEvent.click(screen.getByRole("combobox", { name: "Project (optional)" }));
+      await waitFor(() => expect(screen.getByRole("option", { name: "Project Beta" })).toBeDefined());
+      expect(screen.queryByRole("option", { name: "Project Alpha" })).toBeNull();
+    });
+  });
 });

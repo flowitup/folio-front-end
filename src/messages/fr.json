@@ -1638,7 +1638,8 @@
       },
       "issuer": {
         "issuedFrom": "Émis par",
-        "locked": "verrouillé"
+        "locked": "verrouillé",
+        "sourceCompanyNotIssuable": "L'entreprise d'origine n'est pas proposée : vous n'en êtes pas administrateur. Vérifiez l'émetteur choisi."
       },
       "deleteDialog": {
         "title": "Supprimer le document ?",

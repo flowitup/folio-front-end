@@ -1638,7 +1638,8 @@
       },
       "issuer": {
         "issuedFrom": "Phát hành từ",
-        "locked": "đã khóa"
+        "locked": "đã khóa",
+        "sourceCompanyNotIssuable": "Công ty gốc không có trong danh sách vì bạn không phải quản trị viên của công ty đó. Hãy kiểm tra công ty phát hành đã chọn."
       },
       "deleteDialog": {
         "title": "Xóa tài liệu?",

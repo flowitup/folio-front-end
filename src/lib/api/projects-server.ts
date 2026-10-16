@@ -15,6 +15,8 @@ export interface ProjectSummary {
   name: string;
   /** Site address — the label users see for a project; falls back to `name` when absent. */
   address?: string | null;
+  /** Owning company: a billing document can only be linked to its issuer's projects. */
+  company_id?: string | null;
 }
 
 /**

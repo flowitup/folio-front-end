@@ -1638,7 +1638,8 @@
       },
       "issuer": {
         "issuedFrom": "Issued from",
-        "locked": "locked"
+        "locked": "locked",
+        "sourceCompanyNotIssuable": "The original company is not offered because you are not one of its admins. Check the issuer selected."
       },
       "deleteDialog": {
         "title": "Delete document?",

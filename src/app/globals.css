@@ -544,6 +544,9 @@ body {
     background: var(--ink);
     display: inline-block;
   }
+  .dot.muted {
+    background: var(--muted);
+  }
   .dot.accent {
     background: var(--accent);
   }

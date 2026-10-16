@@ -19,7 +19,11 @@ export function pathForActivity(event: ActivityEvent, locale: string): string | 
   const projectId = data.project_id;
   if (!projectId) return null;
   if (kind === "task_assigned" || kind === "task_moved") {
-    return `/${locale}/projects/${projectId}/planning`;
+    // ?task= opens that task's drawer on the board, not just the board.
+    const taskId = data.task_id;
+    return taskId
+      ? `/${locale}/projects/${projectId}/planning?task=${encodeURIComponent(taskId)}`
+      : `/${locale}/projects/${projectId}/planning`;
   }
   if ((kind === "refund_requested" || kind === "refund_completed") && data.invoice_id) {
     return `/${locale}/projects/${projectId}/invoices/${data.invoice_id}`;

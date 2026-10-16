@@ -729,7 +729,8 @@
       "unscheduled": "Chưa lên lịch",
       "noTasksDay": "—",
       "addOnDay": "Thêm công việc ngày {day}",
-      "addUnscheduled": "Thêm công việc chưa lên lịch"
+      "addUnscheduled": "Thêm công việc chưa lên lịch",
+      "overdue": "Quá hạn"
     },
     "column": {
       "todo": "Cần làm",
@@ -750,7 +751,8 @@
       "invalid": "Một số thông tin không được chấp nhận. Kiểm tra tiêu đề (tối đa 255 ký tự), mô tả (tối đa 5.000 ký tự) và nhãn (tối đa 20 nhãn, mỗi nhãn 50 ký tự) rồi thử lại.",
       "create": "Không thể tạo công việc. Vui lòng thử lại.",
       "save": "Không thể lưu công việc. Vui lòng thử lại.",
-      "delete": "Không thể xóa công việc. Vui lòng thử lại."
+      "delete": "Không thể xóa công việc. Vui lòng thử lại.",
+      "dueDate": "Hạn chót phải nằm trong khoảng từ 01/01/2000 đến 31/12/2100. Vui lòng kiểm tra lại năm."
     },
     "statusLabel": "Trạng thái",
     "close": "Đóng",
@@ -766,7 +768,9 @@
     "unassigned": "Chưa giao",
     "assigneeOther": "Một người ngoài nhóm dự án",
     "assignedTo": "Giao cho {name}",
-    "discardChanges": "Bỏ các thay đổi chưa lưu của công việc này?"
+    "discardChanges": "Bỏ các thay đổi chưa lưu của công việc này?",
+    "overdue": "Quá hạn",
+    "statusSaved": "Đã lưu trạng thái"
   },
   "labor": {
     "title": "Nhân công",

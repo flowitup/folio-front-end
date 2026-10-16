@@ -144,6 +144,9 @@ export function TaskDetailDrawer({
       const moved = await moveTask(task.id, { status });
       setTask(moved);
       onMutated?.();
+      // The status saves at once (unlike the other fields, which wait for
+      // Save): say so, so nobody expects Cancel to undo it.
+      toast.success(t("statusSaved"));
     } catch (err) {
       toast.error(t(`errors.${taskErrorKey(err, "save")}`));
     } finally {

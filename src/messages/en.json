@@ -729,7 +729,8 @@
       "unscheduled": "Unscheduled",
       "noTasksDay": "—",
       "addOnDay": "Add task on {day}",
-      "addUnscheduled": "Add unscheduled task"
+      "addUnscheduled": "Add unscheduled task",
+      "overdue": "Overdue"
     },
     "column": {
       "todo": "To do",
@@ -750,7 +751,8 @@
       "invalid": "Some details were not accepted. Check the title (255 characters at most), the description (5,000 at most) and the labels (20 at most, 50 characters each), then try again.",
       "create": "Could not create the task. Please try again.",
       "save": "Could not save the task. Please try again.",
-      "delete": "Could not delete the task. Please try again."
+      "delete": "Could not delete the task. Please try again.",
+      "dueDate": "The due date must be between 01/01/2000 and 12/31/2100. Check the year."
     },
     "statusLabel": "Status",
     "close": "Close",
@@ -766,7 +768,9 @@
     "unassigned": "Unassigned",
     "assigneeOther": "Someone outside the project team",
     "assignedTo": "Assigned to {name}",
-    "discardChanges": "Discard your unsaved changes to this task?"
+    "discardChanges": "Discard your unsaved changes to this task?",
+    "overdue": "Overdue",
+    "statusSaved": "Status saved"
   },
   "labor": {
     "title": "Labor",

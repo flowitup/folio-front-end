@@ -145,7 +145,9 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   // strip the param so refresh / back-button doesn't re-open it.
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
-    setCreateState({ status: "backlog", dueDate: null });
+    // The dialog's Status field shows (and lets the user change) the lane;
+    // "À faire" puts it on the board, where the user expects to find it.
+    setCreateState({ status: "todo", dueDate: null });
     const params = new URLSearchParams(searchParams.toString());
     params.delete("new");
     const qs = params.toString();

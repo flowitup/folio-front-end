@@ -10,15 +10,10 @@ import {
   toDateKey,
   weekDays,
 } from "@/lib/planning/week";
+import { PRIORITY_DOT_CLASS } from "@/lib/planning/priority";
+import { formatDate } from "@/lib/utils/formatters";
 import type { Task, TaskPriority, TaskStatus } from "@/types/task";
 
-// Same priority→dot mapping as the Kanban card so the two views read alike.
-const PRIORITY_DOT_CLASS: Record<TaskPriority, string> = {
-  low: "",
-  medium: "accent",
-  high: "warning",
-  urgent: "negative",
-};
 
 // Visual weight for in-day ordering: urgent first, then high/medium/low, then title.
 const PRIORITY_RANK: Record<TaskPriority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
@@ -62,10 +57,14 @@ export function WeekView({
     [locale],
   );
 
-  // Bucket tasks: by due-date key for in-week days, plus an unscheduled list.
-  const { byDay, unscheduled } = useMemo(() => {
+  // Bucket tasks: by due-date key for in-week days, plus an unscheduled list,
+  // plus — on the current week only — the unfinished tasks due before it, so
+  // overdue work does not vanish from "this week".
+  const weekStartKey = toDateKey(weekStart);
+  const { byDay, unscheduled, overdue } = useMemo(() => {
     const map: Record<string, Task[]> = {};
     const none: Task[] = [];
+    const late: Task[] = [];
     const sortFn = (a: Task, b: Task) =>
       PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || a.title.localeCompare(b.title);
     for (const task of tasks) {
@@ -73,12 +72,16 @@ export function WeekView({
         none.push(task);
         continue;
       }
+      if (weekOffset === 0 && task.status !== "done" && task.due_date < weekStartKey) {
+        late.push(task);
+      }
       (map[task.due_date] ??= []).push(task);
     }
     for (const list of Object.values(map)) list.sort(sortFn);
     none.sort(sortFn);
-    return { byDay: map, unscheduled: none };
-  }, [tasks]);
+    late.sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? "") || sortFn(a, b));
+    return { byDay: map, unscheduled: none, overdue: late };
+  }, [tasks, weekOffset, weekStartKey]);
 
   return (
     <div className="space-y-3">
@@ -115,6 +118,35 @@ export function WeekView({
           {formatWeekRange(weekStart, locale)}
         </span>
       </div>
+
+      {/* Overdue: unfinished tasks due before this week (current week only). */}
+      {overdue.length > 0 && (
+        <div
+          className="rounded-[10px] p-2"
+          style={{ border: "1px solid var(--negative)", background: "var(--negative-tint)" }}
+        >
+          <div className="mb-2 flex items-center gap-2 px-0.5">
+            <h3 className="text-[12px] font-semibold" style={{ color: "var(--negative)" }}>
+              {t("weekView.overdue")}
+            </h3>
+            <span className="num text-[11px] tabular-nums" style={{ color: "var(--negative)" }}>
+              {overdue.length}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {overdue.map((task) => (
+              <div key={task.id} className="min-w-[180px] flex-1">
+                <WeekTaskChip
+                  task={task}
+                  statusLabel={`${t(statusKey(task.status))} · ${formatDate(task.due_date ?? "")}`}
+                  assigneeName={task.assignee_id ? assigneeNames?.get(task.assignee_id) : null}
+                  onClick={() => onTaskClick(task)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 7-day grid (Mon→Sun) */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">

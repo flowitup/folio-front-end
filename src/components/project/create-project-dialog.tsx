@@ -22,6 +22,8 @@ import {
 import { createProject } from "@/lib/api/projects";
 import type { Project } from "@/types/project";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { MAX_BUDGET } from "@/lib/numeric-bounds";
+import { formatEUR } from "@/lib/utils/formatters";
 import type { UserCompanySummary } from "@/lib/auth/permissions";
 
 interface CreateProjectDialogProps {
@@ -84,6 +86,10 @@ export function CreateProjectDialog({
     const trimmedName = name.trim();
 
     const budgetNum = budget.trim() ? parseMoneyInput(budget) : undefined;
+    if (budgetNum != null && Math.abs(budgetNum) > MAX_BUDGET) {
+      setError(t("budgetTooLarge", { max: formatEUR(MAX_BUDGET) }));
+      return;
+    }
     if (budgetNum === null) {
       setError(t("budgetInvalid"));
       return;

@@ -207,6 +207,7 @@
     "budgetSourceLabelOptional": "Nguồn tài trợ (tùy chọn)",
     "budgetSourcePlaceholder": "vd. Vay ngân hàng BNP",
     "budgetInvalid": "Nhập tổng tín dụng dưới dạng số tiền, ví dụ 12500 hoặc 12.500,00",
+    "budgetTooLarge": "Tổng tín dụng không được vượt quá {max}.",
     "bankRelease": {
       "title": "Giải ngân tín dụng ngân hàng",
       "overDrawn": "Vượt quá",

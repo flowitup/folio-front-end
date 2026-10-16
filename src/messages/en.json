@@ -207,6 +207,7 @@
     "budgetSourceLabelOptional": "Funding source (optional)",
     "budgetSourcePlaceholder": "e.g. Bank loan BNP",
     "budgetInvalid": "Enter the credit total as an amount, e.g. 12500 or 12,500.00",
+    "budgetTooLarge": "The total credit cannot exceed {max}.",
     "bankRelease": {
       "title": "Bank credit release",
       "overDrawn": "Over-drawn by",

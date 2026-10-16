@@ -86,7 +86,7 @@ export function ProjectSettingsClient({ project }: Props) {
 
       {/* Bank credit card — initial credit granted by the bank; funds
           releases are deducted from it on the Overview/Expense charts. */}
-      {canViewBudget && <BankCreditCard project={project} />}
+      {canViewBudget && <BankCreditCard project={project} canEdit={canEdit} />}
 
       {/* Invoice prefix card */}
       <div className="folio-card p-7">

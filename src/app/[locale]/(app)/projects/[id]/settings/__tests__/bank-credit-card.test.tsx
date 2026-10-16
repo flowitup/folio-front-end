@@ -75,4 +75,23 @@ describe("BankCreditCard — network failure", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: en.projects.save })).not.toBeDisabled());
     expect(screen.queryByText(en.projects.saving)).toBeNull();
   });
+
+  it("is read-only without project:update", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <BankCreditCard project={{ ...PROJECT, budget: 12500.5 } as Project} canEdit={false} />
+      </NextIntlClientProvider>
+    );
+    const input = screen.getByLabelText(en.projects.budgetLabel) as HTMLInputElement;
+    expect(input.value).toBe("12500.50");
+    expect(input.disabled).toBe(true);
+    expect(screen.queryByRole("button", { name: en.projects.save })).toBeNull();
+  });
+
+  it("names the maximum instead of letting the API refuse it", () => {
+    renderCard();
+    fireEvent.change(screen.getByLabelText(en.projects.budgetLabel), { target: { value: "12000000000" } });
+    expect(screen.getByTestId("bank-credit-too-large")).toBeTruthy();
+    expect((screen.getByRole("button", { name: en.projects.save }) as HTMLButtonElement).disabled).toBe(true);
+  });
 });

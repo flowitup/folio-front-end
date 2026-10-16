@@ -207,6 +207,7 @@
     "budgetSourceLabelOptional": "Source de financement (facultatif)",
     "budgetSourcePlaceholder": "ex. Prêt bancaire BNP",
     "budgetInvalid": "Saisissez le crédit total sous forme de montant, par ex. 12500 ou 12 500,00",
+    "budgetTooLarge": "Le crédit total ne peut pas dépasser {max}.",
     "bankRelease": {
       "title": "Déblocage du crédit bancaire",
       "overDrawn": "Dépassement de",

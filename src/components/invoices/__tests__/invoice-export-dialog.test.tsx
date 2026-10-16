@@ -74,14 +74,32 @@ describe("InvoiceExportDialog — render", () => {
     expect(screen.getByText("dialogTitle")).toBeDefined();
   });
 
-  it("renders from/to month inputs with empty values", () => {
+  it("renders from/to month inputs defaulting to the current month", () => {
     renderDialog();
     const fromInput = document.getElementById("invoice-export-from") as HTMLInputElement;
     const toInput = document.getElementById("invoice-export-to") as HTMLInputElement;
+    const now = new Date();
+    const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     expect(fromInput).toBeTruthy();
     expect(toInput).toBeTruthy();
-    expect(fromInput?.value).toBe("");
-    expect(toInput?.value).toBe("");
+    expect(fromInput?.value).toBe(current);
+    expect(toInput?.value).toBe(current);
+  });
+
+  it("accepts a typed MM/YYYY month and normalises it", () => {
+    renderDialog();
+    const fromInput = document.getElementById("invoice-export-from") as HTMLInputElement;
+    fireEvent.change(fromInput, { target: { value: "09/2026" } });
+    expect(fromInput.value).toBe("2026-09");
+  });
+
+  it("shows an inline format error for an unreadable month", () => {
+    renderDialog();
+    fireEvent.change(document.getElementById("invoice-export-from")!, {
+      target: { value: "sept" },
+    });
+    expect(screen.getByText("monthPicker.formatError")).toBeDefined();
+    expect(screen.getByText("download").closest("button")).toBeDisabled();
   });
 
   it("renders xlsx and pdf format toggle buttons", () => {
@@ -112,6 +130,8 @@ describe("InvoiceExportDialog — range validation UI", () => {
 
   it("download button is disabled when from and to are empty", () => {
     renderDialog();
+    fireEvent.change(document.getElementById("invoice-export-from")!, { target: { value: "" } });
+    fireEvent.change(document.getElementById("invoice-export-to")!, { target: { value: "" } });
     const downloadBtn = screen.getByText("download").closest("button");
     expect(downloadBtn).toBeDisabled();
   });
@@ -121,6 +141,7 @@ describe("InvoiceExportDialog — range validation UI", () => {
     fireEvent.change(document.getElementById("invoice-export-from")!, {
       target: { value: "2026-01" },
     });
+    fireEvent.change(document.getElementById("invoice-export-to")!, { target: { value: "" } });
     const downloadBtn = screen.getByText("download").closest("button");
     expect(downloadBtn).toBeDisabled();
   });
@@ -564,7 +585,9 @@ describe("InvoiceExportDialog — error path", () => {
 
   it("does not call fetchInvoiceExport when submit button is disabled", () => {
     renderDialog();
-    // No from/to set — button is disabled
+    // from/to cleared — button is disabled
+    fireEvent.change(document.getElementById("invoice-export-from")!, { target: { value: "" } });
+    fireEvent.change(document.getElementById("invoice-export-to")!, { target: { value: "" } });
     const downloadBtn = screen.getByText("download").closest("button");
     expect(downloadBtn).toBeDisabled();
     fireEvent.click(downloadBtn!);

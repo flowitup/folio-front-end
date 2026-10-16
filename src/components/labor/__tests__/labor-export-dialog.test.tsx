@@ -102,6 +102,8 @@ describe("LaborExportDialog — range validation UI", () => {
 
   it("download button is disabled when from and to are empty", () => {
     renderDialog();
+    fireEvent.change(document.getElementById("export-from")!, { target: { value: "" } });
+    fireEvent.change(document.getElementById("export-to")!, { target: { value: "" } });
     const downloadBtn = screen.getByText("download").closest("button");
     expect(downloadBtn).toBeDisabled();
   });
@@ -382,7 +384,9 @@ describe("LaborExportDialog — error path", () => {
   it("does not call fetchLaborExport when submit is disabled", () => {
     renderDialog();
 
-    // No from/to set — button is disabled
+    // from/to cleared — button is disabled
+    fireEvent.change(document.getElementById("export-from")!, { target: { value: "" } });
+    fireEvent.change(document.getElementById("export-to")!, { target: { value: "" } });
     const downloadBtn = screen.getByText("download").closest("button");
     expect(downloadBtn).toBeDisabled();
 
@@ -498,6 +502,8 @@ describe("LaborExportDialog — with worker prop (render)", () => {
 
   it("download button is disabled when from/to are empty", () => {
     renderWorkerDialog();
+    fireEvent.change(document.getElementById("worker-export-from")!, { target: { value: "" } });
+    fireEvent.change(document.getElementById("worker-export-to")!, { target: { value: "" } });
     expect(screen.getByText("download").closest("button")).toBeDisabled();
   });
 });
@@ -854,7 +860,7 @@ describe("LaborExportDialog — pre-fill props", () => {
     );
   }, 20000);
 
-  it("falls back to empty strings and xlsx when no initial props provided", () => {
+  it("falls back to the current month and xlsx when no initial props provided", () => {
     render(
       <LaborExportDialog
         projectId="proj-uuid-1"
@@ -866,8 +872,10 @@ describe("LaborExportDialog — pre-fill props", () => {
 
     const fromInput = document.getElementById("worker-export-from") as HTMLInputElement;
     const toInput = document.getElementById("worker-export-to") as HTMLInputElement;
-    expect(fromInput?.value).toBe("");
-    expect(toInput?.value).toBe("");
+    const now = new Date();
+    const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    expect(fromInput?.value).toBe(current);
+    expect(toInput?.value).toBe(current);
 
     const xlsxBtn = screen.getByText("xlsx").closest("button");
     expect(xlsxBtn?.className).toContain("bg-primary");

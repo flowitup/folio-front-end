@@ -11,6 +11,14 @@
       "seconds": "Quá nhiều yêu cầu. Vui lòng thử lại sau {seconds} giây.",
       "minutes": "Quá nhiều yêu cầu. Vui lòng thử lại sau {minutes} phút.",
       "unknown": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại."
+    },
+    "monthPicker": {
+      "previousYear": "Năm trước",
+      "nextYear": "Năm sau",
+      "open": "Chọn tháng",
+      "choose": "Chọn tháng",
+      "placeholder": "YYYY-MM",
+      "formatError": "Nhập tháng theo dạng YYYY-MM (ví dụ 2026-09) hoặc MM/YYYY."
     }
   },
   "meta": {

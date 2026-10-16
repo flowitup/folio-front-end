@@ -11,6 +11,14 @@
       "seconds": "Too many requests. Try again in {seconds} s.",
       "minutes": "Too many requests. Try again in {minutes} min.",
       "unknown": "Too many requests. Wait a moment and try again."
+    },
+    "monthPicker": {
+      "previousYear": "Previous year",
+      "nextYear": "Next year",
+      "open": "Pick a month",
+      "choose": "Pick a month",
+      "placeholder": "YYYY-MM",
+      "formatError": "Enter the month as YYYY-MM (e.g. 2026-09) or MM/YYYY."
     }
   },
   "meta": {

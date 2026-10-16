@@ -11,6 +11,14 @@
       "seconds": "Trop de demandes. Réessayez dans {seconds} s.",
       "minutes": "Trop de demandes. Réessayez dans {minutes} min.",
       "unknown": "Trop de demandes. Patientez un instant puis réessayez."
+    },
+    "monthPicker": {
+      "previousYear": "Année précédente",
+      "nextYear": "Année suivante",
+      "open": "Choisir un mois",
+      "choose": "Choisir un mois",
+      "placeholder": "AAAA-MM",
+      "formatError": "Mois attendu au format AAAA-MM (par ex. 2026-09) ou MM/AAAA."
     }
   },
   "meta": {

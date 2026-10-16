@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { MonthField, isMonthValue } from "@/components/ui/month-picker";
 import { PaymentMethodSelect } from "@/components/invoices/payment-method-select";
 import { LaborWorkerSelect } from "@/components/invoices/labor-worker-select";
 import { parisDayKey } from "@/lib/utils/paris-day";
@@ -132,6 +133,7 @@ export function InvoiceForm({
 }: InvoiceFormProps) {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
+  const tCommonMonth = useTranslations("common.monthPicker");
 
   // Default to materials_services — the everyday expense type. released_funds
   // stays selectable but must never be the default: those invoices are
@@ -318,6 +320,9 @@ export function InvoiceForm({
     // legacy row that predates this field must not be blocked by it.
     if (type === "labor" && !editingInvoiceId && !serviceMonth) {
       return t("serviceMonthRequired");
+    }
+    if (type === "labor" && serviceMonth && !isMonthValue(serviceMonth)) {
+      return tCommonMonth("formatError");
     }
     if (type === "labor" && serviceMonth && !isBusinessDate(serviceMonth)) {
       return t("errorDateOutOfRange", dateRange);
@@ -689,14 +694,13 @@ export function InvoiceForm({
                 {t("serviceMonth")}
                 {!editingInvoiceId && <span className="text-destructive"> *</span>}
               </label>
-              <input
+              <MonthField
                 id="invoice-service-month"
-                type="month"
                 min={MIN_BUSINESS_MONTH}
                 max={MAX_BUSINESS_MONTH}
                 value={serviceMonth}
-                onChange={(e) => setServiceMonth(e.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:w-1/2"
+                onChange={setServiceMonth}
+                className="w-full sm:w-1/2"
                 disabled={isLoading}
                 required={!editingInvoiceId}
                 data-testid="service-month-input"

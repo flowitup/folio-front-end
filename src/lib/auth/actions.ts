@@ -96,6 +96,7 @@ export type InviteFlowError =
   | "not_found"
   | "expired"
   | "revoked"
+  | "superseded"
   | "accepted"
   | "unknown";
 
@@ -112,7 +113,9 @@ function classifyInviteError(error: unknown): InviteFlowError {
   if (reason === "phone_registered") return "phone_registered";
   // The invited address already has an account: only its own phone (or its session) accepts.
   if (reason === "account_exists") return "account_exists";
-  if (reason === "expired" || reason === "revoked" || reason === "accepted") return reason;
+  if (reason === "expired" || reason === "revoked" || reason === "superseded" || reason === "accepted") {
+    return reason;
+  }
   switch (err?.status) {
     case 400:
       return "invalid_phone";
@@ -137,7 +140,8 @@ function classifyInviteError(error: unknown): InviteFlowError {
  */
 export async function requestInviteCodeAction(
   token: string,
-  phone: string
+  phone: string,
+  locale?: string
 ): Promise<{ success: boolean; error?: InviteFlowError; retryAfterMinutes?: number }> {
   if (!token || typeof token !== "string" || token.trim().length === 0) {
     return { success: false, error: "not_found" };
@@ -148,6 +152,7 @@ export async function requestInviteCodeAction(
 
   try {
     const payload: RequestInviteCodePayload = { token, phone };
+    if (locale === "fr" || locale === "en" || locale === "vi") payload.locale = locale;
     await requestInviteCode(payload);
     return { success: true };
   } catch (error) {
@@ -201,7 +206,7 @@ export async function acceptInviteAction(
   name: string,
   phone: string,
   code: string
-): Promise<{ success: boolean; error?: InviteFlowError; user?: AcceptedUser }> {
+): Promise<{ success: boolean; error?: InviteFlowError; user?: AcceptedUser; projectId?: string }> {
   // Server-side input validation (don't trust client)
   if (!token || typeof token !== "string" || token.trim().length === 0) {
     return { success: false, error: "not_found" };
@@ -223,11 +228,11 @@ export async function acceptInviteAction(
       phone,
       code: code.trim(),
     };
-    const { user, setCookieHeaders } = await acceptInvite(payload);
+    const { user, projectId, setCookieHeaders } = await acceptInvite(payload);
 
     await setForwardedCookies(setCookieHeaders);
 
-    return { success: true, user };
+    return { success: true, user, projectId };
   } catch (error) {
     console.error(
       "Accept invite error:",

@@ -41,6 +41,9 @@ const TRANSLATIONS: Record<string, string> = {
   errorHourlyLimit: "Too many codes were requested for this number. Try again in {minutes} minutes.",
   errorSmsFailed: "The SMS could not be sent. Try again later.",
   errorPhoneLoginUnavailable: "Phone sign-in is not available on this server.",
+  errorCodeLocked: "Too many tries: this code no longer works. Ask for a new code.",
+  codeRecentlySent: "A code was sent to this number less than a minute ago: type it below.",
+  codeHelp: "No SMS? Only Folio accounts receive a code.",
 };
 
 function fill(key: string, params?: Record<string, unknown>): string {
@@ -53,6 +56,7 @@ function fill(key: string, params?: Record<string, unknown>): string {
 }
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "en",
   useTranslations: () => {
     const translate = (key: string, params?: Record<string, unknown>) => fill(key, params);
     // `t.rich` renders tag markers as components; the plain text it wraps is
@@ -67,6 +71,9 @@ vi.mock("next-intl", () => ({
 // The language control needs the locale router; it has its own tests.
 vi.mock("@/components/language-switcher", () => ({
   LanguageSwitcher: () => null,
+}));
+vi.mock("@/components/legal-links", () => ({
+  LegalLinks: () => <nav data-testid="legal-links" />,
 }));
 
 const mockRequestOtpAction = vi.fn();
@@ -100,6 +107,7 @@ describe("Phone sign-in", () => {
   beforeEach(() => {
     mockRequestOtpAction.mockReset();
     mockLoginWithPhone.mockReset();
+    window.sessionStorage.clear();
   });
 
   it("normalises the typed number and moves to the code step", async () => {
@@ -110,8 +118,9 @@ describe("Phone sign-in", () => {
     // Typed as the French write it; the +33 the field states replaces the 0.
     await sendCodeTo(user, "0612345678");
 
-    expect(mockRequestOtpAction).toHaveBeenCalledWith("+33612345678");
-    expect(screen.getByText("Code sent to +33612345678.")).toBeInTheDocument();
+    // The code goes out in the page's language, and the number reads as it is written elsewhere.
+    expect(mockRequestOtpAction).toHaveBeenCalledWith("+33612345678", "en");
+    expect(screen.getByText("Code sent to +33 6 12 34 56 78.")).toBeInTheDocument();
   });
 
   it("states the dial code the number is read with", () => {
@@ -157,7 +166,8 @@ describe("Phone sign-in", () => {
     expect(mockRequestOtpAction).not.toHaveBeenCalled();
   });
 
-  it("shows the throttled error and stays on the phone step", async () => {
+  it("goes to the code step when a code was just sent to that number", async () => {
+    // The server refuses a second code within a minute; the first one is still good.
     mockRequestOtpAction.mockResolvedValue({ success: false, error: "throttled" });
     const user = userEvent.setup();
     render(<LoginStage />);
@@ -165,14 +175,56 @@ describe("Phone sign-in", () => {
     await user.type(screen.getByLabelText("Phone number"), "0612345678");
     await user.click(screen.getByTestId("login-send-code"));
 
-    await waitFor(() => {
-      expect(
-        screen.getByText("Too many requests. Wait a minute and try again.")
-      ).toBeInTheDocument();
-    });
-    // Still on step 1 — phone input is present, the code boxes are not.
-    expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
-    expect(screen.queryByTestId("login-code-0")).toBeNull();
+    await waitFor(() => expect(screen.getByTestId("login-code-0")).toBeInTheDocument());
+    expect(screen.getByTestId("login-error")).toHaveTextContent("less than a minute ago");
+    expect(screen.getByTestId("login-error")).toHaveAttribute("role", "status");
+  });
+
+  it("says the code is locked after five wrong tries and stops submitting", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    mockLoginWithPhone.mockResolvedValue({ success: false, error: "invalid_code" });
+    const user = userEvent.setup();
+    render(<LoginStage />);
+
+    await sendCodeTo(user, "0612345678");
+    for (const [index, digit] of ["1", "2", "3", "4", "5"].entries()) {
+      await user.click(screen.getByTestId("login-code-0"));
+      await user.paste(digit.repeat(6));
+      // Over a rejected (full) row the boxes wait for an explicit submit.
+      if (index > 0) await user.click(screen.getByTestId("login-verify"));
+      await waitFor(() => expect(mockLoginWithPhone).toHaveBeenCalledTimes(index + 1));
+    }
+    expect(screen.getByTestId("login-error")).toHaveTextContent("Ask for a new code");
+    expect(mockLoginWithPhone).toHaveBeenCalledTimes(5);
+
+    // Even the right code would be refused now: it is not sent.
+    await user.click(screen.getByTestId("login-code-0"));
+    await user.paste("424242");
+    expect(mockLoginWithPhone).toHaveBeenCalledTimes(5);
+    expect(screen.getByTestId("login-verify")).toBeDisabled();
+  });
+
+  it("keeps the code step for the same number after a remount (language switch)", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    const user = userEvent.setup();
+    const { unmount } = render(<LoginStage />);
+    await sendCodeTo(user, "0612345678");
+    unmount();
+
+    render(<LoginStage />);
+    await waitFor(() => expect(screen.getByTestId("login-code-0")).toBeInTheDocument());
+    expect(screen.getByText("Code sent to +33 6 12 34 56 78.")).toBeInTheDocument();
+    expect(screen.getByTestId("login-resend")).toBeDisabled();
+  });
+
+  it("tells everyone on the code step what to do when no SMS comes", async () => {
+    mockRequestOtpAction.mockResolvedValue({ success: true, expiresIn: 300 });
+    const user = userEvent.setup();
+    render(<LoginStage />);
+    await sendCodeTo(user, "0612345678");
+
+    expect(screen.getByTestId("login-code-help")).toHaveTextContent("Only Folio accounts receive a code");
+    expect(screen.getByTestId("legal-links")).toBeInTheDocument();
   });
 
   it("names the wait when the number hit its hourly code cap", async () => {
@@ -231,7 +283,7 @@ describe("Phone sign-in", () => {
     // disabled with nothing explaining why.
     await sendCodeTo(user, TRANSLATIONS.phonePlaceholder);
 
-    expect(mockRequestOtpAction).toHaveBeenCalledWith("+33612345678");
+    expect(mockRequestOtpAction).toHaveBeenCalledWith("+33612345678", "en");
   });
 
   it("does not resubmit while the rejected digits are unchanged", async () => {

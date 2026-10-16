@@ -234,6 +234,8 @@ export default function DashboardPage() {
   // so point to creating one (or, without that right, say one is coming).
   if (!projectsLoading && !selectedProject) {
     const canCreate = canCreateProject(user?.permissions, user?.companies);
+    // Name the company just joined, so the wait is not a mystery.
+    const company = user?.companies?.find((c) => c.is_primary) ?? user?.companies?.[0];
     return (
       <div className="fade-up px-4 pb-12 lg:px-8">
         <div
@@ -253,6 +255,11 @@ export default function DashboardPage() {
           <p className="mt-1 max-w-sm text-[13px]" style={{ color: "var(--muted)" }}>
             {canCreate ? tProjects("getStarted") : tProjects("waitingForAssignment.description")}
           </p>
+          {!canCreate && company && (
+            <p className="mt-2 max-w-sm text-[13px] font-medium" data-testid="overview-waiting-company">
+              {tProjects("waitingForAssignment.company", { company: company.legal_name })}
+            </p>
+          )}
           {canCreate && (
             <Link href={`/${locale}/projects?new=1`} className="btn btn-primary mt-4">
               <Plus size={14} />

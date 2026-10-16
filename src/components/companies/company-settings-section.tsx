@@ -180,7 +180,7 @@ export function CompanySettingsSection() {
               always offered both; the web only joined). */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" data-testid="add-company">
                 <Plus size={14} className="mr-1.5" />
                 {tc("my.addCta")}
               </Button>

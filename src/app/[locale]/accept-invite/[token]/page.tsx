@@ -4,7 +4,6 @@ import { getSession } from "@/lib/auth/session";
 import { verifyInvite } from "@/lib/api/invitations";
 import { AcceptInviteForm } from "./accept-invite-form";
 import { InviteError } from "./invite-error";
-import { LoggedInOther } from "./logged-in-other";
 import { JoinAsInvitee } from "./join-as-invitee";
 import { userDisplayName } from "@/lib/auth/user-display";
 
@@ -29,39 +28,36 @@ function sameEmail(a: string | null | undefined, b: string | null | undefined): 
 export default async function AcceptInvitePage({ params }: AcceptInvitePageProps) {
   const { token, locale } = await params;
 
-  // Gate: if the user is already authenticated, ask them to sign out first —
-  // unless the invitation is already accepted: that is this page re-rendering
-  // right after a successful acceptance set the new session cookies, and the
-  // "signed in as someone else" screen used to flash before the redirect —
-  // or unless they ARE the invitee, who then joins from their session.
+  // A signed-in visitor joins straight from their session: the token is the
+  // authorisation, as it is for a brand-new phone, so someone who signed up on
+  // mobile (synthetic address) or under another e-mail can accept too. Only
+  // when the invited address belongs to ANOTHER account does the API refuse,
+  // and the screen then offers to switch account.
   const session = await getSession();
   if (session) {
     const current = await verifyInvite(token).catch(() => null);
+    // The invitation is already accepted: this is the page re-rendering right
+    // after a successful acceptance set the new session cookies.
     if (current && "error" in current && current.error === "accepted") {
       redirect(`/${locale}/dashboard`);
     }
-    // A dead link (unknown, expired, revoked) says so at once: asking to sign
-    // out first only led to the same error after signing out.
+    // A dead link (unknown, expired, revoked) says so at once.
     if (current && "error" in current) {
       return <InviteError reason={current.error} locale={locale} />;
     }
-    if (current && !("error" in current) && sameEmail(session.user.email, current.email)) {
+    if (current) {
       return (
         <JoinAsInvitee
           token={token}
           locale={locale}
           projectName={current.project_name}
+          // Phone-only accounts carry a synthetic address: name them by name or phone.
           currentUser={userDisplayName(session.user)}
+          isInvitee={sameEmail(session.user.email, current.email)}
+          returnPath={`/${locale}/accept-invite/${encodeURIComponent(token)}`}
         />
       );
     }
-    // Phone-only accounts carry a synthetic address: name them by name or phone.
-    return (
-      <LoggedInOther
-        currentEmail={userDisplayName(session.user)}
-        returnPath={`/${locale}/accept-invite/${encodeURIComponent(token)}`}
-      />
-    );
   }
 
   // Verify the token before rendering the form

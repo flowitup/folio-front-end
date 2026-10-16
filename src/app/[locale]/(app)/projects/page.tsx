@@ -53,7 +53,7 @@ import { EditProjectDialog } from "@/components/project/edit-project-dialog";
 import { DeleteProjectDialog } from "@/components/project/delete-project-dialog";
 import type { Project, ProjectUser } from "@/types/project";
 import { fmtEUR, computeBudgetMeta, personalSpendRows } from "@/lib/projects/budget-display";
-import { userContact, userInitial } from "@/lib/auth/user-display";
+import { userContact, userDisplayName, userInitial } from "@/lib/auth/user-display";
 import { toast } from "sonner";
 
 const COVER_GRADIENTS = [
@@ -681,9 +681,15 @@ export default function ProjectsPage() {
                               {userInitial(member)}
                             </div>
                             <div className="min-w-0">
+                              {/* The name first: a list of phone numbers made the wrong person easy to remove. */}
                               <div className="truncate text-[13px] font-medium">
-                                {userContact(member)}
+                                {userDisplayName(member)}
                               </div>
+                              {member.display_name?.trim() && userContact(member) && (
+                                <div className="truncate text-[11px]" style={{ color: "var(--muted)" }}>
+                                  {userContact(member)}
+                                </div>
+                              )}
                               {member.role_name && (
                                 <div className="text-[11px]" style={{ color: "var(--muted)" }}>
                                   {tMembers(`roles.${member.role_name}`)}
@@ -697,11 +703,13 @@ export default function ProjectsPage() {
                                   setRemoveMember({
                                     projectId: project.id,
                                     userId: member.id,
-                                    email: userContact(member),
+                                    email: member.display_name?.trim()
+                                      ? `${userDisplayName(member)} (${userContact(member)})`
+                                      : userContact(member),
                                   })
                                 }
                                 className="btn btn-quiet shrink-0"
-                                aria-label={tMembers("edit.removeAria", { name: userContact(member) })}
+                                aria-label={tMembers("edit.removeAria", { name: userDisplayName(member) })}
                               >
                                 <Trash2 size={14} style={{ color: "var(--negative)" }} />
                               </button>

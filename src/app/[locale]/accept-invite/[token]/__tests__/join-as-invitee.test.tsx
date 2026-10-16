@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 import { JoinAsInvitee } from "../join-as-invitee";
 
 vi.mock("@/lib/auth/actions", () => ({
+  logout: vi.fn(),
   acceptInviteAsMeAction: vi.fn(),
   acceptInviteAction: vi.fn(),
   requestInviteCodeAction: vi.fn(),
@@ -19,9 +20,12 @@ const TRANSLATIONS: Record<string, string> = {
   "joinAsMe.body": "You're signed in as {currentUser}, the account this invitation was sent to.",
   "joinAsMe.submit": "Join the project",
   "joinAsMe.submitting": "Joining…",
+  "joinAsMe.bodyOther": "You're signed in as {currentUser}. Join with this account, or use another one.",
+  "joinAsMe.switchAccount": "Use another account",
   "errors.generic": "Something went wrong. Please try again.",
   "errors.expired": "This invitation has expired.",
   "errors.wrongAccount": "This invitation was sent to another email address.",
+  joinedToast: "You joined {projectName}",
 };
 
 vi.mock("next-intl", () => ({
@@ -65,6 +69,9 @@ describe("JoinAsInvitee", () => {
 
     expect(mockJoin).toHaveBeenCalledWith("tok-2");
     expect(window.location.href).toBe("/fr/dashboard");
+    // The dashboard opens on the joined project, with a toast naming it.
+    expect(localStorage.getItem("selectedProjectId")).toBe("p-1");
+    expect(sessionStorage.getItem("folio:flash-toast")).toBe("You joined 1 rue Principale, Paris");
   });
 
   it("explains a refusal and stays on the page", async () => {
@@ -77,5 +84,22 @@ describe("JoinAsInvitee", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("This invitation has expired.");
     expect(window.location.href).toBe("");
     expect(screen.getByRole("button", { name: /Join the project/ })).toBeEnabled();
+  });
+
+  it("offers another account a way to join as itself or to switch account", async () => {
+    const { logout } = await import("@/lib/auth/actions");
+    render(
+      <JoinAsInvitee
+        token="tok-2"
+        locale="fr"
+        projectName="P"
+        currentUser="Dave"
+        isInvitee={false}
+        returnPath="/fr/accept-invite/tok-2"
+      />
+    );
+    expect(screen.getByText("You're signed in as Dave. Join with this account, or use another one.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /Use another account/ }));
+    expect(vi.mocked(logout)).toHaveBeenCalledWith("/fr/accept-invite/tok-2");
   });
 });

@@ -129,7 +129,7 @@ export async function revokeInvitation(invitationId: string): Promise<void> {
   }
 }
 
-export type InviteErrorReason = "expired" | "revoked" | "accepted" | "not_found";
+export type InviteErrorReason = "expired" | "revoked" | "superseded" | "accepted" | "not_found";
 
 /**
  * Verify an invitation token.
@@ -162,7 +162,7 @@ export async function verifyInvite(
     try {
       const body = await response.json();
       const reason = body?.reason as InviteErrorReason | undefined;
-      if (reason === "expired" || reason === "revoked" || reason === "accepted") {
+      if (reason === "expired" || reason === "revoked" || reason === "superseded" || reason === "accepted") {
         return { error: reason };
       }
     } catch {
@@ -191,7 +191,7 @@ export type AcceptedUser = Pick<User, "id" | "email" | "display_name">;
  */
 export async function acceptInvite(
   payload: AcceptInvitePayload
-): Promise<{ user?: AcceptedUser; setCookieHeaders: string[] }> {
+): Promise<{ user?: AcceptedUser; projectId?: string; setCookieHeaders: string[] }> {
   let response: Response;
   try {
     response = await fetch(`${env.apiBaseUrl}/invitations/accept`, {
@@ -233,8 +233,9 @@ export async function acceptInvite(
         display_name: body.user.display_name ?? null,
       }
     : undefined;
+  const projectId = typeof body?.project_id === "string" ? body.project_id : undefined;
 
-  return { user, setCookieHeaders };
+  return { user, projectId, setCookieHeaders };
 }
 
 /**

@@ -83,6 +83,7 @@ const KEY_1: ApiKey = {
   prefix: "folio_sk_AbCd",
   createdAt: "2026-01-01T00:00:00.000Z",
   lastUsedAt: "2026-02-01T00:00:00.000Z",
+  valid: true,
 };
 
 const KEY_2: ApiKey = {
@@ -91,6 +92,7 @@ const KEY_2: ApiKey = {
   prefix: "folio_sk_WxYz",
   createdAt: "2026-01-05T00:00:00.000Z",
   lastUsedAt: null,
+  valid: true,
 };
 
 beforeEach(() => {
@@ -112,6 +114,13 @@ describe("ApiKeysSection — load", () => {
     });
     expect(screen.getByText(/folio_sk_AbCd/)).toBeDefined();
     expect(screen.getByText(/folio_sk_WxYz/)).toBeDefined();
+  });
+
+  it("marks a key that stopped working after a phone change", async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, data: [KEY_1, { ...KEY_2, valid: false }] });
+    render(<ApiKeysSection />);
+
+    await waitFor(() => expect(screen.getAllByTestId("api-key-invalid")).toHaveLength(1));
   });
 
   it("translates the placeholder of the usage hint but keeps the header syntax literal", async () => {
@@ -153,6 +162,7 @@ describe("ApiKeysSection — create", () => {
       prefix: "folio_sk_New1",
       createdAt: "2026-03-01T00:00:00.000Z",
       lastUsedAt: null,
+      valid: true,
       token: "folio_sk_supersecretplaintexttoken",
     };
     mockCreate.mockResolvedValueOnce({ ok: true, data: created });

@@ -9,7 +9,7 @@ export default async function UnauthorizedPage() {
   const locale = await getLocale();
   const t = await getTranslations("errors");
   return (
-    <div className="bg-background flex min-h-screen items-center justify-center px-4">
+    <div className="bg-background flex min-h-dvh items-center justify-center px-4">
       <div className="text-center">
         <h1 className="font-display text-foreground text-5xl font-semibold">403</h1>
         <p className="text-muted-foreground mt-3 text-lg">{t("accessDenied")}</p>

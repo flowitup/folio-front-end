@@ -56,7 +56,7 @@
     "errorPhoneRequired": "Vui lòng nhập số điện thoại",
     "errorInvalidPhone": "Nhập số điện thoại Pháp",
     "errorCodeRequired": "Vui lòng nhập mã gồm 6 chữ số",
-    "errorInvalidCode": "Mã không đúng hoặc đã hết hạn",
+    "errorInvalidCode": "Mã không đúng hoặc đã hết hạn. Sau nhiều lần thử, hãy yêu cầu mã mới.",
     "errorThrottled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại.",
     "errorHourlyLimit": "Đã yêu cầu quá nhiều mã cho số này. Vui lòng thử lại sau {minutes} phút.",
     "errorSmsFailed": "Không thể gửi SMS. Vui lòng thử lại sau.",
@@ -73,7 +73,11 @@
     "stepEnterSite": "Vào công trình",
     "verified": "Đã xác minh",
     "codeAlreadySent": "Mã đã được gửi đến số này — hãy nhập mã đó, hoặc nhận mã mới sau {seconds} giây.",
-    "codeExpired": "Mã đã hết hạn — hãy nhận mã mới"
+    "codeExpired": "Mã đã hết hạn — hãy nhận mã mới",
+    "errorCodeLocked": "Nhập sai quá nhiều lần: mã này không còn dùng được, kể cả khi nhập đúng. Hãy yêu cầu mã mới.",
+    "codeRecentlySent": "Một mã đã được gửi tới số này chưa đầy một phút trước: hãy nhập mã bên dưới.",
+    "codeHelp": "Không nhận được SMS? Hãy kiểm tra số điện thoại. Chỉ tài khoản Folio mới nhận được mã: tài khoản được tạo trong ứng dụng Folio trên điện thoại hoặc qua lời mời của công ty bạn. Quyền truy cập bị vô hiệu hóa? Hãy liên hệ quản trị viên của công ty.",
+    "sessionReset": "Phiên đăng nhập của bạn đã được đặt lại để bảo mật. Vui lòng đăng nhập lại."
   },
   "topbar": {
     "projectSettingsTitle": "Cài đặt dự án",
@@ -262,7 +266,8 @@
     "invoicePrefixInvalid": "Tiền tố chỉ được chứa chữ in hoa và số (A-Z, 0-9), tối đa 8 ký tự.",
     "waitingForAssignment": {
       "title": "Chờ quản lý thêm bạn vào công trình",
-      "description": "Quản trị viên công ty sẽ thêm bạn vào một công trình khi sẵn sàng."
+      "description": "Quản trị viên công ty sẽ thêm bạn vào một công trình khi sẵn sàng.",
+      "company": "Bạn thuộc công ty {company}."
     },
     "noCompany": {
       "title": "Bạn chưa thuộc công ty nào",
@@ -362,7 +367,9 @@
         "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
         "rate_limited": "Quá nhiều lần thử. Vui lòng đợi một lát rồi thử lại.",
         "unknown": "Đã xảy ra lỗi. Vui lòng thử lại."
-      }
+      },
+      "invalidBadge": "Không còn hoạt động",
+      "invalidHint": "Được tạo trước khi bạn đổi số điện thoại: khóa này không còn đăng nhập được. Hãy thu hồi và tạo khóa mới."
     },
     "errorInvalidProfile": "Kiểm tra lại tên: tối đa 80 ký tự.",
     "changePhone": {
@@ -385,7 +392,8 @@
       "errorInvalidCode": "Mã không đúng hoặc đã hết hạn",
       "errorFailed": "Không thể đổi số điện thoại. Vui lòng thử lại.",
       "errorSessionExpired": "Phiên đăng nhập đã hết hạn.",
-      "signInAgain": "Đăng nhập lại"
+      "signInAgain": "Đăng nhập lại",
+      "apiKeysWarning": "Các khóa API của bạn sẽ ngừng hoạt động sau khi đổi số: hãy tạo khóa mới sau đó."
     },
     "errorNameRequired": "Tên của bạn không được để trống.",
     "errorSessionExpired": "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để lưu.",
@@ -441,7 +449,7 @@
     "notFound": {
       "title": "Không tìm thấy trang",
       "body": "Trang này không tồn tại, đã bị xóa hoặc bạn không có quyền truy cập.",
-      "back": "Quay lại bảng điều khiển"
+      "back": "Về Tổng quan"
     },
     "boundary": {
       "title": "Đã xảy ra lỗi",
@@ -1217,13 +1225,15 @@
       "invalidPhone": "Nhập số điện thoại Pháp",
       "phoneRegistered": "Số điện thoại này đã có tài khoản. Vui lòng đăng nhập.",
       "codeRequired": "Vui lòng nhập mã gồm 6 chữ số",
-      "invalidCode": "Mã không đúng hoặc đã hết hạn",
+      "invalidCode": "Mã không đúng hoặc đã hết hạn. Sau nhiều lần thử, hãy yêu cầu mã mới.",
       "throttled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại.",
       "hourlyLimit": "Đã yêu cầu quá nhiều mã cho số này. Vui lòng thử lại sau {minutes} phút.",
       "title": "Lời mời không khả dụng",
       "nameRequired": "Vui lòng nhập tên của bạn",
       "accountExists": "Lời mời này dành cho một tài khoản Folio đã có. Hãy nhập số điện thoại của tài khoản đó, hoặc đăng nhập vào tài khoản đó trước.",
-      "wrongAccount": "Lời mời này đã được gửi đến một địa chỉ email khác."
+      "wrongAccount": "Lời mời này được gửi đến địa chỉ của một tài khoản Folio khác. Hãy dùng tài khoản đó để chấp nhận.",
+      "superseded": "Bạn đã được gửi một lời mời mới hơn: hãy dùng đường dẫn trong email gần nhất.",
+      "codeLocked": "Nhập sai quá nhiều lần: mã này không còn dùng được, kể cả khi nhập đúng. Hãy yêu cầu mã mới."
     },
     "loggedInOther": {
       "title": "Bạn đang đăng nhập bằng tài khoản khác",
@@ -1251,8 +1261,12 @@
       "title": "Tham gia {projectName}",
       "body": "Bạn đang đăng nhập bằng {currentUser}, đúng tài khoản được gửi lời mời này.",
       "submit": "Tham gia dự án",
-      "submitting": "Đang tham gia…"
-    }
+      "submitting": "Đang tham gia…",
+      "bodyOther": "Bạn đang đăng nhập bằng {currentUser}. Tham gia dự án bằng tài khoản này, hoặc dùng tài khoản khác.",
+      "switchAccount": "Dùng tài khoản khác"
+    },
+    "codeRecentlySent": "Một mã đã được gửi tới số này chưa đầy một phút trước: hãy nhập mã bên dưới.",
+    "joinedToast": "Bạn đã tham gia {projectName}"
   },
   "admin": {
     "bulkAdd": {
@@ -2124,13 +2138,14 @@
       "joined": "Tham gia",
       "expires": "Hết hạn sau",
       "invitedBy": "Được mời bởi",
-      "actions": "Thao tác"
+      "actions": "Thao tác",
+      "contact": "Liên hệ"
     },
     "invite": {
       "button": "Mời thành viên",
       "unavailable": "Tính năng mời tạm thời không khả dụng. Vui lòng thử lại sau.",
       "dialogTitle": "Mời thành viên mới",
-      "dialogDescription": "Thêm một người vào dự án này. Nếu họ đã có tài khoản Folio, họ sẽ được thêm trực tiếp. Nếu chưa, chúng tôi sẽ gửi link mời có hiệu lực 7 ngày qua email.",
+      "dialogDescription": "Thêm một người vào dự án này. Nếu email này thuộc một tài khoản Folio, họ sẽ được thêm trực tiếp. Nếu chưa, chúng tôi sẽ gửi qua email link mời có hiệu lực 7 ngày, họ có thể chấp nhận bằng số điện thoại, kể cả khi đã có tài khoản.",
       "emailLabel": "Địa chỉ email",
       "emailHint": "Chúng tôi sẽ gửi lời mời đến địa chỉ này",
       "roleLabel": "Vai trò",
@@ -2397,7 +2412,8 @@
       "notFound": "Không tìm thấy tài nguyên yêu cầu.",
       "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
       "generic": "Đã xảy ra lỗi không mong muốn.",
-      "invalidJoinCode": "Mã công ty không hợp lệ hoặc đã bị thu hồi."
+      "invalidJoinCode": "Mã công ty không hợp lệ hoặc đã bị thu hồi.",
+      "joinCodeLength": "Mã công ty gồm 8 ký tự (ví dụ ABCD-2345)."
     },
     "scopePicker": {
       "label": "Công ty đang xem",
@@ -3216,5 +3232,9 @@
     "mergedProfiles": "Hồ sơ doanh nghiệp: chuyển {moved}, gộp {merged}.",
     "mergedAccount": "Tài khoản đăng nhập giờ đã liên kết với hồ sơ đích.",
     "conflictAccounts": "Hai hồ sơ này liên kết với hai tài khoản khác nhau: không phải cùng một người."
+  },
+  "legalLinks": {
+    "support": "Trợ giúp và hỗ trợ",
+    "privacy": "Quyền riêng tư"
   }
 }

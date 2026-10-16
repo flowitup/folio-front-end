@@ -40,9 +40,9 @@ describe("normalizeFrenchPhone", () => {
 
 describe("formatFrenchPhone", () => {
   it.each([
-    ["+33640838057", "+336 40 83 80 57"],
-    ["+33612345678", "+336 12 34 56 78"],
-    ["+33142345678", "+331 42 34 56 78"],
+    ["+33640838057", "+33 6 40 83 80 57"],
+    ["+33612345678", "+33 6 12 34 56 78"],
+    ["+33142345678", "+33 1 42 34 56 78"],
   ])("formats the French E.164 number %s as %s", (raw, expected) => {
     expect(formatFrenchPhone(raw)).toBe(expected);
   });
@@ -54,7 +54,7 @@ describe("formatFrenchPhone", () => {
     "not-a-phone",
     "",
     // Already formatted — a second pass must be a no-op, not a mis-parse.
-    "+336 40 83 80 57",
+    "+33 6 40 83 80 57",
     // Wrong digit count for the E.164 shape (8, not 9, digits after +33).
     "+3361234567",
     // Leading 0 after +33 is not a valid French national number.

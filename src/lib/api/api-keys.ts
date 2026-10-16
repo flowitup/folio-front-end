@@ -28,6 +28,8 @@ export type ApiKey = {
   prefix: string;
   createdAt: string;
   lastUsedAt: string | null;
+  /** False once the key no longer signs in (it predates a phone-number change). */
+  valid: boolean;
 };
 
 /** Returned only from create — the plaintext token can never be retrieved again. */
@@ -40,6 +42,8 @@ interface ApiKeyRaw {
   prefix: string;
   created_at: string;
   last_used_at: string | null;
+  /** Sent by newer back ends; missing means usable. */
+  valid?: boolean;
 }
 
 interface CreatedApiKeyRaw extends ApiKeyRaw {
@@ -76,6 +80,7 @@ function mapApiKey(raw: ApiKeyRaw): ApiKey {
     prefix: raw.prefix,
     createdAt: raw.created_at,
     lastUsedAt: raw.last_used_at ?? null,
+    valid: raw.valid !== false,
   };
 }
 

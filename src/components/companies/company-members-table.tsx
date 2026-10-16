@@ -402,7 +402,7 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
                 <TableHead>{t("col.role")}</TableHead>
                 <TableHead>{t("col.company")}</TableHead>
                 <TableHead>{t("col.projects")}</TableHead>
-                <TableHead className="w-[100px]" />
+                <TableHead className="w-[72px]" />
               </TableRow>
             </TableHeader>
             <TableBody>

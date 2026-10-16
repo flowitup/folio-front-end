@@ -81,7 +81,7 @@ describe("ProfileForm — initial values", () => {
   it("hydrates fields from useAuth().user", () => {
     render(<ProfileForm />);
     expect(screen.getByLabelText("Display name")).toHaveValue("Alice");
-    expect(screen.getByLabelText("Phone")).toHaveValue("+336 12 34 56 78");
+    expect(screen.getByLabelText("Phone")).toHaveValue("+33 6 12 34 56 78");
     expect(screen.getByLabelText("Email")).toHaveValue("alice@example.com");
     expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
   });
@@ -206,7 +206,7 @@ describe("ProfileForm — change number", () => {
       fireEvent.click(screen.getByTestId("change-phone-send"));
     });
     expect(mockRequestCode).toHaveBeenCalledWith("+33698765432");
-    expect(screen.getByText("Enter the code sent to +336 98 76 54 32.")).toBeDefined();
+    expect(screen.getByText("Enter the code sent to +33 6 98 76 54 32.")).toBeDefined();
 
     // Pasting the texted code fills the row and submits it.
     await act(async () => {
@@ -221,7 +221,7 @@ describe("ProfileForm — change number", () => {
         "Phone number changed. Your other devices have been signed out; sign in with your new number from now on."
       );
       expect(mockRefresh).toHaveBeenCalledOnce();
-      expect(screen.getByLabelText("Phone")).toHaveValue("+336 98 76 54 32");
+      expect(screen.getByLabelText("Phone")).toHaveValue("+33 6 98 76 54 32");
     });
   });
 
@@ -266,7 +266,7 @@ describe("ProfileForm — change number", () => {
       expect(screen.getByTestId("change-phone-error")).toHaveTextContent("Wrong or expired code");
     });
     expect(screen.getByTestId("change-phone-confirm")).toBeDisabled();
-    expect(screen.getByLabelText("Phone")).toHaveValue("+336 12 34 56 78");
+    expect(screen.getByLabelText("Phone")).toHaveValue("+33 6 12 34 56 78");
     expect(mockRefresh).not.toHaveBeenCalled();
   });
 

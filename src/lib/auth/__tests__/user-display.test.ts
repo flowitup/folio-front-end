@@ -19,15 +19,15 @@ describe("user display helpers", () => {
   });
 
   it("never shows the synthetic address for a phone-only account", () => {
-    expect(userContact(phoneOnly)).toBe("+336 99 27 10 01");
-    expect(userDisplayName(phoneOnly)).toBe("+336 99 27 10 01");
+    expect(userContact(phoneOnly)).toBe("+33 6 99 27 10 01");
+    expect(userDisplayName(phoneOnly)).toBe("+33 6 99 27 10 01");
     expect(userInitial(phoneOnly)).toBe("·");
-    expect(userDisplayName({ ...phoneOnly, display_name: "  " })).toBe("+336 99 27 10 01");
+    expect(userDisplayName({ ...phoneOnly, display_name: "  " })).toBe("+33 6 99 27 10 01");
   });
 
   it("reads the phone out of the synthetic address when the payload has none", () => {
     expect(userContact({ email: "phone-33600000097@no-email.folio.flowitup.com" })).toBe(
-      "+336 00 00 00 97"
+      "+33 6 00 00 00 97"
     );
   });
 

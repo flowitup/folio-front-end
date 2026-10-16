@@ -56,7 +56,7 @@
     "errorPhoneRequired": "Please enter your phone number",
     "errorInvalidPhone": "Enter a French phone number",
     "errorCodeRequired": "Please enter the 6-digit code",
-    "errorInvalidCode": "Wrong or expired code",
+    "errorInvalidCode": "Wrong or expired code. After several tries, ask for a new code.",
     "errorThrottled": "Too many requests. Wait a minute and try again.",
     "errorHourlyLimit": "Too many codes were requested for this number. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
     "errorSmsFailed": "The SMS could not be sent. Try again later.",
@@ -73,7 +73,11 @@
     "stepEnterSite": "On site",
     "verified": "Verified",
     "codeAlreadySent": "A code was already sent to this number — enter it, or get a new one in {seconds} s.",
-    "codeExpired": "Code expired — ask for a new one"
+    "codeExpired": "Code expired — ask for a new one",
+    "errorCodeLocked": "Too many tries: this code no longer works, even typed correctly. Ask for a new code.",
+    "codeRecentlySent": "A code was sent to this number less than a minute ago: type it below.",
+    "codeHelp": "No SMS? Check the number. Only Folio accounts receive a code: they are created in the Folio mobile app or through your company's invitation. Access deactivated? Contact your company's administrator.",
+    "sessionReset": "Your session was reset for your security. Please sign in again."
   },
   "topbar": {
     "projectSettingsTitle": "Project settings",
@@ -262,7 +266,8 @@
     "invoicePrefixInvalid": "Prefix must contain only uppercase letters and digits (A-Z, 0-9), max 8 characters.",
     "waitingForAssignment": {
       "title": "Waiting to be assigned",
-      "description": "Your company admin hasn't added you to a construction site yet."
+      "description": "Your company admin hasn't added you to a construction site yet.",
+      "company": "You are part of {company}."
     },
     "noCompany": {
       "title": "You don't belong to a company yet",
@@ -362,7 +367,9 @@
         "unauthorized": "Your session has expired. Please sign in again.",
         "rate_limited": "Too many attempts. Please wait a moment and try again.",
         "unknown": "Something went wrong. Please try again."
-      }
+      },
+      "invalidBadge": "No longer works",
+      "invalidHint": "Created before your phone number changed: this key can no longer sign in. Revoke it and create a new one."
     },
     "errorInvalidProfile": "Check your name: it can be up to 80 characters.",
     "changePhone": {
@@ -385,7 +392,8 @@
       "errorInvalidCode": "Wrong or expired code",
       "errorFailed": "Couldn't change your phone number. Please try again.",
       "errorSessionExpired": "Your session has expired.",
-      "signInAgain": "Sign in again"
+      "signInAgain": "Sign in again",
+      "apiKeysWarning": "Your API keys will stop working after the change: create new ones afterwards."
     },
     "errorNameRequired": "Your name cannot be empty.",
     "errorSessionExpired": "Your session has expired. Sign in again to save.",
@@ -441,7 +449,7 @@
     "notFound": {
       "title": "Page not found",
       "body": "This page doesn't exist, was deleted, or you don't have access to it.",
-      "back": "Back to dashboard"
+      "back": "Back to overview"
     },
     "boundary": {
       "title": "Something went wrong",
@@ -1217,13 +1225,15 @@
       "invalidPhone": "Enter a French phone number",
       "phoneRegistered": "This phone number already has an account. Sign in instead.",
       "codeRequired": "Please enter the 6-digit code",
-      "invalidCode": "Wrong or expired code",
+      "invalidCode": "Wrong or expired code. After several tries, ask for a new code.",
       "throttled": "Too many requests. Wait a minute and try again.",
       "hourlyLimit": "Too many codes were requested for this number. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
       "title": "Invitation unavailable",
       "nameRequired": "Please enter your name",
       "accountExists": "This invitation is for an existing Folio account. Enter that account's phone number, or sign in to it first.",
-      "wrongAccount": "This invitation was sent to another email address."
+      "wrongAccount": "This invitation was sent to the address of another Folio account. Use that account to accept it.",
+      "superseded": "A newer invitation was sent to you: use the link in the latest e-mail.",
+      "codeLocked": "Too many tries: this code no longer works, even typed correctly. Ask for a new code."
     },
     "loggedInOther": {
       "title": "You're signed in as someone else",
@@ -1251,8 +1261,12 @@
       "title": "Join {projectName}",
       "body": "You're signed in as {currentUser}, the account this invitation was sent to.",
       "submit": "Join the project",
-      "submitting": "Joining…"
-    }
+      "submitting": "Joining…",
+      "bodyOther": "You're signed in as {currentUser}. Join the project with this account, or use another one.",
+      "switchAccount": "Use another account"
+    },
+    "codeRecentlySent": "A code was sent to this number less than a minute ago: type it below.",
+    "joinedToast": "You joined {projectName}"
   },
   "admin": {
     "bulkAdd": {
@@ -2124,13 +2138,14 @@
       "joined": "Joined",
       "expires": "Expires in",
       "invitedBy": "Invited by",
-      "actions": "Actions"
+      "actions": "Actions",
+      "contact": "Contact"
     },
     "invite": {
       "button": "Invite member",
       "unavailable": "Invites are temporarily unavailable. Please try again shortly.",
       "dialogTitle": "Invite a new member",
-      "dialogDescription": "Add someone to this project. If they already have a Folio account, they'll be added directly. Otherwise we'll email a 7-day invite link.",
+      "dialogDescription": "Add someone to this project. If this e-mail address belongs to a Folio account, they'll be added directly. Otherwise we'll e-mail a 7-day invite link they can accept with their phone number, even if they already have an account.",
       "emailLabel": "Email address",
       "emailHint": "We'll send the invite to this address",
       "roleLabel": "Role",
@@ -2397,7 +2412,8 @@
       "notFound": "The requested resource was not found.",
       "rateLimited": "Too many requests. Please wait and try again.",
       "generic": "An unexpected error occurred.",
-      "invalidJoinCode": "Invalid or revoked company code."
+      "invalidJoinCode": "Invalid or revoked company code.",
+      "joinCodeLength": "A company code has 8 characters (for example ABCD-2345)."
     },
     "scopePicker": {
       "label": "Company shown",
@@ -3216,5 +3232,9 @@
     "mergedProfiles": "Company profiles: {moved} moved, {merged} merged.",
     "mergedAccount": "The sign-in account is now linked to the target.",
     "conflictAccounts": "These two records are linked to two different accounts: they are not the same person."
+  },
+  "legalLinks": {
+    "support": "Help and support",
+    "privacy": "Privacy"
   }
 }

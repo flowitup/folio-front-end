@@ -15,6 +15,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { MyCompany } from "@/types/companies";
 
 // ---------------------------------------------------------------------------
@@ -138,7 +139,14 @@ vi.mock("@/components/companies/company-labor-roles-card", () => ({
 }));
 
 vi.mock("@/components/companies/join-company-dialog", () => ({
-  JoinCompanyDialog: () => <div data-testid="join-company-dialog" />,
+  JoinCompanyDialog: ({ open }: { open: boolean }) => (
+    <div data-testid="join-company-dialog" data-open={String(open)} />
+  ),
+}));
+vi.mock("@/components/companies/company-create-dialog", () => ({
+  CompanyCreateDialog: ({ open }: { open: boolean }) => (
+    <div data-testid="create-company-dialog" data-open={String(open)} />
+  ),
 }));
 
 vi.mock("@/components/companies/company-create-dialog", () => ({
@@ -213,6 +221,20 @@ describe("CompanySettingsSection (merged Company tab)", () => {
     expect(screen.getByTestId("members-table")).toBeDefined();
     expect(screen.getByTestId("payment-methods-card")).toBeDefined();
     expect(screen.getByTestId("labor-roles-card").getAttribute("data-company")).toBe("c1");
+  });
+
+  it("offers to create a company as well as to join one", async () => {
+    resolveWith([makeCompany({ role: "member" })]);
+    const user = userEvent.setup();
+    render(<CompanySettingsSection />);
+
+    await user.click(await screen.findByTestId("add-company"));
+    await user.click(await screen.findByRole("menuitem", { name: "Create a company" }));
+    expect(screen.getByTestId("create-company-dialog").getAttribute("data-open")).toBe("true");
+
+    await user.click(screen.getByTestId("add-company"));
+    await user.click(await screen.findByRole("menuitem", { name: "Enter a company code" }));
+    expect(screen.getByTestId("join-company-dialog").getAttribute("data-open")).toBe("true");
   });
 
   it("hides the admin tools when the caller is only a member of the company", async () => {

@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { FolioLogo } from "@/components/folio-logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { LegalLinks } from "@/components/legal-links";
+import { formatFrenchPhone } from "@/lib/auth/phone-number";
 import { PhoneLoginForm } from "./PhoneLoginForm";
 import { usePhoneLoginFlow } from "./use-phone-login-flow";
 
@@ -20,8 +22,9 @@ const ON_INK = {
   rule: "#3d372f",
 } as const;
 
-export function LoginStage() {
+export function LoginStage({ sessionReset = false }: { sessionReset?: boolean } = {}) {
   const t = useTranslations("auth");
+  const locale = useLocale();
   const flow = usePhoneLoginFlow();
   // Phone + SMS code is the only sign-in, so the copy column follows the flow's
   // own step rather than a chosen view.
@@ -98,7 +101,8 @@ export function LoginStage() {
           {isCodeStep ? (
             <>
               {t.rich("codeSentTo", {
-                phone: flow.sentTo,
+                // "+33 6 12 34 56 78": the way the number is written everywhere else.
+                phone: formatFrenchPhone(flow.sentTo),
                 mono: (chunks) => (
                   <span className="num" style={{ color: ON_INK.cream }}>
                     {chunks}
@@ -153,7 +157,18 @@ export function LoginStage() {
           boxShadow: "0 24px 60px -30px rgba(0,0,0,0.6)",
         }}
       >
+        {sessionReset && flow.step === "phone" && (
+          <p
+            role="status"
+            data-testid="login-session-reset"
+            className="mb-4 rounded-[10px] p-3 text-[12.5px]"
+            style={{ background: "var(--paper-2)", color: "var(--ink)", border: "1px solid var(--border)" }}
+          >
+            {t("sessionReset")}
+          </p>
+        )}
         <PhoneLoginForm flow={flow} />
+        <LegalLinks locale={locale} className="mt-5 justify-center" />
       </div>
     </div>
   );

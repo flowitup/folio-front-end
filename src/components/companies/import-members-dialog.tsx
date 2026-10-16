@@ -54,13 +54,20 @@ export function ImportMembersDialog({ open, onOpenChange, companyId, sourceCompa
   // them, so they are marked and left unselectable instead. A removed member
   // (inactive profile) is not one of them: importing brings them back.
   const [existing, setExisting] = useState<Set<string>>(new Set());
+  // Their phone numbers too: the same person can be a different directory
+  // entry in each company, and importing that phone again would collide.
+  const [existingPhones, setExistingPhones] = useState<Set<string>>(new Set());
+  const isExisting = (entry: { person_id: string; phone?: string | null }) =>
+    existing.has(entry.person_id) || (!!entry.phone && existingPhones.has(phoneKey(entry.phone)));
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     void fetchCompanyDirectoryAction(companyId).then((result) => {
       if (!cancelled && result.ok) {
-        setExisting(new Set(result.data.filter((e) => e.is_active).map((e) => e.person_id)));
+        const active = result.data.filter((e) => e.is_active);
+        setExisting(new Set(active.map((e) => e.person_id)));
+        setExistingPhones(new Set(active.flatMap((e) => (e.phone ? [phoneKey(e.phone)] : []))));
       }
     });
     return () => {
@@ -159,10 +166,10 @@ export function ImportMembersDialog({ open, onOpenChange, companyId, sourceCompa
                     type="checkbox"
                     checked={selected.has(entry.person_id)}
                     onChange={() => toggle(entry.person_id)}
-                    disabled={isSubmitting || existing.has(entry.person_id)}
+                    disabled={isSubmitting || isExisting(entry)}
                   />
                   <span className="min-w-0 flex-1 truncate">{entry.name}</span>
-                  {existing.has(entry.person_id) && (
+                  {isExisting(entry) && (
                     <span className="text-[11px]" style={{ color: "var(--muted)" }}>
                       {t("alreadyMember")}
                     </span>
@@ -188,4 +195,9 @@ export function ImportMembersDialog({ open, onOpenChange, companyId, sourceCompa
       </DialogContent>
     </Dialog>
   );
+}
+
+/** A phone number with its spacing dropped, for comparing two directory entries. */
+function phoneKey(phone: string): string {
+  return phone.replace(/[\s.-]/g, "");
 }

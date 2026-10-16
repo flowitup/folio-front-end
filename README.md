@@ -128,6 +128,7 @@ There's no `.env.example` — create `.env.local` yourself if you need to overri
 | `NEXT_PUBLIC_API_BASE_URL` | Production builds (baked in at build time) | The API base URL, e.g. `http://localhost:5000/api/v1`. Used by the browser, and by the server too unless `API_INTERNAL_BASE_URL` is set. `npm run dev` falls back to that value if unset. |
 | `API_INTERNAL_BASE_URL` | When the server can't reach the public URL (e.g. in Docker) | Server-only, read at runtime, never sent to the browser. Used for every server-side API call (sign-in, the session check on each page, server actions), e.g. `http://api:5000/api/v1`. |
 | `NEXT_PUBLIC_S3_PUBLIC_URL` | Only if file storage has its own origin | Origin of the S3/MinIO endpoint behind presigned URLs (document upload and preview). Added to the Content-Security-Policy at build time; without it the browser blocks those requests. |
+| `IOS_APP_ID`, `ANDROID_SHA256_CERT_FINGERPRINTS`, `ANDROID_PACKAGE` | To open invitation links in the mobile app | Runtime. Served at `/.well-known/apple-app-site-association` (`IOS_APP_ID` = `<team id>.com.flowitup.folio`) and `/.well-known/assetlinks.json` (comma-separated signing-cert SHA-256 fingerprints; package defaults to `com.flowitup.folio`). Unset, no link is claimed. |
 
 ### Install and run
 

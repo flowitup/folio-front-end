@@ -1,7 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { LegalLinks } from "@/components/legal-links";
 import { useAuth } from "@/context/AuthContext";
 import { useProject } from "@/context/ProjectContext";
 import { UsersSection } from "./users/users-section";
@@ -83,6 +84,7 @@ function sectionFromHash(hash: string, isOps: boolean): SectionKey {
 
 export function SettingsClient({ projects }: Props) {
   const t = useTranslations("settings");
+  const locale = useLocale();
   const { user } = useAuth();
   const { selectedProject } = useProject();
 
@@ -183,11 +185,14 @@ export function SettingsClient({ projects }: Props) {
           </section>
         )}
 
-        {APP_VERSION && (
-          <p className="pt-1 text-[11px]" style={{ color: "var(--muted)" }}>
-            Folio v{APP_VERSION}
-          </p>
-        )}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
+          <LegalLinks locale={locale} />
+          {APP_VERSION && (
+            <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+              Folio v{APP_VERSION}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

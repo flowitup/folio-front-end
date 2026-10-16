@@ -15,6 +15,7 @@ import { render, screen } from "@testing-library/react";
 import { LoginStage } from "../LoginStage";
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "en",
   useTranslations: () => {
     const translate = (key: string) => key;
     return Object.assign(translate, { rich: (key: string) => key });
@@ -25,6 +26,10 @@ vi.mock("@/components/language-switcher", () => ({
   LanguageSwitcher: ({ tone }: { tone?: string }) => (
     <div data-testid="language-switcher" data-tone={tone} />
   ),
+}));
+
+vi.mock("@/components/legal-links", () => ({
+  LegalLinks: () => null,
 }));
 
 vi.mock("@/context/AuthContext", () => ({

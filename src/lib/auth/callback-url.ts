@@ -31,3 +31,8 @@ export function loginPathFor(requestedPath: string | null | undefined, locale: s
   if (!requestedPath || postLoginPath(requestedPath, locale) !== requestedPath) return login;
   return `${login}?callbackUrl=${encodeURIComponent(requestedPath)}`;
 }
+
+/** Whether `path` is an invitation page (`/<locale>/accept-invite/<token>`). */
+export function isAcceptInvitePath(path: string): boolean {
+  return /^\/[a-z]{2}\/accept-invite\/[^/?#]+/.test(path);
+}

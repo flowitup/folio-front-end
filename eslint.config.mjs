@@ -27,6 +27,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Vendored PDF.js worker (minified, not our code)
     "public/pdf.worker.min.mjs",
+    // Vendored PDF.js image decoders (wasm fallbacks, not our code)
+    "public/wasm/**",
   ]),
 ]);
 

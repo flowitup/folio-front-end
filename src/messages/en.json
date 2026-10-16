@@ -182,10 +182,11 @@
       "clear": "Clear search"
     },
     "projectStamp": "Project",
-    "progress": "Progress",
+    "progress": "Credit used",
     "creditTotal": "Credit total",
     "spentByCredits": "Spent by credit",
     "spentPersonal": "Spent personal",
+    "spentUnassigned": "{amount} paid in no purse (no company or personal payment method) ›",
     "breakdownTitle": "Where personal money went",
     "laborPaid": "Labor — paid",
     "laborUnpaid": "Labor — unpaid",

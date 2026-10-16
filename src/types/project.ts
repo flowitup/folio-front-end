@@ -29,8 +29,17 @@ export interface Project {
    * Portion of `spent` paid with company money — the credit line. Always present, defaults to 0.
    */
   spent_by_credits?: number;
-  /** Portion paid out of pocket. credits + personal + labor_unpaid === spent. */
+  /**
+   * The personal purse: paid with a personal-flagged method and not reimbursed.
+   * credits + personal + unassigned + labor_unpaid === spent.
+   */
   spent_personal?: number;
+  /** Spend in no purse: no payment method, or one flagged neither company nor personal. */
+  spent_unassigned?: number;
+  /** Every expense net of returns (the ledger total, no labor accrual). */
+  spent_invoiced?: number;
+  /** No-purse spend per invoice type; values sum to spent_unassigned. */
+  unassigned_by_type?: Record<string, number>;
   /** Labor accrued from attendance entries. */
   labor_accrued?: number;
   /** Labor settled by labor-type invoices. */

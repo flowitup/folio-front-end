@@ -50,6 +50,7 @@ describe("ProjectsPage load failure", () => {
     expect(screen.getByTestId("projects-load-error")).toHaveTextContent(frMessages.projects.loadError);
     expect(screen.queryByText(/HTTP 500/)).toBeNull();
     expect(screen.queryByText("load_failed")).toBeNull();
+    mockRefetch.mockClear(); // the quiet refresh on mount
     fireEvent.click(screen.getByRole("button", { name: frMessages.projects.retry }));
     expect(mockRefetch).toHaveBeenCalledTimes(1);
   });

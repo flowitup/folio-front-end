@@ -48,6 +48,7 @@ import { EditProjectDialog } from "@/components/project/edit-project-dialog";
 import { DeleteProjectDialog } from "@/components/project/delete-project-dialog";
 import type { Project, ProjectUser } from "@/types/project";
 import { fmtEUR, computeBudgetMeta, personalSpendRows } from "@/lib/projects/budget-display";
+import { formatShare } from "@/lib/utils/format-percent";
 import { userContact, userInitial } from "@/lib/auth/user-display";
 import { toast } from "sonner";
 
@@ -116,6 +117,12 @@ export default function ProjectsPage() {
   // matches the matrix, so gating on my_permissions alone is correct here.
   const canDeleteProject = (project: Project) =>
     can("project:delete", user?.permissions, project.my_permissions);
+
+  // The list is loaded once per session: an expense added since (same tab,
+  // client navigation) would leave the money figures stale. Refresh quietly.
+  useEffect(() => {
+    void refetch({ silent: true });
+  }, [refetch]);
 
   const canCreate = canCreateProject(user?.permissions, user?.companies);
   // No company at all (e.g. they just left their only one): nobody can assign
@@ -301,13 +308,19 @@ export default function ProjectsPage() {
               creditTotal,
               spentByCredits,
               spentPersonal,
+              spentUnassigned,
               remaining,
               isOverBudget,
               progress,
+              progressPct,
             } = computeBudgetMeta(
               project.budget ?? 0,
               project.spent_personal ?? 0,
               project.spent_by_credits ?? 0,
+              // Same definition as the Overview: credit − every expense, net of returns.
+              project.spent_invoiced ??
+                (project.spent_personal ?? 0) + (project.spent_by_credits ?? 0) + (project.spent_unassigned ?? 0),
+              project.spent_unassigned ?? 0,
             );
             // Financing side of this project: the backend nulls `budget` without
             // `project:view_budget`, so the credit/remaining columns and the
@@ -322,12 +335,15 @@ export default function ProjectsPage() {
             const canViewSpend =
               can("project:manage_labor", user?.permissions, project.my_permissions) ||
               can("project:view_pay", user?.permissions, project.my_permissions);
-            const moneyColumns = (canViewBudget ? 2 : 0) + (canViewSpend ? 2 : 0);
+            // Remaining and the share spent need both: without the spend (zeroed by
+            // the API) they would claim the whole credit is left.
+            const canViewRemaining = canViewBudget && canViewSpend;
+            const moneyColumns = (canViewBudget ? 1 : 0) + (canViewSpend ? 2 : 0) + (canViewRemaining ? 1 : 0);
             // Grid rows of each shown figure (see MONEY_CELL_ROWS), by its position.
             const creditCell = MONEY_CELL_ROWS[0];
             const byCreditsCell = MONEY_CELL_ROWS[canViewBudget ? 1 : 0];
             const personalCell = MONEY_CELL_ROWS[canViewBudget ? 2 : 1];
-            const remainingCell = MONEY_CELL_ROWS[canViewSpend ? 3 : 1];
+            const remainingCell = MONEY_CELL_ROWS[3];
             const breakdownRows = personalSpendRows(project.personal_by_type);
             const laborUnpaid = project.labor_unpaid ?? 0;
             const hasBreakdown = breakdownRows.length > 0 || laborUnpaid > 0;
@@ -424,12 +440,12 @@ export default function ProjectsPage() {
                       </DropdownMenu>
                     </div>
 
-                    {/* Progress — drawdown of the credit, so budget-gated. */}
-                    {canViewBudget && (
+                    {/* Share of the credit spent (all expenses, as on the Overview). */}
+                    {canViewRemaining && (
                       <div className="mb-4">
                         <div className="mb-1.5 flex items-center justify-between text-[12px]">
                           <span style={{ color: "var(--muted)" }}>{t("progress")}</span>
-                          <span className="num font-medium">{Math.round(progress * 100)}%</span>
+                          <span className="num font-medium">{formatShare(locale, progressPct)}</span>
                         </div>
                         <div className="progress-track">
                           <div
@@ -509,9 +525,9 @@ export default function ProjectsPage() {
                               )}
                             </>
                           )}
-                          {canViewBudget && (
+                          {canViewRemaining && (
                             <>
-                              <div className={`label-cap min-w-0 ${remainingCell.label}`}>{t("remaining")}</div>
+                              <div className={`label-cap min-w-0 ${remainingCell.label}`}>{t("remainingToSpend")}</div>
                               <div
                                 className={`font-display num min-w-0 text-[15px] [overflow-wrap:anywhere] ${remainingCell.value}`}
                                 style={isOverBudget ? { color: "var(--negative)" } : undefined}
@@ -525,6 +541,19 @@ export default function ProjectsPage() {
                             </>
                           )}
                         </div>
+                      )}
+
+                      {/* Spend in no purse: not personal, not company. Said once,
+                          with a way to the expenses concerned. */}
+                      {canViewSpend && spentUnassigned !== 0 && (
+                        <Link
+                          href={`/${locale}/projects/${project.id}/invoices?purse=none`}
+                          className="mb-3 block text-[12px] hover:underline"
+                          style={{ color: "var(--muted)" }}
+                          data-testid="project-unassigned-spend"
+                        >
+                          {t("spentUnassigned", { amount: fmtEUR(spentUnassigned) })}
+                        </Link>
                       )}
 
                       {/* Personal spend breakdown — collapsed by default. Unpaid labor is

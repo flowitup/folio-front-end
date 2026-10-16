@@ -182,10 +182,11 @@
       "clear": "Xóa tìm kiếm"
     },
     "projectStamp": "Dự án",
-    "progress": "Tiến độ",
+    "progress": "Đã dùng tín dụng",
     "creditTotal": "Tổng tín dụng",
     "spentByCredits": "Chi từ tín dụng",
     "spentPersonal": "Chi cá nhân",
+    "spentUnassigned": "{amount} chi không thuộc quỹ nào (không có phương thức thanh toán công ty hay cá nhân) ›",
     "breakdownTitle": "Tiền cá nhân đã chi vào đâu",
     "laborPaid": "Nhân công — đã trả",
     "laborUnpaid": "Nhân công — chưa trả",

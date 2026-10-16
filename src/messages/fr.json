@@ -182,10 +182,11 @@
       "clear": "Effacer la recherche"
     },
     "projectStamp": "Projet",
-    "progress": "Avancement",
+    "progress": "Crédit consommé",
     "creditTotal": "Crédit total",
     "spentByCredits": "Dépensé sur crédit",
     "spentPersonal": "Dépensé perso",
+    "spentUnassigned": "{amount} payés sans caisse (aucun moyen de paiement entreprise ou perso) ›",
     "breakdownTitle": "Où est passé l'argent perso",
     "laborPaid": "Main-d'œuvre — payée",
     "laborUnpaid": "Main-d'œuvre — impayée",

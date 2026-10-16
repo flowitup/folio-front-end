@@ -28,32 +28,55 @@ export interface BudgetMeta {
   creditTotal: number;
   /** Spend funded from the credit line (money paid by the company). */
   spentByCredits: number;
-  /** Out-of-pocket spend: everything else, including all labor. Never negative. */
+  /** The personal purse: paid with a personal method, not reimbursed. Never negative. */
   spentPersonal: number;
+  /** Spend in no purse (no payment method, or one flagged neither company nor personal). */
+  spentUnassigned: number;
+  /** Every expense, net of returns: the Overview's and the Expense page's total. */
+  spentTotal: number;
   /**
-   * creditTotal − spentByCredits. Personal money is not drawn from the credit,
-   * so it never moves this figure. Goes negative when the credit is overspent.
+   * creditTotal − every expense, net of returns: the Overview's "Reste à
+   * dépenser", so one project shows one remaining figure everywhere. Computed
+   * on cents before any rounding. Goes negative when the credit is overspent.
    */
   remaining: number;
-  /** True only when a credit total is set and credit spend exceeds it. */
+  /** True only when a credit total is set and spend exceeds it. */
   isOverBudget: boolean;
-  /** Credit drawdown ratio, clamped to [0, 1]; 0 when no credit total is set. */
+  /** Share of the credit spent, clamped to [0, 1] for a bar; 0 without a credit total. */
   progress: number;
+  /** Same share in percent, unclamped (may pass 100 or go below 0), for the label. */
+  progressPct: number;
 }
 
-/** Derive the credit meta-row values from a project's credit total and spend split. */
+/**
+ * Derive the credit meta-row values from a project's credit total and spend
+ * split. `spentTotal` is the API's `spent_invoiced` (every expense net of
+ * returns); it defaults to the purses' sum for callers without it.
+ */
 export function computeBudgetMeta(
   creditTotal: number,
   spentPersonal: number,
   spentByCredits: number,
+  spentTotal: number = spentPersonal + spentByCredits,
+  spentUnassigned = 0,
 ): BudgetMeta {
-  const remaining = creditTotal - spentByCredits;
+  const remaining = Math.round((creditTotal - spentTotal) * 100) / 100;
   const isOverBudget = creditTotal > 0 && remaining < 0;
+  const ratio = creditTotal > 0 ? spentTotal / creditTotal : 0;
   // Clamp to [0, 1] — guards against negative spend (over-refund) producing a
   // negative bar width as well as over-budget overflow past 100%.
-  const progress =
-    creditTotal > 0 ? Math.max(0, Math.min(spentByCredits / creditTotal, 1)) : 0;
-  return { creditTotal, spentByCredits, spentPersonal, remaining, isOverBudget, progress };
+  const progress = Math.max(0, Math.min(ratio, 1));
+  return {
+    creditTotal,
+    spentByCredits,
+    spentPersonal,
+    spentUnassigned,
+    spentTotal,
+    remaining,
+    isOverBudget,
+    progress,
+    progressPct: ratio * 100,
+  };
 }
 
 /** One row of the personal-spend breakdown. */

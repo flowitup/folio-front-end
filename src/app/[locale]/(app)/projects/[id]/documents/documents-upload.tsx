@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { formatPercent } from "@/lib/utils/format-percent";
 import { Upload, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -440,7 +441,7 @@ export function DocumentsUpload({ projectId, onUploaded }: Props) {
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {job.status === "queued" && t("queued")}
                   {job.status === "uploading" &&
-                    `${t("uploading")} ${Math.round(job.progress * 100)}%`}
+                    `${t("uploading")} ${formatPercent(locale, job.progress * 100)}`}
                   {job.status === "done" && t("done")}
                   {job.status === "failed" &&
                     job.error &&

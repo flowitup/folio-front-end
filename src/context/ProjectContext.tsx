@@ -30,7 +30,8 @@ interface ProjectContextType {
   isLoading: boolean;
   /** Set when the project list failed to load; pages show a translated message. */
   error: "load_failed" | null;
-  refetch: () => Promise<void>;
+  /** Reload the list; `silent` keeps the current list on screen while it loads. */
+  refetch: (options?: { silent?: boolean }) => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -68,8 +69,8 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   }, [selectedProjectId, isHydrated]);
 
   // Fetch projects
-  const loadProjects = useCallback(async () => {
-    setIsLoading(true);
+  const loadProjects = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setIsLoading(true);
     setError(null);
 
     try {

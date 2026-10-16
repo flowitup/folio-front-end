@@ -113,7 +113,9 @@ describe("ProjectsPage — editing a project", () => {
     fireEvent.click(screen.getByRole("button", { name: "mock-save-edit" }));
 
     await waitFor(() => expect(mockToastSuccess).toHaveBeenCalledWith(enMessages.projects.projectUpdated));
-    expect(mockRefetch).toHaveBeenCalledTimes(1);
+    // Once quietly on mount (fresh money figures), once after the save.
+    expect(mockRefetch).toHaveBeenCalledTimes(2);
+    expect(mockRefetch).toHaveBeenNthCalledWith(1, { silent: true });
   });
 });
 

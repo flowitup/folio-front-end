@@ -24,6 +24,8 @@ import {
   formatEUR,
 } from "@/lib/api/labor";
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
+import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 
 interface AdjustRateDialogProps {
   projectId: string;
@@ -117,7 +119,8 @@ export function AdjustRateDialog({
     e.preventDefault();
     setError(null);
 
-    const rate = parseFloat(newRate);
+    // "130,50" and "130.50" both read as 130.5 (a number input dropped the comma).
+    const rate = parseMoneyInput(newRate) ?? Number.NaN;
     if (isNaN(rate) || rate <= 0) {
       setError(t("rateChange.errorRatePositive"));
       return;
@@ -155,6 +158,10 @@ export function AdjustRateDialog({
     }
   };
 
+  // Deleting reprices every day since that date, months already paid included:
+  // ask first, saying which rate the days go back to.
+  const [confirmDelete, setConfirmDelete] = useState<WorkerRateChange | null>(null);
+
   const handleDelete = async (rcId: string) => {
     if (!worker) return;
     setDeletingId(rcId);
@@ -182,6 +189,14 @@ export function AdjustRateDialog({
   // captured when the dialog opened. rateChanges is ordered effective_date DESC,
   // so the first row with effective_date <= today is the one in effect now.
   // Falls back to the BE-resolved current rate (then base) before history loads.
+  const formatShortDate = (iso: string) =>
+    new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", day: "numeric" }).format(
+      new Date(iso + "T00:00:00"),
+    );
+  // The rate days go back to once `rc` is deleted: the previous change, else the base rate.
+  const rateBefore = (rc: WorkerRateChange) =>
+    rateChanges.find((other) => other.effective_date < rc.effective_date)?.daily_rate ?? worker?.daily_rate ?? 0;
+
   const today = todayIso();
   const resolvedCurrentRate =
     rateChanges.find((rc) => rc.effective_date <= today)?.daily_rate ??
@@ -211,15 +226,15 @@ export function AdjustRateDialog({
             <Label htmlFor="adjust-rate-amount">{t("rateChange.newRate")}</Label>
             <Input
               id="adjust-rate-amount"
-              type="number"
-              step="0.01"
-              min="0"
-              max={MAX_DAILY_AMOUNT}
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
               value={newRate}
               onChange={(e) => setNewRate(e.target.value)}
-              placeholder="0.00"
+              placeholder={locale === "en" ? "0.00" : "0,00"}
               data-testid="adjust-rate-amount"
             />
+            <p className="text-xs text-muted-foreground">{t("rateChange.thisSiteOnly")}</p>
           </div>
 
           <div className="space-y-2">
@@ -291,7 +306,7 @@ export function AdjustRateDialog({
                     className="h-7 w-7 text-muted-foreground hover:text-destructive"
                     aria-label={t("rateChange.delete")}
                     disabled={deletingId === rc.id}
-                    onClick={() => void handleDelete(rc.id)}
+                    onClick={() => setConfirmDelete(rc)}
                     data-testid={`delete-rate-change-${rc.id}`}
                   >
                     {deletingId === rc.id ? (
@@ -306,6 +321,24 @@ export function AdjustRateDialog({
           )}
         </div>
       </DialogContent>
+      <ConfirmDeleteDialog
+        open={confirmDelete !== null}
+        title={t("rateChange.confirmDeleteTitle")}
+        description={
+          confirmDelete
+            ? t("rateChange.confirmDeleteBody", {
+                rate: formatEUR(rateBefore(confirmDelete)),
+                date: formatShortDate(confirmDelete.effective_date),
+              })
+            : undefined
+        }
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          const target = confirmDelete;
+          setConfirmDelete(null);
+          if (target) void handleDelete(target.id);
+        }}
+      />
     </Dialog>
   );
 }

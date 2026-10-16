@@ -33,7 +33,7 @@ function buildQuery(params?: Record<string, string | number | undefined>): strin
 export async function fetchPersons(
   params?: PersonSearchParams,
 ): Promise<PersonSummary[]> {
-  const qs = buildQuery({ q: params?.q, limit: params?.limit });
+  const qs = buildQuery({ q: params?.q, limit: params?.limit, company_id: params?.companyId });
   const data = await api.get<PersonListResponse>(`/persons${qs}`);
   return data.persons;
 }

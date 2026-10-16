@@ -65,7 +65,7 @@ describe("EditAttendanceDialog", () => {
         note: "double shift",
       },
     });
-    expect(screen.getByLabelText(/override/i)).toHaveValue(150);
+    expect(screen.getByLabelText(/override/i)).toHaveValue("150");
     expect(screen.getByLabelText(/supplement/i)).toHaveValue(2);
     expect(screen.getByLabelText(/^note$/i)).toHaveValue("double shift");
   });
@@ -91,6 +91,22 @@ describe("EditAttendanceDialog", () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ note: "updated", shift_type: "full" }),
     );
+  });
+
+  it("reads a decimal comma in the override (60,5 is 60.50, never 605)", async () => {
+    const { onSave } = renderDialog();
+    fireEvent.change(screen.getByLabelText(/override/i), { target: { value: "60,5" } });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    await vi.waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ amount_override: 60.5 }));
+  });
+
+  it("refuses an override that is not an amount instead of saving it", async () => {
+    const { onSave } = renderDialog();
+    fireEvent.change(screen.getByLabelText(/override/i), { target: { value: "12,500" } });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    expect(await screen.findByText("errors.amountInvalid")).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
   });
 
   it("renders nothing inside when entry is null", () => {

@@ -134,7 +134,7 @@
     },
     "memberFinances": {
       "title": "Tài chính dự án chỉ quản lý mới xem được",
-      "body": "Ngày công và tiền công của bạn nằm ở trang Nhân công.",
+      "body": "Trang Nhân công hiển thị chấm công trong ngày của cả đội.",
       "link": "Mở trang Nhân công"
     }
   },
@@ -710,7 +710,11 @@
     "bankRefundLine": "Ngân hàng hoàn tiền — {number}",
     "deleteExpense": "Xóa chi phí {number}",
     "removeLine": "Xóa dòng",
-    "backToExpenses": "Quay lại danh sách chi phí"
+    "backToExpenses": "Quay lại danh sách chi phí",
+    "memberView": {
+      "title": "Tiền công của tôi",
+      "empty": "Chưa có khoản trả nào cho bạn trong dự án này. Các chi phí khác của dự án chỉ quản lý mới xem được."
+    }
   },
   "planning": {
     "assigneeOtherShort": "Ngoài nhóm",
@@ -907,7 +911,9 @@
       "bonusCost": "Chi phí thưởng",
       "bonusDays": "Ngày công thưởng",
       "bonusDaysSubtitle": "{days} ngày đã cộng dồn",
-      "standaloneShiftLabel": "(chỉ giờ phụ)"
+      "standaloneShiftLabel": "(chỉ giờ phụ)",
+      "bannerRule": "Tính theo từng người và từng tháng: 8 giờ = 1 ngày thưởng, còn dư từ 4 giờ trở lên = ½ ngày. Phần còn lại không chuyển sang tháng sau.",
+      "bonusLine": "gồm {cost} thưởng ({days} ngày, {hours} giờ)"
     },
     "errors": {
       "supplementOutOfRange": "Giờ phụ phải từ 0 đến 12.",
@@ -930,7 +936,9 @@
       "amountTooLarge": "Số tiền không được vượt quá {max, number}.",
       "overrideNegative": "Số tiền không được âm.",
       "dateOutOfRange": "Không thể chấm công cho một ngày trong tương lai hoặc trước năm 2000.",
-      "noteTooLong": "Ghi chú không được dài quá {max, number} ký tự."
+      "noteTooLong": "Ghi chú không được dài quá {max, number} ký tự.",
+      "amountInvalid": "Số tiền không hợp lệ: hãy nhập ví dụ 150,50.",
+      "sharedPersonEdit": "Không thể sửa tên và số điện thoại của người này ở đây: họ có tài khoản riêng hoặc một công ty khác cũng dùng. Vẫn có thể đổi vai trò."
     },
     "logDayDialog": {
       "title": "Chấm công ngày",
@@ -958,7 +966,8 @@
         "noteLabel": "Ghi chú",
         "notePlaceholder": "Tùy chọn"
       },
-      "noWorkers": "Không có công nhân nào."
+      "noWorkers": "Không có công nhân nào.",
+      "addWorkersFirst": "Hãy thêm công nhân trước: sau đó bạn có thể chấm công cho họ."
     },
     "editEntry": {
       "title": "Sửa chấm công"
@@ -1054,7 +1063,10 @@
       "effectiveFrom": "Từ ngày {date}",
       "errorRatePositive": "Mức lương phải lớn hơn 0",
       "errorDateRequired": "Hãy chọn ngày có hiệu lực",
-      "errorGeneric": "Đã xảy ra lỗi"
+      "errorGeneric": "Đã xảy ra lỗi",
+      "thisSiteOnly": "Áp dụng cho dự án này. Các dự án tạo sau sẽ dùng mức lương này.",
+      "confirmDeleteTitle": "Xóa thay đổi mức lương này?",
+      "confirmDeleteBody": "Các ngày từ {date} sẽ trở về {rate} mỗi ngày. Số tiền phải trả của các tháng đó được tính lại, kể cả các tháng đã trả."
     },
     "payments": {
       "tab": "Thanh toán",
@@ -1099,7 +1111,8 @@
       "noteCancel": "Hủy",
       "noteSavedToast": "Đã lưu ghi chú",
       "noteClearedToast": "Đã xóa ghi chú",
-      "noteSaveFailed": "Không lưu được ghi chú"
+      "noteSaveFailed": "Không lưu được ghi chú",
+      "creditDeducted": "Đã trừ khoản trả dư từ các tháng trước: {amount}"
     },
     "summaryUnpaidWarning": "{amount} chưa trả",
     "summaryUnpaidWarningTitle": "Chi phí nhân công tháng này chưa được trả đủ",
@@ -1178,8 +1191,12 @@
       "typeToSearch": "Nhập ít nhất 2 ký tự để tìm",
       "existing": "Đã có",
       "create": "Tạo “{name}”",
-      "alreadyOnProject": "Đã có trong dự án này"
-    }
+      "alreadyOnProject": "Đã có trong dự án này",
+      "createWithPhone": "Người mới với số {phone}"
+    },
+    "newPersonHint": "Người mới: sẽ được tạo cùng công nhân khi bạn lưu.",
+    "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại.",
+    "summaryPaidOutsideMonths": "Khoản trả không có tháng hoặc ngoài các tháng chấm công"
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",
@@ -3061,7 +3078,8 @@
         "inventory_manage": "Quản lý kho thiết bị",
         "project_view_pay": "Xem lương",
         "project_view_budget": "Xem ngân sách & vốn giải ngân"
-      }
+      },
+      "viewPayDenyHint": "Từ chối « Xem lương » cũng gỡ « Quản lý nhân công », vì phần này hiển thị đơn giá và chi phí: người này chỉ còn thấy ngày công của chính mình."
     },
     "errors": {
       "unauthorized": "Bạn cần đăng nhập.",

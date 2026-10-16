@@ -134,6 +134,11 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
     return `${effect}: ${permissionLabel(row.permission)} · ${projectName(row.project_id)}`;
   }
 
+  // A pay deny also takes labor management away (it shows every rate): say so.
+  const showViewPayDenyHint =
+    (newPermission === "project:view_pay" && newEffect === "deny") ||
+    grants.some((row) => row.permission === "project:view_pay" && row.effect === "deny");
+
   async function handleAdd() {
     if (!newPermission || isMutating) return;
     setIsMutating(true);
@@ -261,6 +266,11 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
                   {t("add")}
                 </Button>
               </div>
+              {showViewPayDenyHint && (
+                <p className="text-[12px]" style={{ color: "var(--muted)" }} role="note">
+                  {t("viewPayDenyHint")}
+                </p>
+              )}
             </div>
           </div>
         )}

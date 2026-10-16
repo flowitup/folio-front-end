@@ -46,4 +46,6 @@ export interface MergePersonsResponse {
 export interface PersonSearchParams {
   q?: string;
   limit?: number;
+  /** Search only this company's directory (sent as company_id). */
+  companyId?: string;
 }

@@ -73,3 +73,38 @@ describe("PersonTypeahead — people already on the project", () => {
     expect(onChange).toHaveBeenCalledWith({ id: "p-free", name: "Alpha Bravo", phone: null });
   });
 });
+
+describe("PersonTypeahead — creating a new person", () => {
+  it("hands back a draft and saves nothing (no orphan person on cancel)", async () => {
+    vi.mocked(fetchPersons).mockResolvedValue([]);
+    const onChange = vi.fn();
+    render(<PersonTypeahead value={null} onChange={onChange} />);
+    fireEvent.click(screen.getByRole("combobox"));
+    await type("Hoàng Văn Mới");
+
+    fireEvent.click(screen.getByText("labor.typeahead.create"));
+    expect(onChange).toHaveBeenCalledWith({ id: "", name: "Hoàng Văn Mới", phone: null, draft: true });
+  });
+
+  it("a phone typed in another format finds the person and offers no duplicate", async () => {
+    vi.mocked(fetchPersons).mockResolvedValue([{ id: "p-1", name: "Membre", phone: "+33620300004" }]);
+    render(<PersonTypeahead value={null} onChange={vi.fn()} />);
+    fireEvent.click(screen.getByRole("combobox"));
+    await type("06 20 30 00 04");
+
+    expect(screen.getByText("Membre")).toBeInTheDocument();
+    expect(screen.queryByText(/labor\.typeahead\.create/)).toBeNull();
+  });
+
+  it("an unknown phone becomes the draft's phone, not its name", async () => {
+    vi.mocked(fetchPersons).mockResolvedValue([]);
+    const onChange = vi.fn();
+    render(<PersonTypeahead value={null} onChange={onChange} companyId="co-1" />);
+    fireEvent.click(screen.getByRole("combobox"));
+    await type("06 20 30 00 09");
+    expect(fetchPersons).toHaveBeenCalledWith({ q: "06 20 30 00 09", limit: 20, companyId: "co-1" });
+
+    fireEvent.click(screen.getByText("labor.typeahead.createWithPhone"));
+    expect(onChange).toHaveBeenCalledWith({ id: "", name: "", phone: "06 20 30 00 09", draft: true });
+  });
+});

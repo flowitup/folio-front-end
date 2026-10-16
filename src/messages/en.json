@@ -134,7 +134,7 @@
     },
     "memberFinances": {
       "title": "Project finances are visible to managers",
-      "body": "Your own days and pay are on the Labor page.",
+      "body": "The Labor page shows the team's attendance for the day.",
       "link": "Open Labor"
     }
   },
@@ -710,7 +710,11 @@
     "bankRefundLine": "Bank refund — {number}",
     "deleteExpense": "Delete expense {number}",
     "removeLine": "Remove line",
-    "backToExpenses": "Back to expenses"
+    "backToExpenses": "Back to expenses",
+    "memberView": {
+      "title": "My payments",
+      "empty": "No payment recorded for you on this project yet. The project's other expenses are visible to managers."
+    }
   },
   "planning": {
     "assigneeOtherShort": "Outside the team",
@@ -907,7 +911,9 @@
       "bonusCost": "Bonus cost",
       "bonusDays": "Bonus days",
       "bonusDaysSubtitle": "{count, plural, one {{days} day banked} other {{days} days banked}}",
-      "standaloneShiftLabel": "(supplement only)"
+      "standaloneShiftLabel": "(supplement only)",
+      "bannerRule": "Counted per worker and per month: 8 h = 1 bonus day, 4 h or more left over = ½ day. The rest is not carried into the next month.",
+      "bonusLine": "incl. {cost} bonus ({days} d, {hours} h)"
     },
     "errors": {
       "supplementOutOfRange": "Supplement hours must be between 0 and 12.",
@@ -930,7 +936,9 @@
       "amountTooLarge": "The amount cannot exceed {max, number}.",
       "overrideNegative": "The amount cannot be negative.",
       "dateOutOfRange": "Attendance can't be logged for a future day or a day before 2000.",
-      "noteTooLong": "The note can't be longer than {max, number} characters."
+      "noteTooLong": "The note can't be longer than {max, number} characters.",
+      "amountInvalid": "Invalid amount: type for example 150.50.",
+      "sharedPersonEdit": "This person's name and phone can't be changed here: they have their own account or another company uses them too. The role can still be changed."
     },
     "logDayDialog": {
       "title": "Log day",
@@ -958,7 +966,8 @@
         "noteLabel": "Note",
         "notePlaceholder": "Optional"
       },
-      "noWorkers": "No workers."
+      "noWorkers": "No workers.",
+      "addWorkersFirst": "Add your workers first: you can then log their days."
     },
     "editEntry": {
       "title": "Edit attendance"
@@ -1054,7 +1063,10 @@
       "effectiveFrom": "From {date}",
       "errorRatePositive": "Rate must be greater than 0",
       "errorDateRequired": "Choose an effective date",
-      "errorGeneric": "An error occurred"
+      "errorGeneric": "An error occurred",
+      "thisSiteOnly": "Applies to this site. Sites created later take this rate.",
+      "confirmDeleteTitle": "Delete this rate change?",
+      "confirmDeleteBody": "Days since {date} go back to {rate} per day. The amounts owed for those months are recalculated, including months already paid."
     },
     "payments": {
       "tab": "Payments",
@@ -1099,7 +1111,8 @@
       "noteCancel": "Cancel",
       "noteSavedToast": "Note saved",
       "noteClearedToast": "Note removed",
-      "noteSaveFailed": "Could not save the note"
+      "noteSaveFailed": "Could not save the note",
+      "creditDeducted": "Overpaid in earlier months, deducted: {amount}"
     },
     "summaryUnpaidWarning": "{amount} unpaid",
     "summaryUnpaidWarningTitle": "Labor charges for this month are not fully paid",
@@ -1178,8 +1191,12 @@
       "typeToSearch": "Type at least 2 characters to search",
       "existing": "Existing",
       "create": "Create “{name}”",
-      "alreadyOnProject": "Already on this project"
-    }
+      "alreadyOnProject": "Already on this project",
+      "createWithPhone": "New person with number {phone}"
+    },
+    "newPersonHint": "New person: created together with the worker when you save.",
+    "confirmDeactivateBody": "{name} will be stopped on every site of the company that you manage and can no longer log time there. Their days and what they are still owed stay visible and payable; you can reactivate them.",
+    "summaryPaidOutsideMonths": "Payments with no month or outside logged months"
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",
@@ -3061,7 +3078,8 @@
         "inventory_manage": "Manage inventory",
         "project_view_pay": "View pay",
         "project_view_budget": "View budget & released funds"
-      }
+      },
+      "viewPayDenyHint": "Denying “View pay” also removes “Manage labor”, which shows rates and costs: the person then only sees their own days."
     },
     "errors": {
       "unauthorized": "You need to be signed in.",

@@ -207,3 +207,25 @@ describe("AddWorkerDialog — phone the API refuses", () => {
     expect(document.querySelector("#phone-error")).toBeNull();
   });
 });
+
+describe("AddWorkerDialog — QA3 labor fixes", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("reads a decimal comma in the daily rate: 150,50 is 150.50, never 15050", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<AddWorkerDialog open onOpenChange={vi.fn()} onSave={onSave} />);
+    fireEvent.click(document.querySelector('[data-testid="person-typeahead"]') as HTMLElement);
+    const rate = document.querySelector("#dailyRate") as HTMLInputElement;
+    expect(rate.type).toBe("text");
+    fireEvent.change(rate, { target: { value: "150,50" } });
+    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ daily_rate: 150.5 })));
+  });
+
+  it("says why a shared person's name cannot be changed (409)", async () => {
+    const onSave = vi.fn().mockRejectedValue(new ApiError("HTTP 409", 409, { error: "Conflict" }));
+    render(<AddWorkerDialog open onOpenChange={vi.fn()} onSave={onSave} editWorker={EDIT_WORKER} />);
+    fireEvent.submit(document.querySelector("form") as HTMLFormElement);
+    await waitFor(() => expect(document.body.textContent).toContain("errors.sharedPersonEdit"));
+  });
+});

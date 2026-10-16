@@ -24,6 +24,13 @@ export interface WorkerPaymentRow {
   balance: number;
   invoice_count: number;
   status: PaymentStatus;
+  /** Share of `owed` earned by banked hours, and the bonus days/hours behind it. */
+  bonus_cost: number;
+  bonus_days: number;
+  banked_hours: number;
+  /** Overpayment carried over from earlier months (>= 0), already deducted
+   *  from `balance` so a worker paid ahead is not shown as owing again. */
+  credit: number;
 }
 
 // Rounding tolerance for balance comparisons — labor summary and payment
@@ -47,6 +54,7 @@ export function statusForBalance(paid: number, owed: number): PaymentStatus {
 export function mergeWorkerPaymentRows(
   summary: LaborSummaryResponse | null,
   bucket: LaborPaymentsMonthBucket | null,
+  credits?: ReadonlyMap<string, number>,
 ): WorkerPaymentRow[] {
   const rows = new Map<string, WorkerPaymentRow>();
 
@@ -60,6 +68,10 @@ export function mergeWorkerPaymentRows(
       balance: r.total_cost,
       invoice_count: 0,
       status: statusForBalance(0, r.total_cost),
+      bonus_cost: r.bonus_cost ?? 0,
+      bonus_days: (r.bonus_full_days ?? 0) + (r.bonus_half_days ?? 0) * 0.5,
+      banked_hours: r.banked_hours ?? 0,
+      credit: 0,
     });
   }
 
@@ -75,12 +87,55 @@ export function mergeWorkerPaymentRows(
       balance: owed - w.paid,
       invoice_count: w.invoice_count,
       status: statusForBalance(w.paid, owed),
+      bonus_cost: existing?.bonus_cost ?? 0,
+      bonus_days: existing?.bonus_days ?? 0,
+      banked_hours: existing?.banked_hours ?? 0,
+      credit: 0,
     });
+  }
+
+  for (const row of rows.values()) {
+    const credit = credits?.get(row.worker_id) ?? 0;
+    if (credit < BALANCE_EPSILON) continue;
+    row.credit = credit;
+    row.balance = row.owed - row.paid - credit;
+    row.status = statusForBalance(row.paid + credit, row.owed);
   }
 
   return Array.from(rows.values()).sort((a, b) =>
     a.worker_name.localeCompare(b.worker_name),
   );
+}
+
+/**
+ * What each worker was paid beyond their earnings in the months BEFORE
+ * `month` ("YYYY-MM"), netted across those months. A worker paid 250 € in
+ * September for 99,99 € of work starts October with 150,01 € of credit, so
+ * October does not ask to pay that work again. Only positive credits are
+ * returned; earlier debts stay on their own month. Payments with no
+ * service month are left out (they show under "no month").
+ */
+export function earlierCreditByWorker(
+  monthly: LaborMonthlySummaryResponse | null,
+  paymentsSummary: LaborPaymentsSummaryResponse | null,
+  month: string,
+): Map<string, number> {
+  const net = new Map<string, number>();
+  const add = (id: string, v: number) => net.set(id, (net.get(id) ?? 0) + v);
+  for (const r of monthly?.rows ?? []) {
+    if (ymKey(r.year, r.month) >= month) continue;
+    for (const w of r.workers) add(w.worker_id, -w.total_cost);
+  }
+  for (const b of paymentsSummary?.months ?? []) {
+    if (b.year == null || b.month == null || ymKey(b.year, b.month) >= month) continue;
+    for (const w of b.workers) add(w.worker_id, w.paid);
+  }
+  const credits = new Map<string, number>();
+  for (const [id, v] of net) {
+    const rounded = Math.round(v * 100) / 100;
+    if (rounded >= BALANCE_EPSILON) credits.set(id, rounded);
+  }
+  return credits;
 }
 
 /** Find the bucket matching a "YYYY-MM" month string, or null if absent. */

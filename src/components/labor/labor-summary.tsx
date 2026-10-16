@@ -279,12 +279,33 @@ export function LaborSummary({
   // bonus-inclusive Total would produce a figure that doesn't reconcile —
   // Balance only appears in single-month mode, where both sides are scoped
   // to the same worker+month.
+  // Labor payments no visible month row can show: the no-service-month
+  // bucket (all history only) and months paid without any attendance. They
+  // get their own line so the grand total matches labor_paid elsewhere.
+  const paidOutsideMonths = useMemo(() => {
+    const visible = new Set(
+      filteredMonthlyRows.map((r) => `${r.year}-${String(r.month).padStart(2, "0")}`),
+    );
+    const acc = { total: 0, company: 0, personal: 0 };
+    for (const b of paymentsSummary?.months ?? []) {
+      if (b.year == null || b.month == null) {
+        if (selectedYear != null) continue;
+      } else {
+        if (selectedYear != null && b.year !== selectedYear) continue;
+        if (visible.has(`${b.year}-${String(b.month).padStart(2, "0")}`)) continue;
+      }
+      acc.total += b.total_paid;
+      acc.company += b.company_paid ?? 0;
+      acc.personal += b.personal_paid ?? 0;
+    }
+    return acc;
+  }, [filteredMonthlyRows, paymentsSummary, selectedYear]);
   const totalPaidAllHistory = useMemo(() => {
     return filteredMonthlyRows.reduce((sum, r) => {
       const ym = `${r.year}-${String(r.month).padStart(2, "0")}`;
       return sum + (bucketByMonthKey.get(ym)?.total_paid ?? 0);
-    }, 0);
-  }, [filteredMonthlyRows, bucketByMonthKey]);
+    }, paidOutsideMonths.total);
+  }, [filteredMonthlyRows, bucketByMonthKey, paidOutsideMonths]);
   // Company/personal split of totalPaidAllHistory — same visible-month scope,
   // so the footer caption always reconciles with the rows above it.
   const totalSplitAllHistory = useMemo(() => {
@@ -296,9 +317,9 @@ export function LaborSummary({
         acc.personal += bucket?.personal_paid ?? 0;
         return acc;
       },
-      { company: 0, personal: 0 },
+      { company: paidOutsideMonths.company, personal: paidOutsideMonths.personal },
     );
-  }, [filteredMonthlyRows, bucketByMonthKey]);
+  }, [filteredMonthlyRows, bucketByMonthKey, paidOutsideMonths]);
 
   if (isLoading) {
     return (
@@ -320,6 +341,9 @@ export function LaborSummary({
               count: totalBonusDays,
               bonusCost: formatEUR(totalBonusCost),
             })}
+          </p>
+          <p className="mt-1 text-[12px]" style={{ color: "var(--ink-2)" }} data-testid="supplement-banner-rule">
+            {t("supplement.bannerRule")}
           </p>
         </div>
       )}
@@ -766,6 +790,19 @@ export function LaborSummary({
                               style={{ textAlign: "right", border: "none", paddingTop: 6, paddingBottom: 6 }}
                             >
                               {formatEUR(w.total_cost)}
+                              {(w.bonus_cost ?? 0) > 0 && (
+                                <div
+                                  className="text-[10.5px] font-normal"
+                                  style={{ color: "var(--muted)" }}
+                                  data-testid={`worker-subrow-bonus-${ym}-${w.worker_id}`}
+                                >
+                                  {t("supplement.bonusLine", {
+                                    cost: formatEUR(w.bonus_cost ?? 0),
+                                    days: formatBonusDays(w.bonus_days ?? 0, locale),
+                                    hours: w.banked_hours ?? 0,
+                                  })}
+                                </div>
+                              )}
                             </td>
                             <td
                               className="num text-[12.5px] font-medium tabular-nums"
@@ -783,6 +820,19 @@ export function LaborSummary({
                     }
                     return rows;
                   })}
+                  {paidOutsideMonths.total > 0.004 && (
+                    <tr data-testid="labor-paid-outside-months-row">
+                      <td />
+                      <td style={{ color: "var(--muted)" }}>{t("summaryPaidOutsideMonths")}</td>
+                      <td />
+                      <td />
+                      <td />
+                      <td />
+                      <td className="num tabular-nums" style={{ textAlign: "right" }}>
+                        {formatEUR(paidOutsideMonths.total)}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
                 <tfoot>
                   <tr style={{ background: "var(--paper-2)" }}>

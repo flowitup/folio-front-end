@@ -3088,6 +3088,9 @@
     "confirmBody": "Every worker pointing at {source} moves to {target}, and {source} is permanently deleted. This cannot be undone.",
     "merged": "Merged “{source}” into “{target}”.",
     "mergedDetail": "{n, plural, one {# worker} other {# workers}} reassigned. Source deleted.",
-    "failed": "The merge failed. Please try again."
+    "failed": "The merge failed. Please try again.",
+    "mergedProfiles": "Company profiles: {moved} moved, {merged} merged.",
+    "mergedAccount": "The sign-in account is now linked to the target.",
+    "conflictAccounts": "These two records are linked to two different accounts: they are not the same person."
   }
 }

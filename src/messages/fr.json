@@ -3088,6 +3088,9 @@
     "confirmBody": "Tous les ouvriers liés à {source} passent à {target}, et {source} est supprimé définitivement. Cette action est irréversible.",
     "merged": "« {source} » fusionné dans « {target} ».",
     "mergedDetail": "{n, plural, one {# ouvrier réaffecté} other {# ouvriers réaffectés}}. Source supprimée.",
-    "failed": "La fusion a échoué. Veuillez réessayer."
+    "failed": "La fusion a échoué. Veuillez réessayer.",
+    "mergedProfiles": "Fiches entreprise : {moved, plural, =0 {aucune déplacée} one {# déplacée} other {# déplacées}}, {merged, plural, =0 {aucune fusionnée} one {# fusionnée} other {# fusionnées}}.",
+    "mergedAccount": "Le compte de connexion est maintenant lié à la cible.",
+    "conflictAccounts": "Ces deux fiches sont liées à deux comptes différents : ce ne sont pas la même personne."
   }
 }

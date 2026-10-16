@@ -3088,6 +3088,9 @@
     "confirmBody": "Mọi công nhân gắn với {source} chuyển sang {target}, và {source} bị xóa vĩnh viễn. Không thể hoàn tác.",
     "merged": "Đã gộp “{source}” vào “{target}”.",
     "mergedDetail": "Đã chuyển {n} công nhân. Đã xóa nguồn.",
-    "failed": "Gộp thất bại. Vui lòng thử lại."
+    "failed": "Gộp thất bại. Vui lòng thử lại.",
+    "mergedProfiles": "Hồ sơ doanh nghiệp: chuyển {moved}, gộp {merged}.",
+    "mergedAccount": "Tài khoản đăng nhập giờ đã liên kết với hồ sơ đích.",
+    "conflictAccounts": "Hai hồ sơ này liên kết với hai tài khoản khác nhau: không phải cùng một người."
   }
 }

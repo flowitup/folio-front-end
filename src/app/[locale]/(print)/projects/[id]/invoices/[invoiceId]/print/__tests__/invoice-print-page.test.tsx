@@ -51,7 +51,7 @@ describe("InvoicePrintPage", () => {
     });
     renderFr();
 
-    expect(await screen.findByText("12 rue des Lilas")).toBeDefined();
+    expect(await screen.findByText("QA3 interne · 12 rue des Lilas")).toBeDefined();
     await waitFor(() => expect(document.title).toBe("F-001 – Jean Dupont"));
     expect(screen.getByText(frMessages.invoices.print.project)).toBeDefined();
     expect(screen.getByText("Carte Pro")).toBeDefined();

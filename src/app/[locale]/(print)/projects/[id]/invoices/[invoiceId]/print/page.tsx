@@ -10,7 +10,7 @@ import { invoiceItemLabel } from "@/lib/invoices/invoice-item-label";
 import type { Invoice } from "@/types/invoice";
 import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
 import { fetchProjectById } from "@/lib/api/projects";
-import { projectDisplayName } from "@/lib/projects/project-display-name";
+import { projectDisplayName, projectSecondaryLabel } from "@/lib/projects/project-display-name";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import { refundStatusI18nKey } from "@/lib/invoices/refundable-status-display";
 
@@ -33,7 +33,12 @@ export default function InvoicePrintPage() {
       .catch(() => { if (!cancelled) setError(true); });
     // The project is printed too; a failure only leaves its row out.
     fetchProjectById(projectId)
-      .then((project) => { if (!cancelled) setProjectLabel(projectDisplayName(project)); })
+      // Name first, as everywhere in the app; the printout adds the site address.
+      .then((project) => {
+        if (cancelled) return;
+        const address = projectSecondaryLabel(project);
+        setProjectLabel(address ? `${projectDisplayName(project)} · ${address}` : projectDisplayName(project));
+      })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [projectId, invoiceId]);

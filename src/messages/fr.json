@@ -697,6 +697,7 @@
     "backToExpenses": "Retour aux dépenses"
   },
   "planning": {
+    "assigneeOtherShort": "Hors équipe",
     "title": "Planification",
     "subtitle": "Tâches de l'équipe — glissez une carte sur le tableau pour la déplacer.",
     "backlog": "Backlog",

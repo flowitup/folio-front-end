@@ -697,6 +697,7 @@
     "backToExpenses": "Back to expenses"
   },
   "planning": {
+    "assigneeOtherShort": "Outside the team",
     "title": "Planning",
     "subtitle": "Tasks for the team — drag a card across the board to move it.",
     "backlog": "Backlog",

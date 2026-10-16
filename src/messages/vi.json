@@ -697,6 +697,7 @@
     "backToExpenses": "Quay lại danh sách chi phí"
   },
   "planning": {
+    "assigneeOtherShort": "Ngoài nhóm",
     "title": "Kế hoạch",
     "subtitle": "Việc của đội — kéo thẻ trên bảng để di chuyển.",
     "backlog": "Việc tồn đọng",

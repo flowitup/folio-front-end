@@ -45,6 +45,8 @@ const COMPANY_KINDS = new Set([
   "company_member_added",
   "company_member_role_changed",
   "company_member_grants_changed",
+  // A chat message was reported: the "Messages signalés" card lives in Settings › Company.
+  "chat_report",
 ]);
 
 const EXPENSE_KINDS = new Set(["invoice_created", "invoice_updated", "invoice_deleted"]);

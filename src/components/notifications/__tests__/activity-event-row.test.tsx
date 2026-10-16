@@ -80,8 +80,13 @@ describe("targetForActivity", () => {
     ).toBe("/fr/billing/factures/d1");
   });
 
-  it("opens company settings for team and role changes", () => {
-    for (const kind of ["member_added", "company_member_role_changed", "company_member_grants_changed"]) {
+  it("opens company settings for team and role changes and reported messages", () => {
+    for (const kind of [
+      "member_added",
+      "company_member_role_changed",
+      "company_member_grants_changed",
+      "chat_report",
+    ]) {
       expect(pathForActivity(make(kind, { company_id: "c1" }), "fr")).toBe("/fr/settings#company");
     }
   });

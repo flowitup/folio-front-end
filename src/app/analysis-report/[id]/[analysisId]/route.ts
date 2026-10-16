@@ -23,10 +23,18 @@
  * session. The report cannot reach Folio's cookies, storage, or DOM either
  * way. `script-src 'unsafe-inline'` is acceptable only under that sandbox —
  * do not relax one without the other.
+ *
+ * A CSP sandbox is INTERSECTED with the iframe's sandbox attribute, so it must
+ * carry `allow-popups allow-popups-to-escape-sandbox` too, or the iframe's
+ * popup flags are cancelled and every report link is dead. Plain links are
+ * sent to a new tab by an injected `<base target="_blank">`: navigating the
+ * frame itself would be refused by the app's `frame-src` and blank the report
+ * (see src/lib/analysis-report-document.ts).
  */
 
 import { sessionAuthHeader } from "@/lib/api/auth-header";
 import { env } from "@/lib/config/env";
+import { errorDocument, requestLocale, withLinkShim } from "@/lib/analysis-report-document";
 
 // Mirrors the CSP the backend sets on GET .../analyses/<id>/content. Reports
 // inline their own CSS and a scroll-reveal script, and pull webfonts from
@@ -39,8 +47,9 @@ const REPORT_CSP = [
   "script-src 'unsafe-inline'",
   "frame-ancestors 'self'",
   // Opaque origin even on top-level navigation; scripts still run, as in the
-  // sandboxed viewer iframe. Never add allow-same-origin.
-  "sandbox allow-scripts",
+  // sandboxed viewer iframe, and links may open new tabs. Never add
+  // allow-same-origin or allow-top-navigation.
+  "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox",
 ].join("; ");
 
 const BASE_HEADERS = {
@@ -50,25 +59,17 @@ const BASE_HEADERS = {
   "Content-Security-Policy": REPORT_CSP,
 };
 
-/** Minimal, self-contained placeholder shown inside the frame on failure. */
-function errorDocument(status: number): string {
-  const message =
-    status === 403
-      ? "You do not have access to this report."
-      : status === 404
-        ? "This report is no longer available."
-        : "This report could not be loaded.";
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Report unavailable</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font:14px system-ui,sans-serif;color:#6b7280;background:#fff">${message}</body></html>`;
-}
-
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string; analysisId: string }> }
 ) {
   const { id: projectId, analysisId } = await params;
+  const locale = requestLocale(request);
   const authHeaders = await sessionAuthHeader();
 
   const upstream = `${env.apiBaseUrl}/projects/${encodeURIComponent(projectId)}/analyses/${encodeURIComponent(analysisId)}/content`;
+  const pagePath = `/${locale}/projects/${encodeURIComponent(projectId)}/analyses/${encodeURIComponent(analysisId)}`;
+  const loginUrl = `/${locale}/login?callbackUrl=${encodeURIComponent(pagePath)}`;
 
   let response: Response;
   try {
@@ -78,15 +79,24 @@ export async function GET(
       cache: "no-store",
     });
   } catch {
-    return new Response(errorDocument(502), { status: 502, headers: BASE_HEADERS });
+    return new Response(errorDocument(502, locale), { status: 502, headers: BASE_HEADERS });
   }
 
   if (!response.ok) {
-    return new Response(errorDocument(response.status), {
-      status: response.status,
-      headers: BASE_HEADERS,
-    });
+    // Opened directly (a copied link, "open frame in new tab") while signed
+    // out: go to the sign-in page, which returns to the analysis page. Inside
+    // the viewer iframe the placeholder offers a sign-in link instead.
+    if (response.status === 401 && request.headers.get("sec-fetch-dest") === "document") {
+      return new Response(null, {
+        status: 303,
+        headers: { Location: loginUrl, "Cache-Control": "private, no-store" },
+      });
+    }
+    return new Response(
+      errorDocument(response.status, locale, response.status === 401 ? loginUrl : undefined),
+      { status: response.status, headers: BASE_HEADERS }
+    );
   }
 
-  return new Response(await response.text(), { status: 200, headers: BASE_HEADERS });
+  return new Response(withLinkShim(await response.text()), { status: 200, headers: BASE_HEADERS });
 }

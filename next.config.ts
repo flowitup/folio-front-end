@@ -117,8 +117,10 @@ const analysisReportHeaders = [
       "script-src 'unsafe-inline'",
       "frame-ancestors 'self'",
       // Same as the route's own CSP: an opaque origin even when the report
-      // URL is opened directly rather than in the sandboxed iframe.
-      "sandbox allow-scripts",
+      // URL is opened directly rather than in the sandboxed iframe. The popup
+      // flags must be here too: a CSP sandbox is intersected with the iframe's
+      // sandbox attribute, and without them every report link is dead.
+      "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox",
     ].join("; "),
   },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },

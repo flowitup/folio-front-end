@@ -238,11 +238,19 @@ describe("MembersTable", () => {
     expect(removeIn("Dave")).toBeEnabled();
     for (const name of ["Bob", "Ann", "Gone"]) {
       expect(removeIn(name)).toBeDisabled();
-      expect(removeIn(name)).toHaveAttribute("title", en.members.edit.removeOnlyAdmin);
+      // The reason sits on a wrapper that takes hover, focus and tap (a disabled
+      // button ignores the pointer, so its own title never showed).
+      expect(removeIn(name).closest("[data-testid=disabled-reason]")).toHaveAttribute(
+        "title",
+        en.members.edit.removeOnlyAdmin
+      );
     }
-    // Their own row stays disabled, without the admin-only reason.
+    // Their own row stays disabled, and now says why.
     expect(removeIn("Alice")).toBeDisabled();
-    expect(removeIn("Alice")).not.toHaveAttribute("title");
+    expect(removeIn("Alice").closest("[data-testid=disabled-reason]")).toHaveAttribute(
+      "title",
+      en.members.edit.removeSelf
+    );
     // The phone layout follows the same rule.
     const mobileRemoves = within(screen.getByTestId("members-mobile")).getAllByRole("button", {
       name: en.members.edit.remove,

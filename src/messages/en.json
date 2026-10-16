@@ -2115,7 +2115,8 @@
         "forbidden": "You don't have permission to do that",
         "removeFailed": "Could not remove this member. Please try again.",
         "saveFailed": "Could not save the changes. Please try again."
-      }
+      },
+      "removeSelf": "You cannot remove yourself from the project: ask an admin to do it."
     },
     "assign": {
       "button": "Assign member",

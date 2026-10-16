@@ -2115,7 +2115,8 @@
         "forbidden": "Bạn không có quyền thực hiện điều này",
         "removeFailed": "Không thể xóa thành viên này. Vui lòng thử lại.",
         "saveFailed": "Không thể lưu thay đổi. Vui lòng thử lại."
-      }
+      },
+      "removeSelf": "Bạn không thể tự rời khỏi dự án: hãy nhờ quản trị viên thực hiện."
     },
     "assign": {
       "button": "Thêm thành viên vào dự án",

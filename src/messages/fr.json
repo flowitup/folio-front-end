@@ -2115,7 +2115,8 @@
         "forbidden": "Vous n'avez pas la permission de faire cela",
         "removeFailed": "Impossible de retirer ce membre. Veuillez réessayer.",
         "saveFailed": "Impossible d’enregistrer les modifications. Veuillez réessayer."
-      }
+      },
+      "removeSelf": "Vous ne pouvez pas vous retirer vous-même du projet : demandez-le à un administrateur."
     },
     "assign": {
       "button": "Assigner un membre",

@@ -74,6 +74,7 @@ import type { ProjectSummary } from "@/lib/api/projects-server";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { isDevisLockedByFacture } from "@/lib/billing/devis-lock";
+import { useBillingBackPath } from "@/lib/billing/back-target";
 import { addDaysToDayKey, parisDayKey } from "@/lib/utils/paris-day";
 import { toIsoDate, toItemPayload } from "@/lib/billing/document-payload";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
@@ -519,7 +520,8 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
 
   const kindLabel = tBilling(`${kind}.list.title`);
   const newLabel = tBilling(`${kind}.list.new`);
-  const listPath = `/${locale}/billing/${kindToSegment(kind)}`;
+  // Back and Cancel return to the project's Facturation tab when opened from it.
+  const listPath = useBillingBackPath(`/${locale}/billing/${kindToSegment(kind)}`, locale);
 
   // Edit mode: issuer is snapshotted at creation — use the stored issuer_legal_name directly.
   const editIssuerName = isEdit ? (props.document.issuer_legal_name ?? null) : null;

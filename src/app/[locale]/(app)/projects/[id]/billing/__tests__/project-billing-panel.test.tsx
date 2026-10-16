@@ -146,15 +146,16 @@ describe("ProjectBillingPanel", () => {
     expect(screen.queryByRole("status")).toBeNull();
   });
 
-  it("links quotes to /billing/devis/<id> and invoices to /billing/factures/<id>", async () => {
+  it("links quotes to /billing/devis/<id> and invoices to /billing/factures/<id>, back to this tab", async () => {
     mockFetch.mockResolvedValue([QUOTE, INVOICE]);
     render(<ProjectBillingPanel projectId={PROJECT_ID} />);
 
     await screen.findByRole("table");
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
     // Phone card + desktop row per document.
-    expect(hrefs.filter((h) => h === `/billing/devis/${QUOTE.id}`)).toHaveLength(2);
-    expect(hrefs.filter((h) => h === `/billing/factures/${INVOICE.id}`)).toHaveLength(2);
+    const back = `?back=${encodeURIComponent(`project:${PROJECT_ID}`)}`;
+    expect(hrefs.filter((h) => h === `/billing/devis/${QUOTE.id}${back}`)).toHaveLength(2);
+    expect(hrefs.filter((h) => h === `/billing/factures/${INVOICE.id}${back}`)).toHaveLength(2);
     expect(hrefs).toHaveLength(4);
   });
 

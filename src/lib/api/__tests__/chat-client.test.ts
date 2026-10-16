@@ -22,8 +22,11 @@ import {
   isVoiceNote,
   listChatChannels,
   listChatMessages,
+  listChatReports,
   markChatChannelRead,
   playableAttachmentType,
+  reportChatMessage,
+  resolveChatReport,
   sendChatMessage,
   setChatReaction,
 } from "@/lib/api/chat-client";
@@ -68,6 +71,37 @@ describe("chat-client", () => {
     expect(fetchMock.mock.calls[1][0]).toBe(
       "http://api.test/api/v1/chat/channels/project%3Aab%2Fcd/messages?limit=25"
     );
+  });
+
+  it("pages back with `before`, encoded, next to the limit", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ items: [], members: [] }));
+    await listChatMessages("company:1", { limit: 50, before: "2026-10-01T08:00:00.123+00:00" });
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "http://api.test/api/v1/chat/channels/company%3A1/messages?limit=50&before=2026-10-01T08%3A00%3A00.123%2B00%3A00"
+    );
+  });
+
+  it("reports with a trimmed reason, or none", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ ok: true }));
+    await reportChatMessage("m1", "  insultes  ");
+    await reportChatMessage("m2", "   ");
+    expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/api/v1/chat/messages/m1/report");
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ reason: "insultes" });
+    expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({});
+  });
+
+  it("lists a company's reports and resolves one with its action", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ items: [{ id: "r1" }] }))
+      .mockResolvedValueOnce(jsonResponse({ ok: true }));
+    await expect(listChatReports("c 1")).resolves.toEqual([{ id: "r1" }]);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/api/v1/chat/reports?company_id=c%201");
+    await resolveChatReport("r1", "delete_message");
+    const [url, init] = fetchMock.mock.calls[1];
+    expect(url).toBe("http://api.test/api/v1/chat/reports/r1/resolve");
+    expect(init?.method).toBe("POST");
+    expect(JSON.parse(String(init?.body))).toEqual({ action: "delete_message" });
+    expect(new Headers(init?.headers).get("X-CSRF-TOKEN")).toBe("csrf-123");
   });
 
   it("sends a text-only message as JSON with the CSRF header", async () => {

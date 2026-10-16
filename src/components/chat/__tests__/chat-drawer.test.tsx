@@ -73,4 +73,12 @@ describe("ChatDrawer", () => {
     fireEvent.click(screen.getByTestId("chat-drawer-backdrop"));
     expect(mockClose).toHaveBeenCalledTimes(3);
   });
+
+  it("leaves itself open when an inner layer already handled the Escape", () => {
+    render(<ChatDrawer />);
+    const event = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    event.preventDefault();
+    document.dispatchEvent(event);
+    expect(mockClose).not.toHaveBeenCalled();
+  });
 });

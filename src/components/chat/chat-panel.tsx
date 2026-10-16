@@ -289,7 +289,7 @@ export function ChatPanel({
   );
 
   const items = useMemo(() => mergeHistory(older, page?.items ?? []), [older, page]);
-  const members = page?.members ?? [];
+  const members = useMemo(() => page?.members ?? [], [page]);
   const lastMessage = page?.items[page.items.length - 1];
   const lastMessageId = lastMessage?.id;
   const lastMessageMine = lastMessage?.mine ?? false;

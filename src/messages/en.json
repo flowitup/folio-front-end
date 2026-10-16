@@ -882,7 +882,9 @@
       "bonusCost": "Bonus cost",
       "bonusDays": "Bonus days",
       "bonusDaysSubtitle": "{count, plural, one {{days} day banked} other {{days} days banked}}",
-      "standaloneShiftLabel": "(supplement only)"
+      "standaloneShiftLabel": "(supplement only)",
+      "bannerRule": "Counted per worker and per month: 8 h = 1 bonus day, 4 h or more left over = ½ day. The rest is not carried into the next month.",
+      "bonusLine": "incl. {cost} bonus ({days} d, {hours} h)"
     },
     "errors": {
       "supplementOutOfRange": "Supplement hours must be between 0 and 12.",
@@ -1079,7 +1081,8 @@
       "noteCancel": "Cancel",
       "noteSavedToast": "Note saved",
       "noteClearedToast": "Note removed",
-      "noteSaveFailed": "Could not save the note"
+      "noteSaveFailed": "Could not save the note",
+      "creditDeducted": "Overpaid in earlier months, deducted: {amount}"
     },
     "summaryUnpaidWarning": "{amount} unpaid",
     "summaryUnpaidWarningTitle": "Labor charges for this month are not fully paid",
@@ -1162,7 +1165,8 @@
       "createWithPhone": "New person with number {phone}"
     },
     "newPersonHint": "New person: created together with the worker when you save.",
-    "confirmDeactivateBody": "{name} will be stopped on every site of the company that you manage and can no longer log time there. Their days and what they are still owed stay visible and payable; you can reactivate them."
+    "confirmDeactivateBody": "{name} will be stopped on every site of the company that you manage and can no longer log time there. Their days and what they are still owed stay visible and payable; you can reactivate them.",
+    "summaryPaidOutsideMonths": "Payments with no month or outside logged months"
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

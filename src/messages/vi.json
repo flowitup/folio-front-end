@@ -882,7 +882,9 @@
       "bonusCost": "Chi phí thưởng",
       "bonusDays": "Ngày công thưởng",
       "bonusDaysSubtitle": "{days} ngày đã cộng dồn",
-      "standaloneShiftLabel": "(chỉ giờ phụ)"
+      "standaloneShiftLabel": "(chỉ giờ phụ)",
+      "bannerRule": "Tính theo từng người và từng tháng: 8 giờ = 1 ngày thưởng, còn dư từ 4 giờ trở lên = ½ ngày. Phần còn lại không chuyển sang tháng sau.",
+      "bonusLine": "gồm {cost} thưởng ({days} ngày, {hours} giờ)"
     },
     "errors": {
       "supplementOutOfRange": "Giờ phụ phải từ 0 đến 12.",
@@ -1079,7 +1081,8 @@
       "noteCancel": "Hủy",
       "noteSavedToast": "Đã lưu ghi chú",
       "noteClearedToast": "Đã xóa ghi chú",
-      "noteSaveFailed": "Không lưu được ghi chú"
+      "noteSaveFailed": "Không lưu được ghi chú",
+      "creditDeducted": "Đã trừ khoản trả dư từ các tháng trước: {amount}"
     },
     "summaryUnpaidWarning": "{amount} chưa trả",
     "summaryUnpaidWarningTitle": "Chi phí nhân công tháng này chưa được trả đủ",
@@ -1162,7 +1165,8 @@
       "createWithPhone": "Người mới với số {phone}"
     },
     "newPersonHint": "Người mới: sẽ được tạo cùng công nhân khi bạn lưu.",
-    "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại."
+    "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại.",
+    "summaryPaidOutsideMonths": "Khoản trả không có tháng hoặc ngoài các tháng chấm công"
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

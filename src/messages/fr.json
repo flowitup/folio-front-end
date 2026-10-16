@@ -882,7 +882,9 @@
       "bonusCost": "Coût bonus",
       "bonusDays": "Jours bonus",
       "bonusDaysSubtitle": "{count, plural, one {{days} jour cumulé} other {{days} jours cumulés}}",
-      "standaloneShiftLabel": "(supplément seul)"
+      "standaloneShiftLabel": "(supplément seul)",
+      "bannerRule": "Calculé par ouvrier et par mois : 8 h = 1 jour bonus, un reste de 4 h ou plus = ½ jour. Le reste n'est pas reporté au mois suivant.",
+      "bonusLine": "dont {cost} de prime ({days} j, {hours} h)"
     },
     "errors": {
       "supplementOutOfRange": "Les heures supplémentaires doivent être entre 0 et 12.",
@@ -1079,7 +1081,8 @@
       "noteCancel": "Annuler",
       "noteSavedToast": "Note enregistrée",
       "noteClearedToast": "Note supprimée",
-      "noteSaveFailed": "Impossible d'enregistrer la note"
+      "noteSaveFailed": "Impossible d'enregistrer la note",
+      "creditDeducted": "Avance des mois précédents déduite : {amount}"
     },
     "summaryUnpaidWarning": "{amount} impayé",
     "summaryUnpaidWarningTitle": "Les charges de main-d'œuvre de ce mois ne sont pas entièrement payées",
@@ -1162,7 +1165,8 @@
       "createWithPhone": "Nouvelle personne avec le numéro {phone}"
     },
     "newPersonHint": "Nouvelle personne : elle sera créée avec l'ouvrier, une fois enregistré.",
-    "confirmDeactivateBody": "{name} sera arrêté(e) sur tous les chantiers de l'entreprise que vous gérez et ne pourra plus y pointer. Ses journées et ce qui lui reste dû restent visibles et payables ; vous pourrez le/la réactiver."
+    "confirmDeactivateBody": "{name} sera arrêté(e) sur tous les chantiers de l'entreprise que vous gérez et ne pourra plus y pointer. Ses journées et ce qui lui reste dû restent visibles et payables ; vous pourrez le/la réactiver.",
+    "summaryPaidOutsideMonths": "Paiements sans mois ou hors des mois pointés"
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",

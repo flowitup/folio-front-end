@@ -13,7 +13,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { formatDays } from "@/components/labor/format-days";
+import { formatBonusDays, formatDays } from "@/components/labor/format-days";
 import { personInitials } from "@/lib/utils/person-color";
 import Link from "next/link";
 import { ChevronRight, Loader2, StickyNote } from "lucide-react";
@@ -91,6 +91,24 @@ export function LaborPaymentRow({
   }, [expanded, projectId, month, row.worker_id, reloadSignal]);
 
   const statusLabel = t(`status.${row.status}`);
+  // How the figures add up: the banked-hours bonus inside "owed", and any
+  // overpayment from earlier months deducted from the balance.
+  const bonusLine =
+    row.bonus_cost > 0 ? (
+      <div className="text-[10.5px] font-normal" style={{ color: "var(--muted)" }} data-testid={`labor-payment-bonus-${variant}-${row.worker_id}`}>
+        {tLabor("supplement.bonusLine", {
+          cost: formatEUR(row.bonus_cost),
+          days: formatBonusDays(row.bonus_days, locale),
+          hours: row.banked_hours,
+        })}
+      </div>
+    ) : null;
+  const creditLine =
+    row.credit > 0 ? (
+      <div className="text-[10.5px] font-normal" style={{ color: "var(--muted)" }} data-testid={`labor-payment-credit-${variant}-${row.worker_id}`}>
+        {t("creditDeducted", { amount: formatEUR(row.credit) })}
+      </div>
+    ) : null;
   const testIdSuffix = `${variant}-${row.worker_id}`;
 
   const invoiceList = loadingInvoices ? (
@@ -194,12 +212,14 @@ export function LaborPaymentRow({
           </td>
           <td className="num" style={{ textAlign: "right" }}>
             {formatEUR(row.owed)}
+            {bonusLine}
           </td>
           <td className="num" style={{ textAlign: "right" }}>
             {formatEUR(row.paid)}
           </td>
           <td className="num font-medium" style={{ textAlign: "right" }}>
             {formatEUR(row.balance)}
+            {creditLine}
           </td>
           <td>
             <span className={STATUS_STAMP_CLASS[row.status]}>{statusLabel}</span>
@@ -237,6 +257,7 @@ export function LaborPaymentRow({
         <div>
           <div style={{ color: "var(--muted)" }}>{t("owed")}</div>
           <div className="num font-medium">{formatEUR(row.owed)}</div>
+          {bonusLine}
         </div>
         <div>
           <div style={{ color: "var(--muted)" }}>{t("paid")}</div>
@@ -247,6 +268,7 @@ export function LaborPaymentRow({
         <div className="text-[12.5px]">
           <span style={{ color: "var(--muted)" }}>{t("balance")}: </span>
           <span className="num font-medium">{formatEUR(row.balance)}</span>
+          {creditLine}
         </div>
         <div className="flex items-center gap-1">
           {noteButton}

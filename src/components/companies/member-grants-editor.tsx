@@ -70,7 +70,7 @@ const LABELED_PERMISSIONS = new Set([
 
 export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Props) {
   const t = useTranslations("companySettings.grants");
-  const { projects: allProjects } = useProject();
+  const { projects: allProjects, refetch: refetchProjects } = useProject();
   // Project-scoped grants must only offer projects belonging to THIS
   // company — useProject() returns every project visible to the caller
   // (all their companies). `company_id` on the list payload is optional
@@ -116,6 +116,12 @@ export function MemberGrantsEditor({ open, onOpenChange, companyId, target }: Pr
   useEffect(() => {
     if (open) void load();
   }, [open, load]);
+
+  // The scope picker offers the shared project list: refresh it when the editor opens, so a
+  // project created elsewhere since the page loaded can be picked.
+  useEffect(() => {
+    if (open) void refetchProjects({ silent: true });
+  }, [open, refetchProjects]);
 
   function projectName(id: string | null): string {
     if (!id) return t("scopeCompanyWide");

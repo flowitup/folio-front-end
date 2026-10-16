@@ -6,11 +6,13 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import { usePathname } from "next/navigation";
 import type { Project } from "@/types/project";
 import { fetchProjectById, fetchProjects } from "@/lib/api/projects";
+import { ApiError } from "@/lib/api/http";
 
 const STORAGE_KEY = "selectedProjectId";
 
@@ -32,6 +34,13 @@ interface ProjectContextType {
   error: "load_failed" | null;
   /** Reload the list; `silent` keeps the current list on screen while it loads. */
   refetch: (options?: { silent?: boolean }) => Promise<void>;
+  /**
+   * The project of the current /projects/<id>/ page when it was in the list and a reload
+   * found the user can no longer open it (removed from it by an admin since the page loaded);
+   * null otherwise. The app layout tells the user and leaves the page.
+   */
+  accessLostProjectId: string | null;
+  clearAccessLost: () => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -49,6 +58,10 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<"load_failed" | null>(null);
+  const [accessLostProjectId, setAccessLostProjectId] = useState<string | null>(null);
+  // The last /projects/<id>/ project seen in the list: if a reload drops it and the API then
+  // refuses it, the user lost access while on the page (not a bad link).
+  const lastKnownRouteProject = useRef<string | null>(null);
 
   // Load from localStorage on mount (client-only)
   useEffect(() => {
@@ -75,7 +88,9 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
 
     try {
       const data = await fetchProjects();
-      setProjects(data);
+      // Reloaded on focus and navigation too: an unchanged list keeps the same array, so the
+      // pickers and tables built from it do not re-render for nothing.
+      setProjects((prev) => (JSON.stringify(prev) === JSON.stringify(data) ? prev : data));
 
       // Use functional update to get latest selectedProjectId
       setSelectedProjectId((prevId) => {
@@ -122,6 +137,11 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     if (routeProjectKnown) setSelectedProjectId(routeProjectId);
   }, [routeProjectKnown, routeProjectId]);
 
+  useEffect(() => {
+    if (routeProjectKnown) lastKnownRouteProject.current = routeProjectId;
+    else if (routeProjectId !== lastKnownRouteProject.current) lastKnownRouteProject.current = null;
+  }, [routeProjectKnown, routeProjectId]);
+
   // The URL project is missing from the loaded list (the list failed to load,
   // or it came back without it): fetch that one project so the switcher and
   // the project nav still show the project being viewed. A project the user
@@ -134,11 +154,20 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         if (cancelled || project.id !== routeProjectId) return;
         setProjects((prev) => (prev.some((p) => p.id === project.id) ? prev : [...prev, project]));
       })
-      .catch(() => {});
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const refused = err instanceof ApiError && (err.status === 403 || err.status === 404);
+        if (refused && lastKnownRouteProject.current === routeProjectId) {
+          lastKnownRouteProject.current = null;
+          setAccessLostProjectId(routeProjectId);
+        }
+      });
     return () => {
       cancelled = true;
     };
   }, [isHydrated, isLoading, routeProjectId, routeProjectKnown]);
+
+  const clearAccessLost = useCallback(() => setAccessLostProjectId(null), []);
 
   const selectedProject =
     projects.find((p) => p.id === effectiveProjectId) ?? null;
@@ -153,6 +182,8 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         isLoading: isLoading || !isHydrated,
         error,
         refetch: loadProjects,
+        accessLostProjectId,
+        clearAccessLost,
       }}
     >
       {children}

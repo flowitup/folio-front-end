@@ -84,7 +84,7 @@ interface Props {
 
 export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanies, onMutated }: Props) {
   const t = useTranslations("companySettings.members");
-  const { projects: allProjects } = useProject();
+  const { projects: allProjects, refetch: refetchProjects } = useProject();
   const currentUserId = useOptionalAuth()?.user?.id ?? null;
 
   const [rows, setRows] = useState<MemberRow[]>([]);
@@ -148,6 +148,12 @@ export function CompanyMembersTable({ companyId, adminOfMultiple, sourceCompanie
   useEffect(() => {
     void load();
   }, [load]);
+
+  // The Projects column offers the shared project list, loaded once per session: a project
+  // created or assigned elsewhere since (another device, another admin) must be offered too.
+  useEffect(() => {
+    void refetchProjects({ silent: true });
+  }, [companyId, refetchProjects]);
 
   // This company's projects — Projects column options. D3: every attached
   // member is assignable, always as "member"; Role is the only path to manager.

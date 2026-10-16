@@ -9,6 +9,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { ProjectProvider } from "@/context/ProjectContext";
+import { SessionFreshness } from "@/components/layout/session-freshness";
 import { ChatProvider } from "@/context/ChatContext";
 import { ChatFab } from "@/components/chat/chat-fab";
 import { ChatDrawer } from "@/components/chat/chat-drawer";
@@ -49,6 +50,9 @@ export default async function AppLayout({
 
   return (
     <ProjectProvider>
+      {/* Re-reads the user and the project list on focus, navigation and 403s, so a change
+          made by another admin or on another device shows without a reload. */}
+      <SessionFreshness />
       {/* One channel poll per tab feeds the floating chat button badge and the /chat page. */}
       <ChatProvider>
       <div className="flex h-screen overflow-hidden" style={{ background: "var(--paper)" }}>

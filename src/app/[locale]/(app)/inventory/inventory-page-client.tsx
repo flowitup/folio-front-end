@@ -52,7 +52,11 @@ export function InventoryPageClient({ companyId, companies = [] }: Props) {
   // THE COMPANY SHOWN: the session's permissions describe the primary company only.
   const shownCompany = companies.find((c) => c.id === companyId);
   const canManage = can("inventory:manage", user?.permissions, shownCompany?.permissions);
-  const { projects } = useProject();
+  const { projects, refetch: refetchProjects } = useProject();
+  // Sites come from the shared project list: pick up a project created elsewhere since.
+  useEffect(() => {
+    void refetchProjects({ silent: true });
+  }, [refetchProjects]);
 
   // Filters — applied locally on the loaded list.
   const [location, setLocation] = useState<LocationFilter>("");

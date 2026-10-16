@@ -87,7 +87,7 @@ const FIXTURE_PROJECTS: Project[] = [
 ];
 
 vi.mock("@/context/ProjectContext", () => ({
-  useProject: () => ({ projects: FIXTURE_PROJECTS }),
+  useProject: () => ({ projects: FIXTURE_PROJECTS, refetch: async () => {} }),
 }));
 
 vi.mock("@/app/[locale]/(app)/settings/_actions/companies-actions", () => ({

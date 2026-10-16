@@ -13,7 +13,7 @@ import type { AttachedUser } from "@/types/companies";
 import type { CompanyDirectoryEntry } from "@/lib/api/companies-members";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
-vi.mock("@/context/ProjectContext", () => ({ useProject: () => ({ projects: [] }) }));
+vi.mock("@/context/ProjectContext", () => ({ useProject: () => ({ projects: [], refetch: async () => {} }) }));
 vi.mock("@/app/[locale]/(app)/settings/_actions/companies-actions", () => ({
   fetchAttachedUsersAction: vi.fn(),
   setMemberRoleAction: vi.fn(),

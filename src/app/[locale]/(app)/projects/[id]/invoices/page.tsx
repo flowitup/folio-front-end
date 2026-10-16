@@ -746,7 +746,7 @@ export default function InvoicesPage() {
                                         style={{ fontSize: 10, verticalAlign: "middle" }}
                                         data-testid="cash-advance-badge-desktop"
                                       >
-                                        {t("cashAdvance.badge")}
+                                        {t("cashAdvance.badgeOutsideTotal")}
                                       </span>
                                     )}
                                     {/* On the month-grouped all tab a labor row can sit under a

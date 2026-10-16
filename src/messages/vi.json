@@ -349,6 +349,7 @@
         "revoked": "Đã thu hồi khóa API"
       },
       "errors": {
+        "forbidden": "Tài khoản này không thể có khóa API: tài khoản nền tảng không được phép.",
         "invalid_name": "Vui lòng nhập tên cho khóa này.",
         "limit_reached": "Bạn đã đạt số lượng khóa API tối đa. Hãy thu hồi một khóa trước khi tạo thêm.",
         "not_found": "Khóa API này không còn tồn tại.",

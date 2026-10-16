@@ -171,6 +171,13 @@ describe("Settings nav", () => {
     expect(navButton("Users & Roles")).not.toBeNull();
   });
 
+  it("does not offer API Keys to platform ops, whom the backend refuses keys", () => {
+    state.permissions = ["*:*"];
+    renderWith();
+
+    expect(navButton("API Keys")).toBeNull();
+  });
+
   it("offers Project once a project the caller may edit is selected", () => {
     state.selectedProject = { id: "p1", name: "Maison Lavandou", my_permissions: ["project:read", "project:update"] };
     renderWith();
@@ -241,6 +248,12 @@ describe("Settings nav", () => {
 
     it("sends #users to Profile for a non-platform-ops caller", () => {
       renderAtHash("#users");
+      expect(activeNavName()).toBe("Profile");
+    });
+
+    it("sends #apiKeys to Profile for platform ops", () => {
+      state.permissions = ["*:*"];
+      renderAtHash("#apiKeys");
       expect(activeNavName()).toBe("Profile");
     });
 

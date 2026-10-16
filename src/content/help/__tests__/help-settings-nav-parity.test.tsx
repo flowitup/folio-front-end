@@ -33,15 +33,17 @@ import { helpCatalogueFr } from "../fr"
 import { helpCatalogueVi } from "../vi"
 import type { HelpCatalogue } from "../types"
 
-// The nav is rendered at its widest — platform ops, with a project selected — so every entry any
-// reader can reach counts as documented. A narrower render would fail steps that are correct.
+// The nav is read at its widest — with a project selected, once as platform ops and once as an
+// ordinary user (API Keys is not offered to ops) — so every entry any reader can reach counts as
+// documented. A narrower render would fail steps that are correct.
+const authState = vi.hoisted(() => ({ permissions: ["*:*"] as string[] }))
 vi.mock("@/context/AuthContext", () => ({
   useAuth: () => ({
     user: {
       email: "u@example.com",
       display_name: null,
       phone: null,
-      permissions: ["*:*"],
+      permissions: authState.permissions,
     },
   }),
 }))
@@ -96,6 +98,15 @@ const LOCALES: Locale[] = ["en", "fr", "vi"]
 
 /** The labels the settings nav draws, for this locale, in its widest configuration. */
 function navLabels(locale: Locale): string[] {
+  const labels = new Set<string>()
+  for (const permissions of [["*:*"], ["project:update"]]) {
+    authState.permissions = permissions
+    for (const label of navLabelsFor(locale)) labels.add(label)
+  }
+  return [...labels]
+}
+
+function navLabelsFor(locale: Locale): string[] {
   render(
     <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
       <SettingsClient projects={[]} />

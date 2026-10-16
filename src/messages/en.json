@@ -349,6 +349,7 @@
         "revoked": "API key revoked"
       },
       "errors": {
+        "forbidden": "This account cannot hold API keys: platform accounts are excluded.",
         "invalid_name": "Please enter a name for this key.",
         "limit_reached": "You've reached the maximum number of API keys. Revoke one before creating another.",
         "not_found": "This API key no longer exists.",

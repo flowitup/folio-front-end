@@ -349,6 +349,7 @@
         "revoked": "Clé API révoquée"
       },
       "errors": {
+        "forbidden": "Ce compte ne peut pas avoir de clés API : les comptes de la plateforme en sont exclus.",
         "invalid_name": "Veuillez saisir un nom pour cette clé.",
         "limit_reached": "Vous avez atteint le nombre maximal de clés API. Révoquez-en une avant d'en créer une autre.",
         "not_found": "Cette clé API n'existe plus.",

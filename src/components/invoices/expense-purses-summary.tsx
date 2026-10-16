@@ -188,9 +188,9 @@ export function ExpensePursesSummary({ invoices, meta }: ExpensePursesSummaryPro
   let outstandingAvoirsTotal = 0;
   for (const ref of refunds) {
     const purse = purseOf(ref);
-    const sourceType = ref.refunds_invoice_id
-      ? invoiceById.get(ref.refunds_invoice_id)?.type
-      : undefined;
+    // An avoir applied to an expense (no refunds link) nets into that expense's type.
+    const sourceId = ref.refunds_invoice_id ?? ref.applied_to_invoice_id;
+    const sourceType = sourceId ? invoiceById.get(sourceId)?.type : undefined;
     const type: ExpenseType = (EXPENSE_TYPES as readonly string[]).includes(
       sourceType ?? ""
     )

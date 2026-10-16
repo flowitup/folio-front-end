@@ -40,6 +40,21 @@ export function formatUnitPriceEUR(amount: number): string {
 }
 
 /**
+ * Whole euros when the amount is whole ("150 000 €"), to the cent otherwise
+ * ("150 000,50 €"): a headline credit or remaining figure must never be
+ * rounded up to money that is not there.
+ */
+export function formatEURExact(amount: number): string {
+  const whole = Math.round(amount * 100) % 100 === 0
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: whole ? 0 : 2,
+    maximumFractionDigits: whole ? 0 : 2,
+  }).format(amount)
+}
+
+/**
  * Format a number as whole-euro fr-FR EUR currency ("17 831 €").
  * Used by summary/KPI figures where cents are visual noise.
  */

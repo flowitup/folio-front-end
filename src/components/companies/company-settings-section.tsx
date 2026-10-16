@@ -25,8 +25,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Building2, Loader2, Plus, RefreshCw, TriangleAlert } from "lucide-react";
+import { Building2, KeyRound, Loader2, Plus, RefreshCw, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CompanyCreateDialog } from "@/components/companies/company-create-dialog";
+import { useOptionalAuth } from "@/context/AuthContext";
 import {
   Select,
   SelectContent,
@@ -68,6 +76,8 @@ export function CompanySettingsSection() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [redeemOpen, setRedeemOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const refreshUser = useOptionalAuth()?.refreshUser;
   const [refreshToken, setRefreshToken] = useState(0);
 
   const fetchingRef = useRef(false);
@@ -164,10 +174,26 @@ export function CompanySettingsSection() {
               {t("description")}
             </p>
           </div>
-          <Button size="sm" onClick={() => setRedeemOpen(true)}>
-            <Plus size={14} className="mr-1.5" />
-            {tc("my.addCta")}
-          </Button>
+          {/* Create a company of one's own, or join one with a code (mobile has
+              always offered both; the web only joined). */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm">
+                <Plus size={14} className="mr-1.5" />
+                {tc("my.addCta")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => setCreateOpen(true)}>
+                <Building2 size={14} className="mr-2" />
+                {tc("my.createCta")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setRedeemOpen(true)}>
+                <KeyRound size={14} className="mr-2" />
+                {tc("my.joinCta")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="ink-divider my-5" />
@@ -311,6 +337,19 @@ export function CompanySettingsSection() {
           )}
         </>
       )}
+
+      <CompanyCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={(company) => {
+          // Show the new company straight away (its roles, members, payment
+          // methods), and refresh the session's company list everywhere else.
+          setSelectedId(company.id);
+          void load({ silent: true });
+          void refreshUser?.();
+          void refetchProjects?.();
+        }}
+      />
 
       <JoinCompanyDialog
         open={redeemOpen}

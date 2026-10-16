@@ -2143,7 +2143,9 @@
         "detach": "Detach",
         "detachConfirm": "Remove yourself from \"{name}\"? You will lose access and will need a company code from your admin to re-attach.",
         "detached": "You left \"{name}\"."
-      }
+      },
+      "createCta": "Create a company",
+      "joinCta": "Join with a code"
     },
     "invite": {
       "dialogTitle": "Attach a company",

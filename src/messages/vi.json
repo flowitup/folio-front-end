@@ -2143,7 +2143,9 @@
         "detach": "Hủy liên kết",
         "detachConfirm": "Xóa bạn khỏi \"{name}\"? Bạn sẽ mất quyền truy cập và cần mã công ty từ quản trị viên để liên kết lại.",
         "detached": "Bạn đã rời khỏi \"{name}\"."
-      }
+      },
+      "createCta": "Tạo công ty",
+      "joinCta": "Tham gia bằng mã"
     },
     "invite": {
       "dialogTitle": "Liên kết công ty",

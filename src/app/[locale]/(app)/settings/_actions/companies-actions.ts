@@ -12,7 +12,7 @@
  * - 'forbidden_admin_required'    — admin-only endpoint called by non-admin (403)
  */
 
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   fetchMyCompanies,
   fetchAllCompanies,
@@ -180,7 +180,9 @@ export async function createCompanyAction(
   const auth = await requireSession();
   if (!auth.ok) return auth;
   try {
-    const data = await createCompany(payload);
+    // The UI language names the company's default labor roles.
+    const locale = await getLocale().catch(() => undefined);
+    const data = await createCompany(payload, locale);
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: await classifyBackendError(err) };

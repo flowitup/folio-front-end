@@ -2143,7 +2143,9 @@
         "detach": "Détacher",
         "detachConfirm": "Vous retirer de \"{name}\" ? Vous perdrez l'accès et aurez besoin d'un code entreprise de votre administrateur pour vous rattacher.",
         "detached": "Vous avez quitté « {name} »."
-      }
+      },
+      "createCta": "Créer une entreprise",
+      "joinCta": "Rejoindre avec un code"
     },
     "invite": {
       "dialogTitle": "Rattacher une entreprise",

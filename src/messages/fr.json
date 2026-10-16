@@ -401,7 +401,9 @@
       "validation": "Saisie invalide. Vérifiez votre saisie et réessayez.",
       "conflict": "Un conflit est survenu. Veuillez réessayer.",
       "rate_limited": "Trop de requêtes. Patientez puis réessayez.",
-      "generic": "Une erreur est survenue. Veuillez réessayer."
+      "generic": "Une erreur est survenue. Veuillez réessayer.",
+      "builtin_company_flag": "Le moyen intégré de l'entreprise reste toujours payé par l'entreprise.",
+      "refund_tracked_expenses": "{count, plural, one {# dépense payée avec ce moyen est suivie pour remboursement} other {# dépenses payées avec ce moyen sont suivies pour remboursement}} : retirez d'abord leur suivi de remboursement avant de le marquer payé par l'entreprise."
     },
     "toasts": {
       "created": "Moyen de paiement ajouté",
@@ -414,7 +416,8 @@
     "paidByCompany": "Payé par l'entreprise",
     "personalPayment": "Paiement personnel",
     "loadError": "Impossible de charger les moyens de paiement. Veuillez réessayer.",
-    "saveEditAria": "Enregistrer les modifications"
+    "saveEditAria": "Enregistrer les modifications",
+    "confirmPurseChange": "{count, plural, one {# dépense passée payée avec ce moyen va changer de caisse.} other {# dépenses passées payées avec ce moyen vont changer de caisse.}} Continuer ?"
   },
   "errors": {
     "unauthorized": "Non autorisé",

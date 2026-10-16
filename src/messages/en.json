@@ -401,7 +401,9 @@
       "validation": "Invalid input. Please check your entry and try again.",
       "conflict": "A conflict occurred. Please try again.",
       "rate_limited": "Too many requests. Please wait and try again.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "builtin_company_flag": "The company's built-in method always stays paid by the company.",
+      "refund_tracked_expenses": "{count, plural, one {# expense paid with this method is tracked for refund} other {# expenses paid with this method are tracked for refund}}: clear their refund tracking before marking it paid by the company."
     },
     "toasts": {
       "created": "Payment method added",
@@ -414,7 +416,8 @@
     "paidByCompany": "Paid by the company",
     "personalPayment": "Personal payment",
     "loadError": "Could not load payment methods. Please try again.",
-    "saveEditAria": "Save changes"
+    "saveEditAria": "Save changes",
+    "confirmPurseChange": "{count, plural, one {# past expense paid with this method will move to the other purse.} other {# past expenses paid with this method will move to the other purse.}} Continue?"
   },
   "errors": {
     "unauthorized": "Unauthorized",

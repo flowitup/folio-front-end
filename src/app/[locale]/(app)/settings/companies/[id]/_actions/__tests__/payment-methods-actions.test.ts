@@ -271,6 +271,16 @@ describe("updatePaymentMethodAction", () => {
     if (!result.ok) expect(result.error.code).toBe("duplicate_label");
   });
 
+  it("409 refund_tracked_expenses and builtin company flag get their own codes", async () => {
+    mockUpdate.mockRejectedValueOnce(httpError(409, { error: "refund_tracked_expenses", count: 2 }));
+    const tracked = await updatePaymentMethodAction(COMPANY_ID, PM_ID, { isCompanyPayment: true });
+    expect(tracked.ok === false && tracked.error.code).toBe("refund_tracked_expenses");
+
+    mockUpdate.mockRejectedValueOnce(httpError(409, { error: "builtin_protected", reason: "company_flag" }));
+    const builtin = await updatePaymentMethodAction(COMPANY_ID, PM_ID, { isCompanyPayment: false });
+    expect(builtin.ok === false && builtin.error.code).toBe("builtin_company_flag");
+  });
+
   it("404 → not_found", async () => {
     mockUpdate.mockRejectedValueOnce(httpError(404));
     const result = await updatePaymentMethodAction(COMPANY_ID, PM_ID, {

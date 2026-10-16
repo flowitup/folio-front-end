@@ -401,7 +401,9 @@
       "validation": "Dữ liệu không hợp lệ. Vui lòng kiểm tra và thử lại.",
       "conflict": "Đã xảy ra xung đột. Vui lòng thử lại.",
       "rate_limited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
-      "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+      "builtin_company_flag": "Phương thức mặc định của doanh nghiệp luôn do doanh nghiệp chi trả.",
+      "refund_tracked_expenses": "Có {count} khoản chi trả bằng phương thức này đang được theo dõi hoàn tiền: hãy bỏ theo dõi hoàn tiền trước khi đánh dấu do doanh nghiệp chi trả."
     },
     "toasts": {
       "created": "Đã thêm phương thức thanh toán",
@@ -414,7 +416,8 @@
     "paidByCompany": "Công ty thanh toán",
     "personalPayment": "Thanh toán cá nhân",
     "loadError": "Không tải được phương thức thanh toán. Vui lòng thử lại.",
-    "saveEditAria": "Lưu thay đổi"
+    "saveEditAria": "Lưu thay đổi",
+    "confirmPurseChange": "{count} khoản chi trước đây trả bằng phương thức này sẽ chuyển sang quỹ khác. Tiếp tục?"
   },
   "errors": {
     "unauthorized": "Không được phép",

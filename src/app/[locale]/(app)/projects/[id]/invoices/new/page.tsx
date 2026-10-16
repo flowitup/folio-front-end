@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -52,6 +52,16 @@ export default function NewInvoicePage() {
   // Without `project:view_budget` the backend refuses to record a release, so
   // the type is dropped from the picker rather than offered as a future 403.
   const canViewBudget = can("project:view_budget", user?.permissions, projectPerms);
+  // Adding an expense needs `project:manage_invoices`; without it the form
+  // could only end in a refusal, so it is not shown.
+  const cannotCreate =
+    projectPerms !== undefined && !can("project:manage_invoices", user?.permissions, projectPerms);
+
+  // A refusal is shown above the form: bring it into view from the Save button.
+  const errorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+  }, [error]);
 
   const handleSubmit = async (payload: CreateInvoicePayload) => {
     setIsLoading(true);
@@ -69,7 +79,8 @@ export default function NewInvoicePage() {
           t("errorWorkerLinkNotAllowed"),
           t("errorWorkerNotInProject"),
           t("errorPaymentMethodInactive"),
-          invoiceValidationMessages(t)
+          invoiceValidationMessages(t),
+          { forbidden: t("errorForbiddenSave"), fallback: t("errorSaveFailed") }
         )
       );
       setIsLoading(false);
@@ -94,14 +105,14 @@ export default function NewInvoicePage() {
       </div>
 
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" ref={errorRef}>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      {noAccess ? (
+      {noAccess || cannotCreate ? (
         <Alert variant="destructive">
-          <AlertDescription>{t("loadForbidden")}</AlertDescription>
+          <AlertDescription>{noAccess ? t("loadForbidden") : t("createForbidden")}</AlertDescription>
         </Alert>
       ) : (
         <InvoiceForm
@@ -110,6 +121,7 @@ export default function NewInvoicePage() {
           companyId={companyId}
           projectId={projectId}
           canRecordReleases={canViewBudget}
+          locale={locale}
         />
       )}
     </div>

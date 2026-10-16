@@ -97,12 +97,15 @@ describe("formatMoneyInput", () => {
     [1.2345, "fr", {}, "1,2345"],
     [49.66000000000001, "fr", { maxDecimals: 2 }, "49,66"],
     [-8.45, "fr", {}, "-8,45"],
+    // Three decimals get a fourth so the text never reads as "1 859" grouped.
+    [1.859, "fr", {}, "1,8590"],
+    [-2.375, "en", {}, "-2.3750"],
     [null, "fr", {}, ""],
   ] as const)("formats %d in %s (%j) as %j, which parses back", (value, locale, options, text) => {
     const out = formatMoneyInput(value, locale, options);
     expect(out).toBe(text);
     if (value !== null) {
-      expect(parseMoneyInput(out, { maxDecimals: 4, allowNegative: true, ambiguousGrouping: "decimal" })).toBe(
+      expect(parseMoneyInput(out, { maxDecimals: 4, allowNegative: true })).toBe(
         Number(value.toFixed(options && "maxDecimals" in options ? options.maxDecimals : 4))
       );
     }

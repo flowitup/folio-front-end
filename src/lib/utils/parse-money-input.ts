@@ -131,9 +131,11 @@ export function formatMoneyInput(
   const rounded = Number(value.toPrecision(15));
   const scale = 10 ** maxDecimals;
   const hasFraction = Math.round(Math.abs(rounded) * scale) % scale !== 0;
-  return new Intl.NumberFormat(INPUT_LOCALE_TAG[locale] ?? "fr-FR", {
+  const text = new Intl.NumberFormat(INPUT_LOCALE_TAG[locale] ?? "fr-FR", {
     useGrouping: false,
     minimumFractionDigits: hasFraction ? Math.min(minDecimals, maxDecimals) : 0,
     maximumFractionDigits: maxDecimals,
   }).format(rounded);
+  // 1.859 written "1,859" would read back as ambiguous; "1,8590" cannot.
+  return maxDecimals > 3 && AMBIGUOUS_RE.test(text.replace(/^[-−]/, "")) ? `${text}0` : text;
 }

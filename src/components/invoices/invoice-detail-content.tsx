@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { Printer, Pencil, Trash2, Lock } from "lucide-react";
@@ -94,6 +94,11 @@ export function InvoiceDetailContent({
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A refusal is shown above the (long) edit form: bring it into view.
+  const errorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+  }, [error]);
   const [isAttributing, setIsAttributing] = useState(false);
   // Refunded = locked by the API (only the highlight stays editable).
   const isRefunded = invoice.refundable_status === "refunded";
@@ -127,7 +132,8 @@ export function InvoiceDetailContent({
           t("errorWorkerLinkNotAllowed"),
           t("errorWorkerNotInProject"),
           t("errorPaymentMethodInactive"),
-          invoiceValidationMessages(t)
+          invoiceValidationMessages(t),
+          { forbidden: t("errorForbiddenSave"), fallback: t("errorSaveFailed") }
         )
       );
     } finally {
@@ -253,7 +259,7 @@ export function InvoiceDetailContent({
       )}
 
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" ref={errorRef}>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -265,6 +271,7 @@ export function InvoiceDetailContent({
           companyId={companyId}
           projectId={invoice.project_id}
           editingInvoiceId={invoice.id}
+          locale={locale}
           paymentMethodLabel={invoice.payment_method_label ?? null}
           initialValues={{
             type: invoice.type,

@@ -97,7 +97,7 @@ describe("InvoiceForm — decimal line figures", () => {
     expect(price).not.toHaveAttribute("step");
 
     await retype(qty, "2,3755");
-    await retype(price, "1.859");
+    await retype(price, "1.8590");
     await retype(vat, "5,5");
 
     submit();
@@ -115,11 +115,42 @@ describe("InvoiceForm — decimal line figures", () => {
       { description: "Gasoil", quantity: 2.375, unit_price: 1.859, vat_rate: 20 },
     ]);
     const [qty, price] = figures();
-    expect(qty).toHaveValue("2.375");
-    expect(price).toHaveValue("1.859");
+    // A fourth decimal keeps "2.375" from reading as a thousands group.
+    expect(qty).toHaveValue("2.3750");
+    expect(price).toHaveValue("1.8590");
 
     submit();
     expect(onSubmit.mock.calls[0][0].items[0]).toMatchObject({ quantity: 2.375, unit_price: 1.859 });
+  });
+
+  it.each([
+    [0, "1,500"],
+    [1, "1,500"],
+    [1, "1.340"],
+  ])("refuses the ambiguous figure %i = %j and says how to write it", async (index, text) => {
+    const { onSubmit, submit } = renderForm();
+
+    await retype(figures()[index], text);
+    submit();
+
+    expect(screen.getByText("errorAmountAmbiguous")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("pre-fills saved figures with the French decimal comma", () => {
+    render(
+      <InvoiceForm
+        onSubmit={vi.fn()}
+        locale="fr"
+        initialValues={{
+          type: "others",
+          issue_date: "2026-09-01",
+          recipient_name: "Total",
+          items: [{ description: "Gasoil", quantity: 1.5, unit_price: 8.45, vat_rate: 5.5 }],
+        }}
+      />
+    );
+    expect(figures().map((input) => input.value)).toEqual(["1,5", "8,45", "5,5"]);
   });
 
   it("shows the total the API will store (5 € at 5,5 % is 5,28 €, not 5,27 €)", () => {

@@ -128,6 +128,12 @@ export interface LogAttendancePayload {
   note?: string;
   shift_type?: ShiftType | null;
   supplement_hours?: number;
+  /** Ask the server to refuse (409) a worker already logged on another of
+   *  the company's projects that day. `logAttendance` sends true by default;
+   *  the server keeps it opt-in for older clients. */
+  check_conflicts?: boolean;
+  /** The user saw the 409's conflicts and logs anyway. */
+  acknowledge_conflicts?: boolean;
 }
 
 export interface UpdateAttendancePayload {
@@ -187,9 +193,11 @@ export interface ConflictsResponse {
   conflicts: ConflictGroup[];
 }
 
-/** Server payload on 409 from bulk endpoint. */
+/** Server payload on 409 from the bulk and single-entry endpoints. */
 export interface BulkConflictError {
   error: "Conflict";
+  /** Set on the single-entry 409 so it reads apart from a duplicate entry. */
+  reason?: "cross_project_conflict";
   message: string;
   conflicts: ConflictGroup[];
 }

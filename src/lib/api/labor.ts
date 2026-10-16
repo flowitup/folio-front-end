@@ -12,6 +12,8 @@ import type {
   BulkLogPayload,
   BulkLogResponse,
   ConflictsResponse,
+  ConflictGroup,
+  BulkConflictError,
   LaborSummaryResponse,
   LaborMonthlySummaryResponse,
   LaborPaymentsSummaryResponse,
@@ -101,7 +103,24 @@ export async function logAttendance(projectId: string, payload: LogAttendancePay
   if ((payload.shift_type == null) && payload.amount_override != null) {
     throw new Error('amount_override requires a shift_type');
   }
-  return api.post<LaborEntry>(`/projects/${encodeURIComponent(projectId)}/labor-entries`, payload);
+  // Cross-site double-booking check: on by default for this client (the
+  // server keeps it opt-in for older apps). A 409 is read with
+  // `crossProjectConflictsOf` and resent with `acknowledge_conflicts: true`.
+  return api.post<LaborEntry>(`/projects/${encodeURIComponent(projectId)}/labor-entries`, {
+    check_conflicts: true,
+    ...payload,
+  });
+}
+
+/**
+ * The conflict groups of a "worker already logged on another project that
+ * day" 409, or null when `err` is any other error. Lets a caller show the
+ * cross-project conflict modal instead of a generic failure.
+ */
+export function crossProjectConflictsOf(err: unknown): ConflictGroup[] | null {
+  if (!(err instanceof ApiError) || err.status !== 409) return null;
+  const body = err.data as Partial<BulkConflictError> | undefined;
+  return body && Array.isArray(body.conflicts) && body.conflicts.length ? body.conflicts : null;
 }
 
 /**

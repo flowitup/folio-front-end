@@ -85,7 +85,9 @@
     "stepEnterSite": "Vào công trình",
     "verified": "Đã xác minh",
     "codeAlreadySent": "Mã đã được gửi đến số này — hãy nhập mã đó, hoặc nhận mã mới sau {seconds} giây.",
-    "codeExpired": "Mã đã hết hạn — hãy nhận mã mới"
+    "codeExpired": "Mã đã hết hạn — hãy nhận mã mới",
+    "errorNetworkLimit": "Có quá nhiều yêu cầu đăng nhập từ mạng này. Hãy thử lại sau {minutes} phút.",
+    "errorSmsBusy": "Dịch vụ gửi SMS đang quá tải. Hãy thử lại sau {minutes} phút."
   },
   "topbar": {
     "viewNotifications": "Xem thông báo",
@@ -1751,7 +1753,8 @@
         "body": "{number} sẽ không còn được theo dõi hoàn tiền và trạng thái hoàn tiền sẽ bị xóa.",
         "fundsRelease": "Khoản giải ngân liên kết {number} cũng sẽ bị xóa, làm giảm tổng giải ngân của dự án.",
         "cancel": "Hủy"
-      }
+      },
+      "failedExpenses": "Chưa thêm được (vẫn đang chọn, hãy thử lại): {numbers}"
     },
     "import": {
       "button": "Nhập",

@@ -85,7 +85,9 @@
     "stepEnterSite": "On site",
     "verified": "Verified",
     "codeAlreadySent": "A code was already sent to this number — enter it, or get a new one in {seconds} s.",
-    "codeExpired": "Code expired — ask for a new one"
+    "codeExpired": "Code expired — ask for a new one",
+    "errorNetworkLimit": "Too many sign-in requests from this network. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+    "errorSmsBusy": "The text message service is busy. Try again in {minutes, plural, one {# minute} other {# minutes}}."
   },
   "topbar": {
     "viewNotifications": "View notifications",
@@ -1751,7 +1753,8 @@
         "body": "{number} will no longer be tracked for reimbursement and its refund status will be cleared.",
         "fundsRelease": "The linked funds release {number} will also be deleted, which lowers the project's released total.",
         "cancel": "Cancel"
-      }
+      },
+      "failedExpenses": "Not added (still selected, try again): {numbers}"
     },
     "import": {
       "button": "Import",

@@ -24,10 +24,23 @@ function membersPath(projectId: string): string {
  */
 export type MemberActionResult<T = null> =
   | { ok: true; data: T }
-  | { ok: false; status: number; reason?: string };
+  | { ok: false; status: number; reason?: string; retryAfter?: number };
 
-function failure(status: number, reason?: string): { ok: false; status: number; reason?: string } {
-  return reason ? { ok: false, status, reason } : { ok: false, status };
+function failure(
+  status: number,
+  reason?: string,
+  retryAfter?: number | null,
+): { ok: false; status: number; reason?: string; retryAfter?: number } {
+  const result: { ok: false; status: number; reason?: string; retryAfter?: number } = { ok: false, status };
+  if (reason) result.reason = reason;
+  if (retryAfter) result.retryAfter = retryAfter;
+  return result;
+}
+
+/** Seconds to wait carried by a 429 error, if any. */
+function retryAfterOfErr(err: unknown): number | null {
+  const value = (err as { retryAfter?: unknown } | null)?.retryAfter;
+  return typeof value === "number" && value > 0 ? value : null;
 }
 
 function statusOf(err: unknown): number {
@@ -88,7 +101,7 @@ export async function inviteMemberAction(
     const locale = emailLocale(await getLocale());
     result = await createInvitation({ project_id: projectId, email, locale });
   } catch (err) {
-    return failure(statusOf(err), reasonOf(err));
+    return failure(statusOf(err), reasonOf(err), retryAfterOfErr(err));
   }
   // Route groups like `(app)` are stripped from Next.js cache keys, so
   // including them here makes the call a silent no-op. Use the resolved

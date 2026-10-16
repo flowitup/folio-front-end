@@ -85,7 +85,9 @@
     "stepEnterSite": "Sur le chantier",
     "verified": "Vérifié",
     "codeAlreadySent": "Un code a déjà été envoyé à ce numéro : saisissez-le, ou demandez-en un nouveau dans {seconds} s.",
-    "codeExpired": "Code expiré — demandez-en un nouveau"
+    "codeExpired": "Code expiré — demandez-en un nouveau",
+    "errorNetworkLimit": "Trop de demandes de connexion depuis ce réseau. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
+    "errorSmsBusy": "Le service d'envoi de SMS est momentanément saturé. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}."
   },
   "topbar": {
     "viewNotifications": "Voir les notifications",
@@ -1751,7 +1753,8 @@
         "body": "{number} ne sera plus suivie pour remboursement et son statut de remboursement sera effacé.",
         "fundsRelease": "Le déblocage de fonds lié {number} sera aussi supprimé, ce qui réduit le total débloqué du projet.",
         "cancel": "Annuler"
-      }
+      },
+      "failedExpenses": "Non ajoutées (toujours sélectionnées, réessayez) : {numbers}"
     },
     "import": {
       "button": "Importer",

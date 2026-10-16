@@ -19,6 +19,10 @@ function requestErrorKey(error: RequestOtpError): string {
       return "errorThrottled";
     case "hourly_limit":
       return "errorHourlyLimit";
+    case "network_limit":
+      return "errorNetworkLimit";
+    case "sms_busy":
+      return "errorSmsBusy";
     case "sms_failed":
       return "errorSmsFailed";
     case "unavailable":
@@ -187,12 +191,15 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
       }
       // Keep the digits: the user needs to see what was rejected and retype
       // over it, not start from an empty row.
+      setRetryAfterMinutes(result.retryAfterMinutes ?? 0);
       setErrorKey(
         result.error === "invalid_code"
           ? "errorInvalidCode"
           : result.error === "throttled"
             ? "errorThrottled"
-            : "errorPhoneLoginUnavailable"
+            : result.error === "network_limit"
+              ? "errorNetworkLimit"
+              : "errorPhoneLoginUnavailable"
       );
     },
     [code, codeExpired, isLoading, lastSubmitted, loginWithPhone, sentTo, verified]
@@ -216,7 +223,10 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     code,
     setCode,
     errorKey,
-    errorValues: errorKey === "errorHourlyLimit" ? { minutes: retryAfterMinutes } : undefined,
+    errorValues:
+      errorKey === "errorHourlyLimit" || errorKey === "errorNetworkLimit" || errorKey === "errorSmsBusy"
+        ? { minutes: retryAfterMinutes }
+        : undefined,
     isSendingCode,
     isVerifying: isLoading,
     verified,

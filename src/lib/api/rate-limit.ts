@@ -41,7 +41,10 @@ export function retryAfterOf(err: unknown): number | null {
   if (!err || typeof err !== "object") return null;
   const direct = (err as { retryAfter?: unknown }).retryAfter;
   if (typeof direct === "number" && Number.isFinite(direct) && direct > 0) return Math.ceil(direct);
-  return retryAfterFromBody((err as { data?: unknown }).data);
+  return (
+    retryAfterFromBody((err as { data?: unknown }).data) ??
+    retryAfterFromBody((err as { body?: unknown }).body)
+  );
 }
 
 /** True when `err` is (or wraps) an HTTP 429. */

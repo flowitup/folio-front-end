@@ -353,7 +353,7 @@
         "unknown": "Something went wrong. Please try again."
       }
     },
-    "errorInvalidProfile": "Check your name: it can be up to 255 characters.",
+    "errorInvalidProfile": "Check your name: it can be up to 80 characters.",
     "changePhone": {
       "action": "Change number",
       "title": "Change your phone number",
@@ -372,8 +372,13 @@
       "errorHourlyLimit": "Too many codes were requested for this number. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
       "errorSmsFailed": "The SMS could not be sent. Try again later.",
       "errorInvalidCode": "Wrong or expired code",
-      "errorFailed": "Couldn't change your phone number. Please try again."
-    }
+      "errorFailed": "Couldn't change your phone number. Please try again.",
+      "errorSessionExpired": "Your session has expired.",
+      "signInAgain": "Sign in again"
+    },
+    "errorNameRequired": "Your name cannot be empty.",
+    "errorSessionExpired": "Your session has expired. Sign in again to save.",
+    "signInAgain": "Sign in again"
   },
   "paymentMethods": {
     "title": "Payment methods",

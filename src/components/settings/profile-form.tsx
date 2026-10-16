@@ -19,6 +19,7 @@ import { updateProfileAction } from "@/app/[locale]/(app)/settings/_actions/prof
 import { formatFrenchPhone } from "@/lib/auth/phone-number";
 import type { User } from "@/lib/auth/types";
 import { ChangePhoneDialog } from "./change-phone-dialog";
+import { signInAgain } from "@/lib/auth/sign-in-again";
 
 export function ProfileForm() {
   const t = useTranslations("settings");
@@ -35,19 +36,36 @@ export function ProfileForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const trimmedName = displayName.trim();
+    // A name is required (sign-up asks for it): the API refuses an empty one.
+    if (!trimmedName) {
+      toast.error(t("errorNameRequired"));
+      return;
+    }
     setIsSaving(true);
     try {
-      const trimmedName = displayName.trim();
       const result = await updateProfileAction({
-        display_name: trimmedName.length > 0 ? trimmedName : null,
+        display_name: trimmedName,
       });
 
+      if (!result.success && result.error === "unauthorized") {
+        // Retrying cannot work: offer the sign-in page, back to Settings after.
+        toast.error(t("errorSessionExpired"), {
+          action: {
+            label: t("signInAgain"),
+            onClick: () => signInAgain("/settings"),
+          },
+        });
+        return;
+      }
       if (!result.success) {
         const key =
           result.error === "invalid_phone"
             ? "errorInvalidPhone"
             : result.error === "invalid_input"
               ? "errorInvalidProfile"
+              : result.error === "name_required"
+                ? "errorNameRequired"
               : result.error === "phone_taken"
                 ? "errorPhoneTaken"
                 : "errorSaveFailed";
@@ -82,13 +100,13 @@ export function ProfileForm() {
     <section className="folio-card p-7">
       <div className="mb-5 flex items-center gap-4">
         <div
-          className="flex h-16 w-16 items-center justify-center rounded-full font-display text-[24px] font-medium text-white"
+          className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full font-display text-[24px] font-medium text-white"
           style={{ background: "var(--accent)" }}
         >
           {initials}
         </div>
-        <div>
-          <h2 className="font-display text-[22px] font-medium tracking-tight">
+        <div className="min-w-0">
+          <h2 className="line-clamp-2 break-words font-display text-[22px] font-medium tracking-tight">
             {userDisplayName(user)}
           </h2>
         </div>
@@ -108,7 +126,8 @@ export function ProfileForm() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             disabled={isSaving}
-            maxLength={255}
+            // One limit everywhere a name is typed (sign-up, invitation, profile).
+            maxLength={80}
           />
         </div>
         <div>

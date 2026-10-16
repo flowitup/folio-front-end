@@ -353,7 +353,7 @@
         "unknown": "Une erreur est survenue. Veuillez réessayer."
       }
     },
-    "errorInvalidProfile": "Vérifiez votre nom : il peut compter jusqu'à 255 caractères.",
+    "errorInvalidProfile": "Vérifiez votre nom : il peut compter jusqu'à 80 caractères.",
     "changePhone": {
       "action": "Changer de numéro",
       "title": "Changer de numéro de téléphone",
@@ -372,8 +372,13 @@
       "errorHourlyLimit": "Trop de codes ont été demandés pour ce numéro. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
       "errorSmsFailed": "Le SMS n'a pas pu être envoyé. Réessayez plus tard.",
       "errorInvalidCode": "Code incorrect ou expiré",
-      "errorFailed": "Impossible de changer votre numéro de téléphone. Veuillez réessayer."
-    }
+      "errorFailed": "Impossible de changer votre numéro de téléphone. Veuillez réessayer.",
+      "errorSessionExpired": "Votre session a expiré.",
+      "signInAgain": "Se reconnecter"
+    },
+    "errorNameRequired": "Votre nom ne peut pas être vide.",
+    "errorSessionExpired": "Votre session a expiré. Reconnectez-vous pour enregistrer.",
+    "signInAgain": "Se reconnecter"
   },
   "paymentMethods": {
     "title": "Moyens de paiement",

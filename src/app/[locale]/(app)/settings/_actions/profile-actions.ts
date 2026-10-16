@@ -24,16 +24,19 @@ export interface UpdateProfilePayload {
 
 export type UpdateProfileResult =
   | { success: true; user: User }
-  | { success: false; error: "invalid_phone" | "invalid_input" | "phone_taken" | "unknown" };
+  | {
+      success: false;
+      error: "invalid_phone" | "invalid_input" | "name_required" | "phone_taken" | "unauthorized" | "unknown";
+    };
 
 export async function updateProfileAction(
   payload: UpdateProfilePayload
 ): Promise<UpdateProfileResult> {
   const authHeaders = await sessionAuthHeader();
-  // No cookie at all — treat the same as any other backend rejection rather
-  // than throwing, so the caller can show a toast instead of crashing.
+  // No session at all: the caller says "session expired, sign in again"
+  // instead of an endless "please try again".
   if (!authHeaders.Authorization) {
-    return { success: false, error: "unknown" };
+    return { success: false, error: "unauthorized" };
   }
 
   let response: Response;
@@ -58,10 +61,16 @@ export async function updateProfileAction(
     if (body?.message === "Invalid phone number") {
       return { success: false, error: "invalid_phone" };
     }
+    if (body?.error === "DisplayNameRequired") {
+      return { success: false, error: "name_required" };
+    }
     if (body?.error === "ValidationError") {
       return { success: false, error: "invalid_input" };
     }
     return { success: false, error: "unknown" };
+  }
+  if (response.status === 401) {
+    return { success: false, error: "unauthorized" };
   }
   if (response.status === 409) {
     return { success: false, error: "phone_taken" };
@@ -84,6 +93,7 @@ export async function updateProfileAction(
 // ---------------------------------------------------------------------------
 
 export type RequestPhoneChangeError =
+  | "unauthorized"
   | "invalid_phone"
   | "same_phone"
   | "phone_taken"
@@ -98,6 +108,7 @@ export type RequestPhoneChangeResult =
   | { success: false; error: RequestPhoneChangeError; retryAfterMinutes?: number };
 
 export type ConfirmPhoneChangeError =
+  | "unauthorized"
   | "invalid_code"
   | "invalid_phone"
   | "phone_taken"
@@ -108,9 +119,10 @@ export type ConfirmPhoneChangeResult =
   | { success: true; user: User }
   | { success: false; error: ConfirmPhoneChangeError };
 
+/** null on a network failure; a missing session reads as a 401. */
 async function postPhoneChange(path: string, body: object): Promise<Response | null> {
   const authHeaders = await sessionAuthHeader();
-  if (!authHeaders.Authorization) return null;
+  if (!authHeaders.Authorization) return new Response(null, { status: 401 });
   try {
     return await fetch(`${env.apiBaseUrl}/auth/me/phone/${path}`, {
       method: "POST",
@@ -132,6 +144,7 @@ export async function requestPhoneChangeCodeAction(
 
   const response = await postPhoneChange("request-code", { phone: frenchPhone });
   if (!response) return { success: false, error: "unknown" };
+  if (response.status === 401) return { success: false, error: "unauthorized" };
   if (response.status === 202) {
     const data: { expires_in: number } = await response.json();
     return { success: true, expiresIn: data.expires_in };
@@ -163,6 +176,7 @@ export async function confirmPhoneChangeAction(
 
   const response = await postPhoneChange("confirm", { phone: frenchPhone, code: trimmedCode });
   if (!response) return { success: false, error: "unknown" };
+  if (response.status === 401) return { success: false, error: "unauthorized" };
   if (response.ok) {
     // The session's old tokens are revoked: store the new ones (HttpOnly
     // cookies, as at sign-in) and keep them out of what reaches the browser.

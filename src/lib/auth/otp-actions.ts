@@ -40,13 +40,18 @@ function whitelistedUser(user: User | undefined): User | undefined {
   };
 }
 
+/** The SMS languages the backend writes codes in; anything else is left to its default. */
+function smsLocale(locale: string | undefined): "fr" | "en" | "vi" | null {
+  return locale === "fr" || locale === "en" || locale === "vi" ? locale : null;
+}
+
 /**
  * Ask the backend to text a 6-digit sign-in code to `phone`.
  * `POST /auth/otp/request` always answers 202 for a well-formed number
  * (whether or not an account has it), so a 400 here means the number itself
  * is malformed, not "unknown account".
  */
-export async function requestOtpAction(phone: string): Promise<RequestOtpResult> {
+export async function requestOtpAction(phone: string, locale?: string): Promise<RequestOtpResult> {
   // Server-side input validation (don't trust client): reject before ever
   // hitting the network so an empty/whitespace phone never reaches the BE.
   const trimmedPhone = typeof phone === "string" ? phone.trim() : "";
@@ -64,7 +69,8 @@ export async function requestOtpAction(phone: string): Promise<RequestOtpResult>
     const response = await fetch(`${env.apiBaseUrl}/auth/otp/request`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(await clientIpHeader()) },
-      body: JSON.stringify({ phone: frenchPhone }),
+      // The SMS is written in the language the page is in.
+      body: JSON.stringify({ phone: frenchPhone, ...(smsLocale(locale) ? { locale: smsLocale(locale) } : {}) }),
     });
 
     if (response.status === 202) {

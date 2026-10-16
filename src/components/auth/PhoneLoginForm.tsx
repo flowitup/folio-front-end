@@ -15,6 +15,8 @@ interface PhoneLoginFormProps {
 export function PhoneLoginForm({ flow }: PhoneLoginFormProps) {
   const t = useTranslations("auth");
   const isCodeStep = flow.step === "code";
+  // Not an error: the code already sent to this number is the one to type.
+  const isNotice = flow.errorKey === "codeRecentlySent";
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -46,13 +48,13 @@ export function PhoneLoginForm({ flow }: PhoneLoginFormProps) {
         <div
           data-testid="login-error"
           id="login-error"
-          role="alert"
+          role={isNotice ? "status" : "alert"}
           className="flex items-start gap-2 rounded-[10px] p-3 text-[12.5px]"
-          style={{
-            background: "var(--negative-tint)",
-            color: "#8a3924",
-            border: "1px solid #e6c0ad",
-          }}
+          style={
+            isNotice
+              ? { background: "var(--paper-2)", color: "var(--ink)", border: "1px solid var(--border)" }
+              : { background: "var(--negative-tint)", color: "#8a3924", border: "1px solid #e6c0ad" }
+          }
         >
           <AlertCircle size={14} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
           <span>{t(flow.errorKey, flow.errorValues)}</span>
@@ -112,6 +114,14 @@ export function PhoneLoginForm({ flow }: PhoneLoginFormProps) {
             {flow.codeExpired ? t("codeExpired") : t("codeExpires", { minutes: flow.expiresInMinutes })}
           </span>
         </div>
+      ) : null}
+
+      {isCodeStep ? (
+        // Said to everyone, whether or not the number has an account, so it
+        // gives nothing away — but someone who gets no SMS learns why.
+        <p data-testid="login-code-help" className="text-[12px] leading-[1.5]" style={{ color: "var(--muted)" }}>
+          {t("codeHelp")}
+        </p>
       ) : (
         <div className="text-center text-[12px]" style={{ color: "var(--muted)" }}>
           {flow.waitingOnSameNumber ? (
@@ -160,7 +170,13 @@ function CodeStepFields({ flow }: { flow: PhoneLoginFlow }) {
         value={flow.code}
         onChange={flow.setCode}
         onComplete={(code) => void flow.verify(code)}
-        state={flow.verified ? "verified" : flow.errorKey ? "error" : "idle"}
+        state={
+          flow.verified
+            ? "verified"
+            : flow.errorKey && flow.errorKey !== "codeRecentlySent"
+              ? "error"
+              : "idle"
+        }
         disabled={flow.isVerifying || flow.verified}
         label={t("codeLabel")}
         positionLabel={(position) => t("codeDigit", { position, total: CODE_LENGTH })}

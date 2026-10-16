@@ -55,7 +55,7 @@
     "errorPhoneRequired": "Vui lòng nhập số điện thoại",
     "errorInvalidPhone": "Nhập số điện thoại Pháp",
     "errorCodeRequired": "Vui lòng nhập mã gồm 6 chữ số",
-    "errorInvalidCode": "Mã không đúng hoặc đã hết hạn",
+    "errorInvalidCode": "Mã không đúng hoặc đã hết hạn. Sau nhiều lần thử, hãy yêu cầu mã mới.",
     "errorThrottled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại.",
     "errorHourlyLimit": "Đã yêu cầu quá nhiều mã cho số này. Vui lòng thử lại sau {minutes} phút.",
     "errorSmsFailed": "Không thể gửi SMS. Vui lòng thử lại sau.",
@@ -72,7 +72,10 @@
     "stepEnterSite": "Vào công trình",
     "verified": "Đã xác minh",
     "codeAlreadySent": "Mã đã được gửi đến số này — hãy nhập mã đó, hoặc nhận mã mới sau {seconds} giây.",
-    "codeExpired": "Mã đã hết hạn — hãy nhận mã mới"
+    "codeExpired": "Mã đã hết hạn — hãy nhận mã mới",
+    "errorCodeLocked": "Nhập sai quá nhiều lần: mã này không còn dùng được, kể cả khi nhập đúng. Hãy yêu cầu mã mới.",
+    "codeRecentlySent": "Một mã đã được gửi tới số này chưa đầy một phút trước: hãy nhập mã bên dưới.",
+    "codeHelp": "Không nhận được SMS? Hãy kiểm tra số điện thoại. Chỉ tài khoản Folio mới nhận được mã: tài khoản được tạo trong ứng dụng Folio trên điện thoại hoặc qua lời mời của công ty bạn. Quyền truy cập bị vô hiệu hóa? Hãy liên hệ quản trị viên của công ty."
   },
   "topbar": {
     "viewNotifications": "Xem thông báo",
@@ -1174,14 +1177,15 @@
       "invalidPhone": "Nhập số điện thoại Pháp",
       "phoneRegistered": "Số điện thoại này đã có tài khoản. Vui lòng đăng nhập.",
       "codeRequired": "Vui lòng nhập mã gồm 6 chữ số",
-      "invalidCode": "Mã không đúng hoặc đã hết hạn",
+      "invalidCode": "Mã không đúng hoặc đã hết hạn. Sau nhiều lần thử, hãy yêu cầu mã mới.",
       "throttled": "Quá nhiều yêu cầu. Vui lòng đợi một phút rồi thử lại.",
       "hourlyLimit": "Đã yêu cầu quá nhiều mã cho số này. Vui lòng thử lại sau {minutes} phút.",
       "title": "Lời mời không khả dụng",
       "nameRequired": "Vui lòng nhập tên của bạn",
       "accountExists": "Lời mời này dành cho một tài khoản Folio đã có. Hãy nhập số điện thoại của tài khoản đó, hoặc đăng nhập vào tài khoản đó trước.",
       "wrongAccount": "Lời mời này được gửi đến địa chỉ của một tài khoản Folio khác. Hãy dùng tài khoản đó để chấp nhận.",
-      "superseded": "Bạn đã được gửi một lời mời mới hơn: hãy dùng đường dẫn trong email gần nhất."
+      "superseded": "Bạn đã được gửi một lời mời mới hơn: hãy dùng đường dẫn trong email gần nhất.",
+      "codeLocked": "Nhập sai quá nhiều lần: mã này không còn dùng được, kể cả khi nhập đúng. Hãy yêu cầu mã mới."
     },
     "loggedInOther": {
       "title": "Bạn đang đăng nhập bằng tài khoản khác",
@@ -1212,7 +1216,8 @@
       "submitting": "Đang tham gia…",
       "bodyOther": "Bạn đang đăng nhập bằng {currentUser}. Tham gia dự án bằng tài khoản này, hoặc dùng tài khoản khác.",
       "switchAccount": "Dùng tài khoản khác"
-    }
+    },
+    "codeRecentlySent": "Một mã đã được gửi tới số này chưa đầy một phút trước: hãy nhập mã bên dưới."
   },
   "admin": {
     "bulkAdd": {
@@ -3061,5 +3066,10 @@
     "merged": "Đã gộp “{source}” vào “{target}”.",
     "mergedDetail": "Đã chuyển {n} công nhân. Đã xóa nguồn.",
     "failed": "Gộp thất bại. Vui lòng thử lại."
+  },
+  "legalLinks": {
+    "label": "Trợ giúp và thông tin pháp lý",
+    "support": "Trợ giúp và hỗ trợ",
+    "privacy": "Quyền riêng tư"
   }
 }

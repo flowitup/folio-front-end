@@ -8,7 +8,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { AcceptInviteForm } from "../accept-invite-form";
+import { AcceptInviteForm, errorMessageKey } from "../accept-invite-form";
 import type { VerifyInviteResponse } from "@/lib/auth/types";
 
 vi.mock("@/lib/auth/actions", () => ({
@@ -96,7 +96,7 @@ async function reachCodeStep(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText("Phone number"), "0612345678");
   await user.click(screen.getByRole("button", { name: /Send code/i }));
   await waitFor(() => {
-    expect(screen.getByText("Code sent to +33612345678")).toBeInTheDocument();
+    expect(screen.getByText("Code sent to +33 6 12 34 56 78")).toBeInTheDocument();
   });
 }
 
@@ -143,7 +143,7 @@ describe("AcceptInviteForm", () => {
       const user = userEvent.setup();
       renderForm();
       await reachCodeStep(user);
-      expect(mockRequestCode).toHaveBeenCalledWith("tok123", "+33612345678");
+      expect(mockRequestCode).toHaveBeenCalledWith("tok123", "+33612345678", "en");
     });
 
     it("stays on the details step when the phone already has an account", async () => {
@@ -229,6 +229,29 @@ describe("AcceptInviteForm", () => {
       expect(window.location.href).toBe("");
     });
 
+    it("says the code is locked after five wrong tries and stops sending it", async () => {
+      const user = userEvent.setup();
+      renderForm();
+      await reachCodeStep(user);
+
+      mockAccept.mockResolvedValue({ success: false, error: "invalid_code" });
+      const field = screen.getByLabelText("Code");
+      for (const digit of ["1", "2", "3", "4", "5"]) {
+        await user.clear(field);
+        await user.type(field, digit.repeat(6));
+        await user.click(screen.getByRole("button", { name: /Create account/i }));
+        await waitFor(() => expect(screen.getByText(/Wrong or expired code|errors.codeLocked/)).toBeInTheDocument());
+      }
+      expect(mockAccept).toHaveBeenCalledTimes(5);
+      expect(screen.getByText("errors.codeLocked")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Create account/i })).toBeDisabled();
+    });
+
+    it("links to support and the privacy policy", () => {
+      renderForm();
+      expect(screen.getByTestId("legal-links")).toBeInTheDocument();
+    });
+
     it("reports an invitation that was already used", async () => {
       const user = userEvent.setup();
       renderForm();
@@ -261,7 +284,7 @@ describe("AcceptInviteForm", () => {
       await user.click(screen.getByRole("button", { name: /Change number/i }));
       await user.click(screen.getByRole("button", { name: /Send code/i }));
 
-      expect(await screen.findByText("Code sent to +33612345678")).toBeInTheDocument();
+      expect(await screen.findByText("Code sent to +33 6 12 34 56 78")).toBeInTheDocument();
       expect(mockRequestCode).toHaveBeenCalledTimes(1);
     });
   });
@@ -274,5 +297,11 @@ describe("AcceptInviteForm", () => {
     await user.click(screen.getByRole("button", { name: /Send code/i }));
     expect(await screen.findByText("Please enter your name")).toBeInTheDocument();
     expect(mockRequestCode).not.toHaveBeenCalled();
+  });
+});
+
+describe("errorMessageKey", () => {
+  it("names a link replaced by a newer invitation", () => {
+    expect(errorMessageKey("superseded")).toBe("errors.superseded");
   });
 });

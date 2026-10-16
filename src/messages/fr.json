@@ -55,7 +55,7 @@
     "errorPhoneRequired": "Veuillez saisir votre numéro de téléphone",
     "errorInvalidPhone": "Saisissez un numéro de téléphone français",
     "errorCodeRequired": "Veuillez saisir le code à 6 chiffres",
-    "errorInvalidCode": "Code incorrect ou expiré",
+    "errorInvalidCode": "Code incorrect ou expiré. Après plusieurs essais, demandez un nouveau code.",
     "errorThrottled": "Trop de demandes. Attendez une minute et réessayez.",
     "errorHourlyLimit": "Trop de codes ont été demandés pour ce numéro. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
     "errorSmsFailed": "Le SMS n'a pas pu être envoyé. Réessayez plus tard.",
@@ -72,7 +72,10 @@
     "stepEnterSite": "Sur le chantier",
     "verified": "Vérifié",
     "codeAlreadySent": "Un code a déjà été envoyé à ce numéro : saisissez-le, ou demandez-en un nouveau dans {seconds} s.",
-    "codeExpired": "Code expiré — demandez-en un nouveau"
+    "codeExpired": "Code expiré — demandez-en un nouveau",
+    "errorCodeLocked": "Trop d'essais : ce code ne fonctionne plus, même saisi correctement. Demandez un nouveau code.",
+    "codeRecentlySent": "Un code a été envoyé à ce numéro il y a moins d'une minute : saisissez-le ci-dessous.",
+    "codeHelp": "Pas reçu de SMS ? Vérifiez le numéro. Seuls les comptes Folio reçoivent un code : ils se créent dans l'application mobile Folio ou via l'invitation de votre entreprise. Accès désactivé ? Contactez l'administrateur de votre entreprise."
   },
   "topbar": {
     "viewNotifications": "Voir les notifications",
@@ -1174,14 +1177,15 @@
       "invalidPhone": "Saisissez un numéro de téléphone français",
       "phoneRegistered": "Ce numéro est déjà associé à un compte. Connectez-vous.",
       "codeRequired": "Saisissez le code à 6 chiffres",
-      "invalidCode": "Code incorrect ou expiré",
+      "invalidCode": "Code incorrect ou expiré. Après plusieurs essais, demandez un nouveau code.",
       "throttled": "Trop de demandes. Attendez une minute et réessayez.",
       "hourlyLimit": "Trop de codes ont été demandés pour ce numéro. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
       "title": "Invitation indisponible",
       "nameRequired": "Saisissez votre nom",
       "accountExists": "Cette invitation concerne un compte Folio existant. Saisissez le numéro de téléphone de ce compte, ou connectez-vous d'abord à ce compte.",
       "wrongAccount": "Cette invitation a été envoyée à l'adresse d'un autre compte Folio. Utilisez ce compte-là pour l'accepter.",
-      "superseded": "Une invitation plus récente vous a été envoyée : utilisez le lien du dernier e-mail reçu."
+      "superseded": "Une invitation plus récente vous a été envoyée : utilisez le lien du dernier e-mail reçu.",
+      "codeLocked": "Trop d'essais : ce code ne fonctionne plus, même saisi correctement. Demandez un nouveau code."
     },
     "loggedInOther": {
       "title": "Vous êtes connecté sous un autre compte",
@@ -1212,7 +1216,8 @@
       "submitting": "Connexion au projet…",
       "bodyOther": "Vous êtes connecté en tant que {currentUser}. Rejoignez le projet avec ce compte, ou utilisez un autre compte.",
       "switchAccount": "Utiliser un autre compte"
-    }
+    },
+    "codeRecentlySent": "Un code a été envoyé à ce numéro il y a moins d'une minute : saisissez-le ci-dessous."
   },
   "admin": {
     "bulkAdd": {
@@ -3061,5 +3066,10 @@
     "merged": "« {source} » fusionné dans « {target} ».",
     "mergedDetail": "{n, plural, one {# ouvrier réaffecté} other {# ouvriers réaffectés}}. Source supprimée.",
     "failed": "La fusion a échoué. Veuillez réessayer."
+  },
+  "legalLinks": {
+    "label": "Aide et informations légales",
+    "support": "Aide et support",
+    "privacy": "Confidentialité"
   }
 }

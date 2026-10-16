@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
 import { requestOtpAction, type RequestOtpError } from "@/lib/auth/otp-actions";
 import { normalizeFrenchPhone } from "@/lib/auth/phone-number";
@@ -10,6 +11,53 @@ import { CODE_LENGTH } from "./CodeBoxes";
 // client-side countdown never lets the user ask for a code before the server
 // would accept another request anyway.
 const RESEND_COOLDOWN_SECONDS = 60;
+
+// The backend refuses a code after this many wrong tries (`max_attempts`),
+// even the right one: past it only a new code helps.
+export const MAX_CODE_ATTEMPTS = 5;
+
+// Where the code step survives a language switch or a reload: the locale is a
+// path segment, so switching it remounts the page and would drop the number.
+const STORAGE_KEY = "folio.login.code-step";
+
+interface SavedCodeStep {
+  nationalNumber: string;
+  sentTo: string;
+  expiresAt: number | null;
+  cooldownUntil: number;
+  failedAttempts: number;
+}
+
+function readSavedCodeStep(): SavedCodeStep | null {
+  try {
+    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as Partial<SavedCodeStep>;
+    if (typeof saved.sentTo !== "string" || !saved.sentTo) return null;
+    const expiresAt = typeof saved.expiresAt === "number" ? saved.expiresAt : null;
+    const cooldownUntil = typeof saved.cooldownUntil === "number" ? saved.cooldownUntil : 0;
+    // A code that has run out is worth nothing to come back to.
+    if (Math.max(expiresAt ?? 0, cooldownUntil) <= Date.now()) return null;
+    return {
+      nationalNumber: typeof saved.nationalNumber === "string" ? saved.nationalNumber : "",
+      sentTo: saved.sentTo,
+      expiresAt,
+      cooldownUntil,
+      failedAttempts: typeof saved.failedAttempts === "number" ? saved.failedAttempts : 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeSavedCodeStep(saved: SavedCodeStep | null): void {
+  try {
+    if (saved) window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    else window.sessionStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage blocked (private mode): the flow still works, it just does not survive a reload.
+  }
+}
 
 function requestErrorKey(error: RequestOtpError): string {
   switch (error) {
@@ -51,6 +99,8 @@ export interface PhoneLoginFlow {
   expiresInMinutes: number;
   /** The code's lifetime has run out: it can only be refused. */
   codeExpired: boolean;
+  /** Too many wrong tries: the backend now refuses this code, a new one is needed. */
+  codeLocked: boolean;
   canSend: boolean;
   /** Back on the phone step with the number a live code went to, inside the
    * resend window: Send returns to that code instead of asking for another. */
@@ -69,6 +119,7 @@ export interface PhoneLoginFlow {
  */
 export function usePhoneLoginFlow(): PhoneLoginFlow {
   const { loginWithPhone, isLoading } = useAuth();
+  const locale = useLocale();
 
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [nationalNumber, setNationalNumberState] = useState("");
@@ -92,6 +143,27 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
   // saying "Expires in 5 minutes" about a code that has already expired.
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  // Wrong codes the backend refused for the code now in use.
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [restored, setRestored] = useState(false);
+
+  // Back on the code step after a language switch or a reload. Read after
+  // mount, so the server render and the first client render agree.
+  useEffect(() => {
+    const saved = readSavedCodeStep();
+    if (saved) {
+      const at = Date.now();
+      setNationalNumberState(saved.nationalNumber);
+      setSentTo(saved.sentTo);
+      setExpiresAt(saved.expiresAt);
+      setNow(at);
+      setCooldown(Math.max(0, Math.ceil((saved.cooldownUntil - at) / 1000)));
+      setFailedAttempts(saved.failedAttempts);
+      if (saved.failedAttempts >= MAX_CODE_ATTEMPTS) setErrorKey("errorCodeLocked");
+      setStep("code");
+    }
+    setRestored(true);
+  }, []);
 
   useEffect(() => {
     if (step !== "code" || expiresAt === null) return;
@@ -102,6 +174,26 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
   const remainingSeconds = expiresAt === null ? 300 : Math.max(0, Math.ceil((expiresAt - now) / 1000));
   const expiresInMinutes = Math.max(1, Math.ceil(remainingSeconds / 60));
   const codeExpired = expiresAt !== null && remainingSeconds <= 0;
+  const codeLocked = failedAttempts >= MAX_CODE_ATTEMPTS;
+
+  // Keep the code step saved while it is on screen; leaving it forgets it.
+  useEffect(() => {
+    if (!restored) return;
+    if (step !== "code" || verified || !sentTo) {
+      writeSavedCodeStep(null);
+      return;
+    }
+    writeSavedCodeStep({
+      nationalNumber,
+      sentTo,
+      expiresAt,
+      cooldownUntil: Date.now() + cooldown * 1000,
+      failedAttempts,
+    });
+    // `cooldown` is left out on purpose: its deadline is written when it starts
+    // and recomputing it every tick would only drift it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored, step, verified, nationalNumber, sentTo, expiresAt, failedAttempts, cooldown === 0]);
 
   // Countdown ticker for the "Resend in {n}s" label.
   useEffect(() => {
@@ -130,6 +222,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     !isLoading &&
     !verified &&
     !codeExpired &&
+    !codeLocked &&
     code !== lastSubmitted;
 
   const sendCode = useCallback(async () => {
@@ -146,9 +239,22 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
       return;
     }
     setIsSendingCode(true);
-    const result = await requestOtpAction(target);
+    const result = await requestOtpAction(target, locale);
     setIsSendingCode(false);
     if (!result.success) {
+      if (result.error === "throttled" && target !== sentTo) {
+        // "A code was sent recently" to this number (a reload or another tab
+        // lost track of it): that code is still good, so go and type it.
+        setCode("");
+        setLastSubmitted(null);
+        setFailedAttempts(0);
+        setSentTo(target);
+        setExpiresAt(null);
+        setCooldown(RESEND_COOLDOWN_SECONDS);
+        setErrorKey("codeRecentlySent");
+        setStep("code");
+        return;
+      }
       setRetryAfterMinutes(result.retryAfterMinutes ?? 0);
       setErrorKey(requestErrorKey(result.error));
       return;
@@ -156,20 +262,21 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     // A new code invalidates whatever is still in the boxes.
     setCode("");
     setLastSubmitted(null);
+    setFailedAttempts(0);
     setSentTo(target);
     const sentAt = Date.now();
     setNow(sentAt);
     setExpiresAt(sentAt + result.expiresIn * 1000);
     setCooldown(RESEND_COOLDOWN_SECONDS);
     setStep("code");
-  }, [nationalNumber, sentTo, cooldown]);
+  }, [nationalNumber, sentTo, cooldown, locale]);
 
   const verify = useCallback(
     async (explicitCode?: string) => {
       // The backend counts a wrong code against a 5-attempt limit, so never let
       // an auto-submit and a manual submit of the same code both go out.
       // An expired code can only be refused and would spend an attempt.
-      if (isLoading || verified || codeExpired) return;
+      if (isLoading || verified || codeExpired || codeLocked) return;
       // Auto-submit passes the code it just completed: reading it from state
       // here would still see the value from before that keystroke.
       const submitted = (explicitCode ?? code).trim();
@@ -187,15 +294,17 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
       }
       // Keep the digits: the user needs to see what was rejected and retype
       // over it, not start from an empty row.
-      setErrorKey(
-        result.error === "invalid_code"
-          ? "errorInvalidCode"
-          : result.error === "throttled"
-            ? "errorThrottled"
-            : "errorPhoneLoginUnavailable"
-      );
+      if (result.error === "invalid_code") {
+        const failed = failedAttempts + 1;
+        setFailedAttempts(failed);
+        // Past the limit the backend refuses even the right code: say so, and
+        // let "Resend" through as soon as the server would take it.
+        setErrorKey(failed >= MAX_CODE_ATTEMPTS ? "errorCodeLocked" : "errorInvalidCode");
+        return;
+      }
+      setErrorKey(result.error === "throttled" ? "errorThrottled" : "errorPhoneLoginUnavailable");
     },
-    [code, codeExpired, isLoading, lastSubmitted, loginWithPhone, sentTo, verified]
+    [code, codeExpired, codeLocked, failedAttempts, isLoading, lastSubmitted, loginWithPhone, sentTo, verified]
   );
 
   const changeNumber = useCallback(() => {
@@ -223,6 +332,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     cooldown,
     expiresInMinutes,
     codeExpired,
+    codeLocked,
     canSend,
     waitingOnSameNumber,
     canVerify,

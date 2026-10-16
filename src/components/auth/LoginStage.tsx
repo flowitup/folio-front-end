@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { FolioLogo } from "@/components/folio-logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { LegalLinks } from "@/components/legal-links";
+import { formatFrenchPhone } from "@/lib/auth/phone-number";
 import { PhoneLoginForm } from "./PhoneLoginForm";
 import { usePhoneLoginFlow } from "./use-phone-login-flow";
 
@@ -22,6 +24,7 @@ const ON_INK = {
 
 export function LoginStage() {
   const t = useTranslations("auth");
+  const locale = useLocale();
   const flow = usePhoneLoginFlow();
   // Phone + SMS code is the only sign-in, so the copy column follows the flow's
   // own step rather than a chosen view.
@@ -98,7 +101,8 @@ export function LoginStage() {
           {isCodeStep ? (
             <>
               {t.rich("codeSentTo", {
-                phone: flow.sentTo,
+                // "+33 6 12 34 56 78": the way the number is written everywhere else.
+                phone: formatFrenchPhone(flow.sentTo),
                 mono: (chunks) => (
                   <span className="num" style={{ color: ON_INK.cream }}>
                     {chunks}
@@ -154,6 +158,7 @@ export function LoginStage() {
         }}
       >
         <PhoneLoginForm flow={flow} />
+        <LegalLinks locale={locale} className="mt-5 justify-center" />
       </div>
     </div>
   );

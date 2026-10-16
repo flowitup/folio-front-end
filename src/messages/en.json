@@ -55,7 +55,7 @@
     "errorPhoneRequired": "Please enter your phone number",
     "errorInvalidPhone": "Enter a French phone number",
     "errorCodeRequired": "Please enter the 6-digit code",
-    "errorInvalidCode": "Wrong or expired code",
+    "errorInvalidCode": "Wrong or expired code. After several tries, ask for a new code.",
     "errorThrottled": "Too many requests. Wait a minute and try again.",
     "errorHourlyLimit": "Too many codes were requested for this number. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
     "errorSmsFailed": "The SMS could not be sent. Try again later.",
@@ -72,7 +72,10 @@
     "stepEnterSite": "On site",
     "verified": "Verified",
     "codeAlreadySent": "A code was already sent to this number — enter it, or get a new one in {seconds} s.",
-    "codeExpired": "Code expired — ask for a new one"
+    "codeExpired": "Code expired — ask for a new one",
+    "errorCodeLocked": "Too many tries: this code no longer works, even typed correctly. Ask for a new code.",
+    "codeRecentlySent": "A code was sent to this number less than a minute ago: type it below.",
+    "codeHelp": "No SMS? Check the number. Only Folio accounts receive a code: they are created in the Folio mobile app or through your company's invitation. Access deactivated? Contact your company's administrator."
   },
   "topbar": {
     "viewNotifications": "View notifications",
@@ -1174,14 +1177,15 @@
       "invalidPhone": "Enter a French phone number",
       "phoneRegistered": "This phone number already has an account. Sign in instead.",
       "codeRequired": "Please enter the 6-digit code",
-      "invalidCode": "Wrong or expired code",
+      "invalidCode": "Wrong or expired code. After several tries, ask for a new code.",
       "throttled": "Too many requests. Wait a minute and try again.",
       "hourlyLimit": "Too many codes were requested for this number. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
       "title": "Invitation unavailable",
       "nameRequired": "Please enter your name",
       "accountExists": "This invitation is for an existing Folio account. Enter that account's phone number, or sign in to it first.",
       "wrongAccount": "This invitation was sent to the address of another Folio account. Use that account to accept it.",
-      "superseded": "A newer invitation was sent to you: use the link in the latest e-mail."
+      "superseded": "A newer invitation was sent to you: use the link in the latest e-mail.",
+      "codeLocked": "Too many tries: this code no longer works, even typed correctly. Ask for a new code."
     },
     "loggedInOther": {
       "title": "You're signed in as someone else",
@@ -1212,7 +1216,8 @@
       "submitting": "Joining…",
       "bodyOther": "You're signed in as {currentUser}. Join the project with this account, or use another one.",
       "switchAccount": "Use another account"
-    }
+    },
+    "codeRecentlySent": "A code was sent to this number less than a minute ago: type it below."
   },
   "admin": {
     "bulkAdd": {
@@ -3061,5 +3066,10 @@
     "merged": "Merged “{source}” into “{target}”.",
     "mergedDetail": "{n, plural, one {# worker} other {# workers}} reassigned. Source deleted.",
     "failed": "The merge failed. Please try again."
+  },
+  "legalLinks": {
+    "label": "Help and legal information",
+    "support": "Help and support",
+    "privacy": "Privacy"
   }
 }

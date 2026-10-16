@@ -636,7 +636,8 @@
     "refundSource": {
       "company": "Remboursé par l'entreprise",
       "bank": "Remboursé par la banque",
-      "both": "Remboursé par l'entreprise et la banque"
+      "both": "Remboursé par l'entreprise et la banque",
+      "bankOnlyCompanyOwed": "Banque ✓ · entreprise : à rembourser"
     },
     "releaseAttribution": {
       "label": "Attribution du déblocage",
@@ -1708,7 +1709,13 @@
       "generic": "Une erreur inattendue s'est produite."
     },
     "refundable": {
-      "title": "Factures remboursables",
+      "title": "Dépenses remboursables",
+      "drill": {
+        "company": "Dû par l'entreprise",
+        "bank": "Dû par la banque",
+        "project": "Un seul projet",
+        "clear": "Tout afficher"
+      },
       "addButton": "Ajouter une dépense remboursable",
       "empty": "Aucune dépense remboursable pour le moment.",
       "loading": "Chargement...",
@@ -1756,7 +1763,10 @@
         "refundedTotal": "Total remboursé",
         "refundedByCompany": "Remboursé par l'entreprise",
         "refundedByBank": "Remboursé par la banque",
-        "refundable": "À rembourser",
+        "refundable": "À rembourser · entreprise",
+        "bankOutstanding": "À rembourser · banque",
+        "refundableHint": "Ce que l'entreprise doit encore, y compris une dépense déjà remboursée par la banque seule. Cliquez pour filtrer.",
+        "bankOutstandingHint": "Ce que la banque n'a pas encore remboursé. Une dépense peut être due par les deux : ne pas additionner. Cliquez pour filtrer.",
         "companyShare": "{percent}% entreprise",
         "bothShare": "{percent}% les deux",
         "bankShare": "{percent}% banque"

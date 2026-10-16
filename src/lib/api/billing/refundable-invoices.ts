@@ -13,7 +13,13 @@ export interface FetchRefundableExpensesParams {
   offset?: number;
   /** Server-side search: invoice number, recipient or project name. */
   q?: string;
+  /** One project (the dashboard and expense-page drill-downs). */
+  projectId?: string;
+  /** What one refund channel still owes: 'company' or 'bank'. */
+  channel?: RefundChannel;
 }
+
+export type RefundChannel = "company" | "bank";
 
 /** Shared query string of both listings: company, page and search. */
 function listQuery(refundable: boolean, params?: FetchRefundableExpensesParams): string {
@@ -24,6 +30,8 @@ function listQuery(refundable: boolean, params?: FetchRefundableExpensesParams):
   if (params?.offset !== undefined) qs.set("offset", String(params.offset));
   const q = params?.q?.trim();
   if (q) qs.set("q", q);
+  if (params?.projectId) qs.set("project_id", params.projectId);
+  if (params?.channel) qs.set("channel", params.channel);
   return qs.toString();
 }
 

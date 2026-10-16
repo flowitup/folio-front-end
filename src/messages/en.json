@@ -636,7 +636,8 @@
     "refundSource": {
       "company": "Refunded by company",
       "bank": "Refunded by bank",
-      "both": "Refunded by company and bank"
+      "both": "Refunded by company and bank",
+      "bankOnlyCompanyOwed": "Bank ✓ · company: still owed"
     },
     "releaseAttribution": {
       "label": "Release attribution",
@@ -1708,7 +1709,13 @@
       "generic": "An unexpected error occurred."
     },
     "refundable": {
-      "title": "Refundable Invoices",
+      "title": "Refundable expenses",
+      "drill": {
+        "company": "Owed by the company",
+        "bank": "Owed by the bank",
+        "project": "One project",
+        "clear": "Show all"
+      },
       "addButton": "Add refundable expense",
       "empty": "No refundable expenses yet.",
       "loading": "Loading...",
@@ -1756,7 +1763,10 @@
         "refundedTotal": "Total refunded",
         "refundedByCompany": "Refunded by company",
         "refundedByBank": "Refunded by bank",
-        "refundable": "Refundable",
+        "refundable": "Refundable · company",
+        "bankOutstanding": "Refundable · bank",
+        "refundableHint": "What the company still owes, including an expense the bank alone has refunded. Click to filter.",
+        "bankOutstandingHint": "What the bank has not refunded yet. An expense can be owed by both: do not add them up. Click to filter.",
         "companyShare": "{percent}% company",
         "bothShare": "{percent}% both",
         "bankShare": "{percent}% bank"

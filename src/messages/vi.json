@@ -636,7 +636,8 @@
     "refundSource": {
       "company": "Được hoàn bởi công ty",
       "bank": "Được hoàn bởi ngân hàng",
-      "both": "Được hoàn bởi công ty và ngân hàng"
+      "both": "Được hoàn bởi công ty và ngân hàng",
+      "bankOnlyCompanyOwed": "Ngân hàng ✓ · công ty: còn nợ"
     },
     "releaseAttribution": {
       "label": "Phân bổ giải ngân",
@@ -1708,7 +1709,13 @@
       "generic": "Đã xảy ra lỗi không mong đợi."
     },
     "refundable": {
-      "title": "Hóa đơn hoàn tiền",
+      "title": "Chi phí được hoàn",
+      "drill": {
+        "company": "Công ty còn nợ",
+        "bank": "Ngân hàng còn nợ",
+        "project": "Một dự án",
+        "clear": "Hiện tất cả"
+      },
       "addButton": "Thêm chi phí hoàn tiền",
       "empty": "Chưa có chi phí hoàn tiền nào.",
       "loading": "Đang tải...",
@@ -1756,7 +1763,10 @@
         "refundedTotal": "Tổng đã hoàn",
         "refundedByCompany": "Công ty đã hoàn",
         "refundedByBank": "Ngân hàng đã hoàn",
-        "refundable": "Chờ hoàn tiền",
+        "refundable": "Chờ hoàn · công ty",
+        "bankOutstanding": "Chờ hoàn · ngân hàng",
+        "refundableHint": "Số công ty còn nợ, kể cả khoản chi chỉ mới được ngân hàng hoàn. Nhấn để lọc.",
+        "bankOutstandingHint": "Số ngân hàng chưa hoàn. Một khoản chi có thể được cả hai nợ: đừng cộng lại. Nhấn để lọc.",
         "companyShare": "{percent}% công ty",
         "bothShare": "{percent}% cả hai",
         "bankShare": "{percent}% ngân hàng"

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Loader2, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fetchRefundableExpenses } from "@/lib/api/billing/refundable-invoices";
+import { useRefundableDrill } from "@/components/billing/use-refundable-drill";
 import { RefundableExpenseRowActions } from "@/components/billing/refundable-expense-row-actions";
 import { RefundableExpenseAttachmentsCell } from "@/components/billing/refundable-expense-attachments-cell";
 import { AddRefundableExpenseDialog } from "@/components/billing/add-refundable-expense-dialog";
@@ -66,6 +67,8 @@ export default function RefundableInvoicesPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  // ?project= and ?channel= from the dashboard and expense-page drill-downs.
+  const drill = useRefundableDrill();
   // Rows on screen: a reload after a status change fetches as many pages
   // again, instead of folding the list back to the first one.
   const loadedRef = useRef(0);
@@ -80,10 +83,10 @@ export default function RefundableInvoicesPage() {
     setLoading(true);
     setError(null);
     try {
-      let result = await fetchRefundableExpenses();
+      let result = await fetchRefundableExpenses(drill.params);
       let rows = result.items;
       while (rows.length < loadedRef.current && rows.length < result.total && result.items.length > 0) {
-        result = await fetchRefundableExpenses({ offset: rows.length });
+        result = await fetchRefundableExpenses({ ...drill.params, offset: rows.length });
         rows = [...rows, ...result.items];
       }
       loadedRef.current = rows.length;
@@ -95,13 +98,13 @@ export default function RefundableInvoicesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [drill.params]);
 
   // Next page (the API sends at most 200 rows at a time), appended.
   const loadMore = async () => {
     setLoadingMore(true);
     try {
-      const result = await fetchRefundableExpenses({ offset: items.length });
+      const result = await fetchRefundableExpenses({ ...drill.params, offset: items.length });
       const seen = new Set(items.map((i) => i.id));
       const next = [...items, ...result.items.filter((i) => !seen.has(i.id))];
       loadedRef.current = next.length;
@@ -132,7 +135,12 @@ export default function RefundableInvoicesPage() {
         </Button>
       </div>
 
-      <RefundableSummaryCards summary={summary} />
+      <RefundableSummaryCards
+        summary={summary}
+        activeChannel={drill.channel}
+        onSelectChannel={drill.setChannel}
+      />
+      {drill.chip}
 
       {/* Table */}
       {loading ? (

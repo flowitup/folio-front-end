@@ -447,11 +447,17 @@ export function buildPurseViews(invoices: Invoice[], meta: InvoiceMetaLike): Mon
 }
 
 /** Expenses paid with no company- or personal-flagged method (no payment
- * method, or an unflagged one): they count in neither purse. */
+ * method, or an unflagged one): they count in neither purse. Net of the
+ * returns received in neither purse, as on the Expense page; the count stays
+ * expenses only. */
 export function computeUnassignedSpend(invoices: Invoice[]): PendingRefunds {
   let count = 0;
   let total = 0;
   for (const inv of invoices) {
+    if (inv.type === "return") {
+      if (!isPersonalExpense(inv) && !isCompanyPaidExpense(inv)) total += inv.total_amount;
+      continue;
+    }
     if (!isSpendInvoice(inv)) continue;
     if (isPersonalExpense(inv) || isCompanyPaidExpense(inv)) continue;
     count += 1;

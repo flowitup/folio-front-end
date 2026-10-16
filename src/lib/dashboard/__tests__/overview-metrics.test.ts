@@ -383,6 +383,15 @@ describe("company purse count vs unassigned expenses", () => {
   it("reports the expenses in neither purse", () => {
     expect(computeUnassignedSpend(invoices)).toEqual({ count: 2, total: 3000 });
   });
+
+  it("nets the returns received in neither purse, like the Expense page", () => {
+    const withReturns = [
+      ...invoices,
+      { ...invoices[0], id: "ret-none", type: "return" as const, total_amount: -128, paid_by_company: false, paid_by_personal: false },
+      { ...invoices[0], id: "ret-co", type: "return" as const, total_amount: -50, paid_by_company: true, paid_by_personal: false },
+    ];
+    expect(computeUnassignedSpend(withReturns)).toEqual({ count: 2, total: 2872 });
+  });
 });
 
 describe("buildTypeMonthlyBuckets / sharedMonthlyMax", () => {

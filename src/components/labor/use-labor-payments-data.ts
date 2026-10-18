@@ -14,14 +14,12 @@ import { toast } from "sonner";
 import { fetchLaborSummary, fetchLaborMonthlySummary, fetchLaborPaymentsSummary } from "@/lib/api/labor";
 import { fetchInvoicesWithMeta, updateInvoice } from "@/lib/api/invoice-api";
 import type {
-  LaborMonthlySummaryResponse,
   LaborSummaryResponse,
   LaborPaymentsSummaryResponse,
 } from "@/types/labor";
 import type { Invoice } from "@/types/invoice";
 import {
   mergeWorkerPaymentRows,
-  earlierCreditByWorker,
   findMonthBucket,
   pickDefaultMonth,
   monthToDateRange,
@@ -57,9 +55,6 @@ export function useLaborPaymentsData(
   const [error, setError] = useState<string | null>(null);
 
   const [laborSummary, setLaborSummary] = useState<LaborSummaryResponse | null>(null);
-  // Every month's per-worker earnings — lets a month carry forward what a
-  // worker was overpaid in earlier months (see earlierCreditByWorker).
-  const [monthlySummary, setMonthlySummary] = useState<LaborMonthlySummaryResponse | null>(null);
   // Own fetch/state — only used when the caller doesn't share one (see
   // `isShared` above).
   const [ownPaymentsSummary, setOwnPaymentsSummary] = useState<LaborPaymentsSummaryResponse | null>(null);
@@ -126,7 +121,6 @@ export function useLaborPaymentsData(
           isShared ? Promise.resolve(mountPaymentsSummaryRef.current) : loadPaymentsSummary(),
         ]);
         if (!cancelled) {
-          setMonthlySummary(monthly);
           setMonth(pickDefaultMonth(monthly, payments));
         }
       } catch {
@@ -165,13 +159,9 @@ export function useLaborPaymentsData(
   }, [month, loadMonthData, t]);
 
   const bucket = useMemo(() => findMonthBucket(paymentsSummary, month), [paymentsSummary, month]);
-  const credits = useMemo(
-    () => earlierCreditByWorker(monthlySummary, paymentsSummary, month),
-    [monthlySummary, paymentsSummary, month],
-  );
   const rows = useMemo(
-    () => mergeWorkerPaymentRows(laborSummary, bucket, credits),
-    [laborSummary, bucket, credits],
+    () => mergeWorkerPaymentRows(laborSummary, bucket),
+    [laborSummary, bucket],
   );
   // Balance is settled worker by worker (the back end's labor_unpaid rule,
   // same as monthSettlement): one worker's overpayment never shrinks what

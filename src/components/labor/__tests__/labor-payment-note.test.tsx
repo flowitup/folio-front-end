@@ -39,7 +39,6 @@ const row: WorkerPaymentRow = {
   bonus_cost: 0,
   bonus_days: 0,
   banked_hours: 0,
-  credit: 0,
 };
 
 function renderRow(props: Partial<React.ComponentProps<typeof LaborPaymentRow>> = {}) {

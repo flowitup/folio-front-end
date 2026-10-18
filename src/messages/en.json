@@ -1200,8 +1200,7 @@
       "noteCancel": "Cancel",
       "noteSavedToast": "Note saved",
       "noteClearedToast": "Note removed",
-      "noteSaveFailed": "Could not save the note",
-      "creditDeducted": "Overpaid in earlier months, deducted: {amount}"
+      "noteSaveFailed": "Could not save the note"
     },
     "summaryUnpaidWarning": "{amount} unpaid",
     "summaryUnpaidWarningTitle": "Labor charges for this month are not fully paid",

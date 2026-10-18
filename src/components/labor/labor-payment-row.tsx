@@ -91,8 +91,7 @@ export function LaborPaymentRow({
   }, [expanded, projectId, month, row.worker_id, reloadSignal]);
 
   const statusLabel = t(`status.${row.status}`);
-  // How the figures add up: the banked-hours bonus inside "owed", and any
-  // overpayment from earlier months deducted from the balance.
+  // How the figures add up: the banked-hours bonus inside "owed".
   const bonusLine =
     row.bonus_cost > 0 ? (
       <div className="text-[10.5px] font-normal" style={{ color: "var(--muted)" }} data-testid={`labor-payment-bonus-${variant}-${row.worker_id}`}>
@@ -101,12 +100,6 @@ export function LaborPaymentRow({
           days: formatBonusDays(row.bonus_days, locale),
           hours: row.banked_hours,
         })}
-      </div>
-    ) : null;
-  const creditLine =
-    row.credit > 0 ? (
-      <div className="text-[10.5px] font-normal" style={{ color: "var(--muted)" }} data-testid={`labor-payment-credit-${variant}-${row.worker_id}`}>
-        {t("creditDeducted", { amount: formatEUR(row.credit) })}
       </div>
     ) : null;
   const testIdSuffix = `${variant}-${row.worker_id}`;
@@ -219,7 +212,6 @@ export function LaborPaymentRow({
           </td>
           <td className="num font-medium" style={{ textAlign: "right" }}>
             {formatEUR(row.balance)}
-            {creditLine}
           </td>
           <td>
             <span className={STATUS_STAMP_CLASS[row.status]}>{statusLabel}</span>
@@ -268,7 +260,6 @@ export function LaborPaymentRow({
         <div className="text-[12.5px]">
           <span style={{ color: "var(--muted)" }}>{t("balance")}: </span>
           <span className="num font-medium">{formatEUR(row.balance)}</span>
-          {creditLine}
         </div>
         <div className="flex items-center gap-1">
           {noteButton}

@@ -1200,8 +1200,7 @@
       "noteCancel": "Hủy",
       "noteSavedToast": "Đã lưu ghi chú",
       "noteClearedToast": "Đã xóa ghi chú",
-      "noteSaveFailed": "Không lưu được ghi chú",
-      "creditDeducted": "Đã trừ khoản trả dư từ các tháng trước: {amount}"
+      "noteSaveFailed": "Không lưu được ghi chú"
     },
     "summaryUnpaidWarning": "{amount} chưa trả",
     "summaryUnpaidWarningTitle": "Chi phí nhân công tháng này chưa được trả đủ",

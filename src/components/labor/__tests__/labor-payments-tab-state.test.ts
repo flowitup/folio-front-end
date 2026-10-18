@@ -6,7 +6,6 @@
 
 import { describe, it, expect } from "vitest";
 import {
-  earlierCreditByWorker,
   findMonthBucket,
   mergeWorkerPaymentRows,
   monthToDateRange,
@@ -247,9 +246,9 @@ describe("pickDefaultMonth", () => {
   });
 });
 
-// ── earlier overpayment carried forward ─────────────────────────────────────
+// ── each month stands alone ─────────────────────────────────────
 
-describe("earlierCreditByWorker + mergeWorkerPaymentRows", () => {
+describe("mergeWorkerPaymentRows (no carry-over)", () => {
   // W2 earned 99,99 € in September, was paid 250 € that month, and earned
   // 149,99 € in October: she is owed nothing in October.
   const monthly: LaborMonthlySummaryResponse = {
@@ -280,21 +279,12 @@ describe("earlierCreditByWorker + mergeWorkerPaymentRows", () => {
     ],
   };
 
-  it("credits only workers paid ahead in earlier months", () => {
-    const credits = earlierCreditByWorker(monthly, payments, "2026-10");
-    expect(credits.get("w2")).toBeCloseTo(150.01, 2);
-    // W1 owes September money: debts are not carried, and no-month payments are ignored.
-    expect(credits.has("w1")).toBe(false);
-    expect(earlierCreditByWorker(monthly, payments, "2026-09").size).toBe(0);
-  });
-
-  it("deducts the credit so the next month is not owed again", () => {
-    const credits = earlierCreditByWorker(monthly, payments, "2026-10");
+  it("does not carry an earlier overpayment into the next month", () => {
+    // W2 was paid 250 € for 99,99 € of September work: October still owes in full.
     const summary = makeSummary([summaryRow({ worker_id: "w2", worker_name: "W2", total_cost: 149.99, days_worked: 1.5 })]);
-    const [row] = mergeWorkerPaymentRows(summary, null, credits);
-    expect(row.credit).toBeCloseTo(150.01, 2);
-    expect(row.balance).toBeCloseTo(-0.02, 2);
-    expect(row.status).toBe("overpaid");
+    const [row] = mergeWorkerPaymentRows(summary, null);
+    expect(row.balance).toBeCloseTo(149.99, 2);
+    expect(row.status).toBe("unpaid");
   });
 
   it("carries the bonus breakdown from the summary row", () => {
@@ -302,6 +292,6 @@ describe("earlierCreditByWorker + mergeWorkerPaymentRows", () => {
       summaryRow({ worker_id: "w3", total_cost: 250, banked_hours: 12, bonus_full_days: 1, bonus_half_days: 1, bonus_cost: 150 }),
     ]);
     const [row] = mergeWorkerPaymentRows(summary, null);
-    expect(row).toMatchObject({ bonus_cost: 150, bonus_days: 1.5, banked_hours: 12, credit: 0 });
+    expect(row).toMatchObject({ bonus_cost: 150, bonus_days: 1.5, banked_hours: 12 });
   });
 });

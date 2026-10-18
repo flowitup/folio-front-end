@@ -1200,8 +1200,7 @@
       "noteCancel": "Annuler",
       "noteSavedToast": "Note enregistrée",
       "noteClearedToast": "Note supprimée",
-      "noteSaveFailed": "Impossible d'enregistrer la note",
-      "creditDeducted": "Avance des mois précédents déduite : {amount}"
+      "noteSaveFailed": "Impossible d'enregistrer la note"
     },
     "summaryUnpaidWarning": "{amount} impayé",
     "summaryUnpaidWarningTitle": "Les charges de main-d'œuvre de ce mois ne sont pas entièrement payées",

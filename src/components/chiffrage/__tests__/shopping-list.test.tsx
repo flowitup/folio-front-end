@@ -29,6 +29,8 @@ const article = (id: string, over: Partial<ChiffrageArticle> = {}): ChiffrageArt
   total_ht: 10,
   total_ttc: 12,
   purchased: false,
+  purchased_quantity: null,
+  returned_quantity: null,
   actual_ttc: null,
   ...over,
 });
@@ -42,12 +44,12 @@ const tree = (): ChiffrageTree => ({
       name: "Doublage",
       note: null,
       position: 1000,
-      articles: [article("a1"), article("a2", { purchased: true, actual_ttc: 11 })],
+      articles: [article("a1"), article("a2", { purchased: true, purchased_quantity: 3, returned_quantity: 0, actual_ttc: 18 })],
       store_baskets: [],
       room_subtotals: [],
       subtotal_ht: 20,
       subtotal_ttc: 24,
-      actual_ttc: 11,
+      actual_ttc: 18,
       purchased_count: 1,
     },
   ],
@@ -57,7 +59,7 @@ const tree = (): ChiffrageTree => ({
   total_ht: 20,
   total_ttc: 24,
   unpriced_article_count: 0,
-  actual_ttc: 11,
+  actual_ttc: 18,
   purchased_count: 1,
   article_count: 2,
 });
@@ -66,16 +68,16 @@ describe("ShoppingList", () => {
   it("shows the real spend and ticks an article as bought", () => {
     const onToggle = vi.fn();
     render(
-      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={onToggle} onSetActual={vi.fn()} />,
+      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={onToggle} onSetQuantities={vi.fn()} />,
     );
-    expect(screen.getByTestId("actual-total").textContent).toMatch(/11,00/);
+    expect(screen.getByTestId("actual-total").textContent).toMatch(/18,00/);
     fireEvent.click(screen.getAllByLabelText("markBought")[0]);
     expect(onToggle).toHaveBeenCalledWith(expect.objectContaining({ id: "a1" }), true);
   });
 
   it("hides bought rows when only the remaining ones are wanted", () => {
     render(
-      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetActual={vi.fn()} />,
+      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
     );
     expect(screen.getAllByTestId("shopping-row")).toHaveLength(2);
     fireEvent.click(screen.getByLabelText("onlyToBuy"));
@@ -84,17 +86,32 @@ describe("ShoppingList", () => {
 
   it("does not let a read-only viewer tick", () => {
     render(
-      <ShoppingList tree={tree()} canManage={false} busyIds={new Set()} onTogglePurchased={vi.fn()} onSetActual={vi.fn()} />,
+      <ShoppingList tree={tree()} canManage={false} busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
     );
     screen.getAllByRole("checkbox").slice(1).forEach((c) => expect((c as HTMLInputElement).disabled).toBe(true));
   });
 
-  it("shows how far a bought line and its section went over or under the estimate", () => {
+  it("shows how far a bought line and its section went over the estimate when more was bought", () => {
     render(
-      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetActual={vi.fn()} />,
+      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
     );
-    // a2: estimate 12, paid 11
-    expect(screen.getByTestId("line-gap").textContent).toMatch(/-1,00/);
-    expect(screen.getByTestId("poste-gap").textContent).toMatch(/-1,00/);
+    // a2: estimate 12 for 2 planned, 3 bought: 18 spent, 6 over
+    expect(screen.getByTestId("line-gap").textContent).toMatch(/\+6,00/);
+    expect(screen.getByTestId("poste-gap").textContent).toMatch(/\+6,00/);
+  });
+
+  it("saves the quantity bought and the quantity returned", () => {
+    const onQty = vi.fn();
+    render(
+      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={onQty} />,
+    );
+    const bought = screen.getByLabelText("boughtQuantity");
+    fireEvent.change(bought, { target: { value: "4" } });
+    fireEvent.blur(bought);
+    expect(onQty).toHaveBeenCalledWith(expect.objectContaining({ id: "a2" }), { purchased_quantity: 4 });
+    const returned = screen.getByLabelText("returnedQuantity");
+    fireEvent.change(returned, { target: { value: "1" } });
+    fireEvent.blur(returned);
+    expect(onQty).toHaveBeenCalledWith(expect.objectContaining({ id: "a2" }), { returned_quantity: 1 });
   });
 });

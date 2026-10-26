@@ -86,6 +86,8 @@ const article = (
   total_ht: 0,
   total_ttc: 0,
   purchased: false,
+  purchased_quantity: null,
+  returned_quantity: null,
   actual_ttc: null,
 });
 

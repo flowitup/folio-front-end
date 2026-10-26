@@ -76,7 +76,10 @@ export interface ChiffrageArticle {
   total_ttc: number;
   /** Shopping list: ticked as bought. */
   purchased: boolean;
-  /** Whole-line amount really paid, TTC; null until entered. */
+  /** Quantity really bought (may differ from the planned one) and quantity taken back. */
+  purchased_quantity: number | null;
+  returned_quantity: number | null;
+  /** Cost of the net quantity at the article's price, TTC; null until bought. */
   actual_ttc: number | null;
 }
 
@@ -165,7 +168,8 @@ export interface ArticlePayload {
   note?: string | null;
   room_id?: string | null;
   purchased?: boolean;
-  actual_ttc?: number | string | null;
+  purchased_quantity?: number | string | null;
+  returned_quantity?: number | string | null;
 }
 
 export interface QuotePayload {

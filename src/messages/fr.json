@@ -3189,12 +3189,12 @@
     "printList": "Imprimer",
     "listCopied": "Liste d'achats copiée.",
     "markBought": "Marquer comme acheté : {name}",
-    "actualAmount": "Montant réellement payé (TTC)",
-    "actualPlaceholder": "Réel",
     "boughtOf": "{done}/{total} achetés",
     "estimateShort": "Estimé",
     "actualShort": "Réel",
-    "gapShort": "Écart"
+    "gapShort": "Écart",
+    "boughtQuantity": "Acheté",
+    "returnedQuantity": "Rendu"
   },
   "onboarding": {
     "removedFrom": "Vous avez été retiré(e) de l’entreprise {company}. Pour retrouver vos chantiers, demandez un code entreprise à son administrateur, ou rejoignez une autre entreprise.",

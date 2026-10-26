@@ -3189,12 +3189,12 @@
     "printList": "In",
     "listCopied": "Đã sao chép danh sách cần mua.",
     "markBought": "Đánh dấu đã mua: {name}",
-    "actualAmount": "Số tiền thực trả (gồm VAT)",
-    "actualPlaceholder": "Thực chi",
     "boughtOf": "{done}/{total} đã mua",
     "estimateShort": "Dự toán",
     "actualShort": "Thực chi",
-    "gapShort": "Chênh lệch"
+    "gapShort": "Chênh lệch",
+    "boughtQuantity": "Đã mua",
+    "returnedQuantity": "Trả lại"
   },
   "onboarding": {
     "removedFrom": "Bạn đã bị xóa khỏi công ty {company}. Để quay lại các công trình, hãy xin quản trị viên mã công ty, hoặc tham gia một công ty khác.",

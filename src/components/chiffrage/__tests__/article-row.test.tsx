@@ -37,6 +37,8 @@ function article(overrides: Partial<ChiffrageArticle> = {}): ChiffrageArticle {
     total_ht: 7.5,
     total_ttc: 9,
     purchased: false,
+    purchased_quantity: null,
+    returned_quantity: null,
     actual_ttc: null,
     ...overrides,
   };

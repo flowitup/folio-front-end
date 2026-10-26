@@ -3189,12 +3189,12 @@
     "printList": "Print",
     "listCopied": "Shopping list copied.",
     "markBought": "Mark as bought: {name}",
-    "actualAmount": "Amount actually paid (incl. VAT)",
-    "actualPlaceholder": "Actual",
     "boughtOf": "{done}/{total} bought",
     "estimateShort": "Estimate",
     "actualShort": "Actual",
-    "gapShort": "Gap"
+    "gapShort": "Gap",
+    "boughtQuantity": "Bought",
+    "returnedQuantity": "Returned"
   },
   "onboarding": {
     "removedFrom": "You were removed from the company {company}. To get back to your projects, ask its admin for a company code, or join another company.",

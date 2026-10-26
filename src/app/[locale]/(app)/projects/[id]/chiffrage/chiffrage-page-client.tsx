@@ -247,7 +247,7 @@ export function ChiffragePageClient({
     return { sorted, rows };
   };
 
-  /** Tick or untick an article as bought; a new tick starts at its estimated amount. */
+  /** Tick or untick an article as bought; a new tick starts at the planned quantity. */
   const savePurchase = async (article: ChiffrageArticle, payload: ArticlePayload) => {
     setBusyArticleIds((prev) => new Set(prev).add(article.id));
     try {
@@ -266,12 +266,7 @@ export function ChiffragePageClient({
   };
 
   const togglePurchased = (article: ChiffrageArticle, purchased: boolean) =>
-    savePurchase(
-      article,
-      purchased && article.effective_source !== "none"
-        ? { purchased, actual_ttc: article.total_ttc }
-        : { purchased },
-    );
+    savePurchase(article, { purchased });
 
   const createFromTemplates = async (names: string[]) => {
     setSubmitting(true);
@@ -513,7 +508,7 @@ export function ChiffragePageClient({
           canManage={canManage}
           busyIds={busyArticleIds}
           onTogglePurchased={togglePurchased}
-          onSetActual={(article, actual) => savePurchase(article, { actual_ttc: actual })}
+          onSetQuantities={(article, change) => savePurchase(article, change)}
         />
       ) : tree.postes.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center">

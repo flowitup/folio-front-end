@@ -30,6 +30,9 @@ const EMPTY_TREE = (projectId: string): ChiffrageTree => ({
   total_ht: 0,
   total_ttc: 0,
   unpriced_article_count: 0,
+  actual_ttc: 0,
+  purchased_count: 0,
+  article_count: 0,
 });
 
 export const generateMetadata = pageTitle("navigation.chiffrage");

@@ -85,6 +85,8 @@ const article = (
   effective_source: quotes.length > 0 ? "cheapest" : "none",
   total_ht: 0,
   total_ttc: 0,
+  purchased: false,
+  actual_ttc: null,
 });
 
 const ALPHA = store("A", "Alpha");
@@ -127,6 +129,8 @@ const poste = (): ChiffragePoste => ({
   room_subtotals: [],
   subtotal_ht: 15,
   subtotal_ttc: 18,
+  actual_ttc: 0,
+  purchased_count: 0,
 });
 
 const renderDialog = (showDifferencesDefault?: boolean) =>

@@ -52,6 +52,8 @@ function article(quotes: ChiffrageQuote[], overrides: Partial<ChiffrageArticle> 
     effective_source: effective ? (effective.is_selected ? "selected" : "cheapest") : "none",
     total_ht: 129,
     total_ttc: 154.8,
+    purchased: false,
+    actual_ttc: null,
     ...overrides,
   };
 }

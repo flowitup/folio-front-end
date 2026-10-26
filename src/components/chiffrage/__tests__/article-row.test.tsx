@@ -36,6 +36,8 @@ function article(overrides: Partial<ChiffrageArticle> = {}): ChiffrageArticle {
     effective_source: "none",
     total_ht: 7.5,
     total_ttc: 9,
+    purchased: false,
+    actual_ttc: null,
     ...overrides,
   };
 }

@@ -3193,7 +3193,8 @@
     "actualPlaceholder": "Actual",
     "boughtOf": "{done}/{total} bought",
     "estimateShort": "Estimate",
-    "actualShort": "Actual"
+    "actualShort": "Actual",
+    "gapShort": "Gap"
   },
   "onboarding": {
     "removedFrom": "You were removed from the company {company}. To get back to your projects, ask its admin for a company code, or join another company.",

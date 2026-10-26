@@ -88,4 +88,13 @@ describe("ShoppingList", () => {
     );
     screen.getAllByRole("checkbox").slice(1).forEach((c) => expect((c as HTMLInputElement).disabled).toBe(true));
   });
+
+  it("shows how far a bought line and its section went over or under the estimate", () => {
+    render(
+      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetActual={vi.fn()} />,
+    );
+    // a2: estimate 12, paid 11
+    expect(screen.getByTestId("line-gap").textContent).toMatch(/-1,00/);
+    expect(screen.getByTestId("poste-gap").textContent).toMatch(/-1,00/);
+  });
 });

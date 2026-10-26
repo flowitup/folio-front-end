@@ -67,6 +67,27 @@ function ActualInput({
   );
 }
 
+/** What a bought line cost beyond (+) or under (-) its estimate; null while no amount is entered. */
+const lineGap = (a: ChiffrageArticle): number | null =>
+  a.purchased && a.actual_ttc !== null ? a.actual_ttc - a.total_ttc : null;
+
+const sumGaps = (articles: ChiffrageArticle[]): number =>
+  articles.reduce((s, a) => s + (lineGap(a) ?? 0), 0);
+
+/** Signed gap, red when over the estimate and green when under; nothing when it is zero. */
+function Gap({ value, testId }: { value: number; testId?: string }) {
+  if (Math.abs(value) < 0.005) return null;
+  return (
+    <span
+      data-testid={testId}
+      className={`tabular-nums ${value > 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}
+    >
+      {value > 0 ? "+" : ""}
+      {money(value)}
+    </span>
+  );
+}
+
 export function ShoppingList({ tree, canManage, busyIds, onTogglePurchased, onSetActual }: Props) {
   const t = useTranslations("chiffrage");
   const [onlyToBuy, setOnlyToBuy] = useState(false);
@@ -74,9 +95,8 @@ export function ShoppingList({ tree, canManage, busyIds, onTogglePurchased, onSe
 
   const all = tree.postes.flatMap((p) => p.articles);
   const bought = all.filter((a) => a.purchased);
-  const estimatedBought = bought.reduce((s, a) => s + a.total_ttc, 0);
   const toBuyEstimate = all.filter((a) => !a.purchased).reduce((s, a) => s + a.total_ttc, 0);
-  const diff = tree.actual_ttc - estimatedBought;
+  const diff = sumGaps(all);
 
   const copyList = async () => {
     const lines: string[] = [];
@@ -180,6 +200,12 @@ export function ShoppingList({ tree, canManage, busyIds, onTogglePurchased, onSe
                 <p>
                   <span className="text-muted-foreground">{t("actualShort")}</span> {money(poste.actual_ttc)}
                 </p>
+                {sumGaps(poste.articles) !== 0 ? (
+                  <p>
+                    <span className="text-muted-foreground">{t("gapShort")}</span>{" "}
+                    <Gap value={sumGaps(poste.articles)} testId="poste-gap" />
+                  </p>
+                ) : null}
               </div>
             </header>
             <ul>
@@ -211,6 +237,11 @@ export function ShoppingList({ tree, canManage, busyIds, onTogglePurchased, onSe
                       {a.effective_source === "none" ? t("noPrice") : money(a.total_ttc)}
                     </p>
                     <div className="w-28 text-right">
+                      {lineGap(a) !== null ? (
+                        <p className="mb-0.5 text-xs" data-testid="line-gap">
+                          <Gap value={lineGap(a) as number} />
+                        </p>
+                      ) : null}
                       {a.purchased ? (
                         canManage ? (
                           <ActualInput

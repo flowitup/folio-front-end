@@ -3193,7 +3193,8 @@
     "actualPlaceholder": "Thực chi",
     "boughtOf": "{done}/{total} đã mua",
     "estimateShort": "Dự toán",
-    "actualShort": "Thực chi"
+    "actualShort": "Thực chi",
+    "gapShort": "Chênh lệch"
   },
   "onboarding": {
     "removedFrom": "Bạn đã bị xóa khỏi công ty {company}. Để quay lại các công trình, hãy xin quản trị viên mã công ty, hoặc tham gia một công ty khác.",

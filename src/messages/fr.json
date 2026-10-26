@@ -3193,7 +3193,8 @@
     "actualPlaceholder": "Réel",
     "boughtOf": "{done}/{total} achetés",
     "estimateShort": "Estimé",
-    "actualShort": "Réel"
+    "actualShort": "Réel",
+    "gapShort": "Écart"
   },
   "onboarding": {
     "removedFrom": "Vous avez été retiré(e) de l’entreprise {company}. Pour retrouver vos chantiers, demandez un code entreprise à son administrateur, ou rejoignez une autre entreprise.",

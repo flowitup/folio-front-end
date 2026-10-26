@@ -40,12 +40,18 @@ const poste = (over: Partial<ChiffragePoste> = {}): ChiffragePoste => ({
       effective_source: "none",
       total_ht: 0,
       total_ttc: 0,
+      purchased: false,
+      purchased_quantity: null,
+      returned_quantity: null,
+      actual_ttc: null,
     },
   ],
   store_baskets: [],
   room_subtotals: [],
   subtotal_ht: 3750,
   subtotal_ttc: 4500,
+  actual_ttc: 0,
+  purchased_count: 0,
   ...over,
 });
 

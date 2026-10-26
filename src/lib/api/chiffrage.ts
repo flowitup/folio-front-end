@@ -74,6 +74,13 @@ export interface ChiffrageArticle {
   effective_source: EffectiveSource;
   total_ht: number;
   total_ttc: number;
+  /** Shopping list: ticked as bought. */
+  purchased: boolean;
+  /** Quantity really bought (may differ from the planned one) and quantity taken back. */
+  purchased_quantity: number | null;
+  returned_quantity: number | null;
+  /** Cost of the net quantity at the article's price, TTC; null until bought. */
+  actual_ttc: number | null;
 }
 
 /** A shop to visit for a poste's purchases. */
@@ -115,6 +122,9 @@ export interface ChiffragePoste {
   room_subtotals: ChiffrageRoomSubtotal[];
   subtotal_ht: number;
   subtotal_ttc: number;
+  /** Real spend on bought articles, TTC. */
+  actual_ttc: number;
+  purchased_count: number;
 }
 
 export interface ChiffrageTree {
@@ -128,6 +138,9 @@ export interface ChiffrageTree {
   total_ht: number;
   total_ttc: number;
   unpriced_article_count: number;
+  actual_ttc: number;
+  purchased_count: number;
+  article_count: number;
 }
 
 /** A selectable unit. Presets carry no id — they are a backend constant. */
@@ -154,6 +167,9 @@ export interface ArticlePayload {
   unit?: string | null;
   note?: string | null;
   room_id?: string | null;
+  purchased?: boolean;
+  purchased_quantity?: number | string | null;
+  returned_quantity?: number | string | null;
 }
 
 export interface QuotePayload {

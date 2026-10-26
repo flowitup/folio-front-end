@@ -33,7 +33,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { DoorOpen, Plus, Store } from "lucide-react";
+import { DoorOpen, LayoutTemplate, Plus, Store } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ArticleRow } from "@/components/chiffrage/article-row";
@@ -44,6 +44,8 @@ import { RoomHeading } from "@/components/chiffrage/room-heading";
 import { ArticleImageDialog } from "@/components/chiffrage/article-image-dialog";
 import { SectionCompareDialog } from "@/components/chiffrage/section-compare-dialog";
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
+import { PosteTemplatesDialog } from "@/components/chiffrage/poste-templates-dialog";
+import { ShoppingList } from "@/components/chiffrage/shopping-list";
 import { RoomsDialog } from "@/components/chiffrage/rooms-dialog";
 import { SortableItem } from "@/components/chiffrage/sortable-item";
 import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
@@ -83,6 +85,7 @@ import {
   updateQuoteAction,
 } from "./_actions/chiffrage-actions";
 import type {
+  ArticlePayload,
   ChiffrageArticle,
   ChiffragePoste,
   ChiffrageQuote,
@@ -151,6 +154,9 @@ export function ChiffragePageClient({
     articleId: string | null;
     quote: ChiffrageQuote | null;
   }>({ open: false, articleId: null, quote: null });
+  const [view, setView] = useState<"budget" | "shopping">("budget");
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [busyArticleIds, setBusyArticleIds] = useState<Set<string>>(new Set());
   const [roomsOpen, setRoomsOpen] = useState(false);
   const [storesOpen, setStoresOpen] = useState(false);
   const [storeForm, setStoreForm] = useState<{
@@ -239,6 +245,49 @@ export function ChiffragePageClient({
       rows.push({ kind: "article", article });
     }
     return { sorted, rows };
+  };
+
+  /** Tick or untick an article as bought; a new tick starts at the planned quantity. */
+  const savePurchase = async (article: ChiffrageArticle, payload: ArticlePayload) => {
+    setBusyArticleIds((prev) => new Set(prev).add(article.id));
+    try {
+      const res = await updateArticleAction(projectId, article.id, payload);
+      if (!res.ok) toast.error(res.error);
+      else await refresh();
+    } catch {
+      toast.error(t("actionFailed"));
+    } finally {
+      setBusyArticleIds((prev) => {
+        const next = new Set(prev);
+        next.delete(article.id);
+        return next;
+      });
+    }
+  };
+
+  const togglePurchased = (article: ChiffrageArticle, purchased: boolean) =>
+    savePurchase(article, { purchased });
+
+  const createFromTemplates = async (names: string[]) => {
+    setSubmitting(true);
+    try {
+      let failed = false;
+      // One at a time so the sections keep the order they were ticked in.
+      for (const name of names) {
+        const res = await createPosteAction(projectId, { name });
+        if (!res.ok) {
+          toast.error(res.error);
+          failed = true;
+          break;
+        }
+      }
+      await refresh();
+      if (!failed) setTemplatesOpen(false);
+    } catch {
+      toast.error(t("actionFailed"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const addStore = async (name: string): Promise<ChiffrageStore | null> => {
@@ -398,6 +447,14 @@ export function ChiffragePageClient({
             </Button>
             <Button
               type="button"
+              variant="outline"
+              onClick={() => setTemplatesOpen(true)}
+            >
+              <LayoutTemplate className="mr-1 h-4 w-4" />
+              {t("templates")}
+            </Button>
+            <Button
+              type="button"
               onClick={() => setPosteDialog({ open: true, poste: null })}
             >
               <Plus className="mr-1 h-4 w-4" />
@@ -419,6 +476,25 @@ export function ChiffragePageClient({
         <ChiffrageTotals tree={tree} />
       )}
 
+      {loadFailed ? null : (
+        <div className="inline-flex rounded-md border p-0.5 print:hidden" role="tablist">
+          {(["budget", "shopping"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              role="tab"
+              aria-selected={view === v}
+              className={`rounded px-3 py-1 text-sm ${
+                view === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+              }`}
+              onClick={() => setView(v)}
+            >
+              {t(v === "budget" ? "viewBudget" : "viewShopping")}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Say why the page cannot be edited, and who can change that. */}
       {!canManage && !loadFailed ? (
         <p className="text-sm text-muted-foreground" data-testid="chiffrage-read-only">
@@ -426,7 +502,15 @@ export function ChiffragePageClient({
         </p>
       ) : null}
 
-      {loadFailed ? null : tree.postes.length === 0 ? (
+      {loadFailed ? null : view === "shopping" && tree.postes.length > 0 ? (
+        <ShoppingList
+          tree={tree}
+          canManage={canManage}
+          busyIds={busyArticleIds}
+          onTogglePurchased={togglePurchased}
+          onSetQuantities={(article, change) => savePurchase(article, change)}
+        />
+      ) : tree.postes.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="font-medium">{t("emptyTitle")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -661,6 +745,16 @@ export function ChiffragePageClient({
             );
             if (ok) setStoreForm({ open: false, store: null });
           }}
+        />
+      ) : null}
+
+      {templatesOpen ? (
+        <PosteTemplatesDialog
+          open
+          existingNames={tree.postes.map((p) => p.name)}
+          submitting={submitting}
+          onOpenChange={setTemplatesOpen}
+          onSubmit={createFromTemplates}
         />
       ) : null}
 

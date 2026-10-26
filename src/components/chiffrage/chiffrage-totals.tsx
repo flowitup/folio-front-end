@@ -36,6 +36,15 @@ export function ChiffrageTotals({ tree }: { tree: ChiffrageTree }) {
           <p className="text-xs text-muted-foreground">{t("includingTax")}</p>
         </div>
       </div>
+      {tree.purchased_count > 0 ? (
+        <p className="mt-3 text-sm" data-testid="actual-summary">
+          <span className="text-muted-foreground">{t("actualSpend")}:</span>{" "}
+          <span className="font-medium tabular-nums">{money(tree.actual_ttc)}</span>{" "}
+          <span className="text-muted-foreground">
+            ({t("boughtOf", { done: tree.purchased_count, total: tree.article_count })})
+          </span>
+        </p>
+      ) : null}
       {tree.unpriced_article_count > 0 ? (
         <p
           className="mt-3 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500"

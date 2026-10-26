@@ -57,6 +57,10 @@ const article = (
   effective_source: quotes.length > 0 ? "cheapest" : "none",
   total_ht: 0,
   total_ttc: 0,
+  purchased: false,
+  purchased_quantity: null,
+  returned_quantity: null,
+  actual_ttc: null,
 });
 
 describe("lineVerdict", () => {

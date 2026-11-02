@@ -165,8 +165,8 @@ describe("ProjectsPage card layout", () => {
     renderPage();
     const title = screen.getByTestId("project-card-title");
     expect(title.className).toContain("[overflow-wrap:anywhere]");
-    const grid = title.closest("article")!.firstElementChild as HTMLElement;
-    expect(grid.className).toContain("minmax(0,");
+    // Cover stacked above the body: the body must still be allowed to shrink.
+    expect(title.closest(".min-w-0.flex-col")).not.toBeNull();
   });
 });
 

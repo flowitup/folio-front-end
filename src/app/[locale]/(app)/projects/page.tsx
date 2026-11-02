@@ -311,9 +311,8 @@ export default function ProjectsPage() {
       )}
 
       {!isLoading && !error && filteredProjects.length > 0 && (
-        <div className="grid grid-cols-12 items-start gap-5">
+        <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
           {filteredProjects.map((project, idx) => {
-            const isFeatured = idx === 0;
             const isExpanded = expandedProjectId === project.id;
             const canEdit = canEditProject(project);
             const canDelete = canDeleteProject(project);
@@ -374,23 +373,15 @@ export default function ProjectsPage() {
               <article
                 key={project.id}
                 id={`project-${project.id}`}
-                className={`folio-card overflow-hidden ${
-                  isFeatured ? "col-span-12" : "col-span-12 md:col-span-6"
-                }`}
+                className="folio-card overflow-hidden"
               >
-                <div
-                  className={`grid grid-cols-1 ${
-                    isFeatured
-                      ? "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]"
-                      : "sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]"
-                  }`}
-                >
+                <div className="grid grid-cols-1">
                   {/* Cover */}
                   <button
                     type="button"
                     onClick={() => openProject(project.id)}
                     className="relative cursor-pointer text-left"
-                    style={{ background: cover, minHeight: isFeatured ? 280 : 220 }}
+                    style={{ background: cover, minHeight: 104 }}
                   >
                     <div className="blueprint-grid absolute inset-0 opacity-25" />
                     <div className="paper-noise absolute inset-0" />
@@ -415,13 +406,13 @@ export default function ProjectsPage() {
                   {/* Body */}
                   {/* minmax(0,…) tracks + overflow-wrap: an unbroken address as
                       the title used to widen the body and squeeze the cover to 0. */}
-                  <div className="flex min-w-0 flex-col p-6">
+                  <div className="flex min-w-0 flex-col p-5">
                     <div className="mb-3 flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         {/* Clamped: a 500-character name or address used to make the
                             card ~900px tall. The full text stays in the tooltip. */}
                         <h3
-                          className="font-display line-clamp-3 text-[26px] font-medium leading-tight tracking-tight [overflow-wrap:anywhere]"
+                          className="font-display line-clamp-2 text-[20px] font-medium leading-tight tracking-tight [overflow-wrap:anywhere]"
                           data-testid="project-card-title"
                           title={projectDisplayName(project)}
                         >

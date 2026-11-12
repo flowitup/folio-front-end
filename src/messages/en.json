@@ -3474,7 +3474,7 @@
     "totalBudget": "Total budget",
     "totalSpent": "Total spent",
     "totalRemaining": "Remaining",
-    "laborOwed": "Wages owed",
+    "laborOwed": "Still owed",
     "colProject": "Project",
     "colBudget": "Budget",
     "colSpent": "Spent",
@@ -3484,6 +3484,21 @@
     "colLaborUnpaid": "Wages owed",
     "colPersonal": "Personal spend",
     "total": "Total",
-    "footnote": "Spent includes company and personal money, net of returns. The remaining total only counts projects with a budget. Click a row to open the project's overview."
+    "footnote": "Spent includes company and personal money, net of returns. The remaining total only counts projects with a budget. Click a row to open the project's overview.",
+    "tabLabor": "Labor",
+    "tabMoney": "Budget & spending",
+    "byWorker": "By worker",
+    "byProject": "By project",
+    "month": "Month",
+    "allMonths": "All months",
+    "laborDays": "Days worked",
+    "laborEarned": "Wages",
+    "laborPaid": "Paid",
+    "workerCount": "{count} workers",
+    "unassignedPaid": "including {amount} with no worker",
+    "colWorker": "Worker",
+    "laborEmpty": "No days logged in this period.",
+    "laborFootnote": "Each month stands alone: an overpayment is not carried over. By worker: days and payments of the same person (same name) across all projects. By project: same figures as each project's Labor page.",
+    "laborPartial": "{count} projects could not be loaded."
   }
 }

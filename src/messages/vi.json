@@ -3474,7 +3474,7 @@
     "totalBudget": "Tổng ngân sách",
     "totalSpent": "Tổng đã chi",
     "totalRemaining": "Còn lại",
-    "laborOwed": "Lương còn nợ",
+    "laborOwed": "Còn phải trả",
     "colProject": "Dự án",
     "colBudget": "Ngân sách",
     "colSpent": "Đã chi",
@@ -3484,6 +3484,21 @@
     "colLaborUnpaid": "Lương còn nợ",
     "colPersonal": "Chi cá nhân",
     "total": "Tổng cộng",
-    "footnote": "Đã chi gồm tiền công ty và tiền cá nhân, đã trừ hoàn trả. Tổng \"Còn lại\" chỉ tính các dự án có đặt ngân sách. Bấm vào một dòng để mở tổng quan của dự án."
+    "footnote": "Đã chi gồm tiền công ty và tiền cá nhân, đã trừ hoàn trả. Tổng \"Còn lại\" chỉ tính các dự án có đặt ngân sách. Bấm vào một dòng để mở tổng quan của dự án.",
+    "tabLabor": "Nhân công",
+    "tabMoney": "Ngân sách & chi phí",
+    "byWorker": "Theo thợ",
+    "byProject": "Theo dự án",
+    "month": "Tháng",
+    "allMonths": "Tất cả các tháng",
+    "laborDays": "Tổng công",
+    "laborEarned": "Tiền lương",
+    "laborPaid": "Đã trả",
+    "workerCount": "{count} thợ",
+    "unassignedPaid": "trong đó {amount} chưa gán thợ",
+    "colWorker": "Thợ",
+    "laborEmpty": "Chưa có công nào trong kỳ này.",
+    "laborFootnote": "Mỗi tháng tính riêng, trả dư tháng này không trừ sang tháng khác. Theo thợ: cộng công và tiền đã trả của cùng một người (trùng tên) trên mọi dự án. Theo dự án: tính như trang Nhân công của từng dự án.",
+    "laborPartial": "Không tải được {count} dự án."
   }
 }

@@ -3474,7 +3474,7 @@
     "totalBudget": "Budget total",
     "totalSpent": "Total dépensé",
     "totalRemaining": "Reste à dépenser",
-    "laborOwed": "Salaires dus",
+    "laborOwed": "Reste à payer",
     "colProject": "Projet",
     "colBudget": "Budget",
     "colSpent": "Dépensé",
@@ -3484,6 +3484,21 @@
     "colLaborUnpaid": "Salaires dus",
     "colPersonal": "Dépenses perso",
     "total": "Total",
-    "footnote": "Le dépensé réunit l'argent de l'entreprise et l'argent personnel, retours déduits. Le total du reste ne compte que les projets avec un budget. Cliquez sur une ligne pour ouvrir l'aperçu du projet."
+    "footnote": "Le dépensé réunit l'argent de l'entreprise et l'argent personnel, retours déduits. Le total du reste ne compte que les projets avec un budget. Cliquez sur une ligne pour ouvrir l'aperçu du projet.",
+    "tabLabor": "Main-d'œuvre",
+    "tabMoney": "Budget et dépenses",
+    "byWorker": "Par ouvrier",
+    "byProject": "Par projet",
+    "month": "Mois",
+    "allMonths": "Tous les mois",
+    "laborDays": "Jours travaillés",
+    "laborEarned": "Salaires",
+    "laborPaid": "Payé",
+    "workerCount": "{count} ouvriers",
+    "unassignedPaid": "dont {amount} sans ouvrier",
+    "colWorker": "Ouvrier",
+    "laborEmpty": "Aucune journée sur cette période.",
+    "laborFootnote": "Chaque mois est compté à part : un trop-payé ne se reporte pas. Par ouvrier : jours et paiements d'une même personne (même nom) sur tous les projets. Par projet : même calcul que la page Main-d'œuvre du projet.",
+    "laborPartial": "{count} projets n'ont pas pu être chargés."
   }
 }

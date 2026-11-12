@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { fmtEUR } from "@/lib/projects/budget-display";
 import { formatShare } from "@/lib/utils/format-percent";
+import { CompanyLaborPanel } from "@/components/company-summary/company-labor-panel";
 import { summaryRow, summarize, type SummaryRow } from "@/lib/projects/company-summary";
 
 const DASH = "—";
@@ -47,6 +48,7 @@ export default function CompanySummaryPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { projects, isLoading, error, refetch, selectProject } = useProject();
+  const [tab, setTab] = useState<"labor" | "money">("labor");
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "name", dir: 1 });
 
@@ -66,8 +68,12 @@ export default function CompanySummaryPage() {
   const activeId = companyId && companies.some((c) => c.id === companyId) ? companyId : (companies[0]?.id ?? null);
   const companyName = companies.find((c) => c.id === activeId)?.name ?? "";
 
+  const companyProjects = useMemo(
+    () => projects.filter((p) => (activeId ? p.company_id === activeId : true)),
+    [projects, activeId],
+  );
   const rows = useMemo(() => {
-    const list = projects.filter((p) => (activeId ? p.company_id === activeId : true)).map(summaryRow);
+    const list = companyProjects.map(summaryRow);
     return list.sort((a, b) => {
       const va = value(a, sort.key);
       const vb = value(b, sort.key);
@@ -76,7 +82,7 @@ export default function CompanySummaryPage() {
       if (vb === null) return -1;
       return (va < vb ? -1 : 1) * sort.dir;
     });
-  }, [projects, activeId, sort]);
+  }, [companyProjects, sort]);
   const totals = useMemo(() => summarize(rows), [rows]);
 
   const money = (n: number | null) => (n === null ? DASH : fmtEUR(n));
@@ -116,6 +122,22 @@ export default function CompanySummaryPage() {
         )}
       </div>
 
+      <div className="mb-5 flex gap-5 border-b" style={{ borderColor: "var(--line)" }} role="tablist">
+        {(["labor", "money"] as const).map((k) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={tab === k}
+            onClick={() => setTab(k)}
+            className="-mb-px border-b-2 pb-2 text-sm font-medium"
+            style={tab === k ? { borderColor: "var(--ink)", color: "var(--ink)" } : { borderColor: "transparent", color: "var(--ink-3)" }}
+          >
+            {t(k === "labor" ? "tabLabor" : "tabMoney")}
+          </button>
+        ))}
+      </div>
+
       {isLoading && projects.length === 0 ? (
         <div className="flex items-center gap-2 py-16 text-sm" style={{ color: "var(--ink-3)" }}>
           <Loader2 className="h-4 w-4 animate-spin" /> {t("loading")}
@@ -126,6 +148,8 @@ export default function CompanySummaryPage() {
         <p className="py-16 text-sm" style={{ color: "var(--ink-3)" }}>
           {t("empty")}
         </p>
+      ) : tab === "labor" ? (
+        <CompanyLaborPanel projects={companyProjects} onOpenProject={open} />
       ) : (
         <>
           <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4" data-testid="company-summary-kpis">
@@ -133,7 +157,7 @@ export default function CompanySummaryPage() {
               [t("totalBudget"), money(totals.budget), false],
               [t("totalSpent"), money(totals.spent), false],
               [t("totalRemaining"), money(totals.remaining), totals.remaining < 0],
-              [t("laborOwed"), money(totals.laborUnpaid), false],
+              [t("colLaborUnpaid"), money(totals.laborUnpaid), false],
             ].map(([label, v, bad]) => (
               <div key={label as string} className="folio-card p-4">
                 <div className="text-xs" style={{ color: "var(--ink-3)" }}>

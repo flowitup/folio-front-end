@@ -38,6 +38,7 @@
   "navigation": {
     "dashboard": "Tổng quan",
     "projects": "Dự án",
+    "companySummary": "Tổng hợp công ty",
     "bibliotheque": "Thư viện",
     "inventory": "Kho thiết bị",
     "labor": "Nhân công",
@@ -3461,5 +3462,28 @@
   "legalLinks": {
     "support": "Trợ giúp và hỗ trợ",
     "privacy": "Quyền riêng tư"
+  },
+  "companySummary": {
+    "title": "Tổng hợp công ty",
+    "subtitle": "{company} · {count} dự án",
+    "subtitleNoCompany": "Tất cả dự án của bạn",
+    "company": "Công ty",
+    "loading": "Đang tải...",
+    "loadError": "Không thể tải dữ liệu",
+    "empty": "Chưa có dự án nào.",
+    "totalBudget": "Tổng ngân sách",
+    "totalSpent": "Tổng đã chi",
+    "totalRemaining": "Còn lại",
+    "laborOwed": "Lương còn nợ",
+    "colProject": "Dự án",
+    "colBudget": "Ngân sách",
+    "colSpent": "Đã chi",
+    "colRemaining": "Còn lại",
+    "colUsed": "Đã dùng",
+    "colLaborPaid": "Lương đã trả",
+    "colLaborUnpaid": "Lương còn nợ",
+    "colPersonal": "Chi cá nhân",
+    "total": "Tổng cộng",
+    "footnote": "Đã chi gồm tiền công ty và tiền cá nhân, đã trừ hoàn trả. Tổng \"Còn lại\" chỉ tính các dự án có đặt ngân sách. Bấm vào một dòng để mở tổng quan của dự án."
   }
 }

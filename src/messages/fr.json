@@ -38,6 +38,7 @@
   "navigation": {
     "dashboard": "Aperçu",
     "projects": "Projets",
+    "companySummary": "Synthèse entreprise",
     "bibliotheque": "Bibliothèque",
     "inventory": "Inventaire",
     "labor": "Main-d'œuvre",
@@ -3461,5 +3462,28 @@
   "legalLinks": {
     "support": "Aide et support",
     "privacy": "Confidentialité"
+  },
+  "companySummary": {
+    "title": "Synthèse de l'entreprise",
+    "subtitle": "{company} · {count} projets",
+    "subtitleNoCompany": "Tous vos projets",
+    "company": "Entreprise",
+    "loading": "Chargement...",
+    "loadError": "Impossible de charger les données",
+    "empty": "Aucun projet pour l'instant.",
+    "totalBudget": "Budget total",
+    "totalSpent": "Total dépensé",
+    "totalRemaining": "Reste à dépenser",
+    "laborOwed": "Salaires dus",
+    "colProject": "Projet",
+    "colBudget": "Budget",
+    "colSpent": "Dépensé",
+    "colRemaining": "Reste",
+    "colUsed": "Utilisé",
+    "colLaborPaid": "Salaires payés",
+    "colLaborUnpaid": "Salaires dus",
+    "colPersonal": "Dépenses perso",
+    "total": "Total",
+    "footnote": "Le dépensé réunit l'argent de l'entreprise et l'argent personnel, retours déduits. Le total du reste ne compte que les projets avec un budget. Cliquez sur une ligne pour ouvrir l'aperçu du projet."
   }
 }

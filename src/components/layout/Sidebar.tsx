@@ -22,7 +22,6 @@ import {
   FileSearch,
   ReceiptEuro,
   Images,
-  Table2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -94,8 +93,6 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
   const allProjectNav = [
     { key: "dashboard", href: "/dashboard", icon: Home },
     { key: "projects", href: "/projects", icon: FolderOpen },
-    // Company roll-up: only worth a menu entry once there is more than one project to add up.
-    ...(projects.length > 1 ? [{ key: "companySummary", href: "/company-summary", icon: Table2 }] : []),
     { key: "bibliotheque", href: "/bibliotheque", icon: Library },
     { key: "inventory", href: "/inventory", icon: Wrench },
     ...(selectedProjectId

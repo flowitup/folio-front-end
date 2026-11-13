@@ -14,7 +14,6 @@ import {
   Library,
   Wrench,
   Settings,
-  Table2,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -84,7 +83,6 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
   // Company-wide pages, as in the desktop sidebar.
   // Library and inventory belong to a company: not offered before joining one.
   const companyItems = isWithoutWorkspace(user, projects.length) ? [] : [
-    ...(projects.length > 1 ? [{ key: "companySummary", href: "/company-summary", icon: Table2 }] : []),
     ...(hiddenAreas.has("library")
       ? []
       : [{ key: "bibliotheque", href: "/bibliotheque", icon: Library }]),

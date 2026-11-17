@@ -35,6 +35,11 @@ import { ArrowRight, Building2, Clock, Plus } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { can, canCreateProject } from "@/lib/auth/permissions";
 import { parisDayKey } from "@/lib/utils/paris-day";
+import { CompanyOverview } from "@/components/dashboard/company-overview";
+import { OverviewScopeToggle, type OverviewScope } from "@/components/dashboard/overview-scope-toggle";
+
+/** Remembers the Project / Company switch per browser. */
+const SCOPE_KEY = "folio.overview.scope";
 
 const MONTHS_BACK = 6;
 
@@ -72,12 +77,57 @@ const EMPTY_TYPE_BUCKETS: TypeMonthlyBucket[] = EXPENSE_TYPES.map((type) => ({
 }));
 
 export default function DashboardPage() {
-  const { selectedProject, isLoading: projectsLoading, error: projectsError, refetch: refetchProjects } = useProject();
+  const {
+    selectedProject,
+    projects: allProjects,
+    selectProject,
+    isLoading: projectsLoading,
+    error: projectsError,
+    refetch: refetchProjects,
+  } = useProject();
   const { user } = useAuth();
   const locale = useLocale();
   const t = useTranslations("dashboard");
   const tProjects = useTranslations("projects");
   const projectId = selectedProject?.id;
+
+  // Project / Company switch. Read from storage after mount, so the server
+  // render (always "project") and the first client paint agree.
+  const [scope, setScopeState] = useState<OverviewScope>("project");
+  const [companyId, setCompanyId] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only preference, read after mount to avoid an SSR mismatch
+      if (window.localStorage.getItem(SCOPE_KEY) === "company") setScopeState("company");
+    } catch {
+      // storage blocked: stay on the project view
+    }
+  }, []);
+  const setScope = (s: OverviewScope) => {
+    setScopeState(s);
+    try {
+      window.localStorage.setItem(SCOPE_KEY, s);
+    } catch {
+      // storage blocked: the choice lasts for this visit only
+    }
+  };
+  const projectList = useMemo(() => allProjects ?? [], [allProjects]);
+  const companies = useMemo(() => {
+    const ids = Array.from(new Set(projectList.map((p) => p.company_id).filter((c): c is string => !!c)));
+    return ids.map((id) => ({ id, name: user?.companies?.find((c) => c.id === id)?.legal_name ?? "" }));
+  }, [projectList, user?.companies]);
+  // The company shown: the one picked, else the selected project's, else the first.
+  const activeCompanyId =
+    (companyId && companies.some((c) => c.id === companyId) ? companyId : null) ??
+    selectedProject?.company_id ??
+    companies[0]?.id ??
+    null;
+  const companyProjects = useMemo(
+    () => projectList.filter((p) => !activeCompanyId || p.company_id === activeCompanyId),
+    [projectList, activeCompanyId],
+  );
+  // Worth a switch only when there is more than one project to add up.
+  const canSeeCompany = projectList.length > 1;
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [meta, setMeta] = useState<OverviewMeta>(EMPTY_META);
@@ -279,8 +329,29 @@ export default function DashboardPage() {
     );
   }
 
+  if (scope === "company" && canSeeCompany) {
+    return (
+      <CompanyOverview
+        projects={companyProjects}
+        companies={companies}
+        companyId={activeCompanyId}
+        onCompanyChange={setCompanyId}
+        onScopeChange={setScope}
+        onOpenProject={(id) => {
+          selectProject(id);
+          setScope("project");
+        }}
+      />
+    );
+  }
+
   return (
     <div className="fade-up space-y-5 px-4 pb-12 lg:px-8">
+      {canSeeCompany && (
+        <div className="flex justify-end">
+          <OverviewScopeToggle scope="project" onChange={setScope} />
+        </div>
+      )}
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>

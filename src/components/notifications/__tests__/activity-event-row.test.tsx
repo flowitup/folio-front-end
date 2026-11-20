@@ -74,6 +74,22 @@ describe("targetForActivity", () => {
     expect(pathForActivity(make("worker_added", { project_id: "p1" }), "fr")).toBe("/fr/projects/p1/labor?tab=workers");
   });
 
+  it("opens what a scheduled reminder is about", () => {
+    expect(
+      pathForActivity(make("reminder_attendance", { project_id: "p1", date: "2026-11-23", project_count: "1" }), "fr")
+    ).toBe("/fr/projects/p1/labor?tab=attendance");
+    expect(targetForActivity(make("reminder_attendance", { project_id: "p1" }), "fr")).toEqual({
+      type: "path",
+      path: "/fr/projects/p1/labor?tab=attendance",
+      projectId: "p1",
+    });
+    expect(targetForActivity(make("reminder_attendance", {}), "fr")).toBeNull();
+    expect(pathForActivity(make("reminder_overdue_factures", { count: "2", company_id: "c1" }), "vi")).toBe(
+      "/vi/billing/factures"
+    );
+    expect(pathForActivity(make("reminder_monthly_summary", { month: "2026-11" }), "en")).toBe("/en/dashboard");
+  });
+
   it("opens the quote or the invoice behind a billing status", () => {
     expect(pathForActivity(make("billing_status", { document_id: "d1", status: "accepted" }), "fr")).toBe(
       "/fr/billing/devis/d1"

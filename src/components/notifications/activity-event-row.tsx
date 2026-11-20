@@ -74,6 +74,12 @@ export function targetForActivity(event: ActivityEvent, locale: string): Activit
     const section = docKind === "devis" ? "devis" : "factures";
     return { type: "path", path: `/${locale}/billing/${section}/${data.document_id}` };
   }
+  // Scheduled reminders (QĐ-9): no attendance logged today on a site, overdue factures (the
+  // list shows how late each one is; its status filter reads the stored status, so it is not
+  // applied), the summary of the month just ended (the overview).
+  if (kind === "reminder_attendance") return project("/labor?tab=attendance");
+  if (kind === "reminder_overdue_factures") return { type: "path", path: `/${locale}/billing/factures` };
+  if (kind === "reminder_monthly_summary") return { type: "path", path: `/${locale}/dashboard` };
   if (COMPANY_KINDS.has(kind)) {
     return { type: "path", path: `/${locale}/settings#company` };
   }

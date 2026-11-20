@@ -1397,7 +1397,7 @@
       "reopenDescription": "The month will no longer be marked as closed, and the list of changes made after closing will be cleared.",
       "reopenedToast": "{month} reopened",
       "reopenFailed": "Could not reopen the month. Try again.",
-      "editedAfterClose": "Changed after closing: {count} times, last by {name} at {time}",
+      "editedAfterClose": "Changed after closing: {count, plural, one {# time} other {# times}}, last by {name} at {time}",
       "showEdits": "Show details",
       "hideEdits": "Hide details",
       "unknownUser": "unknown",
@@ -1406,7 +1406,7 @@
       "writeConfirm": "Save anyway",
       "inClosedMonth": "{month} is closed: saving into it will be recorded.",
       "closedStamp": "Closed",
-      "closedStampEdited": "Closed · changed {count} times",
+      "closedStampEdited": "Closed · changed {count, plural, one {# time} other {# times}}",
       "kinds": {
         "entry_created": "Day added",
         "entry_updated": "Day edited",

@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { createTranslator } from "next-intl";
 import en from "../en.json";
 import fr from "../fr.json";
 import vi from "../vi.json";
@@ -44,13 +45,22 @@ describe("labor.monthClose i18n parity", () => {
     ["closeButton", ["{month}"]],
     ["closedBadge", ["{month}"]],
     ["closedBy", ["{name}", "{date}"]],
-    ["editedAfterClose", ["{count}", "{name}", "{time}"]],
+    // "{count" also matches an ICU plural ("{count, plural, …}").
+    ["editedAfterClose", ["{count", "{name}", "{time}"]],
     ["writeTitle", ["{months}"]],
     ["inClosedMonth", ["{month}"]],
   ])("%s keeps its placeholders in every locale", (key, placeholders) => {
     for (const [locale, messages] of Object.entries(locales)) {
       for (const p of placeholders) expect(messages[key], `${locale}: ${key}`).toContain(p);
     }
+  });
+
+  it("says '1 time' / '2 times' in English", () => {
+    const t = createTranslator({ locale: "en", messages: en, namespace: "labor.monthClose" });
+    expect(t("editedAfterClose", { count: 1, name: "Bob", time: "now" })).toBe(
+      "Changed after closing: 1 time, last by Bob at now",
+    );
+    expect(t("closedStampEdited", { count: 2 })).toBe("Closed · changed 2 times");
   });
 
   it("speaks the owner's words in Vietnamese", () => {

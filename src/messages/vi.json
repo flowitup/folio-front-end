@@ -1230,6 +1230,8 @@
       },
       "recordPayment": "Ghi nhận thanh toán",
       "recordPaymentFor": "Ghi nhận thanh toán cho {name}",
+      "owedForMonth": "Còn nợ {month}: {amount}",
+      "monthSettled": "Tháng này đã trả đủ",
       "recordedToast": "Đã ghi nhận thanh toán",
       "recordFailed": "Không thể ghi nhận thanh toán",
       "descriptionTooLong": "Mô tả không được dài quá {max, number} ký tự.",

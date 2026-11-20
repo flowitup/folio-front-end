@@ -1230,6 +1230,8 @@
       },
       "recordPayment": "Record payment",
       "recordPaymentFor": "Record payment for {name}",
+      "owedForMonth": "Still owed for {month}: {amount}",
+      "monthSettled": "This month is fully paid",
       "recordedToast": "Payment recorded",
       "recordFailed": "Failed to record payment",
       "descriptionTooLong": "The description can't be longer than {max, number} characters.",

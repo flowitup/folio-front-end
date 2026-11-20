@@ -1230,6 +1230,8 @@
       },
       "recordPayment": "Enregistrer un paiement",
       "recordPaymentFor": "Enregistrer un paiement pour {name}",
+      "owedForMonth": "Reste dû pour {month} : {amount}",
+      "monthSettled": "Ce mois est entièrement payé",
       "recordedToast": "Paiement enregistré",
       "recordFailed": "Échec de l'enregistrement du paiement",
       "descriptionTooLong": "La description ne doit pas dépasser {max, number} caractères.",

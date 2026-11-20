@@ -116,13 +116,20 @@ vi.mock("../record-labor-payment-dialog", () => ({
     open,
     worker,
     month,
+    balanceFor,
   }: {
     open: boolean;
     worker: Worker | null;
     month: string;
+    balanceFor?: (id: string) => number | undefined;
   }) =>
     open ? (
-      <div data-testid="record-dialog" data-worker-id={worker?.id ?? ""} data-month={month} />
+      <div
+        data-testid="record-dialog"
+        data-worker-id={worker?.id ?? ""}
+        data-month={month}
+        data-balance={worker ? String(balanceFor?.(worker.id)) : ""}
+      />
     ) : null,
 }));
 
@@ -220,6 +227,8 @@ describe("LaborPaymentsTab — record payment dialog wiring", () => {
 
     const dialog = await screen.findByTestId("record-dialog");
     expect(dialog).toHaveAttribute("data-worker-id", "w1");
+    // The month's balance for that worker (500 owed − 300 paid) prefills the amount.
+    expect(dialog).toHaveAttribute("data-balance", "200");
   });
 });
 

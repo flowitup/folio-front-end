@@ -208,6 +208,7 @@ export function LaborPaymentsTab({
         worker={recordDialog.worker}
         month={month}
         companyId={companyId}
+        balanceFor={(id) => rows.find((r) => r.worker_id === id)?.balance}
         onSaved={handleRecordSaved}
       />
     </div>

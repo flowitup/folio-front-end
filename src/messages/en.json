@@ -504,7 +504,7 @@
   "paymentMethods": {
     "title": "Payment methods",
     "description": "Manage the payment methods of this company's expenses and the purse each one counts in. Built-in methods cannot be removed but can be renamed.",
-    "addPlaceholder": "e.g. Wise, Stripe, …",
+    "addPlaceholder": "e.g. Company card BNP, Cash, Bank transfer",
     "addButton": "Add",
     "purseLabel": "Purse",
     "purseCompany": "Company purse",

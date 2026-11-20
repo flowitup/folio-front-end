@@ -504,7 +504,7 @@
   "paymentMethods": {
     "title": "Phương thức thanh toán",
     "description": "Quản lý phương thức thanh toán chi phí của công ty này và quỹ mà mỗi phương thức được tính vào. Phương thức mặc định không thể xóa nhưng có thể đổi tên.",
-    "addPlaceholder": "ví dụ Wise, Stripe…",
+    "addPlaceholder": "vd. Thẻ công ty BNP, Tiền mặt, Chuyển khoản",
     "addButton": "Thêm",
     "purseLabel": "Quỹ",
     "purseCompany": "Quỹ công ty",
@@ -2570,18 +2570,18 @@
       "fields": {
         "legalName": {
           "label": "Tên pháp lý",
-          "placeholder": "vd. Công ty TNHH Lavandou"
+          "placeholder": "vd. Lavandou Bâtiment SARL"
         },
         "address": {
           "label": "Địa chỉ",
           "placeholder": "Số nhà, đường, thành phố, mã bưu chính, quốc gia"
         },
         "siret": {
-          "label": "Mã số doanh nghiệp",
+          "label": "SIRET (mã số doanh nghiệp)",
           "placeholder": "vd. 12345678900012"
         },
         "tvaNumber": {
-          "label": "Mã số thuế GTGT",
+          "label": "N° TVA (mã số thuế GTGT)",
           "placeholder": "vd. FR12345678901"
         },
         "iban": {

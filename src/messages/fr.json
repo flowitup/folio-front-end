@@ -504,7 +504,7 @@
   "paymentMethods": {
     "title": "Moyens de paiement",
     "description": "Gérez les moyens de paiement des dépenses de cette entreprise et la caisse où chacun compte. Les moyens intégrés ne peuvent pas être supprimés mais peuvent être renommés.",
-    "addPlaceholder": "ex. Wise, Stripe…",
+    "addPlaceholder": "ex. Carte entreprise BNP, Espèces, Virement",
     "addButton": "Ajouter",
     "purseLabel": "Caisse",
     "purseCompany": "Caisse entreprise",

@@ -146,11 +146,16 @@ export function RecordLaborPaymentDialog({
   // Select the prefilled amount so typing replaces it.
   useEffect(() => {
     if (!open || prefillTick === 0) return;
-    const el = amountRef.current;
-    if (el && el.value) {
-      el.focus();
-      el.select();
-    }
+    // The dialog moves focus to its first field when it opens; selecting before that
+    // lands loses the selection, so wait until the dialog has settled.
+    const timer = window.setTimeout(() => {
+      const el = amountRef.current;
+      if (el && el.value) {
+        el.focus();
+        el.select();
+      }
+    }, 50);
+    return () => window.clearTimeout(timer);
   }, [open, prefillTick]);
 
   async function handleSave() {

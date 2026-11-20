@@ -42,7 +42,7 @@ const TRANSLATIONS: Record<string, string> = {
   codeHelp: "No SMS? Only Folio accounts receive a code.",
   noAccountUseMobileApp: "No account yet? Accounts are created in the Folio mobile app.",
   installMobileApp: "Get the Folio app",
-  codeRefusedNoAccount: "No SMS? This number may not have an account yet: create one in the mobile app first.",
+  codeRefusedNoAccount: "This number may not have an account yet: create one in the Folio mobile app first, then sign in here again.",
 };
 
 function fill(key: string, params?: Record<string, unknown>): string {
@@ -140,7 +140,7 @@ describe("a number without an account is not left waiting (D6)", () => {
     await typeCode(user, "123456");
 
     expect(await screen.findByTestId("login-no-account-hint")).toHaveTextContent(
-      "No SMS? This number may not have an account yet: create one in the mobile app first."
+      "This number may not have an account yet: create one in the Folio mobile app first, then sign in here again."
     );
   });
 

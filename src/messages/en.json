@@ -102,7 +102,7 @@
     "errorSmsBusy": "The text message service is busy. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
     "noAccountUseMobileApp": "No account yet? Accounts are created in the Folio mobile app.",
     "installMobileApp": "Get the Folio app",
-    "codeRefusedNoAccount": "No SMS? This number may not have an account yet: create one in the mobile app first."
+    "codeRefusedNoAccount": "This number may not have an account yet: create one in the Folio mobile app first, then sign in here again."
   },
   "topbar": {
     "projectSettingsTitle": "Project settings",

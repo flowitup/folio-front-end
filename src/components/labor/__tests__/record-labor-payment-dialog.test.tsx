@@ -300,9 +300,11 @@ describe("RecordLaborPaymentDialog — prefilled with what is still owed", () =>
     const input = screen.getByTestId("record-payment-amount") as HTMLInputElement;
     expect(input.value).toBe("1,425.00");
     expect(screen.getByTestId("record-payment-owed")).toHaveTextContent("labor.payments.owedForMonth");
-    await waitFor(() => expect(document.activeElement).toBe(input));
-    expect(input.selectionStart).toBe(0);
-    expect(input.selectionEnd).toBe(input.value.length);
+    await waitFor(() => {
+      expect(document.activeElement).toBe(input);
+      expect(input.selectionStart).toBe(0);
+      expect(input.selectionEnd).toBe(input.value.length);
+    });
   });
 
   it("saves the prefilled balance without any typing", async () => {

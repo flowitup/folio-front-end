@@ -102,7 +102,7 @@
     "errorSmsBusy": "Le service d'envoi de SMS est momentanément saturé. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
     "noAccountUseMobileApp": "Pas encore de compte ? Les comptes se créent dans l'application mobile Folio.",
     "installMobileApp": "Installer l'application Folio",
-    "codeRefusedNoAccount": "Pas reçu de SMS ? Ce numéro n'a peut-être pas encore de compte : créez-le d'abord dans l'application mobile."
+    "codeRefusedNoAccount": "Ce numéro n'a peut-être pas encore de compte : créez-le d'abord dans l'application mobile Folio, puis reconnectez-vous ici."
   },
   "topbar": {
     "projectSettingsTitle": "Paramètres du projet",

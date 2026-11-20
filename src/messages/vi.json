@@ -102,7 +102,7 @@
     "errorSmsBusy": "Dịch vụ gửi SMS đang quá tải. Hãy thử lại sau {minutes} phút.",
     "noAccountUseMobileApp": "Chưa có tài khoản? Tài khoản được tạo trên ứng dụng Folio trên điện thoại.",
     "installMobileApp": "Cài ứng dụng Folio",
-    "codeRefusedNoAccount": "Không nhận được SMS? Có thể số này chưa có tài khoản: hãy tạo tài khoản trên ứng dụng điện thoại trước."
+    "codeRefusedNoAccount": "Có thể số này chưa có tài khoản: hãy tạo tài khoản trên ứng dụng Folio trên điện thoại trước, rồi đăng nhập lại ở đây."
   },
   "topbar": {
     "projectSettingsTitle": "Cài đặt dự án",

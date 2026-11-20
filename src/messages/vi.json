@@ -24,7 +24,7 @@
     }
   },
   "meta": {
-    "description": "Một ứng dụng ấm áp, gần gũi để quản lý việc xây dựng ngôi nhà của chính bạn.",
+    "description": "Folio — theo dõi công trình, chấm công, chi phí và báo giá, hóa đơn cho công ty xây dựng nhỏ.",
     "signIn": "Đăng nhập",
     "quotes": "Báo giá",
     "invoices": "Hóa đơn",
@@ -239,7 +239,7 @@
     "projectNameOptional": "Tên dự án (tùy chọn)",
     "projectNamePlaceholder": "Mặc định lấy địa chỉ",
     "projectAddress": "Địa chỉ",
-    "projectAddressPlaceholder": "vd. 12 Đường Lê Lợi, Hà Nội",
+    "projectAddressPlaceholder": "vd. 12 rue de la Paix, 75002 Paris",
     "create": "Tạo",
     "creating": "Đang tạo...",
     "createProjectError": "Tạo dự án thất bại. Vui lòng thử lại.",
@@ -288,7 +288,7 @@
     "overBudget": "Vượt quá",
     "budgetLabel": "Tổng tín dụng (€)",
     "budgetSourceLabelOptional": "Nguồn tài trợ (tùy chọn)",
-    "budgetSourcePlaceholder": "vd. Vay ngân hàng BNP",
+    "budgetSourcePlaceholder": "vd. Khách trả theo báo giá, vay ngân hàng",
     "budgetInvalid": "Nhập tổng tín dụng dưới dạng số tiền, ví dụ 12500 hoặc 12.500,00",
     "budgetTooLarge": "Tổng tín dụng không được vượt quá {max}.",
     "bankRelease": {
@@ -305,7 +305,7 @@
       "noCreditHint": "Đặt hạn mức tín dụng ban đầu ngân hàng cấp trong cài đặt dự án.",
       "openSettings": "Mở cài đặt dự án",
       "noReleases": "Chưa có khoản giải ngân nào",
-      "settingsCardTitle": "Tín dụng ngân hàng (vay mua nhà)",
+      "settingsCardTitle": "Ngân sách / tín dụng của dự án",
       "settingsCardHint": "Số tiền ban đầu ngân hàng cấp. Các khoản giải ngân sẽ được trừ vào số này.",
       "headlineMetaOver": "vượt hạn mức <c>{credit}</c> tín dụng · đã giải ngân <p>{pct}</p>",
       "drawsMetaSingle": "{count, plural, other {# lần giải ngân}} · {month}"
@@ -362,7 +362,8 @@
       "title": "Mục đã ẩn",
       "body": "Công ty của công trình này đã ẩn mục này với các thành viên.",
       "back": "Quay lại công trình"
-    }
+    },
+    "budgetHelp": "Số tiền tối đa dự án được chi. Bỏ trống nếu chưa biết."
   },
   "settings": {
     "profile": "Hồ sơ",

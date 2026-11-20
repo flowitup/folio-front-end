@@ -24,7 +24,7 @@
     }
   },
   "meta": {
-    "description": "A warm, human-feeling app for managing the construction of your own house.",
+    "description": "Folio — site tracking, attendance, expenses, quotes and invoices for small construction companies.",
     "signIn": "Sign in",
     "quotes": "Quotes",
     "invoices": "Invoices",
@@ -239,7 +239,7 @@
     "projectNameOptional": "Project name (optional)",
     "projectNamePlaceholder": "Defaults to the address",
     "projectAddress": "Address",
-    "projectAddressPlaceholder": "e.g. 12 Rue des Martyrs, Paris",
+    "projectAddressPlaceholder": "e.g. 12 rue de la Paix, 75002 Paris",
     "create": "Create",
     "creating": "Creating...",
     "createProjectError": "Failed to create project. Please try again.",
@@ -288,7 +288,7 @@
     "overBudget": "Over by",
     "budgetLabel": "Credit total (€)",
     "budgetSourceLabelOptional": "Funding source (optional)",
-    "budgetSourcePlaceholder": "e.g. Bank loan BNP",
+    "budgetSourcePlaceholder": "e.g. Client pays per quote, bank loan",
     "budgetInvalid": "Enter the credit total as an amount, e.g. 12500 or 12,500.00",
     "budgetTooLarge": "The total credit cannot exceed {max}.",
     "bankRelease": {
@@ -305,7 +305,7 @@
       "noCreditHint": "Set the initial credit granted by your bank in the project settings.",
       "openSettings": "Open project settings",
       "noReleases": "No funds released yet",
-      "settingsCardTitle": "Bank credit (mortgage loan)",
+      "settingsCardTitle": "Project budget / credit",
       "settingsCardHint": "Initial amount granted by the bank. Funds releases are deducted from it.",
       "headlineMetaOver": "over the <c>{credit}</c> credit · <p>{pct}</p> released",
       "drawsMetaSingle": "{count, plural, one {# draw} other {# draws}} · {month}"
@@ -362,7 +362,8 @@
       "title": "Hidden section",
       "body": "This project's company has hidden this section from its members.",
       "back": "Back to the project"
-    }
+    },
+    "budgetHelp": "The most the project may spend. Leave blank if you don't know yet."
   },
   "settings": {
     "profile": "Profile",

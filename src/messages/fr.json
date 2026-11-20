@@ -24,7 +24,7 @@
     }
   },
   "meta": {
-    "description": "Une application chaleureuse et humaine pour gérer la construction de votre propre maison.",
+    "description": "Folio — suivi de chantier, pointage, dépenses, devis et factures pour les petites entreprises du bâtiment.",
     "signIn": "Connexion",
     "quotes": "Devis",
     "invoices": "Factures",
@@ -239,7 +239,7 @@
     "projectNameOptional": "Nom du projet (facultatif)",
     "projectNamePlaceholder": "Par défaut, l'adresse",
     "projectAddress": "Adresse",
-    "projectAddressPlaceholder": "ex. 12 Rue des Martyrs, Paris",
+    "projectAddressPlaceholder": "ex. 12 rue de la Paix, 75002 Paris",
     "create": "Créer",
     "creating": "Création...",
     "createProjectError": "Échec de la création du projet. Veuillez réessayer.",
@@ -288,7 +288,7 @@
     "overBudget": "Dépassement de",
     "budgetLabel": "Crédit total (€)",
     "budgetSourceLabelOptional": "Source de financement (facultatif)",
-    "budgetSourcePlaceholder": "ex. Prêt bancaire BNP",
+    "budgetSourcePlaceholder": "ex. Paiement du client selon devis, prêt bancaire",
     "budgetInvalid": "Saisissez le crédit total sous forme de montant, par ex. 12500 ou 12 500,00",
     "budgetTooLarge": "Le crédit total ne peut pas dépasser {max}.",
     "bankRelease": {
@@ -305,7 +305,7 @@
       "noCreditHint": "Renseignez le crédit initial accordé par votre banque dans les paramètres du projet.",
       "openSettings": "Ouvrir les paramètres du projet",
       "noReleases": "Aucun fonds débloqué pour l'instant",
-      "settingsCardTitle": "Crédit bancaire (crédit immobilier)",
+      "settingsCardTitle": "Budget / crédit du chantier",
       "settingsCardHint": "Montant initial accordé par la banque. Les déblocages de fonds en sont déduits.",
       "headlineMetaOver": "au-delà des <c>{credit}</c> de crédit · <p>{pct}</p> débloqués",
       "drawsMetaSingle": "{count, plural, one {# déblocage} other {# déblocages}} · {month}"
@@ -362,7 +362,8 @@
       "title": "Section masquée",
       "body": "L'entreprise de ce chantier a masqué cette section pour ses membres.",
       "back": "Retour au chantier"
-    }
+    },
+    "budgetHelp": "Montant maximum que le chantier peut dépenser. Laissez vide si vous ne le savez pas encore."
   },
   "settings": {
     "profile": "Profil",

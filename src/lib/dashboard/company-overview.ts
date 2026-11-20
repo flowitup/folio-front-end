@@ -28,6 +28,7 @@ export interface CompanyProjectCard {
 export type Attention =
   | { kind: "over"; projectId: string; name: string; amount: number; pct: number }
   | { kind: "near"; projectId: string; name: string; amount: number; pct: number }
+  | { kind: "wagesOwed"; amount: number; workerCount: number }
   | { kind: "unassignedPay"; amount: number };
 
 export function projectStatus(row: SummaryRow): ProjectStatus {
@@ -85,8 +86,56 @@ export function attentionItems(
       pct: Math.round(c.row.usedPct ?? 0),
     });
   }
+  if (labor && labor.totals.owed > 0) {
+    items.push({
+      kind: "wagesOwed",
+      amount: labor.totals.owed,
+      workerCount: labor.workers.filter((w) => w.owed > 0).length,
+    });
+  }
   if (labor && labor.totals.unassignedPaid > 0) items.push({ kind: "unassignedPay", amount: labor.totals.unassignedPaid });
   return items;
+}
+
+/** Paid to workers in the month: what settles wages (payments with no worker excluded). */
+export function workerPaid(labor: CompanyLabor): number {
+  return Math.round((labor.totals.paid - labor.totals.unassignedPaid) * 100) / 100;
+}
+
+const ymKey = (y: number, m: number) => `${y}-${String(m).padStart(2, "0")}`;
+
+/**
+ * Months the picker offers, most recent first: every month from the earliest
+ * of (a month with attendance or payments, a project's creation month) up to
+ * `thisMonth` (or a later month with data), with no gaps — a month without
+ * attendance can still be picked and shows zeros.
+ *
+ * @param dataMonths "YYYY-MM" months with attendance or payments.
+ * @param projectStartMonths "YYYY-MM" creation months of the projects (blank ones ignored).
+ * @param thisMonth "YYYY-MM" of today, Paris calendar.
+ */
+export function pickerMonths(
+  dataMonths: readonly string[],
+  projectStartMonths: readonly string[],
+  thisMonth: string,
+): string[] {
+  const valid = [...dataMonths, ...projectStartMonths].filter((m) => /^\d{4}-\d{2}$/.test(m));
+  const first = valid.reduce((min, m) => (m < min ? m : min), thisMonth);
+  const last = valid.reduce((max, m) => (m > max ? m : max), thisMonth);
+  const out: string[] = [];
+  let [y, mo] = first.split("-").map(Number);
+  // Bounded: fifty years of months at most, whatever the data says.
+  for (let i = 0; i < 600; i += 1) {
+    const key = ymKey(y, mo);
+    out.push(key);
+    if (key >= last) break;
+    mo += 1;
+    if (mo > 12) {
+      mo = 1;
+      y += 1;
+    }
+  }
+  return out.reverse();
 }
 
 /** Two-letter avatar from a person's name: first and last word ("Nguyễn Văn Ân" → "NÂ"). */

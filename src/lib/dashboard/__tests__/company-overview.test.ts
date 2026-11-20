@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { attentionItems, companyProjectCards, initials, projectStatus } from "../company-overview";
+import { attentionItems, companyProjectCards, initials, pickerMonths, projectStatus, workerPaid } from "../company-overview";
 import { summaryRow } from "@/lib/projects/company-summary";
 import type { Project } from "@/types/project";
 import type { CompanyLabor } from "@/lib/projects/company-labor";
@@ -39,6 +39,38 @@ describe("company overview", () => {
       { kind: "near", projectId: "near", name: "near", amount: 8, pct: 92 },
       { kind: "unassignedPay", amount: 300 },
     ]);
+  });
+
+  it("flags the month's wages still owed, with the number of workers owed", () => {
+    const l: CompanyLabor = {
+      workers: [
+        { key: "a", name: "A", days: 5, earned: 500, paid: 200, owed: 300, projects: [] },
+        { key: "b", name: "B", days: 2, earned: 200, paid: 200, owed: 0, projects: [] },
+        { key: "c", name: "C", days: 1, earned: 100, paid: 0, owed: 100, projects: [] },
+      ],
+      projects: [],
+      totals: { days: 8, earned: 800, paid: 400, owed: 400, unassignedPaid: 0, workerCount: 3 },
+    };
+    expect(attentionItems([], l, name)).toEqual([{ kind: "wagesOwed", amount: 400, workerCount: 2 }]);
+    // Nothing owed: no wages item, so "nothing needs attention" can show.
+    expect(attentionItems([], labor([]), name)).toEqual([]);
+  });
+
+  it("counts as paid only the payments linked to a worker", () => {
+    const l = labor([]);
+    l.totals.paid = 7885 + 6395;
+    l.totals.unassignedPaid = 6395;
+    expect(workerPaid(l)).toBe(7885);
+  });
+
+  it("offers every month from the first project or labor month to this month, newest first", () => {
+    expect(pickerMonths(["2026-11", "2026-10"], ["2026-09", ""], "2026-11")).toEqual(["2026-11", "2026-10", "2026-09"]);
+    // Gaps are filled, and the range crosses a year.
+    expect(pickerMonths(["2025-11"], [], "2026-02")).toEqual(["2026-02", "2026-01", "2025-12", "2025-11"]);
+    // No data at all: this month alone.
+    expect(pickerMonths([], [], "2026-11")).toEqual(["2026-11"]);
+    // A later month with data stays reachable.
+    expect(pickerMonths(["2026-12"], [], "2026-11")).toEqual(["2026-12", "2026-11"]);
   });
 
   it("makes two-letter initials", () => {

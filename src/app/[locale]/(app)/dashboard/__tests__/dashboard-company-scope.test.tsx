@@ -125,4 +125,32 @@ describe("DashboardPage — company scope", () => {
       projects.pop();
     }
   });
+
+  it("says what period each figure covers on the company view", async () => {
+    renderDashboard();
+    const attention = await screen.findByTestId("company-attention");
+    // July 2026: Ân worked 5 days (500 €) on each project, nothing paid yet.
+    expect(await within(attention).findByText(/July 2026 wages: 1\s000 € still owed · 1 worker/)).toBeInTheDocument();
+    // "Spent" is named as all-time, once.
+    expect(screen.getAllByText("Spent to date")).toHaveLength(1);
+    expect(screen.queryByText("Spent")).toBeNull();
+    // The picker is labelled and has no gap after the first labor month.
+    expect(screen.getByText("Days & wages:")).toBeInTheDocument();
+    const options = within(screen.getByTestId("company-month-select")).getAllByRole("option").map((o) => (o as HTMLOptionElement).value);
+    expect(options).toContain("2026-07");
+    expect(options).toContain("2026-08");
+    // The footnote sits right under the band.
+    expect(screen.getByTestId("company-overview-band").nextElementSibling).toBe(screen.getByTestId("company-footnote"));
+    // Worker line: days and what was paid, not days alone.
+    expect(within(screen.getByTestId("company-wages")).getByText(/10 days · paid 0 €/)).toBeInTheDocument();
+  });
+
+  it("says a month without days has no days yet, not that all wages are paid", async () => {
+    renderDashboard();
+    const select = await screen.findByTestId("company-month-select");
+    await within(screen.getByTestId("company-attention")).findByText(/still owed/);
+    fireEvent.change(select, { target: { value: "2026-08" } });
+    expect(await screen.findByTestId("company-wages-empty")).toHaveTextContent("No days logged this month.");
+    expect(screen.getByTestId("company-attention")).not.toHaveTextContent("still owed");
+  });
 });

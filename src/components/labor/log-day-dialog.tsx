@@ -70,6 +70,8 @@ import type {
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 import { NOTE_MAX_LENGTH } from "./edit-attendance-dialog";
 import { formatDate } from "@/lib/utils/formatters";
+import { useLaborMonthClosures } from "@/components/labor/month-closure-context";
+import { formatClosureMonth, monthKeyOf } from "@/lib/labor/month-closure";
 
 /** Days before the picked date read for "recent workers" and "Same as last day". */
 const LOOKBACK_DAYS = 30;
@@ -116,6 +118,7 @@ export function LogDayDialog({
   const tLabor = useTranslations("labor");
   const tConflict = useTranslations("labor.conflict");
   const tCommon = useTranslations("common");
+  const { closureFor, confirmWrite } = useLaborMonthClosures();
   const [date, setDate] = useState<string>(initialDate || todayKey());
   // Day-level description for the picked date (separate from per-worker notes).
   // Seeded from the backend whenever the dialog opens or the date changes, and
@@ -439,6 +442,8 @@ export function LogDayDialog({
       setError(tLabor("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
       return;
     }
+    // A day in a closed month still saves, after "Tháng X đã chốt. Vẫn lưu?".
+    if (!(await confirmWrite([date]))) return;
     const inSelection = conflictsForSelection();
     if (inSelection.length > 0) {
       setPendingConflicts(inSelection);
@@ -499,6 +504,19 @@ export function LogDayDialog({
             </Button>
           </DisabledReason>
         </div>
+
+        {(() => {
+          const monthKey = monthKeyOf(date);
+          return monthKey && closureFor(monthKey) ? (
+            <p
+              className="rounded-md px-3 py-2 text-[12.5px]"
+              style={{ background: "var(--warning-tint)", color: "#6f4e12" }}
+              data-testid="log-day-closed-month"
+            >
+              {tLabor("monthClose.inClosedMonth", { month: formatClosureMonth(monthKey) })}
+            </p>
+          ) : null;
+        })()}
 
         <div className="relative">
           <Search className="text-muted-foreground absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2" />

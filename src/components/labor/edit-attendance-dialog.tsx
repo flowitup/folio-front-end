@@ -42,6 +42,7 @@ import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 import { ApiError } from "@/lib/api/http";
 import { formatMoneyInputValue, readMoneyInput } from "./money-input";
 import { rateLimitErrorMessage } from "@/lib/api/rate-limit";
+import { useLaborMonthClosures } from "@/components/labor/month-closure-context";
 
 /** The API's limit on an attendance note. */
 export const NOTE_MAX_LENGTH = 500;
@@ -64,6 +65,7 @@ export function EditAttendanceDialog({
 }: EditAttendanceDialogProps) {
   const t = useTranslations("labor");
   const tCommon = useTranslations("common");
+  const { confirmWrite } = useLaborMonthClosures();
   const locale = useLocale();
   const [shiftType, setShiftType] = useState<ShiftType | null>(null);
   const [supplementHours, setSupplementHours] = useState(0);
@@ -112,6 +114,9 @@ export function EditAttendanceDialog({
       setError(t("errors.amountTooLarge", { max: MAX_DAILY_AMOUNT }));
       return;
     }
+
+    // A day in a closed month still saves, after "Tháng X đã chốt. Vẫn lưu?".
+    if (!(await confirmWrite([entry.date]))) return;
 
     setIsSaving(true);
     try {

@@ -27,7 +27,7 @@ import { LaborExportDialog } from "@/components/labor/labor-export-dialog";
 import { ChangeRequestsPanel, RefuseChangeDialog, RejectEntryDialog } from "@/components/labor/change-requests-panel";
 import type { ChangeRequestActions } from "@/components/labor/labor-entry-card";
 
-import type { Worker, LaborEntry, LaborActivity, LaborDayDescription, LaborSummaryResponse, LaborMonthlySummaryResponse, LaborPaymentsSummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
+import type { AttendanceChangeRequest, Worker, LaborEntry, LaborActivity, LaborDayDescription, LaborSummaryResponse, LaborMonthlySummaryResponse, LaborPaymentsSummaryResponse, CreateWorkerPayload, UpdateWorkerPayload, UpdateAttendancePayload } from "@/types/labor";
 import type { LaborRole } from "@/types/labor-role";
 import {
   fetchWorkers,
@@ -57,6 +57,7 @@ import { fetchLaborRolesAction } from "@/components/labor/labor-role-actions";
 import { upsertLaborRole } from "@/components/labor/labor-role-helpers";
 import { useAttendanceChangeRequests } from "./use-attendance-change-requests";
 import { DayRoster } from "@/components/labor/day-roster";
+import { LaborMonthClosureContext, useLaborMonthClosuresState } from "@/components/labor/month-closure-context";
 
 type TabType = "workers" | "attendance" | "summary" | "payments" | "roster";
 
@@ -117,6 +118,16 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   // no view_pay): they were explicitly granted invoice rights and still need
   // the Payments tab, even without labor visibility.
   const isMemberPersona = !canManageLabor && !canViewPay && !canManageInvoices;
+
+  // Closed months ("Chốt tháng", QĐ-10): readable by whoever sees the whole
+  // project's labor; closing / reopening needs manage_labor. Every save into a
+  // closed month below asks "Tháng X đã chốt. Vẫn lưu?" first.
+  const monthClosures = useLaborMonthClosuresState({
+    projectId,
+    enabled: !isProjectContextLoading && (canManageLabor || canViewPay),
+    canManage: canManageLabor,
+  });
+  const { confirmWrite: confirmClosedMonthWrite, refresh: refreshClosures } = monthClosures.api;
 
   // State. `activeTab` is seeded with a placeholder and corrected by the
   // persona effect below the FIRST time ProjectContext resolves — never
@@ -392,6 +403,11 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     if (activeTab === "summary") loadSummary();
   }, [activeTab, loadSummary]);
 
+  // The Summary tab shows "changed after closing": refresh it whenever the tab opens.
+  useEffect(() => {
+    if (activeTab === "summary") void refreshClosures();
+  }, [activeTab, refreshClosures]);
+
   // Worker change requests on validated days (proposed from the mobile app).
   // Managers only — the same permission the backend checks on the decide routes.
   const changeRequests = useAttendanceChangeRequests({
@@ -401,16 +417,26 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
     onDecided: loadEntries,
   });
   const reloadChangeRequests = changeRequests.reload;
+  // Applying a worker's change rewrites a validated day: ask first when its month is closed.
+  const approveRequest = changeRequests.approve;
+  const approveChangeRequest = useCallback(
+    (request: AttendanceChangeRequest) => {
+      void (async () => {
+        if (await confirmClosedMonthWrite([request.date])) await approveRequest(request);
+      })();
+    },
+    [approveRequest, confirmClosedMonthWrite],
+  );
   const changeRequestActions = useMemo<ChangeRequestActions | undefined>(
     () =>
       canManageLabor
         ? {
-            onApprove: changeRequests.approve,
+            onApprove: approveChangeRequest,
             onRefuse: changeRequests.requestRefuse,
             busyIds: changeRequests.settlingIds,
           }
         : undefined,
-    [canManageLabor, changeRequests.approve, changeRequests.requestRefuse, changeRequests.settlingIds],
+    [canManageLabor, approveChangeRequest, changeRequests.requestRefuse, changeRequests.settlingIds],
   );
   const changeRequestCount = changeRequests.requests.length;
 
@@ -507,6 +533,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   };
 
   const handleDeleteEntry = async (entry: LaborEntry) => {
+    if (!(await confirmClosedMonthWrite([entry.date]))) return;
     try {
       await deleteAttendance(projectId, entry.id);
       toast.success(t("entryDeleted"));
@@ -524,6 +551,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   const settlingEntryIds = useRef(new Set<string>());
 
   const handleValidateEntry = async (entry: LaborEntry) => {
+    if (settlingEntryIds.current.has(entry.id)) return;
+    if (!(await confirmClosedMonthWrite([entry.date]))) return;
     if (settlingEntryIds.current.has(entry.id)) return;
     settlingEntryIds.current.add(entry.id);
     try {
@@ -635,6 +664,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
   };
 
   return (
+    <LaborMonthClosureContext.Provider value={monthClosures.api}>
     <div className="fade-up flex min-h-full flex-col gap-4 px-4 pb-12 lg:gap-6 lg:px-8">
       {/* Segmented tabs — member persona (D3) gets the single roster tab, no
           segmented control needed since there is nothing to switch between. */}
@@ -773,7 +803,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
               isLoading={changeRequests.isLoading}
               loadFailed={changeRequests.loadFailed}
               settlingIds={changeRequests.settlingIds}
-              onApprove={changeRequests.approve}
+              onApprove={approveChangeRequest}
               onRefuse={changeRequests.requestRefuse}
               onRetry={() => void reloadChangeRequests()}
             />
@@ -945,6 +975,8 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
         editActivity={editActivity}
         onSave={handleSaveActivity}
       />
+      {monthClosures.dialog}
     </div>
+    </LaborMonthClosureContext.Provider>
   );
 }

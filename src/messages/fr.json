@@ -221,7 +221,8 @@
       "showAll": "Voir les {count} ouvriers",
       "showLess": "Réduire",
       "footnote": "Montants depuis le début des projets, retours déduits. Jours et salaires du mois choisi ; chaque mois est compté à part, un trop-payé ne se reporte pas. Un même ouvrier (même nom) sur plusieurs projets est additionné.",
-      "partial": "Journées non chargées pour {count} projets."
+      "partial": "Journées non chargées pour {count} projets.",
+      "closedChip": "Mois clôturé"
     },
     "bankRelease": {
       "headlineNoDraws": "restant sur <c>{credit}</c> de crédit · aucun déblocage",
@@ -1375,7 +1376,54 @@
       "retrySearch": "Réessayer"
     },
     "newPersonHint": "Nouvelle personne : elle sera créée avec l'ouvrier, une fois enregistré.",
-    "confirmDeactivateBody": "{name} sera arrêté(e) sur tous les chantiers de l'entreprise que vous gérez et ne pourra plus y pointer. Ses journées et ce qui lui reste dû restent visibles et payables ; vous pourrez le/la réactiver."
+    "confirmDeactivateBody": "{name} sera arrêté(e) sur tous les chantiers de l'entreprise que vous gérez et ne pourra plus y pointer. Ses journées et ce qui lui reste dû restent visibles et payables ; vous pourrez le/la réactiver.",
+    "monthClose": {
+      "closeButton": "Clôturer {month}",
+      "closeTitle": "Clôturer le mois {month} ?",
+      "closeIntro": "Vérifiez avant de clôturer. La clôture ne verrouille rien : on peut encore modifier, mais chaque modification affiche un avertissement et est enregistrée (qui, quand).",
+      "checkPending": "Jours en attente de validation",
+      "checkUnassigned": "Paiements de main-d'œuvre sans ouvrier ou sans mois",
+      "checkOwed": "Reste dû aux ouvriers",
+      "checkCounting": "Calcul…",
+      "checkOk": "Aucun",
+      "checkWarning": "Vous pouvez clôturer quand même, mais mieux vaut régler ces points d'abord.",
+      "closeConfirm": "Clôturer",
+      "closedToast": "Mois {month} clôturé",
+      "closeFailed": "Impossible de clôturer le mois. Réessayez.",
+      "closedBadge": "Mois {month} clôturé",
+      "closedBy": "par {name}, le {date}",
+      "reopen": "Rouvrir",
+      "reopenTitle": "Rouvrir le mois {month} ?",
+      "reopenDescription": "Le mois ne sera plus marqué comme clôturé et la liste des modifications après clôture sera effacée.",
+      "reopenedToast": "Mois {month} rouvert",
+      "reopenFailed": "Impossible de rouvrir le mois. Réessayez.",
+      "editedAfterClose": "Modifié après clôture : {count} fois, dernière fois par {name} le {time}",
+      "showEdits": "Voir le détail",
+      "hideEdits": "Masquer le détail",
+      "unknownUser": "inconnu",
+      "writeTitle": "Le mois {months} est clôturé. Enregistrer quand même ?",
+      "writeDescription": "La modification sera enregistrée et notée (qui, quand), visible dans l'onglet Résumé du mois.",
+      "writeConfirm": "Enregistrer quand même",
+      "inClosedMonth": "Mois {month} clôturé : l'enregistrement sera noté.",
+      "closedStamp": "Clôturé",
+      "closedStampEdited": "Clôturé · modifié {count} fois",
+      "kinds": {
+        "entry_created": "Jour ajouté",
+        "entry_updated": "Jour modifié",
+        "entry_deleted": "Jour supprimé",
+        "entry_self_logged": "Jour saisi par l'ouvrier",
+        "entry_self_edited": "Jour modifié par l'ouvrier",
+        "entry_validated": "Jour validé",
+        "entry_rejected": "Jour refusé",
+        "change_approved": "Demande de modification acceptée",
+        "payment_created": "Paiement enregistré",
+        "payment_updated": "Paiement modifié",
+        "payment_deleted": "Paiement supprimé",
+        "rate_changed": "Taux journalier modifié",
+        "rate_change_deleted": "Taux journalier supprimé",
+        "other": "Modification"
+      }
+    }
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",

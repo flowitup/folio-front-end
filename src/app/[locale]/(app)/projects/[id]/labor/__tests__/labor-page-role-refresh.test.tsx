@@ -60,6 +60,9 @@ vi.mock("@/context/ProjectContext", () => ({
 }));
 
 vi.mock("@/lib/api/labor", () => ({
+  fetchLaborMonthClosures: vi.fn().mockResolvedValue([]),
+  closeLaborMonth: vi.fn(),
+  reopenLaborMonth: vi.fn(),
   fetchWorkers: vi.fn().mockResolvedValue(WORKERS),
   createWorker: vi.fn(),
   updateWorker: vi.fn(),

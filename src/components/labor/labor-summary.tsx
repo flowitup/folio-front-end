@@ -23,6 +23,9 @@ import { resolveDefaultRoleI18nKey } from "@/lib/utils/default-role-names";
 import { findMonthBucket } from "@/components/labor/labor-payments-tab-state";
 import { PaidSplitCaption } from "@/components/labor/paid-split-caption";
 import { monthSettlement } from "@/lib/labor/month-settlement";
+import { formatClosureMonth, unsettledPaymentCount } from "@/lib/labor/month-closure";
+import { MonthClosurePanel } from "@/components/labor/month-closure-panel";
+import { useLaborMonthClosures } from "@/components/labor/month-closure-context";
 
 interface LaborSummaryProps {
   projectId: string;
@@ -149,6 +152,7 @@ export function LaborSummary({
   const t = useTranslations("labor");
   const tRole = useTranslations("labor.role.defaults");
   const locale = useLocale();
+  const { closureFor } = useLaborMonthClosures();
   const [exportOpen, setExportOpen] = useState(false);
   // Year filter — null = "All years". Only meaningful when month filter
   // is unset (we're in the all-history monthly-rollup view).
@@ -439,6 +443,17 @@ export function LaborSummary({
         </div>
       )}
 
+      {/* "Chốt tháng" for the viewed month: close button + checklist, or the
+          closed badge, reopen, and the changes made after closing. */}
+      {!isAllHistory && (
+        <MonthClosurePanel
+          projectId={projectId}
+          month={month}
+          owed={summary ? footerBalance : null}
+          unsettledPayments={unsettledPaymentCount(paymentsSummary, month)}
+        />
+      )}
+
       {/* Summary table */}
       <div className="folio-card overflow-hidden">
         <div
@@ -545,6 +560,7 @@ export function LaborSummary({
                     // anomalous even mid-month, so the current month is not
                     // excluded. Same 1-cent epsilon as the shortfall check.
                     const showOverpaidWarning = monthOverpay > 0.01;
+                    const closure = closureFor(ym);
                     const rows: React.ReactNode[] = [
                       <tr
                         key={`row-${ym}`}
@@ -604,6 +620,17 @@ export function LaborSummary({
                           >
                             {formatYearMonthLabel(row, locale)}
                           </button>
+                          {closure && (
+                            <span
+                              className={`stamp num ml-2 whitespace-nowrap ${closure.edited_after_close > 0 ? "warning" : "positive"}`}
+                              title={t("monthClose.closedBadge", { month: formatClosureMonth(ym) })}
+                              data-testid={`month-closed-stamp-${ym}`}
+                            >
+                              {closure.edited_after_close > 0
+                                ? t("monthClose.closedStampEdited", { count: closure.edited_after_close })
+                                : t("monthClose.closedStamp")}
+                            </span>
+                          )}
                           {(showUnpaidWarning || showOverpaidWarning) && (
                             // Under the month on a phone, beside it from sm up; a stamp
                             // never wraps inside its pill.

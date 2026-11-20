@@ -1,6 +1,6 @@
 {
   "name": "construction-front-end",
-  "version": "0.2.24",
+  "version": "0.2.25",
   "private": true,
   "engines": {
     "node": ">=22.13"

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api/http";
 import { deleteTask, fetchTask, updateTask } from "@/lib/api/task-api";
@@ -84,11 +84,30 @@ describe("TaskDetailDrawer", () => {
     expect(screen.queryByRole("button", { name: en.planning.delete })).toBeNull();
   });
 
+  it("asks in the app, naming the task, before deleting it", async () => {
+    vi.mocked(deleteTask).mockResolvedValue(undefined);
+    const onClose = renderDrawer(vi.fn(), { canDelete: true });
+    await userEvent.click(screen.getByRole("button", { name: en.planning.delete }));
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent("Delete “Pour slab”?");
+    await userEvent.click(within(dialog).getByRole("button", { name: en.planning.cancel }));
+    expect(deleteTask).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: en.planning.delete }));
+    await userEvent.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: en.planning.delete })
+    );
+    await waitFor(() => expect(deleteTask).toHaveBeenCalledWith("t1"));
+    expect(onClose).toHaveBeenCalled();
+  });
+
   it("keeps the drawer open and says why when a delete is refused", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     vi.mocked(deleteTask).mockRejectedValue(new ApiError("HTTP 403", 403));
     const onClose = renderDrawer(vi.fn(), { canDelete: true });
     await userEvent.click(screen.getByRole("button", { name: en.planning.delete }));
+    await userEvent.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: en.planning.delete })
+    );
     await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(en.planning.errors.forbidden));
     expect(onClose).not.toHaveBeenCalled();
   });

@@ -14,6 +14,7 @@ import {
   Library,
   Wrench,
   Settings,
+  SlidersHorizontal,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
   const locale = useLocale();
   const t = useTranslations("navigation");
   const tBilling = useTranslations("sidebar.billing");
+  const tTopbar = useTranslations("topbar");
   const { selectedProjectId, selectedProject, projects } = useProject();
   const { user } = useAuth();
   // Mirror of the desktop sidebar gate: documents need effective
@@ -57,7 +59,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
     (!selectedProject?.company_id ||
       isCompanyAdmin(user?.companies, selectedProject.company_id, user?.permissions));
 
-  const allProjectItems = selectedProjectId
+  const allProjectItems: { key: string; href: string; icon: typeof HardHat; label?: string }[] = selectedProjectId
     ? [
         { key: "labor", href: `/projects/${selectedProjectId}/labor`, icon: HardHat },
         ...(projectBillingVisible
@@ -76,6 +78,17 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
           : []),
         { key: "analyses", href: `/projects/${selectedProjectId}/analyses`, icon: FileSearch },
         { key: "photos", href: `/projects/${selectedProjectId}/photos`, icon: Images },
+        // Same entry and gate as the desktop sidebar: those who may edit the project.
+        ...(canSeeDocuments
+          ? [
+              {
+                key: "projectSettings",
+                href: `/projects/${selectedProjectId}/settings`,
+                icon: SlidersHorizontal,
+                label: tTopbar("projectSettingsTitle"),
+              },
+            ]
+          : []),
       ]
     : [];
   const projectItems = allProjectItems.filter((item) => !hiddenOnProject.has(item.key));
@@ -152,7 +165,7 @@ export function MobileMoreSheet({ open, onClose }: MobileMoreSheetProps) {
                     )}
                   >
                     <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
-                    <span>{t(item.key)}</span>
+                    <span>{item.label ?? t(item.key)}</span>
                   </Link>
                 );
               })}

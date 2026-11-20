@@ -12,6 +12,7 @@ import { TaskForm } from "@/components/planning/task-form";
 import { toast } from "sonner";
 import { createTask } from "@/lib/api/task-api";
 import { taskErrorKey } from "@/lib/planning/task-error";
+import { useConfirm } from "@/hooks/use-confirm";
 import type { CreateTaskPayload, TaskAssignee, TaskStatus } from "@/types/task";
 
 interface TaskCreateDialogProps {
@@ -42,6 +43,8 @@ export function TaskCreateDialog({
   onCreated,
 }: TaskCreateDialogProps) {
   const t = useTranslations("planning");
+  const tConfirm = useTranslations("settings.confirmDialog");
+  const { ask, dialog: confirmDialog } = useConfirm();
   const [saving, setSaving] = useState(false);
   // Whether anything was typed (reported by TaskForm): Escape, the backdrop
   // and Cancel then ask before throwing it away, as the task drawer does.
@@ -50,8 +53,16 @@ export function TaskCreateDialog({
     dirtyRef.current = dirty;
   }, []);
 
-  const requestOpenChange = (next: boolean) => {
-    if (!next && dirtyRef.current && !confirm(t("discardChanges"))) return;
+  const requestOpenChange = async (next: boolean) => {
+    if (!next && dirtyRef.current) {
+      const discard = await ask({
+        title: t("discardChanges"),
+        confirmLabel: tConfirm("discard"),
+        cancelLabel: tConfirm("keepEditing"),
+        destructive: true,
+      });
+      if (!discard) return;
+    }
     if (!next) dirtyRef.current = false;
     onOpenChange(next);
   };
@@ -72,7 +83,7 @@ export function TaskCreateDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={requestOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => void requestOpenChange(next)}>
       {/* The title says it all; no description (silences Radix's warning). */}
       <DialogContent className="max-w-md" aria-describedby={undefined}>
         <DialogHeader>
@@ -87,10 +98,11 @@ export function TaskCreateDialog({
           assignees={assignees}
           isSaving={saving}
           onSubmit={handleSubmit}
-          onCancel={() => requestOpenChange(false)}
+          onCancel={() => void requestOpenChange(false)}
           onDirtyChange={onDirtyChange}
         />
       </DialogContent>
+      {confirmDialog}
     </Dialog>
   );
 }

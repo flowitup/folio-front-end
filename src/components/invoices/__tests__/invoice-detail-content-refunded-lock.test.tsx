@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { InvoiceDetailContent } from "../invoice-detail-content";
 import type { Invoice } from "@/types/invoice";
 
@@ -100,18 +100,24 @@ describe("InvoiceDetailContent — refunded lock", () => {
   });
 
   it("shows a refused delete's reason translated, and a translated fallback otherwise", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     vi.mocked(deleteInvoice).mockRejectedValueOnce({
       status: 400,
       data: { error: "ValidationError", message: "Unlink or delete this invoice's returns first" },
     });
     renderDetail({});
+    // The in-app question, answered yes.
+    const confirmDelete = async () => {
+      fireEvent.click(screen.getByLabelText("invoices.delete"));
+      const dialog = await screen.findByRole("alertdialog");
+      expect(dialog).toHaveTextContent("invoices.deleteConfirmTitle");
+      fireEvent.click(within(dialog).getByRole("button", { name: "invoices.delete" }));
+    };
 
-    fireEvent.click(screen.getByLabelText("invoices.delete"));
+    await confirmDelete();
     expect(await screen.findByText("invoices.errorUnlinkReturnsFirst")).toBeDefined();
 
     vi.mocked(deleteInvoice).mockRejectedValueOnce(new Error("Failed to delete invoice"));
-    fireEvent.click(screen.getByLabelText("invoices.delete"));
+    await confirmDelete();
     expect(await screen.findByText("invoices.deleteInvoiceFailed")).toBeDefined();
     expect(screen.queryByText("Failed to delete invoice")).toBeNull();
   });

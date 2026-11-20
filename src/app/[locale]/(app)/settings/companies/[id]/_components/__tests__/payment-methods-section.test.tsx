@@ -32,6 +32,10 @@ vi.mock("next-intl", () => {
       description: "Manage payment methods.",
       addPlaceholder: "e.g. Wise, Stripe, …",
       addButton: "Add",
+      purseLabel: "Purse",
+      purseCompany: "Company purse",
+      pursePersonal: "Personal purse",
+      purseNone: "No purse",
       builtin: "Built-in",
       paidByCompany: "Paid by the company",
       personalPayment: "Personal payment",
@@ -57,6 +61,12 @@ vi.mock("next-intl", () => {
     },
     "paymentMethods.builtins": {
       cash: "Cash",
+    },
+    "settings.paymentMethodForm": {
+      nameLabel: "Payment method name",
+      namePlaceholder: "e.g. BNP company card, Cash, Bank transfer",
+      pursePlaceholder: "Choose a purse…",
+      purseRequired: "Choose “Company purse” or “Personal purse” before adding.",
     },
   };
 
@@ -194,7 +204,7 @@ describe("PaymentMethodsSection — initial render", () => {
 
   it("renders add form input and button", () => {
     renderSection();
-    expect(screen.getByRole("textbox", { name: /e\.g\./i })).toBeDefined();
+    expect(screen.getByRole("textbox", { name: "Payment method name" })).toBeDefined();
     expect(screen.getByRole("button", { name: /Add/i })).toBeDefined();
   });
 });
@@ -220,8 +230,9 @@ describe("PaymentMethodsSection — inline add", () => {
 
       renderSection();
 
-      const input = screen.getByRole("textbox", { name: /e\.g\./i });
+      const input = screen.getByRole("textbox", { name: "Payment method name" });
       fireEvent.change(input, { target: { value: "Stripe" } });
+      fireEvent.change(screen.getByRole("combobox", { name: "Purse" }), { target: { value: "personal" } });
 
       const addBtn = screen.getByRole("button", { name: /Add/i });
       await act(async () => {
@@ -250,8 +261,9 @@ describe("PaymentMethodsSection — inline add", () => {
 
       renderSection();
 
-      const input = screen.getByRole("textbox", { name: /e\.g\./i });
+      const input = screen.getByRole("textbox", { name: "Payment method name" });
       fireEvent.change(input, { target: { value: "Cash" } });
+      fireEvent.change(screen.getByRole("combobox", { name: "Purse" }), { target: { value: "company" } });
 
       await act(async () => {
         fireEvent.click(screen.getByRole("button", { name: /Add/i }));
@@ -268,7 +280,7 @@ describe("PaymentMethodsSection — inline add", () => {
 
   it("add input accepts labels up to the backend limit (120)", () => {
     renderSection();
-    const input = screen.getByRole("textbox", { name: /e\.g\./i });
+    const input = screen.getByRole("textbox", { name: "Payment method name" });
     expect(input.getAttribute("maxlength")).toBe("120");
   });
 
@@ -276,6 +288,38 @@ describe("PaymentMethodsSection — inline add", () => {
     renderSection();
     const addBtn = screen.getByRole("button", { name: /Add/i });
     expect(addBtn).toBeDisabled();
+  });
+
+  it("chooses no purse for the user and adds nothing until one is picked", async () => {
+    renderSection();
+    const purse = screen.getByRole("combobox", { name: "Purse" }) as HTMLSelectElement;
+    expect(purse.value).toBe("");
+    // Only the two purses are offered.
+    expect(Array.from(purse.options).filter((o) => !o.disabled).map((o) => o.text)).toEqual([
+      "Company purse",
+      "Personal purse",
+    ]);
+    expect(screen.getByRole("textbox", { name: "Payment method name" })).toHaveAttribute(
+      "placeholder",
+      "e.g. BNP company card, Cash, Bank transfer"
+    );
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Payment method name" }), {
+      target: { value: "Carte BNP" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Add/i }));
+    });
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent("Choose “Company purse” or “Personal purse” before adding.");
+
+    mockCreate.mockResolvedValueOnce({ ok: true, data: INITIAL_METHODS });
+    fireEvent.change(purse, { target: { value: "company" } });
+    expect(screen.queryByRole("alert")).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Add/i }));
+    });
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledWith(COMPANY_ID, "Carte BNP", "company"));
   });
 });
 

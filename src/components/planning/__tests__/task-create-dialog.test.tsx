@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
@@ -37,5 +37,29 @@ describe("TaskCreateDialog", () => {
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
     expect(screen.getByLabelText(en.planning.titleLabel)).toHaveValue("Pour slab");
     expect(screen.getByLabelText(en.planning.titleLabel)).toHaveAttribute("maxLength", "255");
+  });
+
+  it("asks in the app before Cancel throws away a typed task", async () => {
+    const confirm = vi.spyOn(window, "confirm");
+    const onOpenChange = vi.fn();
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <TaskCreateDialog open projectId="p1" defaultStatus="todo" onOpenChange={onOpenChange} onCreated={vi.fn()} />
+      </NextIntlClientProvider>
+    );
+
+    await userEvent.type(screen.getByLabelText(en.planning.titleLabel), "Pour slab");
+    await userEvent.click(screen.getByRole("button", { name: en.planning.cancel }));
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent(en.planning.discardChanges);
+    await userEvent.click(within(dialog).getByRole("button", { name: en.settings.confirmDialog.keepEditing }));
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: en.planning.cancel }));
+    await userEvent.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: en.settings.confirmDialog.discard })
+    );
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(confirm).not.toHaveBeenCalled();
   });
 });

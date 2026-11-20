@@ -9,6 +9,7 @@
  * Query params:
  *   ?from=<id>       — pre-load source document (clone mode)
  *   ?template=<id>   — pre-load template (apply-template mode)
+ *   ?project_id=<id> — start linked to that project (the project's billing tab)
  */
 
 import { fetchBillingIssuerCompanies } from "@/lib/billing/billing-issuer-companies";
@@ -21,6 +22,7 @@ import type { BillingDocument, BillingDocumentTemplate } from "@/types/billing";
 import type { MyCompany } from "@/types/companies";
 import type { ProjectSummary } from "@/lib/api/projects-server";
 import { pageTitle } from "@/lib/i18n/page-title";
+import { parseProjectId } from "../../_components/billing-list-params";
 
 export const generateMetadata = pageTitle("meta.newInvoice");
 
@@ -32,6 +34,7 @@ export default async function NewFacturePage({ searchParams }: NewFacturePagePro
   const params = await searchParams;
   const fromId = typeof params.from === "string" ? params.from : undefined;
   const templateId = typeof params.template === "string" ? params.template : undefined;
+  const projectId = parseProjectId(typeof params.project_id === "string" ? params.project_id : undefined);
 
   // Companies the user administers — required before allowing document creation
   // (a load failure reads as none, which shows the callout).
@@ -77,6 +80,7 @@ export default async function NewFacturePage({ searchParams }: NewFacturePagePro
       projects={projects}
       initialFromSource={sourceDoc}
       initialFromTemplate={templateDoc}
+      initialProjectId={projectId}
     />
   );
 }

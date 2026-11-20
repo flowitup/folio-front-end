@@ -24,7 +24,7 @@
     }
   },
   "meta": {
-    "description": "A warm, human-feeling app for managing the construction of your own house.",
+    "description": "Folio — site tracking, attendance, expenses, quotes and invoices for small construction companies.",
     "signIn": "Sign in",
     "quotes": "Quotes",
     "invoices": "Invoices",
@@ -247,7 +247,7 @@
     "projectNameOptional": "Project name (optional)",
     "projectNamePlaceholder": "Defaults to the address",
     "projectAddress": "Address",
-    "projectAddressPlaceholder": "e.g. 12 Rue des Martyrs, Paris",
+    "projectAddressPlaceholder": "e.g. 12 rue de la Paix, 75002 Paris",
     "create": "Create",
     "creating": "Creating...",
     "createProjectError": "Failed to create project. Please try again.",
@@ -296,7 +296,7 @@
     "overBudget": "Over by",
     "budgetLabel": "Credit total (€)",
     "budgetSourceLabelOptional": "Funding source (optional)",
-    "budgetSourcePlaceholder": "e.g. Bank loan BNP",
+    "budgetSourcePlaceholder": "e.g. Client pays per quote, bank loan",
     "budgetInvalid": "Enter the credit total as an amount, e.g. 12500 or 12,500.00",
     "budgetTooLarge": "The total credit cannot exceed {max}.",
     "bankRelease": {
@@ -313,7 +313,7 @@
       "noCreditHint": "Set the initial credit granted by your bank in the project settings.",
       "openSettings": "Open project settings",
       "noReleases": "No funds released yet",
-      "settingsCardTitle": "Bank credit (mortgage loan)",
+      "settingsCardTitle": "Project budget / credit",
       "settingsCardHint": "Initial amount granted by the bank. Funds releases are deducted from it.",
       "headlineMetaOver": "over the <c>{credit}</c> credit · <p>{pct}</p> released",
       "drawsMetaSingle": "{count, plural, one {# draw} other {# draws}} · {month}"
@@ -370,7 +370,8 @@
       "title": "Hidden section",
       "body": "This project's company has hidden this section from its members.",
       "back": "Back to the project"
-    }
+    },
+    "budgetHelp": "The most the project may spend. Leave blank if you don't know yet."
   },
   "settings": {
     "profile": "Profile",
@@ -483,7 +484,20 @@
     },
     "errorNameRequired": "Your name cannot be empty.",
     "errorSessionExpired": "Your session has expired. Sign in again to save.",
-    "signInAgain": "Sign in again"
+    "signInAgain": "Sign in again",
+    "confirmDialog": {
+      "confirm": "Continue",
+      "cancel": "Cancel",
+      "discard": "Discard",
+      "keepEditing": "Keep editing",
+      "deleteNamed": "Delete “{name}”?"
+    },
+    "paymentMethodForm": {
+      "nameLabel": "Payment method name",
+      "namePlaceholder": "e.g. BNP company card, Cash, Bank transfer",
+      "pursePlaceholder": "Choose a purse…",
+      "purseRequired": "Choose “Company purse” or “Personal purse” before adding."
+    }
   },
   "paymentMethods": {
     "title": "Payment methods",
@@ -862,7 +876,14 @@
     "memberView": {
       "title": "My payments",
       "empty": "No payment recorded for you on this project yet. The project's other expenses are visible to managers."
-    }
+    },
+    "clientPaid": "Client payment",
+    "clientPaidAuto": "Client payment (auto)",
+    "deleteConfirmTitle": "Delete expense {number}?",
+    "deleteConfirmBody": "The {amount} expense ({recipient}) will be removed from the project. This cannot be undone.",
+    "deleteConfirmBodyNoRecipient": "The {amount} expense will be removed from the project. This cannot be undone.",
+    "attachmentDeleteTitle": "Delete the file “{name}”?",
+    "attachmentDeleteBody": "The file will be removed from this expense. This cannot be undone."
   },
   "planning": {
     "assigneeOtherShort": "Outside the team",
@@ -1667,7 +1688,9 @@
           "cta": "Create your first quote"
         },
         "importTitle": "Import quotes",
-        "heading": "Quotes"
+        "heading": "Quotes",
+        "deadlineColumn": "Valid until",
+        "deadlineShort": "Valid until {date}"
       },
       "status": {
         "draft": "Draft",
@@ -1698,7 +1721,9 @@
           "cta": "Create your first invoice"
         },
         "importTitle": "Import invoices",
-        "heading": "Invoices"
+        "heading": "Invoices",
+        "deadlineColumn": "Due",
+        "deadlineShort": "Due {date}"
       },
       "status": {
         "draft": "Draft",
@@ -1727,14 +1752,16 @@
         "status": "Status",
         "totalTtc": "Total (incl. VAT)",
         "actions": "Actions",
-        "issuer": "Issuer"
+        "issuer": "Issuer",
+        "project": "Project"
       },
       "loadMoreFailed": "Failed to load more documents. Please try again.",
       "loadFailed": "The documents couldn't be loaded.",
       "retry": "Try again",
       "noFilterResults": "No documents with this status.",
       "companyFilter": "Issuing company",
-      "allCompanies": "All companies"
+      "allCompanies": "All companies",
+      "overdueDays": "{days, plural, one {# day overdue} other {# days overdue}}"
     },
     "form": {
       "modes": {
@@ -1763,7 +1790,8 @@
         "paymentTerms": "Payment terms",
         "paymentTermsPlaceholder": "e.g. Net 30, bank transfer",
         "project": "Project (optional)",
-        "projectNone": "No project"
+        "projectNone": "No project",
+        "projectSuggestion": "Link to {name}?"
       },
       "items": {
         "section": "Line items",
@@ -1889,12 +1917,13 @@
       },
       "confirmStatus": {
         "title": "Change the status to “{status}”?",
-        "paid": "If the invoice is linked to a project, a “Funds released” expense for this amount will be recorded there. After that, the invoice can only be cancelled.",
+        "paid": "If the invoice is linked to a project, this amount will be recorded there as paid by the client. After that, the invoice can only be cancelled.",
         "factureCancelled": "This is final: a cancelled invoice can no longer change status.",
         "devisExpired": "This is final: an expired quote can no longer change status.",
         "devisRejected": "The quote will be marked as rejected. You can reopen it as a draft later.",
         "confirm": "Confirm",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "factureSent": "The invoice will be marked as sent to the client."
       },
       "issuerProfile": {
         "missing": "{company}'s profile is missing: {fields}. These details are printed on your quotes and invoices (a SIRET is mandatory on a French invoice).",
@@ -1904,7 +1933,8 @@
           "tvaNumber": "VAT number",
           "iban": "IBAN"
         }
-      }
+      },
+      "devisTermsWarning": "This text looks copied from the quote. Fix it before sending the invoice."
     },
     "editPage": {
       "loadFailed": "Failed to load document. Please refresh or try again later."
@@ -2092,7 +2122,7 @@
       },
       "empty": {
         "title": "No quotes or invoices yet",
-        "description": "Choose this project in the “Project” field of a quote or invoice to see it here."
+        "description": "Create a quote or an invoice with the buttons above, or choose this project in the “Project” field of an existing document."
       },
       "errors": {
         "load": "Couldn't load the quotes and invoices for this project.",

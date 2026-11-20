@@ -24,7 +24,7 @@
     }
   },
   "meta": {
-    "description": "Une application chaleureuse et humaine pour gérer la construction de votre propre maison.",
+    "description": "Folio — suivi de chantier, pointage, dépenses, devis et factures pour les petites entreprises du bâtiment.",
     "signIn": "Connexion",
     "quotes": "Devis",
     "invoices": "Factures",
@@ -247,7 +247,7 @@
     "projectNameOptional": "Nom du projet (facultatif)",
     "projectNamePlaceholder": "Par défaut, l'adresse",
     "projectAddress": "Adresse",
-    "projectAddressPlaceholder": "ex. 12 Rue des Martyrs, Paris",
+    "projectAddressPlaceholder": "ex. 12 rue de la Paix, 75002 Paris",
     "create": "Créer",
     "creating": "Création...",
     "createProjectError": "Échec de la création du projet. Veuillez réessayer.",
@@ -296,7 +296,7 @@
     "overBudget": "Dépassement de",
     "budgetLabel": "Crédit total (€)",
     "budgetSourceLabelOptional": "Source de financement (facultatif)",
-    "budgetSourcePlaceholder": "ex. Prêt bancaire BNP",
+    "budgetSourcePlaceholder": "ex. Paiement du client selon devis, prêt bancaire",
     "budgetInvalid": "Saisissez le crédit total sous forme de montant, par ex. 12500 ou 12 500,00",
     "budgetTooLarge": "Le crédit total ne peut pas dépasser {max}.",
     "bankRelease": {
@@ -313,7 +313,7 @@
       "noCreditHint": "Renseignez le crédit initial accordé par votre banque dans les paramètres du projet.",
       "openSettings": "Ouvrir les paramètres du projet",
       "noReleases": "Aucun fonds débloqué pour l'instant",
-      "settingsCardTitle": "Crédit bancaire (crédit immobilier)",
+      "settingsCardTitle": "Budget / crédit du chantier",
       "settingsCardHint": "Montant initial accordé par la banque. Les déblocages de fonds en sont déduits.",
       "headlineMetaOver": "au-delà des <c>{credit}</c> de crédit · <p>{pct}</p> débloqués",
       "drawsMetaSingle": "{count, plural, one {# déblocage} other {# déblocages}} · {month}"
@@ -370,7 +370,8 @@
       "title": "Section masquée",
       "body": "L'entreprise de ce chantier a masqué cette section pour ses membres.",
       "back": "Retour au chantier"
-    }
+    },
+    "budgetHelp": "Montant maximum que le chantier peut dépenser. Laissez vide si vous ne le savez pas encore."
   },
   "settings": {
     "profile": "Profil",
@@ -483,7 +484,20 @@
     },
     "errorNameRequired": "Votre nom ne peut pas être vide.",
     "errorSessionExpired": "Votre session a expiré. Reconnectez-vous pour enregistrer.",
-    "signInAgain": "Se reconnecter"
+    "signInAgain": "Se reconnecter",
+    "confirmDialog": {
+      "confirm": "Continuer",
+      "cancel": "Annuler",
+      "discard": "Abandonner",
+      "keepEditing": "Continuer la saisie",
+      "deleteNamed": "Supprimer « {name} » ?"
+    },
+    "paymentMethodForm": {
+      "nameLabel": "Nom du moyen de paiement",
+      "namePlaceholder": "ex. Carte entreprise BNP, Espèces, Virement",
+      "pursePlaceholder": "Choisir la caisse…",
+      "purseRequired": "Choisissez « Caisse entreprise » ou « Caisse personnelle » avant d'ajouter."
+    }
   },
   "paymentMethods": {
     "title": "Moyens de paiement",
@@ -862,7 +876,14 @@
     "memberView": {
       "title": "Mes paiements",
       "empty": "Aucun paiement enregistré pour vous sur ce projet. Les autres dépenses du projet sont visibles par les responsables."
-    }
+    },
+    "clientPaid": "Payé par le client",
+    "clientPaidAuto": "Payé par le client (auto)",
+    "deleteConfirmTitle": "Supprimer la dépense {number} ?",
+    "deleteConfirmBody": "La dépense de {amount} ({recipient}) sera supprimée du chantier. Cette action est irréversible.",
+    "deleteConfirmBodyNoRecipient": "La dépense de {amount} sera supprimée du chantier. Cette action est irréversible.",
+    "attachmentDeleteTitle": "Supprimer le fichier « {name} » ?",
+    "attachmentDeleteBody": "Le fichier sera retiré de cette dépense. Cette action est irréversible."
   },
   "planning": {
     "assigneeOtherShort": "Hors équipe",
@@ -1667,7 +1688,9 @@
           "cta": "Créer votre premier devis"
         },
         "importTitle": "Importer des devis",
-        "heading": "Devis"
+        "heading": "Devis",
+        "deadlineColumn": "Valable jusqu'au",
+        "deadlineShort": "Valable jusqu'au {date}"
       },
       "status": {
         "draft": "Brouillon",
@@ -1698,7 +1721,9 @@
           "cta": "Créer votre première facture"
         },
         "importTitle": "Importer des factures",
-        "heading": "Factures"
+        "heading": "Factures",
+        "deadlineColumn": "Échéance",
+        "deadlineShort": "Échéance {date}"
       },
       "status": {
         "draft": "Brouillon",
@@ -1727,14 +1752,16 @@
         "status": "Statut",
         "totalTtc": "Total TTC",
         "actions": "Actions",
-        "issuer": "Émetteur"
+        "issuer": "Émetteur",
+        "project": "Chantier"
       },
       "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer.",
       "loadFailed": "Impossible de charger les documents.",
       "retry": "Réessayer",
       "noFilterResults": "Aucun document avec ce statut.",
       "companyFilter": "Entreprise émettrice",
-      "allCompanies": "Toutes les entreprises"
+      "allCompanies": "Toutes les entreprises",
+      "overdueDays": "En retard de {days, plural, one {# jour} other {# jours}}"
     },
     "form": {
       "modes": {
@@ -1763,7 +1790,8 @@
         "paymentTerms": "Conditions de paiement",
         "paymentTermsPlaceholder": "ex. 30 jours net, virement bancaire",
         "project": "Chantier (optionnel)",
-        "projectNone": "Aucun chantier"
+        "projectNone": "Aucun chantier",
+        "projectSuggestion": "Rattacher à {name} ?"
       },
       "items": {
         "section": "Lignes",
@@ -1889,12 +1917,13 @@
       },
       "confirmStatus": {
         "title": "Passer au statut « {status} » ?",
-        "paid": "Si la facture est liée à un projet, une dépense « Fonds débloqués » de ce montant y sera enregistrée. Ensuite, la facture ne pourra plus qu'être annulée.",
+        "paid": "Si la facture est liée à un chantier, ce montant y sera enregistré comme payé par le client. Ensuite, la facture ne pourra plus qu'être annulée.",
         "factureCancelled": "C'est un statut définitif : la facture annulée ne pourra plus changer de statut.",
         "devisExpired": "C'est un statut définitif : le devis expiré ne pourra plus changer de statut.",
         "devisRejected": "Le devis sera marqué comme refusé. Vous pourrez le rouvrir en brouillon.",
         "confirm": "Confirmer",
-        "cancel": "Annuler"
+        "cancel": "Annuler",
+        "factureSent": "La facture sera marquée comme envoyée au client."
       },
       "issuerProfile": {
         "missing": "La fiche de {company} n'a pas encore : {fields}. Ces mentions figurent sur vos devis et factures (le SIRET est obligatoire sur une facture).",
@@ -1904,7 +1933,8 @@
           "tvaNumber": "n° de TVA",
           "iban": "IBAN"
         }
-      }
+      },
+      "devisTermsWarning": "Ce texte semble repris du devis. Corrigez-le avant d'envoyer la facture."
     },
     "editPage": {
       "loadFailed": "Impossible de charger le document. Veuillez actualiser ou réessayer plus tard."
@@ -2092,7 +2122,7 @@
       },
       "empty": {
         "title": "Aucun devis ni facture pour l'instant",
-        "description": "Choisissez ce chantier dans le champ « Chantier » d'un devis ou d'une facture pour le retrouver ici."
+        "description": "Créez un devis ou une facture avec les boutons ci-dessus, ou choisissez ce chantier dans le champ « Chantier » d'un document existant."
       },
       "errors": {
         "load": "Impossible de charger les devis et factures de ce chantier.",

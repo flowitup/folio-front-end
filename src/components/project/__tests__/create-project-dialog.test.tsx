@@ -27,6 +27,7 @@ vi.mock("next-intl", () => ({
       budgetSourceLabelOptional: "Funding source (optional)",
       budgetSourcePlaceholder: "e.g. Bank loan BNP",
       budgetInvalid: "Budget must be a positive number",
+      budgetHelp: "The most the project may spend. Leave blank if you don't know yet.",
       create: "Create",
       creating: "Creating...",
       cancel: "Cancel",
@@ -64,8 +65,35 @@ describe("CreateProjectDialog", () => {
     const nameInput = screen.getByLabelText("Project name (optional)");
     expect(addressInput).toBeRequired();
     expect(nameInput).not.toBeRequired();
-    // The address is the first field: it precedes the name in the DOM.
-    expect(addressInput.compareDocumentPosition(nameInput) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The name comes first, as people say it; the address follows.
+    expect(nameInput.compareDocumentPosition(addressInput) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(nameInput).toHaveFocus();
+  });
+
+  it("types the name then the address in screen order and creates the project with both", async () => {
+    mockCreateProject.mockResolvedValueOnce(FAKE_PROJECT);
+    const user = userEvent.setup();
+    render(<CreateProjectDialog open={true} onOpenChange={vi.fn()} />);
+
+    // Focus starts on the name; Tab moves on to the address.
+    await user.keyboard("Riverside Tower");
+    await user.tab();
+    await user.keyboard("12 Rue des Martyrs");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() => {
+      expect(mockCreateProject).toHaveBeenCalledWith({
+        address: "12 Rue des Martyrs",
+        name: "Riverside Tower",
+      });
+    });
+  });
+
+  it("explains what the credit total is under its field", () => {
+    render(<CreateProjectDialog open={true} onOpenChange={vi.fn()} />);
+    expect(screen.getByLabelText("Budget (€)")).toHaveAccessibleDescription(
+      "The most the project may spend. Leave blank if you don't know yet."
+    );
   });
 
   it("submits valid input, calls API, and notifies parent", async () => {

@@ -10,7 +10,8 @@
  *   Facture: draft→sent, sent→paid|overdue|cancelled, overdue→paid, paid→cancelled
  *
  * Transitions with a side effect or no way back (paid, cancelled, expired,
- * rejected) ask for confirmation first.
+ * rejected) ask for confirmation first, and so does sending a facture whose
+ * notes or terms still read like the quote's ("Devis valable 30 jours").
  *
  * Terminal states (no outbound transitions) render the button disabled, and so
  * does a devis converted to a live facture (the API refuses any change to it).
@@ -43,6 +44,8 @@ import { billingStatusLabel } from "@/lib/billing/status-label";
 import { updateBillingDocumentStatusAction } from "@/app/[locale]/(app)/billing/_actions/billing-actions";
 import { isDevisLockedByFacture } from "@/lib/billing/devis-lock";
 import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
+import { DevisTermsWarning } from "@/components/billing/devis-terms-warning";
+import { factureHasDevisTerms } from "@/lib/billing/devis-terms";
 import type { BillingDocument, BillingDocumentKind, BillingDocumentStatus } from "@/types/billing";
 
 // ---------------------------------------------------------------------------
@@ -155,11 +158,15 @@ export function BillingStatusMenu({
     if (document.kind === "facture" && to === "paid") return tConfirm("paid");
     if (document.kind === "facture" && to === "cancelled") return tConfirm("factureCancelled");
     if (document.kind === "devis" && to === "expired") return tConfirm("devisExpired");
+    if (to === "sent") return tConfirm("factureSent");
     return tConfirm("devisRejected");
   }
 
+  // Sending a facture that still carries the quote's validity clause.
+  const sendsDevisTerms = factureHasDevisTerms(document);
+
   function requestTransition(transition: Transition) {
-    if (CONFIRM_TARGETS.has(transition.to)) {
+    if (CONFIRM_TARGETS.has(transition.to) || (transition.to === "sent" && sendsDevisTerms)) {
       setPending(transition);
       return;
     }
@@ -248,6 +255,7 @@ export function BillingStatusMenu({
               {pending ? confirmDescription(pending.to) : null}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {pending?.to === "sent" && sendsDevisTerms && <DevisTermsWarning />}
           <AlertDialogFooter>
             <AlertDialogCancel>{tConfirm("cancel")}</AlertDialogCancel>
             <AlertDialogAction

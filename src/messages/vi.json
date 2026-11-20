@@ -24,7 +24,7 @@
     }
   },
   "meta": {
-    "description": "Một ứng dụng ấm áp, gần gũi để quản lý việc xây dựng ngôi nhà của chính bạn.",
+    "description": "Folio — theo dõi công trình, chấm công, chi phí và báo giá, hóa đơn cho công ty xây dựng nhỏ.",
     "signIn": "Đăng nhập",
     "quotes": "Báo giá",
     "invoices": "Hóa đơn",
@@ -247,7 +247,7 @@
     "projectNameOptional": "Tên dự án (tùy chọn)",
     "projectNamePlaceholder": "Mặc định lấy địa chỉ",
     "projectAddress": "Địa chỉ",
-    "projectAddressPlaceholder": "vd. 12 Đường Lê Lợi, Hà Nội",
+    "projectAddressPlaceholder": "vd. 12 rue de la Paix, 75002 Paris",
     "create": "Tạo",
     "creating": "Đang tạo...",
     "createProjectError": "Tạo dự án thất bại. Vui lòng thử lại.",
@@ -296,7 +296,7 @@
     "overBudget": "Vượt quá",
     "budgetLabel": "Tổng tín dụng (€)",
     "budgetSourceLabelOptional": "Nguồn tài trợ (tùy chọn)",
-    "budgetSourcePlaceholder": "vd. Vay ngân hàng BNP",
+    "budgetSourcePlaceholder": "vd. Khách trả theo báo giá, vay ngân hàng",
     "budgetInvalid": "Nhập tổng tín dụng dưới dạng số tiền, ví dụ 12500 hoặc 12.500,00",
     "budgetTooLarge": "Tổng tín dụng không được vượt quá {max}.",
     "bankRelease": {
@@ -313,7 +313,7 @@
       "noCreditHint": "Đặt hạn mức tín dụng ban đầu ngân hàng cấp trong cài đặt dự án.",
       "openSettings": "Mở cài đặt dự án",
       "noReleases": "Chưa có khoản giải ngân nào",
-      "settingsCardTitle": "Tín dụng ngân hàng (vay mua nhà)",
+      "settingsCardTitle": "Ngân sách / tín dụng của dự án",
       "settingsCardHint": "Số tiền ban đầu ngân hàng cấp. Các khoản giải ngân sẽ được trừ vào số này.",
       "headlineMetaOver": "vượt hạn mức <c>{credit}</c> tín dụng · đã giải ngân <p>{pct}</p>",
       "drawsMetaSingle": "{count, plural, other {# lần giải ngân}} · {month}"
@@ -370,7 +370,8 @@
       "title": "Mục đã ẩn",
       "body": "Công ty của công trình này đã ẩn mục này với các thành viên.",
       "back": "Quay lại công trình"
-    }
+    },
+    "budgetHelp": "Số tiền tối đa dự án được chi. Bỏ trống nếu chưa biết."
   },
   "settings": {
     "profile": "Hồ sơ",
@@ -483,7 +484,20 @@
     },
     "errorNameRequired": "Tên của bạn không được để trống.",
     "errorSessionExpired": "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để lưu.",
-    "signInAgain": "Đăng nhập lại"
+    "signInAgain": "Đăng nhập lại",
+    "confirmDialog": {
+      "confirm": "Tiếp tục",
+      "cancel": "Hủy",
+      "discard": "Bỏ thay đổi",
+      "keepEditing": "Tiếp tục sửa",
+      "deleteNamed": "Xóa “{name}”?"
+    },
+    "paymentMethodForm": {
+      "nameLabel": "Tên phương thức thanh toán",
+      "namePlaceholder": "vd. Thẻ công ty BNP, Tiền mặt, Chuyển khoản",
+      "pursePlaceholder": "Chọn quỹ…",
+      "purseRequired": "Chọn “Quỹ công ty” hoặc “Quỹ cá nhân” trước khi thêm."
+    }
   },
   "paymentMethods": {
     "title": "Phương thức thanh toán",
@@ -862,7 +876,14 @@
     "memberView": {
       "title": "Tiền công của tôi",
       "empty": "Chưa có khoản trả nào cho bạn trong dự án này. Các chi phí khác của dự án chỉ quản lý mới xem được."
-    }
+    },
+    "clientPaid": "Khách đã trả",
+    "clientPaidAuto": "Khách đã trả (tự động)",
+    "deleteConfirmTitle": "Xóa chi phí {number}?",
+    "deleteConfirmBody": "Chi phí {amount} ({recipient}) sẽ bị xóa khỏi dự án. Không thể hoàn tác.",
+    "deleteConfirmBodyNoRecipient": "Chi phí {amount} sẽ bị xóa khỏi dự án. Không thể hoàn tác.",
+    "attachmentDeleteTitle": "Xóa tệp “{name}”?",
+    "attachmentDeleteBody": "Tệp sẽ bị xóa khỏi chi phí này. Không thể hoàn tác."
   },
   "planning": {
     "assigneeOtherShort": "Ngoài nhóm",
@@ -1667,7 +1688,9 @@
           "cta": "Tạo báo giá đầu tiên"
         },
         "importTitle": "Nhập báo giá",
-        "heading": "Báo giá"
+        "heading": "Báo giá",
+        "deadlineColumn": "Hiệu lực đến",
+        "deadlineShort": "Hiệu lực đến {date}"
       },
       "status": {
         "draft": "Nháp",
@@ -1698,7 +1721,9 @@
           "cta": "Tạo hóa đơn đầu tiên"
         },
         "importTitle": "Nhập hóa đơn",
-        "heading": "Hóa đơn"
+        "heading": "Hóa đơn",
+        "deadlineColumn": "Hạn",
+        "deadlineShort": "Hạn {date}"
       },
       "status": {
         "draft": "Nháp",
@@ -1727,14 +1752,16 @@
         "status": "Trạng thái",
         "totalTtc": "Tổng (gồm VAT)",
         "actions": "Thao tác",
-        "issuer": "Bên phát hành"
+        "issuer": "Bên phát hành",
+        "project": "Dự án"
       },
       "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại.",
       "loadFailed": "Không thể tải danh sách tài liệu.",
       "retry": "Thử lại",
       "noFilterResults": "Không có tài liệu nào ở trạng thái này.",
       "companyFilter": "Công ty phát hành",
-      "allCompanies": "Tất cả công ty"
+      "allCompanies": "Tất cả công ty",
+      "overdueDays": "Quá hạn {days} ngày"
     },
     "form": {
       "modes": {
@@ -1763,7 +1790,8 @@
         "paymentTerms": "Điều khoản thanh toán",
         "paymentTermsPlaceholder": "vd. Thanh toán trong 30 ngày, chuyển khoản",
         "project": "Công trình (tùy chọn)",
-        "projectNone": "Không có công trình"
+        "projectNone": "Không có công trình",
+        "projectSuggestion": "Gắn vào {name}?"
       },
       "items": {
         "section": "Danh mục dịch vụ",
@@ -1889,12 +1917,13 @@
       },
       "confirmStatus": {
         "title": "Chuyển sang trạng thái “{status}”?",
-        "paid": "Nếu hóa đơn gắn với một dự án, một khoản chi “Giải ngân” với số tiền này sẽ được ghi vào dự án đó. Sau đó, hóa đơn chỉ có thể bị hủy.",
+        "paid": "Nếu hóa đơn gắn với một dự án, số tiền này sẽ được ghi vào dự án là tiền khách đã trả. Sau đó, hóa đơn chỉ có thể bị hủy.",
         "factureCancelled": "Đây là trạng thái cuối cùng: hóa đơn đã hủy sẽ không thể đổi trạng thái nữa.",
         "devisExpired": "Đây là trạng thái cuối cùng: báo giá hết hạn sẽ không thể đổi trạng thái nữa.",
         "devisRejected": "Báo giá sẽ được đánh dấu là bị từ chối. Bạn có thể mở lại dưới dạng bản nháp sau.",
         "confirm": "Xác nhận",
-        "cancel": "Hủy"
+        "cancel": "Hủy",
+        "factureSent": "Hóa đơn sẽ được đánh dấu là đã gửi cho khách."
       },
       "issuerProfile": {
         "missing": "Hồ sơ của {company} còn thiếu: {fields}. Các thông tin này được in trên báo giá và hóa đơn (SIRET là bắt buộc trên hóa đơn tại Pháp).",
@@ -1904,7 +1933,8 @@
           "tvaNumber": "mã số VAT",
           "iban": "IBAN"
         }
-      }
+      },
+      "devisTermsWarning": "Điều khoản này có vẻ chép từ báo giá. Sửa trước khi gửi hóa đơn."
     },
     "editPage": {
       "loadFailed": "Không thể tải tài liệu. Vui lòng tải lại trang hoặc thử lại sau."
@@ -2092,7 +2122,7 @@
       },
       "empty": {
         "title": "Chưa có báo giá hay hóa đơn nào",
-        "description": "Chọn công trình này ở trường “Công trình” của báo giá hoặc hóa đơn để xem tại đây."
+        "description": "Tạo báo giá hoặc hóa đơn bằng các nút ở trên, hoặc chọn công trình này ở trường “Công trình” của một tài liệu có sẵn."
       },
       "errors": {
         "load": "Không thể tải báo giá và hóa đơn của công trình này.",

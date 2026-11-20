@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { BOARD_COLUMNS } from "@/types/task";
 import type { Task, TaskAssignee, TaskStatus, UpdateTaskPayload } from "@/types/task";
+import { useConfirm } from "@/hooks/use-confirm";
 
 const STATUSES: TaskStatus[] = ["backlog", ...BOARD_COLUMNS];
 
@@ -56,6 +57,8 @@ export function TaskDetailDrawer({
   assignees,
 }: TaskDetailDrawerProps) {
   const t = useTranslations("planning");
+  const tConfirm = useTranslations("settings.confirmDialog");
+  const { ask, dialog: confirmDialog, isOpen: confirming } = useConfirm();
   const [task, setTask] = useState<Task | null>(seed ?? null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -73,11 +76,19 @@ export function TaskDetailDrawer({
   }, [taskId]);
 
   // The backdrop, the X and Escape ask before throwing typed edits away.
-  const requestClose = useCallback(() => {
-    if (dirtyRef.current && !confirm(t("discardChanges"))) return;
+  const requestClose = useCallback(async () => {
+    if (dirtyRef.current) {
+      const discard = await ask({
+        title: t("discardChanges"),
+        confirmLabel: tConfirm("discard"),
+        cancelLabel: tConfirm("keepEditing"),
+        destructive: true,
+      });
+      if (!discard) return;
+    }
     dirtyRef.current = false;
     onClose();
-  }, [onClose, t]);
+  }, [ask, onClose, t, tConfirm]);
 
   // Fetch when opening (unless seed already supplied for the same id).
   useEffect(() => {
@@ -111,12 +122,14 @@ export function TaskDetailDrawer({
   // and closing the whole drawer then discarded the user's edits.
   useEffect(() => {
     if (!taskId) return;
+    // While the in-app confirmation is open, Escape belongs to it.
+    if (confirming) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !e.defaultPrevented) requestClose();
+      if (e.key === "Escape" && !e.defaultPrevented) void requestClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [taskId, requestClose]);
+  }, [taskId, requestClose, confirming]);
 
   const handleUpdate = async (payload: UpdateTaskPayload) => {
     if (!task) return;
@@ -156,7 +169,14 @@ export function TaskDetailDrawer({
 
   const handleDelete = async () => {
     if (!task) return;
-    if (!confirm(t("deleteConfirm"))) return;
+    const ok = await ask({
+      title: tConfirm("deleteNamed", { name: task.title }),
+      description: t("deleteConfirm"),
+      confirmLabel: t("delete"),
+      cancelLabel: t("cancel"),
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await deleteTask(task.id);
     } catch (err) {
@@ -174,7 +194,7 @@ export function TaskDetailDrawer({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/30 z-40"
-        onClick={requestClose}
+        onClick={() => void requestClose()}
         aria-hidden
       />
       {/* Drawer */}
@@ -200,7 +220,7 @@ export function TaskDetailDrawer({
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={requestClose} aria-label={t("close")}>
+            <Button variant="ghost" size="sm" onClick={() => void requestClose()} aria-label={t("close")}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -257,6 +277,7 @@ export function TaskDetailDrawer({
           )}
         </div>
       </aside>
+      {confirmDialog}
     </>,
     document.body
   );

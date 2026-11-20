@@ -18,6 +18,7 @@ import { InvoiceAttachmentPreviewDialog } from "./invoice-attachment-preview-dia
 import { isRefundedLockError } from "./refunded-lock";
 import { InvoiceAttachmentRenameDialog } from "./invoice-attachment-rename-dialog";
 import { formatDate } from "@/lib/utils/formatters";
+import { useConfirm } from "@/hooks/use-confirm";
 import { formatBytes } from "@/app/[locale]/(app)/projects/[id]/documents/format-bytes";
 
 // No HEIC/HEIF: most browsers cannot display it (blank thumbnail and
@@ -47,6 +48,7 @@ export function InvoiceAttachments({ invoice, canManage: canManageInvoice }: Inv
   const refundedLocked = invoice.refundable_status === "refunded";
   const canManage = canManageInvoice && !refundedLocked;
   const [attachments, setAttachments] = useState<InvoiceAttachment[]>([]);
+  const { ask, dialog: confirmDialog } = useConfirm();
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,10 +112,17 @@ export function InvoiceAttachments({ invoice, canManage: canManageInvoice }: Inv
     await reload();
   };
 
-  const handleDelete = async (attachmentId: string) => {
-    if (!confirm(t("attachmentDeleteConfirm"))) return;
+  const handleDelete = async (att: InvoiceAttachment) => {
+    const ok = await ask({
+      title: t("attachmentDeleteTitle", { name: att.filename }),
+      description: t("attachmentDeleteBody"),
+      confirmLabel: t("delete"),
+      cancelLabel: t("cancel"),
+      destructive: true,
+    });
+    if (!ok) return;
     try {
-      await deleteAttachment(attachmentId);
+      await deleteAttachment(att.id);
       await reload();
     } catch (err) {
       setError(isRefundedLockError(err) ? t("errorRefundedLocked") : t("deleteFailed"));
@@ -128,6 +137,7 @@ export function InvoiceAttachments({ invoice, canManage: canManageInvoice }: Inv
 
   return (
     <Card>
+      {confirmDialog}
       <CardContent className="p-0">
         <div className="px-4 py-2 border-b">
           <h3 className="text-sm font-semibold">{t("attachments")}</h3>
@@ -195,7 +205,7 @@ export function InvoiceAttachments({ invoice, canManage: canManageInvoice }: Inv
                   key={att.id}
                   attachment={att}
                   canManage={canManage}
-                  onDelete={() => handleDelete(att.id)}
+                  onDelete={() => handleDelete(att)}
                   onRename={() => setRenameTarget(att)}
                   onPreview={() => setPreviewAttachment(att)}
                   onDownloadFailed={(gone) => handleDownloadFailed(att.filename, gone)}

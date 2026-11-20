@@ -4,7 +4,8 @@
  * PaymentMethodRow — single row in the payment methods list.
  *
  * Supports inline label editing, isCompanyPayment/isPersonalPayment toggles
- * (for all methods) and delete action (disabled for built-ins). The two
+ * (for all methods, worded as the purses: "Company purse" / "Personal purse")
+ * and delete action (disabled for built-ins). The two
  * toggles are mutually exclusive (radio-like): checking one clears the other
  * locally, and save always sends both flags so the effective state on the
  * server is explicit. The delete confirmation dialog is managed by the
@@ -20,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import type { PaymentMethod } from "@/lib/api/payment-methods-api";
+import { useConfirm } from "@/hooks/use-confirm";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -57,6 +59,7 @@ export function PaymentMethodRow({
   const [editIsPersonalPayment, setEditIsPersonalPayment] = useState(method.isPersonalPayment);
   const [isSaving, setIsSaving] = useState(false);
   const savingRef = useRef(false);
+  const { ask, dialog: confirmDialog } = useConfirm();
 
   function startEdit() {
     setEditValue(method.label);
@@ -104,7 +107,10 @@ export function PaymentMethodRow({
     if (
       (companyPaymentChanged || personalPaymentChanged) &&
       method.usageCount > 0 &&
-      !window.confirm(t("confirmPurseChange", { count: method.usageCount }))
+      !(await ask({
+        title: t("confirmPurseChange", { count: method.usageCount }),
+        cancelLabel: t("cancel"),
+      }))
     ) {
       return;
     }
@@ -134,6 +140,7 @@ export function PaymentMethodRow({
 
   return (
     <li className="flex items-center gap-2 py-2 border-b last:border-b-0" style={{ borderColor: "var(--line)" }}>
+      {confirmDialog}
       {/* Label / inline edit */}
       <div className="flex-1 min-w-0">
         {isEditing ? (
@@ -157,7 +164,7 @@ export function PaymentMethodRow({
                 disabled={isSaving}
                 className="h-3.5 w-3.5 cursor-pointer"
               />
-              {t("paidByCompany")}
+              {t("purseCompany")}
             </label>
             <label className="flex items-center gap-2 text-[12px] cursor-pointer select-none">
               <input
@@ -168,7 +175,7 @@ export function PaymentMethodRow({
                 disabled={isSaving}
                 className="h-3.5 w-3.5 cursor-pointer"
               />
-              {t("personalPayment")}
+              {t("pursePersonal")}
             </label>
           </div>
         ) : (
@@ -180,12 +187,12 @@ export function PaymentMethodRow({
       <div className="flex items-center gap-1.5 shrink-0">
         {method.isCompanyPayment && !isEditing && (
           <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
-            {t("paidByCompany")}
+            {t("purseCompany")}
           </Badge>
         )}
         {method.isPersonalPayment && !isEditing && (
           <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
-            {t("personalPayment")}
+            {t("pursePersonal")}
           </Badge>
         )}
         {method.isBuiltin && (

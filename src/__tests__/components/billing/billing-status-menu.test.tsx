@@ -450,3 +450,58 @@ describe("BillingStatusMenu — action invocation", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Sending a facture that still carries the quote's validity clause
+// ---------------------------------------------------------------------------
+
+describe("BillingStatusMenu — facture terms copied from the quote", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function clickMarkAsSent(user: ReturnType<typeof userEvent.setup>) {
+    await openMenuAndGetLabels(user);
+    const sentItem = Array.from(document.querySelectorAll("[role='menuitem']")).find((el) =>
+      /mark as sent/i.test(el.textContent ?? "")
+    )!;
+    await user.click(sentItem);
+  }
+
+  it("asks first and shows the warning, then sends on confirm", async () => {
+    const user = userEvent.setup();
+    mockAction.mockResolvedValueOnce({ ok: true, data: makeDoc("facture", "sent") });
+    const doc = { ...makeDoc("facture", "draft"), terms: "Devis valable 30 jours" };
+    render(<BillingStatusMenu document={doc} onStatusChanged={vi.fn()} />);
+
+    await clickMarkAsSent(user);
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent("This text looks copied from the quote");
+    expect(mockAction).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: /mark as sent/i }));
+    await waitFor(() => expect(mockAction).toHaveBeenCalledWith("doc-1", "sent"));
+  });
+
+  it("sends straight away when the terms are the invoice's own", async () => {
+    const user = userEvent.setup();
+    mockAction.mockResolvedValueOnce({ ok: true, data: makeDoc("facture", "sent") });
+    const doc = { ...makeDoc("facture", "draft"), terms: "Paiement à 30 jours" };
+    render(<BillingStatusMenu document={doc} onStatusChanged={vi.fn()} />);
+
+    await clickMarkAsSent(user);
+    await waitFor(() => expect(mockAction).toHaveBeenCalledWith("doc-1", "sent"));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+  });
+
+  it("says a paid invoice is recorded as paid by the client, not as an expense", async () => {
+    const user = userEvent.setup();
+    renderMenu("facture", "sent");
+    await openMenuAndGetLabels(user);
+    const paidItem = Array.from(document.querySelectorAll("[role='menuitem']")).find((el) =>
+      /mark as paid/i.test(el.textContent ?? "")
+    )!;
+    await user.click(paidItem);
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent("recorded there as paid by the client");
+    expect(dialog).not.toHaveTextContent("expense");
+  });
+});

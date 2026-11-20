@@ -139,8 +139,14 @@ describe("InvoiceDetailContent — cash advance header", () => {
   });
 
   it("keeps a plain release headed as Released Funds, without the badge", () => {
-    renderDetail({ invoice: { is_auto_generated: false } });
+    renderDetail({ invoice: { is_auto_generated: false, source_billing_document_id: null } });
     expect(screen.getByText("invoices.types.released_funds")).toBeTruthy();
     expect(screen.queryByTestId("cash-advance-badge-detail")).toBeNull();
+  });
+
+  it("heads a release written by a paid facture as a client payment", () => {
+    renderDetail();
+    expect(screen.getByText("invoices.clientPaid")).toBeTruthy();
+    expect(screen.queryByText("invoices.types.released_funds")).toBeNull();
   });
 });

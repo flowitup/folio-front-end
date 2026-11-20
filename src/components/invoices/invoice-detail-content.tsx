@@ -31,6 +31,7 @@ import { RefundSourceIndicator } from "@/components/invoices/refund-source-indic
 import { TruncatedStamp } from "@/components/invoices/truncated-stamp";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
 import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
+import { isClientPayment } from "@/lib/invoices/client-payment";
 
 const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp",
@@ -183,7 +184,7 @@ export function InvoiceDetailContent({
             {invoice.invoice_number}
           </h2>
           <span className={TYPE_BADGE_CLASS[ledgerTypeOf(invoice)]}>
-            {t(`types.${ledgerTypeOf(invoice)}`)}
+            {isClientPayment(invoice) ? t("clientPaid") : t(`types.${ledgerTypeOf(invoice)}`)}
           </span>
           {invoice.type === "released_funds" && invoice.is_cash_advance && (
             <span

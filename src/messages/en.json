@@ -853,7 +853,9 @@
     "memberView": {
       "title": "My payments",
       "empty": "No payment recorded for you on this project yet. The project's other expenses are visible to managers."
-    }
+    },
+    "clientPaid": "Client payment",
+    "clientPaidAuto": "Client payment (auto)"
   },
   "planning": {
     "assigneeOtherShort": "Outside the team",
@@ -1754,7 +1756,8 @@
         "paymentTerms": "Payment terms",
         "paymentTermsPlaceholder": "e.g. Net 30, bank transfer",
         "project": "Project (optional)",
-        "projectNone": "No project"
+        "projectNone": "No project",
+        "projectSuggestion": "Link to {name}?"
       },
       "items": {
         "section": "Line items",
@@ -1880,12 +1883,13 @@
       },
       "confirmStatus": {
         "title": "Change the status to “{status}”?",
-        "paid": "If the invoice is linked to a project, a “Funds released” expense for this amount will be recorded there. After that, the invoice can only be cancelled.",
+        "paid": "If the invoice is linked to a project, this amount will be recorded there as paid by the client. After that, the invoice can only be cancelled.",
         "factureCancelled": "This is final: a cancelled invoice can no longer change status.",
         "devisExpired": "This is final: an expired quote can no longer change status.",
         "devisRejected": "The quote will be marked as rejected. You can reopen it as a draft later.",
         "confirm": "Confirm",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "factureSent": "The invoice will be marked as sent to the client."
       },
       "issuerProfile": {
         "missing": "{company}'s profile is missing: {fields}. These details are printed on your quotes and invoices (a SIRET is mandatory on a French invoice).",
@@ -1895,7 +1899,8 @@
           "tvaNumber": "VAT number",
           "iban": "IBAN"
         }
-      }
+      },
+      "devisTermsWarning": "This text looks copied from the quote. Fix it before sending the invoice."
     },
     "editPage": {
       "loadFailed": "Failed to load document. Please refresh or try again later."
@@ -2083,7 +2088,7 @@
       },
       "empty": {
         "title": "No quotes or invoices yet",
-        "description": "Choose this project in the “Project” field of a quote or invoice to see it here."
+        "description": "Create a quote or an invoice with the buttons above, or choose this project in the “Project” field of an existing document."
       },
       "errors": {
         "load": "Couldn't load the quotes and invoices for this project.",

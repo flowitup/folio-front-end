@@ -38,6 +38,7 @@ import {
   ledgerTypeOf,
   monthKeyForInvoice,
 } from "@/lib/invoices/group-invoices-by-month";
+import { isClientPayment } from "@/lib/invoices/client-payment";
 import { invoiceTotals } from "@/lib/invoices/invoice-totals";
 import {
   matchesExpenseFilters,
@@ -777,7 +778,7 @@ export default function InvoicesPage() {
                                         style={{ fontSize: 10, verticalAlign: "middle" }}
                                       >
                                         <Lock size={10} className="mr-0.5 inline" />
-                                        {t("auto")}
+                                        {isClientPayment(invoice) ? t("clientPaidAuto") : t("auto")}
                                       </span>
                                     )}
                                     {invoice.type === "released_funds" && invoice.is_cash_advance && (

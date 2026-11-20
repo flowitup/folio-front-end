@@ -853,7 +853,9 @@
     "memberView": {
       "title": "Tiền công của tôi",
       "empty": "Chưa có khoản trả nào cho bạn trong dự án này. Các chi phí khác của dự án chỉ quản lý mới xem được."
-    }
+    },
+    "clientPaid": "Khách đã trả",
+    "clientPaidAuto": "Khách đã trả (tự động)"
   },
   "planning": {
     "assigneeOtherShort": "Ngoài nhóm",
@@ -1754,7 +1756,8 @@
         "paymentTerms": "Điều khoản thanh toán",
         "paymentTermsPlaceholder": "vd. Thanh toán trong 30 ngày, chuyển khoản",
         "project": "Công trình (tùy chọn)",
-        "projectNone": "Không có công trình"
+        "projectNone": "Không có công trình",
+        "projectSuggestion": "Gắn vào {name}?"
       },
       "items": {
         "section": "Danh mục dịch vụ",
@@ -1880,12 +1883,13 @@
       },
       "confirmStatus": {
         "title": "Chuyển sang trạng thái “{status}”?",
-        "paid": "Nếu hóa đơn gắn với một dự án, một khoản chi “Giải ngân” với số tiền này sẽ được ghi vào dự án đó. Sau đó, hóa đơn chỉ có thể bị hủy.",
+        "paid": "Nếu hóa đơn gắn với một dự án, số tiền này sẽ được ghi vào dự án là tiền khách đã trả. Sau đó, hóa đơn chỉ có thể bị hủy.",
         "factureCancelled": "Đây là trạng thái cuối cùng: hóa đơn đã hủy sẽ không thể đổi trạng thái nữa.",
         "devisExpired": "Đây là trạng thái cuối cùng: báo giá hết hạn sẽ không thể đổi trạng thái nữa.",
         "devisRejected": "Báo giá sẽ được đánh dấu là bị từ chối. Bạn có thể mở lại dưới dạng bản nháp sau.",
         "confirm": "Xác nhận",
-        "cancel": "Hủy"
+        "cancel": "Hủy",
+        "factureSent": "Hóa đơn sẽ được đánh dấu là đã gửi cho khách."
       },
       "issuerProfile": {
         "missing": "Hồ sơ của {company} còn thiếu: {fields}. Các thông tin này được in trên báo giá và hóa đơn (SIRET là bắt buộc trên hóa đơn tại Pháp).",
@@ -1895,7 +1899,8 @@
           "tvaNumber": "mã số VAT",
           "iban": "IBAN"
         }
-      }
+      },
+      "devisTermsWarning": "Điều khoản này có vẻ chép từ báo giá. Sửa trước khi gửi hóa đơn."
     },
     "editPage": {
       "loadFailed": "Không thể tải tài liệu. Vui lòng tải lại trang hoặc thử lại sau."
@@ -2083,7 +2088,7 @@
       },
       "empty": {
         "title": "Chưa có báo giá hay hóa đơn nào",
-        "description": "Chọn công trình này ở trường “Công trình” của báo giá hoặc hóa đơn để xem tại đây."
+        "description": "Tạo báo giá hoặc hóa đơn bằng các nút ở trên, hoặc chọn công trình này ở trường “Công trình” của một tài liệu có sẵn."
       },
       "errors": {
         "load": "Không thể tải báo giá và hóa đơn của công trình này.",

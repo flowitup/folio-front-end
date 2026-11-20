@@ -13,6 +13,7 @@ import { RefundSourceIndicator } from "@/components/invoices/refund-source-indic
 import { TruncatedStamp } from "@/components/invoices/truncated-stamp";
 import { highlightRowTint } from "@/lib/invoices/highlight-colors";
 import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
+import { isClientPayment } from "@/lib/invoices/client-payment";
 import type { Invoice, InvoiceType } from "@/types/invoice";
 
 const TYPE_STAMP_CLASS: Record<InvoiceType, string> = {
@@ -76,7 +77,7 @@ export function InvoiceMobileCard({
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <span className={TYPE_STAMP_CLASS[ledgerTypeOf(invoice)]}>
-              {t(`types.${ledgerTypeOf(invoice)}`)}
+              {isClientPayment(invoice) ? t("clientPaidAuto") : t(`types.${ledgerTypeOf(invoice)}`)}
             </span>
             {/* Unapplied, the "outstanding avoir" stamp says it all: no second "Avoir".
                 Applied, the badge is skipped where it reads the same as the type

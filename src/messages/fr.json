@@ -853,7 +853,9 @@
     "memberView": {
       "title": "Mes paiements",
       "empty": "Aucun paiement enregistré pour vous sur ce projet. Les autres dépenses du projet sont visibles par les responsables."
-    }
+    },
+    "clientPaid": "Payé par le client",
+    "clientPaidAuto": "Payé par le client (auto)"
   },
   "planning": {
     "assigneeOtherShort": "Hors équipe",
@@ -1754,7 +1756,8 @@
         "paymentTerms": "Conditions de paiement",
         "paymentTermsPlaceholder": "ex. 30 jours net, virement bancaire",
         "project": "Chantier (optionnel)",
-        "projectNone": "Aucun chantier"
+        "projectNone": "Aucun chantier",
+        "projectSuggestion": "Rattacher à {name} ?"
       },
       "items": {
         "section": "Lignes",
@@ -1880,12 +1883,13 @@
       },
       "confirmStatus": {
         "title": "Passer au statut « {status} » ?",
-        "paid": "Si la facture est liée à un projet, une dépense « Fonds débloqués » de ce montant y sera enregistrée. Ensuite, la facture ne pourra plus qu'être annulée.",
+        "paid": "Si la facture est liée à un chantier, ce montant y sera enregistré comme payé par le client. Ensuite, la facture ne pourra plus qu'être annulée.",
         "factureCancelled": "C'est un statut définitif : la facture annulée ne pourra plus changer de statut.",
         "devisExpired": "C'est un statut définitif : le devis expiré ne pourra plus changer de statut.",
         "devisRejected": "Le devis sera marqué comme refusé. Vous pourrez le rouvrir en brouillon.",
         "confirm": "Confirmer",
-        "cancel": "Annuler"
+        "cancel": "Annuler",
+        "factureSent": "La facture sera marquée comme envoyée au client."
       },
       "issuerProfile": {
         "missing": "La fiche de {company} n'a pas encore : {fields}. Ces mentions figurent sur vos devis et factures (le SIRET est obligatoire sur une facture).",
@@ -1895,7 +1899,8 @@
           "tvaNumber": "n° de TVA",
           "iban": "IBAN"
         }
-      }
+      },
+      "devisTermsWarning": "Ce texte semble repris du devis. Corrigez-le avant d'envoyer la facture."
     },
     "editPage": {
       "loadFailed": "Impossible de charger le document. Veuillez actualiser ou réessayer plus tard."
@@ -2083,7 +2088,7 @@
       },
       "empty": {
         "title": "Aucun devis ni facture pour l'instant",
-        "description": "Choisissez ce chantier dans le champ « Chantier » d'un devis ou d'une facture pour le retrouver ici."
+        "description": "Créez un devis ou une facture avec les boutons ci-dessus, ou choisissez ce chantier dans le champ « Chantier » d'un document existant."
       },
       "errors": {
         "load": "Impossible de charger les devis et factures de ce chantier.",

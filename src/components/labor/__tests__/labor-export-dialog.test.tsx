@@ -899,3 +899,18 @@ describe("LaborExportDialog — picker month label", () => {
     expect(screen.queryByText("October 2026")).toBeNull();
   });
 });
+
+describe("LaborExportDialog — file language", () => {
+  afterEach(() => window.localStorage.clear());
+
+  it("defaults to the interface language and sends the one picked", async () => {
+    vi.mocked(fetchLaborExport).mockResolvedValue({ blob: new Blob(["x"]), filename: "f.xlsx" });
+    renderDialog();
+    expect(screen.getByRole("button", { name: "Français" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "English" }));
+    fireEvent.click(screen.getByText("download").closest("button")!);
+    await waitFor(() => expect(fetchLaborExport).toHaveBeenCalledWith("proj-test-1", expect.anything(), "xlsx", "en"));
+    expect(window.localStorage.getItem("folio.export.locale")).toBe("en");
+  });
+});
+

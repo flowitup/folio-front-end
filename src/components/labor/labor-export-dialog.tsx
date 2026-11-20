@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { MonthField, isMonthValue } from "@/components/ui/month-picker";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { ExportLanguageField, useExportLocale } from "@/components/export/export-language-field";
 import { fetchLaborExport, fetchWorkerLaborExport, formatEUR } from "@/lib/api/labor";
 import { triggerBrowserDownload } from "@/lib/util/trigger-browser-download";
 import { ApiError } from "@/lib/api/http";
@@ -86,6 +87,7 @@ export function LaborExportDialog({
   const t = useTranslations("labor.export");
   const tCommon = useTranslations("common");
   const locale = useLocale();
+  const [fileLocale, setFileLocale] = useExportLocale();
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [format, setFormat] = useState<LaborExportFormat>("xlsx");
@@ -150,7 +152,7 @@ export function LaborExportDialog({
           effectiveWorkerId,
           { from, to },
           format,
-          locale,
+          fileLocale,
         ));
         triggerBrowserDownload(blob, filename);
         toast.success(t("workerToastSuccess"), { id: toastId });
@@ -159,7 +161,7 @@ export function LaborExportDialog({
           projectId,
           { from, to },
           format,
-          locale,
+          fileLocale,
         ));
         triggerBrowserDownload(blob, filename);
         toast.success(t("downloaded"), { id: toastId });
@@ -276,6 +278,8 @@ export function LaborExportDialog({
               )}
             </>
           )}
+
+          <ExportLanguageField label={t("fileLanguage")} value={fileLocale} onChange={setFileLocale} />
 
           {/* Format selector — toggle buttons */}
           <div className="space-y-2">

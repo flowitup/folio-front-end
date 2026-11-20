@@ -730,3 +730,19 @@ describe("InvoiceExportDialog — type follows the active tab on every open", ()
     expect(await exportedType()).toBe("others");
   });
 });
+
+describe("InvoiceExportDialog — file language", () => {
+  afterEach(() => window.localStorage.clear());
+
+  it("uses the last language picked, not the interface language", async () => {
+    window.localStorage.setItem("folio.export.locale", "vi");
+    vi.mocked(fetchInvoiceExport).mockResolvedValue({ blob: new Blob(["x"]), filename: "f.xlsx" });
+    render(<InvoiceExportDialog projectId="proj-test-1" open onOpenChange={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Tiếng Việt" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByText("download").closest("button")!);
+    await waitFor(() =>
+      expect(fetchInvoiceExport).toHaveBeenCalledWith("proj-test-1", expect.anything(), "xlsx", undefined, "vi"),
+    );
+  });
+});
+

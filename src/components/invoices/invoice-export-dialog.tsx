@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { ExportLanguageField, useExportLocale } from "@/components/export/export-language-field";
 import { fetchInvoiceExport } from "@/lib/api/invoice-api";
 import { ApiError } from "@/lib/api/http";
 import { rateLimitMessage, retryAfterOf } from "@/lib/api/rate-limit";
@@ -65,7 +66,7 @@ export function InvoiceExportDialog({
   const startType = !canViewBudget && initialType === "released_funds" ? "all" : initialType;
   const t = useTranslations("invoices.export");
   const tCommon = useTranslations("common");
-  const locale = useLocale();
+  const [fileLocale, setFileLocale] = useExportLocale();
   const [from, setFrom] = useState<string>(thisMonth);
   const [to, setTo] = useState<string>(thisMonth);
   const [format, setFormat] = useState<InvoiceExportFormat>("xlsx");
@@ -112,7 +113,7 @@ export function InvoiceExportDialog({
         { from, to },
         format,
         typeFilter,
-        locale,
+        fileLocale,
       );
       triggerBrowserDownload(blob, filename);
       toast.success(t("downloaded"), { id: toastId });
@@ -199,6 +200,8 @@ export function InvoiceExportDialog({
               </SelectContent>
             </Select>
           </div>
+
+          <ExportLanguageField label={t("fileLanguage")} value={fileLocale} onChange={setFileLocale} />
 
           {/* Format selector — toggle buttons */}
           <div className="space-y-2">

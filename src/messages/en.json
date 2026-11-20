@@ -483,6 +483,12 @@
       "discard": "Discard",
       "keepEditing": "Keep editing",
       "deleteNamed": "Delete “{name}”?"
+    },
+    "paymentMethodForm": {
+      "nameLabel": "Payment method name",
+      "namePlaceholder": "e.g. BNP company card, Cash, Bank transfer",
+      "pursePlaceholder": "Choose a purse…",
+      "purseRequired": "Choose “Company purse” or “Personal purse” before adding."
     }
   },
   "paymentMethods": {

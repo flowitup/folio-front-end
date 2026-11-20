@@ -483,6 +483,12 @@
       "discard": "Bỏ thay đổi",
       "keepEditing": "Tiếp tục sửa",
       "deleteNamed": "Xóa “{name}”?"
+    },
+    "paymentMethodForm": {
+      "nameLabel": "Tên phương thức thanh toán",
+      "namePlaceholder": "vd. Thẻ công ty BNP, Tiền mặt, Chuyển khoản",
+      "pursePlaceholder": "Chọn quỹ…",
+      "purseRequired": "Chọn “Quỹ công ty” hoặc “Quỹ cá nhân” trước khi thêm."
     }
   },
   "paymentMethods": {

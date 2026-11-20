@@ -4,7 +4,8 @@
  * PaymentMethodRow — single row in the payment methods list.
  *
  * Supports inline label editing, isCompanyPayment/isPersonalPayment toggles
- * (for all methods) and delete action (disabled for built-ins). The two
+ * (for all methods, worded as the purses: "Company purse" / "Personal purse")
+ * and delete action (disabled for built-ins). The two
  * toggles are mutually exclusive (radio-like): checking one clears the other
  * locally, and save always sends both flags so the effective state on the
  * server is explicit. The delete confirmation dialog is managed by the
@@ -163,7 +164,7 @@ export function PaymentMethodRow({
                 disabled={isSaving}
                 className="h-3.5 w-3.5 cursor-pointer"
               />
-              {t("paidByCompany")}
+              {t("purseCompany")}
             </label>
             <label className="flex items-center gap-2 text-[12px] cursor-pointer select-none">
               <input
@@ -174,7 +175,7 @@ export function PaymentMethodRow({
                 disabled={isSaving}
                 className="h-3.5 w-3.5 cursor-pointer"
               />
-              {t("personalPayment")}
+              {t("pursePersonal")}
             </label>
           </div>
         ) : (
@@ -186,12 +187,12 @@ export function PaymentMethodRow({
       <div className="flex items-center gap-1.5 shrink-0">
         {method.isCompanyPayment && !isEditing && (
           <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
-            {t("paidByCompany")}
+            {t("purseCompany")}
           </Badge>
         )}
         {method.isPersonalPayment && !isEditing && (
           <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
-            {t("personalPayment")}
+            {t("pursePersonal")}
           </Badge>
         )}
         {method.isBuiltin && (

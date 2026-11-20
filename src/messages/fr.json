@@ -483,6 +483,12 @@
       "discard": "Abandonner",
       "keepEditing": "Continuer la saisie",
       "deleteNamed": "Supprimer « {name} » ?"
+    },
+    "paymentMethodForm": {
+      "nameLabel": "Nom du moyen de paiement",
+      "namePlaceholder": "ex. Carte entreprise BNP, Espèces, Virement",
+      "pursePlaceholder": "Choisir la caisse…",
+      "purseRequired": "Choisissez « Caisse entreprise » ou « Caisse personnelle » avant d'ajouter."
     }
   },
   "paymentMethods": {

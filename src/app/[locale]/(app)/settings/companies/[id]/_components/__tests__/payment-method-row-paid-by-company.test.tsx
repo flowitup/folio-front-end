@@ -2,7 +2,7 @@
  * Tests for PaymentMethodRow — isCompanyPayment badge and edit checkbox.
  *
  * Covers:
- * - "Paid by the company" badge renders on rows with isCompanyPayment=true
+ * - "Company purse" badge renders on rows with isCompanyPayment=true
  * - Badge absent when isCompanyPayment=false
  * - Edit mode shows the paidByCompany checkbox
  * - Saving with checkbox ticked calls onRenameRequest with isCompanyPayment=true
@@ -22,8 +22,8 @@ vi.mock("next-intl", () => ({
       paymentMethods: {
         title: "Payment methods",
         builtin: "Built-in",
-        paidByCompany: "Paid by the company",
-        personalPayment: "Personal payment",
+        purseCompany: "Company purse",
+        pursePersonal: "Personal purse",
         usedInInvoices: "{count} invoices",
         cancelEditAria: "Cancel edit",
         saveEditAria: "Save changes",
@@ -90,14 +90,14 @@ function renderRow(
 beforeEach(() => vi.clearAllMocks());
 
 describe("PaymentMethodRow — paidByCompany badge", () => {
-  it("renders 'Paid by the company' badge when isCompanyPayment=true", () => {
+  it("renders 'Company purse' badge when isCompanyPayment=true", () => {
     renderRow(makeMethod({ isCompanyPayment: true }));
-    expect(screen.getByText("Paid by the company")).toBeDefined();
+    expect(screen.getByText("Company purse")).toBeDefined();
   });
 
   it("does NOT render paidByCompany badge when isCompanyPayment=false", () => {
     renderRow(makeMethod({ isCompanyPayment: false }));
-    expect(screen.queryByText("Paid by the company")).toBeNull();
+    expect(screen.queryByText("Company purse")).toBeNull();
   });
 });
 
@@ -107,7 +107,7 @@ describe("PaymentMethodRow — purse change on a used method", () => {
     const onRename = vi.fn().mockResolvedValue(true);
     renderRow(makeMethod({ usageCount: 3 }), onRename);
     fireEvent.click(screen.getByRole("button", { name: /Edit "Wise"/i }));
-    fireEvent.click(await screen.findByLabelText("Paid by the company"));
+    fireEvent.click(await screen.findByLabelText("Company purse"));
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     const dialog = await screen.findByRole("alertdialog");
     expect(dialog).toHaveTextContent("3 past expenses");
@@ -140,9 +140,9 @@ describe("PaymentMethodRow — edit mode shows paidByCompany checkbox", () => {
 
     await waitFor(() => {
       // The label for the checkbox should appear
-      expect(screen.getByText("Paid by the company")).toBeDefined();
+      expect(screen.getByText("Company purse")).toBeDefined();
       // The checkbox input should be present and unchecked
-      const checkbox = screen.getByLabelText("Paid by the company");
+      const checkbox = screen.getByLabelText("Company purse");
       expect(checkbox).toBeDefined();
       expect((checkbox as HTMLInputElement).checked).toBe(false);
     });
@@ -154,7 +154,7 @@ describe("PaymentMethodRow — edit mode shows paidByCompany checkbox", () => {
     fireEvent.click(screen.getByRole("button", { name: /Edit "Wise"/i }));
 
     await waitFor(() => {
-      const checkbox = screen.getByLabelText("Paid by the company");
+      const checkbox = screen.getByLabelText("Company purse");
       expect((checkbox as HTMLInputElement).checked).toBe(true);
     });
   });
@@ -165,7 +165,7 @@ describe("PaymentMethodRow — edit mode shows paidByCompany checkbox", () => {
     fireEvent.click(screen.getByRole("button", { name: /Edit "Wise"/i }));
 
     await waitFor(() => {
-      const checkbox = screen.getByLabelText("Personal payment");
+      const checkbox = screen.getByLabelText("Personal purse");
       expect(checkbox).toBeDefined();
       expect((checkbox as HTMLInputElement).checked).toBe(false);
     });
@@ -176,15 +176,15 @@ describe("PaymentMethodRow — edit mode shows paidByCompany checkbox", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Edit "Wise"/i }));
     await waitFor(() => {
-      const personal = screen.getByLabelText("Personal payment") as HTMLInputElement;
+      const personal = screen.getByLabelText("Personal purse") as HTMLInputElement;
       expect(personal.checked).toBe(true);
     });
 
-    fireEvent.click(screen.getByLabelText("Paid by the company"));
+    fireEvent.click(screen.getByLabelText("Company purse"));
 
     await waitFor(() => {
-      const company = screen.getByLabelText("Paid by the company") as HTMLInputElement;
-      const personal = screen.getByLabelText("Personal payment") as HTMLInputElement;
+      const company = screen.getByLabelText("Company purse") as HTMLInputElement;
+      const personal = screen.getByLabelText("Personal purse") as HTMLInputElement;
       expect(company.checked).toBe(true);
       expect(personal.checked).toBe(false);
     });
@@ -200,10 +200,10 @@ describe("PaymentMethodRow — save submits isCompanyPayment", () => {
 
       // Open edit mode
       fireEvent.click(screen.getByRole("button", { name: /Edit "Wise"/i }));
-      await waitFor(() => expect(screen.getByLabelText("Paid by the company")).toBeDefined());
+      await waitFor(() => expect(screen.getByLabelText("Company purse")).toBeDefined());
 
       // Tick the checkbox
-      fireEvent.click(screen.getByLabelText("Paid by the company"));
+      fireEvent.click(screen.getByLabelText("Company purse"));
 
       // Press Enter to save
       await act(async () => {
@@ -229,12 +229,12 @@ describe("PaymentMethodRow — save submits isCompanyPayment", () => {
       // Open edit mode
       fireEvent.click(screen.getByRole("button", { name: /Edit "Wise"/i }));
       await waitFor(() => {
-        const cb = screen.getByLabelText("Paid by the company");
+        const cb = screen.getByLabelText("Company purse");
         expect((cb as HTMLInputElement).checked).toBe(true);
       });
 
       // Untick the checkbox
-      fireEvent.click(screen.getByLabelText("Paid by the company"));
+      fireEvent.click(screen.getByLabelText("Company purse"));
 
       await act(async () => {
         fireEvent.keyDown(screen.getByDisplayValue("Wise"), {
@@ -257,9 +257,9 @@ describe("PaymentMethodRow — save submits isCompanyPayment", () => {
       renderRow(makeMethod({ isCompanyPayment: false, isPersonalPayment: false }), onRename);
 
       fireEvent.click(screen.getByRole("button", { name: /Edit "Wise"/i }));
-      await waitFor(() => expect(screen.getByLabelText("Personal payment")).toBeDefined());
+      await waitFor(() => expect(screen.getByLabelText("Personal purse")).toBeDefined());
 
-      fireEvent.click(screen.getByLabelText("Personal payment"));
+      fireEvent.click(screen.getByLabelText("Personal purse"));
 
       await act(async () => {
         fireEvent.keyDown(screen.getByDisplayValue("Wise"), {

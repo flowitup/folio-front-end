@@ -6,12 +6,15 @@
  * or the month-independent "no service_month" bucket. Both share the same
  * row shape (invoice number/date/amount + a quick-assign control); the two
  * call sites differ only in title/copy and whether a month-only "assign to
- * this month" action is offered (no-month rows only — see onAssignMonth).
+ * a month" action is offered (no-month rows only — see onAssignMonth). That
+ * action proposes the month of the payment's own date, with "Other month…"
+ * opening a month picker.
  */
 
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MonthPickerPopover } from "@/components/ui/month-picker";
 import { AssignWorkerSelect } from "@/components/labor/assign-worker-select";
 import { formatEUR } from "@/lib/api/labor";
 import { formatDate } from "@/lib/utils/formatters";
@@ -27,12 +30,14 @@ export interface UnassignedLaborInvoicesProps {
   canManage: boolean;
   isLoading?: boolean;
   emptyMessage: string;
-  /** Label for the optional "assign to this month" per-row button. */
-  assignMonthLabel?: string;
+  /** Label of the per-row "assign to {month}" button, for a "YYYY-MM" month. */
+  assignMonthLabel?: (month: string) => string;
+  /** Label of the button opening a month picker ("Other month…"). */
+  otherMonthLabel?: string;
   onAssignWorker: (invoiceId: string, workerId: string) => void;
-  /** When provided, rows get an extra button that stamps service_month
+  /** When provided, rows get buttons that stamp service_month ("YYYY-MM")
    *  without requiring a worker pick (used by the "no month" section). */
-  onAssignMonth?: (invoiceId: string) => void;
+  onAssignMonth?: (invoiceId: string, month: string) => void;
   testId: string;
 }
 
@@ -45,6 +50,7 @@ export function UnassignedLaborInvoices({
   isLoading,
   emptyMessage,
   assignMonthLabel,
+  otherMonthLabel,
   onAssignWorker,
   onAssignMonth,
   testId,
@@ -79,6 +85,8 @@ export function UnassignedLaborInvoices({
             const methodLabel = inv.payment_method_label
               ? localizeMethodLabel(inv.payment_method_label, tBuiltins)
               : null;
+            // The payment's own month (issue date), not the month being viewed.
+            const ownMonth = /^\d{4}-\d{2}/.test(inv.issue_date ?? "") ? inv.issue_date.slice(0, 7) : null;
             return (
               <li
                 key={inv.id}
@@ -104,15 +112,32 @@ export function UnassignedLaborInvoices({
                         value={inv.worker_id}
                         onChange={(workerId) => onAssignWorker(inv.id, workerId)}
                       />
-                      {onAssignMonth && assignMonthLabel && (
+                      {onAssignMonth && assignMonthLabel && ownMonth && (
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={() => onAssignMonth(inv.id)}
+                          onClick={() => onAssignMonth(inv.id, ownMonth)}
+                          data-testid={`${testId}-assign-month-${inv.id}`}
                         >
-                          {assignMonthLabel}
+                          {assignMonthLabel(ownMonth)}
                         </Button>
+                      )}
+                      {onAssignMonth && otherMonthLabel && (
+                        <MonthPickerPopover
+                          value={ownMonth ?? ""}
+                          onChange={(m) => onAssignMonth(inv.id, m)}
+                          align="end"
+                        >
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            data-testid={`${testId}-other-month-${inv.id}`}
+                          >
+                            {otherMonthLabel}
+                          </Button>
+                        </MonthPickerPopover>
                       )}
                     </>
                   )}

@@ -88,7 +88,7 @@ vi.mock("../unassigned-labor-invoices", () => ({
     testId: string;
     invoices: { id: string }[];
     onAssignWorker: (invoiceId: string, workerId: string) => void;
-    onAssignMonth?: (invoiceId: string) => void;
+    onAssignMonth?: (invoiceId: string, month: string) => void;
   }) => (
     <div data-testid={testId}>
       {invoices.map((inv) => (
@@ -97,7 +97,7 @@ vi.mock("../unassigned-labor-invoices", () => ({
             assign-worker-{inv.id}
           </button>
           {onAssignMonth && (
-            <button type="button" onClick={() => onAssignMonth(inv.id)}>
+            <button type="button" onClick={() => onAssignMonth(inv.id, "2026-10")}>
               assign-month-{inv.id}
             </button>
           )}
@@ -273,13 +273,13 @@ describe("LaborPaymentsTab — quick-assign payloads", () => {
     );
   });
 
-  it("the no-month 'assign to this month' button PUTs service_month only", async () => {
+  it("the no-month 'assign to a month' button PUTs the month it was given (not the viewed one), service_month only", async () => {
     render(<LaborPaymentsTab projectId="p1" canManage workers={WORKERS} />);
 
     fireEvent.click(await screen.findByText("assign-month-inv-nomonth"));
 
     await waitFor(() =>
-      expect(mockUpdateInvoice).toHaveBeenCalledWith("p1", "inv-nomonth", { service_month: "2026-07-01" }),
+      expect(mockUpdateInvoice).toHaveBeenCalledWith("p1", "inv-nomonth", { service_month: "2026-10-01" }),
     );
   });
 });

@@ -1252,6 +1252,7 @@
       "assignFailed": "Không thể gán hóa đơn",
       "noMonthTitle": "Chưa có tháng",
       "assignToMonth": "Gán vào {month}",
+      "assignOtherMonth": "Tháng khác…",
       "emptyMonth": "Không có dữ liệu cho tháng này",
       "loadFailed": "Không thể tải dữ liệu thanh toán",
       "addNote": "Thêm ghi chú",

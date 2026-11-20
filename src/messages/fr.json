@@ -1252,6 +1252,7 @@
       "assignFailed": "Échec de l'attribution",
       "noMonthTitle": "Sans mois",
       "assignToMonth": "Attribuer à {month}",
+      "assignOtherMonth": "Autre mois…",
       "emptyMonth": "Aucune donnée pour ce mois",
       "loadFailed": "Échec du chargement des paiements",
       "addNote": "Ajouter une note",

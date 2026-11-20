@@ -39,6 +39,8 @@ import {
   monthKeyForInvoice,
 } from "@/lib/invoices/group-invoices-by-month";
 import { isClientPayment } from "@/lib/invoices/client-payment";
+import { expenseDeleteQuestion } from "@/lib/invoices/delete-confirm";
+import { useConfirm } from "@/hooks/use-confirm";
 import { invoiceTotals } from "@/lib/invoices/invoice-totals";
 import {
   matchesExpenseFilters,
@@ -95,6 +97,7 @@ interface TableSection {
 export default function InvoicesPage() {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
+  const { ask, dialog: confirmDialog } = useConfirm();
   const locale = useLocale();
   const params = useParams();
   const router = useRouter();
@@ -328,7 +331,7 @@ export default function InvoicesPage() {
   }, [selectedInvoiceId, listLoaded]);
 
   const handleDelete = async (invoice: Invoice) => {
-    if (!confirm(t("deleteConfirm"))) return;
+    if (!(await ask(expenseDeleteQuestion(t, invoice)))) return;
     try {
       await deleteInvoice(projectId, invoice.id);
       await loadInvoices();
@@ -376,6 +379,7 @@ export default function InvoicesPage() {
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
+      {confirmDialog}
       {/* "Two purses" summary (design Expense Dataviz 1b) — project-level,
           fed by an unfiltered fetch so tab/tag filters below never change it. */}
       {summary && canViewBudget && (

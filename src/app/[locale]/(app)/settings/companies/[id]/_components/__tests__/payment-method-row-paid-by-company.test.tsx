@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act, within } from "@testing-library/react";
 import { PaymentMethodRow } from "../payment-method-row";
 import type { PaymentMethod } from "@/lib/api/payment-methods-api";
 
@@ -103,18 +103,24 @@ describe("PaymentMethodRow — paidByCompany badge", () => {
 
 describe("PaymentMethodRow — purse change on a used method", () => {
   it("asks before re-filing past expenses, and saves nothing when declined", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const confirmSpy = vi.spyOn(window, "confirm");
     const onRename = vi.fn().mockResolvedValue(true);
     renderRow(makeMethod({ usageCount: 3 }), onRename);
     fireEvent.click(screen.getByRole("button", { name: /Edit "Wise"/i }));
     fireEvent.click(await screen.findByLabelText("Paid by the company"));
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining("3 past expenses"));
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent("3 past expenses");
+    fireEvent.click(within(dialog).getByRole("button", { name: "paymentMethods.cancel" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
     expect(onRename).not.toHaveBeenCalled();
 
-    confirmSpy.mockReturnValue(true);
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    fireEvent.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "settings.confirmDialog.confirm" })
+    );
     await waitFor(() => expect(onRename).toHaveBeenCalled());
+    expect(confirmSpy).not.toHaveBeenCalled();
     confirmSpy.mockRestore();
   });
 });

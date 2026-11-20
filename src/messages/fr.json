@@ -476,7 +476,14 @@
     },
     "errorNameRequired": "Votre nom ne peut pas être vide.",
     "errorSessionExpired": "Votre session a expiré. Reconnectez-vous pour enregistrer.",
-    "signInAgain": "Se reconnecter"
+    "signInAgain": "Se reconnecter",
+    "confirmDialog": {
+      "confirm": "Continuer",
+      "cancel": "Annuler",
+      "discard": "Abandonner",
+      "keepEditing": "Continuer la saisie",
+      "deleteNamed": "Supprimer « {name} » ?"
+    }
   },
   "paymentMethods": {
     "title": "Moyens de paiement",
@@ -856,7 +863,12 @@
       "empty": "Aucun paiement enregistré pour vous sur ce projet. Les autres dépenses du projet sont visibles par les responsables."
     },
     "clientPaid": "Payé par le client",
-    "clientPaidAuto": "Payé par le client (auto)"
+    "clientPaidAuto": "Payé par le client (auto)",
+    "deleteConfirmTitle": "Supprimer la dépense {number} ?",
+    "deleteConfirmBody": "La dépense de {amount} ({recipient}) sera supprimée du chantier. Cette action est irréversible.",
+    "deleteConfirmBodyNoRecipient": "La dépense de {amount} sera supprimée du chantier. Cette action est irréversible.",
+    "attachmentDeleteTitle": "Supprimer le fichier « {name} » ?",
+    "attachmentDeleteBody": "Le fichier sera retiré de cette dépense. Cette action est irréversible."
   },
   "planning": {
     "assigneeOtherShort": "Hors équipe",

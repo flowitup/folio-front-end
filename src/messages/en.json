@@ -476,7 +476,14 @@
     },
     "errorNameRequired": "Your name cannot be empty.",
     "errorSessionExpired": "Your session has expired. Sign in again to save.",
-    "signInAgain": "Sign in again"
+    "signInAgain": "Sign in again",
+    "confirmDialog": {
+      "confirm": "Continue",
+      "cancel": "Cancel",
+      "discard": "Discard",
+      "keepEditing": "Keep editing",
+      "deleteNamed": "Delete “{name}”?"
+    }
   },
   "paymentMethods": {
     "title": "Payment methods",
@@ -856,7 +863,12 @@
       "empty": "No payment recorded for you on this project yet. The project's other expenses are visible to managers."
     },
     "clientPaid": "Client payment",
-    "clientPaidAuto": "Client payment (auto)"
+    "clientPaidAuto": "Client payment (auto)",
+    "deleteConfirmTitle": "Delete expense {number}?",
+    "deleteConfirmBody": "The {amount} expense ({recipient}) will be removed from the project. This cannot be undone.",
+    "deleteConfirmBodyNoRecipient": "The {amount} expense will be removed from the project. This cannot be undone.",
+    "attachmentDeleteTitle": "Delete the file “{name}”?",
+    "attachmentDeleteBody": "The file will be removed from this expense. This cannot be undone."
   },
   "planning": {
     "assigneeOtherShort": "Outside the team",

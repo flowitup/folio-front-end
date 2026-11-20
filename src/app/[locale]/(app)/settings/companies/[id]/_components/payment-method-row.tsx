@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { localizeMethodLabel } from "@/lib/payment-methods/localize-method-label";
 import type { PaymentMethod } from "@/lib/api/payment-methods-api";
+import { useConfirm } from "@/hooks/use-confirm";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -57,6 +58,7 @@ export function PaymentMethodRow({
   const [editIsPersonalPayment, setEditIsPersonalPayment] = useState(method.isPersonalPayment);
   const [isSaving, setIsSaving] = useState(false);
   const savingRef = useRef(false);
+  const { ask, dialog: confirmDialog } = useConfirm();
 
   function startEdit() {
     setEditValue(method.label);
@@ -104,7 +106,10 @@ export function PaymentMethodRow({
     if (
       (companyPaymentChanged || personalPaymentChanged) &&
       method.usageCount > 0 &&
-      !window.confirm(t("confirmPurseChange", { count: method.usageCount }))
+      !(await ask({
+        title: t("confirmPurseChange", { count: method.usageCount }),
+        cancelLabel: t("cancel"),
+      }))
     ) {
       return;
     }
@@ -134,6 +139,7 @@ export function PaymentMethodRow({
 
   return (
     <li className="flex items-center gap-2 py-2 border-b last:border-b-0" style={{ borderColor: "var(--line)" }}>
+      {confirmDialog}
       {/* Label / inline edit */}
       <div className="flex-1 min-w-0">
         {isEditing ? (

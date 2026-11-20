@@ -476,7 +476,14 @@
     },
     "errorNameRequired": "Tên của bạn không được để trống.",
     "errorSessionExpired": "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để lưu.",
-    "signInAgain": "Đăng nhập lại"
+    "signInAgain": "Đăng nhập lại",
+    "confirmDialog": {
+      "confirm": "Tiếp tục",
+      "cancel": "Hủy",
+      "discard": "Bỏ thay đổi",
+      "keepEditing": "Tiếp tục sửa",
+      "deleteNamed": "Xóa “{name}”?"
+    }
   },
   "paymentMethods": {
     "title": "Phương thức thanh toán",
@@ -856,7 +863,12 @@
       "empty": "Chưa có khoản trả nào cho bạn trong dự án này. Các chi phí khác của dự án chỉ quản lý mới xem được."
     },
     "clientPaid": "Khách đã trả",
-    "clientPaidAuto": "Khách đã trả (tự động)"
+    "clientPaidAuto": "Khách đã trả (tự động)",
+    "deleteConfirmTitle": "Xóa chi phí {number}?",
+    "deleteConfirmBody": "Chi phí {amount} ({recipient}) sẽ bị xóa khỏi dự án. Không thể hoàn tác.",
+    "deleteConfirmBodyNoRecipient": "Chi phí {amount} sẽ bị xóa khỏi dự án. Không thể hoàn tác.",
+    "attachmentDeleteTitle": "Xóa tệp “{name}”?",
+    "attachmentDeleteBody": "Tệp sẽ bị xóa khỏi chi phí này. Không thể hoàn tác."
   },
   "planning": {
     "assigneeOtherShort": "Ngoài nhóm",

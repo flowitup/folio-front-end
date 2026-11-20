@@ -59,7 +59,6 @@
   "auth": {
     "welcomeBack": "Bienvenue",
     "signInPrompt": "Connectez-vous à votre compte pour continuer",
-    "contactAdmin": "Contactez votre administrateur si vous avez besoin d'un accès.",
     "heroTitle": "Reprenez le chantier.",
     "phoneLabel": "Numéro de téléphone",
     "phonePlaceholder": "6 12 34 56 78",
@@ -100,7 +99,10 @@
     "sessionReset": "Votre session a été réinitialisée pour votre sécurité. Reconnectez-vous.",
     "sessionEnded": "Votre session a pris fin : votre compte a peut-être été désactivé. Reconnectez-vous ou contactez l'administrateur de votre entreprise.",
     "errorNetworkLimit": "Trop de demandes de connexion depuis ce réseau. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
-    "errorSmsBusy": "Le service d'envoi de SMS est momentanément saturé. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}."
+    "errorSmsBusy": "Le service d'envoi de SMS est momentanément saturé. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
+    "noAccountUseMobileApp": "Pas encore de compte ? Les comptes se créent dans l'application mobile Folio.",
+    "installMobileApp": "Installer l'application Folio",
+    "codeRefusedNoAccount": "Pas reçu de SMS ? Ce numéro n'a peut-être pas encore de compte : créez-le d'abord dans l'application mobile."
   },
   "topbar": {
     "projectSettingsTitle": "Paramètres du projet",

@@ -105,6 +105,8 @@ export interface PhoneLoginFlow {
   codeExpired: boolean;
   /** Too many wrong tries: the backend now refuses this code, a new one is needed. */
   codeLocked: boolean;
+  /** The backend refused the code typed — as it refuses every code for a number with no account. */
+  codeRefused: boolean;
   canSend: boolean;
   /** Back on the phone step with the number a live code went to, inside the
    * resend window: Send returns to that code instead of asking for another. */
@@ -347,6 +349,7 @@ export function usePhoneLoginFlow(): PhoneLoginFlow {
     expiresInMinutes,
     codeExpired,
     codeLocked,
+    codeRefused: errorKey === "errorInvalidCode" || errorKey === "errorCodeLocked",
     canSend,
     waitingOnSameNumber,
     canVerify,

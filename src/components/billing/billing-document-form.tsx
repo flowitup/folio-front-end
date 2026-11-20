@@ -84,6 +84,9 @@ import { toIsoDate, toItemPayload } from "@/lib/billing/document-payload";
 import { BillingPdfPreviewDialog } from "@/components/billing/billing-pdf-preview-dialog";
 import { useBillingErrorMessage } from "@/components/billing/use-billing-error-message";
 import { BillingDeleteDialog } from "@/components/billing/billing-delete-dialog";
+import { DevisTermsWarning } from "@/components/billing/devis-terms-warning";
+import { looksCopiedFromDevis } from "@/lib/billing/devis-terms";
+import { useOptionalProject } from "@/context/ProjectContext";
 
 // Loose shape check; the API does the strict one.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -108,6 +111,8 @@ export type BillingDocumentFormProps =
       projects?: ProjectSummary[];
       initialFromSource?: BillingDocument;
       initialFromTemplate?: BillingDocumentTemplate;
+      /** ?project_id= of a "New quote / invoice" button on a project's billing tab. */
+      initialProjectId?: string;
     }
   | {
       mode: "edit";
@@ -192,8 +197,20 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
       : null;
   const sourceCompanyIssuable =
     !!sourceCompanyId && props.attachedCompanies.some((c) => c.id === sourceCompanyId);
+  // A new document opened from a project's billing tab starts on that project
+  // (when the user may link it), issued by the project's company when the
+  // user may issue from it; opened from the menu it starts on no project.
+  const urlProject =
+    props.mode === "create" && props.initialProjectId
+      ? (props.projects ?? []).find((p) => p.id === props.initialProjectId) ?? null
+      : null;
+  const urlProjectId = urlProject?.id ?? null;
+  const urlCompanyId =
+    urlProject?.company_id && props.attachedCompanies.some((c) => c.id === urlProject.company_id)
+      ? urlProject.company_id
+      : null;
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
-    sourceCompanyIssuable ? sourceCompanyId : null
+    sourceCompanyIssuable ? sourceCompanyId : urlCompanyId
   );
 
   // ---------------------------------------------------------------------------
@@ -203,7 +220,7 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   // Sentinel "none" maps to null (Select cannot hold null natively).
   const PROJECT_NONE = "__none__";
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    seed?.project_id ?? null
+    seed?.project_id ?? urlProjectId
   );
 
   // Only the issuer's projects (plus the one already linked, so an edit never
@@ -216,6 +233,15 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
       p.company_id === issuerCompanyId ||
       p.id === (seed?.project_id ?? null)
   );
+
+  // Opened from the menu, a new document is never linked silently to the
+  // project selected in the sidebar (a paid facture would credit it): the
+  // picker offers it as a one-tap suggestion instead.
+  const sidebarProjectId = useOptionalProject()?.selectedProjectId ?? null;
+  const suggestedProject =
+    props.mode === "create" && !selectedProjectId && sidebarProjectId
+      ? projectOptions.find((p) => p.id === sidebarProjectId) ?? null
+      : null;
 
   // Runtime-refetchable attached companies (reset when company_no_longer_attached).
   const [attachedCompanies, setAttachedCompanies] = useState<MyCompany[]>(
@@ -250,7 +276,13 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
   const [paymentDueDate, setPaymentDueDate] = useState(
     toIsoDate(dateSeed?.payment_due_date) ?? plus30Days(seedIssueDate)
   );
-  const [paymentTerms, setPaymentTerms] = useState(seed?.payment_terms ?? "");
+  // A new facture started on its project's company shows that company's default
+  // terms, as when the company picker sets its default.
+  const urlCompanyTerms =
+    kind === "facture" && !sourceCompanyIssuable && urlCompanyId
+      ? props.attachedCompanies.find((c) => c.id === urlCompanyId)?.default_payment_terms
+      : null;
+  const [paymentTerms, setPaymentTerms] = useState(seed?.payment_terms ?? urlCompanyTerms ?? "");
   // A new document's validity / due date follows its issue date (+30 days) until
   // the user picks one; an edited document keeps the dates it was saved with.
   const validityTouchedRef = useRef(isEdit);
@@ -268,6 +300,9 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
     : undefined;
   const [notes, setNotes] = useState(seed?.notes ?? templateSeed?.notes ?? "");
   const [terms, setTerms] = useState(seed?.terms ?? templateSeed?.terms ?? "");
+  // A facture whose text still reads like the quote's validity clause.
+  const notesFromDevis = kind === "facture" && looksCopiedFromDevis(notes);
+  const termsFromDevis = kind === "facture" && looksCopiedFromDevis(terms);
   const [signatureBlock, setSignatureBlock] = useState(seed?.signature_block_text ?? "");
 
   // Edit-mode live document state (updated after status change)
@@ -920,6 +955,17 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
               ))}
             </SelectContent>
           </Select>
+          {suggestedProject && (
+            <button
+              type="button"
+              data-testid="project-suggestion"
+              className="text-[12px] underline-offset-2 hover:underline"
+              style={{ color: "var(--accent-ink)" }}
+              onClick={() => setSelectedProjectId(suggestedProject.id)}
+            >
+              {tForm("details.projectSuggestion", { name: projectDisplayName(suggestedProject) })}
+            </button>
+          )}
         </div>
       </div>
 
@@ -951,7 +997,9 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
             placeholder={tForm("notes.notesPlaceholder")}
             rows={3}
             className="resize-none"
+            aria-describedby={notesFromDevis ? "notes-devis-warning" : undefined}
           />
+          {notesFromDevis && <DevisTermsWarning id="notes-devis-warning" />}
         </div>
         <div className="space-y-1">
           <Label htmlFor="terms" className="text-[12px]">{tForm("notes.terms")}</Label>
@@ -963,7 +1011,9 @@ function BillingDocumentFormFields(props: BillingDocumentFormProps) {
             placeholder={tForm("notes.termsPlaceholder")}
             rows={3}
             className="resize-none"
+            aria-describedby={termsFromDevis ? "terms-devis-warning" : undefined}
           />
+          {termsFromDevis && <DevisTermsWarning id="terms-devis-warning" />}
         </div>
         <div className="space-y-1">
           <Label htmlFor="signature-block" className="text-[12px]">{tForm("notes.signatureBlock")}</Label>

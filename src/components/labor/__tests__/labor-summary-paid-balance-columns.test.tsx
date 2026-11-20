@@ -5,8 +5,9 @@
  * Single-month mode: Paid matched per worker for the viewed month; Balance =
  * this row's already-rendered Total minus Paid; footer sums both.
  *
- * All-history mode: month header Paid = the bucket's total (assigned +
- * unassigned) with a "+ n unassigned" hint; per-worker sub-rows get Paid
+ * All-history mode: month header Paid = the payments linked to a worker
+ * (the single-month rule) with a "+ n unassigned" hint; payments with no
+ * worker or no month sit on their own line under the grand total; per-worker sub-rows get Paid
  * only, matched strictly by (worker_id, month) so a worker's payment in one
  * month never leaks into another month's row; no Balance column at all.
  *
@@ -218,7 +219,7 @@ describe("LaborSummary — Paid column (all-history mode)", () => {
     ],
   };
 
-  it("month header Paid = bucket.total_paid (assigned + unassigned)", () => {
+  it("month header Paid = worker-linked payments only (unassigned excluded)", () => {
     render(
       <LaborSummary
         {...baseProps}
@@ -229,7 +230,8 @@ describe("LaborSummary — Paid column (all-history mode)", () => {
       />,
     );
     const julyRow = screen.getByTestId("month-row-2026-07");
-    expect(julyRow.textContent).toContain("€700.00");
+    expect(julyRow.textContent).toContain("€500.00");
+    expect(julyRow.textContent).not.toContain("€700.00");
   });
 
   it("keeps every row at 7 cells so the phone layout can drop the crew and bar columns", () => {
@@ -317,7 +319,7 @@ describe("LaborSummary — Paid column (all-history mode)", () => {
     expect(screen.queryByText("payments.balance")).toBeNull();
   });
 
-  it("footer Paid sums total_paid across all visible months", () => {
+  it("footer Paid sums the worker-linked payments across all visible months", () => {
     render(
       <LaborSummary
         {...baseProps}
@@ -327,9 +329,13 @@ describe("LaborSummary — Paid column (all-history mode)", () => {
         paymentsSummary={paymentsSummary}
       />,
     );
-    // 700 (July) + 0 (June) = 700.
+    // 500 (Alice, July) + 0 (June); July's 200 unassigned stays out.
     const footerRow = screen.getByText("grandTotal").closest("tr")!;
-    expect(footerRow.textContent).toContain("€700.00");
+    expect(footerRow.textContent).toContain("€500.00");
+    expect(footerRow.textContent).not.toContain("€700.00");
+    const other = screen.getByTestId("labor-unassigned-paid-row");
+    expect(other.textContent).toContain("€200.00");
+    expect(other.textContent).toContain('summaryUnassignedLabor:{"n":2}');
   });
 
   it("shows each worker's banked-hours bonus under their month total", () => {
@@ -356,12 +362,19 @@ describe("LaborSummary — Paid column (all-history mode)", () => {
     expect(screen.getByTestId("supplement-banner-rule").textContent).toBe("supplement.bannerRule");
   });
 
-  it("adds payments with no service month or no logged month on their own line and in the footer", () => {
+  it("puts payments with no worker or no service month on one line under the total, outside it", () => {
     const withOrphans: LaborPaymentsSummaryResponse = {
       months: [
         ...paymentsSummary.months,
         { year: 2026, month: 5, total_paid: 30, workers: [], unassigned_paid: 30, unassigned_count: 1, company_paid: 30 },
-        { year: null, month: null, total_paid: 50, workers: [], unassigned_paid: 50, unassigned_count: 1 },
+        {
+          year: null,
+          month: null,
+          total_paid: 90,
+          workers: [{ worker_id: "w1", worker_name: "Alice", paid: 40, invoice_count: 1 }],
+          unassigned_paid: 50,
+          unassigned_count: 1,
+        },
       ],
     };
     render(
@@ -373,12 +386,63 @@ describe("LaborSummary — Paid column (all-history mode)", () => {
         paymentsSummary={withOrphans}
       />,
     );
-    const orphanRow = screen.getByTestId("labor-paid-outside-months-row");
-    expect(orphanRow.textContent).toContain("summaryPaidOutsideMonths");
-    expect(orphanRow.textContent).toContain("€80.00");
-    expect(orphanRow.children).toHaveLength(7);
+    expect(screen.queryByTestId("labor-paid-outside-months-row")).toBeNull();
     const footerRow = screen.getByText("grandTotal").closest("tr")!;
-    expect(footerRow.textContent).toContain("€780.00");
+    expect(footerRow.textContent).toContain("€500.00");
+    const other = screen.getByTestId("labor-unassigned-paid-row");
+    // 200 unassigned in July + 30 in May + 90 with no month (worker or not).
+    expect(other.textContent).toContain("€320.00");
+    expect(other.textContent).toContain('summaryUnassignedLabor:{"n":5}');
+    expect(other.children).toHaveLength(7);
+    // The footer row comes first, the line sits under it.
+    expect(footerRow.nextElementSibling).toBe(other);
+    expect(screen.getByTestId("labor-unassigned-paid-assign").getAttribute("href")).toBe(
+      "/en/projects/proj-1/labor?tab=payments",
+    );
+  });
+
+  it("matches the screenshot case: total 7 885 / paid 7 885, subcontractor 6 395 apart", () => {
+    const ms: LaborMonthlySummaryResponse = {
+      rows: [
+        {
+          year: 2026,
+          month: 11,
+          total_days: 20,
+          total_cost: 7885,
+          workers: [{ worker_id: "w1", worker_name: "Alice", days_worked: 20, total_cost: 7885 }],
+        },
+      ],
+    };
+    const ps: LaborPaymentsSummaryResponse = {
+      months: [
+        {
+          year: 2026,
+          month: 11,
+          total_paid: 7885 + 1425,
+          workers: [{ worker_id: "w1", worker_name: "Alice", paid: 7885, invoice_count: 5 }],
+          unassigned_paid: 1425,
+          unassigned_count: 1,
+        },
+        { year: null, month: null, total_paid: 4970, workers: [], unassigned_paid: 4970, unassigned_count: 1 },
+      ],
+    };
+    render(<LaborSummary {...baseProps} summary={null} monthlySummary={ms} month="" paymentsSummary={ps} />);
+    const footerRow = screen.getByText("grandTotal").closest("tr")!;
+    expect(footerRow.textContent).toContain("€7885.00€7885.00");
+    expect(screen.getByTestId("labor-unassigned-paid-row").textContent).toContain("€6395.00");
+  });
+
+  it("hides the paid-split caption where the bucket's split also covers unassigned money", () => {
+    const ps: LaborPaymentsSummaryResponse = {
+      months: [
+        { ...paymentsSummary.months[0], company_paid: 700 },
+        paymentsSummary.months[1],
+      ],
+    };
+    render(<LaborSummary {...baseProps} summary={null} monthlySummary={monthlySummary} month="" paymentsSummary={ps} />);
+    expect(screen.queryByTestId("month-paid-split-2026-07")).toBeNull();
+    expect(screen.queryByTestId("all-history-paid-split")).toBeNull();
+    expect(screen.queryByTestId("labor-unassigned-paid-split")).toBeNull();
   });
 });
 

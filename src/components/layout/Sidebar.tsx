@@ -22,6 +22,7 @@ import {
   FileSearch,
   ReceiptEuro,
   Images,
+  SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -61,6 +62,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
   const router = useRouter();
   const t = useTranslations("navigation");
   const tProjects = useTranslations("projects");
+  const tTopbar = useTranslations("topbar");
   const {
     projects,
     selectedProjectId,
@@ -90,7 +92,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
     (!selectedProject?.company_id ||
       isCompanyAdmin(user?.companies, selectedProject.company_id, user?.permissions));
 
-  const allProjectNav = [
+  const allProjectNav: { key: string; href: string; icon: typeof Home; label?: string }[] = [
     { key: "dashboard", href: "/dashboard", icon: Home },
     { key: "projects", href: "/projects", icon: FolderOpen },
     { key: "bibliotheque", href: "/bibliotheque", icon: Library },
@@ -118,6 +120,18 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
             : []),
           { key: "analyses", href: `/projects/${selectedProjectId}/analyses`, icon: FileSearch },
           { key: "photos", href: `/projects/${selectedProjectId}/photos`, icon: Images },
+          // Credit, invoice prefix, members…: one click from anywhere for
+          // those who may edit the project (the settings page's own gate).
+          ...(canSeeDocuments
+            ? [
+                {
+                  key: "projectSettings",
+                  href: `/projects/${selectedProjectId}/settings`,
+                  icon: SlidersHorizontal,
+                  label: tTopbar("projectSettingsTitle"),
+                },
+              ]
+            : []),
         ]
       : []),
   ];
@@ -311,7 +325,7 @@ export function Sidebar({ canViewBilling = false }: { canViewBilling?: boolean }
               <span className="nav-icon flex w-5 items-center justify-center">
                 <Icon size={16} />
               </span>
-              <span className="font-medium">{t(item.key)}</span>
+              <span className="font-medium">{item.label ?? t(item.key)}</span>
             </Link>
           );
         })}

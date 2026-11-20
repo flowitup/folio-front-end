@@ -125,7 +125,7 @@ export function LaborPaymentsTab({
   }
 
   const periodLabel = month ? formatMonthLabel(month, locale) : "";
-  const monthAssignLabel = t("assignToMonth", { month: periodLabel });
+  const monthAssignLabel = (m: string) => t("assignToMonth", { month: formatMonthLabel(m, locale) });
 
   return (
     <div className="space-y-5">
@@ -187,6 +187,7 @@ export function LaborPaymentsTab({
           isLoading={noMonthLoading}
           emptyMessage={t("emptyMonth")}
           assignMonthLabel={monthAssignLabel}
+          otherMonthLabel={t("assignOtherMonth")}
           onAssignWorker={(invoiceId, workerId) => handleAssignWorker(invoiceId, workerId, true)}
           onAssignMonth={handleAssignMonth}
         />
@@ -208,6 +209,7 @@ export function LaborPaymentsTab({
         worker={recordDialog.worker}
         month={month}
         companyId={companyId}
+        balanceFor={(id) => rows.find((r) => r.worker_id === id)?.balance}
         onSaved={handleRecordSaved}
       />
     </div>

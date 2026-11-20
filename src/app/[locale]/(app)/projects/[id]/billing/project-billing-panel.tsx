@@ -6,7 +6,8 @@
  *
  * Read-only and compact: number, kind, recipient, status, issue date and
  * total TTC, each row linking to the document's own billing page where it is
- * edited, previewed or sent. Loads in the browser so the page shows a spinner
+ * edited, previewed or sent. "New quote" / "New invoice" open the billing form
+ * already linked to this project (?project_id=), and come back here. Loads in the browser so the page shows a spinner
  * while the list arrives and offers a retry when it fails.
  *
  * Mount it with `key={projectId}`: a new project starts from a fresh loading
@@ -15,7 +16,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { FileText, Loader2, RotateCcw } from "lucide-react";
+import { FileText, Loader2, Plus, RotateCcw } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -26,7 +27,7 @@ import { fetchProjectBillingDocuments } from "@/lib/api/billing/project-billing-
 import { kindToSegment } from "@/lib/billing/url-helpers";
 import { billingStatusLabel } from "@/lib/billing/status-label";
 import { formatDate, formatEUR } from "@/lib/utils/formatters";
-import type { ProjectBillingDocumentSummary } from "@/types/billing";
+import type { BillingDocumentKind, ProjectBillingDocumentSummary } from "@/types/billing";
 
 type LoadState =
   | { status: "loading" }
@@ -36,6 +37,11 @@ type LoadState =
 // The document's back arrow returns to this tab, not the company-wide list.
 function documentHrefFor(doc: ProjectBillingDocumentSummary, projectId: string): string {
   return `/billing/${kindToSegment(doc.kind)}/${doc.id}?${projectBackQuery(projectId)}`;
+}
+
+/** The billing form for a new document of this kind, linked to the project. */
+export function newDocumentHref(kind: BillingDocumentKind, projectId: string): string {
+  return `/billing/${kindToSegment(kind)}/new?project_id=${encodeURIComponent(projectId)}&${projectBackQuery(projectId)}`;
 }
 
 interface ProjectBillingPanelProps {
@@ -74,6 +80,17 @@ export function ProjectBillingPanel({ projectId }: ProjectBillingPanelProps) {
 
   return (
     <div className="fade-up space-y-6 px-4 pb-12 lg:px-8">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {(["devis", "facture"] as const).map((kind) => (
+          <Button key={kind} asChild variant={kind === "facture" ? "default" : "outline"} size="sm">
+            <Link prefetch={false} href={newDocumentHref(kind, projectId)}>
+              <Plus size={14} aria-hidden="true" />
+              {t(`${kind}.list.new`)}
+            </Link>
+          </Button>
+        ))}
+      </div>
+
       {state.status === "loading" && (
         <div
           role="status"

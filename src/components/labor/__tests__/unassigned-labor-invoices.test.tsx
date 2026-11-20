@@ -109,27 +109,51 @@ describe("UnassignedLaborInvoices — quick-assign worker", () => {
 describe("UnassignedLaborInvoices — no-month 'assign to this month' action", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("fires onAssignMonth(invoiceId) on click, independent of worker selection", () => {
+  it("proposes the month of the payment's own date, independent of worker selection", () => {
     const onAssignMonth = vi.fn();
     const onAssignWorker = vi.fn();
     render(
       <UnassignedLaborInvoices
         testId="no-month"
         title="No month set"
-        invoices={[makeInvoice({ id: "inv-7", service_month: null, worker_id: "w1" })]}
+        invoices={[makeInvoice({ id: "inv-7", service_month: null, worker_id: "w1", issue_date: "2026-10-07" })]}
         workers={WORKERS}
         canManage
         emptyMessage="Nothing here"
-        assignMonthLabel="Assign to July 2026"
+        assignMonthLabel={(m) => `Assign to ${m}`}
         onAssignWorker={onAssignWorker}
         onAssignMonth={onAssignMonth}
       />,
     );
 
-    fireEvent.click(screen.getByText("Assign to July 2026"));
+    fireEvent.click(screen.getByText("Assign to 2026-10"));
 
-    expect(onAssignMonth).toHaveBeenCalledWith("inv-7");
+    expect(onAssignMonth).toHaveBeenCalledWith("inv-7", "2026-10");
     expect(onAssignWorker).not.toHaveBeenCalled();
+  });
+
+  it("offers another month through a month picker", async () => {
+    const onAssignMonth = vi.fn();
+    document.documentElement.lang = "en";
+    render(
+      <UnassignedLaborInvoices
+        testId="no-month"
+        title="No month set"
+        invoices={[makeInvoice({ id: "inv-7", service_month: null, issue_date: "2026-10-07" })]}
+        workers={WORKERS}
+        canManage
+        emptyMessage="Nothing here"
+        assignMonthLabel={(m) => `Assign to ${m}`}
+        otherMonthLabel="Other month…"
+        onAssignWorker={vi.fn()}
+        onAssignMonth={onAssignMonth}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Other month…"));
+    fireEvent.click(await screen.findByRole("button", { name: "September 2026" }));
+
+    expect(onAssignMonth).toHaveBeenCalledWith("inv-7", "2026-09");
   });
 
   it("omits the assign-to-month button when assignMonthLabel/onAssignMonth are absent", () => {
@@ -158,7 +182,7 @@ describe("UnassignedLaborInvoices — phone width", () => {
         workers={WORKERS}
         canManage
         emptyMessage="Nothing to assign"
-        assignMonthLabel="Assign to October 2026"
+        assignMonthLabel={() => "Assign to October 2026"}
         onAssignWorker={vi.fn()}
         onAssignMonth={vi.fn()}
       />,

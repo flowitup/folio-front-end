@@ -24,7 +24,7 @@
     }
   },
   "meta": {
-    "description": "Một ứng dụng ấm áp, gần gũi để quản lý việc xây dựng ngôi nhà của chính bạn.",
+    "description": "Folio — theo dõi công trình, chấm công, chi phí và báo giá, hóa đơn cho công ty xây dựng nhỏ.",
     "signIn": "Đăng nhập",
     "quotes": "Báo giá",
     "invoices": "Hóa đơn",
@@ -59,7 +59,6 @@
   "auth": {
     "welcomeBack": "Chào mừng trở lại",
     "signInPrompt": "Đăng nhập vào tài khoản để tiếp tục",
-    "contactAdmin": "Liên hệ quản trị viên nếu bạn cần quyền truy cập.",
     "heroTitle": "Trở lại với công trình.",
     "phoneLabel": "Số điện thoại",
     "phonePlaceholder": "6 12 34 56 78",
@@ -100,7 +99,10 @@
     "sessionReset": "Phiên đăng nhập của bạn đã được đặt lại để bảo mật. Vui lòng đăng nhập lại.",
     "sessionEnded": "Phiên đăng nhập của bạn đã kết thúc: tài khoản của bạn có thể đã bị vô hiệu hóa. Vui lòng đăng nhập lại hoặc liên hệ quản trị viên công ty.",
     "errorNetworkLimit": "Có quá nhiều yêu cầu đăng nhập từ mạng này. Hãy thử lại sau {minutes} phút.",
-    "errorSmsBusy": "Dịch vụ gửi SMS đang quá tải. Hãy thử lại sau {minutes} phút."
+    "errorSmsBusy": "Dịch vụ gửi SMS đang quá tải. Hãy thử lại sau {minutes} phút.",
+    "noAccountUseMobileApp": "Chưa có tài khoản? Tài khoản được tạo trên ứng dụng Folio trên điện thoại.",
+    "installMobileApp": "Cài ứng dụng Folio",
+    "codeRefusedNoAccount": "Có thể số này chưa có tài khoản: hãy tạo tài khoản trên ứng dụng Folio trên điện thoại trước, rồi đăng nhập lại ở đây."
   },
   "topbar": {
     "projectSettingsTitle": "Cài đặt dự án",
@@ -173,11 +175,12 @@
       "title": "Tổng quan công ty",
       "company": "Công ty",
       "month": "Tháng",
+      "monthPickerLabel": "Công & lương:",
       "projectCountShort": "{count} dự án",
       "remaining": "Còn lại để chi",
       "used": "Đã dùng {pct} của {budget}",
       "overCount": "{count} dự án vượt ngân sách",
-      "spent": "Đã chi",
+      "spentToDate": "Đã chi từ đầu dự án",
       "spentSub": "công ty + cá nhân",
       "days": "Tổng công",
       "workerCount": "{count} thợ",
@@ -207,15 +210,22 @@
       "alertOver": "{name} vượt {amount}",
       "alertNear": "{name} còn {amount}",
       "alertPct": "Đã chi {pct}% ngân sách",
+      "alertWagesOwed": "Lương {month} còn nợ {amount} · {count} thợ",
       "alertUnassigned": "{amount} lương chưa gán thợ",
       "alertUnassignedSub": "{month}",
       "wagesTitle": "Lương phải trả",
       "loadingLabor": "Đang tải công thợ…",
       "wagesNone": "Đã trả đủ lương tháng này.",
+      "wagesNoDays": "Tháng này chưa có công.",
+      "workerSub": "{days} công · đã trả {paid}",
       "showAll": "Xem cả {count} thợ",
       "showLess": "Thu gọn",
       "footnote": "Tiền tính từ đầu dự án, đã trừ hoàn trả. Công và lương tính theo tháng đã chọn; mỗi tháng tính riêng, trả dư không trừ sang tháng khác. Cùng một thợ (trùng tên) trên nhiều dự án được cộng lại.",
       "partial": "Không tải được công thợ của {count} dự án."
+    },
+    "bankRelease": {
+      "headlineNoDraws": "còn lại trên <c>{credit}</c> tín dụng · chưa giải ngân",
+      "customerPaid": "Khách đã trả (hóa đơn): {amount} · {count} hóa đơn"
     }
   },
   "projects": {
@@ -239,7 +249,7 @@
     "projectNameOptional": "Tên dự án (tùy chọn)",
     "projectNamePlaceholder": "Mặc định lấy địa chỉ",
     "projectAddress": "Địa chỉ",
-    "projectAddressPlaceholder": "vd. 12 Đường Lê Lợi, Hà Nội",
+    "projectAddressPlaceholder": "vd. 12 rue de la Paix, 75002 Paris",
     "create": "Tạo",
     "creating": "Đang tạo...",
     "createProjectError": "Tạo dự án thất bại. Vui lòng thử lại.",
@@ -288,7 +298,7 @@
     "overBudget": "Vượt quá",
     "budgetLabel": "Tổng tín dụng (€)",
     "budgetSourceLabelOptional": "Nguồn tài trợ (tùy chọn)",
-    "budgetSourcePlaceholder": "vd. Vay ngân hàng BNP",
+    "budgetSourcePlaceholder": "vd. Khách trả theo báo giá, vay ngân hàng",
     "budgetInvalid": "Nhập tổng tín dụng dưới dạng số tiền, ví dụ 12500 hoặc 12.500,00",
     "budgetTooLarge": "Tổng tín dụng không được vượt quá {max}.",
     "bankRelease": {
@@ -305,7 +315,7 @@
       "noCreditHint": "Đặt hạn mức tín dụng ban đầu ngân hàng cấp trong cài đặt dự án.",
       "openSettings": "Mở cài đặt dự án",
       "noReleases": "Chưa có khoản giải ngân nào",
-      "settingsCardTitle": "Tín dụng ngân hàng (vay mua nhà)",
+      "settingsCardTitle": "Ngân sách / tín dụng của dự án",
       "settingsCardHint": "Số tiền ban đầu ngân hàng cấp. Các khoản giải ngân sẽ được trừ vào số này.",
       "headlineMetaOver": "vượt hạn mức <c>{credit}</c> tín dụng · đã giải ngân <p>{pct}</p>",
       "drawsMetaSingle": "{count, plural, other {# lần giải ngân}} · {month}"
@@ -362,7 +372,8 @@
       "title": "Mục đã ẩn",
       "body": "Công ty của công trình này đã ẩn mục này với các thành viên.",
       "back": "Quay lại công trình"
-    }
+    },
+    "budgetHelp": "Số tiền tối đa dự án được chi. Bỏ trống nếu chưa biết."
   },
   "settings": {
     "profile": "Hồ sơ",
@@ -475,12 +486,25 @@
     },
     "errorNameRequired": "Tên của bạn không được để trống.",
     "errorSessionExpired": "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để lưu.",
-    "signInAgain": "Đăng nhập lại"
+    "signInAgain": "Đăng nhập lại",
+    "confirmDialog": {
+      "confirm": "Tiếp tục",
+      "cancel": "Hủy",
+      "discard": "Bỏ thay đổi",
+      "keepEditing": "Tiếp tục sửa",
+      "deleteNamed": "Xóa “{name}”?"
+    },
+    "paymentMethodForm": {
+      "nameLabel": "Tên phương thức thanh toán",
+      "namePlaceholder": "vd. Thẻ công ty BNP, Tiền mặt, Chuyển khoản",
+      "pursePlaceholder": "Chọn quỹ…",
+      "purseRequired": "Chọn “Quỹ công ty” hoặc “Quỹ cá nhân” trước khi thêm."
+    }
   },
   "paymentMethods": {
     "title": "Phương thức thanh toán",
     "description": "Quản lý phương thức thanh toán chi phí của công ty này và quỹ mà mỗi phương thức được tính vào. Phương thức mặc định không thể xóa nhưng có thể đổi tên.",
-    "addPlaceholder": "ví dụ Wise, Stripe…",
+    "addPlaceholder": "vd. Thẻ công ty BNP, Tiền mặt, Chuyển khoản",
     "addButton": "Thêm",
     "purseLabel": "Quỹ",
     "purseCompany": "Quỹ công ty",
@@ -668,6 +692,7 @@
       "typeOthers": "Khác",
       "typeRefund": "Trả hàng",
       "format": "Định dạng",
+      "fileLanguage": "Ngôn ngữ của file",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF",
       "download": "Tải xuống",
@@ -853,7 +878,14 @@
     "memberView": {
       "title": "Tiền công của tôi",
       "empty": "Chưa có khoản trả nào cho bạn trong dự án này. Các chi phí khác của dự án chỉ quản lý mới xem được."
-    }
+    },
+    "clientPaid": "Khách đã trả",
+    "clientPaidAuto": "Khách đã trả (tự động)",
+    "deleteConfirmTitle": "Xóa chi phí {number}?",
+    "deleteConfirmBody": "Chi phí {amount} ({recipient}) sẽ bị xóa khỏi dự án. Không thể hoàn tác.",
+    "deleteConfirmBodyNoRecipient": "Chi phí {amount} sẽ bị xóa khỏi dự án. Không thể hoàn tác.",
+    "attachmentDeleteTitle": "Xóa tệp “{name}”?",
+    "attachmentDeleteBody": "Tệp sẽ bị xóa khỏi chi phí này. Không thể hoàn tác."
   },
   "planning": {
     "assigneeOtherShort": "Ngoài nhóm",
@@ -978,6 +1010,7 @@
     "shiftHalf": "Nửa ngày",
     "shiftOvertime": "Tăng ca",
     "totalLaborCost": "Tổng chi phí nhân công",
+    "totalLaborCostBasis": "theo công đã chấm",
     "workerDays": "Ngày công",
     "onSiteToday": "Có mặt hôm nay",
     "acrossWorkers": "trên {n} công nhân",
@@ -995,6 +1028,8 @@
     "summaryDrillDown": "Nhấn để xem chi tiết theo công nhân",
     "summaryMonthPickerAll": "Tất cả tháng",
     "summaryUnassignedHint": "+ {n} chưa gán",
+    "summaryUnassignedLabor": "Chi phí nhân công chưa gán thợ (vd. thầu phụ) · {n} khoản",
+    "summaryUnassignedLaborAssign": "Gán →",
     "workersBadge": "{n} công nhân",
     "role": {
       "label": "Vai trò",
@@ -1125,6 +1160,7 @@
       "to": "Đến tháng",
       "month": "Tháng",
       "format": "Định dạng",
+      "fileLanguage": "Ngôn ngữ của file",
       "xlsx": "Excel (.xlsx)",
       "pdf": "PDF (.pdf)",
       "summaryLine": "{count} tháng đã chọn",
@@ -1223,6 +1259,8 @@
       },
       "recordPayment": "Ghi nhận thanh toán",
       "recordPaymentFor": "Ghi nhận thanh toán cho {name}",
+      "owedForMonth": "Còn nợ {month}: {amount}",
+      "monthSettled": "Tháng này đã trả đủ",
       "recordedToast": "Đã ghi nhận thanh toán",
       "recordFailed": "Không thể ghi nhận thanh toán",
       "descriptionTooLong": "Mô tả không được dài quá {max, number} ký tự.",
@@ -1239,6 +1277,7 @@
       "assignFailed": "Không thể gán hóa đơn",
       "noMonthTitle": "Chưa có tháng",
       "assignToMonth": "Gán vào {month}",
+      "assignOtherMonth": "Tháng khác…",
       "emptyMonth": "Không có dữ liệu cho tháng này",
       "loadFailed": "Không thể tải dữ liệu thanh toán",
       "addNote": "Thêm ghi chú",
@@ -1336,8 +1375,7 @@
       "retrySearch": "Thử lại"
     },
     "newPersonHint": "Người mới: sẽ được tạo cùng công nhân khi bạn lưu.",
-    "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại.",
-    "summaryPaidOutsideMonths": "Khoản trả không có tháng hoặc ngoài các tháng chấm công"
+    "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại."
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",
@@ -1652,7 +1690,9 @@
           "cta": "Tạo báo giá đầu tiên"
         },
         "importTitle": "Nhập báo giá",
-        "heading": "Báo giá"
+        "heading": "Báo giá",
+        "deadlineColumn": "Hiệu lực đến",
+        "deadlineShort": "Hiệu lực đến {date}"
       },
       "status": {
         "draft": "Nháp",
@@ -1683,7 +1723,9 @@
           "cta": "Tạo hóa đơn đầu tiên"
         },
         "importTitle": "Nhập hóa đơn",
-        "heading": "Hóa đơn"
+        "heading": "Hóa đơn",
+        "deadlineColumn": "Hạn",
+        "deadlineShort": "Hạn {date}"
       },
       "status": {
         "draft": "Nháp",
@@ -1712,14 +1754,16 @@
         "status": "Trạng thái",
         "totalTtc": "Tổng (gồm VAT)",
         "actions": "Thao tác",
-        "issuer": "Bên phát hành"
+        "issuer": "Bên phát hành",
+        "project": "Dự án"
       },
       "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại.",
       "loadFailed": "Không thể tải danh sách tài liệu.",
       "retry": "Thử lại",
       "noFilterResults": "Không có tài liệu nào ở trạng thái này.",
       "companyFilter": "Công ty phát hành",
-      "allCompanies": "Tất cả công ty"
+      "allCompanies": "Tất cả công ty",
+      "overdueDays": "Quá hạn {days} ngày"
     },
     "form": {
       "modes": {
@@ -1748,7 +1792,8 @@
         "paymentTerms": "Điều khoản thanh toán",
         "paymentTermsPlaceholder": "vd. Thanh toán trong 30 ngày, chuyển khoản",
         "project": "Công trình (tùy chọn)",
-        "projectNone": "Không có công trình"
+        "projectNone": "Không có công trình",
+        "projectSuggestion": "Gắn vào {name}?"
       },
       "items": {
         "section": "Danh mục dịch vụ",
@@ -1874,12 +1919,13 @@
       },
       "confirmStatus": {
         "title": "Chuyển sang trạng thái “{status}”?",
-        "paid": "Nếu hóa đơn gắn với một dự án, một khoản chi “Giải ngân” với số tiền này sẽ được ghi vào dự án đó. Sau đó, hóa đơn chỉ có thể bị hủy.",
+        "paid": "Nếu hóa đơn gắn với một dự án, số tiền này sẽ được ghi vào dự án là tiền khách đã trả. Sau đó, hóa đơn chỉ có thể bị hủy.",
         "factureCancelled": "Đây là trạng thái cuối cùng: hóa đơn đã hủy sẽ không thể đổi trạng thái nữa.",
         "devisExpired": "Đây là trạng thái cuối cùng: báo giá hết hạn sẽ không thể đổi trạng thái nữa.",
         "devisRejected": "Báo giá sẽ được đánh dấu là bị từ chối. Bạn có thể mở lại dưới dạng bản nháp sau.",
         "confirm": "Xác nhận",
-        "cancel": "Hủy"
+        "cancel": "Hủy",
+        "factureSent": "Hóa đơn sẽ được đánh dấu là đã gửi cho khách."
       },
       "issuerProfile": {
         "missing": "Hồ sơ của {company} còn thiếu: {fields}. Các thông tin này được in trên báo giá và hóa đơn (SIRET là bắt buộc trên hóa đơn tại Pháp).",
@@ -1889,7 +1935,8 @@
           "tvaNumber": "mã số VAT",
           "iban": "IBAN"
         }
-      }
+      },
+      "devisTermsWarning": "Điều khoản này có vẻ chép từ báo giá. Sửa trước khi gửi hóa đơn."
     },
     "editPage": {
       "loadFailed": "Không thể tải tài liệu. Vui lòng tải lại trang hoặc thử lại sau."
@@ -2077,7 +2124,7 @@
       },
       "empty": {
         "title": "Chưa có báo giá hay hóa đơn nào",
-        "description": "Chọn công trình này ở trường “Công trình” của báo giá hoặc hóa đơn để xem tại đây."
+        "description": "Tạo báo giá hoặc hóa đơn bằng các nút ở trên, hoặc chọn công trình này ở trường “Công trình” của một tài liệu có sẵn."
       },
       "errors": {
         "load": "Không thể tải báo giá và hóa đơn của công trình này.",
@@ -2523,18 +2570,18 @@
       "fields": {
         "legalName": {
           "label": "Tên pháp lý",
-          "placeholder": "vd. Công ty TNHH Lavandou"
+          "placeholder": "vd. Lavandou Bâtiment SARL"
         },
         "address": {
           "label": "Địa chỉ",
           "placeholder": "Số nhà, đường, thành phố, mã bưu chính, quốc gia"
         },
         "siret": {
-          "label": "Mã số doanh nghiệp",
+          "label": "SIRET (mã số doanh nghiệp)",
           "placeholder": "vd. 12345678900012"
         },
         "tvaNumber": {
-          "label": "Mã số thuế GTGT",
+          "label": "N° TVA (mã số thuế GTGT)",
           "placeholder": "vd. FR12345678901"
         },
         "iban": {

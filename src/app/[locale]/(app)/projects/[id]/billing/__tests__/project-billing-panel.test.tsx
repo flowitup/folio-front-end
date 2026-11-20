@@ -156,7 +156,24 @@ describe("ProjectBillingPanel", () => {
     const back = `?back=${encodeURIComponent(`project:${PROJECT_ID}`)}`;
     expect(hrefs.filter((h) => h === `/billing/devis/${QUOTE.id}${back}`)).toHaveLength(2);
     expect(hrefs.filter((h) => h === `/billing/factures/${INVOICE.id}${back}`)).toHaveLength(2);
-    expect(hrefs).toHaveLength(4);
+    // + "New quote" and "New invoice".
+    expect(hrefs).toHaveLength(6);
+  });
+
+  it("offers a new quote and a new invoice already linked to this project", async () => {
+    mockFetch.mockResolvedValue([]);
+    render(<ProjectBillingPanel projectId={PROJECT_ID} />);
+
+    await screen.findByText("No quotes or invoices yet");
+    const back = `back=${encodeURIComponent(`project:${PROJECT_ID}`)}`;
+    expect(screen.getByRole("link", { name: /New quote/ })).toHaveAttribute(
+      "href",
+      `/billing/devis/new?project_id=${PROJECT_ID}&${back}`
+    );
+    expect(screen.getByRole("link", { name: /New invoice/ })).toHaveAttribute(
+      "href",
+      `/billing/factures/new?project_id=${PROJECT_ID}&${back}`
+    );
   });
 
   it("shows the empty state when no document is linked to the project", async () => {
@@ -165,7 +182,7 @@ describe("ProjectBillingPanel", () => {
 
     expect(await screen.findByText("No quotes or invoices yet")).toBeInTheDocument();
     expect(
-      screen.getByText(/Choose this project in the “Project” field of a quote or invoice/)
+      screen.getByText(/Create a quote or an invoice with the buttons above/)
     ).toBeInTheDocument();
     expect(screen.queryByRole("table")).toBeNull();
   });

@@ -22,6 +22,8 @@ import {
   companyProjectCards,
   companyTotals,
   initials,
+  pickerMonths,
+  workerPaid,
   type ProjectStatus,
 } from "@/lib/dashboard/company-overview";
 import { OverviewScopeToggle, type OverviewScope } from "@/components/dashboard/overview-scope-toggle";
@@ -94,7 +96,15 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
   // Default: this month (Paris calendar), else the latest month with attendance or payments.
   const thisMonth = parisDayKey().slice(0, 7);
   const activeMonth = month ?? (months.includes(thisMonth) ? thisMonth : (months[0] ?? thisMonth));
-  const monthOptions = months.includes(activeMonth) ? months : [activeMonth, ...months];
+  // Every month from the first project or labor month to this one, gaps included.
+  const startMonths = useMemo(
+    () => projects.map((p) => (p.created_at ? parisDayKey(p.created_at).slice(0, 7) : "")),
+    [projects],
+  );
+  const monthOptions = useMemo(() => {
+    const list = pickerMonths(months, startMonths, thisMonth);
+    return list.includes(activeMonth) ? list : [activeMonth, ...list];
+  }, [months, startMonths, thisMonth, activeMonth]);
   const laborResult = useMemo(() => (labor ? companyLabor(labor.inputs, activeMonth) : null), [labor, activeMonth]);
 
   const cards = useMemo(() => companyProjectCards(projects, laborResult, projectDisplayName), [projects, laborResult]);
@@ -115,8 +125,12 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
   };
   const laborValue = (fn: () => string) => (laborResult ? fn() : "…");
 
+  // The big figure is the amount spent when no project has a budget: the
+  // small "spent" tile would repeat it, so it only shows next to "left to spend".
   const kpis = [
-    { label: t("spent"), value: fmtEUR(totals.spent), sub: t("spentSub"), color: "var(--paper)" },
+    ...(hasBudget
+      ? [{ label: t("spentToDate"), value: fmtEUR(totals.spent), sub: t("spentSub"), color: "var(--paper)" }]
+      : []),
     {
       label: t("days"),
       value: laborValue(() => formatDays(laborResult!.totals.days, locale)),
@@ -126,7 +140,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
     {
       label: t("wagesOwed"),
       value: laborValue(() => fmtEUR(laborResult!.totals.owed)),
-      sub: laborResult ? t("wagesPaid", { amount: fmtEUR(laborResult.totals.paid) }) : "",
+      sub: laborResult ? t("wagesPaid", { amount: fmtEUR(workerPaid(laborResult)) }) : "",
       color: OWED_ON_DARK,
     },
     { label: t("personal"), value: fmtEUR(totals.personal), sub: t("projectCount", { count: personalProjects }), color: "var(--paper)" },
@@ -160,19 +174,23 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
               ))}
             </select>
           )}
-          <select
-            aria-label={t("month")}
-            value={activeMonth}
-            onChange={(e) => setMonth(e.target.value)}
-            className="min-h-[48px] rounded-[14px] border-0 px-3.5 text-[13.5px] font-medium"
-            style={selectStyle}
-          >
-            {monthOptions.map((m) => (
-              <option key={m} value={m}>
-                {monthLabel(m)}
-              </option>
-            ))}
-          </select>
+          <label className="flex items-center gap-2 text-[13.5px]" style={{ color: "var(--ink-2)" }}>
+            <span>{t("monthPickerLabel")}</span>
+            <select
+              aria-label={t("month")}
+              value={activeMonth}
+              onChange={(e) => setMonth(e.target.value)}
+              className="min-h-[48px] rounded-[14px] border-0 px-3.5 text-[13.5px] font-medium"
+              style={selectStyle}
+              data-testid="company-month-select"
+            >
+              {monthOptions.map((m) => (
+                <option key={m} value={m}>
+                  {monthLabel(m)}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </div>
 
@@ -183,7 +201,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
       >
         <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-2.5">
           <span className="text-[13px]" style={{ color: BAND_MUTED }}>
-            {hasBudget ? t("remaining") : t("spent")}
+            {hasBudget ? t("remaining") : t("spentToDate")}
           </span>
           <span className="font-display text-[44px] font-semibold leading-none tracking-tight tabular-nums sm:text-[52px]">
             {fmtEUR(hasBudget ? totals.remaining : totals.spent)}
@@ -203,7 +221,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
             </>
           )}
         </div>
-        <div className="grid min-w-0 flex-[2_1_420px] grid-cols-2 gap-3 md:grid-cols-4">
+        <div className={`grid min-w-0 flex-[2_1_420px] grid-cols-2 gap-3 ${kpis.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
           {kpis.map((k) => (
             <div key={k.label} className="flex flex-col gap-1.5 rounded-2xl px-4 py-3.5" style={{ background: BAND_TINT }}>
               <span className="text-[12.5px]" style={{ color: BAND_MUTED }}>
@@ -219,6 +237,11 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
           ))}
         </div>
       </section>
+
+      <p className="text-[13px] leading-relaxed" style={{ color: "var(--ink-2)" }} data-testid="company-footnote">
+        {t("footnote")}
+        {labor && labor.failed > 0 && ` ${t("partial", { count: labor.failed })}`}
+      </p>
 
       <div className="flex flex-wrap items-start gap-5">
         <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-3.5">
@@ -299,7 +322,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
               </p>
             ) : (
               alerts.map((a) => (
-                <div key={a.kind === "unassignedPay" ? "unassigned" : `${a.kind}-${a.projectId}`} className="flex gap-2.5 border-t py-2.5" style={{ borderColor: "rgba(163,90,31,0.25)" }}>
+                <div key={a.kind === "unassignedPay" || a.kind === "wagesOwed" ? a.kind : `${a.kind}-${a.projectId}`} className="flex gap-2.5 border-t py-2.5" style={{ borderColor: "rgba(163,90,31,0.25)" }}>
                   <span aria-hidden="true" className="mt-1.5 h-2 w-2 flex-none rounded-full" style={{ background: a.kind === "over" ? "var(--negative)" : "var(--accent-ink)" }} />
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[14px] font-medium">
@@ -307,11 +330,15 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                         ? t("alertOver", { name: a.name, amount: fmtEUR(a.amount) })
                         : a.kind === "near"
                           ? t("alertNear", { name: a.name, amount: fmtEUR(a.amount) })
-                          : t("alertUnassigned", { amount: fmtEUR(a.amount) })}
+                          : a.kind === "wagesOwed"
+                            ? t("alertWagesOwed", { month: monthLabel(activeMonth), amount: fmtEUR(a.amount), count: a.workerCount })
+                            : t("alertUnassigned", { amount: fmtEUR(a.amount) })}
                     </span>
-                    <span className="text-[12.5px]" style={{ color: "#5c4630" }}>
-                      {a.kind === "unassignedPay" ? t("alertUnassignedSub", { month: monthLabel(activeMonth) }) : t("alertPct", { pct: a.pct })}
-                    </span>
+                    {a.kind !== "wagesOwed" && (
+                      <span className="text-[12.5px]" style={{ color: "#5c4630" }}>
+                        {a.kind === "unassignedPay" ? t("alertUnassignedSub", { month: monthLabel(activeMonth) }) : t("alertPct", { pct: a.pct })}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))
@@ -336,8 +363,8 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                 <Loader2 className="h-4 w-4 animate-spin" /> {t("loadingLabor")}
               </div>
             ) : workers.length === 0 ? (
-              <p className="text-[13px]" style={{ color: "var(--muted)" }}>
-                {t("wagesNone")}
+              <p className="text-[13px]" style={{ color: "var(--muted)" }} data-testid="company-wages-empty">
+                {laborResult.totals.days > 0 ? t("wagesNone") : t("wagesNoDays")}
               </p>
             ) : (
               <>
@@ -362,7 +389,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                           <div className="h-full rounded-full" style={{ width: `${maxOwed > 0 ? (w.owed / maxOwed) * 100 : 0}%`, background: "var(--accent)" }} />
                         </div>
                         <span className="whitespace-nowrap text-[12px]" style={{ color: "var(--muted)" }}>
-                          {t("daysChip", { days: formatDays(w.days, locale) })}
+                          {t("workerSub", { days: formatDays(w.days, locale), paid: fmtEUR(w.paid) })}
                         </span>
                       </div>
                     </div>
@@ -379,10 +406,6 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
         </aside>
       </div>
 
-      <p className="text-[12px]" style={{ color: "var(--muted)" }}>
-        {t("footnote")}
-        {labor && labor.failed > 0 && ` ${t("partial", { count: labor.failed })}`}
-      </p>
     </div>
   );
 }

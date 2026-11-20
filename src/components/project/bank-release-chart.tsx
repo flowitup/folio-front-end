@@ -9,6 +9,7 @@ import { useChartLink } from "@/components/dashboard/use-chart-link";
 import { expenseListHref } from "@/lib/invoices/expense-filters";
 import {
   computeBankReleaseMetrics,
+  computeCustomerPayments,
   buildDrawSeries,
 } from "@/lib/dashboard/bank-release-metrics";
 import type { Invoice } from "@/types/invoice";
@@ -28,6 +29,11 @@ import type { Invoice } from "@/types/invoice";
  * client-side from the same project's `released_funds` rows, so the track can
  * differ marginally from the meta only if a release row is missing from the
  * fetched list.
+ *
+ * A facture marked paid also lands as a `released_funds` row (tagged with
+ * `source_billing_document_id`) and inside `funds_released_total`. That is the
+ * customer's money, not the bank's: it is taken out of the draws and of the
+ * released figure, and shown on its own line under the card.
  */
 interface BankReleaseChartProps {
   /** Project credit total (crédit immobilier). Null/0 → prompt to set it. */
@@ -42,6 +48,8 @@ interface BankReleaseChartProps {
   loading?: boolean;
   /** The project's expense list: each draw opens its release there. */
   expensesHref?: string | null;
+  /** The project's factures: the "paid by customers" line opens them. Null: plain text. */
+  customerPaidHref?: string | null;
 }
 
 const PLACEHOLDER = "—";
@@ -57,17 +65,22 @@ export function BankReleaseChart({
   settingsHref,
   loading = false,
   expensesHref = null,
+  customerPaidHref = null,
 }: BankReleaseChartProps) {
   const t = useTranslations("projects.bankRelease");
+  const tCard = useTranslations("dashboard.bankRelease");
   const locale = useLocale();
   const { tipHandlers, overlay } = useDataTip();
   const chartLink = useChartLink();
   const releaseHref = (id: string) =>
     expensesHref ? `${expensesHref}${expensesHref.includes("?") ? "&" : "?"}invoice=${encodeURIComponent(id)}` : null;
 
-  const metrics = computeBankReleaseMetrics(credit, releasedTotal);
   // Memoized: the data-tip hook re-renders the card on every mousemove.
   const series = useMemo(() => buildDrawSeries(invoices), [invoices]);
+  const customer = useMemo(() => computeCustomerPayments(invoices), [invoices]);
+  // Drawn from the bank = the backend's released total minus customer payments.
+  const bankReleased = Math.max(0, Math.round((releasedTotal - customer.total) * 100) / 100);
+  const metrics = computeBankReleaseMetrics(credit, bankReleased);
   const { monthYear, pctFmt } = useMemo(
     () => ({
       monthYear: new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }),
@@ -128,20 +141,29 @@ export function BankReleaseChart({
             <span className="text-[13px]" style={{ color: "var(--muted)" }}>
               {/* Over-drawn, the figure is the overrun: "remaining of" would
                   contradict the "Over-drawn by" label above it. */}
-              {t.rich(overDrawn && !loading ? "headlineMetaOver" : "headlineMeta", {
-                credit: fig(formatEURExact(metrics.credit)),
-                pct: fig(pctFmt.format(metrics.pct / 100)),
-                c: (chunks) => (
-                  <span className="num" style={{ color: "var(--ink-2)" }}>
-                    {chunks}
-                  </span>
-                ),
-                p: (chunks) => (
-                  <span className="num" style={{ color: "var(--accent-ink)" }}>
-                    {chunks}
-                  </span>
-                ),
-              })}
+              {!loading && series.draws.length === 0 && !overDrawn
+                ? tCard.rich("headlineNoDraws", {
+                    credit: formatEURExact(metrics.credit),
+                    c: (chunks) => (
+                      <span className="num" style={{ color: "var(--ink-2)" }}>
+                        {chunks}
+                      </span>
+                    ),
+                  })
+                : t.rich(overDrawn && !loading ? "headlineMetaOver" : "headlineMeta", {
+                    credit: fig(formatEURExact(metrics.credit)),
+                    pct: fig(pctFmt.format(metrics.pct / 100)),
+                    c: (chunks) => (
+                      <span className="num" style={{ color: "var(--ink-2)" }}>
+                        {chunks}
+                      </span>
+                    ),
+                    p: (chunks) => (
+                      <span className="num" style={{ color: "var(--accent-ink)" }}>
+                        {chunks}
+                      </span>
+                    ),
+                  })}
             </span>
           </div>
 
@@ -254,6 +276,19 @@ export function BankReleaseChart({
       {!loading && series.draws.length === 0 ? (
         <div className="mt-4 text-[11.5px]" style={{ color: "var(--muted)" }}>
           {t("noReleases")}
+        </div>
+      ) : null}
+
+      {/* Customer money from paid factures: counted in "left to spend", never as a bank draw. */}
+      {!loading && customer.count > 0 ? (
+        <div className="mt-3 text-[12.5px]" style={{ color: "var(--ink-2)" }} data-testid="bank-release-customer-paid">
+          {customerPaidHref ? (
+            <Link href={customerPaidHref} className="hover:underline">
+              {tCard("customerPaid", { amount: formatEURExact(customer.total), count: customer.count })}
+            </Link>
+          ) : (
+            tCard("customerPaid", { amount: formatEURExact(customer.total), count: customer.count })
+          )}
         </div>
       ) : null}
 

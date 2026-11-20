@@ -17,7 +17,7 @@
  * the payment unattributed, editable later via the normal invoices flow.
  */
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -39,9 +39,26 @@ import type { CreateInvoicePayload } from "@/types/invoice";
 import { MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
 import { ApiError } from "@/lib/api/http";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
+import { formatEUR } from "@/lib/api/labor";
 
 /** The API's limit on an invoice line description. */
 const DESCRIPTION_MAX_LENGTH = 500;
+
+const INPUT_LOCALE_TAG: Record<string, string> = { en: "en-GB", fr: "fr-FR", vi: "vi-VN" };
+
+/** An amount as the amount field shows it: "1 425,00" (fr), "1.425,00" (vi), "1,425.00" (en). */
+function amountText(value: number, locale: string): string {
+  return new Intl.NumberFormat(INPUT_LOCALE_TAG[locale] ?? "fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+/** What is still owed from a month balance (owed − paid): never below 0, in cents. */
+function owedFrom(balance: number | undefined): number | undefined {
+  if (balance === undefined || !Number.isFinite(balance)) return undefined;
+  return Math.max(0, Math.round(balance * 100) / 100);
+}
 
 function todayKey(): string {
   const d = new Date();
@@ -60,6 +77,10 @@ export interface RecordLaborPaymentDialogProps {
   /** The project's company id. Payment methods are company-scoped, so the
    *  optional method picker only renders when this is set. */
   companyId?: string | null;
+  /** A worker's balance for the viewed month (wages − worker-linked payments
+   *  of that month only), or undefined when the worker has no row that month.
+   *  Prefills the amount with what is still owed. */
+  balanceFor?: (workerId: string) => number | undefined;
   onSaved: () => void;
 }
 
@@ -70,6 +91,7 @@ export function RecordLaborPaymentDialog({
   worker,
   month,
   companyId,
+  balanceFor,
   onSaved,
 }: RecordLaborPaymentDialogProps) {
   const t = useTranslations("labor.payments");
@@ -82,6 +104,11 @@ export function RecordLaborPaymentDialog({
   const [issueDate, setIssueDate] = useState(todayKey());
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<string>("");
+  // Typed by the user: a change of worker then keeps it instead of refilling.
+  const [amountEdited, setAmountEdited] = useState(false);
+  // Bumped on every prefill so the amount gets selected once it is rendered.
+  const [prefillTick, setPrefillTick] = useState(0);
+  const amountRef = useRef<HTMLInputElement>(null);
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +120,13 @@ export function RecordLaborPaymentDialog({
   const amountFieldId = `${fieldId}-amount`;
   const methodFieldId = `${fieldId}-method`;
 
+  const owed = workerId ? owedFrom(balanceFor?.(workerId)) : undefined;
+  const prefill = (id: string | null) => {
+    const o = id ? owedFrom(balanceFor?.(id)) : undefined;
+    setAmount(o !== undefined && o > 0 ? amountText(o, locale) : "");
+    setPrefillTick((n) => n + 1);
+  };
+
   // Seed fields fresh each time the dialog opens.
   useEffect(() => {
     if (!open) return;
@@ -101,10 +135,28 @@ export function RecordLaborPaymentDialog({
     setWorkerName(name);
     setIssueDate(todayKey());
     setDescription(name ? `${name} — ${formatMonthYear(month, locale)}` : "");
-    setAmount("");
+    setAmountEdited(false);
+    prefill(worker?.id ?? null);
     setPaymentMethodId(null);
     setError(null);
+    // `prefill` reads balanceFor at open time; a later refetch must not rewrite the field.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, worker, month, locale]);
+
+  // Select the prefilled amount so typing replaces it.
+  useEffect(() => {
+    if (!open || prefillTick === 0) return;
+    // The dialog moves focus to its first field when it opens; selecting before that
+    // lands loses the selection, so wait until the dialog has settled.
+    const timer = window.setTimeout(() => {
+      const el = amountRef.current;
+      if (el && el.value) {
+        el.focus();
+        el.select();
+      }
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, [open, prefillTick]);
 
   async function handleSave() {
     setError(null);
@@ -183,6 +235,7 @@ export function RecordLaborPaymentDialog({
                   const name = w ? (w.person_name ?? w.name) : "";
                   setWorkerName(name);
                   setDescription(name ? `${name} — ${formatMonthYear(month, locale)}` : "");
+                  if (!amountEdited) prefill(id);
                 }}
                 disabled={isSaving}
               />
@@ -229,12 +282,28 @@ export function RecordLaborPaymentDialog({
               autoComplete="off"
               placeholder={locale === "en" ? "0.00" : "0,00"}
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                setAmountEdited(true);
+              }}
+              ref={amountRef}
               className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               disabled={isSaving}
               autoFocus
+              aria-describedby={owed !== undefined ? `${amountFieldId}-owed` : undefined}
               data-testid="record-payment-amount"
             />
+            {owed !== undefined && (
+              <p
+                id={`${amountFieldId}-owed`}
+                className="mt-1 text-xs text-muted-foreground"
+                data-testid="record-payment-owed"
+              >
+                {owed > 0
+                  ? t("owedForMonth", { month: formatMonthYear(month, locale), amount: formatEUR(owed) })
+                  : t("monthSettled")}
+              </p>
+            )}
           </div>
 
           {companyId && (

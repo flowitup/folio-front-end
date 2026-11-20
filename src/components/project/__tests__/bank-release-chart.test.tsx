@@ -225,4 +225,38 @@ describe("BankReleaseChart", () => {
     expect(screen.getByTestId("bank-release-remaining").textContent!.replace(/\s/g, "")).toBe("84999,50€");
     expect(screen.getByTestId("bank-release-stats").textContent!.replace(/\s/g, "")).toContain("25000,50€");
   });
+
+  it("keeps a paid facture out of the bank draws and shows it on its own line", () => {
+    const d1 = makeRelease({ total_amount: 20000, issue_date: "2026-06-01" });
+    const d2 = makeRelease({ total_amount: 10000, issue_date: "2026-07-01" });
+    const fac = makeRelease({ total_amount: 3068.4, issue_date: "2026-08-01", source_billing_document_id: "fac-1", is_auto_generated: true });
+    render(
+      <BankReleaseChart
+        credit={100000}
+        releasedTotal={33068.4}
+        invoices={[d1, d2, fac]}
+        customerPaidHref="/en/projects/p1/billing"
+      />
+    );
+    // 2 draws, not 3; the facture has no segment.
+    expect(screen.getByText(/projects\.bankRelease\.drawsMeta\(\{"count":2/)).toBeInTheDocument();
+    expect(screen.queryByTestId(`bank-release-draw-${fac.id}`)).toBeNull();
+    // Remaining at the bank: 100 000 − 30 000 (the facture is not drawn credit).
+    expect(screen.getByTestId("bank-release-remaining").textContent!.replace(/\s/g, "")).toBe("70000€");
+    const line = screen.getByTestId("bank-release-customer-paid");
+    expect(line.textContent).toContain("dashboard.bankRelease.customerPaid");
+    expect(line.textContent).toContain('"count":1');
+    expect(line.querySelector("a")?.getAttribute("href")).toBe("/en/projects/p1/billing");
+  });
+
+  it("does not call a paid facture alone a release percentage", () => {
+    const fac = makeRelease({ total_amount: 5000, source_billing_document_id: "fac-1" });
+    render(<BankReleaseChart credit={100000} releasedTotal={5000} invoices={[fac]} />);
+    expect(screen.getByText("dashboard.bankRelease.headlineNoDraws")).toBeInTheDocument();
+    expect(screen.queryByText("projects.bankRelease.headlineMeta")).toBeNull();
+    expect(screen.getByText("projects.bankRelease.noReleases")).toBeInTheDocument();
+    expect(screen.getByTestId("bank-release-remaining").textContent!.replace(/\s/g, "")).toBe("100000€");
+    // No link without an href.
+    expect(screen.getByTestId("bank-release-customer-paid").querySelector("a")).toBeNull();
+  });
 });

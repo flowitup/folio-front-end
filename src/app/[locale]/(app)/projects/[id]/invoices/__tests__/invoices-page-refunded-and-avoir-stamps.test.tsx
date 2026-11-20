@@ -144,7 +144,7 @@ describe("InvoicesPage — refunded expenses", () => {
   });
 
   it("shows a refused delete's reason in the UI language", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const nativeConfirm = vi.spyOn(window, "confirm");
     vi.mocked(deleteInvoice).mockRejectedValue({
       status: 400,
       data: { error: "ValidationError", message: "Unlink or delete this invoice's returns first" },
@@ -153,6 +153,13 @@ describe("InvoicesPage — refunded expenses", () => {
     const desktop = await desktopTable();
 
     fireEvent.click(desktop.getByLabelText(fr.invoices.deleteExpense.replace("{number}", "INV-2026-0009")));
+
+    // The app's own question, in the UI language, naming the expense and its amount.
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent("Supprimer la dépense INV-2026-0009 ?");
+    expect(dialog.textContent?.replace(/\s+/g, " ")).toContain("100,00 €");
+    expect(nativeConfirm).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole("button", { name: fr.invoices.delete }));
 
     expect(await screen.findByText(fr.invoices.errorUnlinkReturnsFirst)).toBeDefined();
     expect(screen.queryByText("Unlink or delete this invoice's returns first")).toBeNull();

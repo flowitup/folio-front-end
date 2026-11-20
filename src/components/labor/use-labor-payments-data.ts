@@ -196,9 +196,10 @@ export function useLaborPaymentsData(
     }
   }
 
-  async function handleAssignMonth(invoiceId: string) {
+  /** Stamps a service month ("YYYY-MM", default: the viewed month) on a payment. */
+  async function handleAssignMonth(invoiceId: string, targetMonth: string = month) {
     try {
-      await updateInvoice(projectId, invoiceId, { service_month: `${month}-01` });
+      await updateInvoice(projectId, invoiceId, { service_month: `${targetMonth}-01` });
       toast.success(t("assignedToast"));
       bump();
       await Promise.all([loadMonthData(month), loadNoMonthInvoices(), loadPaymentsSummary()]);

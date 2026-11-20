@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
@@ -103,34 +103,37 @@ describe("TaskDetailDrawer unsaved edits", () => {
     expect(screen.getByLabelText(en.planning.descriptionLabel)).toHaveValue("unsaved description");
   });
 
-  it("asks before the backdrop discards unsaved edits", async () => {
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("asks in the app before the backdrop discards unsaved edits", async () => {
+    const confirm = vi.spyOn(window, "confirm");
     const onClose = vi.fn();
     render(drawer(TASK, onClose));
     typeTitle("Pour slab now");
 
     fireEvent.click(backdrop());
-    expect(confirm).toHaveBeenCalledWith(en.planning.discardChanges);
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent(en.planning.discardChanges);
+    await userEvent.click(within(dialog).getByRole("button", { name: en.settings.confirmDialog.keepEditing }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByLabelText(en.planning.titleLabel)).toHaveValue("Pour slab now");
 
-    confirm.mockReturnValue(true);
     fireEvent.keyDown(window, { key: "Escape" });
-    expect(onClose).toHaveBeenCalledTimes(1);
+    const again = await screen.findByRole("alertdialog");
+    await userEvent.click(within(again).getByRole("button", { name: en.settings.confirmDialog.discard }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(confirm).not.toHaveBeenCalled();
   });
 
   it("closes without asking when nothing was changed", () => {
-    const confirm = vi.spyOn(window, "confirm");
     const onClose = vi.fn();
     render(drawer(TASK, onClose));
     fireEvent.click(screen.getByRole("button", { name: en.planning.close }));
     fireEvent.click(backdrop());
-    expect(confirm).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 
   it("does not ask once the edits are saved", async () => {
-    const confirm = vi.spyOn(window, "confirm");
     mockUpdate.mockImplementation(async (_id: string, payload: Partial<Task>) => ({ ...TASK, ...payload }));
     const onClose = vi.fn();
     render(drawer(TASK, onClose));
@@ -139,7 +142,7 @@ describe("TaskDetailDrawer unsaved edits", () => {
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
 
     fireEvent.click(backdrop());
-    expect(confirm).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(onClose).toHaveBeenCalled();
   });
 });

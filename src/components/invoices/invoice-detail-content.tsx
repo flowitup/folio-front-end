@@ -31,6 +31,9 @@ import { RefundSourceIndicator } from "@/components/invoices/refund-source-indic
 import { TruncatedStamp } from "@/components/invoices/truncated-stamp";
 import type { Invoice, UpdateInvoicePayload, InvoiceType } from "@/types/invoice";
 import { ledgerTypeOf } from "@/lib/invoices/group-invoices-by-month";
+import { isClientPayment } from "@/lib/invoices/client-payment";
+import { expenseDeleteQuestion } from "@/lib/invoices/delete-confirm";
+import { useConfirm } from "@/hooks/use-confirm";
 
 const TYPE_BADGE_CLASS: Record<InvoiceType, string> = {
   released_funds: "stamp",
@@ -90,6 +93,7 @@ export function InvoiceDetailContent({
 }: InvoiceDetailContentProps) {
   const t = useTranslations("invoices");
   const tBuiltins = useTranslations("paymentMethods.builtins");
+  const { ask, dialog: confirmDialog } = useConfirm();
   const locale = useLocale();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -142,7 +146,7 @@ export function InvoiceDetailContent({
   };
 
   const handleDelete = async () => {
-    if (!confirm(t("deleteConfirm"))) return;
+    if (!(await ask(expenseDeleteQuestion(t, invoice)))) return;
     try {
       await deleteInvoice(invoice.project_id, invoice.id);
       onDeleted();
@@ -174,6 +178,7 @@ export function InvoiceDetailContent({
 
   return (
     <div className="space-y-3">
+      {confirmDialog}
       {/* Action bar — wraps on phones: the row sits inside overflow-hidden
           wrappers (expand animation, mobile card), so anything that overflowed
           was clipped and Edit/Delete became unreachable. */}
@@ -183,7 +188,7 @@ export function InvoiceDetailContent({
             {invoice.invoice_number}
           </h2>
           <span className={TYPE_BADGE_CLASS[ledgerTypeOf(invoice)]}>
-            {t(`types.${ledgerTypeOf(invoice)}`)}
+            {isClientPayment(invoice) ? t("clientPaid") : t(`types.${ledgerTypeOf(invoice)}`)}
           </span>
           {invoice.type === "released_funds" && invoice.is_cash_advance && (
             <span

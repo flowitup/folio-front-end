@@ -286,3 +286,60 @@ describe("RecordLaborPaymentDialog — labels and errors", () => {
     expect(screen.queryByText(/HTTP 500/)).toBeNull();
   });
 });
+
+describe("RecordLaborPaymentDialog — prefilled with what is still owed", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const balances: Record<string, number> = { "worker-1": 1425, "worker-9": 300 };
+  const balanceFor = (id: string) => balances[id];
+
+  it("fills the amount with the month's balance, selected so typing replaces it", async () => {
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} balanceFor={balanceFor} />);
+    const input = screen.getByTestId("record-payment-amount") as HTMLInputElement;
+    expect(input.value).toBe("1,425.00");
+    expect(screen.getByTestId("record-payment-owed")).toHaveTextContent("labor.payments.owedForMonth");
+    await waitFor(() => {
+      expect(document.activeElement).toBe(input);
+      expect(input.selectionStart).toBe(0);
+      expect(input.selectionEnd).toBe(input.value.length);
+    });
+  });
+
+  it("saves the prefilled balance without any typing", async () => {
+    mockCreateInvoice.mockResolvedValue({ id: "inv-3" } as never);
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} balanceFor={balanceFor} />);
+    fireEvent.click(screen.getByText("invoices.save"));
+    await waitFor(() => expect(mockCreateInvoice).toHaveBeenCalledTimes(1));
+    expect(mockCreateInvoice.mock.calls[0][1].items[0].unit_price).toBe(1425);
+  });
+
+  it("leaves the field empty and says the month is paid when nothing is owed", () => {
+    render(
+      <RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} balanceFor={() => -50} />,
+    );
+    expect((screen.getByTestId("record-payment-amount") as HTMLInputElement).value).toBe("");
+    expect(screen.getByTestId("record-payment-owed")).toHaveTextContent("labor.payments.monthSettled");
+  });
+
+  it("shows no owed line for a worker without a row that month", () => {
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={PRESELECTED_WORKER} balanceFor={() => undefined} />);
+    expect((screen.getByTestId("record-payment-amount") as HTMLInputElement).value).toBe("");
+    expect(screen.queryByTestId("record-payment-owed")).toBeNull();
+  });
+
+  it("refills when the worker is picked, unless the amount was typed", () => {
+    const { unmount } = render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={null} balanceFor={balanceFor} />);
+    const input = () => screen.getByTestId("record-payment-amount") as HTMLInputElement;
+    expect(input().value).toBe("");
+    fireEvent.change(screen.getByTestId("labor-worker-select-mock"), { target: { value: "worker-9" } });
+    expect(input().value).toBe("300.00");
+    unmount();
+
+    render(<RecordLaborPaymentDialog {...BASE_PROPS} worker={null} balanceFor={balanceFor} />);
+    fireEvent.change(input(), { target: { value: "120" } });
+    fireEvent.change(screen.getByTestId("labor-worker-select-mock"), { target: { value: "worker-9" } });
+    expect(input().value).toBe("120");
+  });
+});

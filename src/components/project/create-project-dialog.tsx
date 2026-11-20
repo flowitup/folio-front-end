@@ -130,20 +130,7 @@ export function CreateProjectDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="create-project-address">{t("projectAddress")}</Label>
-            <Input
-              id="create-project-address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder={t("projectAddressPlaceholder")}
-              maxLength={500}
-              autoFocus
-              required
-              disabled={isSubmitting}
-            />
-          </div>
-
+          {/* Name first, as people say it; left blank, the address names the project. */}
           <div className="space-y-2">
             <Label htmlFor="create-project-name">{t("projectNameOptional")}</Label>
             <Input
@@ -152,6 +139,20 @@ export function CreateProjectDialog({
               onChange={(e) => setName(e.target.value)}
               placeholder={t("projectNamePlaceholder")}
               maxLength={255}
+              autoFocus
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="create-project-address">{t("projectAddress")}</Label>
+            <Input
+              id="create-project-address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder={t("projectAddressPlaceholder")}
+              maxLength={500}
+              required
               disabled={isSubmitting}
             />
           </div>
@@ -182,8 +183,12 @@ export function CreateProjectDialog({
               value={budget}
               onChange={(e) => setBudget(e.target.value)}
               placeholder="0"
+              aria-describedby="create-project-budget-help"
               disabled={isSubmitting}
             />
+            <p id="create-project-budget-help" className="text-[12px] text-muted-foreground">
+              {t("budgetHelp")}
+            </p>
           </div>
 
           <div className="space-y-2">

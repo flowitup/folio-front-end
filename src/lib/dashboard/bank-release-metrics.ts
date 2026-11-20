@@ -46,6 +46,33 @@ export function computeBankReleaseMetrics(
   };
 }
 
+/**
+ * A `released_funds` row created when a sales invoice (facture) is marked
+ * paid: the customer's money, not a draw on the bank credit. The backend
+ * tags it with the facture it came from.
+ */
+export function isCustomerPayment(inv: Invoice): boolean {
+  return inv.type === "released_funds" && !inv.is_cash_advance && !!inv.source_billing_document_id;
+}
+
+export interface CustomerPayments {
+  total: number;
+  /** Distinct factures behind the rows. */
+  count: number;
+}
+
+/** What customers paid through factures, from the project's `released_funds` rows. */
+export function computeCustomerPayments(invoices: Invoice[]): CustomerPayments {
+  let total = 0;
+  const docs = new Set<string>();
+  for (const inv of invoices) {
+    if (!isCustomerPayment(inv)) continue;
+    total += inv.total_amount;
+    docs.add(inv.source_billing_document_id as string);
+  }
+  return { total: Math.round(total * 100) / 100, count: docs.size };
+}
+
 /** One `released_funds` invoice, reduced to what the draw ledger renders. */
 export interface BankDraw {
   id: string;
@@ -75,9 +102,10 @@ export interface DrawSeries {
 export function buildDrawSeries(invoices: Invoice[]): DrawSeries {
   // Cash-advance releases are company money handed to a person, not a draw
   // from the bank credit — the backend keeps them out of funds_released_total
-  // for the same reason, so the draw ledger must skip them too.
+  // for the same reason, so the draw ledger must skip them too. A facture paid
+  // by the customer is not a bank draw either (see isCustomerPayment).
   const draws: BankDraw[] = invoices
-    .filter((inv) => inv.type === "released_funds" && !inv.is_cash_advance)
+    .filter((inv) => inv.type === "released_funds" && !inv.is_cash_advance && !isCustomerPayment(inv))
     .map((inv) => ({
       id: inv.id,
       number: inv.invoice_number,

@@ -220,6 +220,10 @@
       "showLess": "Thu gọn",
       "footnote": "Tiền tính từ đầu dự án, đã trừ hoàn trả. Công và lương tính theo tháng đã chọn; mỗi tháng tính riêng, trả dư không trừ sang tháng khác. Cùng một thợ (trùng tên) trên nhiều dự án được cộng lại.",
       "partial": "Không tải được công thợ của {count} dự án."
+    },
+    "bankRelease": {
+      "headlineNoDraws": "còn lại trên <c>{credit}</c> tín dụng · chưa giải ngân",
+      "customerPaid": "Khách đã trả (hóa đơn): {amount} · {count} hóa đơn"
     }
   },
   "projects": {

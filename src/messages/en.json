@@ -220,6 +220,10 @@
       "showLess": "Show less",
       "footnote": "Money since each project started, net of returns. Days and wages for the picked month; each month stands alone, an overpayment is not carried over. The same worker (same name) across projects is added up.",
       "partial": "Days could not be loaded for {count} projects."
+    },
+    "bankRelease": {
+      "headlineNoDraws": "remaining of <c>{credit}</c> credit · nothing drawn yet",
+      "customerPaid": "Paid by customers (invoices): {amount} · {count, plural, one {# invoice} other {# invoices}}"
     }
   },
   "projects": {

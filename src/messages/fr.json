@@ -220,6 +220,10 @@
       "showLess": "Réduire",
       "footnote": "Montants depuis le début des projets, retours déduits. Jours et salaires du mois choisi ; chaque mois est compté à part, un trop-payé ne se reporte pas. Un même ouvrier (même nom) sur plusieurs projets est additionné.",
       "partial": "Journées non chargées pour {count} projets."
+    },
+    "bankRelease": {
+      "headlineNoDraws": "restant sur <c>{credit}</c> de crédit · aucun déblocage",
+      "customerPaid": "Payé par les clients (factures) : {amount} · {count, plural, one {# facture} other {# factures}}"
     }
   },
   "projects": {

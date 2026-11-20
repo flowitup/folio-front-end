@@ -399,6 +399,7 @@ export default function DashboardPage() {
           settingsHref={projectSettingsHref}
           loading={showLoading}
           expensesHref={viewExpenseHref}
+          customerPaidHref={projectId ? `/${locale}/projects/${projectId}/billing` : null}
         />
       )}
 

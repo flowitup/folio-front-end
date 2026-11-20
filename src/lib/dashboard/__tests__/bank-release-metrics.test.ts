@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { Invoice } from "@/types/invoice";
 import {
   computeBankReleaseMetrics,
+  computeCustomerPayments,
   buildDrawSeries,
 } from "@/lib/dashboard/bank-release-metrics";
 
@@ -125,5 +126,22 @@ describe("buildDrawSeries", () => {
     expect(series.draws).toHaveLength(1);
     expect(series.totalDrawn).toBe(97_376);
     expect(series.last?.amount).toBe(97_376);
+  });
+});
+
+describe("customer payments (factures marked paid)", () => {
+  const draw = () => mkInvoice({ type: "released_funds", issue_date: "2026-06-01", total_amount: 1000 });
+  const fac = (doc: string, amount: number) =>
+    mkInvoice({ type: "released_funds", issue_date: "2026-07-01", total_amount: amount, source_billing_document_id: doc });
+
+  it("are not bank draws", () => {
+    const series = buildDrawSeries([draw(), draw(), fac("f-1", 3068.4)]);
+    expect(series.draws).toHaveLength(2);
+    expect(series.totalDrawn).toBe(2000);
+  });
+
+  it("add up per facture", () => {
+    expect(computeCustomerPayments([draw(), fac("f-1", 3068.4), fac("f-2", 100.1)])).toEqual({ total: 3168.5, count: 2 });
+    expect(computeCustomerPayments([draw()])).toEqual({ total: 0, count: 0 });
   });
 });

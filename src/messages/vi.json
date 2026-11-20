@@ -221,7 +221,8 @@
       "showAll": "Xem cả {count} thợ",
       "showLess": "Thu gọn",
       "footnote": "Tiền tính từ đầu dự án, đã trừ hoàn trả. Công và lương tính theo tháng đã chọn; mỗi tháng tính riêng, trả dư không trừ sang tháng khác. Cùng một thợ (trùng tên) trên nhiều dự án được cộng lại.",
-      "partial": "Không tải được công thợ của {count} dự án."
+      "partial": "Không tải được công thợ của {count} dự án.",
+      "closedChip": "Đã chốt tháng"
     },
     "bankRelease": {
       "headlineNoDraws": "còn lại trên <c>{credit}</c> tín dụng · chưa giải ngân",
@@ -1375,7 +1376,54 @@
       "retrySearch": "Thử lại"
     },
     "newPersonHint": "Người mới: sẽ được tạo cùng công nhân khi bạn lưu.",
-    "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại."
+    "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại.",
+    "monthClose": {
+      "closeButton": "Chốt tháng {month}",
+      "closeTitle": "Chốt tháng {month}?",
+      "closeIntro": "Kiểm tra trước khi chốt. Chốt không khóa dữ liệu: vẫn sửa được, nhưng mỗi lần sửa sẽ hiện cảnh báo và được ghi lại ai sửa, lúc nào.",
+      "checkPending": "Ngày công chờ duyệt",
+      "checkUnassigned": "Thanh toán lương chưa gán thợ hoặc tháng",
+      "checkOwed": "Còn nợ thợ",
+      "checkCounting": "Đang đếm…",
+      "checkOk": "Không có",
+      "checkWarning": "Vẫn chốt được, nhưng nên xử lý các mục trên trước.",
+      "closeConfirm": "Chốt tháng",
+      "closedToast": "Đã chốt tháng {month}",
+      "closeFailed": "Không chốt được tháng. Thử lại.",
+      "closedBadge": "Đã chốt tháng {month}",
+      "closedBy": "bởi {name}, ngày {date}",
+      "reopen": "Mở lại",
+      "reopenTitle": "Mở lại tháng {month}?",
+      "reopenDescription": "Tháng sẽ không còn được đánh dấu đã chốt, và danh sách sửa sau khi chốt sẽ bị xóa.",
+      "reopenedToast": "Đã mở lại tháng {month}",
+      "reopenFailed": "Không mở lại được tháng. Thử lại.",
+      "editedAfterClose": "Đã sửa sau khi chốt: {count} lần, gần nhất bởi {name} lúc {time}",
+      "showEdits": "Xem chi tiết",
+      "hideEdits": "Ẩn chi tiết",
+      "unknownUser": "không rõ",
+      "writeTitle": "Tháng {months} đã chốt. Vẫn lưu?",
+      "writeDescription": "Thay đổi vẫn được lưu, nhưng sẽ được ghi lại (ai sửa, lúc nào) và hiện trong tab Tổng hợp của tháng.",
+      "writeConfirm": "Vẫn lưu",
+      "inClosedMonth": "Tháng {month} đã chốt: lưu vào tháng này sẽ được ghi lại.",
+      "closedStamp": "Đã chốt",
+      "closedStampEdited": "Đã chốt · sửa {count} lần",
+      "kinds": {
+        "entry_created": "Thêm ngày công",
+        "entry_updated": "Sửa ngày công",
+        "entry_deleted": "Xóa ngày công",
+        "entry_self_logged": "Thợ tự chấm công",
+        "entry_self_edited": "Thợ sửa ngày công",
+        "entry_validated": "Duyệt ngày công",
+        "entry_rejected": "Từ chối ngày công",
+        "change_approved": "Duyệt yêu cầu sửa",
+        "payment_created": "Ghi thanh toán",
+        "payment_updated": "Sửa thanh toán",
+        "payment_deleted": "Xóa thanh toán",
+        "rate_changed": "Đổi lương ngày",
+        "rate_change_deleted": "Xóa mức lương",
+        "other": "Thay đổi"
+      }
+    }
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

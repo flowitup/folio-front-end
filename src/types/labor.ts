@@ -417,3 +417,53 @@ export interface LaborPaymentsSummaryResponse {
    */
   months: LaborPaymentsMonthBucket[];
 }
+
+// ─── Closed labor months ("Chốt tháng", QĐ-10) ───────────────────────────────
+
+/** What kind of write landed in a closed month (see the API's EDIT_KINDS). */
+export type LaborMonthClosureEditKind =
+  | "entry_created"
+  | "entry_updated"
+  | "entry_deleted"
+  | "entry_self_logged"
+  | "entry_self_edited"
+  | "entry_validated"
+  | "entry_rejected"
+  | "change_approved"
+  | "payment_created"
+  | "payment_updated"
+  | "payment_deleted"
+  | "rate_changed"
+  | "rate_change_deleted";
+
+export interface LaborMonthClosureEdit {
+  kind: LaborMonthClosureEditKind | string;
+  edited_at: string | null;
+  user_id: string | null;
+  user_name: string | null;
+  entry_id: string | null;
+  worker_id: string | null;
+  worker_name: string | null;
+  /** The attendance day or the rate's effective date; null for a payment. */
+  entry_date: string | null;
+}
+
+/** A closed (project, month). Closing locks nothing: later writes are recorded in `edits`. */
+export interface LaborMonthClosure {
+  project_id: string;
+  /** "YYYY-MM" */
+  month: string;
+  closed_at: string | null;
+  closed_by_user_id: string | null;
+  closed_by_name: string | null;
+  edited_after_close: number;
+  last_edited_at: string | null;
+  last_edited_by_user_id: string | null;
+  last_edited_by_name: string | null;
+  /** Newest first. */
+  edits: LaborMonthClosureEdit[];
+}
+
+export interface LaborMonthClosureListResponse {
+  closures: LaborMonthClosure[];
+}

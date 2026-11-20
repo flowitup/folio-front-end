@@ -32,6 +32,8 @@ import type {
   LaborDayDescriptionListResponse,
   LaborPaymentNote,
   LaborPaymentNoteListResponse,
+  LaborMonthClosure,
+  LaborMonthClosureListResponse,
 } from "@/types/labor";
 import { api, ApiError } from "@/lib/api/http";
 import { env } from "@/lib/config/env";
@@ -315,6 +317,28 @@ export async function setLaborPaymentNote(
   payload: { worker_id: string; month: string; note: string },
 ): Promise<void> {
   await api.put<unknown>(`/projects/${encodeURIComponent(projectId)}/labor-payment-notes`, payload);
+}
+
+// ─── Closed labor months ("Chốt tháng") ──────────────────────────────────────
+
+/** The project's closed months, newest first, each with the edits made after closing. */
+export async function fetchLaborMonthClosures(projectId: string): Promise<LaborMonthClosure[]> {
+  const data = await api.get<LaborMonthClosureListResponse>(
+    `/projects/${encodeURIComponent(projectId)}/labor-month-closures`,
+  );
+  return data.closures;
+}
+
+/** Close `month` ("YYYY-MM"). Closing an already closed month returns it unchanged. */
+export async function closeLaborMonth(projectId: string, month: string): Promise<LaborMonthClosure> {
+  return api.post<LaborMonthClosure>(`/projects/${encodeURIComponent(projectId)}/labor-month-closures`, { month });
+}
+
+/** Reopen (undo the closure of) `month` ("YYYY-MM"). */
+export async function reopenLaborMonth(projectId: string, month: string): Promise<void> {
+  await api.delete(
+    `/projects/${encodeURIComponent(projectId)}/labor-month-closures/${encodeURIComponent(month)}`,
+  );
 }
 
 // ─── Worker rate changes ─────────────────────────────────────────────────────

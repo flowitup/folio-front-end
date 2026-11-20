@@ -26,6 +26,7 @@ import {
 import { MAX_DAILY_AMOUNT } from "@/lib/numeric-bounds";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
+import { useLaborMonthClosures } from "@/components/labor/month-closure-context";
 
 interface AdjustRateDialogProps {
   projectId: string;
@@ -66,6 +67,7 @@ export function AdjustRateDialog({
 }: AdjustRateDialogProps) {
   const t = useTranslations("labor");
   const locale = useLocale();
+  const { confirmWrite } = useLaborMonthClosures();
 
   const [rateChanges, setRateChanges] = useState<WorkerRateChange[]>([]);
   // isRefreshing: true only during user-triggered re-fetches (add / delete),
@@ -134,6 +136,8 @@ export function AdjustRateDialog({
       return;
     }
     if (!worker) return;
+    // A rate dated back into a closed month reprices it: ask first.
+    if (!(await confirmWrite([], effectiveDate))) return;
 
     setIsSaving(true);
     setIsRefreshing(true);
@@ -336,7 +340,11 @@ export function AdjustRateDialog({
         onConfirm={() => {
           const target = confirmDelete;
           setConfirmDelete(null);
-          if (target) void handleDelete(target.id);
+          if (!target) return;
+          // Its days fall back to the previous rate, closed months included: ask first.
+          void (async () => {
+            if (await confirmWrite([], target.effective_date)) await handleDelete(target.id);
+          })();
         }}
       />
     </Dialog>

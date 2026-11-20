@@ -978,6 +978,7 @@
     "shiftHalf": "Half day",
     "shiftOvertime": "Overtime",
     "totalLaborCost": "Total labor cost",
+    "totalLaborCostBasis": "from logged days",
     "workerDays": "Worker-days",
     "onSiteToday": "On site today",
     "acrossWorkers": "across {n, plural, one {# worker} other {# workers}}",
@@ -995,6 +996,8 @@
     "summaryDrillDown": "Click to view per-worker breakdown",
     "summaryMonthPickerAll": "All months",
     "summaryUnassignedHint": "+ {n} unassigned",
+    "summaryUnassignedLabor": "Labor costs with no worker (e.g. subcontractor) · {n, plural, one {# payment} other {# payments}}",
+    "summaryUnassignedLaborAssign": "Assign →",
     "workersBadge": "{n, plural, one {# worker} other {# workers}}",
     "role": {
       "label": "Role",
@@ -1336,8 +1339,7 @@
       "retrySearch": "Retry"
     },
     "newPersonHint": "New person: created together with the worker when you save.",
-    "confirmDeactivateBody": "{name} will be stopped on every site of the company that you manage and can no longer log time there. Their days and what they are still owed stay visible and payable; you can reactivate them.",
-    "summaryPaidOutsideMonths": "Payments with no month or outside logged months"
+    "confirmDeactivateBody": "{name} will be stopped on every site of the company that you manage and can no longer log time there. Their days and what they are still owed stay visible and payable; you can reactivate them."
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

@@ -978,6 +978,7 @@
     "shiftHalf": "Nửa ngày",
     "shiftOvertime": "Tăng ca",
     "totalLaborCost": "Tổng chi phí nhân công",
+    "totalLaborCostBasis": "theo công đã chấm",
     "workerDays": "Ngày công",
     "onSiteToday": "Có mặt hôm nay",
     "acrossWorkers": "trên {n} công nhân",
@@ -995,6 +996,8 @@
     "summaryDrillDown": "Nhấn để xem chi tiết theo công nhân",
     "summaryMonthPickerAll": "Tất cả tháng",
     "summaryUnassignedHint": "+ {n} chưa gán",
+    "summaryUnassignedLabor": "Chi phí nhân công chưa gán thợ (vd. thầu phụ) · {n} khoản",
+    "summaryUnassignedLaborAssign": "Gán →",
     "workersBadge": "{n} công nhân",
     "role": {
       "label": "Vai trò",
@@ -1336,8 +1339,7 @@
       "retrySearch": "Thử lại"
     },
     "newPersonHint": "Người mới: sẽ được tạo cùng công nhân khi bạn lưu.",
-    "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại.",
-    "summaryPaidOutsideMonths": "Khoản trả không có tháng hoặc ngoài các tháng chấm công"
+    "confirmDeactivateBody": "{name} sẽ bị ngừng trên mọi dự án của công ty mà bạn quản lý và không thể chấm công ở đó nữa. Ngày công và số tiền còn nợ vẫn hiển thị và có thể trả; bạn có thể kích hoạt lại."
   },
   "acceptInvite": {
     "title": "Bạn được mời tham gia {projectName}",

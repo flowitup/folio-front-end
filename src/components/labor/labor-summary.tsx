@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { formatBonusDays, formatDays } from "@/components/labor/format-days";
 import { personInitials } from "@/lib/utils/person-color";
@@ -62,6 +63,34 @@ function formatMonthLabel(month: string, locale: string): string {
   const [y, m] = month.split("-").map(Number);
   if (!y || !m) return month;
   return new Date(y, m - 1, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
+}
+
+/** Paid to workers in a bucket: the part that settles wages. */
+function workerLinkedPaid(b: LaborPaymentsMonthBucket): number {
+  return b.workers.reduce((sum, w) => sum + w.paid, 0);
+}
+
+interface SplitAcc {
+  company: number;
+  personal: number;
+  /** False once a bucket's split also covers money outside this set. */
+  exact: boolean;
+}
+
+function emptySplit(): SplitAcc {
+  return { company: 0, personal: 0, exact: true };
+}
+
+/** Adds a bucket's company/personal split when it belongs wholly to the set. */
+function addSplit(acc: SplitAcc, b: LaborPaymentsMonthBucket, wholeBucket: boolean) {
+  const company = b.company_paid ?? 0;
+  const personal = b.personal_paid ?? 0;
+  if (!wholeBucket) {
+    if (company > 0 || personal > 0) acc.exact = false;
+    return;
+  }
+  acc.company += company;
+  acc.personal += personal;
 }
 
 // Folio warm worker-accent palette, lifted from the Labor Summary
@@ -269,54 +298,40 @@ export function LaborSummary({
     }
     return m;
   }, [paymentsSummary]);
-  // Month-header Paid = bucket.total_paid, which already folds in
-  // assigned + unassigned payments for that month (the money that actually
-  // left). Deliberately no Balance column in this mode: recorded payments
-  // aren't tracked per bonus day, so subtracting Paid from this table's
+  // One rule for "Paid", in both modes: the payments linked to a worker
+  // (what settles wages). Payments with no worker (e.g. a subcontractor's
+  // labor invoice) or no service month settle nobody, so they stay out of the
+  // month rows and the grand total and get their own line under it.
+  // Deliberately no Balance column in this mode: recorded payments aren't
+  // tracked per bonus day, so subtracting Paid from this table's
   // bonus-inclusive Total would produce a figure that doesn't reconcile —
   // Balance only appears in single-month mode, where both sides are scoped
   // to the same worker+month.
-  // Labor payments no visible month row can show: the no-service-month
-  // bucket (all history only) and months paid without any attendance. They
-  // get their own line so the grand total matches labor_paid elsewhere.
-  const paidOutsideMonths = useMemo(() => {
-    const visible = new Set(
-      filteredMonthlyRows.map((r) => `${r.year}-${String(r.month).padStart(2, "0")}`),
-    );
-    const acc = { total: 0, company: 0, personal: 0 };
+  const { workerPaidAllHistory, workerSplitAllHistory, otherLaborPaid } = useMemo(() => {
+    const paid = { total: 0, ...emptySplit() };
+    const other = { total: 0, count: 0, ...emptySplit() };
     for (const b of paymentsSummary?.months ?? []) {
       if (b.year == null || b.month == null) {
+        // No service month: everything in it, worker or not, settles no month.
         if (selectedYear != null) continue;
-      } else {
-        if (selectedYear != null && b.year !== selectedYear) continue;
-        if (visible.has(`${b.year}-${String(b.month).padStart(2, "0")}`)) continue;
+        other.total += b.total_paid;
+        other.count += b.unassigned_count + b.workers.reduce((n, w) => n + w.invoice_count, 0);
+        addSplit(other, b, true);
+        continue;
       }
-      acc.total += b.total_paid;
-      acc.company += b.company_paid ?? 0;
-      acc.personal += b.personal_paid ?? 0;
+      if (selectedYear != null && b.year !== selectedYear) continue;
+      const linked = workerLinkedPaid(b);
+      paid.total += linked;
+      if (linked > 0.004) addSplit(paid, b, b.unassigned_paid <= 0.004);
+      if (b.unassigned_paid > 0.004) {
+        other.total += b.unassigned_paid;
+        other.count += b.unassigned_count;
+        addSplit(other, b, linked <= 0.004);
+      }
     }
-    return acc;
-  }, [filteredMonthlyRows, paymentsSummary, selectedYear]);
-  const totalPaidAllHistory = useMemo(() => {
-    return filteredMonthlyRows.reduce((sum, r) => {
-      const ym = `${r.year}-${String(r.month).padStart(2, "0")}`;
-      return sum + (bucketByMonthKey.get(ym)?.total_paid ?? 0);
-    }, paidOutsideMonths.total);
-  }, [filteredMonthlyRows, bucketByMonthKey, paidOutsideMonths]);
-  // Company/personal split of totalPaidAllHistory — same visible-month scope,
-  // so the footer caption always reconciles with the rows above it.
-  const totalSplitAllHistory = useMemo(() => {
-    return filteredMonthlyRows.reduce(
-      (acc, r) => {
-        const ym = `${r.year}-${String(r.month).padStart(2, "0")}`;
-        const bucket = bucketByMonthKey.get(ym);
-        acc.company += bucket?.company_paid ?? 0;
-        acc.personal += bucket?.personal_paid ?? 0;
-        return acc;
-      },
-      { company: paidOutsideMonths.company, personal: paidOutsideMonths.personal },
-    );
-  }, [filteredMonthlyRows, bucketByMonthKey, paidOutsideMonths]);
+    return { workerPaidAllHistory: paid.total, workerSplitAllHistory: paid, otherLaborPaid: other };
+  }, [paymentsSummary, selectedYear]);
+  const paymentsHref = `/${locale}/projects/${projectId}/labor?tab=payments`;
 
   if (isLoading) {
     return (
@@ -356,6 +371,9 @@ export function LaborSummary({
           </div>
           <div className="num mt-2 text-[11px]" style={{ color: "var(--positive)" }}>
             {periodLabel}
+          </div>
+          <div className="mt-0.5 text-[11px]" style={{ color: "var(--muted)" }} data-testid="total-labor-cost-basis">
+            {t("totalLaborCostBasis")}
           </div>
         </div>
         <div className="folio-card p-4 lg:p-5">
@@ -508,7 +526,7 @@ export function LaborSummary({
                     const ym = `${row.year}-${String(row.month).padStart(2, "0")}`;
                     const open = openMonths.has(ym);
                     const bucket = bucketByMonthKey.get(ym);
-                    const monthPaid = bucket?.total_paid ?? 0;
+                    const monthPaid = bucket ? workerLinkedPaid(bucket) : 0;
                     const monthUnassignedCount = bucket?.unassigned_count ?? 0;
                     // Warn on CLOSED months whose charges aren't fully settled.
                     // The current month is excluded — being mid-month unpaid is
@@ -671,11 +689,16 @@ export function LaborSummary({
                               {t("summaryUnassignedHint", { n: monthUnassignedCount })}
                             </span>
                           )}
-                          <PaidSplitCaption
-                            company={bucket?.company_paid ?? 0}
-                            personal={bucket?.personal_paid ?? 0}
-                            testId={`month-paid-split-${ym}`}
-                          />
+                          {/* The split covers the whole bucket: shown only when
+                              the bucket holds no unassigned payment, so it never
+                              adds up to more than the Paid figure above. */}
+                          {(bucket?.unassigned_paid ?? 0) <= 0.004 && (
+                            <PaidSplitCaption
+                              company={bucket?.company_paid ?? 0}
+                              personal={bucket?.personal_paid ?? 0}
+                              testId={`month-paid-split-${ym}`}
+                            />
+                          )}
                         </td>
                       </tr>,
                     ];
@@ -801,19 +824,6 @@ export function LaborSummary({
                     }
                     return rows;
                   })}
-                  {paidOutsideMonths.total > 0.004 && (
-                    <tr data-testid="labor-paid-outside-months-row">
-                      <td />
-                      <td style={{ color: "var(--muted)" }}>{t("summaryPaidOutsideMonths")}</td>
-                      <td />
-                      <td />
-                      <td />
-                      <td />
-                      <td className="num tabular-nums" style={{ textAlign: "right" }}>
-                        {formatEUR(paidOutsideMonths.total)}
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
                 <tfoot>
                   <tr style={{ background: "var(--paper-2)" }}>
@@ -836,14 +846,48 @@ export function LaborSummary({
                       className="num font-medium tabular-nums"
                       style={{ textAlign: "right" }}
                     >
-                      {totalPaidAllHistory > 0 ? formatEUR(totalPaidAllHistory) : "—"}
-                      <PaidSplitCaption
-                        company={totalSplitAllHistory.company}
-                        personal={totalSplitAllHistory.personal}
-                        testId="all-history-paid-split"
-                      />
+                      {workerPaidAllHistory > 0 ? formatEUR(workerPaidAllHistory) : "—"}
+                      {workerSplitAllHistory.exact && (
+                        <PaidSplitCaption
+                          company={workerSplitAllHistory.company}
+                          personal={workerSplitAllHistory.personal}
+                          testId="all-history-paid-split"
+                        />
+                      )}
                     </td>
                   </tr>
+                  {otherLaborPaid.total > 0.004 && (
+                    <tr data-testid="labor-unassigned-paid-row">
+                      <td />
+                      <td className="text-[12.5px]" style={{ color: "var(--ink-2)" }}>
+                        <div>
+                          {t("summaryUnassignedLabor", { n: otherLaborPaid.count })}
+                        </div>
+                        <Link
+                          href={paymentsHref}
+                          className="text-[12px] font-medium hover:underline"
+                          style={{ color: "var(--accent-ink)" }}
+                          data-testid="labor-unassigned-paid-assign"
+                        >
+                          {t("summaryUnassignedLaborAssign")}
+                        </Link>
+                      </td>
+                      <td />
+                      <td />
+                      <td />
+                      <td />
+                      <td className="num tabular-nums" style={{ textAlign: "right" }}>
+                        {formatEUR(otherLaborPaid.total)}
+                        {otherLaborPaid.exact && (
+                          <PaidSplitCaption
+                            company={otherLaborPaid.company}
+                            personal={otherLaborPaid.personal}
+                            testId="labor-unassigned-paid-split"
+                          />
+                        )}
+                      </td>
+                    </tr>
+                  )}
                 </tfoot>
               </table>
             </div>

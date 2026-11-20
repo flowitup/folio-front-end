@@ -978,6 +978,7 @@
     "shiftHalf": "Demi-journée",
     "shiftOvertime": "Journée majorée (×1,5)",
     "totalLaborCost": "Coût total main-d'œuvre",
+    "totalLaborCostBasis": "selon les jours pointés",
     "workerDays": "Jours-ouvriers",
     "onSiteToday": "Sur site aujourd'hui",
     "acrossWorkers": "sur {n, plural, one {# ouvrier} other {# ouvriers}}",
@@ -995,6 +996,8 @@
     "summaryDrillDown": "Cliquer pour voir le détail par ouvrier",
     "summaryMonthPickerAll": "Tous les mois",
     "summaryUnassignedHint": "+ {n, plural, one {# non attribué} other {# non attribués}}",
+    "summaryUnassignedLabor": "Main-d'œuvre sans ouvrier attribué (ex. sous-traitant) · {n, plural, one {# paiement} other {# paiements}}",
+    "summaryUnassignedLaborAssign": "Attribuer →",
     "workersBadge": "{n, plural, one {# ouvrier} other {# ouvriers}}",
     "role": {
       "label": "Rôle",
@@ -1336,8 +1339,7 @@
       "retrySearch": "Réessayer"
     },
     "newPersonHint": "Nouvelle personne : elle sera créée avec l'ouvrier, une fois enregistré.",
-    "confirmDeactivateBody": "{name} sera arrêté(e) sur tous les chantiers de l'entreprise que vous gérez et ne pourra plus y pointer. Ses journées et ce qui lui reste dû restent visibles et payables ; vous pourrez le/la réactiver.",
-    "summaryPaidOutsideMonths": "Paiements sans mois ou hors des mois pointés"
+    "confirmDeactivateBody": "{name} sera arrêté(e) sur tous les chantiers de l'entreprise que vous gérez et ne pourra plus y pointer. Ses journées et ce qui lui reste dû restent visibles et payables ; vous pourrez le/la réactiver."
   },
   "acceptInvite": {
     "title": "Vous êtes invité à rejoindre {projectName}",

@@ -291,3 +291,11 @@ describe("LaborSummary — bonus KPI in all-history mode", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("LaborSummary — total labor cost basis", () => {
+  it("says the headline cost comes from logged days (not from recorded labor expenses)", () => {
+    render(<LaborSummary {...baseProps} month="" />);
+    const card = screen.getByText("totalLaborCost").parentElement!;
+    expect(card.querySelector('[data-testid="total-labor-cost-basis"]')?.textContent).toBe("totalLaborCostBasis");
+  });
+});

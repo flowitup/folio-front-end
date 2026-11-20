@@ -33,7 +33,7 @@ import { BankReleaseChart } from "@/components/project/bank-release-chart";
 import Link from "next/link";
 import { ArrowRight, Building2, Clock, Plus } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { can, canCreateProject } from "@/lib/auth/permissions";
+import { can, canCreateProject, isCompanyAdmin } from "@/lib/auth/permissions";
 import { parisDayKey } from "@/lib/utils/paris-day";
 import { CompanyOverview } from "@/components/dashboard/company-overview";
 import { OverviewScopeToggle, type OverviewScope } from "@/components/dashboard/overview-scope-toggle";
@@ -91,20 +91,24 @@ export default function DashboardPage() {
   const tProjects = useTranslations("projects");
   const projectId = selectedProject?.id;
 
-  // Project / Company switch. Read from storage after mount, so the server
-  // render (always "project") and the first client paint agree.
-  const [scope, setScopeState] = useState<OverviewScope>("project");
+  // Project / Company switch. The stored choice is read after mount, so the
+  // server render (always "project") and the first client paint agree:
+  // undefined = not read yet, null = nothing stored.
+  const [scopePref, setScopePref] = useState<OverviewScope | null | undefined>(undefined);
   const [companyId, setCompanyId] = useState<string | null>(null);
   useEffect(() => {
+    let stored: OverviewScope | null = null;
     try {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only preference, read after mount to avoid an SSR mismatch
-      if (window.localStorage.getItem(SCOPE_KEY) === "company") setScopeState("company");
+      const raw = window.localStorage.getItem(SCOPE_KEY);
+      if (raw === "company" || raw === "project") stored = raw;
     } catch {
-      // storage blocked: stay on the project view
+      // storage blocked: no remembered choice
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only preference, read after mount to avoid an SSR mismatch
+    setScopePref(stored);
   }, []);
   const setScope = (s: OverviewScope) => {
-    setScopeState(s);
+    setScopePref(s);
     try {
       window.localStorage.setItem(SCOPE_KEY, s);
     } catch {
@@ -112,22 +116,33 @@ export default function DashboardPage() {
     }
   };
   const projectList = useMemo(() => allProjects ?? [], [allProjects]);
+  // Company figures are for company admins only: a member's view of them is
+  // all zeros ("all wages paid") while the company still owes wages.
   const companies = useMemo(() => {
     const ids = Array.from(new Set(projectList.map((p) => p.company_id).filter((c): c is string => !!c)));
-    return ids.map((id) => ({ id, name: user?.companies?.find((c) => c.id === id)?.legal_name ?? "" }));
-  }, [projectList, user?.companies]);
+    return ids
+      .filter((id) => isCompanyAdmin(user?.companies, id, user?.permissions))
+      .map((id) => ({ id, name: user?.companies?.find((c) => c.id === id)?.legal_name ?? "" }));
+  }, [projectList, user?.companies, user?.permissions]);
   // The company shown: the one picked, else the selected project's, else the first.
   const activeCompanyId =
     (companyId && companies.some((c) => c.id === companyId) ? companyId : null) ??
-    selectedProject?.company_id ??
+    (selectedProject?.company_id && companies.some((c) => c.id === selectedProject.company_id)
+      ? selectedProject.company_id
+      : null) ??
     companies[0]?.id ??
     null;
   const companyProjects = useMemo(
-    () => projectList.filter((p) => !activeCompanyId || p.company_id === activeCompanyId),
+    () => projectList.filter((p) => p.company_id === activeCompanyId),
     [projectList, activeCompanyId],
   );
-  // Worth a switch only when there is more than one project to add up.
-  const canSeeCompany = projectList.length > 1;
+  // Worth a switch only when there is more than one project to add up, and
+  // only for an admin of the company shown.
+  const canSeeCompany = projectList.length > 1 && activeCompanyId !== null;
+  // An admin with several projects opens on the company view until they pick;
+  // a stored "company" without the right falls back to the project view.
+  const scope: OverviewScope =
+    scopePref === undefined || !canSeeCompany ? "project" : (scopePref ?? "company");
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [meta, setMeta] = useState<OverviewMeta>(EMPTY_META);
@@ -329,7 +344,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (scope === "company" && canSeeCompany) {
+  if (scope === "company") {
     return (
       <CompanyOverview
         projects={companyProjects}

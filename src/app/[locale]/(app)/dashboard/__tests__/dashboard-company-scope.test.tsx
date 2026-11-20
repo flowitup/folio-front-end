@@ -27,8 +27,11 @@ const projects = [project("p-1", "Nhà 13", 100000, 40000), project("p-2", "Nhà
 vi.mock("@/context/ProjectContext", () => ({
   useProject: () => ({ selectedProject: projects[0], projects, selectProject: mockSelectProject, isLoading: false }),
 }));
+const ADMIN = { permissions: ["project:view_budget"], companies: [{ id: "c-1", legal_name: "AVN", role: "admin", is_primary: true }] };
+const MEMBER = { permissions: ["project:view_budget"], companies: [{ id: "c-1", legal_name: "AVN", role: "member", is_primary: true }] };
+let mockUser: typeof ADMIN = ADMIN;
 vi.mock("@/context/AuthContext", () => ({
-  useAuth: () => ({ user: { permissions: ["project:view_budget"], companies: [{ id: "c-1", legal_name: "AVN", role: "admin", is_primary: true }] } }),
+  useAuth: () => ({ user: mockUser }),
 }));
 
 function renderDashboard() {
@@ -42,10 +45,12 @@ function renderDashboard() {
 beforeEach(() => {
   vi.clearAllMocks();
   window.localStorage.clear();
+  mockUser = ADMIN;
 });
 
 describe("DashboardPage — company scope", () => {
   it("switches to the company view and back to a project", async () => {
+    window.localStorage.setItem("folio.overview.scope", "project");
     renderDashboard();
     fireEvent.click(within(screen.getByTestId("overview-scope-toggle")).getByRole("button", { name: "Company" }));
 
@@ -67,5 +72,57 @@ describe("DashboardPage — company scope", () => {
     window.localStorage.setItem("folio.overview.scope", "company");
     renderDashboard();
     expect(await screen.findByTestId("company-overview")).toBeInTheDocument();
+  });
+
+  it("opens an admin with several projects on the company view when nothing is stored", async () => {
+    renderDashboard();
+    expect(await screen.findByTestId("company-overview")).toBeInTheDocument();
+  });
+
+  it("keeps the project view once an admin picked it", async () => {
+    renderDashboard();
+    await screen.findByTestId("company-overview");
+    fireEvent.click(within(screen.getByTestId("overview-scope-toggle")).getByRole("button", { name: "Project" }));
+    expect(window.localStorage.getItem("folio.overview.scope")).toBe("project");
+    expect(screen.queryByTestId("company-overview")).toBeNull();
+  });
+
+  it("gives a member no company switch and no company figures", async () => {
+    mockUser = MEMBER;
+    renderDashboard();
+    expect(await screen.findByTestId("overview-member-finances")).toBeInTheDocument();
+    expect(screen.queryByTestId("overview-scope-toggle")).toBeNull();
+    expect(screen.queryByTestId("company-overview")).toBeNull();
+    expect(screen.queryByText("All wages for this month are paid.")).toBeNull();
+  });
+
+  it("falls back to the project view when a member has 'company' stored", async () => {
+    mockUser = MEMBER;
+    window.localStorage.setItem("folio.overview.scope", "company");
+    renderDashboard();
+    expect(await screen.findByTestId("overview-member-finances")).toBeInTheDocument();
+    expect(screen.queryByTestId("company-overview")).toBeNull();
+    expect(screen.queryByTestId("overview-scope-toggle")).toBeNull();
+  });
+
+  it("lists only the companies the user administers", async () => {
+    mockUser = {
+      permissions: ["project:view_budget"],
+      companies: [
+        { id: "c-1", legal_name: "AVN", role: "admin", is_primary: true },
+        { id: "c-2", legal_name: "Other", role: "member", is_primary: false },
+      ],
+    };
+    projects.push(project("p-3", "Nhà khác", null, 0));
+    projects[2].company_id = "c-2";
+    try {
+      renderDashboard();
+      expect(await screen.findByTestId("company-overview")).toBeInTheDocument();
+      // One administered company: no company picker, and the other company's project is not added up.
+      expect(screen.queryByRole("combobox", { name: "Company" })).toBeNull();
+      expect(screen.getAllByTestId("company-project-card")).toHaveLength(2);
+    } finally {
+      projects.pop();
+    }
   });
 });

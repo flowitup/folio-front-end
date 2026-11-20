@@ -230,7 +230,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
               <span className="font-display text-[22px] font-semibold leading-tight tabular-nums" style={{ color: k.color }}>
                 {k.value}
               </span>
-              <span className="text-[12px]" style={{ color: BAND_MUTED }}>
+              <span className="text-[12px] lg:text-[13.5px]" style={{ color: BAND_MUTED }}>
                 {k.sub}
               </span>
             </div>
@@ -267,7 +267,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                 >
                   <div className="flex w-full items-start justify-between gap-2">
                     <span className="text-[15px] font-semibold">{projectDisplayName(r.project)}</span>
-                    <span className="inline-flex flex-none items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-medium" style={{ background: st.bg, color: st.fg }}>
+                    <span className="inline-flex flex-none items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-medium lg:text-[13.5px]" style={{ background: st.bg, color: st.fg }}>
                       <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full" style={{ background: st.dot }} />
                       {t(`status.${c.status}`)}
                     </span>
@@ -388,7 +388,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                         <div className="h-[5px] flex-1 overflow-hidden rounded-full" style={{ background: "var(--paper-2)" }}>
                           <div className="h-full rounded-full" style={{ width: `${maxOwed > 0 ? (w.owed / maxOwed) * 100 : 0}%`, background: "var(--accent)" }} />
                         </div>
-                        <span className="whitespace-nowrap text-[12px]" style={{ color: "var(--muted)" }}>
+                        <span className="whitespace-nowrap text-[12px] lg:text-[13.5px]" style={{ color: "var(--muted)" }}>
                           {t("workerSub", { days: formatDays(w.days, locale), paid: fmtEUR(w.paid) })}
                         </span>
                       </div>

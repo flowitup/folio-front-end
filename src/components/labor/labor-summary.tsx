@@ -504,10 +504,11 @@ export function LaborSummary({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              {/* Phones drop the crew avatars (3rd column) and the cost bar
-                  (5th) so TOTAL and PAID fit without a sideways scroll. */}
+              {/* Phones drop the crew avatars (3rd column); below 1280px the cost
+                  bar (5th) goes too, so TOTAL and PAID fit without a sideways scroll
+                  on tablets and small laptops. */}
               <table
-                className="ledger [&_tr>*:nth-child(3)]:hidden [&_tr>*:nth-child(5)]:hidden sm:[&_tr>*:nth-child(3)]:table-cell sm:[&_tr>*:nth-child(5)]:table-cell"
+                className="ledger [&_tr>*:nth-child(3)]:hidden [&_tr>*:nth-child(5)]:hidden sm:[&_tr>*:nth-child(3)]:table-cell xl:[&_tr>*:nth-child(5)]:table-cell"
                 data-testid="labor-monthly-table"
               >
                 <thead>

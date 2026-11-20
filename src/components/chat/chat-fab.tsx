@@ -6,7 +6,7 @@
  * selected project's channel; while the widget is open it turns into the close toggle
  * (support-chat convention). Rendered only once the backend confirms the chat feature.
  *
- * Mounted in the (app) layout OUTSIDE the zoom:0.8 content wrapper: position:fixed
+ * Mounted in the (app) layout OUTSIDE the zoom:0.9 content wrapper: position:fixed
  * offsets inside the zoomed subtree rescale erratically. Sits above the mobile
  * bottom nav on narrow widths.
  */

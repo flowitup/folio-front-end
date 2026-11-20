@@ -17,6 +17,10 @@ vi.mock("@/lib/api/labor", () => ({
     rows: [{ year: 2026, month: 7, total_days: 5, total_cost: 500, workers: [{ worker_id: "w1", worker_name: "Ân", days_worked: 5, total_cost: 500 }] }],
   }),
   fetchLaborPaymentsSummary: vi.fn().mockResolvedValue({ months: [] }),
+  // "Nhà 13" (p-1) has July 2026 closed; the other project's closures cannot be read.
+  fetchLaborMonthClosures: vi.fn((projectId: string) =>
+    projectId === "p-1" ? Promise.resolve([{ project_id: "p-1", month: "2026-07", edits: [] }]) : Promise.reject(new Error("403")),
+  ),
 }));
 
 const mockSelectProject = vi.fn();
@@ -66,6 +70,16 @@ describe("DashboardPage — company scope", () => {
     fireEvent.click(cards[1]);
     expect(mockSelectProject).toHaveBeenCalledWith("p-1");
     expect(screen.queryByTestId("company-overview")).toBeNull();
+  });
+
+  it("marks the projects whose viewed month is closed", async () => {
+    window.localStorage.setItem("folio.overview.scope", "company");
+    renderDashboard();
+    await screen.findByTestId("company-overview");
+    const closedCard = (await screen.findByTestId("company-project-closed")).closest("[data-testid='company-project-card']");
+    expect(closedCard).toHaveTextContent("Nhà 13");
+    expect(closedCard).toHaveTextContent("Month closed");
+    expect(screen.getAllByTestId("company-project-closed")).toHaveLength(1);
   });
 
   it("opens on the company view when it was the last choice", async () => {

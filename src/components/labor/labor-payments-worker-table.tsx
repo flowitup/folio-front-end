@@ -100,7 +100,7 @@ export function LaborPaymentsWorkerTable({
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-x-auto lg:block" data-testid="labor-payments-desktop">
+          <div className="hidden overflow-x-auto xl:block" data-testid="labor-payments-desktop">
             <table className="ledger">
               <thead>
                 <tr>
@@ -170,7 +170,7 @@ export function LaborPaymentsWorkerTable({
           </div>
 
           {/* Mobile cards */}
-          <div className="space-y-3 p-4 lg:hidden" data-testid="labor-payments-mobile">
+          <div className="space-y-3 p-4 xl:hidden" data-testid="labor-payments-mobile">
             {rows.map((row) => (
               <LaborPaymentRow
                 key={row.worker_id}

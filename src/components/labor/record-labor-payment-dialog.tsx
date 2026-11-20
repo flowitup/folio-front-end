@@ -40,6 +40,7 @@ import { MAX_LINE_UNIT_PRICE } from "@/lib/numeric-bounds";
 import { ApiError } from "@/lib/api/http";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 import { formatEUR } from "@/lib/api/labor";
+import { useLaborMonthClosures } from "@/components/labor/month-closure-context";
 
 /** The API's limit on an invoice line description. */
 const DESCRIPTION_MAX_LENGTH = 500;
@@ -97,6 +98,7 @@ export function RecordLaborPaymentDialog({
   const t = useTranslations("labor.payments");
   const tLabor = useTranslations("labor");
   const tInvoices = useTranslations("invoices");
+  const { confirmWrite } = useLaborMonthClosures();
   const locale = useLocale();
 
   const [workerId, setWorkerId] = useState<string | null>(null);
@@ -191,6 +193,8 @@ export function RecordLaborPaymentDialog({
       service_month: `${month}-01`,
       worker_id: workerId,
     };
+    // A payment for a closed month still saves, after "Tháng X đã chốt. Vẫn lưu?".
+    if (!(await confirmWrite([month]))) return;
     setIsSaving(true);
     try {
       await createInvoice(projectId, payload);

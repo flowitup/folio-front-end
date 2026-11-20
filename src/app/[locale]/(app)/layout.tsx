@@ -63,7 +63,7 @@ export default async function AppLayout({
         <Sidebar canViewBilling={canViewBilling} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Topbar />
-          {/* On desktop (≥1024px) content is scaled down (--app-zoom, 0.8) so
+          {/* On desktop (≥1024px) content is scaled down (--app-zoom, 0.9) so
               less scrolling is needed; zoom reflows layout (shrinks scroll
               height) unlike transform: scale. Sidebar and Topbar stay at 100%.
               Phones and tablets are NOT scaled: there the zoom made text 8-10px

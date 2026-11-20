@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { fetchLaborSummary, fetchLaborMonthlySummary, fetchLaborPaymentsSummary } from "@/lib/api/labor";
 import { fetchInvoicesWithMeta, updateInvoice } from "@/lib/api/invoice-api";
+import { useLaborMonthClosures } from "@/components/labor/month-closure-context";
 import type {
   LaborSummaryResponse,
   LaborPaymentsSummaryResponse,
@@ -38,6 +39,7 @@ export function useLaborPaymentsData(
   reloadSharedPaymentsSummary?: () => Promise<LaborPaymentsSummaryResponse>,
 ) {
   const t = useTranslations("labor.payments");
+  const { confirmWrite } = useLaborMonthClosures();
   // Both must be provided together — a caller that shares the summary value
   // but forgets the reload function (or vice versa) falls back to the
   // self-contained fetch rather than crashing on a missing reload call.
@@ -182,6 +184,8 @@ export function useLaborPaymentsData(
   );
 
   async function handleAssignWorker(invoiceId: string, workerId: string, includeMonth: boolean) {
+    // The payment is (or lands) in the viewed month: ask first when it is closed.
+    if (!(await confirmWrite([month]))) return;
     try {
       await updateInvoice(
         projectId,
@@ -198,6 +202,7 @@ export function useLaborPaymentsData(
 
   /** Stamps a service month ("YYYY-MM", default: the viewed month) on a payment. */
   async function handleAssignMonth(invoiceId: string, targetMonth: string = month) {
+    if (!(await confirmWrite([targetMonth]))) return;
     try {
       await updateInvoice(projectId, invoiceId, { service_month: `${targetMonth}-01` });
       toast.success(t("assignedToast"));

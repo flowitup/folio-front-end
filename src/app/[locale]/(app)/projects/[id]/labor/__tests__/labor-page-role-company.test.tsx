@@ -73,6 +73,9 @@ vi.mock("@/lib/api/projects", () => ({
 }));
 
 vi.mock("@/lib/api/labor", () => ({
+  fetchLaborMonthClosures: vi.fn().mockResolvedValue([]),
+  closeLaborMonth: vi.fn(),
+  reopenLaborMonth: vi.fn(),
   fetchWorkers: vi.fn().mockResolvedValue(WORKERS),
   createWorker: vi.fn(),
   updateWorker: vi.fn(),

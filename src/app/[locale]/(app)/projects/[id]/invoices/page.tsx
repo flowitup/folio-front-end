@@ -506,7 +506,7 @@ export default function InvoicesPage() {
         ) : (
           <>
           {/* Mobile card list */}
-          <div className="space-y-3 lg:hidden">
+          <div className="space-y-3 xl:hidden">
             {activeTab === "labor" ? (
               <LaborInvoicesByWorker
                 invoices={invoices}
@@ -615,7 +615,7 @@ export default function InvoicesPage() {
               scroller kills position:sticky. The labor tab renders its own
               nested layout with no sticky parts, so it keeps corner clipping. */}
           <div
-            className={`folio-card hidden lg:block${activeTab === "labor" ? " overflow-hidden" : ""}`}
+            className={`folio-card hidden xl:block${activeTab === "labor" ? " overflow-hidden" : ""}`}
             data-testid="invoices-table-desktop"
           >
             {activeTab === "labor" ? (

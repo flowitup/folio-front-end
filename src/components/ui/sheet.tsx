@@ -46,7 +46,7 @@ function SheetOverlay({
 
 /**
  * Side panel. Radix portals it to `document.body`, which is what keeps it out of the app
- * shell's `zoom: 0.8` wrapper — a fixed overlay rendered inside that wrapper has its pixel
+ * shell's `zoom: 0.9` wrapper — a fixed overlay rendered inside that wrapper has its pixel
  * offsets rescaled and lands in the wrong place.
  */
 function SheetContent({

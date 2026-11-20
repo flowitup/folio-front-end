@@ -221,7 +221,8 @@
       "showAll": "Show all {count} workers",
       "showLess": "Show less",
       "footnote": "Money since each project started, net of returns. Days and wages for the picked month; each month stands alone, an overpayment is not carried over. The same worker (same name) across projects is added up.",
-      "partial": "Days could not be loaded for {count} projects."
+      "partial": "Days could not be loaded for {count} projects.",
+      "closedChip": "Month closed"
     },
     "bankRelease": {
       "headlineNoDraws": "remaining of <c>{credit}</c> credit · nothing drawn yet",
@@ -1375,7 +1376,54 @@
       "retrySearch": "Retry"
     },
     "newPersonHint": "New person: created together with the worker when you save.",
-    "confirmDeactivateBody": "{name} will be stopped on every site of the company that you manage and can no longer log time there. Their days and what they are still owed stay visible and payable; you can reactivate them."
+    "confirmDeactivateBody": "{name} will be stopped on every site of the company that you manage and can no longer log time there. Their days and what they are still owed stay visible and payable; you can reactivate them.",
+    "monthClose": {
+      "closeButton": "Close {month}",
+      "closeTitle": "Close {month}?",
+      "closeIntro": "Check before closing. Closing locks nothing: changes still save, but each one shows a warning and is recorded with who made it and when.",
+      "checkPending": "Days waiting for validation",
+      "checkUnassigned": "Labor payments with no worker or month",
+      "checkOwed": "Still owed to workers",
+      "checkCounting": "Counting…",
+      "checkOk": "None",
+      "checkWarning": "You can still close, but it is better to sort these out first.",
+      "closeConfirm": "Close month",
+      "closedToast": "{month} closed",
+      "closeFailed": "Could not close the month. Try again.",
+      "closedBadge": "{month} closed",
+      "closedBy": "by {name}, on {date}",
+      "reopen": "Reopen",
+      "reopenTitle": "Reopen {month}?",
+      "reopenDescription": "The month will no longer be marked as closed, and the list of changes made after closing will be cleared.",
+      "reopenedToast": "{month} reopened",
+      "reopenFailed": "Could not reopen the month. Try again.",
+      "editedAfterClose": "Changed after closing: {count, plural, one {# time} other {# times}}, last by {name} at {time}",
+      "showEdits": "Show details",
+      "hideEdits": "Hide details",
+      "unknownUser": "unknown",
+      "writeTitle": "{months} is closed. Save anyway?",
+      "writeDescription": "The change still saves, but it is recorded (who, when) and shown in the month's Summary tab.",
+      "writeConfirm": "Save anyway",
+      "inClosedMonth": "{month} is closed: saving into it will be recorded.",
+      "closedStamp": "Closed",
+      "closedStampEdited": "Closed · changed {count, plural, one {# time} other {# times}}",
+      "kinds": {
+        "entry_created": "Day added",
+        "entry_updated": "Day edited",
+        "entry_deleted": "Day deleted",
+        "entry_self_logged": "Day logged by the worker",
+        "entry_self_edited": "Day edited by the worker",
+        "entry_validated": "Day validated",
+        "entry_rejected": "Day refused",
+        "change_approved": "Change request applied",
+        "payment_created": "Payment recorded",
+        "payment_updated": "Payment edited",
+        "payment_deleted": "Payment deleted",
+        "rate_changed": "Daily rate changed",
+        "rate_change_deleted": "Daily rate removed",
+        "other": "Change"
+      }
+    }
   },
   "acceptInvite": {
     "title": "You're invited to join {projectName}",

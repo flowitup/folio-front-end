@@ -13,7 +13,7 @@
  * inside the chat already handled (a message popover, a confirmation, the blocked-people
  * dialog: Radix marks it defaultPrevented) closes only that layer.
  *
- * Mounted in the (app) layout outside the zoom:0.8 content wrapper (fixed offsets inside
+ * Mounted in the (app) layout outside the zoom:0.9 content wrapper (fixed offsets inside
  * it rescale) and above the mobile bottom nav (z-50).
  */
 

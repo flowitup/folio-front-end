@@ -202,11 +202,28 @@ body {
 }
 
 /* App shell content scale: none on phones and tablets (small text, iOS
-   focus-zoom on inputs), 0.8 on desktop so less scrolling is needed. Used by
+   focus-zoom on inputs), 0.9 on desktop so less scrolling is needed. Used by
    the (app) layout and by overlays that must match the scaled content. */
 :root { --app-zoom: 1; }
 @media (min-width: 1024px) {
-  :root { --app-zoom: 0.8; }
+  :root { --app-zoom: 0.9; }
+
+  /* Amounts and status labels stay readable inside the scaled content: at
+     least 13.5px before the 0.9 zoom, about 12px on screen. Larger sizes
+     (headline figures) are left alone. */
+  .app-zoom :is(.num, .tabular-nums, [data-slot="badge"]):not([class*="text-["]):not(.text-xs):not(.stamp) {
+    font-size: max(13.5px, 1em);
+  }
+  .app-zoom .stamp {
+    font-size: 13.4px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .app-zoom :is(.num, .tabular-nums, [data-slot="badge"]):is(
+      [class*="text-[9"], [class*="text-[10"], [class*="text-[11"], [class*="text-[12"],
+      [class*="text-[13px"], [class*="text-[13."], .text-xs) {
+    font-size: 13.5px;
+  }
 }
 .app-zoom { zoom: var(--app-zoom); }
 

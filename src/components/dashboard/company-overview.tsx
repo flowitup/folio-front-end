@@ -8,9 +8,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import type { Project } from "@/types/project";
-import { fetchLaborMonthlySummary, fetchLaborPaymentsSummary } from "@/lib/api/labor";
+import { fetchLaborMonthClosures, fetchLaborMonthlySummary, fetchLaborPaymentsSummary } from "@/lib/api/labor";
 import { projectDisplayName } from "@/lib/projects/project-display-name";
 import { fmtEUR } from "@/lib/projects/budget-display";
 import { formatShare } from "@/lib/utils/format-percent";
@@ -62,6 +62,22 @@ async function loadLabor(projects: readonly Project[]): Promise<{ inputs: Projec
   return { inputs, failed };
 }
 
+/**
+ * Closed labor months per project ("Chốt tháng"): {projectId: ["YYYY-MM", …]}.
+ * Best effort: a project the caller may not read closures of is left out.
+ */
+async function loadClosedMonths(projects: readonly Project[]): Promise<Record<string, string[]>> {
+  const out: Record<string, string[]> = {};
+  for (let i = 0; i < projects.length; i += BATCH) {
+    const batch = projects.slice(i, i + BATCH);
+    const settled = await Promise.allSettled(batch.map((p) => fetchLaborMonthClosures(p.id)));
+    settled.forEach((s, j) => {
+      if (s.status === "fulfilled") out[batch[j].id] = s.value.map((c) => c.month);
+    });
+  }
+  return out;
+}
+
 export interface CompanyOverviewProps {
   projects: readonly Project[];
   companies: { id: string; name: string }[];
@@ -78,6 +94,19 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
   const [month, setMonth] = useState<string | null>(null);
   const [allWorkers, setAllWorkers] = useState(false);
   const ids = projects.map((p) => p.id).join(",");
+  const [closedMonths, setClosedMonths] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadClosedMonths(projects).then((d) => {
+      if (!cancelled) setClosedMonths(d);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Keyed on the project ids, like the labor load below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids]);
 
   useEffect(() => {
     let cancelled = false;
@@ -230,7 +259,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
               <span className="font-display text-[22px] font-semibold leading-tight tabular-nums" style={{ color: k.color }}>
                 {k.value}
               </span>
-              <span className="text-[12px]" style={{ color: BAND_MUTED }}>
+              <span className="text-[12px] lg:text-[13.5px]" style={{ color: BAND_MUTED }}>
                 {k.sub}
               </span>
             </div>
@@ -267,7 +296,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                 >
                   <div className="flex w-full items-start justify-between gap-2">
                     <span className="text-[15px] font-semibold">{projectDisplayName(r.project)}</span>
-                    <span className="inline-flex flex-none items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-medium" style={{ background: st.bg, color: st.fg }}>
+                    <span className="inline-flex flex-none items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-medium lg:text-[13.5px]" style={{ background: st.bg, color: st.fg }}>
                       <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full" style={{ background: st.dot }} />
                       {t(`status.${c.status}`)}
                     </span>
@@ -304,6 +333,16 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                         style={c.owed > 0 ? { background: "var(--negative-tint)", color: "#8a3a26" } : { background: "var(--positive-tint)", color: "#3d5531" }}
                       >
                         {c.owed > 0 ? t("owedChip", { amount: fmtEUR(c.owed) }) : c.days > 0 ? t("paidChip") : t("noDaysChip")}
+                      </span>
+                    )}
+                    {closedMonths[r.project.id]?.includes(activeMonth) && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 font-medium"
+                        style={{ background: "var(--paper)", color: "#3d5531" }}
+                        data-testid="company-project-closed"
+                      >
+                        <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                        {t("closedChip")}
                       </span>
                     )}
                   </div>
@@ -388,7 +427,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                         <div className="h-[5px] flex-1 overflow-hidden rounded-full" style={{ background: "var(--paper-2)" }}>
                           <div className="h-full rounded-full" style={{ width: `${maxOwed > 0 ? (w.owed / maxOwed) * 100 : 0}%`, background: "var(--accent)" }} />
                         </div>
-                        <span className="whitespace-nowrap text-[12px]" style={{ color: "var(--muted)" }}>
+                        <span className="whitespace-nowrap text-[12px] lg:text-[13.5px]" style={{ color: "var(--muted)" }}>
                           {t("workerSub", { days: formatDays(w.days, locale), paid: fmtEUR(w.paid) })}
                         </span>
                       </div>

@@ -12,8 +12,10 @@
  *   - Status filter Select (kind-aware values)
  *   - Search input (debounced 300ms, sent to the API as ?q= so every
  *     document is searched, not only the loaded ones)
- *   - Table: Number / Date / Recipient / Status badge / Total TTC / Actions menu;
- *     a row opens its document
+ *   - Table: Number / Date / Due date (factures) or Valid until (devis) /
+ *     Recipient / Project / Status badge (+ "N days overdue" on an unpaid
+ *     facture past its due date) / Total TTC / Actions menu; a row opens its
+ *     document
  *   - Load-more pagination (25 per page) via router.push ?page= round-trip
  *   - Empty state with "Create your first {kind}" CTA
  *   - Import of historical documents (CSV / JSON) for the companies the caller
@@ -44,6 +46,8 @@ import Link from "next/link";
 import { billingStatusLabel } from "@/lib/billing/status-label";
 import { formatDate } from "@/lib/utils/formatters";
 import { toIsoDate } from "@/lib/billing/document-payload";
+import { overdueDays } from "@/lib/billing/overdue";
+import { useOptionalProject } from "@/context/ProjectContext";
 import {
   parsePage,
   parseProjectId,
@@ -99,6 +103,16 @@ export function BillingDocumentList({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const locale = useLocale();
+  // Project names come from the user's own project list (the rows only carry
+  // project_id); a project the user cannot see stays a dash.
+  const projects = useOptionalProject()?.projects;
+  const projectName = (doc: BillingDocument) =>
+    (doc.project_id && projects?.find((p) => p.id === doc.project_id)?.name) || "—";
+  // Factures are due by payment_due_date, devis valid until validity_until.
+  const deadline = (doc: BillingDocument) => {
+    const day = toIsoDate(kind === "facture" ? doc.payment_due_date : doc.validity_until);
+    return day ? formatDate(day) : "—";
+  };
 
   // Status filter — read directly from ?status= per render (H-2: no local useState).
   // handleStatusChange calls router.push which triggers a server re-render with
@@ -253,6 +267,26 @@ export function BillingDocumentList({
 
   const kindLabel = t(`${kind}.list.title`);
 
+  // The status pill, followed by a red "N days overdue" once an unpaid facture
+  // is past its due date. A facture marked "overdue" by hand shows the days in
+  // place of its plain "Overdue" pill.
+  const statusCell = (doc: BillingDocument) => {
+    const late = overdueDays(doc);
+    const overdue =
+      late !== null ? (
+        <span className="stamp negative" data-testid="billing-overdue-days">
+          {t("list.overdueDays", { days: late })}
+        </span>
+      ) : null;
+    if (overdue && doc.status === "overdue") return overdue;
+    return (
+      <span className="inline-flex flex-wrap items-center gap-1.5">
+        <BillingStatusBadge status={doc.status} label={billingStatusLabel(t, kind, doc.status)} />
+        {overdue}
+      </span>
+    );
+  };
+
   // ---------------------------------------------------------------------------
   // Empty state
   // ---------------------------------------------------------------------------
@@ -382,13 +416,17 @@ export function BillingDocumentList({
                     <span className="num text-[12.5px] font-medium">
                       {numberLink(doc)}
                     </span>
-                    <BillingStatusBadge
-                      status={doc.status}
-                      label={billingStatusLabel(t, kind, doc.status)}
-                    />
+                    {statusCell(doc)}
                   </div>
-                  {/* Row 2: recipient */}
+                  {/* Row 2: recipient + project */}
                   <div className="mt-1.5 text-[13px]">{doc.recipient_name}</div>
+                  <div
+                    className="mt-0.5 truncate text-[12px]"
+                    style={{ color: "var(--muted)" }}
+                    data-testid="billing-card-project"
+                  >
+                    {projectName(doc)}
+                  </div>
                   {multiCompany && (
                     <div
                       className="mt-0.5 truncate text-[12px]"
@@ -406,6 +444,13 @@ export function BillingDocumentList({
                         style={{ color: "var(--muted)" }}
                       >
                         {formatDate(toIsoDate(doc.issue_date) ?? doc.issue_date)}
+                      </span>
+                      <span
+                        className="num text-[12px]"
+                        style={{ color: "var(--muted)" }}
+                        data-testid="billing-card-deadline"
+                      >
+                        {t(`${kind}.list.deadlineShort`, { date: deadline(doc) })}
                       </span>
                       <span className="num text-[13px] font-medium">
                         {formatTTC(doc.total_ttc)}
@@ -430,7 +475,9 @@ export function BillingDocumentList({
                     <tr>
                       <th>{t("list.columns.number")}</th>
                       <th>{t("list.columns.date")}</th>
+                      <th>{t(`${kind}.list.deadlineColumn`)}</th>
                       <th>{t("list.columns.recipient")}</th>
+                      <th>{t("list.columns.project")}</th>
                       {multiCompany && <th>{t("list.columns.issuer")}</th>}
                       <th>{t("list.columns.status")}</th>
                       <th style={{ textAlign: "right" }}>{t("list.columns.totalTtc")}</th>
@@ -446,18 +493,19 @@ export function BillingDocumentList({
                         <td className="num" style={{ color: "var(--muted)" }}>
                           {formatDate(toIsoDate(doc.issue_date) ?? doc.issue_date)}
                         </td>
+                        <td className="num" style={{ color: "var(--muted)" }} data-testid="billing-row-deadline">
+                          {deadline(doc)}
+                        </td>
                         <td>{doc.recipient_name}</td>
+                        <td style={{ color: "var(--muted)" }} data-testid="billing-row-project">
+                          {projectName(doc)}
+                        </td>
                         {multiCompany && (
                           <td style={{ color: "var(--muted)" }} data-testid="billing-row-issuer">
                             {doc.issuer_legal_name}
                           </td>
                         )}
-                        <td>
-                          <BillingStatusBadge
-                            status={doc.status}
-                            label={billingStatusLabel(t, kind, doc.status)}
-                          />
-                        </td>
+                        <td>{statusCell(doc)}</td>
                         <td className="num font-medium" style={{ textAlign: "right" }}>
                           {formatTTC(doc.total_ttc)}
                         </td>

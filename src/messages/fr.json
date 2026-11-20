@@ -1652,7 +1652,9 @@
           "cta": "Créer votre premier devis"
         },
         "importTitle": "Importer des devis",
-        "heading": "Devis"
+        "heading": "Devis",
+        "deadlineColumn": "Valable jusqu'au",
+        "deadlineShort": "Valable jusqu'au {date}"
       },
       "status": {
         "draft": "Brouillon",
@@ -1683,7 +1685,9 @@
           "cta": "Créer votre première facture"
         },
         "importTitle": "Importer des factures",
-        "heading": "Factures"
+        "heading": "Factures",
+        "deadlineColumn": "Échéance",
+        "deadlineShort": "Échéance {date}"
       },
       "status": {
         "draft": "Brouillon",
@@ -1712,14 +1716,16 @@
         "status": "Statut",
         "totalTtc": "Total TTC",
         "actions": "Actions",
-        "issuer": "Émetteur"
+        "issuer": "Émetteur",
+        "project": "Chantier"
       },
       "loadMoreFailed": "Échec du chargement de documents supplémentaires. Veuillez réessayer.",
       "loadFailed": "Impossible de charger les documents.",
       "retry": "Réessayer",
       "noFilterResults": "Aucun document avec ce statut.",
       "companyFilter": "Entreprise émettrice",
-      "allCompanies": "Toutes les entreprises"
+      "allCompanies": "Toutes les entreprises",
+      "overdueDays": "En retard de {days, plural, one {# jour} other {# jours}}"
     },
     "form": {
       "modes": {

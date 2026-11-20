@@ -1652,7 +1652,9 @@
           "cta": "Tạo báo giá đầu tiên"
         },
         "importTitle": "Nhập báo giá",
-        "heading": "Báo giá"
+        "heading": "Báo giá",
+        "deadlineColumn": "Hiệu lực đến",
+        "deadlineShort": "Hiệu lực đến {date}"
       },
       "status": {
         "draft": "Nháp",
@@ -1683,7 +1685,9 @@
           "cta": "Tạo hóa đơn đầu tiên"
         },
         "importTitle": "Nhập hóa đơn",
-        "heading": "Hóa đơn"
+        "heading": "Hóa đơn",
+        "deadlineColumn": "Hạn",
+        "deadlineShort": "Hạn {date}"
       },
       "status": {
         "draft": "Nháp",
@@ -1712,14 +1716,16 @@
         "status": "Trạng thái",
         "totalTtc": "Tổng (gồm VAT)",
         "actions": "Thao tác",
-        "issuer": "Bên phát hành"
+        "issuer": "Bên phát hành",
+        "project": "Dự án"
       },
       "loadMoreFailed": "Không tải thêm được tài liệu. Vui lòng thử lại.",
       "loadFailed": "Không thể tải danh sách tài liệu.",
       "retry": "Thử lại",
       "noFilterResults": "Không có tài liệu nào ở trạng thái này.",
       "companyFilter": "Công ty phát hành",
-      "allCompanies": "Tất cả công ty"
+      "allCompanies": "Tất cả công ty",
+      "overdueDays": "Quá hạn {days} ngày"
     },
     "form": {
       "modes": {

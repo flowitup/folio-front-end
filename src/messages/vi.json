@@ -59,7 +59,6 @@
   "auth": {
     "welcomeBack": "Chào mừng trở lại",
     "signInPrompt": "Đăng nhập vào tài khoản để tiếp tục",
-    "contactAdmin": "Liên hệ quản trị viên nếu bạn cần quyền truy cập.",
     "heroTitle": "Trở lại với công trình.",
     "phoneLabel": "Số điện thoại",
     "phonePlaceholder": "6 12 34 56 78",
@@ -100,7 +99,10 @@
     "sessionReset": "Phiên đăng nhập của bạn đã được đặt lại để bảo mật. Vui lòng đăng nhập lại.",
     "sessionEnded": "Phiên đăng nhập của bạn đã kết thúc: tài khoản của bạn có thể đã bị vô hiệu hóa. Vui lòng đăng nhập lại hoặc liên hệ quản trị viên công ty.",
     "errorNetworkLimit": "Có quá nhiều yêu cầu đăng nhập từ mạng này. Hãy thử lại sau {minutes} phút.",
-    "errorSmsBusy": "Dịch vụ gửi SMS đang quá tải. Hãy thử lại sau {minutes} phút."
+    "errorSmsBusy": "Dịch vụ gửi SMS đang quá tải. Hãy thử lại sau {minutes} phút.",
+    "noAccountUseMobileApp": "Chưa có tài khoản? Tài khoản được tạo trên ứng dụng Folio trên điện thoại.",
+    "installMobileApp": "Cài ứng dụng Folio",
+    "codeRefusedNoAccount": "Không nhận được SMS? Có thể số này chưa có tài khoản: hãy tạo tài khoản trên ứng dụng điện thoại trước."
   },
   "topbar": {
     "projectSettingsTitle": "Cài đặt dự án",

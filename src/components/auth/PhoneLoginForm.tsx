@@ -3,6 +3,7 @@
 import { type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { appInstallUrl } from "./app-install-url";
 import { CodeBoxes, CODE_LENGTH } from "./CodeBoxes";
 import { FrenchPhoneInput } from "./FrenchPhoneInput";
 import type { PhoneLoginFlow } from "./use-phone-login-flow";
@@ -59,6 +60,18 @@ export function PhoneLoginForm({ flow }: PhoneLoginFormProps) {
           <AlertCircle size={14} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
           <span>{t(flow.errorKey, flow.errorValues)}</span>
         </div>
+      )}
+
+      {isCodeStep && flow.codeRefused && (
+        // Said to everyone whose code is refused, so it reveals nothing — but a number a
+        // company added by phone has no account yet, and its owner learns where to make one.
+        <p
+          data-testid="login-no-account-hint"
+          className="-mt-2 text-[13px] leading-[1.5]"
+          style={{ color: "var(--ink)" }}
+        >
+          {t("codeRefusedNoAccount")} <InstallLink />
+        </p>
       )}
 
       {isCodeStep ? <CodeStepFields flow={flow} /> : <PhoneStepFields flow={flow} />}
@@ -123,17 +136,47 @@ export function PhoneLoginForm({ flow }: PhoneLoginFormProps) {
           {t("codeHelp")}
         </p>
       ) : (
-        <div className="text-center text-[12px]" style={{ color: "var(--muted)" }}>
-          {flow.waitingOnSameNumber ? (
-            <span data-testid="login-code-already-sent">
+        <>
+          {flow.waitingOnSameNumber && (
+            <div
+              data-testid="login-code-already-sent"
+              className="text-center text-[12px]"
+              style={{ color: "var(--muted)" }}
+            >
               {t("codeAlreadySent", { seconds: flow.cooldown })}
-            </span>
-          ) : (
-            t("contactAdmin")
+            </div>
           )}
-        </div>
+          {/* Accounts are only made in the mobile app: a number nobody signed up with would
+              otherwise wait here for an SMS that never comes. */}
+          <p
+            data-testid="login-no-account"
+            className="rounded-[10px] p-3 text-[13.5px] leading-[1.5]"
+            style={{ background: "var(--paper-2)", color: "var(--ink)", border: "1px solid var(--border)" }}
+          >
+            {t("noAccountUseMobileApp")} <InstallLink />
+          </p>
+        </>
       )}
     </form>
+  );
+}
+
+/** The mobile app's install page, when the deployment has one. */
+function InstallLink() {
+  const t = useTranslations("auth");
+  const url = appInstallUrl();
+  if (!url) return null;
+  return (
+    <a
+      data-testid="login-install-app"
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-medium underline"
+      style={{ color: "var(--ink)" }}
+    >
+      {t("installMobileApp")}
+    </a>
   );
 }
 

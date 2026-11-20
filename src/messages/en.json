@@ -59,7 +59,6 @@
   "auth": {
     "welcomeBack": "Welcome back",
     "signInPrompt": "Sign in to your account to continue",
-    "contactAdmin": "Contact your administrator if you need access.",
     "heroTitle": "Step back onto the site.",
     "phoneLabel": "Phone number",
     "phonePlaceholder": "6 12 34 56 78",
@@ -100,7 +99,10 @@
     "sessionReset": "Your session was reset for your security. Please sign in again.",
     "sessionEnded": "Your session has ended: your account may have been deactivated. Sign in again or contact your company administrator.",
     "errorNetworkLimit": "Too many sign-in requests from this network. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
-    "errorSmsBusy": "The text message service is busy. Try again in {minutes, plural, one {# minute} other {# minutes}}."
+    "errorSmsBusy": "The text message service is busy. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+    "noAccountUseMobileApp": "No account yet? Accounts are created in the Folio mobile app.",
+    "installMobileApp": "Get the Folio app",
+    "codeRefusedNoAccount": "No SMS? This number may not have an account yet: create one in the mobile app first."
   },
   "topbar": {
     "projectSettingsTitle": "Project settings",

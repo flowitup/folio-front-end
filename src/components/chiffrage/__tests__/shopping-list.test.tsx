@@ -68,7 +68,7 @@ describe("ShoppingList", () => {
   it("shows the real spend and ticks an article as bought", () => {
     const onToggle = vi.fn();
     render(
-      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={onToggle} onSetQuantities={vi.fn()} />,
+      <ShoppingList tree={tree()} projectId="proj" canManage busyIds={new Set()} onTogglePurchased={onToggle} onSetQuantities={vi.fn()} />,
     );
     expect(screen.getByTestId("actual-total").textContent).toMatch(/18,00/);
     fireEvent.click(screen.getAllByLabelText("markBought")[0]);
@@ -76,24 +76,95 @@ describe("ShoppingList", () => {
   });
 
   it("hides bought rows when only the remaining ones are wanted", () => {
-    render(
-      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
+    const { rerender } = render(
+      <ShoppingList tree={tree()} projectId="proj" canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
     );
     expect(screen.getAllByTestId("shopping-row")).toHaveLength(2);
-    fireEvent.click(screen.getByLabelText("onlyToBuy"));
+    rerender(
+      <ShoppingList
+        tree={tree()}
+        projectId="proj"
+        filter={{ query: "", status: "toBuy" }}
+        canManage
+        busyIds={new Set()}
+        onTogglePurchased={vi.fn()}
+        onSetQuantities={vi.fn()}
+      />,
+    );
     expect(screen.getAllByTestId("shopping-row")).toHaveLength(1);
+  });
+
+  it("finds lines by words of the name or note, accents ignored", () => {
+    const tr = tree();
+    tr.postes[0].articles[0] = article("a1", { name: "Câble R2V 3G6", note: "[Câbles] Réf. LM 70808794" });
+    render(
+      <ShoppingList
+        tree={tr}
+        projectId="proj"
+        filter={{ query: "cable 70808794", status: "all" }}
+        canManage
+        busyIds={new Set()}
+        onTogglePurchased={vi.fn()}
+        onSetQuantities={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByTestId("shopping-row")).toHaveLength(1);
+    expect(screen.getByText("Câble R2V 3G6")).toBeDefined();
+  });
+
+  it("gathers lines under their [group] note tag, folds a group, and shows the note without the tag", () => {
+    const tr = tree();
+    tr.postes[0].articles = [
+      article("a1", { note: "[Câbles] réf. 1", position: 1 }),
+      article("a2", { note: "[Boîtes] réf. 2", position: 2 }),
+      article("a3", { note: "[Câbles] réf. 3", position: 3 }),
+    ];
+    const onToggleGroup = vi.fn();
+    const { rerender } = render(
+      <ShoppingList tree={tr} projectId="proj" onToggleGroup={onToggleGroup} canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
+    );
+    const headings = screen.getAllByTestId("group-heading");
+    expect(headings.map((h) => h.textContent)).toEqual([expect.stringContaining("Câbles"), expect.stringContaining("Boîtes")]);
+    // a3 follows a1 under "Câbles", ahead of a2.
+    expect(screen.getAllByTestId("shopping-row").map((r) => r.textContent)).toEqual([
+      expect.stringContaining("Article a1"),
+      expect.stringContaining("Article a3"),
+      expect.stringContaining("Article a2"),
+    ]);
+    expect(screen.getByText("réf. 1")).toBeDefined();
+    fireEvent.click(headings[0]);
+    expect(onToggleGroup).toHaveBeenCalledWith("p1|shop|Câbles");
+    rerender(
+      <ShoppingList
+        tree={tr}
+        projectId="proj"
+        collapsedGroups={new Set(["p1|shop|Câbles"])}
+        canManage
+        busyIds={new Set()}
+        onTogglePurchased={vi.fn()}
+        onSetQuantities={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByTestId("shopping-row")).toHaveLength(1);
+  });
+
+  it("shows a thumbnail slot on every line", () => {
+    render(
+      <ShoppingList tree={tree()} projectId="proj" canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
+    );
+    expect(screen.getAllByTestId("article-image-placeholder")).toHaveLength(2);
   });
 
   it("does not let a read-only viewer tick", () => {
     render(
-      <ShoppingList tree={tree()} canManage={false} busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
+      <ShoppingList tree={tree()} projectId="proj" canManage={false} busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
     );
-    screen.getAllByRole("checkbox").slice(1).forEach((c) => expect((c as HTMLInputElement).disabled).toBe(true));
+    screen.getAllByRole("checkbox").forEach((c) => expect((c as HTMLInputElement).disabled).toBe(true));
   });
 
   it("shows how far a bought line and its section went over the estimate when more was bought", () => {
     render(
-      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
+      <ShoppingList tree={tree()} projectId="proj" canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
     );
     // a2: estimate 12 for 2 planned, 3 bought: 18 spent, 6 over
     expect(screen.getByTestId("line-gap").textContent).toMatch(/\+6,00/);
@@ -103,7 +174,7 @@ describe("ShoppingList", () => {
   it("saves the quantity bought and the quantity returned", () => {
     const onQty = vi.fn();
     render(
-      <ShoppingList tree={tree()} canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={onQty} />,
+      <ShoppingList tree={tree()} projectId="proj" canManage busyIds={new Set()} onTogglePurchased={vi.fn()} onSetQuantities={onQty} />,
     );
     const bought = screen.getByLabelText("boughtQuantity");
     fireEvent.change(bought, { target: { value: "4" } });

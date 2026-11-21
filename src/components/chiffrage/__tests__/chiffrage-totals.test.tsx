@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 
 import { ChiffrageTotals } from "../chiffrage-totals";
 import type { ChiffrageArticle, ChiffragePoste, ChiffrageTree } from "@/lib/api/chiffrage";
@@ -69,5 +69,14 @@ describe("ChiffrageTotals dashboard", () => {
   it("hides the spend block before anything is bought", () => {
     render(<ChiffrageTotals tree={tree([poste("a", "Doublage", [art("1", "a")])])} />);
     expect(screen.queryByTestId("actual-summary")).toBeNull();
+  });
+  it("opens every attention item when there are more than six", () => {
+    const items = Array.from({ length: 9 }, (_, k) => art(String(k), "a", { effective_source: "none" }));
+    render(<ChiffrageTotals tree={tree([poste("a", "Électricité", items)])} />);
+    const list = screen.getByTestId("attention-list");
+    expect(within(list).getAllByRole("listitem")).toHaveLength(6);
+    fireEvent.click(screen.getByTestId("attention-toggle"));
+    expect(within(list).getAllByRole("listitem")).toHaveLength(9);
+    expect(screen.getByTestId("attention-toggle").textContent).toBe("dashShowLess");
   });
 });

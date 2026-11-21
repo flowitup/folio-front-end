@@ -78,6 +78,19 @@ export function PosteCard({
               {poste.note}
             </p>
           ) : null}
+          {poste.articles.length > 0 ? (
+            <div className="mt-1 flex items-center gap-2" data-testid="poste-progress">
+              <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-emerald-600"
+                  style={{ width: `${(100 * poste.purchased_count) / poste.articles.length}%` }}
+                />
+              </div>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {t("boughtOf", { done: poste.purchased_count, total: poste.articles.length })}
+              </span>
+            </div>
+          ) : null}
         </div>
         <div className="shrink-0 text-right">
           <p className="font-medium tabular-nums">{money(poste.subtotal_ht)}</p>

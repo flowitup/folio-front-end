@@ -847,6 +847,7 @@ export function LaborPageClient({ initialDate }: LaborPageClientProps) {
           isLoading={isTabLoading}
           month={summaryMonth}
           onMonthChange={setSummaryMonth}
+          canEditNotes={canManageInvoices}
         />
       )}
 

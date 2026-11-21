@@ -221,7 +221,14 @@
       "showAll": "Voir les {count} ouvriers",
       "showLess": "Réduire",
       "footnote": "Montants depuis le début des projets, retours déduits. Jours et salaires du mois choisi ; chaque mois est compté à part, un trop-payé ne se reporte pas. Un même ouvrier (même nom) sur plusieurs projets est additionné.",
-      "partial": "Journées non chargées pour {count} projets."
+      "partial": "Journées non chargées pour {count} projets.",
+      "spendPartial": "Les dépenses de {count} projets n’ont pas pu être chargées.",
+      "laborChartTitle": "Jours & salaires sur 6 mois",
+      "laborChartDays": "{days} jours au total",
+      "laborEarned": "Salaires dus",
+      "laborPaid": "Payé",
+      "projectChartTitle": "Dépenses par projet",
+      "budgetShort": "budget"
     },
     "bankRelease": {
       "headlineNoDraws": "restant sur <c>{credit}</c> de crédit · aucun déblocage",

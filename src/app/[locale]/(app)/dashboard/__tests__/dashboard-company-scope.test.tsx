@@ -143,6 +143,14 @@ describe("DashboardPage — company scope", () => {
     expect(screen.getByTestId("company-overview-band").nextElementSibling).toBe(screen.getByTestId("company-footnote"));
     // Worker line: days and what was paid, not days alone.
     expect(within(screen.getByTestId("company-wages")).getByText(/10 days · paid 0 €/)).toBeInTheDocument();
+    // The KPI tiles size to the band (container query), not to the window,
+    // so four tiles never squeeze their amounts out of the band.
+    expect(screen.getByTestId("company-kpis").parentElement!.className).toContain("@container");
+    expect(screen.getByTestId("company-kpis").className).not.toMatch(/\bmd:grid-cols/);
+    // Each worker's bar has its own full-width row: the tracks compare.
+    for (const track of within(screen.getByTestId("company-wages")).getAllByTestId("company-wage-track")) {
+      expect(track.parentElement!.className).toContain("flex-col");
+    }
   });
 
   it("says a month without days has no days yet, not that all wages are paid", async () => {
@@ -152,5 +160,17 @@ describe("DashboardPage — company scope", () => {
     fireEvent.change(select, { target: { value: "2026-08" } });
     expect(await screen.findByTestId("company-wages-empty")).toHaveTextContent("No days logged this month.");
     expect(screen.getByTestId("company-attention")).not.toHaveTextContent("still owed");
+  });
+  it("adds the company charts: spend by type, labor by month and spend per project", async () => {
+    renderDashboard();
+    const charts = await screen.findByTestId("company-charts");
+    expect(within(charts).getByTestId("overview-type-minis")).toBeInTheDocument();
+    expect(await within(charts).findByText("Days & wages, last 6 months")).toBeInTheDocument();
+    // Two projects: one bar each, most spent first.
+    const perProject = within(charts).getByTestId("company-project-chart");
+    expect(within(perProject).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
+      expect.stringContaining("Nhà số 1"),
+      expect.stringContaining("Nhà 13"),
+    ]);
   });
 });

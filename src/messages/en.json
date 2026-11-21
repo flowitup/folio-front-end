@@ -221,7 +221,14 @@
       "showAll": "Show all {count} workers",
       "showLess": "Show less",
       "footnote": "Money since each project started, net of returns. Days and wages for the picked month; each month stands alone, an overpayment is not carried over. The same worker (same name) across projects is added up.",
-      "partial": "Days could not be loaded for {count} projects."
+      "partial": "Days could not be loaded for {count} projects.",
+      "spendPartial": "Expenses of {count} projects could not be loaded.",
+      "laborChartTitle": "Days & wages, last 6 months",
+      "laborChartDays": "{days} days in all",
+      "laborEarned": "Wages earned",
+      "laborPaid": "Paid",
+      "projectChartTitle": "Spend by project",
+      "budgetShort": "budget"
     },
     "bankRelease": {
       "headlineNoDraws": "remaining of <c>{credit}</c> credit · nothing drawn yet",

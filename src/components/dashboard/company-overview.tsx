@@ -27,6 +27,7 @@ import {
   type ProjectStatus,
 } from "@/lib/dashboard/company-overview";
 import { OverviewScopeToggle, type OverviewScope } from "@/components/dashboard/overview-scope-toggle";
+import { CompanyCharts } from "@/components/dashboard/company-charts";
 
 /** Projects loaded at a time: two requests each, well under the API's per-minute limit. */
 const BATCH = 4;
@@ -150,13 +151,8 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
 
   return (
     <div className="fade-up space-y-5 px-4 pb-12 lg:px-8" data-testid="company-overview">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h2 className="font-display text-[22px] font-semibold leading-tight tracking-tight">{companyName || t("title")}</h2>
-          <span className="text-[13px]" style={{ color: "var(--muted)" }}>
-            {t("projectCountShort", { count: projects.length })}
-          </span>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="min-w-0 font-display text-[22px] font-semibold leading-tight tracking-tight">{companyName || t("title")}</h2>
         <div className="flex flex-wrap items-center gap-2.5">
           <OverviewScopeToggle scope="company" onChange={onScopeChange} />
           {companies.length > 1 && (
@@ -200,10 +196,10 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
         data-testid="company-overview-band"
       >
         <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-2.5">
-          <span className="text-[13px]" style={{ color: BAND_MUTED }}>
+          <span className="text-[14px]" style={{ color: BAND_MUTED }}>
             {hasBudget ? t("remaining") : t("spentToDate")}
           </span>
-          <span className="font-display text-[44px] font-semibold leading-none tracking-tight tabular-nums sm:text-[52px]">
+          <span className="font-display text-[40px] font-semibold leading-none tracking-tight tabular-nums [overflow-wrap:anywhere] sm:text-[52px]">
             {fmtEUR(hasBudget ? totals.remaining : totals.spent)}
           </span>
           {hasBudget && totals.usedPct !== null && (
@@ -214,44 +210,57 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                   style={{ width: `${Math.max(0, Math.min(100, totals.usedPct))}%`, background: totals.remaining < 0 ? "#e8a58a" : "var(--accent)" }}
                 />
               </div>
-              <span className="text-[12.5px]" style={{ color: BAND_MUTED }}>
+              <span className="text-[13.5px]" style={{ color: BAND_MUTED }}>
                 {t("used", { pct: formatShare(locale, totals.usedPct), budget: fmtEUR(totals.budget) })}
                 {totals.overBudgetCount > 0 && ` · ${t("overCount", { count: totals.overBudgetCount })}`}
               </span>
             </>
           )}
         </div>
-        <div className={`grid min-w-0 flex-[2_1_420px] grid-cols-2 gap-3 ${kpis.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
-          {kpis.map((k) => (
-            <div key={k.label} className="flex flex-col gap-1.5 rounded-2xl px-4 py-3.5" style={{ background: BAND_TINT }}>
-              <span className="text-[12.5px]" style={{ color: BAND_MUTED }}>
-                {k.label}
-              </span>
-              <span className="font-display text-[22px] font-semibold leading-tight tabular-nums" style={{ color: k.color }}>
-                {k.value}
-              </span>
-              <span className="text-[12px]" style={{ color: BAND_MUTED }}>
-                {k.sub}
-              </span>
-            </div>
-          ))}
+        {/* Columns follow the band's own width, not the window's: beside the
+            sidebar (and under the desktop zoom) a window-based "md:" gave four
+            tiles too narrow for their amounts, which spilled out of the band. */}
+        <div className="@container min-w-0 flex-[2_1_420px]">
+          <div
+            className={`grid grid-cols-2 gap-3 ${kpis.length === 4 ? "@[680px]:grid-cols-4" : "@[520px]:grid-cols-3"}`}
+            data-testid="company-kpis"
+          >
+            {kpis.map((k) => (
+              <div key={k.label} className="flex min-w-0 flex-col gap-1.5 rounded-2xl px-4 py-3.5" style={{ background: BAND_TINT }}>
+                <span className="text-[13.5px] leading-snug" style={{ color: BAND_MUTED }}>
+                  {k.label}
+                </span>
+                <span
+                  className="font-display text-[22px] font-semibold leading-tight tabular-nums [overflow-wrap:anywhere]"
+                  style={{ color: k.color }}
+                >
+                  {k.value}
+                </span>
+                <span className="text-[13px] leading-snug" style={{ color: BAND_MUTED }}>
+                  {k.sub}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <p className="text-[13px] leading-relaxed" style={{ color: "var(--ink-2)" }} data-testid="company-footnote">
+      <p className="max-w-[110ch] text-[13.5px] leading-relaxed" style={{ color: "var(--ink-2)" }} data-testid="company-footnote">
         {t("footnote")}
         {labor && labor.failed > 0 && ` ${t("partial", { count: labor.failed })}`}
       </p>
+
+      <CompanyCharts projects={projects} laborInputs={labor?.inputs ?? null} cards={cards} />
 
       <div className="flex flex-wrap items-start gap-5">
         <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-3.5">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="font-display text-[20px] font-semibold tracking-tight">{t("projectCountShort", { count: cards.length })}</h2>
-            <span className="text-[13px]" style={{ color: "var(--muted)" }}>
+            <span className="text-[13.5px]" style={{ color: "var(--muted)" }}>
               {t("attentionFirst")}
             </span>
           </div>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3.5">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3.5">
             {cards.map((c) => {
               const st = STATUS_STYLE[c.status];
               const r = c.row;
@@ -267,17 +276,17 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                 >
                   <div className="flex w-full items-start justify-between gap-2">
                     <span className="text-[15px] font-semibold">{projectDisplayName(r.project)}</span>
-                    <span className="inline-flex flex-none items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-medium" style={{ background: st.bg, color: st.fg }}>
+                    <span className="inline-flex flex-none items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12.5px] font-medium" style={{ background: st.bg, color: st.fg }}>
                       <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full" style={{ background: st.dot }} />
                       {t(`status.${c.status}`)}
                     </span>
                   </div>
                   <div className="flex w-full flex-col gap-2">
                     <div className="flex items-baseline gap-2">
-                      <span className="font-display text-[26px] font-semibold leading-none tabular-nums" style={{ color: c.status === "over" ? "var(--negative)" : "var(--ink)" }}>
+                      <span className="font-display text-[26px] font-semibold leading-none tabular-nums [overflow-wrap:anywhere]" style={{ color: c.status === "over" ? "var(--negative)" : "var(--ink)" }}>
                         {r.remaining !== null ? fmtEUR(r.remaining) : r.spent !== null ? fmtEUR(r.spent) : "—"}
                       </span>
-                      <span className="text-[12px]" style={{ color: "var(--muted)" }}>
+                      <span className="text-[13px]" style={{ color: "var(--muted)" }}>
                         {r.remaining !== null ? t("left") : t("spentShort")}
                       </span>
                     </div>
@@ -286,7 +295,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: st.dot }} />
                       </div>
                     )}
-                    <span className="text-[12px]" style={{ color: "var(--muted)" }}>
+                    <span className="text-[13px]" style={{ color: "var(--muted)" }}>
                       {r.budget !== null && r.spent !== null && r.usedPct !== null
                         ? t("spentOf", { spent: fmtEUR(r.spent), budget: fmtEUR(r.budget), pct: formatShare(locale, r.usedPct) })
                         : r.spent !== null
@@ -294,7 +303,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                           : t("hiddenLine")}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-2 text-[12.5px] tabular-nums">
+                  <div className="flex flex-wrap gap-2 text-[13px] tabular-nums">
                     <span className="rounded-full px-2.5 py-1.5" style={{ background: "var(--paper)", color: "var(--ink-2)" }}>
                       {laborResult ? t("daysChip", { days: formatDays(c.days, locale) }) : "…"}
                     </span>
@@ -335,7 +344,7 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                             : t("alertUnassigned", { amount: fmtEUR(a.amount) })}
                     </span>
                     {a.kind !== "wagesOwed" && (
-                      <span className="text-[12.5px]" style={{ color: "#5c4630" }}>
+                      <span className="text-[13px]" style={{ color: "#5c4630" }}>
                         {a.kind === "unassignedPay" ? t("alertUnassignedSub", { month: monthLabel(activeMonth) }) : t("alertPct", { pct: a.pct })}
                       </span>
                     )}
@@ -378,25 +387,26 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
                       {initials(w.name)}
                     </span>
                     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                      <div className="flex justify-between gap-2 text-[13.5px]">
+                      <div className="flex justify-between gap-2 text-[14px]">
                         <span className="truncate font-medium" title={w.projects.map((p) => p.name).join(", ")}>
                           {w.name}
                         </span>
-                        <span className="tabular-nums">{fmtEUR(w.owed)}</span>
+                        <span className="flex-none font-medium tabular-nums">{fmtEUR(w.owed)}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="h-[5px] flex-1 overflow-hidden rounded-full" style={{ background: "var(--paper-2)" }}>
-                          <div className="h-full rounded-full" style={{ width: `${maxOwed > 0 ? (w.owed / maxOwed) * 100 : 0}%`, background: "var(--accent)" }} />
-                        </div>
-                        <span className="whitespace-nowrap text-[12px]" style={{ color: "var(--muted)" }}>
-                          {t("workerSub", { days: formatDays(w.days, locale), paid: fmtEUR(w.paid) })}
-                        </span>
+                      {/* Full-width track: a track sharing the row with the
+                          "days · paid" text got a different length per worker,
+                          so a larger debt could draw a shorter bar. */}
+                      <div className="h-[5px] overflow-hidden rounded-full" style={{ background: "var(--paper-2)" }} data-testid="company-wage-track">
+                        <div className="h-full rounded-full" style={{ width: `${maxOwed > 0 ? (w.owed / maxOwed) * 100 : 0}%`, background: "var(--accent)" }} />
                       </div>
+                      <span className="text-[13px]" style={{ color: "var(--muted)" }}>
+                        {t("workerSub", { days: formatDays(w.days, locale), paid: fmtEUR(w.paid) })}
+                      </span>
                     </div>
                   </div>
                 ))}
                 {workers.length > WORKERS_SHOWN && (
-                  <button type="button" onClick={() => setAllWorkers((v) => !v)} className="mt-1 self-start text-[12.5px] font-medium" style={{ color: "var(--accent-ink)" }}>
+                  <button type="button" onClick={() => setAllWorkers((v) => !v)} className="mt-1 self-start text-[13.5px] font-medium" style={{ color: "var(--accent-ink)" }}>
                     {allWorkers ? t("showLess") : t("showAll", { count: workers.length })}
                   </button>
                 )}

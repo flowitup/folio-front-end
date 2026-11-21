@@ -221,7 +221,14 @@
       "showAll": "Xem cả {count} thợ",
       "showLess": "Thu gọn",
       "footnote": "Tiền tính từ đầu dự án, đã trừ hoàn trả. Công và lương tính theo tháng đã chọn; mỗi tháng tính riêng, trả dư không trừ sang tháng khác. Cùng một thợ (trùng tên) trên nhiều dự án được cộng lại.",
-      "partial": "Không tải được công thợ của {count} dự án."
+      "partial": "Không tải được công thợ của {count} dự án.",
+      "spendPartial": "Không tải được chi phí của {count} dự án.",
+      "laborChartTitle": "Công & lương 6 tháng",
+      "laborChartDays": "Tổng {days} công",
+      "laborEarned": "Lương phát sinh",
+      "laborPaid": "Đã trả",
+      "projectChartTitle": "Chi theo dự án",
+      "budgetShort": "ngân sách"
     },
     "bankRelease": {
       "headlineNoDraws": "còn lại trên <c>{credit}</c> tín dụng · chưa giải ngân",

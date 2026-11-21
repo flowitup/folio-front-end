@@ -13,7 +13,7 @@
  * one of the shops.
  */
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useConfirmDialog } from "@/components/chiffrage/use-confirm-dialog";
 import { useRouter } from "next/navigation";
@@ -41,6 +41,17 @@ import { ArticleFormDialog } from "@/components/chiffrage/article-form-dialog";
 import { ChiffrageTotals } from "@/components/chiffrage/chiffrage-totals";
 import { PosteCard } from "@/components/chiffrage/poste-card";
 import { RoomHeading } from "@/components/chiffrage/room-heading";
+import { GroupHeading } from "@/components/chiffrage/group-heading";
+import { ListToolbar } from "@/components/chiffrage/list-toolbar";
+import {
+  NO_FILTER,
+  groupStats,
+  isFiltering,
+  matchesFilter,
+  noteGroup,
+  orderByGroup,
+  type ListFilter,
+} from "@/components/chiffrage/list-filter";
 import { ArticleImageDialog } from "@/components/chiffrage/article-image-dialog";
 import { SectionCompareDialog } from "@/components/chiffrage/section-compare-dialog";
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
@@ -120,8 +131,30 @@ export function ChiffragePageClient({
   const [tree, setTree] = useState(initialTree);
   const [units, setUnits] = useState(initialUnits);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  // Postes collapsed by the reader; empty by default so sections open as before.
+  // Postes and "[Group]" sub-groups folded by the reader, remembered per
+  // project in this browser so a long chiffrage reopens the way it was left.
   const [collapsedPostes, setCollapsedPostes] = useState<Set<string>>(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [filter, setFilter] = useState<ListFilter>(NO_FILTER);
+  const foldKey = `folio.chiffrage.fold.${projectId}`;
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(foldKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as { postes?: string[]; groups?: string[] };
+      setCollapsedPostes(new Set(saved.postes ?? []));
+      setCollapsedGroups(new Set(saved.groups ?? []));
+    } catch {
+      // storage blocked or corrupt: start unfolded
+    }
+  }, [foldKey]);
+  const saveFold = (postes: Set<string>, groups: Set<string>) => {
+    try {
+      window.localStorage.setItem(foldKey, JSON.stringify({ postes: [...postes], groups: [...groups] }));
+    } catch {
+      // storage blocked: the folding lasts for this visit only
+    }
+  };
   // The section whose head-to-head shop comparison modal is open, if any.
   const [compareDialog, setCompareDialog] = useState<{
     open: boolean;
@@ -191,13 +224,34 @@ export function ChiffragePageClient({
       return next;
     });
 
-  const toggleCollapse = (posteId: string) =>
-    setCollapsedPostes((prev) => {
-      const next = new Set(prev);
-      if (next.has(posteId)) next.delete(posteId);
-      else next.add(posteId);
-      return next;
-    });
+  const toggleCollapse = (posteId: string) => {
+    const next = new Set(collapsedPostes);
+    if (next.has(posteId)) next.delete(posteId);
+    else next.add(posteId);
+    setCollapsedPostes(next);
+    saveFold(next, collapsedGroups);
+  };
+
+  const toggleGroup = (key: string) => {
+    const next = new Set(collapsedGroups);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setCollapsedGroups(next);
+    saveFold(collapsedPostes, next);
+  };
+
+  const filtering = isFiltering(filter);
+  const allArticles = tree.postes.flatMap((p) => p.articles);
+  const shownCount = filtering ? allArticles.filter((a) => matchesFilter(a, filter)).length : allArticles.length;
+
+  /** Fold every section (or open them all, with their sub-groups). */
+  const foldAll = (fold: boolean) => {
+    const postes = fold ? new Set(tree.postes.map((p) => p.id)) : new Set<string>();
+    const groups = new Set<string>();
+    setCollapsedPostes(postes);
+    setCollapsedGroups(groups);
+    saveFold(postes, groups);
+  };
 
   /** Run a mutation, surface its error, and re-sync from server truth. */
   const mutate = useCallback(
@@ -225,26 +279,67 @@ export function ChiffragePageClient({
    * declared order and unassigned items come last, matching how the backend
    * orders room_subtotals — the two must agree or the headings would show one
    * room's figure above another room's items.
+   *
+   * Inside a room, articles whose note starts with "[Group]" are gathered
+   * under a foldable group heading. The room heading is left out when no
+   * article of the section has a room ("Unassigned" over everything says
+   * nothing). While a search or status filter is on, only matching lines show
+   * and every fold is opened.
    */
   const byRoom = (poste: ChiffragePoste) => {
     const rank = new Map(tree.rooms.map((r, i) => [r.id, i]));
-    const sorted = [...poste.articles].sort((a, b) => {
+    const byPosition = [...poste.articles].sort((a, b) => {
       const ra = a.room_id === null ? Number.MAX_SAFE_INTEGER : (rank.get(a.room_id) ?? rank.size);
       const rb = b.room_id === null ? Number.MAX_SAFE_INTEGER : (rank.get(b.room_id) ?? rank.size);
       return ra === rb ? a.position - b.position : ra - rb;
     });
-    const rows: Array<
-      { kind: "heading"; key: string; roomId: string | null } | { kind: "article"; article: ChiffrageArticle }
-    > = [];
-    let current: string | null | undefined = undefined;
-    for (const article of sorted) {
-      if (article.room_id !== current) {
-        current = article.room_id;
-        rows.push({ kind: "heading", key: `h-${current ?? "none"}`, roomId: current });
-      }
-      rows.push({ kind: "article", article });
+    const runs: { roomId: string | null; articles: ChiffrageArticle[] }[] = [];
+    for (const a of byPosition) {
+      const last = runs[runs.length - 1];
+      if (last && last.roomId === a.room_id) last.articles.push(a);
+      else runs.push({ roomId: a.room_id, articles: [a] });
     }
-    return { sorted, rows };
+    const showRooms = poste.articles.some((a) => a.room_id !== null);
+    type Row =
+      | { kind: "heading"; key: string; roomId: string | null }
+      | {
+          kind: "group";
+          key: string;
+          name: string;
+          collapsed: boolean;
+          stats: ReturnType<typeof groupStats>;
+        }
+      | { kind: "article"; article: ChiffrageArticle };
+    const rows: Row[] = [];
+    const sorted: ChiffrageArticle[] = [];
+    for (const run of runs) {
+      const ordered = orderByGroup(run.articles);
+      const visible = filtering ? ordered.filter((a) => matchesFilter(a, filter)) : ordered;
+      if (visible.length === 0) continue;
+      if (showRooms) rows.push({ kind: "heading", key: `h-${run.roomId ?? "none"}`, roomId: run.roomId });
+      let current: string | null = null;
+      let collapsed = false;
+      for (const article of ordered) {
+        const group = noteGroup(article.note).group;
+        if (group !== current) {
+          current = group;
+          collapsed = false;
+          if (group !== null) {
+            const key = `${poste.id}|${run.roomId ?? ""}|${group}`;
+            const members = ordered.filter((a) => noteGroup(a.note).group === group);
+            if (!filtering || members.some((a) => matchesFilter(a, filter))) {
+              collapsed = !filtering && collapsedGroups.has(key);
+              rows.push({ kind: "group", key, name: group, collapsed, stats: groupStats(members) });
+            }
+          }
+        }
+        if (collapsed) continue;
+        if (filtering && !matchesFilter(article, filter)) continue;
+        rows.push({ kind: "article", article });
+        sorted.push(article);
+      }
+    }
+    return { sorted, rows, shown: sorted.length };
   };
 
   /** Tick or untick an article as bought; a new tick starts at the planned quantity. */
@@ -495,6 +590,17 @@ export function ChiffragePageClient({
         </div>
       )}
 
+      {!loadFailed && tree.postes.length > 0 ? (
+        <ListToolbar
+          filter={filter}
+          onChange={setFilter}
+          shown={shownCount}
+          total={allArticles.length}
+          onCollapseAll={() => foldAll(true)}
+          onExpandAll={() => foldAll(false)}
+        />
+      ) : null}
+
       {/* Say why the page cannot be edited, and who can change that. */}
       {!canManage && !loadFailed ? (
         <p className="text-sm text-muted-foreground" data-testid="chiffrage-read-only">
@@ -505,11 +611,22 @@ export function ChiffragePageClient({
       {loadFailed ? null : view === "shopping" && tree.postes.length > 0 ? (
         <ShoppingList
           tree={tree}
+          projectId={projectId}
+          filter={filter}
+          collapsedPostes={collapsedPostes}
+          onToggleCollapse={toggleCollapse}
+          collapsedGroups={collapsedGroups}
+          onToggleGroup={toggleGroup}
+          imageVersion={imageVersion}
           canManage={canManage}
           busyIds={busyArticleIds}
           onTogglePurchased={togglePurchased}
           onSetQuantities={(article, change) => savePurchase(article, change)}
         />
+      ) : filtering && shownCount === 0 && tree.postes.length > 0 ? (
+        <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground" data-testid="no-match">
+          {t("noMatch")}
+        </p>
       ) : tree.postes.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="font-medium">{t("emptyTitle")}</p>
@@ -528,7 +645,11 @@ export function ChiffragePageClient({
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-4">
-              {tree.postes.map((poste) => (
+              {tree.postes.map((poste) => {
+                const layout = byRoom(poste);
+                // A filter hides the sections it leaves empty.
+                if (filtering && layout.shown === 0) return null;
+                return (
                 <SortableItem
                   key={poste.id}
                   id={poste.id}
@@ -538,8 +659,8 @@ export function ChiffragePageClient({
                     <PosteCard
                       poste={poste}
                       canManage={canManage}
-                      dragHandle={canManage ? handle : undefined}
-                      collapsed={collapsedPostes.has(poste.id)}
+                      dragHandle={canManage && !filtering ? handle : undefined}
+                      collapsed={!filtering && collapsedPostes.has(poste.id)}
                       onToggleCollapse={() => toggleCollapse(poste.id)}
                       canCompare={hasComparablePrices(poste)}
                       onCompare={() =>
@@ -569,11 +690,21 @@ export function ChiffragePageClient({
                         onDragEnd={(e) => void onDragEndArticles(poste, e)}
                       >
                         <SortableContext
-                          items={byRoom(poste).sorted.map((a) => a.id)}
+                          items={layout.sorted.map((a) => a.id)}
                           strategy={verticalListSortingStrategy}
                         >
-                          {byRoom(poste).rows.map((row) =>
-                            row.kind === "heading" ? (
+                          {layout.rows.map((row) =>
+                            row.kind === "group" ? (
+                              <GroupHeading
+                                key={row.key}
+                                name={row.name}
+                                count={row.stats.count}
+                                bought={row.stats.bought}
+                                amount={row.stats.ht}
+                                collapsed={row.collapsed}
+                                onToggle={() => toggleGroup(row.key)}
+                              />
+                            ) : row.kind === "heading" ? (
                               <RoomHeading
                                 key={row.key}
                                 name={
@@ -603,7 +734,7 @@ export function ChiffragePageClient({
                                   expanded={expanded.has(article.id)}
                                   busyQuoteId={busyQuoteId}
                                   dragHandle={
-                                    canManage ? articleHandle : undefined
+                                    canManage && !filtering ? articleHandle : undefined
                                   }
                                   onToggle={() => toggle(article.id)}
                                   onEdit={() =>
@@ -684,7 +815,8 @@ export function ChiffragePageClient({
                     </PosteCard>
                   )}
                 </SortableItem>
-              ))}
+                );
+              })}
             </div>
           </SortableContext>
         </DndContext>

@@ -8,12 +8,23 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ClipboardCopy, Printer } from "lucide-react";
+import { ChevronDown, ChevronRight, ClipboardCopy, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { DecimalInput } from "@/components/ui/decimal-input";
 import { money, quantity, unitLabel } from "@/components/chiffrage/format";
+import { ArticleImage } from "@/components/chiffrage/article-image";
+import { GroupHeading } from "@/components/chiffrage/group-heading";
+import {
+  NO_FILTER,
+  groupStats,
+  isFiltering,
+  matchesFilter,
+  noteGroup,
+  orderByGroup,
+  type ListFilter,
+} from "@/components/chiffrage/list-filter";
 import type {
   ChiffrageArticle,
   ChiffragePoste,
@@ -22,6 +33,16 @@ import type {
 
 interface Props {
   tree: ChiffrageTree;
+  projectId: string;
+  /** Search and status filter from the toolbar above the list. */
+  filter?: ListFilter;
+  collapsedPostes?: Set<string>;
+  onToggleCollapse?: (posteId: string) => void;
+  /** Folded "[Group]" keys, shared with the estimate view. */
+  collapsedGroups?: Set<string>;
+  onToggleGroup?: (key: string) => void;
+  /** Bumped after an image change so thumbnails refetch. */
+  imageVersion?: number;
   canManage: boolean;
   /** Ids of articles whose change is being saved. */
   busyIds: Set<string>;
@@ -101,15 +122,24 @@ function Gap({ value, testId }: { value: number; testId?: string }) {
   );
 }
 
+const NONE = new Set<string>();
+
 export function ShoppingList({
   tree,
+  projectId,
+  filter = NO_FILTER,
+  collapsedPostes = NONE,
+  onToggleCollapse,
+  collapsedGroups = NONE,
+  onToggleGroup,
+  imageVersion = 0,
   canManage,
   busyIds,
   onTogglePurchased,
   onSetQuantities,
 }: Props) {
   const t = useTranslations("chiffrage");
-  const [onlyToBuy, setOnlyToBuy] = useState(false);
+  const filtering = isFiltering(filter);
   const roomName = useMemo(
     () => new Map(tree.rooms.map((r) => [r.id, r.name])),
     [tree.rooms],
@@ -143,8 +173,37 @@ export function ShoppingList({
     }
   };
 
-  const visible = (poste: ChiffragePoste) =>
-    onlyToBuy ? poste.articles.filter((a) => !a.purchased) : poste.articles;
+  /** The section's lines in display order, "[Group]" headings included. */
+  const layout = (poste: ChiffragePoste) => {
+    const ordered = orderByGroup([...poste.articles].sort((a, b) => a.position - b.position));
+    type Row =
+      | { kind: "group"; key: string; name: string; collapsed: boolean; stats: ReturnType<typeof groupStats> }
+      | { kind: "article"; article: ChiffrageArticle };
+    const rows: Row[] = [];
+    let shown = 0;
+    let current: string | null = null;
+    let collapsed = false;
+    for (const a of ordered) {
+      const group = noteGroup(a.note).group;
+      if (group !== current) {
+        current = group;
+        collapsed = false;
+        if (group !== null) {
+          // Same key shape as the estimate view, without the room part (this list is not split by room).
+          const key = `${poste.id}|shop|${group}`;
+          const members = ordered.filter((x) => noteGroup(x.note).group === group);
+          if (!filtering || members.some((x) => matchesFilter(x, filter))) {
+            collapsed = !filtering && collapsedGroups.has(key);
+            rows.push({ kind: "group", key, name: group, collapsed, stats: groupStats(members) });
+          }
+        }
+      }
+      if (filtering && !matchesFilter(a, filter)) continue;
+      shown += 1;
+      if (!collapsed) rows.push({ kind: "article", article: a });
+    }
+    return { rows, shown };
+  };
 
   return (
     <div className="space-y-4" data-testid="shopping-list">
@@ -198,16 +257,7 @@ export function ShoppingList({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            className="h-4 w-4"
-            checked={onlyToBuy}
-            onChange={(e) => setOnlyToBuy(e.target.checked)}
-          />
-          {t("onlyToBuy")}
-        </label>
+      <div className="flex flex-wrap items-center justify-end gap-2 print:hidden">
         <div className="flex gap-2">
           <Button type="button" variant="outline" size="sm" onClick={copyList}>
             <ClipboardCopy className="mr-1 h-4 w-4" />
@@ -225,9 +275,16 @@ export function ShoppingList({
         </div>
       </div>
 
+      {filtering && tree.postes.every((p) => layout(p).shown === 0) ? (
+        <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground" data-testid="no-match">
+          {t("noMatch")}
+        </p>
+      ) : null}
+
       {tree.postes.map((poste) => {
-        const rows = visible(poste);
-        if (rows.length === 0) return null;
+        const { rows, shown } = layout(poste);
+        if (shown === 0) return null;
+        const folded = !filtering && collapsedPostes.has(poste.id);
         return (
           <section
             key={poste.id}
@@ -235,7 +292,21 @@ export function ShoppingList({
             data-testid="shopping-poste"
           >
             <header className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
-              <div>
+              <div className="flex min-w-0 items-start gap-1">
+                {onToggleCollapse ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 shrink-0 p-0 print:hidden"
+                    onClick={() => onToggleCollapse(poste.id)}
+                    aria-expanded={!folded}
+                    aria-label={folded ? t("expandSection") : t("collapseSection")}
+                  >
+                    {folded ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                ) : null}
+              <div className="min-w-0">
                 <h3 className="font-semibold">{poste.name}</h3>
                 <p className="text-xs text-muted-foreground">
                   {t("boughtOf", {
@@ -243,6 +314,7 @@ export function ShoppingList({
                     total: poste.articles.length,
                   })}
                 </p>
+              </div>
               </div>
               <div className="text-right text-sm tabular-nums">
                 <p>
@@ -267,9 +339,27 @@ export function ShoppingList({
                 ) : null}
               </div>
             </header>
+            {folded ? null : (
             <ul>
-              {rows.map((a) => {
+              {rows.map((row) => {
+                if (row.kind === "group") {
+                  return (
+                    <li key={row.key} className="list-none">
+                      <GroupHeading
+                        name={row.name}
+                        count={row.stats.count}
+                        bought={row.stats.bought}
+                        amount={row.stats.ttc}
+                        amountSuffix={t("ttcShort")}
+                        collapsed={row.collapsed}
+                        onToggle={() => onToggleGroup?.(row.key)}
+                      />
+                    </li>
+                  );
+                }
+                const a = row.article;
                 const busy = busyIds.has(a.id);
+                const note = noteGroup(a.note).rest;
                 return (
                   <li
                     key={a.id}
@@ -283,6 +373,12 @@ export function ShoppingList({
                       disabled={!canManage || busy}
                       aria-label={t("markBought", { name: a.name })}
                       onChange={(e) => onTogglePurchased(a, e.target.checked)}
+                    />
+                    <ArticleImage
+                      projectId={projectId}
+                      imageRef={a.image_ref}
+                      alt={a.name}
+                      version={imageVersion}
                     />
                     <div className="min-w-[10rem] flex-1">
                       <p
@@ -301,6 +397,11 @@ export function ShoppingList({
                           ? ` · ${roomName.get(a.room_id)}`
                           : ""}
                       </p>
+                      {note ? (
+                        <p className="line-clamp-1 text-xs text-muted-foreground" title={note}>
+                          {note}
+                        </p>
+                      ) : null}
                     </div>
                     <p className="w-24 text-right text-sm tabular-nums text-muted-foreground">
                       {a.effective_source === "none"
@@ -325,7 +426,7 @@ export function ShoppingList({
                       ) : null}
                     </div>
                     {a.purchased ? (
-                      <div className="flex basis-full flex-wrap items-center gap-3 pl-8">
+                      <div className="flex basis-full flex-wrap items-center gap-3 pl-[5.5rem]">
                         {canManage ? (
                           <>
                             <QuantityInput
@@ -366,6 +467,7 @@ export function ShoppingList({
                 );
               })}
             </ul>
+            )}
           </section>
         );
       })}

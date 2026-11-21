@@ -20,6 +20,7 @@ import { ArticleImage } from "@/components/chiffrage/article-image";
 import { Button } from "@/components/ui/button";
 import { QuoteComparisonTable } from "@/components/chiffrage/quote-comparison-table";
 import { money, quantity, unitLabel } from "@/components/chiffrage/format";
+import { noteGroup } from "@/components/chiffrage/list-filter";
 import type {
   ChiffrageArticle,
   ChiffrageQuote,
@@ -72,6 +73,8 @@ export function ArticleRow({
 }: Props) {
   const t = useTranslations("chiffrage");
   const unpriced = article.effective_source === "none";
+  // The "[Group]" tag is shown as the group heading above, not repeated here.
+  const note = noteGroup(article.note).rest;
 
   return (
     <div className="border-b last:border-0" data-testid="article-row">
@@ -130,9 +133,22 @@ export function ArticleRow({
             {article.effective_source === "selected" ? (
               <Badge className={BADGE_FITS}>{t("retained")}</Badge>
             ) : null}
+            {article.purchased ? (
+              <Badge
+                variant="outline"
+                className={`${BADGE_FITS} border-emerald-600/40 text-emerald-700 dark:text-emerald-400`}
+                data-testid="bought-badge"
+              >
+                {t("boughtBadge")}
+              </Badge>
+            ) : null}
           </div>
-          {article.note ? (
-            <p className="text-xs text-muted-foreground">{article.note}</p>
+          {/* One line while folded (long notes made each row three lines
+              tall); the whole note shows on hover and when the row is open. */}
+          {note ? (
+            <p className={`text-xs text-muted-foreground ${expanded ? "" : "line-clamp-1"}`} title={note}>
+              {note}
+            </p>
           ) : null}
         </div>
 

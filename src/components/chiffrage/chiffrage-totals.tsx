@@ -7,6 +7,7 @@
  * budget reads as a complete one.
  */
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 
@@ -33,6 +34,7 @@ function signed(v: number): string {
 
 export function ChiffrageTotals({ tree }: { tree: ChiffrageTree }) {
   const t = useTranslations("chiffrage");
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
 
   const bought = tree.postes.flatMap((p) => p.articles).filter((a) => a.purchased);
   const gap = bought.reduce((sum, a) => sum + gapOf(a), 0);
@@ -72,7 +74,7 @@ export function ChiffrageTotals({ tree }: { tree: ChiffrageTree }) {
       });
     }
   }
-  const shown = alerts.slice(0, MAX_ALERTS);
+  const shown = showAllAlerts ? alerts : alerts.slice(0, MAX_ALERTS);
   const tone = {
     bad: "bg-red-600",
     warn: "bg-amber-500",
@@ -142,8 +144,10 @@ export function ChiffrageTotals({ tree }: { tree: ChiffrageTree }) {
               {tree.postes.map((p) => {
                 const pg = p.articles.reduce((s, a) => s + gapOf(a), 0);
                 return (
-                  <li key={p.id} className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_auto] items-center gap-3 text-sm">
-                    <span className="truncate font-medium" title={p.name}>{p.name}</span>
+                  <li key={p.id} className="grid grid-cols-[minmax(0,11rem)_minmax(0,1fr)_auto] items-center gap-3 text-sm">
+                    {/* Two lines before cutting: "Mái (charpente, couverture,
+                        isolation)" read as "Mái (charpent…" in one. */}
+                    <span className="line-clamp-2 font-medium leading-snug" title={p.name}>{p.name}</span>
                     <span className="space-y-1">
                       <span className="block h-2 rounded-full bg-muted-foreground/25" style={{ width: `${(100 * p.subtotal_ttc) / scale}%` }} />
                       <span className="block h-2 rounded-full bg-primary" style={{ width: `${(100 * p.actual_ttc) / scale}%` }} />
@@ -168,7 +172,7 @@ export function ChiffrageTotals({ tree }: { tree: ChiffrageTree }) {
             {shown.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t("dashNothing")}</p>
             ) : (
-              <ul className="space-y-2 text-sm">
+              <ul className={`space-y-2 text-sm ${showAllAlerts ? "max-h-80 overflow-y-auto pr-1" : ""}`}>
                 {shown.map((a) => (
                   <li key={a.key} className="flex items-start gap-2">
                     <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${tone[a.tone]}`} />
@@ -177,8 +181,17 @@ export function ChiffrageTotals({ tree }: { tree: ChiffrageTree }) {
                 ))}
               </ul>
             )}
-            {alerts.length > shown.length ? (
-              <p className="mt-2 text-xs text-muted-foreground">{t("dashMore", { count: alerts.length - shown.length })}</p>
+            {/* The rest was a plain "and N more" that could not be opened. */}
+            {alerts.length > MAX_ALERTS ? (
+              <button
+                type="button"
+                onClick={() => setShowAllAlerts((v) => !v)}
+                aria-expanded={showAllAlerts}
+                className="mt-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
+                data-testid="attention-toggle"
+              >
+                {showAllAlerts ? t("dashShowLess") : t("dashMore", { count: alerts.length - MAX_ALERTS })}
+              </button>
             ) : null}
           </div>
         </div>

@@ -77,9 +77,10 @@ describe("Sidebar — company hidden sections", () => {
 });
 
 describe("Sidebar — project switcher company", () => {
-  it("names the selected project's company when the user has several", () => {
+  it("does not show the company under the project name", () => {
     selectProject("co-b");
     render(<Sidebar />);
-    expect(screen.getByTestId("project-switcher-selected-company")).toHaveTextContent("B");
+    expect(screen.queryByTestId("project-switcher-selected-company")).toBeNull();
+    expect(screen.queryByTestId("project-switcher-company")).toBeNull();
   });
 });

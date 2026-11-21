@@ -143,6 +143,14 @@ describe("DashboardPage — company scope", () => {
     expect(screen.getByTestId("company-overview-band").nextElementSibling).toBe(screen.getByTestId("company-footnote"));
     // Worker line: days and what was paid, not days alone.
     expect(within(screen.getByTestId("company-wages")).getByText(/10 days · paid 0 €/)).toBeInTheDocument();
+    // The KPI tiles size to the band (container query), not to the window,
+    // so four tiles never squeeze their amounts out of the band.
+    expect(screen.getByTestId("company-kpis").parentElement!.className).toContain("@container");
+    expect(screen.getByTestId("company-kpis").className).not.toMatch(/\bmd:grid-cols/);
+    // Each worker's bar has its own full-width row: the tracks compare.
+    for (const track of within(screen.getByTestId("company-wages")).getAllByTestId("company-wage-track")) {
+      expect(track.parentElement!.className).toContain("flex-col");
+    }
   });
 
   it("says a month without days has no days yet, not that all wages are paid", async () => {

@@ -27,6 +27,7 @@ import {
   type ProjectStatus,
 } from "@/lib/dashboard/company-overview";
 import { OverviewScopeToggle, type OverviewScope } from "@/components/dashboard/overview-scope-toggle";
+import { CompanyCharts } from "@/components/dashboard/company-charts";
 
 /** Projects loaded at a time: two requests each, well under the API's per-minute limit. */
 const BATCH = 4;
@@ -248,6 +249,8 @@ export function CompanyOverview({ projects, companies, companyId, onCompanyChang
         {t("footnote")}
         {labor && labor.failed > 0 && ` ${t("partial", { count: labor.failed })}`}
       </p>
+
+      <CompanyCharts projects={projects} laborInputs={labor?.inputs ?? null} cards={cards} />
 
       <div className="flex flex-wrap items-start gap-5">
         <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-3.5">

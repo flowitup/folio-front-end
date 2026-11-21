@@ -161,4 +161,16 @@ describe("DashboardPage — company scope", () => {
     expect(await screen.findByTestId("company-wages-empty")).toHaveTextContent("No days logged this month.");
     expect(screen.getByTestId("company-attention")).not.toHaveTextContent("still owed");
   });
+  it("adds the company charts: spend by type, labor by month and spend per project", async () => {
+    renderDashboard();
+    const charts = await screen.findByTestId("company-charts");
+    expect(within(charts).getByTestId("overview-type-minis")).toBeInTheDocument();
+    expect(await within(charts).findByText("Days & wages, last 6 months")).toBeInTheDocument();
+    // Two projects: one bar each, most spent first.
+    const perProject = within(charts).getByTestId("company-project-chart");
+    expect(within(perProject).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
+      expect.stringContaining("Nhà số 1"),
+      expect.stringContaining("Nhà 13"),
+    ]);
+  });
 });

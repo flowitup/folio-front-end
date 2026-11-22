@@ -18,13 +18,18 @@ interface Props {
   /** Lines shown / lines in the chiffrage. */
   shown: number;
   total: number;
+  /**
+   * The stage filter's choices, from stageChoices(): one per rank, with the
+   * names the postes give it. No chips when no poste has stages.
+   */
+  stages?: string[][];
   onCollapseAll: () => void;
   onExpandAll: () => void;
 }
 
 const STATUSES: ListStatus[] = ["all", "toBuy", "bought", "unpriced"];
 
-export function ListToolbar({ filter, onChange, shown, total, onCollapseAll, onExpandAll }: Props) {
+export function ListToolbar({ filter, onChange, shown, total, stages = [], onCollapseAll, onExpandAll }: Props) {
   const t = useTranslations("chiffrage");
   const label: Record<ListStatus, string> = {
     all: t("filterAll"),
@@ -71,6 +76,32 @@ export function ListToolbar({ filter, onChange, shown, total, onCollapseAll, onE
           </button>
         ))}
       </div>
+      {stages.length > 0 ? (
+        <div
+          className="inline-flex flex-wrap rounded-md border p-0.5"
+          role="group"
+          aria-label={t("stageFilterLabel")}
+          data-testid="stage-filter"
+        >
+          {[null, ...stages.map((_, i) => i)].map((s) => {
+            const active = (filter.stage ?? null) === s;
+            return (
+              <button
+                key={s ?? "all"}
+                type="button"
+                aria-pressed={active}
+                title={s === null ? undefined : stages[s].join(" · ")}
+                onClick={() => onChange({ ...filter, stage: s })}
+                className={`rounded px-2.5 py-1 text-sm ${
+                  active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {s === null ? t("stageAll") : t("stageChip", { n: s + 1 })}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
       <span className="text-sm tabular-nums text-muted-foreground" data-testid="list-count">
         {t("linesShown", { shown, total })}
       </span>

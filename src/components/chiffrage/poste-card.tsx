@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import {
   ChevronDown,
   ChevronRight,
+  Layers,
   Pencil,
   Plus,
   Scale,
@@ -30,6 +31,8 @@ interface Props {
   /** Open the head-to-head shop comparison for this section. */
   onCompare: () => void;
   onEdit: () => void;
+  /** Open the dialog of the poste's stages (giai đoạn). */
+  onManagePhases?: () => void;
   onDelete: () => void;
   onAddArticle: () => void;
   children: React.ReactNode;
@@ -44,6 +47,7 @@ export function PosteCard({
   canCompare,
   onCompare,
   onEdit,
+  onManagePhases,
   onDelete,
   onAddArticle,
   children,
@@ -122,6 +126,22 @@ export function PosteCard({
             >
               <Plus className="h-4 w-4" />
             </Button>
+            {onManagePhases ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onManagePhases}
+                aria-label={t("managePhases")}
+                title={t("managePhases")}
+                data-testid="poste-phases"
+              >
+                <Layers className="h-4 w-4" />
+                {(poste.phases ?? []).length > 0 ? (
+                  <span className="ml-1 text-xs tabular-nums">{(poste.phases ?? []).length}</span>
+                ) : null}
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="ghost"

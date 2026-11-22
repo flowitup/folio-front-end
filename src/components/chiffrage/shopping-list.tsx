@@ -16,17 +16,21 @@ import { DecimalInput } from "@/components/ui/decimal-input";
 import { money, quantity, unitLabel } from "@/components/chiffrage/format";
 import { ArticleImage } from "@/components/chiffrage/article-image";
 import { GroupHeading } from "@/components/chiffrage/group-heading";
+import { PhaseHeading } from "@/components/chiffrage/phase-heading";
 import {
   NO_FILTER,
+  byPhase,
   groupStats,
   isFiltering,
   matchesFilter,
   noteGroup,
   orderByGroup,
+  phaseRanks,
   type ListFilter,
 } from "@/components/chiffrage/list-filter";
 import type {
   ChiffrageArticle,
+  ChiffragePhase,
   ChiffragePoste,
   ChiffrageTree,
 } from "@/lib/api/chiffrage";
@@ -140,6 +144,8 @@ export function ShoppingList({
 }: Props) {
   const t = useTranslations("chiffrage");
   const filtering = isFiltering(filter);
+  const ranks = useMemo(() => phaseRanks(tree.postes), [tree.postes]);
+  const matches = (a: ChiffrageArticle) => matchesFilter(a, filter, ranks);
   const roomName = useMemo(
     () => new Map(tree.rooms.map((r) => [r.id, r.name])),
     [tree.rooms],
@@ -152,16 +158,29 @@ export function ShoppingList({
     .reduce((s, a) => s + a.total_ttc, 0);
   const diff = sumGaps(all);
 
+  /** Copy what is left to buy, as shown: a stage or search filter narrows the copy too. */
   const copyList = async () => {
     const lines: string[] = [];
     for (const poste of tree.postes) {
-      const todo = poste.articles.filter((a) => !a.purchased);
-      if (todo.length === 0) continue;
+      const staged = (poste.phases ?? []).length > 0;
+      const buckets = byPhase(poste)
+        .map((b) => ({ ...b, todo: b.articles.filter((a) => !a.purchased && (!filtering || matches(a))) }))
+        .filter((b) => b.todo.length > 0);
+      if (buckets.length === 0) continue;
       lines.push(poste.name);
-      for (const a of todo) {
-        lines.push(
-          `- ${a.name}: ${quantity(a.quantity)}${a.unit ? ` ${unitLabel(a.unit, t)}` : ""}`,
-        );
+      for (const b of buckets) {
+        if (staged) {
+          lines.push(
+            b.rank === null
+              ? `## ${t("noPhase")}`
+              : `## ${t("stageChip", { n: b.rank + 1 })} · ${b.phase?.name ?? ""}`,
+          );
+        }
+        for (const a of [...b.todo].sort((x, y) => x.position - y.position)) {
+          lines.push(
+            `- ${a.name}: ${quantity(a.quantity)}${a.unit ? ` ${unitLabel(a.unit, t)}` : ""}`,
+          );
+        }
       }
       lines.push("");
     }
@@ -173,34 +192,51 @@ export function ShoppingList({
     }
   };
 
-  /** The section's lines in display order, "[Group]" headings included. */
+  /**
+   * The section's lines in display order: stage headings when the poste has
+   * stages, then "[Group]" headings inside each stage.
+   */
   const layout = (poste: ChiffragePoste) => {
-    const ordered = orderByGroup([...poste.articles].sort((a, b) => a.position - b.position));
     type Row =
+      | { kind: "phase"; key: string; phase: ChiffragePhase | null; rank: number | null; collapsed: boolean }
       | { kind: "group"; key: string; name: string; collapsed: boolean; stats: ReturnType<typeof groupStats> }
       | { kind: "article"; article: ChiffrageArticle };
     const rows: Row[] = [];
     let shown = 0;
-    let current: string | null = null;
-    let collapsed = false;
-    for (const a of ordered) {
-      const group = noteGroup(a.note).group;
-      if (group !== current) {
-        current = group;
-        collapsed = false;
-        if (group !== null) {
-          // Same key shape as the estimate view, without the room part (this list is not split by room).
-          const key = `${poste.id}|shop|${group}`;
-          const members = ordered.filter((x) => noteGroup(x.note).group === group);
-          if (!filtering || members.some((x) => matchesFilter(x, filter))) {
-            collapsed = !filtering && collapsedGroups.has(key);
-            rows.push({ kind: "group", key, name: group, collapsed, stats: groupStats(members) });
+    const showPhases = (poste.phases ?? []).length > 0;
+    for (const bucket of byPhase(poste)) {
+      const visible = filtering ? bucket.articles.filter(matches) : bucket.articles;
+      if (filtering && visible.length === 0) continue;
+      shown += visible.length;
+      // Same keys as the estimate view, so a stage folded there is folded here.
+      const phaseKey = `${poste.id}|phase|${bucket.phase?.id ?? "none"}`;
+      if (showPhases) {
+        const folded = !filtering && collapsedGroups.has(phaseKey);
+        rows.push({ kind: "phase", key: phaseKey, phase: bucket.phase, rank: bucket.rank, collapsed: folded });
+        if (folded) continue;
+      }
+      const phasePart = showPhases ? `${bucket.phase?.id ?? "none"}|` : "";
+      const ordered = orderByGroup([...bucket.articles].sort((a, b) => a.position - b.position));
+      let current: string | null = null;
+      let collapsed = false;
+      for (const a of ordered) {
+        const group = noteGroup(a.note).group;
+        if (group !== current) {
+          current = group;
+          collapsed = false;
+          if (group !== null) {
+            // Same key shape as the estimate view, without the room part (this list is not split by room).
+            const key = `${poste.id}|shop|${phasePart}${group}`;
+            const members = ordered.filter((x) => noteGroup(x.note).group === group);
+            if (!filtering || members.some(matches)) {
+              collapsed = !filtering && collapsedGroups.has(key);
+              rows.push({ kind: "group", key, name: group, collapsed, stats: groupStats(members) });
+            }
           }
         }
+        if (filtering && !matches(a)) continue;
+        if (!collapsed) rows.push({ kind: "article", article: a });
       }
-      if (filtering && !matchesFilter(a, filter)) continue;
-      shown += 1;
-      if (!collapsed) rows.push({ kind: "article", article: a });
     }
     return { rows, shown };
   };
@@ -342,6 +378,22 @@ export function ShoppingList({
             {folded ? null : (
             <ul>
               {rows.map((row) => {
+                if (row.kind === "phase") {
+                  return (
+                    <li key={row.key} className="list-none">
+                      <PhaseHeading
+                        name={row.phase?.name ?? null}
+                        rank={row.rank === null ? null : row.rank + 1}
+                        subtotal={(poste.phase_subtotals ?? []).find(
+                          (s) => s.phase_id === (row.phase?.id ?? null),
+                        )}
+                        amount="ttc"
+                        collapsed={row.collapsed}
+                        onToggle={() => onToggleGroup?.(row.key)}
+                      />
+                    </li>
+                  );
+                }
                 if (row.kind === "group") {
                   return (
                     <li key={row.key} className="list-none">

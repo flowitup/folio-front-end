@@ -19,8 +19,12 @@ import {
   createUnit,
   deleteArticle,
   deletePoste,
+  createPhase,
   createRoom,
   deleteArticleImage,
+  deletePhase,
+  reorderPhase,
+  updatePhase,
   deleteQuote,
   deleteRoom,
   deleteStore,
@@ -40,6 +44,7 @@ import {
   updateStore,
   type ArticlePayload,
   type ChiffrageArticle,
+  type ChiffragePhase,
   type ChiffragePoste,
   type ChiffrageQuote,
   type ChiffrageRoom,
@@ -184,6 +189,36 @@ export async function reorderRoomAction(
   payload: ReorderPayload
 ): Promise<Result<ChiffrageRoom>> {
   return run(projectId, () => reorderRoom(projectId, roomId, payload));
+}
+
+// --- phases (stages of one poste) -----------------------------------------
+
+export async function createPhaseAction(
+  projectId: string,
+  posteId: string,
+  name: string
+): Promise<Result<ChiffragePhase>> {
+  return run(projectId, () => createPhase(projectId, posteId, name));
+}
+
+export async function updatePhaseAction(
+  projectId: string,
+  phaseId: string,
+  name: string
+): Promise<Result<ChiffragePhase>> {
+  return run(projectId, () => updatePhase(projectId, phaseId, name));
+}
+
+export async function deletePhaseAction(projectId: string, phaseId: string): Promise<Result<void>> {
+  return run(projectId, () => deletePhase(projectId, phaseId));
+}
+
+export async function reorderPhaseAction(
+  projectId: string,
+  phaseId: string,
+  payload: ReorderPayload
+): Promise<Result<ChiffragePhase>> {
+  return run(projectId, () => reorderPhase(projectId, phaseId, payload));
 }
 
 // --- article image ---------------------------------------------------------

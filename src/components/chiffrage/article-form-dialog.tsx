@@ -17,7 +17,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UnitSelect } from "@/components/chiffrage/unit-select";
 import { RoomSelect } from "@/components/chiffrage/room-select";
-import type { ChiffrageArticle, ChiffrageRoom, ChiffrageUnit } from "@/lib/api/chiffrage";
+import type {
+  ChiffrageArticle,
+  ChiffragePhase,
+  ChiffrageRoom,
+  ChiffrageUnit,
+} from "@/lib/api/chiffrage";
 import { MAX_ARTICLE_QUANTITY } from "@/lib/numeric-bounds";
 import { parseMoneyInput } from "@/lib/utils/parse-money-input";
 import { formatDecimalForInput } from "@/components/ui/decimal-input";
@@ -27,6 +32,10 @@ interface Props {
   article: ChiffrageArticle | null;
   units: ChiffrageUnit[];
   rooms: ChiffrageRoom[];
+  /** The poste's stages (giai đoạn), in order. */
+  phases?: ChiffragePhase[];
+  /** Rank of the stage a new item starts in (the stage filter on screen), if any. */
+  defaultStage?: number | null;
   submitting: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: {
@@ -35,11 +44,15 @@ interface Props {
     unit: string | null;
     note: string | null;
     room_id: string | null;
+    /** Sent only when the poste has stages or the item had one. */
+    phase_id?: string | null;
   }) => void;
   onCreateUnit: (symbol: string) => Promise<ChiffrageUnit | null>;
   /** Remove a custom unit (refused while articles use it). */
   onDeleteUnit?: (unit: ChiffrageUnit) => Promise<boolean>;
   onCreateRoom: (name: string) => Promise<ChiffrageRoom | null>;
+  /** Add a stage to the poste from the picker; omitted, no stage picker shows. */
+  onCreatePhase?: (name: string) => Promise<ChiffragePhase | null>;
 }
 
 export function ArticleFormDialog({
@@ -47,12 +60,15 @@ export function ArticleFormDialog({
   article,
   units,
   rooms,
+  phases = [],
+  defaultStage = null,
   submitting,
   onOpenChange,
   onSubmit,
   onCreateUnit,
   onDeleteUnit,
   onCreateRoom,
+  onCreatePhase,
 }: Props) {
   const t = useTranslations("chiffrage");
   const locale = useLocale();
@@ -64,6 +80,12 @@ export function ArticleFormDialog({
   const [unit, setUnit] = useState<string | null>(article?.unit ?? null);
   const [note, setNote] = useState(article?.note ?? "");
   const [roomId, setRoomId] = useState<string | null>(article?.room_id ?? null);
+  const [phaseId, setPhaseId] = useState<string | null>(
+    article ? (article.phase_id ?? null) : defaultStage !== null ? (phases[defaultStage]?.id ?? null) : null
+  );
+  // A stage created from the picker is not in `phases` until the page re-reads the tree.
+  const [createdPhases, setCreatedPhases] = useState<ChiffragePhase[]>([]);
+  const phaseOptions = [...phases, ...createdPhases.filter((c) => !phases.some((p) => p.id === c.id))];
   // Unreadable text is flagged once the field is left, not on a half-typed "2,".
   const [qtyTouched, setQtyTouched] = useState(false);
 
@@ -84,6 +106,7 @@ export function ArticleFormDialog({
       unit,
       note: note.trim() || null,
       room_id: roomId,
+      ...(phaseOptions.length > 0 || article?.phase_id ? { phase_id: phaseId } : {}),
     });
   };
 
@@ -111,6 +134,31 @@ export function ArticleFormDialog({
                 onCreateRoom={onCreateRoom}
               />
             </div>
+            {onCreatePhase ? (
+              <div className="space-y-2">
+                <Label id="article-phase-label" htmlFor="article-phase">
+                  {t("phase")}
+                </Label>
+                <RoomSelect
+                  id="article-phase"
+                  labelledBy="article-phase-label"
+                  testId="phase-select"
+                  value={phaseId}
+                  rooms={phaseOptions}
+                  onChange={setPhaseId}
+                  onCreateRoom={async (name) => {
+                    const created = await onCreatePhase(name);
+                    if (created) setCreatedPhases((prev) => [...prev, created]);
+                    return created;
+                  }}
+                  labels={{
+                    none: t("noPhase"),
+                    addPlaceholder: t("addPhasePlaceholder"),
+                    add: t("addPhase"),
+                  }}
+                />
+              </div>
+            ) : null}
             <div className="space-y-2">
               <Label htmlFor="article-name">{t("articleName")}</Label>
               <Input

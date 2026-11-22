@@ -42,14 +42,18 @@ import { ChiffrageTotals } from "@/components/chiffrage/chiffrage-totals";
 import { PosteCard } from "@/components/chiffrage/poste-card";
 import { RoomHeading } from "@/components/chiffrage/room-heading";
 import { GroupHeading } from "@/components/chiffrage/group-heading";
+import { PhaseHeading } from "@/components/chiffrage/phase-heading";
 import { ListToolbar } from "@/components/chiffrage/list-toolbar";
 import {
   NO_FILTER,
+  byPhase,
   groupStats,
   isFiltering,
   matchesFilter,
   noteGroup,
   orderByGroup,
+  phaseRanks,
+  stageChoices,
   type ListFilter,
 } from "@/components/chiffrage/list-filter";
 import { ArticleImageDialog } from "@/components/chiffrage/article-image-dialog";
@@ -57,7 +61,7 @@ import { SectionCompareDialog } from "@/components/chiffrage/section-compare-dia
 import { PosteFormDialog } from "@/components/chiffrage/poste-form-dialog";
 import { PosteTemplatesDialog } from "@/components/chiffrage/poste-templates-dialog";
 import { ShoppingList } from "@/components/chiffrage/shopping-list";
-import { RoomsDialog } from "@/components/chiffrage/rooms-dialog";
+import { RoomsDialog, type NamedListLabels } from "@/components/chiffrage/rooms-dialog";
 import { SortableItem } from "@/components/chiffrage/sortable-item";
 import { StoreFormDialog } from "@/components/chiffrage/store-form-dialog";
 import { StoresDialog } from "@/components/chiffrage/stores-dialog";
@@ -69,6 +73,7 @@ import {
 } from "@/components/chiffrage/quote-form-dialog";
 import {
   createArticleAction,
+  createPhaseAction,
   createPosteAction,
   createRoomAction,
   createStoreAction,
@@ -77,17 +82,20 @@ import {
   createUnitAction,
   deleteUnitAction,
   deleteArticleAction,
+  deletePhaseAction,
   deletePosteAction,
   deleteRoomAction,
   deleteStoreAction,
   deleteQuoteAction,
   getChiffrageAction,
   reorderArticleAction,
+  reorderPhaseAction,
   reorderPosteAction,
   reorderRoomAction,
   selectQuoteAction,
   unselectQuoteAction,
   updateArticleAction,
+  updatePhaseAction,
   updatePosteAction,
   updateRoomAction,
   updateStoreAction,
@@ -98,6 +106,7 @@ import {
 import type {
   ArticlePayload,
   ChiffrageArticle,
+  ChiffragePhase,
   ChiffragePoste,
   ChiffrageQuote,
   ChiffrageRoom,
@@ -191,6 +200,8 @@ export function ChiffragePageClient({
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [busyArticleIds, setBusyArticleIds] = useState<Set<string>>(new Set());
   const [roomsOpen, setRoomsOpen] = useState(false);
+  // The poste whose stages (giai đoạn) dialog is open, if any.
+  const [phasesFor, setPhasesFor] = useState<string | null>(null);
   const [storesOpen, setStoresOpen] = useState(false);
   const [storeForm, setStoreForm] = useState<{
     open: boolean;
@@ -241,8 +252,15 @@ export function ChiffragePageClient({
   };
 
   const filtering = isFiltering(filter);
+  const ranks = useMemo(() => phaseRanks(tree.postes), [tree.postes]);
+  const stages = useMemo(() => stageChoices(tree.postes), [tree.postes]);
+  const matches = (a: ChiffrageArticle) => matchesFilter(a, filter, ranks);
   const allArticles = tree.postes.flatMap((p) => p.articles);
-  const shownCount = filtering ? allArticles.filter((a) => matchesFilter(a, filter)).length : allArticles.length;
+  const shownCount = filtering ? allArticles.filter(matches).length : allArticles.length;
+  // A stage filter left over from stages that were since deleted would hide everything.
+  useEffect(() => {
+    if (filter.stage != null && filter.stage >= stages.length) setFilter((f) => ({ ...f, stage: null }));
+  }, [filter.stage, stages.length]);
 
   /** Fold every section (or open them all, with their sub-groups). */
   const foldAll = (fold: boolean) => {
@@ -275,32 +293,31 @@ export function ChiffragePageClient({
   );
 
   /**
-   * Lay a poste's articles out room by room. Rooms follow the project's
-   * declared order and unassigned items come last, matching how the backend
-   * orders room_subtotals — the two must agree or the headings would show one
-   * room's figure above another room's items.
+   * Lay a poste's articles out stage by stage (giai đoạn), then room by room.
+   * Stages follow the poste's own order and the unassigned lines come last;
+   * rooms follow the project's declared order and unassigned items come last.
+   * Both match how the backend orders phase_subtotals and room_subtotals — the
+   * two must agree or a heading would show one bucket's figure above another
+   * bucket's items.
    *
    * Inside a room, articles whose note starts with "[Group]" are gathered
-   * under a foldable group heading. The room heading is left out when no
-   * article of the section has a room ("Unassigned" over everything says
-   * nothing). While a search or status filter is on, only matching lines show
-   * and every fold is opened.
+   * under a foldable group heading. Stage headings only show when the poste
+   * has stages, and room headings only when some article of the section has a
+   * room ("Unassigned" over everything says nothing). While a search, status
+   * or stage filter is on, only matching lines show and every fold is opened.
    */
   const byRoom = (poste: ChiffragePoste) => {
     const rank = new Map(tree.rooms.map((r, i) => [r.id, i]));
-    const byPosition = [...poste.articles].sort((a, b) => {
-      const ra = a.room_id === null ? Number.MAX_SAFE_INTEGER : (rank.get(a.room_id) ?? rank.size);
-      const rb = b.room_id === null ? Number.MAX_SAFE_INTEGER : (rank.get(b.room_id) ?? rank.size);
-      return ra === rb ? a.position - b.position : ra - rb;
-    });
-    const runs: { roomId: string | null; articles: ChiffrageArticle[] }[] = [];
-    for (const a of byPosition) {
-      const last = runs[runs.length - 1];
-      if (last && last.roomId === a.room_id) last.articles.push(a);
-      else runs.push({ roomId: a.room_id, articles: [a] });
-    }
+    const showPhases = (poste.phases ?? []).length > 0;
     const showRooms = poste.articles.some((a) => a.room_id !== null);
     type Row =
+      | {
+          kind: "phase";
+          key: string;
+          phase: ChiffragePhase | null;
+          rank: number | null;
+          collapsed: boolean;
+        }
       | { kind: "heading"; key: string; roomId: string | null }
       | {
           kind: "group";
@@ -312,34 +329,57 @@ export function ChiffragePageClient({
       | { kind: "article"; article: ChiffrageArticle };
     const rows: Row[] = [];
     const sorted: ChiffrageArticle[] = [];
-    for (const run of runs) {
-      const ordered = orderByGroup(run.articles);
-      const visible = filtering ? ordered.filter((a) => matchesFilter(a, filter)) : ordered;
-      if (visible.length === 0) continue;
-      if (showRooms) rows.push({ kind: "heading", key: `h-${run.roomId ?? "none"}`, roomId: run.roomId });
-      let current: string | null = null;
-      let collapsed = false;
-      for (const article of ordered) {
-        const group = noteGroup(article.note).group;
-        if (group !== current) {
-          current = group;
-          collapsed = false;
-          if (group !== null) {
-            const key = `${poste.id}|${run.roomId ?? ""}|${group}`;
-            const members = ordered.filter((a) => noteGroup(a.note).group === group);
-            if (!filtering || members.some((a) => matchesFilter(a, filter))) {
-              collapsed = !filtering && collapsedGroups.has(key);
-              rows.push({ kind: "group", key, name: group, collapsed, stats: groupStats(members) });
+    for (const bucket of byPhase(poste)) {
+      if (filtering && !bucket.articles.some(matches)) continue;
+      const phaseKey = `${poste.id}|phase|${bucket.phase?.id ?? "none"}`;
+      if (showPhases) {
+        const folded = !filtering && collapsedGroups.has(phaseKey);
+        rows.push({ kind: "phase", key: phaseKey, phase: bucket.phase, rank: bucket.rank, collapsed: folded });
+        if (folded) continue;
+      }
+      const byPosition = [...bucket.articles].sort((a, b) => {
+        const ra = a.room_id === null ? Number.MAX_SAFE_INTEGER : (rank.get(a.room_id) ?? rank.size);
+        const rb = b.room_id === null ? Number.MAX_SAFE_INTEGER : (rank.get(b.room_id) ?? rank.size);
+        return ra === rb ? a.position - b.position : ra - rb;
+      });
+      const runs: { roomId: string | null; articles: ChiffrageArticle[] }[] = [];
+      for (const a of byPosition) {
+        const last = runs[runs.length - 1];
+        if (last && last.roomId === a.room_id) last.articles.push(a);
+        else runs.push({ roomId: a.room_id, articles: [a] });
+      }
+      const phasePart = showPhases ? `${bucket.phase?.id ?? "none"}|` : "";
+      for (const run of runs) {
+        const ordered = orderByGroup(run.articles);
+        const visible = filtering ? ordered.filter(matches) : ordered;
+        if (visible.length === 0) continue;
+        if (showRooms)
+          rows.push({ kind: "heading", key: `h-${phasePart}${run.roomId ?? "none"}`, roomId: run.roomId });
+        let current: string | null = null;
+        let collapsed = false;
+        for (const article of ordered) {
+          const group = noteGroup(article.note).group;
+          if (group !== current) {
+            current = group;
+            collapsed = false;
+            if (group !== null) {
+              // Without stages the key keeps its old shape, so folds saved before stages existed still apply.
+              const key = `${poste.id}|${phasePart}${run.roomId ?? ""}|${group}`;
+              const members = ordered.filter((a) => noteGroup(a.note).group === group);
+              if (!filtering || members.some(matches)) {
+                collapsed = !filtering && collapsedGroups.has(key);
+                rows.push({ kind: "group", key, name: group, collapsed, stats: groupStats(members) });
+              }
             }
           }
+          if (collapsed) continue;
+          if (filtering && !matches(article)) continue;
+          rows.push({ kind: "article", article });
+          sorted.push(article);
         }
-        if (collapsed) continue;
-        if (filtering && !matchesFilter(article, filter)) continue;
-        rows.push({ kind: "article", article });
-        sorted.push(article);
       }
     }
-    return { sorted, rows, shown: sorted.length };
+    return { sorted, rows, shown: filtering ? poste.articles.filter(matches).length : poste.articles.length };
   };
 
   /** Tick or untick an article as bought; a new tick starts at the planned quantity. */
@@ -405,6 +445,51 @@ export function ChiffragePageClient({
     // Rooms live on the tree, so extend it rather than keeping a second copy.
     setTree((prev) => ({ ...prev, rooms: [...prev.rooms, res.data] }));
     return res.data;
+  };
+
+  /** Add a stage to a poste; stages live on the tree, so it is re-read. */
+  const addPhase = async (posteId: string, name: string): Promise<ChiffragePhase | null> => {
+    const res = await createPhaseAction(projectId, posteId, name);
+    if (!res.ok) {
+      toast.error(res.error);
+      return null;
+    }
+    await refresh();
+    return res.data;
+  };
+
+  /** Move a stage of one poste into the slot another holds; optimistic like the rooms. */
+  const reorderPhase = async (posteId: string, phaseId: string, overId: string) => {
+    const poste = tree.postes.find((p) => p.id === posteId);
+    const plan = poste ? planMove(poste.phases ?? [], phaseId, overId) : null;
+    if (!poste || !plan) return true;
+    const setPhases = (phases: ChiffragePhase[]) =>
+      setTree((prev) => ({
+        ...prev,
+        postes: prev.postes.map((p) => (p.id === posteId ? { ...p, phases } : p)),
+      }));
+    const previous = poste.phases ?? [];
+    setPhases(plan.items);
+    const res = await reorderPhaseAction(projectId, phaseId, plan.move);
+    if (!res.ok) {
+      setPhases(previous);
+      toast.error(res.error);
+      return false;
+    }
+    await refresh();
+    return true;
+  };
+
+  const phaseLabels: NamedListLabels = {
+    title: t("phases"),
+    hint: t("phasesDialogHint"),
+    empty: t("noPhasesYet"),
+    name: t("phaseName"),
+    rename: t("renamePhase"),
+    remove: t("deletePhase"),
+    confirmRemove: (name) => t("confirmDeletePhase", { name }),
+    addPlaceholder: t("addPhasePlaceholder"),
+    add: t("addPhase"),
   };
 
   const addUnit = async (symbol: string): Promise<ChiffrageUnit | null> => {
@@ -484,6 +569,10 @@ export function ChiffragePageClient({
     if (!over || active.id === over.id) return;
     const drop = planArticleDrop(poste.articles, String(active.id), String(over.id));
     if (!drop) return;
+    if (drop.kind === "otherPhase") {
+      toast.info(t("dragOtherPhase"));
+      return;
+    }
     if (drop.kind === "otherRoom") {
       toast.info(t("dragOtherRoom"));
       return;
@@ -596,6 +685,7 @@ export function ChiffragePageClient({
           onChange={setFilter}
           shown={shownCount}
           total={allArticles.length}
+          stages={stages}
           onCollapseAll={() => foldAll(true)}
           onExpandAll={() => foldAll(false)}
         />
@@ -667,6 +757,7 @@ export function ChiffragePageClient({
                         setCompareDialog({ open: true, poste })
                       }
                       onEdit={() => setPosteDialog({ open: true, poste })}
+                      onManagePhases={() => setPhasesFor(poste.id)}
                       onDelete={async () => {
                         if (
                           await ask(t("confirmDeletePoste", { name: poste.name }))
@@ -694,7 +785,19 @@ export function ChiffragePageClient({
                           strategy={verticalListSortingStrategy}
                         >
                           {layout.rows.map((row) =>
-                            row.kind === "group" ? (
+                            row.kind === "phase" ? (
+                              <PhaseHeading
+                                key={row.key}
+                                name={row.phase?.name ?? null}
+                                rank={row.rank === null ? null : row.rank + 1}
+                                subtotal={(poste.phase_subtotals ?? []).find(
+                                  (s) => s.phase_id === (row.phase?.id ?? null),
+                                )}
+                                amount="ht"
+                                collapsed={row.collapsed}
+                                onToggle={() => toggleGroup(row.key)}
+                              />
+                            ) : row.kind === "group" ? (
                               <GroupHeading
                                 key={row.key}
                                 name={row.name}
@@ -850,6 +953,26 @@ export function ChiffragePageClient({
         />
       ) : null}
 
+      {(() => {
+        const poste = phasesFor ? tree.postes.find((p) => p.id === phasesFor) : undefined;
+        if (!poste) return null;
+        return (
+          <RoomsDialog
+            open
+            labels={{ ...phaseLabels, title: `${t("phases")} · ${poste.name}` }}
+            testId="phase"
+            rooms={poste.phases ?? []}
+            onOpenChange={(open) => {
+              if (!open) setPhasesFor(null);
+            }}
+            onCreate={async (name) => (await addPhase(poste.id, name)) !== null}
+            onRename={(phase, name) => mutate(() => updatePhaseAction(projectId, phase.id, name))}
+            onDelete={(phase) => mutate(() => deletePhaseAction(projectId, phase.id))}
+            onReorder={(phaseId, overId) => reorderPhase(poste.id, phaseId, overId)}
+          />
+        );
+      })()}
+
       {storesOpen ? (
         <StoresDialog
           open
@@ -944,6 +1067,14 @@ export function ChiffragePageClient({
           submitting={submitting}
           onOpenChange={(open) => setArticleDialog((p) => ({ ...p, open }))}
           rooms={tree.rooms}
+          phases={
+            tree.postes.find((p) => p.id === (articleDialog.article?.poste_id ?? articleDialog.posteId))
+              ?.phases ?? []
+          }
+          defaultStage={filter.stage ?? null}
+          onCreatePhase={(name) =>
+            addPhase((articleDialog.article?.poste_id ?? articleDialog.posteId) as string, name)
+          }
           onCreateUnit={addUnit}
           onDeleteUnit={removeUnit}
           onCreateRoom={addRoom}

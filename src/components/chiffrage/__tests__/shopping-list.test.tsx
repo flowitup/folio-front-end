@@ -185,4 +185,53 @@ describe("ShoppingList", () => {
     fireEvent.blur(returned);
     expect(onQty).toHaveBeenCalledWith(expect.objectContaining({ id: "a2" }), { returned_quantity: 1 });
   });
+
+  it("splits a section by stage, with each stage's figures, and filters on one stage", () => {
+    const tr = tree();
+    tr.postes[0].phases = [
+      { id: "g1", name: "Gaines", position: 1 },
+      { id: "g2", name: "Appareillage", position: 2 },
+    ];
+    tr.postes[0].articles = [
+      article("a1", { phase_id: "g2", position: 1 }),
+      article("a2", { phase_id: "g1", position: 2, purchased: true, actual_ttc: 15 }),
+      article("a3", { position: 3 }),
+    ];
+    tr.postes[0].phase_subtotals = [
+      { phase_id: "g1", subtotal_ht: 10, subtotal_ttc: 12, actual_ttc: 15, article_count: 1, purchased_count: 1 },
+      { phase_id: "g2", subtotal_ht: 10, subtotal_ttc: 12, actual_ttc: 0, article_count: 1, purchased_count: 0 },
+      { phase_id: null, subtotal_ht: 10, subtotal_ttc: 12, actual_ttc: 0, article_count: 1, purchased_count: 0 },
+    ];
+    const onToggleGroup = vi.fn();
+    const { rerender } = render(
+      <ShoppingList tree={tr} projectId="proj" canManage busyIds={new Set()} onToggleGroup={onToggleGroup} onTogglePurchased={vi.fn()} onSetQuantities={vi.fn()} />,
+    );
+    const headings = screen.getAllByTestId("phase-heading");
+    expect(headings.map((h) => h.textContent)).toEqual([
+      expect.stringContaining("Gaines"),
+      expect.stringContaining("Appareillage"),
+      expect.stringContaining("noPhase"),
+    ]);
+    expect(screen.getAllByTestId("phase-actual")).toHaveLength(1);
+    const rows = screen.getAllByTestId("shopping-row").map((r) => r.textContent);
+    expect(rows[0]).toContain("Article a2");
+    expect(rows[1]).toContain("Article a1");
+    fireEvent.click(headings[0]);
+    expect(onToggleGroup).toHaveBeenCalledWith("p1|phase|g1");
+
+    rerender(
+      <ShoppingList
+        tree={tr}
+        projectId="proj"
+        filter={{ query: "", status: "all", stage: 1 }}
+        canManage
+        busyIds={new Set()}
+        onTogglePurchased={vi.fn()}
+        onSetQuantities={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByTestId("phase-heading")).toHaveLength(1);
+    expect(screen.getAllByTestId("shopping-row")).toHaveLength(1);
+    expect(screen.getByText("Article a1")).toBeDefined();
+  });
 });

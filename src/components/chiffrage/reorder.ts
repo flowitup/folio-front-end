@@ -48,16 +48,19 @@ export function neighboursAfterMove<T extends { id: string }>(
 interface RoomedItem {
   id: string;
   room_id: string | null;
+  phase_id?: string | null;
   position: number;
 }
 
 export type ArticleDrop =
   | { kind: "otherRoom" }
+  | { kind: "otherPhase" }
   | { kind: "move"; move: Required<ReorderPayload>; optimisticPosition: number };
 
 /**
- * A drop in a section whose items are shown room by room. A drop on another
- * room's item is refused (the room is a field of the item, changed in Edit).
+ * A drop in a section whose items are shown stage by stage, then room by
+ * room. A drop on another stage's or room's item is refused (both are fields
+ * of the item, changed in Edit).
  * Within a room, the neighbours come from that room's items in position
  * order — what is on screen — not from the section-wide order, which
  * interleaves rooms and would move the item the other way. The optimistic
@@ -72,9 +75,13 @@ export function planArticleDrop<T extends RoomedItem>(
   const moving = items.find((a) => a.id === activeId);
   const target = items.find((a) => a.id === overId);
   if (!moving || !target || moving.id === target.id) return null;
+  // Stages come before rooms on screen, so a drop into another stage is
+  // reported as such even when the rooms differ too.
+  const phaseOf = (a: T) => a.phase_id ?? null;
+  if (phaseOf(moving) !== phaseOf(target)) return { kind: "otherPhase" };
   if (moving.room_id !== target.room_id) return { kind: "otherRoom" };
   const roomItems = items
-    .filter((a) => a.room_id === moving.room_id)
+    .filter((a) => a.room_id === moving.room_id && phaseOf(a) === phaseOf(moving))
     .sort((a, b) => a.position - b.position);
   const plan = planMove(roomItems, activeId, overId);
   if (!plan) return null;

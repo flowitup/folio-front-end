@@ -15,6 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { ChiffrageRoom } from "@/lib/api/chiffrage";
 
+/** Texts of the picker, so the same control can pick a stage (giai đoạn). */
+export interface NamedSelectLabels {
+  none: string;
+  addPlaceholder: string;
+  add: string;
+}
+
 interface Props {
   /** The trigger's id, so the field's <Label htmlFor> focuses it. */
   id?: string;
@@ -24,6 +31,10 @@ interface Props {
   rooms: ChiffrageRoom[];
   onChange: (roomId: string | null) => void;
   onCreateRoom: (name: string) => Promise<ChiffrageRoom | null>;
+  /** Defaults to the room texts. */
+  labels?: NamedSelectLabels;
+  /** Prefix of the test ids; "room-select" by default. */
+  testId?: string;
 }
 
 export function RoomSelect({
@@ -33,8 +44,15 @@ export function RoomSelect({
   rooms,
   onChange,
   onCreateRoom,
+  labels,
+  testId = "room-select",
 }: Props) {
   const t = useTranslations("chiffrage");
+  const text = labels ?? {
+    none: t("noRoom"),
+    addPlaceholder: t("addRoomPlaceholder"),
+    add: t("addRoom"),
+  };
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState("");
   const [busy, setBusy] = useState(false);
@@ -64,10 +82,10 @@ export function RoomSelect({
           variant="outline"
           aria-labelledby={labelledBy ? `${labelledBy} ${valueId}` : undefined}
           className="w-full justify-between font-normal"
-          data-testid="room-select-trigger"
+          data-testid={`${testId}-trigger`}
         >
           <span id={valueId} className={selected ? "" : "text-muted-foreground"}>
-            {selected ? selected.name : t("noRoom")}
+            {selected ? selected.name : text.none}
           </span>
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
@@ -85,7 +103,7 @@ export function RoomSelect({
               setOpen(false);
             }}
           >
-            <span className="text-muted-foreground">{t("noRoom")}</span>
+            <span className="text-muted-foreground">{text.none}</span>
             {value === null ? <Check className="h-4 w-4" /> : null}
           </button>
           {rooms.map((room) => (
@@ -109,7 +127,7 @@ export function RoomSelect({
             <Input
               value={adding}
               maxLength={120}
-              placeholder={t("addRoomPlaceholder")}
+              placeholder={text.addPlaceholder}
               onChange={(e) => setAdding(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -118,7 +136,7 @@ export function RoomSelect({
                 }
               }}
               className="h-8"
-              data-testid="room-select-new"
+              data-testid={`${testId}-new`}
             />
             <Button
               type="button"
@@ -126,7 +144,7 @@ export function RoomSelect({
               className="h-8 shrink-0"
               disabled={busy || !adding.trim()}
               onClick={() => void add()}
-              aria-label={t("addRoom")}
+              aria-label={text.add}
             >
               <Plus className="h-4 w-4" />
             </Button>

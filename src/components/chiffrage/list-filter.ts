@@ -4,16 +4,74 @@
  * (e.g. "[Câbles & gaines] Réf. LM 70808794 …").
  */
 
-import type { ChiffrageArticle } from "@/lib/api/chiffrage";
+import type { ChiffrageArticle, ChiffragePhase, ChiffragePoste } from "@/lib/api/chiffrage";
 
 export type ListStatus = "all" | "toBuy" | "bought" | "unpriced";
 
 export interface ListFilter {
   query: string;
   status: ListStatus;
+  /**
+   * Show only the n-th stage (0-based) of every poste, or every stage when
+   * null. Stages are per poste, so "GĐ2" is each poste's second stage.
+   */
+  stage?: number | null;
 }
 
-export const NO_FILTER: ListFilter = { query: "", status: "all" };
+export const NO_FILTER: ListFilter = { query: "", status: "all", stage: null };
+
+/** Each stage id mapped to its rank inside its own poste. */
+export type PhaseRanks = ReadonlyMap<string, number>;
+
+const NO_RANKS: PhaseRanks = new Map();
+
+export function phaseRanks(postes: ChiffragePoste[]): PhaseRanks {
+  const ranks = new Map<string, number>();
+  for (const p of postes) (p.phases ?? []).forEach((ph, i) => ranks.set(ph.id, i));
+  return ranks;
+}
+
+/**
+ * The stage filter's choices: one per rank up to the longest list of stages,
+ * each with the names the postes give that stage (for a tooltip).
+ */
+export function stageChoices(postes: ChiffragePoste[]): string[][] {
+  const out: string[][] = [];
+  for (const p of postes) {
+    (p.phases ?? []).forEach((ph, i) => {
+      out[i] ??= [];
+      if (!out[i].includes(ph.name)) out[i].push(ph.name);
+    });
+  }
+  return out;
+}
+
+export interface PhaseBucket {
+  /** null: the items not assigned to one of the poste's stages. */
+  phase: ChiffragePhase | null;
+  /** Rank of the stage inside the poste; null for the unassigned bucket. */
+  rank: number | null;
+  articles: ChiffrageArticle[];
+}
+
+/**
+ * A poste's articles split by stage, in the poste's stage order, empty stages
+ * included, then the unassigned ones (only if there are any). A poste without
+ * stages gives one unassigned bucket holding everything. Matches the order of
+ * the backend's phase_subtotals.
+ */
+export function byPhase(poste: ChiffragePoste): PhaseBucket[] {
+  const phases = poste.phases ?? [];
+  const known = new Set(phases.map((p) => p.id));
+  const buckets: PhaseBucket[] = phases.map((phase, rank) => ({
+    phase,
+    rank,
+    articles: poste.articles.filter((a) => a.phase_id === phase.id),
+  }));
+  const rest = poste.articles.filter((a) => !a.phase_id || !known.has(a.phase_id));
+  if (phases.length === 0 || rest.length > 0) buckets.push({ phase: null, rank: null, articles: rest });
+  return buckets;
+}
 
 const TAG = /^\s*\[([^\]\n]{1,60})\]\s*/;
 
@@ -31,10 +89,16 @@ export function fold(s: string): string {
 }
 
 export function isFiltering(filter: ListFilter): boolean {
-  return filter.status !== "all" || filter.query.trim() !== "";
+  return filter.status !== "all" || filter.query.trim() !== "" || (filter.stage ?? null) !== null;
 }
 
-export function matchesFilter(a: ChiffrageArticle, filter: ListFilter): boolean {
+export function matchesFilter(
+  a: ChiffrageArticle,
+  filter: ListFilter,
+  ranks: PhaseRanks = NO_RANKS,
+): boolean {
+  const stage = filter.stage ?? null;
+  if (stage !== null && (!a.phase_id || ranks.get(a.phase_id) !== stage)) return false;
   if (filter.status === "toBuy" && a.purchased) return false;
   if (filter.status === "bought" && !a.purchased) return false;
   if (filter.status === "unpriced" && a.effective_source !== "none") return false;

@@ -50,8 +50,25 @@ import { Input } from "@/components/ui/input";
 import { SortableItem } from "@/components/chiffrage/sortable-item";
 import type { ChiffrageRoom } from "@/lib/api/chiffrage";
 
+/** Texts of the dialog, so the same list can manage a poste's stages. */
+export interface NamedListLabels {
+  title: string;
+  hint: string;
+  empty: string;
+  name: string;
+  rename: string;
+  remove: string;
+  confirmRemove: (name: string) => string;
+  addPlaceholder: string;
+  add: string;
+}
+
 interface Props {
   open: boolean;
+  /** Defaults to the room texts. */
+  labels?: NamedListLabels;
+  /** Prefix of the test ids; "room" by default. */
+  testId?: string;
   /** The project's rooms, already in display order. */
   rooms: ChiffrageRoom[];
   onOpenChange: (open: boolean) => void;
@@ -72,8 +89,21 @@ export function RoomsDialog({
   onRename,
   onDelete,
   onReorder,
+  labels,
+  testId = "room",
 }: Props) {
   const t = useTranslations("chiffrage");
+  const text: NamedListLabels = labels ?? {
+    title: t("rooms"),
+    hint: t("roomsDialogHint"),
+    empty: t("noRoomsYet"),
+    name: t("roomName"),
+    rename: t("renameRoom"),
+    remove: t("deleteRoom"),
+    confirmRemove: (name) => t("confirmDeleteRoom", { name }),
+    addPlaceholder: t("addRoomPlaceholder"),
+    add: t("addRoom"),
+  };
   const { ask, dialog: confirmDialog } = useConfirmDialog();
   const [pending, setPending] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -125,7 +155,7 @@ export function RoomsDialog({
   };
 
   const remove = async (room: ChiffrageRoom) => {
-    if (!(await ask(t("confirmDeleteRoom", { name: room.name })))) return;
+    if (!(await ask(text.confirmRemove(room.name)))) return;
     if ((await run(() => onDelete(room))) && editing?.id === room.id) {
       setEditing(null);
     }
@@ -152,16 +182,16 @@ export function RoomsDialog({
         }}
       >
         <DialogHeader>
-          <DialogTitle>{t("rooms")}</DialogTitle>
-          <DialogDescription>{t("roomsDialogHint")}</DialogDescription>
+          <DialogTitle>{text.title}</DialogTitle>
+          <DialogDescription>{text.hint}</DialogDescription>
         </DialogHeader>
 
         {rooms.length === 0 ? (
           <p
             className="rounded-md border border-dashed px-3 py-4 text-center text-sm text-muted-foreground"
-            data-testid="rooms-empty"
+            data-testid={`${testId}s-empty`}
           >
-            {t("noRoomsYet")}
+            {text.empty}
           </p>
         ) : (
           <DndContext
@@ -177,7 +207,7 @@ export function RoomsDialog({
             >
               <ol className="divide-y rounded-md border" aria-busy={pending}>
                 {rooms.map((room, index) => (
-                  <li key={room.id} data-testid="room-row">
+                  <li key={room.id} data-testid={`${testId}-row`}>
                     <SortableItem
                       id={room.id}
                       disabled={pending || editing !== null}
@@ -197,7 +227,7 @@ export function RoomsDialog({
                               <Input
                                 value={editing.name}
                                 maxLength={120}
-                                aria-label={t("roomName")}
+                                aria-label={text.name}
                                 autoFocus
                                 disabled={pending}
                                 className="h-8"
@@ -271,8 +301,8 @@ export function RoomsDialog({
                                 onClick={() =>
                                   setEditing({ id: room.id, name: room.name })
                                 }
-                                aria-label={t("renameRoom")}
-                                title={t("renameRoom")}
+                                aria-label={text.rename}
+                                title={text.rename}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -283,8 +313,8 @@ export function RoomsDialog({
                                 className={iconButton}
                                 disabled={pending}
                                 onClick={() => void remove(room)}
-                                aria-label={t("deleteRoom")}
-                                title={t("deleteRoom")}
+                                aria-label={text.remove}
+                                title={text.remove}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -310,11 +340,11 @@ export function RoomsDialog({
           <Input
             value={adding}
             maxLength={120}
-            placeholder={t("addRoomPlaceholder")}
-            aria-label={t("addRoom")}
+            placeholder={text.addPlaceholder}
+            aria-label={text.add}
             disabled={pending}
             onChange={(e) => setAdding(e.target.value)}
-            data-testid="rooms-new"
+            data-testid={`${testId}s-new`}
           />
           <Button
             type="submit"

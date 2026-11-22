@@ -59,6 +59,23 @@ export interface ChiffrageRoomSubtotal {
   article_count: number;
 }
 
+/** A stage of works (giai đoạn) inside one poste; each poste has its own list. */
+export interface ChiffragePhase {
+  id: string;
+  name: string;
+  position: number;
+}
+
+/** What one stage costs inside its poste. phase_id null = not assigned to a stage. */
+export interface ChiffragePhaseSubtotal {
+  phase_id: string | null;
+  subtotal_ht: number;
+  subtotal_ttc: number;
+  actual_ttc: number;
+  article_count: number;
+  purchased_count: number;
+}
+
 export interface ChiffrageArticle {
   id: string;
   poste_id: string;
@@ -67,6 +84,8 @@ export interface ChiffrageArticle {
   unit: string | null;
   note: string | null;
   room_id: string | null;
+  /** The poste's stage this item belongs to; absent on older backends. */
+  phase_id?: string | null;
   position: number;
   quotes: ChiffrageQuote[];
   image_ref: ChiffrageImageRef | null;
@@ -120,6 +139,10 @@ export interface ChiffragePoste {
   /** What each shop would cost for this section alone, best-covering first. */
   store_baskets: ChiffrageStoreBasket[];
   room_subtotals: ChiffrageRoomSubtotal[];
+  /** The poste's stages in order; empty (or absent on older backends) when it has none. */
+  phases?: ChiffragePhase[];
+  /** One entry per stage, empty ones included, then the unassigned bucket if any. */
+  phase_subtotals?: ChiffragePhaseSubtotal[];
   subtotal_ht: number;
   subtotal_ttc: number;
   /** Real spend on bought articles, TTC. */
@@ -167,6 +190,7 @@ export interface ArticlePayload {
   unit?: string | null;
   note?: string | null;
   room_id?: string | null;
+  phase_id?: string | null;
   purchased?: boolean;
   purchased_quantity?: number | string | null;
   returned_quantity?: number | string | null;
@@ -379,6 +403,64 @@ export async function reorderRoom(
     `${base(projectId)}/rooms/${encodeURIComponent(roomId)}/reorder`,
     { method: "POST", body: payload },
     "Failed to reorder the room"
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Phases — the stages of works of one poste (giai đoạn)
+// ---------------------------------------------------------------------------
+
+export async function listPhases(projectId: string, posteId: string): Promise<ChiffragePhase[]> {
+  return request<ChiffragePhase[]>(
+    `${base(projectId)}/postes/${encodeURIComponent(posteId)}/phases`,
+    { method: "GET" },
+    "Failed to load the stages"
+  );
+}
+
+export async function createPhase(
+  projectId: string,
+  posteId: string,
+  name: string
+): Promise<ChiffragePhase> {
+  return request<ChiffragePhase>(
+    `${base(projectId)}/postes/${encodeURIComponent(posteId)}/phases`,
+    { method: "POST", body: { name } },
+    "Failed to create the stage"
+  );
+}
+
+export async function updatePhase(
+  projectId: string,
+  phaseId: string,
+  name: string
+): Promise<ChiffragePhase> {
+  return request<ChiffragePhase>(
+    `${base(projectId)}/phases/${encodeURIComponent(phaseId)}`,
+    { method: "PATCH", body: { name } },
+    "Failed to rename the stage"
+  );
+}
+
+/** Deleting a stage keeps its items; they become unassigned. */
+export async function deletePhase(projectId: string, phaseId: string): Promise<void> {
+  return request<void>(
+    `${base(projectId)}/phases/${encodeURIComponent(phaseId)}`,
+    { method: "DELETE" },
+    "Failed to delete the stage"
+  );
+}
+
+/** Move a stage between two neighbours of the same poste. */
+export async function reorderPhase(
+  projectId: string,
+  phaseId: string,
+  payload: ReorderPayload
+): Promise<ChiffragePhase> {
+  return request<ChiffragePhase>(
+    `${base(projectId)}/phases/${encodeURIComponent(phaseId)}/reorder`,
+    { method: "POST", body: payload },
+    "Failed to reorder the stage"
   );
 }
 

@@ -86,6 +86,21 @@ describe("planArticleDrop", () => {
     expect(planArticleDrop(items, "led", "switch")).toEqual({ kind: "otherRoom" });
   });
 
+  it("refuses a drop on another stage's item, and keeps neighbours inside the stage", () => {
+    const staged = [
+      { id: "gaine", room_id: null, phase_id: "g1", position: 1000 },
+      { id: "prise", room_id: null, phase_id: "g2", position: 2000 },
+      { id: "boite", room_id: null, phase_id: "g1", position: 3000 },
+      { id: "inter", room_id: null, phase_id: "g2", position: 4000 },
+    ];
+    expect(planArticleDrop(staged, "prise", "gaine")).toEqual({ kind: "otherPhase" });
+    expect(planArticleDrop(staged, "inter", "prise")).toEqual({
+      kind: "move",
+      move: { before_id: null, after_id: "prise" },
+      optimisticPosition: 1999,
+    });
+  });
+
   it("moves within the room using the room's own neighbours", () => {
     // Drag "sink" onto "switch": sink goes first in the kitchen.
     const drop = planArticleDrop(items, "sink", "switch");

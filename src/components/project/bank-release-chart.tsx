@@ -78,8 +78,9 @@ export function BankReleaseChart({
   // Memoized: the data-tip hook re-renders the card on every mousemove.
   const series = useMemo(() => buildDrawSeries(invoices), [invoices]);
   const customer = useMemo(() => computeCustomerPayments(invoices), [invoices]);
-  // Drawn from the bank = the backend's released total minus customer payments.
-  const bankReleased = Math.max(0, Math.round((releasedTotal - customer.total) * 100) / 100);
+  // Released = the backend's released total. Customer payments from paid
+  // factures count as released funds too (owner's call, 2026-11-24).
+  const bankReleased = Math.max(0, Math.round(releasedTotal * 100) / 100);
   const metrics = computeBankReleaseMetrics(credit, bankReleased);
   const { monthYear, pctFmt } = useMemo(
     () => ({
@@ -279,7 +280,7 @@ export function BankReleaseChart({
         </div>
       ) : null}
 
-      {/* Customer money from paid factures: counted in "left to spend", never as a bank draw. */}
+      {/* Info line: how much of the released funds came from customer factures. */}
       {!loading && customer.count > 0 ? (
         <div className="mt-3 text-[12.5px]" style={{ color: "var(--ink-2)" }} data-testid="bank-release-customer-paid">
           {customerPaidHref ? (

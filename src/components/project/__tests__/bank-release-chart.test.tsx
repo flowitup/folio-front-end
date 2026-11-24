@@ -226,7 +226,7 @@ describe("BankReleaseChart", () => {
     expect(screen.getByTestId("bank-release-stats").textContent!.replace(/\s/g, "")).toContain("25000,50€");
   });
 
-  it("keeps a paid facture out of the bank draws and shows it on its own line", () => {
+  it("counts a paid facture as released funds and still shows it on its own line", () => {
     const d1 = makeRelease({ total_amount: 20000, issue_date: "2026-06-01" });
     const d2 = makeRelease({ total_amount: 10000, issue_date: "2026-07-01" });
     const fac = makeRelease({ total_amount: 3068.4, issue_date: "2026-08-01", source_billing_document_id: "fac-1", is_auto_generated: true });
@@ -238,24 +238,22 @@ describe("BankReleaseChart", () => {
         customerPaidHref="/en/projects/p1/billing"
       />
     );
-    // 2 draws, not 3; the facture has no segment.
-    expect(screen.getByText(/projects\.bankRelease\.drawsMeta\(\{"count":2/)).toBeInTheDocument();
-    expect(screen.queryByTestId(`bank-release-draw-${fac.id}`)).toBeNull();
-    // Remaining at the bank: 100 000 − 30 000 (the facture is not drawn credit).
-    expect(screen.getByTestId("bank-release-remaining").textContent!.replace(/\s/g, "")).toBe("70000€");
+    // 3 draws: the facture has its own segment.
+    expect(screen.getByText(/projects\.bankRelease\.drawsMeta\(\{"count":3/)).toBeInTheDocument();
+    expect(screen.getByTestId(`bank-release-draw-${fac.id}`)).toBeInTheDocument();
+    // Remaining: 100 000 − 33 068,40 (the facture counts as released).
+    expect(screen.getByTestId("bank-release-remaining").textContent!.replace(/\s/g, "")).toBe("66931,60€");
     const line = screen.getByTestId("bank-release-customer-paid");
     expect(line.textContent).toContain("dashboard.bankRelease.customerPaid");
     expect(line.textContent).toContain('"count":1');
     expect(line.querySelector("a")?.getAttribute("href")).toBe("/en/projects/p1/billing");
   });
 
-  it("does not call a paid facture alone a release percentage", () => {
+  it("counts a paid facture alone as released", () => {
     const fac = makeRelease({ total_amount: 5000, source_billing_document_id: "fac-1" });
     render(<BankReleaseChart credit={100000} releasedTotal={5000} invoices={[fac]} />);
-    expect(screen.getByText("dashboard.bankRelease.headlineNoDraws")).toBeInTheDocument();
-    expect(screen.queryByText("projects.bankRelease.headlineMeta")).toBeNull();
-    expect(screen.getByText("projects.bankRelease.noReleases")).toBeInTheDocument();
-    expect(screen.getByTestId("bank-release-remaining").textContent!.replace(/\s/g, "")).toBe("100000€");
+    expect(screen.getByText("projects.bankRelease.headlineMeta")).toBeInTheDocument();
+    expect(screen.getByTestId("bank-release-remaining").textContent!.replace(/\s/g, "")).toBe("95000€");
     // No link without an href.
     expect(screen.getByTestId("bank-release-customer-paid").querySelector("a")).toBeNull();
   });

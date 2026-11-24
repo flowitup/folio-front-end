@@ -134,10 +134,10 @@ describe("customer payments (factures marked paid)", () => {
   const fac = (doc: string, amount: number) =>
     mkInvoice({ type: "released_funds", issue_date: "2026-07-01", total_amount: amount, source_billing_document_id: doc });
 
-  it("are not bank draws", () => {
+  it("count as released funds like any other draw", () => {
     const series = buildDrawSeries([draw(), draw(), fac("f-1", 3068.4)]);
-    expect(series.draws).toHaveLength(2);
-    expect(series.totalDrawn).toBe(2000);
+    expect(series.draws).toHaveLength(3);
+    expect(series.totalDrawn).toBe(5068.4);
   });
 
   it("add up per facture", () => {

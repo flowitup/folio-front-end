@@ -105,7 +105,7 @@ export function buildDrawSeries(invoices: Invoice[]): DrawSeries {
   // for the same reason, so the draw ledger must skip them too. A facture paid
   // by the customer is not a bank draw either (see isCustomerPayment).
   const draws: BankDraw[] = invoices
-    .filter((inv) => inv.type === "released_funds" && !inv.is_cash_advance && !isCustomerPayment(inv))
+    .filter((inv) => inv.type === "released_funds" && !inv.is_cash_advance)
     .map((inv) => ({
       id: inv.id,
       number: inv.invoice_number,
